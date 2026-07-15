@@ -1,9 +1,17 @@
 # Onslaught Toolkit
 
-Onslaught Toolkit is a Battle Engine Aquila (2003) preservation, patching, and
-rebuild project. The WinUI 3 Windows app is the primary end-user toolkit. A
-separate GPL-licensed, RE-informed original-code rebuild now lives under
-[`rebuild/`](rebuild/README.md); it does not replace or modify the retail game.
+Onslaught Toolkit is a Battle Engine Aquila (2003) preservation,
+reconstruction, and enhancement project. Its WinUI 3 app is the **community
+front door** for saves/options, safe-copy patching and modding, media/Lore, and
+future reconstruction workflows. The GPL-licensed [`rebuild/`](rebuild/README.md)
+is a first-class **playable reconstruction** companion, separate by
+architecture and license but part of the same product strategy. **Retail
+enhancements**—including meaningful copied-target tools, patches/mods, and
+evidence-gated multiplayer progress—are the third deliberate outcome. Neither
+the toolkit nor the reconstruction replaces or modifies the installed retail
+game.
+
+In short: WinUI is the community front door, `rebuild/` is the playable reconstruction, and retail enhancements are a deliberate shipping outcome.
 
 This public repository is the primary collaboration and day-to-day working
 checkout. The former maintainer-only tree has been folded into this repo as

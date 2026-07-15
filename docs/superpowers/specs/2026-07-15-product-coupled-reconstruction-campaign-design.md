@@ -1,6 +1,6 @@
 # Product-Coupled Battle Engine Aquila Reconstruction Campaign Design
 
-Status: written design awaiting file review before campaign implementation
+Status: accepted and implemented
 Date: 2026-07-15
 
 ## Decision

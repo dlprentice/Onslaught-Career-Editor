@@ -11,24 +11,27 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 CANONICAL_GOAL = """
-Continuously reverse engineer and reconstruct Battle Engine Aquila through an
-evidence-backed, multi-slice campaign. Resume from the repository’s current
-baton, autonomously pursue the highest-value actionable work across retail RE,
-deterministic Core/Godot reconstruction, WinUI tooling, assets, documentation,
-and regression harnesses. Translate static analysis and explicitly authorized
-copied-runtime observations into bounded behavior contracts before implementing
-retail-derived behavior. Preserve provenance, honest non-claims, tests, and
-resume-ready state after every slice. Keep the installed game and original
-BEA.exe immutable, proprietary evidence local, and release/online/destructive
-actions separately authorized. Continue until campaign exit criteria, a human
-pause, or a genuine authority blocker; one advancement is progress, not goal
-completion. Operate unattended: make conservative, reversible assumptions and
-build automated visual, behavioral, capture/replay, and regression harnesses
-wherever they can replace subjective human verification. Do not pause for
-ordinary clarification. If one slice genuinely needs unavailable authority or
-human interaction, record the exact blocker and continue with the next safe,
-independent campaign slice. Stop only when no meaningful authorized work
-remains.
+Continuously reconstruct and enhance Battle Engine Aquila through an
+evidence-backed, product-coupled campaign. Operate one portfolio with three
+shipping outcomes: the community WinUI Toolkit, a playable RE-informed
+original-code reconstruction, and meaningful tools, patches, mods, and
+multiplayer progress for copied retail installations. Treat static analysis,
+pinned source, copied-runtime observation, lore, asset research,
+documentation, and harnesses as inputs rather than ends. Every slice must
+name its primary product outcome, user value, exact consumer, acceptance
+evidence, and non-claims. Do not run consecutive research-only slices unless
+a concrete dependency requires it; absent such a dependency, deliver a
+user-observable capability within every two accepted slices. Translate
+retail-derived behavior through bounded evidence contracts before consumer
+implementation, then close the product increment rather than the proof
+artifact. Keep the installed game and original BEA.exe immutable, proprietary
+payloads local, Host/Join evidence-gated, and spending or genuinely
+destructive operations separately authorized. Operate unattended with
+conservative reversible assumptions, automated behavioral/visual verification,
+prompt integration, and resume-ready state. If one slice blocks, record the
+exact reason and continue another safe shipping outcome. Stop only at an
+accepted phase boundary, a human pause, or when no meaningful authorized
+product work remains; one advancement is progress, not campaign completion.
 """
 
 
@@ -279,7 +282,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             normalized_words(contributing).casefold(),
         )
         self.assertIn(
-            "human or the current root accepts campaign pause/phase-complete",
+            "the current root or maintainer accepts the phase boundary",
             normalized_words(campaign).casefold(),
         )
         for stale_phrase in (
@@ -307,29 +310,32 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertNotIn("STOP_LOCAL", slash_goal)
         self.assertNotIn("TIME-BOXED MARATHON", slash_goal)
 
-    def test_campaign_baton_clears_only_the_obsolete_shield_authority_blocker(
+    def test_paused_product_baton_keeps_shield_authorized_but_unmeasured(
         self,
     ) -> None:
         baton = read_repo_text("goal.md")
         campaign = read_repo_text("goal.campaign.md")
 
         self.assertIn("M2.3-target-acquisition-static-contract", baton)
-        self.assertIn("Resolved skipped blocker", baton)
-        self.assertIn("standing campaign authority", baton)
-        self.assertIn("The shield measurement itself remains pending", baton)
-        self.assertIn("No shield attempt", baton)
-        self.assertIn("publish no behavior contract", baton)
+        self.assertIn("Status: **PAUSED**", baton)
+        self.assertIn("standing-authorized", baton)
+        self.assertIn("No accepted two-attempt shield measurement exists", baton)
+        self.assertIn(
+            "no shield retail behavior contract",
+            normalized_words(baton).casefold(),
+        )
+        self.assertIn("dangerous-misinterpretation exception", baton)
         self.assertNotIn("MISSING_COMPLETE_LIVE_RUNTIME_LEASE", baton)
         self.assertNotIn("BLOCKED_SHIELD_LIVE_AUTHORITY", baton)
         self.assertNotIn("## Active skipped blocker", baton)
-        self.assertIn("single-root default", campaign.casefold())
+        self.assertIn("single-root", campaign.casefold())
         normalized_campaign = normalized_words(campaign).casefold()
         self.assertIn(
-            "live pair pending and covered by standing campaign authority",
+            "exactly two authorized copied-runtime shield attempts",
             normalized_campaign,
         )
         self.assertIn(
-            "campaign continues until accepted exit criteria, a human pause, or no meaningful authorized work remains",
+            "one advancement is progress, not campaign completion",
             normalized_campaign,
         )
         self.assertNotIn(
@@ -348,7 +354,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         normalized_baton = normalized_words(baton).casefold()
 
         self.assertIn("m0.6-single-root-operating-foundation", normalized_baton)
-        self.assertIn("| m0.6 |", campaign.casefold())
+        self.assertIn("| p0.1 |", campaign.casefold())
         for placeholder in (
             "pending foundation implementation commit",
             "pending final foundation verification",
@@ -365,8 +371,10 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertIn("Single-root default", developer["routingPolicy"])
         self.assertTrue(developer["verifiedTruth"]["release"]["newReleaseAuthorized"])
         self.assertIn("single-root default", documentation["routingPolicy"].casefold())
-        self.assertIn("standing-authorized", developer["currentFocus"])
-        self.assertIn("standing-authorized", documentation["currentFocus"])
+        self.assertIn("product-coupled", developer["currentFocus"].casefold())
+        self.assertIn("paused", developer["currentFocus"].casefold())
+        self.assertIn("product-coupled", documentation["currentFocus"].casefold())
+        self.assertIn("paused", documentation["currentFocus"].casefold())
         for label, state in (
             ("developer", developer),
             ("documentation", documentation),
@@ -375,6 +383,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             with self.subTest(state=label):
                 self.assertEqual("2026-07-15", state["lastUpdated"])
                 self.assertIn("m2.3", state["currentFocus"].casefold())
+                self.assertIn("paused", state["currentFocus"].casefold())
         self.assertIn(
             "standing-authorized", orchestrator["currentTruth"][-1].casefold()
         )

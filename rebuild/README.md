@@ -1,10 +1,20 @@
 # Onslaught Rebuild
 
 Status: active RE-informed original-code implementation
-Last updated: 2026-07-12
+Last updated: 2026-07-15
 
 This subtree turns the project's static and runtime research into executable
-original code. It is deliberately separate from the WinUI toolkit:
+original code. It is deliberately separate from the WinUI toolkit by
+architecture and GPL licensing, but it is not an unrelated top-level demo: it
+belongs to the **shared product strategy** as the playable reconstruction
+companion. **Future WinUI** workflows are intended to help community users
+discover, configure, verify, and launch it, and to orchestrate optional local
+imports of **user-owned retail assets** without bundling proprietary payloads.
+WinUI may discover, configure, and launch the companion, but GPL reconstruction
+code/artifacts retain their GPL obligations and no proprietary retail bytes
+enter the GPL source tree or either community release.
+
+The implementation boundaries are:
 
 - `OnslaughtRebuild.Core` owns deterministic simulation state;
 - `OnslaughtRebuild.Client` converts real-time input into exact 30 Hz Core

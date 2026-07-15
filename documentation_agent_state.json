@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
   "routingPolicy": "Active docs use the single-root default in goal.policy.md. The current root owns integration/state/commits/final acceptance; subagents and consults are need-shaped advisers, and coordination roles activate only for deliberate concurrency.",
-  "currentFocus": "Full reconstruction campaign; M0.6 single-root operating foundation accepted; current slice remains M2.3 target-acquisition static contract; shield live measurement is standing-authorized but remains pending exactly two copied-target attempts.",
+  "currentFocus": "Product-coupled reconstruction campaign is paused awaiting user goal resume; preserved M2.3 target-acquisition static-contract work remains the resume target and names Playable Reconstruction as its consumer outcome.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
@@ -35,10 +35,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Consolidate existing pinned-source and Steam-static player target-selection evidence into one public-safe machine-readable M2.3 contract and regression checker, preserving runtime non-claims.",
-    "When selected by campaign priority, execute exactly two copied-runtime walker shield attempts; if either attempt fails, publish no behavior contract.",
-    "After a valid shield pair, publish the narrow source/Steam/runtime/rebuild contract and only then consider its deterministic Core consumer.",
-    "Document corpus-wide extractor coverage from executable producer/consumer reports, never inferred archive counts.",
-    "Treat Home, Save Lab, and Media/Asset native acceptance as bounded to the exact tested states and sizes; keep selected-0003 identity, texture, and articulation claims unresolved."
+    "After the user resumes the goal, finish or exactly block preserved M2.3 and retain its runtime non-claims and exact deterministic target/lock consumer.",
+    "Use exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in Core and Godot.",
+    "Document and verify the WinUI Reconstruction community surface when it truthfully discovers, configures, verifies, and launches the playable companion.",
+    "Keep the queued P1/P2 viewport/command-ownership experiment bounded to the original-game multiplayer epic and do not enable Host/Join."
   ]
 }

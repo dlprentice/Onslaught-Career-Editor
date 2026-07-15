@@ -15,17 +15,41 @@ rarely.
 
 ## Long-Horizon Charter
 
-Preserve and reverse engineer Battle Engine Aquila / Onslaught, keep the WinUI
-3 product lane primary for current user-facing tooling, and turn bounded static
-and copied-runtime evidence into practical tooling, patches, mods, asset
-workflows, online-play research, and an executable RE-informed original-code
-rebuild. Preserve a separately staffed strict clean-room path as a future
-option rather than mislabeling exposed implementation work.
+Continuously reconstruct and enhance Battle Engine Aquila through one
+evidence-backed, product-coupled portfolio. Research is valuable when it makes
+a product decision possible; it is not a substitute for delivering the named
+consumer. The portfolio has three shipping outcomes:
+
+| Product outcome | Durable purpose |
+|---|---|
+| **WinUI Community** | Keep the WinUI Toolkit the community front door for preservation, safe-copy workflows, saves/options, patches/mods, local content, reconstruction discovery, and public releases. |
+| **Playable Reconstruction** | Grow the deterministic Core and its clients into a playable, evidence-backed, RE-informed original-code reconstruction through consumer-complete vertical increments. |
+| **Retail Enhancement** | Deliver meaningful tools, safe copied-target patches and mods, and evidence-gated progress toward original-game multiplayer. |
+
+Static analysis, pinned source, copied-runtime observation, lore, asset
+research, documentation, and harnesses are **supporting inputs**. They may be
+necessary evidence or infrastructure, but their counts and completion are not
+the portfolio's primary outcomes.
+
+**Original-game multiplayer** is a strategic epic inside Retail Enhancement,
+not a released capability. WinUI community release work remains a first-class
+outcome when the exact artifact, claim, gates, and audience are ready.
 
 The public repository is the primary collaboration and day-to-day working
 tree. Track source, tests, tools, public-safe RE notes, state batons, readiness
-notes, and compact proof summaries when they help contributors understand or
-continue the project.
+notes, and compact proof summaries when they help contributors understand,
+use, or continue the products.
+
+### Reconstruction terminology
+
+In this project, reconstruction means rebuilding game systems in new original
+code from bounded binary, runtime, source-reference, and asset evidence while
+keeping proprietary code and payloads out of the implementation and public
+artifacts. The active implementation is an **evidence-backed, RE-informed original-code reconstruction**.
+It is not parity-complete and is **not a strict clean-room implementation** because current implementers have seen
+source and decompilation-derived material. A separately staffed unexposed
+specification/implementation/acceptance process may pursue that narrower label
+later; it is not required to keep building this reconstruction now.
 
 ## Single-Root Default
 
@@ -97,6 +121,47 @@ safe behavior contract before retail-derived deterministic implementation.
 Build or extend the smallest durable behavioral, visual, capture/replay, or
 regression harness that can replace subjective verification.
 
+## Product-Coupled Slice Contract
+
+Every Current Slice records these fields before consequential implementation:
+
+- **primary outcome:** WinUI Community, Playable Reconstruction, or Retail
+  Enhancement;
+- **user outcome:** what a player, modder, contributor, or maintainer can do or
+  understand after the slice;
+- **evidence question:** the smallest uncertainty that must be resolved;
+- **exact consumer:** the code path, product surface, patch row, import path,
+  or release artifact that will consume the result;
+- **acceptance:** executable, deterministic, native, copied-runtime, visual, or
+  release evidence that proves the consumer works;
+- **non-claims:** nearby conclusions the evidence does not support; and
+- **next link:** the immediate product increment or dependency that follows.
+
+No second consecutive research-only slice may be selected unless a concrete
+dependency makes another evidence step necessary. The baton must name that
+dependency, the blocked exact consumer, and why a product implementation would
+otherwise be unsafe or misleading. Absent that dependency, **every two accepted slices**
+must contain at least one **user-observable result**. This is
+a course-correction rule, not a quota for shallow UI or ceremonial work.
+
+For this rule, evidence-debt, contract-only, checker-only, documentation-only,
+and harness-only slices are research-only unless the same slice lands the
+named consumer and its acceptance evidence. A user-observable result changes a
+named path that a player, modder, or community user can invoke in WinUI, the
+playable reconstruction, or a copied retail profile. Operator-only proof UI,
+receipts, test-count growth, disabled chrome, and release-note wording do not
+qualify by themselves.
+
+The result must demonstrably complete or materially improve the named user
+task through end-to-end consumer acceptance. Navigation-only shells, no-op
+commands, inert scaffolds, and output with no usable effect do not qualify.
+
+A behavior contract does not by itself land a product milestone. It may close
+an evidence prerequisite or prevent a dangerous misimplementation, but the
+milestone stays in progress until its named consumer and proportional
+acceptance evidence land. Research/checker/documentation work that has no
+credible exact consumer moves to backlog instead of becoming the next slice.
+
 ## Hard Payload Boundary
 
 The installed Steam game and original `BEA.exe` remain immutable. Use copied
@@ -149,6 +214,12 @@ in scope for the durable campaign and their exact target is known:
   campaign slice calls for them, applicable gates pass, and evidence supports
   the published claim.
 
+This policy records the maintainer's explicit standing decisions; it does not
+manufacture authority merely by being read or by a goal being resumed. Every
+use still depends on the still-current user scope, the named action family,
+and the exact verified target. A later user instruction can narrow, revoke, or
+supersede that standing authority.
+
 Before any copied-runtime, copied-executable, copied-profile, debugger, input,
 or process-memory mutation, root resolves path/hash/process-image identity and
 proves the target is the intended copy rather than the installed game or
@@ -200,8 +271,8 @@ Fresh maintainer authority is required for:
   outside an invocation-owned disposable root.
 
 Installed-game/original-executable mutation and proprietary-payload
-publication remain prohibited rather than approval-gated. Host/Join remains
-disabled until its distinct-endpoint and source-bound causality gates are
+publication remain prohibited rather than approval-gated. **Host/Join remains disabled**
+until its distinct-endpoint and source-bound causality gates are
 accepted. Standing online or publication authority cannot substitute for those
 product-evidence gates.
 
@@ -210,13 +281,22 @@ product-evidence gates.
 - Steam static evidence can establish bounded released-code identity and
   structure; controlled copied-runtime evidence establishes observed causality,
   behavior, and measured values.
-- WinUI 3 remains the primary Windows product lane. Electron, WPF, and the old
-  Python GUI/CLI remain archived/reference-only.
+- WinUI 3 remains the community front door and released Windows toolkit. It is
+  expected to discover, configure, launch, and explain reconstruction and
+  retail-enhancement workflows as those consumers become ready. Electron,
+  WPF, and the old Python GUI/CLI remain archived/reference-only.
 - Python remains active for RE, validation, and local lab tooling.
 - `rebuild/OnslaughtRebuild.Core` owns deterministic simulation truth. Godot is
   a presentation/input adapter over Core, not evidence of retail behavior.
-- The active rebuild is RE-informed original code, not parity-complete and not
-  a strict clean-room implementation.
+- The active rebuild is evidence-backed, RE-informed original code, not
+  parity-complete and not a strict clean-room implementation. It is separate
+  by architecture and license but belongs to the shared product strategy.
+- User-owned retail assets may be extracted or imported through local-only
+  workflows. Proprietary payloads remain ignored/local and are never bundled
+  into source or community releases.
+- WinUI may discover, configure, and launch the separately licensed rebuild;
+  GPL reconstruction code/artifacts retain their GPL obligations, while no
+  proprietary retail bytes enter the GPL source tree or either release.
 - Historical proof plans are evidence, not current authority. Prefer executable
   code, focused tests, bounded contracts, or one exact blocker over recursive
   readiness/checklist chains.
@@ -228,17 +308,19 @@ AGENTS → slice-local evidence**.
 
 For each slice:
 
-1. Check repository identity, current tip, dirty paths, and the active baton.
-2. Read the directly relevant source, policy, provenance, and proof boundary.
-3. Make focused changes without overwriting unrelated work.
-4. Add or extend a proportional automated harness when behavior or a durable
+1. Record the primary outcome, user outcome, evidence question, exact consumer,
+   acceptance, non-claims, and next link in the active baton.
+2. Check repository identity, current tip, dirty paths, and the active baton.
+3. Read the directly relevant source, policy, provenance, and proof boundary.
+4. Make focused changes without overwriting unrelated work.
+5. Add or extend a proportional automated harness when behavior or a durable
    operating contract changes.
-5. Run the smallest gate set that proves the change and disclose skipped proof
+6. Run the smallest gate set that proves the consumer and disclose skipped proof
    classes.
-6. Update public-safe docs/state only to verified truth; keep raw evidence
+7. Update public-safe docs/state only to verified truth; keep raw evidence
    ignored/local.
-7. Commit and push a green wave when useful. Never force-push.
-8. Leave `goal.md` with the next safe executable Current Slice and continue
+8. Commit and push a green wave when useful. Never force-push.
+9. Leave `goal.md` with the next safe executable Current Slice and continue
    unless the user asked to stop.
 
 Record a blocker with a specific code, evidence, prior attempt, owner, and next
@@ -251,3 +333,9 @@ Do not mark the campaign complete merely because one or several slices landed.
 Completion requires the exit criteria in `goal.campaign.md`, verified green
 state, a resume-ready backlog/non-claim record, and human or root integration
 acceptance.
+
+“No meaningful authorized product work remains” is true only after root has
+walked every tier of the consumer-first picker and recorded an exact blocker,
+owner, next action, and reopen condition for every remaining material item.
+One blocked slice, one unavailable runtime, or one exhausted evidence path is
+never sufficient while another safe product consumer remains actionable.

@@ -1,5 +1,24 @@
 # Current Capabilities
 
+## Product Portfolio At A Glance
+
+The project now manages **three shipping outcomes** rather than treating
+research volume as delivery:
+
+1. the **community WinUI Toolkit**, which remains the released community front
+   door for preservation, saves/options, safe-copy patching, media, and Lore;
+2. a playable, evidence-backed, RE-informed original-code reconstruction under
+   `rebuild/`, currently represented by deterministic Core/headless verification
+   and the procedural Godot First Flight client; and
+3. retail enhancements for copied installations: useful tools, patches, mods,
+   and the explicit **original-game multiplayer** epic.
+
+Static RE, runtime measurements, source references, assets, documentation, and
+harnesses support those outcomes. They do not prove retail parity or count as
+shipped product increments without a named consumer. WinUI does not yet manage
+First Flight, the reconstruction is not retail-complete, and Host/Join remains
+disabled.
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`); `0x004081c0` → `CBattleEngine__Move` (was `CMonitor__Process`); `0x00410c50` → `CBattleEngineJetPart__Move` (was `CMonitor__UpdateMovementTransitionAndEffects`); `0x004dac90` proposed correction rejected; known-stale live metadata retained for separate correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->

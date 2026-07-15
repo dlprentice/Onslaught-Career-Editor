@@ -19,7 +19,7 @@ control, release, or project-scoped external action already covered there.
 ## Verbatim `/goal` Objective
 
 ```text
-Continuously reverse engineer and reconstruct Battle Engine Aquila through an evidence-backed, multi-slice campaign. Resume from the repository’s current baton, autonomously pursue the highest-value actionable work across retail RE, deterministic Core/Godot reconstruction, WinUI tooling, assets, documentation, and regression harnesses. Translate static analysis and explicitly authorized copied-runtime observations into bounded behavior contracts before implementing retail-derived behavior. Preserve provenance, honest non-claims, tests, and resume-ready state after every slice. Keep the installed game and original BEA.exe immutable, proprietary evidence local, and release/online/destructive actions separately authorized. Continue until campaign exit criteria, a human pause, or a genuine authority blocker; one advancement is progress, not goal completion. Operate unattended: make conservative, reversible assumptions and build automated visual, behavioral, capture/replay, and regression harnesses wherever they can replace subjective human verification. Do not pause for ordinary clarification. If one slice genuinely needs unavailable authority or human interaction, record the exact blocker and continue with the next safe, independent campaign slice. Stop only when no meaningful authorized work remains.
+Continuously reconstruct and enhance Battle Engine Aquila through an evidence-backed, product-coupled campaign. Operate one portfolio with three shipping outcomes: the community WinUI Toolkit, a playable RE-informed original-code reconstruction, and meaningful tools, patches, mods, and multiplayer progress for copied retail installations. Treat static analysis, pinned source, copied-runtime observation, lore, asset research, documentation, and harnesses as inputs rather than ends. Every slice must name its primary product outcome, user value, exact consumer, acceptance evidence, and non-claims. Do not run consecutive research-only slices unless a concrete dependency requires it; absent such a dependency, deliver a user-observable capability within every two accepted slices. Translate retail-derived behavior through bounded evidence contracts before consumer implementation, then close the product increment rather than the proof artifact. Keep the installed game and original BEA.exe immutable, proprietary payloads local, Host/Join evidence-gated, and spending or genuinely destructive operations separately authorized. Operate unattended with conservative reversible assumptions, automated behavioral/visual verification, prompt integration, and resume-ready state. If one slice blocks, record the exact reason and continue another safe shipping outcome. Stop only at an accepted phase boundary, a human pause, or when no meaningful authorized product work remains; one advancement is progress, not campaign completion.
 ```
 
 ## Operating Notes
@@ -30,7 +30,7 @@ Continuously reverse engineer and reconstruct Battle Engine Aquila through an ev
   `coordination/` activates only when root deliberately creates concurrent
   writers or a shared-resource wave.
 - A slice advancement is not campaign completion. After closeout, select and
-  execute the next safe material slice.
+  execute the next safe product-coupled slice.
 - A blocked slice is recorded and skipped while another authorized independent
   advancement exists. Mark the whole goal blocked only when no meaningful
   authorized work remains.

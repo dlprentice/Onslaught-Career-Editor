@@ -1,201 +1,228 @@
-# Full Reconstruction Campaign
+# Product-Coupled Battle Engine Aquila Campaign
 
-Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-15 (single-root campaign foundation landed; target-acquisition static contract remains current)
+Status: **PAUSED durable campaign — awaiting user goal resume**
+Last updated: 2026-07-15 (product-coupled portfolio installed; M2.3 work preserved)
 
-Policy: [`goal.policy.md`](goal.policy.md)  
-Mutable baton: [`goal.md`](goal.md)  
-Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)
+Policy: [`goal.policy.md`](goal.policy.md)
+Mutable baton: [`goal.md`](goal.md)
+Slash goal: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)
 
-This file is the **long-horizon roadmap** for reverse-engineering, rebuilding,
-and productizing Battle Engine Aquila work in this repo. Agents mutate
-[`goal.md`](goal.md) every cycle; they update **this** file when a milestone
-status, priority, or exit criterion changes—not for routine slice chatter.
+This roadmap coordinates one portfolio with three shipping outcomes:
 
-## North star
+1. the community WinUI Toolkit;
+2. a playable RE-informed original-code reconstruction; and
+3. meaningful retail tools, patches, mods, and original-game multiplayer
+   progress.
 
-Produce a growing, **evidence-backed reconstruction** of Battle Engine Aquila:
+Reverse engineering, source crosswalks, runtime measurement, assets, lore,
+documentation, and harnesses support those outcomes. They do not replace them.
+The mutable baton owns the current slice; this file changes only when product
+priority, milestone state, or an exit criterion materially changes.
 
-| Lane | North-star outcome |
-|------|--------------------|
-| **RE** | Source-named systems mapped with static + copied-runtime proof, contracts in retail units |
-| **Rebuild** | Deterministic Core + Godot adapter implementing accepted contracts (RE-informed, not fake clean-room) |
-| **WinUI 3** | Primary toolkit: safe-copy, patch/mod, saves, media/lore, honest labels for proven vs research |
-| **Lore** | Searchable, linked, packageable narrative/history without hard payloads |
-| **Harnesses** | Automated unit/integration/runtime gates so each land stays green |
+## Current product truth
 
-**Not** the north star: mutate Steam install, claim parity-complete retail clone,
-player-ready online, public release/tag without separate authority, or thrash on
-known hard blockers (e.g. MSB4278 native AYA DLLs) without new evidence.
+- **WinUI Community:** WinUI 3 is the released community front door. The
+  current public `v1.0.9` toolkit supports preservation, saves/options,
+  safe-copy patching, media, and Lore. It does not yet provide a coherent
+  Reconstruction surface or manage First Flight.
+- **Playable Reconstruction:** `rebuild/` contains deterministic Core,
+  headless replay/hash verification, and a playable procedural Godot First
+  Flight client. Motion scalars are partially retail-derived; resources,
+  combat, targeting, world, missions, presentation, and retail content remain
+  incomplete or synthetic as documented by their contracts.
+- **Retail Enhancement:** copied-target safe patching and a 29-row catalog are
+  established, but most shipped value is compatibility, presentation, or lab
+  tooling. Original-game multiplayer is an explicit strategic epic, not a
+  released capability; Host/Join stays disabled.
+- **Retail assets:** local user-owned asset extraction/import is supported only
+  in bounded forms. Proprietary payloads are not tracked or redistributed, and
+  complete-corpus extraction has not been proven.
+- **Split-screen expectation:** retained source/tests currently shape P1 as the
+  top viewport and P2 as the bottom viewport. No fresh native copied-runtime
+  P1/P2 ordering test has occurred in this strategy rewrite.
 
-## Operating rules (summary)
+## Campaign operating rules
 
-Full loop contract lives in `goal.policy.md`. Campaign-specific:
+1. One Current Slice is active after resume. It names a primary outcome, user
+   outcome, evidence question, exact consumer, acceptance, non-claims, and
+   next link.
+2. Retail-derived behavior reaches Core, Godot, WinUI, or a retail patch only
+   through evidence proportionate to the claim. A behavior contract does not land
+   a product milestone; its consumer must land too.
+3. No second consecutive research-only slice is selected without a concrete
+   dependency on an unsafe or misleading consumer implementation. Absent that
+   dependency, every two accepted slices include a user-observable result.
+4. Automated behavioral, visual, capture/replay, native, and regression
+   evidence is built with the consumer where it can replace subjective human
+   verification.
+5. If one slice blocks, record the exact blocker and move to another safe
+   shipping outcome. Do not manufacture paperwork or shallow UI to satisfy the
+   visible-result rule.
+6. Keep installed game files and the original `BEA.exe` immutable; operate on
+   copied targets and local user-owned payloads only.
 
-1. **Single-root default:** the active root task owns implementation,
-   integration, validation, state, and acceptance. `coordination/` is optional
-   and activates only for deliberately concurrent writers or resource waves.
-2. **One active slice at a time** in `goal.md`. Each slice closes with a
-   verified advancement or exact skipped blocker, while the campaign continues
-   until accepted exit criteria, a human pause, or no meaningful authorized
-   work remains.
-3. **Agent chooses the next slice** using the priority order below after each
-   `ADVANCEMENT` or resolved blocker—not only when a human rewrites the slice.
-4. **Measurement before Core** for retail-derived scalars/behavior: dual-accept
-   copied-runtime (or equivalent named gate) → public contract → translation
-   policy → Core/goldens/tests.
-5. **Harness with the work:** every new behavior path gets the smallest durable
-   test/checker that would catch regression; prefer `tools/*_test.py`, AppCore
-   tests, `npm run test:rebuild`, focused WinUI gates.
-6. **Lab hygiene:** safe-copy while running; strip bulky trees after closeout;
-   keep compact evidence only (`runtime-proof-lab-retention.md`).
-7. **Surface balance:** do not starve WinUI or lore for rebuild-only sprints, or
-   the reverse, for more than ~3 consecutive slices unless a hard dependency
-   forces it—record the bias in `goal.md`.
+Evidence debt, contracts, checkers, documentation, and standalone harnesses
+remain research-only for these rules unless their exact consumer and
+acceptance land in the same slice. A user-observable result must change an
+invocable WinUI, playable-reconstruction, or copied-retail user path; internal
+receipts, operator-only proof UI, disabled controls, or test counts do not
+qualify alone.
+The result must materially improve and end-to-end accept the named user task;
+navigation-only shells, no-op commands, inert scaffolds, and unusable output do
+not qualify.
 
-## Priority order (default next-slice picker)
+## Consumer-first next-slice picker
 
-When choosing the next slice, walk this list top-down; take the first item that
-is **actionable**, **not closed**, and **not blocked without a new attempt**:
+After each closeout, choose the highest-value actionable item in this order:
 
-1. **Unblock / hygiene** — disk explosion, broken gates, false CI, unsafe path
-2. **Rebuild-grade RE contract** ready to land (measurement done, Core pending)
-3. **Next scalar/system measurement** that unblocks Core fidelity
-4. **Core + goldens + harness** for an accepted contract
-5. **Godot/Client adapter** only as needed for the new Core truth
-6. **WinUI product** — safe-copy, patch honesty, save lab, media, Home focus if
-   native proof is authorized
-7. **Lore / packaging** — links, pack freshness, offline search quality
-8. **Asset/AYA pipeline** — only if extractor/tooling blocker cleared
-9. **Online research** — docs/proof ladders only; Host/Join stays disabled
-10. **Docs/state truth** — only when it unblocks the next real slice
+1. correct a shipped safety, data-integrity, or dangerously misleading defect;
+2. pay **actionable evidence debt** that blocks a named consumer and cannot be
+   implemented honestly yet;
+3. complete the nearest playable reconstruction vertical in Core plus its
+   headless/Godot acceptance path;
+4. deliver a high-value retail enhancement or advance the original-game
+   multiplayer epic through a bounded copied-target experiment;
+5. integrate a proven reconstruction or retail workflow into the community
+   WinUI Toolkit and, when ready, its community release;
+6. advance local retail asset/mission import that feeds a named playable or
+   WinUI consumer; or
+7. improve community knowledge only when it directly supports use,
+   contribution, rights/provenance clarity, or the next product decision.
 
-Skip thrashing: if the same blocker repeats without new evidence, escalate via
-`BLOCKED_*` with owner/next_action, do not invent a fifth identical attempt.
+Selection considers user value, dependency criticality, uncertainty reduction,
+reversibility, and verification cost—not research counts. A user-observable
+result changes what a user can play, see, configure, import, patch, or reliably
+verify. Documentation alone qualifies only when the documentation itself is
+the community-facing product need.
 
 ## Milestone map
 
 Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 
-### M0 — Operating system (landed foundation)
+### P0 — Product integration foundation
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M0.1 | Public primary repo + `AGENTS.md` / validation matrix | landed |
-| M0.2 | WinUI + AppCore + CLI primary product lane | landed |
-| M0.3 | Rebuild Core + Headless goldens + Godot First Flight | landed |
-| M0.4 | `/goal` policy + mutable baton + lab retention hygiene | landed |
-| M0.5 | Walker + jet scalar contracts → Core speeds | landed |
-| M0.6 | Single-root operating foundation + optional coordination overlay | landed |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P0.1 | Single-root authority, safe copied-target boundary, mutable baton | landed | Coordination is optional and need-shaped. |
+| P0.2 | Product-coupled slice contract and regression guard | landed | Canonical authorities and both focused strategy/foundation guards are aligned; campaign remains paused. |
+| P0.3 | Deterministic Core/client/headless architecture and First Flight | landed | Foundation only, not retail parity. |
+| P0.4 | WinUI/AppCore safe-copy and community release foundation | landed | Latest published app is `v1.0.9`. |
 
-### M1 — Motion & vehicle fidelity (rebuild-grade)
+### P1 — Playable reconstruction verticals
 
-| ID | Milestone | Status | Notes |
-|----|-----------|--------|-------|
-| M1.1 | Walker forward scalar | landed | v2 + `WalkerSpeedPerTick=100` |
-| M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
-| M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3`; Core LookX integrate |
-| M1.4 | Strafe / lateral scalar | landed | strafe-p02 dual-accept; v1 + policy; `WalkerStrafeSpeedPerTick=101` |
-| M1.5 | Transform morph timing + energy gate | landed | xform-p03 dual-accept; `MorphToJetSettleTicks=148` |
-| M1.6 | Friction / coast / release models beyond scalar speed | in_progress | offline half-life scaffold landed; live dual-accept pending |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P1.1 | Procedural First Flight movement/transform vertical | landed | Playable Core/Godot foundation with bounded measured motion constants. |
+| P1.2 | Coherent energy + shield resource loop | in_progress | Energy drain is consumed; shield copied-runtime pair and Core/Godot consumer remain. |
+| P1.3 | Firing, projectile, damage, and destruction loop | in_progress | Current behavior is synthetic/provisional; retail evidence and consumer goldens remain. |
+| P1.4 | Deterministic target selection and lock feedback | in_progress | M2.3 static contract may prevent a dangerous misimplementation; runtime-required behavior and Core/Godot consumer remain. |
+| P1.5 | Camera, world, mission, enemy, and progression verticals | open | Select the smallest playable loop after resources/combat/targeting. |
+| P1.6 | Automated playable acceptance | in_progress | Headless hashes and native Godot smoke exist; grow with each vertical. |
 
-### M2 — Combat & resources
+### P2 — Community WinUI integration and releases
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | scaffolds + pair envelopes + draft policies; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 neutral-control/input-free runner and symmetric correlation gate landed; live pair pending and covered by standing campaign authority; walker regen provisional |
-| M2.3 | Target / lock behavior (bounded, evidence-first) | open |
-| M2.4 | Core combat goldens + harness expansion | open |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P2.1 | Preservation/saves/options/patch/media/Lore community front door | landed | Public `v1.0.9`; bounded native harnesses exist. |
+| P2.2 | WinUI Reconstruction surface | open | Discover, explain, configure, verify, and launch First Flight without claiming it is already bundled or retail-complete. |
+| P2.3 | WinUI local retail-content workflow | open | Guide user-owned extraction/import with provenance and local-only boundaries. |
+| P2.4 | Community release of a product-coupled increment | open | Exact artifact and claims must pass release gates; releases are not automatic. |
 
-### M3 — World, camera, UI systems (rebuild + RE)
+### P3 — Retail enhancements and mods
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M3.1 | Camera / look contracts (retail → Core/Client) | in_progress | body LookX Core/Client/Godot from turn-p02; camera scaffold offline; free-cam not Core authority |
-| M3.2 | Level load readiness gates (850-class smoke stays) | open |
-| M3.3 | Mission/script hooks as public-safe behavior contracts | open |
-| M3.4 | Godot presentation upgrades driven by Core truth only | open |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P3.1 | Safe copied-install creation, patch/restore, launch/stop | landed | Original installation and executable remain immutable. |
+| P3.2 | High-value patch/mod expansion | in_progress | Prefer a meaningful player-visible capability over catalog volume. |
+| P3.3 | Mod verification and rollback receipts | in_progress | Extend only with each new mutation contract. |
+| P3.4 | Community-facing mod discovery/presets | open | WinUI consumer; descriptions stay bounded to proof. |
 
-### M4 — Assets & extraction
+### P4 — Original-game multiplayer epic
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M4.1 | Safe Python / tracked extraction pipeline | landed / partial |
-| M4.2 | Full AYA corpus export | blocked | MSB4278 / native DLL |
-| M4.3 | Local Godot BYO mesh path (non-parity) | landed foundation |
-| M4.4 | Catalog/import product path honesty in WinUI | open |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P4.1 | P1/P2 viewport, device, state, and command ownership map | open | Fresh copied-runtime ordering/ownership test is queued; source-shaped top/bottom expectation is not runtime acceptance. |
+| P4.2 | Distinct command-source causality across separate processes/endpoints | open | Same-process or loopback evidence cannot satisfy this gate. |
+| P4.3 | Reversible transport/helper prototype for copied targets | open | No installed-game mutation; exact identity and rollback required. |
+| P4.4 | WinUI session UX, identity, invitations, lifecycle, and cleanup | open | Host/Join remains disabled until accepted causality and safety gates. |
+| P4.5 | Community multiplayer experiment/release | deferred | Requires distinct-endpoint, security, failure, and player-readiness acceptance. |
 
-### M5 — WinUI product depth
+### P5 — Retail asset and mission import
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M5.1 | Safe-copy launch / stop / patch apply-restore | landed foundation |
-| M5.2 | Patch catalog honesty + Lab UX | landed foundation |
-| M5.3 | Home native-focus acceptance | landed | unattended exact-build first-run/ready focus plus normal/760 schema-3 visual receipts |
-| M5.4 | Save Lab / options workflows polish + tests | landed | exact repo-build UIA-only first-use/options gate; 8 normal/compact captures, 2 semantically reparsed workflows, receipt-bound cleanup, zero process census |
-| M5.5 | Media library + catalog workflows | landed | exact repo-build UIA-only generated-fixture gate; 3 distinct launches, 8 normal/compact captures, independent catalog/media readback, receipt-bound cleanup, zero process census |
-| M5.6 | Release hygiene (no auto-release from campaign) | open |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P5.1 | Deterministic AYA inventory/export records | in_progress | Producer prerequisites exist; complete-corpus extraction/export is unproven. |
+| P5.2 | Local user-owned mesh/texture presentation in Godot | in_progress | Bounded local mesh path exists; identity/material/animation fidelity remains unresolved. |
+| P5.3 | Mission/world data model and playable importer | open | Parser evidence must feed an exact Core/Godot consumer. |
+| P5.4 | WinUI local import orchestration | open | Do not bundle or publish proprietary assets. |
 
-### M6 — Lore & knowledge
+### P6 — Community knowledge supporting outcomes
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M6.1 | Lore pack generation + offline search | landed foundation |
-| M6.2 | Link integrity / browser-opening labels | landed foundation |
-| M6.3 | Curated BOOK / index freshness vs RE corpus | open |
-| M6.4 | Provenance/rights non-claims kept accurate | open |
+| ID | Consumer-complete increment | Status | Current boundary |
+|---|---|---|---|
+| P6.1 | Searchable packaged Lore/RE reading experience | landed foundation | Breadth is not editorial completeness or canon proof. |
+| P6.2 | Contributor-facing evidence/provenance maps | in_progress | Maintain only when they unblock safe implementation or review. |
+| P6.3 | Player/modder guides tied to shipped workflows | open | Couple guides to WinUI, reconstruction, mod, or multiplayer consumers. |
+| P6.4 | Rights and non-claim clarity | continuous | Repository licenses cover only their named material. |
 
-### M7 — Online research (not product netplay)
+## Immediate product-coupled sequence after resume
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M7.1 | Distinct-endpoint command-source proof ladder | open |
-| M7.2 | Host/Join remains disabled until accepted proofs | in force |
-| M7.3 | Docs only until causality proofs land | open |
+1. **Finish M2.3 narrowly:** accept or block the preserved target-acquisition
+   static contract as a **dangerous-misinterpretation exception**. It does not
+   land targeting; it must queue the runtime question and Core consumer.
+2. **Complete the resource vertical:** run exactly two authorized copied-runtime
+   shield attempts. The accepted measurement lifecycle defines when an attempt
+   starts and counts; this strategy neither redefines nor expands that cap, and
+   no third runtime attempt is authorized. If both attempts accept, publish the bounded
+   contract, intentionally map the value into Core, expose the behavior in
+   Godot, and verify the playable resource loop. If either fails, publish no
+   behavior contract and advance another outcome.
+3. **Add WinUI Reconstruction:** give community users a truthful surface to
+   discover, configure, verify, and launch the playable companion.
+4. **Exercise the multiplayer foundation:** run the bounded P1/P2 viewport and
+   command-ownership experiment, then choose the next causality consumer from
+   evidence rather than assumption.
+5. **Continue consumer-complete combat/targeting or retail-mod increments**
+   using the picker, keeping asset/mission import attached to a playable or
+   WinUI consumer.
 
-### M8 — Harness maturity (continuous)
+## Closed measurement ledger
 
-| ID | Milestone | Status |
-|----|-----------|--------|
-| M8.1 | Runtime pair runners + unit tests (no live BEA for unit) | landed foundation |
-| M8.2 | Lab strip after closeout | landed |
-| M8.3 | Per-system regression checkers for each landed contract | landed | walker+jet+yaw+strafe JSON regression CLI (2026-07-15) |
-| M8.4 | Expand `npm` scripts only when a gate is re-run often | open |
+These are accepted evidence prerequisites already consumed by deterministic
+Core. They remain bounded retail findings, not proof of full reconstruction:
 
-## Campaign exit criteria (when `/goal` may stop)
+| System | Public contract / consumer | Private pair |
+|---|---|---|
+| Walker forward | `walker-forward-scalar-response-v2` → `WalkerSpeedPerTick` | p27 |
+| Jet thrust | `jet-forward-scalar-response-v1` → `JetSpeedPerTick` | jet-p06 |
+| Walker Look/Left yaw | `walker-turn-yaw-scalar-response.v1` → Core look rate | turn-p02 |
+| Walker strafe | `walker-strafe-lateral-scalar-response.v1` → Core strafe rate | strafe-p02 |
+| Walker→jet settle | `walker-transform-morph-timing.v1` → Core morph timing | xform-p03 |
+| Jet energy drain | energy scalar v1 → `JetEnergyDrainPerTick=17` | energy-p02 |
 
-The campaign may declare **phase-complete** (not “game fully reverse-engineered”)
-when **all** hold:
+Shield regeneration, fire cooldown, projectile speed, coast/friction, target
+selection causality, camera presentation, and P1/P2 ownership are not in this
+closed ledger.
 
-1. M1 motion scalars needed for playable First Flight fidelity are **landed**
-   or **deferred** with written non-claims.
-2. M2 combat has at least one dual-accept or static-backed Core contract for
-   fire + projectile path, or explicit deferred non-claims.
-3. Rebuild `npm run test:rebuild` green; WinUI primary lane gates green for
-   touched product surfaces.
-4. No multi-GB unmanaged proof trees under active lab roots (hygiene policy).
-5. `goal.md` lists remaining open milestones as a **backlog**, not a silent stop.
-6. Human or the current root accepts campaign pause/phase-complete; another
-   task gains that authority only through explicit root succession.
+## Phase exit criteria
 
-**Never** auto-claim: retail parity, clean-room purity, online play-ready, or
-public release.
+The campaign may pause at an accepted phase boundary only when all hold:
 
-## Closed measurement ledger (compact)
+1. At least one new playable vertical beyond the procedural foundation is
+   consumer-complete in Core and its headless/Godot acceptance path.
+2. WinUI exposes at least one truthful reconstruction or new retail-enhancement
+   workflow useful to the community.
+3. At least one meaningful retail enhancement or multiplayer epic gate has
+   advanced through evidence to an executable consumer or an exact durable
+   blocker.
+4. Active evidence debt names its consumer or has moved to backlog; no open
+   contract/checker chain is being counted as a landed product milestone.
+5. Touched product gates are green, proprietary payloads remain local, the
+   installed game/original executable remain immutable, and `goal.md` is
+   resume-ready.
+6. The current root or maintainer accepts the phase boundary. Full retail
+   parity, strict clean-room status, player-ready online play, or exhaustive
+   extraction are never inferred from phase completion.
 
-| System | Contract | Core | Private label |
-|--------|----------|------|---------------|
-| Walker forward | `walker-forward-scalar-response-v2` | `WalkerSpeedPerTick=100` | p27 |
-| Jet thrust | `jet-forward-scalar-response-v1` | `JetSpeedPerTick=381` | jet-p06 |
-| Walker Look/Left yaw | `walker-turn-yaw-scalar-response.v1` | `WalkerLookYawRateMilliRadPerTick=3` | turn-p02 |
-| Walker Movement/Left path | `walker-strafe-lateral-scalar-response.v1` | `WalkerStrafeSpeedPerTick=101` | strafe-p02 |
-| Walker morph→jet settle | `walker-transform-morph-timing.v1` | `MorphToJetSettleTicks=148` | xform-p03 |
-
-## How agents update this file
-
-- After landing a milestone: set status → `landed`, one-line note, date.
-- After durable blocker: status → `blocked`, link `goal.md` BLOCKED record.
-- After reprioritizing: edit priority notes; do not rewrite history.
-- Do **not** paste full attempt logs here—keep those in private compact roots
-  or RE proof summaries.
+One advancement is progress, not campaign completion. A blocked slice is not
+a blocked portfolio while another safe product outcome remains actionable.

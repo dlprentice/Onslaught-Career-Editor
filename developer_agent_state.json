@@ -1,7 +1,7 @@
 {
   "lastUpdated": "2026-07-15",
   "routingPolicy": "Single-root default: the current root owns integration, validation, state, commits/pushes, consequential actions, and final acceptance. Subagents/consults are bounded advisers unless root explicitly assigns a non-overlapping write set; coordination/worktrees/resource claims activate only for deliberate concurrency.",
-  "currentFocus": "Full reconstruction campaign; M0.6 single-root operating foundation accepted; current slice remains M2.3 target-acquisition static contract; shield live measurement is standing-authorized but still pending exactly two copied-target attempts.",
+  "currentFocus": "Product-coupled reconstruction campaign is paused awaiting user goal resume; preserved M2.3 target-acquisition static-contract work remains the resume target and is evidence debt for a named Playable Reconstruction consumer.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
     "goalPolicy": "goal.policy.md",
@@ -165,9 +165,9 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Consolidate existing pinned-source and Steam-static player target-selection evidence into one public-safe machine-readable M2.3 contract and regression checker, preserving runtime non-claims.",
-    "When selected by campaign priority, execute exactly two copied-runtime walker shield attempts under standing campaign authority; if either attempt fails, publish no behavior contract.",
-    "Only if both shield attempts pass, derive the bounded shield behavior contract and translation policy before any deterministic Core shield change.",
-    "Restore the legacy native extractor runtime through an authorized supported toolchain path, then produce real six-lane terminal outcomes and run the bounded ignored/local reconciliation; do not promote surface accounting into exhaustive-target or successful-extraction claims."
+    "After the user resumes the goal, finish or exactly block preserved M2.3 as a dangerous-misinterpretation exception and queue its deterministic target/lock consumer rather than claiming targeting landed.",
+    "Then run exactly two copied-runtime shield attempts; if either attempt fails, publish no behavior contract, while only a valid pair may reach the shield consumer in deterministic Core and Godot.",
+    "Deliver a WinUI Reconstruction community surface that truthfully discovers, configures, verifies, and launches the playable companion.",
+    "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join."
   ]
 }
