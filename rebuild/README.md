@@ -157,8 +157,13 @@ untrusted software beside the build.
   latching for toggle/reset; and
 - a Godot view that renders Core snapshots but cannot mutate Core state.
 
-These are first-slice mechanics, not claims that retail values, timing,
-handling, combat, mission behavior, or visuals match Battle Engine Aquila.
+Dual-accepted retail→Core motion constants are documented under
+`reverse-engineering/game-mechanics/` (walker/jet forward, strafe, Look yaw,
+morph settle). Energy drain/regen, shield rates, fire cooldown, projectile
+speed, and coast/friction remain provisional scaffolds until dual-accept.
+Core agreement never re-proves retail. Arena layout and presentation remain
+architecture-prototype choices—not claims that mission behavior or visuals
+match Battle Engine Aquila.
 
 ## Input And Tick Semantics
 
