@@ -439,6 +439,22 @@ class MeasurementTests(unittest.TestCase):
             self.m.sampler.MEASURE_ENERGY, self.m.sampler.VEHICLE_JET
         )
 
+    def test_turn_and_strafe_require_walker_vehicle(self):
+        with self.assertRaisesRegex(ValueError, "requires walker"):
+            self.m.validate_measure_vehicle(
+                self.m.sampler.MEASURE_TURN, self.m.sampler.VEHICLE_JET
+            )
+        with self.assertRaisesRegex(ValueError, "requires walker"):
+            self.m.validate_measure_vehicle(
+                self.m.sampler.MEASURE_STRAFE, self.m.sampler.VEHICLE_JET
+            )
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_TURN, self.m.sampler.VEHICLE_WALKER
+        )
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_STRAFE, self.m.sampler.VEHICLE_WALKER
+        )
+
     def test_source_has_no_outer_hard_timeout_for_lifecycle_owner(self):
         source = self.m.MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("timeout=ATTEMPT_DEADLINE_SECONDS", source)
