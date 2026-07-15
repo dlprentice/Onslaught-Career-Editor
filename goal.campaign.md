@@ -1,7 +1,8 @@
 # Full Reconstruction Campaign
 
 Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-14 (marathon: LookX/Core+Client, energy/shield offsets, M1.6/M2 scaffolds)  
+Last updated: 2026-07-14 (shield input-free live readiness; native visual harness next)
+
 Policy: [`goal.policy.md`](goal.policy.md)  
 Mutable baton: [`goal.md`](goal.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)
@@ -97,7 +98,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | scaffolds + pair envelopes + draft policies; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 live pending; walker regen provisional |
+| M2.2 | Damage / hull / shield regeneration contracts | in_progress | **jet energy drain dual-accepted energy-p02 → JetEnergyDrainPerTick=17**; shield BE+0x100 neutral-control/input-free runner and symmetric correlation gate landed, live pair authority-blocked; walker regen provisional |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
 
