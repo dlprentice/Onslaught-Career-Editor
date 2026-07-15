@@ -33,6 +33,11 @@ class MeasureModeCatalogTests(unittest.TestCase):
         # Offline modes must not collide with live MEASURE_MODES.
         self.assertTrue(names.isdisjoint(catalog.mode_names()))
 
+    def test_full_catalog_report_shape(self) -> None:
+        report = catalog.full_catalog_report()
+        self.assertEqual(5, len(report["liveMeasureModes"]))
+        self.assertEqual(5, len(report["offlineHarnesses"]))
+
 
 if __name__ == "__main__":
     unittest.main()
