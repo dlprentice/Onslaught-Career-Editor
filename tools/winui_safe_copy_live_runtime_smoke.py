@@ -1089,10 +1089,14 @@ static void PokeWalkerKeyDown(int processId, long moduleBase, byte virtualKey, b
 
 static void PokeWalkerForwardKeys(int processId, long moduleBase, byte value)
 {
-    // Options may index KeyOn by VK or by scan; also re-latch default Up-arrow.
+    // Options may index KeyOn by VK or by scan; also re-latch default Up-arrow
+    // for forward measure. Turn measure must NOT re-latch Up (that forces Forward).
+    string measureMode = (Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward")
+        .Trim().ToLowerInvariant();
     PokeWalkerKeyDown(processId, moduleBase, WalkerForwardVirtualKey, value);
     PokeWalkerKeyDown(processId, moduleBase, WalkerForwardScanCode, value);
-    PokeWalkerKeyDown(processId, moduleBase, WalkerForwardArrowVk, value);
+    if (measureMode != "turn")
+        PokeWalkerKeyDown(processId, moduleBase, WalkerForwardArrowVk, value);
 }
 
 /// <summary>
@@ -2997,24 +3001,43 @@ static int RunWalkerProfilePreparationPhase()
                 LaunchArguments: launchArguments, ProfilePresetId: null));
         // Adapter holds scan-code Q. Default config-2 keyboard maps do not bind
         // Movement/Forward to Q (pair-09: control stayed 0, position static).
-        // Patch only the copied defaultoptions.bea so P1 Forward = Q.
+        // Patch only the copied defaultoptions.bea so the measure channel uses Q.
+        // ONSLAUGHT_LIVE_WALKER_MEASURE=turn binds Look/Left=Q for yaw; else Forward=Q.
+        string measureMode = (Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward")
+            .Trim().ToLowerInvariant();
+        bool turnMeasure = measureMode == "turn";
+        ConfigurationKeybindRow measureRow = turnMeasure
+            ? new ConfigurationKeybindRow
+            {
+                // Look/Left entry 0x19 — yaw/look left for turn-rate scalar path.
+                GroupLabel = "Look",
+                ActionLabel = "Left",
+                EntryId = 0x19,
+                KeyboardDeviceCode = 9u,
+                AllowLookMouse = true,
+                CurrentPlayer1Token = "",
+                CurrentPlayer2Token = "",
+                Player1Token = "Q",
+                Player2Token = "E",
+            }
+            : new ConfigurationKeybindRow
+            {
+                GroupLabel = "Movement",
+                ActionLabel = "Forward",
+                EntryId = 0x1f,
+                KeyboardDeviceCode = 9u,
+                CurrentPlayer1Token = "",
+                CurrentPlayer2Token = "",
+                Player1Token = "Q",
+                Player2Token = "E",
+            };
         GameProfileControlOptionsService.ApplyToSafeCopy(
             new GameProfileControlOptionsRequest(
                 ProfileRoot: prepared.TargetGameRoot,
                 AppOwnedProfilesRoot: profilesRoot,
                 KeybindRows: new[]
                 {
-                    new ConfigurationKeybindRow
-                    {
-                        GroupLabel = "Movement",
-                        ActionLabel = "Forward",
-                        EntryId = 0x1f,
-                        KeyboardDeviceCode = 9u,
-                        CurrentPlayer1Token = "",
-                        CurrentPlayer2Token = "",
-                        Player1Token = "Q",
-                        Player2Token = "E",
-                    },
+                    measureRow,
                     // Transform (morph walker↔jet) for jet-mode scalar measurement.
                     // Entry id 0x21 is "Others: Transform" in options catalog.
                     new ConfigurationKeybindRow
@@ -3031,7 +3054,9 @@ static int RunWalkerProfilePreparationPhase()
                 }));
         WriteNewCanaryText(receiptPath, artifactRoot, JsonSerializer.Serialize(new {
             passed = true, prepared.TargetGameRoot, prepared.ExecutablePath, prepared.ManifestPath,
-            forwardBoundToQ = true,
+            measureMode,
+            forwardBoundToQ = !turnMeasure,
+            lookLeftBoundToQ = turnMeasure,
             transformBoundToT = true,
         }, new JsonSerializerOptions { WriteIndented = true }));
         return 0;
@@ -3308,6 +3333,7 @@ static int RunWalkerTrajectoryAttempt()
             WorkingDirectory = Path.GetDirectoryName(adapterPath)!,
         };
         string vehicleMode = Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_VEHICLE") ?? "walker";
+        string measureModeAdapter = Environment.GetEnvironmentVariable("ONSLAUGHT_LIVE_WALKER_MEASURE") ?? "forward";
         adapterCommand = new[] {
             adapterPath, "observe-one", "--attempt", attempt.ToString(System.Globalization.CultureInfo.InvariantCulture),
             "--receipt", runtimeReceiptPath, "--expected-receipt-sha256", receiptSha256,
@@ -3315,6 +3341,7 @@ static int RunWalkerTrajectoryAttempt()
             "--status-output", observerStatusPath,
             "--authorized-private-root", artifactRoot,
             "--vehicle", vehicleMode,
+            "--measure", measureModeAdapter,
         };
         foreach (string argument in adapterCommand)
             adapterStart.ArgumentList.Add(argument);

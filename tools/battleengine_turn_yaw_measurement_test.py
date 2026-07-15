@@ -91,6 +91,32 @@ class AnalyzeAndEnvelopeTests(unittest.TestCase):
         self.assertEqual(0x278, turn.BATTLE_ENGINE_YAW_AXIS_OFFSET)
         self.assertEqual(1.5, turn.SOURCE_GROUND_TURN_RATE_HYPOTHESIS)
 
+    def test_accepts_yaw_axis_store_rate_source_like_live_turn_p01(self) -> None:
+        """Live hold wrote ~0.09 into yaw_axis; differentiate-as-heading is ~0."""
+
+        frequency = 10_000_000
+        step = frequency // 100
+
+        def series(phase: str, n: int, axis: float) -> list[turn.YawSample]:
+            return [
+                turn.YawSample(tick=i * step, phase=phase, heading_rad=0.0, yaw_axis=axis)
+                for i in range(n)
+            ]
+
+        baseline = series("baseline", 20, 0.0)
+        hold = series("hold", 50, 0.0905)
+        release = series("release", 25, 0.01)
+        metrics = turn.analyze_turn_attempt(
+            attempt=1,
+            baseline=baseline,
+            hold=hold,
+            release=release,
+            frequency=frequency,
+            rate_source="yaw_axis_store",
+        )
+        self.assertTrue(metrics.accepted)
+        self.assertAlmostEqual(0.0905, metrics.steady_yaw_rate_rad_s, places=3)
+
 
 if __name__ == "__main__":
     unittest.main()

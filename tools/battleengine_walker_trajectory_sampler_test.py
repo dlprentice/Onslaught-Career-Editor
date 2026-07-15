@@ -63,6 +63,7 @@ def coherent_memory(*, module_base: int = 0x10000000) -> tuple[FakeMemory, int]:
     memory.put_u32(battle_engine + sampler.BATTLE_ENGINE_STATE_OFFSET, sampler.WALKER_STATE_RAW)
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_POSITION_OFFSET, (1.0, 2.0, 3.0))
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_VELOCITY_OFFSET, (0.0, 0.0, 0.0))
+    memory.put_f32(battle_engine + sampler.BATTLE_ENGINE_YAW_AXIS_OFFSET, 0.0)
     memory.put_f32(walker + sampler.WALKER_CONTROL_OFFSET, 0.0)
     memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_LEVEL_OFFSET, 850)
     memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_PLAYER_COUNT_OFFSET, 2)
@@ -419,11 +420,13 @@ class CoherentReadTests(unittest.TestCase):
         position_key = (battle_engine + sampler.BATTLE_ENGINE_POSITION_OFFSET, 12)
         first = memory.values[position_key]
         second = struct.pack("<3f", 2.0, 2.0, 3.0)
-        # Two 12-read acquisitions per pair; position is read index 5 in each.
+        # Two acquisitions per pair (walker chain + yaw_axis); position is read
+        # index 5 in each. First acquisition is 13 reads after yaw_axis field.
+        reads_per_acquire = 13
         for _ in range(sampler.MAX_COHERENCE_PAIRS):
-            pair = [{} for _ in range(24)]
+            pair = [{} for _ in range(reads_per_acquire * 2)]
             pair[5] = {position_key: first}
-            pair[17] = {position_key: second}
+            pair[5 + reads_per_acquire] = {position_key: second}
             memory.read_overrides.extend(pair)
         with self.assertRaisesRegex(sampler.SampleError, "torn"):
             sampler.read_coherent_sample(memory, module_base, tick=1, phase="baseline", slot=0)

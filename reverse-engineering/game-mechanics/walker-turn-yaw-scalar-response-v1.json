@@ -1,0 +1,99 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95YawRateRadPerSec": 0.0,
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 20
+        },
+        "responseLatencyMs": {
+          "lower": 0,
+          "upper": 30
+        },
+        "steadyYawRateRadPerSec": 0.09065712988376617
+      },
+      "receiptSha256": "2e9b80e436e71c9c75a5d3f2f77bf140fe285047fb0f8d2e2ad87c2435ae34c2",
+      "runDigest": "e585e540de973bf4e94785f241553f6ff6a68e6b9c89ffa5460d88f4ca215b30",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95YawRateRadPerSec": 0.0,
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 20
+        },
+        "responseLatencyMs": {
+          "lower": 0,
+          "upper": 20
+        },
+        "steadyYawRateRadPerSec": 0.09065712988376617
+      },
+      "receiptSha256": "04f3dedb067c4bd0f0f4b3297b5f7e5ffae35bfde6d5512d8508f251ec0aed21",
+      "runDigest": "1b6172503802887f63dbddbfab982222e56aa5730706c9b42b34c2a307348791",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    }
+  ],
+  "claim": "scalar-walker-look-left-yaw-axis-rate-response",
+  "envelope": {
+    "releaseLatencyMs": {
+      "lower": 0,
+      "upper": 20
+    },
+    "responseLatencyMs": {
+      "lower": 0,
+      "upper": 30
+    },
+    "steadyYawRateRadPerSec": {
+      "lower": 0.08159141689538955,
+      "upper": 0.09972284287214279
+    }
+  },
+  "metricUnits": {
+    "latency": "milliseconds",
+    "yawRate": "radians-per-second"
+  },
+  "nonclaims": [
+    "Measured under Look/Left bound to Q on copied defaultoptions; not all input maps.",
+    "Yaw rate is the absolute magnitude of the hypothesized BattleEngine+0x278 store during hold, not a proven SI gyroscope reading.",
+    "Source mGroundTurnRate=1.5 is NOT dual-accepted and must not authorize Core.",
+    "Does not prove body-yaw vs camera-yaw identity beyond the observed store response.",
+    "Does not prove jet turn, strafe, or full facing parity.",
+    "No conversion to Core ticks is established without the separate translation policy."
+  ],
+  "privateEvidenceLabel": "turn-p02",
+  "rateSource": "yaw_axis_store_abs",
+  "sampling": {
+    "baselineMs": 500,
+    "cadenceMs": 10,
+    "clock": "query-performance-counter",
+    "holdMs": 2000,
+    "releaseMs": 750,
+    "timingPrecisionMs": 10
+  },
+  "schemaVersion": "battleengine-walker-turn-yaw-scalar-response.v1",
+  "status": "two-accepted-fresh-attempts"
+}

@@ -16,6 +16,12 @@ public static class SimulationConstants
     // reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
     // Schema: battleengine-jet-forward-scalar-response.v1
     public const int JetSpeedPerTick = 381;
+    // Milli-radians/tick at 30 Hz ≈ 0.0907 rad/s Look/Left hold (pair turn-p02
+    // envelope [0.0816, 0.0997]). Policy:
+    // reverse-engineering/game-mechanics/walker-turn-yaw-retail-to-core-translation-policy.md
+    // Schema: battleengine-walker-turn-yaw-scalar-response.v1
+    // Not yet wired into continuous facing integration (facing still snaps).
+    public const int WalkerLookYawRateMilliRadPerTick = 3;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;
     public const int MaximumHull = 1_000;

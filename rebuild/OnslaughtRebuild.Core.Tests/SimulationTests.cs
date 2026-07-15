@@ -13,6 +13,17 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void WalkerLookYawRate_MatchesAcceptedTurnP02Translation()
+    {
+        // Dual-accept steady ≈ 0.090657 rad/s → round(ω * 1000 / 30) = 3.
+        // Policy: walker-turn-yaw-retail-to-core-translation-policy.md
+        Assert.Equal(3, SimulationConstants.WalkerLookYawRateMilliRadPerTick);
+        const double measuredRadPerSec = 0.09065712988376617;
+        int mapped = (int)Math.Round(measuredRadPerSec * 1000.0 / SimulationConstants.TicksPerSecond);
+        Assert.Equal(SimulationConstants.WalkerLookYawRateMilliRadPerTick, mapped);
+    }
+
+    [Fact]
     public void ToggleMode_UsesEnergyAndDisablesJetShield()
     {
         var simulation = new Simulation(1);

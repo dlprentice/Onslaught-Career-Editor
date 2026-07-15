@@ -19,6 +19,7 @@ import datetime as dt
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import stat
@@ -29,6 +30,7 @@ from typing import Callable, Protocol, Sequence
 
 import battleengine_walker_trajectory_sampler as sampler
 import runtime_proof_lab_hygiene as proof_hygiene
+import battleengine_turn_yaw_measurement as turn_yaw
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1112,7 +1114,8 @@ def _sample_batches(reader: ReceiptPinnedReader, guard: ReceiptRuntimeGuard,
 def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: Path,
                   reader: ReceiptPinnedReader, native: NativeApi, clock: QpcClock,
                   deadline: Deadline, authorized_private_root: Path,
-                  *, vehicle: str = sampler.VEHICLE_WALKER) -> tuple[sampler.AttemptTrace, dict[str, object]]:
+                  *, vehicle: str = sampler.VEHICLE_WALKER,
+                  measure: str = sampler.MEASURE_FORWARD) -> tuple[sampler.AttemptTrace, dict[str, object]]:
     if reader.handle is None:
         raise RuntimeError("observer handle is not open")
     guard = ReceiptRuntimeGuard(
@@ -1185,36 +1188,45 @@ def collect_trace(attempt: int, receipt: sampler.ReceiptIdentity, receipt_path: 
     hold_rows: list[sampler.RawSample] = []
     step = sampler.cadence_step_qpc(clock.frequency)
     hold_origin_box: list[int] = []
-    # Effective key-down edge is when control proves, not when the external
-    # handshake finished (handshake + control wait can exceed 250 ms).
+    # Effective key-down edge is when the measure-mode store proves, not when
+    # the external handshake finished (handshake + prove wait can exceed 250 ms).
     control_edge_box: list[int] = []
+    measure_mode = measure if measure in (sampler.MEASURE_FORWARD, sampler.MEASURE_TURN) else sampler.MEASURE_FORWARD
     for batch_start in range(0, sampler.PHASE_TARGETS["hold"], BATCH_SIZE):
         def batch(start=batch_start):
             deadline.check("hold")
             if not hold_origin_box:
                 # First batch runs only after Q-down inside execute_owned_q_window.
-                # Wait until the control store proves Forward before the hold
-                # origin so residual settle and late KeyDown delivery do not
-                # collapse the steady window to friction decay of a one-shot.
                 control_wait_deadline = time.time() + 8.0
                 proved = False
                 while time.time() < control_wait_deadline:
                     deadline.check("hold")
                     if not guard.revalidate_receipt() or not guard.foreground_matches():
                         raise sampler.AttemptError(
-                            "receipt or foreground changed while waiting for Q forward control"
+                            "receipt or foreground changed while waiting for Q measure control"
                         )
                     probe_tick = clock.now()
                     probe = sampler.read_coherent_sample(
                         reader, receipt.module_base, tick=probe_tick, phase="hold", slot=0,
                         vehicle=vehicle,
                     )
-                    if probe.control_raw == sampler.FORWARD_CONTROL_RAW:
+                    if measure_mode == sampler.MEASURE_TURN:
+                        # Look/Left or Movement/Left may not write walker mLastMoveY.
+                        # Prove on hypothesized yaw-axis store (BE+0x278) magnitude.
+                        if abs(float(probe.yaw_axis)) >= 0.05:
+                            proved = True
+                            control_edge_box.append(probe_tick)
+                            break
+                    elif probe.control_raw == sampler.FORWARD_CONTROL_RAW:
                         proved = True
                         control_edge_box.append(probe_tick)
                         break
                     time.sleep(0.02)
                 if not proved:
+                    if measure_mode == sampler.MEASURE_TURN:
+                        raise sampler.AttemptError(
+                            "yaw-axis field did not leave neutral after Q-down (turn measure)"
+                        )
                     raise sampler.AttemptError(
                         "control field did not enter forward/thrust state after Q-down"
                     )
@@ -1273,6 +1285,7 @@ def _trace_payload(trace: sampler.AttemptTrace, q_input_nonclaim: str) -> dict[s
             "tick": value.tick, "phase": value.phase, "slot": value.slot,
             "position": list(value.position), "velocity": list(value.velocity),
             "stateRaw": value.state_raw, "controlRaw": value.control_raw,
+            "yawAxis": value.yaw_axis,
         }
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-raw.v1",
@@ -1288,20 +1301,96 @@ def _trace_payload(trace: sampler.AttemptTrace, q_input_nonclaim: str) -> dict[s
     }
 
 
-def analyze_provisional_trace(trace: sampler.AttemptTrace) -> sampler.AttemptMetrics:
+def _yaw_samples_from_trace(
+    rows: list[sampler.RawSample],
+    phase: str,
+) -> list[turn_yaw.YawSample]:
+    """Build yaw samples from path heading (position deltas) and yaw-axis store."""
+
+    if not rows:
+        return []
+    out: list[turn_yaw.YawSample] = []
+    heading = 0.0
+    have_heading = False
+    previous = rows[0]
+    for current in rows:
+        dx = current.position[0] - previous.position[0]
+        dz = current.position[2] - previous.position[2]
+        if abs(dx) + abs(dz) > 1e-4:
+            heading = math.atan2(dx, dz)
+            have_heading = True
+        elif not have_heading and abs(current.velocity[0]) + abs(current.velocity[2]) > 1e-4:
+            try:
+                heading = turn_yaw.heading_from_velocity_xz(
+                    current.velocity[0], current.velocity[2]
+                )
+                have_heading = True
+            except turn_yaw.TurnYawError:
+                pass
+        if not have_heading:
+            # In-place turn: treat hypothesized yaw-axis float as heading proxy.
+            heading = float(current.yaw_axis)
+        out.append(
+            turn_yaw.YawSample(
+                tick=current.tick,
+                phase=phase,
+                heading_rad=heading,
+                yaw_axis=float(current.yaw_axis),
+            )
+        )
+        previous = current
+    return out
+
+
+def analyze_provisional_trace(
+    trace: sampler.AttemptTrace,
+    *,
+    measure: str = sampler.MEASURE_FORWARD,
+) -> sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics:
     """Run the integrated sampler; AppCore cleanup remains a separate final gate."""
     provisional = replace(
         trace,
         integrity=replace(trace.integrity, cleanup_confirmed=True),
     )
+    if measure == sampler.MEASURE_TURN:
+        return turn_yaw.analyze_turn_attempt(
+            attempt=provisional.attempt,
+            baseline=_yaw_samples_from_trace(provisional.samples["baseline"], "baseline"),
+            hold=_yaw_samples_from_trace(provisional.samples["hold"], "hold"),
+            release=_yaw_samples_from_trace(provisional.samples["release"], "release"),
+            frequency=provisional.frequency,
+            # Live turn-p01: BE+0x278 holds a near-steady magnitude during Look/Left
+            # hold; differentiate-as-heading reads ~0. Use store as rad/s proxy.
+            rate_source="yaw_axis_store",
+        )
     return sampler.analyze_attempt(provisional)
 
 
-def _metrics_payload(metrics: sampler.AttemptMetrics) -> dict[str, object]:
+def _metrics_payload(
+    metrics: sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics,
+    *,
+    measure: str = sampler.MEASURE_FORWARD,
+) -> dict[str, object]:
+    if measure == sampler.MEASURE_TURN and isinstance(metrics, turn_yaw.TurnAttemptMetrics):
+        return {
+            "schemaVersion": "battleengine-walker-turn-yaw-private-metrics.v1",
+            "attempt": metrics.attempt,
+            "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+            "measure": sampler.MEASURE_TURN,
+            "metrics": asdict(metrics),
+            "calibrationTarget": {
+                "sourceNamedPath": "CGeneralVolume yaw / walker Look-Left hold scalar response",
+                "steamLinkedObservation": "receipt-bound player-0 BattleEngine yaw-axis + path heading",
+                "scope": "steady yaw rate, baseline dominate, response/release latency",
+                "nonclaim": "scaffold live path; not Core authority until dual-accept public contract",
+            },
+            "publicProjectionWritten": False,
+        }
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-metrics.v1",
         "attempt": metrics.attempt,
         "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+        "measure": sampler.MEASURE_FORWARD,
         "metrics": asdict(metrics),
         "calibrationTarget": {
             "sourceNamedPath": "CWalker::Forward -> CWalker::Move scalar response",
@@ -1357,9 +1446,14 @@ def run_observer(args: argparse.Namespace) -> int:
         vehicle = getattr(args, "vehicle", sampler.VEHICLE_WALKER) or sampler.VEHICLE_WALKER
         if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
             raise ValueError("vehicle must be walker or jet")
+        measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
+        if measure not in (sampler.MEASURE_FORWARD, sampler.MEASURE_TURN):
+            raise ValueError("measure must be forward or turn")
+        if measure == sampler.MEASURE_TURN and vehicle != sampler.VEHICLE_WALKER:
+            raise ValueError("turn measure currently requires walker vehicle mode")
         trace, readiness = collect_trace(
             args.attempt, receipt, receipt_path, reader, native, QpcClock(), deadline,
-            authorized_root, vehicle=vehicle,
+            authorized_root, vehicle=vehicle, measure=measure,
         )
         deadline.check()
         # collect_trace only returns after execute_owned_q_window confirms key-up.
@@ -1368,9 +1462,11 @@ def run_observer(args: argparse.Namespace) -> int:
         q_up_confirmed = True
         # Persist raw samples before analysis so failed control/schedule gates
         # still leave private evidence for the next tooling fix.
-        _write_new_json(raw_path, _trace_payload(trace, INTERFERENCE_NONCLAIM))
-        metrics = analyze_provisional_trace(trace)
-        _write_new_json(metrics_path, _metrics_payload(metrics))
+        payload = _trace_payload(trace, INTERFERENCE_NONCLAIM)
+        payload["measure"] = measure
+        _write_new_json(raw_path, payload)
+        metrics = analyze_provisional_trace(trace, measure=measure)
+        _write_new_json(metrics_path, _metrics_payload(metrics, measure=measure))
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"
     finally:
@@ -1414,6 +1510,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=sampler.VEHICLE_WALKER,
         help="Vehicle mode for sample state/control chain (default walker).",
     )
+    observer.add_argument(
+        "--measure",
+        choices=(sampler.MEASURE_FORWARD, sampler.MEASURE_TURN),
+        default=sampler.MEASURE_FORWARD,
+        help="Scalar channel: forward/thrust (default) or turn/yaw.",
+    )
     pair = sub.add_parser("run-two", allow_abbrev=False)
     pair.add_argument("--source-root", required=True)
     pair.add_argument("--exe-override", required=True)
@@ -1425,6 +1527,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(sampler.VEHICLE_WALKER, sampler.VEHICLE_JET),
         default=sampler.VEHICLE_WALKER,
         help="Vehicle mode: walker (default) or jet (morph + thrust scalar).",
+    )
+    pair.add_argument(
+        "--measure",
+        choices=(sampler.MEASURE_FORWARD, sampler.MEASURE_TURN),
+        default=sampler.MEASURE_FORWARD,
+        help="Scalar channel: forward/thrust (default) or turn/yaw.",
     )
     return parser
 
@@ -1514,7 +1622,9 @@ def _invoke_smoke(args: argparse.Namespace, attempt: int, profile_root: Path,
     ]
     env = os.environ.copy()
     vehicle = getattr(args, "vehicle", sampler.VEHICLE_WALKER) or sampler.VEHICLE_WALKER
+    measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
     env["ONSLAUGHT_LIVE_WALKER_VEHICLE"] = vehicle
+    env["ONSLAUGHT_LIVE_WALKER_MEASURE"] = measure
     started = time.monotonic()
     process = subprocess.Popen(
         command, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

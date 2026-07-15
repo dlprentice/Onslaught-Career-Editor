@@ -87,7 +87,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 |----|-----------|--------|-------|
 | M1.1 | Walker forward scalar | landed | v2 + `WalkerSpeedPerTick=100` |
 | M1.2 | Jet forward/thrust scalar | landed | v1 + `JetSpeedPerTick=381` |
-| M1.3 | Turn / yaw rate scalar | in_progress | Offline harness + plan landed 2026-07-14; live dual-accept pending |
+| M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3` |
 | M1.4 | Strafe / lateral scalar | open | |
 | M1.5 | Transform morph timing + energy gate | open | harness + Core |
 | M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
@@ -180,7 +180,7 @@ public release.
 |--------|----------|------|---------------|
 | Walker forward | `walker-forward-scalar-response-v2` | `WalkerSpeedPerTick=100` | p27 |
 | Jet thrust | `jet-forward-scalar-response-v1` | `JetSpeedPerTick=381` | jet-p06 |
-| Walker turn/yaw | scaffold v0 + plan only | — (no Core) | live dual-accept pending |
+| Walker Look/Left yaw | `walker-turn-yaw-scalar-response.v1` | `WalkerLookYawRateMilliRadPerTick=3` | turn-p02 |
 
 ## How agents update this file
 

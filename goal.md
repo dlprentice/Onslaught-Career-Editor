@@ -5,7 +5,7 @@ Last updated: 2026-07-14
 Policy: [`goal.policy.md`](goal.policy.md)  
 Campaign map: [`goal.campaign.md`](goal.campaign.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: `1590d438` (turn/yaw harness + contract regression + baton tip on main)
+Integration baseline: pending push of turn-p02 dual-accept wave (builds on `71c85101`)
 
 ## How this baton works
 
@@ -14,12 +14,8 @@ This file is the **mutable** `/goal` working memory. Every cycle must:
 1. Read `goal.policy.md` then `goal.campaign.md` then this file.
 2. Execute **Current Slice** only (one bounded unit of work).
 3. On closeout: record `ADVANCEMENT` or `BLOCKED_*`, update ledgers, **rewrite
-   Current Slice** to the next campaign pick (agent decision — do not wait for
-   a human to invent the next slice unless blocked).
+   Current Slice** to the next campaign pick.
 4. Update `goal.campaign.md` milestone status when a milestone lands or blocks.
-
-The campaign **does not end** when one slice lands. Continue until
-`goal.campaign.md` exit criteria or a well-formed blocker requiring a human.
 
 ## North star (one line)
 
@@ -31,76 +27,56 @@ hygiene, without touching Steam/original `BEA.exe` or claiming false parity.
 
 | Slice | Result | Artifacts |
 |-------|--------|-----------|
-| Walker forward scalar | landed | v2 contract; policy; `WalkerSpeedPerTick=100`; p27-compact |
-| Jet forward/thrust scalar | landed | v1 contract; policy; `JetSpeedPerTick=381`; jet-p06 compact |
-| Runtime proof lab hygiene | landed | `runtime_proof_lab_hygiene.py`; retention doc; runner strip |
-| Durable multi-slice campaign OS | landed | `goal.campaign.md`; slash-goal text; policy multi-slice mode |
-| M1.3 turn/yaw harness scaffold + M8.3 contract regression | landed (partial M1.3) | `battleengine_turn_yaw_measurement.py` + tests; measurement plan; `battleengine_scalar_contract_regression.py` + tests on real walker/jet JSON |
+| Walker forward scalar | landed | v2; `WalkerSpeedPerTick=100`; p27 |
+| Jet forward/thrust scalar | landed | v1; `JetSpeedPerTick=381`; jet-p06 |
+| Runtime proof lab hygiene | landed | strip helpers + retention |
+| Durable multi-slice campaign OS | landed | `goal.campaign.md` + slash text |
+| M1.3 turn/yaw harness scaffold + M8.3 regression | landed | offline harness + contract CLI |
+| **M1.3 live Look/Left yaw dual-accept** | **landed** | turn-p02; v1 contract; policy; `WalkerLookYawRateMilliRadPerTick=3` |
 
 ## Current Slice
 
-**ID:** `M1.3-live-turn-yaw-dual-accept`  
-**Lane:** RE copied-runtime measurement → public contract (only if dual-accept)  
-**Objective:** Wire turn input + yaw/heading sampling into the receipt-bound
-live pair runner; obtain exactly two accepted copied-runtime turn/yaw attempts;
-publish v1 retail contract + translation policy + Core **only** if both accept.
-Use `tools/battleengine_turn_yaw_measurement.py` for analysis. Lab hygiene
-strip after closeout. If live path is blocked (no game copy / input bind),
-record well-formed `BLOCKED_*` and fall back to M1.5 transform timing harness
-or M2.1 fire scaffolding — do not invent dual-accept.
+**ID:** `M1.4-strafe-lateral-or-M1.5-transform`  
+**Lane:** RE measurement-first (preferred) or harness  
+**Objective:** Next motion scalar after closed walker forward, jet thrust, and
+Look/Left yaw. Prefer **M1.4 strafe/lateral** dual-accept using Movement/Left
+bound path + position lateral speed, reusing pair runner measure mode. If
+strafe tooling is blocked after one real attempt, fall back to **M1.5 transform
+timing** harness (morph state 1→3 latency already partially instrumented).
 
-**Constraints (always):**
-
-- Never mutate Steam / original `BEA.exe`
-- No release/tag from this baton alone
-- No reopen walker/jet scalars without new evidence
-- No thrash on AYA MSB4278 without new evidence
-- Commit/push green waves when the durable slash goal authorizes and gates pass
+**Constraints:** Steam untouched; no Core without dual-accept; no walker/jet
+forward reopen; lab hygiene strip; commit/push when green.
 
 ## Progress log
 
-### 2026-07-14 — ADVANCEMENT: M1.3 scaffold + M8.3 regression + prior wave push
+### 2026-07-14 — ADVANCEMENT: M1.3 live turn-p02 dual-accept → Core
 
-**Decision:** Campaign priority #1 (land pending green work) then #3 (next
-scalar measurement). Pending jet/hygiene/campaign wave was dirty on
-`bd3072b7`; validated (64 Python unit tests + prior rebuild green), committed
-and pushed as `248a875d`. For the next unit of work, full live turn dual-accept
-needs input binding + orientation sampling not yet on the runner path; chose
-actionable offline advance of **M1.3 harness** (measurement-before-Core
-scaffold, no Core constant) and **M8.3** landed-contract regression driving
-real walker v2 + jet v1 JSON entry points.
+**Decision:** Campaign priority next scalar after offline harness. Wired
+`--measure turn` (Look/Left=Q, BE+0x278 sample, yaw_axis_store rates, no Up
+poke). Live pair **turn-p02** `pairEligible=true`; both attempts steady
+**0.090657 rad/s**. Published v1 contract + accepted translation policy;
+Core `WalkerLookYawRateMilliRadPerTick=3` (milli-rad @ 30 Hz). Facing still
+snaps (constant reserved for later continuous yaw). Hygiene: profile trees
+stripped; turn-p02 ~0.5 MB. Steam untouched. Gates: 72 Python unit tests OK;
+39 Core tests OK.
 
-**Landed this cycle:**
+**Not claimed:** body vs camera yaw identity; source mGroundTurnRate=1.5; full
+facing integration; campaign exit.
 
-- `tools/battleengine_turn_yaw_measurement.py` + unit tests (heading, rates,
-  analyze, pair envelope scaffold with explicit non-claims)
-- `reverse-engineering/game-mechanics/walker-turn-yaw-scalar-measurement-plan.md`
-- `tools/battleengine_scalar_contract_regression.py` + tests (CLI + real
-  contracts)
-- Gates: turn/yaw + contract tests OK; no live lab this cycle
-  (`{SCRATCH}/no-live-lab.txt`)
-- No multi-GB trees created; Steam untouched
+### 2026-07-14 — Decision log (start of live wire)
 
-**Closeout class:** `ADVANCEMENT` (harness + docs + regression checker).  
-**Not claimed:** live dual-accept turn contract; Core turn rate; campaign exit.
-
-### 2026-07-14 — Campaign structure stand-up
-
-- Introduced durable `goal.campaign.md` multi-lane milestone map.
-- Canonical slash text under `roadmap/goals/`.
+See prior progress for offline scaffold and jet land.
 
 ## Lane bias accounting
 
-| Last 3 slices | Lanes |
-|---------------|--------|
-| jet + campaign OS land | RE + rebuild + docs |
-| turn/yaw harness + contract regression | RE harness + M8 harness |
-| (next) live turn dual-accept | RE measurement |
+| Last 3 | Lanes |
+|--------|--------|
+| jet/campaign | RE+rebuild |
+| turn harness | RE harness |
+| turn live dual-accept | RE+rebuild |
 
-## Resume checklist (new session / after compact)
+## Resume checklist
 
-- [x] `git log -1 --oneline` / status (baseline `890a92c8`)
-- [x] Read policy + campaign + this file
-- [x] Confirm Steam not a write target
-- [ ] Execute Current Slice (live turn dual-accept — next session)
-- [ ] Mutate this file before ending that cycle
+- [x] tip / baton for this cycle
+- [ ] Execute Current Slice M1.4/M1.5 after push
+- [ ] Mutate baton on closeout

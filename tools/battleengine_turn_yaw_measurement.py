@@ -106,6 +106,20 @@ def _percentile(values: Sequence[float], fraction: float) -> float:
     return ordered[index]
 
 
+def phase_yaw_axis_store_rates(
+    samples: Sequence[YawSample],
+) -> list[tuple[YawSample, float]]:
+    """Treat |yaw_axis| store as instantaneous yaw rate (live turn-p01 shape).
+
+    When Look/Left write a near-steady float into BE+0x278, differentiating it
+    as a heading yields ~0. Use the store magnitude as rad/s directly.
+    """
+
+    if len(samples) < 2:
+        raise TurnYawError("yaw phase undersampled")
+    return [(row, abs(float(row.yaw_axis or 0.0))) for row in samples[1:]]
+
+
 def analyze_turn_attempt(
     *,
     attempt: int,
@@ -113,20 +127,33 @@ def analyze_turn_attempt(
     hold: Sequence[YawSample],
     release: Sequence[YawSample],
     frequency: int,
+    rate_source: str = "heading",
 ) -> TurnAttemptMetrics:
-    """Accept a turn attempt when hold yaw rate dominates baseline and settles."""
+    """Accept a turn attempt when hold yaw rate dominates baseline and settles.
+
+    rate_source:
+      - "heading": differentiate heading_rad (path/velocity heading series)
+      - "yaw_axis_store": use |yaw_axis| as instantaneous rate (live BE+0x278)
+    """
 
     if attempt not in (1, 2):
         raise TurnYawError("attempt must be 1 or 2")
+    if rate_source not in ("heading", "yaw_axis_store"):
+        raise TurnYawError("rate_source must be heading or yaw_axis_store")
     for phase_name, rows in (("baseline", baseline), ("hold", hold), ("release", release)):
         if len(rows) < 8:
             raise TurnYawError(f"{phase_name} phase undersampled")
         if any(row.phase != phase_name for row in rows):
             raise TurnYawError(f"{phase_name} sample phase label mismatch")
 
-    baseline_rates = phase_yaw_rates(baseline, frequency)
-    hold_rates = phase_yaw_rates(hold, frequency)
-    release_rates = phase_yaw_rates(release, frequency)
+    if rate_source == "yaw_axis_store":
+        baseline_rates = phase_yaw_axis_store_rates(baseline)
+        hold_rates = phase_yaw_axis_store_rates(hold)
+        release_rates = phase_yaw_axis_store_rates(release)
+    else:
+        baseline_rates = phase_yaw_rates(baseline, frequency)
+        hold_rates = phase_yaw_rates(hold, frequency)
+        release_rates = phase_yaw_rates(release, frequency)
 
     steady = hold_rates[-max(8, len(hold_rates) // 3) :]
     if len(steady) < 8:
