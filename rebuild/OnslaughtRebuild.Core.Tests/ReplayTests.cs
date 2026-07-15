@@ -178,6 +178,27 @@ public sealed class ReplayTests
     }
 
     [Fact]
+    public void CommandSpan_LookX_RoundsTripsInJsonAndAffectsFacing()
+    {
+        const string json = """
+              {
+                "schemaVersion": "onslaught-rebuild-command-tape.v1",
+                "name": "look-hold",
+                "seed": 1,
+                "durationTicks": 262,
+                "spans": [
+                  { "startTick": 0, "durationTicks": 262, "moveX": 0, "moveZ": 0, "lookX": 1 }
+                ]
+              }
+              """;
+        CommandTape tape = CommandTapeCodec.Deserialize(json);
+        Assert.Equal(1, tape.Spans[0].LookX);
+        ReplayResult result = ReplayRunner.Run(tape);
+        Assert.Equal(1, result.FinalState.FacingX);
+        Assert.Equal(1, result.FinalState.FacingZ);
+    }
+
+    [Fact]
     public void ReplayTraceHash_DistinguishesHistoriesErasedByReset()
     {
         var movedThenReset = new CommandTape(
