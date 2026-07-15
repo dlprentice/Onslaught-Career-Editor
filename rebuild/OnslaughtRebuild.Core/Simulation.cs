@@ -112,11 +112,16 @@ public sealed class Simulation
             return;
         }
 
-        int speed = _mode == VehicleMode.Walker
+        // Walker lateral uses dual-accepted strafe path speed; forward uses walker
+        // forward scalar. Jet keeps a single measured jet thrust speed for now.
+        int speedX = _mode == VehicleMode.Walker
+            ? SimulationConstants.WalkerStrafeSpeedPerTick
+            : SimulationConstants.JetSpeedPerTick;
+        int speedZ = _mode == VehicleMode.Walker
             ? SimulationConstants.WalkerSpeedPerTick
             : SimulationConstants.JetSpeedPerTick;
-        int velocityX = input.MoveX * speed;
-        int velocityZ = input.MoveZ * speed;
+        int velocityX = input.MoveX * speedX;
+        int velocityZ = input.MoveZ * speedZ;
         if (input.MoveX != 0 && input.MoveZ != 0)
         {
             velocityX = velocityX * 181 / 256;
