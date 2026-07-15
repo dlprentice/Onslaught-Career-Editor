@@ -3,7 +3,7 @@
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
 **STOP wall clock:** 2026-07-15 10:00 local  
-Integration tip: `6bcd379a`  
+Integration tip: `8c1b22be`  
 30m durable re-entry: **armed** `019f633f58c2`
 
 ## Current Slice
@@ -11,6 +11,8 @@ Integration tip: `6bcd379a`
 **ID:** `M2-energy-live-or-continue`  
 **Objective:** Live jet energy dual-accept when mission+receipt ready; else
 offline harness / product honesty until STOP.
+
+Offline catalog: coast/camera/fire/projectile/shield (not yet MEASURE_MODES).
 
 ## Resume
 
