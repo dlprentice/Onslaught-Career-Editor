@@ -55,6 +55,23 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void LookX_TakesPrecedenceOverMoveFacingSnap()
+    {
+        var simulation = new Simulation(1);
+        // After enough Look ticks to leave sector 0, Move should not override while Look held.
+        for (int tick = 0; tick < 262; tick++)
+        {
+            simulation.Step(new SimInput(1, 0, LookX: 1));
+        }
+
+        WorldSnapshot state = simulation.Snapshot;
+        Assert.Equal(1, state.FacingX);
+        Assert.Equal(1, state.FacingZ);
+        // MoveX still applied velocity on X axis.
+        Assert.True(state.PlayerPosition.X > 0);
+    }
+
+    [Fact]
     public void LookX_OneTick_DoesNotYetLeaveForwardFacing()
     {
         // Rate is 3 mrad/tick; sector width ~785 mrad → many ticks before snap.
