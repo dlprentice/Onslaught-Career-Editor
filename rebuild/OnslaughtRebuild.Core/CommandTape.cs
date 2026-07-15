@@ -12,7 +12,8 @@ public sealed record CommandSpan(
     sbyte MoveZ,
     bool ToggleMode = false,
     bool Fire = false,
-    bool Reset = false)
+    bool Reset = false,
+    sbyte LookX = 0)
 {
     [JsonIgnore]
     public int EndTickExclusive => checked(StartTick + DurationTicks);
@@ -35,7 +36,7 @@ public sealed record CommandSpan(
             actions |= SimActions.Reset;
         }
 
-        return new SimInput(MoveX, MoveZ, actions);
+        return new SimInput(MoveX, MoveZ, actions, LookX);
     }
 }
 
