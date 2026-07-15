@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 import stat
 import struct
 import subprocess
@@ -511,6 +510,37 @@ def verify_owned_evidence_directory(path: Path, evidence_root: Path) -> Path:
     return child
 
 
+def verify_owned_manifest_path(manifest_path: Path, evidence_root: Path) -> Path:
+    manifest = manifest_path.absolute()
+    parent = verify_owned_evidence_directory(manifest.parent, evidence_root)
+    require(
+        manifest.parent == parent and manifest.name == "save-lab-acceptance-manifest.json",
+        f"Save Lab manifest is not the canonical file in its direct owned child: {manifest}",
+    )
+    _require_not_reparse_point(manifest, "Save Lab manifest")
+    native_support.require_reparse_free_tree(parent, label="Save Lab receipt tree")
+    return manifest
+
+
+def validate_owned_manifest_receipt(
+    manifest_path: Path,
+    *,
+    evidence_root: Path,
+    repo_root: Path,
+    expected_harness_run_id: str,
+) -> dict[str, Any]:
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    manifest = verify_owned_manifest_path(manifest_path, root)
+    summary = validate_manifest(
+        manifest,
+        repo_root,
+        expected_harness_run_id=expected_harness_run_id,
+    )
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    verify_owned_manifest_path(manifest, root)
+    return summary
+
+
 def remove_failed_invocation_evidence(
     invocation_id: str,
     evidence_root: Path = EVIDENCE_ROOT,
@@ -534,7 +564,10 @@ def remove_failed_invocation_evidence(
         if run_directory.exists():
             verify_evidence_root(evidence_root, repo_root=repo_root)
             verify_owned_evidence_directory(run_directory, root)
-            shutil.rmtree(run_directory)
+            native_support.remove_reparse_free_tree(
+                run_directory,
+                label="Save Lab invocation evidence",
+            )
 
 
 def select_owned_repo_winui_survivors(
@@ -582,7 +615,15 @@ def terminate_exact_owned_winui_process(
 def remediate_final_process_census(
     census: dict[int, dict[str, Any]],
     owned_process_identities: set[tuple[int, int, str]],
+    *,
+    receipt_path: Path | None = None,
+    evidence_root: Path = EVIDENCE_ROOT,
+    repo_root: Path = REPO_ROOT,
 ) -> None:
+    if owned_process_identities:
+        require(receipt_path is not None, "owned WinUI cleanup identities lack a validated receipt path")
+        root = verify_evidence_root(evidence_root, repo_root=repo_root)
+        verify_owned_manifest_path(receipt_path, root)
     expected_executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
     survivors = select_owned_repo_winui_survivors(
         census,
@@ -592,6 +633,8 @@ def remediate_final_process_census(
     termination_errors: list[str] = []
     for process_id, row in survivors:
         try:
+            root = verify_evidence_root(evidence_root, repo_root=repo_root)
+            verify_owned_manifest_path(receipt_path, root)
             terminate_exact_owned_winui_process(process_id, row, expected_executable)
         except Exception as exc:
             termination_errors.append(str(exc))
@@ -635,13 +678,33 @@ def recover_validated_owned_process_identities(
     if len(manifests) != 1:
         return set()
     manifest = next(iter(manifests))
-    verify_owned_evidence_directory(manifest.parent, root)
-    summary = validate_manifest(
+    summary = validate_owned_manifest_receipt(
         manifest,
-        repo_root,
+        evidence_root=root,
+        repo_root=repo_root,
         expected_harness_run_id=invocation_id,
     )
     return owned_process_identity_set(summary)
+
+
+def recover_validated_owned_process_receipt(
+    invocation_id: str,
+    *,
+    evidence_root: Path = EVIDENCE_ROOT,
+    repo_root: Path = REPO_ROOT,
+) -> tuple[set[tuple[int, int, str]], Path | None]:
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    manifests = invocation_manifests(invocation_id, root)
+    if len(manifests) != 1:
+        return set(), None
+    manifest = next(iter(manifests))
+    summary = validate_owned_manifest_receipt(
+        manifest,
+        evidence_root=root,
+        repo_root=repo_root,
+        expected_harness_run_id=invocation_id,
+    )
+    return owned_process_identity_set(summary), manifest
 
 
 def run_acceptance() -> dict[str, Any]:
@@ -660,6 +723,7 @@ def run_acceptance() -> dict[str, Any]:
     error: Exception | None = None
     result: dict[str, Any] | None = None
     owned_process_identities: set[tuple[int, int, str]] = set()
+    owned_identity_receipt_path: Path | None = None
     try:
         run_command(WINUI_BUILD_COMMAND, timeout=180)
         executable = BUILT_APP_ROOT / "OnslaughtCareerEditor.WinUI.exe"
@@ -687,12 +751,14 @@ def run_acceptance() -> dict[str, Any]:
         evidence_root = verify_evidence_root()
         manifest_path = next(iter(manifests))
         verify_owned_evidence_directory(manifest_path.parent, evidence_root)
-        manifest_summary = validate_manifest(
+        manifest_summary = validate_owned_manifest_receipt(
             manifest_path,
-            REPO_ROOT,
+            evidence_root=evidence_root,
+            repo_root=REPO_ROOT,
             expected_harness_run_id=invocation_id,
         )
         owned_process_identities = owned_process_identity_set(manifest_summary)
+        owned_identity_receipt_path = manifest_path
         time.sleep(0.5)
         post = process_census()
         require(not post, f"post-run relevant-process census must be zero, found: {describe_processes(post)}")
@@ -706,20 +772,30 @@ def run_acceptance() -> dict[str, Any]:
             error = append_cleanup_error(error, "build-server shutdown", cleanup_error)
         if not owned_process_identities:
             try:
-                owned_process_identities = recover_validated_owned_process_identities(invocation_id)
+                (
+                    owned_process_identities,
+                    owned_identity_receipt_path,
+                ) = recover_validated_owned_process_receipt(invocation_id)
             except Exception:
                 # Without one fully validated receipt, survivor mutation is not authorized.
                 pass
         try:
             final_census = process_census()
             if final_census:
-                remediate_final_process_census(final_census, owned_process_identities)
+                remediate_final_process_census(
+                    final_census,
+                    owned_process_identities,
+                    receipt_path=owned_identity_receipt_path,
+                )
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "final relevant-process census", cleanup_error)
         try:
             if run_root.exists():
                 verify_runner_path(run_root)
-                shutil.rmtree(run_root)
+                native_support.remove_reparse_free_tree(
+                    run_root,
+                    label="Save Lab runner scratch",
+                )
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "runner-root cleanup", cleanup_error)
         if error is not None:

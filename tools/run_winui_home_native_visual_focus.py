@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 import stat
 import subprocess
 import sys
@@ -361,7 +360,10 @@ def remove_failed_invocation_evidence(
         if run_directory.exists():
             verify_evidence_root(evidence_root, repo_root=repo_root)
             verify_owned_evidence_directory(run_directory, root)
-            shutil.rmtree(run_directory)
+            native_support.remove_reparse_free_tree(
+                run_directory,
+                label="Home invocation evidence",
+            )
 
 
 def shutdown_build_servers() -> None:
@@ -442,7 +444,10 @@ def run_acceptance() -> dict[str, Any]:
         try:
             if run_root.exists():
                 verify_runner_path(run_root)
-                shutil.rmtree(run_root)
+                native_support.remove_reparse_free_tree(
+                    run_root,
+                    label="Home runner scratch",
+                )
         except Exception as cleanup_error:
             error = append_cleanup_error(error, "runner-root cleanup", cleanup_error)
         if error is not None:

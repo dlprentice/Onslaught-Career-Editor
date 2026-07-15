@@ -219,8 +219,9 @@ pixel coverage. Build and test are pinned to Debug/win-x64; one invocation ID
 and the runner's post-build executable/DLL hashes bind the child test and its
 owned accepted/partial evidence. Partial publication, skipped/zero tests, stale
 artifacts, or a nonzero Toolkit/testhost/vstest/BEA/debugger process census
-fail the gate. Its evidence and runner roots are exact reparse-free repository
-`local-lab` children. The shared command runner captures PID/start/path for its
+fail the gate. Its evidence and runner roots are exact repository `local-lab`
+children, and recursive cleanup refuses any nested reparse point. The shared
+command runner captures PID/start/path for its
 spawned build or test root and revalidates that identity before timeout
 process-tree termination. This native command is not part of ordinary
 non-runtime UI tests or release signoff; its screenshots, app data, TRX, and
@@ -242,8 +243,10 @@ an exact 1/1 native TRX, full repo-build process/start/hash/HWND identity,
 unchanged inputs, distinct app-owned outputs whose Goodies/P1 semantics are
 independently parsed from retained bytes, stable owner-bound focus and marker
 geometry, one fresh schema-1 manifest, and a zero final process census. Its
-ignored roots are exact reparse-free repository `local-lab` children, and
-owned WinUI cleanup revalidates PID/start/path before bounded close or
+ignored roots are exact repository `local-lab` children, and recursive cleanup
+refuses any nested reparse point. Manifest ownership is rechecked after full
+artifact validation and immediately before receipt-authorized process cleanup.
+Owned WinUI cleanup revalidates PID/start/path before bounded close or
 process-tree kill.
 A final survivor is force-cleaned only when it matches this invocation's
 validated launch receipt; remediation still fails the gate. It never invokes

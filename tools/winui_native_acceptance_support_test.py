@@ -154,6 +154,36 @@ class NativeAcceptanceSupportTests(unittest.TestCase):
             str(identity.start_time_utc_ticks),
         )
 
+    def test_recursive_cleanup_rejects_nested_junction_without_touching_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            owned = root / "owned"
+            outside = root / "outside"
+            owned.mkdir()
+            outside.mkdir()
+            canary = outside / "canary.txt"
+            canary.write_text("preserve", encoding="utf-8")
+            junction = owned / "nested"
+            self._create_junction(junction, outside)
+            try:
+                with self.assertRaisesRegex(support.NativeAcceptanceError, "reparse point"):
+                    support.remove_reparse_free_tree(owned, label="owned fixture")
+                self.assertEqual(canary.read_text(encoding="utf-8"), "preserve")
+                self.assertTrue(owned.is_dir())
+            finally:
+                junction.rmdir()
+
+    @staticmethod
+    def _create_junction(link: Path, target: Path) -> None:
+        completed = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+            text=True,
+            capture_output=True,
+            timeout=10,
+        )
+        if completed.returncode != 0:
+            raise AssertionError(completed.stderr or completed.stdout)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

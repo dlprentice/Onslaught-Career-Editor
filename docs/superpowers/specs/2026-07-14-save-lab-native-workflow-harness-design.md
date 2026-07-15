@@ -151,7 +151,10 @@ The outer runner:
    still fails the gate because remediation was required.
 
 Both ignored roots must be their exact repository `local-lab` children; any
-reparse-point root or owned child fails before writes or recursive cleanup.
+reparse point anywhere in an owned recursive-cleanup tree fails before removal.
+Receipt validation checks the canonical manifest and reparse-free artifact tree
+both before and after parsing, then checks them again immediately before any
+receipt-authorized survivor kill.
 Each exact WinUI launch revalidates PID/start/path before bounded graceful close
 and again before process-tree kill, propagating failure if exit is not observed.
 An unreceipted survivor is reported but never mutated. The shared build/test
@@ -166,9 +169,9 @@ TRX parsing, hashing, PNG dimensions, process census, owned process-tree
 termination, build-server shutdown, and cleanup-error accumulation. Home keeps
 its own manifest validator and owned-path rules; Save Lab receives its own.
 Existing Home unit and named native gates must remain green after extraction.
-Both runners require their exact repository `local-lab` roots and direct owned
-children to remain reparse-free before writes, publication, or recursive
-cleanup.
+Both runners require their exact repository `local-lab` roots and recursively
+owned cleanup trees to remain reparse-free before writes, publication, or
+removal.
 
 Name the generic C# Toolkit pixel checks independently of Home while Home
 retains a compatibility wrapper. Workflow actions, marker

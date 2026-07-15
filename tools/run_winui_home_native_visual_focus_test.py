@@ -182,6 +182,30 @@ class HomeNativeVisualFocusRunnerTests(unittest.TestCase):
                 evidence_root.rmdir()
                 runner_root.rmdir()
 
+    def test_failed_invocation_cleanup_rejects_nested_junction(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            repo = root / "repo"
+            evidence_root = repo / "local-lab" / "winui-home-native-visual-focus"
+            owned = evidence_root / f"home-newcomer-test-{self.HARNESS_RUN_ID}"
+            outside = root / "outside"
+            owned.mkdir(parents=True)
+            outside.mkdir()
+            canary = outside / "canary.txt"
+            canary.write_text("preserve", encoding="utf-8")
+            junction = owned / "nested"
+            self._create_junction(junction, outside)
+            try:
+                with self.assertRaisesRegex(harness.HarnessError, "reparse point"):
+                    harness.remove_failed_invocation_evidence(
+                        self.HARNESS_RUN_ID,
+                        evidence_root,
+                        repo_root=repo,
+                    )
+                self.assertEqual(canary.read_text(encoding="utf-8"), "preserve")
+            finally:
+                junction.rmdir()
+
 
     def _write_valid_manifest(self, root: Path) -> Path:
         build = root / "OnslaughtCareerEditor.WinUI" / "bin" / "Debug" / "net10.0-windows10.0.19041.0" / "win-x64"

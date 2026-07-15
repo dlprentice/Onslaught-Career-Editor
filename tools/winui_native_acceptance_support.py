@@ -7,6 +7,8 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import stat
 import struct
 import subprocess
 import xml.etree.ElementTree as ET
@@ -163,6 +165,45 @@ def describe_processes(census: dict[int, dict[str, Any]]) -> str:
         f"{row.get('ProcessName')}[{process_id}]"
         for process_id, row in sorted(census.items())
     ) or "zero"
+
+
+def require_reparse_free_tree(root: Path, *, label: str) -> None:
+    if not os.path.lexists(root):
+        return
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        directory_stat = os.lstat(directory)
+        require(
+            not os.path.islink(directory)
+            and not (getattr(directory_stat, "st_file_attributes", 0) & reparse_flag),
+            f"{label} contains a reparse point: {directory}",
+        )
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                entry_stat = entry.stat(follow_symlinks=False)
+                entry_path = Path(entry.path)
+                require(
+                    not entry.is_symlink()
+                    and not (getattr(entry_stat, "st_file_attributes", 0) & reparse_flag),
+                    f"{label} contains a reparse point: {entry_path}",
+                )
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(entry_path)
+
+
+def remove_reparse_free_tree(root: Path, *, label: str) -> None:
+    require_reparse_free_tree(root, label=label)
+    if os.path.lexists(root):
+        root_stat = os.lstat(root)
+        reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        require(
+            not os.path.islink(root)
+            and not (getattr(root_stat, "st_file_attributes", 0) & reparse_flag),
+            f"{label} root became a reparse point before removal: {root}",
+        )
+        shutil.rmtree(root)
 
 
 def capture_owned_process_identity(

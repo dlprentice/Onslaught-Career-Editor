@@ -587,11 +587,13 @@ relative artifact paths, hashes/lengths, input preservation, independently
 parsed retained-output readbacks, marker sets, focus ownership, and PNG
 dimensions. Owned discovery accepts only
 `save-lab-*-<runid>` and `.save-lab-*-<runid>.partial` direct children.
-Require both ignored roots to be exact reparse-free repository `local-lab`
-children before writes or recursive cleanup. Revalidate PID/start/path before
-bounded close/process-tree kill and require observed exit for every exact owned
-WinUI launch. Apply the same reparse-free root/direct-child guard to the shared
-Home runner.
+Require both ignored roots to be exact repository `local-lab` children before
+writes or recursive cleanup, and refuse any nested reparse point in a cleanup
+tree. Validate the canonical manifest/tree before and after artifact parsing
+and again immediately before receipt-authorized survivor cleanup. Revalidate
+PID/start/path before bounded close/process-tree kill and require observed exit
+for every exact owned WinUI launch. Apply the same recursive reparse guard to
+the shared Home runner.
 
 - [ ] **Step 3: Implement runner lifecycle and fault-safe finalization**
 
