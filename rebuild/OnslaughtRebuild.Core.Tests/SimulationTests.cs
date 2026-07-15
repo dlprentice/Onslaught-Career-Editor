@@ -55,6 +55,16 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void LookX_OneTick_DoesNotYetLeaveForwardFacing()
+    {
+        // Rate is 3 mrad/tick; sector width ~785 mrad → many ticks before snap.
+        var simulation = new Simulation(1);
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
+        Assert.Equal(0, state.FacingX);
+        Assert.Equal(1, state.FacingZ);
+    }
+
+    [Fact]
     public void LookX_Negative_SnapsFacingLeftCardinal()
     {
         var simulation = new Simulation(1);
