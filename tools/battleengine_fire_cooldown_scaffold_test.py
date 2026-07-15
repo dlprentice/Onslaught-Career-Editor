@@ -16,6 +16,12 @@ class FireScaffoldTests(unittest.TestCase):
         self.assertEqual(5, m.event_count)
         self.assertAlmostEqual(200.0, m.median_cooldown_ms, delta=1.0)
 
+    def test_energy_drop_edges_reject_flat_series(self) -> None:
+        with self.assertRaisesRegex(fire.FireScaffoldError, "at least two"):
+            fire.fire_edges_from_energy_drops(
+                [(0, 1.0), (100, 1.0), (200, 1.0)], min_drop=0.05
+            )
+
     def test_energy_drop_edges_recover_cooldown(self) -> None:
         frequency = 10_000_000
         step = frequency // 5  # 200 ms
