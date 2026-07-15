@@ -402,6 +402,38 @@ public class SaveEditorFirstSaveJourneyTests
     }
 
     [Test]
+    public void NativeSaveLabHarness_UsesDeterministicInputsAndNoExternalOrSyntheticOsInput()
+    {
+        string path = Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.UiTests",
+            "WinUiSaveLabNativeWorkflowTests.cs");
+        Assert.That(File.Exists(path), Is.True, "The unattended Save Lab native producer must exist.");
+        string source = File.ReadAllText(path);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(source, Does.Contain("gold_career_save.bin"));
+            Assert.That(source, Does.Contain("0C17E47D"));
+            Assert.That(source, Does.Contain("A922C6BC"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_SAVE_LAB_NATIVE_ACCEPTANCE_RUN_ID"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_SAVE_LAB_NATIVE_EXPECTED_EXE_SHA256"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_SAVE_LAB_NATIVE_EXPECTED_DLL_SHA256"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_GAME_DIR_CANDIDATES"));
+            Assert.That(source, Does.Contain("ONSLAUGHT_STEAM_ROOT_CANDIDATES"));
+            Assert.That(source, Does.Contain("save-ready-normal.png"));
+            Assert.That(source, Does.Contain("save-complete-760.png"));
+            Assert.That(source, Does.Contain("options-guidance-normal.png"));
+            Assert.That(source, Does.Contain("options-complete-760.png"));
+            Assert.That(source, Does.Not.Contain("ONSLAUGHT_WINUI_REAL_OPTIONS_PATH"));
+            Assert.That(source, Does.Not.Contain("ExplorerRevealService.TryReveal"));
+            Assert.That(source, Does.Not.Contain("Launcher.LaunchUriAsync"));
+            Assert.That(source, Does.Not.Contain("Keyboard."));
+            Assert.That(source, Does.Not.Contain("Mouse."));
+        });
+    }
+
+    [Test]
     public void CodeBehind_UpdatesLiveAndAdvancedAccessibilityWithoutResettingCollapsedValues()
     {
         string code = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml.cs");
