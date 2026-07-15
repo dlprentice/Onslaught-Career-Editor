@@ -10,17 +10,18 @@ Integration tip: (pending this push)
 
 | Slice | Result |
 |-------|--------|
-| Motion dual-accepts + transform morph | landed prior |
-| M3.1 camera harness + Core LookX | landed `83c33e0d` |
-| **M2 energy/shield offset + measure=energy** | landed: BE+0xFC energy, BE+0x100 shields; sampler samples; `--measure energy --vehicle jet` analysis path |
+| Motion dual-accepts + transform | prior |
+| Camera look harness + Core LookX | `83c33e0d` |
+| Energy/shield offsets + measure=energy | `0f4af824` |
+| **M1.6 coast/friction scaffold** | offline half-life harness + plan + npm gate |
 
 ## Current Slice
 
-**ID:** `M2-energy-live-dual-accept-or-WinUI`  
-**Objective:** Live dual-accept jet energy drain (`--measure energy --vehicle jet`)
-if copied-runtime ready; else WinUI honesty / M1.6 coast plan. Offsets are
-hypotheses until dual-accept.
+**ID:** `M2-energy-live-or-WinUI-honesty`  
+**Objective:** Prefer live jet energy dual-accept when GameProfiles/receipt ready;
+else WinUI Host/Join honesty regression expansion or lore pack freshness.
+Energy offsets remain hypotheses until dual-accept.
 
 ## Resume
 
-If `Get-Date` < STOP continue; else finalize.
+Continue while `Get-Date` < STOP.

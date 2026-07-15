@@ -90,7 +90,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | M1.3 | Turn / yaw rate scalar | landed | turn-p02 dual-accept; v1 + policy; `WalkerLookYawRateMilliRadPerTick=3`; Core LookX integrate |
 | M1.4 | Strafe / lateral scalar | landed | strafe-p02 dual-accept; v1 + policy; `WalkerStrafeSpeedPerTick=101` |
 | M1.5 | Transform morph timing + energy gate | landed | xform-p03 dual-accept; `MorphToJetSettleTicks=148` |
-| M1.6 | Friction / coast / release models beyond scalar speed | open | may share harnesses |
+| M1.6 | Friction / coast / release models beyond scalar speed | in_progress | offline half-life scaffold landed; live dual-accept pending |
 
 ### M2 — Combat & resources
 
