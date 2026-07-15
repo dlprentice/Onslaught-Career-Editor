@@ -17,6 +17,16 @@ class ShieldScaffoldTests(unittest.TestCase):
         self.assertTrue(m.accepted)
         self.assertGreater(m.steady_rate_per_sec, 1.0)
 
+    def test_rejects_drain_when_expecting_regen(self) -> None:
+        samples = shield.synthetic_shield_series(rate_per_sec=-1.0)
+        with self.assertRaisesRegex(shield.ShieldScaffoldError, "positive"):
+            shield.analyze_shield_rate(
+                attempt=1,
+                samples=samples,
+                frequency=10_000_000,
+                expect_positive=True,
+            )
+
     def test_pair_envelope(self) -> None:
         frequency = 10_000_000
         m1 = shield.analyze_shield_rate(
