@@ -1226,6 +1226,7 @@
     "test:battleengine-scalar-contract-regression": "py -3 tools\\battleengine_scalar_contract_regression_test.py",
     "test:battleengine-coast-friction-measurement": "py -3 tools\\battleengine_coast_friction_measurement_test.py",
     "test:battleengine-measure-mode-catalog": "py -3 tools\\battleengine_measure_mode_catalog_test.py",
+    "report:battleengine-measure-mode-catalog": "py -3 tools\\battleengine_measure_mode_catalog.py",
     "test:battleengine-campaign-scalar-status": "py -3 tools\\battleengine_campaign_scalar_status_test.py",
     "report:battleengine-campaign-scalar-status": "py -3 tools\\battleengine_campaign_scalar_status.py",
     "test:battleengine-m2-m3-scaffolds": "npm run test:battleengine-camera-look-measurement && npm run test:battleengine-energy-scaffold && npm run test:battleengine-shield-scaffold && npm run test:battleengine-fire-cooldown-scaffold && npm run test:battleengine-projectile-speed-scaffold && npm run test:battleengine-coast-friction-measurement && npm run test:battleengine-measure-mode-catalog && npm run test:battleengine-campaign-scalar-status && npm run test:battleengine-scalar-contract-regression",

@@ -125,3 +125,18 @@ def offline_harness_dicts() -> list[dict[str, str]]:
         }
         for row in OFFLINE_HARNESS_ROWS
     ]
+
+
+def full_catalog_report() -> dict[str, object]:
+    return {
+        "liveMeasureModes": catalog_as_dicts(),
+        "offlineHarnesses": offline_harness_dicts(),
+    }
+
+
+if __name__ == "__main__":
+    import json
+    import sys
+
+    json.dump(full_catalog_report(), sys.stdout, indent=2)
+    sys.stdout.write("\n")
