@@ -158,9 +158,10 @@ git commit -m "test(winui): resolve repo root from RID output"
 **Interfaces:**
 - Produces Python `NativeAcceptanceError`, `require`, `sha256`, `normalized`,
   `png_dimensions`, `validate_exact_trx`, `process_census`,
-  `describe_processes`, `run_command`, `terminate_owned_process_tree`,
-  `validate_invocation_id`, `shutdown_build_servers`, and
-  `append_cleanup_error`.
+  `describe_processes`, `OwnedProcessIdentity`,
+  `capture_owned_process_identity`, `run_command`,
+  `terminate_owned_process_tree`, `validate_invocation_id`,
+  `shutdown_build_servers`, and `append_cleanup_error`.
 - Produces C# `ToolkitVisualEvidenceAcceptance` with
   `HasMeaningfulFrameCoverage`, `HasRenderedToolkitHeader`, and
   `HasRenderedActivity`, plus `NativeWinUiSessionResourceCleanup.Run`.
@@ -169,9 +170,10 @@ git commit -m "test(winui): resolve repo root from RID output"
 - [ ] **Step 1: Write Python support tests RED**
 
 Cover exact one-test TRX acceptance/rejection, PNG signature/dimensions,
-invocation IDs, timeout termination of only the injected root PID, and cleanup
-error accumulation. Import the missing module directly so the first run fails
-for the intended reason.
+invocation IDs, timeout termination of only the captured root PID/start/path,
+identity mismatch rejection before process-tree kill, and cleanup error
+accumulation. Import the missing module directly so the first run fails for the
+intended reason.
 
 ```python
 def test_validate_exact_trx_rejects_skipped_test(self) -> None:
@@ -229,10 +231,12 @@ def run_command(command: list[str], *, repo_root: Path, timeout: int,
     env["MSBUILDDISABLENODEREUSE"] = "1"
     env.update(env_overrides or {})
     process = subprocess.Popen(command, cwd=repo_root, env=env)
+    identity = capture_owned_process_identity(process.pid, repo_root=repo_root)
     try:
         return_code = process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        terminate_owned_process_tree(process.pid, repo_root=repo_root)
+        if process.poll() is None:
+            terminate_owned_process_tree(identity, repo_root=repo_root)
         try:
             process.wait(timeout=20)
         except subprocess.TimeoutExpired:
@@ -585,8 +589,9 @@ dimensions. Owned discovery accepts only
 `save-lab-*-<runid>` and `.save-lab-*-<runid>.partial` direct children.
 Require both ignored roots to be exact reparse-free repository `local-lab`
 children before writes or recursive cleanup. Revalidate PID/start/path before
-bounded close/kill and require observed exit for every exact owned WinUI
-launch.
+bounded close/process-tree kill and require observed exit for every exact owned
+WinUI launch. Apply the same reparse-free root/direct-child guard to the shared
+Home runner.
 
 - [ ] **Step 3: Implement runner lifecycle and fault-safe finalization**
 

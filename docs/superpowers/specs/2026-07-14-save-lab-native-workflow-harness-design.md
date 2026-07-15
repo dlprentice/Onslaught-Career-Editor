@@ -147,14 +147,17 @@ The outer runner:
 6. shuts down build servers, removes its runner scratch root, and requires
    zero relevant processes even when the test or cleanup fails. If an exact
    WinUI launch from the validated manifest survives, it revalidates
-   PID/start/path, performs bounded forced cleanup, recenses, and still fails
-   the gate because remediation was required.
+   PID/start/path, performs bounded forced process-tree cleanup, recenses, and
+   still fails the gate because remediation was required.
 
 Both ignored roots must be their exact repository `local-lab` children; any
 reparse-point root or owned child fails before writes or recursive cleanup.
 Each exact WinUI launch revalidates PID/start/path before bounded graceful close
 and again before process-tree kill, propagating failure if exit is not observed.
-An unreceipted survivor is reported but never mutated.
+An unreceipted survivor is reported but never mutated. The shared build/test
+command runner likewise captures its spawned root PID/start/path immediately,
+revalidates all three before any timeout process-tree kill, and uses its bound
+process handle only for a final root fallback.
 
 ## Shared Harness Boundary
 
@@ -163,6 +166,9 @@ TRX parsing, hashing, PNG dimensions, process census, owned process-tree
 termination, build-server shutdown, and cleanup-error accumulation. Home keeps
 its own manifest validator and owned-path rules; Save Lab receives its own.
 Existing Home unit and named native gates must remain green after extraction.
+Both runners require their exact repository `local-lab` roots and direct owned
+children to remain reparse-free before writes, publication, or recursive
+cleanup.
 
 Name the generic C# Toolkit pixel checks independently of Home while Home
 retains a compatibility wrapper. Workflow actions, marker

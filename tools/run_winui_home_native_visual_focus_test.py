@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import struct
+import subprocess
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -126,7 +127,8 @@ class HomeNativeVisualFocusRunnerTests(unittest.TestCase):
 
     def test_failed_invocation_cleanup_removes_only_owned_accepted_and_partial_runs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            evidence_root = Path(temp_dir) / "local-lab" / "winui-home-native-visual-focus"
+            repo = Path(temp_dir) / "repo"
+            evidence_root = repo / "local-lab" / "winui-home-native-visual-focus"
             other_id = "b" * 32
             other_run = evidence_root / f"home-newcomer-20260715T000000000Z-{other_id}"
             owned_run = evidence_root / f"home-newcomer-20260715T000000001Z-{self.HARNESS_RUN_ID}"
@@ -135,7 +137,11 @@ class HomeNativeVisualFocusRunnerTests(unittest.TestCase):
             owned_run.mkdir()
             owned_partial.mkdir()
 
-            harness.remove_failed_invocation_evidence(self.HARNESS_RUN_ID, evidence_root)
+            harness.remove_failed_invocation_evidence(
+                self.HARNESS_RUN_ID,
+                evidence_root,
+                repo_root=repo,
+            )
 
             self.assertTrue(other_run.is_dir())
             self.assertFalse(owned_run.exists())
@@ -148,6 +154,33 @@ class HomeNativeVisualFocusRunnerTests(unittest.TestCase):
 
             with self.assertRaisesRegex(harness.HarnessError, "invocation ID is invalid"):
                 harness.remove_failed_invocation_evidence("*", evidence_root)
+
+    def test_runner_and_evidence_roots_reject_junctions_before_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            repo = root / "repo"
+            local_lab = repo / "local-lab"
+            local_lab.mkdir(parents=True)
+            outside_runner = root / "outside-runner"
+            outside_evidence = root / "outside-evidence"
+            outside_runner.mkdir()
+            outside_evidence.mkdir()
+            runner_root = local_lab / "winui-home-native-visual-focus-runner"
+            evidence_root = local_lab / "winui-home-native-visual-focus"
+            self._create_junction(runner_root, outside_runner)
+            self._create_junction(evidence_root, outside_evidence)
+            try:
+                with self.assertRaisesRegex(harness.HarnessError, "reparse point"):
+                    harness.verify_runner_path(
+                        runner_root / f".{self.HARNESS_RUN_ID}.partial",
+                        runner_root=runner_root,
+                        repo_root=repo,
+                    )
+                with self.assertRaisesRegex(harness.HarnessError, "reparse point"):
+                    harness.verify_evidence_root(evidence_root, repo_root=repo)
+            finally:
+                evidence_root.rmdir()
+                runner_root.rmdir()
 
 
     def _write_valid_manifest(self, root: Path) -> Path:
@@ -253,6 +286,17 @@ class HomeNativeVisualFocusRunnerTests(unittest.TestCase):
             "EndpointInputEpoch": 0,
             "EndpointFocusedAutomationId": expected,
         }
+
+    @staticmethod
+    def _create_junction(link: Path, target: Path) -> None:
+        completed = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+            text=True,
+            capture_output=True,
+            timeout=10,
+        )
+        if completed.returncode != 0:
+            raise AssertionError(completed.stderr or completed.stdout)
 
 
 if __name__ == "__main__":

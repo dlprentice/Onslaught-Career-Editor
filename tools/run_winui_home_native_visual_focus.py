@@ -10,8 +10,10 @@ Aquila and never consumes an external WinUI executable override.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -244,7 +246,7 @@ def invocation_manifests(invocation_id: str, evidence_root: Path = EVIDENCE_ROOT
     if not evidence_root.exists():
         return set()
     return {
-        path.resolve()
+        path.absolute()
         for path in evidence_root.glob(f"home-newcomer-*-{invocation_id}/home-acceptance-manifest.json")
         if path.is_file()
     }
@@ -256,25 +258,97 @@ def invocation_evidence_directories(invocation_id: str, evidence_root: Path = EV
         return set()
     matches = set(evidence_root.glob(f"home-newcomer-*-{invocation_id}"))
     matches.update(evidence_root.glob(f".home-newcomer-*-{invocation_id}.partial"))
-    return {path.resolve() for path in matches if path.is_dir()}
+    return {path.absolute() for path in matches if path.is_dir()}
 
 
-def partial_evidence_directories() -> list[Path]:
-    if not EVIDENCE_ROOT.exists():
+def partial_evidence_directories(evidence_root: Path = EVIDENCE_ROOT) -> list[Path]:
+    if not evidence_root.exists():
         return []
-    return sorted(path for path in EVIDENCE_ROOT.iterdir() if path.is_dir() and path.name.endswith(".partial"))
+    return sorted(path for path in evidence_root.iterdir() if path.is_dir() and path.name.endswith(".partial"))
 
 
-def verify_runner_path(path: Path) -> None:
+def _require_not_reparse_point(path: Path, label: str) -> None:
+    if not os.path.lexists(path):
+        return
+    attributes = getattr(os.lstat(path), "st_file_attributes", 0)
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    require(not (attributes & reparse_flag), f"{label} must not be a reparse point: {path}")
+
+
+def _resolve_owned_ignored_root(root: Path, expected_name: str, repo_root: Path) -> Path:
+    resolved_repo = repo_root.resolve()
+    lexical_local_lab = resolved_repo / "local-lab"
+    lexical_expected = lexical_local_lab / expected_name
+    require(
+        os.path.normcase(os.path.abspath(root)) == os.path.normcase(os.path.abspath(lexical_expected)),
+        f"{expected_name} ignored root is not the exact repository-owned path",
+    )
+    _require_not_reparse_point(lexical_local_lab, "repository local-lab")
+    _require_not_reparse_point(lexical_expected, f"{expected_name} ignored root")
+    resolved_local_lab = lexical_local_lab.resolve()
+    resolved = root.resolve()
+    require(
+        resolved_local_lab != resolved_repo
+        and resolved_repo in resolved_local_lab.parents
+        and resolved != resolved_local_lab
+        and resolved_repo in resolved.parents
+        and resolved_local_lab in resolved.parents,
+        f"{expected_name} ignored root escaped repository local-lab: {resolved}",
+    )
+    return resolved
+
+
+def verify_evidence_root(
+    evidence_root: Path = EVIDENCE_ROOT,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> Path:
+    return _resolve_owned_ignored_root(
+        evidence_root,
+        "winui-home-native-visual-focus",
+        repo_root,
+    )
+
+
+def verify_runner_path(
+    path: Path,
+    *,
+    runner_root: Path = RUNNER_ROOT,
+    repo_root: Path = REPO_ROOT,
+) -> None:
     resolved = path.resolve()
-    root = RUNNER_ROOT.resolve()
-    require(resolved != root and root in resolved.parents, f"runner cleanup path escaped its ignored root: {resolved}")
+    root = _resolve_owned_ignored_root(
+        runner_root,
+        "winui-home-native-visual-focus-runner",
+        repo_root,
+    )
+    _require_not_reparse_point(path, "runner-owned child")
+    require(
+        resolved != root and resolved.parent == root,
+        f"runner cleanup path escaped its ignored root: {resolved}",
+    )
 
 
-def remove_failed_invocation_evidence(invocation_id: str, evidence_root: Path = EVIDENCE_ROOT) -> None:
+def verify_owned_evidence_directory(path: Path, evidence_root: Path) -> Path:
+    root = evidence_root.absolute()
+    child = path.absolute()
+    require(child.parent == root, f"Home evidence path is not a direct owned child: {child}")
+    _require_not_reparse_point(root, "Home evidence root")
+    _require_not_reparse_point(child, "Home evidence child")
+    return child
+
+
+def remove_failed_invocation_evidence(
+    invocation_id: str,
+    evidence_root: Path = EVIDENCE_ROOT,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> None:
     validate_invocation_id(invocation_id)
-    root = evidence_root.resolve()
-    for run_directory in invocation_evidence_directories(invocation_id, evidence_root):
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    for run_directory in invocation_evidence_directories(invocation_id, root):
+        root = verify_evidence_root(evidence_root, repo_root=repo_root)
+        run_directory = verify_owned_evidence_directory(run_directory, root)
         expected_accepted = run_directory.name.startswith("home-newcomer-") and run_directory.name.endswith(invocation_id)
         expected_partial = (
             run_directory.name.startswith(".home-newcomer-")
@@ -285,6 +359,8 @@ def remove_failed_invocation_evidence(invocation_id: str, evidence_root: Path = 
             f"refusing to remove unowned failed evidence path: {run_directory}",
         )
         if run_directory.exists():
+            verify_evidence_root(evidence_root, repo_root=repo_root)
+            verify_owned_evidence_directory(run_directory, root)
             shutil.rmtree(run_directory)
 
 
@@ -297,14 +373,15 @@ def append_cleanup_error(error: Exception | None, phase: str, cleanup_error: Exc
 
 
 def run_acceptance() -> dict[str, Any]:
+    evidence_root = verify_evidence_root()
     baseline = process_census()
     require(not baseline, f"pre-run relevant-process census must be zero, found: {describe_processes(baseline)}")
-    partials = partial_evidence_directories()
+    partials = partial_evidence_directories(evidence_root)
     require(not partials, f"pre-run native Home evidence contains partial directories: {[path.name for path in partials]}")
     invocation_id = uuid.uuid4().hex
     validate_invocation_id(invocation_id)
     require(
-        not invocation_evidence_directories(invocation_id, EVIDENCE_ROOT),
+        not invocation_evidence_directories(invocation_id, evidence_root),
         "fresh runner invocation ID unexpectedly already owns evidence",
     )
     run_root = RUNNER_ROOT / f".{invocation_id}.partial"
@@ -330,12 +407,18 @@ def run_acceptance() -> dict[str, Any]:
             },
         )
         trx_summary = validate_trx(trx)
-        owned_manifests = invocation_manifests(invocation_id, EVIDENCE_ROOT)
+        evidence_root = verify_evidence_root()
+        owned_manifests = invocation_manifests(invocation_id, evidence_root)
         require(len(owned_manifests) == 1, f"native Home invocation must publish exactly one owned manifest, found {len(owned_manifests)}")
-        partials = partial_evidence_directories()
+        for manifest in owned_manifests:
+            verify_owned_evidence_directory(manifest.parent, evidence_root)
+        partials = partial_evidence_directories(evidence_root)
         require(not partials, f"native Home run left partial evidence directories: {[path.name for path in partials]}")
+        evidence_root = verify_evidence_root()
+        manifest_path = next(iter(owned_manifests))
+        verify_owned_evidence_directory(manifest_path.parent, evidence_root)
         manifest_summary = validate_manifest(
-            next(iter(owned_manifests)),
+            manifest_path,
             REPO_ROOT,
             expected_harness_run_id=invocation_id,
         )
@@ -364,7 +447,7 @@ def run_acceptance() -> dict[str, Any]:
             error = append_cleanup_error(error, "runner-root cleanup", cleanup_error)
         if error is not None:
             try:
-                remove_failed_invocation_evidence(invocation_id, EVIDENCE_ROOT)
+                remove_failed_invocation_evidence(invocation_id, evidence_root)
             except Exception as cleanup_error:
                 error = append_cleanup_error(error, "owned evidence rollback", cleanup_error)
 

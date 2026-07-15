@@ -100,11 +100,21 @@ class NativeAcceptanceSupportTests(unittest.TestCase):
         self.assertIn("primary", str(error))
         self.assertIn("final census failed: cleanup", str(error))
 
-    def test_run_command_timeout_terminates_only_spawned_root_pid(self) -> None:
+    def test_run_command_timeout_terminates_only_captured_spawn_identity(self) -> None:
         process = mock.Mock()
         process.pid = 4242
+        process.poll.return_value = None
         process.wait.side_effect = [subprocess.TimeoutExpired(["fixture"], 1), 0]
+        identity = support.OwnedProcessIdentity(
+            process_id=4242,
+            start_time_utc_ticks=638881920000000000,
+            executable_path=Path(r"C:\Program Files\dotnet\dotnet.exe"),
+        )
         with mock.patch.object(support.subprocess, "Popen", return_value=process), mock.patch.object(
+            support,
+            "capture_owned_process_identity",
+            return_value=identity,
+        ) as capture, mock.patch.object(
             support,
             "terminate_owned_process_tree",
         ) as terminate:
@@ -115,8 +125,34 @@ class NativeAcceptanceSupportTests(unittest.TestCase):
                     timeout=1,
                 )
 
-        terminate.assert_called_once_with(4242, repo_root=Path.cwd())
+        capture.assert_called_once_with(4242, repo_root=Path.cwd())
+        terminate.assert_called_once_with(identity, repo_root=Path.cwd())
         process.kill.assert_not_called()
+
+    def test_tree_termination_binds_start_and_path_before_taskkill(self) -> None:
+        identity = support.OwnedProcessIdentity(
+            process_id=4242,
+            start_time_utc_ticks=638881920000000000,
+            executable_path=Path(r"C:\Program Files\dotnet\dotnet.exe"),
+        )
+        completed = subprocess.CompletedProcess([], 42, "", "")
+
+        with mock.patch.object(support.subprocess, "run", return_value=completed) as run:
+            with self.assertRaisesRegex(support.NativeAcceptanceError, "identity"):
+                support.terminate_owned_process_tree(identity, repo_root=Path.cwd())
+
+        command = run.call_args.args[0]
+        environment = run.call_args.kwargs["env"]
+        script = command[-1]
+        self.assertEqual(command[:4], ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"])
+        self.assertLess(script.index("StartTime.ToUniversalTime().Ticks"), script.index("taskkill.exe"))
+        self.assertLess(script.index("GetFullPath"), script.index("taskkill.exe"))
+        self.assertEqual(environment["ONSLAUGHT_NATIVE_CLEANUP_PID"], "4242")
+        self.assertEqual(environment["ONSLAUGHT_NATIVE_CLEANUP_PATH"], str(identity.executable_path))
+        self.assertEqual(
+            environment["ONSLAUGHT_NATIVE_CLEANUP_START_TICKS"],
+            str(identity.start_time_utc_ticks),
+        )
 
 
 if __name__ == "__main__":

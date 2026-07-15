@@ -569,42 +569,13 @@ def terminate_exact_owned_winui_process(
     row: dict[str, Any],
     expected_executable: Path,
 ) -> None:
-    script = (
-        "$expectedPid=[int]$env:ONSLAUGHT_SAVE_LAB_CLEANUP_PID;"
-        "$expectedPath=$env:ONSLAUGHT_SAVE_LAB_CLEANUP_PATH;"
-        "$expectedTicks=[long]$env:ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS;"
-        "$p=Get-Process -Id $expectedPid -ErrorAction SilentlyContinue;"
-        "if($null -eq $p){exit 0};"
-        "if([IO.Path]::GetFullPath($p.Path) -ne [IO.Path]::GetFullPath($expectedPath)){exit 41};"
-        "if($p.StartTime.ToUniversalTime().Ticks -ne $expectedTicks){exit 42};"
-        "$p.Kill();if(-not $p.WaitForExit(10000)){exit 43}"
-    )
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "ONSLAUGHT_SAVE_LAB_CLEANUP_PID": str(process_id),
-            "ONSLAUGHT_SAVE_LAB_CLEANUP_PATH": str(expected_executable),
-            "ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS": str(row["StartTimeUtcTicks"]),
-        }
-    )
-    completed = subprocess.run(
-        [
-            "powershell.exe",
-            "-NoLogo",
-            "-NoProfile",
-            "-Command",
-            script,
-        ],
-        cwd=REPO_ROOT,
-        env=environment,
-        text=True,
-        capture_output=True,
-        timeout=20,
-    )
-    require(
-        completed.returncode == 0,
-        f"exact owned WinUI termination failed for {process_id} with code {completed.returncode}: "
-        f"{completed.stderr.strip() or completed.stdout.strip()}",
+    native_support.terminate_owned_process_tree(
+        native_support.OwnedProcessIdentity(
+            process_id=process_id,
+            start_time_utc_ticks=row["StartTimeUtcTicks"],
+            executable_path=expected_executable,
+        ),
+        repo_root=REPO_ROOT,
     )
 
 
@@ -651,6 +622,26 @@ def owned_process_identity_set(summary: dict[str, Any]) -> set[tuple[int, int, s
         )
         for row in summary["ownedProcessIdentities"]
     }
+
+
+def recover_validated_owned_process_identities(
+    invocation_id: str,
+    *,
+    evidence_root: Path = EVIDENCE_ROOT,
+    repo_root: Path = REPO_ROOT,
+) -> set[tuple[int, int, str]]:
+    root = verify_evidence_root(evidence_root, repo_root=repo_root)
+    manifests = invocation_manifests(invocation_id, root)
+    if len(manifests) != 1:
+        return set()
+    manifest = next(iter(manifests))
+    verify_owned_evidence_directory(manifest.parent, root)
+    summary = validate_manifest(
+        manifest,
+        repo_root,
+        expected_harness_run_id=invocation_id,
+    )
+    return owned_process_identity_set(summary)
 
 
 def run_acceptance() -> dict[str, Any]:
@@ -715,15 +706,7 @@ def run_acceptance() -> dict[str, Any]:
             error = append_cleanup_error(error, "build-server shutdown", cleanup_error)
         if not owned_process_identities:
             try:
-                cleanup_evidence_root = verify_evidence_root()
-                cleanup_manifests = invocation_manifests(invocation_id, cleanup_evidence_root)
-                if len(cleanup_manifests) == 1:
-                    cleanup_summary = validate_manifest(
-                        next(iter(cleanup_manifests)),
-                        REPO_ROOT,
-                        expected_harness_run_id=invocation_id,
-                    )
-                    owned_process_identities = owned_process_identity_set(cleanup_summary)
+                owned_process_identities = recover_validated_owned_process_identities(invocation_id)
             except Exception:
                 # Without one fully validated receipt, survivor mutation is not authorized.
                 pass

@@ -10,6 +10,7 @@ import re
 import struct
 import subprocess
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,13 @@ PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 
 class NativeAcceptanceError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class OwnedProcessIdentity:
+    process_id: int
+    start_time_utc_ticks: int
+    executable_path: Path
 
 
 def require(condition: bool, message: str) -> None:
@@ -157,17 +165,96 @@ def describe_processes(census: dict[int, dict[str, Any]]) -> str:
     ) or "zero"
 
 
-def terminate_owned_process_tree(root_process_id: int, *, repo_root: Path) -> None:
+def capture_owned_process_identity(
+    process_id: int,
+    *,
+    repo_root: Path,
+) -> OwnedProcessIdentity:
+    script = (
+        "$expectedPid=[int]$env:ONSLAUGHT_NATIVE_CAPTURE_PID;"
+        "$p=Get-Process -Id $expectedPid -ErrorAction SilentlyContinue;"
+        "if($null -eq $p){exit 44};"
+        "[pscustomobject]@{Id=$p.Id;"
+        "StartTimeUtcTicks=$p.StartTime.ToUniversalTime().Ticks;"
+        "Path=$p.Path}|ConvertTo-Json -Compress"
+    )
+    environment = os.environ.copy()
+    environment["ONSLAUGHT_NATIVE_CAPTURE_PID"] = str(process_id)
     completed = subprocess.run(
-        ["taskkill.exe", "/PID", str(root_process_id), "/T", "/F"],
+        ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", script],
         cwd=repo_root,
+        env=environment,
         text=True,
         capture_output=True,
         timeout=20,
     )
     require(
-        completed.returncode in {0, 128},
-        f"failed to terminate owned process tree {root_process_id}: "
+        completed.returncode == 0,
+        f"could not capture owned process identity for {process_id}: "
+        f"{completed.stderr.strip() or completed.stdout.strip() or f'exit {completed.returncode}'}",
+    )
+    try:
+        row = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise NativeAcceptanceError(f"owned process identity for {process_id} is malformed") from exc
+    require(
+        isinstance(row, dict)
+        and row.get("Id") == process_id
+        and isinstance(row.get("StartTimeUtcTicks"), int)
+        and row["StartTimeUtcTicks"] > 0
+        and isinstance(row.get("Path"), str)
+        and row["Path"],
+        f"owned process identity for {process_id} is incomplete",
+    )
+    return OwnedProcessIdentity(
+        process_id=process_id,
+        start_time_utc_ticks=row["StartTimeUtcTicks"],
+        executable_path=Path(row["Path"]),
+    )
+
+
+def terminate_owned_process_tree(
+    identity: OwnedProcessIdentity,
+    *,
+    repo_root: Path,
+) -> None:
+    script = (
+        "$expectedPid=[int]$env:ONSLAUGHT_NATIVE_CLEANUP_PID;"
+        "$expectedPath=$env:ONSLAUGHT_NATIVE_CLEANUP_PATH;"
+        "$expectedTicks=[long]$env:ONSLAUGHT_NATIVE_CLEANUP_START_TICKS;"
+        "$p=Get-Process -Id $expectedPid -ErrorAction SilentlyContinue;"
+        "if($null -eq $p){exit 0};"
+        "if(-not [string]::Equals("
+        "[IO.Path]::GetFullPath($p.Path),[IO.Path]::GetFullPath($expectedPath),"
+        "[StringComparison]::OrdinalIgnoreCase)){exit 41};"
+        "if($p.StartTime.ToUniversalTime().Ticks -ne $expectedTicks){exit 42};"
+        "& taskkill.exe /PID $expectedPid /T /F *> $null;"
+        "$taskkillExit=$LASTEXITCODE;"
+        "if($taskkillExit -ne 0 -and $taskkillExit -ne 128){exit 43}"
+    )
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "ONSLAUGHT_NATIVE_CLEANUP_PID": str(identity.process_id),
+            "ONSLAUGHT_NATIVE_CLEANUP_PATH": str(identity.executable_path),
+            "ONSLAUGHT_NATIVE_CLEANUP_START_TICKS": str(identity.start_time_utc_ticks),
+        }
+    )
+    completed = subprocess.run(
+        ["powershell.exe", "-NoLogo", "-NoProfile", "-Command", script],
+        cwd=repo_root,
+        env=environment,
+        text=True,
+        capture_output=True,
+        timeout=20,
+    )
+    if completed.returncode in {41, 42}:
+        raise NativeAcceptanceError(
+            f"refusing to terminate process tree {identity.process_id}: live identity no longer matches capture"
+        )
+    require(
+        completed.returncode == 0,
+        f"failed to terminate owned process tree {identity.process_id}: "
         f"{completed.stderr.strip() or completed.stdout.strip()}",
     )
 
@@ -186,15 +273,31 @@ def run_command(
         env.update(env_overrides)
     process = subprocess.Popen(command, cwd=repo_root, env=env)
     try:
+        identity = capture_owned_process_identity(process.pid, repo_root=repo_root)
+    except Exception:
+        if process.poll() is None:
+            process.kill()
+        process.wait(timeout=20)
+        raise
+    try:
         return_code = process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        terminate_owned_process_tree(process.pid, repo_root=repo_root)
+    except subprocess.TimeoutExpired as timeout_error:
+        termination_error: Exception | None = None
+        try:
+            if process.poll() is None:
+                terminate_owned_process_tree(identity, repo_root=repo_root)
+        except Exception as exc:
+            termination_error = exc
         try:
             process.wait(timeout=20)
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=10)
-        raise
+        if termination_error is not None:
+            raise NativeAcceptanceError(
+                f"command timed out and identity-bound tree termination failed: {termination_error}"
+            ) from timeout_error
+        raise timeout_error
     require(return_code == 0, f"command exited {return_code}: {' '.join(command)}")
 
 

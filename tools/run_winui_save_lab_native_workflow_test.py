@@ -262,6 +262,25 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
             finally:
                 evidence_root.rmdir()
 
+    def test_cleanup_identity_recovery_rejects_manifest_through_child_junction(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            repo = root / "repo"
+            manifest = self._write_valid_manifest(repo)
+            run_directory = manifest.parent
+            outside = root / "outside-receipt"
+            run_directory.rename(outside)
+            self._create_junction(run_directory, outside)
+            try:
+                with self.assertRaisesRegex(harness.NativeAcceptanceError, "reparse point"):
+                    harness.recover_validated_owned_process_identities(
+                        self.RUN_ID,
+                        evidence_root=repo / "local-lab" / "winui-save-lab-native-workflow",
+                        repo_root=repo,
+                    )
+            finally:
+                run_directory.rmdir()
+
     def test_owned_repo_winui_survivors_require_exact_path_and_start_identity(self) -> None:
         expected = Path(r"C:\repo\OnslaughtCareerEditor.WinUI.exe")
         row = {
@@ -297,22 +316,18 @@ class SaveLabNativeWorkflowRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(harness.NativeAcceptanceError, "UTC timestamp"):
             harness.dotnet_utc_timestamp_ticks("2026-07-14")
 
-    def test_exact_owned_winui_termination_binds_identity_outside_command_source(self) -> None:
+    def test_exact_owned_winui_termination_uses_identity_gated_tree_kill(self) -> None:
         expected = Path(r"C:\repo path\OnslaughtCareerEditor.WinUI.exe")
         row = {"StartTimeUtcTicks": 638881920000000000}
-        completed = subprocess.CompletedProcess([], 0, "", "")
 
-        with mock.patch.object(harness.subprocess, "run", return_value=completed) as run:
+        with mock.patch.object(harness.native_support, "terminate_owned_process_tree") as terminate:
             harness.terminate_exact_owned_winui_process(4101, row, expected)
 
-        command = run.call_args.args[0]
-        environment = run.call_args.kwargs["env"]
-        self.assertEqual(command[:4], ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"])
-        self.assertEqual(len(command), 5)
-        self.assertNotIn(str(expected), command[-1])
-        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_PID"], "4101")
-        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_PATH"], str(expected))
-        self.assertEqual(environment["ONSLAUGHT_SAVE_LAB_CLEANUP_START_TICKS"], str(row["StartTimeUtcTicks"]))
+        identity = terminate.call_args.args[0]
+        self.assertEqual(identity.process_id, 4101)
+        self.assertEqual(identity.start_time_utc_ticks, row["StartTimeUtcTicks"])
+        self.assertEqual(identity.executable_path, expected)
+        self.assertEqual(terminate.call_args.kwargs["repo_root"], harness.REPO_ROOT)
 
     def _write_valid_manifest(self, root: Path) -> Path:
         build = root / "OnslaughtCareerEditor.WinUI" / "bin" / "Debug" / "net10.0-windows10.0.19041.0" / "win-x64"
