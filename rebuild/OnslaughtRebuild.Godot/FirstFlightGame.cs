@@ -18,6 +18,8 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName MoveBackwardAction = "first_flight_move_backward";
     private static readonly StringName MoveLeftAction = "first_flight_move_left";
     private static readonly StringName MoveRightAction = "first_flight_move_right";
+    private static readonly StringName LookLeftAction = "first_flight_look_left";
+    private static readonly StringName LookRightAction = "first_flight_look_right";
     private static readonly StringName FireAction = "first_flight_fire";
     private static readonly StringName ToggleModeAction = "first_flight_toggle_mode";
     private static readonly StringName ResetAction = "first_flight_reset";
@@ -178,6 +180,8 @@ public sealed partial class FirstFlightGame : Node3D
         EnsureKeyAction(MoveBackwardAction, Key.S);
         EnsureKeyAction(MoveLeftAction, Key.A);
         EnsureKeyAction(MoveRightAction, Key.D);
+        EnsureKeyAction(LookLeftAction, Key.Left);
+        EnsureKeyAction(LookRightAction, Key.Right);
         EnsureKeyAction(FireAction, Key.Space);
         EnsureKeyAction(ToggleModeAction, Key.Q);
         EnsureKeyAction(ResetAction, Key.R);
@@ -212,12 +216,14 @@ public sealed partial class FirstFlightGame : Node3D
     {
         sbyte moveX = QuantizeAxis(Input.GetAxis(MoveLeftAction, MoveRightAction));
         sbyte moveZ = QuantizeAxis(Input.GetAxis(MoveBackwardAction, MoveForwardAction));
+        sbyte lookX = QuantizeAxis(Input.GetAxis(LookLeftAction, LookRightAction));
         return new InteractiveInput(
             moveX,
             moveZ,
             Input.IsActionPressed(FireAction),
             Input.IsActionPressed(ToggleModeAction),
-            Input.IsActionPressed(ResetAction));
+            Input.IsActionPressed(ResetAction),
+            lookX);
     }
 
     private static sbyte QuantizeAxis(float value)

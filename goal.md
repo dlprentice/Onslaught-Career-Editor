@@ -10,17 +10,16 @@ Integration tip: (pending this push)
 
 | Slice | Result |
 |-------|--------|
-| Motion dual-accepts + transform | prior |
 | Camera look harness + Core LookX | `83c33e0d` |
 | Energy/shield offsets + measure=energy | `0f4af824` |
-| **M1.6 coast/friction scaffold** | offline half-life harness + plan + npm gate |
+| M1.6 coast/friction scaffold | `3420588f` |
+| **Client/Godot LookX adapter** | InteractiveInput.LookX + Left/Right keys; Client tests green |
 
 ## Current Slice
 
-**ID:** `M2-energy-live-or-WinUI-honesty`  
-**Objective:** Prefer live jet energy dual-accept when GameProfiles/receipt ready;
-else WinUI Host/Join honesty regression expansion or lore pack freshness.
-Energy offsets remain hypotheses until dual-accept.
+**ID:** `M2-energy-live-or-WinUI-or-fire`  
+**Objective:** Live jet energy dual-accept when GameProfiles ready; else fire
+cooldown measure path scaffolding; else WinUI honesty. No reopen closed dual-accepts.
 
 ## Resume
 

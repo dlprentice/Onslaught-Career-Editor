@@ -206,6 +206,23 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void LookX_HeldRotatesFacingUsingWalkerLookYawRate()
+    {
+        var session = new InteractiveSession(1);
+        // One Core step needs elapsedTicks such that elapsed * TPS >= PhaseUnitsPerStep.
+        const long oneCoreStepTicks =
+            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
+        session.ObserveInput(new InteractiveInput(0, 0, false, false, false, LookX: 1));
+        for (int i = 0; i < 262; i++)
+        {
+            session.AdvanceFrameTicks(oneCoreStepTicks);
+        }
+
+        Assert.Equal(1, session.CurrentSnapshot.FacingX);
+        Assert.Equal(1, session.CurrentSnapshot.FacingZ);
+    }
+
+    [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
         var session = new InteractiveSession(Seed);

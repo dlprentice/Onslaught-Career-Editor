@@ -276,7 +276,9 @@ public sealed class InteractiveSession
             }
 
             PreviousSnapshot = CurrentSnapshot;
-            CurrentSnapshot = _simulation.Step(new SimInput(moveX, moveZ, actions));
+            // Look is level-sampled every Core step while observed (same as Move).
+            CurrentSnapshot = _simulation.Step(
+                new SimInput(moveX, moveZ, actions, _input.LookX));
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;
