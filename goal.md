@@ -2,7 +2,7 @@
 
 Status: **ACTIVE** (full reconstruction campaign)  
 Last updated: 2026-07-14  
-Integration tip: `0cbabf39`
+Integration tip: `1b263add`
 
 ## Closed ledger (this slice)
 
@@ -19,9 +19,9 @@ from source. Campaign ACTIVE.
 
 ## Resume (Codex handoff)
 
-- **Tip SHA:** `0cbabf39`
-- **Closed:** M2-energy-live-dual-accept ADVANCEMENT
-- **Validation:** `npm run test:rebuild-core` (51); `test:rebuild-client` (73); `npm run test:battleengine-scalar-contract-regression` PASS (6 contracts incl. jet-energy-drain v1 signed rates); energy scaffold; `test:docsync` PASS
-- **Paths:** public energy v1/policy/Core 17 + goldens; regression test signed-rate fix; index status partial jet-accepted
+- **Tip SHA:** `1b263add`
+- **Closed:** M2-energy-live-dual-accept ADVANCEMENT (not BLOCKED)
+- **Validation:** `npm run test:rebuild-core` (51); `test:rebuild-client` (73); `npm run test:battleengine-scalar-contract-regression` PASS (`"passed": true`, 6 contracts incl. jet-energy-drain v1 signed rates); energy scaffold; `test:docsync` PASS. Proof: `{SCRATCH}/gates/scalar-regression-FINAL.txt`, `rebuild-core-FINAL.txt`
+- **Paths:** energy v1/policy/Core 17 + goldens; scalar regression signed-rate test; index policy partial jet-accepted
 - **Codex owns next:** `M2-shield-live-dual-accept` only
 - **Confirm:** Steam/original BEA untouched; copied `game/` only; no release
