@@ -1,7 +1,7 @@
 # Full Reconstruction Campaign
 
 Status: **ACTIVE durable campaign**  
-Last updated: 2026-07-14  
+Last updated: 2026-07-14 (marathon: LookX/Core+Client, energy/shield offsets, M1.6/M2 scaffolds)  
 Policy: [`goal.policy.md`](goal.policy.md)  
 Mutable baton: [`goal.md`](goal.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)
