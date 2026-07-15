@@ -75,7 +75,8 @@ public sealed class InteractiveSession
         _resetEdgePending ||
         _firePulsePending ||
         _movementPulseX != 0 ||
-        _movementPulseZ != 0;
+        _movementPulseZ != 0 ||
+        _input.LookX != 0;
 
     public InteractiveSessionMetrics Metrics => new(
         _totalSteps,
