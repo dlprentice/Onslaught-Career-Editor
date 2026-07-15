@@ -5,7 +5,7 @@ Last updated: 2026-07-14
 Policy: [`goal.policy.md`](goal.policy.md)  
 Campaign map: [`goal.campaign.md`](goal.campaign.md)  
 Slash prompt: [`roadmap/goals/full-rebuild-campaign-slash-goal.md`](roadmap/goals/full-rebuild-campaign-slash-goal.md)  
-Integration baseline: pending push of turn-p02 dual-accept wave (builds on `71c85101`)
+Integration baseline: `a4185316` (Look/Left yaw dual-accept + Core milli-rad rate)
 
 ## How this baton works
 
