@@ -9,6 +9,18 @@ import battleengine_energy_scaffold as energy
 
 
 class EnergyScaffoldTests(unittest.TestCase):
+    def test_offset_hypothesis_matches_sampler_constants(self) -> None:
+        import battleengine_walker_trajectory_sampler as sampler
+
+        self.assertEqual(0xFC, energy.BATTLE_ENGINE_ENERGY_OFFSET)
+        self.assertEqual(0x100, energy.BATTLE_ENGINE_SHIELDS_OFFSET)
+        self.assertEqual(
+            energy.BATTLE_ENGINE_ENERGY_OFFSET, sampler.BATTLE_ENGINE_ENERGY_OFFSET
+        )
+        self.assertEqual(
+            energy.BATTLE_ENGINE_SHIELDS_OFFSET, sampler.BATTLE_ENGINE_SHIELDS_OFFSET
+        )
+
     def test_drain_accepts(self) -> None:
         samples = energy.synthetic_energy_series(rate_per_sec=-3.0)
         m = energy.analyze_energy_rate(

@@ -64,7 +64,12 @@ def coherent_memory(*, module_base: int = 0x10000000) -> tuple[FakeMemory, int]:
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_POSITION_OFFSET, (1.0, 2.0, 3.0))
     memory.put_f32x3(battle_engine + sampler.BATTLE_ENGINE_VELOCITY_OFFSET, (0.0, 0.0, 0.0))
     memory.put_f32(battle_engine + sampler.BATTLE_ENGINE_YAW_AXIS_OFFSET, 0.0)
+    memory.put_f32(battle_engine + sampler.BATTLE_ENGINE_ENERGY_OFFSET, 2.5)
+    memory.put_f32(battle_engine + sampler.BATTLE_ENGINE_SHIELDS_OFFSET, 2.5)
     memory.put_f32(walker + sampler.WALKER_CONTROL_OFFSET, 0.0)
+    # Energy/shields offsets must remain distinct from position/state stores.
+    assert sampler.BATTLE_ENGINE_ENERGY_OFFSET == 0xFC
+    assert sampler.BATTLE_ENGINE_SHIELDS_OFFSET == 0x100
     memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_LEVEL_OFFSET, 850)
     memory.put_u32(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_PLAYER_COUNT_OFFSET, 2)
     memory.put_u8(module_base + sampler.C_GAME_OBJECT_RVA + sampler.C_GAME_HORIZONTAL_SPLIT_OFFSET, 1)
@@ -367,6 +372,10 @@ class CoherentReadTests(unittest.TestCase):
         self.assertEqual((0.0, 0.0, 0.0), sample.velocity)
         self.assertEqual(sampler.WALKER_STATE_RAW, sample.state_raw)
         self.assertEqual(sampler.NEUTRAL_CONTROL_RAW, sample.control_raw)
+        self.assertAlmostEqual(2.5, sample.energy)
+        self.assertAlmostEqual(2.5, sample.shields)
+        self.assertEqual(0xFC, sampler.BATTLE_ENGINE_ENERGY_OFFSET)
+        self.assertEqual(0x100, sampler.BATTLE_ENGINE_SHIELDS_OFFSET)
         self.assertNotIn("basis", sample.__dataclass_fields__)
         self.assertNotIn("grounded", sample.__dataclass_fields__)
 
@@ -420,9 +429,9 @@ class CoherentReadTests(unittest.TestCase):
         position_key = (battle_engine + sampler.BATTLE_ENGINE_POSITION_OFFSET, 12)
         first = memory.values[position_key]
         second = struct.pack("<3f", 2.0, 2.0, 3.0)
-        # Two acquisitions per pair (walker chain + yaw_axis); position is read
-        # index 5 in each. First acquisition is 13 reads after yaw_axis field.
-        reads_per_acquire = 13
+        # Two acquisitions per pair (walker chain + yaw/energy/shields);
+        # position is read index 5 in each. First acquisition is 15 reads.
+        reads_per_acquire = 15
         for _ in range(sampler.MAX_COHERENCE_PAIRS):
             pair = [{} for _ in range(reads_per_acquire * 2)]
             pair[5] = {position_key: first}

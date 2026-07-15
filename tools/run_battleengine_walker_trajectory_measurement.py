@@ -33,6 +33,7 @@ import runtime_proof_lab_hygiene as proof_hygiene
 import battleengine_turn_yaw_measurement as turn_yaw
 import battleengine_strafe_measurement as strafe
 import battleengine_transform_timing_measurement as morph_timing
+import battleengine_energy_scaffold as energy_scaffold
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1408,6 +1409,8 @@ def _trace_payload(trace: sampler.AttemptTrace, q_input_nonclaim: str) -> dict[s
             "position": list(value.position), "velocity": list(value.velocity),
             "stateRaw": value.state_raw, "controlRaw": value.control_raw,
             "yawAxis": value.yaw_axis,
+            "energy": value.energy,
+            "shields": value.shields,
         }
     return {
         "schemaVersion": "battleengine-walker-trajectory-private-raw.v1",
@@ -1468,7 +1471,13 @@ def analyze_provisional_trace(
     trace: sampler.AttemptTrace,
     *,
     measure: str = sampler.MEASURE_FORWARD,
-) -> sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics:
+    vehicle: str = sampler.VEHICLE_WALKER,
+) -> (
+    sampler.AttemptMetrics
+    | turn_yaw.TurnAttemptMetrics
+    | strafe.StrafeAttemptMetrics
+    | energy_scaffold.EnergyRateMetrics
+):
     """Run the integrated sampler; AppCore cleanup remains a separate final gate."""
     provisional = replace(
         trace,
@@ -1496,11 +1505,31 @@ def analyze_provisional_trace(
             release=path_rows("release"),
             frequency=provisional.frequency,
         )
+    if measure == sampler.MEASURE_ENERGY:
+        hold = provisional.samples["hold"]
+        samples = [
+            energy_scaffold.EnergySample(tick=row.tick, energy=float(row.energy))
+            for row in hold
+        ]
+        # Jet thrust drains energy; walker Q-hold is not the regen protocol.
+        expect_negative = vehicle == sampler.VEHICLE_JET
+        return energy_scaffold.analyze_energy_rate(
+            attempt=provisional.attempt,
+            samples=samples,
+            frequency=provisional.frequency,
+            expect_negative=expect_negative,
+        )
     return sampler.analyze_attempt(provisional)
 
 
 def _metrics_payload(
-    metrics: sampler.AttemptMetrics | turn_yaw.TurnAttemptMetrics | strafe.StrafeAttemptMetrics,
+    metrics: (
+        sampler.AttemptMetrics
+        | turn_yaw.TurnAttemptMetrics
+        | strafe.StrafeAttemptMetrics
+        | morph_timing.TransformTimingMetrics
+        | energy_scaffold.EnergyRateMetrics
+    ),
     *,
     measure: str = sampler.MEASURE_FORWARD,
 ) -> dict[str, object]:
@@ -1548,6 +1577,23 @@ def _metrics_payload(
                 "steamLinkedObservation": "receipt-bound state series after T morph handshake",
                 "scope": "morph request to 5-sample jet settle latency",
                 "nonclaim": "not Core authority until dual-accept public contract",
+            },
+            "publicProjectionWritten": False,
+        }
+    if measure == sampler.MEASURE_ENERGY and isinstance(
+        metrics, energy_scaffold.EnergyRateMetrics
+    ):
+        return {
+            "schemaVersion": "battleengine-energy-rate-private-metrics.v1",
+            "attempt": metrics.attempt,
+            "acceptedBySamplerBeforeAppCoreCleanup": metrics.accepted,
+            "measure": sampler.MEASURE_ENERGY,
+            "metrics": asdict(metrics),
+            "calibrationTarget": {
+                "sourceNamedPath": "BattleEngine energy float drain/regen (BE+0xFC hypothesis)",
+                "steamLinkedObservation": "receipt-bound player-0 BattleEngine energy samples",
+                "scope": "steady energy rate during hold (jet drain preferred)",
+                "nonclaim": "offset is steam-static hypothesis; not Core authority until dual-accept",
             },
             "publicProjectionWritten": False,
         }
@@ -1613,9 +1659,15 @@ def run_observer(args: argparse.Namespace) -> int:
             raise ValueError("vehicle must be walker or jet")
         measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
         if measure not in sampler.MEASURE_MODES:
-            raise ValueError("measure must be forward, turn, strafe, or transform")
+            raise ValueError(
+                "measure must be forward, turn, strafe, transform, or energy"
+            )
         if measure in (sampler.MEASURE_TURN, sampler.MEASURE_STRAFE) and vehicle != sampler.VEHICLE_WALKER:
             raise ValueError("turn/strafe measure currently requires walker vehicle mode")
+        if measure == sampler.MEASURE_ENERGY and vehicle != sampler.VEHICLE_JET:
+            raise ValueError(
+                "energy measure currently requires jet vehicle (drain under thrust hold)"
+            )
         clock = QpcClock()
         if measure == sampler.MEASURE_TRANSFORM:
             metrics, readiness, payload = collect_transform_attempt(
@@ -1638,7 +1690,9 @@ def run_observer(args: argparse.Namespace) -> int:
             payload = _trace_payload(trace, INTERFERENCE_NONCLAIM)
             payload["measure"] = measure
             _write_new_json(raw_path, payload)
-            metrics = analyze_provisional_trace(trace, measure=measure)
+            metrics = analyze_provisional_trace(
+                trace, measure=measure, vehicle=vehicle
+            )
             _write_new_json(metrics_path, _metrics_payload(metrics, measure=measure))
     except BaseException as exc:
         failure = f"{type(exc).__name__}: {exc}"

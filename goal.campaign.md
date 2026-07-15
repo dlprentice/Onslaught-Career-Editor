@@ -97,7 +97,7 @@ Statuses: `open` | `in_progress` | `landed` | `blocked` | `deferred`
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M2.1 | Fire cooldown / projectile speed retail contracts | in_progress | offline scaffold landed; live dual-accept pending |
-| M2.2 | Damage / hull / shield regeneration contracts | open |
+| M2.2 | Damage / hull / shield regeneration contracts | in_progress | energy BE+0xFC / shields BE+0x100 hyp + sampler; live dual-accept pending |
 | M2.3 | Target / lock behavior (bounded, evidence-first) | open |
 | M2.4 | Core combat goldens + harness expansion | open |
 

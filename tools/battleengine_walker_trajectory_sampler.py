@@ -108,6 +108,12 @@ BATTLE_ENGINE_POSITION_OFFSET = 0x1C
 BATTLE_ENGINE_VELOCITY_OFFSET = 0x7C
 # Steam-static hypothesis: GeneralVolume yaw-axis field (ApplyYawInput… notes).
 BATTLE_ENGINE_YAW_AXIS_OFFSET = 0x278
+# Steam-static current energy float: cloak gate / walker recharge / profile apply
+# all read/write BattleEngine+0xFC (see energy-rate-scalar-measurement-plan.md).
+BATTLE_ENGINE_ENERGY_OFFSET = 0xFC
+# Steam-static shields float: walker recharge mirrors energy into main+0x100
+# (source mShields=mEnergy; decompile main+0x100 after main+0xFC).
+BATTLE_ENGINE_SHIELDS_OFFSET = 0x100
 WALKER_CONTROL_OFFSET = 0x40
 # JetPart mLastMoveYVal (Steam CDB thrust store path; source Thrust sets it last).
 JET_LAST_MOVE_Y_OFFSET = 0x24
@@ -121,7 +127,14 @@ MEASURE_FORWARD = "forward"
 MEASURE_TURN = "turn"
 MEASURE_STRAFE = "strafe"
 MEASURE_TRANSFORM = "transform"
-MEASURE_MODES = (MEASURE_FORWARD, MEASURE_TURN, MEASURE_STRAFE, MEASURE_TRANSFORM)
+MEASURE_ENERGY = "energy"
+MEASURE_MODES = (
+    MEASURE_FORWARD,
+    MEASURE_TURN,
+    MEASURE_STRAFE,
+    MEASURE_TRANSFORM,
+    MEASURE_ENERGY,
+)
 MAX_COHERENCE_PAIRS = 3
 CADENCE_MS = 10
 # Source/Steam-static hypothesis for actor integration (CLOCK_TICK / GAME_FR).
@@ -186,6 +199,9 @@ class RawSample:
     control_raw: int
     # BattleEngine+0x278 yaw-axis hypothesis (float); 0.0 when unread/unavailable.
     yaw_axis: float = 0.0
+    # BattleEngine+0xFC / +0x100 energy/shields hypotheses (float).
+    energy: float = 0.0
+    shields: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -399,6 +415,12 @@ def _acquire(
     yaw_axis = _read_exact(
         reader, _checked_address(battle_engine, BATTLE_ENGINE_YAW_AXIS_OFFSET, 4), 4
     )
+    energy = _read_exact(
+        reader, _checked_address(battle_engine, BATTLE_ENGINE_ENERGY_OFFSET, 4), 4
+    )
+    shields = _read_exact(
+        reader, _checked_address(battle_engine, BATTLE_ENGINE_SHIELDS_OFFSET, 4), 4
+    )
     p0_after = _read_u32(reader, module_base, P0_GLOBAL_RVA)
     battle_engine_after = _read_u32(reader, p0_after, PLAYER_BATTLE_ENGINE_OFFSET)
     if vehicle == VEHICLE_WALKER:
@@ -410,7 +432,10 @@ def _acquire(
         part_after = _read_u32(reader, battle_engine_after, BATTLE_ENGINE_JET_OFFSET)
     if (p0, battle_engine, part) != (p0_after, battle_engine_after, part_after):
         raise SampleError("runtime pointer chain changed during acquisition")
-    return (p0, battle_engine, part), state + position + velocity + control + yaw_axis
+    return (
+        (p0, battle_engine, part),
+        state + position + velocity + control + yaw_axis + energy + shields,
+    )
 
 
 def read_coherent_sample(
@@ -461,13 +486,29 @@ def read_coherent_sample(
         velocity = struct.unpack_from("<3f", first, 16)
         control_raw = struct.unpack_from("<I", first, 28)[0]
         yaw_axis = struct.unpack_from("<f", first, 32)[0]
-        if not all(math.isfinite(value) for value in (*position, *velocity, yaw_axis)):
-            raise SampleError("position, velocity, and yaw_axis values must be finite")
+        energy = struct.unpack_from("<f", first, 36)[0]
+        shields = struct.unpack_from("<f", first, 40)[0]
+        if not all(
+            math.isfinite(value)
+            for value in (*position, *velocity, yaw_axis, energy, shields)
+        ):
+            raise SampleError(
+                "position, velocity, yaw_axis, energy, and shields must be finite"
+            )
         control = struct.unpack_from("<f", first, 28)[0]
         if not math.isfinite(control):
             raise SampleError("control value must be finite")
         return RawSample(
-            tick, phase, slot, position, velocity, state_raw, control_raw, yaw_axis=yaw_axis
+            tick,
+            phase,
+            slot,
+            position,
+            velocity,
+            state_raw,
+            control_raw,
+            yaw_axis=yaw_axis,
+            energy=energy,
+            shields=shields,
         )
     raise SampleError("torn runtime sample after three coherence pairs")
 

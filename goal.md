@@ -2,33 +2,25 @@
 
 Status: **ACTIVE** (time-boxed marathon)  
 Last updated: 2026-07-14  
-**STOP wall clock:** 2026-07-15 10:00 local (STOP_LOCAL=10:00 STOP_DATE=tomorrow from session start)  
-Integration tip: (pending push after this closeout)  
-30m durable re-entry scheduled until STOP (task 019f633f58c2)
+**STOP wall clock:** 2026-07-15 10:00 local  
+Integration tip: (pending this push)  
+30m durable re-entry: 019f633f58c2
 
 ## Closed ledger (selected)
 
 | Slice | Result |
 |-------|--------|
-| Walker/jet/yaw/strafe dual-accepts | landed (prior) |
-| **M1.5 transform morph settle** | landed xform-p03; `MorphToJetSettleTicks=148` |
-| Energy / projectile / shield scaffolds | offline harnesses landed |
-| **M3.1 camera look scaffold + Core LookX** | landed: `battleengine_camera_look_measurement`; Core `LookX` integrates `WalkerLookYawRateMilliRadPerTick`; package `test:battleengine-m2-m3-scaffolds` |
+| Motion dual-accepts + transform morph | landed prior |
+| M3.1 camera harness + Core LookX | landed `83c33e0d` |
+| **M2 energy/shield offset + measure=energy** | landed: BE+0xFC energy, BE+0x100 shields; sampler samples; `--measure energy --vehicle jet` analysis path |
 
 ## Current Slice
 
-**ID:** `M2-energy-offset-static-or-live-or-WinUI`  
-**Objective:** Discover retail energy/shield field offsets (static/source → sampler
-hypothesis) for live dual-accept; if blocked, WinUI product honesty tests or
-M1.6 coast/friction plan. No reopen closed motion dual-accepts.
-
-## Progress (time-box session)
-
-- Wired `--measure transform`; dual-accept morph settle; Core 148 ticks.
-- Energy/projectile/shield pure scaffolds + plans.
-- Camera look offline harness + npm gates; Core body LookX from turn-p02 rate.
-- Marathon continues until wall-clock STOP; 30m scheduler re-entry armed.
+**ID:** `M2-energy-live-dual-accept-or-WinUI`  
+**Objective:** Live dual-accept jet energy drain (`--measure energy --vehicle jet`)
+if copied-runtime ready; else WinUI honesty / M1.6 coast plan. Offsets are
+hypotheses until dual-accept.
 
 ## Resume
 
-Continue Current Slice if `Get-Date` < STOP; else finalize and stop.
+If `Get-Date` < STOP continue; else finalize.

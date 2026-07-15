@@ -8,6 +8,10 @@ import statistics
 from dataclasses import dataclass
 from typing import Sequence
 
+# Steam-static hypothesis (see energy-rate-scalar-measurement-plan.md).
+BATTLE_ENGINE_ENERGY_OFFSET = 0xFC
+BATTLE_ENGINE_SHIELDS_OFFSET = 0x100
+
 
 class EnergyScaffoldError(ValueError):
     pass
