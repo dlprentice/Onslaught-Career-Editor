@@ -29,6 +29,19 @@ class CoastFrictionTests(unittest.TestCase):
             envelope["schemaVersion"],
         )
 
+    def test_pair_envelope_rejects_unstable_half_lives(self) -> None:
+        frequency = 10_000_000
+        h1, r1 = coast.synthetic_coast_attempt(attempt=1, half_life_ms=100.0)
+        h2, r2 = coast.synthetic_coast_attempt(attempt=2, half_life_ms=400.0)
+        m1 = coast.analyze_coast_attempt(
+            attempt=1, hold=h1, release=r1, frequency=frequency
+        )
+        m2 = coast.analyze_coast_attempt(
+            attempt=2, hold=h2, release=r2, frequency=frequency
+        )
+        with self.assertRaisesRegex(coast.CoastFrictionError, "not stable"):
+            coast.materialize_coast_pair_envelope(m1, m2)
+
     def test_rejects_no_decay(self) -> None:
         frequency = 10_000_000
         step = frequency // 100
