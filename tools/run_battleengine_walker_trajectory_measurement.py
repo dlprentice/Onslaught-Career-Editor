@@ -1623,6 +1623,23 @@ def _write_new_json(path: Path, value: object) -> None:
         os.fsync(stream.fileno())
 
 
+def validate_measure_vehicle(measure: str, vehicle: str) -> None:
+    """Reject measure/vehicle combinations that the live path cannot support yet."""
+
+    if measure not in sampler.MEASURE_MODES:
+        raise ValueError(
+            "measure must be forward, turn, strafe, transform, or energy"
+        )
+    if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
+        raise ValueError("vehicle must be walker or jet")
+    if measure in (sampler.MEASURE_TURN, sampler.MEASURE_STRAFE) and vehicle != sampler.VEHICLE_WALKER:
+        raise ValueError("turn/strafe measure currently requires walker vehicle mode")
+    if measure == sampler.MEASURE_ENERGY and vehicle != sampler.VEHICLE_JET:
+        raise ValueError(
+            "energy measure currently requires jet vehicle (drain under thrust hold)"
+        )
+
+
 def run_observer(args: argparse.Namespace) -> int:
     authorized_root = Path(os.path.abspath(args.authorized_private_root))
     receipt_path = _authorize_private_path(
@@ -1658,16 +1675,7 @@ def run_observer(args: argparse.Namespace) -> int:
         if vehicle not in (sampler.VEHICLE_WALKER, sampler.VEHICLE_JET):
             raise ValueError("vehicle must be walker or jet")
         measure = getattr(args, "measure", sampler.MEASURE_FORWARD) or sampler.MEASURE_FORWARD
-        if measure not in sampler.MEASURE_MODES:
-            raise ValueError(
-                "measure must be forward, turn, strafe, transform, or energy"
-            )
-        if measure in (sampler.MEASURE_TURN, sampler.MEASURE_STRAFE) and vehicle != sampler.VEHICLE_WALKER:
-            raise ValueError("turn/strafe measure currently requires walker vehicle mode")
-        if measure == sampler.MEASURE_ENERGY and vehicle != sampler.VEHICLE_JET:
-            raise ValueError(
-                "energy measure currently requires jet vehicle (drain under thrust hold)"
-            )
+        validate_measure_vehicle(measure, vehicle)
         clock = QpcClock()
         if measure == sampler.MEASURE_TRANSFORM:
             metrics, readiness, payload = collect_transform_attempt(

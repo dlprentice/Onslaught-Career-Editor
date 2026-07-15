@@ -430,6 +430,15 @@ class MeasurementTests(unittest.TestCase):
         )
         self.assertEqual(self.m.sampler.MEASURE_ENERGY, payload["measure"])
 
+    def test_energy_measure_requires_jet_vehicle(self):
+        with self.assertRaisesRegex(ValueError, "requires jet"):
+            self.m.validate_measure_vehicle(
+                self.m.sampler.MEASURE_ENERGY, self.m.sampler.VEHICLE_WALKER
+            )
+        self.m.validate_measure_vehicle(
+            self.m.sampler.MEASURE_ENERGY, self.m.sampler.VEHICLE_JET
+        )
+
     def test_source_has_no_outer_hard_timeout_for_lifecycle_owner(self):
         source = self.m.MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("timeout=ATTEMPT_DEADLINE_SECONDS", source)
