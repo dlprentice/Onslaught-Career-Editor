@@ -25,11 +25,11 @@ maintainer-local payloads.
 | --- | --- | --- |
 | What does the shipped app do? | `CURRENT_CAPABILITIES.md` | Current bounded capability summary |
 | How do I build or contribute? | `CONTRIBUTING.md` | Current human contributor workflow |
-| What may an agent change? | `AGENTS.md`, `goal.policy.md`, `goal.md` | Current execution and campaign boundaries |
+| What may an agent change? | `AGENTS.md` | Current repository boundaries |
 | Which commands should I run? | Root `package.json` | Current command definitions |
 | What is release signoff? | `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md` | Current source/package signoff guide |
-| What is current RE truth? | `re_orchestrator_state.json`, `reverse-engineering/RE-INDEX.md` | Current baton plus canonical RE index |
-| What is current Lore truth? | `documentation_agent_state.json`, `lore/LORE-INDEX.md` | Current baton plus canonical narrative index |
+| What is current RE truth? | `re_orchestrator_state.json`, `reverse-engineering/RE-INDEX.md` | Current evidence ledger plus canonical RE index |
+| What is current Lore truth? | `documentation_agent_state.json`, `lore/LORE-INDEX.md` | Current evidence ledger plus canonical narrative index |
 | Where is the active rebuild? | `rebuild/README.md`, `roadmap/rebuild-front-door-chain-map.md` | Executable rebuild and evidence/provenance routing |
 
 Do not browse all 1,400-plus package scripts to begin work. Use `npm test` for

@@ -36,8 +36,6 @@ ACTIVE_MARKDOWN_FILES = (
     "README.RELEASE.md",
     "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
     "VALIDATION.md",
-    "goal.md",
-    "goal.policy.md",
     "rebuild/AGENTS.md",
     "rebuild/README.md",
     "roadmap/original-binary-online-multiplayer-feasibility.md",

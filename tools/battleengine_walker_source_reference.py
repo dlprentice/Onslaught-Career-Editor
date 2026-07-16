@@ -973,7 +973,7 @@ def render_report(report: Mapping[str, Any]) -> bytes:
 
 def _default_repo_root() -> Path:
     for candidate in Path(__file__).resolve().parents:
-        if (candidate / "goal.policy.md").is_file() and (candidate / "package.json").is_file():
+        if (candidate / "AGENTS.md").is_file() and (candidate / "package.json").is_file():
             return candidate
     raise ModelError("repository root not found")
 

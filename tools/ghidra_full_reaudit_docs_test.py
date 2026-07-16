@@ -251,15 +251,13 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
         self.assertEqual(updated.count(docs.NOTICE_START), 1)
         self.assertEqual(repeated, updated)
 
-    def test_primary_state_and_reference_source_paths_are_excluded(self) -> None:
-        state = self.write(".codex/state/progress.md", "# State\n")
+    def test_reference_source_and_primary_canary_paths_are_excluded(self) -> None:
         source = self.write("references/Onslaught/engine.cpp", "// source\n")
         canary = self.write(
             "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
             "# Primary-owned canary\n",
         )
         records = [
-            self.record("0x00404000", state.relative_to(self.root).as_posix()),
             self.record("0x00404010", source.relative_to(self.root).as_posix()),
             self.record("0x00404020", canary.relative_to(self.root).as_posix()),
         ]
@@ -267,8 +265,7 @@ class GhidraFullReauditDocsTests(unittest.TestCase):
         result = docs.reconcile_docs(self.root, records, write=True)
 
         self.assertEqual(result.changed_count, 0)
-        self.assertEqual(result.excluded_count, 3)
-        self.assertEqual(state.read_text(encoding="utf-8"), "# State\n")
+        self.assertEqual(result.excluded_count, 2)
         self.assertEqual(source.read_text(encoding="utf-8"), "// source\n")
         self.assertEqual(canary.read_text(encoding="utf-8"), "# Primary-owned canary\n")
 

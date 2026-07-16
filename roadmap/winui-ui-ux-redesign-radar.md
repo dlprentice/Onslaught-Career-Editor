@@ -11,7 +11,7 @@ This document tracks UI/UX debt that is too broad for a release-candidate polish
 - Keep proof vocabulary one level deeper in Details, Advanced, Diagnostics, readiness notes, or maintainer docs.
 - Do not imply online multiplayer, matchmaking, audible music replacement proof, or rebuild parity is complete.
 - Keep the installed Steam game folder and original `BEA.exe` read-only. The UI should repeat this where a user is about to copy, patch, launch, or stop a game process.
-- Current platform decision: keep WinUI 3 as the flagship and improve agent-driven inspection/visual QA before considering any rewrite. See `roadmap/winui-agentic-ui-hardening-plan.md`.
+- Current platform decision: keep WinUI 3 as the flagship before considering any rewrite.
 
 ## Redesign Radar
 

@@ -34,7 +34,6 @@ Public platform sources checked for this dossier:
 
 Repo sources used:
 
-- `roadmap/goals/2026-05-01-ralph-loop-agentic-re-master-goal.md`
 - `roadmap/electron-workbench-migration.md`
 - `roadmap/status-current.md`
 - `roadmap/repo-structure-and-archive-map.md`

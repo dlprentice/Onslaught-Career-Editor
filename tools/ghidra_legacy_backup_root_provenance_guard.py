@@ -22,15 +22,9 @@ PACKAGE_COMMAND = (
 )
 
 ACTIVE_SURFACES = (
-    "goal.md",
     "developer_agent_state.json",
     "documentation_agent_state.json",
     "re_orchestrator_state.json",
-    "coordination/AUTOMATION_STORAGE_GHIDRA_POSTURE.md",
-    "coordination/README.md",
-    "coordination/REPORT_CONTRACT.md",
-    "coordination/RESOURCE_LEASES.md",
-    "coordination/WORKSTREAM_CONTRACT.md",
     "LOCAL_LAB_OVERLAY.md",
 )
 
@@ -50,17 +44,7 @@ FORBIDDEN_ACTIVE_PATTERNS = (
     (re.compile(r"(?i)/(?:home|mnt|var|opt|tmp|users?)/"), "Unix absolute local path"),
 )
 
-REQUIRED_ACTIVE_TOKENS = {
-    "coordination/AUTOMATION_STORAGE_GHIDRA_POSTURE.md": (
-        "configured removable scratch/backup root",
-        "Exact drive letters, roots, volume identifiers",
-        "Historical backup/archive drive strings in old wave evidence are provenance only",
-    ),
-    "goal.md": (
-        "latest backup class redaction",
-        "Storage/Ghidra backup details remain local campaign evidence only",
-    ),
-}
+REQUIRED_ACTIVE_TOKENS = {}
 
 REQUIRED_HISTORICAL_TOKENS = (
     SANITIZED_BACKUP_ROOT_TOKEN,

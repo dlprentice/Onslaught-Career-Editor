@@ -80,11 +80,6 @@ ALLOW_EXACT_SHA256 = {
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
 
-ALLOW_CODEX_PREFIXES = (
-    ".codex/goals/",
-    ".codex/state/",
-)
-
 ALLOW_CDB_SCRIPT_PREFIXES = (
     "tools/runtime-probes/",
 )
@@ -382,7 +377,7 @@ def path_findings(path: str) -> list[Finding]:
     findings: list[Finding] = []
     lower = path.lower()
     name = Path(path).name.lower()
-    if lower.startswith(".codex/") and not any(lower.startswith(prefix.lower()) and lower.endswith(".md") for prefix in ALLOW_CODEX_PREFIXES):
+    if lower.startswith(".codex/"):
         findings.append(Finding(path, "deny-codex-runtime-subtree", path))
     if path in DENY_EXACT:
         findings.append(Finding(path, "deny-exact", path))
@@ -624,8 +619,8 @@ def run_self_test() -> int:
         (root / "manual.xml").write_text("<xml>not ok</xml>\n", encoding="utf-8")
         (root / "local.rep").mkdir()
         (root / "local.rep" / "project.db").write_bytes(b"not ok")
-        (root / ".codex" / "goals").mkdir(parents=True)
-        (root / ".codex" / "goals" / "ok.md").write_text("project goal history\n", encoding="utf-8")
+        (root / ".codex" / "custom").mkdir(parents=True)
+        (root / ".codex" / "custom" / "instructions.md").write_text("not public\n", encoding="utf-8")
         (root / ".codex" / "sessions").mkdir(parents=True)
         (root / ".codex" / "sessions" / "session.jsonl").write_text("not ok\n", encoding="utf-8")
         (root / "archive" / "electron-workbench" / "packages" / "ui").mkdir(parents=True)
@@ -725,11 +720,6 @@ def run_self_test() -> int:
                 print("- gold fixture exception was rejected for a reason other than hash mismatch")
                 print(f"- findings: {findings!r}")
                 return 1
-        if any(finding.path == ".codex/goals/ok.md" for finding in findings):
-            print("Public payload safety self-test: FAIL")
-            print("- allowed .codex goal markdown was rejected")
-            print(f"- findings: {findings!r}")
-            return 1
         if any(finding.path == "archive/electron-workbench/packages/ui/index.html" for finding in findings):
             print("Public payload safety self-test: FAIL")
             print("- allowed Electron archive index.html was rejected")

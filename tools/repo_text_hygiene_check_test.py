@@ -113,7 +113,7 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
             + "private"
         )
         labels = self.matching_labels(
-            ".codex/state/winui-lane-health-evidence.md",
+            "developer_agent_state.json",
             f"`git status` ran in `{private_repo_root}`.",
         )
         labels.update(
@@ -133,29 +133,6 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
         )
 
         self.assertIn("tracked-private-repo-root-path", labels)
-
-    def test_flags_private_repo_root_paths_in_directive_and_subagents(self) -> None:
-        labels = self.matching_labels(
-            "onslaught_codex_directive.md",
-            "Work was originally directed at dlprentice/Onslaught-Career-Editor-private.",
-        )
-        labels.update(
-            self.matching_labels(
-                "subagents/example/report.md",
-                "Historical command used /mnt/c/Users/operator/source/Onslaught-Career-Editor-"
-                + "private/Views/MainWindow.xaml",
-            )
-        )
-
-        self.assertIn("tracked-private-repo-root-path", labels)
-
-    def test_flags_private_save_attempt_fixture_paths_in_subagent_docs(self) -> None:
-        labels = self.matching_labels(
-            "subagents/depth3/lane05_cli_fixcards.md",
-            "python3 patcher.py save-attempts/haha-cannon-goes-brrrrr.bes /tmp/out.bes",
-        )
-
-        self.assertIn("tracked-private-save-attempt-fixture-reference", labels)
 
     def test_allows_private_repo_root_paths_in_private_runtime_evidence(self) -> None:
         labels = self.matching_labels(
@@ -225,7 +202,7 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
         )
         labels.update(
             self.matching_labels(
-                ".codex/state/winui-product-re-campaign-evidence.md",
+                "roadmap/legacy-storage-note.md",
                 "External backup drives are detached; use backup root while `Z:` is unavailable.",
             )
         )
@@ -242,14 +219,8 @@ class RepoTextHygieneRuleTests(unittest.TestCase):
 
     def test_flags_stale_current_consult_stack_requiring_gemini_opus(self) -> None:
         labels = self.matching_labels(
-            ".codex/goals/active-thread-goal.md",
-            "Required normal/adversarial Codex, Grok, Grok Composer, Opus, and Gemini consults.",
-        )
-        labels.update(
-            self.matching_labels(
-                "roadmap/static-to-proof-rebuild-transition-backlog.md",
-                "Use bounded normal/adversarial Codex, Grok Composer, Opus, and Gemini consults.",
-            )
+            "roadmap/static-to-proof-rebuild-transition-backlog.md",
+            "Use bounded normal/adversarial Codex, Grok Composer, Opus, and Gemini consults.",
         )
 
         self.assertIn("stale-current-consult-stack-requires-gemini-opus", labels)

@@ -43,7 +43,6 @@ current accounting context lives in
 | [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |
 | [patchbench-primitive-projection-contract.md](/roadmap/patchbench-primitive-projection-contract.md) | Design-only primitive receipt/source-summary presentation boundary for future PatchBench helper extraction; not extraction approval |
 | [resolved-archive.md](/roadmap/resolved-archive.md) | Historical completed work |
-| [goals/2026-05-01-ralph-loop-agentic-re-master-goal.md](/roadmap/goals/2026-05-01-ralph-loop-agentic-re-master-goal.md) | Completed Ralph-loop agentic RE operating-model goal contract |
 | [interaction-audit/2026-05-01-ui-action-inventory.md](/roadmap/interaction-audit/2026-05-01-ui-action-inventory.md) | Historical UI action inventory |
 | [reverse-engineering/coverage-map.md](/roadmap/reverse-engineering/coverage-map.md) | RE coverage map and reusable objective templates |
 | [web-runtime/webgpu-wasm-netcode-feasibility.md](/roadmap/web-runtime/webgpu-wasm-netcode-feasibility.md) | Future WebGPU/WASM/netcode feasibility and prerequisites |

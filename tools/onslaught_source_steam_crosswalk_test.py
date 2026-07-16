@@ -241,11 +241,11 @@ class CrosswalkValidationTests(unittest.TestCase):
         self.assert_invalid(value, "unsupported evidence path")
 
     def test_steam_evidence_cannot_traverse_out_of_layer_directory(self) -> None:
-        escaped = self.repo.root / "goal.md"
+        escaped = self.repo.root / "outside-evidence.txt"
         escaped.write_text("STEAM_alpha", encoding="utf-8")
         value = document()
         value["rows"][0]["steamStatic"]["evidence"][0]["file"] = (
-            "reverse-engineering/binary-analysis/../../goal.md"
+            "reverse-engineering/binary-analysis/../../outside-evidence.txt"
         )
         self.assert_invalid(value, "unsupported evidence path")
 

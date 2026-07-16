@@ -42,7 +42,7 @@ REVIEWED_DECISIONS_PATH = Path(
 REVIEWED_PLAN_PATH = Path(
     "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json"
 )
-EXCLUDED_PREFIXES = (".codex/state/", "references/")
+EXCLUDED_PREFIXES = ("references/",)
 EXCLUDED_PATHS = {
     "roadmap/battleengine-morph-identity-canary-implementation-plan-2026-07-12.md",
 }

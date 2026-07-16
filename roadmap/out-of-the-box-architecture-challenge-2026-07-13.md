@@ -54,10 +54,9 @@ claims against repository evidence.
 
 Important evidence:
 
-- [goal.policy.md](../goal.policy.md) prohibits recursive proof-plan chains when
-  executable code, a focused test, or one concrete blocker is more direct.
-- [goal.md](../goal.md) records twelve failed morph-canary runtime attempts, no
-  accepted matrix, and the eventual decision to timebox that work.
+- [AGENTS.md](../AGENTS.md) favors direct implementation and proportional evidence.
+- The morph-canary runtime evidence records twelve failed attempts, no accepted
+  matrix, and the eventual decision to timebox that work.
 - [CURRENT_CAPABILITIES.md](../CURRENT_CAPABILITIES.md) is 136,702 characters and
   accurately distinguishes many proof classes, but gives future/negative proof
   status far more front-door space than ordinary product posture.

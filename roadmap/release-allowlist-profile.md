@@ -1,15 +1,15 @@
 # Release Allowlist Profile
 
-> Generated: 2026-07-12 20:00:27 -0400
+> Generated: 2026-07-16 10:37:54 -0400
 
 ## Classification Summary
 
 | Class | Count | Meaning |
 |---|---:|---|
-| R0_ALLOW | 6291 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
+| R0_ALLOW | 6496 | Default allow bucket for portable/export release accounting (still requires human review before publishing an artifact) |
 | R2_REVIEW | 0 | Volatile/generated/binary artifacts; include only when intentional |
 | R3_CONDITIONAL | 3 | Reference submodule families requiring licensing/scope review |
-| R4_DENY | 13184 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
+| R4_DENY | 13055 | Excluded from portable app ZIPs and legacy curated export payloads; may still be tracked public source when compact, non-secret project history |
 
 Public-primary note: this profile is not the boundary for what may exist in
 the public source repo. It is an app/export accounting artifact. The source
@@ -531,8 +531,6 @@ outputs, and secrets.
 - `developer_agent_state.json`
 - `documentation_agent_state.json`
 - `re_orchestrator_state.json`
-- `goal.md`
-- `goal.policy.md`
 - `.gitignore`
 - `roadmap/release-allowlist-classification.tsv`
 - `lore-book/roadmap/release-allowlist-classification.tsv`
@@ -719,26 +717,6 @@ outputs, and secrets.
 
 ## R4 Portable/Legacy Export Exclusions (Current Working Tree)
 
-- `.codex/goals/active-thread-goal.md`
-- `.codex/goals/repo-hardening.md`
-- `.codex/goals/three-lane-strategy-reset.md`
-- `.codex/goals/winui-lane-health.md`
-- `.codex/goals/winui-product-consolidation.md`
-- `.codex/goals/winui-product-re-campaign.md`
-- `.codex/state/repo-hardening-evidence.md`
-- `.codex/state/repo-hardening-progress.md`
-- `.codex/state/three-lane-reset-evidence.md`
-- `.codex/state/three-lane-reset.md`
-- `.codex/state/winui-lane-health-evidence.md`
-- `.codex/state/winui-lane-health.md`
-- `.codex/state/winui-product-consolidation-evidence.md`
-- `.codex/state/winui-product-consolidation.md`
-- `.codex/state/winui-product-re-campaign-completion-audit-2026-05-08.md`
-- `.codex/state/winui-product-re-campaign-completion-audit.md`
-- `.codex/state/winui-product-re-campaign-evidence.md`
-- `.codex/state/winui-product-re-campaign-progress.md`
-- `.codex/state/winui-product-sprint-evidence.md`
-- `.codex/state/winui-product-sprint.md`
 - `.gitignore`
 - `AGENTS.md`
 - `MCP_DEBUGGING_OPTIONS.md`
@@ -839,7 +817,27 @@ outputs, and secrets.
 - `archive/legacy-python/onslaught_explorer.py`
 - `archive/legacy-python/patcher.py`
 - `archive/legacy-python/requirements.txt`
-- ... (13064 more entries in `roadmap/release-allowlist-classification.tsv`)
+- `archive/legacy-python/tests_pyqt/test_binary_patches_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_cardid_preset_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_cli_goodie_list_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_cli_options_file_safety_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_cli_readonly_modes_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_cli_validation_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_save_editor_defaults_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_save_patch_regressions_unittest.py`
+- `archive/legacy-python/tests_pyqt/test_smoke.py`
+- `archive/legacy-winui-release/BUNDLE-LAUNCHER.cmd`
+- `archive/legacy-winui-release/BUNDLE-README.MD`
+- `archive/legacy-winui-release/Build-PortableBundle.ps1`
+- `archive/legacy-wpf/App.xaml`
+- `archive/legacy-wpf/App.xaml.cs`
+- `archive/legacy-wpf/AssemblyInfo.cs`
+- `archive/legacy-wpf/MainWindow.xaml`
+- `archive/legacy-wpf/MainWindow.xaml.cs`
+- `archive/legacy-wpf/MediaPlaybackKind.cs`
+- `archive/legacy-wpf/Onslaught - Career Editor.csproj`
+- `archive/legacy-wpf/Onslaught - Career Editor.sln`
+- ... (12935 more entries in `roadmap/release-allowlist-classification.tsv`)
 
 ## Re-run Commands
 

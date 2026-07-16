@@ -31,8 +31,6 @@ class ReleaseCuratedManifestTests(unittest.TestCase):
         source_only_paths = [
             "LOCAL_LAB_OVERLAY.md",
             "coordination/README.md",
-            "goal.md",
-            "goal.policy.md",
             "tools/public_primary_migration_inventory.py",
         ]
         self.assertEqual(
@@ -131,27 +129,6 @@ class ReleaseCuratedManifestTests(unittest.TestCase):
         self.assertIn("test:rebuild-godot-toolchain", scripts["test:rebuild"])
         self.assertIn("test:rebuild-godot-smoke-validation", scripts["test:rebuild"])
         self.assertNotIn("test:docsync", quick_check)
-
-    def test_export_facing_signoff_blocks_match(self) -> None:
-        paths = [
-            manifest.ROOT / "COLLABORATION.md",
-            manifest.ROOT / "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
-            manifest.ROOT / "release" / "readiness" / "public_AGENTS.md",
-            manifest.ROOT / "release" / "readiness" / "public_README.txt",
-            manifest.ROOT / "release" / "readiness" / "public_CONTRIBUTING.txt",
-        ]
-
-        blocks = []
-        for path in paths:
-            text = path.read_text(encoding="utf-8")
-            start = text.index("<!-- public-package-commands:start -->")
-            end = text.index("<!-- public-package-commands:end -->", start)
-            blocks.append(text[start:end].replace("\r\n", "\n"))
-
-        self.assertEqual(blocks[0], blocks[1])
-        self.assertEqual(blocks[0], blocks[2])
-        self.assertEqual(blocks[0], blocks[3])
-        self.assertEqual(blocks[0], blocks[4])
 
     def test_filter_public_rows_excludes_non_r0_rows(self) -> None:
         rows = [

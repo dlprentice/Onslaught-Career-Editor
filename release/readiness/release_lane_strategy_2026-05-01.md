@@ -208,6 +208,6 @@ Plain language should be:
 
 Use this file only as historical context. For current source-collaboration truth,
 start with `README.MD`, `AGENTS.md`, `LOCAL_LAB_OVERLAY.md`,
-`roadmap/public-primary-working-repo.md`, `goal.policy.md`, and `goal.md`.
+and `roadmap/public-primary-working-repo.md`.
 Continue WinUI product hardening, safe-copy patch/mod proof, and online/rebuild
 research from the public-primary repo.

@@ -82,8 +82,7 @@ Modify:
 - `tools/winui_safe_copy_live_runtime_smoke.py` and
   `tools/winui_safe_copy_live_runtime_smoke_test.py`.
 - `reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md`,
-  `reverse-engineering/RE-INDEX.md`, `goal.md`, and state files only after an
-  accepted runtime result.
+  and `reverse-engineering/RE-INDEX.md` only after an accepted runtime result.
 
 Do not add a package script. These focused tools are invoked directly; the
 contributor-facing command cleanup belongs to the separate validation campaign.
@@ -607,11 +606,10 @@ git commit -m "feat(re): orchestrate morph identity canary matrix"
   `reverse-engineering/binary-analysis/battleengine-morph-identity-canary-runtime-summary-2026-07-12.md`
 - Conditional mirror after PASS: matching two files under
   `lore-book/reverse-engineering/binary-analysis/`
-- Conditional modify after PASS: movement crosswalk, RE indexes, `goal.md`, and
-  state JSON files.
+- Conditional modify after PASS: movement crosswalk and RE indexes.
 
 **Interfaces:**
-- Consumes the tested executor and explicit local baton/leases.
+- Consumes the tested executor and explicit local authority/leases.
 - Produces either one accepted public-safe identity summary or one bounded
   blocker. It never produces a behavior contract or rebuild change.
 
@@ -673,7 +671,7 @@ baseline still matches; and keys, CDB, and managed game process are clean.
 - [ ] **Step 5: Apply the evidence decision**
 
 If any acceptance condition fails, keep raw material private, release leases,
-record the exact blocker in `goal.md` and state, and stop before Stage B.
+record the exact blocker with the owning runtime evidence, and stop before Stage B.
 
 If all pass, copy only the validated sanitized JSON into the canonical and Lore
 paths, add a concise Markdown interpretation/nonclaim note, link it from the RE

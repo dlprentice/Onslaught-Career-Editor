@@ -1,13 +1,8 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. Two normal Codex Desktop tasks may form a supervisor/worker pair after list/read/send tools and a harmless two-way probe are verified; a directly spawned subordinate agent is an alternative.",
   "currentFocus": "Product-coupled reconstruction campaign execution is paused with no implementation worker assigned; the capped shield observations are closed without an accepted pair or behavior contract, and the WinUI Reconstruction companion workflow is queued next.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
-    "goalPolicy": "goal.policy.md",
-    "goalCampaign": "goal.campaign.md",
-    "activeGoal": "goal.md",
-    "slashGoal": "roadmap/goals/full-rebuild-campaign-slash-goal.md",
     "capabilities": "CURRENT_CAPABILITIES.md",
     "reState": "re_orchestrator_state.json"
   },

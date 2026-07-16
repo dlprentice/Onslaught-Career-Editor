@@ -1,16 +1,11 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Active docs use the single-writer default in goal.policy.md. One active implementation owner integrates, validates, updates state, commits/pushes, and accepts; two normal Codex Desktop tasks may form a supervisor/worker pair after list/read/send tools and a harmless two-way probe are verified, while a directly spawned subordinate agent remains an alternative.",
   "currentFocus": "Product-coupled reconstruction campaign execution is paused with no implementation worker assigned; the capped shield observations are closed without an accepted pair or behavior contract, and the WinUI Reconstruction companion workflow is queued next.",
   "sourceOfTruth": {
     "readme": "README.MD",
     "contributorGuide": "CONTRIBUTING.md",
     "collaborationGuide": "COLLABORATION.md",
     "securityGuide": "SECURITY.md",
-    "goalPolicy": "goal.policy.md",
-    "goalCampaign": "goal.campaign.md",
-    "activeGoal": "goal.md",
-    "slashGoal": "roadmap/goals/full-rebuild-campaign-slash-goal.md",
     "capabilities": "CURRENT_CAPABILITIES.md",
     "reIndex": "reverse-engineering/RE-INDEX.md",
     "loreIndex": "lore/_index.md"

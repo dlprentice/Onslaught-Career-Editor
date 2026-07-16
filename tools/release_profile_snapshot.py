@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate or validate portable/export release-classification artifacts.
 
-The public repository is the working source repo and may track compact
-non-secret state, agent reports, RE notes, and proof summaries. R4_DENY in this
+The public repository is the working source repo and may track private RE notes
+and proof summaries. R4_DENY in this
 script means excluded from portable app ZIPs and legacy curated export payloads;
 it does not automatically mean "must be absent from public source."
 """
@@ -56,8 +56,6 @@ DENY_EXACT = (
     "developer_agent_state.json",
     "documentation_agent_state.json",
     "re_orchestrator_state.json",
-    "goal.md",
-    "goal.policy.md",
     ".gitignore",
     "roadmap/release-allowlist-classification.tsv",
     "lore-book/roadmap/release-allowlist-classification.tsv",

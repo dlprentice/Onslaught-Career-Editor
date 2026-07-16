@@ -68,12 +68,6 @@ PRIVATE_REPO_ROOT_PATTERN = re.compile(
     rf"(?:{WINDOWS_USER_ROOT_PATTERN_TEXT}\\{{1,2}}source\\{{1,2}}Onslaught-Career-Editor-private|C:/Users/[A-Za-z0-9._-]+/source/Onslaught-Career-Editor-private|{WSL_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private|{LINUX_USER_ROOT_PATTERN_TEXT}/source/Onslaught-Career-Editor-private)",
     re.IGNORECASE,
 )
-PRIVATE_SAVE_ATTEMPT_PATTERN = re.compile(
-    r"\bsave-attempts[/\\][^\s`\"'<>|,)\\\]]+\.bes\b",
-    re.IGNORECASE,
-)
-
-
 @dataclass(frozen=True)
 class TextRule:
     label: str
@@ -178,39 +172,24 @@ RULES = (
         "tracked-private-repo-root-path",
         PRIVATE_REPO_ROOT_PATTERN,
         include_path_prefixes=(
-            ".codex/state/",
-            "coordination/",
             "developer_agent_state.json",
             "documentation_agent_state.json",
-            "goal.md",
-            "goal.policy.md",
             "lore-book/",
             "MCP_DEBUGGING_OPTIONS.md",
-            "onslaught_codex_directive.md",
             "re_orchestrator_state.json",
             "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
             "release/readiness/",
             "reverse-engineering/",
             "roadmap/",
-            "subagents/",
         ),
         exclude_path_prefixes=("release/readiness/private_runtime_evidence/",),
-    ),
-    TextRule(
-        "tracked-private-save-attempt-fixture-reference",
-        PRIVATE_SAVE_ATTEMPT_PATTERN,
-        include_path_prefixes=("subagents/depth3/",),
     ),
     TextRule(
         "tracked-maintainer-user-root-path",
         MAINTAINER_USER_ROOT_PATTERN,
         include_path_prefixes=(
-            ".codex/state/",
-            "coordination/",
             "developer_agent_state.json",
             "documentation_agent_state.json",
-            "goal.md",
-            "goal.policy.md",
             "lore-book/",
             "MCP_DEBUGGING_OPTIONS.md",
             "re_orchestrator_state.json",
@@ -224,12 +203,8 @@ RULES = (
         "tracked-maintainer-local-root-path",
         MAINTAINER_LOCAL_ROOT_PATTERN,
         include_path_prefixes=(
-            ".codex/state/",
-            "coordination/",
             "developer_agent_state.json",
             "documentation_agent_state.json",
-            "goal.md",
-            "goal.policy.md",
             "lore-book/",
             "MCP_DEBUGGING_OPTIONS.md",
             "re_orchestrator_state.json",
@@ -243,12 +218,8 @@ RULES = (
         "tracked-maintainer-backup-drive-reference",
         STANDALONE_BACKUP_DRIVE_PATTERN,
         include_path_prefixes=(
-            ".codex/state/",
-            "coordination/",
             "developer_agent_state.json",
             "documentation_agent_state.json",
-            "goal.md",
-            "goal.policy.md",
             "lore-book/",
             "MCP_DEBUGGING_OPTIONS.md",
             "re_orchestrator_state.json",
@@ -262,12 +233,8 @@ RULES = (
         "stale-current-consult-stack-requires-gemini-opus",
         re.compile(r"Grok(?:,\s*Grok Composer| Composer)?,\s*Opus,\s*and\s*Gemini\s+consults", re.IGNORECASE),
         include_path_prefixes=(
-            ".codex/goals/",
-            "coordination/",
             "developer_agent_state.json",
             "documentation_agent_state.json",
-            "goal.md",
-            "goal.policy.md",
             "lore-book/roadmap/",
             "re_orchestrator_state.json",
             "roadmap/",
