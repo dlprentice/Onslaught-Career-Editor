@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. A parent may supervise a sole worker only through native controls over a directly spawned subordinate agent task or verified equivalent cross-task tools; an independently created top-level task is not implicitly supervised.",
+  "routingPolicy": "Single-writer default: one active implementation owner holds integration, validation, state, commits/pushes, consequential actions, and acceptance. Two normal Codex Desktop tasks may form a supervisor/worker pair after list/read/send tools and a harmless two-way probe are verified; a directly spawned subordinate agent is an alternative.",
   "currentFocus": "Product-coupled reconstruction campaign execution is paused with no implementation worker assigned; the capped shield observations are closed without an accepted pair or behavior contract, and the WinUI Reconstruction companion workflow is queued next.",
   "sourceOfTruth": {
     "agentGuide": "AGENTS.md",
@@ -170,7 +170,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Resume execution only by directly spawning one sole worker agent task with native parent message/wait/interrupt controls; do not use concurrent codex exec resume calls for supervision.",
+    "Resume from a fresh Desktop-created supervisor task, verify list_threads/read_thread/send_message_to_thread and a harmless round trip with the sole worker, then read prior task histories by identifier; do not use concurrent codex exec resume calls for supervision.",
     "Deliver a WinUI Reconstruction community surface that truthfully discovers, configures, verifies, and launches the playable companion.",
     "Run the bounded P1/P2 viewport and command-ownership experiment as the first original-game multiplayer epic gate, without enabling Host/Join.",
     "Turn accepted copied-retail multiplayer evidence into the next meaningful tool, mod, or playable consumer rather than stopping at the harness."

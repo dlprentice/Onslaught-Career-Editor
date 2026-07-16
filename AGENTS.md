@@ -102,10 +102,11 @@ gates in the handoff.
   `roadmap/goals/full-rebuild-campaign-slash-goal.md`. One explicitly designated
   sole sequential worker may own implementation, integration, canonical state,
   validation, and version control while its parent only supervises and reports.
-  The parent must directly spawn that agent task and retain native
-  message/wait/interrupt controls (or first verify equivalent cross-task tools);
-  an independently created top-level task is not implicitly supervisable. This
-  compact topology does not activate the coordination overlay.
+  Two normal Codex Desktop tasks may use verified `list_threads`, `read_thread`,
+  and `send_message_to_thread` controls plus a no-action round-trip probe. A
+  directly spawned subordinate agent with native collaboration controls is an
+  alternative. This compact topology does not activate the coordination
+  overlay.
 
 ## Setup
 
@@ -194,6 +195,8 @@ sole sequential implementation worker remains single-writer work: the worker
 reconciles `goal.md`, canonical state batons, and shared front-door truth, while
 the parent does not make competing repository or campaign mutations. Do not
 use concurrent `codex exec resume` calls to simulate parent-to-worker steering.
+If a resumed or CLI-origin task lacks Desktop thread tools, start a fresh
+Desktop supervisor task instead of resuming or forking the stale task.
 
 ## WinUI Rules
 

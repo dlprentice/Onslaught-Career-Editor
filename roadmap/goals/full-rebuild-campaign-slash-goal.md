@@ -27,11 +27,11 @@ Continuously reconstruct and enhance Battle Engine Aquila through an evidence-ba
 - Authority order is `goal.policy.md` → `goal.campaign.md` → `goal.md` → the
   applicable `AGENTS.md` → slice-local evidence.
 - Exactly one task is the active implementation and integration owner. It may
-  be the root or one explicitly designated sole sequential worker whose parent
-  only supervises, steers, interrupts, and reports through native controls over
-  a directly spawned subordinate agent task. A separately created top-level
-  task is independent unless equivalent cross-task read/send/stop controls are
-  verified before delegation; never emulate supervision with concurrent
+  be the root or one explicitly designated sole sequential worker while another
+  task only supervises, steers, and reports. Two normal Codex Desktop tasks may
+  use verified `list_threads`, `read_thread`, and `send_message_to_thread`
+  controls after a harmless round-trip probe; a directly spawned subordinate
+  agent is an alternative. Never emulate supervision with concurrent
   `codex exec resume` calls. This compact topology does not activate
   `coordination/`; that overlay is for genuine concurrency or a shared-resource
   wave.

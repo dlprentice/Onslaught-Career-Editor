@@ -146,7 +146,8 @@ class ProductCoupledCampaignStrategyTests(unittest.TestCase):
         required = (
             "Status: **PAUSED**",
             "no implementation worker assigned",
-            "directly spawned subordinate agent task",
+            "fresh Codex Desktop supervisor task",
+            "send_message_to_thread",
             "M2.3-target-acquisition-static-contract",
             "M2-shield-live-dual-accept",
             "BLOCKED: exactly two counted copied-runtime observations",

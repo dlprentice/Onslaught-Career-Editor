@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-07-15",
-  "routingPolicy": "Active docs use the single-writer default in goal.policy.md. One active implementation owner integrates, validates, updates state, commits/pushes, and accepts; a parent may supervise a sole worker only through native controls over a directly spawned subordinate agent task or verified equivalent cross-task tools.",
+  "routingPolicy": "Active docs use the single-writer default in goal.policy.md. One active implementation owner integrates, validates, updates state, commits/pushes, and accepts; two normal Codex Desktop tasks may form a supervisor/worker pair after list/read/send tools and a harmless two-way probe are verified, while a directly spawned subordinate agent remains an alternative.",
   "currentFocus": "Product-coupled reconstruction campaign execution is paused with no implementation worker assigned; the capped shield observations are closed without an accepted pair or behavior contract, and the WinUI Reconstruction companion workflow is queued next.",
   "sourceOfTruth": {
     "readme": "README.MD",
@@ -35,7 +35,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Resume execution only by directly spawning one sole worker agent task with native parent message/wait/interrupt controls; do not use concurrent codex exec resume calls for supervision.",
+    "Resume from a fresh Desktop-created supervisor task, verify list_threads/read_thread/send_message_to_thread and a harmless round trip with the sole worker, then read prior task histories by identifier; do not use concurrent codex exec resume calls for supervision.",
     "Document and verify the WinUI Reconstruction community surface when it truthfully discovers, configures, verifies, and launches the playable companion.",
     "Keep the queued P1/P2 viewport/command-ownership experiment bounded to the original-game multiplayer epic and do not enable Host/Join.",
     "Document the next copied-retail consumer only after accepted evidence reaches a meaningful tool, mod, or playable path."

@@ -59,14 +59,27 @@ validation, state updates, version control, consequential campaign actions,
 and acceptance in the active checkout.
 
 For a long-running campaign, the user or current campaign owner may instead
-designate one **sole sequential implementation worker** while the parent task
-only supervises, steers, interrupts, and reports. Active supervision is valid
-only when the worker is a directly spawned subordinate agent task exposed to
-the parent through native spawn/message/wait/interrupt controls, or when the
-current surface first verifies equivalent cross-task read, send, and stop
-controls. A separately created top-level task is independent by default; a
-shared checkout, task identifier, session log, or ignored mailbox is not a
+designate one **sole sequential implementation worker** while another task only
+supervises, steers, and reports. The preferred Codex Desktop topology is two
+normal top-level tasks with the supervisor's current tool surface verified to
+include `list_threads`, `read_thread`, and `send_message_to_thread`. Before
+campaign execution, perform one harmless round-trip message: the supervisor
+sends a no-action probe to the worker, and the worker replies to the
+supervisor's task identifier. These tasks need not have a parent/child
+relationship or separate working directories.
+
+A directly spawned subordinate agent task with native
+spawn/message/wait/interrupt controls remains a valid alternative when a
+background agent rather than a normal Desktop task is desired. A shared
+checkout, task identifier, session log, or ignored mailbox by itself is not a
 two-way supervision channel.
+
+Older resumed or CLI-origin tasks can retain a stale dynamic-tool manifest even
+when opened in Codex Desktop. If the thread-management tools are absent, do not
+attribute that absence to the repository or emulate the missing channel. Start
+a fresh Desktop-created supervisor task rather than resuming or forking the
+stale task, verify its tools and round trip, then read the prior task histories
+by identifier before delegation.
 
 Do not use `codex exec resume <task-id>` as a substitute for parent-to-worker
 messaging while the target task may be active. It can create overlapping turns

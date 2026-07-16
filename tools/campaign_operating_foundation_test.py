@@ -70,7 +70,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
                 "optional coordination overlay",
                 "implementation, integration, validation, state",
                 "sole sequential implementation worker",
-                "supervises, steers, interrupts, and reports",
+                "supervises, steers, and reports",
                 "supervising task does not edit, validate, commit, push, launch, mutate, publish",
                 "execution-safety mechanism, not a permission gate",
                 "Exactly one task is the active implementation owner",
@@ -202,7 +202,7 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
             ),
         )
 
-    def test_supervised_worker_requires_a_real_two_way_control_channel(self) -> None:
+    def test_supervised_worker_requires_a_verified_two_way_control_channel(self) -> None:
         policy = read_repo_text("goal.policy.md")
         coordination = read_repo_text("coordination/README.md")
         contributing = read_repo_text("CONTRIBUTING.md")
@@ -211,9 +211,15 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         ).casefold()
 
         for phrase in (
+            "two normal top-level tasks",
+            "list_threads",
+            "read_thread",
+            "send_message_to_thread",
+            "harmless round-trip message",
             "directly spawned subordinate agent task",
-            "equivalent cross-task read, send, and stop controls",
-            "a separately created top-level task is independent by default",
+            "remains a valid alternative",
+            "older resumed or cli-origin tasks",
+            "fresh desktop-created supervisor task",
             "codex exec resume <task-id>",
             "overlapping turns",
             "mailbox may carry a checkpoint handoff only",
@@ -341,7 +347,11 @@ class CampaignOperatingFoundationTests(unittest.TestCase):
         self.assertIn("M2.3-target-acquisition-static-contract", baton)
         self.assertIn("Status: **PAUSED**", baton)
         self.assertIn("no implementation worker assigned", baton)
-        self.assertIn("directly spawned subordinate agent task", baton)
+        self.assertIn("fresh Codex Desktop supervisor task", baton)
+        self.assertIn("send_message_to_thread", baton)
+        self.assertIn("019f5e71-2038-7bf2-aab8-e75f9747fa3a", baton)
+        self.assertIn("019f67ff-3b76-75b2-915e-5aec4abedecb", baton)
+        self.assertIn("openai/codex#25990", baton)
         self.assertIn("standing-authorized", baton)
         self.assertIn("The shield attempt cap is exhausted", baton)
         self.assertIn("zero active shield edges", baton)

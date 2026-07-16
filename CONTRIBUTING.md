@@ -188,10 +188,11 @@ maintainer can fold their PR into the current state files during review.
 
 The active implementation owner normally owns source integration and canonical
 state. It may be the root task or one explicitly designated sole sequential
-worker whose parent only supervises and reports through native controls over a
-directly spawned subordinate agent task. A separately created top-level task is
-independent unless equivalent cross-task read/send/stop controls are actually
-available and verified; `codex exec resume` is not such a supervision channel.
+worker while another task supervises and reports. Two normal Codex Desktop
+tasks may use verified `list_threads`, `read_thread`, and
+`send_message_to_thread` controls after a harmless round-trip probe; a directly
+spawned subordinate agent with native collaboration controls is an alternative.
+`codex exec resume` is not a supervision channel.
 Follow the
 [optional coordination overlay](coordination/README.md) only for concurrent
 writers, recurring automation, or separate integration/acceptance roles. During

@@ -2,8 +2,9 @@
 
 Status: **PAUSED** (no implementation worker assigned; supervision incident reconciled)
 Last updated: 2026-07-15
-Resume topology: one directly spawned subordinate agent task with native
-parent message/wait/interrupt controls
+Resume topology: one fresh Codex Desktop supervisor task plus one sole worker,
+with verified `list_threads` / `read_thread` / `send_message_to_thread`
+round-trip messaging
 
 ## Portfolio state
 
@@ -13,11 +14,24 @@ runtime, assets, lore, documentation, and harnesses support those products; a
 proof artifact is not itself a landed product increment.
 
 The durable campaign remains active, but execution is paused and no task owns
-the next slice. On resume, the supervising parent must directly spawn the sole
-implementation worker through native agent controls; an independently created
-top-level task is not a supervised worker in this environment. While that
-worker is active, the parent is monitor-only and makes no competing repository,
-runtime, publication, or acceptance mutations.
+the next slice. This baton was reconciled from a legacy CLI-origin task whose
+resumed Desktop turns did not receive Codex app thread tools. On resume, use a
+fresh Desktop-created supervisor task, verify its thread-tool surface, read the
+prior histories by identifier, and complete a harmless two-way worker probe
+before delegation. While the worker is active, the supervisor is monitor-only
+and makes no competing repository, runtime, publication, or acceptance
+mutations.
+
+Prior task identifiers:
+
+- legacy supervisor: `019f5e71-2038-7bf2-aab8-e75f9747fa3a`;
+- stopped Desktop worker: `019f67ff-3b76-75b2-915e-5aec4abedecb`.
+
+The missing-tool symptom matches the open upstream Codex bug
+[openai/codex#25990](https://github.com/openai/codex/issues/25990). The two
+tasks used the same repository directory; creation/resume provenance, not the
+checkout path, distinguished their thread-tool surfaces.
+
 The inherited M2.3 packet has been reviewed, accepted, and integrated as a
 bounded static guard. It remains an input to future target/lock behavior, not a
 completed playable-targeting milestone.

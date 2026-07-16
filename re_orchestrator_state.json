@@ -54,7 +54,7 @@
   ],
   "openQuestions": [],
   "nextSteps": [
-    "Resume execution only by directly spawning one sole worker agent task with native parent message/wait/interrupt controls; do not use concurrent codex exec resume calls for supervision.",
+    "Resume from a fresh Desktop-created supervisor task, verify list_threads/read_thread/send_message_to_thread and a harmless round trip with the sole worker, then read prior task histories by identifier; do not use concurrent codex exec resume calls for supervision.",
     "Deliver the WinUI Reconstruction surface with public-safe evidence boundaries while keeping WinUI and Godot as consumers rather than retail proof.",
     "Run the bounded P1/P2 viewport and command-ownership experiment before selecting the next original-game multiplayer consumer; Host/Join remains disabled.",
     "Turn accepted copied-retail multiplayer evidence into a meaningful tool, mod, or playable consumer rather than stopping at the harness."
