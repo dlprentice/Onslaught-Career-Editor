@@ -269,7 +269,7 @@ For WinUI patch/mod UX, the preferred user shape is a safe-copy launcher/mod-man
 
 ## Rebuild Work
 
-- Read [`rebuild/AGENTS.md`](rebuild/AGENTS.md) and
+- Read [`rebuild/README.md`](rebuild/README.md) and
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) first.
 - Keep simulation truth in the deterministic Core. Render clients consume
   inputs and snapshots; they do not own gameplay state.
