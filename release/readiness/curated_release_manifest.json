@@ -489,7 +489,6 @@
   "exclude": [
     ".codex/**",
     "archive/**",
-    "patches/archive/**",
     "game/**",
     "media/**",
     "save-attempts/**",

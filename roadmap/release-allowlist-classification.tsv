@@ -1569,8 +1569,6 @@ package-lock.json	R4_DENY	package-lock.json
 package.json	R0_ALLOW	default
 patches/CATALOG_CONTRACT.md	R0_ALLOW	default
 patches/README.md	R0_ALLOW	default
-patches/archive/patch_ischeatactive_always_true_BROKEN.py	R0_ALLOW	default
-patches/archive/patch_ischeatactive_return_path_bypass.py	R0_ALLOW	default
 patches/catalog/patches.v2.json	R0_ALLOW	default
 patches/catalog/safe-copy-profiles.v1.json	R0_ALLOW	default
 patches/patch_devmode_goodies_logic_fix.py	R0_ALLOW	default

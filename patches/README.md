@@ -61,7 +61,7 @@ Important: file patches cannot directly set `g_bAllCheatsEnabled` because it liv
 
 The WinUI/AppCore product path is the preferred patch lane. It prepares a playable copied game folder under an app-owned root, patches only the copied `BEA.exe`, verifies patch bytes, and leaves the installed game untouched. Backup, checksum, apply, and restore outputs are flushed and verified in same-directory staging files before atomic publication. Restore accepts only an integrity- and provenance-verified full-file backup and can repair a copied executable with unexpected patch bytes or truncation.
 
-Standalone active scripts are lab/reference helpers. Mutating modes require an explicit copied `BEA.exe` path plus `--allowed-root`, a generated playable copied-game manifest, verified backup hash sidecars, and refuse Program Files, Steam-library-shaped roots, reparse-point targets, and hardlinked targets. They do not carry AppCore's atomic product-publication guarantee. Broken/legacy scripts under `patches/archive/` are archival only and intentionally refuse to write bytes.
+Standalone active scripts are lab/reference helpers. Mutating modes require an explicit copied `BEA.exe` path plus `--allowed-root`, a generated playable copied-game manifest, verified backup hash sidecars, and refuse Program Files, Steam-library-shaped roots, reparse-point targets, and hardlinked targets. They do not carry AppCore's atomic product-publication guarantee.
 
 `tools/apply_bea_catalog_patch.py --apply` also requires the canonical clean
 specimen or its verified full-file backup. Its
@@ -147,72 +147,6 @@ This patch forces `g_Cheat_LATETE` to always be written as `0` in the goodies UI
 
 **Usage:** For dev mode exploration only. Normal users should just use save name cheats.
 
-## Archived Patches (Reference Only)
-
-These are kept for archival/reference. They live in `patches/archive/` and should not be used unless you know exactly what you're doing.
-
-### archive/patch_ischeatactive_always_true_BROKEN.py (Archived) - DO NOT USE
-
-**STATUS: BROKEN - Causes goodies to LOCK**
-
-This patch made `IsCheatActive()` always return TRUE, which also activates the `lat\\xEAte` goodies-only
-override everywhere it is consulted. In the goodies UI, this breaks the normal “MALLOY unlocks all”
-flow and can effectively lock/hide items.
-
-| Property | Value |
-|----------|-------|
-| Virtual Address | `0x00465490` |
-| File Offset | `0x65490` |
-| Original | `A1 F4 2D 66 00 81 EC 00 01 00 00` |
-| Patched | `B8 01 00 00 00 C2 04 00 90 90 90` |
-| Function | `IsCheatActive()` entry point |
-
-**Intended Effects (BROKEN - see above):**
-| Cheat | Index | Intended Effect | Actual Effect |
-|-------|-------|-----------------|---------------|
-| MALLOY/105770Y2 | 0 | All goodies unlocked | **LOCKS goodies** (lat\\xEAte interaction) |
-| TURKEY/!EVAH! | 1 | All campaign levels accessible | Works |
-| V3R5IOF | 2 | Version display enabled | Unknown (no call sites found yet) |
-| Maladim | 3 | God mode menu toggle | Steam build exposes God OFF/God ON; God ON blocks normal combat damage in current evidence |
-
-**Technical Note:** The patch replaces the function's prologue with `MOV EAX,1; RET 4` making it immediately return TRUE without checking any flags or save names.
-
-### archive/patch_ischeatactive_return_path_bypass.py (Legacy) - FALLBACK
-
-**STATUS: Partial - only enables TURKEY effect**
-
-A simpler 2-byte patch that modifies a conditional jump in `IsCheatActive()`. Prefer `patch_devmode_goodies_logic_fix.py` for dev-mode exploration; for normal users, prefer save-name cheats (no patch).
-
-| Property | Value |
-|----------|-------|
-| Virtual Address | `0x004654a0` |
-| Original | `75 7A` (JNZ) |
-| Patched | `EB 7A` (JMP) |
-
-Only affects the final return path in `IsCheatActive()`, not the early-exit checks.
-
-## Deleted Patches (Dec 2025)
-
-The following patches were removed because they don't work:
-
-### patch_all_cheats_v2.py - DELETED
-
-**Reason:** Attempted to patch `g_bAllCheatsEnabled` at `0x00679ec1`, but this address is in **BSS (uninitialized memory)** - it doesn't exist in the executable file. BSS variables are zero-initialized by Windows at runtime.
-
-**BSS Analysis:**
-```
-.data section:
-  Virtual Size:   0x3B2614 (includes BSS)
-  Raw Size:       0x3F000  (file-backed only)
-
-g_bAllCheatsEnabled offset in section: 0x57ec1
-0x57ec1 > 0x3F000  (ADDRESS IS IN BSS, NOT IN FILE)
-```
-
-### patch_windowed_mode.py - DELETED
-
-**Reason:** Replaced by `patch_display_mode_flow.py` (which includes current windowed/startup flow patches plus verification/restore).
-
 ## Cheat Codes (CORRECTED Dec 2025)
 
 Enter these as your **save game name** (case-sensitive, can be substring):
@@ -235,7 +169,7 @@ The normal `strstr()` cheat code path works correctly: MALLOY unlocks goodies wi
 
 ## Direct Flag Check Locations
 
-11 code locations check `g_bAllCheatsEnabled` directly, bypassing `IsCheatActive()`. These control additional dev behaviors not covered by `archive/patch_ischeatactive_always_true_BROKEN.py`:
+11 code locations check `g_bAllCheatsEnabled` directly, bypassing `IsCheatActive()`. These control additional dev behaviors:
 
 | Address | Function | Purpose |
 |---------|----------|---------|

@@ -6,7 +6,6 @@ import sys
 import tempfile
 import json
 import hashlib
-import importlib.util
 import os
 from pathlib import Path
 
@@ -49,17 +48,6 @@ def run_script(args: list[str]) -> subprocess.CompletedProcess[str]:
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def load_module_from_path(script: str):
-    module_path = REPO_ROOT / script
-    module_name = "archive_patch_guard_" + module_path.stem
-    spec = importlib.util.spec_from_file_location(module_name, module_path)
-    if spec is None or spec.loader is None:
-        raise AssertionError(f"Could not load module spec for {script}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 def write_minimal_profile_manifest(root: Path) -> None:
@@ -496,43 +484,6 @@ def test_catalog_patch_helper_rejects_steam_library_shape_even_with_manifest() -
             raise AssertionError("Catalog helper mutated BEA.exe under a Steam-library-shaped root.")
 
 
-def test_archival_cheat_patch_scripts_are_disabled() -> None:
-    with tempfile.TemporaryDirectory(prefix="onslaught-archive-patch-disabled-") as temp:
-        exe_path = Path(temp) / "BEA.exe"
-        original = seed_exe(
-            exe_path,
-            {
-                0x65490: bytes([0xA1, 0xF4, 0x2D, 0x66, 0x00, 0x81, 0xEC, 0x00, 0x01, 0x00, 0x00]),
-                0x654A0: bytes([0x75, 0x7A]),
-            },
-        )
-        for script in (
-            "patches/archive/patch_ischeatactive_always_true_BROKEN.py",
-            "patches/archive/patch_ischeatactive_return_path_bypass.py",
-        ):
-            result = run_script([script, str(exe_path)])
-            if result.returncode == 0:
-                raise AssertionError(f"Expected archival script to be disabled: {script}\n{result.stdout}")
-            if "disabled" not in result.stdout.lower():
-                raise AssertionError(f"Expected archival script refusal to mention disabled: {script}\n{result.stdout}")
-            if exe_path.read_bytes() != original:
-                raise AssertionError(f"Archival script mutated BEA.exe despite disabled guard: {script}")
-
-            module = load_module_from_path(script)
-            for function_name in ("apply_patch", "restore_backup"):
-                try:
-                    getattr(module, function_name)(exe_path)
-                except RuntimeError as ex:
-                    if "disabled" not in str(ex).lower():
-                        raise AssertionError(
-                            f"Expected disabled RuntimeError from {script}::{function_name}; got {ex}"
-                        ) from ex
-                else:
-                    raise AssertionError(f"{script}::{function_name} did not raise the disabled guard.")
-                if exe_path.read_bytes() != original:
-                    raise AssertionError(f"{script}::{function_name} mutated BEA.exe despite disabled guard.")
-
-
 def main() -> int:
     test_display_script_requires_allowed_root()
     test_display_script_rejects_steam_library_shape_even_with_manifest()
@@ -543,7 +494,6 @@ def main() -> int:
     test_catalog_patch_helper_rejects_preexisting_backup_hash_link()
     test_catalog_patch_helper_manifest_patch_ids_are_case_insensitive()
     test_catalog_patch_helper_rejects_steam_library_shape_even_with_manifest()
-    test_archival_cheat_patch_scripts_are_disabled()
     print("legacy patch script safety checks passed")
     return 0
 
