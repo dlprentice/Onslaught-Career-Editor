@@ -1,5 +1,0 @@
-0x00523df0 OggVorbisStream__InitDecoder
-0x00524180 OggVorbisStream__ReadPcmSamples
-0x005234e0 Input__HandleMouseWindowMessage
-0x00528b60 CBinkOpenThread__WorkerMain
-0x00527c90 CReconnectInterface__ctor

@@ -1,6 +1,0 @@
-address	name	signature	status
-0x004caf30	CParticleManager__ClearParticleOwnerBacklinks	void CParticleManager__ClearParticleOwnerBacklinks(void)	OK
-0x004cb080	CParticleManager__PruneDeadOwnerLinks	void CParticleManager__PruneDeadOwnerLinks(void)	OK
-0x004cbc60	CParticleManager__UpdateRenderNodesAndResetState	void CParticleManager__UpdateRenderNodesAndResetState(void)	OK
-0x004cbff0	CParticleManager__DestroyParticleList	void __fastcall CParticleManager__DestroyParticleList(void * param_1)	OK
-0x004cb920	CParticleManager__UpdateParticleAndRecycleIfDead	void __thiscall CParticleManager__UpdateParticleAndRecycleIfDead(void * this, void * param_1, int param_2)	OK

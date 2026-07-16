@@ -1,6 +1,0 @@
-address	expected_name	observed_name	status
-0x00494b00	CMeshPart__Helper_00494b00	CMeshPart__Helper_00494b00	ok
-0x00494b50	CMeshPart__Helper_00494b50	CMeshPart__Helper_00494b50	ok
-0x004950f0	CMeshPart__Helper_004950f0	CMeshPart__Helper_004950f0	ok
-0x004957d0	CMeshPart__Helper_004957d0	CMeshPart__Helper_004957d0	ok
-0x00495ed0	CMCMech__Helper_00495ed0	CMCMech__Helper_00495ed0	ok

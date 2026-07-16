@@ -1,5 +1,0 @@
-0x004238c0 CChunkerStream__OpenReadAndGetChunker
-0x0044a690 RenderState__Set0x89_Zero
-0x0044a6b0 CDXEngine__ApplyNavMapConsoleToggle_Thunk
-0x0046a1f0 CUnitAI__GetStringByResolvedTextIdAfter
-0x0046a220 CUnitAI__GetMultiplayerLevelDescriptionByType

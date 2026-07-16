@@ -1,8 +1,0 @@
-address	name	signature	status
-0x004ae110	CMeshPart__Unk_004ae110	int __thiscall CMeshPart__Unk_004ae110(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
-0x004ae1a0	CMeshPart__Unk_004ae1a0	int __thiscall CMeshPart__Unk_004ae1a0(void * this, int param_1, void * param_2)	OK
-0x004ae220	CMeshPart__Unk_004ae220	int __thiscall CMeshPart__Unk_004ae220(void * this, int param_1, int param_2, int param_3, void * param_4)	OK
-0x004ae430	CMeshPart__Unk_004ae430	int __thiscall CMeshPart__Unk_004ae430(void * this, int param_1, void * param_2, int param_3)	OK
-0x004ae640	CMeshPart__Unk_004ae640	void __fastcall CMeshPart__Unk_004ae640(int param_1)	OK
-0x004aea50	CMeshPart__Unk_004aea50	void __fastcall CMeshPart__Unk_004aea50(int param_1)	OK
-0x004aede0	CMeshPart__Unk_004aede0	int CMeshPart__Unk_004aede0(void)	OK

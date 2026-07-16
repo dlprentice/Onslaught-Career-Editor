@@ -1,7 +1,0 @@
-address	name	signature	status
-0x00480e10	CCollisionSeekingRound__Helper_00480e10	void __thiscall CCollisionSeekingRound__Helper_00480e10(void * this, int param_1, void * param_2)	OK
-0x00480ed0	CUnitAI__Helper_00480ed0	void __thiscall CUnitAI__Helper_00480ed0(void * this, void * param_1, void * param_2)	OK
-0x004812d0	CHLCollisionDetector__VFunc_00_004812d0	void __thiscall CHLCollisionDetector__VFunc_00_004812d0(void * this, void * param_1, int param_2)	OK
-0x00480ed0	CUnitAI__Helper_00480ed0	void __thiscall CUnitAI__Helper_00480ed0(void * this, void * param_1, void * param_2)	OK
-0x00426150	CCollisionSeekingRound__Init	undefined CCollisionSeekingRound__Init(void)	OK
-0x004263f0	CCollisionSeekingRound__Destructor	undefined CCollisionSeekingRound__Destructor(void)	OK

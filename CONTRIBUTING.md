@@ -148,10 +148,9 @@ For minor current-doc changes use `npm run test:doc-commands` and
 all-tree `test:md-links` only when historical or broad tree documentation
 changes. Runtime-helper changes use `npm run test:runtime-tooling-safety`; the
 copied-runtime proof sweep is maintainer research, not ordinary AppCore
-acceptance. Receipt-bound walker measurement changes use the focused
-`npm run test:battleengine-walker-measurement-contract` gate; add the broad
-runtime-tooling gate only when shared profile, CDB, input, or smoke helpers also
-change. `npm run test:md-links` writes ignored reports under
+acceptance. Run the directly affected focused checker for measurement changes;
+add the broad runtime-tooling gate only when shared profile, CDB, input, or
+smoke helpers also change. `npm run test:md-links` writes ignored reports under
 `.artifacts/md-link-check`; do not commit those reports.
 
 ## Change Expectations
@@ -176,7 +175,7 @@ change. `npm run test:md-links` writes ignored reports under
 - Preserve or add stable `AutomationProperties.AutomationId` values for actionable controls and named inputs.
 - Rebuild the WinUI project before native UIA or visual smoke so tests do not launch stale binaries.
 - UIA proof, static XAML/code guards, visual screenshots, and copied-runtime proof are separate evidence classes; do not substitute one for another.
-- Useful public direction docs: `roadmap/winui-toolchain-and-qa-direction.md`, `roadmap/winui-ui-ux-redesign-radar.md`, `COLLABORATION.md`, and `AGENTS.md`.
+- Useful public direction docs: `roadmap/winui-toolchain-and-qa-direction.md`, `roadmap/winui-ui-ux-redesign-radar.md`, and `AGENTS.md`.
 - For the large `tools/` folder, start with `tools/README.md` before treating an individual helper as a public PR gate.
 
 The opt-in unattended Home arrival-focus and visual acceptance gate rebuilds
@@ -341,7 +340,7 @@ Do not publish a public release, push a public release branch, sign binaries, sh
 ## Opening A PR
 
 - Base public PRs on this public repo unless a maintainer explicitly assigns a separate branch or private workspace.
-- Use the GitHub PR template for PRs; use [COLLABORATION.md](COLLABORATION.md) for agent handoffs, review requests, or non-GitHub handoff notes.
+- Use the GitHub PR template for PRs and keep review notes in the PR or task.
 - Keep the PR scoped to one lane and name the lane in the description.
 - Include the exact local gates you ran and any gates intentionally skipped.
 - Do not add GitHub Actions, CI/CD workflows, release automation, game assets,
@@ -371,7 +370,6 @@ Before opening a PR or handing work to another developer:
 
 - [README.MD](README.MD)
 - [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)
-- [COLLABORATION.md](COLLABORATION.md)
 - [SECURITY.md](SECURITY.md)
 - [RELEASE_SCOPE_AND_TEST_COMMANDS.md](RELEASE_SCOPE_AND_TEST_COMMANDS.md)
 - [README.RELEASE.md](README.RELEASE.md)

@@ -1,9 +1,0 @@
-address	name	signature	status
-0x00407140	CMonitor__RemoveActiveReaderById	void __thiscall CMonitor__RemoveActiveReaderById(void * this, int param_1, int param_2)	OK
-0x00407540	CGame__UpdateMouseLookAngles	void __fastcall CGame__UpdateMouseLookAngles(void * param_1)	OK
-0x0040dce0	CBattleEngine__HostileEnvironment	void __fastcall CBattleEngine__HostileEnvironment(int param_1)	OK
-0x00450400	CFEPBEConfig__PushProjectionMatrixForRender	void CFEPBEConfig__PushProjectionMatrixForRender(void)	OK
-0x00450440	CFEPBEConfig__PopProjectionMatrixAfterRender	void CFEPBEConfig__PopProjectionMatrixAfterRender(void)	OK
-0x00451930	CFEPBEConfig__FindEntryByName	int __cdecl CFEPBEConfig__FindEntryByName(void * param_1)	OK
-0x004655d0	con_fmv_play	void __cdecl con_fmv_play(void * param_1)	OK
-0x004685a0	CFrontEnd__SetRenderViewAndProjection	void CFrontEnd__SetRenderViewAndProjection(void)	OK

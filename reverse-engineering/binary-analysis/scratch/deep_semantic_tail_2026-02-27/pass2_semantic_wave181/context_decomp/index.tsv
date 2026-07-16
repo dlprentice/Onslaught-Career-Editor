@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0059a21f	CFastVB__AreNodeTreesCompatible	int __stdcall CFastVB__AreNodeTreesCompatible(void * param_1, void * param_2, int param_3)	OK
-0x0059a54d	CFastVB__ScoreNodeTreeMatch	int __thiscall CFastVB__ScoreNodeTreeMatch(void * this, void * param_1, int param_2, void * param_3, int param_4, uint param_5)	OK
-0x0059a71a	CFastVB__SelectBestNodeTreeMatch	int CFastVB__SelectBestNodeTreeMatch(void)	OK
-0x005980be	CFastVB__InitDispatchTableVariant_005980be	void __cdecl CFastVB__InitDispatchTableVariant_005980be(void * param_1)	OK
-0x0059822c	CFastVB__InitDispatchTableVariant_0059822c	void __cdecl CFastVB__InitDispatchTableVariant_0059822c(void * param_1)	OK

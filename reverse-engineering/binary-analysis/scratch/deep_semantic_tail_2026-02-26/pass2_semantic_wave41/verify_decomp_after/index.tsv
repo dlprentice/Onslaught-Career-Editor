@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00511070	CWorldPhysicsManager__FreeTagDefinitionEntry	void __fastcall CWorldPhysicsManager__FreeTagDefinitionEntry(int param_1)	OK
-0x005113a0	CWorldPhysicsManager__ClearEntryWorkSets_40_50	void __fastcall CWorldPhysicsManager__ClearEntryWorkSets_40_50(int param_1)	OK
-0x00511720	CWorldPhysicsManager__ResolveTagListNameToIndex_E8	void __thiscall CWorldPhysicsManager__ResolveTagListNameToIndex_E8(void * this, int param_1, void * param_2)	OK
-0x005117c0	CWorldPhysicsManager__ResolveTagListNameToIndex_EC	void __thiscall CWorldPhysicsManager__ResolveTagListNameToIndex_EC(void * this, int param_1, void * param_2)	OK
-0x00511860	CWorldPhysicsManager__ResolveTagListNameToIndex_F0	void __thiscall CWorldPhysicsManager__ResolveTagListNameToIndex_F0(void * this, int param_1, void * param_2)	OK

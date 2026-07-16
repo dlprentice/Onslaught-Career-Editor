@@ -1,5 +1,0 @@
-0x005988f5 CFastVB__CompareNodeValuesByTagAndPayload
-0x00598873 CFastVB__CloneNodeChainWithAddRef
-0x00598d6b CFastVB__InitNodeType13
-0x00599b13 CFastVB__SetParseErrorAndMarkStateDirty
-0x00599b69 CFastVB__NodeTreeHasBitFlag0x200

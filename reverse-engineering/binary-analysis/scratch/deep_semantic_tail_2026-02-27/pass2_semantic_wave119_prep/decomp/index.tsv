@@ -1,9 +1,0 @@
-address	name	signature	status
-0x004662a0	CFrontEnd__Init	int __thiscall CFrontEnd__Init(void * this, int arg2, int arg3)	OK
-0x0044cd80	<none>	<none>	MISSING
-0x0044d1d0	<none>	<none>	MISSING
-0x00444f20	CUnitAI__Unk_00444f20	bool __thiscall CUnitAI__Unk_00444f20(void * this, int param_1, int param_2)	OK
-0x0044cd20	CUnitAI__Unk_0044cd20	void __thiscall CUnitAI__Unk_0044cd20(void * this, void * param_1, float param_2)	OK
-0x00444620	CExplosionInitThing__Unk_00444620	void __thiscall CExplosionInitThing__Unk_00444620(void * this, int param_1, int param_2)	OK
-0x004691c0	CUnitAI__Unk_004691c0	void __fastcall CUnitAI__Unk_004691c0(int param_1)	OK
-0x00440b70	CUnitAI__Unk_00440b70	void __fastcall CUnitAI__Unk_00440b70(void * param_1)	OK

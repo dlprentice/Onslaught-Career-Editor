@@ -1,4 +1,0 @@
-address	name	signature	status
-0x00501ba0	CVertexShader__Unk_00501ba0	int __fastcall CVertexShader__Unk_00501ba0(int param_1)	OK
-0x00502920	CVertexShader__Unk_00502920	void __fastcall CVertexShader__Unk_00502920(int param_1)	OK
-0x00501cd0	CWaterRenderSystem__Helper_00501cd0	void __fastcall CWaterRenderSystem__Helper_00501cd0(int param_1)	OK

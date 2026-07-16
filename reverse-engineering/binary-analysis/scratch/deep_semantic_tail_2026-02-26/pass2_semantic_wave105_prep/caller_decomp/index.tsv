@@ -1,7 +1,0 @@
-address	name	signature	status
-0x004aab90	CMesh__Deserialize	undefined CMesh__Deserialize(void)	OK
-0x004d7200	CResourceAccumulator__ReadResourceFile	undefined CResourceAccumulator__ReadResourceFile(void)	OK
-0x0050b780	CWorld__DeserializeWorld	undefined CWorld__DeserializeWorld(void)	OK
-0x00559410	CDXTexture__CreateMipmaps	undefined CDXTexture__CreateMipmaps(void)	OK
-0x0054e160	CDXMeshVB__Load	undefined CDXMeshVB__Load(void)	OK
-0x0043ed80	CCutscene__Load	undefined CCutscene__Load(void)	OK

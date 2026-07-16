@@ -1,5 +1,0 @@
-address	name	signature	status
-0x005759c3	CDXTexture__Helper_005759c3	void CDXTexture__Helper_005759c3(void)	OK
-0x00581e8c	CDXTexture__Helper_00581e8c	int __thiscall CDXTexture__Helper_00581e8c(void * this, int param_1, int param_2)	OK
-0x00581e1c	CFastVB__Helper_00581e1c	void __thiscall CFastVB__Helper_00581e1c(void * this, int param_1, uint param_2)	OK
-0x0058210e	CTexture__Helper_0058210e	void __thiscall CTexture__Helper_0058210e(void * this, int param_1, uint param_2)	OK

@@ -1,5 +1,0 @@
-0x0059a21f CFastVB__AreNodeTreesCompatible
-0x0059a54d CFastVB__ScoreNodeTreeMatch
-0x0059a71a CFastVB__SelectBestNodeTreeMatch
-0x00598f60 CFastVB__NodeType8_scalar_deleting_dtor
-0x005997a5 CFastVB__InitNodeType17

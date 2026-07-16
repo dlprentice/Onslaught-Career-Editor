@@ -1,3 +1,0 @@
-address	name	signature	status
-0x0058c3fe	CTexture__SkipLineContinuationAndAdvance	int __fastcall CTexture__SkipLineContinuationAndAdvance(void * param_1)	OK
-0x0058d2ad	CTexture__ReadNextLexToken	int __thiscall CTexture__ReadNextLexToken(void * this, void * param_1, int param_2, void * param_3)	OK

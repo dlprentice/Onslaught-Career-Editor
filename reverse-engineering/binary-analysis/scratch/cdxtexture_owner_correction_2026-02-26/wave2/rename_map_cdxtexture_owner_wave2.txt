@@ -1,3 +1,0 @@
-0x0055e950 CDXEngine__Helper_0055e950
-0x00560b93 CTexture__Helper_00560b93
-0x0056961e CMCBuggy__Helper_0056961e

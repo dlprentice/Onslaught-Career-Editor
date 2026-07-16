@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0055fc35	CRT__IsFloat10Integral_0055fc35	void CRT__IsFloat10Integral_0055fc35(void)	OK
-0x00561590	CRT__Exp2FromFpuCore_00561590	int CRT__Exp2FromFpuCore_00561590(void)	OK
-0x005615a5	CRT__NoOp_005615a5	void CRT__NoOp_005615a5(void)	OK
-0x005615bc	CRT__MapExponentFlagToClassCode_005615bc	int CRT__MapExponentFlagToClassCode_005615bc(void)	OK
-0x00561618	CRT__ExtractFiniteExponentMaskOrPassThrough_00561618	uint __cdecl CRT__ExtractFiniteExponentMaskOrPassThrough_00561618(int param_1, uint param_2)	OK

@@ -1,4 +1,0 @@
-address	name	signature	status
-0x0046c120	con_navmapon	void __cdecl con_navmapon(char * cmd)	OK
-0x0046c150	con_navmapoff	void __cdecl con_navmapoff(char * cmd)	OK
-0x005473b0	CDXEngine__Unk_005473b0	int CDXEngine__Unk_005473b0(void)	OK

@@ -1,4 +1,0 @@
-address	name	signature	status
-0x004429a0	CDestructableSegment__Unk_004429a0	void __fastcall CDestructableSegment__Unk_004429a0(void * param_1)	OK
-0x00442a80	CDestructableSegment__Unk_00442a80	void __fastcall CDestructableSegment__Unk_00442a80(int param_1)	OK
-0x00442ac0	CDestructableSegment__Unk_00442ac0	void __thiscall CDestructableSegment__Unk_00442ac0(void * this, int param_1, int param_2)	OK

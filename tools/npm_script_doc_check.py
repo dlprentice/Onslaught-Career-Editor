@@ -28,7 +28,6 @@ SKIP_PREFIXES = (
 )
 ACTIVE_MARKDOWN_FILES = (
     "AGENTS.md",
-    "COLLABORATION.md",
     "CONTRIBUTING.md",
     "CURRENT_CAPABILITIES.md",
     "LOCAL_LAB_OVERLAY.md",
@@ -42,7 +41,6 @@ ACTIVE_MARKDOWN_FILES = (
     "roadmap/repo-structure-and-archive-map.md",
     "release/readiness/LOCAL_SIGNOFF_COMMANDS.md",
     "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "release/readiness/public_AGENTS.md",
     "tools/README.md",
 )
 
@@ -89,8 +87,6 @@ def workspace_script_map() -> dict[str, set[str]]:
     package_paths = [
         *ROOT.glob("apps/*/package.json"),
         *ROOT.glob("packages/*/package.json"),
-        *ROOT.glob("archive/electron-workbench/apps/*/package.json"),
-        *ROOT.glob("archive/electron-workbench/packages/*/package.json"),
     ]
     for package_path in package_paths:
         package = load_json(package_path)

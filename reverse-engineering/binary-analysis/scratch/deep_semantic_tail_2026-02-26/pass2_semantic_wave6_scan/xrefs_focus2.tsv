@@ -1,7 +1,0 @@
-target_addr	target_name	from_addr	from_function	ref_type
-0040bfd0	CGeneralVolume__Unk_0040bfd0	005d8a8c	<no_function>	DATA
-00409f70	CGeneralVolume__Unk_00409f70	004d32db	<no_function>	UNCONDITIONAL_CALL
-00497140	CUnitAI__Unk_00497140	004976f1	<no_function>	UNCONDITIONAL_CALL
-004a5500	CMesh__Unk_004a5500	004a87bb	CMesh__Load	UNCONDITIONAL_CALL
-004a5500	CMesh__Unk_004a5500	004a944f	CMesh__Load	UNCONDITIONAL_CALL
-004a5670	CMesh__Unk_004a5670	004a950a	CMesh__Load	UNCONDITIONAL_CALL

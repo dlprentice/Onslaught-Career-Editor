@@ -1,4 +1,0 @@
-address	name	signature	status
-0x0047a8b0	CGillMHead__Unk_0047a8b0	int __fastcall CGillMHead__Unk_0047a8b0(int param_1)	OK
-0x0047a900	CGillMHead__Unk_0047a900	int __fastcall CGillMHead__Unk_0047a900(int param_1)	OK
-0x004d10b0	CGillMHead__Unk_004d10b0	void __thiscall CGillMHead__Unk_004d10b0(void * this, int param_1, int param_2)	OK

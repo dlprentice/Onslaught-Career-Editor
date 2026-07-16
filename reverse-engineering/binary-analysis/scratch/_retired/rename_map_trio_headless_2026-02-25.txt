@@ -1,3 +1,0 @@
-0x0042d260 OptionsEntries__InitSingleBindingEntry
-0x0042d2b0 OptionsEntries__InitDualBindingEntry
-0x0042d300 OptionsEntries__InitSentinelEntry

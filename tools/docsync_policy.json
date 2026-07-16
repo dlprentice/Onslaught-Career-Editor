@@ -17,11 +17,6 @@
       "mirror": "lore-book/roadmap/advanced-features.md"
     },
     {
-      "name": "roadmap_agent_workflow",
-      "canonical": "roadmap/agent-workflow.md",
-      "mirror": "lore-book/roadmap/agent-workflow.md"
-    },
-    {
       "name": "roadmap_app_delivery_phases",
       "canonical": "roadmap/app-delivery-phases.md",
       "mirror": "lore-book/roadmap/app-delivery-phases.md"
@@ -37,19 +32,9 @@
       "mirror": "lore-book/roadmap/community-outreach.md"
     },
     {
-      "name": "roadmap_csharp_python_parity",
-      "canonical": "roadmap/csharp-python-parity.md",
-      "mirror": "lore-book/roadmap/csharp-python-parity.md"
-    },
-    {
       "name": "roadmap_executable_modding",
       "canonical": "roadmap/executable-modding.md",
       "mirror": "lore-book/roadmap/executable-modding.md"
-    },
-    {
-      "name": "roadmap_electron_workbench_migration",
-      "canonical": "roadmap/electron-workbench-migration.md",
-      "mirror": "lore-book/roadmap/electron-workbench-migration.md"
     },
     {
       "name": "roadmap_gui_expansion",

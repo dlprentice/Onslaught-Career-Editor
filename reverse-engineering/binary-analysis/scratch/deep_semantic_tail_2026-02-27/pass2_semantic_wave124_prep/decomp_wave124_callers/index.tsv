@@ -1,7 +1,0 @@
-address	name	signature	status
-0x0048f2f0	CDXLandscape__Helper_0048f2f0	int CDXLandscape__Helper_0048f2f0(void)	OK
-0x0048f320	CLandscapeVB__VFunc_01_0048f320	int __fastcall CLandscapeVB__VFunc_01_0048f320(int param_1)	OK
-0x00540c30	CDXFrontEnd__SetupRenderMatricesAndProjection	void CDXFrontEnd__SetupRenderMatricesAndProjection(void)	OK
-0x004901e0	CUnitAI__Unk_004901e0	int CUnitAI__Unk_004901e0(void)	OK
-0x0048f210	CUnitAI__Unk_0048f210	void __fastcall CUnitAI__Unk_0048f210(int param_1)	OK
-0x00490900	CUnitAI__Unk_00490900	void __thiscall CUnitAI__Unk_00490900(void * this, void * param_1, void * param_2)	OK

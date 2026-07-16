@@ -21,9 +21,5 @@ trim_trailing_whitespace = false
 end_of_line = crlf
 trim_trailing_whitespace = false
 
-[setuphistory.txt]
-end_of_line = crlf
-trim_trailing_whitespace = false
-
 [*.md]
 trim_trailing_whitespace = false

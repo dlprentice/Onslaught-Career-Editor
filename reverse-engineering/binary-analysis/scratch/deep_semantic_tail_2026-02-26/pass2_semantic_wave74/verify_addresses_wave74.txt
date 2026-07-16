@@ -1,8 +1,0 @@
-0x0056a1cd CRT__ParseFloatTextToLongDouble
-0x0056a69e CRT__GetStringTypeACompat
-0x0056be17 CRT__InitCTypeTablesFromCodePage
-0x0056ce69 CRT__IsInDst_WrapperLocked
-0x0056ce8a CRT__IsInDst
-0x0056d036 CRT__ComputeDstTransitionDayMillis
-0x0056d8da CRT__LongDoubleMultiply10Byte
-0x0056dafa CRT__LongDoubleScaleByPowerOf10

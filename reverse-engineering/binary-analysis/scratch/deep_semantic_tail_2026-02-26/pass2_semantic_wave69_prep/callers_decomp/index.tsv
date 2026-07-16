@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0057511b	Platform__Helper_0057511b	int Platform__Helper_0057511b(void)	OK
-0x0057c7a4	CMeshCollisionVolume__Unk_0057c7a4	int __thiscall CMeshCollisionVolume__Unk_0057c7a4(void * this, void * param_1, int param_2, int param_3, int param_4)	OK
-0x00589405	CTexture__Helper_00589405	int __fastcall CTexture__Helper_00589405(int param_1)	OK
-0x00575923	CDXTexture__Helper_00575923	int __stdcall CDXTexture__Helper_00575923(void * param_1, void * param_2)	OK
-0x005894a9	CTexture__OpenIncludeSourceAndInitBuffer	int CTexture__OpenIncludeSourceAndInitBuffer(void)	OK

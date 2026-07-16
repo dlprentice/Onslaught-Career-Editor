@@ -1,5 +1,0 @@
-address	expected_name	observed_name	status
-0x004f39b0	CUnit__Helper_004f39b0	CUnit__Helper_004f39b0	ok
-0x004f3ac0	CUnitAI__Helper_004f3ac0	CUnitAI__Helper_004f3ac0	ok
-0x004f3c80	CAtmospheric__Helper_004f3c80	CAtmospheric__Helper_004f3c80	ok
-0x004f3d10	CCollisionSeekingRound__Helper_004f3d10	CCollisionSeekingRound__Helper_004f3d10	ok

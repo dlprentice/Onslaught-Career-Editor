@@ -34,7 +34,6 @@ Public platform sources checked for this dossier:
 
 Repo sources used:
 
-- `roadmap/electron-workbench-migration.md`
 - `roadmap/status-current.md`
 - `roadmap/repo-structure-and-archive-map.md`
 - `reverse-engineering/game-assets/extraction-pipeline.md`

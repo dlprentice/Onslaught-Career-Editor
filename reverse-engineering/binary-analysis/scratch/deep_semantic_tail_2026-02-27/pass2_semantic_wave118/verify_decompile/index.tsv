@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0044d1f0	CUnitAI__RunHelper2000AndDispatchVFunc0x38IfFlag4	void __fastcall CUnitAI__RunHelper2000AndDispatchVFunc0x38IfFlag4(void * param_1)	OK
-0x0044d210	CUnitAI__RenderWithStaticShadowVisibilityUpdate	void __thiscall CUnitAI__RenderWithStaticShadowVisibilityUpdate(void * this, int param_1, int param_2)	OK
-0x00452ce0	CFrontEnd__RenderVideoQuadScaledToWindow	void __stdcall CFrontEnd__RenderVideoQuadScaledToWindow(float param_1, int param_2, float param_3, float param_4)	OK
-0x00469390	CFrontEnd__ProcessMouseReadyOrDispatchVBufTexture	int __cdecl CFrontEnd__ProcessMouseReadyOrDispatchVBufTexture(void * param_1, void * param_2, void * param_3, void * param_4, void * param_5)	OK
-0x00469550	CFrontEnd__ResolveLevelNameTextByCode	void __cdecl CFrontEnd__ResolveLevelNameTextByCode(int param_1)	OK

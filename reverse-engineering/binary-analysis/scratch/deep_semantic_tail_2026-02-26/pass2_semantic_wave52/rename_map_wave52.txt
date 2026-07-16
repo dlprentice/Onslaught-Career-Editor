@@ -1,5 +1,0 @@
-0x00488330 CIBuffer__CreateConfigured
-0x00488aa0 CIBuffer__GetEntryHeightByOwnerSlot
-0x0048a4e0 CInfantryGuide__dtor
-0x0048ace0 CInfantryGuide__SelectNearestTargetReader
-0x004c0c70 CPDSimpleSprite__EvalExpressionNode

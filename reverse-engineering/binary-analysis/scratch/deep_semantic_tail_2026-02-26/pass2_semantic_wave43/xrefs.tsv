@@ -1,4 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-0047a8b0	CGillMHead__Unk_0047a8b0	005e4350	<none>	<no_function>	DATA
-0047a900	CGillMHead__Unk_0047a900	005e42e4	<none>	<no_function>	DATA
-004d10b0	CGillMHead__Unk_004d10b0	0046faf9	0046fae0	CGame__UnPause	UNCONDITIONAL_CALL

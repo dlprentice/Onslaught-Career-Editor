@@ -1,6 +1,0 @@
-address	name	signature	status
-0x005988f5	CFastVB__CompareNodeValuesByTagAndPayload	int __fastcall CFastVB__CompareNodeValuesByTagAndPayload(void * param_1)	OK
-0x00598873	CFastVB__CloneNodeChainWithAddRef	int __fastcall CFastVB__CloneNodeChainWithAddRef(void * param_1)	OK
-0x00598d6b	CFastVB__InitNodeType13	int __fastcall CFastVB__InitNodeType13(void * param_1)	OK
-0x00599b13	CFastVB__SetParseErrorAndMarkStateDirty	void __cdecl CFastVB__SetParseErrorAndMarkStateDirty(int param_1, int param_2, int param_3, int param_4)	OK
-0x00599b69	CFastVB__NodeTreeHasBitFlag0x200	uint __thiscall CFastVB__NodeTreeHasBitFlag0x200(void * this, int param_1, int param_2)	OK

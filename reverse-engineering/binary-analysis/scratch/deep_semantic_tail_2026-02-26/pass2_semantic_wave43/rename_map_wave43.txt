@@ -1,3 +1,0 @@
-0x0047a8b0 CGillMHead__TryTransitionIdleToOpen
-0x0047a900 CGillMHead__AdvanceOpenAttackCloseState
-0x004d10b0 CGillMHead__ResetAnimationStateAndPauseLatch

@@ -1,5 +1,0 @@
-address	name	signature	status
-0x004433f0	CDestroyableSegment__Unk_004433f0	int __fastcall CDestroyableSegment__Unk_004433f0(int param_1)	OK
-0x00442890	CDestroyableSegment__Helper_00442890	double __fastcall CDestroyableSegment__Helper_00442890(void * param_1)	OK
-0x00442840	<none>	<none>	MISSING
-0x00443360	<none>	<none>	MISSING

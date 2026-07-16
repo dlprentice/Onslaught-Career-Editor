@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00479db0	CExplosionInitThing__TriggerRandomGillArmSubEffect	void __fastcall CExplosionInitThing__TriggerRandomGillArmSubEffect(int param_1)	OK
-0x0047a160	CExplosionInitThing__StartState1WithStoredMotionVector	void __fastcall CExplosionInitThing__StartState1WithStoredMotionVector(void * param_1)	OK
-0x0047d670	CUnitAI__FreeOwnedObjects_10_18	void __fastcall CUnitAI__FreeOwnedObjects_10_18(int param_1)	OK
-0x0047e870	CUnitAI__ResetWorkGrid1024AndFlags	int __fastcall CUnitAI__ResetWorkGrid1024AndFlags(int param_1)	OK
-0x00490e10	CUnitAI__InitWorkGrid1024	int __fastcall CUnitAI__InitWorkGrid1024(int param_1)	OK

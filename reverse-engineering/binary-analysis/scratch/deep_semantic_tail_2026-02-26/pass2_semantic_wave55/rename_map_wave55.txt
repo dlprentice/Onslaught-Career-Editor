@@ -1,4 +1,0 @@
-0x004aa410 CMesh__FindTextureByNameSuffixHint
-0x004aa5a0 CMesh__GetPartField40ByFlatIndex
-0x004aa5e0 CMesh__FindEntryByInclusiveRangeTable
-0x004aa7e0 CMesh__FindEntryValueByTypeId

@@ -1,59 +1,16 @@
 # Roadmap Index
 
 Status: active
-Last updated: 2026-07-11
 
-Execution mode: WinUI-first toolkit plus an active RE-informed rebuild. WinUI 3
-is the primary user-facing preservation/modding app. `rebuild/` owns the
-separate GPL game implementation. Electron, WPF, and the old Python GUI/CLI app
-are archived/reference surfaces; Python scripts remain RE/tooling/lab support.
+Use current implementation and focused tests as source truth. These are the
+roadmap front doors that still describe active work:
 
-Ghidra static RE (Steam retail): a historical local snapshot reports
-**6411/6411** rows passing a narrow name/comment/signature hygiene contract and
-**1179/1179** current-risk rows accounted for. Those counters do not prove
-binary-wide semantic completion, correct prototypes/types, runtime behavior, or
-rebuild parity. The active deep audit rates the tracked evidence roughly 2.5/5;
-current accounting context lives in
-`reverse-engineering/binary-analysis/static-reaudit-measurement-register.md` and
-`re_orchestrator_state.json`.
+- [status-current.md](/roadmap/status-current.md) — current product and release state.
+- [mod-patch-runtime-rebuild-register.md](/roadmap/mod-patch-runtime-rebuild-register.md) — current player-facing mod, patch, runtime, and rebuild work.
+- [rebuild-front-door-chain-map.md](/roadmap/rebuild-front-door-chain-map.md) — rebuild implementation and provenance routing.
+- [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) — original-binary online feasibility and current limits.
+- [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) — source ownership and generated/local boundaries.
+- [web-runtime/webgpu-wasm-netcode-feasibility.md](/roadmap/web-runtime/webgpu-wasm-netcode-feasibility.md) — future web-runtime feasibility.
 
-## Implementation Focus
-
-| Implementation | Status | Notes |
-|---|---|---|
-| `OnslaughtCareerEditor.WinUI` | Primary product lane | WinUI 3 Windows app |
-| `OnslaughtCareerEditor.AppCore` / `OnslaughtCareerEditor.Cli` / `OnslaughtCareerEditor.AppCore.Host` | Shared correctness/reference | Retained while Windows lane needs them |
-| `rebuild` | Active GPL rebuild | Deterministic Core/headless host now; Godot .NET visual adapter next |
-| `tools` | Active tooling | Release, docs, RE, extraction, and validation scripts |
-| `archive/electron-workbench` | Archived reference | Former Electron/React/TypeScript detour |
-| `archive/legacy-python` | Archived reference | Historical Python GUI/CLI parity app |
-| `archive/legacy-wpf` | Archived reference | Historical WPF app |
-
-## Active Roadmap Documents
-
-| Document | Purpose |
-|---|---|
-| [three-lane-product-strategy.md](/roadmap/three-lane-product-strategy.md) | Canonical lane strategy and next sequence |
-| [status-current.md](/roadmap/status-current.md) | Current product/release state |
-| [mod-patch-runtime-rebuild-register.md](/roadmap/mod-patch-runtime-rebuild-register.md) | Player-facing mod/patch/runtime/rebuild proof accounting |
-| [rebuild-front-door-chain-map.md](/roadmap/rebuild-front-door-chain-map.md) | Active implementation, provenance, evidence, and system routing map |
-| [static-to-proof-rebuild-transition-backlog.md](/roadmap/static-to-proof-rebuild-transition-backlog.md) | Historical proof-chain evidence register; not an active queue |
-| [original-binary-online-multiplayer-feasibility.md](/roadmap/original-binary-online-multiplayer-feasibility.md) | Original-binary online proof ladder and non-claims |
-| [repo-structure-and-archive-map.md](/roadmap/repo-structure-and-archive-map.md) | Current canonical/derived/generated/historical/local authority map |
-| [winui-lore-offline-pack-plan.md](/roadmap/winui-lore-offline-pack-plan.md) | Generated full-offline Lore content-pack shape for app ZIP candidates |
-| [patchbench-primitive-projection-contract.md](/roadmap/patchbench-primitive-projection-contract.md) | Design-only primitive receipt/source-summary presentation boundary for future PatchBench helper extraction; not extraction approval |
-| [resolved-archive.md](/roadmap/resolved-archive.md) | Historical completed work |
-| [interaction-audit/2026-05-01-ui-action-inventory.md](/roadmap/interaction-audit/2026-05-01-ui-action-inventory.md) | Historical UI action inventory |
-| [reverse-engineering/coverage-map.md](/roadmap/reverse-engineering/coverage-map.md) | RE coverage map and reusable objective templates |
-| [web-runtime/webgpu-wasm-netcode-feasibility.md](/roadmap/web-runtime/webgpu-wasm-netcode-feasibility.md) | Future WebGPU/WASM/netcode feasibility and prerequisites |
-
-## Historical / Archived Documents
-
-Superseded planning is archived under `archive/historical-docs/` and excluded from public release outputs. Current readers should use the active WinUI-first strategy above.
-
-| Document | Status |
-|---|---|
-| [electron-workbench-migration.md](/roadmap/electron-workbench-migration.md) | Historical Electron architecture/reference record |
-| [gui-expansion.md](/roadmap/gui-expansion.md) | Historical PyQt roadmap |
-| [csharp-python-parity.md](/roadmap/csharp-python-parity.md) | Historical parity tracking |
-| [material-design-audit.md](/roadmap/material-design-audit.md) | Historical WPF/Python UI audit |
+Dated audits, completed plans, and retired application comparisons are history,
+not active work queues. Use Git history when that provenance is needed.

@@ -1,8 +1,0 @@
-0x004d28c0 CPlayer__GotoFPView
-0x004d29c0 CPlayer__Goto3rdPersonView
-0x004d28a0 CPlayer__Init
-0x004d2a50 CPlayer__GotoControlView
-0x004d2a70 CPlayer__GetCurrentViewPoint
-0x004d2ae0 CPlayer__GetCurrentViewOrientation
-0x004d2b40 CPlayer__GetOldCurrentViewPoint
-0x004d2bb0 CPlayer__GetOldCurrentViewOrientation

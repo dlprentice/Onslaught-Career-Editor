@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00512470	PlatformInput__ClearTransientKeyStateTable	void __fastcall PlatformInput__ClearTransientKeyStateTable(int param_1)	OK
-0x00512630	Platform__HandleDeviceLostAndRestore	void __fastcall Platform__HandleDeviceLostAndRestore(int param_1)	OK
-0x00512fc0	PlatformInput__ClearAllKeyStateTables	void __fastcall PlatformInput__ClearAllKeyStateTables(int param_1)	OK
-0x00523bc0	Input__DispatchClickInRect	uint __cdecl Input__DispatchClickInRect(float param_1, float param_2, float param_3, float param_4, int param_5)	OK
-0x00523d40	Input__GetCursorStateInRectAndConsume	uint __cdecl Input__GetCursorStateInRectAndConsume(float param_1, float param_2, float param_3, float param_4)	OK

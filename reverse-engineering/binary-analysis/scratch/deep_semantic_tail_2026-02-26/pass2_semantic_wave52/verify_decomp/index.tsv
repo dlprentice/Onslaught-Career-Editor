@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00488330	CIBuffer__CreateConfigured	int __thiscall CIBuffer__CreateConfigured(void * this, void * param_1, int param_2, int param_3, int param_4, int param_5)	OK
-0x00488aa0	CIBuffer__GetEntryHeightByOwnerSlot	double __thiscall CIBuffer__GetEntryHeightByOwnerSlot(void * this, int param_1, int param_2)	OK
-0x0048a4e0	CInfantryGuide__dtor	void __fastcall CInfantryGuide__dtor(void * param_1)	OK
-0x0048ace0	CInfantryGuide__SelectNearestTargetReader	void __fastcall CInfantryGuide__SelectNearestTargetReader(int param_1)	OK
-0x004c0c70	CPDSimpleSprite__EvalExpressionNode	int CPDSimpleSprite__EvalExpressionNode(void)	OK

@@ -133,7 +133,7 @@ Material Design provides `MaterialDesign.Brush.Primary`, `MaterialDesign.Brush.B
 
 ### 4.3 Parity with C# WPF
 
-- **Functional parity:** Documented as COMPLETE in `roadmap/csharp-python-parity.md`.
+- **Historical comparison:** The retired app implementations are available in Git history.
 - **Visual parity:** Both use light themes and similar accent colors, but different frameworks (WPF vs Qt).
 - **Design system parity:** Neither stack uses a shared Material Design implementation.
 
@@ -226,5 +226,4 @@ Material Design provides `MaterialDesign.Brush.Primary`, `MaterialDesign.Brush.B
 
 - [Material Design in XAML Toolkit – Getting Started](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit/wiki/Getting-Started)
 - [Material Design 3 Defaults](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit) (MaterialDesign3.Defaults.xaml)
-- `roadmap/csharp-python-parity.md` — functional parity status
 - `onslaught/gui/theme.py` — Python light theme

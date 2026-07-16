@@ -3,7 +3,7 @@
 Status: active release note
 Last updated: 2026-07-12
 
-This file describes the current source-release and public-safety posture. The repo is WinUI-first for the user-facing Windows product. Electron, WPF, and the old Python GUI/CLI parity app are archived/reference surfaces.
+This file describes the current source-release and public-safety posture. WinUI/AppCore is the sole application lane; retired implementations remain in Git history only.
 
 Contributor setup, local validation expectations, and hard-payload contribution
 boundaries are in [CONTRIBUTING.md](CONTRIBUTING.md). Asset-leak,
@@ -76,16 +76,9 @@ Active product/runtime surfaces:
 - `rebuild/` - separate GPL RE-informed source lane with deterministic Core/headless verification and a playable procedural Godot First Flight client; not part of the published WinUI ZIP
 - Python scripts under `tools/` - RE/tooling/lab support, not a product GUI lane
 
-Archived non-shipping app/reference surfaces:
-
-- `archive/electron-workbench/` - former Electron/React/TypeScript workbench, TypeScript contracts, TypeScript CLI, and Electron bundle helpers
-- `archive/legacy-python/` - historical Python GUI/CLI parity app
-- `archive/legacy-wpf/` - historical WPF app
-- `archive/legacy-winui-release/` - historical WinUI portable-bundle helpers
-
 The source repo is the working repo, not a small exported subset. It includes
-WinUI/AppCore/C# CLI/docs/tooling source, archived reference lanes, RE notes,
-runtime proof summaries, state batons, readiness notes, and project history.
+WinUI/AppCore/C# CLI/docs/tooling source, RE notes, bounded proof summaries,
+readiness notes, and project history.
 Ignored local overlays are for hard payloads: game binaries/assets, copied
 runtime output, full Ghidra databases/backups, secrets, build outputs, and bulky
 generated captures. Signed installer-grade WinUI packaging remains a separate
@@ -124,9 +117,8 @@ npm run test:repo-hygiene
 ```
 
 Run only the gates relevant to the change. `npm run test:md-links` may write
-generated reports under `subagents/md-link-check`; those reports are validation
-artifacts, not app release payload. Archived Electron checks are reference
-checks only, not product release gates.
+generated reports under `.artifacts/md-link-check`; those reports are validation
+artifacts, not app release payload.
 
 Use [VALIDATION.md](VALIDATION.md) for the current measured matrix. Individual
 WinUI/AppCore/UI commands are focused diagnostics; the primary-lane wrapper is
@@ -156,12 +148,6 @@ change; do not copy stale count literals from old prose. The
 secrets, while `test:public-allowlist` runs hard-payload safety, submodule
 payload safety, and public-primary migration/hash inventory.
 
-## Archive Posture
-
-`archive/electron-workbench/release/Build-ElectronBundle.ps1` and related
-scripts are retained only so the archived Electron workbench can be inspected
-later. They must not be treated as the community product release path.
-
 ## Maintainer Notes
 
 - WinUI 3 is the product UX focus.
@@ -176,4 +162,4 @@ later. They must not be treated as the community product release path.
   full Ghidra databases/backups, secrets, build outputs, screenshots/frame
   dumps, raw CDB logs, and copied runtime payloads out of git and app release
   ZIPs.
-- Halt broad Electron, Python GUI, and WPF product work. Port only narrow, reviewed logic into WinUI/AppCore/tools if needed.
+- Retired application implementations are available from Git history when provenance is needed.

@@ -1,6 +1,0 @@
-address	name	signature	status
-0x004238c0	CChunkerStream__OpenReadAndGetChunker	int __thiscall CChunkerStream__OpenReadAndGetChunker(void * this, void * param_1, int param_2)	OK
-0x0044a690	RenderState__Set0x89_Zero	void RenderState__Set0x89_Zero(void)	OK
-0x0044a6b0	CDXEngine__ApplyNavMapConsoleToggle_Thunk	int CDXEngine__ApplyNavMapConsoleToggle_Thunk(void)	OK
-0x0046a1f0	CUnitAI__GetStringByResolvedTextIdAfter	void __cdecl CUnitAI__GetStringByResolvedTextIdAfter(int param_1, int param_2)	OK
-0x0046a220	CUnitAI__GetMultiplayerLevelDescriptionByType	void __cdecl CUnitAI__GetMultiplayerLevelDescriptionByType(int param_1)	OK

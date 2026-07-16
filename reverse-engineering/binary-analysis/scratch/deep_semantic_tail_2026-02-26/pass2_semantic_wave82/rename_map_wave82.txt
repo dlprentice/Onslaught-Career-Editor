@@ -1,5 +1,0 @@
-0x00591050 CFastVB__ReleaseOwnedObjectAndReset
-0x00592b00 CFastVB__ParserContext_Shutdown
-0x00592c50 CFastVB__ParserContext_Init
-0x00599258 CFastVB__ComputeNodeSpanAndStride
-0x00599878 CFastVB__CloneNodeTreeWithAddRef

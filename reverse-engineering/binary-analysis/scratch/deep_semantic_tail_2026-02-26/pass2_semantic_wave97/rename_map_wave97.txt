@@ -1,5 +1,0 @@
-0x0055da5e CRT__SehStoreFrameGlobals
-0x0055da76 CRT__InitRuntimeFromStoredFrameGlobals
-0x0055db72 CRT__EhVectorDestructorIterator_IfNoException
-0x0055e412 CRT__CallHelper_00564a0b_NoFlags
-0x0055e45f CRT__CallHelper_00564c09_WithAutoUnlock

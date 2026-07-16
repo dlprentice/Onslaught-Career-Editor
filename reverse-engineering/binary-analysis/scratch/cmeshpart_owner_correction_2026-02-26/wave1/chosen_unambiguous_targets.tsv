@@ -1,6 +1,0 @@
-address	old_name	inferred_owner	new_name	xref_count	top_counts
-0x004ae080	CMeshPart__Unk_004ae080	CMesh	CMesh__Helper_004ae080	3	CMesh:3
-0x004ae0d0	CMeshPart__Unk_004ae0d0	CMesh	CMesh__Helper_004ae0d0	3	CMesh:3
-0x004b0cd0	CMeshPart__Unk_004b0cd0	CMesh	CMesh__Helper_004b0cd0	8	CMesh:4;CDestructableSegmentsController:3;CStaticShadows:1
-0x004b0fb0	CMeshPart__Unk_004b0fb0	CMCMech	CMCMech__Helper_004b0fb0	27	CMCMech:7;CMCTentacle:5;CDXEngine:3;CMCBuggy:3;CMesh:2;CStaticShadows:2
-0x004b25d0	CMeshPart__Unk_004b25d0	CMesh	CMesh__Helper_004b25d0	3	CMesh:3

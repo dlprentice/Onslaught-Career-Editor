@@ -10,7 +10,7 @@
 - `OnslaughtCareerEditor.Cli/` is the supported C# helper CLI.
 - `tools/` contains Python RE, validation, asset, and lab tooling; it is not a product GUI lane.
 - `rebuild/` is the GPL-licensed, RE-informed original-code reconstruction lane.
-- Electron, WPF, and the old Python GUI/CLI are archived reference lanes.
+- Retired Electron, WPF, and Python app implementations live only in Git history; they are not source lanes.
 
 ## Hard Boundaries
 

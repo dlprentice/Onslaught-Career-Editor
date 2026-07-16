@@ -1,3 +1,0 @@
-address	name	signature	status
-0x005a7e09	CFastVB__DispatchOp_ComposeMatrixFromOptionalTransforms	int CFastVB__DispatchOp_ComposeMatrixFromOptionalTransforms(void)	OK
-0x005ad590	CFastVB__JpegEntropy_CommitAndResetBlockState	int CFastVB__JpegEntropy_CommitAndResetBlockState(void)	OK

@@ -1,5 +1,0 @@
-0x005602d2 CRT__SehDispatchWithScopeTable
-0x0056036d CRT__SehLookupAndInvokeScopeHandler
-0x00560627 CRT__SehUnwindToTargetState
-0x005606c5 CRT__SehUnwindAndResumeSearch
-0x00560cb1 CRT__InitFpuControlWord_0x10000_0x30000

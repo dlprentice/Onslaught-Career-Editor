@@ -1,4 +1,0 @@
-0x00403ba0 CThing__Hit_TriggerDieOnDamageMaskA
-0x00403bf0 CThing__Hit_TriggerDieOnDamageMaskB
-0x00417540 CThing__RenderAndUpdateStaticShadow
-0x004176c0 CThing__InitRenderThingFromInitMeshName

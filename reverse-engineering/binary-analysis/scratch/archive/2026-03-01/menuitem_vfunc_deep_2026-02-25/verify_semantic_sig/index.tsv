@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00453a50	CMenuItem__ButtonPressed_NoOp	void __thiscall CMenuItem__ButtonPressed_NoOp(void * this, int from_controller, int button)	OK
-0x00453a60	CMenuItem__IsEnabled	int __thiscall CMenuItem__IsEnabled(void * this)	OK
-0x00453a70	CMenuItem__GetRowHeight	int __thiscall CMenuItem__GetRowHeight(void * this)	OK
-0x00453a80	CMenuItem__DefaultFalseFlag	byte __thiscall CMenuItem__DefaultFalseFlag(void * this)	OK
-0x00453a90	CMenuItem__scalar_deleting_dtor	void * __thiscall CMenuItem__scalar_deleting_dtor(void * this, byte flags)	OK

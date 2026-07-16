@@ -1,5 +1,0 @@
-0x00520530 CFEPVirtualKeyboard__InitKeyboardLayout
-0x00520cc0 CFEPVirtualKeyboard__HandleKeyToken
-0x00520f70 CFEPVirtualKeyboard__MoveSelectionToRow
-0x004d0db0 CPauseMenu__InitBindingPromptAction
-0x00403a50 CFrontEndPage__HasPendingPositionLerp

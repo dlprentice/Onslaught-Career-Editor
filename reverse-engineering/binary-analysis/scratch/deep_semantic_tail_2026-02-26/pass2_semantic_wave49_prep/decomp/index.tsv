@@ -1,5 +1,0 @@
-address	name	signature	status
-0x004144f0	CCockpit__Unk_004144f0	int __fastcall CCockpit__Unk_004144f0(void * param_1)	OK
-0x00418120	CCockpit__Unk_00418120	int __fastcall CCockpit__Unk_00418120(void * param_1)	OK
-0x004a1c30	CMemoryManager__Unk_004a1c30	void __fastcall CMemoryManager__Unk_004a1c30(void * param_1)	OK
-0x004a2a20	CMemoryManager__Unk_004a2a20	void __fastcall CMemoryManager__Unk_004a2a20(void * param_1)	OK

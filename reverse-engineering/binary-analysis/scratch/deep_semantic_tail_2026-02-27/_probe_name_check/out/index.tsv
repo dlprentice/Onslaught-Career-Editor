@@ -1,4 +1,0 @@
-address	name	signature	status
-0x00469c20	CFrontEnd__ResolveEpisodeNameTextByIndex	void __cdecl CFrontEnd__ResolveEpisodeNameTextByIndex(int param_1)	OK
-0x00469cf0	CFrontEnd__ResolveLevelNameTextIdByCode	int __cdecl CFrontEnd__ResolveLevelNameTextIdByCode(int param_1)	OK
-0x0046a210	CFrontEnd__GetFallbackUnnamedLevelTextId	int CFrontEnd__GetFallbackUnnamedLevelTextId(void)	OK

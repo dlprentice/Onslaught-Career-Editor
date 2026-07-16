@@ -1,5 +1,0 @@
-0x0050abc0 CWorld__CloneScriptObjectCodeByName
-0x0052c430 CD3DApplication__Cleanup3DEnvironment
-0x00548f90 MEM_MANAGER__Init
-0x0052ff30 ScriptCommandRegistry__InitBuiltins
-0x005be628 HResultToString

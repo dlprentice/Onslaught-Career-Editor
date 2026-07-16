@@ -1,6 +1,0 @@
-0x0055d6d4 CDXTexture__Helper_0055d6d4
-0x0056fce0 CFastVB__Helper_0056fce0
-0x00570870 CFastVB__Helper_00570870
-0x00572fa0 CFastVB__Helper_00572fa0
-0x00574492 CDXTexture__Helper_00574492
-0x005d0a2a CFEPSaveGame__Helper_005d0a2a

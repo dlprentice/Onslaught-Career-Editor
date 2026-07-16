@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0056004d	CDXTexture__AsciiToLowerInPlace	char * __cdecl CDXTexture__AsciiToLowerInPlace(void * param_1)	OK
-0x00560b2c	CTexture__InitializeThreadLocalState	int CTexture__InitializeThreadLocalState(void)	OK
-0x00560b80	CTexture__InitializeThreadLocalRecordDefaults	void __cdecl CTexture__InitializeThreadLocalRecordDefaults(int param_1)	OK
-0x00561150	CTexture__InitializeGlobalCriticalSections	void CTexture__InitializeGlobalCriticalSections(void)	OK
-0x005602ae	CDXTexture__ReportFatalAndExitProcess	void __cdecl CDXTexture__ReportFatalAndExitProcess(int param_1)	OK

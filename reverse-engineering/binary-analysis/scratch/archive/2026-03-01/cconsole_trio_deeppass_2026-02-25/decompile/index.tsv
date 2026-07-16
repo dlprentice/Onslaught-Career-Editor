@@ -1,4 +1,0 @@
-address	name	signature	status
-0x0042d260	CConsole__Unk_0042d260	int CConsole__Unk_0042d260(void)	OK
-0x0042d2b0	CConsole__Unk_0042d2b0	int CConsole__Unk_0042d2b0(void)	OK
-0x0042d300	CConsole__Unk_0042d300	void __fastcall CConsole__Unk_0042d300(void * param_1)	OK

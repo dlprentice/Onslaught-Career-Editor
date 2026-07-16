@@ -10,7 +10,6 @@ This document used to track the older WinUI/AppCore/CLI shipping plan. It remain
 Current delivery truth lives in:
 
 - [three-lane-product-strategy.md](three-lane-product-strategy.md)
-- [electron-workbench-migration.md](electron-workbench-migration.md)
 - [status-current.md](status-current.md)
 - [RELEASE_SCOPE_AND_TEST_COMMANDS.md](/RELEASE_SCOPE_AND_TEST_COMMANDS.md)
 - [release/readiness/release_readiness_checklist.md](/release/readiness/release_readiness_checklist.md)

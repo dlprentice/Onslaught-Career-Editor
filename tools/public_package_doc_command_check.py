@@ -20,14 +20,12 @@ COMMAND_PATTERN = re.compile(r"npm\s+run\s+(?P<script>[A-Za-z0-9:_-]+)")
 START_MARKER = "<!-- public-package-commands:start -->"
 END_MARKER = "<!-- public-package-commands:end -->"
 REQUIRED_MARKED_DOCS = {
-    "COLLABORATION.md",
     "CONTRIBUTING.md",
     "CURRENT_CAPABILITIES.md",
     "README.MD",
     "README.RELEASE.md",
     "RELEASE_SCOPE_AND_TEST_COMMANDS.md",
     "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
-    "release/readiness/public_AGENTS.md",
 }
 
 

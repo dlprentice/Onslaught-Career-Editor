@@ -1,4 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-00404210	CAtmospheric__Unk_00404210	005d87a0	<none>	<no_function>	DATA
-00404790	CAtmospheric__Unk_00404790	00404754	<none>	<no_function>	UNCONDITIONAL_CALL
-004048c0	CAtmospheric__Unk_004048c0	004f45ce	<none>	<no_function>	UNCONDITIONAL_CALL

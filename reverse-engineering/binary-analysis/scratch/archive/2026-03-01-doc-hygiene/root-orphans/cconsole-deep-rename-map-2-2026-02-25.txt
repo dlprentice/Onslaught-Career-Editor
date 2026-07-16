@@ -1,7 +1,0 @@
-0x0042a4f0 CConsole__ExecuteBufferedCommandSlot
-0x0042c750 FatalError__ExitWithLocalizedPrefix_A
-0x0042d0b0 FatalError__ExitWithLocalizedPrefix_B
-0x0042d310 PlatformInput__InitMouse
-0x0042d3b0 PlatformInput__ShutdownMouse
-0x0042d420 PlatformInput__PollMouseMotion
-0x0042d4d0 PlatformInput__PollMouseState

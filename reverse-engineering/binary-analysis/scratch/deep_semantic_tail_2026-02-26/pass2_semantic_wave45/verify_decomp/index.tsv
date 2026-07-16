@@ -1,4 +1,0 @@
-address	name	signature	status
-0x004429a0	CDestructableSegment__DispatchChildDestructionEvents	void __fastcall CDestructableSegment__DispatchChildDestructionEvents(void * param_1)	OK
-0x00442a80	CDestructableSegment__SetSubtreeActiveFlagRecursive	void __fastcall CDestructableSegment__SetSubtreeActiveFlagRecursive(int param_1)	OK
-0x00442ac0	CDestructableSegment__PropagateDamageToChildren	void __thiscall CDestructableSegment__PropagateDamageToChildren(void * this, int param_1, int param_2)	OK

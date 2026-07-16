@@ -1,7 +1,0 @@
-address	name	signature	status
-0x004081c0	CMonitor__Process	void __fastcall CMonitor__Process(void * param_1)	OK
-0x00407a50	CMonitor__UpdateCameraVectorsAndInput	void __fastcall CMonitor__UpdateCameraVectorsAndInput(void * param_1)	OK
-0x0040de40	CMonitor__HandleTargetStateChangeAndHudPrompt	void __fastcall CMonitor__HandleTargetStateChangeAndHudPrompt(void * param_1)	OK
-0x0040e940	CMonitor__UpdateTrackedList_59C	void __fastcall CMonitor__UpdateTrackedList_59C(void * param_1)	OK
-0x0040eb50	CMonitor__FlushTrackedList_1D4	void __fastcall CMonitor__FlushTrackedList_1D4(int param_1)	OK
-0x0040ebf0	CMonitor__UpdateTrackedList_620	void __fastcall CMonitor__UpdateTrackedList_620(void * param_1)	OK

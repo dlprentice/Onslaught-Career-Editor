@@ -1,8 +1,0 @@
-address	name	signature	status
-0x0058c2b9	CTexture__AppendDiagnosticTextLine	int __thiscall CTexture__AppendDiagnosticTextLine(void * this, void * param_1, void * param_2)	OK
-0x0058c457	CTexture__ParseFloatingLiteral	int __thiscall CTexture__ParseFloatingLiteral(void * this, void * param_1, void * param_2, void * param_3)	OK
-0x0058c5d3	CTexture__ParseIdentifierToken	uint __thiscall CTexture__ParseIdentifierToken(void * this, void * param_1, void * param_2, void * param_3)	OK
-0x0058c652	CTexture__ParseOperatorToken	int __thiscall CTexture__ParseOperatorToken(void * this, int param_1, void * param_2, void * param_3)	OK
-0x0058d18b	CTexture__ParseCharLiteralToken	char * __thiscall CTexture__ParseCharLiteralToken(void * this, void * param_1, void * param_2, void * param_3)	OK
-0x0058d1ca	CTexture__ParseStringLiteralToken	char * __thiscall CTexture__ParseStringLiteralToken(void * this, void * param_1, void * param_2, void * param_3)	OK
-0x0058d419	CTexture__ParseVertexSemanticUsageToken	int __thiscall CTexture__ParseVertexSemanticUsageToken(void * this, void * param_1, void * param_2, void * param_3, void * param_4)	OK

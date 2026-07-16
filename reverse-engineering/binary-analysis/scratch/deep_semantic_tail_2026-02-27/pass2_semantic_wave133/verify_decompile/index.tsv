@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00504b40	CVBufTexture__UpdateTrackedPitchWithClamp	void __fastcall CVBufTexture__UpdateTrackedPitchWithClamp(int param_1)	OK
-0x00504cf0	CVBufTexture__ShouldSkipUpdateByStateFlags	int __fastcall CVBufTexture__ShouldSkipUpdateByStateFlags(int param_1)	OK
-0x00504d30	CVBufTexture__IsTransitionAllowedByState	bool __fastcall CVBufTexture__IsTransitionAllowedByState(int param_1)	OK
-0x005068f0	CEngine__AdvanceProgressIfAnySlotAssigned	void __fastcall CEngine__AdvanceProgressIfAnySlotAssigned(int param_1)	OK
-0x005078b0	CEngine__GetListEntryIdByIndex	int __thiscall CEngine__GetListEntryIdByIndex(void * this, int param_1, int param_2)	OK

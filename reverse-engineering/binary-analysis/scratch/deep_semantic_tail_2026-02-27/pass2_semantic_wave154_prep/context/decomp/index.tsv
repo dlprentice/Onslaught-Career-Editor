@@ -1,9 +1,0 @@
-address	name	signature	status
-0x0056235d	CRT__MsizeByPointer	int __cdecl CRT__MsizeByPointer(int param_1)	OK
-0x005689b8	CTexture__Helper_005689b8	int * __cdecl CTexture__Helper_005689b8(int param_1, int param_2)	OK
-0x00569788	CDXTexture__Helper_00569788	int __cdecl CDXTexture__Helper_00569788(int param_1, int param_2)	OK
-0x0055fa62	CRT__PowCore_0055fa62	int __cdecl CRT__PowCore_0055fa62(int param_1, uint param_2, int param_3, uint param_4)	FAILED
-0x0055f7a3	___timet_from_ft	undefined ___timet_from_ft(void)	OK
-0x00560181	entry	undefined entry(void)	OK
-0x0056468c	CTexture__Unk_0056468c	double CTexture__Unk_0056468c(void)	OK
-0x00564486	CTexture__Unk_00564486	int __cdecl CTexture__Unk_00564486(int param_1, uint param_2, int param_3)	OK

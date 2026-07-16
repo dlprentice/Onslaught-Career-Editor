@@ -1,4 +1,0 @@
-0x0058b3c7 CTexture__ExecuteDirectiveParserAction
-0x0058b812 CTexture__RunDirectiveParser
-0x0058bd25 CTexture__InitializePreprocessorStateFromMemorySpan
-0x0058bd87 CTexture__GetNextTokenWithPreprocessor

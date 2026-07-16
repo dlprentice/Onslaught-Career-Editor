@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0055da8d	CRT__InitFloatConversionDispatchTable	void CRT__InitFloatConversionDispatchTable(void)	OK
-0x0055dccd	CRT__Acos	double __cdecl CRT__Acos(int param_1, uint param_2)	OK
-0x0055df28	CRT__OnexitTablePush	int __cdecl CRT__OnexitTablePush(int param_1)	OK
-0x0055dfa6	CRT__RegisterOnexitFunction	int __cdecl CRT__RegisterOnexitFunction(int param_1)	OK
-0x0055e42a	Win32__CaptureSystemTimeAsFileTimeTicks	void Win32__CaptureSystemTimeAsFileTimeTicks(void)	OK

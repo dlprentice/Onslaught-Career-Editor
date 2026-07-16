@@ -1,7 +1,0 @@
-address	name	signature	status
-0x00453f50	Controls__DispatchRemap	void __cdecl Controls__DispatchRemap(int action_code, int key_or_value, void * callback)	OK
-0x004541e0	Controls__RemapKey	void __cdecl Controls__RemapKey(int action_code, int key_code)	OK
-0x00453780	Controls__ApplyPreset	void __cdecl Controls__ApplyPreset(int scheme)	OK
-0x00454e90	Controls__ClearDuplicateBinding	void __cdecl Controls__ClearDuplicateBinding(int key_code, short scan_code, int device_code)	OK
-0x00455010	ControlsUI__RenderBindingsList	undefined ControlsUI__RenderBindingsList(void)	OK
-0x00456080	Controls__BeginRemapCapture	undefined Controls__BeginRemapCapture(void)	OK

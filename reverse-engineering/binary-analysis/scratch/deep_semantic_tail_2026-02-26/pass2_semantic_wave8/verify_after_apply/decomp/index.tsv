@@ -1,8 +1,0 @@
-address	name	signature	status
-0x00472570	CGame__DoWeWantMesh	bool __thiscall CGame__DoWeWantMesh(void * this, int param_1, void * param_2)	OK
-0x004725f0	CGame__GetPlayerLives	int __thiscall CGame__GetPlayerLives(void * this, int param_1, int param_2)	OK
-0x00472650	CGame__IsRunningResources	bool __fastcall CGame__IsRunningResources(int param_1)	OK
-0x004815c0	CHud__Reset	void __fastcall CHud__Reset(int param_1)	OK
-0x00481af0	CHud__PostLoadProcess	void CHud__PostLoadProcess(void)	OK
-0x00481b00	CHud__ShutDown	void __fastcall CHud__ShutDown(int param_1)	OK
-0x0044a0d0	CEngine__SelectViewpoint	void __thiscall CEngine__SelectViewpoint(void * this, int param_1, int param_2)	OK

@@ -1,2 +1,0 @@
-0x00411630 CMonitor__IntegrateMovementAgainstTerrain
-0x00411aa0 CMonitor__ComputeTerrainVelocityScalar

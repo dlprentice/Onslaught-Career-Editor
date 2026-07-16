@@ -1,5 +1,0 @@
-# owner correction from CUnit__Unk_* (wave2)
-0x004e6640 CThing__Helper_004e6640
-0x004f0200 CLTShell__Helper_004f0200
-0x004f2a30 CLTShell__Helper_004f2a30
-0x004f74b0 CDXBattleLine__Helper_004f74b0

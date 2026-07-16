@@ -1,8 +1,0 @@
-address	name	signature	status
-0x005343e0	IScript__Unk_005343e0	void __stdcall IScript__Unk_005343e0(void * param_1)	OK
-0x00534410	IScript__Unk_00534410	void __stdcall IScript__Unk_00534410(void * param_1)	OK
-0x00534440	IScript__Unk_00534440	void __stdcall IScript__Unk_00534440(void * param_1)	OK
-0x00534470	IScript__Unk_00534470	void __stdcall IScript__Unk_00534470(void * param_1)	OK
-0x00535350	IScript__Unk_00535350	void __fastcall IScript__Unk_00535350(void * param_1)	OK
-0x00535fa0	IScript__Unk_00535fa0	void __thiscall IScript__Unk_00535fa0(void * this, int param_1, void * param_2)	OK
-0x00536ca0	IScript__Unk_00536ca0	void __thiscall IScript__Unk_00536ca0(void * this, int param_1, void * param_2)	OK

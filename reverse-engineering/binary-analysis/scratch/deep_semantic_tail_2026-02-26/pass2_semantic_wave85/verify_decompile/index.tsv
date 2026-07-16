@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00592530	CFastVB__JpegParser_ReadAndValidateSOI	int __stdcall CFastVB__JpegParser_ReadAndValidateSOI(void * param_1)	OK
-0x005913b0	CFastVB__JpegParser_ResetFrameState	int CFastVB__JpegParser_ResetFrameState(void)	OK
-0x00591720	CFastVB__JpegParser_ParseSOFComponents	int CFastVB__JpegParser_ParseSOFComponents(void)	OK
-0x00596589	CFastVB__SolveScalarEndpointPairFromSamples	void __stdcall CFastVB__SolveScalarEndpointPairFromSamples(void * param_1, void * param_2, int param_3)	OK
-0x005968a4	CFastVB__SolveVectorEndpointPairFromSamples	void __stdcall CFastVB__SolveVectorEndpointPairFromSamples(void * param_1, void * param_2, float param_3, int param_4)	OK

@@ -1,7 +1,0 @@
-address	name	signature	status
-0x0052b760	CD3DApplication__Resize3DEnvironment	int __fastcall CD3DApplication__Resize3DEnvironment(void * param_1)	OK
-0x0052b840	CD3DApplication__ToggleFullscreen	int __fastcall CD3DApplication__ToggleFullscreen(void * param_1)	OK
-0x0052ba50	CD3DApplication__ForceWindowed	int __thiscall CD3DApplication__ForceWindowed(void * this, void * param_1, int param_2)	OK
-0x0052bc80	CD3DApplication__SelectDeviceProc	int __stdcall CD3DApplication__SelectDeviceProc(int param_1, void * param_2, int param_3, int param_4)	OK
-0x0052c4f0	CD3DApplication__DisplayErrorMsg	int __stdcall CD3DApplication__DisplayErrorMsg(int param_1)	OK
-0x0052c8d0	CD3DApplication__SetDeviceCursorFromIcon	int __cdecl CD3DApplication__SetDeviceCursorFromIcon(void * param_1, int param_2)	OK

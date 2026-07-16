@@ -72,9 +72,6 @@ workflows operate on copied files and safe game copies.
 
 For contributor setup, local validation expectations, hard-payload boundaries, and PR-ready change rules, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-For a concise handoff checklist for outside developers and agent reviewers, see
-**[COLLABORATION.md](COLLABORATION.md)**.
-
 For asset-leak, copied-executable safety, secrets, and future online-session reporting rules, see **[SECURITY.md](SECURITY.md)**.
 
 **Contributor base:** use this public repository unless a maintainer explicitly
@@ -85,9 +82,8 @@ publication, source pushes, signing, installer release, and announcement are
 separate maintainer actions. Signed installer-grade MSIX trust/install remains a
 future proof, not a current release claim.
 
-Electron, the old Python GUI/CLI app, and WPF are archived/reference app
-surfaces in this repo for provenance and future inspection. They are not active
-product lanes and are not part of the default shipped app ZIP.
+Retired Electron, Python GUI/CLI, and WPF implementations remain available in
+Git history. They are not source lanes or shipped content.
 
 ## Active Layout
 
@@ -123,10 +119,8 @@ solution build followed by AppCore/WinUI tests from that build, and deterministi
 rebuild Core/client/toolchain-contract tests. It does not run whole-tree payload
 or hygiene scans, historical proof sweeps, Ghidra, or native Godot.
 `npm run dev` launches the WinUI app. Both commands use the tools already
-installed on the machine; the root
-`npm install` path exists only for deliberate inspection of the archived
-Electron workbench and is not normal product setup. Root `package.json` is the
-command authority. Use [VALIDATION.md](VALIDATION.md) for measured gate costs,
+installed on the machine; no dependency install is required. Root
+`package.json` is the command authority. Use [VALIDATION.md](VALIDATION.md) for measured gate costs,
 the change-class matrix, and the machine-readable script inventory command.
 
 To play the original-code rebuild prototype, double-click
@@ -151,12 +145,9 @@ because those gates also inspect reference submodule boundaries. A local
 Battle Engine Aquila install is only needed for game-aware workflows such as
 Media browsing, safe-copy patching, asset extraction, and live runtime proof.
 
-Archived app scripts are reference checks only. They are not the default product
-lane, but they remain part of the repository history.
-
 Use the
 [repository authority map](roadmap/repo-structure-and-archive-map.md) before
-editing mirrors, generated material, release history, or archived surfaces.
+editing mirrors, generated material, or release history.
 
 Core public-source validation:
 
@@ -192,11 +183,10 @@ npm run test:winui-notices
 
 `npm run test:md-links` may write generated reports under `.artifacts/md-link-check`; use it for validation, but do not treat generated report payloads as app release assets.
 
-## Archived Apps
+## Retired Apps
 
-This repo preserves the historical Electron, Python GUI/CLI, and WPF app
-attempts for provenance, not as active product lanes. They may contain useful
-reference implementations, but WinUI/AppCore remains the release lane.
+Historical Electron, Python GUI/CLI, and WPF implementations are available in
+Git history. WinUI/AppCore is the only current application lane.
 
 ## Safety Rules
 
@@ -214,7 +204,7 @@ reference implementations, but WinUI/AppCore remains the release lane.
   rebuild Core, tests, headless host, and Godot .NET client.
 - PowerShell 7 (`pwsh`) for rebuild toolchain contract tests and the npm Godot
   setup/build/run/smoke commands.
-- Node.js 24.x and npm `>=11.12 <12` for repo docs/release checks and optional archived Electron inspection. The tracked `packageManager` target is `npm@11.12.1`.
+- Node.js 24.x and npm `>=11.12 <12` for repo commands. The tracked `packageManager` target is `npm@11.12.1`.
 - Python 3 with the Windows `py` launcher for public-safe tooling checks.
 - A valid Battle Engine Aquila installation for game-aware workflows.
 
@@ -235,7 +225,6 @@ Common Steam path:
 
 - [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)
 - [CONTRIBUTING.md](CONTRIBUTING.md)
-- [COLLABORATION.md](COLLABORATION.md)
 - [SECURITY.md](SECURITY.md)
 - [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md)
 - [roadmap/public-roadmap.md](roadmap/public-roadmap.md)

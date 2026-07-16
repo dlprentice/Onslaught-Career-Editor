@@ -1,3 +1,0 @@
-address	name	signature	status
-0x00574296	CFastVB__ComputeFormatMatchPenalty	uint __fastcall CFastVB__ComputeFormatMatchPenalty(int param_1, int param_2)	OK
-0x0057437a	CFastVB__SelectBestFormatHandler	int __stdcall CFastVB__SelectBestFormatHandler(void * param_1, uint param_2, int param_3, void * param_4)	OK

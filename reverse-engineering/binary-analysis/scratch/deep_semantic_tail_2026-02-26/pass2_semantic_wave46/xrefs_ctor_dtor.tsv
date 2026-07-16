@@ -1,3 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-00443fc0	CDestroyableSegment__Unk_00443fc0	0047fe99	0047fe30	CHiveBoss__Init	UNCONDITIONAL_CALL
-00444000	CDestroyableSegment__Unk_00444000	004f977f	004f95d0	VFuncSlot_02_004f95d0	UNCONDITIONAL_CALL

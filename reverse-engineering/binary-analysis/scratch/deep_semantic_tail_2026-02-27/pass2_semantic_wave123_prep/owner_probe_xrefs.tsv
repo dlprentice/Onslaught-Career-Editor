@@ -1,6 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-00480c90	CUnitAI__Unk_00480c90	004812ec	004812d0	CHLCollisionDetector__VFunc_00_004812d0	UNCONDITIONAL_CALL
-00480c90	CUnitAI__Unk_00480c90	00481008	00480ed0	CUnitAI__Helper_00480ed0	UNCONDITIONAL_CALL
-00480db0	CUnitAI__Unk_00480db0	004811d2	00481060	CUnitAI__Unk_00481060	UNCONDITIONAL_CALL
-00481060	CUnitAI__Unk_00481060	00426a0d	<none>	<no_function>	UNCONDITIONAL_CALL
-004812d0	CHLCollisionDetector__VFunc_00_004812d0	005dbf78	<none>	<no_function>	DATA

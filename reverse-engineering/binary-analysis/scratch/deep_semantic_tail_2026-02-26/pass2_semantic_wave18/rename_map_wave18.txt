@@ -1,4 +1,0 @@
-0x004661e0 CFEPMultiplayerStart__ClearSecondaryPlayerSet
-0x004661f0 CFEPMultiplayerStart__InitWaitingThreadSubsystem
-0x004b7b60 CDropship__RequestQueueAdvance
-0x004b7b80 CDropship__TryAdvanceQueuedPortrait

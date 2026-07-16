@@ -1,6 +1,0 @@
-address	expected_name	observed_name	status
-0x004ae080	CMesh__Helper_004ae080	CMesh__Helper_004ae080	ok
-0x004ae0d0	CMesh__Helper_004ae0d0	CMesh__Helper_004ae0d0	ok
-0x004b0cd0	CMesh__Helper_004b0cd0	CMesh__Helper_004b0cd0	ok
-0x004b0fb0	CMCMech__Helper_004b0fb0	CMCMech__Helper_004b0fb0	ok
-0x004b25d0	CMesh__Helper_004b25d0	CMesh__Helper_004b25d0	ok

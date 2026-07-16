@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00580120	CFastVB__Unk_00580120	int __fastcall CFastVB__Unk_00580120(void * param_1)	OK
-0x0058070e	CFastVB__Unk_0058070e	int __thiscall CFastVB__Unk_0058070e(void * this, void * param_1, int param_2, int param_3, uint param_4)	OK
-0x005809de	CFastVB__Unk_005809de	int __fastcall CFastVB__Unk_005809de(void * param_1)	OK
-0x00580eef	CFastVB__Unk_005809de	int __fastcall CFastVB__Unk_005809de(void * param_1)	OK
-0x00581d49	CDXTexture__Unk_00581d49	void __fastcall CDXTexture__Unk_00581d49(void * param_1)	OK

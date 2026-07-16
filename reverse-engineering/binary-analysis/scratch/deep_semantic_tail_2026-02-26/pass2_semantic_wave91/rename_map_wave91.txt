@@ -1,2 +1,0 @@
-0x005a7e09 CFastVB__DispatchOp_ComposeMatrixFromOptionalTransforms
-0x005ad590 CFastVB__JpegEntropy_CommitAndResetBlockState

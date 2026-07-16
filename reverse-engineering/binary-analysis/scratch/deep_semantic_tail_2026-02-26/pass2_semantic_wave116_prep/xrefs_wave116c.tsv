@@ -1,9 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-00444f00	CUnitAI__Unk_00444f00	0049500d	<none>	<no_function>	UNCONDITIONAL_CALL
-00444f20	CUnitAI__Unk_00444f20	00494fc2	<none>	<no_function>	UNCONDITIONAL_CALL
-00438050	CUnitAI__Unk_00438050	00437f5f	<none>	<no_function>	UNCONDITIONAL_CALL
-004496e0	CUnitAI__Unk_004496e0	0041bf5d	0041bdf0	CCareer__ReCalcLinks	UNCONDITIONAL_CALL
-004496e0	CUnitAI__Unk_004496e0	0041c118	0041bdf0	CCareer__ReCalcLinks	UNCONDITIONAL_CALL
-004496e0	CUnitAI__Unk_004496e0	0046d7bd	0046d470	CGame__FillOutEndLevelData	UNCONDITIONAL_CALL
-004496e0	CUnitAI__Unk_004496e0	0046da6a	0046d9f0	CGame__RunOutroFMV	UNCONDITIONAL_CALL
-00445f40	CUnitAI__Unk_00445f40	00445a85	<none>	<no_function>	UNCONDITIONAL_CALL

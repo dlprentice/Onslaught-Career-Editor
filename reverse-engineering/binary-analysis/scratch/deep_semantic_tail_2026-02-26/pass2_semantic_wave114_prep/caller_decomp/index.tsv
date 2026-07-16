@@ -1,8 +1,0 @@
-address	name	signature	status
-0x00408150	CUnit__ProcessStateSwapAndDeathChecks	void __fastcall CUnit__ProcessStateSwapAndDeathChecks(void * param_1)	OK
-0x00421c40	CUnit__ApplyFlag4DampingAndScaleSpeed_00421c40	void __fastcall CUnit__ApplyFlag4DampingAndScaleSpeed_00421c40(void * param_1)	OK
-0x00405880	<none>	<none>	MISSING
-0x004081c0	CMonitor__Process	void __fastcall CMonitor__Process(void * param_1)	OK
-0x0040c720	CGeneralVolume__ResetAndSetActiveReader	void __thiscall CGeneralVolume__ResetAndSetActiveReader(void * this, int param_1, void * param_2)	OK
-0x0040a580	CMonitor__Helper_0040a580	void __fastcall CMonitor__Helper_0040a580(void * param_1)	OK
-0x00406560	CBattleEngine__Unk_00406560	void __fastcall CBattleEngine__Unk_00406560(int param_1)	OK

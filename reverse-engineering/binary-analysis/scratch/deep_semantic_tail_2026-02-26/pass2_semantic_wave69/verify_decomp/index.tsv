@@ -1,4 +1,0 @@
-address	name	signature	status
-0x0058864a	CDXTexture__InitMappedFileContext	void __fastcall CDXTexture__InitMappedFileContext(void * param_1)	OK
-0x0058865c	CDXTexture__OpenMappedFileReadOnly	int __thiscall CDXTexture__OpenMappedFileReadOnly(void * this, void * param_1, int param_2, int param_3)	OK
-0x00588cc6	CDXTexture__ProjectPointToPlaneAndScale	void __stdcall CDXTexture__ProjectPointToPlaneAndScale(void * param_1, void * param_2, void * param_3, float param_4, void * param_5)	OK

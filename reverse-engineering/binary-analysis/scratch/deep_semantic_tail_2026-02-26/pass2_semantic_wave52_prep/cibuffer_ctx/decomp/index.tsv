@@ -1,5 +1,0 @@
-address	name	signature	status
-0x00488380	CIBuffer__Create	undefined CIBuffer__Create(void)	OK
-0x005007f0	CVBufTexture__ResizeIndexBuffer	undefined CVBufTexture__ResizeIndexBuffer(void)	OK
-0x00544af0	CDXLandscape__Init	undefined CDXLandscape__Init(void)	OK
-0x0055a420	CDXTrees__BuildTreeGeometry	undefined CDXTrees__BuildTreeGeometry(void)	OK

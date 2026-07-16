@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0050a870	CSPtrSetArray19__ClearAll	void __fastcall CSPtrSetArray19__ClearAll(void * param_1)	OK
-0x0050a9c0	CSPtrSetArray19__InitAndResetState	void * __fastcall CSPtrSetArray19__InitAndResetState(void * param_1)	OK
-0x00511ca0	CWorldPhysicsManager__ResolveLoadedDefRefLinks_TypeA	void __fastcall CWorldPhysicsManager__ResolveLoadedDefRefLinks_TypeA(int param_1)	OK
-0x00511d20	CWorldPhysicsManager__ResolveLoadedDefRefLinks_TypeB	void __fastcall CWorldPhysicsManager__ResolveLoadedDefRefLinks_TypeB(void * param_1)	OK
-0x00512040	CLTShell__InitUnhandledExceptionLogFile	int CLTShell__InitUnhandledExceptionLogFile(void)	OK

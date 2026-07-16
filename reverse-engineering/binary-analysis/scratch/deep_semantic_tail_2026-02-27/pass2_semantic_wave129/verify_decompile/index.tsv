@@ -1,6 +1,0 @@
-address	name	signature	status
-0x004b4ba0	CMeshPart__PopulatePoseCacheRecursive	int CMeshPart__PopulatePoseCacheRecursive(void)	OK
-0x004b4cd0	CMeshPart__RefreshCachedPoseIfStale	int CMeshPart__RefreshCachedPoseIfStale(void)	OK
-0x004b4de0	CMeshPart__EvaluatePoseTransformForFrame	int CMeshPart__EvaluatePoseTransformForFrame(void)	OK
-0x004b5330	CMeshPart__EvaluateAnimatedTransformCore	int CMeshPart__EvaluateAnimatedTransformCore(void)	OK
-0x004b5ad0	CMeshPart__RenderAnimatedRecursive	int CMeshPart__RenderAnimatedRecursive(void)	OK

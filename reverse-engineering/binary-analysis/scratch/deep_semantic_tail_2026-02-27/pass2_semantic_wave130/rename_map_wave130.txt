@@ -1,5 +1,0 @@
-0x004aede0 CMeshPart__LoadOldStyle_VersionA
-0x004af110 CMeshPart__LoadOldStyle_VersionB_WithExtraBlock
-0x004b0800 CMeshPart__ApplyRootTransformRecursive
-0x004b0c00 CMeshPart__GetBasisX
-0x004b0c20 CMeshPart__GetBasisY

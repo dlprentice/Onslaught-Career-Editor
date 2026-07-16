@@ -1,2 +1,0 @@
-0x0058c3fe CTexture__SkipLineContinuationAndAdvance
-0x0058d2ad CTexture__ReadNextLexToken

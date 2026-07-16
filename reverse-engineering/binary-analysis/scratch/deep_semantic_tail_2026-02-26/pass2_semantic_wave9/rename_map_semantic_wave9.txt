@@ -1,1 +1,0 @@
-0x0045ac30 CFEPGoodies__BuildStaticGoodieDataTable

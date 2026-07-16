@@ -1,4 +1,0 @@
-0x004e2c50 CSoundManager__ReloadLanguageSampleBank
-0x00523cc0 Input__GetClickStateInRect
-0x004693d0 CFrontEnd__GetCursorStateInRect
-0x0044dea0 CFrontEnd__IsMouseInputReady

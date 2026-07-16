@@ -1,3 +1,0 @@
-address	name	signature	status
-0x0046e460	CGame__Render	void __thiscall CGame__Render(void * this, int num_renders)	OK
-0x00470650	CGame__RenderDebugMemoryAndSelectionInfo	void __fastcall CGame__RenderDebugMemoryAndSelectionInfo(int param_1)	OK

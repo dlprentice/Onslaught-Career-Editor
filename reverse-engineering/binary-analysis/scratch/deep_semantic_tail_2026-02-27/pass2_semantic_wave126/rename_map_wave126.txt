@@ -1,5 +1,0 @@
-0x0049bbb0 MathMatrix3x3__DivideByScalarInPlace
-0x0049bc10 MathMatrix3x3__TransposeInPlace
-0x0049bc40 MathMatrix3x3__Determinant
-0x0049bc80 MathMatrix3x3__BuildCofactorMatrix
-0x004901e0 MathMatrix3x4__AssignFromEightScalars

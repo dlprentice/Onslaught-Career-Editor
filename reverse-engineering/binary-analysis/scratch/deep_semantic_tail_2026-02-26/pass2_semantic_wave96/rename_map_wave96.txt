@@ -1,5 +1,0 @@
-0x0055d6a0 CRT__SehPopExceptionFrameAndJump
-0x0055d6db CRT__SehLockUnlockAndJump
-0x0055d6e2 CRT__SehRtlUnwindAndRestoreFrame
-0x0055d767 CRT__SehInvokeCallSettingFrame12
-0x0055d7bb CRT__SehCallback_Call_005602d2

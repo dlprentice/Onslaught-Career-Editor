@@ -1,2 +1,0 @@
-0x00574476 CDXTexture__Helper_00574476
-0x0059c650 CTexture__Helper_0059c650

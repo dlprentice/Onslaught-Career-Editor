@@ -1,7 +1,0 @@
-address	name	signature	status
-0x004d0810	CPauseMenu__ButtonPressed	void __thiscall CPauseMenu__ButtonPressed(void * this, void * param_1, int param_2)	OK
-0x00472b40	CDXEngine__Helper_00472b40	void __thiscall CDXEngine__Helper_00472b40(void * this, int param_1, void * param_2)	OK
-0x00450c90	<none>	<none>	MISSING
-0x00450d30	<none>	<none>	MISSING
-0x00451320	<none>	<none>	MISSING
-0x004515c0	<none>	<none>	MISSING

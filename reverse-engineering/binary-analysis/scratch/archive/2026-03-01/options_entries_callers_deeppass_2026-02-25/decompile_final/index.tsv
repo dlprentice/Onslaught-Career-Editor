@@ -1,3 +1,0 @@
-address	name	signature	status
-0x00453460	OptionsEntries__InitDefaultDualBindingsTable	void __cdecl OptionsEntries__InitDefaultDualBindingsTable(void)	OK
-0x00514210	OptionsEntries__InitDefaultSingleBindingsTable	void __cdecl OptionsEntries__InitDefaultSingleBindingsTable(void)	OK

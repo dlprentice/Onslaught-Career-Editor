@@ -1,2 +1,0 @@
-0x0049fdb0 CComponent__SpawnGenericMeshBreakEffects
-0x00482590 CExplosionInitThing__RenderTargetIndicatorOverlay

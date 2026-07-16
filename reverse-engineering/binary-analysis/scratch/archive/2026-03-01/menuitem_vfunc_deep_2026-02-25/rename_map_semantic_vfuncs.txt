@@ -1,4 +1,0 @@
-0x00453a50 CMenuItem__ButtonPressed_NoOp
-0x00453a60 CMenuItem__IsEnabled
-0x00453a70 CMenuItem__GetRowHeight
-0x00453a80 CMenuItem__DefaultFalseFlag

@@ -1,7 +1,0 @@
-address	old_name	inferred_owner	xref_count	top_counts
-0x0055d6d4	CTexture__Unk_0055d6d4	CDXTexture	2	CDXTexture:2
-0x0056fce0	CTexture__Unk_0056fce0	CFastVB	1	CFastVB:1
-0x00570870	CTexture__Unk_00570870	CFastVB	2	CFastVB:2
-0x00572fa0	CTexture__Unk_00572fa0	CFastVB	10	CFastVB:10
-0x00574492	CTexture__Unk_00574492	CDXTexture	4	CDXTexture:4
-0x005d0a2a	CTexture__Unk_005d0a2a	CFEPSaveGame	2	CFEPSaveGame:2

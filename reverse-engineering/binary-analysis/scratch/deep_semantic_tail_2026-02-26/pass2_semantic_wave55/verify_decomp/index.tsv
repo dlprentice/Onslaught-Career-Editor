@@ -1,5 +1,0 @@
-address	name	signature	status
-0x004aa410	CMesh__FindTextureByNameSuffixHint	int * __cdecl CMesh__FindTextureByNameSuffixHint(void * param_1)	OK
-0x004aa5a0	CMesh__GetPartField40ByFlatIndex	int __thiscall CMesh__GetPartField40ByFlatIndex(void * this, int param_1, int param_2)	OK
-0x004aa5e0	CMesh__FindEntryByInclusiveRangeTable	int __thiscall CMesh__FindEntryByInclusiveRangeTable(void * this, int param_1, int param_2)	OK
-0x004aa7e0	CMesh__FindEntryValueByTypeId	double __thiscall CMesh__FindEntryValueByTypeId(void * this, int param_1, int param_2, void * param_3)	OK

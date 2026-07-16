@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00598474	CFastVB__InitDispatchOpsFromFeatureFlags	void __cdecl CFastVB__InitDispatchOpsFromFeatureFlags(void * param_1)	OK
-0x0059f6dd	CFastVB__BroadcastMatrix4x4ToSIMDLanes	void __thiscall CFastVB__BroadcastMatrix4x4ToSIMDLanes(void * this, void * param_1, void * param_2)	OK
-0x005a2a61	CFastVB__DispatchOp_TransformVec2ByMatrix4	void __stdcall CFastVB__DispatchOp_TransformVec2ByMatrix4(void * param_1, void * param_2, void * param_3)	OK
-0x005aa0cc	CFastVB__DispatchOp_ComposeTransformFromOptionalInputs_Scalar	int CFastVB__DispatchOp_ComposeTransformFromOptionalInputs_Scalar(void)	OK
-0x005aa2f2	CFastVB__DispatchOp_ComposeTransformFromOptionalInputs_SIMD	int CFastVB__DispatchOp_ComposeTransformFromOptionalInputs_SIMD(void)	OK

@@ -1,6 +1,0 @@
-0x0055e21b CTexture__Helper_0055e21b
-0x00561834 CDXTexture__Helper_00561834
-0x00573ff0 CTexture__Helper_00573ff0
-0x00575a65 CDXTexture__Helper_00575a65
-0x005775bd CTexture__Helper_005775bd
-0x005987f4 CTexture__Helper_005987f4

@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00402fa0	CUnit__Unk_00402fa0	void __fastcall CUnit__Unk_00402fa0(void * param_1)	OK
-0x0040e910	CUnit__Unk_0040e910	double __fastcall CUnit__Unk_0040e910(void * param_1)	OK
-0x00428110	CUnitAI__Unk_00428110	void __fastcall CUnitAI__Unk_00428110(void * param_1)	OK
-0x00428800	CUnitAI__Unk_00428800	int __fastcall CUnitAI__Unk_00428800(void * param_1)	OK
-0x00438050	CUnitAI__Unk_00438050	void __thiscall CUnitAI__Unk_00438050(void * this, int param_1, void * param_2)	OK

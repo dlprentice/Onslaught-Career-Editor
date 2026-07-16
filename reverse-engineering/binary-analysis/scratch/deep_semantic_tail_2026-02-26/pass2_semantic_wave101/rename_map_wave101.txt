@@ -1,5 +1,0 @@
-0x0055fc35 CRT__IsFloat10Integral_0055fc35
-0x00561590 CRT__Exp2FromFpuCore_00561590
-0x005615a5 CRT__NoOp_005615a5
-0x005615bc CRT__MapExponentFlagToClassCode_005615bc
-0x00561618 CRT__ExtractFiniteExponentMaskOrPassThrough_00561618

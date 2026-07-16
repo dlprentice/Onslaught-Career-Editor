@@ -66,7 +66,6 @@ DENY_EXACT = {
 }
 
 ALLOW_EXACT = {
-    "archive/electron-workbench/packages/ui/index.html",
     "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
     "references/AYAResourceExtractor/BoxWithTextures.fbx",
     "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
@@ -201,9 +200,6 @@ TEXT_ALLOW_EXACT = {
 }
 
 PAYLOAD_TEXT_ALLOW_EXACT = {
-    "archive/electron-workbench/apps/electron/src/job-runner.ts",
-    "archive/electron-workbench/apps/electron/src/media-catalog.ts",
-    "archive/electron-workbench/packages/ui/src/lib/bridge.ts",
     "tools/goodies_frontend_art_probe.py",
     "tools/winui_frontend_color_runtime_artifact_check.py",
     "tools/winui_msix_candidate_probe.py",
@@ -720,11 +716,6 @@ def run_self_test() -> int:
                 print("- gold fixture exception was rejected for a reason other than hash mismatch")
                 print(f"- findings: {findings!r}")
                 return 1
-        if any(finding.path == "archive/electron-workbench/packages/ui/index.html" for finding in findings):
-            print("Public payload safety self-test: FAIL")
-            print("- allowed Electron archive index.html was rejected")
-            print(f"- findings: {findings!r}")
-            return 1
         if any(finding.path == "references/AYAResourceExtractor/BoxWithTextures.fbx" for finding in findings):
             if not any(
                 finding.path == "references/AYAResourceExtractor/BoxWithTextures.fbx"

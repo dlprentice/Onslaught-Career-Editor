@@ -95,8 +95,6 @@ def compare_private_public(public_root: Path, private_root: Path) -> list[Findin
 def check_required_public_surfaces(public_root: Path) -> list[Finding]:
     findings: list[Finding] = []
     required_files = [
-        "archive/electron-workbench/packages/ui/src/components/media/MediaDetails.tsx",
-        "archive/electron-workbench/packages/ui/src/components/media/MediaSection.tsx",
         "tests_shared/fixtures/gold_career_save.bin",
     ]
     for path in required_files:

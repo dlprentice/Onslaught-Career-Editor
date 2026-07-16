@@ -1,2 +1,0 @@
-address	name	signature	status
-0x0046ca70	CGame__ShutdownRestartLoop	void __fastcall CGame__ShutdownRestartLoop(void * this)	OK

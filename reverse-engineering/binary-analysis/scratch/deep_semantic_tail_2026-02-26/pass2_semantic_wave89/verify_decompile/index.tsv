@@ -1,5 +1,0 @@
-address	name	signature	status
-0x005a38c0	CFastVB__DispatchOp_TransformVec4ArrayByMatrix4	int CFastVB__DispatchOp_TransformVec4ArrayByMatrix4(void)	OK
-0x005a47f2	CFastVB__DispatchOp_ExtractAxisAndOptionalAngle	void __stdcall CFastVB__DispatchOp_ExtractAxisAndOptionalAngle(void * param_1, void * param_2, void * param_3)	OK
-0x005a7617	CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles	void __stdcall CFastVB__DispatchOp_BuildRotationMatrixFromEulerAngles(void * param_1, int param_2, int param_3)	OK
-0x005a7cf0	CFastVB__DispatchOp_BuildRotationMatrixFromAxisAngleVector	void __stdcall CFastVB__DispatchOp_BuildRotationMatrixFromAxisAngleVector(void * param_1, void * param_2)	OK

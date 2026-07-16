@@ -1,4 +1,0 @@
-address	old_name	expected_new_name	actual_name	status
-0x0055e950	CDXTexture__Unk_0055e950	CDXEngine__Helper_0055e950	CDXEngine__Helper_0055e950	OK
-0x00560b93	CDXTexture__Unk_00560b93	CTexture__Helper_00560b93	CTexture__Helper_00560b93	OK
-0x0056961e	CDXTexture__Unk_0056961e	CMCBuggy__Helper_0056961e	CMCBuggy__Helper_0056961e	OK

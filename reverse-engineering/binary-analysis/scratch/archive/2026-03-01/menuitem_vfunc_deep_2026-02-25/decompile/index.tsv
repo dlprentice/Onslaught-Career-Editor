@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00453a50	CMenuItem__VFunc_01_00453a50	undefined CMenuItem__VFunc_01_00453a50(void)	OK
-0x00453a60	CMenuItem__VFunc_03_00453a60	int __thiscall CMenuItem__VFunc_03_00453a60(void * this)	OK
-0x00453a70	CMenuItem__VFunc_06_00453a70	int __thiscall CMenuItem__VFunc_06_00453a70(void * this)	OK
-0x00453a80	CMenuItem__VFunc_09_00453a80	byte __thiscall CMenuItem__VFunc_09_00453a80(void * this)	OK
-0x00453a90	CMenuItem__scalar_deleting_dtor	void * __thiscall CMenuItem__scalar_deleting_dtor(void * this, byte flags)	OK

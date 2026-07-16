@@ -1,5 +1,0 @@
-0x0048f210 CLandscapeVB__RebuildHeightGridVertexBuffer
-0x004804c0 CExplosionInitThing__ApplyHBConfigField
-0x0047cea0 CUnitAI__ClearLinkedThingFlagsAndResetCounter
-0x0047fb00 CUnitAI__QueueMessageWithTimestamp
-0x00490900 Vec3__SubtractInPlace

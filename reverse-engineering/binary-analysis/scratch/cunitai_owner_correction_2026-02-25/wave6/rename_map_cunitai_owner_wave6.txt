@@ -1,2 +1,0 @@
-0x00480e10 CCollisionSeekingRound__Helper_00480e10
-0x0049bd50 CMCMech__Helper_0049bd50

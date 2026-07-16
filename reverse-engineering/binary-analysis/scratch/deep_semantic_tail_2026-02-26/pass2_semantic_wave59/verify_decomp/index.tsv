@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0057ca6a	CDXTexture__DecodeFromMemory_WithFallbackCodecs	int CDXTexture__DecodeFromMemory_WithFallbackCodecs(void)	OK
-0x005894a9	CTexture__OpenIncludeSourceAndInitBuffer	int CTexture__OpenIncludeSourceAndInitBuffer(void)	OK
-0x00589650	CTexture__InitBufferFromMemorySpan	int CTexture__InitBufferFromMemorySpan(void)	OK
-0x00591340	CDXTexture__PumpDecoderStreamAndFinalize	int __stdcall CDXTexture__PumpDecoderStreamAndFinalize(void * param_1, int param_2)	OK
-0x00598749	CTexture__HasSameFormatClassId	bool __thiscall CTexture__HasSameFormatClassId(void * this, int param_1, int param_2)	OK

@@ -1,6 +1,0 @@
-helper=594
-CTexture helper=66
-CFastVB helper=0
-CDXTexture helper=0
-FUN=0
-UnkOrAuto=0

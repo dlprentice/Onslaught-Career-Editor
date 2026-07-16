@@ -1,3 +1,0 @@
-address	name	signature	status
-0x00544fb0	CDXLandscape__ResetWrapper	void CDXLandscape__ResetWrapper(void)	OK
-0x00472a10	CGameInterface__LoadHudTextures	void __fastcall CGameInterface__LoadHudTextures(int param_1)	OK

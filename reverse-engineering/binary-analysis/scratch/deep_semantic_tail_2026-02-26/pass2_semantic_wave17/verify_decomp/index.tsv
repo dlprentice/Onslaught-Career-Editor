@@ -1,4 +1,0 @@
-address	name	signature	status
-0x00501ba0	CVertexShader__GetVertexDeclarationToken	int __fastcall CVertexShader__GetVertexDeclarationToken(int param_1)	OK
-0x00501cd0	CVertexShader__ApplyRenderStateShaderConstants	void __fastcall CVertexShader__ApplyRenderStateShaderConstants(int param_1)	OK
-0x00502920	CVertexShader__ApplyCustomRenderStateShaderConstants	void __fastcall CVertexShader__ApplyCustomRenderStateShaderConstants(int param_1)	OK

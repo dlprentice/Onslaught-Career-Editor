@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0055f506	CRT__FReadCore	uint __cdecl CRT__FReadCore(void * param_1, uint param_2, uint param_3, void * param_4)	OK
-0x0055f5ee	Win32__FindFirstFileWithMeta	int __cdecl Win32__FindFirstFileWithMeta(int param_1, void * param_2)	OK
-0x0055f6bb	Win32__FindNextFileWithMeta	int __cdecl Win32__FindNextFileWithMeta(int param_1, void * param_2)	OK
-0x0055fe26	CRT__LockRouteByAddress	void __cdecl CRT__LockRouteByAddress(uint param_1)	OK
-0x0055fe55	CRT__LockRouteByIndex	void __cdecl CRT__LockRouteByIndex(int param_1, int param_2)	OK

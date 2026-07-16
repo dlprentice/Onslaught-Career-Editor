@@ -1,4 +1,0 @@
-address	name	signature	status
-0x0042d260	CConsole__Unk_0042d260	int CConsole__Unk_0042d260(void * this, int active, int entry_id, int slot0_device_code, short slot0_scan, short slot0_vk)	OK
-0x0042d2b0	CConsole__Unk_0042d2b0	int CConsole__Unk_0042d2b0(void * this, int active, int entry_id, int slot0_device_code, short slot0_scan, int slot1_device_code, short slot1_scan, short slot0_vk, short slot1_vk)	OK
-0x0042d300	CConsole__Unk_0042d300	void __fastcall CConsole__Unk_0042d300(void * this)	OK

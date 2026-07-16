@@ -1,9 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-004662a0	CFrontEnd__Init	004684ef	004684d0	CFrontEnd__Run	UNCONDITIONAL_CALL
-0044cd80	<no_function>	005e46a8	<none>	<no_function>	DATA
-0044d1d0	<no_function>	005e4690	<none>	<no_function>	DATA
-00444f20	CUnitAI__Unk_00444f20	00494fc2	<none>	<no_function>	UNCONDITIONAL_CALL
-0044cd20	CUnitAI__Unk_0044cd20	005e4680	<none>	<no_function>	DATA
-00444620	CExplosionInitThing__Unk_00444620	005343b7	<none>	<no_function>	UNCONDITIONAL_CALL
-004691c0	CUnitAI__Unk_004691c0	0046692a	<none>	<no_function>	UNCONDITIONAL_CALL
-00440b70	CUnitAI__Unk_00440b70	005446c5	<none>	<no_function>	UNCONDITIONAL_CALL

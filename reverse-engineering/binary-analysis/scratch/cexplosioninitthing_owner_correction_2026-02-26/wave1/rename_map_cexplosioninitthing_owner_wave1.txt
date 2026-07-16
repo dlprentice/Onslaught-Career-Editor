@@ -1,2 +1,0 @@
-0x0046baf0 CFEPWingmen__Helper_0046baf0
-0x004c7db0 CPDSimpleSprite__Helper_004c7db0

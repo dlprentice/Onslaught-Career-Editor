@@ -1,8 +1,0 @@
-helper_total 508
-helper_CExplosionInitThing 25
-helper_CDXEngine 42
-helper_CMeshCollisionVolume 25
-helper_CUnitAI 19
-helper_CEngine 19
-FUN 0
-UnkOrAuto 0

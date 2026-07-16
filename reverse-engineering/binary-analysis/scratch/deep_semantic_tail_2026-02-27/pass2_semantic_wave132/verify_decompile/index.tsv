@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0044adb0	CExplosionInitThing__ExtractYawPitchFromMatrixIfValid	float * __thiscall CExplosionInitThing__ExtractYawPitchFromMatrixIfValid(void * this, void * param_1, int param_2)	OK
-0x00451a40	CUnitAI__FindLinkedNodeByGlobalId	int * __fastcall CUnitAI__FindLinkedNodeByGlobalId(int param_1)	OK
-0x00479f30	CUnitAI__ComputeTerrainClearanceNoiseScale	double __fastcall CUnitAI__ComputeTerrainClearanceNoiseScale(void * param_1)	OK
-0x0047a0b0	CUnitAI__ComputeLateralSlopeAlignment	double __fastcall CUnitAI__ComputeLateralSlopeAlignment(int param_1)	OK
-0x0047bf60	CUnitAI__ProcessAndCrashIfNoAirOrHoverSupport	void __fastcall CUnitAI__ProcessAndCrashIfNoAirOrHoverSupport(void * param_1)	OK

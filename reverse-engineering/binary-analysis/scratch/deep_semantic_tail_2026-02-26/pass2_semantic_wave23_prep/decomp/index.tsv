@@ -1,7 +1,0 @@
-address	name	signature	status
-0x00520530	CFEPVirtualKeyboard__Unk_00520530	void __fastcall CFEPVirtualKeyboard__Unk_00520530(int param_1)	OK
-0x00520cc0	CFEPVirtualKeyboard__Unk_00520cc0	void __thiscall CFEPVirtualKeyboard__Unk_00520cc0(void * this, int param_1, void * param_2)	OK
-0x00520f70	CFEPVirtualKeyboard__Unk_00520f70	void __thiscall CFEPVirtualKeyboard__Unk_00520f70(void * this, int param_1, float param_2)	OK
-0x00403a50	CFrontEndPage__Unk_00403a50	int __fastcall CFrontEndPage__Unk_00403a50(int param_1)	OK
-0x00428bc0	CFrontEndPage__Unk_00428bc0	double __fastcall CFrontEndPage__Unk_00428bc0(int param_1)	OK
-0x004d0db0	CPauseMenu__Unk_004d0db0	void * __thiscall CPauseMenu__Unk_004d0db0(void * this, void * param_1, int param_2, int param_3, void * param_4)	OK

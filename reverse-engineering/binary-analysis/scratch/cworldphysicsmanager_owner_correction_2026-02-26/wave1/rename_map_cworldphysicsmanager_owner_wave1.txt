@@ -1,3 +1,0 @@
-0x0050f680 CSpawnerThng__Helper_0050f680
-0x005113f0 CWeaponRound__Helper_005113f0
-0x00511510 CUnit__Helper_00511510

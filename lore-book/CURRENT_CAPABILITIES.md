@@ -201,7 +201,7 @@ Windowed & Mods safe-copy preparation now writes an AppCore-backed Safe copy rec
 
 Wave1220 static closeout anchor: active current-risk focused accounting is `1179/1179 = 100.00%`; loaded Ghidra function-quality closure remains `6411/6411 = 100.00%`; static debt remains `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`; Wave911 focused remains historical-retired/non-reconstructable at `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`. The active static target remains rebuild-grade static contracts and a rebuild-grade specification aiming at no noticeable difference. Runtime behavior, exact layouts, exact source identity, BEA patching behavior, visual QA, gameplay outcomes, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
-This file records the current repo reality. WinUI 3 is the only forward-facing GUI product lane. Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces. Active Python work means focused scripts under `tools/`, not a Python product app.
+This file records the current repo reality. WinUI 3 is the only GUI product lane. Retired application implementations live in Git history. Active Python work means focused scripts under `tools/`, not a Python product app.
 
 Retail `BEA.exe` plus real `.bes` / `.bea` behavior remain authoritative. Source references remain useful for parity and naming, but they are not the shipping truth when they differ.
 
@@ -261,7 +261,7 @@ Online-ladder evidence now also includes an expanded level-854 fire-handoff/proj
 
 Online-ladder evidence now also includes a level-854 fire-to-damage/outcome observer diagnostic with scope `level854-fire-to-damage-outcome-observer-not-online-proof`: `copiedDefaultOptionsFireWeaponQe=true`, `button18RuntimeDispatchObserved=false`, `button19RuntimeDispatchObserved=true`, `button18DispatchCount=0`, `button19DispatchCount=3`, `sameWindowFireHandoffWindowCount=3`, `sameWindowFireBurstPointerChainWindowCount=2`, `sameWindowDamageSurfaceWindowCount=1`, `sameWindowUnitApplyDamageWindowCount=1`, `sameWindowOutcomeSurfaceWindowCount=0`, `waitWindowFireButtonDispatchCount=0`, `waitWindowDamageHitCount=27`, `waitWindowOutcomeHitCount=0`, `damageHitCount=151`, `unitApplyDamageHitCount=61`, `roundCollisionHitCount=90`, `outcomeHitCount=0`, `damageProof=false`, `runtimeOutcomeProof=false`, `fireToDamageOutcomePromotion=false`, `newBeaLaunchCount=1`, `cdbAttachCount=1`, `boundedCaptureCount=10`, `visualCaptureCount=10`, `renderPlayers=2`, `renderLevel=854`, `baseOnlineMultiplayerReady=false`, and `activeP3P4OriginalBinaryGameplayProof=false`. This proves the observer can see same-window fire handoff, fire-to-burst pointer-chain, round-collision, and CUnit damage surfaces under scoped Q/E stimulus, but wait/no-input damage activity prevents damage/outcome causality promotion; it is not base online multiplayer, public matchmaking, native BEA netcode, active P3/P4 gameplay, damage proof, runtime outcome proof, deterministic sync, rollback, anti-cheat, or online parity.
 
-**Default git branch (2026-05-27):** `main` carries the WinUI primary lane (PR #1 lane promotion). Legacy WPF lives under `archive/legacy-wpf/` only. Gate index: `release/readiness/winui_main_lane_gate_index_2026-05-27.md`. Operator tip: active static RE percentages and release accounting are centralized below; Wave1220 static closeout is complete, and current active work is converting static/asset contracts into measurable active AppCore/WinUI rebuild-tooling surfaces. Distribution: disposable ZIP probes are proven; MSIX trusted install remains blocked (`0x800B0109`). Formal distribution strategy is not selected - see `release/readiness/msix_trust_strategy_next_steps_2026-05-27.md`.
+**Default git branch:** `main` carries the WinUI primary lane. Gate index: `release/readiness/winui_main_lane_gate_index_2026-05-27.md`. Active static RE percentages and release accounting are centralized below. Distribution: disposable ZIP probes are proven; MSIX trusted install remains blocked (`0x800B0109`). Formal distribution strategy is not selected - see `release/readiness/msix_trust_strategy_next_steps_2026-05-27.md`.
 
 ## Active Product And Support Surfaces
 
@@ -274,17 +274,6 @@ Online-ladder evidence now also includes a level-854 fire-to-damage/outcome obse
 | `OnslaughtCareerEditor.UiTests` | Active tests | WinUI product-lane/static/contrast/launch-smoke coverage |
 | `OnslaughtCareerEditor.AppCore.Host` | Support/reference bridge | JSON/stdio diagnostics including save patch plans, public-safe asset model preview coverage, asset catalog readability coverage, material import readiness, material-import manifest/input planning, guarded rebuild-preview output, rebuild-scene contract output, rebuild-mesh OBJ/MTL output, and rebuild-mesh import validation |
 | `tools` | Active tooling | Release checks, docs checks, RE utility scripts, Ghidra/CDB helpers, extraction utilities |
-
-## Archived App Surfaces
-
-| Surface | Status | Notes |
-|---|---|---|
-| `archive/electron-workbench` | Archived/reference | Former Electron/React/TypeScript workbench, TypeScript contracts, and TypeScript CLI |
-| `archive/legacy-python` | Archived/reference | Historical Python GUI/CLI parity attempt |
-| `archive/legacy-wpf` | Archived/reference | Historical WPF app |
-| `archive/legacy-winui-release` | Archived/reference | Historical WinUI portable-bundle helpers |
-
-Archived apps remain in git so we can inspect or revive narrow pieces later. They are not active release lanes.
 
 ## Ghidra Static RE Posture (Steam retail)
 
@@ -415,7 +404,7 @@ dotnet run --project ".\OnslaughtCareerEditor.WinUI\OnslaughtCareerEditor.WinUI.
 ```
 <!-- public-package-commands:end -->
 
-`npm run dev` is a convenience alias for the WinUI project above, not the archived Electron workbench.
+`npm run dev` is a convenience alias for the WinUI project above.
 
 C# CLI:
 
@@ -438,13 +427,11 @@ py -3 tools\docsync_check.py
 
 Maintainers run release profile, curated-manifest, hard-payload, and repo hygiene
 checks from the public-primary source tree before publishing source or app
-artifacts. Archived Electron checks are maintainer reference checks only and are
-not public package commands.
+artifacts.
 
 ## Documentation
 
 - `AGENTS.md`
-- `COLLABORATION.md`
 - `README.MD`
 - `CONTRIBUTING.md`
 - `SECURITY.md`

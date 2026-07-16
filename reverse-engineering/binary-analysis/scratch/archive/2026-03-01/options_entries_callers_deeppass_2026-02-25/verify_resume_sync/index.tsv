@@ -1,6 +1,0 @@
-address	name	signature	status
-0x0042d260	OptionsEntries__InitSingleBindingEntry	void * __thiscall OptionsEntries__InitSingleBindingEntry(void * this, byte active, int entry_id, int slot0_device_code, short slot0_scan, short slot0_vk)	OK
-0x0042d2b0	OptionsEntries__InitDualBindingEntry	void * __thiscall OptionsEntries__InitDualBindingEntry(void * this, byte active, int entry_id, int slot0_device_code, short slot0_scan, int slot1_device_code, short slot1_scan, short slot0_vk, short slot1_vk)	OK
-0x0042d300	OptionsEntries__InitSentinelEntry	void __thiscall OptionsEntries__InitSentinelEntry(void * this)	OK
-0x00453460	OptionsEntries__InitDefaultDualBindingsTable	void __cdecl OptionsEntries__InitDefaultDualBindingsTable(void)	OK
-0x00514210	OptionsEntries__InitDefaultSingleBindingsTable	void __cdecl OptionsEntries__InitDefaultSingleBindingsTable(void)	OK

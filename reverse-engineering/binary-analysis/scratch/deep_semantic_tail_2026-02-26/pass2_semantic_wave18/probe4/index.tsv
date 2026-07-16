@@ -1,4 +1,0 @@
-address	name	signature	status
-0x004b7ab0	CDropship__SelectPortraitIndex	int __thiscall CDropship__SelectPortraitIndex(void * this, int param_1, void * param_2)	OK
-0x004b7b60	CFrontEndPage__Unk_004b7b60	void __fastcall CFrontEndPage__Unk_004b7b60(int param_1)	OK
-0x004b7b80	CUnitAI__Unk_004b7b80	void __fastcall CUnitAI__Unk_004b7b80(void * param_1)	OK

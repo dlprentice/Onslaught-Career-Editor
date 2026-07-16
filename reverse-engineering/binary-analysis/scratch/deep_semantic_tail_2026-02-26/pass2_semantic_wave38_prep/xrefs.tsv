@@ -1,3 +1,0 @@
-target_addr	target_name	from_addr	from_function_addr	from_function	ref_type
-004f3a50	CCSPersistentThing__VFunc_01_004f3a50	005df6dc	<none>	<no_function>	DATA
-004f3a70	CThing__Unk_004f3a70	004f3a53	004f3a50	CCSPersistentThing__VFunc_01_004f3a50	UNCONDITIONAL_CALL

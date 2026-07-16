@@ -1,5 +1,0 @@
-0x00580120 CFastVB__RunDualProfileConversionStage
-0x0058070e CFastVB__InitDualTexelConversionPipeline
-0x005809de CFastVB__ShutdownActiveProfile
-0x00580eef CFastVB__ShutdownActiveProfile_Thunk
-0x00581d49 CDXTexture__ProbeTexelProfileSample

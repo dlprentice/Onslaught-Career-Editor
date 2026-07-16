@@ -1,6 +1,0 @@
-address	name	signature	status
-0x00407310	CBattleEngine__IsCurrentResolvedEntry	int __thiscall CBattleEngine__IsCurrentResolvedEntry(void * this, int param_1, int param_2)	OK
-0x004178a0	CUnit__ProcessClosingAndUnshuttingAnimations	void __fastcall CUnit__ProcessClosingAndUnshuttingAnimations(void * param_1)	OK
-0x004239f0	CUnitAI__InitDefaults_AutoConfigTestPath	int __fastcall CUnitAI__InitDefaults_AutoConfigTestPath(void * param_1)	OK
-0x00428c70	CUnitAI__RunSharedStepAndMaybeTriggerFlag4Action	void __fastcall CUnitAI__RunSharedStepAndMaybeTriggerFlag4Action(void * param_1)	OK
-0x00428cf0	CUnitAI__ForwardCommandToAttachedNodeThenDispatch	void __thiscall CUnitAI__ForwardCommandToAttachedNodeThenDispatch(void * this, int param_1, int param_2)	OK

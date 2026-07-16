@@ -63,7 +63,6 @@ game/**/*.h text eol=crlf
 game/**/*.log text eol=crlf
 game/**/*.LOG text eol=crlf
 game/cardid.txt text eol=crlf
-setuphistory.txt text eol=crlf
 game/steam_appid.txt -text
 
 # Binary and game/runtime artifacts: never line-ending convert

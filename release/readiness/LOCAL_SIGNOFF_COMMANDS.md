@@ -129,29 +129,6 @@ bash tools/release_package.sh --dry-run
 
 These checks validate tracked docs, documented npm commands, local markdown links, public allowlist safety, stale-public-text hygiene, and release packaging gates (dry-run only; no archive written). They do not publish anything.
 
-`npm run test:md-links` writes ignored JSON/Markdown reports under `subagents/md-link-check`; the report directory must remain excluded from public release output.
+`npm run test:md-links` writes ignored JSON/Markdown reports under `.artifacts/md-link-check`; the report directory must remain excluded from public release output.
 
 The public allowlist gate is content-aware: generated candidate rows that contain local proof/backup-root payloads are excluded, and `npm run test:public-allowlist` remains the fail-closed payload scanner before export.
-
-## 5. Optional Archived Electron Checks
-
-Only run these when intentionally inspecting the archived Electron workbench:
-
-```powershell
-npm run archive:electron:build
-npm run archive:electron:test:renderer-smoke
-npm run archive:electron:test:cli-smoke
-```
-
-Expected:
-
-- Archived Electron/React/TypeScript code still builds or reports exact archive-health blockers.
-- Failures here are archive-health issues unless a later prompt explicitly reactivates Electron.
-
-## 6. Optional Legacy WinUI Bundle Checks
-
-Only run the archived bundle helper when intentionally validating historical packaging reference material:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\archive\legacy-winui-release\Build-PortableBundle.ps1 -ForceClean
-```

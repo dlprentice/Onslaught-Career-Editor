@@ -6,8 +6,8 @@ Last updated: 2026-07-12
 This file defines repo validation and public safety/release gates. WinUI 3 is
 the primary preservation/modding GUI. The separately GPL-licensed `rebuild/`
 lane includes a deterministic Core/headless verifier and the playable
-procedural Godot .NET First Flight client;
-Electron, WPF, and the old Python GUI/CLI app are archived/reference surfaces.
+procedural Godot .NET First Flight client. Retired application implementations
+remain available in Git history only.
 
 Important distinction: the public source repo is now the primary working repo
 and intentionally contains broad source/docs/tools/RE history. The downloadable
@@ -33,7 +33,7 @@ The active product/support source shape is:
 - `patches/**`
 - `tools/**` for package gates, local validation, RE/runtime proof support, and
   public-primary migration checks
-- public RE, lore, roadmap, readiness notes, state batons, and compact proof
+- public RE, lore, roadmap, readiness notes, and compact proof
   summaries
 
 Ghidra static RE posture (Steam retail, loaded database):
@@ -50,13 +50,6 @@ Ghidra static RE posture (Steam retail, loaded database):
   exact layouts, patch behavior, visual QA, gameplay outcomes, rebuild parity,
   or no-noticeable-difference parity.
 
-Archived/reference app surfaces:
-
-- `archive/electron-workbench/**`
-- `archive/legacy-python/**`
-- `archive/legacy-wpf/**`
-- `archive/legacy-winui-release/**`
-
 Authoritative strategy docs:
 
 - `README.MD`
@@ -71,7 +64,7 @@ Authoritative strategy docs:
 - root `AGENTS.md` as the public-primary contributor guide; `release/readiness/public_AGENTS.md` is a package/export compatibility template
 - `EXPORT_PROVENANCE.json` in materialized public candidates
 
-Release-accounting inputs, repo state files, and historical checklists may be
+Release-accounting inputs and historical checklists may be
 tracked source material when non-secret and useful. They are not automatically
 portable app ZIP payload.
 
@@ -136,8 +129,7 @@ arbitrary `.bes`, `.bea`, options, or `save-attempts/` payloads. Curated/package
 candidates exclude this real game-generated save because a hash proves identity,
 not redistribution provenance; fixture-dependent UI tests skip when it is absent.
 
-Do not treat the former private repo as source authority. Do not treat Electron,
-Python GUI, or WPF as the primary community product surfaces. Do not publish
+Do not treat the former private repo as source authority. Do not publish
 signed/installer-grade WinUI release claims until that packaging path is
 separately proven.
 
@@ -154,15 +146,15 @@ The measured change-class matrix and executable inventory are in
 [VALIDATION.md](VALIDATION.md). Historical proof commands remain reproducible,
 but they are not ordinary product or release gates.
 
-`npm run test:md-links` writes ignored reports under `subagents/md-link-check`; it is still a local validation gate, not a public payload.
+`npm run test:md-links` writes ignored reports under `.artifacts/md-link-check`; it is still a local validation gate, not a public payload.
 
 `npm run test:public-primary-migration-inventory` compares this public repo to
 the former private tracked index when the old private checkout is available.
 `npm run test:hard-payload-safety` is the normal hard-payload guard for this
 public-primary repo.
 
-Archived Electron checks are reference checks only. Archive commands are not
-default WinUI product, release, or UX gates.
+Retired application code and commands are not part of the working tree or
+default product, release, or UX gates.
 
 ## 4b. Local Validation Only
 
@@ -253,10 +245,10 @@ Public-primary source/release-ready means:
   available.
 - Hard-payload safety passes and no game/runtime payload, secret, build output,
   raw frame/CDB proof, or full Ghidra database is tracked.
-- C# parity gates pass until their covered behavior is retired.
+- Focused C# behavior gates pass for the changed contract.
 - Mutating workflows refuse repo-local/install-local originals and operate only on copied targets.
 - App release ZIP/package contents exclude hard payloads and generated proof
   roots.
 - Release docs identify WinUI 3 as the toolkit product and `rebuild/` as the
   separate GPL game-implementation lane.
-- Electron, Python GUI, and WPF are documented as archived/reference only.
+- Retired application implementations are absent from the working tree and available in Git history.
