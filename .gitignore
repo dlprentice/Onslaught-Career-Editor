@@ -39,7 +39,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
-subagents/md-link-check/
+.artifacts/md-link-check/
 subagents/winui-home-navigation/
 subagents/winui-launch-smoke/
 subagents/winui-lore-reader-interaction/

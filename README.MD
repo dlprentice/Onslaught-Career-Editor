@@ -15,8 +15,8 @@ In short: WinUI is the community front door, `rebuild/` is the playable reconstr
 
 This public repository is the primary collaboration and day-to-day working
 checkout. The former maintainer-only tree has been folded into this repo as
-project history and working material: source, tools, RE docs, wave notes, state batons,
-agent reports, readiness notes, and structured proof summaries should live here
+project history and working material: source, tools, RE docs, wave notes,
+readiness notes, and structured proof summaries should live here
 when they are useful to contributors. Ignored local overlays are only for hard
 payloads such as actual game installs, copied executables, private media/input
 files, full Ghidra project stores/backups, secrets, build output, and bulky
@@ -142,7 +142,7 @@ and not a strict clean-room implementation.
 `npm run test:hard-payload-safety` checks that tracked files do not include
 actual copied game/runtime binaries, known local game payload roots, build
 outputs, `.env` files, or credential-like key material. It does not censor raw
-RE notes, state batons, agent reports, or proof summaries.
+RE notes or proof summaries.
 
 A fresh clone can build the source, run AppCore/WinUI tests, and inspect docs
 without a local game install, Ghidra database, or private proof archive.
@@ -190,7 +190,7 @@ npm run test:winui-notices
 ```
 <!-- public-package-commands:end -->
 
-`npm run test:md-links` may write generated reports under `subagents/md-link-check`; use it for validation, but do not treat generated report payloads as app release assets.
+`npm run test:md-links` may write generated reports under `.artifacts/md-link-check`; use it for validation, but do not treat generated report payloads as app release assets.
 
 ## Archived Apps
 

@@ -1,134 +1,36 @@
 # Collaboration Guide
 
-Status: active public-safe collaboration guide
-Last updated: 2026-07-12
+Use this checklist when handing a change to another contributor or reviewer.
 
-Use this guide when preparing work for another developer or an agent reviewer.
-This public repository is now the primary collaboration and day-to-day working
-repo. Validation is local; do not add GitHub Actions, hosted CI, release
-automation, or workflow scaffolding.
+## Start
 
-## Start Here
+1. Read `AGENTS.md`, `CONTRIBUTING.md`, and the directly relevant implementation or runbook.
+2. Keep the change scoped to one product or evidence contract.
+3. Run the smallest local gate that proves the change.
+4. Confirm the diff contains no proprietary game payload, copied executable, arbitrary save, raw debugger/runtime capture, secret, or bulky generated artifact.
 
-1. Read [CONTRIBUTING.md](CONTRIBUTING.md), pick one lane, and keep the change
-   scoped to it. Read [SECURITY.md](SECURITY.md) and
-   [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md) when the work touches game
-   files/copies, saves, assets, Ghidra/runtime proof, or payload boundaries.
-2. Use `npm test` for fresh setup, broad active-product changes, or integrated
-   closeout. For a narrow lane or documentation-only change, start with the
-   smallest relevant gate in the table below.
-3. Run the selected local gates before review and include the exact commands in
-   the handoff, including any broader gates intentionally skipped.
-4. Confirm that no game payloads, copied executables, screenshots/frame dumps,
-   raw CDB logs, arbitrary saves, secrets, or bulky generated proof payloads
-   are in the change. Text state batons, compact proof summaries, and agent
-   reports are allowed when they are useful and non-secret.
-5. For meaningful code, docs, runtime proof, release, or repo-boundary changes,
-   update the relevant state baton or explain why the work was read-only.
+## Main Lanes
 
-## Lanes
-
-| Lane | Main paths | Normal local gates |
+| Lane | Main paths | Typical gate |
 | --- | --- | --- |
-| WinUI app | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | focused `build:winui` or `test:winui` while editing; `npm run test:winui-primary-lane` for broad handoff |
-| AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/`, tests | focused `npm run test:appcore`; primary-lane handoff; `npm run build:cli` for CLI changes |
-| RE-informed rebuild | `rebuild/` | `npm run test:rebuild`; add `npm run test:rebuild-godot-smoke` for native client changes |
-| Patch / mod safety | `patches/`, AppCore patch services, WinUI patch surfaces | `npm run test:winui-patch-engine-safety`, `npm run test:winui-safe-copy-preflight` |
-| Runtime tooling | profile/CDB/safe-copy smoke helpers | `npm run test:runtime-tooling-safety`; add only the owning proof checker |
-| Docs | current front doors/state | `npm run test:doc-commands`, `npm run test:md-links:public-core`; add docsync/all-history checks when their inputs change |
-| RE / Lore docs | `reverse-engineering/`, `lore/`, protected `lore-book/` projections | docs gates plus the focused owning checker |
-| Public/release boundary | `release/readiness/`, manifests, package inputs, ignore/boundary policy | full signoff block below and the affected package gate |
+| WinUI | `OnslaughtCareerEditor.WinUI/`, `OnslaughtCareerEditor.UiTests/` | focused WinUI build/test |
+| AppCore / CLI | `OnslaughtCareerEditor.AppCore/`, `OnslaughtCareerEditor.Cli/` | focused AppCore/CLI test |
+| Rebuild | `rebuild/` | `npm run test:rebuild` |
+| Patch / mod safety | `patches/`, AppCore patch services | patch-engine and safe-copy checks |
+| Runtime tooling | `tools/`, copied-runtime helpers | owning focused checker |
+| Docs | current front doors and subsystem docs | affected link/command checks plus `git diff --check` |
+| Release boundary | `release/`, manifests, package inputs | affected public inventory and allowlist gates |
 
-<!-- public-package-commands:start -->
-```powershell
-npm run test:doc-commands
-npm run test:md-links
-npm run test:winui-notices
-npm run test:public-allowlist
-npm run test:repo-hygiene
-npm run test:rebuild
-```
-<!-- public-package-commands:end -->
-
-The block above is public/release signoff, not ordinary edit-loop ceremony.
-This repo's root `package.json` is the command authority for contributors and
-their agents. Maintainers may run additional local runtime, Ghidra, or
-release-accounting gates when a change touches those areas.
-
-See [VALIDATION.md](VALIDATION.md) for the measured matrix. In the source repo,
-broad documentation closeout also runs `npm run test:doc-commands-all`; a
-materialized candidate intentionally validates only its smaller public-doc set.
-
-In the full public-primary source repo, `npm run test:public-allowlist` runs the
-hard-payload, submodule payload, and migration inventory gates. Use
-`npm run test:public-primary-migration-inventory` or
-`npm run test:hard-payload-safety` as focused source-repo diagnostics. In a
-materialized curated candidate, the replacement `package.json` runs
-`test:public-allowlist` in filesystem payload mode; run
-`test:public-candidate-inventory` and `test:public-allowlist` before build output
-exists. Payload mode intentionally rejects generated binaries, so use a fresh
-candidate to re-prove package cleanliness after building. Migration inventory
-is intentionally source-only because it requires Git indexes and may compare a
-sibling maintainer checkout.
-
-## Handoff Template
-
-Use this format in a PR description, review request, or agent handoff. Public
-issue/PR templates may use the same fields; those templates are not hosted
-validation or release automation.
+## Handoff
 
 ```text
-Lane:
 Summary:
 Changed paths:
 Validation run:
 Validation intentionally skipped:
-Private/public boundary check:
-State baton update:
-Installed game / original BEA.exe mutation:
-Remaining risks or follow-ups:
+Public/private boundary check:
+Installed game or original BEA.exe mutation: none
+Remaining risks:
 ```
 
-Required answers:
-
-- `Validation run` names exact commands, not broad statements.
-- `Private/public boundary check` says whether the change adds hard payload,
-  release manifest entries, copied-game proof summaries, or local evidence.
-- `State baton update` names updated state files, or says `read-only/no state
-  edit`.
-- `Installed game / original BEA.exe mutation` must always be `none`.
-  Copied-profile/runtime proof is reported under validation and local evidence;
-  it is never an exception to the installed/original read-only rule.
-
-## Review Expectations
-
-Reviewers should check:
-
-- The change is narrow and path-scoped.
-- The lane-specific gates match the changed files.
-- User-facing WinUI copy is plain and does not expose maintainer proof jargon.
-- Static RE, runtime proof, patch behavior, online play, and rebuild parity are
-  kept as separate claim classes.
-- The repo remains free of game assets, screenshots/frame dumps, arbitrary
-  saves, copied executables, raw proof bundles, secrets, and credential
-  material. State files and text agent reports are allowed when concise,
-  useful, and non-secret.
-
-## Issue Or Feature Reports
-
-Public reports should be minimal and non-proprietary:
-
-- Describe the product area, expected behavior, actual behavior, and local
-  command or app action.
-- Redact local user paths and machine identifiers.
-- Do not attach game binaries, extracted assets, arbitrary saves, screenshots,
-  frame captures, copied executable bytes, or raw runtime proof bundles.
-- For security or private-data concerns, follow [SECURITY.md](SECURITY.md)
-  instead of posting public details.
-
-## Public Release Note
-
-Passing local repo gates is not the same as publishing a release. Public
-publishing, release branches, binary packages, signed installers, and runtime
-multiplayer claims require explicit maintainer authorization and their own
-proof.
+Passing local checks does not publish anything. Commit, push, export, release, announcement, signing, and runtime mutation require their own authorization.

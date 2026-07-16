@@ -1,201 +1,47 @@
-# AGENTS.md
+# Onslaught Toolkit
 
-Status: package/export compatibility agent guide; root AGENTS.md is the canonical public-primary contributor guide
-Last updated: 2026-07-12
+> Status: active public-primary contributor guide
+> Current truth: this is the normal collaboration repository for the Battle Engine Aquila preservation, tooling, and reconstruction project.
 
-This file is the public-primary contributor agent guide for Onslaught Toolkit.
-The root `AGENTS.md` is now the normal working guide. Public candidate exports
-may still materialize this file for package/export compatibility, but the public
-repo is no longer a sparse subset of a private source tree.
+## Direction
 
-## Current Direction
+- `OnslaughtCareerEditor.WinUI/` is the primary user-facing Windows app.
+- `OnslaughtCareerEditor.AppCore/` owns shared save, options, patch-planning, media, catalog, and safe-copy correctness.
+- `OnslaughtCareerEditor.Cli/` is the supported C# helper CLI.
+- `tools/` contains Python RE, validation, asset, and lab tooling; it is not a product GUI lane.
+- `rebuild/` is the GPL-licensed, RE-informed original-code reconstruction lane.
+- Electron, WPF, and the old Python GUI/CLI are archived reference lanes.
 
-- WinUI 3 is the primary user-facing Windows app.
-- `OnslaughtCareerEditor.AppCore` holds shared correctness logic for saves,
-  options, patch planning, media/catalog support, and safe-copy workflows.
-- `OnslaughtCareerEditor.Cli` is a C# support CLI.
-- Python under `tools/` supports repo tooling, validation, asset/RE support,
-  local lab workflows, and release-policy support. It is not a product GUI lane.
-- `rebuild/` is the active GPL-3.0-or-later, RE-informed original-code game
-  implementation. Its deterministic Core/headless verifier and playable
-  procedural Godot First Flight client are separate from WinUI and require no
-  proprietary game payloads.
-- Electron, WPF, and the old Python GUI/CLI are archived/reference lanes only.
-- Static reverse-engineering docs, wave notes, state batons, agent reports, and
-  compact proof summaries are tracked project material. Actual game payloads,
-  copied executables, screenshots/frame dumps, arbitrary saves/options, raw CDB
-  logs, full Ghidra databases/backups, secrets, and bulky local proof bundles
-  are ignored local overlays.
+## Hard Boundaries
 
-## First Rules
+- Read `README.MD`, the nearest nested `AGENTS.md`, and the files directly related to the change.
+- Do not add game binaries, extracted assets, copied executables, arbitrary save payloads, raw debugger logs, full Ghidra projects/backups, credentials, `.env*`, or bulky runtime captures. The tracked regression fixture `tests_shared/fixtures/gold_career_save.bin` is the narrow exception.
+- Never patch or mutate an installed Battle Engine Aquila directory or original `BEA.exe`; operate on copied targets only.
+- Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.
+- Keep public claims bounded to demonstrated source, static evidence, controlled copied-runtime evidence, or focused tests. Separate proven behavior from plans and reconstruction aspirations.
+- Do not add hosted CI, release automation, or workflow scaffolding. Validation is local.
+- Preserve public/private, license, attribution, and provenance boundaries.
 
-- Read `README.MD`, `CONTRIBUTING.md`, `SECURITY.md`, and
-  `COLLABORATION.md` before making changes.
-- Keep changes narrow and path-scoped.
-- Do not add game binaries, extracted assets, arbitrary saves/options,
-  screenshots/frame dumps, raw CDB logs, bulky local proof bundles, credentials,
-  `.env*`, or copied runtime outputs.
-- Do not patch or mutate an installed Battle Engine Aquila folder or original
-  `BEA.exe`. App workflows must operate on copied targets only.
-- Do not synthesize `.bes` saves from scratch; use real baselines and preserve
-  unknown bytes.
-- Do not add GitHub Actions, hosted CI, release automation, or workflow
-  scaffolding. Validation is local.
-- Public issue/PR templates are allowed when they remain documentation-only and
-  do not add hosted validation or workflow automation.
-- Public docs must separate proven features from plans, runtime experiments,
-  online/multiplayer research, and rebuild aspirations.
+## Evidence
 
-## Product Lanes
+- `reverse-engineering/RE-INDEX.md` is the RE front door.
+- Static evidence supports only the identities and structures it demonstrates.
+- Controlled copied-runtime evidence establishes observed causality, behavior, and measured values.
+- Stuart's source and the legacy AYA extractor are references, not proof of Steam behavior or complete format support.
+- Use ignored local overlays for proprietary payloads and large lab artifacts; never promote them into Git.
 
-| Area | Status | Main paths |
-| --- | --- | --- |
-| WinUI 3 app | Primary product | `OnslaughtCareerEditor.WinUI/` |
-| Shared core | Active support | `OnslaughtCareerEditor.AppCore/` |
-| C# CLI | Active support | `OnslaughtCareerEditor.Cli/` |
-| Tests | Active | `OnslaughtCareerEditor.AppCore.Tests/`, `OnslaughtCareerEditor.UiTests/` |
-| Tooling | Active support | `tools/` |
-| RE-informed rebuild | Active GPL implementation | `rebuild/` |
-| Reverse-engineering docs | Payload/secret-safe specs/research | `reverse-engineering/RE-INDEX.md`, `reverse-engineering/quick-reference/`, `roadmap/ROADMAP-INDEX.md` |
-| Archived apps | Reference only | `archive/` is tracked reference source, not shipped app payload |
+## Validation
 
-## Setup
-
-From repo root:
+Root `package.json` owns commands. Choose the smallest gate that proves the changed contract.
 
 ```powershell
-dotnet --version # .NET SDK 10.x
-dotnet --list-runtimes # includes Microsoft.NETCore.App 8.x
-npm run test:hard-payload-safety
 npm test
 npm run dev
 ```
 
-Use this repo's `package.json` for contributor commands. Public-source
-validation also requires Python 3 through the Windows `py` launcher because
-docs/release/tooling checks use `py -3`.
+- WinUI/AppCore/CLI changes: use the matching focused .NET build/tests.
+- Rebuild changes: read `rebuild/AGENTS.md`, `rebuild/PROVENANCE.md`, and `rebuild/README.md`; run `npm run test:rebuild` plus native smoke only when native behavior changed.
+- Docs changes: use `git diff --check` and only affected link, JSON, command, or mirror checks.
+- Release/public-boundary changes: follow `README.RELEASE.md` and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 
-## Common Local Gates
-
-Run the smallest gate set that matches your change.
-
-```powershell
-npm run build:winui
-npm run test:appcore
-npm run test:winui
-npm run test:winui-primary-lane
-npm run test:winui-safe-copy-preflight
-npm run test:winui-patch-engine-safety
-npm run build:host
-npm run build:rebuild-core
-npm run test:rebuild
-```
-
-For public/export boundary signoff, use the common block:
-
-<!-- public-package-commands:start -->
-```powershell
-npm run test:doc-commands
-npm run test:md-links
-npm run test:winui-notices
-npm run test:public-allowlist
-npm run test:repo-hygiene
-npm run test:rebuild
-```
-<!-- public-package-commands:end -->
-
-Maintainers may still run release profile and curated-manifest gates before
-packaging or export. Public agents working in the normal repo should use the
-root `AGENTS.md` and `npm run test:hard-payload-safety`; run
-`npm run test:public-candidate-inventory` only on a fresh materialized
-package/export candidate before install/build/test outputs are created. Before
-trusting a shared export candidate, verify `EXPORT_PROVENANCE.json` is present
-and then run `npm run test:public-candidate-inventory` and
-`npm run test:public-allowlist` on a clean tree before any build. Payload mode
-intentionally rejects generated `bin/obj` binaries; use a fresh candidate to
-re-prove package cleanliness after building.
-Migration inventory remains a canonical source-repo gate; it is intentionally
-absent here because a materialized candidate has no Git index or maintainer
-sibling-comparison authority.
-
-Run .NET build/test commands serially. UI Automation and visual claims require
-native WinUI checks; browser or fixture success is not native runtime proof.
-The normal public-primary source repo can track broad source/docs/tools/RE
-history, compact non-secret state batons, text subagent reports, readiness
-notes, and proof summaries. Package/export candidates may still be smaller than
-the source repo and must exclude raw hard payloads, bulky generated proof
-output, full Ghidra databases/backups, secrets, and machine-only runtime
-material.
-
-## Public/Private Boundary
-
-This file may be materialized into package/export candidates. It is not a
-reason to reduce the public-primary source repo to a sparse export.
-
-Package/export candidates and app ZIP payloads must exclude hard payloads:
-
-- `game/**`, private `media/**`, `save-attempts/**`, copied executable bytes,
-  arbitrary saves/options, extracted assets, screenshots/frame captures, raw CDB
-  logs, full Ghidra databases/backups, secrets, local config, and bulky local
-  proof bundles.
-- Generated/raw payloads under `subagents/**`; compact text reports and proof
-  summaries may be tracked in public source.
-- Runtime `.codex` sessions/cache/auth/log material; compact non-secret
-  `.codex/goals/**` and `.codex/state/**` markdown may be tracked in public
-  source when useful.
-- Portable app ZIPs and legacy curated exports may omit state batons and
-  maintainer-only accounting surfaces, but that does not make compact
-  non-secret state files invalid in the public-primary source repo.
-
-Use `SECURITY.md` for private-data reporting and `README.RELEASE.md` /
-`PUBLIC_SIGNOFF_COMMANDS.md` for release-safety posture.
-
-## WinUI Contribution Rules
-
-- Keep normal user wording plain. Hide proof IDs, raw offsets, and maintainer
-  jargon behind details surfaces or docs.
-- Back user-visible behavior with AppCore where practical.
-- Add or preserve stable `AutomationProperties.AutomationId` values for
-  actionable controls and named inputs.
-- For UI behavior changes, prefer focused WinUI/AppCore tests plus the relevant
-  visual/UIA proof.
-- Rebuild WinUI before native UIA smoke tests so tests do not launch stale
-  binaries.
-
-## Patch/Mod Rules
-
-- Patch only copied executables and app-owned artifact roots.
-- Verify original bytes before applying a patch and patched bytes after.
-- Keep patch descriptions bounded to what is proven.
-- Do not claim gameplay improvement, online play, or runtime behavior unless a
-  matching proof exists.
-
-## Rebuild Rules
-
-- Read `rebuild/AGENTS.md` and `rebuild/PROVENANCE.md` before editing.
-- Keep deterministic simulation in Core and presentation in the Godot adapter.
-- Do not import proprietary payloads, reference-source bodies, or decompiler
-  output, and do not call the current RE-informed lane strict clean-room.
-
-## Online/Multiplayer Boundary
-
-Online multiplayer is active research, not a released public capability.
-Host/Join UI must remain disabled until distinct-endpoint command-source proof
-and source-bound copied-runtime causality proof are accepted. Loopback,
-synthetic, same-process, or same-workstation proofs do not equal player-ready
-netplay.
-
-## Pull Request Checklist
-
-Before asking for review:
-
-- Describe the change and affected paths plainly.
-- Name the local gates you ran.
-- Confirm no private assets, arbitrary saves/options, screenshots/frame dumps,
-  raw CDB logs, copied executables, bulky proof bundles, secrets, runtime
-  cache/session/auth/log material, or copied runtime outputs were added.
-- Confirm any state batons or text agent reports added are compact, non-secret,
-  and free of hard payloads or raw local proof output.
-- Confirm installed game files and original `BEA.exe` were not mutated.
-- Keep archived app changes out of scope unless the task explicitly targets an
-  archive.
+Commit, push, publication, release, live launch, and mutation remain separately authorized actions.

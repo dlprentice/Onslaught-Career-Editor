@@ -5,7 +5,7 @@ Last updated: 2026-07-13
 
 This public repository is the primary day-to-day working checkout. The repo is
 allowed to contain raw project history and working material such as RE notes,
-wave evidence summaries, state batons, agent reports, readiness docs, and
+wave evidence summaries, readiness docs, and
 scratch checkers. Ignored local lab overlays are reserved for hard payloads that
 should not live in git: copied game files, full Ghidra databases/backups,
 secrets, build output, and bulky generated runtime captures.
@@ -58,7 +58,7 @@ The public repo should track:
 - Tooling that can run against user-supplied local game files or local Ghidra
   projects.
 - Documentation that explains current claims, limits, and contribution paths.
-- Project state batons and agent reports when they are useful for handoff,
+- Focused project notes and proof summaries when they are useful,
   accounting, or audit history.
 
 ## Do Not Commit
@@ -103,7 +103,7 @@ Extension ignore rules are a safety net, not an approved placement plan. Put
 hard payloads under the approved overlay roots above. If a hard payload appears
 as tracked or untracked source, stop and fix the ignore rule or move the payload
 into an ignored local overlay. Do not use this rule to hide normal source, docs,
-state batons, RE summaries, or agent reports.
+RE summaries or proof summaries.
 
 Large archives can be exposed through ignored junctions instead of duplicated on
 the primary source drive. Keep those junctions under ignored overlay roots such
@@ -162,7 +162,6 @@ see
 
 For coordinated automation, storage sentinel, Ghidra/headless, consult, and
 proof-retention posture, see
-[AUTOMATION_STORAGE_GHIDRA_POSTURE.md](coordination/AUTOMATION_STORAGE_GHIDRA_POSTURE.md).
 
 ## Ghidra Note
 

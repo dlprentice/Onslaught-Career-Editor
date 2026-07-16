@@ -6,7 +6,7 @@ Last updated: 2026-07-11
 This public source tree is the primary collaboration and day-to-day working repo
 for a WinUI-first Battle Engine Aquila preservation and tooling project. Raw
 project history and working material can be tracked here: RE notes, wave notes,
-state batons, agent reports, readiness docs, proof summaries, checkers, and
+readiness docs, proof summaries, checkers, and
 tooling. Ignored overlay folders are for hard payloads: actual game files,
 copied executables, private media/input files, full Ghidra databases/backups,
 secrets, build output, and bulky generated runtime captures.
@@ -152,7 +152,7 @@ acceptance. Receipt-bound walker measurement changes use the focused
 `npm run test:battleengine-walker-measurement-contract` gate; add the broad
 runtime-tooling gate only when shared profile, CDB, input, or smoke helpers also
 change. `npm run test:md-links` writes ignored reports under
-`subagents/md-link-check`; do not commit those reports.
+`.artifacts/md-link-check`; do not commit those reports.
 
 ## Change Expectations
 
@@ -167,40 +167,8 @@ change. `npm run test:md-links` writes ignored reports under
 - Keep user-facing WinUI wording plain. Avoid internal proof IDs, raw offsets, and maintainer jargon in normal app surfaces.
 - Bulky live runtime proof artifacts should use an approved external artifact
   root plus the documented arm phrase. Track compact proof summaries, checkers,
-  and state updates; keep copied-game frames, raw captures, and raw CDB logs out
+  and focused documentation; keep copied-game frames, raw captures, and raw CDB logs out
   of git.
-
-## State Baton Updates
-
-For agent-led or maintainer-led code, docs, runtime proof, release, or
-repo-boundary changes, update the relevant state baton before handoff:
-
-- `developer_agent_state.json` for implementation, runtime, tooling, and
-  validation truth.
-- `documentation_agent_state.json` for docs, release posture, collaboration
-  posture, and handoff truth.
-- `re_orchestrator_state.json` only when active RE orchestration changes.
-
-Keep state concise and non-secret. For read-only audits, do not edit state just
-to satisfy the rule; report the needed state update in the audit result.
-External contributors may instead explain that no baton update was made; a
-maintainer can fold their PR into the current state files during review.
-
-The active implementation owner normally owns source integration and canonical
-state. It may be the root task or one explicitly designated sole sequential
-worker while another task supervises and reports. Two normal Codex Desktop
-tasks may use verified `list_threads`, `read_thread`, and
-`send_message_to_thread` controls after a harmless round-trip probe; a directly
-spawned subordinate agent with native collaboration controls is an alternative.
-`codex exec resume` is not a supervision channel.
-Follow the
-[optional coordination overlay](coordination/README.md) only for concurrent
-writers, recurring automation, or separate integration/acceptance roles. During
-such a wave, worker branches do not all edit canonical state; an integration
-preparer may propose reconciliation for `goal.md`, the state JSON files, and
-shared readiness/front-door docs after competing write/resource claims end, but
-the active implementation owner writes and accepts the final state. Read-only
-review roles remain read-only.
 
 ## WinUI UI/UX Contributions
 
