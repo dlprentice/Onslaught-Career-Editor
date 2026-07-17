@@ -9,7 +9,7 @@ This note is retained as historical context. The saved Ghidra symbol was correct
 ## Status
 
 - Named in Ghidra: superseded; current saved name is `CBattleEngine__FinishedPlayingCurrentAnimation`
-- Fresh read-back: `release/readiness/ghidra_battleengine_transition_config_signature_correction_2026-05-10.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

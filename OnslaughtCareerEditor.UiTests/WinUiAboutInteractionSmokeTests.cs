@@ -25,7 +25,7 @@ public class WinUiAboutInteractionSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-about-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-about-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir);
         var startInfo = new ProcessStartInfo(exePath)

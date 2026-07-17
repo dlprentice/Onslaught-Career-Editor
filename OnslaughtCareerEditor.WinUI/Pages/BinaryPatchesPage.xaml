@@ -1163,7 +1163,7 @@
                                                        Style="{StaticResource SectionBodyTextStyle}" />
                                             <TextBlock x:Name="PatchBenchOnlineLiveAttemptCommands"
                                                        AutomationProperties.AutomationId="PatchBenchOnlineLiveAttemptCommands"
-                                                       Text="Safe checks: live readiness and live run kit"
+                                                       Text="Source checks only; online play remains unproven"
                                                        Style="{StaticResource SectionBodyTextStyle}" />
                                             <TextBlock x:Name="PatchBenchOnlinePromotionLockStatus"
                                                        AutomationProperties.AutomationId="PatchBenchOnlinePromotionLockStatus"

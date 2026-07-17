@@ -84,7 +84,7 @@ Default values set in `CBattleEngineData::Initialise()`:
 
 ## Source-To-Retail Layout Candidate
 
-`tools\battleengine_profile_layout_candidate_probe.py` validates the current source-to-retail profile layout candidate from Stuart source field order, x86 `GenericSPtrSet` shape, and existing read-only retail decompiles.
+The current source-to-retail layout candidate combines Stuart source field order, x86 `GenericSPtrSet` shape, and read-only retail decompiles.
 
 | Source field | Candidate retail profile offset | Current evidence |
 | --- | ---: | --- |
@@ -101,7 +101,7 @@ This layout candidate does not prove all retail profile values or runtime cloak 
 
 ## Retail Profile Data Snapshot
 
-`tools\battleengine_profile_data_probe.py` parses the local retail `data/battle engine configurations.dat` file read-only using the source loader order. On the current verified install it found six profiles and one positive-stealth profile:
+A read-only parse of `data/battle engine configurations.dat` using the source loader order found six profiles and one positive-stealth profile:
 
 | Profile | `mStealth` / profile `+0xa0` | Runtime implication |
 | --- | ---: | --- |
@@ -116,9 +116,8 @@ This snapshot is derived evidence only. It does not prove that a runtime session
 
 ## Level 710 Configuration Evidence
 
-`tools\battleengine_level_configuration_probe.py` inspects the local read-only
-`data/Resources/710_res_PC.aya` level resource archive and the tracked
-`Level710script.msl` evidence.
+Read-only inspection of `data/Resources/710_res_PC.aya` and the tracked
+`Level710script.msl` provides the level-710 evidence below.
 
 Derived findings:
 
@@ -140,9 +139,8 @@ runtime transition into `Sniper`.
 
 ## Level Configuration Corpus Index
 
-`tools\battleengine_level_configuration_index_probe.py` scans the local
-read-only `data/Resources/*_res_PC.aya` numeric level corpus and parses the same
-structural header tables.
+A read-only scan of numeric `data/Resources/*_res_PC.aya` archives parsed the
+same structural header tables.
 
 Current derived findings:
 

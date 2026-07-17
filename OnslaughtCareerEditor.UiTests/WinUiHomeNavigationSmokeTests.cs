@@ -176,9 +176,8 @@ public class WinUiHomeNavigationSmokeTests
     {
         string invalidGameDirectory = Path.Combine(
             ResolveRepoRoot(),
-            "subagents",
+            ".artifacts",
             "winui-home-navigation",
-            "2026-05-27",
             "fixtures",
             "invalid-game");
         Directory.CreateDirectory(invalidGameDirectory);
@@ -201,9 +200,8 @@ public class WinUiHomeNavigationSmokeTests
     {
         string missingGameDirectory = Path.Combine(
             ResolveRepoRoot(),
-            "subagents",
+            ".artifacts",
             "winui-home-navigation",
-            "2026-05-27",
             "fixtures",
             $"missing-game-{Guid.NewGuid():N}");
         Assert.That(Directory.Exists(missingGameDirectory), Is.False, "The regression fixture must represent an unavailable folder.");
@@ -491,7 +489,7 @@ public class WinUiHomeNavigationSmokeTests
 
     private static HomeNavigationSession LaunchHomeSession(string? gameDirectory = null, string stateName = "unset")
     {
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-home-navigation", "2026-05-27");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-home-navigation");
         return LaunchHomeSession(evidenceDir, gameDirectory, stateName, requireRepoBuild: false);
     }
 

@@ -19,8 +19,7 @@ rate (drain). Two fresh accepted attempts form a stable envelope.
 ## Method
 
 - Level 850 / configuration 2 safe-copy launch; morph to jet; Q thrust hold.
-- Sample BE+0xFC at ~10 ms QPC polls during hold; analyze with
-  `tools/battleengine_energy_scaffold.py` (`expect_negative=True`).
+- Sample BE+0xFC at ~10 ms QPC polls during hold and require a negative steady response.
 - Pair envelope via `materialize_energy_pair_envelope`.
 
 ## Non-claims

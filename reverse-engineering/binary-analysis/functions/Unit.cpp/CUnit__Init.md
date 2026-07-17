@@ -16,11 +16,7 @@ Core unit initialization for interactive actor subclasses. Static retail read-ba
 void __thiscall CUnit__Init(void * this, void * init);
 ```
 
-Current read-back is Wave526 authority:
-
-- `subagents/ghidra-static-reaudit/wave526-unit-core-tail-004f84c0/post_metadata.tsv`
-- `subagents/ghidra-static-reaudit/wave526-unit-core-tail-004f84c0/post_instructions_init_full.tsv`
-- Focused instruction evidence shows `0x004f91ef RET 0x4`, proving one explicit stack argument after `ECX`.
+Focused instruction evidence shows `0x004f91ef RET 0x4`, proving one explicit stack argument after `ECX`.
 
 The older 2026-03-01 high-impact snapshot recorded this function as no-stack-argument `thiscall`; Wave526 supersedes that signature.
 

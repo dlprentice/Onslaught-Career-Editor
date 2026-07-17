@@ -1448,7 +1448,7 @@ public class BinaryPatchRegressionTests
         Assert.That(copiedControlModule.CopiedOptionsEdits, Is.EqualTo(new[] { "controllerConfiguration=1", "mouseLookSensitivity=2.25" }));
         Assert.That(copiedControlModule.ClaimBoundary, Does.Contain("does not prove improved feel"));
         Assert.That(copiedControlModule.RestoreStrategy, Does.Contain("copied defaultoptions.bea backup"));
-        Assert.That(copiedControlModule.EvidenceRefs, Does.Contain("roadmap/mod-patch-runtime-rebuild-register.md"));
+        Assert.That(copiedControlModule.EvidenceRefs, Does.Contain("reverse-engineering/binary-analysis/executable-analysis.md"));
         Assert.That(copiedControlModule.NonClaims, Does.Contain("No improved control-feel proof."));
 
         string[] enhancedExpandedKeys = BinaryPatchPlanBuilder.BuildSelectedSpecs(enhancedKeys)

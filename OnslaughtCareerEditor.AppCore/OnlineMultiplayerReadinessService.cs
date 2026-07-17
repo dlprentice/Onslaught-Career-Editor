@@ -980,10 +980,8 @@ namespace Onslaught___Career_Editor
                 BlockingReasons: blockingReasons,
                 SafeCommands: new[]
                 {
-                    "npm run test:winui-original-binary-second-host-live-readiness",
-                    "npm run test:winui-original-binary-second-host-live-run-kit",
-                    "npm run test:winui-original-binary-second-host-command-source",
-                    "npm run test:winui-original-binary-host-join-enablement"
+                    "npm run test:safe-copy",
+                    "npm run test:product"
                 });
         }
 

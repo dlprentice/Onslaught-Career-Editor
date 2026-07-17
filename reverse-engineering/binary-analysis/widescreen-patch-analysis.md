@@ -169,7 +169,7 @@ Quick summary:
 
 ## Related Files
 
-- [CLIParams.cpp.md](functions/CLIParams.cpp/_index.md) - Command-line parameter handling
+- [CLI parameter parsing](functions/CLIParams.cpp/CLIParams__ParseCommandLine.md) - Command-line parameter handling
 - [executable-analysis.md](executable-analysis.md) - PE structure details
 - [../game-mechanics/cheat-codes.md](../game-mechanics/cheat-codes.md) - Other hidden features
 

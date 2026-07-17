@@ -31,7 +31,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
@@ -74,7 +74,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
@@ -99,7 +99,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
           ],
           "non_claims": [
@@ -144,7 +144,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
@@ -169,7 +169,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; cardid.txt/source files are not rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md"
           ],
           "non_claims": [
@@ -192,7 +192,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the cave string is only written inside the copied executable.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/version-overlay-patch.md"
           ],
           "non_claims": [
@@ -215,7 +215,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; no art, texture, save, or installed-game files are rewritten.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md"
           ],
           "non_claims": [
@@ -238,7 +238,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; copied and source saves are not modified.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md"
           ],
           "non_claims": [
@@ -262,7 +262,7 @@
           ],
           "restore_strategy": "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
           "evidence_refs": [
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/save-file/save-format.md"
           ],
           "non_claims": [
@@ -304,7 +304,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md"
           ],
@@ -329,7 +329,7 @@
           "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
           "evidence_refs": [
             "patches/README.md",
-            "roadmap/mod-patch-runtime-rebuild-register.md",
+            "reverse-engineering/binary-analysis/executable-analysis.md",
             "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md"
           ],
           "non_claims": [

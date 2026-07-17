@@ -274,7 +274,8 @@ function Assert-SafeCopyAttachIdentity(
 function Resolve-ExistingCommandFile([string]$Path, [string]$AllowedRoot) {
     $resolvedPath = Resolve-ExistingFilePath $Path "Command file"
     if (-not $AllowedRoot) {
-        $AllowedRoot = Join-Path $scriptRoot "runtime-probes"
+        Write-Error "Command-file use requires -AllowedCommandRoot so CDB input stays within an explicit task-owned directory."
+        exit 1
     }
 
     $resolvedRoot = Resolve-ExistingDirectoryPath $AllowedRoot "Allowed command root"

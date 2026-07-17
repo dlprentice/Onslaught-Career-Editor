@@ -4,7 +4,7 @@ Build a read-only manifest for the loose .vid/Bink corpus.
 
 Examples:
     py -3 tools/export_video_manifest.py
-    py -3 tools/export_video_manifest.py --video-root game/data/video --out-dir subagents/video_manifest_wave1_2026-03-13
+    py -3 tools/export_video_manifest.py --video-root game/data/video --out-dir .artifacts/video-manifest
 """
 
 from __future__ import annotations
@@ -143,7 +143,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument(
         "--out-dir",
         type=Path,
-        default=Path("subagents") / "video_manifest_wave1_2026-03-13",
+        default=Path(".artifacts") / "video-manifest",
     )
     ap.add_argument("--self-test", action="store_true", help="Run built-in parser/guard checks without private game assets")
     return ap.parse_args()

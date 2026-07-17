@@ -169,4 +169,4 @@ LAB_004f2958:
 ## Related
 - Unwind handler: [CTexture__FindTexture_Unwind](CTexture__FindTexture_Unwind.md) at 0x005d5120
 - Constructor: CTexture__ctor at 0x00556cc0
-- Parent: [_index.md](_index.md)
+- Parent: [retained function index](../_index.md)

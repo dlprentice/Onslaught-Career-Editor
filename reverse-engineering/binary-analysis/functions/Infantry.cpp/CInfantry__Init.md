@@ -16,7 +16,7 @@ Initialize an infantry unit by allocating three child component objects and conf
 void __thiscall CInfantry__Init(void * this, void * infantryInit);
 ```
 
-Read-back verified by Wave416 metadata/decompile/xref/tag/instruction exports and `tools\ghidra_infantry_lifecycle_wave416_probe.py`.
+Saved metadata, decompile, xref, tag, and instruction exports support this boundary.
 
 ## Responsibilities
 

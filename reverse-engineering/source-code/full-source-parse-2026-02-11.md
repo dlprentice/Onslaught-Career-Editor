@@ -120,9 +120,7 @@ Top C# files by method-candidate count:
 ## See Also
 
 - `reverse-engineering/source-code/_index.md`
-- `reverse-engineering/source-code/source-file-inventory.md`
 - `reverse-engineering/binary-analysis/functions/_index.md`
-- `reverse-engineering/binary-analysis/functions/FUNCTION_COVERAGE_STATE.md`
 
 ---
 

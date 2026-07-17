@@ -180,7 +180,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         private static string FormatSecondHostLiveAttemptCommands(OnlineSecondHostLiveAttemptReadiness readiness)
         {
-            return $"Safe checks: {string.Join("; ", readiness.SafeCommands)}";
+            return $"Source checks (do not prove online play): {string.Join("; ", readiness.SafeCommands)}";
         }
 
         private static string FormatCompanionSafeCopyStatus(string status)

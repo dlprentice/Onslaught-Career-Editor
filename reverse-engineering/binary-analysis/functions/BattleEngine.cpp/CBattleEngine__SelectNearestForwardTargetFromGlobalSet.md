@@ -5,7 +5,7 @@
 ## Status
 
 - Named in Ghidra: yes
-- Fresh read-back: `release/readiness/battleengine_helper_ghidra_readback_2026-05-06.md`; signature/comment hardened in `release/readiness/ghidra_early_queue_signature_correction_2026-05-10.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Source alignment candidate: `CBattleEngine::GetClosestLockableUnit`
 - Source candidate status: `hypothesis-only`; no reviewed retail rename was applied
 - Runtime behavior proof: not yet

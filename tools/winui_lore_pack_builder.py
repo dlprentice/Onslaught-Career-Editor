@@ -18,7 +18,9 @@ sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 LORE_BOOK_DIR = "lore-book"
+CANONICAL_LORE_DIR = "lore"
 LORE_PACK_DIR = "lore-pack"
+LORE_SOURCE_NAME = "canonical-lore"
 INDEX_FILE_NAME = "onslaught-lore.v1.index.json"
 CONTENT_FILE_NAME = "onslaught-lore.v1.jsonl"
 SCHEMA = "onslaught-lore-pack.v1"
@@ -232,7 +234,7 @@ def rewrite_pack_links(
 
 def git_lore_files(root: Path, lore_root: Path) -> list[Path]:
     completed = subprocess.run(
-        ["git", "ls-files", "--", f"{LORE_BOOK_DIR}/"],
+        ["git", "ls-files", "--", LORE_BOOK_DIR, CANONICAL_LORE_DIR],
         cwd=root,
         text=True,
         stdout=subprocess.PIPE,
@@ -254,7 +256,14 @@ def git_lore_files(root: Path, lore_root: Path) -> list[Path]:
 
 
 def filesystem_lore_files(lore_root: Path) -> list[Path]:
-    return sorted(path for path in lore_root.rglob("*") if path.is_file())
+    candidates: list[Path] = []
+    lore_book_root = lore_root / LORE_BOOK_DIR
+    if lore_book_root.is_dir():
+        candidates.extend(path for path in lore_book_root.iterdir() if path.is_file())
+    canonical_root = lore_root / CANONICAL_LORE_DIR
+    if canonical_root.is_dir():
+        candidates.extend(path for path in canonical_root.rglob("*") if path.is_file())
+    return sorted(candidates)
 
 
 def collect_lore_documents(root: Path, lore_root: Path, *, use_git: bool) -> list[Path]:
@@ -262,21 +271,26 @@ def collect_lore_documents(root: Path, lore_root: Path, *, use_git: bool) -> lis
     documents: list[Path] = []
     for path in sorted(candidates, key=lambda item: item.relative_to(lore_root).as_posix().lower()):
         relative = path.relative_to(lore_root).as_posix()
+        relative_parts = PurePosixPath(relative).parts
+        if not relative_parts or relative_parts[0] not in {LORE_BOOK_DIR, CANONICAL_LORE_DIR}:
+            continue
         lower_name = path.name.lower()
         suffix = path.suffix.lower()
         if lower_name in DENY_NAMES or suffix in DENY_SUFFIXES:
             raise ValueError(f"hard-payload-like Lore source rejected: {relative}")
+        if relative_parts[0] == LORE_BOOK_DIR and relative != f"{LORE_BOOK_DIR}/BOOK.md":
+            raise ValueError("lore-book contains obsolete mirrored content")
         if suffix in PACKABLE_SUFFIXES:
             documents.append(path)
     return documents
 
 
 def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_git: bool = True) -> dict[str, object]:
-    lore_root = root / LORE_BOOK_DIR
+    lore_root = root
     if output_dir is None:
         output_dir = root / LORE_PACK_DIR
-    if not lore_root.is_dir():
-        raise FileNotFoundError(f"missing {lore_root}")
+    if not (root / LORE_BOOK_DIR / "BOOK.md").is_file():
+        raise FileNotFoundError("missing Lore entry guide")
 
     documents = collect_lore_documents(root, lore_root, use_git=use_git)
     if not documents:
@@ -311,7 +325,7 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
 
     index = {
         "schema": SCHEMA,
-        "sourceRoot": LORE_BOOK_DIR,
+        "sourceRoot": LORE_SOURCE_NAME,
         "documentCount": len(index_documents),
         "documents": index_documents,
     }
@@ -459,9 +473,11 @@ class LorePackBuilderTests(unittest.TestCase):
     def test_build_and_check_lore_pack(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
-            lore = root / LORE_BOOK_DIR
+            lore_book = root / LORE_BOOK_DIR
+            lore_book.mkdir()
+            lore = root / CANONICAL_LORE_DIR
             lore.mkdir()
-            (lore / "BOOK.md").write_text("- [Start](Start.md)\n", encoding="utf-8")
+            (lore_book / "BOOK.md").write_text("- [Start](../lore/Start.md)\n", encoding="utf-8")
             (lore / "Start.md").write_text("# Start\n\n[Rows](rows.tsv)\n[Tool](../tools/helper.py)", encoding="utf-8")
             (lore / "rows.tsv").write_text("id\tvalue\n1\tAquila\n", encoding="utf-8")
             (lore / "logic.c").write_text("int main(void) { return 0; }\n", encoding="utf-8")
@@ -476,7 +492,7 @@ class LorePackBuilderTests(unittest.TestCase):
             self.assertEqual(checked["documentCount"], 2)
             self.assertNotIn("```tsv", content)
             self.assertNotIn("```c", content)
-            self.assertIn("[Rows](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/rows.tsv)", content)
+            self.assertIn("[Rows](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore/rows.tsv)", content)
             self.assertIn("[Tool](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/tools/helper.py)", content)
 
     def test_redacts_maintainer_paths_and_private_endpoints(self) -> None:
@@ -531,6 +547,7 @@ class LorePackBuilderTests(unittest.TestCase):
             root = Path(temp_root)
             lore = root / LORE_BOOK_DIR
             lore.mkdir()
+            (lore / "BOOK.md").write_text("# Book\n", encoding="utf-8")
             (lore / "BEA.exe").write_bytes(b"no")
 
             with self.assertRaises(ValueError):
@@ -767,7 +784,7 @@ class LorePackBuilderTests(unittest.TestCase):
             rows.extend(extra_content_rows)
         index = {
             "schema": SCHEMA,
-            "sourceRoot": LORE_BOOK_DIR,
+            "sourceRoot": LORE_SOURCE_NAME,
             "documentCount": len(documents),
             "documents": documents,
         }

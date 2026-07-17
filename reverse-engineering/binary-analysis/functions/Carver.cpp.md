@@ -93,10 +93,7 @@ The full Wave745 tranche spans `0x005d1840 Unwind@005d1840` through `0x005d1a98 
 
 ## Validation
 
-- Headless missing-boundary create dry/apply recovered `8` function objects and saved the project.
-- Headless signature/comment correction saved `24` Carrier/Carver-region targets with `16` saved name corrections.
-- Metadata/decompile/xref/instruction read-back verified `24/24` targets, `29` xref rows, and `1944` instruction rows.
-- `tools\ghidra_carrier_carver_boundary_signature_correction_probe.py --check` passed with `8` created boundaries, `24` signature targets, and `16` renamed targets.
+Saved metadata, decompile, xref, and instruction read-back support the function boundaries summarized above.
 
 ## Notes
 

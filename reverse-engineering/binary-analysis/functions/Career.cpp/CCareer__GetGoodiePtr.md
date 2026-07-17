@@ -27,7 +27,7 @@ void * CCareer__GetGoodiePtr(void * this, int goodie_index);
 
 ## 2026-05-07 Xref Read-Back
 
-A read-only Ghidra xref export for `0x00421980` wrote 423 rows. A second read-only export checked the concrete `g_Career_mGoodies[71..73]` addresses. `tools/goodies_getgoodieptr_xref_probe.py --check` passed and confirmed all 423 exported helper calls currently resolve to `CCareer__UpdateGoodieStates`, with zero direct data references reported for the 71-73 state addresses.
+A read-only Ghidra xref export for `0x00421980` wrote 423 rows. A second read-only export checked the concrete `g_Career_mGoodies[71..73]` addresses. All exported helper calls resolved to `CCareer__UpdateGoodieStates`, with zero direct data references reported for the 71-73 state addresses.
 
 This supports the current Goodies 71-73 model: `CCareer__GetGoodiePtr` is an unlock-recomputation helper in the known retail xref set, not evidence for a frontend direct-selection path. It does not prove that no indirect array access or runtime-only path can request 71-73.
 

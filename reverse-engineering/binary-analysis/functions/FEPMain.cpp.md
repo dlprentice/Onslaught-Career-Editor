@@ -101,7 +101,6 @@ Wave953 read-only re-audit evidence:
 
 - `cfepmain-menu-review-wave953` re-exported the eleven CFEPMain rows plus six frontend context anchors with no missing rows and no mutation.
 - Fresh read-back verified 17 metadata rows, 17 tag rows, 257 xref rows, 2935 instruction rows, 17 decompile rows, and 56 vtable rows.
-- The existing Wave401 continuity probe still passed: `py -3 tools\ghidra_fepmain_wave401_probe.py --check`.
 - Read-only backup verified at `[maintainer-local-ghidra-backup-root]\BEA_20260528-093826_post_wave953_cfepmain_menu_review_verified` with 19 files, 173542279 bytes, and `DiffCount=0`.
 
 Wave401 saved and read back Ghidra metadata for the eleven targets above:
@@ -109,6 +108,5 @@ Wave401 saved and read back Ghidra metadata for the eleven targets above:
 - `ApplyFEPMainWave401.java` dry run: `updated=0 skipped=11 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`.
 - `ApplyFEPMainWave401.java` apply run: `updated=11 skipped=0 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - Read-back verified `11` metadata rows, `11` decompile exports, `19` xref rows, `11` tag rows, `1155` instruction rows, and `72` combined vtable-slot rows.
-- Focused probe: `tools/ghidra_fepmain_wave401_probe.py --check` passed.
 
 This is saved static Ghidra name/signature/comment/tag refinement only. It does not prove runtime frontend behavior, exact source identity, concrete CFEPMain layout, local variable names, structure types, BEA launch behavior, game patching, or rebuild parity.

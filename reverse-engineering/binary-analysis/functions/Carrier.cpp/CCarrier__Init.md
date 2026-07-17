@@ -16,7 +16,7 @@ Initialize a carrier object by allocating and configuring two child component ob
 void __thiscall CCarrier__Init(void * this, void * init);
 ```
 
-Read-back verified by the Wave 318 Carrier/Carver correction artifacts under ignored `subagents/ghidra-static-reaudit/carrier-carver-wave318/current/` and guarded by `tools\ghidra_carrier_carver_boundary_signature_correction_probe.py`.
+Static read-back supports the saved name, signature, and boundary described here.
 
 ## Responsibilities
 

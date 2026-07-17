@@ -1,7 +1,7 @@
 # CMech__InitTargeting
 
 <!-- ghidra-full-reaudit-20260713:start -->
-> **2026-07-13 live correction closeout:** `0x0049faa0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl` and `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
+> **2026-07-13 live correction closeout:** `0x0049faa0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
 > Address: 0x0049faa0 | Source: Mech.cpp (source file not present in `references/Onslaught/` snapshot)
@@ -39,4 +39,4 @@ Runtime targeting, reticle, guide, or lock-on behavior is not proven by this wav
 
 - [CMech__InitLegMotion](./CMech__InitLegMotion.md)
 - [CMech__InitCockpit](./CMech__InitCockpit.md)
-- [../GroundUnit.cpp/_index.md](../GroundUnit.cpp/_index.md) - shared slot-9 caller invokes vtable slots 117/118/119
+- [Shared grounded-motion initialization](../GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md) - shared slot-9 caller context

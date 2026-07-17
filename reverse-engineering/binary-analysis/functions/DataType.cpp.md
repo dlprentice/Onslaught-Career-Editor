@@ -69,11 +69,13 @@ Wave573 hardened the CIntDataType arithmetic/comparison head and the base destru
 | `0x0052d320` | `bool __thiscall CIntDataType__GreaterOrEqual(void * this, void * rhs)` | Returns `this+0x04 >= rhs_value`. |
 | `0x0052d390` | `void __thiscall CDataType__Destructor(void * this)` | Base destructor that restores the base CDataType vtable pointer. |
 
-## Wave574 Bool Static Read-Back
+## Boolean datatype read-back
 
-Wave1208 current-risk re-read (`wave1208-cbooldatatype-current-risk-review`) refreshed the three bool datatype slots with fresh Ghidra export metadata/tag/xref/instruction/decompile evidence: `3 CBoolDataType current-risk rows`, `3 xref rows`, `99 instruction rows`, and `3 decompile rows`. The reviewed anchors are `CBoolDataType__Equals`, `CBoolDataType__NotEquals`, and `CBoolDataType__Assign`; active current-risk progress is `1092/1179 = 92.62%` with remaining active focused work: 87, current focused candidates: 1141, live regenerated current focused candidates: 1141, current risk candidates: 6166, unique-address accounting, continuity denominator, current-risk denominator, focused threshold `15`, not Wave911 reconstruction, and legacy additive counter is deprecated (`1123/1179`) with a 26 duplicate-address overcount and Wave1145 arithmetic overcount: 5. This was a read-only review with no mutation, no rename, no signature change, no comment change, no tag change, no function-boundary change, and no executable-byte change; Codex read-only consults used. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-040938_post_wave1208_cbooldatatype_current_risk_review_verified`. Static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0`. Active measurement paths: `static-reaudit-current-risk-ledger.json`, `static-reaudit-measurement-register.md`, and `wave1108-current-risk-rank`. This is rebuild-grade static contracts evidence for no noticeable difference planning only; runtime MissionScript behavior, runtime bool datatype behavior, exact bool ABI, exact datatype layout, exact source identity, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof.
-
-Wave574 semantically renamed and hardened three adjacent boolean datatype vtable slots. Wave575 later confirmed the factory/type-id mapping at the saved-Ghidra evidence level: type 2 installs `CFloatDataType` vtable `0x005e4ea4`, while type 4 installs the observed CBoolDataType vtable region. This is static retail-binary evidence only; exact source identity, concrete datatype layouts beyond observed fields, runtime MissionScript behavior, and rebuild parity remain unproven.
+Saved static evidence identifies three adjacent boolean datatype vtable slots.
+The factory/type-id mapping installs `CFloatDataType` vtable `0x005e4ea4` for
+type 2 and the observed `CBoolDataType` vtable region for type 4. Exact source
+identity, concrete layouts, runtime MissionScript behavior, and rebuild parity
+remain unproven.
 
 | Address | Saved signature | Evidence |
 | --- | --- | --- |

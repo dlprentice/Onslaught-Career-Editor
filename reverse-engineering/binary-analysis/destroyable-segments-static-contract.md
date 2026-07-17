@@ -2,19 +2,10 @@
 
 Status: active static contract map
 Last updated: 2026-06-07
-Latest review: Wave1205 (`wave1205-destroyable-segment-current-risk-review`)
 
-Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0. This is static Ghidra/read-back/system-map acceptance for the current-risk lane, not runtime destructable-segment damage/break/rubble/cascade/pickup behavior, exact event payload schema, exact layout proof, exact source-body identity, BEA patching proof, rebuild parity, or no-noticeable-difference parity.
-
-Static-to-proof planning pointer: `destroyable-segments-damage-break-proof-plan.md` records the bounded gameplay-contract proof plan, copied-profile guardrails, event/layout unknowns, and stop conditions for a future proof slice. It does not start runtime proof or change the static claim boundary.
-
-Historical Wave1205 anchors below are at-wave snapshots; their older active current-risk counters are preserved as evidence provenance, not current status.
-
-Probe token anchor: Wave1205; wave1205-destroyable-segment-current-risk-review; 1076/1179 = 91.26%; 5 destroyable-segment current-risk rows; current focused candidates: 1141; live regenerated current focused candidates: 1141; remaining active focused work: 103; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; no rename; no signature change; no comment change; no tag change; no function-boundary change; no executable-byte change; Codex read-only consults used; unique-address accounting; legacy additive counter is deprecated; 1107/1179; 26 duplicate-address overcount; Wave1145 arithmetic overcount: 5; CDestructableSegment__RegisterChild; CDestroyableCoreSegment__AreCoreChildrenDestroyed; CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex; CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex; CDestructableSegmentsController__SetAllSegmentsActiveFlagAndRefreshMetric; 0 / 0 / 0; 6411/6411 = 100.00%; 9 xref rows; 96 instruction rows; 5 decompile rows; [maintainer-local-ghidra-backup-root]\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified; static-reaudit-current-risk-ledger.json; wave1108-current-risk-rank; current-risk denominator; continuity denominator; focused threshold `15`; not Wave911 reconstruction; rebuild-grade static contracts; no noticeable difference.
-
-Wave1205 (`wave1205-destroyable-segment-current-risk-review`) re-read `5 destroyable-segment current-risk rows` with fresh Ghidra metadata, tag, xref, instruction, and decompile evidence and no mutation. It adds current-risk read-back for `CDestructableSegment__RegisterChild`, `CDestroyableCoreSegment__AreCoreChildrenDestroyed`, `CDestructableSegmentsController__GetSegmentLastDamageTimeByIndex`, `CDestructableSegmentsController__GetSegmentLastDamageAmountByIndex`, and `CDestructableSegmentsController__SetAllSegmentsActiveFlagAndRefreshMetric`. At Wave1205 time, active current-risk accounting was `1076/1179 = 91.26%`; current focused candidates: 1141; live regenerated current focused candidates: 1141; remaining active focused work: 103; current risk candidates: 6166. Fresh exports verified `9 xref rows`, `96 instruction rows`, and `5 decompile rows`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260607-021737_post_wave1205_destroyable_segment_current_risk_review_verified`.
-
-Wave1205 keeps the legacy additive counter deprecated at `1107/1179` because it contains a 26 duplicate-address overcount and Wave1145 arithmetic overcount: 5. This is current-risk denominator work from the Wave1108 lane with focused threshold `15`; it is not Wave911 reconstruction. Static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0` commentless/exact-undefined/`param_N` debt. Static target remains rebuild-grade static contracts and a rebuild-grade specification aiming at no noticeable difference.
+Saved Ghidra metadata, xrefs, instructions, and decompile read-back support the
+five segment/controller anchors described below. This is a static subsystem map,
+not runtime damage, break, rubble, pickup, layout, patch, or rebuild proof.
 
 ## Static Contract
 

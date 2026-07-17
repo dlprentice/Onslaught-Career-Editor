@@ -25,7 +25,7 @@ void __thiscall CUnit__TriggerEffect(void * this, void * trigger_context);
 - `RET 0x4` proves one explicit stack argument after ECX.
 - The body uses `trigger_context`, `trigger_context+0x138`, `this+0x164 -> +0x120`, and cooldown/state field `+0x240`.
 - Decompile read-back includes `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`, `CMessage`, and pilot-text selection tokens including `Tara_Fighter`.
-- Wave528 artifacts live under `subagents/ghidra-static-reaudit/wave528-unit-warspite-command-004fe030/`.
+- Current saved Ghidra metadata supports the function boundary summarized here.
 
 ## Boundaries
 

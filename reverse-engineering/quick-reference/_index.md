@@ -46,7 +46,7 @@ This folder holds dense lookup tables that are useful during deep reverse-engine
 Use these quick tables for lookup speed, then verify or expand findings in the detailed docs:
 
 - [../RE-INDEX.md](../RE-INDEX.md)
-- [/release/readiness/battleengine_logic_coverage_2026-05-06.md](/release/readiness/battleengine_logic_coverage_2026-05-06.md) - BattleEngine source-anchor coverage (release evidence)
+- [Mapped systems](../binary-analysis/mapped-systems.md) - Current static system owners and claim boundaries
 - [../game-assets/_index.md](../game-assets/_index.md)
 - [../save-file/save-format.md](../save-file/save-format.md)
 - [../save-file/struct-layouts.md](../save-file/struct-layouts.md)

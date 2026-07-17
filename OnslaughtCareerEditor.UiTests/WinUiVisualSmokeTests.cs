@@ -27,7 +27,7 @@ public class WinUiVisualSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Launches the current WinUI app on the desktop and captures ignored screenshots under subagents/.")]
+    [Explicit("Launches the current WinUI app on the desktop and captures ignored screenshots under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void MainWindow_CapturesPrimaryProductScreens()
     {
@@ -37,7 +37,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-visual-qa", PrimaryVisualQaDate);
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-visual-qa", PrimaryVisualQaDate);
         Directory.CreateDirectory(evidenceDir);
         foreach (string oldScreenshot in Directory.GetFiles(evidenceDir, "*.png"))
         {
@@ -106,7 +106,7 @@ public class WinUiVisualSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Launches the current WinUI app and captures ignored screenshots after scrolling long workflow pages under subagents/.")]
+    [Explicit("Launches the current WinUI app and captures ignored screenshots after scrolling long workflow pages under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void MainWindow_CapturesScrolledWorkflowSections()
     {
@@ -116,7 +116,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-scrolled-visual-qa", ScrolledVisualQaDate);
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-scrolled-visual-qa", ScrolledVisualQaDate);
         Directory.CreateDirectory(evidenceDir);
         foreach (string oldScreenshot in Directory.GetFiles(evidenceDir, "*.png"))
         {
@@ -193,7 +193,7 @@ public class WinUiVisualSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private generated asset catalog path in ONSLAUGHT_WINUI_REAL_ASSET_CATALOG and captures ignored screenshots under subagents/.")]
+    [Explicit("Requires a private generated asset catalog path in ONSLAUGHT_WINUI_REAL_ASSET_CATALOG and captures ignored screenshots under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void AssetLibrary_CapturesRealTexturePreviewWhenCatalogProvided()
     {
@@ -209,7 +209,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-real-asset-visual-qa", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-real-asset-visual-qa");
         Directory.CreateDirectory(evidenceDir);
         string searchText = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_REAL_ASSET_TEXTURE_SEARCH") ?? "f_trooperd";
         string expectedText = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_REAL_ASSET_TEXTURE_EXPECTED") ?? "F Trooperd";
@@ -227,7 +227,7 @@ public class WinUiVisualSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private generated asset catalog path in ONSLAUGHT_WINUI_REAL_ASSET_CATALOG and captures ignored screenshots under subagents/.")]
+    [Explicit("Requires a private generated asset catalog path in ONSLAUGHT_WINUI_REAL_ASSET_CATALOG and captures ignored screenshots under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void AssetLibrary_CapturesRealModelWireframeWhenCatalogProvided()
     {
@@ -243,7 +243,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-real-asset-visual-qa", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-real-asset-visual-qa");
         Directory.CreateDirectory(evidenceDir);
         string searchText = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_REAL_ASSET_MODEL_SEARCH") ?? "arachnid";
         CaptureConfiguredTab(
@@ -284,7 +284,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-real-asset-visual-qa", "2026-05-07");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-real-asset-visual-qa");
         Directory.CreateDirectory(evidenceDir);
 
         CaptureConfiguredTab(
@@ -377,7 +377,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-sidecar-texture-smoke", "2026-05-08");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-sidecar-texture-smoke");
         Directory.CreateDirectory(evidenceDir);
         string assetCatalogFixture = PrepareSidecarOnlyAssetCatalogFixture(evidenceDir);
         CaptureConfiguredTab(
@@ -414,7 +414,7 @@ public class WinUiVisualSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-real-asset-row-breadth", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-real-asset-row-breadth");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir, "asset-library-row-breadth");
         var startInfo = new ProcessStartInfo(exePath)

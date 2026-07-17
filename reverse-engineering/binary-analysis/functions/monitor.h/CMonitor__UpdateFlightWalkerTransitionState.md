@@ -5,7 +5,7 @@
 ## Status
 
 - Named in Ghidra: yes
-- Fresh read-back: `release/readiness/transition_hud_helper_ghidra_readback_2026-05-06.md`; Morph event bridge: `release/readiness/battleengine_morph_event_readback_2026-05-06.md`; saved source-bridge correction: `release/readiness/ghidra_transition_targeting_signature_tranche_2026-05-09.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

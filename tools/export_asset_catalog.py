@@ -508,13 +508,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Single generated export root that contains every catalog export path",
     )
-    ap.add_argument("--packed-manifest", type=Path, default=Path("subagents/aya_asset_manifest_wave5_2026-03-13.json"))
-    ap.add_argument("--texture-manifest", type=Path, default=Path("subagents/asset_export_wave1_2026-03-13/loose_textures/manifest.json"))
-    ap.add_argument("--loose-mesh-manifest", type=Path, default=Path("subagents/asset_export_wave1_2026-03-13/loose_meshes/manifest.json"))
-    ap.add_argument("--embedded-mesh-manifest", type=Path, default=Path("subagents/asset_export_wave1_2026-03-13/embedded_meshes/manifest.json"))
-    ap.add_argument("--video-manifest", type=Path, default=Path("subagents/video_manifest_wave1_2026-03-13/manifest.json"))
-    ap.add_argument("--language-matrix", type=Path, default=Path("subagents/language_export_wave1_2026-03-13/merged_matrix.json"))
-    ap.add_argument("--out-dir", type=Path, default=Path("subagents/asset_catalog_wave1_2026-03-14"))
+    ap.add_argument("--packed-manifest", type=Path, default=Path(".artifacts/aya-assets/packed-manifest.json"))
+    ap.add_argument("--texture-manifest", type=Path, default=Path(".artifacts/asset-export/loose-textures/manifest.json"))
+    ap.add_argument("--loose-mesh-manifest", type=Path, default=Path(".artifacts/asset-export/loose-meshes/manifest.json"))
+    ap.add_argument("--embedded-mesh-manifest", type=Path, default=Path(".artifacts/asset-export/embedded-meshes/manifest.json"))
+    ap.add_argument("--video-manifest", type=Path, default=Path(".artifacts/video-manifest/manifest.json"))
+    ap.add_argument("--language-matrix", type=Path, default=Path(".artifacts/language-export/merged_matrix.json"))
+    ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without private game assets")
     ap.add_argument(
         "--emit-consumer-contract-fixture",

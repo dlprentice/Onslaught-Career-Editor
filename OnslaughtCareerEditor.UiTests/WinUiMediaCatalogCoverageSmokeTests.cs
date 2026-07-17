@@ -89,7 +89,7 @@ public class WinUiMediaCatalogCoverageSmokeTests
 
     private static void WriteCoverageSummary(MediaCatalogSnapshot snapshot)
     {
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-media-catalog-coverage", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-media-catalog-coverage");
         Directory.CreateDirectory(evidenceDir);
 
         object summary = new
@@ -128,7 +128,7 @@ public class WinUiMediaCatalogCoverageSmokeTests
 
     private static void WriteDecodabilitySummary(MediaCatalogSnapshot snapshot)
     {
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-media-catalog-decodability", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-media-catalog-decodability");
         Directory.CreateDirectory(evidenceDir);
 
         object summary = new

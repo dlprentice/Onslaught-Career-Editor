@@ -1,3 +1,0 @@
-bp 00465490 ".printf \"IsCheatActive this=%p cheat=%x\\n\", @ecx, poi(@esp+4); g"
-bp 004CDE60 ".printf \"PauseMenu__Init this=%p\\n\", @ecx; g"
-g

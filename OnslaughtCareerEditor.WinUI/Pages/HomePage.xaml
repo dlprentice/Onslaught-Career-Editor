@@ -225,7 +225,7 @@
                                        AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Open the curated preservation library and roadmap mirrors."
+                            <TextBlock Text="Open the curated preservation library for story, characters, development history, and research."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button Content="Open Lore"
                                     AutomationProperties.AutomationId="HomeOpenLoreButton"

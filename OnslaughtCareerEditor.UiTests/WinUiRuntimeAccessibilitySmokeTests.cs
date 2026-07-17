@@ -330,7 +330,7 @@ public class WinUiRuntimeAccessibilitySmokeTests
 
     private static string PrepareIsolatedAppData(int lastTab = -1, int lastMediaSubTab = 0)
     {
-        string appDataDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-runtime-accessibility-smoke", "appdata");
+        string appDataDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-runtime-accessibility-smoke", "appdata");
         string configDir = Path.Combine(appDataDir, "OnslaughtCareerEditor");
         Directory.CreateDirectory(configDir);
         File.WriteAllText(

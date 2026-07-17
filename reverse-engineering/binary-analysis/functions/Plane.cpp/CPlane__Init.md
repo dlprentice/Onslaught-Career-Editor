@@ -47,9 +47,8 @@ The retail binary carries debug string `[maintainer-local-source-export-root]\Pl
 
 - `ApplyPlaneInitWave483.java` final dry/apply/verify logs saved successfully.
 - The initial comment pass exposed and corrected a stale human claim that the `0x80` write was on `this`; final read-back and probe require `init_thing+0x80`.
-- `py -3 tools\ghidra_plane_init_wave483_probe_test.py`
-- `cmd.exe /c npm run test:ghidra-plane-init-wave483`
-- `cmd.exe /c npm run test:ghidra-static-reaudit-queue`
+- The retired focused probe and queue check passed; their implementations remain
+  available in Git history.
 
 ## Deferred
 

@@ -5,7 +5,7 @@
 ## Status
 
 - Named in Ghidra: yes
-- Fresh read-back: `release/readiness/battleengine_helper_ghidra_readback_2026-05-06.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

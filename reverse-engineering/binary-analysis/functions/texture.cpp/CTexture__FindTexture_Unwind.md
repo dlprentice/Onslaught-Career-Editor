@@ -49,4 +49,4 @@ The address `LAB_005d513c` is near `CTexture__FindTexture_Unwind` (0x005d5120), 
 
 ## Related
 - Parent function: [CTexture__FindTexture](CTexture__FindTexture.md) at 0x004f27f0
-- Parent: [_index.md](_index.md)
+- Parent: [retained function index](../_index.md)

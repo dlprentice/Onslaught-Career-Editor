@@ -119,6 +119,6 @@ The following globals were discovered via automated Inquisition agents during de
 
 ## Related
 
-- [FEPSaveGame.cpp/_index.md](FEPSaveGame.cpp/_index.md) - Cheat system details
-- [PauseMenu.cpp/_index.md](PauseMenu.cpp/_index.md) - God mode toggle
-- [CLIParams.cpp/_index.md](CLIParams.cpp/_index.md) - CLI flags
+- [Save-game cheat check](FEPSaveGame.cpp/IsCheatActive.md)
+- [Pause-menu rendering](PauseMenu.cpp/CPauseMenu__Render.md)
+- [CLI parameter parsing](CLIParams.cpp/CLIParams__ParseCommandLine.md)

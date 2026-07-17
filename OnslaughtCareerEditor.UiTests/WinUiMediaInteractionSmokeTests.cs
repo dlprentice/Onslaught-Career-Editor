@@ -44,7 +44,7 @@ public class WinUiMediaInteractionSmokeTests
             Assert.Ignore("Configured game install did not expose both audio and video catalog rows.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-media-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-media-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir, gameDirectory);
         var startInfo = new ProcessStartInfo(exePath)
@@ -142,7 +142,7 @@ public class WinUiMediaInteractionSmokeTests
             Assert.Ignore("Configured game install did not expose two representative audio rows and two representative video rows.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-media-representative-playback", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-media-representative-playback");
         Directory.CreateDirectory(evidenceDir);
         File.WriteAllText(
             Path.Combine(evidenceDir, "representative-playback-summary.json"),
@@ -240,7 +240,7 @@ public class WinUiMediaInteractionSmokeTests
             Assert.Ignore("Configured game install did not expose the broader media family sample.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-media-broader-family-playback", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-media-broader-family-playback");
         Directory.CreateDirectory(evidenceDir);
         File.WriteAllText(
             Path.Combine(evidenceDir, "broader-family-playback-summary.json"),

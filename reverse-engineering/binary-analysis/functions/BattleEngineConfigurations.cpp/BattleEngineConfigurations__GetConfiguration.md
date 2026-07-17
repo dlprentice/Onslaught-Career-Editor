@@ -6,7 +6,7 @@
 
 - Named in Ghidra: yes
 - Saved signature: `void * __cdecl BattleEngineConfigurations__GetConfiguration(int configurationId)`
-- Fresh read-back: `release/readiness/ghidra_battleengine_transition_config_signature_correction_2026-05-10.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

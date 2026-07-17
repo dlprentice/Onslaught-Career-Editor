@@ -66,22 +66,16 @@ DENY_EXACT = {
 }
 
 ALLOW_EXACT = {
-    "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
     "references/AYAResourceExtractor/BoxWithTextures.fbx",
-    "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl",
     "tests_shared/fixtures/gold_career_save.bin",
 }
 
 ALLOW_EXACT_SHA256 = {
-    "lore-book/reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "33de0b10ef96271fc895c066d2aa764a0ca28e87f99b3be29fada5e1b4c67b3d",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
-    "reverse-engineering/binary-analysis/function_mutation_attempt_log.jsonl": "33de0b10ef96271fc895c066d2aa764a0ca28e87f99b3be29fada5e1b4c67b3d",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
 
-ALLOW_CDB_SCRIPT_PREFIXES = (
-    "tools/runtime-probes/",
-)
+ALLOW_CDB_SCRIPT_PREFIXES: tuple[str, ...] = ()
 
 DENY_SUFFIXES = (
     ".7z",
@@ -196,15 +190,9 @@ TEXT_DENY_PATTERNS = (
 
 TEXT_ALLOW_EXACT = {
     "tools/public_allowlist_safety_check.py",
-    "tools/repo_text_hygiene_check.py",
 }
 
-PAYLOAD_TEXT_ALLOW_EXACT = {
-    "tools/goodies_frontend_art_probe.py",
-    "tools/winui_frontend_color_runtime_artifact_check.py",
-    "tools/winui_msix_candidate_probe.py",
-    "tools/winui_safe_copy_local_multiplayer_visible_movement_delta_check.py",
-}
+PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 
 CDB_PROMPT_RE = re.compile(r"(?m)^\s*\d+:\d+>\s+")
 REGISTER_DUMP_RE = re.compile(
@@ -259,7 +247,11 @@ def public_candidate_files(root: Path, *, include_submodules: bool = False) -> l
     except subprocess.CalledProcessError as exc:
         stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else str(exc.stderr)
         raise RuntimeError(f"git ls-files failed for public candidate enumeration: {stderr.strip()}") from exc
-    paths = [path for item in result.stdout.decode("utf-8", errors="replace").split("\0") if (path := normalize(item))]
+    paths = [
+        path
+        for item in result.stdout.decode("utf-8", errors="replace").split("\0")
+        if (path := normalize(item)) and (root / path).exists()
+    ]
     if include_submodules:
         paths.extend(submodule_candidate_files(root))
     return sorted(set(paths))
@@ -726,9 +718,9 @@ def run_self_test() -> int:
                 print("- AYAResourceExtractor fixture fbx was rejected for a reason other than hash mismatch")
                 print(f"- findings: {findings!r}")
                 return 1
-        if any(finding.path == "tools/runtime-probes/allowed-observer.cdb.txt" for finding in findings):
+        if not any(finding.path == "tools/runtime-probes/allowed-observer.cdb.txt" for finding in findings):
             print("Public payload safety self-test: FAIL")
-            print("- allowed runtime probe command script was rejected")
+            print("- tracked CDB command scripts were not rejected")
             print(f"- findings: {findings!r}")
             return 1
     with tempfile.TemporaryDirectory() as tmp:

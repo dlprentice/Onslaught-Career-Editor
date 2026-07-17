@@ -221,7 +221,7 @@ Mapped helpers in the Steam build:
 | 0x0044b1d0 | `CGenericActiveReader__dtor` | Unregister helper (removes reader cell from `mToRead+0x04`) |
 | 0x004bac40 | `CMonitor__Shutdown` | Monitor shutdown/destructor: iterate `monitor+0x04` and null each reader cell (`*cell = NULL`), then clear+free the `CSPtrSet` |
 
-Binary-level details: `reverse-engineering/binary-analysis/functions/monitor.h/_index.md`
+Binary-level details: [`CMonitor__Process`](../../binary-analysis/functions/monitor.h/CMonitor__Process.md)
 
 ### Usage Throughout Codebase
 

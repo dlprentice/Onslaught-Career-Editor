@@ -113,7 +113,7 @@ namespace Onslaught___Career_Editor
                 new[]
                 {
                     "patches/README.md",
-                    "roadmap/mod-patch-runtime-rebuild-register.md",
+                    "reverse-engineering/binary-analysis/executable-analysis.md",
                     "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
                     "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
                 },
@@ -142,7 +142,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
                         },
                         new[]
@@ -171,7 +171,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/binary-analysis/version-overlay-patch.md",
                         },
                         new[]
@@ -193,7 +193,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
                         },
                         new[]
@@ -215,7 +215,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md",
                         },
                         new[]
@@ -237,7 +237,7 @@ namespace Onslaught___Career_Editor
                         "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
                         new[]
                         {
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/save-file/save-format.md",
                         },
                         new[]
@@ -266,7 +266,7 @@ namespace Onslaught___Career_Editor
                         new[]
                         {
                             "patches/README.md",
-                            "roadmap/mod-patch-runtime-rebuild-register.md",
+                            "reverse-engineering/binary-analysis/executable-analysis.md",
                             "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
                         },
                         new[]

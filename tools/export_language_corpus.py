@@ -3,7 +3,7 @@
 Batch export Battle Engine Aquila LANGUAGE/*.DAT into TSV/JSON plus a merged matrix.
 
 Default output root:
-    subagents/language_export_wave1_YYYY-MM-DD
+    .artifacts/language-export/YYYY-MM-DD
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument(
         "--out-dir",
         type=Path,
-        default=Path("subagents") / f"language_export_wave1_{date.today().isoformat()}",
+        default=Path(".artifacts") / "language-export" / date.today().isoformat(),
         help="Output directory for TSV/JSON/matrix exports",
     )
     return ap.parse_args()

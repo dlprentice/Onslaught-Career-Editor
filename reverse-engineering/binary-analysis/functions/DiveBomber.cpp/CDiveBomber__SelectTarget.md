@@ -16,7 +16,7 @@ AI target selection logic for dive bomber aircraft. Iterates through potential t
 void __thiscall CDiveBomber__SelectTarget(void * this, void * out_target_position);
 ```
 
-Wave800 gameplay object helpers read-back verified in `subagents/ghidra-static-reaudit/wave800-gameplay-object-helpers/post-metadata.tsv` (`status=OK`) with `gameplay-object-helpers-wave800` and `wave800-readback-verified` tags. The older no-argument return-pointer signature was incomplete: direct caller `0x004fd4d0 CCannon__SelectTarget` passes an output pointer at `0x004fd4e1`, and the decompile writes fallback center position through `CThing__GetCentrePos` when no higher-priority candidate is selected. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-070217_post_wave800_gameplay_object_helpers_verified`.
+The older no-argument return-pointer signature was incomplete: direct caller `0x004fd4d0 CCannon__SelectTarget` passes an output pointer at `0x004fd4e1`, and the decompile writes fallback center position through `CThing__GetCentrePos` when no higher-priority candidate is selected.
 
 ## Responsibilities
 

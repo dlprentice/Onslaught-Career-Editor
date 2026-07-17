@@ -63,7 +63,7 @@ namespace Onslaught___Career_Editor
         public const string BackupSuffix = ".original.backup";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
-        private const string ExpectedPatchCatalogSha256 = "283fe89355f3ffa017e1812709cd59c95d67fa991886f72636d1fd0001d624c8";
+        private const string ExpectedPatchCatalogSha256 = "9b42e35ba1f12f012300e569ea0be6e747c245d4c60403bee3e32c0b5857a582";
         private const string TargetFileName = "BEA.exe";
         private const string KnownRetailSteamSha256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750";
         private const long KnownRetailSteamSize = 2_506_752;

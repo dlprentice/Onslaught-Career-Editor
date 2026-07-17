@@ -17,8 +17,8 @@ Examples:
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya
     python tools/aya_archive_inventory.py game/data/resources --glob "*_res_PC.aya"
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --show-chunks 6
-    python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-tag TEXT --dump-tag MESH --dump-dir subagents/aya_dump
-    python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-index 255 --carve-from-tag CMSH --dump-dir subagents/aya_dump
+    python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-tag TEXT --dump-tag MESH --dump-dir .artifacts/aya-dump
+    python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-index 255 --carve-from-tag CMSH --dump-dir .artifacts/aya-dump
 """
 
 from __future__ import annotations

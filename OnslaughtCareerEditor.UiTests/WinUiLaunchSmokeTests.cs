@@ -116,7 +116,7 @@ public class WinUiLaunchSmokeTests
 
     private static string PrepareIsolatedAppData()
     {
-        string appDataDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-launch-smoke", "appdata");
+        string appDataDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-launch-smoke", "appdata");
         string configDir = Path.Combine(appDataDir, "OnslaughtCareerEditor");
         Directory.CreateDirectory(configDir);
         File.WriteAllText(

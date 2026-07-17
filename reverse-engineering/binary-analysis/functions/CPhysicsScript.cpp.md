@@ -69,5 +69,4 @@ Final read-back verified `5/5` metadata rows, `5/5` decompile exports, `5` xref 
 
 - [PhysicsScript static contract](../physics-script-static-contract.md)
 - [CPhysicsScriptStatements.cpp](CPhysicsScriptStatements.cpp.md)
-- [SPtrSet.cpp](SPtrSet.cpp/_index.md)
-- [WorldPhysicsManager.cpp](WorldPhysicsManager.cpp/_index.md)
+- [Retained function index](_index.md)

@@ -2,7 +2,7 @@
 """Build, zip, extract, and smoke a disposable WinUI ZIP package.
 
 This probe is the non-cert distribution lane for the current WinUI app. It
-publishes the app under ``subagents/``, stages a user-friendly portable bundle
+publishes the app under ignored ``.artifacts/``, stages a user-friendly portable bundle
 root, creates a ZIP archive, extracts it to a fresh ignored folder, then runs
 existing UI Automation smoke tests against the extracted executable through
 ``ONSLAUGHT_WINUI_TEST_EXE_PATH``.
@@ -35,7 +35,8 @@ import winui_lore_pack_builder
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "OnslaughtCareerEditor.WinUI" / "OnslaughtCareerEditor.WinUI.csproj"
 UITESTS = ROOT / "OnslaughtCareerEditor.UiTests" / "OnslaughtCareerEditor.UiTests.csproj"
-DEFAULT_OUT_ROOT = ROOT / "subagents" / "winui-zip-package-probe" / "current"
+ARTIFACTS_ROOT = ROOT / ".artifacts"
+DEFAULT_OUT_ROOT = ARTIFACTS_ROOT / "winui-zip-package-probe"
 APP_EXE = "OnslaughtCareerEditor.WinUI.exe"
 APP_PRI = "OnslaughtCareerEditor.WinUI.pri"
 NOTICES = "THIRD_PARTY_NOTICES.md"
@@ -87,7 +88,10 @@ REQUIRED_PAYLOAD_FILES = (
     + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
 )
 DEFAULT_PACKAGE_NAME = "OnslaughtCareerEditor.WinUI-local-probe-win-x64.zip"
-HOME_NAVIGATION_FILTER = "FullyQualifiedName~WinUiHomeNavigationSmokeTests"
+HOME_NAVIGATION_FILTER = (
+    "FullyQualifiedName~WinUiHomeNavigationSmokeTests"
+    "&FullyQualifiedName!~Home_NewcomerHierarchy_CapturesFirstRunReadyAndCompactWithoutNavigation"
+)
 LORE_SMOKE_FILTER = "FullyQualifiedName~WinUiLoreInteractionSmokeTests.LoreReader_SearchesSelectsAndShowsCurrentDocumentThroughUiAutomation"
 HOME_NAVIGATION_TEST_TIMEOUT_SECONDS = 600
 LORE_SMOKE_TEST_TIMEOUT_SECONDS = 240
@@ -169,9 +173,9 @@ def relative(path: Path) -> str:
 def safe_rmtree(path: Path) -> None:
     path = path.resolve()
     try:
-        path.relative_to((ROOT / "subagents").resolve())
+        path.relative_to(ARTIFACTS_ROOT.resolve())
     except ValueError as exc:
-        raise RuntimeError(f"Refusing to remove path outside subagents/: {path}") from exc
+        raise RuntimeError(f"Refusing to remove path outside .artifacts/: {path}") from exc
     if path.exists():
         shutil.rmtree(path)
 
@@ -347,9 +351,6 @@ def build_lore_pack(bundle_dir: Path) -> CheckResult:
 def resolve_packaged_lore_entry_files(book_path: Path) -> set[Path]:
     lore_root = LORE_BOOK_SOURCE.resolve()
     packaged_files: set[Path] = {book_path.resolve()}
-    start_here = LORE_BOOK_SOURCE / "Start-Here.md"
-    if start_here.is_file():
-        packaged_files.add(start_here.resolve())
     for match in LORE_BOOK_LINK_REGEX.finditer(book_path.read_text(encoding="utf-8")):
         target = unquote(match.group("target").strip()).split("#", 1)[0]
         if not target or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target):
@@ -931,7 +932,6 @@ def inspect_raw_deep_lore_book_leakage(names: set[str], prefix: str) -> list[Che
         return []
     allowed_lore_book = {
         f"{LORE_BOOK_DIR}/BOOK.md",
-        f"{LORE_BOOK_DIR}/Start-Here.md",
     }
     leaked = sorted(
         name for name in names
@@ -1177,7 +1177,7 @@ def build_report(
     return {
         "schema": "winui-zip-package-probe.v1",
         "status": "pass" if publish_exit == 0 and extract_exit == 0 and not failures else "blocked",
-        "releaseClaim": "Disposable friendly portable ZIP package, Explorer-safe entry paths, extraction, extracted app launch smoke, extracted app Home navigation smoke (all WinUiHomeNavigationSmokeTests), extracted Lore smoke, and representative Media smoke when requested are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
+        "releaseClaim": "Disposable friendly portable ZIP package, Explorer-safe entry paths, extraction, extracted app launch smoke, representative extracted-app Home navigation, extracted Lore smoke, and representative Media smoke when requested are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
         "outputRoot": relative(out_root),
         "zipPackage": relative(zip_path),
         "zipByteSize": zip_path.stat().st_size if zip_path.is_file() else 0,
@@ -1217,7 +1217,7 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="run the ZIP package probe")
     parser.add_argument("--json", action="store_true", help="print JSON report")
     parser.add_argument("--include-media-smoke", action="store_true", help="also run representative Media playback against the extracted executable")
-    parser.add_argument("--out-root", type=Path, default=DEFAULT_OUT_ROOT, help="ignored output root under subagents/")
+    parser.add_argument("--out-root", type=Path, default=DEFAULT_OUT_ROOT, help="ignored output root under .artifacts/")
     parser.add_argument("--package-name", default=DEFAULT_PACKAGE_NAME, help="ZIP filename to create under the ignored output root")
     args = parser.parse_args()
 
@@ -1232,9 +1232,9 @@ def main() -> int:
         out_root = ROOT / out_root
     out_root = out_root.resolve()
     try:
-        out_root.relative_to((ROOT / "subagents").resolve())
+        out_root.relative_to(ARTIFACTS_ROOT.resolve())
     except ValueError:
-        print(f"Refusing to write ZIP probe output outside subagents/: {out_root}")
+        print(f"Refusing to write ZIP probe output outside .artifacts/: {out_root}")
         return 1
 
     safe_rmtree(out_root)

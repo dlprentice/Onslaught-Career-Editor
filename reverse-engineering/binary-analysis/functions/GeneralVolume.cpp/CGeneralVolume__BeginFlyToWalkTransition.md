@@ -5,7 +5,7 @@
 ## Status
 
 - Named in Ghidra: yes
-- Fresh read-back: `release/readiness/ghidra_cockpit_volume_unitai_signature_correction_2026-05-11.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Saved signature: `void __fastcall CGeneralVolume__BeginFlyToWalkTransition(void * this)`
 - Runtime behavior proof: not yet
 - Exact source-file identity: not yet

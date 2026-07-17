@@ -1,3 +1,0 @@
-bp 00421200 ".printf \"CCareer__Load this=%p src=%p size=%x flag=%x\\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0c); g"
-bp 00461E20 ".printf \"CFEPLoadGame__DoLoad this=%p\\n\", @ecx; g"
-g

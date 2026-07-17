@@ -67,4 +67,4 @@ Before any serious runtime-validation wave:
 1. regenerate or re-check the specimen manifest,
 2. note whether `installed_live_bea_exe` matches `clean_repo_bea_exe`,
 3. record the exact specimen keys used by the probe session,
-4. write resulting notes/logs under `subagents/` with a date- and task-scoped filename.
+4. write resulting notes/logs under ignored `.artifacts/` with a date- and task-scoped filename.

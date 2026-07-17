@@ -94,8 +94,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 "Loading lore library...",
                 "Refreshing the offline document tree and embedded reader.");
             LibrarySummaryTextBlock.Text = "Loading lore library...";
-            LibraryCountTextBlock.Text = "Scanning lore-book...";
-            PaneStateTextBlock.Text = "Scanning lore-book...";
+            LibraryCountTextBlock.Text = "Indexing included documents...";
+            PaneStateTextBlock.Text = "Indexing included documents...";
             AppStatusService.SetStatus("Lore: loading library");
 
             string? restorePath = preserveCurrentDocument ? _currentSourcePath : null;
@@ -115,7 +115,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ? "Offline Lore library ready."
                     : _index.UsingLoreBook
                         ? "Offline Lore entry guide ready."
-                        : "Fallback Lore index loaded.";
+                        : "Repository Lore library ready.";
 
                 ApplyTreeFilter(updateSelection: false);
 
@@ -708,7 +708,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ? "Showing included offline documents; Source and External links open in your browser."
                     : _index.UsingLoreBook
                         ? "Showing included Lore chapters; Source and External links open in your browser."
-                        : "Showing the fallback Lore scan.";
+                        : "Showing canonical Lore documents from this source checkout.";
             }
             else
             {
@@ -778,7 +778,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (_documentLookup.TryGetValue(fullPath, out LoreDocument? document) &&
                 !string.IsNullOrWhiteSpace(document.RelativePath))
             {
-                return $"Reading {document.RelativePath} from the offline Lore library.";
+                return $"Reading {document.Title} from the offline Lore library.";
             }
 
             string fileName = IsLorePackSourcePath(fullPath)

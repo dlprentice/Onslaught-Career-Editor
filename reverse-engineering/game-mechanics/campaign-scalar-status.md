@@ -1,6 +1,8 @@
 # Campaign scalar status (human front door)
 
-Machine report: `npm run report:battleengine-campaign-scalar-status`
+This summary is maintained directly from the accepted scalar policy documents
+in this directory; retired generated status reports are available in Git
+history.
 
 ## Dual-accepted → Core
 
@@ -35,8 +37,6 @@ observation with symmetric energy/shield correlation and input-not-owned
 cleanup. This is runner readiness only, not a retail shield-rate claim.
 
 ## Offline-only harness catalog
-
-Machine: `tools/battleengine_measure_mode_catalog.py` → `OFFLINE_HARNESS_ROWS`
 
 | Mode | Module |
 |------|--------|

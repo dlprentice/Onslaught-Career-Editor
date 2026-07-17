@@ -65,7 +65,7 @@ Wave619 hardened the contiguous import-thunk island from `0x0055d5e0` through `0
 - DirectSound/VFW/Version signatures: local Windows SDK headers (`dsound.h`, `Vfw.h`, `winver.h`).
 - zlib signatures: local repo/reference zlib header evidence.
 - Ogg/Vorbis signatures: local Ogg/Vorbis header evidence.
-- IAT slots, thunk bytes, and xrefs: saved Ghidra post-Wave619 exports under `subagents/ghidra-static-reaudit/wave619-import-thunks/`.
+- IAT slots, thunk bytes, and xrefs: current saved Ghidra metadata summarized in this document.
 
 ## Queue Note
 

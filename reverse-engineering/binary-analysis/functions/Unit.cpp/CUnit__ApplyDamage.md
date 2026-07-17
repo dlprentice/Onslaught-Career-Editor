@@ -7,7 +7,7 @@
 - **Saved Ghidra name:** `CUnit__ApplyDamage`
 - **Saved Ghidra signature:** `void __thiscall CUnit__ApplyDamage(void * this, float damage_amount, void * damage_source, int apply_shields, int mesh_part_index)`
 - **Latest correction:** Wave835 CUnit ApplyDamage (`cunit-apply-damage-wave835`, `wave835-readback-verified`)
-- **Read-back evidence:** `release/readiness/ghidra_cunit_apply_damage_wave835_2026-05-25.md`
+- **Static authority:** [Ghidra reference](../../GHIDRA-REFERENCE.md)
 
 ## Purpose
 

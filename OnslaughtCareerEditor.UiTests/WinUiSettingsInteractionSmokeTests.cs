@@ -33,7 +33,7 @@ public class WinUiSettingsInteractionSmokeTests
         }
 
         string expectedFolderName = Path.GetFileName(gameDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-settings-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-settings-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir);
         var startInfo = new ProcessStartInfo(exePath)

@@ -138,7 +138,7 @@
   ],
   "evidencePaths": [
     "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json",
-    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-decisions-2026-07-13.jsonl",
+    "reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json",
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md",
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md",
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__AddProjectile.md",

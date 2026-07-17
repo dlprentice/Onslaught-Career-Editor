@@ -1,245 +1,120 @@
 # Onslaught Toolkit
 
-Onslaught Toolkit is a Battle Engine Aquila (2003) preservation,
-reconstruction, and enhancement project. Its WinUI 3 app is the **community
-front door** for saves/options, safe-copy patching and modding, media/Lore, and
-future reconstruction workflows. The GPL-licensed [`rebuild/`](rebuild/README.md)
-is a first-class **playable reconstruction** companion, separate by
-architecture and license but part of the same product strategy. **Retail
-enhancements**—including meaningful copied-target tools, patches/mods, and
-evidence-gated multiplayer progress—are the third deliberate outcome. Neither
-the toolkit nor the reconstruction replaces or modifies the installed retail
-game.
+Onslaught Toolkit is a preservation, tooling, and original-code reconstruction
+project for *Battle Engine Aquila* (2003). The primary product is a WinUI 3
+Windows app for inspecting and safely editing real save/options files, preparing
+copied game profiles, applying evidence-backed patches to copied executables,
+and browsing locally supplied media, catalogs, and project lore.
 
-In short: WinUI is the community front door, `rebuild/` is the playable reconstruction, and retail enhancements are a deliberate shipping outcome.
+The toolkit never replaces or mutates the installed retail game. The
+GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
+original-code implementation with deterministic Core behavior and a small
+playable Godot client; it does not contain proprietary game content and does not
+claim retail parity.
 
-This public repository is the primary collaboration and day-to-day working
-checkout. The former maintainer-only tree has been folded into this repo as
-project history and working material: source, tools, RE docs, wave notes,
-readiness notes, and structured proof summaries should live here
-when they are useful to contributors. Ignored local overlays are only for hard
-payloads such as actual game installs, copied executables, private media/input
-files, full Ghidra project stores/backups, secrets, build output, and bulky
-generated runtime captures. See [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md).
+## Active surfaces
 
-Detailed static RE status is intentionally not duplicated in this README. Use
-[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and the static measurement
-registers under `reverse-engineering/binary-analysis/`, especially
-[static-reaudit-measurement-register.md](reverse-engineering/binary-analysis/static-reaudit-measurement-register.md),
-for current accounting.
+| Path | Owner |
+| --- | --- |
+| `OnslaughtCareerEditor.WinUI/` | Primary Windows user experience |
+| `OnslaughtCareerEditor.AppCore/` | Save, options, safe-copy, patch, media, catalog, and lore correctness |
+| `OnslaughtCareerEditor.Cli/` | Supported C# inspection and patch-planning CLI |
+| `rebuild/` | GPL RE-informed deterministic reconstruction |
+| `reverse-engineering/` | Provenance-bounded technical evidence and format notes |
+| `lore/` | Canonical public lore/history library |
+| `tools/` | Focused extraction, validation, release, Ghidra, and copied-runtime helpers |
 
-For the current feature surface, navigation order, Save Lab workflows, static-RE posture, and lane gates, see **[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)**.
+Retired Electron, Python GUI, WPF, generated readiness waves, and mirrored
+documentation remain available in Git history; they are not current source
+lanes. [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) describes what the
+current product does and what remains unproven.
 
-For Battle Engine Aquila story, characters, and studio history, use the
-[Lore Index](lore/_index.md) for lore/history navigation, the
-[Onslaught Lore Book](lore-book/BOOK.md) for the curated reading map, and the
-[RE Index](reverse-engineering/RE-INDEX.md) for technical research. Offline-pack
-inclusion and document counts do not establish canon, editorial review,
-provenance review, rights review, freshness, completeness, or public-safety
-clearance.
+## Build and run
 
-## Download
+Requirements:
 
-Downloadable app builds are published on the
-[GitHub Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases)
-page as unsigned portable Windows x64 ZIP assets with SHA-256 checksum sidecars.
-Extract the full ZIP and run `Launch Onslaught Toolkit.cmd` from the clean
-top-level folder. The app payload lives under `app\`; run
-`app\OnslaughtCareerEditor.WinUI.exe` only as a fallback. Use `v1.0.9` or newer;
-it keeps the Explorer-safe ZIP layout introduced after `v1.0.3`/`v1.0.4`, labels
-browser-opening Lore links clearly, and includes a generated offline Lore
-content pack.
+- Windows 10 or 11
+- .NET 10 SDK for WinUI/AppCore/CLI and .NET 8 for the rebuild
+- Node.js 24.x with npm 11.12.x
+- Python 3 through the Windows `py` launcher
+- PowerShell 7 for rebuild tooling
 
-The ZIP release does not include Battle Engine Aquila game files, copied
-executables, saves, media payloads, full Ghidra databases, or bulky generated
-proof captures. Published `v1.0.9` keeps `lore-book\BOOK.md` as a short entry
-point and adds `lore-pack\onslaught-lore.v1.jsonl` plus
-`lore-pack\onslaught-lore.v1.index.json` with 949 tracked Markdown/TXT
-documents selected from the Lore, roadmap, and technical RE corpus, so the app
-can search and read broad offline material without raw deep `lore-book/`
-filenames breaking normal Explorer extraction. The count is a packaging fact,
-not a claim of narrative completeness, editorial review, freshness,
-provenance/rights review, or broad public-safety approval. Its ZIP SHA-256 is
-`e09439c40a4ff7197c4151e18651388b2515a71950ea2479b01266c00d918519`, with a
-published checksum sidecar. v1.0.9 also improves first-time-user wording around
-write/copy/shell actions and confirms before the app closes or force-stops a
-managed copied-game process. External references may still open in the browser.
-Media and safe copied-game workflows use your own retail/Steam install.
-Asset Library loads generated local asset catalogs; the ZIP does not bundle
-game assets or generate catalogs in-place. Catalog generation is a source/lab
-workflow documented under `reverse-engineering/game-assets/`. Patching
-workflows operate on copied files and safe game copies.
-
-For contributor setup, local validation expectations, hard-payload boundaries, and PR-ready change rules, see **[CONTRIBUTING.md](CONTRIBUTING.md)**.
-
-For asset-leak, copied-executable safety, secrets, and future online-session reporting rules, see **[SECURITY.md](SECURITY.md)**.
-
-**Contributor base:** use this public repository unless a maintainer explicitly
-assigns a separate branch or short-lived workspace. Local lab inputs are
-supported through ignored overlay folders when they are actual game payloads,
-secrets, copied runtime output, or other non-source artifacts. Portable ZIP
-publication, source pushes, signing, installer release, and announcement are
-separate maintainer actions. Signed installer-grade MSIX trust/install remains a
-future proof, not a current release claim.
-
-Retired Electron, Python GUI/CLI, and WPF implementations remain available in
-Git history. They are not source lanes or shipped content.
-
-## Active Layout
-
-| Surface | Status | Notes |
-|---|---|---|
-| `OnslaughtCareerEditor.WinUI` | Primary product lane | WinUI 3 Windows app for normal user workflows |
-| `OnslaughtCareerEditor.AppCore` | Shared correctness/core support | Save/options/patch/media/lore/asset-catalog behavior for the Windows lane |
-| `OnslaughtCareerEditor.AppCore.Tests` | Active tests | Core regression coverage |
-| `OnslaughtCareerEditor.UiTests` | Active tests | WinUI product-lane, static, contrast, and launch-smoke coverage |
-| `OnslaughtCareerEditor.Cli` | Active C# support CLI | Supported analyzer/patcher CLI for Windows/AppCore workflows |
-| `OnslaughtCareerEditor.AppCore.Host` | Support/reference bridge | JSON/stdio diagnostics including save patch plans and public-safe asset model preview coverage |
-| `rebuild` | Active RE-informed rebuild | GPL deterministic Core/headless verifier plus the playable procedural Godot First Flight client; no retail payload or parity claim |
-| `tools` | Active tooling | Release, docs, RE, extraction, validation, Ghidra/CDB, and local utility scripts |
-
-## Quick Start
-
-The normal WinUI/AppCore path does not require a game install, Git submodules,
-or `npm install`. From repo root:
+From the repository root:
 
 ```powershell
-dotnet --version # must be .NET SDK 10.x
-dotnet --list-runtimes # must include Microsoft.NETCore.App 8.x for rebuild tests/host
-node --version # must be v24.x
-npm --version  # must satisfy >=11.12 <12; npm@11.12.1 is the packageManager target
-py -3 --version
 npm test
 npm run dev
 ```
 
-`npm test` is the active-product quick check: validation-profile accounting,
-current docs and public-core links, generated-output safety, one complete WinUI
-solution build followed by AppCore/WinUI tests from that build, and deterministic
-rebuild Core/client/toolchain-contract tests. It does not run whole-tree payload
-or hygiene scans, historical proof sweeps, Ghidra, or native Godot.
-`npm run dev` launches the WinUI app. Both commands use the tools already
-installed on the machine; no dependency install is required. Root
-`package.json` is the command authority. Use [VALIDATION.md](VALIDATION.md) for measured gate costs,
-the change-class matrix, and the machine-readable script inventory command.
+`npm test` builds and tests the active WinUI/AppCore lane once, then runs the
+deterministic rebuild Core tests. It deliberately excludes native Godot,
+release packaging, Ghidra, private runtime evidence, and historical accounting.
+Use the smallest focused command for narrower work:
 
-To play the original-code rebuild prototype, double-click
-`rebuild\Launch First Flight.cmd` or run `npm run run:rebuild-godot`. The first
-launch downloads and verifies the pinned official Godot 4.7 .NET archive (about
-114 MB) in a per-user cache; later launches reuse the verified cache. First
-Flight needs no Battle Engine Aquila installation or proprietary game content.
-Use WASD to move, Space to fire, Q to transform, R to reset, and Esc to exit.
-The resizable window starts at 1280x720 and has a supported 1200x675 minimum.
-It is a small playable RE-informed prototype, not retail gameplay/visual parity
-and not a strict clean-room implementation.
-
-`npm run test:hard-payload-safety` checks that tracked files do not include
-actual copied game/runtime binaries, known local game payload roots, build
-outputs, `.env` files, or credential-like key material. It does not censor raw
-RE notes or proof summaries.
-
-A fresh clone can build the source, run AppCore/WinUI tests, and inspect docs
-without a local game install, Ghidra database, or private proof archive.
-Initialize submodules only before running public allowlist/release-safety gates
-because those gates also inspect reference submodule boundaries. A local
-Battle Engine Aquila install is only needed for game-aware workflows such as
-Media browsing, safe-copy patching, asset extraction, and live runtime proof.
-
-Use the
-[repository authority map](roadmap/repo-structure-and-archive-map.md) before
-editing mirrors, generated material, or release history.
-
-Core public-source validation:
-
-<!-- public-package-commands:start -->
 ```powershell
-npm run test:winui-primary-lane
-npm run test:winui-safe-copy-preflight
-npm run test:winui-patch-engine-safety
-npm run build:host
-dotnet run --project .\OnslaughtCareerEditor.Cli\OnslaughtCareerEditor.Cli.csproj -- --help
-npm run test:rebuild
+npm run test:appcore
+npm run test:ui
+npm run test:safe-copy
+npm run test:cli
+npm run test:docs
+npm run test:safety
+npm run test:rebuild-core
 ```
-<!-- public-package-commands:end -->
 
-Public sign-off commands live in
-[PUBLIC_SIGNOFF_COMMANDS.md](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
-Runtime proof aggregates may require ignored local overlays for copied
-executables, frames, captures, or full debugger logs. Track compact proof
-summaries and checkers; keep the bulky generated payloads local or archived
-outside git.
+Root [`package.json`](package.json) is the command authority. See
+[`VALIDATION.md`](VALIDATION.md) for proportional command selection and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution boundaries.
 
-Repo/docs/release safety checks:
+The First Flight rebuild can be launched independently:
 
-<!-- public-package-commands:start -->
 ```powershell
-npm run test:doc-commands
-npm run test:md-links
-npm run test:public-allowlist
-npm run test:repo-hygiene
-npm run test:winui-notices
+npm run run:rebuild-godot
 ```
-<!-- public-package-commands:end -->
 
-`npm run test:md-links` may write generated reports under `.artifacts/md-link-check`; use it for validation, but do not treat generated report payloads as app release assets.
+Its first run downloads and verifies the pinned Godot .NET archive into a
+per-user cache. It does not require a retail game install.
 
-## Retired Apps
+## Data and mutation safety
 
-Historical Electron, Python GUI/CLI, and WPF implementations are available in
-Git history. WinUI/AppCore is the only current application lane.
+- Never synthesize `.bes` saves from scratch. Start from a real baseline and
+  preserve file length, reserved fields, and unknown bytes.
+- Never patch an installed `BEA.exe`. Executable changes are allowed only on a
+  verified copied target or an app-created safe game copy.
+- Keep game binaries, extracted assets, real saves, full Ghidra projects,
+  debugger transcripts, private captures, secrets, and build output out of Git.
+- Asset and media workflows consume user-supplied local inputs. Passing a
+  parser or export check does not grant redistribution rights.
+- Online multiplayer is not player-ready. The app exposes a local split-screen
+  copied-profile preset only; Host/Join remains unavailable.
 
-## Safety Rules
+The tracked regression fixture
+`tests_shared/fixtures/gold_career_save.bin` is the reviewed narrow exception to
+the no-save-payload rule. See [`SECURITY.md`](SECURITY.md) and
+[`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) for handling local inputs.
 
-- Never create `.bes` career files from scratch.
-- Treat retail `BEA.exe` and real save/options files as authoritative.
-- Patch only copied targets for executable mutation workflows.
-- Online multiplayer is not available yet. The app offers a local split-screen launch preset for safe copies; Host/Join controls stay hidden or disabled and are never advertised as player-ready.
-- Preserve file size, reserved bytes, and unknown regions unless the behavior is explicitly documented.
-- Keep actual game/media/save payloads and bulky generated proof captures out of git and out of public release ZIPs.
+## Evidence and provenance
 
-## Requirements
+[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the
+technical evidence front door. Static analysis proves only the identities and
+structures it directly demonstrates; controlled copied-runtime work is needed
+for observed behavior and measured values. Stuart's source and the pinned
+[`references/Onslaught`](references/Onslaught) submodule are source references,
+not proof of Steam behavior or exact source identity.
 
-- Windows 10/11 for WinUI 3.
-- .NET 10 SDK for WinUI/AppCore/C# CLI, plus the .NET 8 SDK/runtime for the
-  rebuild Core, tests, headless host, and Godot .NET client.
-- PowerShell 7 (`pwsh`) for rebuild toolchain contract tests and the npm Godot
-  setup/build/run/smoke commands.
-- Node.js 24.x and npm `>=11.12 <12` for repo commands. The tracked `packageManager` target is `npm@11.12.1`.
-- Python 3 with the Windows `py` launcher for public-safe tooling checks.
-- A valid Battle Engine Aquila installation for game-aware workflows.
+The canonical lore library begins at [`lore/_index.md`](lore/_index.md).
+[`lore-book/BOOK.md`](lore-book/BOOK.md) is a short reading guide, not a mirror.
+Release candidates generate an ignored short-path offline pack from those
+canonical inputs.
 
-Common Steam path:
+## Releases and licenses
 
-- `C:\Program Files (x86)\Steam\steamapps\common\Battle Engine Aquila`
+Published unsigned portable Windows ZIPs, when available, are on
+[GitHub Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases).
+The source checkout may be newer than the latest published asset. Building a
+candidate does not publish, sign, install, or announce it; see
+[`README.RELEASE.md`](README.RELEASE.md).
 
-## Reverse Engineering Status
-
-- Static docs summarize static status at a bounded level. Static status is
-  not runtime gameplay proof, exact layout proof, patch behavior proof, visual
-  proof, online play, or rebuild parity.
-- Use the tracked static measurement registers for current percentages, debt
-  counters, current-risk progress, latest backup pointers, and
-  completion-target accounting.
-
-## Core Docs
-
-- [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md)
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [SECURITY.md](SECURITY.md)
-- [roadmap/ROADMAP-INDEX.md](roadmap/ROADMAP-INDEX.md)
-- [roadmap/public-roadmap.md](roadmap/public-roadmap.md)
-- [roadmap/three-lane-product-strategy.md](roadmap/three-lane-product-strategy.md)
-- [roadmap/winui-ui-ux-redesign-radar.md](roadmap/winui-ui-ux-redesign-radar.md)
-- [roadmap/repo-structure-and-archive-map.md](roadmap/repo-structure-and-archive-map.md)
-- [RELEASE_SCOPE_AND_TEST_COMMANDS.md](RELEASE_SCOPE_AND_TEST_COMMANDS.md)
-
-## License
-
-The toolkit code, docs, and tooling are MIT-licensed; see [LICENSE](LICENSE).
-The [`rebuild/`](rebuild/README.md) subtree is separately licensed
-GPL-3.0-or-later, as is the `references/Onslaught` source submodule under its
-own license. The root MIT license does not relicense either GPL subtree.
-
-Battle Engine Aquila, its executable, media, saves, screenshots, extracted
-assets, trademarks, and third-party runtime components are not licensed by
-this repository.
+Repository licensing, third-party notices, source attribution, and the rebuild
+GPL boundary remain authoritative in [`LICENSE`](LICENSE),
+[`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md),
+and [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md).

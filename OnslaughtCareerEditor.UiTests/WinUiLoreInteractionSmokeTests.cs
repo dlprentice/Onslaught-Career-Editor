@@ -26,7 +26,7 @@ public class WinUiLoreInteractionSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-lore-reader-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-lore-reader-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir);
         var startInfo = new ProcessStartInfo(exePath)

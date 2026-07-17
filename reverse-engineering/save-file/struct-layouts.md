@@ -338,7 +338,7 @@ The console port uses BASE_VERSION=17. The internal PC build used 9.
 - [grade-system.md](grade-system.md) - Ranking calculation
 - [kill-tracking.md](kill-tracking.md) - Kill categories and thresholds
 - [../binary-analysis/functions/_index.md](../binary-analysis/functions/_index.md) - Function catalog
-- [../binary-analysis/README.md](../binary-analysis/README.md) - Binary analysis overview
+- [../binary-analysis/_index.md](../binary-analysis/_index.md) - Binary analysis overview
 
 ---
 

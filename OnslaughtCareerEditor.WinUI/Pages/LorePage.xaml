@@ -20,7 +20,7 @@
                        AutomationProperties.AutomationId="LorePageTitle"
                        AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Read included Lore documents offline with searchable navigation and document history. Source and External links open in your browser."
+            <TextBlock Text="Explore Battle Engine Aquila's world, characters, development history, and preservation research."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <TextBlock x:Name="LoreSourceBoundaryStatusTextBlock"
                        AutomationProperties.AutomationId="LoreSourceBoundaryStatus"

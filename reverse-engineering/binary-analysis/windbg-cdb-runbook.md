@@ -1,186 +1,72 @@
-# WinDbg/CDB Runbook
+# WinDbg/CDB copied-target runbook
 
-> Minimal runtime-validation workflow for BEA.exe
-> Date: 2026-03-14
+Use this workflow only for a copied `BEA.exe` launched from an app-owned profile. Never attach these helpers to the installed game directory.
 
-## Purpose
+## Prepare a bounded session
 
-This is the first durable runtime-debugging runbook for the retail Steam build.
+1. Confirm the retail specimen against [retail-specimen-baseline.md](retail-specimen-baseline.md) and [retail-specimen-manifest-2026-03-14.json](retail-specimen-manifest-2026-03-14.json):
 
-It is intentionally narrow:
+   ```powershell
+   py -3 tools\hash_retail_specimens.py
+   ```
 
-- pin the specimen first,
-- use `CDB` server/client mode,
-- log to a file,
-- tail the log incrementally,
-- probe only the highest-value unresolved runtime questions.
+2. Create one ignored, task-scoped command directory under `.artifacts/`:
 
-## Current Workstation Reality
+   ```powershell
+   New-Item -ItemType Directory -Force .artifacts\cdb\session | Out-Null
+   ```
 
-As of 2026-03-14 on this workstation:
+3. Put only the commands needed for this observation in `.artifacts\cdb\session\observer.cdb.txt`. Command files are deliberately not tracked; the evidence record should state the exact commands used.
 
-- `cdb.exe` is still **not** on `PATH` in older shells
-- the standard Windows Kits paths checked during this pass were absent:
-  - `C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe`
-  - `C:\Program Files\Windows Kits\10\Debuggers\x86\cdb.exe`
-- Microsoft WinDbg is now installed and exposes the x86 debugger here:
-  - `C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2601.12001.0_x64__8wekyb3d8bbwe\x86\cdb.exe`
+4. Identify the copied-profile process with `tools/list_game_windows.ps1`, then attach by exact PID and identity:
 
-That means live sessions can run now, but helper scripts should be preferred over bare `cdb.exe` invocations so the path resolution stays stable.
+   ```powershell
+   $profilesRoot = (Resolve-Path .artifacts\profiles).Path
+   $profile = (Resolve-Path .artifacts\profiles\<profile-name>).Path
+   $commandRoot = (Resolve-Path .artifacts\cdb\session).Path
 
-## First Step: Pin The Specimen
+   powershell -ExecutionPolicy Bypass -File .\tools\start_cdb_server.ps1 `
+     -ProcessId <managed-bea-pid> `
+     -AppOwnedProfilesRoot $profilesRoot `
+     -ExpectedExecutablePath (Join-Path $profile BEA.exe) `
+     -ExpectedWorkingDirectory $profile `
+     -CommandFile (Join-Path $commandRoot observer.cdb.txt) `
+     -AllowedCommandRoot $commandRoot `
+     -LogPath (Join-Path $commandRoot windbg.log)
+   ```
 
-Before attaching:
+`start_cdb_server.ps1` refuses process-name attachment by default, verifies the copied executable and working directory, and requires an explicit allowed root for debugger commands. Keep remote-server mode off unless that separate surface is the subject of a deliberate security review.
 
-```powershell
-py -3 tools\hash_retail_specimens.py
-```
+## Useful breakpoint recipes
 
-Use the current [retail-specimen-baseline.md](retail-specimen-baseline.md) and
-[retail-specimen-manifest-2026-03-14.json](/reverse-engineering/binary-analysis/retail-specimen-manifest-2026-03-14.json)
-as the authority for which executable and supporting files the session is about.
+These addresses and calling-shape inferences apply only to the pinned retail specimen.
 
-If the installed live executable does not match the clean repo mirror, say so explicitly in the session notes. Do not silently treat a patched live binary as the clean retail authority.
-
-## Recommended Session Layout
-
-Use a task-scoped scratch folder under `subagents/`, for example:
-
-```text
-subagents/2026-03-14-runtime-defaultoptions-wave1/
-```
-
-Suggested contents:
-
-- `windbg.log`
-- `windbg.cursor`
-- `session-notes.md`
-- any breakpoint command files or probe outputs
-
-## Helper Scripts
-
-Prefer these helpers instead of typing the WindowsApps path manually:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\get_cdb_path.ps1 -AsLiteral
-powershell -ExecutionPolicy Bypass -File .\tools\start_cdb_server.ps1 -CommandFile .\tools\runtime-probes\defaultoptions-wave1.cdb.txt
-powershell -ExecutionPolicy Bypass -File .\tools\connect_cdb_client.ps1
-```
-
-For copied-profile runtime proof, prefer exact-PID attach after `tools/list_game_windows.ps1` identifies the managed BEA window:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\start_cdb_server.ps1 -ProcessId <managed-bea-pid> -CommandFile .\tools\runtime-probes\defaultoptions-wave1.cdb.txt
-```
-
-The helper defaults to a local attached logger because the current WinDbg/CDB package exits before opening the log when `-server` is combined directly with an attach target. Use `-EnableRemoteServer` only for a separately proven server/client workflow. The helper fails if multiple name-matched BEA processes are running, if the requested PID is not the expected process, or if CDB cannot create the requested log before input begins. Treat a missing debugger log as a setup failure, not runtime behavior evidence.
-
-Use simple alphanumeric or underscore-only server passwords. CDB can exit before opening the log when the TCP server password contains punctuation.
-
-Current canned probe command files:
-
-- `tools/runtime-probes/defaultoptions-wave1.cdb.txt`
-- `tools/runtime-probes/maladim-wave1.cdb.txt`
-
-## Server / Client Pattern
-
-Assuming `cdb.exe` is available:
-
-### 1. Start the game normally
-
-Reach the state you want to probe, or leave it at boot if the probe target is startup/load behavior.
-
-### 2. Attach a long-lived server
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\start_cdb_server.ps1 -CommandFile .\tools\runtime-probes\defaultoptions-wave1.cdb.txt
-```
-
-### 3. Connect a client
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\connect_cdb_client.ps1
-```
-
-### 4. Tail the server log incrementally
-
-```powershell
-py -3 tools\windbg_tail.py --log C:\temp\bea-windbg.log
-```
-
-Use `--reset` when starting a fresh read window.
-
-## First Probe Targets
-
-These are the highest-value immediate targets from the current repo state:
-
-1. `CCareer__Load` at `0x00421200`
-2. `CFEPLoadGame__DoLoad` at `0x00461E20`
-3. `IsCheatActive` at `0x00465490`
-4. `PauseMenu__Init` at `0x004CDE60`
-
-Why these first:
-
-- `CCareer__Load` and `CFEPLoadGame__DoLoad` close the `defaultoptions.bea` write/apply behavior loop.
-- `IsCheatActive` and `PauseMenu__Init` are the shortest path to clarifying `Maladim` runtime gating.
-
-## Minimal Breakpoint Recipes
-
-These are starting points, not final automation. They assume current address naming and current retail baseline.
-
-### `CCareer__Load`
+### Career load
 
 ```text
 bp 00421200 ".printf \"CCareer__Load this=%p src=%p size=%x flag=%x\\n\", @ecx, poi(@esp+4), poi(@esp+8), poi(@esp+0c); g"
 ```
 
-Inference:
+Observed static shape: `this` in `ECX`; source, size, and flag at `esp+4`, `esp+8`, and `esp+0c`.
 
-- `this` in `ECX`
-- source pointer at `esp+4`
-- size at `esp+8`
-- `flag` at `esp+0c`
-
-### `IsCheatActive`
-
-```text
-bp 00465490 ".printf \"IsCheatActive this=%p cheat=%x\\n\", @ecx, poi(@esp+4); g"
-```
-
-### `PauseMenu__Init`
-
-```text
-bp 004CDE60 ".printf \"PauseMenu__Init this=%p\\n\", @ecx; g"
-```
-
-### `CFEPLoadGame__DoLoad`
+### Frontend load
 
 ```text
 bp 00461E20 ".printf \"CFEPLoadGame__DoLoad this=%p\\n\", @ecx; g"
 ```
 
-## Suggested First Runtime Questions
+### Cheat lookup
 
-### `defaultoptions.bea`
+```text
+bp 00465490 ".printf \"IsCheatActive this=%p cheat=%x\\n\", @ecx, poi(@esp+4); g"
+```
 
-- Does boot call `CCareer__Load(..., flag=0)` exactly as expected?
-- During frontend load flows, when does `CFEPLoadGame__DoLoad` cause `defaultoptions.bea` write-back?
-- Is the write-back path gated only by `DAT_0082b5b0 == 0`, or are there extra runtime conditions?
+### Pause-menu initialization
 
-### `Maladim`
+```text
+bp 004CDE60 ".printf \"PauseMenu__Init this=%p\\n\", @ecx; g"
+```
 
-- Does `IsCheatActive(3)` fire when the save name contains `Maladim`?
-- Does `PauseMenu__Init` expose the option but later gameplay paths suppress the effect?
-- Is the missing visible effect a menu/display issue, a toggle-state issue, or a deeper gameplay-state gate?
+## Evidence boundary
 
-## Recording Rule
-
-Every runtime pass should leave behind:
-
-- the specimen keys used,
-- the exact breakpoints/commands used,
-- the log path,
-- the observed outcome,
-- and the unresolved next question.
-
-Persist those under `subagents/` with a dated, task-scoped filename.
+Runtime observations establish only what the pinned copied specimen did under the recorded inputs. Keep the specimen hashes, command text, log, outcome, and remaining question together under the task-scoped `.artifacts/` directory. Do not promote binaries, payloads, debugger logs, or generated command files into Git.

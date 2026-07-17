@@ -54,6 +54,5 @@ Wave402 saved and read back Ghidra metadata for the four targets above:
 - `ApplyFEPDemoWave402.java` dry run: `updated=0 skipped=4 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`.
 - `ApplyFEPDemoWave402.java` apply run: `updated=4 skipped=0 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 - Read-back verified `4` metadata rows, `4` decompile exports, `5` xref rows, `4` tag rows, `420` instruction rows, and `80` vtable/data-context rows.
-- Focused probe: `tools/ghidra_fepdemo_wave402_probe.py --check` passed.
 
 This is saved static Ghidra name/signature/comment/tag refinement only. It does not prove runtime frontend behavior, exact source identity, concrete `CFEPDemoMain` layout, local variable names, structure types, BEA launch behavior, game patching, or rebuild parity.

@@ -36,5 +36,5 @@ Runtime leg animation behavior, walk/run/jump semantics, exact `CMech` or init-c
 
 - [CMech__InitCockpit](./CMech__InitCockpit.md)
 - [CMech__InitTargeting](./CMech__InitTargeting.md)
-- [../GroundUnit.cpp/_index.md](../GroundUnit.cpp/_index.md) - shared grounded-unit slot-9 initialization context
+- [Shared grounded-motion initialization](../GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md) - shared grounded-unit slot-9 context
 - [../MCMech.cpp.md](../MCMech.cpp.md) - `CMCMech` motion-controller context

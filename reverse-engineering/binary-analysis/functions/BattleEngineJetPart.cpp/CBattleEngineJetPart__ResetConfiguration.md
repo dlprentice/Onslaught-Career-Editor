@@ -6,7 +6,7 @@
 
 - Named in Ghidra: yes
 - Saved signature: `void __thiscall CBattleEngineJetPart__ResetConfiguration(void * this)`
-- Fresh read-back: `release/readiness/ghidra_battleengine_resetconfiguration_signature_tranche_2026-05-10.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

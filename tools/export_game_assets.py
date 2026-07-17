@@ -836,7 +836,7 @@ def write_asset_export_summary(output: SecuredOutputRoot, asset_export_root: Pat
 def parse_args() -> argparse.Namespace:
     repo_root = default_repo_root()
     game_root = repo_root / "game"
-    default_out = repo_root / "subagents" / f"asset_backend_wave1_{date.today().isoformat()}"
+    default_out = repo_root / ".artifacts" / "asset-export" / date.today().isoformat()
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=repo_root)

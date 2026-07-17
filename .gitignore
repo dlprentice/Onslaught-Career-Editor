@@ -27,30 +27,16 @@
 .DS_Store
 Thumbs.db
 
-# Codex runtime-local state. Tracked .codex/goals and .codex/state markdown
-# remain public project batons; runtime skills/auth/cache/session material does not.
-/.codex/*
-!/.codex/goals/
-!/.codex/goals/**/*.md
-!/.codex/state/
-!/.codex/state/**/*.md
+# Codex runtime-local state
+/.codex/
 
 # Local validation scratch
 __pycache__/
 *.pyc
 *.pyo
-.artifacts/md-link-check/
-subagents/winui-home-navigation/
-subagents/winui-launch-smoke/
-subagents/winui-lore-reader-interaction/
-subagents/winui-media-interaction/
-subagents/winui-media-representative-playback/
-subagents/winui-runtime-accessibility-smoke/
-subagents/winui-agentic-ui-snapshot/
-subagents/winui-visual-qa/
-subagents/winui-zip-package-probe/
-subagents/winui-zip-release-candidate-probe/
-subagents/winui-zip-release-readiness-current/
+/.artifacts/
+/lore-pack/
+/subagents/
 release/out/
 release/artifacts/
 .tmp*/

@@ -18,7 +18,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "start_cdb_server.ps1"
-COMMAND_FILE = ROOT / "tools" / "runtime-probes" / "defaultoptions-wave1.cdb.txt"
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell") or "powershell"
 CMD_EXE = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "cmd.exe"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -140,6 +139,10 @@ class StartCdbServerTests(unittest.TestCase):
         fake_root = Path(cls.fake_temp.name)
         source_path = fake_root / "FakeCdb.cs"
         cls.fake_cdb = fake_root / "FakeCdb.exe"
+        cls.command_root = fake_root / "commands"
+        cls.command_root.mkdir()
+        cls.command_file = cls.command_root / "observer.cdb.txt"
+        cls.command_file.write_text(".echo TEST_COMMAND_READY\n", encoding="utf-8")
         source_path.write_text(FAKE_CDB_SOURCE, encoding="utf-8")
         framework_root = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Microsoft.NET"
         compiler_candidates = [
@@ -296,9 +299,10 @@ class StartCdbServerTests(unittest.TestCase):
         profile_root: Path,
         expected_executable: Path | None = None,
         log_path: Path | None = None,
-        command_file: Path = COMMAND_FILE,
+        command_file: Path | None = None,
     ) -> str:
         expected_executable = expected_executable or (profile_root / "BEA.exe")
+        command_file = command_file or self.command_file
         command = (
             f"& {self.ps_quote(SCRIPT)} "
             "-ProcessName BEA.exe "
@@ -307,6 +311,7 @@ class StartCdbServerTests(unittest.TestCase):
             f"-ExpectedExecutablePath {self.ps_quote(expected_executable)} "
             f"-ExpectedWorkingDirectory {self.ps_quote(profile_root)} "
             f"-CommandFile {self.ps_quote(command_file)} "
+            f"-AllowedCommandRoot {self.ps_quote(self.command_root)} "
         )
         if log_path is not None:
             command += f"-LogPath {self.ps_quote(log_path)} "
@@ -468,7 +473,7 @@ class StartCdbServerTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("-p", result.stdout)
-            self.assertIn(str(COMMAND_FILE), result.stdout)
+            self.assertIn(str(self.command_file), result.stdout)
 
     def test_rejects_exact_pid_without_app_owned_profile_proof(self) -> None:
         command = (
@@ -476,7 +481,8 @@ class StartCdbServerTests(unittest.TestCase):
             f"& {self.ps_quote(SCRIPT)} "
             "-ProcessName ($proc.ProcessName + '.exe') "
             "-ProcessId $PID "
-            f"-CommandFile {self.ps_quote(COMMAND_FILE)} "
+            f"-CommandFile {self.ps_quote(self.command_file)} "
+            f"-AllowedCommandRoot {self.ps_quote(self.command_root)} "
             "-PrintOnly"
         )
 
@@ -489,7 +495,8 @@ class StartCdbServerTests(unittest.TestCase):
         command = (
             f"& {self.ps_quote(SCRIPT)} "
             "-ProcessName BEA.exe "
-            f"-CommandFile {self.ps_quote(COMMAND_FILE)} "
+            f"-CommandFile {self.ps_quote(self.command_file)} "
+            f"-AllowedCommandRoot {self.ps_quote(self.command_root)} "
             "-PrintOnly"
         )
 
@@ -577,14 +584,17 @@ class StartCdbServerTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("must be inside app-owned profiles root", self.normalized_stderr(result))
 
-    def test_rejects_command_file_outside_default_probe_root(self) -> None:
+    def test_rejects_command_file_outside_allowed_root(self) -> None:
         with tempfile.TemporaryDirectory(prefix="bea-cdb-test-") as temp:
             command_file = Path(temp) / "observer.cdb.txt"
             command_file.write_text(".echo test\n", encoding="utf-8")
+            allowed_root = Path(temp) / "commands"
+            allowed_root.mkdir()
             command = (
                 f"& {self.ps_quote(SCRIPT)} "
                 "-ProcessName BEA.exe "
                 f"-CommandFile {self.ps_quote(command_file)} "
+                f"-AllowedCommandRoot {self.ps_quote(allowed_root)} "
                 "-PrintOnly"
             )
 
@@ -641,7 +651,8 @@ class StartCdbServerTests(unittest.TestCase):
         missing_arm = (
             f"& {self.ps_quote(SCRIPT)} "
             "-ProcessName BEA.exe "
-            f"-CommandFile {self.ps_quote(COMMAND_FILE)} "
+            f"-CommandFile {self.ps_quote(self.command_file)} "
+            f"-AllowedCommandRoot {self.ps_quote(self.command_root)} "
             "-EnableRemoteServer "
             "-Password safer_token "
             "-PrintOnly"
@@ -653,7 +664,8 @@ class StartCdbServerTests(unittest.TestCase):
         default_password = (
             f"& {self.ps_quote(SCRIPT)} "
             "-ProcessName BEA.exe "
-            f"-CommandFile {self.ps_quote(COMMAND_FILE)} "
+            f"-CommandFile {self.ps_quote(self.command_file)} "
+            f"-AllowedCommandRoot {self.ps_quote(self.command_root)} "
             "-EnableRemoteServer "
             "-RemoteServerArmPhrase 'ALLOW CDB REMOTE SERVER' "
             "-Password secret "

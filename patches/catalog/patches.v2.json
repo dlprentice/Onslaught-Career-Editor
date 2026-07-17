@@ -29,7 +29,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -72,7 +72,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_safe_copy_live_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -115,7 +115,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
         "patches/README.md",
-        "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -156,7 +156,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/extra-graphics-feature-gate-patch.md",
         "patches/README.md",
-        "release/readiness/winui_modern_graphics_live_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": false,
       "dependencies": [],
@@ -197,7 +197,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/version-overlay-patch.md",
         "patches/README.md",
-        "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [
@@ -239,7 +239,7 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/version-overlay-patch.md",
         "patches/README.md",
-        "release/readiness/winui_version_overlay_runtime_smoke_2026-06-17.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -277,10 +277,10 @@
       "confidence": "medium-high",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
-        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md",
         "references/Onslaught/DXFrontend.cpp",
-        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
-        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -324,10 +324,10 @@
       "confidence": "medium",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
-        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md",
         "references/Onslaught/DXFrontend.cpp",
-        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
-        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -370,10 +370,10 @@
       "confidence": "medium",
       "evidence_refs": [
         "reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md",
-        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/_index.md",
+        "reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md",
         "references/Onslaught/DXFrontend.cpp",
-        "release/readiness/winui_frontend_clear_screen_color_patch_2026-06-16.md",
-        "release/readiness/winui_frontend_color_navigated_runtime_proof_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -418,7 +418,7 @@
         "reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Process.md",
         "references/Onslaught/FEPGoodies.cpp",
         "patches/README.md",
-        "release/readiness/winui_goodies_gallery_display_unlock_2026-06-17.md"
+        "reverse-engineering/save-file/goodies-system.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -498,10 +498,10 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/pause-key-default-row-patch.md",
         "reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_pause_o_scan_initializer_runtime_2026-06-18.md",
-        "release/readiness/winui_pause_o_scan_initializer_normal_gameplay_resume_2026-06-19.md"
+        "reverse-engineering/binary-analysis/functions/PauseMenu.cpp/PauseMenu__Init.md",
+        "reverse-engineering/binary-analysis/functions/PauseMenu.cpp/CPauseMenu__ResumeGameAndPersistOptions.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -514,8 +514,8 @@
       ],
       "requires_windowed_pair": true,
       "diagnostic_refs": [
-        "release/readiness/winui_controller_mapping_table_diagnostic_2026-06-18.md",
-        "release/readiness/winui_free_camera_pause_context_diagnostic_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ]
     },
     {
@@ -546,10 +546,10 @@
       "evidence_refs": [
         "reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_aurore_gate_bypass_2026-06-17.md",
-        "release/readiness/winui_safe_copy_free_camera_toggle_2026-06-18.md"
+        "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -592,9 +592,9 @@
         "references/Onslaught/Camera.cpp",
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [],
@@ -643,9 +643,9 @@
         "references/Onslaught/Camera.cpp",
         "references/Onslaught/Controller.h",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_forward_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "optional": true,
       "dependencies": [
@@ -713,9 +713,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -771,9 +771,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_backward_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -822,9 +822,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -880,9 +880,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_strafe_left_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -931,9 +931,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -989,9 +989,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_strafe_right_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -1044,9 +1044,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -1106,9 +1106,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_yaw_left_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -1157,9 +1157,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -1215,9 +1215,9 @@
         "references/Onslaught/Camera.cpp",
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
+        "reverse-engineering/binary-analysis/executable-analysis.md",
         "patches/README.md",
-        "release/readiness/winui_free_camera_q_yaw_right_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -1271,8 +1271,8 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -1333,8 +1333,8 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "release/readiness/winui_free_camera_q_pitch_up_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",
@@ -1388,8 +1388,8 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify dependency expansion selected the companion, then verify its offset reports ready or already patched.",
@@ -1450,8 +1450,8 @@
         "reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md",
         "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
         "patches/README.md",
-        "roadmap/mod-patch-runtime-rebuild-register.md",
-        "release/readiness/winui_free_camera_q_pitch_down_runtime_2026-06-18.md"
+        "reverse-engineering/binary-analysis/executable-analysis.md",
+        "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
       "verification_probe": "Verify selected patch state and ensure the offset reports ready or already patched.",

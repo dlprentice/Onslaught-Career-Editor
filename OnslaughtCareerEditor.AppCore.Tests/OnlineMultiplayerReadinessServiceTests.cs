@@ -222,8 +222,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains(readiness.BlockingReasons, reason => reason.Contains("server command inputs", System.StringComparison.OrdinalIgnoreCase));
             Assert.Contains(readiness.RequiredInputs, step => step.Label == "Client preflight" && step.Status == "Missing");
             Assert.Contains(readiness.RequiredInputs, step => step.Label == "Server command inputs" && step.Status == "Incomplete");
-            Assert.Contains(readiness.SafeCommands, command => command.Contains("test:winui-original-binary-second-host-live-readiness", System.StringComparison.Ordinal));
-            Assert.Contains(readiness.SafeCommands, command => command.Contains("test:winui-original-binary-second-host-live-run-kit", System.StringComparison.Ordinal));
+            Assert.Equal(new[] { "npm run test:safe-copy", "npm run test:product" }, readiness.SafeCommands);
             Assert.DoesNotContain(readiness.SafeCommands, command => command.Contains("Host/Join", System.StringComparison.OrdinalIgnoreCase));
         }
 

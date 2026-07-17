@@ -6,7 +6,7 @@
 
 - Named in Ghidra: yes
 - Saved signature: `void __thiscall CBattleEngineJetPart__Thrust(void * this, float moveY)`
-- Fresh read-back: `release/readiness/ghidra_battleengine_jetpart_signature_correction_2026-05-10.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

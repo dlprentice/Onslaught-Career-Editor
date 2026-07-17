@@ -1,78 +1,34 @@
-# Texture Resource Decode Static Contract
+# Texture and resource decode static contract
 
-Historical Wave1216 and Wave1163 anchors below are at-wave snapshots; their older active current-risk counters are preserved as evidence provenance, not current status.
+Status: active static map
+Evidence class: reviewed Steam-binary instructions, xrefs, strings, and
+decompilation
 
-Wave1216 measured anchor: unique-address accounting governs active current-risk progress. Probe token anchor: Wave1216; wave1216-render-resource-texture-hud-tail-current-risk-review; 1145/1179 = 97.12%; 7 render/resource/texture/HUD tail current-risk rows; CThing__InitRenderThingFromInitMeshName; CPDMesh__dtor_base; CWaterRenderSystem__ResetAndMarkSourceFlag; CAtmosphericsProfile__ResetAndInitSnowResources; CHudComponent__RenderPassEntry; CTexture__NodeType11_Ctor_WithDescriptorCopy; CTexture__NodeType12_Ctor_WithStackScalars; CTexture__NodeType11_Dtor_DeleteOnFlag_Body; CTexture__NodeType11_Dtor_DeleteOnFlag; 6411/6411 = 100.00%; 0 / 0 / 0; 12 xref rows; 962 instruction rows; 7 decompile rows; 28 context xref rows; 1015 context instruction rows; 9 context decompile rows; 6 texture-context xref rows; 111 texture-context instruction rows; 6 texture-context decompile rows; 13 data-xref rows; current focused candidates: 1127; live regenerated current focused candidates: 1127; remaining active focused work: 34; current risk candidates: 6166; fresh Ghidra export; texture label correction; 4 renamed; 4 comments updated; 25 tags added; no signature change; no function-boundary change; no executable-byte change; unique-address accounting; Codex read-only consults used; no Cursor/Composer; legacy additive counter is deprecated (`1176/1179`); 26 duplicate-address overcount; Wave1145 arithmetic overcount: 5; Wave911 is historical-retired/non-reconstructable at 812/1408 = 57.67%; 1179/1179 current-risk focused rows reviewed or superseded with bounded static evidence; static-reaudit-current-risk-ledger.json; static-reaudit-measurement-register.md; mesh-resource-render-static-contract.md; texture-resource-decode-static-contract.md; continuity denominator; verified backup class `historical-verified-backup-redacted`; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction; rebuild-grade static contracts; no noticeable difference.
+This contract routes texture and resource work without promoting static names
+to runtime or pixel-fidelity claims.
 
-Wave1163 current-risk update: Wave1163 (`wave1163-texture-node-tree-inflate-huffman-current-risk-review`) accounts for `17 CFastVB/CTexture/CDXTexture current-risk rows` from the `wave1108-current-risk-rank` current-risk denominator with fresh Ghidra export evidence. It is a read-only review with no mutation, no rename, no signature change, no comment/tag change, no function-boundary change, no executable-byte change, no BEA launch, no installed-game mutation, no save mutation, and no runtime-file mutation. Static closure remains `6411/6411 = 100.00%` with static debt `0 / 0 / 0`; expanded post-100 static surface remains `1560/1560 = 100.00%`; Wave911 focused is historical-retired/non-reconstructable at `812/1408 = 57.67%`; Wave911 top-500 remains `500/500 = 100.00%`; Wave1108 current focused accounting is now `564/1179 = 47.84%`; current risk candidates: 6166; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 615; focused threshold `15`; not Wave911 reconstruction. Fresh exports verified `68 xref rows` and `2779 instruction rows`. Static anchors include `CTexture__NodePayloadRecordCtor`, `CFastVB__NodeType9__ctor`, `CDXTexture__NodeType13__ctor`, `CDXTexture__RegisterSerializedChunk`, `CFastVB__AreNodeTreesCompatible`, `CFastVB__SelectBestNodeTreeMatch`, `CTexture__LoadDefaultHuffmanTables`, `CDXTexture__InflateStream_ProcessZlibState`, `CDXTexture__BuildInflateHuffmanTable`, and `CDXTexture__FlushEntropyBitWriter`. JPEG Huffman separate from inflate Huffman is an explicit static map boundary. Verified backup class: `historical-verified-backup-redacted`. Runtime parser behavior, runtime texture decode behavior, runtime JPEG behavior, runtime inflate/decompression behavior, exact node-tree/payload/chunk/z_stream/Huffman-table/entropy-writer layouts, hidden ABI completeness, exact source-body identity, BEA patching behavior, visual QA, gameplay outcomes, and rebuild parity remain separate proof. Current system contract: `texture-resource-decode-static-contract.md`. Probe token anchor: Wave1163; wave1163-texture-node-tree-inflate-huffman-current-risk-review; 564/1179 = 47.84%; 17 CFastVB/CTexture/CDXTexture current-risk rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 615; current risk candidates: 6166; fresh Ghidra export; read-only review; no mutation; 0 / 0 / 0; 6411/6411 = 100.00%; 68 xref rows; 2779 instruction rows; CTexture__NodePayloadRecordCtor; CFastVB__NodeType9__ctor; CDXTexture__NodeType13__ctor; CDXTexture__RegisterSerializedChunk; CFastVB__AreNodeTreesCompatible; CFastVB__SelectBestNodeTreeMatch; CTexture__LoadDefaultHuffmanTables; CDXTexture__InflateStream_ProcessZlibState; CDXTexture__BuildInflateHuffmanTable; CDXTexture__FlushEntropyBitWriter; JPEG Huffman separate from inflate Huffman; historical-verified-backup-redacted; texture-resource-decode-static-contract.md; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction.
-
-Status: active static contract
-Last updated: 2026-07-03
-Current anchor: `Wave1220 static closeout acceptance`
-
-This contract summarizes the static-only texture/resource/decode map for clean-room planning. It is built from saved Ghidra evidence and public-safe read-back docs, not from runtime texture pixels or rebuild proof.
-
-Wave1220 static closeout acceptance: active current-risk focused accounting is `1179/1179 = 100.00%`; remaining active focused work: 0. This is static Ghidra/read-back/system-map acceptance for the current-risk lane, not runtime parser/texture/decompression/JPEG behavior, exact layout proof, exact source-body identity, BEA patching proof, visual output proof, rebuild parity, or no-noticeable-difference parity.
-
-Current machine-readable companion: `texture-resource-decode-static-contract-ledger.v1.json`.
-It records `latestGhidraBackupClass=verified-static-backup-redacted`, treats
-Wave1163 and Wave1216 as provenance-only historical anchors, and keeps the
-current accounting authority in `static-reaudit-measurement-register.md`.
-Ledger lane ids: `archive-resource-ingress`, `texture-lookup-lifetime`,
-`serialized-parser-node-tree`, `decode-setup`, `codec-fronts`,
-`jpeg-entropy-huffman`, `zlib-inflate-huffman`, `texel-conversion-upload`, and
-`render-facing-handoff`.
-
-## Static Scope
-
-The texture/resource/decode lane covers resource ingress, texture lookup/lifetime, serialized parser/node-tree helpers, decode setup, codec fronts, JPEG entropy helpers, zlib/inflate helpers, texel conversion/upload, and render-facing texture handoff. Wave1163 adds fresh current-risk read-back over the serialized node-tree plus JPEG/default Huffman and inflate Huffman split.
-
-Core entry points and prior reviews:
-
-- Wave904 `texture-render-static-review-wave904`: static-coherent texture/resource/decode/render core after initial function-quality closure.
-- Wave964 `cdxtexture-inflate-codes-tree-review-wave964`: inflate state, block-header return, code-state, and dynamic tree caveat cleanup.
-- Wave1025 `cfastvb-node-tree-review-wave1025`: CFastVB/CTexture/CDXTexture parser node-tree review.
-- Wave1163 `wave1163-texture-node-tree-inflate-huffman-current-risk-review`: `17 CFastVB/CTexture/CDXTexture current-risk rows`, `564/1179 = 47.84%`, fresh read-only Ghidra export, no mutation.
-
-## Subsystem Map
-
-| Lane | Static anchors | Static contract |
+| Lane | Retained anchors | Demonstrated boundary |
 | --- | --- | --- |
-| Archive/resource ingress | `CChunkReader`, `CDXMemBuffer__Read`, resource path builders, mapped-file helpers | Resource streams and mapped buffers feed texture load/decode. Exact archive-file runtime behavior and asset extraction parity remain separate proof. |
-| Texture lookup/lifetime | `CTexture__FindTexture`, `CTexture__ctor`, `CTexture__Release`, texture global list/fallback fields | Texture names, fallback behavior, list membership, and release paths are statically mapped. Exact concrete `CTexture` layout and runtime D3D resource lifetime remain separate proof. |
-| Serialized parser/node-tree | `CTexture__NodePayloadRecordCtor`, `CFastVB__NodeType9__ctor`, `CDXTexture__NodeType13__ctor`, `CDXTexture__RegisterSerializedChunk`, `CFastVB__AreNodeTreesCompatible`, `CFastVB__ScoreNodeTreeMatch`, `CFastVB__SelectBestNodeTreeMatch` | Parser node payloads, node-type constructors, serialized chunk registry, structural predicates, compatibility scoring, and selector diagnostics are statically coherent. Hidden ECX/EAX/stack ABI and exact node/payload/chunk layouts remain separate proof. |
-| Decode setup | `CTexture__InitDecodeLookupScratchTables`, `CTexture__InitializeDecodePipelineFromHeader`, `CDXTexture__CreateDecodeJobDescriptor`, `CDXTexture__AllocDecodeBlockAndLink` | Decode scratch tables, image descriptors, component-plane setup, and job/block allocation are statically mapped. Runtime image fidelity and exact descriptor schemas remain separate proof. |
-| Codec fronts | `CDXTexture__DecodeMemoryToTextureObject`, `CDXTexture__DecodeFromMemory_WithFallbackCodecs`, `CDXTexture__GetImageHeaderInfo`, PNG/JPEG/BMP/DDS decode helpers | Format dispatch and header/descriptor validation paths are statically mapped. Exact third-party library/source identity and runtime pixels remain separate proof. |
-| JPEG entropy/Huffman | `CTexture__LoadDefaultHuffmanTables`, `CDXTexture__FlushEntropyBitWriter`, JPEG scan/layout and entropy helpers | JPEG default Huffman tables and entropy bit-writer state are a distinct static lane. Do not conflate these with zlib/inflate Huffman table builders. Runtime JPEG output and exact entropy-writer layout remain separate proof. |
-| Zlib/inflate/Huffman | `CDXTexture__InflateStream_ProcessZlibState`, `CDXTexture__InflateCodesState_Process`, `CDXTexture__BuildInflateHuffmanTable`, `CDXTexture__InflateDynamicTree_BuildLitDistTrees` | Inflate stream/state, code-state processing, dynamic literal/distance tree construction, and table building are statically mapped. Exact `z_stream`, inflate-state, table-entry schema, zlib version/source identity, and runtime decompression behavior remain separate proof. |
-| Texel conversion/upload | `CFastVB`/`CTexture`/`CDXTexture` pack/unpack profile rows, `CDXTexture__UploadDecodedBufferToSurface`, surface upload helpers | Packed texel conversion callbacks, profile factories, dither/non-dither paths, and upload handoff are statically mapped. Runtime GPU upload, pixel correctness, and device behavior remain separate proof. |
-| Render-facing handoff | `CFastVB__RenderTriangleStripImmediate`, `CVBufTexture__DrawSpriteEx`, `CDXTexture__LoadTextureFromFile_Core` | Texture decode connects into render buffers and sprite/mesh/HUD render consumers. Runtime render correctness and visual QA remain separate proof. |
+| Resource ingress | `CChunkReader`, `CDXMemBuffer__Read`, mapped-file and path helpers | Resource streams and mapped buffers feed loaders; archive completeness is not proven. |
+| Texture lifetime | `CTexture__FindTexture`, constructor/release paths, global list and fallback fields | Lookup, fallback and release topology are mapped; the concrete object layout is not. |
+| Serialized node tree | `CTexture__NodePayloadRecordCtor`, node-type constructors, `CDXTexture__RegisterSerializedChunk`, compatibility/selection helpers | Node creation, structural predicates and selection flow are mapped; hidden ABI and payload schemas remain provisional. |
+| Decode setup | scratch-table, header, job-descriptor and decode-block helpers | Descriptor and component-plane setup is visible statically; decoded output is not verified. |
+| Codec fronts | memory/header dispatch plus PNG, JPEG, BMP and DDS helpers | Format routing and validation paths are mapped; library identity and format completeness are not. |
+| JPEG entropy | `CTexture__LoadDefaultHuffmanTables`, `CDXTexture__FlushEntropyBitWriter` | JPEG tables and entropy writing are a separate lane from inflate Huffman construction. |
+| Zlib/inflate | `CDXTexture__InflateStream_ProcessZlibState`, code-state, dynamic-tree and table builders | Stream/state/table topology is mapped; exact `z_stream` layouts and decompression behavior are not. |
+| Conversion and render handoff | packed-texel helpers, `CDXTexture__UploadDecodedBufferToSurface`, `CFastVB__RenderTriangleStripImmediate`, `CVBufTexture__DrawSpriteEx` | CPU conversion and render-facing handoff are visible; GPU upload and rendered pixels are not proven. |
 
-## Historical Wave1163 Evidence
+The retained function notes and
+[`mesh-resource-render-static-contract.md`](mesh-resource-render-static-contract.md)
+provide address-level context. Asset exporters and the WinUI Asset Library may
+use this map to choose parsers and label uncertainty, but successful extraction
+or preview does not establish full retail-format support.
 
-Wave1163 verified `17` metadata rows, `17` tag rows, `68` xref rows, `2779` instruction rows, and `17` decompile rows for:
+## Claim boundary
 
-`CTexture__NodePayloadRecordCtor`, `CFastVB__NodeType9__ctor`, `CDXTexture__NodeType13__ctor`, `CDXTexture__RegisterSerializedChunk`, `CFastVB__NodeTreeHasBitFlag0x200`, `CFastVB__NodeTreeHasOnlyLeafType0to2`, `CFastVB__CountNodeTreeExpandedLeafCount`, `CFastVB__AreNodeTreesStructurallyEqual`, `CFastVB__AreNodeTreesCompatible`, `CFastVB__ScoreNodeTreeMatch`, `CFastVB__SelectBestNodeTreeMatch`, `CTexture__LoadDefaultHuffmanTables`, `CDXTexture__InflateStream_ProcessZlibState`, `CDXTexture__InflateCodesState_Process`, `CDXTexture__BuildInflateHuffmanTable`, `CDXTexture__InflateDynamicTree_BuildLitDistTrees`, and `CDXTexture__FlushEntropyBitWriter`.
-
-Verified backup class: `historical-verified-backup-redacted`.
-
-## Clean-Room Planning Boundaries
-
-Useful static outputs for clean-room work:
-
-- Implement archive/resource stream readers from documented AYA/resource docs and static file/stream anchors.
-- Implement texture registry/lifetime behavior from `CTexture__FindTexture`, constructor/release rows, and resource load paths.
-- Implement a parser node model with separate node payload, node-type constructors, serialized chunk registry, compatibility predicates, and selector diagnostics.
-- Implement JPEG/default Huffman and entropy writer logic separately from zlib/inflate table construction.
-- Implement zlib/inflate stream/state/table logic as an independent decompression lane; do not infer runtime decompression fidelity until tested.
-- Implement texel conversion/upload as a staged CPU conversion plus render handoff plan; do not claim D3D8 runtime parity without runtime proof.
-
-Static boundaries that remain outside this contract:
-
-- Runtime parser/texture/decompression/JPEG behavior.
-- Runtime texture pixels and GPU upload behavior.
-- Exact concrete layouts for node trees, payloads, chunk builders, `z_stream`, inflate state, table entries, entropy writer, texture objects, and Direct3D surfaces.
-- Exact source-body identity and third-party library identity.
-- BEA patching behavior, visual QA, gameplay outcomes, and rebuild parity.
-
-Probe token anchor: Wave1163; wave1163-texture-node-tree-inflate-huffman-current-risk-review; 564/1179 = 47.84%; 17 CFastVB/CTexture/CDXTexture current-risk rows; texture-resource-decode-static-contract.md; archive/resource ingress; serialized parser/node-tree; JPEG Huffman separate from inflate Huffman; zlib/inflate/Huffman; texel conversion/upload; no runtime texture decode proof; no rebuild parity.
+Static evidence does not prove runtime texture pixels, decompression/JPEG
+correctness, Direct3D resource behavior, exact layouts, third-party source
+identity, patch behavior, visual parity, or rebuild parity. Those require
+focused parser tests, controlled copied-runtime evidence, or renderer-specific
+validation as appropriate. Proprietary assets and decoded payloads remain
+untracked local inputs.

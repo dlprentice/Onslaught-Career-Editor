@@ -38,5 +38,5 @@ Transitions the player into **pan view** for a short duration by:
 - This function is currently incorrectly documented as “ApplyForce” in older RE notes; those docs have been corrected to reflect the pan-camera behavior.
 
 ## Related
-- `reverse-engineering/binary-analysis/functions/Camera.cpp/_index.md` (CPanCamera mappings)
-- `reverse-engineering/binary-analysis/functions/monitor.h/_index.md` (CPanCamera is `CCamera, CMonitor` and participates in ActiveReader deletion lists)
+
+See the [function map](../_index.md) for current camera and monitor ownership.

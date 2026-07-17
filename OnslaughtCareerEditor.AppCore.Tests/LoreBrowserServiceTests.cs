@@ -49,6 +49,24 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void LoadIndex_UsesCanonicalLoreWithoutTrackedMirror()
+        {
+            string lore = Path.Combine(_repoRoot, "lore");
+            Directory.CreateDirectory(lore);
+            File.WriteAllText(Path.Combine(lore, "_index.md"), "# Lore Index");
+            File.WriteAllText(Path.Combine(lore, "world-lore.md"), "# World Lore");
+
+            LoreIndex index = new LoreBrowserService().LoadIndex(_repoRoot);
+
+            Assert.False(index.UsingLoreBook);
+            Assert.Equal("canonical-files", index.SourceKind);
+            Assert.Equal(2, index.Documents.Count);
+            Assert.Equal("_index.md", index.HomeDocument?.RelativePath);
+            Assert.Equal("Lore Index", index.HomeDocument?.Title);
+            Assert.Equal("Lore library", index.RootItems.Single().Title);
+        }
+
+        [Fact]
         public void LoadIndex_FindsPackagedLoreBookSiblingFromAppFolder()
         {
             string bundleRoot = Path.Combine(_tempRoot, "bundle");

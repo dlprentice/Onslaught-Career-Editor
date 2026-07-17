@@ -5,7 +5,7 @@
 ## Status
 
 - Named in Ghidra: yes
-- Fresh read-back: `release/readiness/ghidra_early_helper_signature_tranche_2026-05-09.md`
+- Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
 - Runtime behavior proof: not yet
 
 ## Summary

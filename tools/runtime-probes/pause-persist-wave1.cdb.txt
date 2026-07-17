@@ -1,3 +1,0 @@
-bp 004D06E0 ".printf \"CPauseMenu__ResumeGameAndPersistOptions this=%p\\n\", @ecx; g"
-bp 0051F680 ".printf \"CFEPOptions__WriteDefaultOptionsFile data=%p size=%x\\n\", poi(@esp+4), poi(@esp+8); g"
-g

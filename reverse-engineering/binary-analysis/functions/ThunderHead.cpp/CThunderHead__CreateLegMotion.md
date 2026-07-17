@@ -18,7 +18,7 @@ Creates and initializes the leg motion animation system for the ThunderHead mech
 void __thiscall CThunderHead__CreateLegMotion(void * this, void * init_context);
 ```
 
-Read-back verified in `subagents/ghidra-static-reaudit/wave519-thunderhead-004f4730/post_metadata.tsv` (`status=OK`).
+Current saved Ghidra metadata supports the name and signature summarized here.
 
 ## Wave519 Read-Back
 

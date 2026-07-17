@@ -76,5 +76,4 @@ See:
 - Migrated from ghidra-analysis.md (Dec 2025)
 - Critical for understanding god mode UI mechanism
 - `0x004ce328` is an instruction inside `PauseMenu__Init` (not a function entry point): `CMP dword ptr [g_bGodModeEnabled], 1`
-- Positive-case `Maladim` runtime confirmation is preserved in `subagents/2026-03-15-runtime-maladim-wave2/session-notes.md`
-- Gameplay-effect follow-up is preserved in `subagents/2026-03-29-runtime-maladim-wave3/session-notes.md`
+- A controlled copied-runtime observation reached the positive `Maladim` gate; broader gameplay effects remain unproven.

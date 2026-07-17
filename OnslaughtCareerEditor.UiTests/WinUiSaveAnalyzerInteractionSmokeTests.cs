@@ -19,7 +19,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
 {
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private real save path in ONSLAUGHT_WINUI_REAL_SAVE_PATH and captures ignored screenshots under subagents/.")]
+    [Explicit("Requires a private real save path in ONSLAUGHT_WINUI_REAL_SAVE_PATH and captures ignored screenshots under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void SaveAnalyzer_AnalyzesRealSaveThroughUiWhenProvided()
     {
@@ -35,7 +35,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-save-analyzer-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-save-analyzer-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir);
         var startInfo = new ProcessStartInfo(exePath)
@@ -114,7 +114,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
         string fixturePath = Path.Combine(repoRoot, "tests_shared", "fixtures", "gold_career_save.bin");
         Assert.That(File.Exists(fixturePath), Is.True, "Tracked gold career-save fixture is required.");
 
-        string evidenceDir = Path.Combine(repoRoot, "subagents", "winui-save-editor-interaction", "2026-07-13");
+        string evidenceDir = Path.Combine(repoRoot, ".artifacts", "winui-save-editor-interaction");
         Directory.CreateDirectory(evidenceDir);
         string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-guided-first-save-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRoot);
@@ -355,7 +355,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private real options path in ONSLAUGHT_WINUI_REAL_OPTIONS_PATH and writes only copied outputs under subagents/.")]
+    [Explicit("Requires a private real options path in ONSLAUGHT_WINUI_REAL_OPTIONS_PATH and writes only copied outputs under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void ConfigurationEditor_PatchesCopiedOptionsThroughUiWhenProvided()
     {
@@ -371,7 +371,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-configuration-editor-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-configuration-editor-interaction");
         Directory.CreateDirectory(evidenceDir);
         string inputCopyPath = Path.Combine(evidenceDir, "input-copy.bea");
         string outputPath = Path.Combine(evidenceDir, "patched-output.bea");

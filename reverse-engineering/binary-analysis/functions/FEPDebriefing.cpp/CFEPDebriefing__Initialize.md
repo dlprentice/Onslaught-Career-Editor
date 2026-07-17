@@ -13,15 +13,13 @@ Initializes the mission debriefing screen after a mission is completed. This scr
 
 ## Signature
 ```c
-// Live read-back signature (wave217 snapshot)
+// Saved static read-back signature
 int __fastcall CFEPDebriefing__Initialize(void * this);
 ```
 
-## Signature Evidence
+## Signature evidence
 
-- `MCP-MUTATION-BACKLOG.md` completion record (2026-02-24): `int CFEPDebriefing__Initialize(void * this)`.
-- `scratch/deep_semantic_tail_2026-02-27/all_after_wave217.tsv` line 917: `int __fastcall CFEPDebriefing__Initialize(void * this)`.
-- `scratch/program_2026-03-01/phase5_signature_readback/index.tsv`: read-back `status=OK`.
+Saved metadata and decompile read-back agree on the one-argument fastcall signature above.
 
 ## Algorithm
 
@@ -92,7 +90,7 @@ When a kill threshold is crossed during the mission, the debriefing screen highl
 
 - This initializer owns debrief-page state setup and runtime summary population.
 - Internal data-flow anchor: older exports showed `CFEPDebriefing__Initialize` referencing the then-named `CFEPDebriefing__ResetStateAndVector` at `0x004567c9`; Wave 376 corrects that target to shared `GlobalListNode__ClearField4AndPushGlobalList`, so this is no longer a debriefing-owned reset/vector method claim.
-- Dedicated xref export (2026-03-01) for `0x00456780` shows a data reference from `0x005db9c0` (`ref_type=DATA`), consistent with indirect vtable/dispatch-table invocation rather than direct call xrefs: `scratch/program_2026-03-01/phase5_fepdebriefing_xrefs/xrefs.tsv`.
+- A dedicated xref export for `0x00456780` shows a data reference from `0x005db9c0` (`ref_type=DATA`), consistent with indirect vtable/dispatch-table invocation rather than direct call xrefs.
 - Save/defaultoptions persistence side effects are downstream in frontend save/load/pause flows (documented in `high-impact-call-chain-appendix.md`), not at this entrypoint.
 
 ## Cross-References

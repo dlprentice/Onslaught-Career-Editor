@@ -127,7 +127,7 @@ Scans the mesh bone array for a `tentacle` name and returns true on the first ma
 
 Wave435 saved the Ghidra create/name/signature/comment/tag correction with `ApplyCmcTentacleWarspiteDomeWave435.java`. Headless apply reported `updated=18 skipped=0 created=4 would_create=0 renamed=8 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`; the corrective signature apply reported `updated=18 skipped=0 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`; and verify dry reported `updated=0 skipped=18 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0`.
 
-Read-back verified `18` metadata rows, `18` tag rows, `28` xref rows, `32` vtable-slot rows, `4338` instruction rows, and `18` decompile exports. Focused probe `npm run test:ghidra-cmctentacle-warspitedome-wave435` passed after the saved-project read-back.
+Read-back verified `18` metadata rows, `18` tag rows, `28` xref rows, `32` vtable-slot rows, `4338` instruction rows, and `18` decompile exports. The retired focused probe passed after the saved-project read-back; its implementation remains available in Git history.
 
 ## Not Proven
 

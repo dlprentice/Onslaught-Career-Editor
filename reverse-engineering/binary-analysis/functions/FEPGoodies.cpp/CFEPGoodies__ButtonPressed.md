@@ -52,7 +52,7 @@ Follow-up dry/apply through `ApplyGoodiesButtonPressedSignature.java` set the so
 void __thiscall CFEPGoodies__ButtonPressed(void * this, int button, float val)
 ```
 
-`tools/goodies_ghidra_readback_probe.py --check` now verifies this signature and the selected-coordinate behavior tokens.
+Saved Ghidra read-back supports this signature and the selected-coordinate behavior tokens.
 
 The same verifier now also checks the `CFEPGoodies__ButtonPressed`, `CFEPGoodies__Process`, and `CFEPGoodies__LoadingGoodyPoll` decompile exports for direct `0x47`/`0x48`/`0x49` target constants. Current result: `PASS hits=0`. That keeps the current binary-selection model honest: these paths still route through the coordinate mapper rather than a hard-coded direct selector for Goodies 71-73.
 

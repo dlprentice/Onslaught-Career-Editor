@@ -13,7 +13,7 @@ namespace Onslaught___Career_Editor
         private const string LorePackContentFileName = "onslaught-lore.v1.jsonl";
         private const string LorePackSourcePrefix = "lore-pack://";
         private const string LorePackNavigationScheme = "onslaught-lore";
-        private const string MissingLoreBookMessage = "Lore book directory not found.";
+        private const string MissingLoreBookMessage = "Lore content directory not found.";
         private const string InvalidLorePackDocumentIdMessage = "Lore content pack contains an invalid document identifier.";
         private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document path.";
         private const string InvalidLorePackIndexMessage = "Lore content pack index is invalid.";
@@ -42,7 +42,7 @@ namespace Onslaught___Career_Editor
         public LoreIndex LoadIndex(string? startDirectory = null)
         {
             string projectRoot = FindProjectRoot(startDirectory)
-                ?? throw new DirectoryNotFoundException("Could not locate repo root containing lore-book or lore-pack.");
+                ?? throw new DirectoryNotFoundException("Could not locate Lore content or a Lore pack.");
 
             _contentPack = null;
             if (TryLoadContentPack(projectRoot, out LoreContentPack? contentPack, out List<LoreTreeItem> packRootItems, out Dictionary<string, LoreDocument> packDocumentMap))
@@ -53,10 +53,25 @@ namespace Onslaught___Career_Editor
                     .ThenBy(static doc => doc.Title, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                LoreDocument? packHome = packDocuments.FirstOrDefault(static doc => doc.RelativePath.Equals("BOOK.md", StringComparison.OrdinalIgnoreCase))
+                LoreDocument? packHome = packDocuments.FirstOrDefault(static doc => doc.RelativePath.Equals("lore-book/BOOK.md", StringComparison.OrdinalIgnoreCase))
+                    ?? packDocuments.FirstOrDefault(static doc => doc.RelativePath.Equals("BOOK.md", StringComparison.OrdinalIgnoreCase))
                     ?? packDocuments.FirstOrDefault();
                 return new LoreIndex(projectRoot, packDocuments, CloneTree(packRootItems), true, packHome, "content-pack");
             }
+
+            string canonicalLoreDirectory = Path.Combine(projectRoot, "lore");
+            if (Directory.Exists(canonicalLoreDirectory))
+            {
+                BuildFallbackIndex(canonicalLoreDirectory, out List<LoreTreeItem> canonicalRootItems, out Dictionary<string, LoreDocument> canonicalDocumentMap);
+                IReadOnlyList<LoreDocument> canonicalDocuments = canonicalDocumentMap.Values
+                    .OrderBy(static doc => doc.Order ?? int.MaxValue)
+                    .ThenBy(static doc => doc.Title, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                LoreDocument? canonicalHome = canonicalDocuments.FirstOrDefault(static doc => doc.RelativePath.Equals("_index.md", StringComparison.OrdinalIgnoreCase))
+                    ?? canonicalDocuments.FirstOrDefault();
+                return new LoreIndex(projectRoot, canonicalDocuments, CloneTree(canonicalRootItems), false, canonicalHome, "canonical-files");
+            }
+
             string loreBookDirectory = Path.Combine(projectRoot, "lore-book");
             if (!Directory.Exists(loreBookDirectory))
             {
@@ -272,8 +287,9 @@ namespace Onslaught___Career_Editor
             while (directory != null)
             {
                 string loreBook = Path.Combine(directory.FullName, "lore-book");
+                string canonicalLore = Path.Combine(directory.FullName, "lore");
                 string lorePack = Path.Combine(directory.FullName, LorePackDirectoryName);
-                if (Directory.Exists(loreBook) || Directory.Exists(lorePack))
+                if (Directory.Exists(canonicalLore) || Directory.Exists(loreBook) || Directory.Exists(lorePack))
                 {
                     return directory.FullName;
                 }
@@ -390,18 +406,19 @@ namespace Onslaught___Career_Editor
 
             LoreTreeItem root = new()
             {
-                Title = "Lore Book",
+                Title = "Lore library",
                 Order = 0
             };
             rootItems.Add(root);
 
             int order = 0;
-            foreach (string file in Directory.GetFiles(loreBookDirectory, "*.md", SearchOption.AllDirectories))
+            foreach (string file in Directory.GetFiles(loreBookDirectory, "*.md", SearchOption.AllDirectories)
+                .OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
             {
                 string relativePath = Path.GetRelativePath(loreBookDirectory, file).Replace('\\', '/');
                 LoreDocument document = new()
                 {
-                    Title = Path.GetFileNameWithoutExtension(file).Replace('-', ' '),
+                    Title = ResolveMarkdownTitle(File.ReadAllText(file), file),
                     FilePath = file,
                     RelativePath = relativePath,
                     IsIndex = IsIndexFile(file),

@@ -326,7 +326,8 @@ Quadtree-based spatial partitioning system. Used to find tree objects in world c
 - GetOwner() returns CThing pointer
 
 ### tree.cpp
-See [tree.cpp/_index.md](tree.cpp/_index.md) for the CTree class which manages individual tree objects (falling physics, destruction).
+See the retained [`CTree__UpdateFallingTree`](tree.cpp/CTree__UpdateFallingTree.md)
+note for the individual falling-tree path.
 
 ## Global References
 

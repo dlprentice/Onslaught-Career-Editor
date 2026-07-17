@@ -35,4 +35,4 @@ The historical cockpit/camera interpretation is not runtime-proven by this wave.
 
 - [CMech__InitLegMotion](./CMech__InitLegMotion.md)
 - [CMech__InitTargeting](./CMech__InitTargeting.md)
-- [../GroundUnit.cpp/_index.md](../GroundUnit.cpp/_index.md) - shared slot-9 caller invokes vtable slots 117/118/119
+- [Shared grounded-motion initialization](../GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md) - shared slot-9 caller context

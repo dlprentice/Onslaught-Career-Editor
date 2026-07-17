@@ -6,7 +6,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 > - [RE Index](../reverse-engineering/RE-INDEX.md) - Technical reverse engineering findings
 > - [Roadmap Index](../roadmap/ROADMAP-INDEX.md) - Current action items and priorities
 > - [CURRENT_CAPABILITIES.md](../CURRENT_CAPABILITIES.md) - Project overview and current app surface
-> - Mirror policy: `lore-book/lore/_index.md` may adjust only relative-link depth (allowed mirror rewrite); all other content should stay synchronized.
+> - Release packaging: the ignored offline Lore pack is generated directly from this canonical directory; there is no tracked mirror.
 
 ---
 

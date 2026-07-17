@@ -643,8 +643,8 @@ internal static class Program
         string resourcesRoot = Path.Combine(repoRoot, "game", "data", "resources");
         string extractorRuntimeDir = Path.Combine(repoRoot, "references", "AYAResourceExtractor", "Code", "AyaResourceExtractor", "bin", "Debug", "net6.0-windows");
         string extractorRoot = Path.Combine(repoRoot, "references", "AYAResourceExtractor");
-        string embeddedRoot = Path.Combine(repoRoot, "subagents", "aya_embedded_mesh_wave1_2026-03-13");
-        string outDir = Path.Combine(repoRoot, "subagents", $"asset_export_wave1_{DateTime.Today:yyyy-MM-dd}");
+        string embeddedRoot = Path.Combine(repoRoot, ".artifacts", "aya-embedded-meshes");
+        string outDir = Path.Combine(repoRoot, ".artifacts", "asset-export", DateTime.Today.ToString("yyyy-MM-dd"));
         int? limitLooseTextures = null;
         int? limitLooseMeshes = null;
         int? limitEmbeddedBodies = null;

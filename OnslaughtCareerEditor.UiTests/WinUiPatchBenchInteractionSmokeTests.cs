@@ -284,7 +284,7 @@ public class WinUiPatchBenchInteractionSmokeTests
 
     [Test]
     [Category("WinUIRuntime")]
-    [Explicit("Requires a private BEA.exe source path in ONSLAUGHT_WINUI_REAL_BEA_EXE_PATH and writes only copied outputs under subagents/.")]
+    [Explicit("Requires a private BEA.exe source path in ONSLAUGHT_WINUI_REAL_BEA_EXE_PATH and writes only copied outputs under .artifacts/.")]
     [Apartment(ApartmentState.STA)]
     public void PatchBench_VerifiesAppliesAndRestoresCopiedExecutableWhenProvided()
     {
@@ -305,7 +305,7 @@ public class WinUiPatchBenchInteractionSmokeTests
             Assert.Ignore($"Build output not found at: {exePath}. Run the WinUI build first.");
         }
 
-        string evidenceDir = Path.Combine(ResolveRepoRoot(), "subagents", "winui-patch-bench-interaction", "2026-05-06");
+        string evidenceDir = Path.Combine(ResolveRepoRoot(), ".artifacts", "winui-patch-bench-interaction");
         Directory.CreateDirectory(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir, Path.GetDirectoryName(Path.GetFullPath(sourceExePath))!);
         string patchWorkspace = Path.Combine(appDataDir, "OnslaughtCareerEditor", "PatchBench");

@@ -53,7 +53,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("lore-pack\\onslaught-lore.v1.jsonl", launcher)
             self.assertIn("keep the top-level folders together", launcher)
 
-    def test_copy_lore_book_uses_short_entry_subset_when_pack_exists(self) -> None:
+    def test_copy_lore_book_packages_only_canonical_book_when_pack_exists(self) -> None:
         original_lore_book_source = probe.LORE_BOOK_SOURCE
         try:
             with tempfile.TemporaryDirectory() as temp_root:
@@ -62,11 +62,11 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 destination_root = root / "bundle"
                 source.mkdir(parents=True)
                 (source / "BOOK.md").write_text(
-                    "- [Start Here](Start-Here.md)\n"
+                    "- [Overview](Overview.md)\n"
                     "- [Tech](reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md)\n",
                     encoding="utf-8",
                 )
-                (source / "Start-Here.md").write_text("# Start Here\n", encoding="utf-8")
+                (source / "Overview.md").write_text("# Overview\n", encoding="utf-8")
                 linked = source / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md"
                 linked.parent.mkdir(parents=True)
                 linked.write_text("# Ghidra Reference\n", encoding="utf-8")
@@ -83,7 +83,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
 
                 self.assertEqual(result.status, "PASS")
                 self.assertTrue((destination_root / "lore-book" / "BOOK.md").is_file())
-                self.assertTrue((destination_root / "lore-book" / "Start-Here.md").is_file())
+                self.assertFalse((destination_root / "lore-book" / "Overview.md").exists())
                 self.assertFalse((destination_root / "lore-book" / "reverse-engineering" / "binary-analysis" / "GHIDRA-REFERENCE.md").exists())
                 self.assertFalse((destination_root / "lore-book" / unlinked.relative_to(source)).exists())
         finally:
@@ -150,11 +150,6 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 source.mkdir(parents=True)
                 (repo_root / "tools").mkdir(parents=True)
                 (source / "BOOK.md").write_text(
-                    "- [Start](Start-Here.md)\n"
-                    "- [Sibling](Sibling.md)\n",
-                    encoding="utf-8",
-                )
-                (source / "Start-Here.md").write_text(
                     "[Sibling](Sibling.md)\n"
                     "[Deep](deep/Deep.md#anchor)\n"
                     "[Tool](../tools/helper.py)\n",
@@ -171,18 +166,18 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
                 result = probe.copy_lore_book(destination_root)
 
                 self.assertEqual(result.status, "PASS")
-                packaged_start = (destination_root / "lore-book" / "Start-Here.md").read_text(encoding="utf-8")
+                packaged_book = (destination_root / "lore-book" / "BOOK.md").read_text(encoding="utf-8")
                 self.assertIn(
                     "[Sibling](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/Sibling.md)",
-                    packaged_start,
+                    packaged_book,
                 )
                 self.assertIn(
                     "[Deep](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/lore-book/deep/Deep.md#anchor)",
-                    packaged_start,
+                    packaged_book,
                 )
                 self.assertIn(
                     "[Tool](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/tools/helper.py)",
-                    packaged_start,
+                    packaged_book,
                 )
                 self.assertFalse((destination_root / "lore-book" / "deep" / "Deep.md").exists())
         finally:
@@ -289,7 +284,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self._write_required_root_payload(bundle_dir)
             self._write_lore_pack_payload(
                 bundle_dir,
-                relative_path="Start-Here.md",
+                relative_path="Overview.md",
                 content_relative_path="folder/../SecretLeakProbe.md",
             )
 
@@ -308,7 +303,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self._write_required_root_payload(bundle_dir)
             self._write_lore_pack_payload(
                 bundle_dir,
-                relative_path="folder/Start-Here.md",
+                relative_path="folder/Overview.md",
                 content_relative_path="folder/Other.md",
             )
 
@@ -326,7 +321,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self._write_required_root_payload(bundle_dir)
             self._write_lore_pack_payload(
                 bundle_dir,
-                relative_path="folder/Start-Here.md",
+                relative_path="folder/Overview.md",
                 content_relative_path="folder/./SecretLeakProbe.md",
             )
 
@@ -803,7 +798,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         self.assertIn("=== attempt 2 exit 0 ===", output)
 
     def _write_required_root_payload(self, bundle_dir: Path) -> None:
-        for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md", "lore-book/Start-Here.md"):
+        for relative_path in (probe.ROOT_LAUNCHER, probe.ROOT_README, probe.ROOT_LICENSE, "lore-book/BOOK.md"):
             path = bundle_dir / relative_path
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(relative_path, encoding="utf-8")
@@ -817,7 +812,7 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
         bundle_dir: Path,
         *,
         content: str = "# Start\n\nSynthetic fixture.\n",
-        relative_path: str = "Start-Here.md",
+        relative_path: str = "Overview.md",
         content_relative_path: str | None = None,
         doc_id: str = "doc-000001",
         content_doc_id: str | None = None,

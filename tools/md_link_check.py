@@ -21,16 +21,25 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-try:
-    from npm_script_doc_check import ACTIVE_MARKDOWN_FILES
-except ModuleNotFoundError:  # Support import as tools.md_link_check.
-    from tools.npm_script_doc_check import ACTIVE_MARKDOWN_FILES
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-PUBLIC_CORE_MARKDOWN = ACTIVE_MARKDOWN_FILES
+PUBLIC_CORE_MARKDOWN = (
+    "README.MD",
+    "CURRENT_CAPABILITIES.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "README.RELEASE.md",
+    "VALIDATION.md",
+    "lore/_index.md",
+    "reverse-engineering/RE-INDEX.md",
+    "roadmap/ROADMAP-INDEX.md",
+    "roadmap/public-roadmap.md",
+    "roadmap/three-lane-product-strategy.md",
+    "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
+    "rebuild/README.md",
+    "rebuild/PROVENANCE.md",
+)
 
 
 def utc_now_iso() -> str:
@@ -59,7 +68,7 @@ def include_markdown_path(path: Path) -> bool:
         return False
     if rel.startswith("release/artifacts/"):
         return False
-    if rel.startswith("subagents/"):
+    if rel.startswith(".artifacts/"):
         return False
     if rel.startswith("wave_"):
         return False
@@ -84,7 +93,7 @@ def iter_markdown_files(scope: str = "all") -> List[Path]:
             text=True,
         )
         files = [REPO_ROOT / line for line in result.stdout.splitlines() if line.strip()]
-        files = [p for p in files if include_markdown_path(p)]
+        files = [p for p in files if p.is_file() and include_markdown_path(p)]
         files.sort(key=lambda x: x.as_posix())
         if files:
             return files
@@ -140,7 +149,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--out-dir",
-        default="reverse-engineering/binary-analysis",
+        default=".artifacts/md-link-check",
         help="Output dir (workspace-relative)",
     )
     ap.add_argument("--date", default=_dt.date.today().isoformat(), help="Date stamp (YYYY-MM-DD)")

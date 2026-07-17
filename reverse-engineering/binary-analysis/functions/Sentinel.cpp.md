@@ -21,7 +21,7 @@ CThing
     CSentinel
 ```
 
-## Wave498 Saved CSentinel Evidence
+## Saved CSentinel evidence
 
 | Address | Saved name | Signature | Static evidence |
 | --- | --- | --- | --- |
@@ -33,39 +33,11 @@ CThing
 | `0x004ded60` | `CSentinel__Deactivate` | `int __fastcall CSentinel__Deactivate(void * this)` | Primary table slot 50 points here. Reads current animation state, compares it to the `activate` animation index, switches to looping `inactive` animation when appropriate, calls the slot-22 state-change helper, and returns `0`. |
 | `0x004dee00` | `CSentinel__CheckWeaponSlot` | `int __thiscall CSentinel__CheckWeaponSlot(void * this, void * weapon_context)` | Called by `CSentinel__UpdateFlamethrowers`. Maps `weapon_context+0xac` values `2..9` to slot ids `9..16`, walks `this+0x19c`, returns `0` when an occupied entry has `+0x270` matching the slot id, and returns `1` otherwise. |
 
-## Wave498 Read-Back
-
-Evidence artifacts live under `subagents/ghidra-static-reaudit/wave498-sentinel-safeside-004de1d0/`.
-
-| Evidence | Result |
-| --- | --- |
-| Dry run | `updated=0 skipped=6 created=0 would_create=1 renamed=0 would_rename=1 missing=0 bad=0` |
-| Apply | `updated=7 skipped=0 created=1 would_create=0 renamed=1 would_rename=0 missing=0 bad=0` |
-| Void correction apply | `updated=1 skipped=6 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0` |
-| Int correction apply | `updated=1 skipped=6 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0` |
-| Final verify dry | `updated=0 skipped=7 created=0 would_create=0 renamed=0 would_rename=0 missing=0 bad=0` |
-| Probe | `py -3 tools\ghidra_sentinel_wave498_probe.py --check` PASS |
-| NPM probe | `cmd.exe /c npm run test:ghidra-sentinel-wave498` PASS |
-| Backup | `[maintainer-local-ghidra-backup-root]\BEA_20260517-115915_post_wave498_sentinel_verified`, 19 files, 157780871 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
-
-Wave542 later resolved the deferred non-Sentinel `0x004de1d0` target as `CSafeSide__ShutdownAndUnlinkFactionAnchor`.
-
-## Wave542 CSafeSide Follow-Up
+## CSafeSide follow-up
 
 | Address | Saved name | Signature | Static evidence |
 | --- | --- | --- | --- |
 | `0x004de1d0` | `CSafeSide__ShutdownAndUnlinkFactionAnchor` | `void __fastcall CSafeSide__ShutdownAndUnlinkFactionAnchor(void * this)` | Vtable slot data at `0x005dcce4` points here for tables `0x005dccc0`, `0x005dccc4`, and `0x005dccd0`. The body removes `this` from `DAT_00855160` through `CSPtrSet__Remove`, then forwards to `CComplexThing__Shutdown`. `CUnit__FindNearestFactionAnchor` also scans `DAT_00855160`, bounding the list role as faction-anchor context. |
-
-Read-back artifacts live under `subagents/ghidra-static-reaudit/wave542-safeside-vfunc-004de1d0/`.
-
-| Evidence | Result |
-| --- | --- |
-| Dry run | `updated=0 skipped=1 renamed=0 would_rename=1 missing=0 bad=0` |
-| Apply | `updated=1 skipped=0 renamed=1 would_rename=0 missing=0 bad=0` |
-| Final verify dry | `updated=0 skipped=1 renamed=0 would_rename=0 missing=0 bad=0` |
-| Probe | `py -3 tools\ghidra_safeside_shutdown_wave542_probe.py --check` PASS |
-| NPM probe | `cmd.exe /c npm run test:ghidra-safeside-shutdown-wave542` PASS |
-| Backup | `[maintainer-local-ghidra-backup-root]\BEA_20260518-093637_post_wave542_safeside_shutdown_verified`, 19 files, 159320967 bytes, `MissingCount=0`, `ExtraCount=0`, `HashDiffCount=0` |
 
 This is not runtime faction-anchor proof, exact `CSafeSide` source-body proof, concrete layout recovery, BEA launch behavior, game patching, or rebuild parity.
 
@@ -101,7 +73,7 @@ This is not runtime faction-anchor proof, exact `CSafeSide` source-body proof, c
 - `CSentinelBehaviourType` (0x00627c98) - behavior type descriptor.
 - `CMCSentinel` (0x0062dfa8) - motion controller for sentinel.
 
-## Wave434 CMCSentinel Motion Controller Read-Back
+## CMCSentinel motion controller
 
 Wave434 corrected the separate `CMCSentinel` motion-controller vtable at `0x005dc420`. This is distinct from the gameplay `CSentinel` unit, but Wave498 confirms `CSentinel__Init` allocates/attaches `CMCSentinel` at `this+0x70`.
 

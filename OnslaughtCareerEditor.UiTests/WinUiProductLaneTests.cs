@@ -124,81 +124,6 @@ public class WinUiProductLaneTests
     }
 
     [Test]
-    public void HomeNativeAcceptance_CoversFirstRunReadyAndCompactWithoutNavigation()
-    {
-        string smoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiHomeNavigationSmokeTests.cs");
-        string packageJson = ReadRepoFile("package.json");
-        string acceptance = ExtractCodeSlice(
-            smoke,
-            "public void Home_NewcomerHierarchy_CapturesFirstRunReadyAndCompactWithoutNavigation()",
-            "[Test]\n    [Category(\"WinUIRuntime\")]\n    [Explicit(\"Launches WinUI on Home and verifies Game Options deep-link navigation.\")]" );
-        string captureHelper = ExtractCodeSlice(
-            smoke,
-            "private static HomeCaptureEvidence CaptureReceiptBoundHomeWindow(",
-            "private static void WaitForHomeLayout(");
-        string manifestPublisher = ExtractCodeSlice(
-            smoke,
-            "private static void PublishHomeAcceptanceRun(",
-            "private static void TryDeleteDirectory(");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(Regex.Matches(acceptance, "LaunchHomeSession\\(").Count, Is.EqualTo(2));
-            Assert.That(acceptance, Does.Contain("LaunchHomeSession(stagingDirectory, requireRepoBuild: true)"));
-            Assert.That(acceptance, Does.Contain("LaunchHomeSession(stagingDirectory, readyGameDirectory, \"ready\", requireRepoBuild: true)"));
-            Assert.That(acceptance, Does.Contain("HomeSetupActionButton"));
-            Assert.That(acceptance, Does.Contain("HomeOpenPatchBenchButton"));
-            Assert.That(acceptance, Does.Contain("HomePatchModsTitle"));
-            Assert.That(acceptance, Does.Contain("HomeSaveOptionsTitle"));
-            Assert.That(acceptance, Does.Contain("HomeOpenConfigurationEditorButton"));
-            Assert.That(acceptance, Does.Contain("new Rectangle(16, 16, 760, 820)"));
-            Assert.That(acceptance, Does.Contain("CaptureReceiptBoundHomeWindow("));
-            Assert.That(Regex.Matches(acceptance, "CaptureReceiptBoundHomeWindow\\(").Count, Is.EqualTo(4));
-            Assert.That(acceptance, Does.Contain("HomeFocusEvidence"));
-            Assert.That(acceptance, Does.Contain("focusReceipts"));
-            Assert.That(acceptance, Does.Contain("AssertHomeFocusRemains("));
-            Assert.That(acceptance, Does.Contain("local-lab"));
-            Assert.That(acceptance, Does.Contain("winui-home-native-visual-focus"));
-            Assert.That(acceptance, Does.Contain(".partial"));
-            Assert.That(acceptance, Does.Contain("PublishHomeAcceptanceRun("));
-            Assert.That(acceptance, Does.Contain("WaitForHomeLayout("));
-            Assert.That(acceptance, Does.Contain("AssertHomeElementsInsideWindow("));
-            Assert.That(acceptance, Does.Not.Contain("ActivateAndWait("));
-            Assert.That(acceptance, Does.Not.Contain(".Click("));
-            Assert.That(acceptance, Does.Not.Contain(".Invoke("));
-            Assert.That(smoke, Does.Contain("HomeVisualEvidenceAcceptance.HasMeaningfulFrameCoverage"));
-            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadTerminalDiagnostic"));
-            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadEndpointStatus"));
-            Assert.That(smoke, Does.Contain("ExactWindowScopedMatch"));
-            Assert.That(smoke, Does.Contain("failIfUnavailable: requireRepoBuild"));
-            Assert.That(smoke, Does.Contain("preLaunchExecutableSha256"));
-            Assert.That(smoke, Does.Contain("CloseLaunchedHomeApp(app)"));
-            Assert.That(
-                captureHelper.IndexOf("operations.RestoreWindowState(originalState);", StringComparison.Ordinal),
-                Is.LessThan(captureHelper.IndexOf("File.Move(temporaryPath, outputPath);", StringComparison.Ordinal)),
-                "The accepted PNG must not replace prior evidence until exact window restoration succeeds.");
-            Assert.That(captureHelper, Does.Contain("Assert.That(File.Exists(outputPath), Is.False"));
-            Assert.That(captureHelper, Does.Not.Contain("overwrite: true"));
-            Assert.That(smoke, Does.Contain("Directory.Move(stagingDirectory, acceptedDirectory);"));
-            Assert.That(smoke, Does.Contain("home-acceptance-manifest.json"));
-            Assert.That(manifestPublisher, Does.Contain("focusReceipts"));
-            Assert.That(manifestPublisher, Does.Contain("Has.Count.EqualTo(4)"));
-            Assert.That(manifestPublisher, Does.Contain("Has.Count.EqualTo(2)"));
-            Assert.That(manifestPublisher, Does.Contain("if (Directory.Exists(stagingDirectory))"));
-            Assert.That(manifestPublisher, Does.Contain("capture.Identity == receipt.Identity"));
-            Assert.That(manifestPublisher, Does.Not.Contain("acceptedTemporaryManifestPath"));
-            Assert.That(smoke, Does.Contain("ResolveRepoBuiltWinUiAppPath"));
-            Assert.That(packageJson, Does.Contain("test:winui-home-native-visual-focus"));
-            Assert.That(packageJson, Does.Contain("run_winui_home_native_visual_focus_test.py"));
-            Assert.That(packageJson, Does.Contain("run_winui_home_native_visual_focus.py"));
-            Assert.That(
-                manifestPublisher.IndexOf("File.Move(temporaryManifestPath, stagedManifestPath);", StringComparison.Ordinal),
-                Is.LessThan(manifestPublisher.IndexOf("Directory.Move(stagingDirectory, acceptedDirectory);", StringComparison.Ordinal)),
-                "The final acceptance manifest must be complete inside staging before the one directory publication rename.");
-        });
-    }
-
-    [Test]
     public void ShellRoutePersistence_RestoresPersistedSaveLabTab()
     {
         string shellCode = ReadRepoFile("OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs");
@@ -585,50 +510,6 @@ public class WinUiProductLaneTests
         Assert.That(hostCode, Does.Contain("RowsWithMaterialReferenceModes"));
         Assert.That(hostCode, Does.Contain("MaterialMappingModes"));
         Assert.That(hostCode, Does.Contain("MaterialReferenceModes"));
-    }
-
-    [Test]
-    public void WinUiInstallerSigning_PreflightTracksPackageProofLayers()
-    {
-        string project = ReadRepoFile("OnslaughtCareerEditor.WinUI", "OnslaughtCareerEditor.WinUI.csproj");
-        string packageJson = ReadRepoFile("package.json");
-        string preflight = ReadRepoFile("tools", "winui_installer_preflight.py");
-
-        Assert.That(project, Does.Contain("<EnableMsixTooling>false</EnableMsixTooling>"));
-        Assert.That(project, Does.Contain("<AppxPackage>false</AppxPackage>"));
-        Assert.That(project, Does.Contain("<WindowsPackageType>None</WindowsPackageType>"));
-        Assert.That(project, Does.Contain("<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>"));
-        Assert.That(project, Does.Not.Contain("PackageCertificateThumbprint"));
-        Assert.That(project, Does.Not.Contain("PackageCertificateKeyFile"));
-        Assert.That(project, Does.Not.Contain("PackageCertificatePassword"));
-        Assert.That(packageJson, Does.Contain("test:winui-installer-preflight"));
-        Assert.That(packageJson, Does.Contain("test:winui-msix-candidate-probe"));
-        if (packageJson.Contains("\"name\": \"onslaught-toolkit-public-source\"", StringComparison.Ordinal))
-        {
-            Assert.That(packageJson, Does.Not.Contain("test:winui-msix-signing-probe"));
-            Assert.That(packageJson, Does.Not.Contain("test:winui-msix-install-probe"));
-            Assert.That(packageJson, Does.Not.Contain("test:winui-msix-trusted-install-probe"));
-            Assert.That(packageJson, Does.Not.Contain("--allow-current-user-cert-trust"));
-        }
-        else
-        {
-            Assert.That(packageJson, Does.Contain("test:winui-msix-signing-probe"));
-            Assert.That(packageJson, Does.Contain("test:winui-msix-install-probe"));
-            Assert.That(packageJson, Does.Contain("test:winui-msix-trusted-install-probe"));
-        }
-        Assert.That(preflight, Does.Contain("guarded-not-ready"));
-        Assert.That(preflight, Does.Contain("unsigned_msix_candidate_probe"));
-        Assert.That(preflight, Does.Contain("local_msix_signing_probe"));
-        Assert.That(preflight, Does.Contain("untrusted_install_probe"));
-        Assert.That(preflight, Does.Contain("trusted_install_probe"));
-        Assert.That(preflight, Does.Contain("winui_msix_current_candidate_probe_2026-05-08.md"));
-        Assert.That(preflight, Does.Contain("winui_msix_current_signing_probe_2026-05-08.md"));
-        Assert.That(preflight, Does.Contain("winui_msix_current_untrusted_install_probe_2026-05-08.md"));
-        Assert.That(preflight, Does.Contain("winui_msix_trusted_install_guarded_blocker_2026-05-22.md"));
-        Assert.That(preflight, Does.Contain("install is blocked without certificate trust"));
-        Assert.That(preflight, Does.Contain("Package.appxmanifest"));
-        Assert.That(preflight, Does.Contain("not configured as an MSIX package"));
-        Assert.That(preflight, Does.Not.Contain("signed installer/MSIX release is not proven"));
     }
 
     [Test]

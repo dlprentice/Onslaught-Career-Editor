@@ -87,7 +87,7 @@ See [windowed-mode-analysis.md](../../windowed-mode-analysis.md) for the full in
 | `-autoconfigtest [path]` | string (optional) | Run auto-config test |
 | `-testeur` | flag | Test mode (European QA flag?) |
 
-See [_index.md](./_index.md) for detailed descriptions of each parameter.
+See the [retained function index](../_index.md) for related command-line notes.
 
 ## Notes
 - Migrated from ghidra-analysis.md (Dec 2025)

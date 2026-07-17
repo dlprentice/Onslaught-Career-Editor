@@ -1,6 +1,0 @@
-bp 0045cb80 "r @$t0=poi(@esp+4); r @$t1=poi(@esp+8); gu; .printf \"Goodies get_goodie_number x=%d y=%d ret=%d\\n\", @$t0, @$t1, @eax; g"
-bp 0045cf2a ".printf \"Goodies right-probe-after-clamp this=%p mCX=%d mCY=%d\\n\", @ebx, poi(@ebx+13c), poi(@ebx+140); g"
-bp 0045cf4c ".printf \"Goodies right-backtrack-scan this=%p mCX=%d mCY=%d\\n\", @ebx, poi(@ebx+13c), poi(@ebx+140); g"
-bp 0045d070 ".printf \"Goodies selected-load-gate this=%p mCX=%d mCY=%d\\n\", @ebx, poi(@ebx+13c), poi(@ebx+140); g"
-bp 0045c9f0 ".printf \"Goodies StartLoadingGoody this=%p mCX=%d mCY=%d\\n\", @ecx, poi(@ecx+13c), poi(@ecx+140); g"
-g
