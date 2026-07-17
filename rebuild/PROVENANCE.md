@@ -1,76 +1,57 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-07-12
 
-## Current Lane
+`rebuild/` is a GPL-3.0-or-later, source- and reverse-engineering-informed
+reconstruction. It is not a clean-room lane. The root MIT license does not
+relicense this subtree or the pinned `references/Onslaught` source.
 
-`rebuild/` is an **RE-informed original-code implementation**, not a strict
-clean-room rebuild. Its coordinator and current implementation lane have been
-exposed to public GPL reference source, reverse-engineering documentation,
-Ghidra-derived descriptions, and runtime evidence.
+## Permitted evidence and inputs
 
-The subtree is therefore licensed separately under GPL-3.0-or-later. The root
-MIT license continues to cover original toolkit code outside `rebuild/`; it
-does not relicense this subtree or the `references/Onslaught` submodule.
+- Stuart Gillam's pinned GPL source may be read, ported, and adapted with its
+  license and attribution preserved.
+- The Steam retail executable and Ghidra database establish released static
+  identities and deltas from the reference source.
+- Controlled copied-runtime observations establish measured behavior.
+- Original design work, deterministic tests, public standards, and engine APIs
+  may fill gaps that are clearly labelled provisional.
+- The project has full permission to use, modify, and distribute the original
+  game assets. Selected assets may enter the rebuild when an implemented slice
+  consumes them and their provenance, credits, and third-party terms are clear.
 
-## Allowed Inputs
+Do not import the retail executable, decompiler output, user saves, raw runtime
+captures, or separately licensed third-party code/media into this subtree.
+Never describe synthetic or source-only behavior as observed Steam behavior.
 
-- behavior requirements stated as facts, tests, or bounded public contracts;
-- original design decisions made in this subtree;
-- public standards and engine APIs;
-- synthetic command tapes and procedurally authored test/visual content; and
-- independently measured runtime behavior when its proof boundary is recorded.
+## Authority
 
-User-supplied local meshes, including user-extracted retail meshes, may be
-loaded only as optional ignored local presentation inputs through the explicit
-`--local-assets` path. Runtime/config wording remains origin-neutral unless a
-separate exporter receipt and content hash are bound. These meshes are not
-inputs to Core/Client implementation, repository content, redistribution
-material, simulation truth, or evidence of visual/gameplay parity.
+The reference source is implementation evidence, not automatic proof that the
+Steam build is byte- or behavior-identical. When sources disagree, use this
+order for the released PC game:
 
-## Forbidden Imports
+1. controlled retail runtime observation;
+2. retail binary/static evidence;
+3. pinned source implementation and vocabulary;
+4. provisional reconstruction design.
 
-- copied or mechanically translated reference-source functions, headers,
-  comments, names, layouts, or control flow;
-- decompiler text or generated code derived from the retail executable;
-- proprietary executables, game archives, media, saves, screenshots, or
-  extracted assets;
-- project references or build-time reads from `references/Onslaught`; and
-- claims that a passing replay, renderer smoke, or visual comparison proves
-  gameplay, asset, timing, or presentation parity.
+Record a source or address only when it makes a current implementation decision
+auditable. Generated inventories, human-review gates, and proof-plan chains are
+not provenance.
 
-## First-Slice Classification
+## Current slice
 
-The initial implementation is a synthetic prototype. None of its numeric
-values are presented as measured retail constants.
+The deterministic Core and command-tape/hash format are reconstruction-owned
+infrastructure. The current Godot Aquila Handling Lab is still a procedural
+input/rendering harness. Its arena, targets, weapons, resources, jet/morph
+rules, and presentation are provisional unless a specific retained retail
+measurement says otherwise.
 
-| Surface | Classification | Evidence claim |
-| --- | --- | --- |
-| Tick rate, arena bounds, movement speeds, resources, cooldowns, damage, and hit radius | Original project design values | No retail timing, handling, balance, or layout claim |
-| Walker/jet mode, energy use, shield behavior, firing, and targets | Original prototype mechanics inspired only by the high-level project premise | No retail control-flow, gameplay, or parity claim |
-| Seeded target positions and `first-flight` command tape | Synthetic regression content | Determinism input only; not a retail mission or asset |
-| Binary state serializer, final-state hash, and rolling replay trace hash | Original test/acceptance format | Canonical continuation-state and replay-history stability only |
-| Real-time input adapter, edge/pulse latching, and catch-up policy | Original client scheduling design | Deterministic adapter behavior only; no retail input/timing claim |
-| Default First Flight arena, craft, sentries, projectiles, HUD, camera, colors, and layout | Original procedural Godot presentation | A playable renderer/input proof only; no retail asset, mission, visual, or gameplay parity claim |
-| Explicit local player/terrain mesh roles | Optional user-supplied ignored local presentation input; a retail source is possible but not inferred from path/config | Nonempty renderable local load success only; never committed, redistributed, or used as origin/simulation/parity evidence |
+Walker/jet forward speed, walker strafe, walker yaw, and jet energy drain have
+bounded retail measurements mapped into Core. Their presence does not make the
+surrounding movement or vehicle model retail-faithful. In particular, the
+current morph lock is synthetic and the observed retail settle measurement is
+not yet implemented.
 
-The Core test project copies the Core sources and project file into test output,
-rejects filesystem/process/clock/network API tokens, linked source/build inputs,
-custom build targets, project/assembly references, and known presentation or
-toolkit assembly dependencies. This is a build-boundary gate, not proof against
-semantic copying. Human provenance review remains required.
-
-## Strict Clean-Room Path
-
-A future strict clean-room effort must use separately staffed roles:
-
-1. an exposed specification team produces behavior-only specifications with
-   provenance and rights review;
-2. an implementation team with no exposure to reference source, decompiler
-   output, this RE-informed implementation, or private proof payloads works
-   only from the approved specifications; and
-3. an independent acceptance team compares observable behavior without
-   transferring implementation details between the first two teams.
-
-Nothing in the current subtree is evidence that this separation has occurred.
+A passing replay proves repeatability of the encoded state and input history.
+A native smoke proves the current client starts, renders, advances, and exits.
+Neither proves gameplay, mission, asset, timing, or visual parity.

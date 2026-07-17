@@ -1,8 +1,10 @@
 # Game Assets And Mission Data
 
-These documents describe formats and relationships observed from user-supplied
-local game data and the pinned AYA reference extractor. The repository and app
-release do not contain extracted retail assets.
+These documents describe formats and relationships observed from the project
+owner's game data and the pinned AYA reference extractor. Current source and app
+packages do not bundle the full retail data set; see
+[`../project-meta/attribution.md`](../project-meta/attribution.md) for the
+project's asset permission and attribution boundary.
 
 ## Asset formats and extraction
 
@@ -19,15 +21,11 @@ catalog and does not extract the installed game in place.
 
 ## Mission and script references
 
-- [Mission script index](mission-scripts-index.md)
 - [MSL scripting](msl-scripting.md)
-- [Events](mission-events-index.md)
-- [Slots](mission-slot-usage.md)
-- [Messages](mission-message-usage.md)
-- [Speakers](mission-speaker-index.md)
-- [Text](mission-text-index.md)
-- [Thing usage](mission-thing-usage.md)
+- [MissionScript / IScript static contract](../binary-analysis/missionscript-iscript-static-contract.md)
 
-Counts and mappings are bounded to their recorded corpus. They do not establish
-format completeness, redistribution rights, renderer fidelity, or rebuild
-parity.
+The MSL reference retains language conventions and representative examples.
+Generated per-level inventories and count tables are intentionally not tracked;
+agents can query the source corpus directly when a reconstruction task needs
+them. Static identities do not establish runtime source selection, command
+effects, renderer fidelity, or rebuild parity.

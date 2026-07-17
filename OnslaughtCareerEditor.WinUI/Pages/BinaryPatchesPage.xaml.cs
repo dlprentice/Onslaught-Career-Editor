@@ -101,11 +101,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string? _lastCopiedProfileRoot;
         private string? _lastCopiedProfileContentSignature;
         private string? _lastCopiedProfileCreateMusicSwapPresetId;
-        private GameProfileMusicReplacementResult? _lastMusicReplacementResult;
-        private OnlineSecondHostReadinessArtifactSummary? _secondHostReadinessArtifactSummary;
-        private OnlineLocalGamepadReadinessArtifactSummary? _localGamepadReadinessArtifactSummary;
-        private OnlineDualSafeCopyTopologyArtifactSummary? _dualSafeCopyTopologyArtifactSummary;
-        private GameProfileManagedProcess? _managedCopiedProfileProcess;
+        private GameProfileMusicReplacementResult? _lastMusicReplacementResult;        private GameProfileManagedProcess? _managedCopiedProfileProcess;
         private bool _isLoadingSourcePath;
         private bool _isAwaitingCopiedProfileConfirmation;
         private bool _isPreparingCopiedProfile;
@@ -140,84 +136,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             OperationLogTextBox.Text =
                 "Windowed & Mods safely patches and plays a copy of your game. Your original Steam installation is left untouched.\n" +
-                "Ready.";
-
-            RenderOnlineMultiplayerReadiness();
-            LoadSourcePathFromConfig();
+                "Ready.";            LoadSourcePathFromConfig();
             RestoreTrackedSafeGameCopyProcess();
             UpdateControlState();
-        }
-
-        private void RenderOnlineMultiplayerReadiness()
-        {
-            OnlineMultiplayerReadinessSummary summary = OnlineMultiplayerReadinessService.GetCurrentSummary(
-                _secondHostReadinessArtifactSummary,
-                _localGamepadReadinessArtifactSummary,
-                _dualSafeCopyTopologyArtifactSummary);
-            PatchBenchOnlineReadinessTextState text = PatchBenchOnlineReadinessText.Build(
-                summary,
-                _secondHostReadinessArtifactSummary,
-                _localGamepadReadinessArtifactSummary,
-                _dualSafeCopyTopologyArtifactSummary);
-
-            PatchBenchOnlineReadinessHeadline.Text = text.Headline;
-            PatchBenchOnlineReadinessSlots.Text = text.Slots;
-            PatchBenchOnlineReadinessMetadataSlots.Text = text.MetadataSlots;
-            PatchBenchOnlineTargetModel.Text = text.TargetModel;
-            PatchBenchOnlineReadinessProofClass.Text = text.ProofClass;
-            PatchBenchOnlineReadinessNextProof.Text = text.NextProof;
-            PatchBenchOnlineReadinessGateDetails.Text = text.GateDetails;
-            PatchBenchOnlineProofLadder.Text = text.ProofLadder;
-            PatchBenchOnlineCompanionModelDetails.Text = text.CompanionModelDetails;
-            PatchBenchOnlineSecondHostSetupChecklist.Text = text.SecondHostSetupChecklist;
-            PatchBenchOnlineReadinessBlockedActions.Text = text.BlockedActions;
-            PatchBenchOnlineReadinessBlockedReasons.Text = text.BlockedReasons;
-            PatchBenchOnlineLiveAttemptStatus.Text = text.LiveAttemptStatus;
-            PatchBenchOnlineLiveAttemptBlockers.Text = text.LiveAttemptBlockers;
-            PatchBenchOnlineLiveAttemptCommands.Text = text.LiveAttemptCommands;
-            PatchBenchOnlinePromotionLockStatus.Text = text.PromotionLockStatus;
-            PatchBenchOnlineReadinessArtifactStatus.Text = text.SecondHostReadinessArtifactStatus;
-            PatchBenchGamepadReadinessArtifactStatus.Text = text.GamepadReadinessArtifactStatus;
-            PatchBenchDualSafeCopyTopologyArtifactStatus.Text = text.DualSafeCopyTopologyArtifactStatus;
-            PatchBenchDualSafeCopyTopologyBoundary.Text = text.DualSafeCopyTopologyBoundary;
-            PatchBenchDualSafeCopyTopologyNextProofs.Text = text.DualSafeCopyTopologyNextProofs;
-            RenderOnlineTechnicalDetailsVisibility();
-            RenderMaintainerArtifactToolsVisibility();
-            RenderOnlineCompanionSessionReadiness(false, null, null);
-        }
-
-        private void RenderOnlineCompanionSessionReadiness(
-            bool contentMatchesCurrentSelection,
-            GameProfileLaunchPlan? launchPlan,
-            string? launchPlanError)
-        {
-            OnlineCompanionSessionReadinessSummary summary = OnlineMultiplayerReadinessService.GetCompanionSessionReadiness(
-                _lastCopiedProfileRoot,
-                contentMatchesCurrentSelection,
-                launchPlan,
-                launchPlanError);
-            PatchBenchOnlineCompanionSessionTextState text = PatchBenchOnlineReadinessText.BuildCompanionSession(summary);
-
-            PatchBenchOnlinePrepActionStatus.Text = text.PrepActionStatus;
-            PatchBenchOnlineCompanionSessionStatus.Text = text.SessionStatus;
-            PatchBenchOnlineCompanionLaunchPlan.Text = text.LaunchPlan;
-            PatchBenchOnlineCompanionNextProofs.Text = text.NextProofs;
-            PatchBenchOnlineCompanionNonClaims.Text = text.NonClaims;
-        }
-
-        private void RenderMaintainerArtifactToolsVisibility()
-        {
-            bool visible = PatchBenchOnlineMaintainerArtifactToolsToggle.IsOn;
-            PatchBenchMaintainerArtifactLoaderPanel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-            PatchBenchMaintainerArtifactToolsStatus.Text = visible
-                ? "Technical summary loaders are visible. Loading a summary still cannot enable Host/Join or prove online play."
-                : "Technical summary loaders are hidden. Normal safe-copy play does not need summary files.";
-        }
-
-        private void RenderOnlineTechnicalDetailsVisibility()
-        {
-            bool visible = PatchBenchOnlineTechnicalDetailsToggle.IsOn;
-            PatchBenchOnlineTechnicalDetailsExpander.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private IEnumerable<BinaryPatchItemModel> AllItems => _allPatchItems;
@@ -348,6 +269,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchInvertWalkerYOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchInvertFlightYOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchCreateMusicSwapPresetComboBox.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
+
             PatchBenchLaunchCopiedProfileButton.IsEnabled = hasLaunchableCopiedProfile;
             PatchBenchTopPlaySafeCopyButton.IsEnabled = PatchBenchLaunchCopiedProfileButton.IsEnabled;
             PatchBenchStopCopiedProfileButton.IsEnabled = _managedCopiedProfileProcess is not null && !_isStoppingCopiedProfile;
@@ -405,10 +327,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 copiedProfileContentMatchesCurrent,
                 copiedProfileHasLaunchPlan,
                 copiedProfileLaunchPlan,
-                copiedProfileLaunchError);
-            RenderOnlineCompanionSessionReadiness(
-                copiedProfileContentMatchesCurrent,
-                copiedProfileHasLaunchPlan ? copiedProfileLaunchPlan : null,
                 copiedProfileLaunchError);
         }
 
@@ -699,6 +617,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : PatchBenchMenuColorSelectionKind.None;
         }
 
+
         private void PatchCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox { IsChecked: true, DataContext: BinaryPatchItemModel changedItem } &&
@@ -885,16 +804,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             OperationLogTextBox.Text = "Local split-screen preset selected: -skipfmv -level 850. Create safe copy next, then launch that safe copy. No listener, invitation, remote input, or Host/Join control is enabled.";
         }
 
-        private void MaintainerArtifactToolsToggle_Toggled(object sender, RoutedEventArgs e)
-        {
-            RenderMaintainerArtifactToolsVisibility();
-        }
-
-        private void OnlineTechnicalDetailsToggle_Toggled(object sender, RoutedEventArgs e)
-        {
-            RenderOnlineTechnicalDetailsVisibility();
-        }
-
         private void UpdateSafeCopyBusyState()
         {
             string? status = null;
@@ -919,150 +828,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchSafeCopyBusyPanel.Visibility = isBusy ? Visibility.Visible : Visibility.Collapsed;
             PatchBenchSafeCopyBusyRing.IsActive = isBusy;
             PatchBenchSafeCopyBusyStatus.Text = status ?? "Safe copy operation in progress.";
-        }
-
-        private async void LoadOnlineReadinessArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (App.MainWindowInstance is null)
-                {
-                    return;
-                }
-
-                string? path = await PickerInterop.PickFileAsync(App.MainWindowInstance, new[] { ".json" });
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return;
-                }
-
-                if (OnlineMultiplayerReadinessService.TryLoadSecondHostReadinessArtifact(
-                        path,
-                        out OnlineSecondHostReadinessArtifactSummary? artifact,
-                        out string? error) &&
-                    artifact is not null)
-                {
-                    _secondHostReadinessArtifactSummary = artifact;
-                    RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatSecondHostReadinessArtifactStatus(artifact);
-                    AppStatusService.SetStatus("Windowed & Mods: loaded redacted second-host readiness summary");
-                    return;
-                }
-
-                PatchBenchOnlineReadinessArtifactStatus.Text = error ?? "Second-host readiness summary could not be loaded.";
-                OperationLogTextBox.Text = PatchBenchOnlineReadinessArtifactStatus.Text;
-                AppStatusService.SetStatus("Windowed & Mods: second-host readiness summary rejected");
-            }
-            catch (Exception ex) when (IsUserFacingOperationException(ex))
-            {
-                PatchBenchOnlineReadinessArtifactStatus.Text = "Readiness summary load failed.";
-                OperationLogTextBox.Text = $"Could not load readiness summary: {ex.Message}";
-                AppStatusService.SetStatus("Windowed & Mods: readiness summary load failed");
-            }
-        }
-
-        private void ClearOnlineReadinessArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            _secondHostReadinessArtifactSummary = null;
-            RenderOnlineMultiplayerReadiness();
-            OperationLogTextBox.Text = "Second-host readiness summary cleared. Host/Join remain unavailable.";
-            AppStatusService.SetStatus("Windowed & Mods: second-host readiness summary cleared");
-        }
-
-        private async void LoadDualSafeCopyTopologyArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (App.MainWindowInstance is null)
-                {
-                    return;
-                }
-
-                string? path = await PickerInterop.PickFileAsync(App.MainWindowInstance, new[] { ".json" });
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return;
-                }
-
-                if (OnlineMultiplayerReadinessService.TryLoadDualSafeCopyTopologyArtifact(
-                        path,
-                        out OnlineDualSafeCopyTopologyArtifactSummary? artifact,
-                        out string? error) &&
-                    artifact is not null)
-                {
-                    _dualSafeCopyTopologyArtifactSummary = artifact;
-                    RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatDualSafeCopyTopologyArtifactStatus(artifact);
-                    AppStatusService.SetStatus("Windowed & Mods: loaded dual-safe-copy topology summary");
-                    return;
-                }
-
-                PatchBenchDualSafeCopyTopologyArtifactStatus.Text = error ?? "Dual-safe-copy topology summary could not be loaded.";
-                OperationLogTextBox.Text = PatchBenchDualSafeCopyTopologyArtifactStatus.Text;
-                AppStatusService.SetStatus("Windowed & Mods: dual-safe-copy topology summary rejected");
-            }
-            catch (Exception ex) when (IsUserFacingOperationException(ex))
-            {
-                PatchBenchDualSafeCopyTopologyArtifactStatus.Text = "Topology summary load failed.";
-                OperationLogTextBox.Text = $"Could not load topology summary: {ex.Message}";
-                AppStatusService.SetStatus("Windowed & Mods: topology summary load failed");
-            }
-        }
-
-        private void ClearDualSafeCopyTopologyArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            _dualSafeCopyTopologyArtifactSummary = null;
-            RenderOnlineMultiplayerReadiness();
-            OperationLogTextBox.Text = "Dual-safe-copy topology summary cleared. Host/Join remain unavailable.";
-            AppStatusService.SetStatus("Windowed & Mods: dual-safe-copy topology summary cleared");
-        }
-
-        private async void LoadGamepadReadinessArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (App.MainWindowInstance is null)
-                {
-                    return;
-                }
-
-                string? path = await PickerInterop.PickFileAsync(App.MainWindowInstance, new[] { ".json" });
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return;
-                }
-
-                if (OnlineMultiplayerReadinessService.TryLoadLocalGamepadReadinessArtifact(
-                        path,
-                        out OnlineLocalGamepadReadinessArtifactSummary? artifact,
-                        out string? error) &&
-                    artifact is not null)
-                {
-                    _localGamepadReadinessArtifactSummary = artifact;
-                    RenderOnlineMultiplayerReadiness();
-                    OperationLogTextBox.Text = PatchBenchOnlineReadinessText.FormatLocalGamepadReadinessArtifactStatus(artifact);
-                    AppStatusService.SetStatus("Windowed & Mods: loaded local physical controller readiness summary");
-                    return;
-                }
-
-                PatchBenchGamepadReadinessArtifactStatus.Text = error ?? "Local physical controller readiness summary could not be loaded.";
-                OperationLogTextBox.Text = PatchBenchGamepadReadinessArtifactStatus.Text;
-                AppStatusService.SetStatus("Windowed & Mods: local physical controller readiness summary rejected");
-            }
-            catch (Exception ex) when (IsUserFacingOperationException(ex))
-            {
-                PatchBenchGamepadReadinessArtifactStatus.Text = "Controller readiness summary load failed.";
-                OperationLogTextBox.Text = $"Could not load controller readiness summary: {ex.Message}";
-                AppStatusService.SetStatus("Windowed & Mods: controller readiness summary load failed");
-            }
-        }
-
-        private void ClearGamepadReadinessArtifactButton_Click(object sender, RoutedEventArgs e)
-        {
-            _localGamepadReadinessArtifactSummary = null;
-            RenderOnlineMultiplayerReadiness();
-            OperationLogTextBox.Text = "Physical controller readiness summary cleared. Host/Join remain unavailable.";
-            AppStatusService.SetStatus("Windowed & Mods: physical controller readiness summary cleared");
         }
 
         private void AdminLevelPresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1398,6 +1163,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void SourceExePathTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+
             if (!_isLoadingSourcePath)
             {
                 ExePathTextBox.Text = string.Empty;
@@ -1748,6 +1514,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchLaunchText.BuildBoundary("Safe copy ready for a guarded launch attempt.");
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicReplacementStatus(outcomeText.MusicSwap);
                 OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedOperationLog(outcomeText);
+
                 AppStatusService.SetStatus("Windowed & Mods: safe copy ready");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
@@ -2098,6 +1865,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus(result.TargetMusicFileName, result.Success);
                 OperationLogTextBox.Text = result.Message;
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: music backup restored" : "Windowed & Mods: music restore failed");
+
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
@@ -2448,6 +2216,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _isLaunchingCopiedProfile ||
                 _isStoppingCopiedProfile)
             {
+
                 return;
             }
 
@@ -2798,6 +2567,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string root = Path.GetFullPath(GetPatchWorkspaceRoot())
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 + Path.DirectorySeparatorChar;
+
             string fullPath = Path.GetFullPath(path);
             return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase);
         }

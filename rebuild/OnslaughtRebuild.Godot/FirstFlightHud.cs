@@ -31,7 +31,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         IsInstanceValid(_energyBar) &&
         IsInstanceValid(_controlsPanel);
 
-    public void Initialize(LocalPresentationLoadStatus localPresentation = default)
+    public void Initialize()
     {
         var root = new Control
         {
@@ -42,7 +42,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         };
         AddChild(root);
 
-        BuildIdentityPanel(root, localPresentation);
+        BuildIdentityPanel(root);
         BuildObjectivePanel(root);
         BuildModePanel(root);
         BuildControlsPanel(root);
@@ -100,7 +100,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _controlsPanel.Modulate = color;
     }
 
-    private void BuildIdentityPanel(Control root, LocalPresentationLoadStatus localPresentation)
+    private void BuildIdentityPanel(Control root)
     {
         var panel = CreatePanel("IdentityPanel");
         panel.OffsetLeft = 24f;
@@ -112,9 +112,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", 5);
         panel.AddChild(stack);
-        stack.AddChild(CreateLabel("FIRST FLIGHT", 22, TextPrimary));
+        stack.AddChild(CreateLabel("AQUILA HANDLING LAB", 22, TextPrimary));
         stack.AddChild(CreateLabel(
-            DescribePresentation(localPresentation),
+            "Synthetic arena | handling workbench, not retail parity",
             13,
             TextMuted));
 
@@ -122,14 +122,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _shieldBar = AddResourceRow(stack, "SHIELD", Shield);
         _hullBar = AddResourceRow(stack, "HULL", Hull);
     }
-
-    private static string DescribePresentation(LocalPresentationLoadStatus status) => status switch
-    {
-        { PlayerLoaded: true, TerrainLoaded: true } => "User-supplied local meshes: player + terrain | non-parity",
-        { PlayerLoaded: true } => "User-supplied local mesh: player | synthetic terrain | non-parity",
-        { TerrainLoaded: true } => "Synthetic player | user-supplied local mesh: terrain | non-parity",
-        _ => "Synthetic arena | RE-informed prototype",
-    };
 
     private void BuildObjectivePanel(Control root)
     {

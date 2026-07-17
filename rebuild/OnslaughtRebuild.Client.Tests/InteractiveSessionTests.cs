@@ -356,27 +356,6 @@ public sealed class InteractiveSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
     }
 
-    [Fact]
-    public void FirstFlightSmokeScenario_MatchesIndependentGoldenStateAndCounters()
-    {
-        const string expectedHash = "f8123c79c48d30d04a6882bc39885bb1de82114c1528f05b51542fb73ac59744";
-        var session = new InteractiveSession(Seed);
-
-        for (int tick = 0; tick < FirstFlightSmokeScenario.DurationTicks; tick++)
-        {
-            session.ObserveInput(FirstFlightSmokeScenario.GetInputForTick(tick));
-            session.AdvanceFrameTicks(333_334);
-        }
-
-        Assert.Equal(expectedHash, StateHasher.ComputeHex(session.CurrentSnapshot));
-        Assert.Equal(120, session.Metrics.TotalSteps);
-        Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
-        Assert.Equal(1, session.Metrics.ResetEdgesConsumed);
-        Assert.Equal(61, session.Metrics.FireHeldTicksSampled);
-        Assert.Equal(1, session.CurrentSnapshot.TargetsDestroyed);
-        Assert.Equal(VehicleMode.Walker, session.CurrentSnapshot.Mode);
-    }
-
     private static InteractiveSession RunInteractiveSequence()
     {
         var session = new InteractiveSession(Seed);

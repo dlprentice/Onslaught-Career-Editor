@@ -109,11 +109,11 @@ level###/
 └── [additional .msl]     # Support scripts
 ```
 
-See [mission-scripts-index.md](mission-scripts-index.md) for a per-level inventory of loose scripts.
-See [mission-text-index.md](mission-text-index.md) for token → text mapping extracted from English/Global files.
-See [mission-message-usage.md](mission-message-usage.md) for message call usage from loose MSL.
-See [mission-thing-usage.md](mission-thing-usage.md) for object references/spawns from loose MSL.
-See [mission-speaker-index.md](mission-speaker-index.md) for global speaker token mappings.
+See [MSL scripting](msl-scripting.md) for the retained language reference and
+[MissionScript / IScript static contract](../binary-analysis/missionscript-iscript-static-contract.md)
+for binary-side identities. Per-level scripts, text, message, speaker, and
+object-reference queries are run directly against the local source corpus when
+needed; generated inventory mirrors are not tracked.
 
 ### MSL Scripting Language
 

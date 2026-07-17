@@ -35,7 +35,6 @@ PUBLIC_CORE_MARKDOWN = (
     "reverse-engineering/RE-INDEX.md",
     "roadmap/ROADMAP-INDEX.md",
     "roadmap/public-roadmap.md",
-    "roadmap/three-lane-product-strategy.md",
     "release/readiness/PUBLIC_SIGNOFF_COMMANDS.md",
     "rebuild/README.md",
     "rebuild/PROVENANCE.md",

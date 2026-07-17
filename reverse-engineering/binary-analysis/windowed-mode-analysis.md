@@ -11,7 +11,7 @@
 | Guard Flag | Current canonical Steam hash (`74154bfa...`) has `DAT_00662f3e` = 0x01; some historical baselines were observed at 0x00 |
 | Flag Storage | `CLIParams.mForceWindowed` at offset 0x38 |
 | Root Cause | Launch behavior depends on both CLI parse gating and startup fullscreen-flow gates |
-| Practical path | Use `patches/patch_display_mode_flow.py` windowed patches (`0x12A644`, optional `0x12BB97`); guard-byte normalization is an alternate baseline tweak |
+| Practical path | Use the AppCore safe-copy profile with catalog rows at `0x12A644` and `0x12BB97`; guard-byte normalization is an alternate baseline tweak |
 
 ## The Mystery
 
@@ -69,14 +69,11 @@ Current evidence supports a two-gate model: parser gate (`DAT_00662f3e`) plus st
 
 ## Workarounds
 
-### Option 0: Isolated patch-branch testing (recommended before deeper surgery)
+### Option 0: Isolated safe-copy testing
 
-Use `patches/patch_display_mode_flow.py` with split controls:
-
-- `--apply --resolution-only`
-- `--apply --windowed-only`
-
-This allows clean A/B testing of resolution-gate vs windowed-startup mutations without coupling both changes in a single run.
+Use the Windowed & Mods custom profile to select the resolution gate and
+windowed-startup rows independently. AppCore verifies the supported specimen
+and mutates only the copied executable.
 
 ### Option 1: DxWnd (Recommended)
 

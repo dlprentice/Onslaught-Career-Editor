@@ -515,7 +515,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--video-manifest", type=Path, default=Path(".artifacts/video-manifest/manifest.json"))
     ap.add_argument("--language-matrix", type=Path, default=Path(".artifacts/language-export/merged_matrix.json"))
     ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
-    ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without private game assets")
+    ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without game assets")
     ap.add_argument(
         "--emit-consumer-contract-fixture",
         type=Path,

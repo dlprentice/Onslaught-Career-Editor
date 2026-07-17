@@ -2,9 +2,9 @@
 
 Status: public-safe release readiness draft
 
-This file is generated from the active WinUI product, AppCore/support, CLI/support, host/support, and test project dependency graph plus local NuGet package metadata. It is a source-controlled notice draft for review. It is not a signed-installer legal approval and is not proof that a final binary package contains every required notice file.
+This file is generated from the active WinUI product, AppCore/support, CLI/support, and test project dependency graph plus local NuGet package metadata. It is a source-controlled notice draft for review. It is not a signed-installer legal approval and is not proof that a final binary package contains every required notice file.
 
-Private game files, extracted assets, screenshots, copied executables, runtime proof, local NuGet cache paths, and local machine paths are intentionally omitted.
+Retail executables, user saves, bulk extracted assets, raw captures, local NuGet cache paths, and local machine paths are intentionally omitted.
 
 ## Binary Release Boundary
 
@@ -98,7 +98,7 @@ Private game files, extracted assets, screenshots, copied executables, runtime p
 2. Re-run `py -3 tools\generate_winui_third_party_notices.py --check` after restore/publish so dependency drift is visible.
 3. Verify the package contains this notice draft or a final derivative plus package-provided license/notice files required by redistributed dependencies.
 4. Document the LGPL strategy for `LibVLCSharp` and `VideoLAN.LibVLC.Windows`, including how users can replace or relink the LGPL-covered components if required by the final distribution shape.
-5. Keep private game assets and private proof artifacts outside the release package.
+5. Keep retail executables, user saves, bulk extraction output, and raw proof artifacts outside the release package.
 
 ## Current Limitations
 

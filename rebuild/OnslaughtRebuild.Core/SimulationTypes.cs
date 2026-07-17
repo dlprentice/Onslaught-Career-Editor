@@ -75,6 +75,7 @@ public sealed record WorldSnapshot(
     SimVector2 PlayerVelocity,
     sbyte FacingX,
     sbyte FacingZ,
+    int FacingYawMilliRad,
     int Energy,
     int Shield,
     int Hull,

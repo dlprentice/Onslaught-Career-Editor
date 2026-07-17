@@ -39,12 +39,19 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void LookX_IdlePreservesMoveSnapFacingForExistingTapes()
+    public void MovementUsesBodyHeadingWithoutResettingLookYaw()
     {
         var simulation = new Simulation(1);
-        WorldSnapshot state = simulation.Step(new SimInput(1, 0));
+        for (int tick = 0; tick < 262; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookX: 1));
+        }
+
+        WorldSnapshot state = simulation.Step(new SimInput(0, 1));
         Assert.Equal(1, state.FacingX);
-        Assert.Equal(0, state.FacingZ);
+        Assert.Equal(1, state.FacingZ);
+        Assert.True(state.PlayerPosition.X > 0);
+        Assert.True(state.PlayerPosition.Z > 0);
     }
 
     [Fact]
@@ -107,16 +114,6 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void MorphToJetSettle_MatchesAcceptedXformP03Translation()
-    {
-        // Mid latency ~4.92 s → round(s * 30) = 148.
-        Assert.Equal(148, SimulationConstants.MorphToJetSettleTicks);
-        const double midSeconds = 4.9225;
-        int mapped = (int)Math.Round(midSeconds * SimulationConstants.TicksPerSecond);
-        Assert.Equal(SimulationConstants.MorphToJetSettleTicks, mapped);
-    }
-
-    [Fact]
     public void JetEnergyDrain_MatchesAcceptedEnergyP02Translation()
     {
         // Dual-accept mid |rate| ≈ 0.5169 energy units/s → round(|r|*1000/30)=17.
@@ -125,17 +122,6 @@ public sealed class SimulationTests
         const double midAbsRate = 0.5169068149241056;
         int mapped = (int)Math.Round(midAbsRate * 1000.0 / SimulationConstants.TicksPerSecond);
         Assert.Equal(SimulationConstants.JetEnergyDrainPerTick, mapped);
-    }
-
-    [Fact]
-    public void MorphSettle_IsDistinctFromShortTransformLock()
-    {
-        // Policy: MorphToJetSettleTicks is settle latency; TransformDurationTicks
-        // remains the short mode-toggle lock used by TryToggleMode.
-        Assert.True(
-            SimulationConstants.MorphToJetSettleTicks >
-            SimulationConstants.TransformDurationTicks);
-        Assert.Equal(15, SimulationConstants.TransformDurationTicks);
     }
 
     [Fact]

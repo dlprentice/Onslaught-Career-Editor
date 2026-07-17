@@ -49,12 +49,15 @@ Do not expose Host/Join as available, represent a generated catalog as bundled
 game content, claim reconstruction parity, or turn research controls into a
 normal-user promise without corresponding proven behavior.
 
-## Files and proprietary inputs
+## Files and retail inputs
 
-Never commit retail binaries, extracted assets, arbitrary saves, copied
-executables, full Ghidra stores/backups, debugger logs, private media/captures,
-credentials, or `.env*` files. Use the ignored locations described in
-[`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md).
+Never commit retail binaries, arbitrary saves, copied executables, full Ghidra
+stores/backups, debugger logs, private captures, credentials, or `.env*` files.
+Use the ignored locations described in [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
+for bulk extraction and experiments. The project has permission to use, modify,
+and distribute original game assets, but a contribution should add only the
+curated inputs a current product or rebuild path consumes, with credits,
+provenance, and third-party terms intact.
 
 Save edits must start from a real baseline and preserve unknown bytes. Retail
 executable mutation must target a verified copy, never an installed game
@@ -69,8 +72,9 @@ smallest public-safe evidence needed to support a current contract. Cite the
 evidence class and state what it does not prove.
 
 Before changing `rebuild/`, read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
-and [`rebuild/README.md`](rebuild/README.md). Do not copy proprietary source text
-or retail payloads into the GPL lane.
+and [`rebuild/README.md`](rebuild/README.md). GPL-compatible source adaptation
+and authorized original assets are permitted; retail executable/decompiler text
+and separately licensed third-party material are not.
 
 ## Validation
 

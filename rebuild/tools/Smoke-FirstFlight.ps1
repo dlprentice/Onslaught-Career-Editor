@@ -65,7 +65,8 @@ function Invoke-FirstFlightNativeSmoke {
         StateHash = $validation.StateHash
         SampledColorCount = $validation.SampledColorCount
         NonBlackSampleCount = $validation.NonBlackSampleCount
-        WorldAnchorSampleCount = $validation.WorldAnchorSampleCount
+        WorldSampledColorCount = $validation.WorldSampledColorCount
+        WorldNonBlackSampleCount = $validation.WorldNonBlackSampleCount
         ReportPath = $reportPath
         ScreenshotPath = $screenshotPath
         LogPath = $logPath
@@ -107,9 +108,11 @@ try {
         Tick = $standard.Tick
         StateHash = $standard.StateHash
         StandardViewport = "$($standard.Width)x$($standard.Height)"
-        StandardWorldAnchorSampleCount = $standard.WorldAnchorSampleCount
+        StandardWorldSampledColorCount = $standard.WorldSampledColorCount
+        StandardWorldNonBlackSampleCount = $standard.WorldNonBlackSampleCount
         MinimumViewport = "$($minimum.Width)x$($minimum.Height)"
-        MinimumWorldAnchorSampleCount = $minimum.WorldAnchorSampleCount
+        MinimumWorldSampledColorCount = $minimum.WorldSampledColorCount
+        MinimumWorldNonBlackSampleCount = $minimum.WorldNonBlackSampleCount
         RunRoot = $runRoot
     }
 }

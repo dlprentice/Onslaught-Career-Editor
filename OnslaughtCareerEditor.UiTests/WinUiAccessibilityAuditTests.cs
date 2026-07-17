@@ -126,38 +126,12 @@ public class WinUiAccessibilityAuditTests
                 "PatchBenchStageMusicReplacementButton",
                 "PatchBenchRestoreMusicReplacementButton",
                 "PatchBenchMusicReplacementStatus",
-                "PatchBenchOnlineReadinessStatusPanel",
                 "PatchBenchOnlinePrepCard",
                 "PatchBenchOnlinePrepTitle",
                 "PatchBenchOnlinePrepSummary",
                 "PatchBenchOnlinePrepBoundary",
                 "PatchBenchOnlinePrepLocalProbeButton",
                 "PatchBenchOnlinePrepActionStatus",
-                "PatchBenchOnlineReadinessTitle",
-                "PatchBenchOnlineReadinessHeadline",
-                "PatchBenchOnlineReadinessSlots",
-                "PatchBenchOnlineReadinessMetadataSlots",
-                "PatchBenchOnlineReadinessProofClass",
-            "PatchBenchOnlineReadinessNextProof",
-            "PatchBenchOnlineReadinessBlockedActions",
-            "PatchBenchOnlineMaintainerArtifactToolsToggle",
-            "PatchBenchMaintainerArtifactToolsStatus",
-            "PatchBenchMaintainerArtifactLoaderPanel",
-            "PatchBenchDualSafeCopyTopologyArtifactStatus",
-            "PatchBenchDualSafeCopyTopologyBoundary",
-            "PatchBenchDualSafeCopyTopologyNextProofs",
-                "PatchBenchLoadDualSafeCopyTopologyArtifactButton",
-                "PatchBenchClearDualSafeCopyTopologyArtifactButton",
-                "PatchBenchOnlineLiveAttemptStatus",
-                "PatchBenchOnlineLiveAttemptBlockers",
-                "PatchBenchOnlineLiveAttemptCommands",
-                "PatchBenchOnlinePromotionLockStatus",
-                "PatchBenchOnlineReadinessArtifactStatus",
-                "PatchBenchLoadOnlineReadinessArtifactButton",
-                "PatchBenchClearOnlineReadinessArtifactButton",
-                "PatchBenchGamepadReadinessArtifactStatus",
-                "PatchBenchLoadGamepadReadinessArtifactButton",
-                "PatchBenchClearGamepadReadinessArtifactButton",
                 "PatchBenchOperationLog"
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/MediaPage.xaml"] =
@@ -559,8 +533,7 @@ public class WinUiAccessibilityAuditTests
         [
             "AssetCatalogStatus",
             "AssetModelWireframeStatus",
-            "AssetModelMetadataStatus",
-            "AssetMaterialPackageOutputStatus"
+            "AssetModelMetadataStatus"
         ];
 
         foreach (string automationId in nonLiveStatusIds)

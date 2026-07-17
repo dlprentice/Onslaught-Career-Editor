@@ -74,13 +74,13 @@ public class WinUiRuntimeAccessibilitySmokeTests
             NavigateAndWait(window, "AssetLibraryNavigationItem", "Asset Library", "Load generated catalog", "AssetLibraryPageTitle");
             string assetCatalogStatus = FindByAutomationId(window, "AssetCatalogStatus").Name;
             Assert.That(assetCatalogStatus, Does.Contain("generated catalog is loaded"));
-            Assert.That(assetCatalogStatus, Does.Contain("generated export folder"));
+            Assert.That(assetCatalogStatus, Does.Contain("viewer, not an extractor"));
             Assert.That(assetCatalogStatus, Does.Contain("asset_catalog/catalog.json"));
             AutomationElement assetFirstRunGuide = FindByAutomationId(window, "AssetCatalogFirstRunGuide");
-            Assert.That(assetFirstRunGuide.Name, Does.Contain("First run"));
-            Assert.That(assetFirstRunGuide.Name, Does.Contain("Generate a catalog from your own game install"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("Catalog viewer"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("Asset Library opens an existing export catalog"));
             Assert.That(assetFirstRunGuide.Name, Does.Contain("asset_catalog/catalog.json"));
-            Assert.That(assetFirstRunGuide.Name, Does.Contain("does not bundle game assets"));
+            Assert.That(assetFirstRunGuide.Name, Does.Contain("legacy extractor's local runtime dependencies"));
             NavigateAndWait(window, "LoreNavigationItem", "Lore", "Library", "LorePageTitle");
             NavigateAndWait(window, "BinaryNavigationItem", "Windowed & Mods", "Safe game copy", "BinaryPatchesPageTitle");
             NavigateAndWait(window, "SettingsNavigationItem", "Settings", "Game Directory", "SettingsPageTitle");

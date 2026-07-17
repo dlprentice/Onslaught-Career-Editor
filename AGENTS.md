@@ -7,7 +7,8 @@
 
 - `OnslaughtCareerEditor.WinUI/` is the primary user-facing Windows app.
 - `OnslaughtCareerEditor.AppCore/` owns shared save, options, patch-planning, media, catalog, and safe-copy correctness.
-- `OnslaughtCareerEditor.Cli/` is the supported C# helper CLI.
+- `OnslaughtCareerEditor.Cli/` is an unshipped maintainer adapter over AppCore,
+  not a second product lane.
 - `tools/` contains Python RE, validation, asset, and lab tooling; it is not a product GUI lane.
 - `rebuild/` is the GPL-licensed, RE-informed original-code reconstruction lane.
 - Retired Electron, WPF, and Python app implementations live only in Git history; they are not source lanes.
@@ -15,13 +16,22 @@
 ## Hard Boundaries
 
 - Read `README.MD` and only the files directly related to the change.
-- Do not add game binaries, extracted assets, copied executables, arbitrary save payloads, raw debugger logs, full Ghidra projects/backups, credentials, `.env*`, or bulky runtime captures. The tracked regression fixture `tests_shared/fixtures/gold_career_save.bin` is the narrow exception.
+- Do not add game binaries, copied executables, arbitrary save payloads, raw
+  debugger logs, full Ghidra projects/backups, credentials, `.env*`, or bulky
+  runtime captures. The tracked regression fixture
+  `tests_shared/fixtures/gold_career_save.bin` is the narrow save exception.
 - Never patch or mutate an installed Battle Engine Aquila directory or original `BEA.exe`; operate on copied targets only.
 - Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.
 - Keep public claims bounded to demonstrated source, static evidence, controlled copied-runtime evidence, or focused tests. Separate proven behavior from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation is local.
 - Preserve public/private, license, attribution, and provenance boundaries.
-- The GPL-licensed `rebuild/` lane is RE-informed, not strict clean-room work. Keep proprietary assets, binaries, copied source text, and generated retail payloads outside it.
+- The project has permission to use, modify, and distribute the original game
+  assets. Add only curated assets owned by a current product or rebuild slice,
+  with provenance, credits, and third-party terms preserved; bulk extraction is
+  not source.
+- The GPL-licensed `rebuild/` lane may adapt the pinned GPL reference source and
+  use authorized original assets. Keep retail executables, decompiler output,
+  and separately licensed third-party material outside it.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation, filesystem, clock, process, network, and GPU APIs; clients and renderers adapt Core state rather than own simulation truth.
 
 ## Evidence
@@ -29,8 +39,11 @@
 - `reverse-engineering/RE-INDEX.md` is the RE front door.
 - Static evidence supports only the identities and structures it demonstrates.
 - Controlled copied-runtime evidence establishes observed causality, behavior, and measured values.
-- Stuart's source and the legacy AYA extractor are references, not proof of Steam behavior or complete format support.
-- Use ignored local overlays for proprietary payloads and large lab artifacts; never promote them into Git.
+- Stuart's source is architecture and implementation evidence; the Steam binary
+  and controlled runtime observation decide released-behavior deltas. The legacy
+  AYA extractor does not establish complete format support.
+- Use ignored local overlays for large intermediate and lab artifacts. Promote
+  only the smallest reviewed inputs that a live product or rebuild path consumes.
 
 ## Validation
 

@@ -145,7 +145,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(".artifacts") / "video-manifest",
     )
-    ap.add_argument("--self-test", action="store_true", help="Run built-in parser/guard checks without private game assets")
+    ap.add_argument("--self-test", action="store_true", help="Run built-in parser/guard checks without game assets")
     return ap.parse_args()
 
 

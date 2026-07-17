@@ -1,9 +1,15 @@
-# Retail → Core (walker morph → jet settle)
+# Walker morph-to-jet settle observation
 
-Status: **accepted** (2026-07-15)  
-Depends on: walker-transform-morph-timing.v1 (xform-p03)
+Status: measured retail observation; Core mapping not accepted
+Evidence: `walker-transform-morph-timing.v1` pair xform-p03
 
-- Measured mid-latency ≈ **4.92 s**
-- Core 30 Hz: \( t = \mathrm{round}(L_\mathrm{s} \cdot 30) \) → **148** ticks
-- Constant: `MorphToJetSettleTicks = 148`
-- Distinct from `TransformDurationTicks` (short mode-toggle lock, not morph settle).
+The captured midpoint from morph input to the measured settle condition is
+approximately 4.92 seconds, or 148 ticks at Core's 30 Hz rate. This conversion
+is arithmetic only. The capture's settle condition has not yet been mapped to
+specific retail transition states, input lock, animation completion, control
+handoff, or Core fields.
+
+Do not map 148 directly to `TransformDurationTicks`. The current 15-tick Core
+lock is synthetic. A future implementation must first identify the retail
+transition phases in source/static evidence and compare a matching input
+sequence before choosing which state, if any, owns the measured interval.

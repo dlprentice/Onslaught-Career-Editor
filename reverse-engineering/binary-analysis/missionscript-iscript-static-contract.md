@@ -20,12 +20,10 @@ current sources.
   [`functions/ScriptObjectCode.cpp.md`](functions/ScriptObjectCode.cpp.md), and
   [`functions/EventFunction.cpp.md`](functions/EventFunction.cpp.md) retain
   function-level identities and call relationships.
-- [`../game-assets/mission-scripts-index.md`](../game-assets/mission-scripts-index.md),
-  [`../game-assets/mission-events-index.md`](../game-assets/mission-events-index.md),
-  [`../game-assets/mission-slot-usage.md`](../game-assets/mission-slot-usage.md),
-  [`../game-assets/mission-thing-usage.md`](../game-assets/mission-thing-usage.md),
-  and [`../game-assets/mission-message-usage.md`](../game-assets/mission-message-usage.md)
-  are aggregate copied-corpus indexes. They do not publish raw mission scripts.
+- [`../game-assets/msl-scripting.md`](../game-assets/msl-scripting.md) retains
+  reusable syntax and representative corpus observations. Per-level counts and
+  mappings are queried from the source corpus when needed instead of being
+  tracked as generated inventories.
 
 ## Static surfaces
 

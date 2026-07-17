@@ -19,9 +19,10 @@ options, not a required sequence.
 | Portable ZIP inputs or layout | `npm run release:winui-zip` |
 
 `npm test` is the focused default handoff for cross-cutting active-product work:
-one WinUI solution build, AppCore/UI tests from that build, and deterministic
-rebuild Core tests. It intentionally does not run release packaging, native
-Godot, Ghidra, private runtime probes, or historical repository accounting.
+one WinUI solution build, consequential AppCore write/parser safety contracts,
+and the static WinUI accessibility audit. It intentionally does not run broad
+UI, rebuild, release packaging, Ghidra, private runtime probes, or historical
+repository accounting.
 
 Generated check output belongs under ignored `.artifacts/`, `local-lab/`, or
 another explicitly selected local scratch root. Validation output is not source

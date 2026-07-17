@@ -109,13 +109,6 @@ public sealed class Simulation
             _facingYawMilliRad = NormalizeMilliRad(_facingYawMilliRad);
             QuantizeFacingFromYaw();
         }
-        else if (input.MoveX != 0 || input.MoveZ != 0)
-        {
-            _facingX = input.MoveX;
-            _facingZ = input.MoveZ;
-            _facingYawMilliRad = YawMilliRadFromFacing(_facingX, _facingZ);
-        }
-
         if (_transformTicksRemaining != 0)
         {
             _playerVelocity = SimVector2.Zero;
@@ -130,8 +123,23 @@ public sealed class Simulation
         int speedZ = _mode == VehicleMode.Walker
             ? SimulationConstants.WalkerSpeedPerTick
             : SimulationConstants.JetSpeedPerTick;
-        int velocityX = input.MoveX * speedX;
-        int velocityZ = input.MoveZ * speedZ;
+        // Movement axes are local to the body. The pinned walker source rotates
+        // forward and strafe acceleration by heading; this integer eight-way
+        // projection keeps Core deterministic while the motion model remains a
+        // deliberately small handling slice.
+        int forwardX = _facingX;
+        int forwardZ = _facingZ;
+        int headingScale = forwardX != 0 && forwardZ != 0 ? 181 : 256;
+        int forwardXScaled = forwardX * headingScale;
+        int forwardZScaled = forwardZ * headingScale;
+        int rightXScaled = forwardZScaled;
+        int rightZScaled = -forwardXScaled;
+        int velocityX =
+            ((input.MoveZ * speedZ * forwardXScaled) +
+             (input.MoveX * speedX * rightXScaled)) / 256;
+        int velocityZ =
+            ((input.MoveZ * speedZ * forwardZScaled) +
+             (input.MoveX * speedX * rightZScaled)) / 256;
         if (input.MoveX != 0 && input.MoveZ != 0)
         {
             velocityX = velocityX * 181 / 256;
@@ -171,23 +179,6 @@ public sealed class Simulation
         }
 
         return wrapped;
-    }
-
-    private static int YawMilliRadFromFacing(sbyte facingX, sbyte facingZ)
-    {
-        // atan2(x, z) in milli-rad for the eight discrete facing vectors.
-        return (facingX, facingZ) switch
-        {
-            (0, 1) => 0,
-            (1, 1) => 785,
-            (1, 0) => 1571,
-            (1, -1) => 2356,
-            (0, -1) => 3142,
-            (-1, -1) => -2356,
-            (-1, 0) => -1571,
-            (-1, 1) => -785,
-            _ => 0,
-        };
     }
 
     private void QuantizeFacingFromYaw()
@@ -385,6 +376,7 @@ public sealed class Simulation
             _playerVelocity,
             _facingX,
             _facingZ,
+            _facingYawMilliRad,
             _energy,
             _shield,
             _hull,

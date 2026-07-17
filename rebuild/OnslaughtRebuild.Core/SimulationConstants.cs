@@ -34,11 +34,6 @@ public static class SimulationConstants
     public const int TransformEnergyThreshold = 200;
     public const int TransformEnergyCost = 120;
     public const int TransformDurationTicks = 15;
-    // Ticks @ 30 Hz for walker→jet settle after Transform (pair xform-p03,
-    // mid ~4.92 s → 148). Policy:
-    // reverse-engineering/game-mechanics/walker-transform-morph-retail-to-core-translation-policy.md
-    // Distinct from TransformDurationTicks (short lock, not morph settle).
-    public const int MorphToJetSettleTicks = 148;
     // Walker regen still provisional (no dual-accept yet).
     public const int WalkerEnergyRegenerationPerTick = 4;
     public const int WalkerShieldRegenerationPerTick = 2;

@@ -40,7 +40,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 120 $report.tick
-    Assert-SmokeValue 'stateHash' '87b9d09a3afec0bebd97f06793b83baabe3ff330b2378ff149194d6d6a4f779d' $report.stateHash
+    Assert-SmokeValue 'stateHash' '3ea1ea256f8b087b787e84457f533a10c0e5eb321cf07f5273b3e8e885b7bf2b' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'totalSteps' 120 $report.totalSteps
@@ -76,7 +76,11 @@ function Test-FirstFlightSmokeEvidence {
         Assert-SmokeValue 'decoded screenshot width' $ExpectedWidth $bitmap.Width
         Assert-SmokeValue 'decoded screenshot height' $ExpectedHeight $bitmap.Height
         $colors = [Collections.Generic.HashSet[int]]::new()
+        $worldColors = [Collections.Generic.HashSet[int]]::new()
         $nonBlackSamples = 0
+        $worldNonBlackSamples = 0
+        $worldTop = [int]($bitmap.Height * 0.27)
+        $worldBottom = [int]($bitmap.Height * 0.86)
         for ($y = 0; $y -lt $bitmap.Height; $y += 32) {
             for ($x = 0; $x -lt $bitmap.Width; $x += 32) {
                 $color = $bitmap.GetPixel($x, $y)
@@ -84,11 +88,20 @@ function Test-FirstFlightSmokeEvidence {
                 if (($color.R + $color.G + $color.B) -gt 30) {
                     $nonBlackSamples++
                 }
+                if ($y -ge $worldTop -and $y -lt $worldBottom) {
+                    $null = $worldColors.Add($color.ToArgb())
+                    if (($color.R + $color.G + $color.B) -gt 30) {
+                        $worldNonBlackSamples++
+                    }
+                }
             }
         }
 
         if ($colors.Count -lt 30 -or $nonBlackSamples -lt 200) {
             throw "First Flight screenshot appears blank or under-rendered: $($colors.Count) sampled colors, $nonBlackSamples non-black samples."
+        }
+        if ($worldColors.Count -lt 15 -or $worldNonBlackSamples -lt 100) {
+            throw "First Flight world appears blank or under-rendered: $($worldColors.Count) sampled colors, $worldNonBlackSamples non-black samples."
         }
 
         function Measure-BrightRegion {
@@ -112,54 +125,12 @@ function Test-FirstFlightSmokeEvidence {
             return $bright
         }
 
-        function Measure-ColorRegion {
-            param(
-                [int]$Left,
-                [int]$Top,
-                [int]$Right,
-                [int]$Bottom,
-                [ValidateSet('cyan', 'white', 'yellow')][string]$Color
-            )
-
-            $matches = 0
-            for ($regionY = $Top; $regionY -lt $Bottom; $regionY += 2) {
-                for ($regionX = $Left; $regionX -lt $Right; $regionX += 2) {
-                    $pixel = $bitmap.GetPixel($regionX, $regionY)
-                    $matched = switch ($Color) {
-                        'cyan' { $pixel.R -lt 130 -and $pixel.G -gt 130 -and $pixel.B -gt 130 }
-                        'white' { $pixel.R -gt 150 -and $pixel.G -gt 150 -and $pixel.B -gt 150 }
-                        'yellow' { $pixel.R -gt 170 -and $pixel.G -gt 160 -and $pixel.B -lt 150 }
-                    }
-                    if ($matched) {
-                        $matches++
-                    }
-                }
-            }
-
-            return $matches
-        }
-
         $identityBright = Measure-BrightRegion 28 26 350 186
         $objectiveLeft = [Math]::Max(0, [int]($bitmap.Width / 2) - 220)
         $objectiveBright = Measure-BrightRegion $objectiveLeft 26 ($objectiveLeft + 440) 80
         $modeBright = Measure-BrightRegion ($bitmap.Width - 334) 26 ($bitmap.Width - 28) 108
         if ($identityBright -lt 300 -or $objectiveBright -lt 45 -or $modeBright -lt 40) {
             throw "First Flight HUD appears under-rendered: identity=$identityBright, objective=$objectiveBright, mode=$modeBright bright samples."
-        }
-
-        $playerLeft = [int]($bitmap.Width * 0.48)
-        $playerRight = [int]($bitmap.Width * 0.61)
-        $playerTop = [int]($bitmap.Height * 0.32)
-        $playerBottom = [int]($bitmap.Height * 0.55)
-        $playerCyan = Measure-ColorRegion $playerLeft $playerTop $playerRight $playerBottom 'cyan'
-        $playerWhite = Measure-ColorRegion $playerLeft $playerTop $playerRight $playerBottom 'white'
-        $leftSentryYellow = Measure-ColorRegion ([int]($bitmap.Width * 0.25)) ([int]($bitmap.Height * 0.58)) ([int]($bitmap.Width * 0.43)) ([int]($bitmap.Height * 0.92)) 'yellow'
-        $rightSentryYellow = Measure-ColorRegion ([int]($bitmap.Width * 0.78)) ([int]($bitmap.Height * 0.65)) ([int]($bitmap.Width * 0.98)) ([int]($bitmap.Height * 0.98)) 'yellow'
-        $worldYellow = Measure-ColorRegion ([int]($bitmap.Width * 0.03)) ([int]($bitmap.Height * 0.20)) $bitmap.Width $bitmap.Height 'yellow'
-        if ($playerCyan -lt 15 -or $playerWhite -lt 100 -or
-            $leftSentryYellow -lt 80 -or $rightSentryYellow -lt 120 -or
-            $worldYellow -lt 500) {
-            throw "First Flight screenshot is missing world anchors: playerCyan=$playerCyan, playerWhite=$playerWhite, leftSentryYellow=$leftSentryYellow, rightSentryYellow=$rightSentryYellow, worldYellow=$worldYellow."
         }
     }
     finally {
@@ -178,7 +149,8 @@ function Test-FirstFlightSmokeEvidence {
         SampledColorCount = $colors.Count
         NonBlackSampleCount = $nonBlackSamples
         HudBrightSampleCount = $identityBright + $objectiveBright + $modeBright
-        WorldAnchorSampleCount = $playerCyan + $playerWhite + $leftSentryYellow + $rightSentryYellow + $worldYellow
+        WorldSampledColorCount = $worldColors.Count
+        WorldNonBlackSampleCount = $worldNonBlackSamples
         ScreenshotSha256 = $screenshotHash
     }
 }

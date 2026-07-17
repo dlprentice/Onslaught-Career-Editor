@@ -193,8 +193,6 @@ public class WinUiPatchBenchInteractionSmokeTests
                 "PatchBenchUseGameFolderButton",
                 "Use configured source game folder");
 
-            ExpandByAutomationId(window, "PatchBenchLabOnlineResearchExpander");
-            AssertElementAvailable(window, "PatchBenchOnlineReadinessStatusPanel");
             ExpandByAutomationId(window, "PatchBenchLabLaunchControlExpander");
             ExpandByAutomationId(window, "PatchBenchAdvancedLaunchOptionsExpander");
             SelectComboBoxItem(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");

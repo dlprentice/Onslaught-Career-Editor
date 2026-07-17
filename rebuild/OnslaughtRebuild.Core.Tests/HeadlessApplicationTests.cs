@@ -9,43 +9,13 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class HeadlessApplicationTests
 {
     [Fact]
-    public void TapeGolden_IsCheckedAndVerified()
+    public void DefaultTape_ReplaysDeterministicallyWithoutEmbeddedExpectation()
     {
         using var output = new StringWriter();
         using var error = new StringWriter();
 
         int exitCode = HeadlessApplication.Run(
-            ["--repeat", "1"],
-            output,
-            error);
-
-        using JsonDocument result = JsonDocument.Parse(output.ToString());
-        Assert.Equal(0, exitCode);
-        Assert.True(result.RootElement.GetProperty("traceHashChecked").GetBoolean());
-        Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
-        Assert.True(result.RootElement.GetProperty("finalStateHashChecked").GetBoolean());
-        Assert.True(result.RootElement.GetProperty("finalStateHashVerified").GetBoolean());
-        Assert.Equal(
-            result.RootElement.GetProperty("expectedTraceHash").GetString(),
-            result.RootElement.GetProperty("traceHash").GetString());
-        Assert.Equal(
-            result.RootElement.GetProperty("expectedFinalStateHash").GetString(),
-            result.RootElement.GetProperty("finalStateHash").GetString());
-        Assert.Equal(
-            "headless-built-in-golden",
-            result.RootElement.GetProperty("verificationSource").GetString());
-        Assert.Equal(string.Empty, error.ToString());
-    }
-
-    [Fact]
-    public void NoVerify_ReportsThatNoGoldenWasChecked()
-    {
-        string tapePath = Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json");
-        using var output = new StringWriter();
-        using var error = new StringWriter();
-
-        int exitCode = HeadlessApplication.Run(
-            ["--tape", tapePath, "--no-verify", "--repeat", "1"],
+            ["--repeat", "2"],
             output,
             error);
 
@@ -105,20 +75,6 @@ public sealed class HeadlessApplicationTests
         {
             File.Delete(tapePath);
         }
-    }
-
-    [Fact]
-    public void ExplicitTape_RequiresIndependentExpectationUnlessVerificationIsDisabled()
-    {
-        string sourcePath = Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json");
-        using var output = new StringWriter();
-        using var error = new StringWriter();
-
-        int exitCode = HeadlessApplication.Run(["--tape", sourcePath], output, error);
-
-        Assert.Equal(1, exitCode);
-        Assert.Equal(string.Empty, output.ToString());
-        Assert.Contains("requires --expect", error.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -182,7 +138,7 @@ public sealed class HeadlessApplicationTests
     }
 
     [Fact]
-    public void DefaultTape_IgnoresCurrentDirectoryShadowAndUsesBuiltInGolden()
+    public void DefaultTape_IgnoresCurrentDirectoryShadow()
     {
         string originalDirectory = Environment.CurrentDirectory;
         string shadowRoot = Path.Combine(
@@ -201,12 +157,6 @@ public sealed class HeadlessApplicationTests
                 null,
                 null,
                 []);
-            ReplayResult shadowResult = ReplayRunner.Run(shadowTape);
-            shadowTape = shadowTape with
-            {
-                ExpectedFinalStateHash = shadowResult.FinalStateHash,
-                ExpectedTraceHash = shadowResult.TraceHash,
-            };
             File.WriteAllText(
                 Path.Combine(shadowScenarioDirectory, "first-flight.v1.json"),
                 CommandTapeCodec.Serialize(shadowTape));
@@ -219,9 +169,7 @@ public sealed class HeadlessApplicationTests
             using JsonDocument result = JsonDocument.Parse(output.ToString());
             Assert.Equal(0, exitCode);
             Assert.Equal("first-flight", result.RootElement.GetProperty("tape").GetString());
-            Assert.Equal(
-                "headless-built-in-golden",
-                result.RootElement.GetProperty("verificationSource").GetString());
+            Assert.Equal("none", result.RootElement.GetProperty("verificationSource").GetString());
             Assert.Equal(string.Empty, error.ToString());
         }
         finally
@@ -250,7 +198,7 @@ public sealed class HeadlessApplicationTests
             using var error = new StringWriter();
 
             int exitCode = HeadlessApplication.Run(
-                ["--tape", tapePath, "--no-verify", "--repeat", "100"],
+                ["--tape", tapePath, "--repeat", "100"],
                 output,
                 error);
 
@@ -261,33 +209,6 @@ public sealed class HeadlessApplicationTests
         finally
         {
             File.Delete(tapePath);
-        }
-    }
-
-    [Fact]
-    public void BuiltInTapeDeclarationDrift_FailsClosedAgainstIndependentConstants()
-    {
-        string tapePath = Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json");
-        string original = File.ReadAllText(tapePath);
-        CommandTape tape = CommandTapeCodec.Deserialize(original);
-
-        try
-        {
-            File.WriteAllText(
-                tapePath,
-                CommandTapeCodec.Serialize(tape with { ExpectedTraceHash = new string('0', 64) }));
-            using var output = new StringWriter();
-            using var error = new StringWriter();
-
-            int exitCode = HeadlessApplication.Run([], output, error);
-
-            Assert.Equal(1, exitCode);
-            Assert.Equal(string.Empty, output.ToString());
-            Assert.Contains("independent headless golden", error.ToString(), StringComparison.Ordinal);
-        }
-        finally
-        {
-            File.WriteAllText(tapePath, original);
         }
     }
 

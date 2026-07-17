@@ -1,133 +1,114 @@
 # Current Capabilities
 
-Onslaught Toolkit has two deliverables: the WinUI Windows toolkit and the
-separately GPL-licensed, RE-informed rebuild. Reverse engineering, Lore, and
-local tools support those deliverables; file counts and proof machinery are not
-product features.
+Onslaught Toolkit has one player-facing product: the WinUI 3 Windows app.
+AppCore owns its file and copied-target correctness. Reverse engineering, the
+unshipped CLI, focused tools, and the early GPL rebuild support that product and
+the longer reconstruction effort; they are not parallel app lanes.
 
-## WinUI Toolkit
+## WinUI toolkit
 
-The WinUI 3 app is the primary user-facing product. Its top navigation exposes
-Home, Save Lab, Media, Asset Library, Lore, Windowed & Mods, Settings, and
-About.
+The primary navigation is Home, Save Lab, Media, Asset Library, Lore, Windowed
+& Mods, Settings, and About.
 
 ### Save Lab and Game Options
 
 - Analyze existing `.bes` career saves and `.bea` options files.
-- Write a separate career-save copy with selected mission, link, Goodie, rank,
-  and kill-count changes.
+- Write a separate save copy with supported mission, link, Goodie, rank, and
+  kill-count changes.
 - Edit supported startup, audio, controller, and binding values in a copied
   `defaultoptions.bea`.
-- Compare files and show bounded structural details for diagnosis.
+- Compare files and inspect bounded structural details.
 
-The toolkit never synthesizes a career save. AppCore begins with an existing
-retail-generated baseline, preserves file size and unknown bytes outside the
-selected regions, stages writes beside the destination, and verifies the
-committed result. The tracked 10,004-byte fixture is the only narrow save-payload
-exception in Git.
+AppCore starts from an existing retail-generated baseline, preserves file size
+and unknown bytes outside selected regions, stages output beside the
+destination, and verifies the committed bytes. It does not synthesize saves.
 
 ### Windowed & Mods
 
-- Treat the configured retail install and original `BEA.exe` as read-only
-  source material.
+- Treat the installed game and original `BEA.exe` as read-only sources.
 - Create an app-owned playable safe game copy.
-- Apply catalogued, expected-byte-verified compatibility changes and optional
-  patches only to that copy.
+- Plan, apply, restore, and verify expected-byte catalog patches on that copy.
 - Launch and stop only the copied-game process started by the app.
-- Keep advanced BEA.exe-only technical copies separate from playable profiles.
-- Offer a local split-screen launch preset for a safe copy.
+- Keep BEA.exe-only technical copies separate from playable profiles.
 
-Online Host/Join, public matchmaking, native BEA netcode, and active P3/P4 play
-are not available. The current evidence boundary is summarized in the
-[multiplayer feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md).
+The patch catalog's original/replacement bytes and copied-target rules are
+automatically checked. A byte-correct patch is not automatically proof of its
+visible or gameplay effect. Windowed startup, expanded mode enumeration, card-ID
+handling, graphics defaults, colors, Goodies display, pause binding, version
+text, and free-camera experiments therefore retain their individual stability
+labels and evidence notes.
+
+The local split-screen action currently supplies the game's existing launch
+arguments to a safe copy. It is not proof of active P2 input and does not add
+online play. Host/Join, matchmaking, and new networking are unavailable.
 
 ### Media, assets, and Lore
 
-- Media browses and plays supported installed audio/video as read-only input.
-- Asset Library loads an existing generated local catalog and previews supported
-  PNG/FBX metadata and bounded wireframes. It does not extract the installed
-  game or bundle retail assets.
-- Lore provides search, history, and an embedded reader for the canonical
-  articles under [`lore/`](lore/_index.md). Portable builds use a short generated
-  content pack; project source and external links are labeled as browser-opening
-  actions.
+- Media reads supported audio/video from a selected local game path.
+- Asset Library opens an existing generated catalog and previews supported
+  PNG/FBX metadata, linked textures, and bounded wireframes. It has no asset
+  importer, repacker, animation/bone pipeline, or material-package workflow.
+- Lore searches and renders the canonical articles under [`lore/`](lore/_index.md)
+  with tree navigation and Back/Forward/Home history. Portable builds generate
+  a reader pack from that single source rather than tracking a mirror.
 
-The short [`lore-book/BOOK.md`](lore-book/BOOK.md) file is a package entry guide,
-not a mirrored documentation tree.
+`tools/aya_archive_inventory.py` is a working read-only AYA structure scanner.
+The legacy AYA export bridge still depends on untracked local upstream binaries,
+so a clean checkout does not prove end-to-end PNG/FBX export.
 
-## AppCore, CLI, and host
+## AppCore and CLI
 
-`OnslaughtCareerEditor.AppCore` owns save/options parsing and patching, unknown-
-byte preservation, guarded publication, copied-target enforcement, patch plans,
-media discovery, generated-asset catalogs, and Lore loading.
+`OnslaughtCareerEditor.AppCore` owns save/options parsing, unknown-byte
+preservation, guarded publication, copied-target enforcement, patch plans,
+media discovery, asset-catalog reading, and Lore loading.
 
-`OnslaughtCareerEditor.Cli` is the supported command-line surface for save and
-options analysis/patching plus selected catalog workflows. Run its current help
-instead of relying on copied command lists:
+`OnslaughtCareerEditor.Cli` is a small, source-only maintainer adapter for
+AppCore save, options, patch, and catalog operations. It is built with the
+solution but is not shipped beside WinUI and is not a gamer-facing product or a
+generic automation workbench.
 
-```powershell
-npm run test:cli
-```
+## Reconstruction
 
-`OnslaughtCareerEditor.AppCore.Host` remains a JSON/stdio diagnostic bridge for
-read-only plans and bounded material-package operations. Exact-arm output
-commands write only to validated caller-selected or app-owned targets; they do
-not license extracted assets or prove renderer/rebuild parity.
+[`rebuild/`](rebuild/README.md) is a GPL-3.0-or-later, source- and RE-informed
+reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
+snapshots, state hashing, and command-tape replay without presentation,
+filesystem, clock, process, network, or GPU dependencies.
 
-## Rebuild
+The Godot Aquila Handling Lab is currently an input/rendering harness with a
+procedural arena, synthetic craft/targets, simplified movement, projectiles,
+energy, shield, and hull. It does not yet reproduce retail camera feel, terrain,
+missions, AI, weapon roster, animation, audio, campaign, or networking. Its
+purpose is to replace those placeholders with the smallest source-derived and
+retail-checked Aquila handling slice, then run a recognizable portion of Level
+100 from authorized original assets.
 
-[`rebuild/`](rebuild/README.md) contains a GPL-3.0-or-later, RE-informed
-original-code reconstruction. `OnslaughtRebuild.Core` owns deterministic
-fixed-step simulation, state hashing, command-tape replay, movement, morphing,
-energy/shield state, targets, and projectiles. The client layer owns scheduling,
-input adaptation, camera, rendering, audio, and presentation rather than
-simulation truth.
-
-The Godot First Flight client uses original procedural content and needs no
-retail installation or proprietary assets. It is a small playable prototype,
-not a strict clean-room implementation and not retail gameplay, mission,
-content, audio, online, visual, or no-noticeable-difference parity.
-
+The project has full permission to use, modify, and distribute the original
+game assets. The remaining asset gap is technical integration and format
+fidelity, not a requirement that every user supply an unshipped private pack.
 Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
-## Evidence and research
+## Evidence boundary
 
-The [RE index](reverse-engineering/RE-INDEX.md) is the technical front door.
-Current static authority is the
-[2026-07-13 Ghidra closeout](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
-and its per-address decision log. Its `6,411/6,411` result closes a defined
-metadata/export accounting contract; it does not prove universal semantic
-correctness or runtime behavior.
+[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the
+technical front door. The Ghidra database and retail executable own static
+released-binary facts. Controlled copied-runtime observations own measured
+behavior. Stuart's GPL source owns architecture and implementation evidence;
+retail static/runtime differences decide where the Steam release diverged.
 
-The pinned `references/Onslaught` and `references/AYAResourceExtractor`
-submodules are active reference evidence. Their provenance, build, format, test,
-and license limits are recorded in the
-[reference-submodule audit](reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md).
-They do not override observed Steam behavior or establish complete format
-support.
+Generated inventories and proof-plan chains are not capabilities. Query the
+canonical binary, source, or local corpus for the subsystem being implemented,
+retain only the smallest durable conclusion, and validate the resulting product
+behavior directly.
 
-## Distribution and limits
+## Distribution
 
 The published `v1.0.9` app is an unsigned portable Windows x64 ZIP. It does not
-include the retail game, executables, saves, media, extracted assets, full
-Ghidra databases, raw proof captures, an installer/MSIX identity, signing,
-SmartScreen reputation, or the rebuild.
+currently include the retail executable, original asset set, saves, full Ghidra
+database, raw captures, installer/MSIX identity, signing, or rebuild client.
+Asset permission does not change that current package shape; any future bundled
+asset slice requires deliberate provenance, attribution, and third-party notice
+review.
 
-Current source keeps the same portable layout while generating the Lore pack
-from the single canonical `lore/` tree. Publishing a release remains a separate
-maintainer action.
-
-## Focused commands
-
-```powershell
-npm test                 # WinUI/AppCore/UI plus deterministic rebuild Core
-npm run dev              # build current Lore pack and launch the WinUI app
-npm run test:safe-copy   # copied-target and patch-catalog contracts
-npm run test:docs        # local Markdown links
-npm run test:safety      # hard-payload, secret, and submodule boundary
-npm run test:rebuild     # broad non-native rebuild contract gate
-```
-
-Use `npm run` to see the complete small command surface. The
-[public sign-off guide](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md) adds only
-the checks relevant to a source or portable-ZIP release.
+Use `npm run` for the current focused command surface. `npm test` checks the
+WinUI/AppCore product lane; rebuild, native-client, runtime, and release checks
+are selected only when their owning contract changes.

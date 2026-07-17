@@ -4,7 +4,10 @@ Status: static-coherent system slice
 Date: 2026-05-26
 Scope: `mesh-motion-world-particle-static-review-wave905`
 
-Static-to-proof planning for the world/thing side of MissionScript object references now lives at `world-thing-spawn-object-reference-proof-plan.md`. That plan links this Wave905 world/mesh/thing evidence to `missionscript-iscript-static-contract.md`, `mission-thing-usage.md`, and Unit/BattleEngine spawn anchors without claiming runtime world loading, object identity, spawn behavior, visual QA, or rebuild parity.
+MissionScript object references connect to this world/thing evidence through
+`missionscript-iscript-static-contract.md` and the Unit/BattleEngine spawn
+anchors. These static links do not establish runtime world loading, object
+identity, spawn behavior, visual output, or rebuild parity.
 
 Wave905 reviews the mesh, motion, world, collision, and particle connector surface after the loaded Ghidra function-quality queue reached `6113/6113 = 100.00%`. It ties object/render initialization, CMesh/CMeshPart geometry and pose-cache rows, world occupancy and physics-manager lists, mesh collision, particle manager/set/descriptor rows, and mesh asset bridge counts into one system classification.
 

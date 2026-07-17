@@ -5,8 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -37,9 +35,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private AssetTextureItem? _selectedModelLinkedTexture;
         private string _selectedModelSidecarTexturePath = string.Empty;
         private string _selectedModelSidecarTextureFileName = string.Empty;
-        private AssetMaterialImportDryRunPlan? _materialDryRunPlan;
-        private AssetMaterialImportPackagePlan? _materialPackagePlan;
-        private string _materialPackageOutputRoot = string.Empty;
         private SaveAnalysis? _goodieSaveAnalysis;
         private string _goodieSaveStatePath = string.Empty;
 
@@ -119,9 +114,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _snapshot = _catalogService.Load(path);
             if (string.IsNullOrWhiteSpace(_snapshot.CatalogFilePath))
             {
-                _materialDryRunPlan = null;
-                _materialPackagePlan = null;
-                _materialPackageOutputRoot = string.Empty;
                 CatalogFirstRunGuideBorder.Visibility = Visibility.Visible;
                 CatalogInputGrid.Visibility = Visibility.Visible;
                 ChangeCatalogButton.Visibility = Visibility.Collapsed;
@@ -141,9 +133,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
             CatalogPathTextBox.PlaceholderText = "Paste catalog.json path or browse to a generated export folder";
-            RefreshMaterialImportPlans();
-            _materialPackageOutputRoot = BuildMaterialPackageOutputRoot(_snapshot.CatalogFilePath);
-            UpdateMaterialPackageOutputStatus();
             CatalogStatusTextBlock.Text = $"Catalog loaded: {BuildPathSummary(_snapshot.CatalogFilePath)}";
             CatalogFullPathTextBlock.Text = _snapshot.CatalogFilePath;
             CatalogSummaryTextBlock.Text =
@@ -184,12 +173,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _snapshot.LooseMeshes.Count(static mesh => mesh.ModelSummary.GeometryPreview.Available) +
                 _snapshot.EmbeddedMeshes.Count(static mesh => mesh.ModelSummary.GeometryPreview.Available);
             AssetModelPreviewCoverage modelCoverage = new AssetModelPreviewCoverageService().Build(_snapshot, sampleLimit: 0);
-            AssetMaterialImportPlan materialPlan = new AssetMaterialImportPlanService().Build(_snapshot, sampleLimit: 0);
-            AssetMaterialImportDryRunPlan materialDryRunPlan = _materialDryRunPlan ?? BuildMaterialDryRunPlan();
             GoodiePreviewCoverage goodieCoverage = new GoodiePreviewCoverageService().Build(_snapshot, sampleLimit: 0);
             string materialSlotSummary = BuildModelCoverageSlotSummary(modelCoverage.TextureToMaterialSlotNames);
-            int resolvedDryRunTextureOperations =
-                materialDryRunPlan.CatalogTextureOperations + materialDryRunPlan.SidecarTextureOperations;
 
             return
                 $"Real local extraction: {exportedTextures}/{_snapshot.Summary.TextureCount} texture PNG previews, " +
@@ -200,12 +185,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 $"{modelCoverage.RowsWithTextureToMaterialSlotNames}/{modelCoverage.TotalModelRows} model rows report material slots ({materialSlotSummary}), " +
                 $"{modelCoverage.RowsWithCatalogMatchedTextureBindingFiles}/{modelCoverage.TotalModelRows} model rows have direct catalog texture links, " +
                 $"{modelCoverage.RowsWithAllTextureBindingFilesCatalogMatched}/{modelCoverage.RowsWithTextureBindings} model rows have all texture bindings in the texture catalog, " +
-                $"{materialPlan.TotalCatalogMatchedTextureBindingFiles}/{materialPlan.TotalTextureBindingFiles} readable texture binding files resolve through catalog rows, " +
-                $"{materialPlan.TotalCatalogMissingSidecarTextureFiles}/{materialPlan.TotalCatalogMissingTextureBindingFiles} catalog-missing texture binding files have sidecar previews, " +
-                $"{materialPlan.TotalUnresolvedTextureBindingFiles} unresolved material import binding files, " +
-                $"{materialDryRunPlan.ReadyModelOperations}/{materialDryRunPlan.TotalModelOperations} material import dry-run model operations ready, " +
-                $"{resolvedDryRunTextureOperations}/{materialDryRunPlan.TotalTextureOperations} material import dry-run texture operations resolved, " +
-                $"{materialDryRunPlan.UnresolvedTextureOperations} unresolved dry-run texture operations, " +
                 $"{goodieCoverage.TexturePreviewReadyRows}/{goodieCoverage.TextureBearingRows} texture Goodies preview-ready, " +
                 $"{goodieCoverage.ModelWireframeReadyRows}/{goodieCoverage.ModelBearingRows} model Goodies wireframe-ready, " +
                 $"{goodieCoverage.VideoCatalogLinkedRows}/{goodieCoverage.VideoRows} video Goodies linked. " +
@@ -419,6 +398,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             string? path = await PickerInterop.PickFileAsync(App.MainWindowInstance, [".bes"]);
             if (string.IsNullOrWhiteSpace(path))
+
             {
                 return;
             }
@@ -502,8 +482,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? "Loading texture preview..."
                 : "Texture export is not available at the recorded local path.";
             ModelTextureLinksTextBlock.Text = "Catalog texture links appear when a model export is selected.";
-            ModelPackagePlanTextBlock.Text = "Material package plan appears here when a model export is selected.";
-            UpdateMaterialPackageOutputStatus();
             ClearSelectedModelLinkedTexture();
 
             if (!exportAvailable)
@@ -545,7 +523,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Model export is ready for a local FBX viewer. Wireframe preview needs model geometry metadata.";
             TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
             RenderModelSummary(mesh.ModelSummary, mesh.ExportPath);
-            RenderModelPackagePlan(mesh.CatalogId);
         }
 
         private void ShowEmbeddedMesh(AssetEmbeddedMeshItem mesh)
@@ -567,7 +544,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Embedded model export is ready for a local FBX viewer. Wireframe preview needs model geometry metadata.";
             TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
             RenderModelSummary(mesh.ModelSummary, mesh.ExportPath);
-            RenderModelPackagePlan(mesh.CatalogId);
         }
 
         private void ShowGoodie(AssetGoodieItem goodie, GoodieStateDetail? saveState)
@@ -792,11 +768,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ModelViewControlsPanel.Visibility = Visibility.Collapsed;
             ModelWireframeStatusTextBlock.Visibility = Visibility.Collapsed;
             ModelWireframeNoteTextBlock.Visibility = Visibility.Collapsed;
-            ModelPackagePlanTextBlock.Text = "Material package plan appears here when a model export is selected.";
-            MaterialPackageOutputStatusTextBlock.Text = "Material package output appears here after a catalog loads.";
-            PrepareMaterialPackageButton.IsEnabled = false;
-            OpenMaterialPackageButton.IsEnabled = false;
-            CopyMaterialPackagePathButton.IsEnabled = false;
             ClearSelectedModelLinkedTexture();
             _currentModelGeometryPreview = AssetModelGeometryPreview.Empty;
         }
@@ -828,6 +799,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ModelConnectionCountTextBlock.Text = BuildModelConnectionText(summary);
             AssetModelTextureLinkService textureLinkService = new();
             AssetModelTextureLinks textureLinks = textureLinkService.Build(_snapshot.Textures, summary);
+
             IReadOnlyList<AssetModelSidecarTexture> sidecarTextures =
                 textureLinkService.ResolveSidecarTextures(_snapshot, modelExportPath, textureLinks.TextureBindingFileNames);
             ModelTextureLinksTextBlock.Text = BuildModelTextureLinkText(textureLinks, sidecarTextures);
@@ -835,543 +807,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _currentModelGeometryPreview = summary.GeometryPreview;
             UpdateModelPreviewViewButtonStyles();
             RenderWireframe(_currentModelGeometryPreview);
-        }
-
-        private void RefreshMaterialImportPlans()
-        {
-            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(_snapshot);
-            _materialDryRunPlan = new AssetMaterialImportDryRunPlanService().Build(manifest);
-            _materialPackagePlan = new AssetMaterialImportPackagePlanService().Build(manifest);
-        }
-
-        private AssetMaterialImportDryRunPlan BuildMaterialDryRunPlan()
-        {
-            AssetMaterialImportManifest manifest = new AssetMaterialImportManifestService().Build(_snapshot);
-            return new AssetMaterialImportDryRunPlanService().Build(manifest);
-        }
-
-        private void RenderModelPackagePlan(string catalogId)
-        {
-            AssetMaterialImportPackagePlan packagePlan = _materialPackagePlan ??
-                new AssetMaterialImportPackagePlanService().Build(new AssetMaterialImportManifestService().Build(_snapshot));
-            AssetMaterialImportPackageModelOperation? operation = packagePlan.ModelOperations.FirstOrDefault(model =>
-                string.Equals(model.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase));
-            if (operation == null)
-            {
-                ModelPackagePlanTextBlock.Text = "Material package plan: no package operation matched this catalog row.";
-                return;
-            }
-
-            int resolvedTextures = operation.TextureReferences.Count(static texture => texture.SourceAvailable);
-            string status = operation.ReadyForPackage ? "ready" : operation.PackageStatus;
-            string textureSample = BuildPackageTextureSample(operation.TextureReferences);
-            ModelPackagePlanTextBlock.Text =
-                $"Material package plan: {status}; model destination {operation.DestinationRelativePath}; " +
-                $"{resolvedTextures}/{operation.TextureReferences.Count} texture references resolved. {textureSample}";
-        }
-
-        private static string BuildPackageTextureSample(
-            IReadOnlyList<AssetMaterialImportPackageTextureReference> textureReferences)
-        {
-            IReadOnlyList<string> destinations = textureReferences
-                .Where(static texture => texture.SourceAvailable && !string.IsNullOrWhiteSpace(texture.DestinationRelativePath))
-                .Select(static texture => texture.DestinationRelativePath)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(3)
-                .ToList();
-            if (destinations.Count == 0)
-            {
-                return "No package texture destinations are ready.";
-            }
-
-            return $"Texture destinations: {string.Join(", ", destinations)}.";
-        }
-
-        private void UpdateMaterialPackageOutputStatus(
-            AssetMaterialImportPackageMaterializationResult? result = null,
-            AssetMaterialImportPackageInspectionResult? inspection = null,
-            AssetMaterialImportPackageWorkOrderResult? workOrder = null,
-            AssetMaterialImportPackageImporterBatchResult? importerBatch = null,
-            AssetMaterialImportPackageImporterDryRunResult? importerDryRun = null,
-            AssetMaterialImportPackageImporterDryRunSidecarValidationResult? importerDryRunSidecarValidation = null,
-            AssetMaterialImportPackageImporterInputMaterializationResult? importerInput = null,
-            AssetMaterialImportPackageImporterInputPlanResult? importerInputPlan = null,
-            AssetMaterialImportPackageRebuildPreviewResult? rebuildPreview = null,
-            AssetMaterialImportPackageRebuildSceneResult? rebuildScene = null,
-            AssetMaterialImportPackageRebuildMeshResult? rebuildMesh = null,
-            AssetMaterialImportPackageRebuildMeshImportResult? rebuildMeshImport = null)
-        {
-            AssetMaterialImportPackagePlan? packagePlan = _materialPackagePlan;
-            if (packagePlan == null || string.IsNullOrWhiteSpace(_materialPackageOutputRoot))
-            {
-                MaterialPackageOutputStatusTextBlock.Text = "Material package output appears here after a catalog loads.";
-                PrepareMaterialPackageButton.IsEnabled = false;
-                OpenMaterialPackageButton.IsEnabled = false;
-                CopyMaterialPackagePathButton.IsEnabled = false;
-                return;
-            }
-
-            bool outputExists = Directory.Exists(_materialPackageOutputRoot);
-            if (result == null && outputExists)
-            {
-                try
-                {
-                    inspection ??= new AssetMaterialImportPackageInspectionService().Inspect(_materialPackageOutputRoot);
-                    workOrder ??= new AssetMaterialImportPackageWorkOrderService().Build(_materialPackageOutputRoot);
-                    importerBatch ??= new AssetMaterialImportPackageImporterBatchService().Build(_materialPackageOutputRoot);
-                    importerDryRun ??= new AssetMaterialImportPackageImporterDryRunService().Build(_materialPackageOutputRoot);
-                    importerDryRunSidecarValidation ??=
-                        new AssetMaterialImportPackageImporterDryRunService().ValidateSidecar(_materialPackageOutputRoot);
-                    importerInput ??= new AssetMaterialImportPackageImporterInputService().Preflight(_materialPackageOutputRoot);
-                    string importerInputManifestPath = Path.Combine(
-                        _materialPackageOutputRoot,
-                        AssetMaterialImportPackageImporterInputService.ImporterInputManifestFileName);
-                    if (File.Exists(importerInputManifestPath))
-                    {
-                        importerInputPlan ??= new AssetMaterialImportPackageImporterInputPlanService().Build(_materialPackageOutputRoot);
-                        rebuildPreview ??= new AssetMaterialImportPackageRebuildPreviewService().Preflight(_materialPackageOutputRoot);
-                        string rebuildPreviewManifestPath = Path.Combine(
-                            _materialPackageOutputRoot,
-                            AssetMaterialImportPackageRebuildPreviewService.ManifestFileName);
-                        if (File.Exists(rebuildPreviewManifestPath))
-                        {
-                            rebuildScene ??= new AssetMaterialImportPackageRebuildSceneService().Preflight(_materialPackageOutputRoot);
-                            string rebuildSceneManifestPath = Path.Combine(
-                                _materialPackageOutputRoot,
-                                AssetMaterialImportPackageRebuildSceneService.ManifestFileName);
-                            if (File.Exists(rebuildSceneManifestPath))
-                            {
-                                rebuildMesh ??= new AssetMaterialImportPackageRebuildMeshService().Preflight(_materialPackageOutputRoot);
-                                string rebuildMeshManifestPath = Path.Combine(
-                                    _materialPackageOutputRoot,
-                                    AssetMaterialImportPackageRebuildMeshService.ManifestFileName);
-                                if (File.Exists(rebuildMeshManifestPath))
-                                {
-                                    rebuildMeshImport ??= new AssetMaterialImportPackageRebuildMeshImportService().Preflight(_materialPackageOutputRoot);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
-                {
-                    inspection = null;
-                    workOrder = null;
-                    importerBatch = null;
-                    importerDryRun = null;
-                    importerDryRunSidecarValidation = null;
-                    importerInput = null;
-                    importerInputPlan = null;
-                    rebuildPreview = null;
-                    rebuildScene = null;
-                    rebuildMesh = null;
-                    rebuildMeshImport = null;
-                }
-            }
-
-            if (result != null)
-            {
-                MaterialPackageOutputStatusTextBlock.Text =
-                    $"Material package output: {result.CopiedFiles:N0} copied, {result.ExistingFilesSkipped:N0} already present, " +
-                    $"{result.MissingSourceFiles:N0} missing source files, {result.UnsafeDestinationFiles:N0} unsafe destinations. " +
-                    $"{BuildMaterialPackageInspectionSummary(inspection)} " +
-                    $"{BuildMaterialPackageWorkOrderSummary(workOrder)} " +
-                    $"{BuildMaterialPackageImporterBatchSummary(importerBatch)} " +
-                    $"{BuildMaterialPackageImporterDryRunSummary(importerDryRun)} " +
-                    $"{BuildMaterialPackageImporterDryRunSidecarValidationSummary(importerDryRunSidecarValidation)} " +
-                    $"{BuildMaterialPackageImporterInputSummary(importerInput)} " +
-                    $"{BuildMaterialPackageImporterInputPlanSummary(importerInputPlan)} " +
-                    $"{BuildMaterialPackageRebuildPreviewSummary(rebuildPreview)} " +
-                    $"{BuildMaterialPackageRebuildSceneSummary(rebuildScene)} " +
-                    $"{BuildMaterialPackageRebuildMeshSummary(rebuildMesh)} " +
-                    $"{BuildMaterialPackageRebuildMeshImportSummary(rebuildMeshImport)} " +
-                    $"{BuildMaterialPackageWorkOrderSidecarSummary(result)} " +
-                    $"{BuildMaterialPackageImporterDryRunSidecarSummary(result)} " +
-                    $"Package folder: {BuildPathSummary(_materialPackageOutputRoot)}";
-            }
-            else if (outputExists && workOrder != null)
-            {
-                MaterialPackageOutputStatusTextBlock.Text =
-                    $"Material package output: {packagePlan.TotalPackageFiles:N0} expected files under " +
-                    $"{BuildPathSummary(_materialPackageOutputRoot)}. " +
-                    $"{BuildMaterialPackageInspectionSummary(inspection)} " +
-                    $"{BuildMaterialPackageWorkOrderSummary(workOrder)} " +
-                    $"{BuildMaterialPackageImporterBatchSummary(importerBatch)} " +
-                    $"{BuildMaterialPackageImporterDryRunSummary(importerDryRun)} " +
-                    $"{BuildMaterialPackageImporterDryRunSidecarValidationSummary(importerDryRunSidecarValidation)} " +
-                    $"{BuildMaterialPackageImporterInputSummary(importerInput)} " +
-                    $"{BuildMaterialPackageImporterInputPlanSummary(importerInputPlan)} " +
-                    $"{BuildMaterialPackageRebuildPreviewSummary(rebuildPreview)} " +
-                    $"{BuildMaterialPackageRebuildSceneSummary(rebuildScene)} " +
-                    $"{BuildMaterialPackageRebuildMeshSummary(rebuildMesh)} " +
-                    $"{BuildMaterialPackageRebuildMeshImportSummary(rebuildMeshImport)}";
-            }
-            else
-            {
-                MaterialPackageOutputStatusTextBlock.Text =
-                    $"Material package output: {packagePlan.TotalPackageFiles:N0} ready files " +
-                    $"({packagePlan.ModelPackageFiles:N0} model, {packagePlan.TexturePackageFiles:N0} texture) can be prepared under " +
-                    $"{BuildPathSummary(_materialPackageOutputRoot)}. " +
-                    (outputExists ? "Package folder already exists." : "Package folder has not been created yet.");
-            }
-
-            PrepareMaterialPackageButton.IsEnabled = packagePlan.TotalPackageFiles > 0;
-            OpenMaterialPackageButton.IsEnabled = outputExists;
-            CopyMaterialPackagePathButton.IsEnabled = true;
-        }
-
-        private static string BuildMaterialPackageInspectionSummary(AssetMaterialImportPackageInspectionResult? inspection)
-        {
-            if (inspection == null)
-            {
-                return "Manifest graph inspection was not run.";
-            }
-
-            string status = inspection.Completed ? "ok" : inspection.ManifestStatus;
-            return
-                $"Manifest graph inspection: {status}; " +
-                $"{inspection.ManifestReadyModelGraphRows:N0}/{inspection.ManifestModelGraphRows:N0} model rows ready, " +
-                $"{inspection.ManifestResolvedTextureReferenceRows:N0}/{inspection.ManifestTextureReferenceRows:N0} texture references resolved, " +
-                $"{inspection.UnsafeModelGraphPaths:N0} unsafe graph paths.";
-        }
-
-        private static string BuildMaterialPackageWorkOrderSummary(AssetMaterialImportPackageWorkOrderResult? workOrder)
-        {
-            if (workOrder == null)
-            {
-                return "Importer work order was not built.";
-            }
-
-            string status = workOrder.Completed ? "ready" : workOrder.ManifestStatus;
-            return
-                $"Importer work order: {status}; " +
-                $"{workOrder.ReadyWorkOrderModelRows:N0}/{workOrder.WorkOrderModelRows:N0} ready model tasks, " +
-                $"{workOrder.ReadyTextureReferenceRows:N0}/{workOrder.TextureReferenceRows:N0} ready texture-reference tasks, " +
-                $"{workOrder.MissingPackageFiles:N0} missing package files, " +
-                $"{workOrder.UnsafePackagePaths:N0} unsafe package paths.";
-        }
-
-        private static string BuildMaterialPackageImporterBatchSummary(AssetMaterialImportPackageImporterBatchResult? importerBatch)
-        {
-            if (importerBatch == null)
-            {
-                return "Importer batch was not built.";
-            }
-
-            string status = importerBatch.Completed ? "ready" : importerBatch.SidecarStatus;
-            return
-                $"Importer batch: {status}; " +
-                $"{importerBatch.ReadyTaskRows:N0}/{importerBatch.TotalTaskRows:N0} ready flat tasks " +
-                $"({importerBatch.ModelTaskRows:N0} model, {importerBatch.TextureTaskRows:N0} texture), " +
-                $"{importerBatch.BlockedTaskRows:N0} blocked tasks.";
-        }
-
-        private static string BuildMaterialPackageImporterDryRunSummary(AssetMaterialImportPackageImporterDryRunResult? importerDryRun)
-        {
-            if (importerDryRun == null)
-            {
-                return "Importer dry-run adapter rows were not built.";
-            }
-
-            string status = importerDryRun.Completed ? "ready" : importerDryRun.SourceBatchStatus;
-            return
-                $"Importer dry run: {status}; " +
-                $"{importerDryRun.ReadyAdapterRows:N0}/{importerDryRun.PlannedAdapterRows:N0} adapter rows ready, " +
-                $"{importerDryRun.BlockedTaskRows:N0} blocked source tasks.";
-        }
-
-        private static string BuildMaterialPackageImporterDryRunSidecarValidationSummary(
-            AssetMaterialImportPackageImporterDryRunSidecarValidationResult? validation)
-        {
-            if (validation == null)
-            {
-                return "Importer dry-run sidecar validation was not run.";
-            }
-
-            string status = validation.Completed ? "ok" : validation.SidecarStatus;
-            return
-                $"Importer dry-run sidecar validation: {status}; " +
-                $"{validation.FreshReadyAdapterRows:N0}/{validation.FreshPlannedAdapterRows:N0} fresh adapter rows, " +
-                $"matches fresh build: {(validation.DryRunMatchesFreshBuild ? "yes" : "no")}.";
-        }
-
-        private static string BuildMaterialPackageImporterInputSummary(
-            AssetMaterialImportPackageImporterInputMaterializationResult? importerInput)
-        {
-            if (importerInput == null)
-            {
-                return "Importer input staging was not run.";
-            }
-
-            string status = importerInput.Completed ? "ready" : importerInput.ManifestStatus;
-            string mode = importerInput.Executed ? "staged" : "preflight";
-            return
-                $"Importer input {mode}: {status}; " +
-                $"{importerInput.InputRowsReady:N0}/{importerInput.PlannedAdapterRows:N0} rows ready, " +
-                $"{importerInput.UniqueAdapterFiles:N0} unique files, " +
-                $"{importerInput.CopiedFiles:N0} copied, " +
-                $"{importerInput.ExistingFilesSkipped:N0} existing, " +
-                $"{importerInput.ExistingHashMismatches:N0} hash mismatches.";
-        }
-
-        private static string BuildMaterialPackageImporterInputPlanSummary(
-            AssetMaterialImportPackageImporterInputPlanResult? importerInputPlan)
-        {
-            if (importerInputPlan == null)
-            {
-                return "Importer input plan was not built.";
-            }
-
-            string status = importerInputPlan.Completed ? "ready" : importerInputPlan.ManifestStatus;
-            return
-                $"Importer input plan: {status}; " +
-                $"{importerInputPlan.ReadyJobRows:N0}/{importerInputPlan.TotalJobRows:N0} consumer jobs ready " +
-                $"({importerInputPlan.ModelJobRows:N0} model imports, {importerInputPlan.TextureBindingJobRows:N0} texture binds), " +
-                $"{importerInputPlan.ReadableModelRows:N0} readable FBX rows, " +
-                $"{importerInputPlan.ReadableTextureBindingRows:N0} readable PNG binding rows, " +
-                $"{importerInputPlan.BlockedJobRows:N0} blocked jobs.";
-        }
-
-        private static string BuildMaterialPackageRebuildPreviewSummary(
-            AssetMaterialImportPackageRebuildPreviewResult? rebuildPreview)
-        {
-            if (rebuildPreview == null)
-            {
-                return "Rebuild preview adapter was not run.";
-            }
-
-            string status = rebuildPreview.Completed ? "ready" : rebuildPreview.ManifestStatus;
-            string mode = rebuildPreview.Executed ? "materialized" : "preflight";
-            return
-                $"Rebuild preview {mode}: {status}; " +
-                $"{rebuildPreview.ReadyPreviewRows:N0}/{rebuildPreview.ModelPreviewRows:N0} model previews ready, " +
-                $"{rebuildPreview.ObjFileRows:N0} OBJ rows, " +
-                $"{rebuildPreview.BindingSidecarRows:N0} binding sidecars, " +
-                $"{rebuildPreview.TextureBindingRows:N0} texture bindings, " +
-                $"{rebuildPreview.BlockedPreviewRows:N0} blocked previews.";
-        }
-
-        private static string BuildMaterialPackageRebuildSceneSummary(
-            AssetMaterialImportPackageRebuildSceneResult? rebuildScene)
-        {
-            if (rebuildScene == null)
-            {
-                return "Rebuild scene contract was not run.";
-            }
-
-            string status = rebuildScene.Completed ? "ready" : rebuildScene.ManifestStatus;
-            string mode = rebuildScene.Executed ? "materialized" : "preflight";
-            return
-                $"Rebuild scene contract {mode}: {status}; " +
-                $"{rebuildScene.ReadySceneRows:N0}/{rebuildScene.SceneRows:N0} scene rows ready, " +
-                $"{rebuildScene.FbxVertexRows:N0} FBX vertices, " +
-                $"{rebuildScene.FbxPolygonIndexRows:N0} polygon indices, " +
-                $"{rebuildScene.FbxNormalRows:N0} normals, " +
-                $"{rebuildScene.FbxTextureCoordinateRows:N0} UV rows, " +
-                $"{rebuildScene.TextureBindingRows:N0} texture bindings, " +
-                $"{rebuildScene.BlockedSceneRows:N0} blocked scenes.";
-        }
-
-        private static string BuildMaterialPackageRebuildMeshSummary(
-            AssetMaterialImportPackageRebuildMeshResult? rebuildMesh)
-        {
-            if (rebuildMesh == null)
-            {
-                return "Rebuild mesh output was not run.";
-            }
-
-            string status = rebuildMesh.Completed ? "ready" : rebuildMesh.ManifestStatus;
-            string mode = rebuildMesh.Executed ? "materialized" : "preflight";
-            return
-                $"Rebuild mesh output {mode}: {status}; " +
-                $"{rebuildMesh.ReadyMeshRows:N0}/{rebuildMesh.MeshRows:N0} mesh rows ready, " +
-                $"{rebuildMesh.FaceRows:N0} faces, " +
-                $"{rebuildMesh.VertexRows:N0} vertices, " +
-                $"{rebuildMesh.NormalRows:N0} normals, " +
-                $"{rebuildMesh.TextureCoordinateRows:N0} UV rows, " +
-                $"{rebuildMesh.MaterialRows:N0} materials, " +
-                $"{rebuildMesh.TextureBindingRows:N0} texture bindings, " +
-                $"{rebuildMesh.BlockedMeshRows:N0} blocked meshes.";
-        }
-
-        private static string BuildMaterialPackageRebuildMeshImportSummary(
-            AssetMaterialImportPackageRebuildMeshImportResult? rebuildMeshImport)
-        {
-            if (rebuildMeshImport == null)
-            {
-                return "Rebuild mesh import validation was not run.";
-            }
-
-            string status = rebuildMeshImport.Completed ? "ready" : rebuildMeshImport.ManifestStatus;
-            string mode = rebuildMeshImport.Executed ? "materialized" : "preflight";
-            return
-                $"Rebuild mesh import validation {mode}: {status}; " +
-                $"{rebuildMeshImport.ReadyImportRows:N0}/{rebuildMeshImport.ImportRows:N0} import rows ready, " +
-                $"{rebuildMeshImport.ObjParsedRows:N0} OBJ parsed, " +
-                $"{rebuildMeshImport.MtlParsedRows:N0} MTL parsed, " +
-                $"{rebuildMeshImport.FaceRows:N0} faces, " +
-                $"{rebuildMeshImport.MaterialRows:N0} materials, " +
-                $"{rebuildMeshImport.TextureReferenceRows:N0} texture references, " +
-                $"{rebuildMeshImport.CountMismatchRows:N0} count mismatches, " +
-                $"{rebuildMeshImport.MissingTextureRows:N0} missing textures.";
-        }
-
-        private static string BuildMaterialPackageWorkOrderSidecarSummary(AssetMaterialImportPackageMaterializationResult result)
-        {
-            if (!result.WorkOrderSidecarWritten)
-            {
-                return $"Work-order sidecar: {result.WorkOrderSidecarStatus}.";
-            }
-
-            return
-                $"Work-order sidecar: {result.WorkOrderSidecarStatus} " +
-                $"({result.WorkOrderSidecarRelativePath}, {result.WorkOrderSidecarBytes:N0} bytes).";
-        }
-
-        private static string BuildMaterialPackageImporterDryRunSidecarSummary(AssetMaterialImportPackageMaterializationResult result)
-        {
-            if (!result.ImporterDryRunSidecarWritten)
-            {
-                return $"Importer dry-run sidecar: {result.ImporterDryRunSidecarStatus}.";
-            }
-
-            return
-                $"Importer dry-run sidecar: {result.ImporterDryRunSidecarStatus} " +
-                $"({result.ImporterDryRunSidecarRelativePath}, {result.ImporterDryRunSidecarBytes:N0} bytes).";
-        }
-
-        private async void PrepareMaterialPackageButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(_snapshot.CatalogFilePath) ||
-                string.IsNullOrWhiteSpace(_materialPackageOutputRoot))
-            {
-                AppStatusService.SetStatus("Asset Library: load a catalog before preparing a material package");
-                return;
-            }
-
-            PrepareMaterialPackageButton.IsEnabled = false;
-            MaterialPackageOutputStatusTextBlock.Text = $"Preparing material package: {BuildPathSummary(_materialPackageOutputRoot)}...";
-            AppStatusService.SetStatus("Asset Library: preparing material package");
-
-            try
-            {
-                AssetCatalogSnapshot snapshot = _snapshot;
-                string outputRoot = _materialPackageOutputRoot;
-                AssetMaterialImportPackageMaterializationResult result = await Task.Run(() =>
-                    new AssetMaterialImportPackageMaterializationService().Materialize(snapshot, outputRoot));
-                AssetMaterialImportPackageInspectionResult inspection = await Task.Run(() =>
-                    new AssetMaterialImportPackageInspectionService().Inspect(outputRoot));
-                AssetMaterialImportPackageWorkOrderResult workOrder = await Task.Run(() =>
-                    new AssetMaterialImportPackageWorkOrderService().Build(outputRoot));
-                AssetMaterialImportPackageImporterBatchResult importerBatch = await Task.Run(() =>
-                    new AssetMaterialImportPackageImporterBatchService().Build(outputRoot));
-                AssetMaterialImportPackageImporterDryRunResult importerDryRun = await Task.Run(() =>
-                    new AssetMaterialImportPackageImporterDryRunService().Build(outputRoot));
-                AssetMaterialImportPackageImporterDryRunSidecarValidationResult importerDryRunSidecarValidation = await Task.Run(() =>
-                    new AssetMaterialImportPackageImporterDryRunService().ValidateSidecar(outputRoot));
-                AssetMaterialImportPackageImporterInputMaterializationResult importerInput = await Task.Run(() =>
-                    new AssetMaterialImportPackageImporterInputService().Materialize(outputRoot));
-                AssetMaterialImportPackageImporterInputPlanResult importerInputPlan = await Task.Run(() =>
-                    new AssetMaterialImportPackageImporterInputPlanService().Build(outputRoot));
-                AssetMaterialImportPackageRebuildPreviewResult rebuildPreview = await Task.Run(() =>
-                    new AssetMaterialImportPackageRebuildPreviewService().Materialize(outputRoot));
-                AssetMaterialImportPackageRebuildSceneResult rebuildScene = await Task.Run(() =>
-                    new AssetMaterialImportPackageRebuildSceneService().Materialize(outputRoot));
-                AssetMaterialImportPackageRebuildMeshResult rebuildMesh = await Task.Run(() =>
-                    new AssetMaterialImportPackageRebuildMeshService().Materialize(outputRoot));
-                AssetMaterialImportPackageRebuildMeshImportResult rebuildMeshImport = await Task.Run(() =>
-                    new AssetMaterialImportPackageRebuildMeshImportService().Materialize(outputRoot));
-
-                UpdateMaterialPackageOutputStatus(
-                    result,
-                    inspection,
-                    workOrder,
-                    importerBatch,
-                    importerDryRun,
-                    importerDryRunSidecarValidation,
-                    importerInput,
-                    importerInputPlan,
-                    rebuildPreview,
-                    rebuildScene,
-                    rebuildMesh,
-                    rebuildMeshImport);
-                string completion = result.Completed &&
-                    inspection.Completed &&
-                    workOrder.Completed &&
-                    importerBatch.Completed &&
-                    importerDryRun.Completed &&
-                    importerDryRunSidecarValidation.Completed &&
-                    importerInput.Completed &&
-                    importerInputPlan.Completed &&
-                    rebuildPreview.Completed &&
-                    rebuildScene.Completed &&
-                    rebuildMesh.Completed &&
-                    rebuildMeshImport.Completed
-                    ? "complete, inspected, sidecar-validated, importer-batch-ready, importer-dry-run-ready, importer-dry-run-sidecar-validated, importer-input-staged, importer-input-plan-ready, rebuild-preview-ready, rebuild-scene-contract-ready, rebuild-mesh-ready, and rebuild-mesh-import-ready"
-                    : result.Completed && inspection.Completed
-                        ? "complete and inspected with importer handoff issues"
-                    : result.Completed
-                        ? "complete with manifest inspection issues"
-                        : "completed with blocked files";
-                AppStatusService.SetStatus(
-                    $"Asset Library: material package {completion}; {importerBatch.ReadyTaskRows:N0}/{importerBatch.TotalTaskRows:N0} ready flat importer tasks; " +
-                    $"{importerDryRun.ReadyAdapterRows:N0}/{importerDryRun.PlannedAdapterRows:N0} ready importer dry-run rows; " +
-                    $"dry-run sidecar validation {importerDryRunSidecarValidation.SidecarStatus}; " +
-                    $"importer input {importerInput.InputRowsReady:N0}/{importerInput.PlannedAdapterRows:N0} rows; " +
-                    $"input plan {importerInputPlan.ReadyJobRows:N0}/{importerInputPlan.TotalJobRows:N0} jobs; " +
-                    $"rebuild preview {rebuildPreview.ReadyPreviewRows:N0}/{rebuildPreview.ModelPreviewRows:N0} models; " +
-                    $"rebuild scene contract {rebuildScene.ReadySceneRows:N0}/{rebuildScene.SceneRows:N0} scenes; " +
-                    $"rebuild mesh {rebuildMesh.ReadyMeshRows:N0}/{rebuildMesh.MeshRows:N0} meshes; " +
-                    $"rebuild mesh import {rebuildMeshImport.ReadyImportRows:N0}/{rebuildMeshImport.ImportRows:N0} rows");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
-            {
-                MaterialPackageOutputStatusTextBlock.Text = "Material package output could not be prepared.";
-                AppStatusService.SetStatus("Asset Library: material package preparation failed");
-            }
-            finally
-            {
-                PrepareMaterialPackageButton.IsEnabled = (_materialPackagePlan?.TotalPackageFiles ?? 0) > 0;
-                OpenMaterialPackageButton.IsEnabled = Directory.Exists(_materialPackageOutputRoot);
-                CopyMaterialPackagePathButton.IsEnabled = !string.IsNullOrWhiteSpace(_materialPackageOutputRoot);
-            }
-        }
-
-        private void OpenMaterialPackageButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(_materialPackageOutputRoot) ||
-                !Directory.Exists(_materialPackageOutputRoot))
-            {
-                AppStatusService.SetStatus("Asset Library: material package folder does not exist yet");
-                return;
-            }
-
-            try
-            {
-                Process.Start(new ProcessStartInfo(_materialPackageOutputRoot)
-                {
-                    UseShellExecute = true
-                });
-                AppStatusService.SetStatus("Asset Library: opened material package folder");
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or IOException or System.ComponentModel.Win32Exception)
-            {
-                AppStatusService.SetStatus("Asset Library: material package folder could not be opened");
-            }
-        }
-
-        private void CopyMaterialPackagePathButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(_materialPackageOutputRoot))
-            {
-                AppStatusService.SetStatus("Asset Library: material package path is not available");
-                return;
-            }
-
-            DataPackage data = new();
-            data.SetText(_materialPackageOutputRoot);
-            Clipboard.SetContent(data);
-            AppStatusService.SetStatus("Asset Library: material package path copied");
         }
 
         private static string BuildModelUvMappingText(AssetModelSummary summary)
@@ -1629,6 +1064,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetTexturePreviewBackground(TexturePreviewBackground.Light);
         }
 
+
         private void TexturePreviewDarkButton_Click(object sender, RoutedEventArgs e)
         {
             SetTexturePreviewBackground(TexturePreviewBackground.Dark);
@@ -1877,54 +1313,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return $"{name} in {parent}";
-        }
-
-        private static string BuildMaterialPackageOutputRoot(string? catalogFilePath)
-        {
-            string? overrideRoot = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_ASSET_PACKAGE_ROOT");
-            string baseRoot = string.IsNullOrWhiteSpace(overrideRoot)
-                ? Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "OnslaughtCareerEditor",
-                    "asset-material-packages")
-                : Path.GetFullPath(overrideRoot);
-            return Path.Combine(baseRoot, BuildMaterialPackageOutputToken(catalogFilePath));
-        }
-
-        private static string BuildMaterialPackageOutputToken(string? catalogFilePath)
-        {
-            if (string.IsNullOrWhiteSpace(catalogFilePath))
-            {
-                return "catalog";
-            }
-
-            string fullPath = Path.GetFullPath(catalogFilePath);
-            string? catalogDirectory = Path.GetDirectoryName(fullPath);
-            string? catalogRoot = string.Equals(Path.GetFileName(catalogDirectory), "asset_catalog", StringComparison.OrdinalIgnoreCase)
-                ? Path.GetDirectoryName(catalogDirectory)
-                : catalogDirectory;
-            string label = SanitizePathToken(Path.GetFileName(catalogRoot) ?? "catalog");
-            if (string.IsNullOrWhiteSpace(label))
-            {
-                label = "catalog";
-            }
-
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(fullPath.ToUpperInvariant()));
-            string hash = Convert.ToHexString(hashBytes).Substring(0, 12).ToLowerInvariant();
-            return $"{label}-{hash}";
-        }
-
-        private static string SanitizePathToken(string value)
-        {
-            char[] chars = value.Select(static ch =>
-                char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' ? ch : '_').ToArray();
-            string result = new string(chars).Trim('_');
-            while (result.Contains("__", StringComparison.Ordinal))
-            {
-                result = result.Replace("__", "_", StringComparison.Ordinal);
-            }
-
-            return result.Length <= 64 ? result : result[..64].Trim('_');
         }
 
         private static AssetListKind GetInitialAssetKind()

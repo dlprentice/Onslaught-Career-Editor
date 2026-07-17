@@ -6,7 +6,7 @@ or authorize a release.
 ## Source and product
 
 ```powershell
-npm run test:product
+npm test
 npm run test:cli
 npm run test:docs
 npm run test:safety

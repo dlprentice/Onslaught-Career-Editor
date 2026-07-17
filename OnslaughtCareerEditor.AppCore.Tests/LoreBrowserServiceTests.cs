@@ -849,6 +849,8 @@ See the [world](lore/world-lore.md).
             Assert.Contains("<base href=", html);
             Assert.Contains("linear-gradient", html);
             Assert.Contains("See the", html);
+            Assert.Contains("<h2 id=\"start-here\">Start Here</h2>", html);
+            Assert.DoesNotContain("<h1", html, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

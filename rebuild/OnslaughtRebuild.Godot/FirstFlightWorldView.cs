@@ -30,9 +30,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Camera3D _camera = null!;
     private bool _cameraInitialized;
     private float _modeBlend;
-    private bool _localPlayerVisual;
-    private bool _localTerrainVisual;
-    private LocalPresentationConfig? _localPresentation;
 
     public int TargetVisualCount => _targets.Count;
 
@@ -40,12 +37,9 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
 
-    public LocalPresentationLoadStatus LocalPresentationStatus => new(_localPlayerVisual, _localTerrainVisual);
-
-    public void Initialize(WorldSnapshot snapshot, LocalPresentationConfig? localPresentation = null)
+    public void Initialize(WorldSnapshot snapshot)
     {
         Name = "WorldView";
-        _localPresentation = localPresentation;
         BuildEnvironment();
         BuildArena();
         BuildPlayer();
@@ -121,28 +115,6 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildArena()
     {
-        if (_localPresentation?.HasTerrainMesh == true &&
-            _localPresentation.Terrain is not null &&
-            _localPresentation.TerrainMeshPath is not null)
-        {
-            Node3D? terrain = LocalAssetMeshLoader.TryLoadMeshNode(
-                _localPresentation.TerrainMeshPath,
-                _localPresentation.Terrain,
-                "LocalTerrain");
-            if (terrain is not null)
-            {
-                AddChild(terrain);
-                _localTerrainVisual = true;
-                BuildArenaBoundariesOnly();
-                return;
-            }
-        }
-
-        BuildArenaSynthetic();
-    }
-
-    private void BuildArenaSynthetic()
-    {
         var groundMaterial = VisualPrimitives.CreateMaterial(new Color(0.075f, 0.105f, 0.095f), 0.05f, 0.92f);
         AddChild(new MeshInstance3D
         {
@@ -195,26 +167,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        if (_localPresentation?.HasPlayerMesh == true &&
-            _localPresentation.Player is not null)
-        {
-            Node3D? localPlayer = LocalAssetMeshLoader.TryLoadMeshNode(
-                _localPresentation.PlayerMeshPath,
-                _localPresentation.Player,
-                "LocalAquila");
-            if (localPlayer is not null)
-            {
-                _playerBodyPivot.AddChild(localPlayer);
-                _localPlayerVisual = true;
-                return;
-            }
-        }
-
-        BuildPlayerSynthetic();
-    }
-
-    private void BuildPlayerSynthetic()
-    {
         var bodyMaterial = VisualPrimitives.CreateMaterial(Steel, 0.55f, 0.36f);
         var darkMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.35f, 0.55f);
         _playerAccentMaterial = VisualPrimitives.CreateMaterial(Cyan, 0.35f, 0.32f, Cyan);
@@ -284,8 +236,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdatePlayerShape(WorldSnapshot snapshot, float frameDelta)
     {
-        if (_localPlayerVisual ||
-            _leftLeg is null ||
+        if (_leftLeg is null ||
             _rightLeg is null ||
             _leftWing is null ||
             _rightWing is null ||
@@ -380,18 +331,18 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdateCamera(WorldSnapshot snapshot, Vector3 playerPosition, float frameDelta)
     {
-        TargetSnapshot? nearestTarget = snapshot.Targets
-            .Where(target => target.IsActive)
-            .OrderBy(target =>
-            {
-                Vector3 position = ToWorld(target.Position, 0f);
-                return position.DistanceSquaredTo(playerPosition);
-            })
-            .FirstOrDefault();
-        Vector3 focus = nearestTarget is null
-            ? playerPosition
-            : playerPosition.Lerp(ToWorld(nearestTarget.Position, 0.9f), 0.36f);
-        Vector3 desired = focus + new Vector3(0f, 31f, -25f);
+        var forward = new Vector3(snapshot.FacingX, 0f, snapshot.FacingZ);
+        if (forward.IsZeroApprox())
+        {
+            forward = new Vector3(0f, 0f, 1f);
+        }
+        else
+        {
+            forward = forward.Normalized();
+        }
+
+        Vector3 focus = playerPosition + (forward * 4.5f) + new Vector3(0f, 1.1f, 0f);
+        Vector3 desired = playerPosition - (forward * 11.5f) + new Vector3(0f, 5.8f, 0f);
         if (!_cameraInitialized)
         {
             _camera.Position = desired;
@@ -403,7 +354,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             _camera.Position = _camera.Position.Lerp(desired, weight);
         }
 
-        _camera.LookAt(focus + new Vector3(0f, 0.9f, 1.5f), Vector3.Up);
+        _camera.LookAt(focus, Vector3.Up);
     }
 
     private static Vector3 ToWorld(SimVector2 position, float height)
@@ -418,9 +369,4 @@ public sealed partial class FirstFlightWorldView : Node3D
         MeshInstance3D Beacon,
         MeshInstance3D Marker,
         StandardMaterial3D Material);
-}
-
-public readonly record struct LocalPresentationLoadStatus(bool PlayerLoaded, bool TerrainLoaded)
-{
-    public bool AnyLoaded => PlayerLoaded || TerrainLoaded;
 }

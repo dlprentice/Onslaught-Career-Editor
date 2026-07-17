@@ -1,8 +1,10 @@
 # Local lab overlay
 
-Use ignored local directories for proprietary inputs and bulky/generated work.
-They are not part of the public source tree and must never be copied into a
-release candidate.
+Use ignored local directories for retail inputs and bulky/generated work. They
+are not source and must not be copied wholesale into a release candidate.
+Curated original assets may move into an owning product/rebuild path under the
+project's confirmed permission after provenance, attribution, and third-party
+terms are reviewed.
 
 Recommended owners:
 

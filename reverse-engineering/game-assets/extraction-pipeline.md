@@ -1,11 +1,13 @@
 # Guarded asset extraction pipeline
 
-Status: local user-supplied inputs only
+Status: active local analysis path
 
 The public repository contains parsers and exporters, not Battle Engine Aquila
-assets. A user may point the tools at their own retail installation and write
-derived files to a separate ignored workspace. Neither source assets nor
-exports may be committed or packaged with the toolkit or rebuild.
+asset archives. Tools read a retail installation and write derived files to a
+separate ignored workspace. The project has permission to use, modify, and
+distribute original game assets, but bulk extraction remains local; only a
+curated, attributed asset set consumed by an active product/rebuild slice should
+enter source or packaging.
 
 ## Supported flow
 
@@ -25,9 +27,7 @@ Python exporters publish through guarded output handling: the destination must
 be separate from tracked source and retail input, pre-existing unsafe content
 is rejected, and output is replaced only after a complete staging pass. The C#
 asset services use package-relative paths and keep private absolute source paths
-out of generated public-safe metadata. Materialization commands that copy
-derived files require their explicit arm phrase; read-only inspection and
-preflight do not.
+out of generated metadata.
 
 ## Format and provenance boundaries
 
@@ -40,7 +40,7 @@ preflight do not.
 - Goodies links combine catalog, save-state, and source/static evidence. They
   do not permanently award Goodies, edit the source save, or prove every
   in-game viewer state.
-- Counts from a private installation are local observations, not durable
+- Counts from a local installation are observations, not durable
   repository truth. The generated catalog is the owner for that run; this page
   does not mirror its inventory.
 
@@ -55,9 +55,9 @@ the guarded copied-runtime helper tests. For a change to one exporter, run its
 matching focused test directly instead of treating the combined command as a
 release checklist.
 
-## Prohibited outputs
+## Source boundary
 
-Do not track or release retail archives, extracted textures/models/audio/video,
-copied executables, saves, raw catalog payloads from a private installation,
-debugger logs, screenshots, or generated material packages. Public examples
-must be synthetic or one of the narrowly reviewed repository fixtures.
+Do not track retail archives, copied executables, saves, raw machine-local
+catalogs, debugger logs, screenshots, or generated extraction trees. A selected
+original asset may be tracked or released only when it has a current consumer,
+clear provenance and attribution, and no conflicting third-party term.

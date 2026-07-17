@@ -8,7 +8,10 @@ Status: static-coherent system slice
 Date: 2026-05-26
 Scope: `unit-battleengine-gameplay-static-review-wave906`
 
-Static-to-proof planning for the Unit/BattleEngine spawn side of MissionScript object references now lives at `world-thing-spawn-object-reference-proof-plan.md`. That plan links this Wave906 spawn evidence to `missionscript-iscript-static-contract.md`, `mission-thing-usage.md`, world-load/factory anchors, and spawner anchors without claiming runtime spawn behavior, object identity, gameplay outcomes, visual QA, or rebuild parity.
+MissionScript object references connect to this Unit/BattleEngine evidence
+through `missionscript-iscript-static-contract.md`, world-load/factory anchors,
+and spawner anchors. These static links do not establish runtime spawn behavior,
+object identity, gameplay outcomes, visual output, or rebuild parity.
 
 Wave906 reviews the Unit, BattleEngine, weapon, projectile, AI, target, spawn, and damage/destruction surface after the loaded Ghidra function-quality queue reached `6113/6113 = 100.00%`. It ties shared `CUnit` state, `CUnitAI` behavior, BattleEngine player-mode logic, weapon/round construction and firing, target selection, squad/spawn helpers, concrete unit subclasses, and damage/destructible-segment rows into one system classification.
 

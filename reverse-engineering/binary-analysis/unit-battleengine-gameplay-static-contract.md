@@ -53,11 +53,9 @@ interaction.
 Static rows connect deploy/undeploy state, target-heading updates,
 active-reader replacement, side compatibility, event dispatch, and animation
 state. MissionScript `GetThingRef` / `SpawnThing` context is owned by
-[`missionscript-iscript-static-contract.md`](missionscript-iscript-static-contract.md)
-and the copied-corpus
-[`../game-assets/mission-thing-usage.md`](../game-assets/mission-thing-usage.md).
-Name matches and factory calls do not prove runtime object identity or spawn
-outcomes.
+[`missionscript-iscript-static-contract.md`](missionscript-iscript-static-contract.md).
+Source-corpus name matches and factory calls do not prove runtime object
+identity or spawn outcomes.
 
 ## Collision and terrain handoff
 

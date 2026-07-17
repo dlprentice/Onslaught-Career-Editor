@@ -29,6 +29,9 @@ namespace Onslaught___Career_Editor
         private static readonly Regex HtmlAnchorRegex = new(
             @"<a\s+(?<attrs>[^>]*\bhref=(?<quote>[""'])(?<href>[^""']+)\k<quote>[^>]*)>(?<content>.*?)</a>",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        private static readonly Regex HtmlHeadingRegex = new(
+            @"(?<prefix></?h)(?<level>[1-5])(?=[\s>])",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly MarkdownPipeline _pipeline;
         private LoreContentPack? _contentPack;
 
@@ -147,7 +150,7 @@ namespace Onslaught___Career_Editor
             if (TryGetPackedDocument(normalizedSource, out LorePackDocument? packedDocument))
             {
                 string packedMarkdown = RewritePackedMarkdownLinks(packedDocument!);
-                string contentHtml = Markdown.ToHtml(packedMarkdown, _pipeline);
+                string contentHtml = DemoteDocumentHeadings(Markdown.ToHtml(packedMarkdown, _pipeline));
                 contentHtml = AnnotateSourceLinks(contentHtml);
                 string renderPath = GetRenderPathForDocument(normalizedSource);
                 string wrappedHtml = WrapHtmlDocument(packedDocument!.Title, contentHtml, renderPath);
@@ -173,7 +176,7 @@ namespace Onslaught___Career_Editor
 
             string markdown = File.ReadAllText(normalizedSource);
             string title = ResolveMarkdownTitle(markdown, normalizedSource);
-            string fileContentHtml = Markdown.ToHtml(markdown, _pipeline);
+            string fileContentHtml = DemoteDocumentHeadings(Markdown.ToHtml(markdown, _pipeline));
             fileContentHtml = AnnotateSourceLinks(fileContentHtml);
             string fileRenderPath = GetRenderPathForDocument(normalizedSource);
             string fileWrappedHtml = WrapHtmlDocument(title, fileContentHtml, normalizedSource);
@@ -1080,6 +1083,15 @@ namespace Onslaught___Career_Editor
             return Path.GetFileNameWithoutExtension(filePath);
         }
 
+        private static string DemoteDocumentHeadings(string html)
+        {
+            return HtmlHeadingRegex.Replace(html, static match =>
+            {
+                int level = match.Groups["level"].Value[0] - '0';
+                return $"{match.Groups["prefix"].Value}{level + 1}";
+            });
+        }
+
         private static string WrapHtmlDocument(string title, string contentHtml, string filePath)
         {
             string baseUri = new Uri(Path.GetDirectoryName(filePath)! + Path.DirectorySeparatorChar).AbsoluteUri;
@@ -1123,8 +1135,8 @@ namespace Onslaught___Career_Editor
       box-shadow: 0 24px 64px rgba(17, 24, 39, 0.08);
     }
     h1, h2, h3, h4, h5, h6 { color: var(--text); line-height: 1.2; }
-    h1 { font-size: 2rem; margin-top: 0; }
-    h2 { margin-top: 2rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+    h2 { font-size: 2rem; margin-top: 0; }
+    h3 { margin-top: 2rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
     p, li { font-size: 0.98rem; }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }

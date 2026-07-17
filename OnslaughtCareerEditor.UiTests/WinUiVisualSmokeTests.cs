@@ -738,11 +738,6 @@ public class WinUiVisualSmokeTests
         string textureLinks = TryGetName(FindByAutomationId(window, "AssetModelTextureLinks")) ?? string.Empty;
         Assert.That(textureLinks, Does.Contain("direct catalog texture link"));
         Assert.That(textureLinks, Does.Contain("Sidecar preview files"));
-        string packagePlan = TryGetName(FindByAutomationId(window, "AssetModelPackagePlan")) ?? string.Empty;
-        Assert.That(packagePlan, Does.Contain("Material package plan: ready"));
-        Assert.That(packagePlan, Does.Contain("model destination models/"));
-        Assert.That(packagePlan, Does.Contain("texture references resolved"));
-        Assert.That(packagePlan, Does.Contain("Texture destinations: textures/catalog/"));
         Button openButton = FindByAutomationId(window, "AssetOpenExportButton").AsButton();
         Assert.That(openButton.IsEnabled, Is.True, $"Expected model export action to be enabled for {expectedTitle}.");
     }

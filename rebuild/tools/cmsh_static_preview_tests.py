@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import itertools
 import json
 import math
@@ -341,8 +340,6 @@ v 12.0 18.0 -33.0
 f 1 3 2
 f 1 4 3
 """
-EXPECTED_SHA256 = "3bee52cf5bf193beb090e8065c7eb057490730cd87977a268507f1091870c848"
-
 EXPECTED_REFERENCE_OBJ = b"""v 12.0 19.0 -33.0
 v 15.0 16.0 -36.0
 v 18.0 13.0 -39.0
@@ -359,8 +356,6 @@ f 4 5 6
 f 7 9 8
 f 7 8 9
 """
-EXPECTED_REFERENCE_SHA256 = "ddf266ab5650cc4dc234e23595dac092f873a9b9222b91efff3f17dd6917b93e"
-
 EXPECTED_ATTRIBUTE_OBJ = b"""v 12.0 19.0 -33.0
 v 15.0 16.0 -36.0
 v 18.0 13.0 -39.0
@@ -393,13 +388,11 @@ class CmshStaticPreviewTests(unittest.TestCase):
     def test_generated_archive_emits_exact_geometry_only_obj(self) -> None:
         result = preview.convert_aya_bytes(build_fixture_aya())
         self.assertEqual(EXPECTED_OBJ, result)
-        self.assertEqual(EXPECTED_SHA256, hashlib.sha256(result).hexdigest())
         _validate_obj_semantics(result)
 
     def test_reference_fixture_emits_owner_and_instances_in_part_sequence_order(self) -> None:
         result = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream()))
         self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
-        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
         self.assertEqual(9, sum(line.startswith(b"v ") for line in result.splitlines()))
         self.assertEqual(6, sum(line.startswith(b"f ") for line in result.splitlines()))
 
@@ -521,15 +514,6 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 )
                 with self.assertRaisesRegex(preview.CmshProfileError, "normal transform"):
                     preview.emit_obj(replace(mesh, parts=(mesh.parts[0], transformed)), include_vertex_attributes=True)
-
-    def test_default_obj_bytes_remain_identical_for_v0_and_reference_profiles(self) -> None:
-        fixture = preview.emit_obj(preview.parse_cmsh_stream(build_fixture_stream()))
-        reference = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream()))
-
-        self.assertEqual(EXPECTED_OBJ, fixture)
-        self.assertEqual(EXPECTED_SHA256, hashlib.sha256(fixture).hexdigest())
-        self.assertEqual(EXPECTED_REFERENCE_OBJ, reference)
-        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(reference).hexdigest())
 
     def test_cli_vertex_attributes_flag_is_explicit_and_forwarded(self) -> None:
         with mock.patch.object(preview, "publish_anonymous_previews", return_value=(2, 0)) as publish:
@@ -666,7 +650,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 with self.assertRaisesRegex(preview.CmshProfileError, "non-finite numeric value"):
                     preview.parse_cmsh_stream(bytes(malformed))
 
-    def test_reference_zero_sentinel_source_metadata_emits_identical_golden(self) -> None:
+    def test_reference_zero_sentinel_source_metadata_preserves_reference_output(self) -> None:
         parts = reference_fixture_parts()
         sentinel = _empty_reference_pmvb(stride=0, fvf=0, topology=0)
         parts[2] = _multipart_part(
@@ -689,7 +673,6 @@ class CmshStaticPreviewTests(unittest.TestCase):
         result = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream(parts)))
 
         self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
-        self.assertEqual(EXPECTED_REFERENCE_SHA256, hashlib.sha256(result).hexdigest())
 
     def test_reference_zero_sentinel_source_metadata_rejects_every_near_miss(self) -> None:
         malformed_cmvb = _chunk(b"PMVB", _chunk(b"CMVB", bytes(295)))

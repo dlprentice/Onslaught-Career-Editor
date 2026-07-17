@@ -8,9 +8,10 @@ and browsing locally supplied media, catalogs, and project lore.
 
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
-original-code implementation with deterministic Core behavior and a small
-playable Godot client; it does not contain proprietary game content and does not
-claim retail parity.
+implementation with deterministic Core behavior and a Godot handling lab. It
+currently uses procedural stand-ins and does not claim retail parity. The
+project has permission to use, modify, and distribute the original game assets;
+integration into the rebuild remains implementation work, not a legal blocker.
 
 ## Active surfaces
 
@@ -18,7 +19,7 @@ claim retail parity.
 | --- | --- |
 | `OnslaughtCareerEditor.WinUI/` | Primary Windows user experience |
 | `OnslaughtCareerEditor.AppCore/` | Save, options, safe-copy, patch, media, catalog, and lore correctness |
-| `OnslaughtCareerEditor.Cli/` | Supported C# inspection and patch-planning CLI |
+| `OnslaughtCareerEditor.Cli/` | Unshipped maintainer adapter over AppCore |
 | `rebuild/` | GPL RE-informed deterministic reconstruction |
 | `reverse-engineering/` | Provenance-bounded technical evidence and format notes |
 | `lore/` | Canonical public lore/history library |
@@ -46,9 +47,10 @@ npm test
 npm run dev
 ```
 
-`npm test` builds and tests the active WinUI/AppCore lane once, then runs the
-deterministic rebuild Core tests. It deliberately excludes native Godot,
-release packaging, Ghidra, private runtime evidence, and historical accounting.
+`npm test` builds the active solution once, then checks the consequential
+save/codec/write/copy/patch contracts and the static WinUI accessibility audit.
+It deliberately excludes broad UI, native Godot, release packaging, Ghidra,
+local runtime evidence, and historical accounting.
 Use the smallest focused command for narrower work:
 
 ```powershell
@@ -65,7 +67,7 @@ Root [`package.json`](package.json) is the command authority. See
 [`VALIDATION.md`](VALIDATION.md) for proportional command selection and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution boundaries.
 
-The First Flight rebuild can be launched independently:
+The Aquila Handling Lab can be launched independently:
 
 ```powershell
 npm run run:rebuild-godot
@@ -80,10 +82,13 @@ per-user cache. It does not require a retail game install.
   preserve file length, reserved fields, and unknown bytes.
 - Never patch an installed `BEA.exe`. Executable changes are allowed only on a
   verified copied target or an app-created safe game copy.
-- Keep game binaries, extracted assets, real saves, full Ghidra projects,
-  debugger transcripts, private captures, secrets, and build output out of Git.
-- Asset and media workflows consume user-supplied local inputs. Passing a
-  parser or export check does not grant redistribution rights.
+- Keep game binaries, real saves, full Ghidra projects, debugger transcripts,
+  private captures, secrets, bulk extraction output, and build output out of
+  Git.
+- The project owner's permission covers use, modification, and distribution of
+  original game assets. Curate only assets consumed by an active product or
+  rebuild slice, retain credits/provenance, and review third-party components
+  separately. Parser success establishes format support, not visual fidelity.
 - Online multiplayer is not player-ready. The app exposes a local split-screen
   copied-profile preset only; Host/Join remains unavailable.
 

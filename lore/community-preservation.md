@@ -31,4 +31,8 @@
 
 ### Rights Boundary
 
-This repository makes no claim about current ownership of Battle Engine Aquila intellectual property. Repository code licenses apply only to the material they cover, and licenses on incorporated or public source material apply only within their own stated scope. Those licenses and repository statements do not establish rights to proprietary retail game binaries, media, manuals, trademarks, or extracted assets.
+The project owner has confirmed full permission for this project to use, modify,
+and distribute the original *Battle Engine Aquila* game assets. This is distinct
+from the MIT toolkit code, GPL rebuild/reference code, retail executable,
+trademark, and third-party component terms. Original credits and notices remain
+part of preservation rather than cleanup material.

@@ -66,7 +66,12 @@
 ## Legal Status Note
 
 - Lost Toys Ltd dissolved in 2003.
-- Public preservation work continues under unresolved long-tail IP status; this repo treats ownership/legal status as requiring care, not certainty.
+- The project owner has confirmed that this project has full permission to use,
+  modify, and distribute the original *Battle Engine Aquila* game assets for
+  preservation, modding, and reconstruction.
+- That asset permission is separate from repository code licenses. Preserve the
+  original game's credits and notices; executable, trademark, source-code, and
+  third-party middleware/component terms remain distinct where applicable.
 - `references/Onslaught/` is tracked as a reference submodule in this public
   repo. Its contents keep their own provenance/licensing and are not bundled
   into the portable WinUI app ZIP.

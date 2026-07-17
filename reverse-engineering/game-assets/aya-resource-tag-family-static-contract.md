@@ -19,5 +19,6 @@ Canonical supporting evidence is
 [`../source-code/io/chunker-system.md`](../source-code/io/chunker-system.md),
 [`aya-asset-format.md`](aya-asset-format.md), and
 [`extraction-pipeline.md`](extraction-pipeline.md). Corpus counts and generated
-assets require user-supplied ignored inputs; no tag authorizes redistribution
-or proves parser completeness.
+assets are queried from the local corpus; tag recognition proves neither parser
+completeness nor asset fidelity. Distribution permission is recorded separately
+in [`../project-meta/attribution.md`](../project-meta/attribution.md).

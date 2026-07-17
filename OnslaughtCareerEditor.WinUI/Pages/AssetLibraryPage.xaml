@@ -53,18 +53,18 @@
                             CornerRadius="8"
                             Padding="12">
                         <StackPanel AutomationProperties.AutomationId="AssetCatalogFirstRunGuide"
-                                    AutomationProperties.Name="First run. Generate a catalog from your own game install outside the app. Then choose the generated export folder that contains asset_catalog/catalog.json. Use the install as source for the external extractor, then load the separate generated export folder. The app reads local PNG and FBX exports only and does not bundle game assets or create catalogs here."
+                                    AutomationProperties.Name="Catalog viewer. Asset Library opens an existing export catalog; it does not run extraction. Choose the export folder that contains asset_catalog/catalog.json, not the game install. AYA inventory can read a game install directly, while PNG and FBX export currently requires the legacy extractor's local runtime dependencies. Current app packages do not include an asset catalog or original asset set."
                                     Spacing="4">
-                            <TextBlock Text="First run"
+                            <TextBlock Text="Catalog viewer"
                                        FontWeight="SemiBold" />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Generate a catalog from your own game install outside the app." />
+                                       Text="Asset Library opens an existing export catalog; it does not run extraction." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Then choose the generated export folder, not the game install folder. It should contain asset_catalog/catalog.json." />
+                                       Text="Choose the export folder that contains asset_catalog/catalog.json, not the game install." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Use the install as source for the external extractor, then load the separate generated export folder." />
+                                       Text="AYA inventory can read a game install directly. PNG and FBX export currently requires the legacy extractor's local runtime dependencies." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="The app reads local PNG and FBX exports only; it does not bundle game assets or create catalogs here." />
+                                       Text="Current app packages do not include an asset catalog or original asset set." />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -613,34 +613,6 @@
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords"
                                            Text="Catalog and sidecar texture links appear here when an FBX export references extracted textures." />
-                                <TextBlock x:Name="ModelPackagePlanTextBlock"
-                                           AutomationProperties.AutomationId="AssetModelPackagePlan"
-                                           Style="{StaticResource SectionBodyTextStyle}"
-                                           TextWrapping="WrapWholeWords"
-                                           Text="Material package plan appears here when a model export is selected." />
-                                <TextBlock x:Name="MaterialPackageOutputStatusTextBlock"
-                                           AutomationProperties.AutomationId="AssetMaterialPackageOutputStatus"
-                                           Style="{StaticResource SectionBodyTextStyle}"
-                                           TextWrapping="WrapWholeWords"
-                                           Text="Material package output appears here after a catalog loads." />
-                                <StackPanel Orientation="Horizontal"
-                                            Spacing="8">
-                                    <Button x:Name="PrepareMaterialPackageButton"
-                                            AutomationProperties.AutomationId="AssetPrepareMaterialPackageButton"
-                                            Content="Write local package"
-                                            IsEnabled="False"
-                                            Click="PrepareMaterialPackageButton_Click" />
-                                    <Button x:Name="OpenMaterialPackageButton"
-                                            AutomationProperties.AutomationId="AssetOpenMaterialPackageButton"
-                                            Content="Open package"
-                                            IsEnabled="False"
-                                            Click="OpenMaterialPackageButton_Click" />
-                                    <Button x:Name="CopyMaterialPackagePathButton"
-                                            AutomationProperties.AutomationId="AssetCopyMaterialPackagePathButton"
-                                            Content="Copy package path"
-                                            IsEnabled="False"
-                                            Click="CopyMaterialPackagePathButton_Click" />
-                                </StackPanel>
                                 <Button x:Name="ViewLinkedTextureButton"
                                         AutomationProperties.AutomationId="AssetViewLinkedTextureButton"
                                         Content="View linked texture"

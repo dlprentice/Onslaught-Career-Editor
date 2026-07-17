@@ -114,12 +114,6 @@ Fallback use must not silently authorize product mutation. The current
 fallback design may be removed if fail-closed packaged-catalog loading proves
 simpler and safer; this contract does not require preserving it.
 
-The standalone Python catalog helper follows the same canonical specimen rule
-for mutation. Its `--allow-byte-layout-only-target` flag is a test-only escape
-hatch for synthetic same-size fixtures; it does not establish specimen or
-runtime proof. It remains a lab/helper surface and does not carry AppCore's
-atomic product-publication guarantee.
-
 ## User Copy
 
 Patch Bench must keep three ideas separate:

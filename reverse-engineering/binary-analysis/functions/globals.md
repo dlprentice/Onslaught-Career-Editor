@@ -54,7 +54,7 @@ These are code addresses, not data, but useful for patching:
 |---------|---------|-------------|
 | 0x004654a0 | IsCheatActive return-path branch | Legacy: change 75→EB (does not force TRUE for all cases) |
 | 0x00465490 | IsCheatActive prologue | Force TRUE (archived; breaks goodies unless `lat\xEAte` is mitigated) |
-| 0x0045D819 | Goodies UI (`CFEPGoodies::Process`) | Dev-mode fix: force `g_Cheat_LATETE = 0` (see `patches/patch_devmode_goodies_logic_fix.py`) |
+| 0x0045D819 | Goodies UI (`CFEPGoodies::Process`) | Historical dev-mode mitigation candidate: force `g_Cheat_LATETE = 0`; no active product row |
 | 0x004ce328 | PauseMenu god mode toggle | Cheat-gated UI; uses `g_bGodModeEnabled` as the toggle state |
 
 ---

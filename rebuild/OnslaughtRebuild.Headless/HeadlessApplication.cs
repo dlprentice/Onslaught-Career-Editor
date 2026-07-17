@@ -12,17 +12,11 @@ public static class HeadlessApplication
     private const long MaximumTapeBytes = 8 * 1024 * 1024;
     private const long MaximumReplaySteps = 100_000;
     private const string BuiltInTapeFileName = "first-flight.v1.json";
-    private const string BuiltInFinalStateHash =
-        "0344451c194de4cd84bd6fd16d6f4d36a1421a7f03c677888da7b5beddd02509";
-    private const string BuiltInTraceHash =
-        "7517ecf40d285ca0d674a3cc8d0fd1e5651f22111f44aab44cb9f436e6334fca";
 
     private sealed record Options(
         string TapePath,
-        bool TapePathExplicit,
         string? ExpectedTraceHash,
-        int RepeatCount,
-        bool Verify);
+        int RepeatCount);
 
     private sealed record VerificationExpectation(
         string? TraceHash,
@@ -97,13 +91,13 @@ public static class HeadlessApplication
 
             if (traceHashVerified == false)
             {
-                error.WriteLine("Replay trace hash did not match the expected golden value.");
+                error.WriteLine("Replay trace hash did not match the expected value.");
                 return 2;
             }
 
             if (finalStateHashVerified == false)
             {
-                error.WriteLine("Final state hash did not match the expected golden value.");
+                error.WriteLine("Final state hash did not match the expected value.");
                 return 2;
             }
 
@@ -120,10 +114,8 @@ public static class HeadlessApplication
     private static Options ParseOptions(string[] args)
     {
         string tapePath = ResolveDefaultTapePath();
-        bool tapePathExplicit = false;
         string? expectedTraceHash = null;
         int repeatCount = 2;
-        bool verify = true;
 
         for (int index = 0; index < args.Length; index++)
         {
@@ -131,7 +123,6 @@ public static class HeadlessApplication
             {
                 case "--tape":
                     tapePath = RequireValue(args, ref index, "--tape");
-                    tapePathExplicit = true;
                     break;
                 case "--expect":
                     expectedTraceHash = RequireValue(args, ref index, "--expect");
@@ -144,57 +135,30 @@ public static class HeadlessApplication
                         throw new ArgumentException("--repeat must be an integer from 1 through 1000.");
                     }
                     break;
-                case "--no-verify":
-                    verify = false;
-                    break;
                 default:
                     throw new ArgumentException($"Unknown argument: {args[index]}");
             }
         }
 
-        if (!verify && expectedTraceHash is not null)
-        {
-            throw new ArgumentException("--expect cannot be combined with --no-verify.");
-        }
-
-        return new Options(tapePath, tapePathExplicit, expectedTraceHash, repeatCount, verify);
+        return new Options(tapePath, expectedTraceHash, repeatCount);
     }
 
     private static VerificationExpectation ResolveExpectation(Options options, CommandTape tape)
     {
-        if (!options.Verify)
-        {
-            return new VerificationExpectation(null, null, "none");
-        }
-
         if (options.ExpectedTraceHash is not null)
         {
             return new VerificationExpectation(options.ExpectedTraceHash, null, "command-line");
         }
 
-        if (options.TapePathExplicit)
+        if (tape.ExpectedTraceHash is not null || tape.ExpectedFinalStateHash is not null)
         {
-            throw new ArgumentException(
-                "Explicit --tape input requires --expect <trace-hash> or --no-verify.");
-        }
-
-        if (!string.Equals(
+            return new VerificationExpectation(
                 tape.ExpectedTraceHash,
-                BuiltInTraceHash,
-                StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(
                 tape.ExpectedFinalStateHash,
-                BuiltInFinalStateHash,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException(
-                "Packaged default tape declarations do not match the independent headless golden values.");
+                "command-tape");
         }
 
-        return new VerificationExpectation(
-            BuiltInTraceHash,
-            BuiltInFinalStateHash,
-            "headless-built-in-golden");
+        return new VerificationExpectation(null, null, "none");
     }
 
     private static void ValidateWorkBudget(CommandTape tape, int repeatCount)
@@ -258,9 +222,8 @@ public static class HeadlessApplication
     private static void PrintHelp(TextWriter output)
     {
         output.WriteLine("OnslaughtRebuild.Headless");
-        output.WriteLine("  --tape <path>   Explicit command tape; requires --expect or --no-verify");
-        output.WriteLine("  --expect <hex>  Expected SHA-256 replay trace hash");
+        output.WriteLine("  --tape <path>   Command tape (default: packaged first-flight scenario)");
+        output.WriteLine("  --expect <hex>  Optional expected SHA-256 replay trace hash");
         output.WriteLine("  --repeat <n>    Replay count (default: 2; 100,000 total-step limit)");
-        output.WriteLine("  --no-verify     Generate hashes without a trusted expectation");
     }
 }

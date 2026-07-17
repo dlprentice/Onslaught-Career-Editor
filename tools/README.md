@@ -15,8 +15,6 @@ npm run test:safety
 
 ## Product and release
 
-- `winui_primary_lane_validation.py` builds the WinUI solution once and runs
-  AppCore and UI tests from that build.
 - `winui_lore_pack_builder.py` builds the short-path offline pack from the
   canonical `lore/` tree and the single `lore-book/BOOK.md` entry guide.
 - `winui_zip_package_probe.py` builds the disposable publish and inspects the
@@ -49,8 +47,10 @@ install anything by themselves.
   `cheat_table_decode.py`, and `cardid_preset_manager.py` are focused format
   inspection utilities.
 
-Generated assets and catalogs remain ignored local material. Passing an output
-safety test does not grant redistribution rights or prove format completeness.
+Generated catalogs and bulk exports remain ignored local material. The project
+has permission to distribute original game assets, but only curated inputs with
+an active consumer belong in source. Passing an output safety test proves
+neither format completeness nor visual fidelity.
 
 ## Ghidra and runtime research
 
@@ -61,5 +61,5 @@ rename guards operate only on explicitly selected local project roots.
 
 PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
-checks. Full Ghidra stores, backups, raw CDB transcripts, frames, audio, copied
-executables, and retail assets never belong in Git.
+checks. Full Ghidra stores, backups, raw CDB transcripts, frames, copied
+executables, and bulk retail exports never belong in Git.

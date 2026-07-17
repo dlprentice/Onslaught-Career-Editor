@@ -1,8 +1,15 @@
 # Onslaught Lore
 
-This short entry guide is packaged with Onslaught Toolkit. The canonical Lore
-articles live once under [`lore/`](../lore/_index.md); packaged builds store
-those articles in the searchable offline Lore pack.
+Welcome to the story, history, and preservation record of *Battle Engine
+Aquila*. This short guide is packaged with Onslaught Toolkit; the canonical
+articles live once under [`lore/`](../lore/_index.md), and packaged builds make
+them available in the searchable offline reader.
+
+Use the Lore tree to choose an article, search across titles and text, and use
+Back, Forward, and Home to move through a reading session. If you are new to the
+project, start with the game and world. For the people and circumstances behind
+it, follow the development path. For mechanics, formats, and preservation work,
+use the deep dives.
 
 - [Lore index](../lore/_index.md)
 - The world and game
@@ -28,4 +35,5 @@ Project source links:
 - [Public roadmap](../roadmap/public-roadmap.md)
 
 Static notes and source references do not override observed retail behavior.
-The toolkit does not include or license Battle Engine Aquila game content.
+The project has permission to use, modify, and distribute the original game
+assets; code, executable, trademark, and third-party terms remain distinct.
