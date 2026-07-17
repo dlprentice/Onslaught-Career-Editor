@@ -34,7 +34,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _editorCategoryKillRows.Add(row);
             }
 
-            EditorKillBaselineSummaryTextBlock.Text = SaveEditorAdvancedService.BuildKillSeedSummary(_editorCategoryKillRows);
+            EditorKillBaselineSummaryTextBlock.Text = SaveEditorAdvancedService.BuildKillSeedSummary(
+                _editorInputValid ? _editorCategoryKillRows : Array.Empty<SaveCategoryKillRow>());
             if (_editorInputValid)
             {
                 EditorGlobalKillNumberBox.Value = SaveEditorAdvancedService.GetSuggestedGlobalKillSeed(_editorCategoryKillRows);

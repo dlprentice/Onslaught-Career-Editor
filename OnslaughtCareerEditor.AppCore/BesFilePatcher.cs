@@ -2048,21 +2048,7 @@ namespace Onslaught___Career_Editor
 
             sb.AppendLine("============================================================");
 
-            // Build hints for additional options (like Python CLI)
-            var hints = new List<string>();
-            if (!verbose)
-                hints.Add("--verbose for node details");
-            if (!dumpMystery && !verbose)
-                hints.Add("--dump-mystery for raw unmapped-byte dumps");
-
-            if (hints.Count > 0)
-            {
-                sb.AppendLine($"  Analysis complete. Use {string.Join(", ", hints)}.");
-            }
-            else
-            {
-                sb.AppendLine("  Analysis complete.");
-            }
+            sb.AppendLine("  Analysis complete.");
             sb.AppendLine("============================================================");
 
             return sb.ToString();

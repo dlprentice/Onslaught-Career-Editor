@@ -309,6 +309,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RenderConfigurationSnapshot(ConfigurationSnapshot snapshot)
         {
+            ConfigurationSoundVolumeNumberBox.Value = Math.Round(snapshot.SoundVolume, 3);
+            ConfigurationMusicVolumeNumberBox.Value = Math.Round(snapshot.MusicVolume, 3);
+
             ConfigurationCurrentSettingsTextBlock.Text =
                 $"Current settings from {snapshot.FileName}\n" +
                 $"Sound {snapshot.SoundVolume:0.00} | Music {snapshot.MusicVolume:0.00}\n" +
