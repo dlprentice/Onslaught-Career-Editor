@@ -257,6 +257,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             PatchBenchPrepareCopiedProfileButton.IsEnabled = readiness.CanCreate;
             PatchBenchIncludeSavegamesOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
+            PatchBenchLevel100TextModOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchTopCreateSafeCopyButton.IsEnabled = readiness.CanCreate;
             PatchBenchSafeCopySelectionReadiness.Text = readiness.Status;
             AutomationProperties.SetName(PatchBenchSafeCopySelectionReadiness, readiness.Status);
@@ -305,7 +306,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 selectedProfileTextState);
             PatchBenchPlayerModsSelectionStatus.Text = PatchBenchSelectedProfileText.BuildPlayerModsStatus(
                 visibleSelectedKeys.Contains("version_overlay_use_patched_format_pointer", StringComparer.OrdinalIgnoreCase),
-                visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase));
+                visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase),
+                PatchBenchLevel100TextModOption.IsChecked == true);
             AutomationProperties.SetName(PatchBenchPlayerModsSelectionStatus, PatchBenchPlayerModsSelectionStatus.Text);
             PatchBenchLabSelectionStatus.Text = PatchBenchLabCreationInputText.BuildStatus(
                 BuildLabCreationInputState());
@@ -348,7 +350,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _isRestoringMusicReplacement;
             string? validationError = BinaryPatchPlanBuilder.ValidateVisibleSelection(visibleSelectedKeys);
             int optionalPatchCount = visibleSelectedKeys.Count(key =>
-                !_requiredCompatibilityKeys.Contains(key));
+                !_requiredCompatibilityKeys.Contains(key)) +
+                (PatchBenchLevel100TextModOption.IsChecked == true ? 1 : 0);
 
             return OnslaughtCareerEditor.WinUI.Helpers.PatchBenchSafeCopySelectionReadiness.Build(
                 hasSourceExecutable,
@@ -655,6 +658,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void WindowedPresetButton_Click(object sender, RoutedEventArgs e)
         {
+            PatchBenchLevel100TextModOption.IsChecked = false;
             ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId);
             AppStatusService.SetStatus("Windowed & Mods: Enhanced Copy profile selected");
         }
@@ -710,8 +714,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ClearSelectionButton_Click(object sender, RoutedEventArgs e)
         {
+            PatchBenchLevel100TextModOption.IsChecked = false;
             SelectOnlyKeys(Array.Empty<string>());
-            AppStatusService.SetStatus("Windowed & Mods: optional mod rows cleared");
+            AppStatusService.SetStatus("Windowed & Mods: optional mods cleared");
         }
 
         private void MenuColorRedButton_Click(object sender, RoutedEventArgs e)
@@ -1434,6 +1439,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
 
                 bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
+                bool applyLevel100TextMod = PatchBenchLevel100TextModOption.IsChecked == true;
                 string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
                 string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
                 uint? persistedControllerConfig = PatchBenchPersistControllerConfigOption.IsChecked == true
@@ -1454,11 +1460,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     PatchKeys: selectedPatchKeys,
                     LaunchArguments: BuildSelectedLaunchArguments(),
                     ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys),
-                    MusicSwapPresetId: createMusicSwapPresetId);
+                    MusicSwapPresetId: createMusicSwapPresetId,
+                    ApplyLevel100TutorialTextMod: applyLevel100TextMod);
 
                 if (!await ConfirmAsync(
                         "Create safe copy?",
-                        $"The app will copy the selected game folder into its own safe workspace, then patch only that copied BEA.exe.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
+                        $"The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
                 {
                     PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
                     OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
@@ -1507,6 +1514,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     invertWalkerY,
                     invertFlightY,
                     createMusicSwapPresetId,
+                    applyLevel100TextMod,
                     result.PatchResult.PatchKeys);
                 GameProfilePrepareReceipt receipt = GameProfilePreflightService.BuildPrepareReceipt(
                     result,
@@ -1521,7 +1529,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     SafeCopyFolderName: Path.GetFileName(Path.TrimEndingDirectorySeparator(result.TargetGameRoot)),
                     FilesCopied: result.Entries.Count,
                     PatchDisplayList: BuildPatchDisplayList(result.PatchResult.PatchKeys),
-                    LaunchModifierSummary: PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments));
+                    LaunchModifierSummary: PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments),
+                    Level100TextModApplied: result.Level100TextModResult is not null);
                 PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedSummary(outcomeText);
                 PatchBenchCopiedProfileLaunchPlan.Text = result.LaunchPlan.CommandPreview;
                 PatchBenchCopiedProfileLaunchStatus.Text =
@@ -1975,6 +1984,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool invertWalkerY = PatchBenchInvertWalkerYOption.IsChecked == true;
             bool invertFlightY = PatchBenchInvertFlightYOption.IsChecked == true;
             string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
+            bool applyLevel100TextMod = PatchBenchLevel100TextModOption.IsChecked == true;
             return BuildSafeCopyContentSignature(
                 sourcePath,
                 includeSavegames,
@@ -1983,6 +1993,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 invertWalkerY,
                 invertFlightY,
                 createMusicSwapPresetId,
+                applyLevel100TextMod,
                 effectivePatchKeys);
         }
 
@@ -1994,6 +2005,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool invertWalkerY,
             bool invertFlightY,
             string? createMusicSwapPresetId,
+            bool applyLevel100TextMod,
             IEnumerable<string> effectivePatchKeys)
         {
             string normalizedSourcePath = string.IsNullOrWhiteSpace(sourcePath)
@@ -2014,7 +2026,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string createMusicSwapPresetToken = string.IsNullOrWhiteSpace(createMusicSwapPresetId)
                 ? "none"
                 : createMusicSwapPresetId.Trim();
-            return $"source={normalizedSourcePath}|savegames={includeSavegames}|mouseLookSensitivity={mouseSensitivityToken}|persistedControllerConfig={persistedControllerConfigToken}|invertWalkerY={invertWalkerY}|invertFlightY={invertFlightY}|createMusicSwapPreset={createMusicSwapPresetToken}|effectivePatches={string.Join(",", normalizedPatchKeys)}";
+            return $"source={normalizedSourcePath}|savegames={includeSavegames}|mouseLookSensitivity={mouseSensitivityToken}|persistedControllerConfig={persistedControllerConfigToken}|invertWalkerY={invertWalkerY}|invertFlightY={invertFlightY}|createMusicSwapPreset={createMusicSwapPresetToken}|level100TextMod={applyLevel100TextMod}|effectivePatches={string.Join(",", normalizedPatchKeys)}";
         }
 
         private static string? ResolveGameExecutablePath(string gameDir)
@@ -2381,7 +2393,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 optionalPatchCount,
                 CountSelectedLaunchModifiers(),
                 copiedOptionsCount,
-                GetSelectedCreateMusicSwapPresetId() is not null);
+                GetSelectedCreateMusicSwapPresetId() is not null,
+                PatchBenchLevel100TextModOption.IsChecked == true);
         }
 
         private int CountSelectedLaunchModifiers()

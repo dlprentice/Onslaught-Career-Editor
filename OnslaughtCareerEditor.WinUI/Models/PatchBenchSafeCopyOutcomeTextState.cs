@@ -7,5 +7,6 @@ namespace OnslaughtCareerEditor.WinUI.Models
         string SafeCopyFolderName,
         int FilesCopied,
         string PatchDisplayList,
-        string LaunchModifierSummary);
+        string LaunchModifierSummary,
+        bool Level100TextModApplied);
 }

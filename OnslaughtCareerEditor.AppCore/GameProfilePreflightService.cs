@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Win32.SafeHandles;
@@ -21,7 +22,8 @@ namespace Onslaught___Career_Editor
         IReadOnlyList<string>? PatchKeys = null,
         IReadOnlyList<string>? LaunchArguments = null,
         string? ProfilePresetId = null,
-        string? MusicSwapPresetId = null);
+        string? MusicSwapPresetId = null,
+        bool ApplyLevel100TutorialTextMod = false);
 
     public sealed record GameProfileCopiedEntry(
         string Name,
@@ -40,6 +42,20 @@ namespace Onslaught___Career_Editor
         string WorkingDirectory,
         IReadOnlyList<string> Arguments,
         string CommandPreview);
+
+    public sealed record GameProfileLevel100TextModResult(
+        string SchemaVersion,
+        DateTimeOffset GeneratedAt,
+        bool Mutation,
+        uint TextId,
+        string TargetRelativePath,
+        string BackupRelativePath,
+        long OriginalSize,
+        string OriginalSha256,
+        long ModifiedSize,
+        string ModifiedSha256,
+        int ChangedOffset,
+        int ChangedByteCount);
 
     public sealed record GameProfilePrepareResult(
         string SchemaVersion,
@@ -60,7 +76,8 @@ namespace Onslaught___Career_Editor
         uint? ProfileDefaultScreenShape,
         IReadOnlyList<SafeCopyProfileModule> ProfilePresetModules,
         GameProfileMusicReplacementResult? MusicSwapResult,
-        string ManifestPath);
+        string ManifestPath,
+        GameProfileLevel100TextModResult? Level100TextModResult = null);
 
     public sealed record GameProfileReceiptLine(string Label, string Value);
 
@@ -73,6 +90,15 @@ namespace Onslaught___Career_Editor
     public static class GameProfilePreflightService
     {
         public const string SchemaVersion = "winui-copied-game-profile.v1";
+        public const string Level100TextModSchemaVersion = "winui-level100-english-text-mod.v1";
+
+        private const uint Level100TutorialTextId = 4_422_830;
+        private const int Level100TutorialTextOffset = 0x3CF58;
+        private const string SupportedEnglishDatSha256 = "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a";
+        private const string Level100TutorialOriginalText = "Okay, Hawk? I want you to manoeuvre the Battle Engine to the area marked on your HUD.";
+        private const string Level100TutorialReplacementText = "TOOLKIT MOD ACTIVE. Move Aquila into the yellow objective marker visible on your HUD.";
+        private const string Level100EnglishDatRelativePath = "data/language/english.dat";
+        private const string Level100EnglishDatBackupRelativePath = "data/language/english.dat.original.backup";
 
         private static readonly Regex s_safeProfileName = new("^[A-Za-z0-9._-]{1,64}$", RegexOptions.Compiled);
         private static readonly string[] s_requiredDirectoryEntries =
@@ -162,6 +188,11 @@ namespace Onslaught___Career_Editor
                     ValidatePatchedExecutableAgainstBackupSnapshot(copiedExePath, selected);
                 }
 
+                GameProfileLevel100TextModResult? level100TextModResult = ApplyLevel100TutorialTextModIfRequested(
+                    targetRoot,
+                    options.ApplyLevel100TutorialTextMod,
+                    options.AllowByteLayoutOnlyTarget);
+
                 string manifestPath = Path.Combine(targetRoot, "onslaught-profile-manifest.json");
                 GameProfileLaunchPlan launchPlan = BuildLaunchPlanCore(targetRoot, options.LaunchArguments ?? Array.Empty<string>());
                 var result = new GameProfilePrepareResult(
@@ -183,7 +214,8 @@ namespace Onslaught___Career_Editor
                     ProfileDefaultScreenShape: profilePreset?.DefaultScreenShape,
                     ProfilePresetModules: profilePreset?.Modules ?? Array.Empty<SafeCopyProfileModule>(),
                     MusicSwapResult: null,
-                    ManifestPath: manifestPath);
+                    ManifestPath: manifestPath,
+                    Level100TextModResult: level100TextModResult);
 
                 WriteManifest(result, manifestPath);
                 if (!string.IsNullOrWhiteSpace(options.MusicSwapPresetId))
@@ -306,6 +338,11 @@ namespace Onslaught___Career_Editor
                     result.MusicSwapResult is null
                         ? "none staged during safe-copy creation."
                         : $"staged for {result.MusicSwapResult.TargetMusicFileName}; runtime playback still needs live testing."),
+                new(
+                    "Level 100 text",
+                    result.Level100TextModResult is null
+                        ? "original English subtitle retained."
+                        : "fixed-size English TUTORIAL_01 replacement staged and hash-verified in this safe copy."),
                 new("Control options", BuildReceiptControlOptionsSummary(controlOptionsResult)),
             };
 
@@ -316,6 +353,12 @@ namespace Onslaught___Career_Editor
                 : result.PatchResult.PatchKeys
                     .Select(key => $"Patch row: {key}")
                     .ToArray();
+            if (result.Level100TextModResult is not null)
+            {
+                includedChanges = includedChanges
+                    .Append("Level 100 English subtitle marker: replaces only TUTORIAL_01 in the copied language table; live retail proof covers this one rendered line.")
+                    .ToArray();
+            }
 
             var stillNotIncluded = result.ProfilePresetModules
                 .SelectMany(module => module.NonClaims)
@@ -325,6 +368,10 @@ namespace Onslaught___Career_Editor
             AddReceiptLimit(stillNotIncluded, "No Host/Join or online multiplayer.");
             AddReceiptLimit(stillNotIncluded, "No installed-game mutation.");
             AddReceiptLimit(stillNotIncluded, "No no-noticeable-difference parity claim.");
+            if (result.Level100TextModResult is not null)
+            {
+                AddReceiptLimit(stillNotIncluded, "No general language importer, mission-script override, texture replacement, or AYA repacker.");
+            }
             if (HasCopiedControlDefaultsModule(result) &&
                 !ControlOptionsMatchProfileDefaults(result, controlOptionsResult))
             {
@@ -471,6 +518,7 @@ namespace Onslaught___Career_Editor
             }
 
             ValidateManifestExecutableState(doc.RootElement, resolvedGameRoot);
+            ValidateOptionalLevel100TextMod(doc.RootElement, resolvedGameRoot);
             ValidateOptionalControlOptionsManifest(resolvedGameRoot);
             if (validateMusicReplacementManifest)
             {
@@ -478,6 +526,87 @@ namespace Onslaught___Career_Editor
             }
 
             return resolvedGameRoot;
+        }
+
+        private static void ValidateOptionalLevel100TextMod(JsonElement manifestRoot, string resolvedGameRoot)
+        {
+            if (!manifestRoot.TryGetProperty("level100TextMod", out JsonElement modEl) ||
+                modEl.ValueKind == JsonValueKind.Null)
+            {
+                return;
+            }
+
+            if (modEl.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is invalid.");
+
+            string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 text metadata");
+            if (!string.Equals(schemaVersion, Level100TextModSchemaVersion, StringComparison.Ordinal))
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an unsupported schema.");
+
+            string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 text metadata");
+            string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 text metadata");
+            if (!string.Equals(targetRelativePath, Level100EnglishDatRelativePath, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(backupRelativePath, Level100EnglishDatBackupRelativePath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata does not target the supported English language table.");
+            }
+
+            string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 text target");
+            string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 text backup");
+            if (!File.Exists(targetPath))
+                throw new FileNotFoundException("Playable copied game folder Level 100 text target is missing.", targetPath);
+            if (!File.Exists(backupPath))
+                throw new FileNotFoundException("Playable copied game folder Level 100 text backup is missing.", backupPath);
+
+            string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 text metadata");
+            string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 text metadata");
+            if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Playable copied game folder Level 100 text backup no longer matches its manifest hash.");
+            if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Playable copied game folder Level 100 text target no longer matches its manifest hash.");
+
+            if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
+                !originalSizeEl.TryGetInt64(out long originalSize) ||
+                !modEl.TryGetProperty("modifiedSize", out JsonElement modifiedSizeEl) ||
+                !modifiedSizeEl.TryGetInt64(out long modifiedSize) ||
+                new FileInfo(backupPath).Length != originalSize ||
+                new FileInfo(targetPath).Length != modifiedSize ||
+                originalSize != modifiedSize)
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text file sizes do not match its fixed-size manifest contract.");
+            }
+
+            if (!modEl.TryGetProperty("textId", out JsonElement textIdEl) ||
+                !textIdEl.TryGetUInt32(out uint textId) ||
+                textId != Level100TutorialTextId)
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has the wrong text ID.");
+            }
+
+            if (!modEl.TryGetProperty("changedOffset", out JsonElement offsetEl) ||
+                !offsetEl.TryGetInt32(out int changedOffset) ||
+                !modEl.TryGetProperty("changedByteCount", out JsonElement byteCountEl) ||
+                !byteCountEl.TryGetInt32(out int changedByteCount))
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is missing its changed range.");
+            }
+
+            byte[] originalBytes = Encoding.Unicode.GetBytes(Level100TutorialOriginalText);
+            byte[] replacementBytes = Encoding.Unicode.GetBytes(Level100TutorialReplacementText);
+            if (changedByteCount != originalBytes.Length ||
+                changedOffset < 0 ||
+                changedOffset > new FileInfo(targetPath).Length - changedByteCount)
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an invalid changed range.");
+            }
+
+            byte[] backupData = File.ReadAllBytes(backupPath);
+            byte[] targetData = File.ReadAllBytes(targetPath);
+            if (!backupData.AsSpan(changedOffset, changedByteCount).SequenceEqual(originalBytes) ||
+                !targetData.AsSpan(changedOffset, changedByteCount).SequenceEqual(replacementBytes))
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 text bytes no longer match the expected original/replacement pair.");
+            }
         }
 
         private static void ValidateOptionalMusicReplacementManifest(string resolvedGameRoot)
@@ -1083,6 +1212,89 @@ namespace Onslaught___Career_Editor
             return normalized.ToArray();
         }
 
+        private static GameProfileLevel100TextModResult? ApplyLevel100TutorialTextModIfRequested(
+            string targetRoot,
+            bool requested,
+            bool allowByteLayoutOnlyTarget)
+        {
+            if (!requested)
+                return null;
+
+            string targetPath = Path.Combine(targetRoot, Level100EnglishDatRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            string backupPath = Path.Combine(targetRoot, Level100EnglishDatBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(targetPath))
+                throw new FileNotFoundException("The copied game does not contain data\\language\\english.dat.", targetPath);
+
+            RejectExistingReparseAncestors(targetPath, "Level 100 English language table path");
+            RejectReparsePoint(targetPath, "Level 100 English language table");
+            RejectMultipleHardLinks(targetPath, "Level 100 English language table");
+            RejectExistingReparseAncestors(backupPath, "Level 100 English language table backup path");
+            if (File.Exists(backupPath))
+                throw new InvalidOperationException("The copied English language table already has a Level 100 text backup.");
+
+            byte[] originalBytes = File.ReadAllBytes(targetPath);
+            string originalSha256 = ComputeSha256(targetPath);
+            if (!allowByteLayoutOnlyTarget &&
+                !string.Equals(originalSha256, SupportedEnglishDatSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The copied English language table is not the supported Steam retail specimen.");
+            }
+
+            int changedOffset = Level100TutorialTextOffset;
+            byte[] expectedBytes = Encoding.Unicode.GetBytes(Level100TutorialOriginalText);
+            byte[] replacementBytes = Encoding.Unicode.GetBytes(Level100TutorialReplacementText);
+            if (expectedBytes.Length != replacementBytes.Length)
+                throw new InvalidOperationException("The Level 100 subtitle replacement must preserve the original UTF-16 byte length.");
+            if (changedOffset > originalBytes.Length - expectedBytes.Length - sizeof(ushort) ||
+                !originalBytes.AsSpan(changedOffset, expectedBytes.Length).SequenceEqual(expectedBytes) ||
+                originalBytes[changedOffset + expectedBytes.Length] != 0 ||
+                originalBytes[changedOffset + expectedBytes.Length + 1] != 0)
+            {
+                throw new InvalidOperationException("The copied English language table does not contain the expected Level 100 TUTORIAL_01 bytes.");
+            }
+
+            File.Copy(targetPath, backupPath, overwrite: false);
+            byte[] modifiedBytes = originalBytes.ToArray();
+            replacementBytes.CopyTo(modifiedBytes, changedOffset);
+
+            string tempPath = Path.Combine(
+                Path.GetDirectoryName(targetPath)!,
+                $"{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                File.WriteAllBytes(tempPath, modifiedBytes);
+                File.Replace(tempPath, targetPath, null, ignoreMetadataErrors: true);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+
+            RejectReparsePoint(targetPath, "modified Level 100 English language table");
+            RejectMultipleHardLinks(targetPath, "Modified Level 100 English language table");
+            byte[] readback = File.ReadAllBytes(targetPath);
+            if (readback.LongLength != originalBytes.LongLength ||
+                !readback.AsSpan().SequenceEqual(modifiedBytes))
+            {
+                throw new IOException("The copied Level 100 English subtitle replacement did not read back exactly.");
+            }
+
+            return new GameProfileLevel100TextModResult(
+                Level100TextModSchemaVersion,
+                DateTimeOffset.UtcNow,
+                Mutation: true,
+                TextId: Level100TutorialTextId,
+                TargetRelativePath: Level100EnglishDatRelativePath,
+                BackupRelativePath: Level100EnglishDatBackupRelativePath,
+                OriginalSize: originalBytes.LongLength,
+                OriginalSha256: ComputeSha256(backupPath),
+                ModifiedSize: readback.LongLength,
+                ModifiedSha256: ComputeSha256(targetPath),
+                ChangedOffset: changedOffset,
+                ChangedByteCount: replacementBytes.Length);
+        }
+
         private static void CopyDirectory(string sourceDirectory, string targetDirectory)
         {
             string sourceRoot = NormalizeExistingDirectory(sourceDirectory);
@@ -1176,6 +1388,25 @@ namespace Onslaught___Career_Editor
                             module.EvidenceRefs,
                             module.NonClaims,
                         }).ToArray(),
+                    },
+                Level100TextMod = result.Level100TextModResult is null
+                    ? null
+                    : new
+                    {
+                        result.Level100TextModResult.SchemaVersion,
+                        result.Level100TextModResult.GeneratedAt,
+                        result.Level100TextModResult.Mutation,
+                        result.Level100TextModResult.TextId,
+                        result.Level100TextModResult.TargetRelativePath,
+                        result.Level100TextModResult.BackupRelativePath,
+                        result.Level100TextModResult.OriginalSize,
+                        result.Level100TextModResult.OriginalSha256,
+                        result.Level100TextModResult.ModifiedSize,
+                        result.Level100TextModResult.ModifiedSha256,
+                        result.Level100TextModResult.ChangedOffset,
+                        result.Level100TextModResult.ChangedByteCount,
+                        ProofStatus = "Rendered in copied Level 100 retail gameplay on the supported Steam English specimen.",
+                        ClaimBoundary = "One fixed-size TUTORIAL_01 subtitle replacement only; not a general language importer, script override, texture replacement, or AYA repacker.",
                     },
                 MusicSwap = result.MusicSwapResult is null
                     ? null

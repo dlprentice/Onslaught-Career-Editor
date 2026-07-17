@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Onslaught___Career_Editor;
 using Xunit;
@@ -276,6 +277,72 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Equal(".", manifest.RootElement.GetProperty("targetGameRoot").GetString());
                 Assert.Equal("BEA.exe", manifest.RootElement.GetProperty("executablePath").GetString());
                 Assert.DoesNotContain(tempRoot, File.ReadAllText(result.ManifestPath), StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void PrepareWindowedCompatibilityProfile_AppliesAndRevalidatesLevel100EnglishTextModInSafeCopyOnly()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-level100-text-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+            string sourceLanguagePath = Path.Combine(sourceRoot, "data", "language", "english.dat");
+            Directory.CreateDirectory(Path.GetDirectoryName(sourceLanguagePath)!);
+            SeedEnglishLanguageDat(sourceLanguagePath);
+            byte[] sourceLanguageBefore = File.ReadAllBytes(sourceLanguagePath);
+
+            try
+            {
+                GameProfilePrepareResult result = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "level100-text-proof",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false,
+                        AllowByteLayoutOnlyTarget: true,
+                        ApplyLevel100TutorialTextMod: true));
+
+                GameProfileLevel100TextModResult mod = Assert.IsType<GameProfileLevel100TextModResult>(result.Level100TextModResult);
+                string copiedLanguagePath = Path.Combine(result.TargetGameRoot, "data", "language", "english.dat");
+                string copiedBackupPath = copiedLanguagePath + ".original.backup";
+                byte[] copiedLanguage = File.ReadAllBytes(copiedLanguagePath);
+                byte[] expectedCopiedLanguage = sourceLanguageBefore.ToArray();
+                byte[] replacementBytes = Encoding.Unicode.GetBytes("TOOLKIT MOD ACTIVE. Move Aquila into the yellow objective marker visible on your HUD.");
+                replacementBytes.CopyTo(expectedCopiedLanguage, mod.ChangedOffset);
+
+                Assert.Equal(sourceLanguageBefore, File.ReadAllBytes(sourceLanguagePath));
+                Assert.Equal(sourceLanguageBefore, File.ReadAllBytes(copiedBackupPath));
+                Assert.Equal(expectedCopiedLanguage, copiedLanguage);
+                Assert.Equal(4_422_830u, mod.TextId);
+                Assert.Equal(replacementBytes,
+                    copiedLanguage.AsSpan(mod.ChangedOffset, mod.ChangedByteCount).ToArray());
+                Assert.NotEqual(mod.OriginalSha256, mod.ModifiedSha256);
+
+                using (JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(result.ManifestPath)))
+                {
+                    JsonElement metadata = manifest.RootElement.GetProperty("level100TextMod");
+                    Assert.Equal(GameProfilePreflightService.Level100TextModSchemaVersion, metadata.GetProperty("schemaVersion").GetString());
+                    Assert.Equal("data/language/english.dat", metadata.GetProperty("targetRelativePath").GetString());
+                    Assert.Equal("data/language/english.dat.original.backup", metadata.GetProperty("backupRelativePath").GetString());
+                }
+
+                GameProfileLaunchPlan plan = GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" });
+                Assert.Equal(new[] { "-level", "100" }, plan.Arguments);
+
+                copiedLanguage[mod.ChangedOffset] ^= 0x01;
+                File.WriteAllBytes(copiedLanguagePath, copiedLanguage);
+                InvalidOperationException tamperEx = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" }));
+                Assert.Contains("Level 100 text target no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1560,6 +1627,14 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             File.WriteAllText(Path.Combine(sourceRoot, "cardid.txt"), "card profile");
             File.WriteAllText(Path.Combine(sourceRoot, "steam_appid.txt"), "55100");
             return exePath;
+        }
+
+        private static void SeedEnglishLanguageDat(string path)
+        {
+            byte[] text = Encoding.Unicode.GetBytes("Okay, Hawk? I want you to manoeuvre the Battle Engine to the area marked on your HUD.");
+            byte[] data = new byte[0x3CF58 + text.Length + sizeof(ushort)];
+            text.CopyTo(data, 0x3CF58);
+            File.WriteAllBytes(path, data);
         }
 
         private static void SeedExe(string exePath)

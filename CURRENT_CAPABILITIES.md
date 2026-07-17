@@ -45,6 +45,17 @@ minimum while Enhanced Copy wrote `2.25`. Enhanced Copy now writes and reads
 back the retail minimum `0.1`. This proves the copied option and live global,
 not subjective mouse feel or physical-controller behavior.
 
+The bounded retail-content go/no-go also passed for one English mission line.
+WinUI can opt a safe copy into a fixed-size replacement of Level 100 text ID
+`4422830` (`TUTORIAL_01`) in `data/language/english.dat`. AppCore requires the
+supported Steam table hash and exact original UTF-16 bytes, preserves file
+length, writes an original backup, records both hashes, and revalidates them
+before launch. A controlled copied Level 100 run rendered the unique
+`TOOLKIT MOD ACTIVE`
+objective line. This proves one direct localization-table edit, not arbitrary
+language import, loose mission-script loading, texture replacement, AYA
+repacking, or a general mod format.
+
 The patch catalog's original/replacement bytes and copied-target rules are
 automatically checked. A byte-correct patch is not automatically proof of its
 visible or gameplay effect. Windowed startup, expanded mode enumeration, card-ID

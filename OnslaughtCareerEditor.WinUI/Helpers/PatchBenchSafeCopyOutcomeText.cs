@@ -77,6 +77,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 "The selected Steam/game install stays unchanged.\n" +
                 BuildSavegamesSummary(state.CopiedSavegames) + "\n" +
                 BuildControlOptionsSummary(state.ControlOptions) + "\n" +
+                BuildLevel100TextModSummary(state.Level100TextModApplied) + "\n" +
                 BuildMusicSwapSummary(state.MusicSwap) + "\n" +
                 $"Play will run BEA.exe from safe copy folder: {state.SafeCopyFolderName}";
         }
@@ -90,8 +91,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 state.LaunchModifierSummary + "\n" +
                 BuildSavegamesSummary(state.CopiedSavegames) + "\n" +
                 BuildControlOptionsSummary(state.ControlOptions) + "\n" +
+                BuildLevel100TextModSummary(state.Level100TextModApplied) + "\n" +
                 BuildMusicSwapSummary(state.MusicSwap) + "\n" +
-                "Only the copied BEA.exe was patched; no game process was started.";
+                "Only files inside the safe copy were changed; no game process was started.";
         }
 
         public static string BuildMusicReplacementStatus(PatchBenchSafeCopyMusicSwapTextState? musicSwap)
@@ -191,6 +193,13 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return musicSwap is null
                 ? "Music swap: no copied-track swap staged during safe-copy creation."
                 : $"Music swap: copied-track swap staged for {musicSwap.TargetMusicFileName}; backup {musicSwap.BackupRelativePath}; runtime playback still needs live testing.";
+        }
+
+        private static string BuildLevel100TextModSummary(bool applied)
+        {
+            return applied
+                ? "Level 100 text: one fixed-size English TUTORIAL_01 marker staged and hash-verified in the safe copy."
+                : "Level 100 text: original English subtitle retained.";
         }
 
         private static string FormatBool(bool value)

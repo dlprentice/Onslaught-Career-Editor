@@ -4,4 +4,5 @@ internal sealed record PatchBenchLabCreationInputState(
     int OptionalPatchCount,
     int LaunchModifierCount,
     int CopiedOptionsCount,
-    bool HasCreateTimeMusicExperiment);
+    bool HasCreateTimeMusicExperiment,
+    bool HasLevel100TextMod);

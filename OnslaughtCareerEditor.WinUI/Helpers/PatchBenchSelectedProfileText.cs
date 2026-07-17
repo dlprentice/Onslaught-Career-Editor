@@ -51,21 +51,19 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add the required Enhanced Copy base and these selected rows.";
         }
 
-        public static string BuildPlayerModsStatus(bool hasPatchedMarker, bool hasGoodiesPreview)
+        public static string BuildPlayerModsStatus(bool hasPatchedMarker, bool hasGoodiesPreview, bool hasLevel100TextMod)
         {
-            if (hasPatchedMarker && hasGoodiesPreview)
-            {
-                return "Player mods selected: PATCHED identity marker and Goodies wall preview.";
-            }
-
+            var selected = new List<string>();
             if (hasPatchedMarker)
-            {
-                return "Player mods selected: PATCHED identity marker.";
-            }
+                selected.Add("PATCHED identity marker");
+            if (hasGoodiesPreview)
+                selected.Add("Goodies wall preview");
+            if (hasLevel100TextMod)
+                selected.Add("Level 100 English subtitle marker");
 
-            return hasGoodiesPreview
-                ? "Player mods selected: Goodies wall preview."
-                : "Player mods selected: none.";
+            return selected.Count == 0
+                ? "Player mods selected: none."
+                : $"Player mods selected: {string.Join(", ", selected)}.";
         }
 
         public static string BuildDetails(PatchBenchSelectedProfileTextState state)

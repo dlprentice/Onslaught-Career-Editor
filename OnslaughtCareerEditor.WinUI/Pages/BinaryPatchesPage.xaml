@@ -199,7 +199,7 @@
                                         </Button>
                                         <Button x:Name="PatchBenchClearSelectionButton"
                                                 AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
-                                                AutomationProperties.Name="Clear optional mod rows; safe copies still include Enhanced Copy"
+                                                AutomationProperties.Name="Clear optional mods; safe copies still include Enhanced Copy"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="56"
@@ -226,7 +226,7 @@
                                                FontSize="14"
                                                FontWeight="SemiBold"
                                                Margin="0,4,0,0" />
-                                    <TextBlock Text="Both player mods start off and change only the copied executable. The PATCHED marker identifies the proven title/menu path. Goodies wall preview changes a bounded display-state path; it does not edit your save, award Goodies, or make an unlock persistent, and it does not prove every Goodies entry or model/FMV playback."
+                                    <TextBlock Text="All player mods start off. The PATCHED marker and Goodies preview change only the copied executable. The Level 100 marker changes one fixed-size English subtitle in the copied language table."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock x:Name="PatchBenchPlayerModsSelectionStatus"
                                                AutomationProperties.AutomationId="PatchBenchPlayerModsSelectionStatus"
@@ -292,6 +292,14 @@
                                                        HorizontalAlignment="Center" />
                                         </Button>
                                     </Grid>
+                                    <CheckBox x:Name="PatchBenchLevel100TextModOption"
+                                              AutomationProperties.AutomationId="PatchBenchLevel100TextModOption"
+                                              AutomationProperties.Name="Replace the first Level 100 English objective subtitle with the proven Toolkit marker"
+                                              Content="Level 100 subtitle marker (English)"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="Replaces only TUTORIAL_01 with a TOOLKIT MOD ACTIVE objective line in the safe copy. Live retail proof covers this one rendered subtitle; this is not a general language importer, mission-script override, texture replacement, or AYA repacker."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
                             </Border>
 

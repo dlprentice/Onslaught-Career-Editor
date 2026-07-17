@@ -14,6 +14,10 @@ internal static class PatchBenchLabCreationInputText
         {
             categories.Add("1 create-time music experiment");
         }
+        if (state.HasLevel100TextMod)
+        {
+            categories.Add("1 Level 100 English text mod");
+        }
 
         return categories.Count == 0
             ? "Extra settings for next copy: none active."
