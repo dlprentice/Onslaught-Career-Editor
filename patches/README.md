@@ -34,8 +34,11 @@ the distinction clear:
 - **unproven**: broader compatibility, gameplay safety, control feel, and
   parity remain open.
 
-The default safe-copy profile is the narrow compatibility pair. Experimental
-rows stay opt-in and must not be promoted by changing catalog prose alone.
+The default Enhanced Copy profile is the verified compatibility base: the
+complete 28-region widescreen correction, windowed startup, `-res 1600 900`,
+retail 16:9 screen shape, and mouse sensitivity `0.1`. Copied Level 100 runtime
+proof is limited to the supported Steam specimen and tested machine.
+Experimental rows stay opt-in and must not be promoted by catalog prose alone.
 
 ## Safety
 

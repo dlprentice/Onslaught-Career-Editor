@@ -56,7 +56,8 @@ namespace Onslaught___Career_Editor
         string? ProfilePresetProofStatus,
         int? ProfileDefaultControllerConfiguration,
         bool ProfileDefaultPersistControllerConfigInOptions,
-        bool ProfileDefaultSharpenMouseLook,
+        float? ProfileDefaultMouseLookSensitivity,
+        uint? ProfileDefaultScreenShape,
         IReadOnlyList<SafeCopyProfileModule> ProfilePresetModules,
         GameProfileMusicReplacementResult? MusicSwapResult,
         string ManifestPath);
@@ -178,7 +179,8 @@ namespace Onslaught___Career_Editor
                     ProfilePresetProofStatus: profilePreset?.ProofStatus,
                     ProfileDefaultControllerConfiguration: profilePreset?.DefaultControllerConfiguration,
                     ProfileDefaultPersistControllerConfigInOptions: profilePreset?.DefaultPersistControllerConfigInOptions ?? false,
-                    ProfileDefaultSharpenMouseLook: profilePreset?.DefaultSharpenMouseLook ?? false,
+                    ProfileDefaultMouseLookSensitivity: profilePreset?.DefaultMouseLookSensitivity,
+                    ProfileDefaultScreenShape: profilePreset?.DefaultScreenShape,
                     ProfilePresetModules: profilePreset?.Modules ?? Array.Empty<SafeCopyProfileModule>(),
                     MusicSwapResult: null,
                     ManifestPath: manifestPath);
@@ -305,7 +307,6 @@ namespace Onslaught___Career_Editor
                         ? "none staged during safe-copy creation."
                         : $"staged for {result.MusicSwapResult.TargetMusicFileName}; runtime playback still needs live testing."),
                 new("Control options", BuildReceiptControlOptionsSummary(controlOptionsResult)),
-                new("Manifest", Path.GetFileName(result.ManifestPath)),
             };
 
             string[] includedChanges = result.ProfilePresetModules.Count > 0
@@ -386,14 +387,16 @@ namespace Onslaught___Career_Editor
             bool controllerConfigMatches = !result.ProfileDefaultControllerConfiguration.HasValue ||
                 (controlOptionsResult.ControllerConfigP1 == result.ProfileDefaultControllerConfiguration.Value &&
                  controlOptionsResult.ControllerConfigP2 == result.ProfileDefaultControllerConfiguration.Value);
-            bool mouseLookMatches = !result.ProfileDefaultSharpenMouseLook ||
-                Math.Abs(controlOptionsResult.MouseSensitivity - GameProfileControlOptionsService.SharperMouseLookSensitivity) < 0.0001f;
+            bool mouseLookMatches = !result.ProfileDefaultMouseLookSensitivity.HasValue ||
+                Math.Abs(controlOptionsResult.MouseSensitivity - result.ProfileDefaultMouseLookSensitivity.Value) < 0.0001f;
+            bool screenShapeMatches = !result.ProfileDefaultScreenShape.HasValue ||
+                controlOptionsResult.ScreenShape == result.ProfileDefaultScreenShape.Value;
             bool invertMatches = !controlOptionsResult.InvertWalkerP1 &&
                 !controlOptionsResult.InvertWalkerP2 &&
                 !controlOptionsResult.InvertFlightP1 &&
                 !controlOptionsResult.InvertFlightP2;
 
-            return controllerConfigMatches && mouseLookMatches && invertMatches;
+            return controllerConfigMatches && mouseLookMatches && screenShapeMatches && invertMatches;
         }
 
         private static GameProfileLaunchPlan BuildLaunchPlanCore(string gameRoot, IReadOnlyList<string> arguments)
@@ -423,7 +426,7 @@ namespace Onslaught___Career_Editor
         {
             return result is null
                 ? "no post-create control edit result; profile defaults and selected options are recorded separately."
-                : $"safe-copy mouse sensitivity {result.MouseSensitivity:0.###}; controller config P1={result.ControllerConfigP1}, P2={result.ControllerConfigP2}; runtime feel still needs live testing.";
+                : $"safe-copy screen shape {result.ScreenShape} (1=16:9); mouse sensitivity {result.MouseSensitivity:0.###}; controller config P1={result.ControllerConfigP1}, P2={result.ControllerConfigP2}.";
         }
 
         private static void AddReceiptLimit(List<string> limits, string value)
@@ -754,7 +757,10 @@ namespace Onslaught___Career_Editor
             byte[] expectedPatchedBytes = backupBytes.ToArray();
             foreach (BinaryPatchSpec spec in selected)
             {
-                spec.Patched.CopyTo(expectedPatchedBytes, spec.FileOffset);
+                foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+                {
+                    region.Patched.CopyTo(expectedPatchedBytes, region.FileOffset);
+                }
             }
 
             byte[] actualBytes = File.ReadAllBytes(executablePath);
@@ -1012,6 +1018,27 @@ namespace Onslaught___Career_Editor
                     continue;
                 }
 
+                if (string.Equals(token, "-res", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (index + 2 >= arguments.Count)
+                        throw new InvalidOperationException("-res requires numeric width and height values.");
+
+                    string widthToken = arguments[++index]?.Trim() ?? string.Empty;
+                    string heightToken = arguments[++index]?.Trim() ?? string.Empty;
+                    if (!int.TryParse(widthToken, out int width) ||
+                        !int.TryParse(heightToken, out int height) ||
+                        width < 640 || width > 16384 ||
+                        height < 480 || height > 16384)
+                    {
+                        throw new InvalidOperationException("-res requires a width from 640 to 16384 and a height from 480 to 16384.");
+                    }
+
+                    normalized.Add("-res");
+                    normalized.Add(width.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    normalized.Add(height.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    continue;
+                }
+
                 if (string.Equals(token, "-level", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "-configuration", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "-textureramlimit", StringComparison.OrdinalIgnoreCase))
@@ -1133,7 +1160,8 @@ namespace Onslaught___Career_Editor
                         ProfileCatalogSha256 = BinaryPatchPlanBuilder.SafeCopyProfileCatalogSha256,
                         DefaultControllerConfiguration = result.ProfileDefaultControllerConfiguration,
                         DefaultPersistControllerConfigInOptions = result.ProfileDefaultPersistControllerConfigInOptions,
-                        DefaultSharpenMouseLook = result.ProfileDefaultSharpenMouseLook,
+                        DefaultMouseLookSensitivity = result.ProfileDefaultMouseLookSensitivity,
+                        DefaultScreenShape = result.ProfileDefaultScreenShape,
                         Modules = result.ProfilePresetModules.Select(module => new
                         {
                             module.Id,

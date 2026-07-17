@@ -64,8 +64,8 @@ public class WinUiPatchBenchInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             WaitForText(window, "Safe game copy", TimeSpan.FromSeconds(20));
-            AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Compatibility Copy profile");
-            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            AssertAutomationNameContains(window, "PatchBenchWindowedPresetButton", "Selected: Enhanced Copy profile");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Copy");
             CaptureChoiceStateScreenshot(
                 window,
                 app.MainWindowHandle,
@@ -150,7 +150,7 @@ public class WinUiPatchBenchInteractionSmokeTests
 
             InvokeByAutomationId(window, "PatchBenchClearSelectionButton");
             AssertAutomationNameContains(window, "PatchBenchClearSelectionButton", "Selected: no optional mod rows");
-            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Compatibility Copy");
+            AssertAutomationNameContains(window, "PatchBenchSelectedProfileStatus", "Selected profile: Enhanced Copy");
             AssertAutomationNameContains(window, "PatchBenchSafeCopySelectionReadiness", "Required compatibility base ready. No optional mods selected.");
             AssertElementEnabled(window, "PatchBenchPrepareCopiedProfileButton", expected: true);
             AssertElementEnabled(window, "PatchBenchTopCreateSafeCopyButton", expected: true);

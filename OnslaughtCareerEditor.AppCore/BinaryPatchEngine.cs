@@ -10,6 +10,11 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Onslaught___Career_Editor
 {
+    public sealed record BinaryPatchRegion(
+        int FileOffset,
+        byte[] Original,
+        byte[] Patched);
+
     public sealed record BinaryPatchSpec(
         string Key,
         string Track,
@@ -26,7 +31,8 @@ namespace Onslaught___Career_Editor
         string? ProofLevel = null,
         string? Selectability = null,
         IReadOnlyList<string>? PresetEligibility = null,
-        bool RequiresWindowedPair = false);
+        bool RequiresWindowedPair = false,
+        IReadOnlyList<BinaryPatchRegion>? AdditionalRegions = null);
 
     public enum BinaryPatchState
     {
@@ -63,26 +69,57 @@ namespace Onslaught___Career_Editor
         public const string BackupSuffix = ".original.backup";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
-        private const string ExpectedPatchCatalogSha256 = "9b42e35ba1f12f012300e569ea0be6e747c245d4c60403bee3e32c0b5857a582";
+        private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
         private const string TargetFileName = "BEA.exe";
         private const string KnownRetailSteamSha256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750";
         private const long KnownRetailSteamSize = 2_506_752;
         private static readonly string[] s_knownRetailSteamHashes = { KnownRetailSteamSha256 };
+        private static readonly BinaryPatchRegion[] s_widescreenAspectRegions =
+        {
+            new(0x01B087, new byte[] { 0xC4, 0x8B, 0x5D }, new byte[] { 0xF0, 0x4F, 0x9D }),
+            new(0x0506CE, new byte[] { 0x68, 0x00, 0x00, 0x40, 0x3F }, new byte[] { 0xE9, 0x5F, 0x78, 0x18, 0x00 }),
+            new(0x12B156, new byte[] { 0xD9, 0x05, 0xF0, 0x4A, 0x5E, 0x00 }, new byte[] { 0xE9, 0x07, 0xCD, 0x0A, 0x00, 0x90 }),
+            new(0x12B200, new byte[] { 0xE8, 0x3B, 0x65, 0xF1, 0xFF }, new byte[] { 0xE9, 0x98, 0xCD, 0x0A, 0x00 }),
+            new(0x12B983, new byte[] { 0xF0, 0x4A, 0x5E }, new byte[] { 0xF8, 0x4F, 0x9D }),
+            new(0x12C790, new byte[] { 0xF0, 0x4A, 0x5E }, new byte[] { 0xF8, 0x4F, 0x9D }),
+            new(0x13E32F, new byte[] { 0x8B, 0x11, 0xFF, 0x52, 0x10 }, new byte[] { 0xE9, 0x9D, 0x9C, 0x09, 0x00 }),
+            new(0x13F3B7, new byte[] { 0xD9, 0x05, 0x40, 0x8A, 0x88, 0x00 }, new byte[] { 0xE9, 0x99, 0x45, 0x06, 0x00, 0x90 }),
+            new(0x141B59, new byte[] { 0xD9, 0x84, 0x24, 0xC4 }, new byte[] { 0xE9, 0x83, 0x64, 0x09 }),
+            new(0x141B5E, new byte[] { 0x00, 0x00 }, new byte[] { 0x90, 0x90 }),
+            new(0x1A3955, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xD9, 0x05, 0x98, 0xB3, 0x5D, 0x00, 0xD8, 0x35, 0xF8, 0x4F, 0x9D, 0x00, 0xE9, 0x57, 0xBA, 0xF9, 0xFF }),
+            new(0x1D7DB5, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xD8, 0x84, 0xE4, 0xC4, 0x00, 0x00, 0x00, 0xEB, 0x28 }),
+            new(0x1D7DE6, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xE9, 0x75, 0x9D, 0xF6, 0xFF }),
+            new(0x1D7E42, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xE9, 0x63, 0x33, 0xF5, 0xFF }),
+            new(0x1D7E62, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xDB, 0x85, 0x58, 0x2E, 0x03, 0x00, 0xDA, 0xB5, 0x5C, 0x2E, 0x03, 0x00, 0xEB, 0xD2 }),
+            new(0x1D7F32, new byte[] { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC }, new byte[] { 0xFF, 0x35, 0xF0, 0x4F, 0x9D, 0x00, 0xE9, 0x96, 0x87, 0xE7, 0xFF }),
+            new(0x1D7F9D, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xDB, 0x85, 0x5C, 0x2E, 0x03 }),
+            new(0x1D7FA3, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xDA, 0xB5, 0x58, 0x2E, 0x03 }),
+            new(0x1D7FA9, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD9, 0x15, 0xF0, 0x4F, 0x9D }),
+            new(0x1D7FAF, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD8, 0x3D, 0xC4, 0x8B, 0x5D }),
+            new(0x1D7FB5, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD9, 0x15, 0xF4, 0x4F, 0x9D }),
+            new(0x1D7FBB, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD8, 0x35, 0xC4, 0x8B, 0x5D }),
+            new(0x1D7FC1, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD9, 0x1D, 0xF8, 0x4F, 0x9D }),
+            new(0x1D7FC7, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xE8, 0x74, 0x97, 0xE6, 0xFF, 0xE9, 0x34, 0x32, 0xF5, 0xFF, 0x8B, 0x11, 0xFF, 0x52, 0x10, 0xD8, 0x0D, 0xF4, 0x4F, 0x9D }),
+            new(0x1D7FDC, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xE9, 0x53, 0x63, 0xF6, 0xFF, 0xD9, 0x44, 0xE4, 0x10, 0xD9, 0xC0, 0xD8, 0x35, 0xF4, 0x4F, 0x9D }),
+            new(0x1D7FED, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xD9, 0x54, 0xE4, 0x10, 0xDE, 0xE9, 0xD8, 0x0D, 0xEC, 0x85, 0x5D }),
+            new(0x1D7FF9, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, new byte[] { 0xE9, 0xB7, 0xFD, 0xFF, 0xFF }),
+        };
 
         private static readonly BinaryPatchSpec[] s_fallbackPatchSpecs =
         {
             new(
                 Key: "resolution_gate",
                 Track: "Stable",
-                DisplayName: "Let non-4:3 display modes pass enumeration",
+                DisplayName: "Correct 16:9 gameplay aspect and field of view",
                 FileOffset: 0x129696,
                 Original: new byte[] { 0xCC },
                 Patched: new byte[] { 0x00 },
                 TargetBinaryHashes: s_knownRetailSteamHashes,
                 TargetBinarySize: KnownRetailSteamSize,
-                ProofLevel: "byte_verified_static_and_copied_launch_pair",
+                ProofLevel: "copied_gameplay_runtime_16_9",
                 Selectability: "profile_visible",
-                PresetEligibility: new[] { "compatibility-copy", "recommended-safe-copy", "enhanced-edition-preview", "debug-camera-preview", "custom" }),
+                PresetEligibility: new[] { "compatibility-copy", "recommended-safe-copy", "enhanced-edition-preview", "debug-camera-preview", "custom" },
+                AdditionalRegions: s_widescreenAspectRegions),
             new(
                 Key: "force_windowed",
                 Track: "Stable",
@@ -510,6 +547,21 @@ namespace Onslaught___Career_Editor
         public static bool UsingFallbackCatalog => s_catalogLoad.UsingFallback;
         public static string CatalogStatus => s_catalogLoad.Status;
 
+        public static IReadOnlyList<BinaryPatchRegion> GetPatchRegions(BinaryPatchSpec spec)
+        {
+            ArgumentNullException.ThrowIfNull(spec);
+            var regions = new List<BinaryPatchRegion>(1 + (spec.AdditionalRegions?.Count ?? 0))
+            {
+                new(spec.FileOffset, spec.Original, spec.Patched),
+            };
+            if (spec.AdditionalRegions is not null)
+            {
+                regions.AddRange(spec.AdditionalRegions);
+            }
+
+            return regions;
+        }
+
         public static string BuildBackupPath(string exePath) => exePath + BackupSuffix;
 
         public static string BuildBackupHashPath(string exePath) => BuildBackupPath(exePath) + BackupHashSuffix;
@@ -686,6 +738,7 @@ namespace Onslaught___Career_Editor
                 actual.TargetBinarySize == expected.TargetBinarySize &&
                 actual.Original.SequenceEqual(expected.Original) &&
                 actual.Patched.SequenceEqual(expected.Patched) &&
+                RegionSequenceEquals(actual.AdditionalRegions, expected.AdditionalRegions) &&
                 StringSetEquals(actual.TargetBinaryHashes, expected.TargetBinaryHashes) &&
                 StringSetEquals(actual.Dependencies, expected.Dependencies) &&
                 StringSetEquals(actual.Conflicts, expected.Conflicts) &&
@@ -694,6 +747,19 @@ namespace Onslaught___Career_Editor
                 string.Equals(actual.Selectability ?? string.Empty, expected.Selectability ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
                 StringSetEquals(actual.PresetEligibility, expected.PresetEligibility) &&
                 actual.RequiresWindowedPair == expected.RequiresWindowedPair;
+        }
+
+        private static bool RegionSequenceEquals(
+            IReadOnlyList<BinaryPatchRegion>? left,
+            IReadOnlyList<BinaryPatchRegion>? right)
+        {
+            IReadOnlyList<BinaryPatchRegion> leftRegions = left ?? Array.Empty<BinaryPatchRegion>();
+            IReadOnlyList<BinaryPatchRegion> rightRegions = right ?? Array.Empty<BinaryPatchRegion>();
+            return leftRegions.Count == rightRegions.Count &&
+                leftRegions.Zip(rightRegions).All(pair =>
+                    pair.First.FileOffset == pair.Second.FileOffset &&
+                    pair.First.Original.SequenceEqual(pair.Second.Original) &&
+                    pair.First.Patched.SequenceEqual(pair.Second.Patched));
         }
 
         private static bool StringSetEquals(IReadOnlyList<string>? left, IReadOnlyList<string>? right)
@@ -748,6 +814,8 @@ namespace Onslaught___Career_Editor
             IReadOnlyList<string> presetEligibility = ParseStringArray(patchEl, "preset_eligibility");
             bool requiresWindowedPair = patchEl.TryGetProperty("requires_windowed_pair", out JsonElement requiresWindowedPairEl) &&
                 requiresWindowedPairEl.ValueKind == JsonValueKind.True;
+            if (!TryParseAdditionalRegions(patchEl, out IReadOnlyList<BinaryPatchRegion> additionalRegions))
+                return false;
 
             spec = new BinaryPatchSpec(
                 Key: key,
@@ -765,7 +833,42 @@ namespace Onslaught___Career_Editor
                 ProofLevel: proofLevel,
                 Selectability: selectability,
                 PresetEligibility: presetEligibility,
-                RequiresWindowedPair: requiresWindowedPair);
+                RequiresWindowedPair: requiresWindowedPair,
+                AdditionalRegions: additionalRegions);
+            return true;
+        }
+
+        private static bool TryParseAdditionalRegions(
+            JsonElement patchEl,
+            out IReadOnlyList<BinaryPatchRegion> regions)
+        {
+            regions = Array.Empty<BinaryPatchRegion>();
+            if (!patchEl.TryGetProperty("additional_regions", out JsonElement regionsEl))
+                return true;
+            if (regionsEl.ValueKind != JsonValueKind.Array)
+                return false;
+
+            var parsed = new List<BinaryPatchRegion>();
+            foreach (JsonElement regionEl in regionsEl.EnumerateArray())
+            {
+                if (!regionEl.TryGetProperty("file_offset", out JsonElement fileOffsetEl) ||
+                    !TryParseOffset(fileOffsetEl, out int fileOffset) ||
+                    !TryGetString(regionEl, "expected_original_bytes", out string originalHex) ||
+                    !TryGetString(regionEl, "patched_bytes", out string patchedHex) ||
+                    !TryParseHexBytes(originalHex, out byte[]? originalMaybe) ||
+                    !TryParseHexBytes(patchedHex, out byte[]? patchedMaybe))
+                {
+                    return false;
+                }
+
+                byte[] original = originalMaybe!;
+                byte[] patched = patchedMaybe!;
+                if (original.Length != patched.Length || original.SequenceEqual(patched))
+                    return false;
+                parsed.Add(new BinaryPatchRegion(fileOffset, original, patched));
+            }
+
+            regions = parsed;
             return true;
         }
 
@@ -955,16 +1058,26 @@ namespace Onslaught___Career_Editor
 
         public static BinaryPatchState GetPatchState(byte[] data, BinaryPatchSpec spec)
         {
-            int length = spec.Original.Length;
-            if (length != spec.Patched.Length)
-                return BinaryPatchState.Mismatch;
-            if (spec.FileOffset < 0 || spec.FileOffset + length > data.Length)
-                return BinaryPatchState.OutOfRange;
+            bool allOriginal = true;
+            bool allPatched = true;
+            foreach (BinaryPatchRegion region in GetPatchRegions(spec))
+            {
+                int length = region.Original.Length;
+                if (length != region.Patched.Length)
+                    return BinaryPatchState.Mismatch;
+                if (region.FileOffset < 0 || region.FileOffset > data.Length - length)
+                    return BinaryPatchState.OutOfRange;
 
-            ReadOnlySpan<byte> current = data.AsSpan(spec.FileOffset, length);
-            if (current.SequenceEqual(spec.Patched))
+                ReadOnlySpan<byte> current = data.AsSpan(region.FileOffset, length);
+                allOriginal &= current.SequenceEqual(region.Original);
+                allPatched &= current.SequenceEqual(region.Patched);
+                if (!current.SequenceEqual(region.Original) && !current.SequenceEqual(region.Patched))
+                    return BinaryPatchState.Mismatch;
+            }
+
+            if (allPatched)
                 return BinaryPatchState.Patched;
-            if (current.SequenceEqual(spec.Original))
+            if (allOriginal)
                 return BinaryPatchState.Original;
             return BinaryPatchState.Mismatch;
         }
@@ -1101,7 +1214,10 @@ namespace Onslaught___Career_Editor
             {
                 if (row.State == BinaryPatchState.Original)
                 {
-                    row.Spec.Patched.CopyTo(data, row.Spec.FileOffset);
+                    foreach (BinaryPatchRegion region in GetPatchRegions(row.Spec))
+                    {
+                        region.Patched.CopyTo(data, region.FileOffset);
+                    }
                 }
             }
 
@@ -1145,7 +1261,7 @@ namespace Onslaught___Career_Editor
             var selectedByKey = new Dictionary<string, BinaryPatchSpec>(StringComparer.OrdinalIgnoreCase);
             foreach (BinaryPatchSpec spec in selected)
             {
-                if (spec.Original.SequenceEqual(spec.Patched))
+                if (GetPatchRegions(spec).Any(region => region.Original.SequenceEqual(region.Patched)))
                 {
                     return (false, $"Patch selection contains no-op row '{spec.Key}'.");
                 }
@@ -1203,12 +1319,13 @@ namespace Onslaught___Career_Editor
             }
 
             var selectedRanges = selected
-                .Select(spec => new
+                .SelectMany(spec => GetPatchRegions(spec).Select(region => new
                 {
                     Spec = spec,
-                    Start = spec.FileOffset,
-                    End = spec.FileOffset + spec.Patched.Length,
-                })
+                    Region = region,
+                    Start = region.FileOffset,
+                    End = region.FileOffset + region.Patched.Length,
+                }))
                 .ToArray();
             for (int i = 0; i < selectedRanges.Length; i++)
             {
@@ -1219,8 +1336,8 @@ namespace Onslaught___Career_Editor
                     bool identicalMutation =
                         selectedRanges[i].Start == selectedRanges[j].Start &&
                         selectedRanges[i].End == selectedRanges[j].End &&
-                        selectedRanges[i].Spec.Original.SequenceEqual(selectedRanges[j].Spec.Original) &&
-                        selectedRanges[i].Spec.Patched.SequenceEqual(selectedRanges[j].Spec.Patched);
+                        selectedRanges[i].Region.Original.SequenceEqual(selectedRanges[j].Region.Original) &&
+                        selectedRanges[i].Region.Patched.SequenceEqual(selectedRanges[j].Region.Patched);
                     if (overlaps && !identicalMutation)
                     {
                         return (false, $"Patch selection contains overlapping rows '{selectedRanges[i].Spec.Key}' and '{selectedRanges[j].Spec.Key}'.");
@@ -1309,41 +1426,15 @@ namespace Onslaught___Career_Editor
             IReadOnlyList<BinaryPatchSpec> specs,
             IReadOnlyList<BinaryPatchVerifyRow> rows)
         {
-            var unexpected = new List<BinaryPatchVerifyRow>();
-            foreach (var group in specs.GroupBy(spec => (spec.FileOffset, Length: spec.Original.Length)))
-            {
-                BinaryPatchSpec[] groupSpecs = group.ToArray();
-                BinaryPatchVerifyRow[] groupRows = rows
-                    .Where(row => groupSpecs.Contains(row.Spec))
-                    .ToArray();
-
-                if (groupSpecs.Any(spec => spec.Original.Length != spec.Patched.Length) ||
-                    group.Key.FileOffset < 0 ||
-                    group.Key.FileOffset + group.Key.Length > data.Length)
-                {
-                    unexpected.AddRange(groupRows.Where(row => row.State is BinaryPatchState.Mismatch or BinaryPatchState.OutOfRange));
-                    continue;
-                }
-
-                ReadOnlySpan<byte> current = data.AsSpan(group.Key.FileOffset, group.Key.Length);
-                bool matchesKnownOriginalOrPatch = false;
-                foreach (BinaryPatchSpec spec in groupSpecs)
-                {
-                    if (current.SequenceEqual(spec.Original) ||
-                        current.SequenceEqual(spec.Patched))
-                    {
-                        matchesKnownOriginalOrPatch = true;
-                        break;
-                    }
-                }
-
-                if (!matchesKnownOriginalOrPatch)
-                {
-                    unexpected.AddRange(groupRows.Where(row => row.State is BinaryPatchState.Mismatch or BinaryPatchState.OutOfRange));
-                }
-            }
-
-            return unexpected;
+            return rows
+                .Where(row => row.State is BinaryPatchState.Mismatch or BinaryPatchState.OutOfRange)
+                .Where(row => GetPatchRegions(row.Spec).Any(region =>
+                    region.Original.Length != region.Patched.Length ||
+                    region.FileOffset < 0 ||
+                    region.FileOffset > data.Length - region.Original.Length ||
+                    (!data.AsSpan(region.FileOffset, region.Original.Length).SequenceEqual(region.Original) &&
+                     !data.AsSpan(region.FileOffset, region.Patched.Length).SequenceEqual(region.Patched))))
+                .ToArray();
         }
 
         private sealed record PatchTargetValidationInfo(
@@ -1600,19 +1691,22 @@ namespace Onslaught___Career_Editor
             var allowedDifferences = new bool[currentBytes.Length];
             foreach (BinaryPatchSpec spec in catalogSpecs)
             {
-                if (spec.FileOffset < 0 ||
-                    spec.Original.Length != spec.Patched.Length ||
-                    spec.FileOffset > currentBytes.Length - spec.Original.Length)
+                foreach (BinaryPatchRegion region in GetPatchRegions(spec))
                 {
-                    return false;
+                    if (region.FileOffset < 0 ||
+                        region.Original.Length != region.Patched.Length ||
+                        region.FileOffset > currentBytes.Length - region.Original.Length)
+                    {
+                        return false;
+                    }
+
+                    ReadOnlySpan<byte> original = backupBytes.AsSpan(region.FileOffset, region.Original.Length);
+                    ReadOnlySpan<byte> current = currentBytes.AsSpan(region.FileOffset, region.Patched.Length);
+                    if (!original.SequenceEqual(region.Original) || !current.SequenceEqual(region.Patched))
+                        continue;
+
+                    Array.Fill(allowedDifferences, true, region.FileOffset, region.Patched.Length);
                 }
-
-                ReadOnlySpan<byte> original = backupBytes.AsSpan(spec.FileOffset, spec.Original.Length);
-                ReadOnlySpan<byte> current = currentBytes.AsSpan(spec.FileOffset, spec.Patched.Length);
-                if (!original.SequenceEqual(spec.Original) || !current.SequenceEqual(spec.Patched))
-                    continue;
-
-                Array.Fill(allowedDifferences, true, spec.FileOffset, spec.Patched.Length);
             }
 
             for (int index = 0; index < currentBytes.Length; index++)

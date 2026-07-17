@@ -19,6 +19,7 @@ namespace Onslaught___Career_Editor
         bool? InvertWalkerP2Override = null,
         bool? InvertFlightP1Override = null,
         bool? InvertFlightP2Override = null,
+        uint? ScreenShapeOverride = null,
         IReadOnlyList<ConfigurationKeybindRow>? KeybindRows = null);
 
     public sealed record GameProfileControlOptionsChangeRange(
@@ -41,6 +42,7 @@ namespace Onslaught___Career_Editor
         bool InvertWalkerP2,
         bool InvertFlightP1,
         bool InvertFlightP2,
+        uint ScreenShape,
         string HashBefore,
         string HashAfter,
         IReadOnlyList<GameProfileControlOptionsChangeRange> ChangedRanges,
@@ -54,11 +56,13 @@ namespace Onslaught___Career_Editor
         public const string ManifestFileName = "onslaught-control-options-manifest.json";
         public const string ManifestSchemaVersion = "winui-safe-copy-control-options.v1";
         public const string ProofStatusOptionsByteMaterializedOnly = "options_byte_materialized_only";
+        public const float MinimumMouseLookSensitivity = 0.1f;
         public const float BalancedMouseLookSensitivity = 1.5f;
         public const float SharperMouseLookSensitivity = 2.25f;
         public const float FastMouseLookSensitivity = 3.0f;
         private static readonly float[] s_supportedMouseLookSensitivities =
         {
+            MinimumMouseLookSensitivity,
             BalancedMouseLookSensitivity,
             SharperMouseLookSensitivity,
             FastMouseLookSensitivity,
@@ -78,6 +82,7 @@ namespace Onslaught___Career_Editor
                 !request.InvertWalkerP2Override.HasValue &&
                 !request.InvertFlightP1Override.HasValue &&
                 !request.InvertFlightP2Override.HasValue &&
+                !request.ScreenShapeOverride.HasValue &&
                 !hasKeybindOverrides)
             {
                 throw new InvalidOperationException("Choose at least one safe-copy control option before applying.");
@@ -86,6 +91,7 @@ namespace Onslaught___Career_Editor
             ValidateControllerConfig(request.ControllerConfigP1Override, "Player 1");
             ValidateControllerConfig(request.ControllerConfigP2Override, "Player 2");
             ValidateMouseSensitivityPreset(request.MouseSensitivityOverride);
+            ValidateScreenShape(request.ScreenShapeOverride);
 
             string profileRoot = ValidateProfileRoot(request.ProfileRoot, request.AppOwnedProfilesRoot);
             string manifestPath = ValidateControlOptionsManifestTarget(profileRoot);
@@ -117,6 +123,7 @@ namespace Onslaught___Career_Editor
                     InvertWalkerP2Override = request.InvertWalkerP2Override,
                     InvertFlightP1Override = request.InvertFlightP1Override,
                     InvertFlightP2Override = request.InvertFlightP2Override,
+                    ScreenShapeOverride = request.ScreenShapeOverride,
                     KeybindRows = request.KeybindRows ?? Array.Empty<ConfigurationKeybindRow>(),
                     OutputAuthorization = outputAuthorization
                 });
@@ -173,13 +180,14 @@ namespace Onslaught___Career_Editor
                 InvertWalkerP2: snapshot.InvertWalkerP2,
                 InvertFlightP1: snapshot.InvertFlightP1,
                 InvertFlightP2: snapshot.InvertFlightP2,
+                ScreenShape: snapshot.ScreenShape,
                 HashBefore: hashBefore,
                 HashAfter: hashAfter,
                 ChangedRanges: changedRanges,
                 Backups: backups,
                 ManifestPath: manifestPath,
                 ProofStatus: ProofStatusOptionsByteMaterializedOnly,
-                Message: "Safe-copy defaultoptions.bea control options were patched with a local backup. This does not prove runtime input feel until the copied game is launched and checked.");
+                Message: "Safe-copy defaultoptions.bea display/control options were patched with a local backup. Runtime behavior still requires a copied-game launch check.");
         }
 
         private static string BuildUniqueSiblingPath(string directory, string prefix, string extension)
@@ -228,6 +236,7 @@ namespace Onslaught___Career_Editor
                     InvertWalkerP2 = request.InvertWalkerP2Override,
                     InvertFlightP1 = request.InvertFlightP1Override,
                     InvertFlightP2 = request.InvertFlightP2Override,
+                    ScreenShape = request.ScreenShapeOverride,
                     KeybindRows = (request.KeybindRows ?? Array.Empty<ConfigurationKeybindRow>())
                         .Where(row => !string.IsNullOrWhiteSpace(row.Player1Token) || !string.IsNullOrWhiteSpace(row.Player2Token))
                         .Select(row => new
@@ -249,6 +258,7 @@ namespace Onslaught___Career_Editor
                     snapshot.InvertWalkerP2,
                     snapshot.InvertFlightP1,
                     snapshot.InvertFlightP2,
+                    snapshot.ScreenShape,
                 },
                 OptionsSize = optionsSize,
                 HashBefore = hashBefore,
@@ -262,7 +272,7 @@ namespace Onslaught___Career_Editor
                     range.AfterHex,
                 }).ToArray(),
                 Backups = backups,
-                ClaimBoundary = "This manifest proves copied defaultoptions.bea byte materialization only; it does not prove improved runtime input feel.",
+                ClaimBoundary = "This manifest proves copied defaultoptions.bea byte materialization only; runtime aspect and input behavior require a copied-game launch check.",
             };
 
             string tempPath = Path.Combine(
@@ -371,7 +381,13 @@ namespace Onslaught___Career_Editor
                 return;
 
             if (!s_supportedMouseLookSensitivities.Any(preset => Math.Abs(value.Value - preset) <= 0.0001f))
-                throw new InvalidOperationException("Safe-copy mouse sensitivity preset must be one of 1.5, 2.25, or 3.0.");
+                throw new InvalidOperationException("Safe-copy mouse sensitivity preset must be one of 0.1, 1.5, 2.25, or 3.0.");
+        }
+
+        private static void ValidateScreenShape(uint? value)
+        {
+            if (value.HasValue && value.Value > 2)
+                throw new InvalidOperationException("Safe-copy screen shape must be 0 (4:3), 1 (16:9), or 2 (1:1).");
         }
 
         private static string NormalizeExistingDirectory(string path)

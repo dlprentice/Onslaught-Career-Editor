@@ -37,18 +37,18 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     new GameProfileLaunchOptions(
                         ProfileRoot: prepared.TargetGameRoot,
                         AppOwnedProfilesRoot: outputRoot,
-                        LaunchArguments: new[] { "-skipfmv", "-showdebugtrace" }),
+                        LaunchArguments: new[] { "-res", "1600", "900", "-skipfmv", "-showdebugtrace" }),
                     runner);
 
                 Assert.Equal(1234, launched.ProcessId);
                 Assert.Equal(prepared.ExecutablePath, launched.ExecutablePath);
                 Assert.Equal(prepared.TargetGameRoot, launched.WorkingDirectory);
-                Assert.Equal(new[] { "-skipfmv", "-showdebugtrace" }, launched.Arguments);
+                Assert.Equal(new[] { "-res", "1600", "900", "-skipfmv", "-showdebugtrace" }, launched.Arguments);
                 Assert.Equal(prepared.ManifestPath, launched.ManifestPath);
                 Assert.Single(runner.Starts);
                 Assert.Equal(prepared.ExecutablePath, runner.Starts[0].FileName);
                 Assert.Equal(prepared.TargetGameRoot, runner.Starts[0].WorkingDirectory);
-                Assert.Equal("-skipfmv -showdebugtrace", runner.Starts[0].ArgumentString);
+                Assert.Equal("-res 1600 900 -skipfmv -showdebugtrace", runner.Starts[0].ArgumentString);
             }
             finally
             {
@@ -954,12 +954,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         private static void SeedExe(string exePath)
         {
             int maxEnd = BinaryPatchEngine.PatchSpecs
-                .Select(spec => spec.FileOffset + spec.Original.Length)
+                .SelectMany(BinaryPatchEngine.GetPatchRegions)
+                .Select(region => region.FileOffset + region.Original.Length)
                 .Max();
             byte[] data = Enumerable.Repeat((byte)0x90, maxEnd + 0x100).ToArray();
             foreach (BinaryPatchSpec spec in BinaryPatchEngine.PatchSpecs)
             {
-                spec.Original.CopyTo(data, spec.FileOffset);
+                foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+                {
+                    region.Original.CopyTo(data, region.FileOffset);
+                }
             }
 
             File.WriteAllBytes(exePath, data);

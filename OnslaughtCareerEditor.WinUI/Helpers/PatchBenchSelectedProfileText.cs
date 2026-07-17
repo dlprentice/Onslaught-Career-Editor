@@ -13,14 +13,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (state.SelectedVisibleRowCount == 0)
             {
-                return "Selected profile: compatibility-only safe copy. No optional visible mod rows are selected; Create safe copy still applies the required windowed compatibility pair.";
+                return "Selected profile: Enhanced Copy only. No optional visible mod rows are selected; Create safe copy still applies the required 16:9 gameplay base.";
             }
 
             string? matchedProfileId = state.MatchedPreset?.Id;
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase))
             {
-                return "Selected profile: Compatibility Copy. Required lowest-change base: windowed startup plus non-4:3 display-mode acceptance only.";
+                return "Selected profile: Enhanced Copy. Required base: aspect-correct 1600x900 gameplay, windowed startup, and minimum mouse sensitivity for modern mouse aiming.";
             }
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase))
@@ -48,7 +48,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Selected profile: graphics flag rows only. Use this for byte/launch checks, not as a complete compatibility profile.";
             }
 
-            return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add required compatibility and these selected rows.";
+            return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add the required Enhanced Copy base and these selected rows.";
         }
 
         public static string BuildPlayerModsStatus(bool hasPatchedMarker, bool hasGoodiesPreview)
@@ -72,7 +72,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (state.SelectedVisibleRowCount == 0)
             {
-                return "Selected safe-copy preset details: Compatibility-only safe copy. Included changes: required windowed compatibility rows are applied during safe-copy creation. Checks and limits: open row details for what was checked and remaining limits. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup when options were written. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+                return "Selected safe-copy preset details: Enhanced Copy only. Included changes: verified 16:9 aspect/FOV regions, tested -res 1600 900 launch, and copied 16:9 and mouse-aim options. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup. Limits: No Host/Join or online multiplayer. No all-machine guarantee. No installed-game mutation.";
             }
 
             if (state.MatchedPreset is null)
@@ -95,14 +95,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (state.SelectedVisibleRowCount == 0)
             {
-                return "No optional mod rows selected. Safe-copy creation still applies the required windowed compatibility pair. Advanced BEA.exe-only actions need a selected row.";
+                return "No optional mod rows selected. Safe-copy creation still applies the required Enhanced Copy base. Advanced BEA.exe-only actions need a selected row.";
             }
 
             string? matchedProfileId = state.MatchedPreset?.Id;
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase))
             {
-                return BuildAdvancedCopyDestinationSummary("Compatibility Copy profile selected.");
+                return BuildAdvancedCopyDestinationSummary("Enhanced Copy profile selected.");
             }
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase))
@@ -112,7 +112,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase))
             {
-                return BuildAdvancedCopyDestinationSummary("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods, not a full overhaul or online mode. It pre-fills copied-options controls for config 1 and mouse sensitivity 2.25; the control-options manifest records current controls only when options are written.");
+                return BuildAdvancedCopyDestinationSummary("Enhanced Profile Preview selected. Patch rows match visible safe-copy mods, not a full overhaul or online mode. It pre-fills copied-options controls for config 1, 16:9, and minimum mouse sensitivity; the control-options manifest records the applied values.");
             }
 
             if (string.Equals(matchedProfileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase))
@@ -142,7 +142,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 .ToArray();
 
             string prefix = isEnhancedPreview
-                ? "Patch rows match Enhanced Profile Preview; copied-options controls come from the current controls below. Control defaults apply only while P1/P2 config 1, mouse sensitivity 2.25, and invert settings still match the preset. Modules: "
+                ? "Patch rows match Enhanced Profile Preview; copied-options controls come from the current controls below. Control defaults apply only while P1/P2 config 1, screen shape 1, minimum mouse sensitivity, and invert settings still match the preset. Modules: "
                 : "Modules: ";
             return names.Length == 0
                 ? $"{prefix}none listed; use row details for selected patch evidence."

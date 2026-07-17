@@ -31,6 +31,20 @@ destination, and verifies the committed bytes. It does not synthesize saves.
 - Launch and stop only the copied-game process started by the app.
 - Keep BEA.exe-only technical copies separate from playable profiles.
 
+Enhanced Copy applies the complete 28-region widescreen correction, selects
+the retail 16:9 option, uses the supported `-res 1600 900` windowed baseline,
+and writes mouse sensitivity `0.1` in the copy. A controlled Level 100 launch
+reported live dimensions `1600x900` and aspect terms `0.5625`, `1.333333`, and
+`1.777778`. This demonstrates the supported Steam specimen on the tested
+machine; other resolutions, drivers, wrappers, menus, cutscenes, and
+split-screen layouts are not implied.
+
+The modern-input defect reproduced here was an internal preset disagreement:
+WinUI instructed Steam Input users to lower retail mouse sensitivity to its
+minimum while Enhanced Copy wrote `2.25`. Enhanced Copy now writes and reads
+back the retail minimum `0.1`. This proves the copied option and live global,
+not subjective mouse feel or physical-controller behavior.
+
 The patch catalog's original/replacement bytes and copied-target rules are
 automatically checked. A byte-correct patch is not automatically proof of its
 visible or gameplay effect. Windowed startup, expanded mode enumeration, card-ID

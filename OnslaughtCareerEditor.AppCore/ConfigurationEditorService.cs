@@ -122,6 +122,7 @@ namespace Onslaught___Career_Editor
         public uint? ControllerConfigP1Override { get; init; }
         public uint? ControllerConfigP2Override { get; init; }
         public float? MouseSensitivityOverride { get; init; }
+        public uint? ScreenShapeOverride { get; init; }
         public string? CopyOptionsFromPath { get; init; }
         public bool CopyOptionsEntries { get; init; }
         public bool CopyOptionsTail { get; init; }
@@ -225,7 +226,7 @@ namespace Onslaught___Career_Editor
                 request.InvertFlightP1Override.HasValue || request.InvertFlightP2Override.HasValue ||
                 request.VibrationP1Override.HasValue || request.VibrationP2Override.HasValue ||
                 request.ControllerConfigP1Override.HasValue || request.ControllerConfigP2Override.HasValue ||
-                request.MouseSensitivityOverride.HasValue)
+                request.MouseSensitivityOverride.HasValue || request.ScreenShapeOverride.HasValue)
             {
                 parts.Add("settings overrides");
             }
@@ -267,6 +268,7 @@ namespace Onslaught___Career_Editor
                    request.ControllerConfigP1Override.HasValue ||
                    request.ControllerConfigP2Override.HasValue ||
                    request.MouseSensitivityOverride.HasValue ||
+                   request.ScreenShapeOverride.HasValue ||
                    request.CopyOptionsEntries ||
                    request.CopyOptionsTail ||
                    CountKeybindOverrideRows(request.KeybindRows) > 0;
@@ -352,6 +354,7 @@ namespace Onslaught___Career_Editor
                 ControllerConfigP1Override = request.ControllerConfigP1Override,
                 ControllerConfigP2Override = request.ControllerConfigP2Override,
                 OptionsMouseSensitivityOverride = request.MouseSensitivityOverride,
+                OptionsScreenShapeOverride = request.ScreenShapeOverride,
                 CopyOptionsFromPath = NormalizeOptionalPath(request.CopyOptionsFromPath),
                 CopyOptionsEntries = request.CopyOptionsEntries,
                 CopyOptionsTail = request.CopyOptionsTail,

@@ -297,6 +297,7 @@ namespace Onslaught___Career_Editor
         public uint? ControllerConfigP1Override { get; set; } = null;
         public uint? ControllerConfigP2Override { get; set; } = null;
         public float? OptionsMouseSensitivityOverride { get; set; } = null;
+        public uint? OptionsScreenShapeOverride { get; set; } = null;
 
         // Options entries + tail snapshot (control bindings + global options snapshot).
         // NOTE (Steam build): Loading a career .bes save (CCareer::Load(flag=1)) does NOT apply these
@@ -714,16 +715,27 @@ namespace Onslaught___Career_Editor
 
         private void ApplyOptionsTailOverrides(byte[] buf)
         {
-            if (!OptionsMouseSensitivityOverride.HasValue)
+            if (!OptionsMouseSensitivityOverride.HasValue && !OptionsScreenShapeOverride.HasValue)
                 return;
 
-            float v = OptionsMouseSensitivityOverride.Value;
-            if (float.IsNaN(v) || float.IsInfinity(v))
-                throw new ArgumentException("Mouse sensitivity must be a finite float.");
-
-            v = Math.Clamp(v, 0.1f, 5.0f);
             var (_entryCount, tailStart, _entriesSize, _tailSize) = ComputeOptionsLayout(buf.Length);
-            WriteFloat32(buf, tailStart + 0x04, v);
+            if (OptionsMouseSensitivityOverride.HasValue)
+            {
+                float v = OptionsMouseSensitivityOverride.Value;
+                if (float.IsNaN(v) || float.IsInfinity(v))
+                    throw new ArgumentException("Mouse sensitivity must be a finite float.");
+
+                v = Math.Clamp(v, 0.1f, 5.0f);
+                WriteFloat32(buf, tailStart + 0x04, v);
+            }
+
+            if (OptionsScreenShapeOverride.HasValue)
+            {
+                uint screenShape = OptionsScreenShapeOverride.Value;
+                if (screenShape > 2)
+                    throw new ArgumentException("Screen shape must be 0 (4:3), 1 (16:9), or 2 (1:1).");
+                WriteUInt32(buf, tailStart + 0x20, screenShape);
+            }
         }
 
         private static readonly Dictionary<string, (uint Vk, uint Scan)> KEY_NAME_MAP = new(StringComparer.OrdinalIgnoreCase)

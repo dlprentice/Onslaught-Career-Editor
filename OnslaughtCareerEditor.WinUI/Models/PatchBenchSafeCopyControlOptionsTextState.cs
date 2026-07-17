@@ -7,5 +7,6 @@ namespace OnslaughtCareerEditor.WinUI.Models
         bool InvertWalkerP1,
         bool InvertWalkerP2,
         bool InvertFlightP1,
-        bool InvertFlightP2);
+        bool InvertFlightP2,
+        uint ScreenShape);
 }

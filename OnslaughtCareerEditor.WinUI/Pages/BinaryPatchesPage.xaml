@@ -157,10 +157,10 @@
                                 <TextBlock Text="Choose player mods"
                                            FontSize="16"
                                            FontWeight="SemiBold" />
-                                  <TextBlock Text="Every safe game copy includes two required compatibility changes: allow non-4:3 display-mode candidates and prefer windowed startup."
+                                  <TextBlock Text="Every safe game copy includes the complete 28-region 16:9 aspect/FOV correction, the retail 16:9 option, and the tested 1600x900 windowed launch baseline."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="This does not prove widescreen field-of-view parity or guarantee windowed behavior on every PC. The installed game stays unchanged, and you can recover by creating a fresh safe copy."
+                                <TextBlock Text="Copied Level 100 gameplay was verified at 1600x900: live dimensions were 1600x900 and the runtime aspect term was 1.777778. Other resolutions, machines, and drivers are not guaranteed. The installed game stays unchanged."
                                             Margin="0,6,0,0"
                                             Style="{StaticResource SectionBodyTextStyle}" />
                                 <TextBlock Text="Add only the player mods you want below. Open Lab only for legacy recipes, experiments, and diagnostics."
@@ -177,7 +177,7 @@
                                     <TextBlock Text="Safe compatibility and recovery"
                                                FontSize="14"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Compatibility Copy is the exact required base: allow non-4:3 display-mode candidates and prefer windowed startup. Optional mods are not part of this base."
+                                    <TextBlock Text="Enhanced Copy is the exact required base: aspect-correct 1600x900 gameplay, windowed startup, and minimum mouse sensitivity for modern mouse aiming. Optional mods are not part of this base."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <Grid ColumnSpacing="8">
                                         <Grid.ColumnDefinitions>
@@ -186,20 +186,20 @@
                                         </Grid.ColumnDefinitions>
                                         <Button x:Name="PatchBenchWindowedPresetButton"
                                                 AutomationProperties.AutomationId="PatchBenchWindowedPresetButton"
-                                                AutomationProperties.Name="Select Compatibility Copy profile"
+                                                AutomationProperties.Name="Select Enhanced Copy profile"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="56"
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="WindowedPresetButton_Click">
-                                            <TextBlock Text="Reset to Compatibility Copy"
+                                            <TextBlock Text="Reset to Enhanced Copy"
                                                        TextWrapping="WrapWholeWords"
                                                        TextAlignment="Center"
                                                        HorizontalAlignment="Center" />
                                         </Button>
                                         <Button x:Name="PatchBenchClearSelectionButton"
                                                 AutomationProperties.AutomationId="PatchBenchClearSelectionButton"
-                                                AutomationProperties.Name="Clear optional mod rows; safe copies still include required compatibility"
+                                                AutomationProperties.Name="Clear optional mod rows; safe copies still include Enhanced Copy"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
                                                 MinHeight="56"
@@ -219,7 +219,7 @@
                                         <TextBlock x:Name="PatchBenchSelectedProfileStatus"
                                                    AutomationProperties.AutomationId="PatchBenchSelectedProfileStatus"
                                                    AutomationProperties.Name="Selected safe-copy profile status"
-                                                   Text="Selected profile: Compatibility Copy. Required lowest-change base."
+                                                   Text="Selected profile: Enhanced Copy. Required 16:9 gameplay base."
                                                    TextWrapping="WrapWholeWords" />
                                     </Border>
                                     <TextBlock Text="Optional player mods"
@@ -307,7 +307,7 @@
                             <TextBlock Text="Safe game copy"
                                        FontSize="16"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Create a launchable app-owned game copy. You do not need the advanced BEA.exe-only copy first. This always adds the required windowed compatibility patches; selected mods are added too. Savegames are optional, and the Steam/game install is unchanged."
+                            <TextBlock Text="Create a launchable app-owned game copy. The app applies the verified 16:9 gameplay correction, writes the copied 16:9 display option, and launches the tested 1600x900 windowed baseline; selected mods are added too. Savegames are optional, and the installed game is unchanged."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <TextBlock x:Name="PatchBenchSafeCopySourceStatus"
                                        AutomationProperties.AutomationId="PatchBenchSafeCopySourceStatus"
@@ -956,6 +956,7 @@
                                               AutomationProperties.AutomationId="PatchBenchMouseSensitivityPresetComboBox"
                                               AutomationProperties.Name="Mouse-look sensitivity preset for safe copy"
                                               SelectionChanged="LaunchOptionComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Modern mouse aim (minimum): 0.10" />
                                         <ComboBoxItem Content="Balanced: 1.50" />
                                         <ComboBoxItem Content="Sharper: 2.25" />
                                         <ComboBoxItem Content="Fast: 3.00" />

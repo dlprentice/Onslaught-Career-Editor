@@ -17,8 +17,8 @@ public sealed class PatchBenchNarrowActionLabelsTests
 
         Assert.Multiple(() =>
         {
-            AssertButton(resetButton, "Reset to Compatibility Copy", "Select Compatibility Copy profile", "WindowedPresetButton_Click");
-            AssertButton(clearButton, "Clear optional mods", "Clear optional mod rows; safe copies still include required compatibility", "ClearSelectionButton_Click");
+            AssertButton(resetButton, "Reset to Enhanced Copy", "Select Enhanced Copy profile", "WindowedPresetButton_Click");
+            AssertButton(clearButton, "Clear optional mods", "Clear optional mod rows; safe copies still include Enhanced Copy", "ClearSelectionButton_Click");
             Assert.That((string?)resetButton.Attribute("MinHeight"), Is.EqualTo("56"));
             Assert.That((string?)clearButton.Attribute("MinHeight"), Is.EqualTo("56"));
         });

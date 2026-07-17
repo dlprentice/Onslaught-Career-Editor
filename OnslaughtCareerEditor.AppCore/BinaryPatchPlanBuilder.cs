@@ -29,7 +29,8 @@ namespace Onslaught___Career_Editor
         string ProofStatus,
         int? DefaultControllerConfiguration = null,
         bool DefaultPersistControllerConfigInOptions = false,
-        bool DefaultSharpenMouseLook = false,
+        float? DefaultMouseLookSensitivity = null,
+        uint? DefaultScreenShape = null,
         IReadOnlyList<SafeCopyProfileModule> Modules = null!);
 
     internal sealed record SafeCopyProfileCatalogLoadResult(
@@ -101,26 +102,26 @@ namespace Onslaught___Career_Editor
         private static readonly SafeCopyProfileModule[] s_compatibilityModules =
         {
             new(
-                "windowed-compatibility",
-                "Windowed compatibility",
-                "Executable patch rows",
-                "Byte-verified copied-executable compatibility baseline.",
-                "Allows the safe copy to prefer windowed startup and accept non-4:3 display-mode candidates; does not prove aspect-ratio gameplay parity.",
+                "enhanced-widescreen",
+                "16:9 gameplay and modern mouse aiming",
+                "Copied executable and default options",
+                "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
+                "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
                 s_windowedCompatibilityKeys,
-                Array.Empty<string>(),
-                Array.Empty<string>(),
-                "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+                new[] { "-res", "1600", "900" },
+                new[] { "screenShape=1", "mouseLookSensitivity=0.1" },
+                "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
                 new[]
                 {
                     "patches/README.md",
-                    "reverse-engineering/binary-analysis/executable-analysis.md",
-                    "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
                     "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
+                    "reverse-engineering/binary-analysis/widescreen-diff-regions-28.tsv",
+                    "reverse-engineering/binary-analysis/widescreen-regions-8-11-validation.md",
                 },
                 new[]
                 {
-                    "No widescreen field-of-view parity.",
-                    "No all-machine windowing guarantee.",
+                    "No all-resolution or all-machine compatibility guarantee.",
+                    "No controller deadzone or look-curve patch.",
                     "No installed-game mutation.",
                 }),
         };
@@ -229,11 +230,11 @@ namespace Onslaught___Career_Editor
                         "copied-options-control-defaults",
                         "Copied control defaults",
                         "Copied defaultoptions.bea edits",
-                        "Manifest/read-back proof only; runtime control feel remains unproven.",
-                        "Persists controller config 1 and a test mouse-look sensitivity in the copied defaultoptions.bea only; does not prove improved feel, deadzones, look curves, camera behavior, or movement changes.",
+                        "Copied-options read-back plus copied-runtime sensitivity value 0.1.",
+                        "Persists controller config 1, retail 16:9 screen shape, and minimum mouse sensitivity in the copied defaultoptions.bea; it does not alter controller deadzones or look curves.",
                         Array.Empty<string>(),
                         Array.Empty<string>(),
-                        new[] { "controllerConfiguration=1", "mouseLookSensitivity=2.25" },
+                        new[] { "controllerConfiguration=1", "screenShape=1", "mouseLookSensitivity=0.1" },
                         "Restore the copied defaultoptions.bea backup or recreate the safe copy; the installed defaultoptions.bea is never rewritten.",
                         new[]
                         {
@@ -242,7 +243,6 @@ namespace Onslaught___Career_Editor
                         },
                         new[]
                         {
-                            "No improved control-feel proof.",
                             "No deadzone or look-curve byte patch.",
                             "No physical gamepad runtime proof.",
                         }),
@@ -283,19 +283,23 @@ namespace Onslaught___Career_Editor
         {
             new(
                 CompatibilityProfileId,
-                "Compatibility Copy",
-                "Windowed startup and non-4:3 display-mode acceptance only.",
+                "Enhanced Copy",
+                "Aspect-correct 1600x900 gameplay, windowed startup, and a modern mouse-aim default in an app-owned copy.",
                 s_windowedCompatibilityKeys,
                 IsSelectable: true,
-                "Byte-verified safe-copy compatibility baseline.",
+                "Copied Level 100 runtime proof at 1600x900 on the supported Steam specimen.",
+                DefaultMouseLookSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
+                DefaultScreenShape: 1,
                 Modules: s_compatibilityModules),
             new(
                 RecommendedProfileId,
                 "Windowed + Graphics Defaults",
-                "Compatibility Copy plus the graphics-default rows that have copied-game launch proof.",
+                "Enhanced Copy plus the graphics-default rows that have copied-game launch proof.",
                 s_recommendedSafeCopyKeys,
                 IsSelectable: true,
                 "Byte-verified rows with copied-game launch proof; visible graphics parity remains unproven.",
+                DefaultMouseLookSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
+                DefaultScreenShape: 1,
                 Modules: s_recommendedModules),
             new(
                 EnhancedPreviewProfileId,
@@ -306,7 +310,8 @@ namespace Onslaught___Career_Editor
                 "Proof-bounded preset over reversible rows with accepted combined safe-copy launch/capture/source-safety proof; not a full overhaul, online mode, control-feel fix, or gameplay parity claim.",
                 DefaultControllerConfiguration: 1,
                 DefaultPersistControllerConfigInOptions: true,
-                DefaultSharpenMouseLook: true,
+                DefaultMouseLookSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
+                DefaultScreenShape: 1,
                 Modules: s_enhancedPreviewModules),
             new(
                 DebugCameraPreviewProfileId,
@@ -315,6 +320,8 @@ namespace Onslaught___Career_Editor
                 s_debugCameraPreviewKeys,
                 IsSelectable: true,
                 "Experimental copied-runtime CDB proofs for the toggle and one Q-forward movement path; not a full free-camera mode, gameplay safety proof, or camera-control overhaul.",
+                DefaultMouseLookSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
+                DefaultScreenShape: 1,
                 Modules: s_debugCameraPreviewModules),
             new(
                 CustomProfileId,
@@ -656,7 +663,8 @@ namespace Onslaught___Career_Editor
             IReadOnlyList<string> patchKeys = ParseStringArray(profileEl, "patch_keys");
             int? defaultControllerConfiguration = TryGetNullableInt32(profileEl, "default_controller_configuration");
             bool defaultPersistControllerConfig = TryGetOptionalBoolean(profileEl, "default_persist_controller_config_in_options");
-            bool defaultSharpenMouseLook = TryGetOptionalBoolean(profileEl, "default_sharpen_mouse_look");
+            float? defaultMouseLookSensitivity = TryGetNullableSingle(profileEl, "default_mouse_look_sensitivity");
+            uint? defaultScreenShape = TryGetNullableUInt32(profileEl, "default_screen_shape");
             IReadOnlyList<SafeCopyProfileModule> modules = ParseModules(profileEl);
             if (!string.Equals(id, CustomProfileId, StringComparison.OrdinalIgnoreCase) && modules.Count == 0)
                 return false;
@@ -670,7 +678,8 @@ namespace Onslaught___Career_Editor
                 proofStatus,
                 defaultControllerConfiguration,
                 defaultPersistControllerConfig,
-                defaultSharpenMouseLook,
+                defaultMouseLookSensitivity,
+                defaultScreenShape,
                 modules);
             return true;
         }
@@ -821,7 +830,8 @@ namespace Onslaught___Career_Editor
                 !string.Equals(actual.ProofStatus, expected.ProofStatus, StringComparison.Ordinal) ||
                 actual.DefaultControllerConfiguration != expected.DefaultControllerConfiguration ||
                 actual.DefaultPersistControllerConfigInOptions != expected.DefaultPersistControllerConfigInOptions ||
-                actual.DefaultSharpenMouseLook != expected.DefaultSharpenMouseLook ||
+                actual.DefaultMouseLookSensitivity != expected.DefaultMouseLookSensitivity ||
+                actual.DefaultScreenShape != expected.DefaultScreenShape ||
                 !StringSequenceEquals(actual.PatchKeys, expected.PatchKeys) ||
                 actual.Modules.Count != expected.Modules.Count)
             {
@@ -929,6 +939,28 @@ namespace Onslaught___Career_Editor
             }
 
             return el.TryGetInt32(out int value) ? value : null;
+        }
+
+        private static float? TryGetNullableSingle(JsonElement parent, string propertyName)
+        {
+            if (!parent.TryGetProperty(propertyName, out JsonElement el) ||
+                el.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+
+            return el.TryGetSingle(out float value) ? value : null;
+        }
+
+        private static uint? TryGetNullableUInt32(JsonElement parent, string propertyName)
+        {
+            if (!parent.TryGetProperty(propertyName, out JsonElement el) ||
+                el.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+
+            return el.TryGetUInt32(out uint value) ? value : null;
         }
 
         private static string ComputeSha256Hex(byte[] bytes)

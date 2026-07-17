@@ -46,14 +46,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     new GameProfileControlOptionsRequest(
                         ProfileRoot: prepared.TargetGameRoot,
                         AppOwnedProfilesRoot: outputRoot,
-                        MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity,
+                        MouseSensitivityOverride: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
                         ControllerConfigP1Override: 2u,
-                        ControllerConfigP2Override: 3u));
+                        ControllerConfigP2Override: 3u,
+                        ScreenShapeOverride: 1u));
 
                 Assert.Equal(Path.Combine(prepared.TargetGameRoot, "defaultoptions.bea"), result.OptionsPath);
-                Assert.Equal(2.25f, result.MouseSensitivity, precision: 3);
+                Assert.Equal(0.1f, result.MouseSensitivity, precision: 3);
                 Assert.Equal(2u, result.ControllerConfigP1);
                 Assert.Equal(3u, result.ControllerConfigP2);
+                Assert.Equal(1u, result.ScreenShape);
                 Assert.NotEqual(result.HashBefore, result.HashAfter);
                 Assert.Contains(
                     result.ChangedRanges,
@@ -64,12 +66,15 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Contains(
                     result.ChangedRanges,
                     range => RangeIntersects(range, 0x24BA, 4));
+                Assert.Contains(
+                    result.ChangedRanges,
+                    range => RangeIntersects(range, 0x26DE, 4));
                 Assert.Single(result.Backups);
                 Assert.True(File.Exists(result.ManifestPath));
                 Assert.Equal(GameProfileControlOptionsService.ProofStatusOptionsByteMaterializedOnly, result.ProofStatus);
                 Assert.Contains(GameProfileControlOptionsService.ManifestSchemaVersion, File.ReadAllText(result.ManifestPath));
                 Assert.Contains(result.HashAfter, File.ReadAllText(result.ManifestPath));
-                Assert.Contains("does not prove runtime input feel", result.Message);
+                Assert.Contains("Runtime behavior still requires a copied-game launch check", result.Message);
                 Assert.Equal(sourceOptionsBefore, File.ReadAllBytes(sourceOptionsPath));
                 Assert.Single(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
                 _ = GameProfilePreflightService.BuildLaunchPlan(prepared.TargetGameRoot, Array.Empty<string>());

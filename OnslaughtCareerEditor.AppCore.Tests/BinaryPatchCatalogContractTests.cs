@@ -28,6 +28,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 expected with { Selectability = "hidden_companion" },
                 expected with { PresetEligibility = new[] { "other-profile" } },
                 expected with { RequiresWindowedPair = false },
+                expected with
+                {
+                    AdditionalRegions = new[]
+                    {
+                        new BinaryPatchRegion(0x220, new byte[] { 0x03 }, new byte[] { 0x91 }),
+                    },
+                },
             };
 
             foreach (BinaryPatchSpec actual in drifted)
@@ -97,6 +104,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void SelectionPolicyRejectsMutationDriftFromPinnedCatalog()
         {
             BinaryPatchSpec canonical = BinaryPatchEngine.PatchSpecs.First(spec => spec.Key == "resolution_gate");
+            Assert.Equal(28, BinaryPatchEngine.GetPatchRegions(canonical).Count);
             BinaryPatchSpec drifted = canonical with { Patched = new byte[] { 0x01 } };
 
             var result = BinaryPatchEngine.ValidatePatchSelectionPolicy(new[] { drifted });
@@ -111,6 +119,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             BinaryPatchSpec spec = MakeSpec() with
             {
                 FileOffset = 0x10,
+                AdditionalRegions = new[]
+                {
+                    new BinaryPatchRegion(0x20, new byte[] { 0x03 }, new byte[] { 0x91 }),
+                },
                 Dependencies = Array.Empty<string>(),
                 Conflicts = Array.Empty<string>(),
                 ExclusiveGroup = string.Empty,
@@ -118,9 +130,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             };
             byte[] backup = new byte[0x40];
             spec.Original.CopyTo(backup, spec.FileOffset);
+            spec.AdditionalRegions![0].Original.CopyTo(backup, spec.AdditionalRegions[0].FileOffset);
 
             byte[] patched = backup.ToArray();
             spec.Patched.CopyTo(patched, spec.FileOffset);
+            spec.AdditionalRegions[0].Patched.CopyTo(patched, spec.AdditionalRegions[0].FileOffset);
+            Assert.Equal(BinaryPatchState.Patched, BinaryPatchEngine.GetPatchState(patched, spec));
             Assert.True(BinaryPatchEngine.CurrentBytesContainOnlyKnownCatalogTransitions(patched, backup, new[] { spec }));
 
             byte[] unrelatedDrift = patched.ToArray();
@@ -129,6 +144,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             byte[] partialPatch = backup.ToArray();
             partialPatch[spec.FileOffset] = spec.Patched[0];
+            Assert.Equal(BinaryPatchState.Mismatch, BinaryPatchEngine.GetPatchState(partialPatch, spec));
             Assert.False(BinaryPatchEngine.CurrentBytesContainOnlyKnownCatalogTransitions(partialPatch, backup, new[] { spec }));
         }
 

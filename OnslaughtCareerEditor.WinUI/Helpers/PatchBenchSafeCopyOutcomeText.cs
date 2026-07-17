@@ -183,7 +183,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             return controlOptions is null
                 ? "Control options: no safe-copy defaultoptions.bea control preset applied."
-                : $"Control options: safe-copy mouse sensitivity {controlOptions.MouseSensitivity:0.###}; controller config P1={controlOptions.ControllerConfigP1}, P2={controlOptions.ControllerConfigP2}; invert walker Y P1/P2={FormatBool(controlOptions.InvertWalkerP1)}/{FormatBool(controlOptions.InvertWalkerP2)}; invert flight Y P1/P2={FormatBool(controlOptions.InvertFlightP1)}/{FormatBool(controlOptions.InvertFlightP2)}; runtime feel still needs live testing.";
+                : $"Control options: safe-copy screen shape {controlOptions.ScreenShape} (1=16:9); mouse sensitivity {controlOptions.MouseSensitivity:0.###}; controller config P1={controlOptions.ControllerConfigP1}, P2={controlOptions.ControllerConfigP2}; invert walker Y P1/P2={FormatBool(controlOptions.InvertWalkerP1)}/{FormatBool(controlOptions.InvertWalkerP2)}; invert flight Y P1/P2={FormatBool(controlOptions.InvertFlightP1)}/{FormatBool(controlOptions.InvertFlightP2)}; runtime behavior still needs this copy's Play check.";
         }
 
         private static string BuildMusicSwapSummary(PatchBenchSafeCopyMusicSwapTextState? musicSwap)

@@ -1,11 +1,11 @@
 {
-  "catalog_version": "2.1",
-  "last_reviewed_at": "2026-07-12",
+  "catalog_version": "2.2",
+  "last_reviewed_at": "2026-07-17",
   "binary": "BEA.exe",
   "patches": [
     {
       "id": "resolution_gate",
-      "title": "Let non-4:3 display modes pass enumeration",
+      "title": "Correct 16:9 gameplay aspect and field of view",
       "track": "stable",
       "target_binary_hashes": [
         "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -14,20 +14,51 @@
       "file_offset": "0x129696",
       "expected_original_bytes": "CC",
       "patched_bytes": "00",
-      "purpose": "Neutralize one non-4:3 mode rejection gate in display mode enumeration.",
+      "additional_regions": [
+        { "file_offset": "0x01B087", "expected_original_bytes": "C4 8B 5D", "patched_bytes": "F0 4F 9D" },
+        { "file_offset": "0x0506CE", "expected_original_bytes": "68 00 00 40 3F", "patched_bytes": "E9 5F 78 18 00" },
+        { "file_offset": "0x12B156", "expected_original_bytes": "D9 05 F0 4A 5E 00", "patched_bytes": "E9 07 CD 0A 00 90" },
+        { "file_offset": "0x12B200", "expected_original_bytes": "E8 3B 65 F1 FF", "patched_bytes": "E9 98 CD 0A 00" },
+        { "file_offset": "0x12B983", "expected_original_bytes": "F0 4A 5E", "patched_bytes": "F8 4F 9D" },
+        { "file_offset": "0x12C790", "expected_original_bytes": "F0 4A 5E", "patched_bytes": "F8 4F 9D" },
+        { "file_offset": "0x13E32F", "expected_original_bytes": "8B 11 FF 52 10", "patched_bytes": "E9 9D 9C 09 00" },
+        { "file_offset": "0x13F3B7", "expected_original_bytes": "D9 05 40 8A 88 00", "patched_bytes": "E9 99 45 06 00 90" },
+        { "file_offset": "0x141B59", "expected_original_bytes": "D9 84 24 C4", "patched_bytes": "E9 83 64 09" },
+        { "file_offset": "0x141B5E", "expected_original_bytes": "00 00", "patched_bytes": "90 90" },
+        { "file_offset": "0x1A3955", "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC", "patched_bytes": "D9 05 98 B3 5D 00 D8 35 F8 4F 9D 00 E9 57 BA F9 FF" },
+        { "file_offset": "0x1D7DB5", "expected_original_bytes": "CC CC CC CC CC CC CC CC CC", "patched_bytes": "D8 84 E4 C4 00 00 00 EB 28" },
+        { "file_offset": "0x1D7DE6", "expected_original_bytes": "CC CC CC CC CC", "patched_bytes": "E9 75 9D F6 FF" },
+        { "file_offset": "0x1D7E42", "expected_original_bytes": "CC CC CC CC CC", "patched_bytes": "E9 63 33 F5 FF" },
+        { "file_offset": "0x1D7E62", "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC CC CC CC", "patched_bytes": "DB 85 58 2E 03 00 DA B5 5C 2E 03 00 EB D2" },
+        { "file_offset": "0x1D7F32", "expected_original_bytes": "CC CC CC CC CC CC CC CC CC CC CC", "patched_bytes": "FF 35 F0 4F 9D 00 E9 96 87 E7 FF" },
+        { "file_offset": "0x1D7F9D", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "DB 85 5C 2E 03" },
+        { "file_offset": "0x1D7FA3", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "DA B5 58 2E 03" },
+        { "file_offset": "0x1D7FA9", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "D9 15 F0 4F 9D" },
+        { "file_offset": "0x1D7FAF", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "D8 3D C4 8B 5D" },
+        { "file_offset": "0x1D7FB5", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "D9 15 F4 4F 9D" },
+        { "file_offset": "0x1D7FBB", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "D8 35 C4 8B 5D" },
+        { "file_offset": "0x1D7FC1", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "D9 1D F8 4F 9D" },
+        { "file_offset": "0x1D7FC7", "expected_original_bytes": "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", "patched_bytes": "E8 74 97 E6 FF E9 34 32 F5 FF 8B 11 FF 52 10 D8 0D F4 4F 9D" },
+        { "file_offset": "0x1D7FDC", "expected_original_bytes": "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", "patched_bytes": "E9 53 63 F6 FF D9 44 E4 10 D9 C0 D8 35 F4 4F 9D" },
+        { "file_offset": "0x1D7FED", "expected_original_bytes": "00 00 00 00 00 00 00 00 00 00 00", "patched_bytes": "D9 54 E4 10 DE E9 D8 0D EC 85 5D" },
+        { "file_offset": "0x1D7FF9", "expected_original_bytes": "00 00 00 00 00", "patched_bytes": "E9 B7 FD FF FF" }
+      ],
+      "purpose": "Install the verified 28-region widescreen hook set: accept non-4:3 modes, derive the runtime aspect ratio, and correct gameplay viewport and field-of-view terms.",
       "preconditions": [
         "Target bytes at offset match expected original or already-patched bytes.",
-        "Patch is applied to BEA.exe-compatible retail layout."
+        "All 28 target regions match the clean Steam retail bytes or the complete patched state."
       ],
       "side_effects": [
-        "Enables non-4:3 candidates in mode enumeration path.",
+        "Enables non-4:3 candidates and applies runtime viewport/FOV correction for 16:9 gameplay.",
         "Does not by itself force startup window mode."
       ],
       "rollback_strategy": "Restore the copied BEA.exe from its verified full-file BEA.exe.original.backup snapshot; do not restore individual patch rows.",
-      "verification_probe": "Verify selected patch state and ensure offset reports ready/already patched.",
+      "verification_probe": "Verify all 28 exact-byte regions, launch copied Level 100 at 1600x900, and observe dimensions 1600x900 plus aspect scratch values 0.5625, 1.333333, and 1.777778.",
       "confidence": "high",
       "evidence_refs": [
-        "reverse-engineering/binary-analysis/windowed-mode-analysis.md",
+        "reverse-engineering/binary-analysis/widescreen-diff-regions-28.tsv",
+        "reverse-engineering/binary-analysis/widescreen-regions-8-11-validation.md",
+        "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
         "patches/README.md",
         "reverse-engineering/binary-analysis/retail-specimen-baseline.md"
       ],
@@ -35,7 +66,7 @@
       "dependencies": [],
       "conflicts": [],
       "exclusive_group": "",
-      "proof_level": "byte_verified_static_and_copied_launch_pair",
+      "proof_level": "copied_gameplay_runtime_16_9",
       "selectability": "profile_visible",
       "preset_eligibility": [
         "compatibility-copy",

@@ -65,9 +65,12 @@ public class BinaryPatchRegressionTests
             if (spec.Optional && !includeOptional)
                 continue;
 
-            int end = spec.FileOffset + spec.Original.Length;
-            if (end > maxEnd)
-                maxEnd = end;
+            foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+            {
+                int end = region.FileOffset + region.Original.Length;
+                if (end > maxEnd)
+                    maxEnd = end;
+            }
         }
 
         int size = fileSize ?? maxEnd + 0x100;
@@ -78,7 +81,10 @@ public class BinaryPatchRegressionTests
             if (spec.Optional && !includeOptional)
                 continue;
 
-            spec.Original.CopyTo(data, spec.FileOffset);
+            foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+            {
+                region.Original.CopyTo(data, region.FileOffset);
+            }
         }
 
         File.WriteAllBytes(exePath, data);
@@ -1353,14 +1359,15 @@ public class BinaryPatchRegressionTests
                 BinaryPatchPlanBuilder.CustomProfileId,
             }));
 
-        Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DisplayName, Is.EqualTo("Compatibility Copy"));
+        Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DisplayName, Is.EqualTo("Enhanced Copy"));
         Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].IsSelectable, Is.True);
         Assert.That(
             BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId),
             Is.EqualTo(new[] { "resolution_gate", "force_windowed" }));
         Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DefaultControllerConfiguration, Is.Null);
         Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DefaultPersistControllerConfigInOptions, Is.False);
-        Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DefaultSharpenMouseLook, Is.False);
+        Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DefaultMouseLookSensitivity, Is.EqualTo(0.1f));
+        Assert.That(presets[BinaryPatchPlanBuilder.CompatibilityProfileId].DefaultScreenShape, Is.EqualTo(1u));
 
         Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DisplayName, Is.EqualTo("Windowed + Graphics Defaults"));
         Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].IsSelectable, Is.True);
@@ -1377,14 +1384,16 @@ public class BinaryPatchRegressionTests
         Assert.That(BinaryPatchPlanBuilder.ValidateVisibleSelection(recommendedKeys), Is.Null);
         Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DefaultControllerConfiguration, Is.Null);
         Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DefaultPersistControllerConfigInOptions, Is.False);
-        Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DefaultSharpenMouseLook, Is.False);
+        Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DefaultMouseLookSensitivity, Is.EqualTo(0.1f));
+        Assert.That(presets[BinaryPatchPlanBuilder.RecommendedProfileId].DefaultScreenShape, Is.EqualTo(1u));
 
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DisplayName, Is.EqualTo("Custom"));
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].IsSelectable, Is.True);
         Assert.That(BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CustomProfileId), Is.Empty);
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultControllerConfiguration, Is.Null);
         Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultPersistControllerConfigInOptions, Is.False);
-        Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultSharpenMouseLook, Is.False);
+        Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultMouseLookSensitivity, Is.Null);
+        Assert.That(presets[BinaryPatchPlanBuilder.CustomProfileId].DefaultScreenShape, Is.Null);
 
         foreach (SafeCopyProfilePreset preset in presets.Values.Where(preset =>
             preset.IsSelectable &&
@@ -1405,7 +1414,8 @@ public class BinaryPatchRegressionTests
         Assert.That(enhancedPreset.IsSelectable, Is.True);
         Assert.That(enhancedPreset.DefaultControllerConfiguration, Is.EqualTo(1));
         Assert.That(enhancedPreset.DefaultPersistControllerConfigInOptions, Is.True);
-        Assert.That(enhancedPreset.DefaultSharpenMouseLook, Is.True);
+        Assert.That(enhancedPreset.DefaultMouseLookSensitivity, Is.EqualTo(0.1f));
+        Assert.That(enhancedPreset.DefaultScreenShape, Is.EqualTo(1u));
         string[] enhancedKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.EnhancedPreviewProfileId).ToArray();
         Assert.That(
             enhancedKeys,
@@ -1431,7 +1441,7 @@ public class BinaryPatchRegressionTests
             enhancedPreset.Modules.Select(module => module.Id),
             Is.EqualTo(new[]
             {
-                "windowed-compatibility",
+                "enhanced-widescreen",
                 "graphics-defaults",
                 "title-marker",
                 "frontend-red-margins",
@@ -1445,11 +1455,11 @@ public class BinaryPatchRegressionTests
         Assert.That(enhancedPreset.Modules.Select(module => module.Id), Does.Not.Contain("music-swap-presets"));
         SafeCopyProfileModule copiedControlModule = enhancedPreset.Modules.Single(module => module.Id == "copied-options-control-defaults");
         Assert.That(copiedControlModule.PatchKeys, Is.Empty);
-        Assert.That(copiedControlModule.CopiedOptionsEdits, Is.EqualTo(new[] { "controllerConfiguration=1", "mouseLookSensitivity=2.25" }));
-        Assert.That(copiedControlModule.ClaimBoundary, Does.Contain("does not prove improved feel"));
+        Assert.That(copiedControlModule.CopiedOptionsEdits, Is.EqualTo(new[] { "controllerConfiguration=1", "screenShape=1", "mouseLookSensitivity=0.1" }));
+        Assert.That(copiedControlModule.ClaimBoundary, Does.Contain("does not alter controller deadzones"));
         Assert.That(copiedControlModule.RestoreStrategy, Does.Contain("copied defaultoptions.bea backup"));
         Assert.That(copiedControlModule.EvidenceRefs, Does.Contain("reverse-engineering/binary-analysis/executable-analysis.md"));
-        Assert.That(copiedControlModule.NonClaims, Does.Contain("No improved control-feel proof."));
+        Assert.That(copiedControlModule.NonClaims, Does.Contain("No deadzone or look-curve byte patch."));
 
         string[] enhancedExpandedKeys = BinaryPatchPlanBuilder.BuildSelectedSpecs(enhancedKeys)
             .Select(spec => spec.Key)
@@ -1476,7 +1486,7 @@ public class BinaryPatchRegressionTests
         Assert.That(BinaryPatchPlanBuilder.ValidateVisibleSelection(debugCameraKeys), Is.Null);
         Assert.That(debugCameraPreset.Modules.Select(module => module.Id), Is.EqualTo(new[]
         {
-            "windowed-compatibility",
+            "enhanced-widescreen",
             "debug-camera-q-forward",
         }));
         SafeCopyProfileModule debugCameraModule = debugCameraPreset.Modules.Single(module => module.Id == "debug-camera-q-forward");

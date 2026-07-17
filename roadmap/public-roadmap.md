@@ -7,11 +7,10 @@ concrete player-facing toolkit workflow.
 
 ## Near-term sequence
 
-1. Close one **Enhanced Copy** milestone for the retail game: aspect-correct
-   widescreen gameplay, one reproduced modern-input defect, and a stable
-   apply/launch/restore profile. Automation must launch only a verified copy,
-   observe the exact changed behavior, stop its owned process, and leave the
-   installed game untouched.
+1. **Enhanced Copy closed:** copied Level 100 runs at an exact 1600x900
+   windowed baseline with the 28-region aspect/FOV correction; the copy writes
+   the retail 16:9 option and minimum mouse sensitivity, and WinUI owns guarded
+   create, launch, stop, and restore boundaries without changing the install.
 2. Run one **retail modding go/no-go**: make a visible, reversible change to
    mission text, script behavior, texture, or another bounded original asset and
    automatically confirm the copied game loaded it. If retail requires an

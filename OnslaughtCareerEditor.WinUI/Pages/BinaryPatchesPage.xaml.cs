@@ -37,11 +37,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         };
         private const string LocalMultiplayerProbeLevelId = "850";
         private const string HighDetailTextureRamLimitMb = "256";
-        private const int DefaultMouseSensitivityPresetIndex = 1;
+        private const int DefaultMouseSensitivityPresetIndex = 0;
+        private const uint EnhancedCopyScreenShape = 1;
         private const int NoCreateMusicSwapPresetIndex = 0;
         private const int NoAdminLevelPresetIndex = 0;
         private static readonly float[] s_mouseLookSensitivityPresets =
         {
+            GameProfileControlOptionsService.MinimumMouseLookSensitivity,
             GameProfileControlOptionsService.BalancedMouseLookSensitivity,
             GameProfileControlOptionsService.SharperMouseLookSensitivity,
             GameProfileControlOptionsService.FastMouseLookSensitivity,
@@ -133,6 +135,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
             PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             PatchGroupsItemsControl.ItemsSource = _patchGroups;
+            ApplyProfileControlDefaults(BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId));
 
             OperationLogTextBox.Text =
                 "Windowed & Mods safely patches and plays a copy of your game. Your original Steam installation is left untouched.\n" +
@@ -363,10 +366,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchChoiceVisualState.ApplyPatchBenchChoiceStyles(
                 new[]
                 {
-                    PatchBenchChoiceVisualState.Bind(PatchBenchWindowedPresetButton, "Select Compatibility Copy profile", "Selected: Compatibility Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchWindowedPresetButton, "Select Enhanced Copy profile", "Selected: Enhanced Copy profile", string.Equals(profileId, BinaryPatchPlanBuilder.CompatibilityProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchStableDefaultsButton, "Select legacy graphics-default Lab recipe; visible improvement is unproven", "Selected: legacy graphics-default Lab recipe; visible improvement is unproven", string.Equals(profileId, BinaryPatchPlanBuilder.RecommendedProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchEnhancedPreviewProfileButton, "Select retained legacy Enhanced Profile Preview Lab recipe", "Selected: retained legacy Enhanced Profile Preview Lab recipe", string.Equals(profileId, BinaryPatchPlanBuilder.EnhancedPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include required compatibility", "Selected: no optional mod rows", SetEquals(selectedKeys, _requiredCompatibilityKeys)),
+                    PatchBenchChoiceVisualState.Bind(PatchBenchClearSelectionButton, "Clear optional mod rows; safe copies still include Enhanced Copy", "Selected: no optional mod rows", SetEquals(selectedKeys, _requiredCompatibilityKeys)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchModernGraphicsPresetButton, "Select extra graphics flag rows only", "Selected: graphics flag rows only", SetEquals(selectedKeys, _requiredCompatibilityKeys.Concat(s_modernGraphicsKeys).ToArray())),
                     PatchBenchChoiceVisualState.Bind(PatchBenchDebugCameraPreviewProfileButton, "Select experimental Debug Camera Preview Lab research recipe", "Selected: experimental Debug Camera Preview Lab research recipe", string.Equals(profileId, BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, StringComparison.OrdinalIgnoreCase)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchMenuColorRedButton, "Select red frontend margins", "Selected: red frontend margins", string.Equals(selectedMenuColorKey, "frontend_clear_screen_dark_red", StringComparison.OrdinalIgnoreCase)),
@@ -652,8 +655,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void WindowedPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectOnlyKeys(BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.CompatibilityProfileId));
-            AppStatusService.SetStatus("Windowed & Mods: Compatibility Copy profile selected");
+            ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId);
+            AppStatusService.SetStatus("Windowed & Mods: Enhanced Copy profile selected");
         }
 
         private void ModernGraphicsPresetButton_Click(object sender, RoutedEventArgs e)
@@ -664,29 +667,45 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void StableDefaultsButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectOnlyKeys(BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.RecommendedProfileId));
+            ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.RecommendedProfileId);
             AppStatusService.SetStatus("Windowed & Mods: Windowed + Graphics Defaults profile selected");
         }
 
         private void EnhancedPreviewPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.EnhancedPreviewProfileId);
-            SelectOnlyKeys(preset.PatchKeys);
-            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = preset.DefaultControllerConfiguration ?? 0;
-            PatchBenchPersistControllerConfigOption.IsChecked = preset.DefaultPersistControllerConfigInOptions;
-            PatchBenchSharpenMouseLookOption.IsChecked = preset.DefaultSharpenMouseLook;
-            PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
-            PatchBenchInvertWalkerYOption.IsChecked = false;
-            PatchBenchInvertFlightYOption.IsChecked = false;
-            RefreshCopiedProfileLaunchPlanPreview();
-            UpdateControlState();
+            ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.EnhancedPreviewProfileId);
             AppStatusService.SetStatus("Windowed & Mods: Enhanced Profile Preview profile selected");
         }
 
         private void DebugCameraPreviewPresetButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectOnlyKeys(BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.DebugCameraPreviewProfileId));
+            ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.DebugCameraPreviewProfileId);
             AppStatusService.SetStatus("Windowed & Mods: Debug Camera Preview profile selected");
+        }
+
+        private void ApplySafeCopyProfilePreset(string profileId)
+        {
+            SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(profileId);
+            SelectOnlyKeys(preset.PatchKeys);
+            ApplyProfileControlDefaults(preset);
+            RefreshCopiedProfileLaunchPlanPreview();
+            UpdateControlState();
+        }
+
+        private void ApplyProfileControlDefaults(SafeCopyProfilePreset preset)
+        {
+            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = preset.DefaultControllerConfiguration ?? 0;
+            PatchBenchPersistControllerConfigOption.IsChecked = preset.DefaultPersistControllerConfigInOptions;
+            PatchBenchSharpenMouseLookOption.IsChecked = preset.DefaultMouseLookSensitivity.HasValue;
+            int mousePresetIndex = preset.DefaultMouseLookSensitivity.HasValue
+                ? Array.FindIndex(s_mouseLookSensitivityPresets, value =>
+                    Math.Abs(value - preset.DefaultMouseLookSensitivity.Value) < 0.0001f)
+                : DefaultMouseSensitivityPresetIndex;
+            PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = mousePresetIndex >= 0
+                ? mousePresetIndex
+                : DefaultMouseSensitivityPresetIndex;
+            PatchBenchInvertWalkerYOption.IsChecked = false;
+            PatchBenchInvertFlightYOption.IsChecked = false;
         }
 
         private void ClearSelectionButton_Click(object sender, RoutedEventArgs e)
@@ -1458,24 +1477,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameProfilePrepareResult result = await Task.Run(() =>
                     GameProfilePreflightService.PrepareWindowedCompatibilityProfile(options));
                 GameProfileControlOptionsResult? controlOptionsResult = null;
-                if (mouseLookSensitivity.HasValue ||
-                    persistedControllerConfig.HasValue ||
-                    invertWalkerY ||
-                    invertFlightY)
-                {
-                    controlOptionsResult = await Task.Run(() =>
-                        GameProfileControlOptionsService.ApplyToSafeCopy(
-                            new GameProfileControlOptionsRequest(
-                                ProfileRoot: result.TargetGameRoot,
-                                AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
-                                MouseSensitivityOverride: mouseLookSensitivity,
-                                ControllerConfigP1Override: persistedControllerConfig,
-                                ControllerConfigP2Override: persistedControllerConfig,
-                                InvertWalkerP1Override: invertWalkerY ? true : null,
-                                InvertWalkerP2Override: invertWalkerY ? true : null,
-                                InvertFlightP1Override: invertFlightY ? true : null,
-                                InvertFlightP2Override: invertFlightY ? true : null)));
-                }
+                controlOptionsResult = await Task.Run(() =>
+                    GameProfileControlOptionsService.ApplyToSafeCopy(
+                        new GameProfileControlOptionsRequest(
+                            ProfileRoot: result.TargetGameRoot,
+                            AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
+                            MouseSensitivityOverride: mouseLookSensitivity,
+                            ControllerConfigP1Override: persistedControllerConfig,
+                            ControllerConfigP2Override: persistedControllerConfig,
+                            InvertWalkerP1Override: invertWalkerY ? true : null,
+                            InvertWalkerP2Override: invertWalkerY ? true : null,
+                            InvertFlightP1Override: invertFlightY ? true : null,
+                            InvertFlightP2Override: invertFlightY ? true : null,
+                            ScreenShapeOverride: EnhancedCopyScreenShape)));
 
                 GameProfileMusicReplacementResult? createMusicSwapResult = result.MusicSwapResult;
 
@@ -1586,12 +1600,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 OperationLogTextBox.Text = "Launching the safe game copy after manifest, hash, and patch verification.";
                 AppStatusService.SetStatus("Windowed & Mods: launching safe copy");
 
-                GameProfileManagedProcess launched = await Task.Run(() =>
-                    GameProfileRuntimeService.LaunchCopiedProfile(
-                        new GameProfileLaunchOptions(
-                            ProfileRoot: plan.WorkingDirectory,
-                            AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
-                            LaunchArguments: BuildSelectedLaunchArguments())));
+                GameProfileManagedProcess launched = GameProfileRuntimeService.LaunchCopiedProfile(
+                    new GameProfileLaunchOptions(
+                        ProfileRoot: plan.WorkingDirectory,
+                        AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
+                        LaunchArguments: BuildSelectedLaunchArguments()));
 
                 App.SafeGameCopyProcesses.Register(launched, GetCopiedProfileWorkspaceRoot());
                 _managedCopiedProfileProcess = launched;
@@ -1607,7 +1620,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy launch failed.";
-                OperationLogTextBox.Text = $"Could not launch safe copy: {ex.Message}";
+                string detail = string.IsNullOrWhiteSpace(ex.Message)
+                    ? $"{ex.GetType().Name} (0x{ex.HResult:X8})"
+                    : $"{ex.GetType().Name} (0x{ex.HResult:X8}): {ex.Message}";
+                OperationLogTextBox.Text = $"Could not launch safe copy: {detail}";
                 AppStatusService.SetStatus("Windowed & Mods: safe copy launch failed");
             }
             finally
@@ -2192,7 +2208,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     result.InvertWalkerP1,
                     result.InvertWalkerP2,
                     result.InvertFlightP1,
-                    result.InvertFlightP2);
+                    result.InvertFlightP2,
+                    result.ScreenShape);
         }
 
         private static PatchBenchSafeCopyMusicSwapTextState? BuildSafeCopyMusicSwapTextState(GameProfileMusicReplacementResult? result)
@@ -2354,6 +2371,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             int optionalPatchCount = GetVisibleSelectedKeys()
                 .Count(key => !_requiredCompatibilityKeys.Contains(key));
             int copiedOptionsCount =
+                1 +
                 (PatchBenchPersistControllerConfigOption.IsChecked == true ? 1 : 0) +
                 (PatchBenchSharpenMouseLookOption.IsChecked == true ? 1 : 0) +
                 (PatchBenchInvertWalkerYOption.IsChecked == true ? 1 : 0) +
@@ -2384,7 +2402,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private IReadOnlyList<string> BuildSelectedLaunchArguments()
         {
-            var args = new List<string>();
+            var args = BinaryPatchPlanBuilder
+                .GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId)
+                .Modules
+                .SelectMany(module => module.LaunchArguments)
+                .ToList();
             if (PatchBenchSkipFmvLaunchOption.IsChecked == true)
             {
                 args.Add("-skipfmv");

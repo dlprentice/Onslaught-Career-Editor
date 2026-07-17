@@ -17,7 +17,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
             Spec = spec;
             Summary = spec.Key switch
             {
-                "resolution_gate" => "Lets the safe game copy accept non-4:3 display modes. This works with Prefer windowed startup.",
+                "resolution_gate" => "Corrects the safe copy's 16:9 gameplay viewport and field of view with the verified 28-region widescreen patch.",
                 "force_windowed" => "Makes the safe game copy prefer windowed startup. This is the normal compatibility fix.",
                 "extra_graphics_default_on" => "Sets the safe copy's extra-graphics default flag when old hardware rules would leave it off.",
                 "ignore_cardid_tweak_overrides" => "Keeps the safe copy from applying old GPU-specific cardid.txt override rules.",
@@ -41,7 +41,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             ProofStatus = spec.Key switch
             {
-                "resolution_gate" => "Tested locally as part of the windowed compatibility pair. This does not prove widescreen field-of-view parity.",
+                "resolution_gate" => "Copied Level 100 runtime proof exercised the 28-region patch at 1600x900 with exact 16:9 aspect and corrected gameplay field-of-view terms.",
                 "force_windowed" => "Tested locally as part of the windowed compatibility pair. Some machines can still need the experimental fullscreen branch fallback.",
                 "extra_graphics_default_on" => "Launch tested in a safe copy. A visible graphics difference has not been proven yet.",
                 "ignore_cardid_tweak_overrides" => "Launch tested in a safe copy. A visible graphics difference has not been proven yet.",
@@ -89,7 +89,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             ExpectedVisibleResult = spec.Key switch
             {
-                "resolution_gate" => "The safe copy can keep non-4:3 display modes in the display-mode path.",
+                "resolution_gate" => "The copied game renders gameplay at 16:9 without stretching the original 4:3 camera view.",
                 "force_windowed" => "The safe copy should prefer a windowed startup path when the runtime supports it.",
                 "extra_graphics_default_on" => "The safe copy starts with the old extra-graphics feature gate defaulted on.",
                 "ignore_cardid_tweak_overrides" => "The safe copy ignores old cardid.txt GPU override rules and uses executable defaults.",
@@ -113,7 +113,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             VerifiedProof = spec.Key switch
             {
-                "resolution_gate" => "Byte verification plus safe-copy launch/capture/stop smoke with unchanged source hashes.",
+                "resolution_gate" => "All 28 expected-byte regions were verified, then a copied Level 100 runtime populated the 16:9 aspect and field-of-view correction values; installed-source hashes stayed unchanged.",
                 "force_windowed" => "Byte verification plus safe-copy launch/capture/stop smoke with unchanged source hashes.",
                 "extra_graphics_default_on" => "Byte verification plus safe-copy launch/capture/stop smoke with the modern graphics rows applied.",
                 "ignore_cardid_tweak_overrides" => "Byte verification plus safe-copy launch/capture/stop smoke with the modern graphics rows applied.",
@@ -137,7 +137,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
             };
             StillUnproven = spec.Key switch
             {
-                "resolution_gate" => "Field-of-view parity, aspect-ratio gameplay parity, and every display setup.",
+                "resolution_gate" => "Every resolution, monitor, wrapper, cutscene, menu, and split-screen layout.",
                 "force_windowed" => "Staying windowed on every machine and wrapper setup.",
                 "extra_graphics_default_on" => "Specific visual quality changes and rendering parity.",
                 "ignore_cardid_tweak_overrides" => "Specific visual quality changes and rendering parity.",
@@ -207,7 +207,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
 
         public string DisplayName => Spec.Key switch
         {
-            "resolution_gate" => "Allow non-4:3 display modes",
+            "resolution_gate" => "Correct 16:9 gameplay view",
             "force_windowed" => "Prefer windowed startup",
             "extra_graphics_default_on" => "Set extra graphics default",
             "ignore_cardid_tweak_overrides" => "Ignore old GPU override rules",

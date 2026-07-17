@@ -44,7 +44,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 ProfilePresetProofStatus: preset.ProofStatus,
                 ProfileDefaultControllerConfiguration: preset.DefaultControllerConfiguration,
                 ProfileDefaultPersistControllerConfigInOptions: preset.DefaultPersistControllerConfigInOptions,
-                ProfileDefaultSharpenMouseLook: preset.DefaultSharpenMouseLook,
+                ProfileDefaultMouseLookSensitivity: preset.DefaultMouseLookSensitivity,
+                ProfileDefaultScreenShape: preset.DefaultScreenShape,
                 ProfilePresetModules: preset.Modules,
                 MusicSwapResult: null,
                 ManifestPath: @"C:\Target\onslaught-profile-manifest.json");
@@ -59,7 +60,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains(receipt.Lines, line => line.Label == "Safe copy folder" && line.Value == "safe-game-copy-test");
             Assert.Contains(receipt.Lines, line => line.Label == "Launch modifiers" && line.Value.Contains("-level 850", StringComparison.Ordinal));
             Assert.Contains(receipt.Lines, line => line.Label == "Savegames" && line.Value.Contains("copied into this safe copy only", StringComparison.Ordinal));
-            Assert.Contains(receipt.IncludedChanges, change => change.Contains("Windowed compatibility", StringComparison.Ordinal));
+            Assert.Contains(receipt.IncludedChanges, change => change.Contains("16:9 gameplay", StringComparison.Ordinal));
             Assert.Contains(receipt.IncludedChanges, change => change.Contains("Red frontend margins", StringComparison.Ordinal));
             Assert.DoesNotContain(receipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
             Assert.Contains(receipt.IncludedChanges, change => change.Contains("no control-options manifest was written", StringComparison.Ordinal));
@@ -109,19 +110,21 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 ProfilePresetProofStatus: preset.ProofStatus,
                 ProfileDefaultControllerConfiguration: preset.DefaultControllerConfiguration,
                 ProfileDefaultPersistControllerConfigInOptions: preset.DefaultPersistControllerConfigInOptions,
-                ProfileDefaultSharpenMouseLook: preset.DefaultSharpenMouseLook,
+                ProfileDefaultMouseLookSensitivity: preset.DefaultMouseLookSensitivity,
+                ProfileDefaultScreenShape: preset.DefaultScreenShape,
                 ProfilePresetModules: preset.Modules,
                 MusicSwapResult: null,
                 ManifestPath: @"C:\Target\onslaught-profile-manifest.json");
             var matchingControls = new GameProfileControlOptionsResult(
                 OptionsPath: @"X:\AppOwnedProfiles\safe-game-copy-test\defaultoptions.bea",
-                MouseSensitivity: GameProfileControlOptionsService.SharperMouseLookSensitivity,
+                MouseSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
                 ControllerConfigP1: 1,
                 ControllerConfigP2: 1,
                 InvertWalkerP1: false,
                 InvertWalkerP2: false,
                 InvertFlightP1: false,
                 InvertFlightP2: false,
+                ScreenShape: 1,
                 HashBefore: new string('a', 64),
                 HashAfter: new string('b', 64),
                 ChangedRanges: Array.Empty<GameProfileControlOptionsChangeRange>(),
@@ -194,7 +197,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 ProfilePresetProofStatus: preset.ProofStatus,
                 ProfileDefaultControllerConfiguration: preset.DefaultControllerConfiguration,
                 ProfileDefaultPersistControllerConfigInOptions: preset.DefaultPersistControllerConfigInOptions,
-                ProfileDefaultSharpenMouseLook: preset.DefaultSharpenMouseLook,
+                ProfileDefaultMouseLookSensitivity: preset.DefaultMouseLookSensitivity,
+                ProfileDefaultScreenShape: preset.DefaultScreenShape,
                 ProfilePresetModules: preset.Modules,
                 MusicSwapResult: musicSwap,
                 ManifestPath: @"X:\Target\onslaught-profile-manifest.json");
@@ -487,11 +491,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Contains("Proof-bounded", result.ProfilePresetProofStatus);
                 Assert.Equal(1, result.ProfileDefaultControllerConfiguration);
                 Assert.True(result.ProfileDefaultPersistControllerConfigInOptions);
-                Assert.True(result.ProfileDefaultSharpenMouseLook);
+                Assert.Equal(GameProfileControlOptionsService.MinimumMouseLookSensitivity, result.ProfileDefaultMouseLookSensitivity);
+                Assert.Equal(1u, result.ProfileDefaultScreenShape);
                 Assert.Equal(
                     new[]
                     {
-                        "windowed-compatibility",
+                        "enhanced-widescreen",
                         "graphics-defaults",
                         "title-marker",
                         "frontend-red-margins",
@@ -503,11 +508,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     module.Id == "copied-options-control-defaults" &&
                     module.PatchKeys.Count == 0 &&
                     module.CopiedOptionsEdits.Contains("controllerConfiguration=1") &&
-                    module.CopiedOptionsEdits.Contains("mouseLookSensitivity=2.25") &&
-                    module.ClaimBoundary.Contains("does not prove improved feel", StringComparison.OrdinalIgnoreCase) &&
+                    module.CopiedOptionsEdits.Contains("screenShape=1") &&
+                    module.CopiedOptionsEdits.Contains("mouseLookSensitivity=0.1") &&
+                    module.ClaimBoundary.Contains("does not alter controller deadzones", StringComparison.OrdinalIgnoreCase) &&
                     module.RestoreStrategy.Contains("copied defaultoptions.bea backup", StringComparison.OrdinalIgnoreCase) &&
                     module.EvidenceRefs.Contains("reverse-engineering/binary-analysis/executable-analysis.md") &&
-                    module.NonClaims.Contains("No improved control-feel proof."));
+                    module.NonClaims.Contains("No deadzone or look-curve byte patch."));
                 Assert.All(result.ProfilePresetModules, module =>
                 {
                     Assert.False(string.IsNullOrWhiteSpace(module.RestoreStrategy));
@@ -534,7 +540,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.True(profileCatalogSha256.All(Uri.IsHexDigit));
                 Assert.Equal(1, profilePreset.GetProperty("defaultControllerConfiguration").GetInt32());
                 Assert.True(profilePreset.GetProperty("defaultPersistControllerConfigInOptions").GetBoolean());
-                Assert.True(profilePreset.GetProperty("defaultSharpenMouseLook").GetBoolean());
+                Assert.Equal(0.1f, profilePreset.GetProperty("defaultMouseLookSensitivity").GetSingle(), precision: 3);
+                Assert.Equal(1u, profilePreset.GetProperty("defaultScreenShape").GetUInt32());
                 JsonElement modules = profilePreset.GetProperty("modules");
                 string[] moduleIds = modules
                     .EnumerateArray()
@@ -543,7 +550,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Equal(
                     new[]
                     {
-                        "windowed-compatibility",
+                        "enhanced-widescreen",
                         "graphics-defaults",
                         "title-marker",
                         "frontend-red-margins",
@@ -556,16 +563,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     .EnumerateArray()
                     .Single(element => element.GetProperty("id").GetString() == "copied-options-control-defaults");
                 Assert.Empty(copiedControlModule.GetProperty("patchKeys").EnumerateArray());
-                Assert.Contains("runtime control feel remains unproven", copiedControlModule.GetProperty("proofStatus").GetString(), StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("copied-runtime sensitivity value 0.1", copiedControlModule.GetProperty("proofStatus").GetString(), StringComparison.OrdinalIgnoreCase);
                 Assert.Contains("copied defaultoptions.bea backup", copiedControlModule.GetProperty("restoreStrategy").GetString(), StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(
-                    new[] { "controllerConfiguration=1", "mouseLookSensitivity=2.25" },
+                    new[] { "controllerConfiguration=1", "screenShape=1", "mouseLookSensitivity=0.1" },
                     copiedControlModule.GetProperty("copiedOptionsEdits").EnumerateArray().Select(element => element.GetString()!).ToArray());
                 Assert.Contains(
                     "reverse-engineering/binary-analysis/executable-analysis.md",
                     copiedControlModule.GetProperty("evidenceRefs").EnumerateArray().Select(element => element.GetString()!).ToArray());
                 Assert.Contains(
-                    "No improved control-feel proof.",
+                    "No deadzone or look-curve byte patch.",
                     copiedControlModule.GetProperty("nonClaims").EnumerateArray().Select(element => element.GetString()!).ToArray());
 
                 foreach (JsonElement module in modules.EnumerateArray())
@@ -651,7 +658,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Equal(BinaryPatchPlanBuilder.DebugCameraPreviewProfileId, result.ProfilePresetId);
                 Assert.Equal("Debug Camera Preview", result.ProfilePresetDisplayName);
                 Assert.Contains("one Q-forward movement path", result.ProfilePresetProofStatus, StringComparison.OrdinalIgnoreCase);
-                Assert.Equal(new[] { "windowed-compatibility", "debug-camera-q-forward" }, result.ProfilePresetModules.Select(module => module.Id));
+                Assert.Equal(new[] { "enhanced-widescreen", "debug-camera-q-forward" }, result.ProfilePresetModules.Select(module => module.Id));
 
                 SafeCopyProfileModule debugCameraModule = result.ProfilePresetModules.Single(module => module.Id == "debug-camera-q-forward");
                 Assert.Equal(new[] { "free_camera_aurore_gate_bypass", "free_camera_keyboard_forward_q_hook" }, debugCameraModule.PatchKeys);
@@ -864,7 +871,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 foreach (string patchKey in result.PatchResult.PatchKeys)
                 {
                     BinaryPatchSpec spec = BinaryPatchEngine.PatchSpecs.Single(row => row.Key == patchKey);
-                    spec.Patched.CopyTo(backupBytes, spec.FileOffset);
+                    foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+                    {
+                        region.Patched.CopyTo(backupBytes, region.FileOffset);
+                    }
                 }
 
                 Assert.Equal(backupBytes, copiedBytes);
@@ -1079,6 +1089,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     result.TargetGameRoot,
                     new[]
                     {
+                        "-res",
+                        "1600",
+                        "900",
                         "-skipfmv",
                         "-nomusic",
                         "-nosound",
@@ -1097,6 +1110,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Equal(
                     new[]
                     {
+                        "-res",
+                        "1600",
+                        "900",
                         "-skipfmv",
                         "-nomusic",
                         "-nosound",
@@ -1112,7 +1128,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         "33554432",
                     },
                     plan.Arguments);
-                Assert.Contains("-skipfmv -nomusic -nosound -hidetail -nostaticshadows -norumble -showdebugtrace -level 3 -configuration 2 -textureramlimit 33554432", plan.CommandPreview);
+                Assert.Contains("-res 1600 900 -skipfmv -nomusic -nosound -hidetail -nostaticshadows -norumble -showdebugtrace -level 3 -configuration 2 -textureramlimit 33554432", plan.CommandPreview);
 
                 for (int configuration = 1; configuration <= 4; configuration++)
                 {
@@ -1148,6 +1164,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException textureRamEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-textureramlimit", "1024" }));
                 Assert.Contains("textureramlimit", textureRamEx.Message, StringComparison.OrdinalIgnoreCase);
+
+                InvalidOperationException resolutionEx = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-res", "320", "200" }));
+                Assert.Contains("-res", resolutionEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 InvalidOperationException manifestEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(sourceRoot, Array.Empty<string>()));
@@ -1545,12 +1565,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         private static void SeedExe(string exePath)
         {
             int maxEnd = BinaryPatchEngine.PatchSpecs
-                .Select(spec => spec.FileOffset + spec.Original.Length)
+                .SelectMany(BinaryPatchEngine.GetPatchRegions)
+                .Select(region => region.FileOffset + region.Original.Length)
                 .Max();
             byte[] data = Enumerable.Repeat((byte)0x90, maxEnd + 0x100).ToArray();
             foreach (BinaryPatchSpec spec in BinaryPatchEngine.PatchSpecs)
             {
-                spec.Original.CopyTo(data, spec.FileOffset);
+                foreach (BinaryPatchRegion region in BinaryPatchEngine.GetPatchRegions(spec))
+                {
+                    region.Original.CopyTo(data, region.FileOffset);
+                }
             }
 
             File.WriteAllBytes(exePath, data);

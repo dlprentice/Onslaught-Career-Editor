@@ -60,7 +60,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 ProofStatus: "Bounded proof.",
                 DefaultControllerConfiguration: 1,
                 DefaultPersistControllerConfigInOptions: true,
-                DefaultSharpenMouseLook: true,
+                DefaultMouseLookSensitivity: GameProfileControlOptionsService.MinimumMouseLookSensitivity,
+                DefaultScreenShape: 1,
                 Modules: new[] { module });
         }
     }
