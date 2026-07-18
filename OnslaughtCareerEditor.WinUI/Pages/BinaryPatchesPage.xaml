@@ -842,15 +842,15 @@
                                              TextWrapping="Wrap"
                                              PlaceholderText="Safe copy launch plan appears here after preparation." />
                                 </Expander>
-                                <Expander x:Name="PatchBenchAdvancedLaunchOptionsExpander" Header="Advanced launch and control options"
+                                <Expander x:Name="PatchBenchAdvancedLaunchOptionsExpander" Header="Advanced Steam launch and copied controls"
                                           AutomationProperties.AutomationId="PatchBenchAdvancedLaunchOptionsExpander"
-                                          AutomationProperties.Name="Advanced launch and control options"
+                                          AutomationProperties.Name="Advanced Steam launch and copied controls"
                                           IsExpanded="False">
                                     <StackPanel Spacing="10">
-                                     <TextBlock Text="Advanced launch options"
+                                     <TextBlock Text="Steam launch options"
                                                 FontSize="16"
                                                 FontWeight="SemiBold" />
-                                     <TextBlock Text="These options are passed only to the safe copy. They do not edit either executable."
+                                     <TextBlock Text="Launch flags below are recognized by the canonical Steam parser and are passed only to the safe copy. Controller settings are written separately to the copied defaultoptions.bea."
                                                 Style="{StaticResource SectionBodyTextStyle}" />
                                      <TextBlock Text="Launch presets"
                                                 Style="{StaticResource SectionBodyTextStyle}" />
@@ -861,14 +861,6 @@
                                                  Content="Quiet capture"
                                                  Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                  Click="QuietCaptureLaunchPresetButton_Click" />
-                                     </StackPanel>
-                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                         <Button x:Name="PatchBenchHighDetailLaunchPresetButton"
-                                                 AutomationProperties.AutomationId="PatchBenchHighDetailLaunchPresetButton"
-                                                 AutomationProperties.Name="Set high detail launch options for safe copy"
-                                                 Content="High detail test"
-                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
-                                                 Click="HighDetailLaunchPresetButton_Click" />
                                          <Button x:Name="PatchBenchClearLaunchOptionsButton"
                                                  AutomationProperties.AutomationId="PatchBenchClearLaunchOptionsButton"
                                                  AutomationProperties.Name="Clear launch options for safe copy"
@@ -880,7 +872,7 @@
                                      <CheckBox x:Name="PatchBenchSkipFmvLaunchOption"
                                                AutomationProperties.AutomationId="PatchBenchSkipFmvLaunchOption"
                                                AutomationProperties.Name="Skip intro movies for safe copy"
-                                               Content="Skip intro movies"
+                                               Content="Skip startup and level movies (-skipfmv; click-to-start remains)"
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
                                     <CheckBox x:Name="PatchBenchNoMusicLaunchOption"
@@ -892,25 +884,7 @@
                                     <CheckBox x:Name="PatchBenchNoSoundLaunchOption"
                                               AutomationProperties.AutomationId="PatchBenchNoSoundLaunchOption"
                                               AutomationProperties.Name="Mute all sound for safe copy"
-                                              Content="Mute all sound"
-                                              Checked="LaunchOptionCheckBox_Changed"
-                                              Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <CheckBox x:Name="PatchBenchHighDetailLaunchOption"
-                                              AutomationProperties.AutomationId="PatchBenchHighDetailLaunchOption"
-                                              AutomationProperties.Name="Request high detail for safe copy"
-                                              Content="Request high detail"
-                                              Checked="LaunchOptionCheckBox_Changed"
-                                              Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <CheckBox x:Name="PatchBenchNoStaticShadowsLaunchOption"
-                                              AutomationProperties.AutomationId="PatchBenchNoStaticShadowsLaunchOption"
-                                              AutomationProperties.Name="Disable static shadows for safe copy"
-                                              Content="Disable static shadows (-nostaticshadows)"
-                                              Checked="LaunchOptionCheckBox_Changed"
-                                              Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <CheckBox x:Name="PatchBenchNoRumbleLaunchOption"
-                                              AutomationProperties.AutomationId="PatchBenchNoRumbleLaunchOption"
-                                              AutomationProperties.Name="Disable controller vibration for safe copy"
-                                              Content="Disable controller vibration (-norumble)"
+                                              Content="Mute all sound (-nosound)"
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
                                     <TextBlock Text="Developer diagnostics"
@@ -942,11 +916,11 @@
                                     </ComboBox>
                                     <TextBlock Text="Presets only fill the validated -level argument. They do not unlock saves, add online multiplayer, or prove that the selected level reaches gameplay."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Controller configuration preset"
+                                    <TextBlock Text="Copied-options controller configuration"
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <ComboBox x:Name="PatchBenchConfigurationLaunchPresetComboBox"
-                                              AutomationProperties.AutomationId="PatchBenchConfigurationLaunchPresetComboBox"
-                                              AutomationProperties.Name="Controller configuration preset for safe copy"
+                                    <ComboBox x:Name="PatchBenchCopiedControllerConfigComboBox"
+                                              AutomationProperties.AutomationId="PatchBenchCopiedControllerConfigComboBox"
+                                              AutomationProperties.Name="Controller configuration written to safe copy default options"
                                               SelectionChanged="LaunchOptionComboBox_SelectionChanged">
                                         <ComboBoxItem Content="No override" />
                                         <ComboBoxItem Content="Config 1: Default" />
@@ -957,10 +931,10 @@
                                     <CheckBox x:Name="PatchBenchPersistControllerConfigOption"
                                               AutomationProperties.AutomationId="PatchBenchPersistControllerConfigOption"
                                               AutomationProperties.Name="Write selected controller config into safe copy default options"
-                                              Content="Persist selected config in safe copy options"
+                                              Content="Write selected config to copied defaultoptions.bea"
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <TextBlock Text="Persisting writes the selected config to the safe copy's defaultoptions.bea for both players. It does not change the installed game and does not prove runtime feel."
+                                    <TextBlock Text="Controller configuration and bindings are owned by the safe copy's defaultoptions.bea for both players. No controller command-line override is used, the installed game is unchanged, and runtime feel is not implied."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <CheckBox x:Name="PatchBenchSharpenMouseLookOption"
                                               AutomationProperties.AutomationId="PatchBenchSharpenMouseLookOption"
@@ -1053,15 +1027,8 @@
                                                 Style="{StaticResource PatchBenchChoiceButtonStyle}"
                                                 Click="ControlConfig4PresetButton_Click" />
                                     </Grid>
-                                    <TextBlock Text="These are A/B test presets for safe-copy control diagnostics. They do not add deadzone, look-curve, camera, movement, or online patches."
+                                    <TextBlock Text="These A/B presets combine parser-proven -skipfmv with copied defaultoptions.bea changes. They do not add command-line controller compatibility, deadzone, look-curve, camera, movement, or online patches."
                                                Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBlock Text="Optional texture RAM limit"
-                                               Style="{StaticResource SectionBodyTextStyle}" />
-                                    <TextBox x:Name="PatchBenchTextureRamLimitLaunchOption"
-                                             AutomationProperties.AutomationId="PatchBenchTextureRamLimitLaunchOption"
-                                              AutomationProperties.Name="Optional texture RAM limit in megabytes for safe copy"
-                                             TextChanged="LaunchOptionTextBox_TextChanged"
-                                             PlaceholderText="Leave blank, or enter MB from 8 to 512" />
                                     </StackPanel>
                                 </Expander>
                             </StackPanel>

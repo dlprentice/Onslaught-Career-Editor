@@ -12,14 +12,6 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 isSelected);
         }
 
-        public static PatchBenchSelectedChoiceState BuildHighDetailChoiceState(bool isSelected)
-        {
-            return BuildChoiceState(
-                "Set high detail launch options for safe copy",
-                "Selected: high detail launch preset",
-                isSelected);
-        }
-
         public static PatchBenchSelectedChoiceState BuildControlBaselineChoiceState(bool isSelected)
         {
             return BuildChoiceState(
@@ -88,11 +80,6 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildQuietCaptureStatusMessage()
         {
             return "quiet capture launch preset selected";
-        }
-
-        public static string BuildHighDetailStatusMessage()
-        {
-            return "high detail launch preset selected";
         }
 
         public static string BuildControlBaselineStatusMessage()

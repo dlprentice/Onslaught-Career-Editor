@@ -105,10 +105,11 @@ revalidates it before every role and immediately before private/public output
 publication. A change between roles invalidates the matrix.
 
 The copied profile binds player one `Actions/Transform` (`0x21`) to Q through
-the existing control-options service. No installed-game file or original
-`BEA.exe` is written. The controlled launch uses
-`-skipfmv -level 850 -configuration 2`, matching the strongest existing
-Level 850 input-to-state evidence while filtering only the Transform action.
+the existing control-options service and writes controller configuration 2 to
+the copied `defaultoptions.bea`. No installed-game file or original `BEA.exe`
+is written. The controlled launch uses `-skipfmv -level 850`, matching the
+strongest existing Level 850 input-to-state evidence while filtering only the
+Transform action. Steam has no `-configuration` parser branch.
 
 ### 2. Launch And Identity Guard
 

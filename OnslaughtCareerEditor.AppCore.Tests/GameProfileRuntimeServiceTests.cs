@@ -556,7 +556,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     new GameProfileLaunchOptions(
                         ProfileRoot: prepared.TargetGameRoot,
                         AppOwnedProfilesRoot: outputRoot,
-                        LaunchArguments: new[] { "-skipfmv", "-hidetail" }),
+                        LaunchArguments: new[] { "-skipfmv", "-nosound" }),
                     runner);
 
                 var registry = new GameProfileManagedProcessRegistry(leasePath);
@@ -570,7 +570,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.Equal(launched.ProcessId, registered.Process.ProcessId);
                 Assert.Equal(Path.GetFullPath(prepared.ExecutablePath), registered.Process.ExecutablePath);
                 Assert.Equal(Path.GetFullPath(prepared.TargetGameRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), registered.Process.WorkingDirectory);
-                Assert.Equal(new[] { "-skipfmv", "-hidetail" }, registered.Process.Arguments);
+                Assert.Equal(new[] { "-skipfmv", "-nosound" }, registered.Process.Arguments);
                 Assert.Equal(Path.GetFullPath(outputRoot).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), registered.AppOwnedProfilesRoot);
             }
             finally

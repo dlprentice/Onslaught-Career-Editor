@@ -1236,16 +1236,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         "-skipfmv",
                         "-nomusic",
                         "-nosound",
-                        "-hidetail",
-                        "-nostaticshadows",
-                        "-norumble",
                         "-showdebugtrace",
                         "-level",
                         "3",
-                        "-configuration",
-                        "2",
-                        "-textureramlimit",
-                        "33554432",
                     });
 
                 Assert.Equal(
@@ -1257,27 +1250,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         "-skipfmv",
                         "-nomusic",
                         "-nosound",
-                        "-hidetail",
-                        "-nostaticshadows",
-                        "-norumble",
                         "-showdebugtrace",
                         "-level",
                         "3",
-                        "-configuration",
-                        "2",
-                        "-textureramlimit",
-                        "33554432",
                     },
                     plan.Arguments);
-                Assert.Contains("-res 1600 900 -skipfmv -nomusic -nosound -hidetail -nostaticshadows -norumble -showdebugtrace -level 3 -configuration 2 -textureramlimit 33554432", plan.CommandPreview);
-
-                for (int configuration = 1; configuration <= 4; configuration++)
-                {
-                    GameProfileLaunchPlan configurationPlan = GameProfilePreflightService.BuildLaunchPlan(
-                        result.TargetGameRoot,
-                        new[] { "-configuration", configuration.ToString() });
-                    Assert.Equal(new[] { "-configuration", configuration.ToString() }, configurationPlan.Arguments);
-                }
+                Assert.Contains("-res 1600 900 -skipfmv -nomusic -nosound -showdebugtrace -level 3", plan.CommandPreview);
 
                 InvalidOperationException resourceBuildEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-buildresources" }));
@@ -1287,24 +1265,27 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-record", "demo.dem" }));
                 Assert.Contains("Unsupported launch argument", demoRecordEx.Message);
 
-                foreach (string sourceOnlyFlag in new[] { "-devmode", "-killhud", "-modelviewer", "-cutsceneeditor", "-artists", "-stresstest", "-mem", "-largeram" })
+                foreach (string unsupportedFlag in new[]
+                {
+                    "-configuration",
+                    "-norumble",
+                    "-nostaticshadows",
+                    "-hidetail",
+                    "-textureramlimit",
+                    "-devmode",
+                    "-killhud",
+                    "-modelviewer",
+                    "-cutsceneeditor",
+                    "-artists",
+                    "-stresstest",
+                    "-mem",
+                    "-largeram",
+                })
                 {
                     InvalidOperationException blockedEx = Assert.Throws<InvalidOperationException>(() =>
-                        GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { sourceOnlyFlag }));
+                        GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { unsupportedFlag }));
                     Assert.Contains("Unsupported launch argument", blockedEx.Message);
                 }
-
-                InvalidOperationException zeroConfigurationEx = Assert.Throws<InvalidOperationException>(() =>
-                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-configuration", "0" }));
-                Assert.Contains("configuration", zeroConfigurationEx.Message, StringComparison.OrdinalIgnoreCase);
-
-                InvalidOperationException configurationEx = Assert.Throws<InvalidOperationException>(() =>
-                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-configuration", "5" }));
-                Assert.Contains("configuration", configurationEx.Message, StringComparison.OrdinalIgnoreCase);
-
-                InvalidOperationException textureRamEx = Assert.Throws<InvalidOperationException>(() =>
-                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-textureramlimit", "1024" }));
-                Assert.Contains("textureramlimit", textureRamEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 InvalidOperationException resolutionEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-res", "320", "200" }));

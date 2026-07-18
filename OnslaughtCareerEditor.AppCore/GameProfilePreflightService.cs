@@ -1296,9 +1296,6 @@ namespace Onslaught___Career_Editor
                     string.Equals(token, "-skipfmv", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "-nomusic", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "-nosound", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "-norumble", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "-nostaticshadows", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "-hidetail", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(token, "-showdebugtrace", StringComparison.OrdinalIgnoreCase))
                 {
                     normalized.Add(token.ToLowerInvariant());
@@ -1326,9 +1323,7 @@ namespace Onslaught___Career_Editor
                     continue;
                 }
 
-                if (string.Equals(token, "-level", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "-configuration", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(token, "-textureramlimit", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(token, "-level", StringComparison.OrdinalIgnoreCase))
                 {
                     if (index + 1 >= arguments.Count)
                         throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
@@ -1338,23 +1333,8 @@ namespace Onslaught___Career_Editor
                         throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
 
                     string normalizedToken = token.ToLowerInvariant();
-                    if (string.Equals(normalizedToken, "-level", StringComparison.Ordinal))
-                    {
-                        if (value < 1 || value > 9999)
-                            throw new InvalidOperationException("-level requires a numeric mission id between 1 and 9999.");
-                    }
-                    else if (string.Equals(normalizedToken, "-configuration", StringComparison.Ordinal))
-                    {
-                        if (value < 1 || value > 4)
-                            throw new InvalidOperationException("-configuration requires a controller configuration between 1 and 4.");
-                    }
-                    else if (string.Equals(normalizedToken, "-textureramlimit", StringComparison.Ordinal))
-                    {
-                        const int minTextureRamBytes = 8 * 1024 * 1024;
-                        const int maxTextureRamBytes = 512 * 1024 * 1024;
-                        if (value < minTextureRamBytes || value > maxTextureRamBytes)
-                            throw new InvalidOperationException("-textureramlimit requires a byte limit between 8388608 and 536870912.");
-                    }
+                    if (value < 1 || value > 9999)
+                        throw new InvalidOperationException("-level requires a numeric mission id between 1 and 9999.");
 
                     normalized.Add(normalizedToken);
                     normalized.Add(value.ToString(System.Globalization.CultureInfo.InvariantCulture));

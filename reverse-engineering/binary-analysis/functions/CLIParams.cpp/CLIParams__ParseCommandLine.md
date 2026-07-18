@@ -11,6 +11,12 @@
 
 Parses command-line arguments passed to BEA.exe. The retail PC port has a different set of parameters than Stuart's internal source code shows.
 
+A direct literal/xref scan of the canonical unpatched Steam executable
+(`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`)
+was repeated on 2026-07-18. The retail parser has no literal or parser branch for
+`-configuration`, `-norumble`, `-nostaticshadows`, `-hidetail`, or
+`-textureramlimit`; those belong to Stuart's different in-house PC parser.
+
 ## Signature
 ```c
 void __thiscall CLIParams__ParseCommandLine(void *this, char *commandLine);

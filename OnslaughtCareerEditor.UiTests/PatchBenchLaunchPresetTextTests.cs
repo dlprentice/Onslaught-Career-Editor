@@ -21,10 +21,6 @@ public class PatchBenchLaunchPresetTextTests
                 "Set quiet capture launch options for safe copy",
                 "Selected: quiet capture launch preset");
             AssertChoiceState(
-                "BuildHighDetailChoiceState",
-                "Set high detail launch options for safe copy",
-                "Selected: high detail launch preset");
-            AssertChoiceState(
                 "BuildControlBaselineChoiceState",
                 "Set control diagnostics baseline config 1",
                 "Selected: control diagnostics baseline config 1");
@@ -58,7 +54,6 @@ public class PatchBenchLaunchPresetTextTests
             Assert.That(InvokeString("BuildAdminLevelPresetLocalMultiplayerWorld851StatusMessage"), Is.EqualTo("admin level preset local multiplayer world 851 selected"));
             Assert.That(InvokeString("BuildLocalMultiplayerProbeStatusMessage"), Is.EqualTo("local multiplayer level 850 launch probe selected"));
             Assert.That(InvokeString("BuildQuietCaptureStatusMessage"), Is.EqualTo("quiet capture launch preset selected"));
-            Assert.That(InvokeString("BuildHighDetailStatusMessage"), Is.EqualTo("high detail launch preset selected"));
             Assert.That(InvokeString("BuildControlBaselineStatusMessage"), Is.EqualTo("control diagnostics baseline config 1 selected"));
             Assert.That(InvokeString("BuildControlSharpenedStatusMessage"), Is.EqualTo("control diagnostics sensitivity test config 1 selected"));
             Assert.That(InvokeString("BuildControlConfig2StatusMessage"), Is.EqualTo("control diagnostics swapped config 2 selected"));

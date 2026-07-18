@@ -108,7 +108,6 @@ public class WinUiPatchBenchInteractionSmokeTests
                      {
                          "PatchBenchLabPatchExperimentsExpander",
                          "PatchBenchLabLaunchControlExpander",
-                         "PatchBenchLabOnlineResearchExpander",
                          "PatchBenchLabMusicExperimentsExpander",
                          "PatchBenchLabBeaDiagnosticsExpander",
                      })
@@ -205,7 +204,6 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
             ClickByAutomationId(window, "PatchBenchQuietCaptureLaunchPresetButton");
             AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
-            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Set high detail launch options for safe copy");
             AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Choose admin level preset");
             AssertTextBoxText(window, "PatchBenchLevelLaunchOption", string.Empty);
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
@@ -217,14 +215,8 @@ public class WinUiPatchBenchInteractionSmokeTests
             SetTextBoxText(window, "PatchBenchLevelLaunchOption", "  ");
             AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Selected: quiet capture launch preset");
 
-            ClickByAutomationId(window, "PatchBenchHighDetailLaunchPresetButton");
-            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Selected: high detail launch preset");
-            AssertAutomationNameContains(window, "PatchBenchQuietCaptureLaunchPresetButton", "Set quiet capture launch options for safe copy");
-            AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
-
             ClickByAutomationId(window, "PatchBenchControlBaselinePresetButton");
             AssertAutomationNameContains(window, "PatchBenchControlBaselinePresetButton", "Selected: control diagnostics baseline config 1");
-            AssertAutomationNameContains(window, "PatchBenchHighDetailLaunchPresetButton", "Set high detail launch options for safe copy");
 
             ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
@@ -237,7 +229,7 @@ public class WinUiPatchBenchInteractionSmokeTests
 
             ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
-            SelectComboBoxItem(window, "PatchBenchConfigurationLaunchPresetComboBox", "Config 3: Alternate morph/jets");
+            SelectComboBoxItem(window, "PatchBenchCopiedControllerConfigComboBox", "Config 3: Alternate morph/jets");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 

@@ -36,7 +36,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             "free_camera_keyboard_pitch_down_q_hook",
         };
         private const string LocalMultiplayerProbeLevelId = "850";
-        private const string HighDetailTextureRamLimitMb = "256";
         private const int DefaultMouseSensitivityPresetIndex = 0;
         private const uint EnhancedCopyScreenShape = 1;
         private const int NoCreateMusicSwapPresetIndex = 0;
@@ -60,7 +59,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             None,
             QuietCapture,
-            HighDetail,
             ControlBaseline,
             ControlSharpened,
             ControlConfig2,
@@ -70,7 +68,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static readonly LaunchPresetChoice[] s_namedLaunchPresetChoices =
         {
             LaunchPresetChoice.QuietCapture,
-            LaunchPresetChoice.HighDetail,
             LaunchPresetChoice.ControlBaseline,
             LaunchPresetChoice.ControlSharpened,
             LaunchPresetChoice.ControlConfig2,
@@ -82,9 +79,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool SkipFmv,
             bool NoMusic,
             bool NoSound,
-            bool HighDetail,
-            bool NoStaticShadows,
-            bool NoRumble,
             bool ShowDebugTrace,
             string LevelId,
             int ControllerConfigurationIndex,
@@ -93,7 +87,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             int MouseSensitivityPresetIndex,
             bool InvertWalkerY,
             bool InvertFlightY,
-            string TextureRamLimitMb,
             string StatusMessage);
 
         private readonly List<BinaryPatchItemModel> _allPatchItems;
@@ -131,7 +124,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             InitializeComponent();
             PatchBenchMusicTargetFileName.Text = "BEA_01(Master).ogg";
             PatchBenchAdminLevelPresetComboBox.SelectedIndex = NoAdminLevelPresetIndex;
-            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = 0;
+            PatchBenchCopiedControllerConfigComboBox.SelectedIndex = 0;
             PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
             PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             PatchGroupsItemsControl.ItemsSource = _patchGroups;
@@ -395,7 +388,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 new[]
                 {
                     PatchBenchChoiceVisualState.Bind(PatchBenchQuietCaptureLaunchPresetButton, PatchBenchLaunchPresetText.BuildQuietCaptureChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.QuietCapture)),
-                    PatchBenchChoiceVisualState.Bind(PatchBenchHighDetailLaunchPresetButton, PatchBenchLaunchPresetText.BuildHighDetailChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.HighDetail)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchControlBaselinePresetButton, PatchBenchLaunchPresetText.BuildControlBaselineChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlBaseline)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchControlSharpenedPresetButton, PatchBenchLaunchPresetText.BuildControlSharpenedChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlSharpened)),
                     PatchBenchChoiceVisualState.Bind(PatchBenchControlConfig2PresetButton, PatchBenchLaunchPresetText.BuildControlConfig2ChoiceState(_selectedLaunchPresetChoice == LaunchPresetChoice.ControlConfig2)),
@@ -436,9 +428,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     skipFmv: true,
                     noMusic: true,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 0,
@@ -446,47 +435,23 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     sharpenMouseLook: false,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
-                LaunchPresetChoice.HighDetail => CurrentLaunchOptionsMatch(
-                    skipFmv: true,
-                    noMusic: false,
-                    noSound: false,
-                    highDetail: true,
-                    noStaticShadows: false,
-                    noRumble: false,
-                    showDebugTrace: false,
-                    levelId: string.Empty,
-                    controllerConfigurationIndex: 0,
-                    persistControllerConfig: false,
-                    sharpenMouseLook: false,
-                    mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
-                    invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: HighDetailTextureRamLimitMb),
+                    invertFlightY: false),
                 LaunchPresetChoice.ControlBaseline => CurrentLaunchOptionsMatch(
                     skipFmv: true,
                     noMusic: false,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 1,
-                    persistControllerConfig: false,
+                    persistControllerConfig: true,
                     sharpenMouseLook: false,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
+                    invertFlightY: false),
                 LaunchPresetChoice.ControlSharpened => CurrentLaunchOptionsMatch(
                     skipFmv: true,
                     noMusic: false,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 1,
@@ -494,15 +459,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     sharpenMouseLook: true,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
+                    invertFlightY: false),
                 LaunchPresetChoice.ControlConfig2 => CurrentLaunchOptionsMatch(
                     skipFmv: true,
                     noMusic: false,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 2,
@@ -510,15 +471,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     sharpenMouseLook: false,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
+                    invertFlightY: false),
                 LaunchPresetChoice.ControlConfig3 => CurrentLaunchOptionsMatch(
                     skipFmv: true,
                     noMusic: false,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 3,
@@ -526,15 +483,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     sharpenMouseLook: false,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
+                    invertFlightY: false),
                 LaunchPresetChoice.ControlConfig4 => CurrentLaunchOptionsMatch(
                     skipFmv: true,
                     noMusic: false,
                     noSound: false,
-                    highDetail: false,
-                    noStaticShadows: false,
-                    noRumble: false,
                     showDebugTrace: false,
                     levelId: string.Empty,
                     controllerConfigurationIndex: 4,
@@ -542,8 +495,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     sharpenMouseLook: false,
                     mouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                     invertWalkerY: false,
-                    invertFlightY: false,
-                    textureRamLimitMb: string.Empty),
+                    invertFlightY: false),
                 _ => false,
             };
         }
@@ -552,9 +504,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool skipFmv,
             bool noMusic,
             bool noSound,
-            bool highDetail,
-            bool noStaticShadows,
-            bool noRumble,
             bool showDebugTrace,
             string levelId,
             int controllerConfigurationIndex,
@@ -562,24 +511,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool sharpenMouseLook,
             int mouseSensitivityPresetIndex,
             bool invertWalkerY,
-            bool invertFlightY,
-            string textureRamLimitMb)
+            bool invertFlightY)
         {
             return PatchBenchSkipFmvLaunchOption.IsChecked == skipFmv
                 && PatchBenchNoMusicLaunchOption.IsChecked == noMusic
                 && PatchBenchNoSoundLaunchOption.IsChecked == noSound
-                && PatchBenchHighDetailLaunchOption.IsChecked == highDetail
-                && PatchBenchNoStaticShadowsLaunchOption.IsChecked == noStaticShadows
-                && PatchBenchNoRumbleLaunchOption.IsChecked == noRumble
                 && PatchBenchShowDebugTraceLaunchOption.IsChecked == showDebugTrace
                 && string.Equals((PatchBenchLevelLaunchOption.Text ?? string.Empty).Trim(), levelId, StringComparison.Ordinal)
-                && PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex == controllerConfigurationIndex
+                && PatchBenchCopiedControllerConfigComboBox.SelectedIndex == controllerConfigurationIndex
                 && PatchBenchPersistControllerConfigOption.IsChecked == persistControllerConfig
                 && PatchBenchSharpenMouseLookOption.IsChecked == sharpenMouseLook
                 && PatchBenchMouseSensitivityPresetComboBox.SelectedIndex == mouseSensitivityPresetIndex
                 && PatchBenchInvertWalkerYOption.IsChecked == invertWalkerY
-                && PatchBenchInvertFlightYOption.IsChecked == invertFlightY
-                && string.Equals((PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty).Trim(), textureRamLimitMb, StringComparison.Ordinal);
+                && PatchBenchInvertFlightYOption.IsChecked == invertFlightY;
         }
 
         private bool IsLaunchPresetOwnedCheckBox(object sender)
@@ -587,9 +531,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return ReferenceEquals(sender, PatchBenchSkipFmvLaunchOption)
                 || ReferenceEquals(sender, PatchBenchNoMusicLaunchOption)
                 || ReferenceEquals(sender, PatchBenchNoSoundLaunchOption)
-                || ReferenceEquals(sender, PatchBenchHighDetailLaunchOption)
-                || ReferenceEquals(sender, PatchBenchNoStaticShadowsLaunchOption)
-                || ReferenceEquals(sender, PatchBenchNoRumbleLaunchOption)
                 || ReferenceEquals(sender, PatchBenchShowDebugTraceLaunchOption)
                 || ReferenceEquals(sender, PatchBenchPersistControllerConfigOption)
                 || ReferenceEquals(sender, PatchBenchSharpenMouseLookOption)
@@ -599,13 +540,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private bool IsLaunchPresetOwnedTextBox(object sender)
         {
-            return ReferenceEquals(sender, PatchBenchLevelLaunchOption)
-                || ReferenceEquals(sender, PatchBenchTextureRamLimitLaunchOption);
+            return ReferenceEquals(sender, PatchBenchLevelLaunchOption);
         }
 
         private bool IsLaunchPresetOwnedComboBox(object sender)
         {
-            return ReferenceEquals(sender, PatchBenchConfigurationLaunchPresetComboBox)
+            return ReferenceEquals(sender, PatchBenchCopiedControllerConfigComboBox)
                 || ReferenceEquals(sender, PatchBenchMouseSensitivityPresetComboBox);
         }
 
@@ -702,7 +642,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ApplyProfileControlDefaults(SafeCopyProfilePreset preset)
         {
-            PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = preset.DefaultControllerConfiguration ?? 0;
+            PatchBenchCopiedControllerConfigComboBox.SelectedIndex = preset.DefaultControllerConfiguration ?? 0;
             PatchBenchPersistControllerConfigOption.IsChecked = preset.DefaultPersistControllerConfigInOptions;
             PatchBenchSharpenMouseLookOption.IsChecked = preset.DefaultMouseLookSensitivity.HasValue;
             int mousePresetIndex = preset.DefaultMouseLookSensitivity.HasValue
@@ -816,9 +756,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: LocalMultiplayerProbeLevelId,
                 ControllerConfigurationIndex: 0,
@@ -827,7 +764,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildLocalMultiplayerProbeStatusMessage()));
             PatchBenchOnlinePrepActionStatus.Text = "Local split-screen launch preset selected. Next: create a safe copy, then play that safe copy. This is not Host/Join or online play.";
             OperationLogTextBox.Text = "Local split-screen preset selected: -skipfmv -level 850. Create safe copy next, then launch that safe copy. No listener, invitation, remote input, or Host/Join control is enabled.";
@@ -905,9 +841,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: true,
                 NoMusic: true,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 0,
@@ -916,7 +849,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildQuietCaptureStatusMessage()));
         }
 
@@ -926,18 +858,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 1,
-                PersistControllerConfig: false,
+                PersistControllerConfig: true,
                 SharpenMouseLook: false,
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildControlBaselineStatusMessage()));
         }
 
@@ -947,9 +875,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 1,
@@ -958,7 +883,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildControlSharpenedStatusMessage()));
         }
 
@@ -989,9 +913,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: true,
                 NoMusic: false,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: controllerConfigurationIndex,
@@ -1000,29 +921,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: statusMessage);
-        }
-
-        private void HighDetailLaunchPresetButton_Click(object sender, RoutedEventArgs e)
-        {
-            ApplyLaunchPreset(LaunchPresetChoice.HighDetail, new LaunchPresetSelection(
-                SkipFmv: true,
-                NoMusic: false,
-                NoSound: false,
-                HighDetail: true,
-                NoStaticShadows: false,
-                NoRumble: false,
-                ShowDebugTrace: false,
-                LevelId: string.Empty,
-                ControllerConfigurationIndex: 0,
-                PersistControllerConfig: false,
-                SharpenMouseLook: false,
-                MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
-                InvertWalkerY: false,
-                InvertFlightY: false,
-                TextureRamLimitMb: HighDetailTextureRamLimitMb,
-                StatusMessage: PatchBenchLaunchPresetText.BuildHighDetailStatusMessage()));
         }
 
         private void ClearLaunchOptionsButton_Click(object sender, RoutedEventArgs e)
@@ -1032,9 +931,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SkipFmv: false,
                 NoMusic: false,
                 NoSound: false,
-                HighDetail: false,
-                NoStaticShadows: false,
-                NoRumble: false,
                 ShowDebugTrace: false,
                 LevelId: string.Empty,
                 ControllerConfigurationIndex: 0,
@@ -1043,7 +939,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MouseSensitivityPresetIndex: DefaultMouseSensitivityPresetIndex,
                 InvertWalkerY: false,
                 InvertFlightY: false,
-                TextureRamLimitMb: string.Empty,
                 StatusMessage: PatchBenchLaunchPresetText.BuildClearLaunchOptionsStatusMessage()));
         }
 
@@ -1067,19 +962,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchSkipFmvLaunchOption.IsChecked = preset.SkipFmv;
                 PatchBenchNoMusicLaunchOption.IsChecked = preset.NoMusic;
                 PatchBenchNoSoundLaunchOption.IsChecked = preset.NoSound;
-                PatchBenchHighDetailLaunchOption.IsChecked = preset.HighDetail;
-                PatchBenchNoStaticShadowsLaunchOption.IsChecked = preset.NoStaticShadows;
-                PatchBenchNoRumbleLaunchOption.IsChecked = preset.NoRumble;
                 PatchBenchShowDebugTraceLaunchOption.IsChecked = preset.ShowDebugTrace;
                 PatchBenchLevelLaunchOption.Text = preset.LevelId;
                 PatchBenchAdminLevelPresetComboBox.SelectedIndex = ResolveAdminLevelPresetIndex(preset.LevelId);
-                PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4);
+                PatchBenchCopiedControllerConfigComboBox.SelectedIndex = Math.Clamp(preset.ControllerConfigurationIndex, 0, 4);
                 PatchBenchPersistControllerConfigOption.IsChecked = preset.PersistControllerConfig;
                 PatchBenchSharpenMouseLookOption.IsChecked = preset.SharpenMouseLook;
                 PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = Math.Clamp(preset.MouseSensitivityPresetIndex, 0, s_mouseLookSensitivityPresets.Length - 1);
                 PatchBenchInvertWalkerYOption.IsChecked = preset.InvertWalkerY;
                 PatchBenchInvertFlightYOption.IsChecked = preset.InvertFlightY;
-                PatchBenchTextureRamLimitLaunchOption.Text = preset.TextureRamLimitMb;
                 RefreshCopiedProfileLaunchPlanPreview();
                 UpdateControlState();
             }
@@ -2416,13 +2307,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             count += PatchBenchSkipFmvLaunchOption.IsChecked == true ? 1 : 0;
             count += PatchBenchNoMusicLaunchOption.IsChecked == true ? 1 : 0;
             count += PatchBenchNoSoundLaunchOption.IsChecked == true ? 1 : 0;
-            count += PatchBenchHighDetailLaunchOption.IsChecked == true ? 1 : 0;
-            count += PatchBenchNoStaticShadowsLaunchOption.IsChecked == true ? 1 : 0;
-            count += PatchBenchNoRumbleLaunchOption.IsChecked == true ? 1 : 0;
             count += PatchBenchShowDebugTraceLaunchOption.IsChecked == true ? 1 : 0;
             count += string.IsNullOrWhiteSpace(PatchBenchLevelLaunchOption.Text) ? 0 : 1;
-            count += GetSelectedControllerConfigurationPreset().HasValue ? 1 : 0;
-            count += string.IsNullOrWhiteSpace(PatchBenchTextureRamLimitLaunchOption.Text) ? 0 : 1;
             return count;
         }
 
@@ -2448,21 +2334,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 args.Add("-nosound");
             }
 
-            if (PatchBenchHighDetailLaunchOption.IsChecked == true)
-            {
-                args.Add("-hidetail");
-            }
-
-            if (PatchBenchNoStaticShadowsLaunchOption.IsChecked == true)
-            {
-                args.Add("-nostaticshadows");
-            }
-
-            if (PatchBenchNoRumbleLaunchOption.IsChecked == true)
-            {
-                args.Add("-norumble");
-            }
-
             if (PatchBenchShowDebugTraceLaunchOption.IsChecked == true)
             {
                 args.Add("-showdebugtrace");
@@ -2475,34 +2346,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 args.Add(levelId);
             }
 
-            uint? selectedControllerConfig = GetSelectedControllerConfigurationPreset();
-            if (selectedControllerConfig.HasValue)
-            {
-                args.Add("-configuration");
-                args.Add(selectedControllerConfig.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            }
-
-            string textureRamMb = (PatchBenchTextureRamLimitLaunchOption.Text ?? string.Empty).Trim();
-            if (textureRamMb.Length > 0)
-            {
-                args.Add("-textureramlimit");
-                if (int.TryParse(textureRamMb, out int megabytes))
-                {
-                    long bytes = (long)megabytes * 1024L * 1024L;
-                    args.Add(bytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                }
-                else
-                {
-                    args.Add(textureRamMb);
-                }
-            }
-
             return args;
         }
 
         private uint? GetSelectedControllerConfigurationPreset()
         {
-            int configurationIndex = PatchBenchConfigurationLaunchPresetComboBox.SelectedIndex;
+            int configurationIndex = PatchBenchCopiedControllerConfigComboBox.SelectedIndex;
             return configurationIndex > 0
                 ? (uint)configurationIndex
                 : null;

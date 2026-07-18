@@ -1,150 +1,48 @@
 Status: active quick reference
-Last updated: 2026-04-29
-Source: migrated from archived Codex Onslaught skills during the skill clean-slate pass.
-Summary: Command-line parameter lookup.
-# Onslaught CLI Parameter Reference
+Last updated: 2026-07-18
+Source: canonical unpatched Steam `BEA.exe` command-line parser plus controlled copied-runtime observations.
+Summary: Narrow Steam launch contract used by Onslaught Toolkit.
 
-Complete command-line parameter documentation for the Onslaught engine.
+# Steam Launch Contract
 
-## Graphics Parameters
+This is intentionally not an exhaustive engine-switch catalog. It records the
+small launch surface used by current Steam workflows. Stuart's in-house PC
+source has a broader parser; those switches are not Steam contracts unless the
+canonical retail parser independently contains them.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-geforce2` | Flag | Force GeForce2-level rendering |
-| `-geforce3` | Flag | Force GeForce3-level rendering |
-| `-vshaders` | Flag | Enable vertex shaders |
-| `-novshaders` | Flag | Disable vertex shaders |
-| `-forcewindowed` | Flag | Run in windowed mode |
-| `-hidetail` | Flag | Enable high detail mode |
-| `-nostaticshadows` | Flag | Disable static shadows |
-| `-textureramlimit N` | Integer | Limit texture RAM to N bytes |
-| `-decimatemeshes` | Flag | Enable mesh decimation |
-| `-nomeshpartreduction` | Flag | Disable mesh part reduction |
-| `-pure` | Flag | Use pure Direct3D device |
-| `-impure` | Flag | Use non-pure Direct3D device |
+## Supported launch surface
 
-## Audio Parameters
+| Parameter | Evidence-bounded behavior |
+|-----------|---------------------------|
+| `-res W H` | The retail parser accepts width and height. The safe-copy workflow has exercised `1600 900`. |
+| `-skipfmv` | Controlled retail launches skip startup and level-intro FMV playback; click-to-start remains. |
+| `-level N` | The retail parser accepts a numeric level id. Controlled safe-copy workflows use this for bounded level probes. |
+| `-forcewindowed` | The canonical parser contains the guarded force-windowed branch, and the canonical guard byte is enabled. Toolkit safe copies also carry the verified force-windowed compatibility patch. |
+| `-nomusic` | Controlled retail use disables background music. |
+| `-nosound` | Controlled retail use disables game audio. |
+| `-showdebugtrace` | The retail parser accepts the flag. Toolkit exposes it only as a copied-profile diagnostic; visible output is not promised. |
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-nomusic` | Flag | Disable music playback |
-| `-nosound` | Flag | Disable all audio |
-| `-norumble` | Flag | Disable controller vibration |
+Controller configuration, sensitivity, inversion, and bindings are not launch
+arguments in the supported Steam workflow. Toolkit writes requested controller
+settings only to the safe copy's `defaultoptions.bea`.
 
-## Development Parameters
+## Supported examples
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-devmode` | Flag | Enable developer mode (debug features) |
-| `-artists` | Flag | Enable artist test mode |
-| `-killhud` | Flag | Hide the HUD (DEV_VERSION only) |
-| `-modelviewer` | Flag | Launch model viewer (DEV_VERSION, sets 64MB heap) |
-| `-cutsceneeditor` | Flag | Launch cutscene editor (DEV_VERSION) |
-| `-buildmodelinfo` | Flag | Build model info (DEV_VERSION) |
-| `-showdebugtrace` | Flag | Show debug trace output |
-| `-traceconsole` | Flag | Enable console tracing |
-
-## Resource Building Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-buildresources [platforms]` | Multi | Build resources for PC, PS2, and/or XBOX (sets 256MB heap) |
-| `-nobaseresources` | Flag | Skip base resource building |
-| `-buildgoodies` | Flag | Build goodies/unlockables |
-| `-resbuildermode` | Flag | Resource builder mode |
-| `-quickcompression` | Flag | Use fast (lower quality) compression |
-
-Example: `-buildresources PC PS2` builds for both PC and PS2.
-
-## Gameplay Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-level N` | Integer | Start at level N directly |
-| `-configuration N` | Integer | Use controller configuration N (1-4) |
-| `-skipfmv` | Flag | Skip startup and level-intro FMV playback; click-to-start remains |
-| `-attractmode` | Flag | Enable attract/demo mode |
-| `-pal` | Flag | Use PAL video mode |
-| `-ntsc` | Flag | Use NTSC video mode |
-
-## Demo Recording Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-record filename` | String | Record demo to filename |
-| `-play filename` | String | Playback demo from filename |
-| `-stresstest N` | Integer | Run stress test mode N |
-
-## Memory Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-mem N` | Integer | Set heap size to N megabytes |
-| `-largeram` | Flag | Enable large RAM mode |
-
-## Platform-Specific Parameters
-
-### PC Only
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-emulatedvd` | Flag | Emulate DVD loading behavior |
-| `-nocodeoffcd` | Flag | Don't load code from CD |
-
-### Xbox Only
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `-devkit` | Flag | Running on development kit |
-| `-clearutility` | Flag | Clear utility data |
-| `-reboot N` | Integer | Reboot Xbox after N attract cycles |
-
-## Default Values
-
-| Parameter | Default Value |
-|-----------|---------------|
-| `mMusic` | TRUE |
-| `mSound` | TRUE |
-| `mPureDevice` | TRUE |
-| `mPal` | TRUE |
-| `mLevelNo` | -1 (use normal progression) |
-| `mConfigurationNo` | 0 |
-| `mTextureRAMLimit` | 0x7FFFFFFF (2GB) |
-| `mLanguage` | LANG_ENGLISH |
-
-## Usage Examples
-
-```bash
-# Development testing - skip videos, use dev mode, start at level 5
-onslaught.exe -devmode -skipfmv -level 5
-
-# Artist testing with model viewer
-onslaught.exe -modelviewer -artists
-
-# Build PC and Xbox resources
-onslaught.exe -buildresources PC XBOX
-
-# Demo recording
-onslaught.exe -record mydemo.dem -level 1
-
-# Demo playback
-onslaught.exe -play mydemo.dem
-
-# Low-end PC settings
-onslaught.exe -geforce2 -novshaders -nostaticshadows -textureramlimit 33554432
-
-# Force windowed mode with specific controller config
-onslaught.exe -forcewindowed -configuration 2
-
-# Stress testing
-onslaught.exe -stresstest 100 -attractmode
+```text
+BEA.exe -res 1600 900 -skipfmv
+BEA.exe -skipfmv -level 850
+BEA.exe -forcewindowed -res 1600 900
 ```
 
-## Notes
+## Source/retail boundary
 
-- Parameters are case-insensitive
-- Parameters can be passed via command line or in a text string
-- DEV_VERSION parameters require a development build
-- Model viewer and cutscene editor are mutually exclusive
-- Resource building sets heap size to 256MB automatically
-- Model viewer sets heap size to 64MB automatically
+The canonical unpatched Steam executable with SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+does not contain parser literals for `-configuration`, `-norumble`,
+`-nostaticshadows`, `-hidetail`, or `-textureramlimit`. Those names occur in
+Stuart's different in-house PC source and are not accepted by AppCore or shown
+by WinUI.
+
+See
+[`CLIParams__ParseCommandLine`](../binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+for the static parser analysis and its evidence limits.
