@@ -276,7 +276,7 @@ namespace Onslaught___Career_Editor
 
             if (analysis.GoodiesInstructions > 0)
             {
-                goodiesChildren.Add(Node($"Instructions: {analysis.GoodiesInstructions}", Array.Empty<string>()));
+                goodiesChildren.Add(Node($"Locked with hint: {analysis.GoodiesInstructions}", Array.Empty<string>()));
             }
 
             if (analysis.GoodiesLocked > 0)

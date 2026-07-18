@@ -149,7 +149,7 @@ namespace Onslaught___Career_Editor
             return state switch
             {
                 MissionScriptGoodieState.Unknown => "Locked",
-                MissionScriptGoodieState.Instructions => "Instructions",
+                MissionScriptGoodieState.Instructions => "Locked with hint",
                 MissionScriptGoodieState.New => "New",
                 MissionScriptGoodieState.Old => "Old",
                 _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Goodie state must be 0, 1, 2, or 3.")

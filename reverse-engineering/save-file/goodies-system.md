@@ -20,6 +20,15 @@ storage end = 0x23F6 (exclusive)
 | `2` | newly unlocked | Gold badge |
 | `3` | previously viewed | Blue badge |
 
+Steam `CFEPGoodies__Render` (`0x0045E0D0`) confirms that states `0` and `1`
+both keep the dark interior. State `0` uses the gray tight ring; state `1` uses
+the pale/white tight ring and can display the unlock hint. Neither ring is the
+cursor. Selection is a separate animation that expands the selected ring to
+`1.25x` and rotates it by up to 45 degrees. State `2` renders gold and state `3`
+renders blue. Stuart's `FEPGoodies.cpp` has the same state switch. Horizontal
+wall panning changes projected screen position, not the cursor coordinate used
+by `get_goodie_number`.
+
 AppCore accepts only a real `10004`-byte, version-`0x4BD1` baseline, refuses in-place Goodie patching, limits writes to displayable indices, and preserves unselected and reserved bytes. [`BesFilePatcher.cs`](../../OnslaughtCareerEditor.AppCore/BesFilePatcher.cs) and its focused tests are the implementation authority for this contract.
 
 MissionScript handlers use one-based indices:
@@ -64,11 +73,18 @@ Goodies `71..73` have source data-table entries, unlock/instruction hooks, and s
 
 ## Bounded retail consumption
 
-Stuart's in-house PC source establishes the four-byte state shape and state meanings, but its frontend implementation and addresses do not define the console-derived Steam release. The checked Steam executable owns the offsets used here: `CCareer__Load` copies the serialized career from file offset `0x0002`, the retail Goodie array begins at file offset `0x1F46`, and `CFEPGoodies` maps wall coordinate `(13,0)` to save index `74`.
+Stuart's in-house PC source establishes the four-byte state shape and state meanings, but its frontend implementation and addresses do not define the console-derived Steam release. The checked Steam executable owns the offsets used here: `CCareer__Load` copies the serialized career from file offset `0x0002`, the retail Goodie array begins at file offset `0x1F46`, and `CFEPGoodies` maps wall coordinate `(2,0)` to save index `2`.
 
-A controlled WinUI/AppCore A/B used disposable copies of one real `10004`-byte, version-`0x4BD1` career save. The control retained Goodie `74 = 0`; the edited output set its dword at `0x206E` to `2`. The output differed only at byte `0x206E` (`00` to `02`); all other bytes, including reserved indices `233..299`, matched, and the source hash was unchanged. Same-file output and a new output inside the installed game tree were both rejected without creating or changing a file.
+A controlled WinUI/AppCore A/B used disposable copies of one real `10004`-byte, version-`0x4BD1` career save. The control retained Goodie `2 = 0`; the edited output set its dword at `0x1F4E` to `2`. The output differed only at byte `0x1F4E` (`00` to `02`); all other bytes, including reserved indices `233..299`, matched, and the source hash was unchanged. Same-file output and a new output inside the installed game tree were both rejected without creating or changing a file.
 
-Both app-owned game copies had the same verified copied `BEA.exe`. After automated retail selection of the sole staged save, the control exposed runtime states `0,0,0` for Goodies `73..75`, while the edited arm exposed `0,2,0` at the same addresses. With the live `CFEPGoodies` object at its checked retail vtable and cursor `(13,0)`, the edited wall entry became `Unlocked! Battle Engine Aquila Picture`; the control target was locked. The Steam load flow also rewrote the copy's `defaultoptions.bea` as an exact mirror of the selected save buffer, independently confirming which buffer it consumed. This establishes causality for Goodie `74` load and wall display only.
+Both app-owned game copies had the same verified copied `BEA.exe`. Before any Goodies-wall interaction, automated retail selection of the sole staged save exposed runtime states `1,0,0` for Goodies `1..3` in the control and `1,2,0` at the same addresses in the edited arm. With the live `CFEPGoodies` object at its checked retail vtable and cursor `(2,0)`, the edited cell was gold and exposed `Unlocked! Col. Chuck Kramer`; opening it changed the live state from `2` to `3`, turned the cell blue, and displayed the Kramer image. The control target remained dark at raw state `0`. Process memory before selection, the live cursor, the retail mapper, the label, and the automatic state transition establish the identity; ring appearance alone does not. The Steam load flow also rewrote the copy's `defaultoptions.bea` as an exact mirror of the selected save buffer before wall interaction, independently confirming which buffer it consumed. The staged save and mirror remained byte-identical to the edited output after the live `2`-to-`3` transition, so persistence of the viewed state was not established.
+
+The tested save was named `Maladim`, which makes retail cheat index `3`
+available for the unrelated God-mode menu option. Fresh Steam decompilation shows
+that `CFEPGoodies__Process` checks only indices `0` (`MALLOY`) and `5`
+(`latête`), so that name did not activate an all-Goodies display override. This
+establishes causality for Goodie `2` load, wall display, and live state
+transition only; it is not a generic no-cheat runtime baseline.
 
 ## Corrected offset boundary
 
@@ -83,4 +99,4 @@ Writing a progress flag at `0x22D4` corrupts the neighboring Goodie dword. AppCo
 
 ## Claim boundary
 
-Source tables and static retail evidence establish layout and likely unlock ownership. Copied-save tests establish broad byte preservation, and the bounded retail A/B above establishes Goodie `74` load-and-wall consumption. They do not establish every runtime wall path, retail/source identity for every rule, or rebuild parity. No game payload, private artifact path, or installed-game mutation belongs in this repository.
+Source tables and static retail evidence establish layout and likely unlock ownership. Copied-save tests establish broad byte preservation, and the bounded retail A/B above establishes Goodie `2` load, wall display, and live transition from new to old. It does not establish disk persistence after that transition, every runtime wall path, retail/source identity for every rule, or rebuild parity. No game payload, private artifact path, or installed-game mutation belongs in this repository.

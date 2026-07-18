@@ -37,7 +37,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
         [Theory]
         [InlineData(0, "Locked")]
-        [InlineData(1, "Instructions")]
+        [InlineData(1, "Locked with hint")]
         [InlineData(2, "New")]
         [InlineData(3, "Old")]
         public void GetStateLabel_MatchesAppCoreGoodieVocabulary(uint rawState, string label)

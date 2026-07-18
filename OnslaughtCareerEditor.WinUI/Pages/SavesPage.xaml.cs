@@ -950,7 +950,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? stateTag = (EditorFocusedGoodieStateComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
             if (!uint.TryParse(stateTag, out uint rawState) || rawState > MissionScriptGoodieStateSaveCodec.MaxKnownStateValue)
             {
-                error = "Choose Locked, Instructions, New, or Old for the focused Goodie state.";
+                error = "Choose Locked, Locked with hint, New, or Old for the focused Goodie state.";
                 return null;
             }
 

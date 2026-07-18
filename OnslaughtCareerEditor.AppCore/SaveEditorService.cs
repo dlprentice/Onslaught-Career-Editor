@@ -194,7 +194,7 @@ namespace Onslaught___Career_Editor
 
             if ((uint)request.State > MissionScriptGoodieStateSaveCodec.MaxKnownStateValue)
             {
-                return PatchResult.Fail("Goodie state must be Locked, Instructions, New, or Old.");
+                return PatchResult.Fail("Goodie state must be Locked, Locked with hint, New, or Old.");
             }
 
             try

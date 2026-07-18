@@ -608,7 +608,7 @@
                                               Header="State"
                                               SelectionChanged="EditorFocusedGoodieStateComboBox_SelectionChanged">
                                         <ComboBoxItem Content="Locked" Tag="0" />
-                                        <ComboBoxItem Content="Instructions" Tag="1" />
+                                        <ComboBoxItem Content="Locked with hint (pale ring)" Tag="1" />
                                         <ComboBoxItem Content="New (gold)" Tag="2" />
                                         <ComboBoxItem Content="Old (blue)" Tag="3" />
                                     </ComboBox>

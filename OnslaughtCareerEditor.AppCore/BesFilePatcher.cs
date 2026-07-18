@@ -1144,7 +1144,7 @@ namespace Onslaught___Career_Editor
             return state switch
             {
                 0 => "Locked",
-                GOODIE_INSTRUCTIONS => "Instructions",
+                GOODIE_INSTRUCTIONS => "Locked with hint",
                 GOODIE_NEW => "New",
                 GOODIE_OLD => "Old",
                 _ => "Other"
@@ -1942,7 +1942,7 @@ namespace Onslaught___Career_Editor
             sb.AppendLine($"    - NEW (gold): {analysis.GoodiesNew}");
             sb.AppendLine($"    - OLD (blue): {analysis.GoodiesOld}");
             if (analysis.GoodiesInstructions > 0)
-                sb.AppendLine($"    - Instructions: {analysis.GoodiesInstructions}");
+                sb.AppendLine($"    - Locked with hint: {analysis.GoodiesInstructions}");
             if (analysis.GoodiesOther > 0)
                 sb.AppendLine($"    - Other:      {analysis.GoodiesOther}");
             sb.AppendLine($"  Locked:    {analysis.GoodiesLocked}");

@@ -26,20 +26,23 @@ AppCore starts from an existing retail-generated baseline, preserves file size
 and unknown bytes outside selected regions, stages output beside the
 destination, and verifies the committed bytes. It does not synthesize saves.
 
-One bounded Steam-retail A/B proved Goodie `74` only. Starting from a real
+One bounded Steam-retail A/B proved Goodie `2` only. Starting from a real
 `10004`-byte save with state `0`, the focused WinUI/AppCore path wrote state `2`
-at dword `0x206E`; only byte `0x206E` changed and every other byte, including
-reserved Goodie slots `233..299`, remained identical. Identical copied
-executables loaded the control as runtime state `0` and the edit as state `2`.
-At Goodies-wall coordinate `(13,0)`, the retail mapper selected ID `74` and the
-edited arm exposed `Unlocked! Battle Engine Aquila Picture`; the retail load
-path also mirrored each selected save buffer to that copy's
-`defaultoptions.bea`. This proves one load-and-wall-consumption path on the
-tested Steam specimen, not other Goodie IDs, unlock rules, releases, or
-persistence after opening the item. Save staging continues to verify the
-app-owned profile and executable, but does not treat retail's mutable
-`defaultoptions.bea` mirror as immutable staging evidence; guarded launch
-validation remains strict.
+at dword `0x1F4E`; only byte `0x1F4E` changed and every other byte, including
+reserved Goodie slots `233..299`, remained identical. The source hash was
+unchanged. Identical verified copied executables loaded Goodies `1..3` as
+runtime states `1,0,0` in the control and `1,2,0` in the edit. At wall
+coordinate `(2,0)`, the retail mapper selected ID `2`; the edited cell was gold,
+exposed `Unlocked! Col. Chuck Kramer`, and transitioned from live state `2` to
+`3` when opened. The tested `Maladim` name enables the unrelated retail
+cheat-index-3 God-menu gate, but the Goodies process consults only cheat indices
+`0` and `5`. The retail load path also mirrored each selected save buffer to
+that copy's `defaultoptions.bea`. This proves one load, wall-display, and live
+state-transition path on the tested Steam specimen, not a generic no-cheat
+environment, other Goodie IDs, unlock rules, releases, or disk persistence
+after opening the item. Save staging continues to verify the app-owned profile
+and executable, but does not treat retail's mutable `defaultoptions.bea` mirror
+as immutable staging evidence; guarded launch validation remains strict.
 
 ### Windowed & Mods
 

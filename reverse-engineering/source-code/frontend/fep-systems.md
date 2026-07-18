@@ -1,5 +1,35 @@
 # Frontend System
 
+## Steam startup skip sequence
+
+Fresh Steam-binary analysis and controlled app-owned copied-runtime observation
+separate startup from `CGame__RunIntroFMV`:
+
+- Front-end page `12` is the object at `CFrontEnd + 0x4034` (retail runtime
+  address `0x008A178C`) with vtable `0x005E49B4`. Its button handler at
+  `0x0051B660` accepts virtual action `0x2C` while the page substate at `+0x0C`
+  is zero. Its process function at `0x0051B6B0` also dispatches that action for
+  a full-window mouse click and otherwise can time out to attract state `-3`.
+  Some older Ghidra labels call this subobject `CFEPMultiplayerStart`; the page
+  table and function behavior establish its startup-intro role.
+- The retail default table at `0x00514210` maps action `0x2C` to Space and
+  Enter. In copied runtime, one focused Space press advanced page `12` to the
+  letterboxed startup movie.
+- The fullscreen receiver at `0x004656E0` quits playback for virtual
+  `BUTTON_SKIP_CUTSCENE` (`7`), whose retail defaults include Space, Enter,
+  Escape, and numpad Enter; the playback loop also accepts transient left-,
+  middle-, or right-mouse latches. A second focused Space press advanced the
+  startup movie immediately to `click to start`, after which a click entered
+  the main menu.
+
+`-skipfmv` is parsed at `0x00423BC0`, but its gate at `0x00663050` belongs to
+the level-intro path in `CGame__RunIntroFMV` (`0x0046D890`). It did not bypass
+the startup front-end sequence in the controlled copied runtime. For the
+checked Steam specimen, the reliable automated startup sequence is therefore
+focus and observe, Space, observe the startup movie, Space, observe
+`click to start`, then click. This does not claim identical input tables or
+timing in other releases.
+
 ## Save/Load Frontend Pages (FEPLoadGame.cpp/h, FEPSaveGame.cpp/h, PCFEPLoadGame.cpp/h, PCFEPSaveGame.cpp/h)
 
 > Analysis added December 2025

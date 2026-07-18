@@ -1081,7 +1081,7 @@ namespace Onslaught___Career_Editor
 	                        case "NEW": countNew++; break;
 	                        case "OLD": countOld++; break;
 	                        case "LOCKED": countLocked++; break;
-	                        case "INSTRUCTIONS": countInstructions++; break;
+	                        case "LOCKED WITH HINT": countInstructions++; break;
 	                        case "OTHER": countOther++; break;
 	                        case "RESERVED": countReserved++; break;
 	                    }
@@ -1097,7 +1097,7 @@ namespace Onslaught___Career_Editor
 	                Console.WriteLine("Summary (displayable slots 0-232):");
 	                Console.WriteLine($"  Unlocked: {unlocked}/{displayableCount} (NEW {countNew}, OLD {countOld})");
 	                Console.WriteLine($"  Locked: {countLocked}");
-	                Console.WriteLine($"  Instructions: {countInstructions}");
+	                Console.WriteLine($"  Locked with hint: {countInstructions}");
 	                if (countOther > 0)
 	                    Console.WriteLine($"  Other: {countOther}");
 	                Console.WriteLine($"  Reserved slots: {countReserved}");
