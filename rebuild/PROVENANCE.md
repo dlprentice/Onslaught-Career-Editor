@@ -41,11 +41,15 @@ not provenance.
 ## Current slice
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
-infrastructure. The Godot Aquila Handling Lab now consumes static conversions
-of the released Federation walker and jet meshes; their exact source/output
-hashes live with the assets. Its arena, targets, weapons, resources, material
-assignment, articulation, jet/morph presentation, and scale remain provisional
-unless a specific retained retail measurement says otherwise.
+infrastructure. The Godot Level 100 Opening Slice consumes static conversions
+of the released Federation walker, jet, Control Tower, and Tank Factory meshes;
+their exact source/output hashes live with the assets. The released Level 100
+WRES placement records now set the player start heading, two nearby facility
+placements, and the Target Zone 1 and Firing Range trigger locations. The loose
+mission scripts establish their order and 0.5-second event delays. Terrain,
+targets, weapons, resources, material assignment, articulation, jet/morph
+presentation, and scale remain provisional unless specific retained evidence
+says otherwise.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -61,6 +65,6 @@ jet-to-walker, transform presentation, resources, weapons, and flight dynamics
 remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts, loads both curated Aquila
-meshes, renders, advances, and exits. It does not prove material, animation,
-mission, scale, timing, or visual parity.
+A native smoke proves the current client starts, loads the four curated meshes,
+exposes both mission markers, renders, advances, and exits. It does not prove
+material, animation, complete mission, scale, timing, or visual parity.

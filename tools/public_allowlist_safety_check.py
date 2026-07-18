@@ -70,6 +70,10 @@ ALLOW_EXACT = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj",
     "references/AYAResourceExtractor/BoxWithTextures.fbx",
     "tests_shared/fixtures/gold_career_save.bin",
 }
@@ -79,6 +83,10 @@ ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya": "35aada1313c3cbb796ba75db071321035f7005096da7c148a7514944f4772b4c",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj": "075deb202b805c3c9f08f5c51e8c54277f76ae118dabef9bdeaede787a7e1bd3",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj": "6cd8840a251561d07d5b51850c3ddaa78702998bc5978aae1bb4537dfcbc753f",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya": "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya": "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj": "c9cbb5b1bb5c1215f5fed1ec4706ca77b99f6fb2db740a28c012989ead0d8c9a",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj": "50f797ad955edde4eb37709bcf692f9dfe8abd600a7d0cbd6a617b29e1ae7d22",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }

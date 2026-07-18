@@ -231,7 +231,7 @@ public sealed class InteractiveSessionTests
         }
 
         Assert.Equal(1, session.CurrentSnapshot.FacingX);
-        Assert.Equal(1, session.CurrentSnapshot.FacingZ);
+        Assert.Equal(0, session.CurrentSnapshot.FacingZ);
     }
 
     [Fact]

@@ -17,17 +17,18 @@ synthetic arena or another layer of readiness tooling.
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The current Godot app is the **Aquila Handling Lab**. It renders the released
-Federation Aquila walker and jet geometry over a procedural arena with
-synthetic targets. It is useful for exercising the deterministic boundary,
-body-relative movement, chase camera, input, and rendering, but it is not yet a
-playable reconstruction of the retail game.
+The current Godot app is the **Level 100 Opening Slice**. It renders the
+released Federation Aquila, Control Tower, and Tank Factory geometry at their
+authored opening positions. Core owns the released player start heading and
+the Target Zone 1 → Firing Range objective handoff, including both scripts'
+0.5-second event delay. The terrain plane, materials, combat targets, weapons,
+resources, and most mission behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
-assets. The two Aquila render meshes are the first integrated originals and
-carry their source hashes and limitations in
-[`Assets/Aquila/README.md`](OnslaughtRebuild.Godot/Assets/Aquila/README.md).
-Add further assets only when a real implemented slice consumes them.
+assets. Exact source hashes and limitations live with the
+[`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md) and
+[`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) assets. Add
+further assets only when a real implemented slice consumes them.
 
 ## Run
 
@@ -51,29 +52,33 @@ Controls:
 | `←`, `→` | Turn body left/right |
 | `Space` | Fire the synthetic projectile |
 | `Q` | Begin walker-to-jet transition; reverse transition remains provisional |
-| `R` | Reset the arena |
+| `R` | Reset the slice |
 | `Esc` | Exit |
 
 ## Current truth
 
-Core currently provides integer positions, resources, cooldowns, projectile
-interactions, reset behavior, ordered snapshots, and versioned SHA-256 state and
-trace hashes. Continuous body yaw is part of the snapshot/hash, and every input
-axis—including look—is part of the trace. Movement is projected relative to the
-body's deterministic eight-way heading.
+Core currently provides integer positions, opening-objective state, resources,
+cooldowns, projectile interactions, reset behavior, ordered snapshots, and
+versioned SHA-256 state and trace hashes. Continuous body yaw and Level 100
+objective state are part of the snapshot/hash, and every input axis—including
+look—is part of the trace. Movement is projected relative to the body's
+deterministic eight-way heading.
 
 Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
 state. Eight-way movement projection, camera tuning, jet-to-walker, transform
-animation, resource semantics, weapons, terrain, collision, AI, missions,
+animation, resource semantics, weapons, terrain, collision, AI, the remaining mission,
 audio, campaign, and networking remain provisional or absent.
 
 The client switches between deterministic static conversions of the released
-walker and jet meshes. Texture/material assignment, part articulation, transform
-animation, and retail scale remain unimplemented; the procedural arena and
-synthetic combat objects are unchanged.
+walker and jet meshes and loads two released Level 100 facility meshes. The
+retired synthetic arena boundary and placeholder structures are gone. Terrain,
+texture/material assignment, part articulation, transform animation, retail
+scale, tutorial dialogue and gates, collision, and the full mission remain
+unimplemented; three synthetic combat targets still exercise the older firing
+path and are not Level 100 parity.
 
 ## Verify
 

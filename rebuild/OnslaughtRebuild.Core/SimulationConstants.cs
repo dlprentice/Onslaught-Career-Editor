@@ -5,7 +5,16 @@ namespace OnslaughtRebuild.Core;
 public static class SimulationConstants
 {
     public const int TicksPerSecond = 30;
-    public const int ArenaHalfExtent = 30_000;
+    // 100_res_PC.aya WRES/WRLD placement data, translated so the released
+    // player-one start (288.6875, 243.25) is Core origin. Half-milli values
+    // use midpoint-away-from-zero rounding in the integer simulation.
+    public static readonly SimVector2 Level100TargetZone1Position = new(-43_188, 33_500);
+    public static readonly SimVector2 Level100FiringRangePosition = new(-69_688, 72_750);
+    public const int Level100PlayerStartYawMicroRad = 509_830;
+    public const int Level100ObjectiveTriggerRadius = 5_000;
+    // TargetZone1.msl and FiringRange.msl each pause 0.5 seconds before
+    // posting their event. Fifteen fixed Core ticks preserve that delay.
+    public const int Level100ObjectiveDispatchTicks = 15;
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.

@@ -68,7 +68,7 @@ Root [`package.json`](package.json) is the command authority. See
 [`VALIDATION.md`](VALIDATION.md) for proportional command selection and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution boundaries.
 
-The Aquila Handling Lab can be launched independently:
+The Level 100 Opening Slice can be launched independently:
 
 ```powershell
 npm run run:rebuild-godot

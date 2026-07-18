@@ -186,7 +186,7 @@ public sealed class ReplayTests
         Assert.Equal(1, tape.Spans[0].LookX);
         ReplayResult result = ReplayRunner.Run(tape);
         Assert.Equal(1, result.FinalState.FacingX);
-        Assert.Equal(1, result.FinalState.FacingZ);
+        Assert.Equal(0, result.FinalState.FacingZ);
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public sealed class ReplayTests
 
         Assert.Equal(idledResult.FinalState.FacingX, lookedResult.FinalState.FacingX);
         Assert.Equal(idledResult.FinalState.FacingZ, lookedResult.FinalState.FacingZ);
-        Assert.Equal(10_444, lookedResult.FinalState.FacingYawMicroRad);
+        Assert.Equal(520_274, lookedResult.FinalState.FacingYawMicroRad);
         Assert.Equal(10_444, lookedResult.FinalState.WalkerYawVelocityMicroRadPerTick);
         Assert.NotEqual(idledResult.FinalStateHash, lookedResult.FinalStateHash);
         Assert.NotEqual(idledResult.TraceHash, lookedResult.TraceHash);

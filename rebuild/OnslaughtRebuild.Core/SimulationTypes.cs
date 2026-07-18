@@ -14,6 +14,15 @@ public enum VehicleTransition
     WalkerToJet = 1,
 }
 
+public enum Level100OpeningPhase
+{
+    ReachTargetZone1 = 0,
+    TargetZone1DispatchPending = 1,
+    ReachFiringRange = 2,
+    FiringRangeDispatchPending = 3,
+    FiringRangeReached = 4,
+}
+
 [Flags]
 public enum SimActions : byte
 {
@@ -89,6 +98,8 @@ public sealed record WorldSnapshot(
     int Hull,
     int TransformTicksRemaining,
     int FireCooldownTicksRemaining,
+    Level100OpeningPhase Level100Phase,
+    int Level100DispatchTicksRemaining,
     int NextProjectileId,
     int TargetsDestroyed,
     IReadOnlyList<TargetSnapshot> Targets,

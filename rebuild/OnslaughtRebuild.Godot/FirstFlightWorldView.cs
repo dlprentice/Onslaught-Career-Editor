@@ -12,15 +12,21 @@ public sealed partial class FirstFlightWorldView : Node3D
     private static readonly Color SteelDark = new(0.075f, 0.105f, 0.115f);
     private static readonly Color Amber = new(0.96f, 0.52f, 0.16f);
     private static readonly Color Green = new(0.30f, 0.70f, 0.39f);
+    private static readonly Color Cyan = new(0.14f, 0.78f, 0.92f);
+    private static readonly Color MutedMarker = new(0.25f, 0.34f, 0.37f);
     private static readonly Color Wreck = new(0.13f, 0.12f, 0.11f);
 
     private readonly Dictionary<int, TargetVisual> _targets = [];
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
+    private readonly List<MeshInstance3D> _level100Facilities = [];
+    private readonly List<ObjectiveMarkerVisual> _level100ObjectiveMarkers = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private MeshInstance3D _walkerMesh = null!;
     private MeshInstance3D _jetMesh = null!;
     private Camera3D _camera = null!;
+    private ObjectiveMarkerVisual _targetZone1Marker = null!;
+    private ObjectiveMarkerVisual _firingRangeMarker = null!;
     private bool _cameraInitialized;
     private float _modeBlend;
 
@@ -40,11 +46,17 @@ public sealed partial class FirstFlightWorldView : Node3D
         (_walkerMesh.Mesh?.GetSurfaceCount() ?? 0) +
         (_jetMesh.Mesh?.GetSurfaceCount() ?? 0);
 
+    public int RetailLevel100FacilityCount => _level100Facilities.Count;
+
+    public int Level100ObjectiveMarkerCount => _level100ObjectiveMarkers.Count;
+
     public void Initialize(WorldSnapshot snapshot)
     {
         Name = "WorldView";
         BuildEnvironment();
-        BuildArena();
+        BuildLevel100OpeningGround();
+        BuildLevel100Facilities();
+        BuildLevel100ObjectiveMarkers();
         BuildPlayer();
         BuildTargets(snapshot);
         BuildCamera();
@@ -79,6 +91,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             ? desiredModeBlend
             : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
         UpdatePlayerShape(current);
+        UpdateLevel100ObjectiveMarkers(current);
         UpdateTargets(current);
         UpdateProjectiles(current);
         UpdateCamera(current, playerPosition, frameDelta);
@@ -120,51 +133,113 @@ public sealed partial class FirstFlightWorldView : Node3D
         });
     }
 
-    private void BuildArena()
+    private void BuildLevel100OpeningGround()
     {
         var groundMaterial = VisualPrimitives.CreateMaterial(new Color(0.075f, 0.105f, 0.095f), 0.05f, 0.92f);
         AddChild(new MeshInstance3D
         {
-            Name = "ArenaGround",
-            Mesh = new PlaneMesh { Size = new Vector2(68f, 68f) },
+            Name = "Level100ProvisionalGround",
+            Mesh = new PlaneMesh { Size = new Vector2(240f, 240f) },
             MaterialOverride = groundMaterial,
         });
 
         var gridMaterial = VisualPrimitives.CreateMaterial(new Color(0.20f, 0.29f, 0.27f, 0.58f), 0f, 1f);
-        for (int coordinate = -30; coordinate <= 30; coordinate += 5)
+        for (int coordinate = -110; coordinate <= 110; coordinate += 10)
         {
             AddChild(VisualPrimitives.CreateBox(
                 $"GridX{coordinate}",
-                new Vector3(0.035f, 0.025f, 60f),
+                new Vector3(0.035f, 0.025f, 220f),
                 new Vector3(coordinate, 0.018f, 0f),
                 gridMaterial));
             AddChild(VisualPrimitives.CreateBox(
                 $"GridZ{coordinate}",
-                new Vector3(60f, 0.025f, 0.035f),
+                new Vector3(220f, 0.025f, 0.035f),
                 new Vector3(0f, 0.018f, coordinate),
                 gridMaterial));
         }
-
-        BuildArenaBoundariesOnly();
-
-        var structureMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.25f, 0.78f);
-        AddChild(VisualPrimitives.CreateBox("WestRelay", new Vector3(3.5f, 5f, 3.5f), new Vector3(-26f, 2.5f, 20f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("EastRelay", new Vector3(4f, 7f, 3f), new Vector3(25f, 3.5f, 16f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("SouthBlock", new Vector3(8f, 2.8f, 3f), new Vector3(19f, 1.4f, -25f), structureMaterial));
-        AddChild(VisualPrimitives.CreateBox("NorthBlock", new Vector3(6f, 2.2f, 4f), new Vector3(-17f, 1.1f, 26f), structureMaterial));
     }
 
-    private void BuildArenaBoundariesOnly()
+    private void BuildLevel100Facilities()
     {
-        var boundaryMaterial = VisualPrimitives.CreateMaterial(
-            new Color(0.78f, 0.30f, 0.08f),
-            0.15f,
-            0.5f,
-            new Color(0.80f, 0.21f, 0.04f));
-        AddChild(VisualPrimitives.CreateBox("NorthBoundary", new Vector3(62f, 0.16f, 0.18f), new Vector3(0f, 0.08f, 30.6f), boundaryMaterial));
-        AddChild(VisualPrimitives.CreateBox("SouthBoundary", new Vector3(62f, 0.16f, 0.18f), new Vector3(0f, 0.08f, -30.6f), boundaryMaterial));
-        AddChild(VisualPrimitives.CreateBox("EastBoundary", new Vector3(0.18f, 0.16f, 62f), new Vector3(30.6f, 0.08f, 0f), boundaryMaterial));
-        AddChild(VisualPrimitives.CreateBox("WestBoundary", new Vector3(0.18f, 0.16f, 62f), new Vector3(-30.6f, 0.08f, 0f), boundaryMaterial));
+        AddLevel100Facility(
+            "RetailControlTower",
+            "res://Assets/Level100/level100-control-tower.obj",
+            new Vector3(-13.289886f, 0.09f, 5.603271f),
+            0f,
+            new Color(0.42f, 0.53f, 0.56f));
+        AddLevel100Facility(
+            "RetailTankFactory",
+            "res://Assets/Level100/level100-tank-factory.obj",
+            new Vector3(10.125f, 0.24f, 22.375f),
+            1.7894337f,
+            new Color(0.49f, 0.55f, 0.48f));
+    }
+
+    private void AddLevel100Facility(
+        string name,
+        string meshPath,
+        Vector3 position,
+        float retailYaw,
+        Color color)
+    {
+        var root = new Node3D
+        {
+            Name = name,
+            Position = position,
+            Rotation = new Vector3(0f, retailYaw, 0f),
+        };
+        var mesh = new MeshInstance3D
+        {
+            Name = $"{name}Geometry",
+            Mesh = CuratedObjMeshLoader.Load(meshPath),
+            RotationDegrees = new Vector3(-90f, 0f, 0f),
+            MaterialOverride = VisualPrimitives.CreateMaterial(color, 0.28f, 0.72f),
+        };
+        root.AddChild(mesh);
+        AddChild(root);
+        _level100Facilities.Add(mesh);
+    }
+
+    private void BuildLevel100ObjectiveMarkers()
+    {
+        _targetZone1Marker = CreateObjectiveMarker(
+            "TargetZone1Marker",
+            SimulationConstants.Level100TargetZone1Position);
+        _firingRangeMarker = CreateObjectiveMarker(
+            "FiringRangeMarker",
+            SimulationConstants.Level100FiringRangePosition);
+    }
+
+    private ObjectiveMarkerVisual CreateObjectiveMarker(string name, SimVector2 position)
+    {
+        var material = VisualPrimitives.CreateMaterial(
+            new Color(MutedMarker, 0.20f),
+            0f,
+            0.48f,
+            MutedMarker);
+        var root = new Node3D
+        {
+            Name = name,
+            Position = ToWorld(position, 0f),
+        };
+        MeshInstance3D area = VisualPrimitives.CreateCylinder(
+            "TriggerArea",
+            SimulationConstants.Level100ObjectiveTriggerRadius * UnitsToMeters,
+            0.08f,
+            new Vector3(0f, 0.04f, 0f),
+            material);
+        MeshInstance3D beacon = VisualPrimitives.CreateCylinder(
+            "ObjectiveBeacon",
+            0.10f,
+            14f,
+            new Vector3(0f, 7f, 0f),
+            material);
+        root.AddChild(area);
+        root.AddChild(beacon);
+        AddChild(root);
+        var marker = new ObjectiveMarkerVisual(root, material);
+        _level100ObjectiveMarkers.Add(marker);
+        return marker;
     }
 
     private void BuildPlayer()
@@ -237,7 +312,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             Name = "FollowCamera",
             Fov = 63f,
             Near = 0.1f,
-            Far = 180f,
+            Far = 300f,
             Current = true,
         };
         AddChild(_camera);
@@ -253,6 +328,32 @@ public sealed partial class FirstFlightWorldView : Node3D
             ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
             : 0f;
         _playerBodyPivot.Position = new Vector3(0f, transitionLift, 0f);
+    }
+
+    private void UpdateLevel100ObjectiveMarkers(WorldSnapshot snapshot)
+    {
+        SetObjectiveMarkerState(
+            _targetZone1Marker,
+            snapshot.Level100Phase is Level100OpeningPhase.ReachTargetZone1 or
+                Level100OpeningPhase.TargetZone1DispatchPending,
+            snapshot.Level100Phase >= Level100OpeningPhase.ReachFiringRange);
+        SetObjectiveMarkerState(
+            _firingRangeMarker,
+            snapshot.Level100Phase is Level100OpeningPhase.ReachFiringRange or
+                Level100OpeningPhase.FiringRangeDispatchPending,
+            snapshot.Level100Phase == Level100OpeningPhase.FiringRangeReached);
+    }
+
+    private static void SetObjectiveMarkerState(
+        ObjectiveMarkerVisual marker,
+        bool active,
+        bool complete)
+    {
+        Color color = complete ? Green : active ? Cyan : MutedMarker;
+        marker.Material.AlbedoColor = new Color(color, active ? 0.32f : 0.18f);
+        marker.Material.Emission = color;
+        marker.Material.EmissionEnergyMultiplier = active ? 3.0f : complete ? 1.5f : 0.6f;
+        marker.Root.Visible = active || complete;
     }
 
     private void UpdateTargets(WorldSnapshot snapshot)
@@ -318,18 +419,11 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdateCamera(WorldSnapshot snapshot, Vector3 playerPosition, float frameDelta)
     {
-        var forward = new Vector3(snapshot.FacingX, 0f, snapshot.FacingZ);
-        if (forward.IsZeroApprox())
-        {
-            forward = new Vector3(0f, 0f, 1f);
-        }
-        else
-        {
-            forward = forward.Normalized();
-        }
+        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
+        var forward = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
 
-        Vector3 focus = playerPosition + (forward * 4.5f) + new Vector3(0f, 1.1f, 0f);
-        Vector3 desired = playerPosition - (forward * 11.5f) + new Vector3(0f, 5.8f, 0f);
+        Vector3 focus = playerPosition + (forward * 5.5f) + new Vector3(0f, 1.2f, 0f);
+        Vector3 desired = playerPosition - (forward * 14.5f) + new Vector3(0f, 7.0f, 0f);
         if (!_cameraInitialized)
         {
             _camera.Position = desired;
@@ -355,5 +449,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         MeshInstance3D Crossbar,
         MeshInstance3D Beacon,
         MeshInstance3D Marker,
+        StandardMaterial3D Material);
+
+    private sealed record ObjectiveMarkerVisual(
+        Node3D Root,
         StandardMaterial3D Material);
 }

@@ -89,6 +89,7 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 
 # Reviewed source exceptions: active rebuild assets and canonical RE database.
 !rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/*.aya
+!rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/*.aya
 !reverse-engineering/ghidra/
 !reverse-engineering/ghidra/**
 

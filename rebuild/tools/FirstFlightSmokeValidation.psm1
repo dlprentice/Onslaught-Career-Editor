@@ -36,13 +36,14 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v1' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v2' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 120 $report.tick
-    Assert-SmokeValue 'stateHash' 'dd8504b39e26b71aaede215d380d7ef88ffb007b9779f4f1c3ba77a81bba0980' $report.stateHash
+    Assert-SmokeValue 'stateHash' 'da95b8d52e5870c8a328a127dabb147d5b641495e3a639df2125d488053aac22' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
+    Assert-SmokeValue 'level100Phase' 'ReachTargetZone1' $report.level100Phase
     Assert-SmokeValue 'totalSteps' 120 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 1 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 1 $report.resetEdgesConsumed
@@ -55,6 +56,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'playerVisualPresent' $true $report.playerVisualPresent
     Assert-SmokeValue 'retailAquilaMeshesPresent' $true $report.retailAquilaMeshesPresent
     Assert-SmokeValue 'retailAquilaSurfaceCount' 2 $report.retailAquilaSurfaceCount
+    Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
+    Assert-SmokeValue 'level100ObjectiveMarkerCount' 2 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'targetVisualCount' 3 $report.targetVisualCount
     Assert-SmokeValue 'hudReady' $true $report.hudReady
     Assert-SmokeValue 'focusLossHandlerInputCleared' $true $report.focusLossHandlerInputCleared

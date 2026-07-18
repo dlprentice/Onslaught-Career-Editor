@@ -43,7 +43,7 @@ public sealed partial class FirstFlightGame : Node3D
             ParseUserArguments();
 
             Window window = GetWindow();
-            window.Title = "Onslaught Rebuild - Aquila Handling Lab";
+            window.Title = "Onslaught Rebuild - Level 100 Opening Slice";
             window.MinSize = new Vector2I(1200, 675);
 
             _world = new FirstFlightWorldView();
@@ -58,7 +58,7 @@ public sealed partial class FirstFlightGame : Node3D
         catch (Exception exception)
         {
             SetProcess(false);
-            GD.PushError($"Aquila Handling Lab failed to initialize: {exception.Message}");
+            GD.PushError($"Level 100 opening slice failed to initialize: {exception.Message}");
             GetTree().Quit(4);
         }
     }
@@ -359,13 +359,14 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v1",
+                SchemaVersion = "onslaught-first-flight-smoke.v2",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
                 StateHash = StateHasher.ComputeHex(_session.CurrentSnapshot),
                 TargetsDestroyed = _session.CurrentSnapshot.TargetsDestroyed,
                 Mode = _session.CurrentSnapshot.Mode.ToString(),
+                Level100Phase = _session.CurrentSnapshot.Level100Phase.ToString(),
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
                 ResetEdgesConsumed = metrics.ResetEdgesConsumed,
@@ -378,6 +379,8 @@ public sealed partial class FirstFlightGame : Node3D
                 PlayerVisualPresent = _world.PlayerVisualPresent,
                 RetailAquilaMeshesPresent = _world.RetailAquilaMeshesPresent,
                 RetailAquilaSurfaceCount = _world.RetailAquilaSurfaceCount,
+                RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
+                Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
                 TargetVisualCount = _world.TargetVisualCount,
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
@@ -424,6 +427,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required string StateHash { get; init; }
         public required int TargetsDestroyed { get; init; }
         public required string Mode { get; init; }
+        public required string Level100Phase { get; init; }
         public required long TotalSteps { get; init; }
         public required long ToggleEdgesConsumed { get; init; }
         public required long ResetEdgesConsumed { get; init; }
@@ -436,6 +440,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required bool PlayerVisualPresent { get; init; }
         public required bool RetailAquilaMeshesPresent { get; init; }
         public required int RetailAquilaSurfaceCount { get; init; }
+        public required int RetailLevel100FacilityCount { get; init; }
+        public required int Level100ObjectiveMarkerCount { get; init; }
         public required int TargetVisualCount { get; init; }
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }

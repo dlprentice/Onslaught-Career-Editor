@@ -66,11 +66,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
         SetProgressValue(_shieldBar, snapshot.Shield);
         SetProgressValue(_hullBar, snapshot.Hull);
 
-        int targetCount = snapshot.Targets.Count;
-        SetLabelText(_objectiveLabel, snapshot.TargetsDestroyed == targetCount
-            ? "ARENA CLEAR  |  PRESS R TO RESET"
-            : $"DESTROY SENTRIES  {snapshot.TargetsDestroyed}/{targetCount}");
-        SetLabelColor(_objectiveLabel, snapshot.TargetsDestroyed == targetCount ? Hull : TextPrimary);
+        string objective = snapshot.Level100Phase switch
+        {
+            Level100OpeningPhase.ReachTargetZone1 => "OBJECTIVE  |  REACH TARGET ZONE 1",
+            Level100OpeningPhase.TargetZone1DispatchPending => "TARGET ZONE 1 REACHED",
+            Level100OpeningPhase.ReachFiringRange => "OBJECTIVE  |  PROCEED TO FIRING RANGE",
+            Level100OpeningPhase.FiringRangeDispatchPending => "FIRING RANGE REACHED",
+            _ => "LEVEL 100 OPENING SLICE COMPLETE",
+        };
+        SetLabelText(_objectiveLabel, objective);
+        SetLabelColor(
+            _objectiveLabel,
+            snapshot.Level100Phase == Level100OpeningPhase.FiringRangeReached ? Hull : TextPrimary);
 
         if (snapshot.Transition == VehicleTransition.WalkerToJet)
         {
@@ -118,9 +125,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", 5);
         panel.AddChild(stack);
-        stack.AddChild(CreateLabel("AQUILA HANDLING LAB", 22, TextPrimary));
+        stack.AddChild(CreateLabel("LEVEL 100 OPENING SLICE", 22, TextPrimary));
         stack.AddChild(CreateLabel(
-            "Released Aquila meshes | synthetic arena, not retail parity",
+            "Released Aquila + Level 100 facilities",
             13,
             TextMuted));
 
@@ -140,7 +147,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         panel.OffsetBottom = 82f;
         root.AddChild(panel);
 
-        _objectiveLabel = CreateLabel("DESTROY SENTRIES  0/3", 18, TextPrimary);
+        _objectiveLabel = CreateLabel("OBJECTIVE  |  REACH TARGET ZONE 1", 18, TextPrimary);
         _objectiveLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _objectiveLabel.VerticalAlignment = VerticalAlignment.Center;
         panel.AddChild(_objectiveLabel);

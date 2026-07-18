@@ -802,6 +802,7 @@ def publish_anonymous_previews(
         checkout / "game",
         checkout / "local-lab" / "rebuild-godot" / "input",
         checkout / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Aquila" / "Source",
+        checkout / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Level100" / "Source",
     )
     allowed_output = checkout / "local-lab" / "rebuild-godot" / "generated"
     try:

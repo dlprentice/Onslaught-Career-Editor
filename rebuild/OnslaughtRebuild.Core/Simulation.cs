@@ -39,6 +39,8 @@ public sealed class Simulation
     private int _hull;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
+    private Level100OpeningPhase _level100Phase;
+    private int _level100DispatchTicksRemaining;
     private int _targetsDestroyed;
 
     // Jet handling remains provisional and outside this walker milestone.
@@ -77,6 +79,7 @@ public sealed class Simulation
 
         TryToggleMode(input);
         UpdateMovement(input);
+        UpdateLevel100Opening();
         UpdateResources();
         TryFire(input);
         UpdateProjectiles();
@@ -212,18 +215,59 @@ public sealed class Simulation
     private void MovePlayer(SimVector2 velocity)
     {
         SimVector2 nextPosition = new(
-            Math.Clamp(
-                _playerPosition.X + velocity.X,
-                -SimulationConstants.ArenaHalfExtent,
-                SimulationConstants.ArenaHalfExtent),
-            Math.Clamp(
-                _playerPosition.Z + velocity.Z,
-                -SimulationConstants.ArenaHalfExtent,
-                SimulationConstants.ArenaHalfExtent));
+            _playerPosition.X + velocity.X,
+            _playerPosition.Z + velocity.Z);
         _playerVelocity = new SimVector2(
             nextPosition.X - _playerPosition.X,
             nextPosition.Z - _playerPosition.Z);
         _playerPosition = nextPosition;
+    }
+
+    private void UpdateLevel100Opening()
+    {
+        if (_level100DispatchTicksRemaining > 0)
+        {
+            _level100DispatchTicksRemaining--;
+            if (_level100DispatchTicksRemaining == 0)
+            {
+                _level100Phase = _level100Phase switch
+                {
+                    Level100OpeningPhase.TargetZone1DispatchPending =>
+                        Level100OpeningPhase.ReachFiringRange,
+                    Level100OpeningPhase.FiringRangeDispatchPending =>
+                        Level100OpeningPhase.FiringRangeReached,
+                    _ => _level100Phase,
+                };
+            }
+
+            return;
+        }
+
+        SimVector2? trigger = _level100Phase switch
+        {
+            Level100OpeningPhase.ReachTargetZone1 =>
+                SimulationConstants.Level100TargetZone1Position,
+            Level100OpeningPhase.ReachFiringRange =>
+                SimulationConstants.Level100FiringRangePosition,
+            _ => null,
+        };
+        if (!trigger.HasValue || !IsWithinLevel100Trigger(_playerPosition, trigger.Value))
+        {
+            return;
+        }
+
+        _level100Phase = _level100Phase == Level100OpeningPhase.ReachTargetZone1
+            ? Level100OpeningPhase.TargetZone1DispatchPending
+            : Level100OpeningPhase.FiringRangeDispatchPending;
+        _level100DispatchTicksRemaining = SimulationConstants.Level100ObjectiveDispatchTicks;
+    }
+
+    private static bool IsWithinLevel100Trigger(SimVector2 position, SimVector2 trigger)
+    {
+        long deltaX = (long)position.X - trigger.X;
+        long deltaZ = (long)position.Z - trigger.Z;
+        long radius = SimulationConstants.Level100ObjectiveTriggerRadius;
+        return (deltaX * deltaX) + (deltaZ * deltaZ) <= radius * radius;
     }
 
     private static SimVector2 ClampMagnitude(SimVector2 value, int maximum)
@@ -403,10 +447,7 @@ public sealed class Simulation
                 break;
             }
 
-            if (hit ||
-                projectile.RemainingTicks <= 0 ||
-                Math.Abs(projectile.Position.X) > SimulationConstants.ArenaHalfExtent + 5_000 ||
-                Math.Abs(projectile.Position.Z) > SimulationConstants.ArenaHalfExtent + 5_000)
+            if (hit || projectile.RemainingTicks <= 0)
             {
                 _projectiles.RemoveAt(projectileIndex);
             }
@@ -420,15 +461,16 @@ public sealed class Simulation
         _transition = VehicleTransition.None;
         _playerPosition = SimVector2.Zero;
         _playerVelocity = SimVector2.Zero;
-        _facingX = 0;
-        _facingZ = 1;
-        _facingYawMicroRad = 0;
+        _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
+        QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
         _hull = SimulationConstants.MaximumHull;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
+        _level100Phase = Level100OpeningPhase.ReachTargetZone1;
+        _level100DispatchTicksRemaining = 0;
         _targetsDestroyed = 0;
         _projectiles.Clear();
         BuildTargets();
@@ -495,6 +537,8 @@ public sealed class Simulation
             _hull,
             _transformTicksRemaining,
             _fireCooldownTicksRemaining,
+            _level100Phase,
+            _level100DispatchTicksRemaining,
             _nextProjectileId,
             _targetsDestroyed,
             Array.AsReadOnly(targets),

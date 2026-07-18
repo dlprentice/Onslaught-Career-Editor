@@ -55,7 +55,7 @@ public sealed class SimulationTests
 
         WorldSnapshot coast = simulation.Step(SimInput.Idle);
         Assert.Equal(34_164, coast.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(164_780, coast.FacingYawMicroRad);
+        Assert.Equal(674_610, coast.FacingYawMicroRad);
     }
 
     [Fact]
@@ -69,9 +69,9 @@ public sealed class SimulationTests
 
         WorldSnapshot state = simulation.Step(new SimInput(0, 1));
         Assert.Equal(1, state.FacingX);
-        Assert.Equal(1, state.FacingZ);
+        Assert.Equal(0, state.FacingZ);
         Assert.True(state.PlayerPosition.X > 0);
-        Assert.True(state.PlayerPosition.Z > 0);
+        Assert.Equal(0, state.PlayerPosition.Z);
     }
 
     [Fact]
@@ -88,11 +88,11 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
         Assert.Equal(0, state.FacingX);
         Assert.Equal(1, state.FacingZ);
-        Assert.Equal(10_444, state.FacingYawMicroRad);
+        Assert.Equal(520_274, state.FacingYawMicroRad);
     }
 
     [Fact]
-    public void LookX_Negative_SnapsFacingLeftCardinal()
+    public void LookX_Negative_TurnsLeftFromTheAuthoredStartYaw()
     {
         var simulation = new Simulation(1);
         for (int tick = 0; tick < 20; tick++)
@@ -102,7 +102,7 @@ public sealed class SimulationTests
 
         WorldSnapshot state = simulation.Snapshot;
         Assert.Equal(-1, state.FacingX);
-        Assert.Equal(0, state.FacingZ);
+        Assert.Equal(1, state.FacingZ);
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Movement_ClampsPlayerToArena()
+    public void Movement_IsNotClampedByTheRetiredSyntheticArena()
     {
         var simulation = new Simulation(1);
 
@@ -193,9 +193,49 @@ public sealed class SimulationTests
             simulation.Step(new SimInput(1, 1));
         }
 
-        Assert.Equal(SimulationConstants.ArenaHalfExtent, simulation.Snapshot.PlayerPosition.X);
-        Assert.Equal(SimulationConstants.ArenaHalfExtent, simulation.Snapshot.PlayerPosition.Z);
-        Assert.Equal(SimVector2.Zero, simulation.Snapshot.PlayerVelocity);
+        Assert.True(simulation.Snapshot.PlayerPosition.X > 30_000);
+        Assert.True(simulation.Snapshot.PlayerPosition.Z > 30_000);
+        Assert.NotEqual(SimVector2.Zero, simulation.Snapshot.PlayerVelocity);
+    }
+
+    [Fact]
+    public void Level100Opening_AdvancesThroughAuthoredTriggersAfterScriptDelay()
+    {
+        var simulation = new Simulation(1);
+
+        Assert.Equal(Level100OpeningPhase.ReachTargetZone1, simulation.Snapshot.Level100Phase);
+        Assert.Equal(
+            SimulationConstants.Level100PlayerStartYawMicroRad,
+            simulation.Snapshot.FacingYawMicroRad);
+
+        DriveToPhase(
+            simulation,
+            SimulationConstants.Level100TargetZone1Position,
+            Level100OpeningPhase.TargetZone1DispatchPending);
+        Assert.Equal(
+            SimulationConstants.Level100ObjectiveDispatchTicks,
+            simulation.Snapshot.Level100DispatchTicksRemaining);
+
+        for (int tick = 1; tick < SimulationConstants.Level100ObjectiveDispatchTicks; tick++)
+        {
+            WorldSnapshot pending = simulation.Step(SimInput.Idle);
+            Assert.Equal(Level100OpeningPhase.TargetZone1DispatchPending, pending.Level100Phase);
+        }
+
+        Assert.Equal(
+            Level100OpeningPhase.ReachFiringRange,
+            simulation.Step(SimInput.Idle).Level100Phase);
+
+        DriveToPhase(
+            simulation,
+            SimulationConstants.Level100FiringRangePosition,
+            Level100OpeningPhase.FiringRangeDispatchPending);
+        for (int tick = 0; tick < SimulationConstants.Level100ObjectiveDispatchTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(Level100OpeningPhase.FiringRangeReached, simulation.Snapshot.Level100Phase);
     }
 
     [Fact]
@@ -287,7 +327,7 @@ public sealed class SimulationTests
         {
             WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
             Assert.Equal(SimVector2.Zero, blocked.PlayerPosition);
-            Assert.Equal(0, blocked.FacingYawMicroRad);
+            Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, blocked.FacingYawMicroRad);
             Assert.Equal(0, blocked.WalkerYawVelocityMicroRadPerTick);
             Assert.Empty(blocked.Projectiles);
         }
@@ -333,5 +373,21 @@ public sealed class SimulationTests
 
         simulation.Step(new SimInput(0, 0, SimActions.Fire));
         Assert.Equal(2, simulation.Snapshot.Projectiles.Count);
+    }
+
+    private static void DriveToPhase(
+        Simulation simulation,
+        SimVector2 destination,
+        Level100OpeningPhase expectedPhase)
+    {
+        for (int tick = 0; tick < 2_000 && simulation.Snapshot.Level100Phase != expectedPhase; tick++)
+        {
+            SimVector2 position = simulation.Snapshot.PlayerPosition;
+            sbyte moveX = (sbyte)Math.Sign(destination.X - position.X);
+            sbyte moveZ = (sbyte)Math.Sign(destination.Z - position.Z);
+            simulation.Step(new SimInput(moveX, moveZ));
+        }
+
+        Assert.Equal(expectedPhase, simulation.Snapshot.Level100Phase);
     }
 }
