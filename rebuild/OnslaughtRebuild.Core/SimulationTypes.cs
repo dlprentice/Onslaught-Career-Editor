@@ -8,6 +8,12 @@ public enum VehicleMode
     Jet = 1,
 }
 
+public enum VehicleTransition
+{
+    None = 0,
+    WalkerToJet = 1,
+}
+
 [Flags]
 public enum SimActions : byte
 {
@@ -71,6 +77,7 @@ public sealed record WorldSnapshot(
     int Tick,
     uint Seed,
     VehicleMode Mode,
+    VehicleTransition Transition,
     SimVector2 PlayerPosition,
     SimVector2 PlayerVelocity,
     sbyte FacingX,

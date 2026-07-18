@@ -72,7 +72,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
             : $"DESTROY SENTRIES  {snapshot.TargetsDestroyed}/{targetCount}");
         SetLabelColor(_objectiveLabel, snapshot.TargetsDestroyed == targetCount ? Hull : TextPrimary);
 
-        if (snapshot.TransformTicksRemaining > 0)
+        if (snapshot.Transition == VehicleTransition.WalkerToJet)
+        {
+            SetLabelText(_modeLabel, $"WALKER → JET  {snapshot.TransformTicksRemaining}/{SimulationConstants.WalkerToJetTransitionTicks}");
+            SetLabelColor(_modeLabel, Alert);
+            SetLabelText(_statusLabel, "Retail-timed transition | Movement, turning, and weapons locked");
+        }
+        else if (snapshot.TransformTicksRemaining > 0)
         {
             SetLabelText(_modeLabel, $"TRANSFORMING  {snapshot.TransformTicksRemaining}");
             SetLabelColor(_modeLabel, Alert);

@@ -90,6 +90,14 @@ state write; a WinUI-created copy reproduced the accepted result with
 `.msl` loading, normal tutorial progression, a mission compiler/editor, or a
 general AYA repacker.
 
+That controlled setup now also owns one rebuild behavior. One clean and two
+modified fresh copies bound Transform through copied `defaultoptions.bea` and
+delivered retail action `0x21` to player one's BattleEngine. The control stayed
+in raw walker state `2`; both modified runs repeated `2 → 1 → 3`, with the
+raw transition lasting 535.359–537.249 ms. Deterministic Core maps only that
+walker-to-jet state to 16 ticks at 30 Hz. Jet-to-walker timing, animation,
+camera, resources, weapons, and flight dynamics remain unproven.
+
 The patch catalog's original/replacement bytes and copied-target rules are
 automatically checked. A byte-correct patch is not automatically proof of its
 visible or gameplay effect. Windowed startup, expanded mode enumeration, card-ID
@@ -135,8 +143,10 @@ filesystem, clock, process, network, or GPU dependencies.
 
 The Godot Aquila Handling Lab is currently an input/rendering harness with a
 procedural arena, synthetic craft/targets, simplified movement, projectiles,
-energy, shield, and hull. It does not yet reproduce retail camera feel, terrain,
-missions, AI, weapon roster, animation, audio, campaign, or networking. Its
+energy, shield, and hull. Its walker-to-jet initiation now exposes Core's
+retail-timed 16-tick transition instead of switching to Jet immediately. It
+does not yet reproduce retail camera feel, terrain, missions, AI, weapon roster,
+animation, audio, campaign, networking, or the rest of the transform model. Its
 purpose is to replace those placeholders with the smallest source-derived and
 retail-checked Aquila handling slice, then run a recognizable portion of Level
 100 from authorized original assets.

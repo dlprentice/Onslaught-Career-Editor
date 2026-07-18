@@ -46,11 +46,13 @@ input/rendering harness. Its arena, targets, weapons, resources, jet/morph
 rules, and presentation are provisional unless a specific retained retail
 measurement says otherwise.
 
-Walker/jet forward speed, walker strafe, walker yaw, and jet energy drain have
-bounded retail measurements mapped into Core. Their presence does not make the
-surrounding movement or vehicle model retail-faithful. In particular, the
-current morph lock is synthetic and the observed retail settle measurement is
-not yet implemented.
+Walker/jet forward speed, walker strafe, walker yaw, jet energy drain, and the
+walker-to-jet raw state interval have bounded retail measurements mapped into
+Core. The latter uses one clean Level 100 control and two repeated early-flight
+copies to map raw states `2 → 1 → 3` to an explicit 16-tick Core transition.
+Their presence does not make the surrounding movement or vehicle model
+retail-faithful; jet-to-walker, transform presentation, resources, weapons, and
+flight dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, renders, advances, and exits.

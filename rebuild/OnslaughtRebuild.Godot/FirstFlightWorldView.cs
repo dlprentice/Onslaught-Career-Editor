@@ -68,9 +68,12 @@ public sealed partial class FirstFlightWorldView : Node3D
             Mathf.LerpAngle(_playerRoot.Rotation.Y, targetYaw, Mathf.Clamp(frameDelta * 12f, 0f, 1f)),
             0f);
 
-        float desiredModeBlend = current.Mode == VehicleMode.Jet ? 1f : 0f;
-        float blendRate = current.TransformTicksRemaining > 0 ? 3.5f : 8f;
-        _modeBlend = Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * blendRate);
+        float desiredModeBlend = current.Transition == VehicleTransition.WalkerToJet
+            ? 1f - (current.TransformTicksRemaining / (float)SimulationConstants.WalkerToJetTransitionTicks)
+            : current.Mode == VehicleMode.Jet ? 1f : 0f;
+        _modeBlend = current.Transition == VehicleTransition.WalkerToJet
+            ? desiredModeBlend
+            : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
         UpdatePlayerShape(current, frameDelta);
         UpdateTargets(current);
         UpdateProjectiles(current);

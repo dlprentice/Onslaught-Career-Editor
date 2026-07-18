@@ -33,6 +33,11 @@ public static class SimulationConstants
     public const int MaximumHull = 1_000;
     public const int TransformEnergyThreshold = 200;
     public const int TransformEnergyCost = 120;
+    // Two fresh copied-retail Level 100 runs held raw BattleEngine state 1
+    // for 535.359-537.249 ms before state 3. Sixteen 30 Hz Core intervals
+    // are 533.333 ms and preserve those exact state-transition endpoints.
+    public const int WalkerToJetTransitionTicks = 16;
+    // Still synthetic for the unmeasured jet-to-walker/empty-energy paths.
     public const int TransformDurationTicks = 15;
     // Walker regen still provisional (no dual-accept yet).
     public const int WalkerEnergyRegenerationPerTick = 4;

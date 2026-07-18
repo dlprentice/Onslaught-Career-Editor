@@ -125,20 +125,37 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void ToggleMode_UsesEnergyAndDisablesJetShield()
+    public void ToggleMode_EntersMeasuredWalkerToJetTransitionBeforeCommittingJetMode()
     {
         var simulation = new Simulation(1);
 
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
-        Assert.Equal(VehicleMode.Jet, state.Mode);
+        Assert.Equal(VehicleMode.Walker, state.Mode);
+        Assert.Equal(VehicleTransition.WalkerToJet, state.Transition);
         Assert.Equal(0, state.Shield);
         Assert.Equal(
             SimulationConstants.MaximumEnergy -
                 SimulationConstants.TransformEnergyCost -
                 SimulationConstants.JetEnergyDrainPerTick,
             state.Energy);
-        Assert.Equal(SimulationConstants.TransformDurationTicks, state.TransformTicksRemaining);
+        Assert.Equal(SimulationConstants.WalkerToJetTransitionTicks, state.TransformTicksRemaining);
+
+        for (int interval = 1; interval < SimulationConstants.WalkerToJetTransitionTicks; interval++)
+        {
+            state = simulation.Step(new SimInput(
+                0,
+                0,
+                interval == 1 ? SimActions.ToggleMode : SimActions.None));
+            Assert.Equal(VehicleMode.Walker, state.Mode);
+            Assert.Equal(VehicleTransition.WalkerToJet, state.Transition);
+            Assert.Equal(SimulationConstants.WalkerToJetTransitionTicks - interval, state.TransformTicksRemaining);
+        }
+
+        state = simulation.Step(SimInput.Idle);
+        Assert.Equal(VehicleMode.Jet, state.Mode);
+        Assert.Equal(VehicleTransition.None, state.Transition);
+        Assert.Equal(0, state.TransformTicksRemaining);
     }
 
     [Fact]
@@ -275,15 +292,17 @@ public sealed class SimulationTests
         var simulation = new Simulation(1);
         simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
-        for (int tick = 1; tick < SimulationConstants.TransformDurationTicks; tick++)
+        for (int tick = 1; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
         {
-            WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire));
+            WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
             Assert.Equal(SimVector2.Zero, blocked.PlayerPosition);
+            Assert.Equal(0, blocked.FacingYawMilliRad);
             Assert.Empty(blocked.Projectiles);
         }
 
-        WorldSnapshot active = simulation.Step(new SimInput(1, 0, SimActions.Fire));
+        WorldSnapshot active = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
         Assert.NotEqual(SimVector2.Zero, active.PlayerPosition);
+        Assert.NotEqual(0, active.FacingYawMilliRad);
         Assert.Single(active.Projectiles);
     }
 
@@ -292,6 +311,11 @@ public sealed class SimulationTests
     {
         var simulation = new Simulation(1);
         simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
+
+        for (int tick = 0; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
 
         for (int tick = 0; tick < 1_000 && simulation.Snapshot.Mode == VehicleMode.Jet; tick++)
         {

@@ -6,7 +6,7 @@
 
 - Named in Ghidra: yes
 - Static authority: [Ghidra reference](../../GHIDRA-REFERENCE.md)
-- Runtime behavior proof: not yet
+- Runtime behavior proof: bounded walker-to-jet path accepted
 
 ## Summary
 
@@ -26,13 +26,19 @@ The current decompile read-back supports the helper name with these token-level 
 
 ## Interpretation
 
-This is the clearest current retail-binary state-machine anchor for fly/walker transition handling. It ties the two `CGeneralVolume` transition helpers to the source `CBattleEngine::Morph()` event, state, and energy-gate anchors. Runtime behavior, concrete layout, tags/local names, and complete source-level control flow remain separate proof targets.
+This is the clearest current retail-binary state-machine anchor for fly/walker transition handling. It ties the two `CGeneralVolume` transition helpers to the source `CBattleEngine::Morph()` event, state, and energy-gate anchors. Concrete layout, tags/local names, and complete source-level control flow remain separate proof targets.
+
+A copied-runtime Level 100 control and two early-flight runs now confirm the
+player-one path through this body: raw state `2` is rejected while flight is
+disabled; enabled runs write state `1` and later settle at state `3`. The two
+state-`1` intervals were 535.359–537.249 ms. See
+[`walker-transform-morph-timing-v1.json`](../../../game-mechanics/walker-transform-morph-timing-v1.json).
 
 Wave 390 corrected the old GillMHead-specific playback-helper label to the shared unit-animation helper because the same target is used by BattleEngine morph/animation paths.
 
 ## Boundaries
 
-- Does not prove runtime `CBattleEngine::Morph()` behavior.
+- Proves only the bounded player-one walker-to-jet path described above.
 - Does not prove concrete `CBattleEngine` layout or local names.
 - Does not prove runtime event behavior.
 - Does not mutate `BEA.exe`.

@@ -1,15 +1,20 @@
-# Walker morph-to-jet settle observation
+# Walker-to-jet transition mapping
 
-Status: measured retail observation; Core mapping not accepted
-Evidence: `walker-transform-morph-timing.v1` pair xform-p03
+Status: accepted bounded mapping
+Evidence: [`walker-transform-morph-timing-v1.json`](walker-transform-morph-timing-v1.json)
 
-The captured midpoint from morph input to the measured settle condition is
-approximately 4.92 seconds, or 148 ticks at Core's 30 Hz rate. This conversion
-is arithmetic only. The capture's settle condition has not yet been mapped to
-specific retail transition states, input lock, animation completion, control
-handoff, or Core fields.
+The canonical Steam `Morph` body and copied-runtime behavior establish these
+raw `BattleEngine+0x260` meanings for this path: `2` is walker, `1` is the
+walker-to-jet transition, and `3` is jet. A clean Level 100 control reached the
+flight-disabled rejection without leaving `2`; two early-flight copies repeated
+`2 → 1 → 3` under the same Transform action.
 
-Do not map 148 directly to `TransformDurationTicks`. The current 15-tick Core
-lock is synthetic. A future implementation must first identify the retail
-transition phases in source/static evidence and compare a matching input
-sequence before choosing which state, if any, owns the measured interval.
+The repeated state-`1` intervals were 535.359–537.249 ms. Deterministic Core
+therefore owns an explicit `WalkerToJet` state for 16 intervals at 30 Hz
+(533.333 ms), keeps stable mode as Walker until completion, rejects repeated
+transform input, and blocks movement, turning, and fire during that state.
+
+This mapping does not cover jet-to-walker timing, visual animation, camera
+settling, energy/shield semantics, weapons, or flight dynamics. The retired
+148-tick conversion used unmatched endpoints and must not return as a Core
+constant.

@@ -65,7 +65,17 @@ public sealed class InteractiveSessionTests
         session.ObserveInput(new InteractiveInput(0, 0, false, true, false));
         session.AdvanceFrame(TimeSpan.FromMilliseconds(100));
 
-        Assert.Equal(VehicleMode.Jet, result.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleMode.Walker, result.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleTransition.WalkerToJet, result.CurrentSnapshot.Transition);
+        Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
+
+        for (int frame = 0; frame < 4; frame++)
+        {
+            session.AdvanceFrame(TimeSpan.FromMilliseconds(100));
+        }
+
+        Assert.Equal(VehicleMode.Jet, session.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleTransition.None, session.CurrentSnapshot.Transition);
         Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
     }
 
@@ -78,7 +88,8 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(VehicleMode.Jet, result.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleMode.Walker, result.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleTransition.WalkerToJet, result.CurrentSnapshot.Transition);
         Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
     }
 

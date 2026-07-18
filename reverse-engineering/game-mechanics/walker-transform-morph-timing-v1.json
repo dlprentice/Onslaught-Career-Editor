@@ -1,70 +1,101 @@
 {
-  "attempts": [
+  "schemaVersion": "battleengine-walker-transform-state-timing.v2",
+  "status": "two-repeated-modified-runs-and-one-clean-control",
+  "specimen": {
+    "sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "role": "canonical Steam BEA.exe selected through the AppCore executable override resolver"
+  },
+  "setup": {
+    "level": 100,
+    "launchArguments": [
+      "-skipfmv",
+      "-level",
+      "100",
+      "-res",
+      "1600",
+      "900"
+    ],
+    "transformBinding": "copied defaultoptions.bea Actions/Transform (0x21) = Key Q",
+    "modifiedArchive": "AppCore's one-byte Level 100 DisableFlightMode-to-EnableFlightMode change"
+  },
+  "observer": {
+    "clock": "QueryPerformanceCounter",
+    "memoryAccess": "uninterrupted read-only sampling",
+    "playerIdentity": "runtime P0 -> CPlayer+0x1c BattleEngine",
+    "stateField": "BattleEngine+0x260",
+    "timingEndpoints": "first observed raw state 1 through first observed raw state 3",
+    "debuggerBoundary": "one-shot input/Morph/state-write markers detached before raw state 1; debugger stops were not timing endpoints"
+  },
+  "numericStates": {
+    "0": "morphing from jet toward walker (Steam Morph write; not runtime-timed here)",
+    "1": "walker-to-jet transition (Steam Morph write and repeated copied-runtime observation)",
+    "2": "walker (control and modified baseline; Steam flight-disabled rejection gate)",
+    "3": "jet (repeated stable state after raw state 1)"
+  },
+  "control": {
+    "earlyFlightArchiveChange": false,
+    "events": [
+      "player one received Transform action 0x21 in raw state 2",
+      "the same BattleEngine entered Morph",
+      "the flight-disabled state-2 rejection executed"
+    ],
+    "rawStateSequence": [
+      2
+    ]
+  },
+  "modifiedAttempts": [
     {
       "attempt": 1,
-      "integrity": {
-        "cleanupConfirmed": true,
-        "foregroundMaintained": true,
-        "keyUpConfirmed": true,
-        "receiptRevalidated": true
+      "rawStateSequence": [
+        2,
+        1,
+        3
+      ],
+      "state1ToState3Ms": {
+        "lower": 535.359,
+        "upper": 535.393
       },
-      "metrics": {
-        "morphLatencyMs": {
-          "lower": 4670,
-          "upper": 4840
-        },
-        "statesSeen": [
-          1,
-          2,
-          3
-        ]
-      },
-      "receiptSha256": "94c847f7000e4d8ffd13b1bcea7a25b1056267a04ce554da969051f9abc7ccda",
-      "runDigest": "94c847f7000e4d8ffd13b1bcea7a25b1056267a04ce554da969051f9abc7ccda"
+      "foregroundStable": true,
+      "postInjectionInputStable": true,
+      "cleanupConfirmed": true
     },
     {
       "attempt": 2,
-      "integrity": {
-        "cleanupConfirmed": true,
-        "foregroundMaintained": true,
-        "keyUpConfirmed": true,
-        "receiptRevalidated": true
+      "rawStateSequence": [
+        2,
+        1,
+        3
+      ],
+      "state1ToState3Ms": {
+        "lower": 537.208,
+        "upper": 537.249
       },
-      "metrics": {
-        "morphLatencyMs": {
-          "lower": 5010,
-          "upper": 5170
-        },
-        "statesSeen": [
-          1,
-          2,
-          3
-        ]
-      },
-      "receiptSha256": "aff45536d05533870d37b0040da85bd55bc9551bdc23be0465059ccadd1bae2d",
-      "runDigest": "aff45536d05533870d37b0040da85bd55bc9551bdc23be0465059ccadd1bae2d"
+      "foregroundStable": true,
+      "postInjectionInputStable": true,
+      "cleanupConfirmed": true
     }
   ],
-  "claim": "walker-transform-to-jet-settle-latency",
-  "envelope": {
-    "morphLatencyMs": {
-      "lower": 4670,
-      "upper": 5170
-    }
+  "acceptedEnvelopeMs": {
+    "lower": 535.359,
+    "upper": 537.249
   },
-  "metricUnits": {
-    "latency": "milliseconds"
+  "coreMapping": {
+    "ticksPerSecond": 30,
+    "walkerToJetTransitionTicks": 16,
+    "mappedMilliseconds": 533.333,
+    "stateOwnership": "Core remains Walker with explicit WalkerToJet transition state, then commits Jet after 16 intervals"
+  },
+  "integrity": {
+    "installedFilesHashed": 5515,
+    "installedSourceUnchanged": true,
+    "ownedProcessesStopped": true,
+    "ownedCopiesRemoved": true,
+    "runtimeCapturesRetained": false
   },
   "nonclaims": [
-    "Latency includes harness T delivery and observer poll cadence.",
-    "Not energy-cost or transform-animation identity.",
-    "Not Core TransformDurationTicks (animation hold) identity."
-  ],
-  "privateEvidenceLabel": "xform-p03",
-  "sampling": {
-    "clock": "query-performance-counter",
-    "pollApproxMs": 20
-  },
-  "schemaVersion": "battleengine-walker-transform-morph-timing.v1",
-  "status": "two-accepted-fresh-attempts"
+    "Not visual animation or camera-settle timing.",
+    "Not jet-to-walker timing.",
+    "Not retail energy, shield, movement, weapon, or flight-dynamics parity.",
+    "The retired 4.67-5.17 second observation did not use the identified raw state-1 to state-3 endpoints and is not a Core duration."
+  ]
 }

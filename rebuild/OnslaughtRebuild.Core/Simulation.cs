@@ -26,6 +26,7 @@ public sealed class Simulation
     private int _tick;
     private int _nextProjectileId;
     private VehicleMode _mode;
+    private VehicleTransition _transition;
     private SimVector2 _playerPosition;
     private SimVector2 _playerVelocity;
     private sbyte _facingX;
@@ -64,10 +65,7 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
-        if (_transformTicksRemaining > 0)
-        {
-            _transformTicksRemaining--;
-        }
+        AdvanceTransition();
 
         if (_fireCooldownTicksRemaining > 0)
         {
@@ -93,28 +91,49 @@ public sealed class Simulation
         }
 
         _energy -= SimulationConstants.TransformEnergyCost;
-        _mode = _mode == VehicleMode.Walker ? VehicleMode.Jet : VehicleMode.Walker;
-        _transformTicksRemaining = SimulationConstants.TransformDurationTicks;
-        if (_mode == VehicleMode.Jet)
+        if (_mode == VehicleMode.Walker)
         {
-            _shield = 0;
+            _transition = VehicleTransition.WalkerToJet;
+            _transformTicksRemaining = SimulationConstants.WalkerToJetTransitionTicks;
+            return;
         }
+
+        _mode = VehicleMode.Walker;
+        _transformTicksRemaining = SimulationConstants.TransformDurationTicks;
+    }
+
+    private void AdvanceTransition()
+    {
+        if (_transformTicksRemaining == 0)
+        {
+            return;
+        }
+
+        _transformTicksRemaining--;
+        if (_transformTicksRemaining != 0 || _transition != VehicleTransition.WalkerToJet)
+        {
+            return;
+        }
+
+        _mode = VehicleMode.Jet;
+        _transition = VehicleTransition.None;
+        _shield = 0;
     }
 
     private void UpdateMovement(SimInput input)
     {
-        if (input.LookX != 0)
-        {
-            _facingYawMilliRad += input.LookX * SimulationConstants.WalkerLookYawRateMilliRadPerTick;
-            _facingYawMilliRad = NormalizeMilliRad(_facingYawMilliRad);
-            QuantizeFacingFromYaw();
-        }
         if (_transformTicksRemaining != 0)
         {
             _playerVelocity = SimVector2.Zero;
             return;
         }
 
+        if (input.LookX != 0)
+        {
+            _facingYawMilliRad += input.LookX * SimulationConstants.WalkerLookYawRateMilliRadPerTick;
+            _facingYawMilliRad = NormalizeMilliRad(_facingYawMilliRad);
+            QuantizeFacingFromYaw();
+        }
         // Walker lateral uses dual-accepted strafe path speed; forward uses walker
         // forward scalar. Jet keeps a single measured jet thrust speed for now.
         int speedX = _mode == VehicleMode.Walker
@@ -201,7 +220,7 @@ public sealed class Simulation
 
     private void UpdateResources()
     {
-        if (_mode == VehicleMode.Walker)
+        if (_mode == VehicleMode.Walker && _transition == VehicleTransition.None)
         {
             _energy = Math.Min(
                 SimulationConstants.MaximumEnergy,
@@ -217,6 +236,7 @@ public sealed class Simulation
         if (_energy == 0)
         {
             _mode = VehicleMode.Walker;
+            _transition = VehicleTransition.None;
             _transformTicksRemaining = SimulationConstants.TransformDurationTicks;
         }
     }
@@ -308,6 +328,7 @@ public sealed class Simulation
     {
         _nextProjectileId = 1;
         _mode = VehicleMode.Walker;
+        _transition = VehicleTransition.None;
         _playerPosition = SimVector2.Zero;
         _playerVelocity = SimVector2.Zero;
         _facingX = 0;
@@ -372,6 +393,7 @@ public sealed class Simulation
             _tick,
             _seed,
             _mode,
+            _transition,
             _playerPosition,
             _playerVelocity,
             _facingX,
