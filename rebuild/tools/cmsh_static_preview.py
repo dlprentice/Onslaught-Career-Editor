@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bounded CMSH static-preview profile v0 parser and geometry-only OBJ emitter."""
+"""Bounded CMSH static-preview profile v0 parser and OBJ emitter."""
 
 from __future__ import annotations
 
@@ -591,7 +591,12 @@ def _transform_obj_normal(
     return tuple(0.0 if abs(component / length) < 1e-15 else component / length for component in transformed)
 
 
-def emit_obj(mesh: ParsedMesh, *, include_vertex_attributes: bool = False) -> bytes:
+def emit_obj(
+    mesh: ParsedMesh,
+    *,
+    include_vertex_attributes: bool = False,
+    include_primary_material_groups: bool = False,
+) -> bytes:
     lines: list[str] = []
     encoded_bytes = 0
 
@@ -682,6 +687,11 @@ def emit_obj(mesh: ParsedMesh, *, include_vertex_attributes: bool = False) -> by
             return str(vertex_index)
 
         for group in part.groups:
+            if include_primary_material_groups:
+                primary_texture = group.raw_texr_u32[0]
+                if primary_texture >= len(mesh.textures):
+                    raise CmshProfileError("OBJ rejection", 0, "unresolved primary texture")
+                append_line(f"usemtl texture-{primary_texture:04d}")
             indices = group.indices
             for ordinal in range(len(indices) - 2):
                 if ordinal % 2 == 0:
@@ -752,8 +762,17 @@ def emit_material_report(mesh: ParsedMesh) -> bytes:
     return result
 
 
-def convert_aya_bytes(source: bytes, *, include_vertex_attributes: bool = False) -> bytes:
-    return emit_obj(parse_cmsh_stream(inflate_aya(source)), include_vertex_attributes=include_vertex_attributes)
+def convert_aya_bytes(
+    source: bytes,
+    *,
+    include_vertex_attributes: bool = False,
+    include_primary_material_groups: bool = False,
+) -> bytes:
+    return emit_obj(
+        parse_cmsh_stream(inflate_aya(source)),
+        include_vertex_attributes=include_vertex_attributes,
+        include_primary_material_groups=include_primary_material_groups,
+    )
 
 
 def _has_reparse_point(path: Path) -> bool:
@@ -791,6 +810,7 @@ def publish_anonymous_previews(
     output_directory: Path,
     *,
     include_vertex_attributes: bool = False,
+    include_primary_material_groups: bool = False,
 ) -> tuple[int, int]:
     trusted_checkout = Path(__file__).resolve().parents[2]
     checkout = _absolute_lexical(checkout)
@@ -853,7 +873,11 @@ def publish_anonymous_previews(
                     raise CmshProfileError("invalid framing", 0, "candidate changed during read")
                 anonymous = f"candidate-{ordinal:04d}"
                 try:
-                    obj = convert_aya_bytes(data, include_vertex_attributes=include_vertex_attributes)
+                    obj = convert_aya_bytes(
+                        data,
+                        include_vertex_attributes=include_vertex_attributes,
+                        include_primary_material_groups=include_primary_material_groups,
+                    )
                 except CmshProfileError as error:
                     failures += 1
                     categories[error.category] += 1
@@ -895,6 +919,11 @@ def _main(argv: Iterable[str] | None = None) -> int:
         action="store_true",
         help="include retained profile-v0 texture coordinates and normals in OBJ output",
     )
+    parser.add_argument(
+        "--primary-material-groups",
+        action="store_true",
+        help="emit one OBJ material group per MMPT using the resolved TEXR layer-0 texture index",
+    )
     arguments = parser.parse_args(argv)
     try:
         matches, failures = publish_anonymous_previews(
@@ -902,6 +931,7 @@ def _main(argv: Iterable[str] | None = None) -> int:
             arguments.input,
             arguments.output,
             include_vertex_attributes=arguments.vertex_attributes,
+            include_primary_material_groups=arguments.primary_material_groups,
         )
     except (CmshProfileError, OSError) as error:
         print(f"preview failed: {error}", file=sys.stderr)

@@ -22,8 +22,10 @@ released Federation Aquila, Control Tower, and Tank Factory geometry at their
 authored horizontal opening positions over the released coarse Level 100
 heightfield. Core owns the released player start heading and the Target Zone 1
 → Firing Range objective handoff, including both scripts' 0.5-second event
-delay. Materials, terrain collision/response, combat targets, weapons,
-resources, and most mission behavior remain provisional.
+delay. The four released meshes render with their exact retained layer-zero
+textures. Secondary material passes, terrain appearance and collision/response,
+combat targets, weapons, resources, and most mission behavior remain
+provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -78,10 +80,12 @@ walker and jet meshes and loads two released Level 100 facility meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 presentation placement, but deterministic Core still has no terrain elevation
-or collision. Texture/material assignment, part articulation, transform
-animation, retail scale, tutorial dialogue and gates, and the full mission
-remain unimplemented; three synthetic combat targets still exercise the older
-firing path and are not Level 100 parity.
+or collision. The client preserves the base material groups and decodes seven
+exact AYA-wrapped DXT2 textures for the Aquila and two facilities. The shared
+secondary `Chrome3` pass, terrain textures and sky, facility destruction, part
+articulation, transform animation, retail scale, retail HUD, tutorial dialogue
+and gates, and the full mission remain unimplemented; three synthetic combat
+targets still exercise the older firing path and are not Level 100 parity.
 
 ## Verify
 

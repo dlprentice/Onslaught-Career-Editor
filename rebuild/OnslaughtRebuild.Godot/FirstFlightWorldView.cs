@@ -49,6 +49,9 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int RetailLevel100FacilityCount => _level100Facilities.Count;
 
+    public int RetailLevel100FacilitySurfaceCount =>
+        _level100Facilities.Sum(facility => facility.Mesh?.GetSurfaceCount() ?? 0);
+
     public int Level100ObjectiveMarkerCount => _level100ObjectiveMarkers.Count;
 
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
@@ -156,20 +159,39 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildLevel100Facilities()
     {
+        var facilityMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
+        {
+            ["texture-0000"] = CreateRetailMaterial(
+                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya", 512, 512),
+                0.28f,
+                0.72f),
+            ["texture-0002"] = CreateRetailMaterial(
+                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-bits.texture.aya", 512, 512),
+                0.28f,
+                0.72f),
+            ["texture-0004"] = CreateRetailMaterial(
+                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-top-02.texture.aya", 512, 512),
+                0.28f,
+                0.72f),
+            ["texture-0006"] = CreateRetailMaterial(
+                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-top-01.texture.aya", 512, 512),
+                0.28f,
+                0.72f),
+        };
         AddLevel100Facility(
             "RetailControlTower",
             "res://Assets/Level100/level100-control-tower.obj",
             new Vector2(-13.289886f, 5.603271f),
             0.0875791f,
             0f,
-            new Color(0.42f, 0.53f, 0.56f));
+            facilityMaterials);
         AddLevel100Facility(
             "RetailTankFactory",
             "res://Assets/Level100/level100-tank-factory.obj",
             new Vector2(10.125f, 22.375f),
             0.2383346f,
             1.7894337f,
-            new Color(0.49f, 0.55f, 0.48f));
+            facilityMaterials);
     }
 
     private void AddLevel100Facility(
@@ -178,7 +200,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         Vector2 relativePosition,
         float meshBaseClearance,
         float retailYaw,
-        Color color)
+        IReadOnlyDictionary<string, Material> materials)
     {
         var root = new Node3D
         {
@@ -193,9 +215,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         var mesh = new MeshInstance3D
         {
             Name = $"{name}Geometry",
-            Mesh = CuratedObjMeshLoader.Load(meshPath),
+            Mesh = CuratedObjMeshLoader.Load(meshPath, materials),
             RotationDegrees = new Vector3(-90f, 0f, 0f),
-            MaterialOverride = VisualPrimitives.CreateMaterial(color, 0.28f, 0.72f),
         };
         root.AddChild(mesh);
         AddChild(root);
@@ -251,23 +272,48 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        Mesh walker = CuratedObjMeshLoader.Load("res://Assets/Aquila/aquila-walker.obj");
-        Mesh jet = CuratedObjMeshLoader.Load("res://Assets/Aquila/aquila-jet.obj");
-        var material = VisualPrimitives.CreateMaterial(new Color(0.47f, 0.64f, 0.74f), 0.45f, 0.42f);
+        StandardMaterial3D cockpit = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/cockpit.texture.aya", 512, 512),
+            0.45f,
+            0.42f);
+        StandardMaterial3D textureA = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-a.texture.aya", 512, 512),
+            0.45f,
+            0.42f);
+        StandardMaterial3D textureB = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024, 1024),
+            0.45f,
+            0.42f);
+        Mesh walker = CuratedObjMeshLoader.Load(
+            "res://Assets/Aquila/aquila-walker.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = cockpit,
+                ["texture-0001"] = textureB,
+                ["texture-0003"] = textureA,
+            });
+        Mesh jet = CuratedObjMeshLoader.Load(
+            "res://Assets/Aquila/aquila-jet.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = cockpit,
+                ["texture-0002"] = textureB,
+                ["texture-0004"] = textureA,
+            });
 
+        // BEA's horizontal X/Y and negative-Z-up axes map to Godot's X/-Z and positive-Y axes.
         _walkerMesh = new MeshInstance3D
         {
             Name = "RetailAquilaWalker",
             Mesh = walker,
-            MaterialOverride = material,
-            Position = new Vector3(0f, 1.99f, 0f),
+            Position = new Vector3(0f, 0.01f, 0f),
+            RotationDegrees = new Vector3(-90f, 0f, 0f),
             Scale = Vector3.One * 1.8f,
         };
         _jetMesh = new MeshInstance3D
         {
             Name = "RetailAquilaJet",
             Mesh = jet,
-            MaterialOverride = material,
             Position = new Vector3(0f, 0.53f, 0f),
             RotationDegrees = new Vector3(-90f, 0f, 0f),
             Scale = Vector3.One * 2.2f,
@@ -275,6 +321,16 @@ public sealed partial class FirstFlightWorldView : Node3D
         };
         _playerBodyPivot.AddChild(_walkerMesh);
         _playerBodyPivot.AddChild(_jetMesh);
+    }
+
+    private static StandardMaterial3D CreateRetailMaterial(Texture2D texture, float metallic, float roughness)
+    {
+        return new StandardMaterial3D
+        {
+            AlbedoTexture = texture,
+            Metallic = metallic,
+            Roughness = roughness,
+        };
     }
 
     private void BuildTargets(WorldSnapshot snapshot)

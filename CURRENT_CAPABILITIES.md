@@ -151,10 +151,13 @@ establish the walker's acceleration, equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
 rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
 retail-timed 16-tick transition instead of switching to Jet immediately. The
-eight-way movement projection remains an approximation, and the slice does not
-yet reproduce retail camera feel, terrain collision or movement response, the
-rest of the mission, AI, weapon roster, material/texture fidelity, part
-animation, audio, campaign, networking, or the rest of the transform model.
+four meshes preserve their layer-zero material groups and render from seven
+exact retained AYA-wrapped DXT2 textures. The eight-way movement projection
+remains an approximation, and the slice does not yet reproduce retail camera
+feel, terrain textures or sky, terrain collision or movement response, the rest
+of the mission, AI, weapon roster, secondary/reflection material passes,
+facility destruction, part animation, retail HUD, audio, campaign, networking,
+or the rest of the transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
 remaining synthetic combat targets are handling fixtures, not Level 100
 parity. Terrain-following in the Godot host is presentation only; Core remains

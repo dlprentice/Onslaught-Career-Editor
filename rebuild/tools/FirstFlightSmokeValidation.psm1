@@ -55,8 +55,9 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'droppedElapsedTicks' 0 $report.droppedElapsedTicks
     Assert-SmokeValue 'playerVisualPresent' $true $report.playerVisualPresent
     Assert-SmokeValue 'retailAquilaMeshesPresent' $true $report.retailAquilaMeshesPresent
-    Assert-SmokeValue 'retailAquilaSurfaceCount' 2 $report.retailAquilaSurfaceCount
+    Assert-SmokeValue 'retailAquilaSurfaceCount' 6 $report.retailAquilaSurfaceCount
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
+    Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 2 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount
     Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 8192 $report.retailLevel100TerrainTriangleCount

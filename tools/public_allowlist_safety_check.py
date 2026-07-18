@@ -66,10 +66,17 @@ DENY_EXACT = {
 }
 
 ALLOW_EXACT = {
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-a.texture.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-b.texture.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/cockpit.texture.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be1.msh.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-bits.texture.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-01.texture.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-02.texture.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/level100-heightfield.hfld.bin",
@@ -80,15 +87,22 @@ ALLOW_EXACT = {
 }
 
 ALLOW_EXACT_SHA256 = {
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-a.texture.aya": "86f9f54ae97ba4e3782c65909d1d93b86566228b1132829ebb93816eb5a4705b",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-b.texture.aya": "ea01431a4023abd517daf5a27066eb7edf706100fb3991566726fb4530490b60",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/cockpit.texture.aya": "c62d0c668226f056db7455c8a5a8fa7d55ab7621ade1e58392d6aaad3c00f0cc",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be1.msh.aya": "d4c8fa752229af4111b31efa5ff5928c892736faa6a807915412767f3cd3c6b2",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya": "35aada1313c3cbb796ba75db071321035f7005096da7c148a7514944f4772b4c",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj": "075deb202b805c3c9f08f5c51e8c54277f76ae118dabef9bdeaede787a7e1bd3",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj": "6cd8840a251561d07d5b51850c3ddaa78702998bc5978aae1bb4537dfcbc753f",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj": "92a3495e278884b63649e114eddb7373b04af2aa92aab25c3f7184dd1140d821",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj": "ed05dfc93bf9dda27ce0e0966a261a60f8105ae2966724187557f010c40ab49b",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-bits.texture.aya": "8e73098eaeb3c961b7cd63c3fbdf2338b22efbe191bf956034db9a69e71c041a",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya": "f04b96e9e2a121f74729f63194b01fac58384b150f476b5e03d17b03b6dcc6e3",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-01.texture.aya": "54adeb37d60fbc8209dbb75eb61fd39898b3f07e808e05c408dc740ff4647fd4",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-02.texture.aya": "e09455015cc79439aa33c5fb6b4a70b75de9f2d5392aa7cd08bbf42d8fc6f78f",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya": "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya": "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/level100-heightfield.hfld.bin": "7a4c7c5b9400e2c8d2325cecb5c44701cd8a6e6f8609cbc8bc31d449c0620f5d",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj": "c9cbb5b1bb5c1215f5fed1ec4706ca77b99f6fb2db740a28c012989ead0d8c9a",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj": "50f797ad955edde4eb37709bcf692f9dfe8abd600a7d0cbd6a617b29e1ae7d22",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj": "9a2b9c287bff21dd7e3b560ee36cc7d7cafb99399b3003bf2e81a832fbd6f6ba",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj": "895813a6d8fd6938934957e934f23b58ec5c059e6ce8f8f9472bc4438b49d53c",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
@@ -241,6 +255,15 @@ MAGIC_DENY_SIGNATURES = (
     ("deny-magic-bink-video", b"BIK"),
     ("deny-magic-sqlite-db", b"SQLite format 3\x00"),
 )
+
+REVIEWED_MAGIC_COLLISIONS = {
+    (
+        "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-bits.texture.aya",
+        "deny-magic-executable",
+        1098,
+        b"MZ",
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -464,6 +487,8 @@ def magic_findings(root: Path, path: str) -> list[Finding]:
     for label, signature in MAGIC_DENY_SIGNATURES:
         offset = prefix.find(signature)
         if offset >= 0:
+            if (path, label, offset, signature) in REVIEWED_MAGIC_COLLISIONS:
+                continue
             if label == "deny-magic-webp-image" and (len(prefix) < offset + 12 or prefix[offset + 8 : offset + 12] != b"WEBP"):
                 findings.append(Finding(path, "deny-magic-riff-media", "RIFF"))
             else:

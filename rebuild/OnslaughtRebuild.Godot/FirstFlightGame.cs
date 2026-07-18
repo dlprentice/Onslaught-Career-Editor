@@ -380,6 +380,7 @@ public sealed partial class FirstFlightGame : Node3D
                 RetailAquilaMeshesPresent = _world.RetailAquilaMeshesPresent,
                 RetailAquilaSurfaceCount = _world.RetailAquilaSurfaceCount,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
+                RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
                 Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
@@ -443,6 +444,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required bool RetailAquilaMeshesPresent { get; init; }
         public required int RetailAquilaSurfaceCount { get; init; }
         public required int RetailLevel100FacilityCount { get; init; }
+        public required int RetailLevel100FacilitySurfaceCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }
         public required int RetailLevel100TerrainVertexCount { get; init; }
         public required int RetailLevel100TerrainTriangleCount { get; init; }

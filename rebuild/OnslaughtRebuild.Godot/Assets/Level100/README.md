@@ -14,9 +14,13 @@ geometry, normals, UVs, and base part transforms.
 | --- | --- | --- |
 | `Source/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk consumed by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/m_fb_control_tower.msh.aya` | Released Control Tower CMSH archive | `86AF67E09DC2FD21C7023ACD53EBCB4171F3BF396F836DA85ECFDDA516588D91` |
-| `level100-control-tower.obj` | Static geometry consumed by Godot | `C9CBB5B1BB5C1215F5FED1EC4706CA77B99F6FB2DB740A28C012989EAD0D8C9A` |
+| `level100-control-tower.obj` | Static intact geometry and base-material groups consumed by Godot | `9A2B9C287BFF21DD7E3B560EE36CC7D7CAFB99399B3003BF2E81A832FBD6F6BA` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
-| `level100-tank-factory.obj` | Static geometry consumed by Godot | `50F797AD955EDDE4EB37709BCF692F9DFE8ABD600A7D0CBD6A617B29E1AE7D22` |
+| `level100-tank-factory.obj` | Static intact geometry and base-material groups consumed by Godot | `895813A6D8FD6938934957E934F23B58EC5C059E6CE8F8F9472BC4438B49D53C` |
+| `Textures/facility-hanger-more-bits-lit.texture.aya` | Released 512×512 `meshtex%A8_FB_hangermorebits_lit.tga(0)A8R8G8B8.aya` base texture | `F04B96E9E2A121F74729F63194B01FAC58384B150F476B5E03D17B03B6DCC6E3` |
+| `Textures/facility-hanger-bits.texture.aya` | Released 512×512 `meshtex%FB_hangerbits.tga(0)A1R5G5B5.aya` base texture | `8E73098EAEB3C961B7CD63C3FBDF2338B22EFBE191BF956034DB9A69E71C041A` |
+| `Textures/facility-hanger-top-01.texture.aya` | Released 512×512 `meshtex%FB_hangertop01.tga(0)A1R5G5B5.aya` base texture | `54ADEB37D60FBC8209DBB75EB61FD39898B3F07E808E05C408DC740FF4647FD4` |
+| `Textures/facility-hanger-top-02.texture.aya` | Released 512×512 `meshtex%FB_hangertop02.tga(0)A1R5G5B5.aya` base texture | `E09455015CC79439AA33C5FB6B4A70B75DE9F2D5392AA7CD08BBF42D8FC6F78F` |
 
 Regenerate into an empty local output directory with:
 
@@ -25,7 +29,8 @@ py -3 rebuild/tools/cmsh_static_preview.py `
   --checkout . `
   --input rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source `
   --output local-lab/rebuild-godot/generated/level100 `
-  --vertex-attributes
+  --vertex-attributes `
+  --primary-material-groups
 ```
 
 Sorted outputs `candidate-0001.obj` and `candidate-0002.obj` correspond to the
@@ -73,7 +78,11 @@ world's horizontal X/Y plane. The current slice consumes:
 their event. `LevelScript.msl` activates Target Zone 1 first, then makes the
 Firing Range the objective after `Reached Target Zone 1`.
 
-The presentation currently uses neutral materials. Retail terrain textures,
+The presentation consumes the four exact layer-zero facility textures and
+preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two
+reference is not interpreted as a base texture or a guessed metallic map. The
+two retained render meshes represent the intact facilities; their released
+damage and destruction states are not implemented. Retail terrain textures,
 collision and movement response, authored lighting, facility animation,
 handedness validation, and complete Level 100 mission behavior are not
 established by this slice.

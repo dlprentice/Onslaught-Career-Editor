@@ -515,16 +515,58 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 with self.assertRaisesRegex(preview.CmshProfileError, "normal transform"):
                     preview.emit_obj(replace(mesh, parts=(mesh.parts[0], transformed)), include_vertex_attributes=True)
 
-    def test_cli_vertex_attributes_flag_is_explicit_and_forwarded(self) -> None:
+    def test_cli_material_and_vertex_attribute_flags_are_explicit_and_forwarded(self) -> None:
         with mock.patch.object(preview, "publish_anonymous_previews", return_value=(2, 0)) as publish:
             status = preview._main(
-                ["--checkout", "checkout", "--input", "input", "--output", "output", "--vertex-attributes"]
+                [
+                    "--checkout",
+                    "checkout",
+                    "--input",
+                    "input",
+                    "--output",
+                    "output",
+                    "--vertex-attributes",
+                    "--primary-material-groups",
+                ]
             )
 
         self.assertEqual(0, status)
         publish.assert_called_once_with(
-            Path("checkout"), Path("input"), Path("output"), include_vertex_attributes=True
+            Path("checkout"),
+            Path("input"),
+            Path("output"),
+            include_vertex_attributes=True,
+            include_primary_material_groups=True,
         )
+
+    def test_opt_in_primary_material_groups_use_layer_zero_and_fail_closed(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
+
+        result = preview.emit_obj(
+            mesh,
+            include_vertex_attributes=True,
+            include_primary_material_groups=True,
+        )
+
+        self.assertEqual(
+            [b"usemtl texture-0000", b"usemtl texture-0003"],
+            [line for line in result.splitlines() if line.startswith(b"usemtl ")],
+        )
+        malformed = replace(
+            mesh,
+            parts=(
+                mesh.parts[0],
+                replace(
+                    mesh.parts[1],
+                    groups=(
+                        replace(mesh.parts[1].groups[0], raw_texr_u32=(0xFFFFFFFF, 1, 2, 3, 0, 1)),
+                        mesh.parts[1].groups[1],
+                    ),
+                ),
+            ),
+        )
+        with self.assertRaisesRegex(preview.CmshProfileError, "unresolved primary texture"):
+            preview.emit_obj(malformed, include_primary_material_groups=True)
 
     def test_material_report_retains_vertex_attributes_duplicate_names_and_six_unknown_positions(self) -> None:
         mesh = preview.parse_cmsh_stream(build_material_fixture_stream())

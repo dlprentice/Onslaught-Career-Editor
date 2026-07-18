@@ -10,7 +10,9 @@ internal static class CuratedObjMeshLoader
     private const int MaximumVertices = 100_000;
     private const int MaximumTriangles = 200_000;
 
-    public static ArrayMesh Load(string resourcePath)
+    public static ArrayMesh Load(
+        string resourcePath,
+        IReadOnlyDictionary<string, Material> materials)
     {
         string source = Godot.FileAccess.GetFileAsString(resourcePath);
         if (string.IsNullOrEmpty(source))
@@ -21,7 +23,9 @@ internal static class CuratedObjMeshLoader
         var vertices = new List<Vector3>();
         var normals = new List<Vector3>();
         var textureCoordinates = new List<Vector2>();
-        var indices = new List<int>();
+        var surfaces = new List<MaterialSurface>();
+        var surfaceByName = new Dictionary<string, MaterialSurface>(StringComparer.Ordinal);
+        MaterialSurface? activeSurface = null;
 
         foreach (string rawLine in source.Split('\n'))
         {
@@ -54,14 +58,32 @@ internal static class CuratedObjMeshLoader
                     break;
 
                 case "f":
+                    if (activeSurface is null)
+                    {
+                        throw new InvalidDataException("Curated mesh has a triangle without a material group.");
+                    }
                     RequireFieldCount(fields, 4, "triangle");
                     for (int field = 1; field < fields.Length; field++)
                     {
-                        indices.Add(ParseUnifiedIndex(fields[field]));
+                        activeSurface.Indices.Add(ParseUnifiedIndex(fields[field]));
                     }
-                    if (indices.Count / 3 > MaximumTriangles)
+                    if (surfaces.Sum(surface => surface.Indices.Count) / 3 > MaximumTriangles)
                     {
                         throw new InvalidDataException("Curated mesh exceeds the triangle limit.");
+                    }
+                    break;
+
+                case "usemtl":
+                    RequireFieldCount(fields, 2, "material");
+                    if (!materials.ContainsKey(fields[1]))
+                    {
+                        throw new InvalidDataException($"Curated mesh references unmapped material '{fields[1]}'.");
+                    }
+                    if (!surfaceByName.TryGetValue(fields[1], out activeSurface))
+                    {
+                        activeSurface = new MaterialSurface(fields[1]);
+                        surfaceByName.Add(fields[1], activeSurface);
+                        surfaces.Add(activeSurface);
                     }
                     break;
 
@@ -70,22 +92,28 @@ internal static class CuratedObjMeshLoader
             }
         }
 
-        if (vertices.Count == 0 || indices.Count == 0 ||
+        if (vertices.Count == 0 || surfaces.Count == 0 || surfaces.Any(surface => surface.Indices.Count == 0) ||
             normals.Count != vertices.Count || textureCoordinates.Count != vertices.Count ||
-            indices.Any(index => index < 0 || index >= vertices.Count))
+            surfaces.SelectMany(surface => surface.Indices).Any(index => index < 0 || index >= vertices.Count))
         {
             throw new InvalidDataException("Curated mesh has inconsistent geometry arrays.");
         }
 
-        var arrays = new Godot.Collections.Array();
-        arrays.Resize((int)Mesh.ArrayType.Max);
-        arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
-        arrays[(int)Mesh.ArrayType.Normal] = normals.ToArray();
-        arrays[(int)Mesh.ArrayType.TexUV] = textureCoordinates.ToArray();
-        arrays[(int)Mesh.ArrayType.Index] = indices.ToArray();
-
         var mesh = new ArrayMesh();
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+        foreach (MaterialSurface surface in surfaces)
+        {
+            var arrays = new Godot.Collections.Array();
+            arrays.Resize((int)Mesh.ArrayType.Max);
+            arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
+            arrays[(int)Mesh.ArrayType.Normal] = normals.ToArray();
+            arrays[(int)Mesh.ArrayType.TexUV] = textureCoordinates.ToArray();
+            arrays[(int)Mesh.ArrayType.Index] = surface.Indices.ToArray();
+
+            int surfaceIndex = mesh.GetSurfaceCount();
+            mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+            mesh.SurfaceSetName(surfaceIndex, surface.Name);
+            mesh.SurfaceSetMaterial(surfaceIndex, materials[surface.Name]);
+        }
         return mesh;
     }
 
@@ -121,5 +149,12 @@ internal static class CuratedObjMeshLoader
         {
             throw new InvalidDataException($"Curated mesh has an invalid {role} record.");
         }
+    }
+
+    private sealed class MaterialSurface(string name)
+    {
+        public string Name { get; } = name;
+
+        public List<int> Indices { get; } = [];
     }
 }
