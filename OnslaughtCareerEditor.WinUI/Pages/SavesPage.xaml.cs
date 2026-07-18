@@ -145,6 +145,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             EditorRankComboBox.SelectedIndex = 0;
             EditorPatchPresetComboBox.SelectedIndex = 0;
+            EditorFocusedGoodieIdNumberBox.Value = 74;
+            EditorFocusedGoodieStateComboBox.SelectedIndex = 2;
             EditorGlobalKillNumberBox.Value = 100;
             EditorGoodiesAsNewToggle.IsOn = false;
             ApplyEditorPreset("SAFE");
@@ -640,6 +642,65 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateEditorActionState();
         }
 
+        private void EditorFocusedGoodieIdNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+        {
+            UpdateEditorActionState();
+        }
+
+        private void EditorFocusedGoodieStateComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateEditorActionState();
+        }
+
+        private async void EditorPatchFocusedGoodieButton_Click(object sender, RoutedEventArgs e)
+        {
+            FocusedGoodieStatePatchRequest? request = BuildFocusedGoodieStateRequest(out string? validationError);
+            if (request is null)
+            {
+                EditorOutputTextBox.Text = validationError ?? "Choose a valid focused Goodie ID and state.";
+                EditorInfoBar.Title = "Focused Goodie patch blocked";
+                EditorInfoBar.Message = EditorOutputTextBox.Text;
+                EditorInfoBar.Severity = InfoBarSeverity.Warning;
+                EditorInfoBar.Visibility = Visibility.Visible;
+                AppStatusService.SetStatus("Save Editor: invalid focused Goodie edit");
+                UpdateEditorActionState();
+                return;
+            }
+
+            string outputPath = request.OutputPath.Trim();
+            if (File.Exists(outputPath) &&
+                !await ConfirmAsync(
+                    "Overwrite output file?",
+                    $"The output file already exists:\n{outputPath}\n\nOverwrite it?"))
+            {
+                AppStatusService.SetStatus("Save Editor: focused Goodie overwrite canceled");
+                return;
+            }
+
+            EditorPatchFocusedGoodieButton.IsEnabled = false;
+            EditorOutputTextBox.Text = "Writing one focused Goodie state...";
+            AppStatusService.SetStatus("Save Editor: writing focused Goodie state...");
+
+            PatchResult result = SaveEditorService.PatchFocusedGoodieState(request);
+            ClearLastWrittenSave();
+            string stateLabel = MissionScriptGoodieStateSaveCodec.GetStateLabel(request.State);
+            string displayMessage = result.Success
+                ? $"Goodie ID {request.GoodieId:000} was written as {stateLabel} to {BuildFileNameSummary(request.OutputPath, "the selected output file")}.\nThe source save was not modified. If this destination is a Safe Game Copy, the output is staged only in that verified copy's savegames folder."
+                : ReplacePathWithLabel(
+                    ReplacePathWithLabel(result.Message, request.InputPath, "selected input save"),
+                    request.OutputPath,
+                    "selected output file");
+
+            EditorOutputTextBox.Text = displayMessage;
+            EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(result.Message);
+            EditorInfoBar.Title = result.Success ? "Focused Goodie copy written" : "Focused Goodie patch blocked";
+            EditorInfoBar.Message = displayMessage;
+            EditorInfoBar.Severity = result.Success ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
+            EditorInfoBar.Visibility = Visibility.Visible;
+            AppStatusService.SetStatus(result.Success ? "Save Editor: focused Goodie copy written" : "Save Editor: focused Goodie patch failed");
+            UpdateEditorActionState();
+        }
+
         private async void EditorPatchButton_Click(object sender, RoutedEventArgs e)
         {
             SavePatchRequest request = BuildEditorRequest(out string? advancedError);
@@ -869,6 +930,39 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
         }
 
+        private FocusedGoodieStatePatchRequest? BuildFocusedGoodieStateRequest(out string? error)
+        {
+            error = null;
+            double rawId = EditorFocusedGoodieIdNumberBox.Value;
+            if (double.IsNaN(rawId) || double.IsInfinity(rawId) || rawId != Math.Truncate(rawId))
+            {
+                error = "Goodie ID must be a whole number from 0 to 232.";
+                return null;
+            }
+
+            int goodieId = (int)rawId;
+            if ((uint)goodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                error = "Goodie ID must be from 0 to 232.";
+                return null;
+            }
+
+            string? stateTag = (EditorFocusedGoodieStateComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
+            if (!uint.TryParse(stateTag, out uint rawState) || rawState > MissionScriptGoodieStateSaveCodec.MaxKnownStateValue)
+            {
+                error = "Choose Locked, Instructions, New, or Old for the focused Goodie state.";
+                return null;
+            }
+
+            return new FocusedGoodieStatePatchRequest
+            {
+                InputPath = (EditorInputFileTextBox.Text ?? string.Empty).Trim(),
+                OutputPath = (EditorOutputFileTextBox.Text ?? string.Empty).Trim(),
+                GoodieId = goodieId,
+                State = (MissionScriptGoodieState)rawState
+            };
+        }
+
         private void ApplyEditorPreset(string preset)
         {
             _suppressEditorPresetSync = true;
@@ -931,6 +1025,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void UpdateEditorActionState()
         {
             SavePatchRequest request = BuildEditorRequest(out string? advancedError);
+            FocusedGoodieStatePatchRequest? focusedGoodieRequest = BuildFocusedGoodieStateRequest(out string? focusedGoodieError);
             bool hasSections = SaveEditorService.HasAnySelectedSection(request);
             bool outputIsSaveLike = SaveEditorService.IsCareerSaveFilePath(request.OutputPath);
             bool samePath = AreSamePaths(request.InputPath, request.OutputPath);
@@ -987,6 +1082,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 !samePath &&
                 outputIsSaveLike;
             EditorPatchButton.IsEnabled = canWrite;
+
+            bool canWriteFocusedGoodie =
+                focusedGoodieRequest is not null &&
+                string.IsNullOrWhiteSpace(focusedGoodieError) &&
+                _editorInputValid &&
+                hasInput &&
+                hasOutput &&
+                !samePath &&
+                outputIsSaveLike;
+            EditorPatchFocusedGoodieButton.IsEnabled = canWriteFocusedGoodie;
+            EditorFocusedGoodieStatusTextBlock.Text = focusedGoodieError ?? (canWriteFocusedGoodie
+                ? $"Ready to write only Goodie ID {focusedGoodieRequest!.GoodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(focusedGoodieRequest.State)}."
+                : "Choose a valid .bes input and a different .bes output to enable this one-field write.");
 
             Models.SaveEditorCompletionEvaluation completion = SaveEditorJourneyStateMachine.EvaluateCompletion(
                 _lastWrittenCompletion,

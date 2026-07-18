@@ -62,6 +62,14 @@ Every parsed archive's embedded Goodie index matched its filename index. Save in
 
 Goodies `71..73` have source data-table entries, unlock/instruction hooks, and shipped texture-only archives (`ca_be_final01`, `ca_be_final02`, and `ca_bea_battle_pic`). A controlled copied-profile observation of ordinary top-row navigation returned `66, 67, 68, 69, 70, 74`, not `71..73`. The WinUI catalog may preview those shipped artwork resources, but hidden or indirect in-game wall reachability remains unproven.
 
+## Bounded retail consumption
+
+Stuart's in-house PC source establishes the four-byte state shape and state meanings, but its frontend implementation and addresses do not define the console-derived Steam release. The checked Steam executable owns the offsets used here: `CCareer__Load` copies the serialized career from file offset `0x0002`, the retail Goodie array begins at file offset `0x1F46`, and `CFEPGoodies` maps wall coordinate `(13,0)` to save index `74`.
+
+A controlled WinUI/AppCore A/B used disposable copies of one real `10004`-byte, version-`0x4BD1` career save. The control retained Goodie `74 = 0`; the edited output set its dword at `0x206E` to `2`. The output differed only at byte `0x206E` (`00` to `02`); all other bytes, including reserved indices `233..299`, matched, and the source hash was unchanged. Same-file output and a new output inside the installed game tree were both rejected without creating or changing a file.
+
+Both app-owned game copies had the same verified copied `BEA.exe`. After automated retail selection of the sole staged save, the control exposed runtime states `0,0,0` for Goodies `73..75`, while the edited arm exposed `0,2,0` at the same addresses. With the live `CFEPGoodies` object at its checked retail vtable and cursor `(13,0)`, the edited wall entry became `Unlocked! Battle Engine Aquila Picture`; the control target was locked. The Steam load flow also rewrote the copy's `defaultoptions.bea` as an exact mirror of the selected save buffer, independently confirming which buffer it consumed. This establishes causality for Goodie `74` load and wall display only.
+
 ## Corrected offset boundary
 
 The former aligned-view note that treated `0x22D4` as `mCareerInProgress` was wrong:
@@ -75,4 +83,4 @@ Writing a progress flag at `0x22D4` corrupts the neighboring Goodie dword. AppCo
 
 ## Claim boundary
 
-Source tables and static retail evidence establish layout and likely unlock ownership. Copied-save tests establish byte preservation. They do not establish every runtime wall path, retail/source identity for every rule, or rebuild parity. No game payload, private artifact path, or installed-game mutation belongs in this repository.
+Source tables and static retail evidence establish layout and likely unlock ownership. Copied-save tests establish broad byte preservation, and the bounded retail A/B above establishes Goodie `74` load-and-wall consumption. They do not establish every runtime wall path, retail/source identity for every rule, or rebuild parity. No game payload, private artifact path, or installed-game mutation belongs in this repository.

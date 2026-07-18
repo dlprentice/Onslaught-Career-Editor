@@ -134,6 +134,59 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void SaveStagingValidation_AllowsRetailOptionsDriftButStillRejectsExecutableDrift()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-save-staging-drift-{Guid.NewGuid():N}");
+            using AppConfigRootScope appConfigRoot = new(tempRoot);
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = AppConfig.GetGameProfilesDir();
+            PrepareSourceGameRoot(sourceRoot);
+
+            try
+            {
+                GameProfilePrepareResult prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "save-staging-drift",
+                        ApplyWindowedCompatibilityPatch: false));
+
+                _ = GameProfileControlOptionsService.ApplyToSafeCopy(
+                    new GameProfileControlOptionsRequest(
+                        ProfileRoot: prepared.TargetGameRoot,
+                        AppOwnedProfilesRoot: outputRoot,
+                        MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity));
+
+                string optionsPath = Path.Combine(prepared.TargetGameRoot, "defaultoptions.bea");
+                byte[] optionsBytes = File.ReadAllBytes(optionsPath);
+                optionsBytes[0x26C4] ^= 0x01;
+                File.WriteAllBytes(optionsPath, optionsBytes);
+
+                _ = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfilePreflightService.BuildLaunchPlan(prepared.TargetGameRoot));
+                Assert.Equal(
+                    Path.GetFullPath(prepared.TargetGameRoot),
+                    GameProfilePreflightService.ValidateSaveStagingProfileRoot(prepared.TargetGameRoot));
+
+                string executablePath = Path.Combine(prepared.TargetGameRoot, "BEA.exe");
+                byte[] executableBytes = File.ReadAllBytes(executablePath);
+                executableBytes[^1] ^= 0x01;
+                File.WriteAllBytes(executablePath, executableBytes);
+
+                InvalidOperationException executableError = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfilePreflightService.ValidateSaveStagingProfileRoot(prepared.TargetGameRoot));
+                Assert.Contains("executable", executableError.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public void ApplyToSafeCopy_RejectsUnsupportedMouseSensitivityPreset()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-control-options-mouse-{Guid.NewGuid():N}");

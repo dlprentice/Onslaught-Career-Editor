@@ -348,8 +348,19 @@ namespace Onslaught___Career_Editor
             IReadOnlyList<string>? arguments = null,
             bool validateMusicReplacementManifest = true)
         {
-            string resolvedGameRoot = ValidateGeneratedProfileRoot(gameRoot, validateMusicReplacementManifest);
+            string resolvedGameRoot = ValidateGeneratedProfileRoot(
+                gameRoot,
+                validateMusicReplacementManifest,
+                validateControlOptionsManifest: true);
             return BuildLaunchPlanCore(resolvedGameRoot, arguments ?? Array.Empty<string>());
+        }
+
+        internal static string ValidateSaveStagingProfileRoot(string gameRoot)
+        {
+            return ValidateGeneratedProfileRoot(
+                gameRoot,
+                validateMusicReplacementManifest: true,
+                validateControlOptionsManifest: false);
         }
 
         public static GameProfilePrepareReceipt BuildPrepareReceipt(
@@ -546,7 +557,10 @@ namespace Onslaught___Career_Editor
             }
         }
 
-        private static string ValidateGeneratedProfileRoot(string gameRoot, bool validateMusicReplacementManifest)
+        private static string ValidateGeneratedProfileRoot(
+            string gameRoot,
+            bool validateMusicReplacementManifest,
+            bool validateControlOptionsManifest)
         {
             if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot))
                 throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {gameRoot}");
@@ -582,7 +596,10 @@ namespace Onslaught___Career_Editor
             ValidateManifestExecutableState(doc.RootElement, resolvedGameRoot);
             ValidateOptionalLevel100TextMod(doc.RootElement, resolvedGameRoot);
             ValidateOptionalLevel100EarlyFlightMod(doc.RootElement, resolvedGameRoot);
-            ValidateOptionalControlOptionsManifest(resolvedGameRoot);
+            if (validateControlOptionsManifest)
+            {
+                ValidateOptionalControlOptionsManifest(resolvedGameRoot);
+            }
             if (validateMusicReplacementManifest)
             {
                 ValidateOptionalMusicReplacementManifest(resolvedGameRoot);

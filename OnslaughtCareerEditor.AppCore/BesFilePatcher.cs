@@ -496,6 +496,15 @@ namespace Onslaught___Career_Editor
 
         public static PatchResult PatchGoodieStates(string inputPath, string outputPath, IReadOnlyDictionary<int, uint>? statesByIndex)
         {
+            return PatchGoodieStates(inputPath, outputPath, statesByIndex, outputAuthorization: null);
+        }
+
+        internal static PatchResult PatchGoodieStates(
+            string inputPath,
+            string outputPath,
+            IReadOnlyDictionary<int, uint>? statesByIndex,
+            FileMutationSafety.AppOwnedProfileMutationAuthorization? outputAuthorization)
+        {
             try
             {
                 if (statesByIndex is null || statesByIndex.Count == 0)
@@ -518,7 +527,9 @@ namespace Onslaught___Career_Editor
                     return PatchResult.Fail("Goodie state patching requires .bes input and output paths.");
                 }
 
-                using GuardedFileMutation mutation = FileMutationSafety.Begin(outputPath, inputPath);
+                using GuardedFileMutation mutation = outputAuthorization is null
+                    ? FileMutationSafety.Begin(outputPath, inputPath)
+                    : FileMutationSafety.BeginInAppOwnedProfile(outputPath, outputAuthorization, inputPath);
 
                 foreach (var (index, state) in statesByIndex)
                 {
@@ -548,7 +559,10 @@ namespace Onslaught___Career_Editor
 
                 foreach (var (index, state) in statesByIndex)
                 {
-                    WriteUInt32(buf, GOODIE_BASE + index * 4, state);
+                    MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(
+                        buf,
+                        index,
+                        (MissionScriptGoodieState)state);
                 }
 
                 mutation.Commit(buf);

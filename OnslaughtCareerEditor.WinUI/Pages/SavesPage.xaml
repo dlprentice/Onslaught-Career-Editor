@@ -583,6 +583,52 @@
 
                         <Border Style="{StaticResource SavesSectionCardStyle}">
                             <StackPanel Spacing="12">
+                                <TextBlock Text="Focused Goodie state"
+                                           FontSize="18"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Write one documented Goodie dword without running the broad Goodies pass. IDs are zero-based. A Safe Game Copy destination must be one .bes file directly inside that verified profile's savegames folder; installed game folders and in-place output remain blocked."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <controls:NumberBox x:Name="EditorFocusedGoodieIdNumberBox"
+                                                        AutomationProperties.AutomationId="SaveEditorFocusedGoodieIdNumberBox"
+                                                        Header="Goodie ID"
+                                                        Minimum="0"
+                                                        Maximum="232"
+                                                        SmallChange="1"
+                                                        SpinButtonPlacementMode="Inline"
+                                                        ValueChanged="EditorFocusedGoodieIdNumberBox_ValueChanged" />
+                                    <ComboBox x:Name="EditorFocusedGoodieStateComboBox"
+                                              Grid.Column="1"
+                                              AutomationProperties.AutomationId="SaveEditorFocusedGoodieStateComboBox"
+                                              Header="State"
+                                              SelectionChanged="EditorFocusedGoodieStateComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Locked" Tag="0" />
+                                        <ComboBoxItem Content="Instructions" Tag="1" />
+                                        <ComboBoxItem Content="New (gold)" Tag="2" />
+                                        <ComboBoxItem Content="Old (blue)" Tag="3" />
+                                    </ComboBox>
+                                </Grid>
+                                <TextBlock x:Name="EditorFocusedGoodieStatusTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorFocusedGoodieStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
+                                <Button x:Name="EditorPatchFocusedGoodieButton"
+                                        AutomationProperties.AutomationId="SaveEditorPatchFocusedGoodieButton"
+                                        Content="Write focused Goodie copy"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Click="EditorPatchFocusedGoodieButton_Click"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="210" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SavesSectionCardStyle}">
+                            <StackPanel Spacing="12">
                                 <TextBlock Text="Patch sections"
                                            FontSize="18"
                                            FontWeight="SemiBold" />

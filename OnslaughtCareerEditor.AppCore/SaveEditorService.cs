@@ -20,6 +20,14 @@ namespace Onslaught___Career_Editor
         public Dictionary<int, int>? PerCategoryKills { get; init; }
     }
 
+    public sealed class FocusedGoodieStatePatchRequest
+    {
+        public string InputPath { get; init; } = string.Empty;
+        public string OutputPath { get; init; } = string.Empty;
+        public int GoodieId { get; init; }
+        public MissionScriptGoodieState State { get; init; } = MissionScriptGoodieState.New;
+    }
+
     public static class SaveEditorService
     {
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedCareerSaves(string? gameDir = null)
@@ -160,6 +168,94 @@ namespace Onslaught___Career_Editor
             };
 
             return patcher.PatchFile(inputPath, outputPath);
+        }
+
+        public static PatchResult PatchFocusedGoodieState(FocusedGoodieStatePatchRequest request)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            string inputPath = request.InputPath?.Trim() ?? string.Empty;
+            string outputPath = request.OutputPath?.Trim() ?? string.Empty;
+            if (inputPath.Length == 0 || outputPath.Length == 0)
+            {
+                return PatchResult.Fail("Select both input and output files before patching.");
+            }
+
+            if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
+            {
+                return PatchResult.Fail("Focused Goodie state patching requires .bes input and output paths.");
+            }
+
+            if ((uint)request.GoodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                return PatchResult.Fail(
+                    $"Goodie ID must be from 0 to {MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount - 1}.");
+            }
+
+            if ((uint)request.State > MissionScriptGoodieStateSaveCodec.MaxKnownStateValue)
+            {
+                return PatchResult.Fail("Goodie state must be Locked, Instructions, New, or Old.");
+            }
+
+            try
+            {
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
+                {
+                    return PatchResult.Fail("Output file must be different from input file. In-place save patching is blocked.");
+                }
+
+                if (!File.Exists(inputPath))
+                {
+                    return PatchResult.Fail($"Input file not found: {inputPath}");
+                }
+
+                IReadOnlyDictionary<int, uint> stateOverride = new Dictionary<int, uint>
+                {
+                    [request.GoodieId] = (uint)request.State
+                };
+
+                string appOwnedProfilesRoot = FileMutationSafety.NormalizeLocalPath(
+                    AppConfig.GetGameProfilesDir(),
+                    "App-owned profiles root");
+                if (!FileMutationSafety.IsSameOrUnderRoot(outputPath, appOwnedProfilesRoot))
+                {
+                    return BesFilePatcher.PatchGoodieStates(inputPath, outputPath, stateOverride);
+                }
+
+                string relativeOutput = Path.GetRelativePath(appOwnedProfilesRoot, outputPath);
+                string[] segments = relativeOutput.Split(
+                    new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+                    StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length != 3 ||
+                    !string.Equals(segments[1], "savegames", StringComparison.OrdinalIgnoreCase))
+                {
+                    return PatchResult.Fail(
+                        "Safe-copy Goodie output must be one .bes file directly inside a verified profile's savegames folder.");
+                }
+
+                string profileRoot = Path.Combine(appOwnedProfilesRoot, segments[0]);
+                _ = GameProfilePreflightService.ValidateSaveStagingProfileRoot(profileRoot);
+                using FileMutationSafety.AppOwnedProfileMutationAuthorization outputAuthorization =
+                    FileMutationSafety.AuthorizeAppOwnedProfileRoot(profileRoot, appOwnedProfilesRoot);
+
+                string savegamesDirectory = Path.Combine(profileRoot, "savegames");
+                Directory.CreateDirectory(savegamesDirectory);
+                FileMutationSafety.RejectExistingReparseAncestors(
+                    savegamesDirectory,
+                    "Safe-copy savegames folder");
+
+                return BesFilePatcher.PatchGoodieStates(
+                    inputPath,
+                    outputPath,
+                    stateOverride,
+                    outputAuthorization);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
+            {
+                return PatchResult.Fail(ex.Message);
+            }
         }
 
         private static int ClampGlobalKillValue(int value)
