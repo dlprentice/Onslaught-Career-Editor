@@ -145,7 +145,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             EditorRankComboBox.SelectedIndex = 0;
             EditorPatchPresetComboBox.SelectedIndex = 0;
-            EditorFocusedGoodieIdNumberBox.Value = 74;
+            EditorFocusedGoodieIdNumberBox.Value = 2;
             EditorFocusedGoodieStateComboBox.SelectedIndex = 2;
             EditorGlobalKillNumberBox.Value = 100;
             EditorGoodiesAsNewToggle.IsOn = false;
