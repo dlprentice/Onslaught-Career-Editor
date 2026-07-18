@@ -9,9 +9,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
 
-    private static readonly Color Steel = new(0.20f, 0.27f, 0.30f);
     private static readonly Color SteelDark = new(0.075f, 0.105f, 0.115f);
-    private static readonly Color Cyan = new(0.10f, 0.74f, 0.82f);
     private static readonly Color Amber = new(0.96f, 0.52f, 0.16f);
     private static readonly Color Green = new(0.30f, 0.70f, 0.39f);
     private static readonly Color Wreck = new(0.13f, 0.12f, 0.11f);
@@ -20,13 +18,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
-    private MeshInstance3D? _leftLeg;
-    private MeshInstance3D? _rightLeg;
-    private MeshInstance3D? _leftWing;
-    private MeshInstance3D? _rightWing;
-    private MeshInstance3D? _leftEngine;
-    private MeshInstance3D? _rightEngine;
-    private StandardMaterial3D? _playerAccentMaterial;
+    private MeshInstance3D _walkerMesh = null!;
+    private MeshInstance3D _jetMesh = null!;
     private Camera3D _camera = null!;
     private bool _cameraInitialized;
     private float _modeBlend;
@@ -36,6 +29,16 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int ProjectileVisualCount => _projectiles.Count;
 
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
+
+    public bool RetailAquilaMeshesPresent =>
+        IsInstanceValid(_walkerMesh) &&
+        IsInstanceValid(_jetMesh) &&
+        _walkerMesh.Mesh?.GetSurfaceCount() > 0 &&
+        _jetMesh.Mesh?.GetSurfaceCount() > 0;
+
+    public int RetailAquilaSurfaceCount =>
+        (_walkerMesh.Mesh?.GetSurfaceCount() ?? 0) +
+        (_jetMesh.Mesh?.GetSurfaceCount() ?? 0);
 
     public void Initialize(WorldSnapshot snapshot)
     {
@@ -75,7 +78,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         _modeBlend = current.Transition == VehicleTransition.WalkerToJet
             ? desiredModeBlend
             : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
-        UpdatePlayerShape(current, frameDelta);
+        UpdatePlayerShape(current);
         UpdateTargets(current);
         UpdateProjectiles(current);
         UpdateCamera(current, playerPosition, frameDelta);
@@ -171,28 +174,30 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        var bodyMaterial = VisualPrimitives.CreateMaterial(Steel, 0.55f, 0.36f);
-        var darkMaterial = VisualPrimitives.CreateMaterial(SteelDark, 0.35f, 0.55f);
-        _playerAccentMaterial = VisualPrimitives.CreateMaterial(Cyan, 0.35f, 0.32f, Cyan);
+        Mesh walker = CuratedObjMeshLoader.Load("res://Assets/Aquila/aquila-walker.obj");
+        Mesh jet = CuratedObjMeshLoader.Load("res://Assets/Aquila/aquila-jet.obj");
+        var material = VisualPrimitives.CreateMaterial(new Color(0.47f, 0.64f, 0.74f), 0.45f, 0.42f);
 
-        _playerBodyPivot.AddChild(VisualPrimitives.CreateBox("MainHull", new Vector3(2.3f, 0.85f, 3.1f), new Vector3(0f, 1.55f, 0f), bodyMaterial));
-        _playerBodyPivot.AddChild(VisualPrimitives.CreateBox("Nose", new Vector3(1.35f, 0.5f, 1.2f), new Vector3(0f, 1.62f, 1.85f), _playerAccentMaterial));
-        _playerBodyPivot.AddChild(VisualPrimitives.CreateSphere("Cockpit", 0.58f, new Vector3(0f, 2.12f, 0.35f), darkMaterial));
-
-        _leftWing = VisualPrimitives.CreateBox("LeftWing", new Vector3(2.7f, 0.16f, 1.55f), new Vector3(-2.05f, 1.62f, -0.25f), bodyMaterial, new Vector3(0f, 0f, -8f));
-        _rightWing = VisualPrimitives.CreateBox("RightWing", new Vector3(2.7f, 0.16f, 1.55f), new Vector3(2.05f, 1.62f, -0.25f), bodyMaterial, new Vector3(0f, 0f, 8f));
-        _playerBodyPivot.AddChild(_leftWing);
-        _playerBodyPivot.AddChild(_rightWing);
-
-        _leftLeg = VisualPrimitives.CreateBox("LeftLeg", new Vector3(0.55f, 1.7f, 0.72f), new Vector3(-0.72f, 0.45f, -0.25f), darkMaterial);
-        _rightLeg = VisualPrimitives.CreateBox("RightLeg", new Vector3(0.55f, 1.7f, 0.72f), new Vector3(0.72f, 0.45f, -0.25f), darkMaterial);
-        _playerRoot.AddChild(_leftLeg);
-        _playerRoot.AddChild(_rightLeg);
-
-        _leftEngine = VisualPrimitives.CreateCylinder("LeftEngine", 0.26f, 0.85f, new Vector3(-0.78f, 1.55f, -1.85f), _playerAccentMaterial, new Vector3(90f, 0f, 0f));
-        _rightEngine = VisualPrimitives.CreateCylinder("RightEngine", 0.26f, 0.85f, new Vector3(0.78f, 1.55f, -1.85f), _playerAccentMaterial, new Vector3(90f, 0f, 0f));
-        _playerBodyPivot.AddChild(_leftEngine);
-        _playerBodyPivot.AddChild(_rightEngine);
+        _walkerMesh = new MeshInstance3D
+        {
+            Name = "RetailAquilaWalker",
+            Mesh = walker,
+            MaterialOverride = material,
+            Position = new Vector3(0f, 1.99f, 0f),
+            Scale = Vector3.One * 1.8f,
+        };
+        _jetMesh = new MeshInstance3D
+        {
+            Name = "RetailAquilaJet",
+            Mesh = jet,
+            MaterialOverride = material,
+            Position = new Vector3(0f, 0.53f, 0f),
+            RotationDegrees = new Vector3(-90f, 0f, 0f),
+            Scale = Vector3.One * 2.2f,
+            Visible = false,
+        };
+        _playerBodyPivot.AddChild(_walkerMesh);
+        _playerBodyPivot.AddChild(_jetMesh);
     }
 
     private void BuildTargets(WorldSnapshot snapshot)
@@ -238,38 +243,16 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddChild(_camera);
     }
 
-    private void UpdatePlayerShape(WorldSnapshot snapshot, float frameDelta)
+    private void UpdatePlayerShape(WorldSnapshot snapshot)
     {
-        if (_leftLeg is null ||
-            _rightLeg is null ||
-            _leftWing is null ||
-            _rightWing is null ||
-            _leftEngine is null ||
-            _rightEngine is null ||
-            _playerAccentMaterial is null)
-        {
-            return;
-        }
+        bool showJet = _modeBlend >= 0.5f;
+        _walkerMesh.Visible = !showJet;
+        _jetMesh.Visible = showJet;
 
-        _leftLeg.Position = new Vector3(-0.72f - (_modeBlend * 0.35f), 0.45f + (_modeBlend * 0.72f), -0.25f - (_modeBlend * 0.78f));
-        _rightLeg.Position = new Vector3(0.72f + (_modeBlend * 0.35f), 0.45f + (_modeBlend * 0.72f), -0.25f - (_modeBlend * 0.78f));
-        _leftLeg.RotationDegrees = new Vector3(_modeBlend * 72f, 0f, _modeBlend * -18f);
-        _rightLeg.RotationDegrees = new Vector3(_modeBlend * 72f, 0f, _modeBlend * 18f);
-        _leftWing.Position = new Vector3(-2.05f - (_modeBlend * 0.5f), 1.62f, -0.25f);
-        _rightWing.Position = new Vector3(2.05f + (_modeBlend * 0.5f), 1.62f, -0.25f);
-        _playerBodyPivot.RotationDegrees = new Vector3(_modeBlend * -10f, 0f, 0f);
-
-        float speed = snapshot.PlayerVelocity.X != 0 || snapshot.PlayerVelocity.Z != 0 ? 1f : 0f;
-        float engineScale = 0.75f + (_modeBlend * 0.7f) + (speed * 0.28f);
-        _leftEngine.Scale = new Vector3(engineScale, engineScale, engineScale);
-        _rightEngine.Scale = _leftEngine.Scale;
-        float pulse = snapshot.TransformTicksRemaining > 0
-            ? 2.4f + (Mathf.Sin(snapshot.Tick * 0.9f) * 0.8f)
-            : 1.8f + (_modeBlend * 1.4f);
-        _playerAccentMaterial.EmissionEnergyMultiplier = Mathf.MoveToward(
-            _playerAccentMaterial.EmissionEnergyMultiplier,
-            pulse,
-            frameDelta * 8f);
+        float transitionLift = snapshot.Transition == VehicleTransition.WalkerToJet
+            ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
+            : 0f;
+        _playerBodyPivot.Position = new Vector3(0f, transitionLift, 0f);
     }
 
     private void UpdateTargets(WorldSnapshot snapshot)

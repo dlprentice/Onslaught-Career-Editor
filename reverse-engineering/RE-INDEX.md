@@ -14,8 +14,9 @@ waves, superseded plans, and generated accounting.
   and specimen described by their evidence.
 - Deterministic rebuild agreement does not re-prove retail behavior or establish
   gameplay, visual, or clean-room parity.
-- Retail binaries, assets, saves, debugger logs, frames, and Ghidra project
-  stores remain untracked local inputs.
+- Retail executables, saves, debugger logs, and runtime frames remain untracked
+  local inputs. The reviewed canonical Ghidra project and the small authorized
+  asset set consumed by the rebuild are the explicit tracked exceptions.
 
 ## Start here
 
@@ -23,6 +24,7 @@ waves, superseded plans, and generated accounting.
 | --- | --- |
 | Save and options formats | [Save-file index](save-file/_index.md) |
 | Retail binary analysis | [Binary-analysis index](binary-analysis/_index.md) |
+| Canonical Ghidra project | [Distributable database](ghidra/README.md) |
 | Pinned source references | [Source-code index](source-code/_index.md) |
 | Measured mechanics | [Game-mechanics index](game-mechanics/_index.md) |
 | Assets and mission data | [Game-assets index](game-assets/_index.md) |

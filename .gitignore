@@ -87,5 +87,10 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 *.gdt
 *.bytes
 
+# Reviewed source exceptions: active rebuild assets and canonical RE database.
+!rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/*.aya
+!reverse-engineering/ghidra/
+!reverse-engineering/ghidra/**
+
 # Narrow public-primary regression fixture exception.
 !tests_shared/fixtures/gold_career_save.bin

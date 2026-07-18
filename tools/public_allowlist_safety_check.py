@@ -66,14 +66,25 @@ DENY_EXACT = {
 }
 
 ALLOW_EXACT = {
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be1.msh.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj",
     "references/AYAResourceExtractor/BoxWithTextures.fbx",
     "tests_shared/fixtures/gold_career_save.bin",
 }
 
 ALLOW_EXACT_SHA256 = {
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be1.msh.aya": "d4c8fa752229af4111b31efa5ff5928c892736faa6a807915412767f3cd3c6b2",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya": "35aada1313c3cbb796ba75db071321035f7005096da7c148a7514944f4772b4c",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj": "075deb202b805c3c9f08f5c51e8c54277f76ae118dabef9bdeaede787a7e1bd3",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker.obj": "6cd8840a251561d07d5b51850c3ddaa78702998bc5978aae1bb4537dfcbc753f",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
+
+REVIEWED_GHIDRA_ROOT = "reverse-engineering/ghidra/"
+REVIEWED_GHIDRA_SUFFIXES = {".bak", ".dat", ".gbf", ".prp"}
 
 ALLOW_CDB_SCRIPT_PREFIXES: tuple[str, ...] = ()
 
@@ -359,8 +370,16 @@ def is_text_candidate(path: str) -> bool:
     return is_text_file(path)
 
 
+def is_reviewed_payload(path: str) -> bool:
+    if path == f"{REVIEWED_GHIDRA_ROOT}BEA.gpr":
+        return True
+    if not path.startswith(f"{REVIEWED_GHIDRA_ROOT}BEA.rep/"):
+        return False
+    return Path(path).suffix.lower() in REVIEWED_GHIDRA_SUFFIXES or Path(path).name == "projectState"
+
+
 def path_findings(path: str) -> list[Finding]:
-    if path in ALLOW_EXACT:
+    if path in ALLOW_EXACT or is_reviewed_payload(path):
         return []
     findings: list[Finding] = []
     lower = path.lower()
@@ -392,7 +411,7 @@ def size_findings(root: Path, path: str) -> list[Finding]:
         size = full_path.stat().st_size
     except OSError as exc:
         return [Finding(path, "stat-error", str(exc))]
-    if path in ALLOW_EXACT_SHA256:
+    if path in ALLOW_EXACT_SHA256 or is_reviewed_payload(path):
         return []
     if size > MAX_UNREVIEWED_FILE_BYTES:
         return [Finding(path, "deny-large-unreviewed-file", str(size))]
@@ -422,7 +441,7 @@ def exact_allow_hash_findings(root: Path, path: str) -> list[Finding]:
 
 
 def magic_findings(root: Path, path: str) -> list[Finding]:
-    if is_text_file(path):
+    if is_text_file(path) or is_reviewed_payload(path):
         return []
     full_path = root / path
     if full_path.is_dir():
@@ -607,6 +626,10 @@ def run_self_test() -> int:
         (root / "manual.xml").write_text("<xml>not ok</xml>\n", encoding="utf-8")
         (root / "local.rep").mkdir()
         (root / "local.rep" / "project.db").write_bytes(b"not ok")
+        canonical_ghidra = root / "reverse-engineering" / "ghidra" / "BEA.rep" / "idata"
+        canonical_ghidra.mkdir(parents=True)
+        (canonical_ghidra / "database.gbf").write_bytes(b"reviewed canonical database fixture")
+        (root / "reverse-engineering" / "ghidra" / "BEA.exe").write_bytes(b"not reviewed")
         (root / ".codex" / "custom").mkdir(parents=True)
         (root / ".codex" / "custom" / "instructions.md").write_text("not public\n", encoding="utf-8")
         (root / ".codex" / "sessions").mkdir(parents=True)
@@ -721,6 +744,22 @@ def run_self_test() -> int:
         if not any(finding.path == "tools/runtime-probes/allowed-observer.cdb.txt" for finding in findings):
             print("Public payload safety self-test: FAIL")
             print("- tracked CDB command scripts were not rejected")
+            print(f"- findings: {findings!r}")
+            return 1
+        canonical_findings = [
+            finding
+            for finding in findings
+            if finding.path.startswith("reverse-engineering/ghidra/")
+            and finding.path != "reverse-engineering/ghidra/BEA.exe"
+        ]
+        if canonical_findings:
+            print("Public payload safety self-test: FAIL")
+            print("- canonical Ghidra project owner was rejected")
+            print(f"- findings: {findings!r}")
+            return 1
+        if not any(finding.path == "reverse-engineering/ghidra/BEA.exe" for finding in findings):
+            print("Public payload safety self-test: FAIL")
+            print("- standalone executable inside the Ghidra owner was not rejected")
             print(f"- findings: {findings!r}")
             return 1
     with tempfile.TemporaryDirectory() as tmp:

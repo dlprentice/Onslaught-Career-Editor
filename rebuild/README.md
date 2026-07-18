@@ -17,15 +17,17 @@ synthetic arena or another layer of readiness tooling.
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The current Godot app is the **Aquila Handling Lab**. It uses procedural geometry
-and synthetic targets. It is useful for exercising the deterministic boundary,
+The current Godot app is the **Aquila Handling Lab**. It renders the released
+Federation Aquila walker and jet geometry over a procedural arena with
+synthetic targets. It is useful for exercising the deterministic boundary,
 body-relative movement, chase camera, input, and rendering, but it is not yet a
 playable reconstruction of the retail game.
 
 The project has permission to use, modify, and distribute the original game
-assets. No original assets are currently integrated into this client. Add them
-directly, with provenance and attribution, only when a real implemented slice
-needs them; do not rebuild the retired manual local-mesh staging workflow.
+assets. The two Aquila render meshes are the first integrated originals and
+carry their source hashes and limitations in
+[`Assets/Aquila/README.md`](OnslaughtRebuild.Godot/Assets/Aquila/README.md).
+Add further assets only when a real implemented slice consumes them.
 
 ## Run
 
@@ -67,6 +69,11 @@ repeated transform input, movement, turning, and fire are blocked during that
 state. Eight-way movement projection, camera tuning, jet-to-walker, transform
 animation, resource semantics, weapons, terrain, collision, AI, missions,
 audio, campaign, and networking remain provisional or absent.
+
+The client switches between deterministic static conversions of the released
+walker and jet meshes. Texture/material assignment, part articulation, transform
+animation, and retail scale remain unimplemented; the procedural arena and
+synthetic combat objects are unchanged.
 
 ## Verify
 

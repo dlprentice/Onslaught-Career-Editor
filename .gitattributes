@@ -90,3 +90,8 @@ game/steam_appid.txt -text
 *.wav -text
 *.webp -text
 *.zip -text
+
+# Reviewed game-derived inputs: preserve exact source bytes.
+rebuild/OnslaughtRebuild.Godot/Assets/Aquila/*.obj -text
+reverse-engineering/ghidra/** binary
+reverse-engineering/ghidra/README.md text eol=lf

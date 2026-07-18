@@ -17,8 +17,9 @@
 
 - Read `README.MD` and only the files directly related to the change.
 - Do not add game binaries, copied executables, arbitrary save payloads, raw
-  debugger logs, full Ghidra projects/backups, credentials, `.env*`, or bulky
-  runtime captures. The tracked regression fixture
+  debugger logs, Ghidra backups or alternate projects, credentials, `.env*`,
+  or bulky runtime captures. The canonical distributable Ghidra project lives
+  only under `reverse-engineering/ghidra/`. The tracked regression fixture
   `tests_shared/fixtures/gold_career_save.bin` is the narrow save exception.
 - Never patch or mutate an installed Battle Engine Aquila directory or original `BEA.exe`; operate on copied targets only.
 - Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.

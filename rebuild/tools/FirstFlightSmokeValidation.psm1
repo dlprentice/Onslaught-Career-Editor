@@ -53,6 +53,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'cappedFrameCount' 0 $report.cappedFrameCount
     Assert-SmokeValue 'droppedElapsedTicks' 0 $report.droppedElapsedTicks
     Assert-SmokeValue 'playerVisualPresent' $true $report.playerVisualPresent
+    Assert-SmokeValue 'retailAquilaMeshesPresent' $true $report.retailAquilaMeshesPresent
+    Assert-SmokeValue 'retailAquilaSurfaceCount' 2 $report.retailAquilaSurfaceCount
     Assert-SmokeValue 'targetVisualCount' 3 $report.targetVisualCount
     Assert-SmokeValue 'hudReady' $true $report.hudReady
     Assert-SmokeValue 'focusLossHandlerInputCleared' $true $report.focusLossHandlerInputCleared

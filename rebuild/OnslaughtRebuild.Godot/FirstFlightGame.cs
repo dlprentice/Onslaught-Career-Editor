@@ -37,21 +37,30 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Ready()
     {
-        ConfigureInputMap();
-        ParseUserArguments();
+        try
+        {
+            ConfigureInputMap();
+            ParseUserArguments();
 
-        Window window = GetWindow();
-        window.Title = "Onslaught Rebuild - Aquila Handling Lab";
-        window.MinSize = new Vector2I(1200, 675);
+            Window window = GetWindow();
+            window.Title = "Onslaught Rebuild - Aquila Handling Lab";
+            window.MinSize = new Vector2I(1200, 675);
 
-        _world = new FirstFlightWorldView();
-        AddChild(_world);
-        _world.Initialize(_session.CurrentSnapshot);
+            _world = new FirstFlightWorldView();
+            AddChild(_world);
+            _world.Initialize(_session.CurrentSnapshot);
 
-        _hud = new FirstFlightHud();
-        AddChild(_hud);
-        _hud.Initialize();
-        _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+            _hud = new FirstFlightHud();
+            AddChild(_hud);
+            _hud.Initialize();
+            _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+        }
+        catch (Exception exception)
+        {
+            SetProcess(false);
+            GD.PushError($"Aquila Handling Lab failed to initialize: {exception.Message}");
+            GetTree().Quit(4);
+        }
     }
 
     public override void _Process(double delta)
@@ -367,6 +376,8 @@ public sealed partial class FirstFlightGame : Node3D
                 CappedFrameCount = metrics.CappedFrameCount,
                 DroppedElapsedTicks = metrics.DroppedElapsedTicks,
                 PlayerVisualPresent = _world.PlayerVisualPresent,
+                RetailAquilaMeshesPresent = _world.RetailAquilaMeshesPresent,
+                RetailAquilaSurfaceCount = _world.RetailAquilaSurfaceCount,
                 TargetVisualCount = _world.TargetVisualCount,
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
@@ -423,6 +434,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required long CappedFrameCount { get; init; }
         public required long DroppedElapsedTicks { get; init; }
         public required bool PlayerVisualPresent { get; init; }
+        public required bool RetailAquilaMeshesPresent { get; init; }
+        public required int RetailAquilaSurfaceCount { get; init; }
         public required int TargetVisualCount { get; init; }
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }

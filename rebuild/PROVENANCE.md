@@ -41,10 +41,11 @@ not provenance.
 ## Current slice
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
-infrastructure. The current Godot Aquila Handling Lab is still a procedural
-input/rendering harness. Its arena, targets, weapons, resources, jet/morph
-rules, and presentation are provisional unless a specific retained retail
-measurement says otherwise.
+infrastructure. The Godot Aquila Handling Lab now consumes static conversions
+of the released Federation walker and jet meshes; their exact source/output
+hashes live with the assets. Its arena, targets, weapons, resources, material
+assignment, articulation, jet/morph presentation, and scale remain provisional
+unless a specific retained retail measurement says otherwise.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -60,5 +61,6 @@ jet-to-walker, transform presentation, resources, weapons, and flight dynamics
 remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts, renders, advances, and exits.
-Neither proves gameplay, mission, asset, timing, or visual parity.
+A native smoke proves the current client starts, loads both curated Aquila
+meshes, renders, advances, and exits. It does not prove material, animation,
+mission, scale, timing, or visual parity.

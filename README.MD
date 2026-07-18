@@ -9,7 +9,8 @@ and browsing locally supplied media, catalogs, and project lore.
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
-currently uses procedural stand-ins and does not claim retail parity. The
+currently renders the released Aquila walker/jet geometry inside a procedural
+arena and does not claim retail parity. The
 project has permission to use, modify, and distribute the original game assets;
 integration into the rebuild remains implementation work, not a legal blocker.
 
@@ -82,9 +83,10 @@ per-user cache. It does not require a retail game install.
   preserve file length, reserved fields, and unknown bytes.
 - Never patch an installed `BEA.exe`. Executable changes are allowed only on a
   verified copied target or an app-created safe game copy.
-- Keep game binaries, real saves, full Ghidra projects, debugger transcripts,
-  private captures, secrets, bulk extraction output, and build output out of
-  Git.
+- Keep game binaries, real saves, Ghidra backups/alternate projects, debugger
+  transcripts, private captures, secrets, bulk extraction output, and build
+  output out of Git. The reviewed canonical Ghidra project is the sole database
+  exception under `reverse-engineering/ghidra/`.
 - The project owner's permission covers use, modification, and distribution of
   original game assets. Curate only assets consumed by an active product or
   rebuild slice, retain credits/provenance, and review third-party components

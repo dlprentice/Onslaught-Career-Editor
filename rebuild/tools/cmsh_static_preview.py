@@ -798,7 +798,11 @@ def publish_anonymous_previews(
     output_directory = _absolute_lexical(output_directory)
     if os.path.normcase(str(checkout)) != os.path.normcase(str(trusted_checkout)):
         raise CmshProfileError("invalid framing", 0, "trusted checkout")
-    allowed_inputs = (checkout / "game", checkout / "local-lab" / "rebuild-godot" / "input")
+    allowed_inputs = (
+        checkout / "game",
+        checkout / "local-lab" / "rebuild-godot" / "input",
+        checkout / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Aquila" / "Source",
+    )
     allowed_output = checkout / "local-lab" / "rebuild-godot" / "generated"
     try:
         input_root = next((root for root in allowed_inputs if _within(input_directory, root)), None)

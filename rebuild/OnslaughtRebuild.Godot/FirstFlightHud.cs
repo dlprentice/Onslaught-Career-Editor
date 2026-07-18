@@ -120,7 +120,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         panel.AddChild(stack);
         stack.AddChild(CreateLabel("AQUILA HANDLING LAB", 22, TextPrimary));
         stack.AddChild(CreateLabel(
-            "Synthetic arena | handling workbench, not retail parity",
+            "Released Aquila meshes | synthetic arena, not retail parity",
             13,
             TextMuted));
 
