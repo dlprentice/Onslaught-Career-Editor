@@ -68,7 +68,7 @@ See [windowed-mode-analysis.md](../../windowed-mode-analysis.md) for the full in
 | Parameter | Type | Effect |
 |-----------|------|--------|
 | `-level N` | int | Skip to level N |
-| `-skipfmv` | flag | No cutscenes |
+| `-skipfmv` | flag | Skip startup and level-intro FMV playback; click-to-start remains |
 | `-nomusic` | flag | Silence music |
 | `-nosound` | flag | Silence all audio |
 | `-res W H` | int int | Set resolution |

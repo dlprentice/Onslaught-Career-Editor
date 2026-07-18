@@ -62,7 +62,7 @@ Example: `-buildresources PC PS2` builds for both PC and PS2.
 |-----------|------|-------------|
 | `-level N` | Integer | Start at level N directly |
 | `-configuration N` | Integer | Use controller configuration N (1-4) |
-| `-skipfmv` | Flag | Skip FMV video playback |
+| `-skipfmv` | Flag | Skip startup and level-intro FMV playback; click-to-start remains |
 | `-attractmode` | Flag | Enable attract/demo mode |
 | `-pal` | Flag | Use PAL video mode |
 | `-ntsc` | Flag | Use NTSC video mode |

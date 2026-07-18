@@ -20,8 +20,9 @@ Steam build has two distinct skip mechanisms for this playback path:
 
 - `CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and sets
   the gate read by this function at `0x00663050`, so the level-intro playback
-  call is never entered. It does not bypass the startup logo, startup movie, or
-  click-to-start page.
+  call is never entered. The same retail global is checked by
+  `CLTShell__InitializeRuntimeAndLoadCoreResources` (`0x004EFB10`) to bypass
+  startup full-screen FMV playback. It does not bypass the click-to-start page.
 - During playback, the receiver at `0x004656E0` sets the FMV quit flag for
   virtual `BUTTON_SKIP_CUTSCENE` (`7`). The retail default single-player table
   at `0x00514210` binds that action to Space (`DIK 0x39`), Enter (`0x1C`),
@@ -31,9 +32,11 @@ Steam build has two distinct skip mechanisms for this playback path:
 
 Stuart's `CLIParams.cpp` and `game.cpp` corroborate the `-skipfmv` gate, while
 his controller table shows only the source-build Space mapping. The broader key
-set and mouse exits above come directly from the Steam executable. A single
-keypress missed during focus acquisition or transient-input reset does not
-establish that the cinematic is unskippable.
+set, mouse exits, and startup use of the shared flag above come directly from
+the Steam executable. A controlled app-owned retail launch with the flag set
+reached `click to start` without game input. A single keypress missed during
+focus acquisition or transient-input reset does not establish that the
+cinematic is unskippable.
 
 The separate, controlled startup sequence is documented in
 [`fep-systems.md`](../../../source-code/frontend/fep-systems.md#steam-startup-skip-sequence).

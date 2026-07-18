@@ -11,7 +11,7 @@ From Dominating David (Discord #media, April 1, 2025):
 | `-playabledemo` | Launches game as playable demo with 1 mission |
 | `-nomusic` | Disables background music |
 | `-nosound` | Disables all audio |
-| `-skipfmv` | Skips intro video |
+| `-skipfmv` | Skips startup and level-intro FMV playback; click-to-start remains |
 
 ### Discovered (Effect Unknown/Untested)
 

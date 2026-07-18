@@ -3,7 +3,7 @@
 ## Steam startup skip sequence
 
 Fresh Steam-binary analysis and controlled app-owned copied-runtime observation
-separate startup from `CGame__RunIntroFMV`:
+establish both the normal input path and the retail `-skipfmv` path:
 
 - Front-end page `12` is the object at `CFrontEnd + 0x4034` (retail runtime
   address `0x008A178C`) with vtable `0x005E49B4`. Its button handler at
@@ -22,13 +22,23 @@ separate startup from `CGame__RunIntroFMV`:
   startup movie immediately to `click to start`, after which a click entered
   the main menu.
 
-`-skipfmv` is parsed at `0x00423BC0`, but its gate at `0x00663050` belongs to
-the level-intro path in `CGame__RunIntroFMV` (`0x0046D890`). It did not bypass
-the startup front-end sequence in the controlled copied runtime. For the
-checked Steam specimen, the reliable automated startup sequence is therefore
-focus and observe, Space, observe the startup movie, Space, observe
-`click to start`, then click. This does not claim identical input tables or
-timing in other releases.
+`CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and writes
+`1` to `0x00663050`. `CLTShell__InitializeRuntimeAndLoadCoreResources`
+(`0x004EFB10`) checks that same global and branches around the startup
+full-screen FMV group. The lower video-open path at `0x00541173` also avoids
+`BinkOpen` while the flag is set. The flag is shared with the level-intro gate
+in `CGame__RunIntroFMV` (`0x0046D890`); it is not limited to that function.
+
+In a fresh app-owned Enhanced Copy, the generated launch plan and live process
+command line were `-res 1600 900 -skipfmv`, and a runtime read confirmed
+`0x00663050 == 1`. No input was sent to the game. The first captured retail
+frame after the window became available was already `click to start`. Thus the
+checked Steam build's `-skipfmv` path skips startup and level-intro FMV
+playback, but it does not bypass the click-to-start frontend interaction.
+
+Without `-skipfmv`, the deterministic manual path remains: focus and observe,
+Space, observe the startup movie, Space, observe `click to start`, then click.
+This does not claim identical input tables or timing in other releases.
 
 ## Save/Load Frontend Pages (FEPLoadGame.cpp/h, FEPSaveGame.cpp/h, PCFEPLoadGame.cpp/h, PCFEPSaveGame.cpp/h)
 
