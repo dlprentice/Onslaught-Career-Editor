@@ -53,8 +53,8 @@ layer-zero `TEXR` assignment and directly decodes seven exact AYA-wrapped DXT2
 base textures. The released renderer's later material passes—including the
 shared layer-two `Chrome3` reference—are not guessed. Terrain textures and
 collision/response, targets, weapons, resources, articulation, jet/morph
-presentation, and scale remain provisional unless specific retained evidence
-says otherwise.
+presentation, and cockpit/HUD remain provisional unless specific retained
+evidence says otherwise.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -64,14 +64,31 @@ control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
 16-tick walker-to-jet transition. Jet forward speed and energy drain retain
 earlier bounded measurements.
 
+A clean copied Level 100 run starts player zero with current/preferred view `1`
+and the first-person `CThingCamera` vtable at `0x005DBB88`. A disposable
+expected-byte-only change to the player constructor's preferred-view immediate
+from `1` to `2` selected the released third-person vtable at `0x005D9230`; the
+copy was restored and no retail patch is retained. The third-person constructor
+at `0x00418EF0`, position path at `0x004191C0`, and orientation path at
+`0x00419540` establish the pitch-zero walker geometry consumed by Godot: camera
+five units behind and 3.25 units above the 1.9-unit center of gravity, looking
+six units ahead. The Steam 16:9/zoom-1 projection term `0.5625` gives a
+58.7155-degree vertical field of view. Retained mesh bounds, the released
+Level 100 ground/start relationship, and copied-runtime framing independently
+agree on scale `1.0`; the client grounds each static mesh from its exact lower
+bound. These observations establish only this third-person pitch-zero
+presentation—not the clean mission's default view, cockpit, pitch response,
+occlusion, or terrain-clipping behavior.
+
 These slices do not make the surrounding vehicle model retail-faithful.
-Eight-way movement projection, terrain response, dash behavior, camera,
-jet-to-walker, transform presentation, resources, weapons, and flight dynamics
-remain provisional.
+Eight-way movement projection, terrain response, dash behavior, camera pitch and
+occlusion, jet-to-walker, transform presentation, resources, weapons, and flight
+dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four curated meshes
 with fourteen base-material surfaces and seven curated textures, loads the
 retained heightfield, exposes both mission markers, renders, advances, and
 exits. It does not prove secondary material passes, terrain appearance or
-collision, animation, the complete mission, scale, timing, or visual parity.
+collision, animation, the complete mission, camera behavior outside the bounded
+pitch-zero framing, timing, or visual parity.

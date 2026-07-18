@@ -41,5 +41,7 @@ passes, and the pinned `AyaModelImporter.cs` also assigns primitives from
 `TEXR[0]`; the client therefore consumes only that unambiguous base layer. The
 shared `Chrome3.tga` reference occurs at layer two and remains intentionally
 unimplemented until its released blend semantics are established. Animation,
-runtime part articulation, retail scale, and transform-animation fidelity also
-remain outside this slice.
+runtime part articulation, and transform-animation fidelity remain outside this
+slice. The client consumes both retained meshes at scale `1.0` and grounds them
+from their exact lower bounds; copied-runtime framing independently agrees with
+the raw retail-unit dimensions.

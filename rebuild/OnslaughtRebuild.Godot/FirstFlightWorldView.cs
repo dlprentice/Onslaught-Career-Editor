@@ -8,6 +8,14 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
+    private const float RetailAquilaScale = 1f;
+    private const float RetailWalkerBaseClearance = 0.00537145f;
+    private const float RetailJetBaseClearance = 0.6706632f;
+    private const float RetailWalkerCenterOfGravityHeight = 1.9f;
+    private const float RetailThirdPersonRearOffset = 5f;
+    private const float RetailThirdPersonHeightOffset = 3.25f;
+    private const float RetailThirdPersonFocusOffset = 6f;
+    private const float RetailVerticalFovDegrees = 58.7155f;
 
     private static readonly Color SteelDark = new(0.075f, 0.105f, 0.115f);
     private static readonly Color Amber = new(0.96f, 0.52f, 0.16f);
@@ -28,7 +36,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Camera3D _camera = null!;
     private ObjectiveMarkerVisual _targetZone1Marker = null!;
     private ObjectiveMarkerVisual _firingRangeMarker = null!;
-    private bool _cameraInitialized;
     private float _modeBlend;
 
     public int TargetVisualCount => _targets.Count;
@@ -77,8 +84,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         float interpolationAlpha,
         float frameDelta)
     {
-        Vector3 previousPosition = ToWorld(previous.PlayerPosition, 0.95f);
-        Vector3 currentPosition = ToWorld(current.PlayerPosition, 0.95f);
+        Vector3 previousPosition = ToWorld(previous.PlayerPosition, 0f);
+        Vector3 currentPosition = ToWorld(current.PlayerPosition, 0f);
         bool resetJump = previousPosition.DistanceSquaredTo(currentPosition) > 100f;
         Vector3 playerPosition = resetJump
             ? currentPosition
@@ -87,9 +94,10 @@ public sealed partial class FirstFlightWorldView : Node3D
 
         float previousYaw = previous.FacingYawMicroRad / 1_000_000f;
         float currentYaw = current.FacingYawMicroRad / 1_000_000f;
+        float playerYaw = Mathf.LerpAngle(previousYaw, currentYaw, interpolationAlpha);
         _playerRoot.Rotation = new Vector3(
             0f,
-            Mathf.LerpAngle(previousYaw, currentYaw, interpolationAlpha),
+            playerYaw,
             0f);
 
         float desiredModeBlend = current.Transition == VehicleTransition.WalkerToJet
@@ -102,7 +110,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdateLevel100ObjectiveMarkers(current);
         UpdateTargets(current);
         UpdateProjectiles(current);
-        UpdateCamera(current, playerPosition, frameDelta);
+        UpdateCamera(playerPosition, playerYaw);
     }
 
     private void BuildEnvironment()
@@ -306,17 +314,17 @@ public sealed partial class FirstFlightWorldView : Node3D
         {
             Name = "RetailAquilaWalker",
             Mesh = walker,
-            Position = new Vector3(0f, 0.01f, 0f),
+            Position = new Vector3(0f, RetailWalkerBaseClearance, 0f),
             RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Scale = Vector3.One * 1.8f,
+            Scale = Vector3.One * RetailAquilaScale,
         };
         _jetMesh = new MeshInstance3D
         {
             Name = "RetailAquilaJet",
             Mesh = jet,
-            Position = new Vector3(0f, 0.53f, 0f),
+            Position = new Vector3(0f, RetailJetBaseClearance, 0f),
             RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Scale = Vector3.One * 2.2f,
+            Scale = Vector3.One * RetailAquilaScale,
             Visible = false,
         };
         _playerBodyPivot.AddChild(_walkerMesh);
@@ -368,7 +376,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera = new Camera3D
         {
             Name = "FollowCamera",
-            Fov = 63f,
+            Fov = RetailVerticalFovDegrees,
             Near = 0.1f,
             Far = 300f,
             Current = true,
@@ -475,24 +483,16 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
-    private void UpdateCamera(WorldSnapshot snapshot, Vector3 playerPosition, float frameDelta)
+    private void UpdateCamera(Vector3 playerGroundPosition, float yaw)
     {
-        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
         var forward = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
+        Vector3 centerOfGravity = playerGroundPosition +
+            (Vector3.Up * RetailWalkerCenterOfGravityHeight);
 
-        Vector3 focus = playerPosition + (forward * 5.5f) + new Vector3(0f, 1.2f, 0f);
-        Vector3 desired = playerPosition - (forward * 14.5f) + new Vector3(0f, 7.0f, 0f);
-        if (!_cameraInitialized)
-        {
-            _camera.Position = desired;
-            _cameraInitialized = true;
-        }
-        else
-        {
-            float weight = 1f - Mathf.Exp(-frameDelta * 4.5f);
-            _camera.Position = _camera.Position.Lerp(desired, weight);
-        }
-
+        Vector3 focus = centerOfGravity + (forward * RetailThirdPersonFocusOffset);
+        Vector3 desired = centerOfGravity - (forward * RetailThirdPersonRearOffset) +
+            (Vector3.Up * RetailThirdPersonHeightOffset);
+        _camera.Position = desired;
         _camera.LookAt(focus, Vector3.Up);
     }
 

@@ -23,9 +23,10 @@ authored horizontal opening positions over the released coarse Level 100
 heightfield. Core owns the released player start heading and the Target Zone 1
 → Firing Range objective handoff, including both scripts' 0.5-second event
 delay. The four released meshes render with their exact retained layer-zero
-textures. Secondary material passes, terrain appearance and collision/response,
-combat targets, weapons, resources, and most mission behavior remain
-provisional.
+textures. The Aquila uses the retained meshes' retail-unit scale and the
+released third-person walker's pitch-zero framing. Secondary material passes,
+terrain appearance and collision/response, combat targets, weapons, resources,
+and most mission behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -71,9 +72,13 @@ Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
-state. Eight-way movement projection, camera tuning, jet-to-walker, transform
-animation, resource semantics, weapons, terrain collision/response, AI, the remaining mission,
-audio, campaign, and networking remain provisional or absent.
+state. The presentation camera now uses the released third-person class's
+pitch-zero walker geometry; clean retail Level 100 still starts in first-person
+view, so this is not a claim that third-person is the mission default. Camera
+pitch response and terrain clipping, eight-way movement projection,
+jet-to-walker, transform animation, resource semantics, weapons, terrain
+collision/response, AI, the remaining mission, audio, campaign, and networking
+remain provisional or absent.
 
 The client switches between deterministic static conversions of the released
 walker and jet meshes and loads two released Level 100 facility meshes. The
@@ -83,9 +88,9 @@ presentation placement, but deterministic Core still has no terrain elevation
 or collision. The client preserves the base material groups and decodes seven
 exact AYA-wrapped DXT2 textures for the Aquila and two facilities. The shared
 secondary `Chrome3` pass, terrain textures and sky, facility destruction, part
-articulation, transform animation, retail scale, retail HUD, tutorial dialogue
-and gates, and the full mission remain unimplemented; three synthetic combat
-targets still exercise the older firing path and are not Level 100 parity.
+articulation, transform animation, retail HUD/cockpit, tutorial dialogue and
+gates, and the full mission remain unimplemented; three synthetic combat targets
+still exercise the older firing path and are not Level 100 parity.
 
 ## Verify
 
