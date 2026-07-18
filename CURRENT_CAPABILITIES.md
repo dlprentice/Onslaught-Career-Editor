@@ -56,6 +56,19 @@ objective line. This proves one direct localization-table edit, not arbitrary
 language import, loose mission-script loading, texture replacement, AYA
 repacking, or a general mod format.
 
+The bounded gameplay-modding go/no-go also passed for one compiled Level 100
+mission command. WinUI can opt a safe copy into rebuilding the supported
+`data/resources/100_res_PC.aya` so the initial `DisableFlightMode` call becomes
+`EnableFlightMode`. AppCore requires the exact original archive and payload,
+changes one byte in the verified `LevelScript` instruction stream, preserves an
+original backup, round-trips the four-member archive, and revalidates both
+payloads before launch. With the same transform input, the original archive hit
+the retail rejection return while the modified archive reached the walker-to-jet
+state write; a WinUI-created copy reproduced the accepted result with
+`flight=1`. This proves one exact compiled-command substitution, not loose
+`.msl` loading, normal tutorial progression, a mission compiler/editor, or a
+general AYA repacker.
+
 The patch catalog's original/replacement bytes and copied-target rules are
 automatically checked. A byte-correct patch is not automatically proof of its
 visible or gameplay effect. Windowed startup, expanded mode enumeration, card-ID

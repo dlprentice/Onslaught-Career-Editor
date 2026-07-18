@@ -258,6 +258,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchPrepareCopiedProfileButton.IsEnabled = readiness.CanCreate;
             PatchBenchIncludeSavegamesOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchLevel100TextModOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
+            PatchBenchLevel100EarlyFlightModOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchTopCreateSafeCopyButton.IsEnabled = readiness.CanCreate;
             PatchBenchSafeCopySelectionReadiness.Text = readiness.Status;
             AutomationProperties.SetName(PatchBenchSafeCopySelectionReadiness, readiness.Status);
@@ -307,7 +308,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchPlayerModsSelectionStatus.Text = PatchBenchSelectedProfileText.BuildPlayerModsStatus(
                 visibleSelectedKeys.Contains("version_overlay_use_patched_format_pointer", StringComparer.OrdinalIgnoreCase),
                 visibleSelectedKeys.Contains("goodies_gallery_display_unlock", StringComparer.OrdinalIgnoreCase),
-                PatchBenchLevel100TextModOption.IsChecked == true);
+                PatchBenchLevel100TextModOption.IsChecked == true,
+                PatchBenchLevel100EarlyFlightModOption.IsChecked == true);
             AutomationProperties.SetName(PatchBenchPlayerModsSelectionStatus, PatchBenchPlayerModsSelectionStatus.Text);
             PatchBenchLabSelectionStatus.Text = PatchBenchLabCreationInputText.BuildStatus(
                 BuildLabCreationInputState());
@@ -351,7 +353,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? validationError = BinaryPatchPlanBuilder.ValidateVisibleSelection(visibleSelectedKeys);
             int optionalPatchCount = visibleSelectedKeys.Count(key =>
                 !_requiredCompatibilityKeys.Contains(key)) +
-                (PatchBenchLevel100TextModOption.IsChecked == true ? 1 : 0);
+                (PatchBenchLevel100TextModOption.IsChecked == true ? 1 : 0) +
+                (PatchBenchLevel100EarlyFlightModOption.IsChecked == true ? 1 : 0);
 
             return OnslaughtCareerEditor.WinUI.Helpers.PatchBenchSafeCopySelectionReadiness.Build(
                 hasSourceExecutable,
@@ -659,6 +662,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void WindowedPresetButton_Click(object sender, RoutedEventArgs e)
         {
             PatchBenchLevel100TextModOption.IsChecked = false;
+            PatchBenchLevel100EarlyFlightModOption.IsChecked = false;
             ApplySafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId);
             AppStatusService.SetStatus("Windowed & Mods: Enhanced Copy profile selected");
         }
@@ -715,6 +719,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void ClearSelectionButton_Click(object sender, RoutedEventArgs e)
         {
             PatchBenchLevel100TextModOption.IsChecked = false;
+            PatchBenchLevel100EarlyFlightModOption.IsChecked = false;
             SelectOnlyKeys(Array.Empty<string>());
             AppStatusService.SetStatus("Windowed & Mods: optional mods cleared");
         }
@@ -1440,6 +1445,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
                 bool applyLevel100TextMod = PatchBenchLevel100TextModOption.IsChecked == true;
+                bool applyLevel100EarlyFlightMod = PatchBenchLevel100EarlyFlightModOption.IsChecked == true;
                 string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
                 string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
                 uint? persistedControllerConfig = PatchBenchPersistControllerConfigOption.IsChecked == true
@@ -1461,7 +1467,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     LaunchArguments: BuildSelectedLaunchArguments(),
                     ProfilePresetId: MatchSelectableSafeCopyProfileId(selectedPatchKeys),
                     MusicSwapPresetId: createMusicSwapPresetId,
-                    ApplyLevel100TutorialTextMod: applyLevel100TextMod);
+                    ApplyLevel100TutorialTextMod: applyLevel100TextMod,
+                    ApplyLevel100EarlyFlightMod: applyLevel100EarlyFlightMod);
 
                 if (!await ConfirmAsync(
                         "Create safe copy?",
@@ -1515,6 +1522,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     invertFlightY,
                     createMusicSwapPresetId,
                     applyLevel100TextMod,
+                    applyLevel100EarlyFlightMod,
                     result.PatchResult.PatchKeys);
                 GameProfilePrepareReceipt receipt = GameProfilePreflightService.BuildPrepareReceipt(
                     result,
@@ -1530,7 +1538,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     FilesCopied: result.Entries.Count,
                     PatchDisplayList: BuildPatchDisplayList(result.PatchResult.PatchKeys),
                     LaunchModifierSummary: PatchBenchLaunchText.BuildModifierSummary(result.LaunchPlan.Arguments),
-                    Level100TextModApplied: result.Level100TextModResult is not null);
+                    Level100TextModApplied: result.Level100TextModResult is not null,
+                    Level100EarlyFlightModApplied: result.Level100EarlyFlightModResult is not null);
                 PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedSummary(outcomeText);
                 PatchBenchCopiedProfileLaunchPlan.Text = result.LaunchPlan.CommandPreview;
                 PatchBenchCopiedProfileLaunchStatus.Text =
@@ -1985,6 +1994,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool invertFlightY = PatchBenchInvertFlightYOption.IsChecked == true;
             string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
             bool applyLevel100TextMod = PatchBenchLevel100TextModOption.IsChecked == true;
+            bool applyLevel100EarlyFlightMod = PatchBenchLevel100EarlyFlightModOption.IsChecked == true;
             return BuildSafeCopyContentSignature(
                 sourcePath,
                 includeSavegames,
@@ -1994,6 +2004,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 invertFlightY,
                 createMusicSwapPresetId,
                 applyLevel100TextMod,
+                applyLevel100EarlyFlightMod,
                 effectivePatchKeys);
         }
 
@@ -2006,6 +2017,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool invertFlightY,
             string? createMusicSwapPresetId,
             bool applyLevel100TextMod,
+            bool applyLevel100EarlyFlightMod,
             IEnumerable<string> effectivePatchKeys)
         {
             string normalizedSourcePath = string.IsNullOrWhiteSpace(sourcePath)
@@ -2026,7 +2038,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string createMusicSwapPresetToken = string.IsNullOrWhiteSpace(createMusicSwapPresetId)
                 ? "none"
                 : createMusicSwapPresetId.Trim();
-            return $"source={normalizedSourcePath}|savegames={includeSavegames}|mouseLookSensitivity={mouseSensitivityToken}|persistedControllerConfig={persistedControllerConfigToken}|invertWalkerY={invertWalkerY}|invertFlightY={invertFlightY}|createMusicSwapPreset={createMusicSwapPresetToken}|level100TextMod={applyLevel100TextMod}|effectivePatches={string.Join(",", normalizedPatchKeys)}";
+            return $"source={normalizedSourcePath}|savegames={includeSavegames}|mouseLookSensitivity={mouseSensitivityToken}|persistedControllerConfig={persistedControllerConfigToken}|invertWalkerY={invertWalkerY}|invertFlightY={invertFlightY}|createMusicSwapPreset={createMusicSwapPresetToken}|level100TextMod={applyLevel100TextMod}|level100EarlyFlightMod={applyLevel100EarlyFlightMod}|effectivePatches={string.Join(",", normalizedPatchKeys)}";
         }
 
         private static string? ResolveGameExecutablePath(string gameDir)
@@ -2394,7 +2406,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 CountSelectedLaunchModifiers(),
                 copiedOptionsCount,
                 GetSelectedCreateMusicSwapPresetId() is not null,
-                PatchBenchLevel100TextModOption.IsChecked == true);
+                PatchBenchLevel100TextModOption.IsChecked == true,
+                PatchBenchLevel100EarlyFlightModOption.IsChecked == true);
         }
 
         private int CountSelectedLaunchModifiers()

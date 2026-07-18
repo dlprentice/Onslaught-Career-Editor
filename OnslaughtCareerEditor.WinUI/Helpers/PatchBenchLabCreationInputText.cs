@@ -18,6 +18,10 @@ internal static class PatchBenchLabCreationInputText
         {
             categories.Add("1 Level 100 English text mod");
         }
+        if (state.HasLevel100EarlyFlightMod)
+        {
+            categories.Add("1 Level 100 gameplay mod");
+        }
 
         return categories.Count == 0
             ? "Extra settings for next copy: none active."

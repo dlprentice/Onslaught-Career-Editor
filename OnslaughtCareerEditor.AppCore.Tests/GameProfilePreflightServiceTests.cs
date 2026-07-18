@@ -1,5 +1,7 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -343,6 +345,78 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException tamperEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" }));
                 Assert.Contains("Level 100 text target no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void PrepareWindowedCompatibilityProfile_AppliesAndRevalidatesLevel100EarlyFlightModInSafeCopyOnly()
+        {
+            const int flightGateCommandOffset = 3_658_889;
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-level100-flight-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+            string sourceArchivePath = Path.Combine(sourceRoot, "data", "Resources", "100_res_PC.aya");
+            SeedLevel100MissionArchive(sourceArchivePath);
+            byte[] sourceArchiveBefore = File.ReadAllBytes(sourceArchivePath);
+            byte[] sourcePayloadBefore = ReadLevel100MissionPayload(sourceArchiveBefore);
+
+            try
+            {
+                GameProfilePrepareResult result = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "level100-early-flight-proof",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false,
+                        AllowByteLayoutOnlyTarget: true,
+                        ApplyLevel100EarlyFlightMod: true));
+
+                GameProfileLevel100EarlyFlightModResult mod = Assert.IsType<GameProfileLevel100EarlyFlightModResult>(result.Level100EarlyFlightModResult);
+                string copiedArchivePath = Path.Combine(result.TargetGameRoot, "data", "Resources", "100_res_PC.aya");
+                string copiedBackupPath = copiedArchivePath + ".original.backup";
+                byte[] copiedPayload = ReadLevel100MissionPayload(File.ReadAllBytes(copiedArchivePath));
+                int[] changedOffsets = sourcePayloadBefore
+                    .Select((value, index) => value == copiedPayload[index] ? -1 : index)
+                    .Where(index => index >= 0)
+                    .ToArray();
+
+                Assert.Equal(sourceArchiveBefore, File.ReadAllBytes(sourceArchivePath));
+                Assert.Equal(sourceArchiveBefore, File.ReadAllBytes(copiedBackupPath));
+                Assert.Equal(new[] { flightGateCommandOffset }, changedOffsets);
+                Assert.Equal(101, sourcePayloadBefore[flightGateCommandOffset]);
+                Assert.Equal(100, copiedPayload[flightGateCommandOffset]);
+                Assert.Equal(flightGateCommandOffset, mod.ChangedPayloadOffset);
+                Assert.Equal(1, mod.ChangedByteCount);
+                Assert.Equal(101, mod.OriginalCommandIndex);
+                Assert.Equal(100, mod.ReplacementCommandIndex);
+                Assert.NotEqual(mod.OriginalSha256, mod.ModifiedSha256);
+
+                using (JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(result.ManifestPath)))
+                {
+                    JsonElement metadata = manifest.RootElement.GetProperty("level100EarlyFlightMod");
+                    Assert.Equal(GameProfilePreflightService.Level100EarlyFlightModSchemaVersion, metadata.GetProperty("schemaVersion").GetString());
+                    Assert.Equal("data/resources/100_res_PC.aya", metadata.GetProperty("targetRelativePath").GetString());
+                    Assert.Equal("data/resources/100_res_PC.aya.original.backup", metadata.GetProperty("backupRelativePath").GetString());
+                }
+
+                GameProfileLaunchPlan plan = GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" });
+                Assert.Equal(new[] { "-level", "100" }, plan.Arguments);
+
+                byte[] tamperedArchive = File.ReadAllBytes(copiedArchivePath);
+                tamperedArchive[^1] ^= 0x01;
+                File.WriteAllBytes(copiedArchivePath, tamperedArchive);
+                InvalidOperationException tamperEx = Assert.Throws<InvalidOperationException>(() =>
+                    GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" }));
+                Assert.Contains("early-flight target no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1635,6 +1709,70 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             byte[] data = new byte[0x3CF58 + text.Length + sizeof(ushort)];
             text.CopyTo(data, 0x3CF58);
             File.WriteAllBytes(path, data);
+        }
+
+        private static void SeedLevel100MissionArchive(string path)
+        {
+            const int payloadSize = 3_758_188;
+            const int scriptObjectOffset = 3_658_602;
+            const int flightGateInstructionOffset = 3_658_885;
+            byte[] payload = new byte[payloadSize];
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(scriptObjectOffset, sizeof(int)), 11);
+            Encoding.ASCII.GetBytes("LevelScript").CopyTo(payload, scriptObjectOffset + sizeof(int));
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(scriptObjectOffset + sizeof(int) + 11, sizeof(int)), 884);
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(flightGateInstructionOffset, sizeof(int)), 24);
+            BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(flightGateInstructionOffset + sizeof(int), sizeof(int)), 101);
+
+            int[] memberSizes = { 1_048_576, 1_048_576, 1_048_576, 612_460 };
+            using var archive = new MemoryStream();
+            byte[] sizePrefix = new byte[sizeof(int)];
+            int payloadOffset = 0;
+            foreach (int memberSize in memberSizes)
+            {
+                using var compressed = new MemoryStream();
+                using (var zlib = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+                {
+                    zlib.Write(payload, payloadOffset, memberSize);
+                }
+
+                byte[] compressedBytes = compressed.ToArray();
+                BinaryPrimitives.WriteInt32LittleEndian(sizePrefix, compressedBytes.Length);
+                archive.Write(sizePrefix);
+                archive.Write(compressedBytes);
+                payloadOffset += memberSize;
+            }
+
+            File.WriteAllBytes(path, archive.ToArray());
+        }
+
+        private static byte[] ReadLevel100MissionPayload(byte[] archive)
+        {
+            int[] memberSizes = { 1_048_576, 1_048_576, 1_048_576, 612_460 };
+            byte[] payload = new byte[memberSizes.Sum()];
+            int archiveOffset = 0;
+            int payloadOffset = 0;
+            foreach (int memberSize in memberSizes)
+            {
+                int compressedSize = BinaryPrimitives.ReadInt32LittleEndian(archive.AsSpan(archiveOffset, sizeof(int)));
+                archiveOffset += sizeof(int);
+                using var compressed = new MemoryStream(archive, archiveOffset, compressedSize, writable: false);
+                using var zlib = new ZLibStream(compressed, CompressionMode.Decompress);
+                int memberOffset = 0;
+                while (memberOffset < memberSize)
+                {
+                    int read = zlib.Read(payload, payloadOffset + memberOffset, memberSize - memberOffset);
+                    if (read == 0)
+                        break;
+                    memberOffset += read;
+                }
+
+                Assert.Equal(memberSize, memberOffset);
+                archiveOffset += compressedSize;
+                payloadOffset += memberSize;
+            }
+
+            Assert.Equal(archive.Length, archiveOffset);
+            return payload;
         }
 
         private static void SeedExe(string exePath)

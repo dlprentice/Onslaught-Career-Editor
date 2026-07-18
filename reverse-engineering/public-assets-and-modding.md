@@ -28,9 +28,33 @@ and original UTF-16 bytes, keeps the table and file length unchanged, writes a
 backup, and records before/after hashes in the copied-profile manifest. A
 controlled copied-game run rendered the unique replacement in Level 100.
 
-This establishes that the retail engine consumes the copied language table. It
-does not establish arbitrary string growth, other languages, loose `.msl`
-loading, texture replacement, AYA repacking, or a general mod-package format.
+The safe-copy product can also rebuild the supported
+`data/resources/100_res_PC.aya` with one exact compiled mission-command change:
+Level 100's initial `DisableFlightMode` call becomes `EnableFlightMode`.
+AppCore verifies the original archive and decompressed payload hashes, changes
+one byte in the `LevelScript` instruction stream, writes an original backup,
+round-trips the four size-prefixed zlib members, and validates the exact
+original/modified payload pair before launch. In controlled retail runs, the
+same transform input reached the original rejection return with the clean
+archive and the walker-to-jet state write with the changed archive. A
+WinUI-created copy reproduced the accepted path with the runtime flight flag
+set.
+
+The retained implementation anchors are `LevelScript` instruction 33 (`CALL`,
+opcode `24`) and its command byte at decompressed payload offset `3658889`:
+descriptor `101` is `DisableFlightMode` and descriptor `100` is
+`EnableFlightMode`. Retail observation distinguished the walker-to-jet state
+write at `BEA.exe+0xA753` from the disabled-flight return at
+`BEA.exe+0xA87D`. Stuart's `BattleEngine.cpp` supports the interpretation—the
+walker morph returns while flight mode is disabled—but the copied Steam runtime
+establishes the released behavior.
+
+These slices establish that the retail engine consumes the copied language
+table and this one rebuilt compiled mission archive. They do not establish
+arbitrary string growth, other languages, loose `.msl` loading, a general
+mission compiler/editor, texture replacement, general AYA repacking, or a mod
+package format. The early-flight option deliberately bypasses Level 100's
+training progression; it is not a claim about intended campaign behavior.
 
 ## Useful References
 

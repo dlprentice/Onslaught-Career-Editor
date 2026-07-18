@@ -11,11 +11,15 @@ concrete player-facing toolkit workflow.
    windowed baseline with the 28-region aspect/FOV correction; the copy writes
    the retail 16:9 option and minimum mouse sensitivity, and WinUI owns guarded
    create, launch, stop, and restore boundaries without changing the install.
-2. **Retail modding go/no-go closed:** AppCore now makes one fixed-size,
-   backup-guarded Level 100 English subtitle change in an app-owned copy, and a
-   controlled retail run rendered its unique marker. Direct language-table
-   edits are viable; general mission-script, texture, and AYA authoring remain
-   unproven, so no mod-package framework is justified yet.
+2. **Retail modding go/no-go closed:** AppCore now makes two narrow,
+   backup-guarded Level 100 changes in an app-owned copy: one fixed-size English
+   subtitle replacement and one exact compiled mission command that changes the
+   initial flight gate from disabled to enabled. Controlled retail runs rendered
+   the text marker and showed the clean/modified transform paths reject/accept
+   the same input; the real WinUI path reproduced the accepted result. Direct
+   language-table edits and this one exact archive rebuild are viable. Loose
+   script loading, a general mission compiler/editor, textures, general AYA
+   authoring, and mod packages remain unproven.
 3. Turn the rebuild's **Aquila Handling Lab** into a source-derived,
    retail-compared slice: walker movement/turning, camera, morph, jet handling,
    landing, aim, and one weapon. Remove synthetic behavior as each real contract

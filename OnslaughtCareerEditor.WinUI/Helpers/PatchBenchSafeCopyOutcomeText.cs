@@ -78,6 +78,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 BuildSavegamesSummary(state.CopiedSavegames) + "\n" +
                 BuildControlOptionsSummary(state.ControlOptions) + "\n" +
                 BuildLevel100TextModSummary(state.Level100TextModApplied) + "\n" +
+                BuildLevel100EarlyFlightModSummary(state.Level100EarlyFlightModApplied) + "\n" +
                 BuildMusicSwapSummary(state.MusicSwap) + "\n" +
                 $"Play will run BEA.exe from safe copy folder: {state.SafeCopyFolderName}";
         }
@@ -92,6 +93,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 BuildSavegamesSummary(state.CopiedSavegames) + "\n" +
                 BuildControlOptionsSummary(state.ControlOptions) + "\n" +
                 BuildLevel100TextModSummary(state.Level100TextModApplied) + "\n" +
+                BuildLevel100EarlyFlightModSummary(state.Level100EarlyFlightModApplied) + "\n" +
                 BuildMusicSwapSummary(state.MusicSwap) + "\n" +
                 "Only files inside the safe copy were changed; no game process was started.";
         }
@@ -200,6 +202,13 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return applied
                 ? "Level 100 text: one fixed-size English TUTORIAL_01 marker staged and hash-verified in the safe copy."
                 : "Level 100 text: original English subtitle retained.";
+        }
+
+        private static string BuildLevel100EarlyFlightModSummary(bool applied)
+        {
+            return applied
+                ? "Level 100 gameplay: early transformation staged from one verified compiled-script command in the safe copy."
+                : "Level 100 gameplay: original tutorial transformation gate retained.";
         }
 
         private static string FormatBool(bool value)

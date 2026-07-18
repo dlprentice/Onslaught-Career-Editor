@@ -51,7 +51,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"Selected profile: manual patch selection with {state.SelectedVisibleRowCount} visible row(s). Create safe copy will add the required Enhanced Copy base and these selected rows.";
         }
 
-        public static string BuildPlayerModsStatus(bool hasPatchedMarker, bool hasGoodiesPreview, bool hasLevel100TextMod)
+        public static string BuildPlayerModsStatus(
+            bool hasPatchedMarker,
+            bool hasGoodiesPreview,
+            bool hasLevel100TextMod,
+            bool hasLevel100EarlyFlightMod)
         {
             var selected = new List<string>();
             if (hasPatchedMarker)
@@ -60,6 +64,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 selected.Add("Goodies wall preview");
             if (hasLevel100TextMod)
                 selected.Add("Level 100 English subtitle marker");
+            if (hasLevel100EarlyFlightMod)
+                selected.Add("Level 100 early flight");
 
             return selected.Count == 0
                 ? "Player mods selected: none."

@@ -226,7 +226,7 @@
                                                FontSize="14"
                                                FontWeight="SemiBold"
                                                Margin="0,4,0,0" />
-                                    <TextBlock Text="All player mods start off. The PATCHED marker and Goodies preview change only the copied executable. The Level 100 marker changes one fixed-size English subtitle in the copied language table."
+                                    <TextBlock Text="All player mods start off. The PATCHED marker and Goodies preview change only the copied executable. Level 100 options change only verified files inside the safe copy."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock x:Name="PatchBenchPlayerModsSelectionStatus"
                                                AutomationProperties.AutomationId="PatchBenchPlayerModsSelectionStatus"
@@ -299,6 +299,14 @@
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
                                     <TextBlock Text="Replaces only TUTORIAL_01 with a TOOLKIT MOD ACTIVE objective line in the safe copy. Live retail proof covers this one rendered subtitle; this is not a general language importer, mission-script override, texture replacement, or AYA repacker."
+                                               Style="{StaticResource SectionBodyTextStyle}" />
+                                    <CheckBox x:Name="PatchBenchLevel100EarlyFlightModOption"
+                                              AutomationProperties.AutomationId="PatchBenchLevel100EarlyFlightModOption"
+                                              AutomationProperties.Name="Allow transformation as soon as Level 100 first grants control in the safe copy"
+                                              Content="Level 100 early flight"
+                                              Checked="LaunchOptionCheckBox_Changed"
+                                              Unchecked="LaunchOptionCheckBox_Changed" />
+                                    <TextBlock Text="Bypasses the tutorial's initial transformation gate in the safe copy. One verified compiled command changes from DisableFlightMode to EnableFlightMode; this is not normal Level 100 progression, loose-script loading, or a general mission editor or AYA repacker."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
                             </Border>

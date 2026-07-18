@@ -1,6 +1,8 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -23,7 +25,8 @@ namespace Onslaught___Career_Editor
         IReadOnlyList<string>? LaunchArguments = null,
         string? ProfilePresetId = null,
         string? MusicSwapPresetId = null,
-        bool ApplyLevel100TutorialTextMod = false);
+        bool ApplyLevel100TutorialTextMod = false,
+        bool ApplyLevel100EarlyFlightMod = false);
 
     public sealed record GameProfileCopiedEntry(
         string Name,
@@ -57,6 +60,23 @@ namespace Onslaught___Career_Editor
         int ChangedOffset,
         int ChangedByteCount);
 
+    public sealed record GameProfileLevel100EarlyFlightModResult(
+        string SchemaVersion,
+        DateTimeOffset GeneratedAt,
+        bool Mutation,
+        string TargetRelativePath,
+        string BackupRelativePath,
+        long OriginalSize,
+        string OriginalSha256,
+        long ModifiedSize,
+        string ModifiedSha256,
+        string OriginalPayloadSha256,
+        string ModifiedPayloadSha256,
+        int ChangedPayloadOffset,
+        int ChangedByteCount,
+        byte OriginalCommandIndex,
+        byte ReplacementCommandIndex);
+
     public sealed record GameProfilePrepareResult(
         string SchemaVersion,
         DateTimeOffset GeneratedAt,
@@ -77,7 +97,8 @@ namespace Onslaught___Career_Editor
         IReadOnlyList<SafeCopyProfileModule> ProfilePresetModules,
         GameProfileMusicReplacementResult? MusicSwapResult,
         string ManifestPath,
-        GameProfileLevel100TextModResult? Level100TextModResult = null);
+        GameProfileLevel100TextModResult? Level100TextModResult = null,
+        GameProfileLevel100EarlyFlightModResult? Level100EarlyFlightModResult = null);
 
     public sealed record GameProfileReceiptLine(string Label, string Value);
 
@@ -91,6 +112,7 @@ namespace Onslaught___Career_Editor
     {
         public const string SchemaVersion = "winui-copied-game-profile.v1";
         public const string Level100TextModSchemaVersion = "winui-level100-english-text-mod.v1";
+        public const string Level100EarlyFlightModSchemaVersion = "winui-level100-early-flight-mod.v1";
 
         private const uint Level100TutorialTextId = 4_422_830;
         private const int Level100TutorialTextOffset = 0x3CF58;
@@ -99,6 +121,26 @@ namespace Onslaught___Career_Editor
         private const string Level100TutorialReplacementText = "TOOLKIT MOD ACTIVE. Move Aquila into the yellow objective marker visible on your HUD.";
         private const string Level100EnglishDatRelativePath = "data/language/english.dat";
         private const string Level100EnglishDatBackupRelativePath = "data/language/english.dat.original.backup";
+        private const string Level100ResourceArchiveRelativePath = "data/resources/100_res_PC.aya";
+        private const string Level100ResourceArchiveBackupRelativePath = "data/resources/100_res_PC.aya.original.backup";
+        private const string SupportedLevel100ResourceArchiveSha256 = "ed6350c0e214d00ab1bf6a7bd137fba3e77d0afe19a6dc4c0607f56ac037496a";
+        private const string SupportedLevel100PayloadSha256 = "115ede0541caaa9b26c7b0eee20d7bb89c9457c04ac0065a8886b81c94e92df4";
+        private const string ModifiedLevel100PayloadSha256 = "917427937bf965737020b3dedb1776bbf23d65d7f55719dcbc2b9343cf637392";
+        // Steam Level 100 WRES LevelScript instruction 33. Retail ExecuteCall uses
+        // the low attribute byte as the command descriptor index.
+        private const int Level100PayloadSize = 3_758_188;
+        private const int Level100ScriptObjectOffset = 3_658_602;
+        private const int Level100ScriptObjectNameLength = 11;
+        private const int Level100ScriptInstructionCount = 884;
+        private const int Level100FlightGateInstructionIndex = 33;
+        private const int Level100FlightGateInstructionOffset =
+            Level100ScriptObjectOffset + sizeof(uint) + Level100ScriptObjectNameLength + sizeof(uint) + (Level100FlightGateInstructionIndex * 8);
+        private const int Level100FlightGateCommandOffset = Level100FlightGateInstructionOffset + sizeof(uint);
+        private const uint MissionScriptCallOpcode = 24;
+        private const byte DisableFlightModeCommandIndex = 101;
+        private const byte EnableFlightModeCommandIndex = 100;
+        private static readonly int[] s_level100PayloadMemberSizes = { 1_048_576, 1_048_576, 1_048_576, 612_460 };
+        private static readonly byte[] s_level100ScriptObjectName = Encoding.ASCII.GetBytes("LevelScript");
 
         private static readonly Regex s_safeProfileName = new("^[A-Za-z0-9._-]{1,64}$", RegexOptions.Compiled);
         private static readonly string[] s_requiredDirectoryEntries =
@@ -192,6 +234,10 @@ namespace Onslaught___Career_Editor
                     targetRoot,
                     options.ApplyLevel100TutorialTextMod,
                     options.AllowByteLayoutOnlyTarget);
+                GameProfileLevel100EarlyFlightModResult? level100EarlyFlightModResult = ApplyLevel100EarlyFlightModIfRequested(
+                    targetRoot,
+                    options.ApplyLevel100EarlyFlightMod,
+                    options.AllowByteLayoutOnlyTarget);
 
                 string manifestPath = Path.Combine(targetRoot, "onslaught-profile-manifest.json");
                 GameProfileLaunchPlan launchPlan = BuildLaunchPlanCore(targetRoot, options.LaunchArguments ?? Array.Empty<string>());
@@ -215,7 +261,8 @@ namespace Onslaught___Career_Editor
                     ProfilePresetModules: profilePreset?.Modules ?? Array.Empty<SafeCopyProfileModule>(),
                     MusicSwapResult: null,
                     ManifestPath: manifestPath,
-                    Level100TextModResult: level100TextModResult);
+                    Level100TextModResult: level100TextModResult,
+                    Level100EarlyFlightModResult: level100EarlyFlightModResult);
 
                 WriteManifest(result, manifestPath);
                 if (!string.IsNullOrWhiteSpace(options.MusicSwapPresetId))
@@ -343,6 +390,11 @@ namespace Onslaught___Career_Editor
                     result.Level100TextModResult is null
                         ? "original English subtitle retained."
                         : "fixed-size English TUTORIAL_01 replacement staged and hash-verified in this safe copy."),
+                new(
+                    "Level 100 flight gate",
+                    result.Level100EarlyFlightModResult is null
+                        ? "original tutorial progression gate retained."
+                        : "early transformation staged from one verified compiled-script command in this safe copy."),
                 new("Control options", BuildReceiptControlOptionsSummary(controlOptionsResult)),
             };
 
@@ -359,6 +411,12 @@ namespace Onslaught___Career_Editor
                     .Append("Level 100 English subtitle marker: replaces only TUTORIAL_01 in the copied language table; live retail proof covers this one rendered line.")
                     .ToArray();
             }
+            if (result.Level100EarlyFlightModResult is not null)
+            {
+                includedChanges = includedChanges
+                    .Append("Level 100 early flight: bypasses the tutorial's initial transformation gate by replacing one verified DisableFlightMode command with EnableFlightMode in the copied mission archive.")
+                    .ToArray();
+            }
 
             var stillNotIncluded = result.ProfilePresetModules
                 .SelectMany(module => module.NonClaims)
@@ -371,6 +429,10 @@ namespace Onslaught___Career_Editor
             if (result.Level100TextModResult is not null)
             {
                 AddReceiptLimit(stillNotIncluded, "No general language importer, mission-script override, texture replacement, or AYA repacker.");
+            }
+            if (result.Level100EarlyFlightModResult is not null)
+            {
+                AddReceiptLimit(stillNotIncluded, "No loose-MSL loading, general mission-script compiler/editor, or general AYA repacker.");
             }
             if (HasCopiedControlDefaultsModule(result) &&
                 !ControlOptionsMatchProfileDefaults(result, controlOptionsResult))
@@ -519,6 +581,7 @@ namespace Onslaught___Career_Editor
 
             ValidateManifestExecutableState(doc.RootElement, resolvedGameRoot);
             ValidateOptionalLevel100TextMod(doc.RootElement, resolvedGameRoot);
+            ValidateOptionalLevel100EarlyFlightMod(doc.RootElement, resolvedGameRoot);
             ValidateOptionalControlOptionsManifest(resolvedGameRoot);
             if (validateMusicReplacementManifest)
             {
@@ -607,6 +670,84 @@ namespace Onslaught___Career_Editor
             {
                 throw new InvalidOperationException("Playable copied game folder Level 100 text bytes no longer match the expected original/replacement pair.");
             }
+        }
+
+        private static void ValidateOptionalLevel100EarlyFlightMod(JsonElement manifestRoot, string resolvedGameRoot)
+        {
+            if (!manifestRoot.TryGetProperty("level100EarlyFlightMod", out JsonElement modEl) ||
+                modEl.ValueKind == JsonValueKind.Null)
+            {
+                return;
+            }
+
+            if (modEl.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata is invalid.");
+
+            string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 early-flight metadata");
+            if (!string.Equals(schemaVersion, Level100EarlyFlightModSchemaVersion, StringComparison.Ordinal))
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has an unsupported schema.");
+
+            string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 early-flight metadata");
+            string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 early-flight metadata");
+            if (!string.Equals(targetRelativePath, Level100ResourceArchiveRelativePath, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(backupRelativePath, Level100ResourceArchiveBackupRelativePath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata does not target the supported mission archive.");
+            }
+
+            string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 early-flight target");
+            string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 early-flight backup");
+            if (!File.Exists(targetPath))
+                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight target is missing.", targetPath);
+            if (!File.Exists(backupPath))
+                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight backup is missing.", backupPath);
+
+            string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 early-flight metadata");
+            string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 early-flight metadata");
+            if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight backup no longer matches its manifest hash.");
+            if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight target no longer matches its manifest hash.");
+
+            if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
+                !originalSizeEl.TryGetInt64(out long originalSize) ||
+                !modEl.TryGetProperty("modifiedSize", out JsonElement modifiedSizeEl) ||
+                !modifiedSizeEl.TryGetInt64(out long modifiedSize) ||
+                new FileInfo(backupPath).Length != originalSize ||
+                new FileInfo(targetPath).Length != modifiedSize)
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight archive sizes no longer match its manifest.");
+            }
+
+            string originalPayloadSha256 = RequiredString(modEl, "originalPayloadSha256", "Level 100 early-flight metadata");
+            string modifiedPayloadSha256 = RequiredString(modEl, "modifiedPayloadSha256", "Level 100 early-flight metadata");
+            if (!modEl.TryGetProperty("changedPayloadOffset", out JsonElement offsetEl) ||
+                !offsetEl.TryGetInt32(out int changedPayloadOffset) ||
+                changedPayloadOffset != Level100FlightGateCommandOffset ||
+                !modEl.TryGetProperty("changedByteCount", out JsonElement byteCountEl) ||
+                !byteCountEl.TryGetInt32(out int changedByteCount) ||
+                changedByteCount != 1 ||
+                !modEl.TryGetProperty("originalCommandIndex", out JsonElement originalCommandEl) ||
+                !originalCommandEl.TryGetInt32(out int originalCommandIndex) ||
+                originalCommandIndex != DisableFlightModeCommandIndex ||
+                !modEl.TryGetProperty("replacementCommandIndex", out JsonElement replacementCommandEl) ||
+                !replacementCommandEl.TryGetInt32(out int replacementCommandIndex) ||
+                replacementCommandIndex != EnableFlightModeCommandIndex)
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has the wrong command substitution.");
+            }
+
+            byte[] originalPayload = ReadLevel100ResourceArchive(File.ReadAllBytes(backupPath)).Payload;
+            byte[] modifiedPayload = ReadLevel100ResourceArchive(File.ReadAllBytes(targetPath)).Payload;
+            ValidateLevel100FlightGatePayload(originalPayload, DisableFlightModeCommandIndex, "backup");
+            ValidateLevel100FlightGatePayload(modifiedPayload, EnableFlightModeCommandIndex, "target");
+            if (!string.Equals(ComputeSha256(originalPayload), originalPayloadSha256, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(ComputeSha256(modifiedPayload), modifiedPayloadSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight payload no longer matches its manifest hash.");
+            }
+
+            ValidateSinglePayloadByteChange(originalPayload, modifiedPayload);
         }
 
         private static void ValidateOptionalMusicReplacementManifest(string resolvedGameRoot)
@@ -1295,6 +1436,237 @@ namespace Onslaught___Career_Editor
                 ChangedByteCount: replacementBytes.Length);
         }
 
+        private static GameProfileLevel100EarlyFlightModResult? ApplyLevel100EarlyFlightModIfRequested(
+            string targetRoot,
+            bool requested,
+            bool allowByteLayoutOnlyTarget)
+        {
+            if (!requested)
+                return null;
+
+            string targetPath = Path.Combine(targetRoot, Level100ResourceArchiveRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            string backupPath = Path.Combine(targetRoot, Level100ResourceArchiveBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(targetPath))
+                throw new FileNotFoundException("The copied game does not contain data\\resources\\100_res_PC.aya.", targetPath);
+
+            RejectExistingReparseAncestors(targetPath, "Level 100 mission archive path");
+            RejectReparsePoint(targetPath, "Level 100 mission archive");
+            RejectMultipleHardLinks(targetPath, "Level 100 mission archive");
+            RejectExistingReparseAncestors(backupPath, "Level 100 mission archive backup path");
+            if (File.Exists(backupPath))
+                throw new InvalidOperationException("The copied Level 100 mission archive already has an early-flight backup.");
+
+            byte[] originalArchive = File.ReadAllBytes(targetPath);
+            string originalSha256 = ComputeSha256(originalArchive);
+            if (!allowByteLayoutOnlyTarget &&
+                !string.Equals(originalSha256, SupportedLevel100ResourceArchiveSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The copied Level 100 mission archive is not the supported Steam retail specimen.");
+            }
+
+            byte[] originalPayload = ReadLevel100ResourceArchive(originalArchive).Payload;
+            ValidateLevel100FlightGatePayload(originalPayload, DisableFlightModeCommandIndex, "source");
+            string originalPayloadSha256 = ComputeSha256(originalPayload);
+            if (!allowByteLayoutOnlyTarget &&
+                !string.Equals(originalPayloadSha256, SupportedLevel100PayloadSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The copied Level 100 mission payload is not the supported Steam retail specimen.");
+            }
+
+            byte[] modifiedPayload = originalPayload.ToArray();
+            modifiedPayload[Level100FlightGateCommandOffset] = EnableFlightModeCommandIndex;
+            ValidateLevel100FlightGatePayload(modifiedPayload, EnableFlightModeCommandIndex, "modified");
+            ValidateSinglePayloadByteChange(originalPayload, modifiedPayload);
+            string modifiedPayloadSha256 = ComputeSha256(modifiedPayload);
+            if (!allowByteLayoutOnlyTarget &&
+                !string.Equals(modifiedPayloadSha256, ModifiedLevel100PayloadSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The Level 100 early-flight payload did not produce the demonstrated retail result.");
+            }
+
+            byte[][] modifiedMembers = SplitLevel100Payload(modifiedPayload);
+            byte[] modifiedArchive = BuildLevel100ResourceArchive(modifiedMembers);
+            byte[] archiveRoundTripPayload = ReadLevel100ResourceArchive(modifiedArchive).Payload;
+            if (!archiveRoundTripPayload.AsSpan().SequenceEqual(modifiedPayload))
+            {
+                throw new IOException("The rebuilt Level 100 mission archive did not round-trip its verified payload.");
+            }
+
+            File.Copy(targetPath, backupPath, overwrite: false);
+            string tempPath = Path.Combine(
+                Path.GetDirectoryName(targetPath)!,
+                $"{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                File.WriteAllBytes(tempPath, modifiedArchive);
+                File.Replace(tempPath, targetPath, null, ignoreMetadataErrors: true);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+
+            RejectReparsePoint(targetPath, "modified Level 100 mission archive");
+            RejectMultipleHardLinks(targetPath, "Modified Level 100 mission archive");
+            byte[] archiveReadback = File.ReadAllBytes(targetPath);
+            if (!archiveReadback.AsSpan().SequenceEqual(modifiedArchive))
+                throw new IOException("The copied Level 100 early-flight archive did not read back exactly.");
+
+            return new GameProfileLevel100EarlyFlightModResult(
+                Level100EarlyFlightModSchemaVersion,
+                DateTimeOffset.UtcNow,
+                Mutation: true,
+                TargetRelativePath: Level100ResourceArchiveRelativePath,
+                BackupRelativePath: Level100ResourceArchiveBackupRelativePath,
+                OriginalSize: originalArchive.LongLength,
+                OriginalSha256: ComputeSha256(backupPath),
+                ModifiedSize: archiveReadback.LongLength,
+                ModifiedSha256: ComputeSha256(archiveReadback),
+                OriginalPayloadSha256: originalPayloadSha256,
+                ModifiedPayloadSha256: modifiedPayloadSha256,
+                ChangedPayloadOffset: Level100FlightGateCommandOffset,
+                ChangedByteCount: 1,
+                OriginalCommandIndex: DisableFlightModeCommandIndex,
+                ReplacementCommandIndex: EnableFlightModeCommandIndex);
+        }
+
+        private static (byte[][] Members, byte[] Payload) ReadLevel100ResourceArchive(byte[] archiveBytes)
+        {
+            var members = new byte[s_level100PayloadMemberSizes.Length][];
+            int archiveOffset = 0;
+            for (int index = 0; index < members.Length; index++)
+            {
+                if (archiveOffset > archiveBytes.Length - sizeof(uint))
+                    throw new InvalidOperationException("The Level 100 mission archive has a truncated zlib member header.");
+
+                int compressedSize = BinaryPrimitives.ReadInt32LittleEndian(
+                    archiveBytes.AsSpan(archiveOffset, sizeof(uint)));
+                archiveOffset += sizeof(uint);
+                if (compressedSize <= 0 || archiveOffset > archiveBytes.Length - compressedSize)
+                    throw new InvalidOperationException("The Level 100 mission archive has an invalid zlib member size.");
+
+                int expectedRawSize = s_level100PayloadMemberSizes[index];
+                byte[] member = new byte[expectedRawSize];
+                using (var compressed = new MemoryStream(archiveBytes, archiveOffset, compressedSize, writable: false))
+                using (var zlib = new ZLibStream(compressed, CompressionMode.Decompress, leaveOpen: false))
+                {
+                    int rawOffset = 0;
+                    while (rawOffset < member.Length)
+                    {
+                        int read = zlib.Read(member, rawOffset, member.Length - rawOffset);
+                        if (read == 0)
+                            break;
+                        rawOffset += read;
+                    }
+
+                    if (rawOffset != member.Length || zlib.ReadByte() != -1)
+                        throw new InvalidOperationException("The Level 100 mission archive has an unexpected decompressed member size.");
+                }
+
+                members[index] = member;
+                archiveOffset += compressedSize;
+            }
+
+            if (archiveOffset != archiveBytes.Length)
+                throw new InvalidOperationException("The Level 100 mission archive has trailing or missing zlib members.");
+
+            byte[] payload = new byte[Level100PayloadSize];
+            int payloadOffset = 0;
+            foreach (byte[] member in members)
+            {
+                member.CopyTo(payload, payloadOffset);
+                payloadOffset += member.Length;
+            }
+
+            if (payloadOffset != payload.Length)
+                throw new InvalidOperationException("The Level 100 mission archive payload size is invalid.");
+
+            return (members, payload);
+        }
+
+        private static byte[][] SplitLevel100Payload(byte[] payload)
+        {
+            if (payload.Length != Level100PayloadSize)
+                throw new InvalidOperationException("The Level 100 mission payload has the wrong size.");
+
+            var members = new byte[s_level100PayloadMemberSizes.Length][];
+            int payloadOffset = 0;
+            for (int index = 0; index < members.Length; index++)
+            {
+                int memberSize = s_level100PayloadMemberSizes[index];
+                members[index] = payload.AsSpan(payloadOffset, memberSize).ToArray();
+                payloadOffset += memberSize;
+            }
+
+            return members;
+        }
+
+        private static byte[] BuildLevel100ResourceArchive(IReadOnlyList<byte[]> members)
+        {
+            if (members.Count != s_level100PayloadMemberSizes.Length)
+                throw new InvalidOperationException("The Level 100 mission archive requires exactly four zlib members.");
+
+            using var archive = new MemoryStream();
+            byte[] sizePrefix = new byte[sizeof(uint)];
+            for (int index = 0; index < members.Count; index++)
+            {
+                byte[] member = members[index];
+                if (member.Length != s_level100PayloadMemberSizes[index])
+                    throw new InvalidOperationException("The Level 100 mission archive member has the wrong payload size.");
+
+                using var compressed = new MemoryStream();
+                using (var zlib = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+                {
+                    zlib.Write(member);
+                }
+
+                byte[] compressedBytes = compressed.ToArray();
+                BinaryPrimitives.WriteInt32LittleEndian(sizePrefix, compressedBytes.Length);
+                archive.Write(sizePrefix);
+                archive.Write(compressedBytes);
+            }
+
+            return archive.ToArray();
+        }
+
+        private static void ValidateLevel100FlightGatePayload(byte[] payload, byte expectedCommandIndex, string label)
+        {
+            if (payload.Length != Level100PayloadSize ||
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.AsSpan(Level100ScriptObjectOffset, sizeof(uint))) != Level100ScriptObjectNameLength ||
+                !payload.AsSpan(Level100ScriptObjectOffset + sizeof(uint), Level100ScriptObjectNameLength).SequenceEqual(s_level100ScriptObjectName) ||
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.AsSpan(
+                    Level100ScriptObjectOffset + sizeof(uint) + Level100ScriptObjectNameLength,
+                    sizeof(uint))) != Level100ScriptInstructionCount ||
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.AsSpan(Level100FlightGateInstructionOffset, sizeof(uint))) != MissionScriptCallOpcode ||
+                BinaryPrimitives.ReadUInt32LittleEndian(payload.AsSpan(Level100FlightGateCommandOffset, sizeof(uint))) != expectedCommandIndex)
+            {
+                throw new InvalidOperationException($"The Level 100 mission {label} does not contain the expected flight-gate CALL instruction.");
+            }
+        }
+
+        private static void ValidateSinglePayloadByteChange(byte[] originalPayload, byte[] modifiedPayload)
+        {
+            if (originalPayload.Length != modifiedPayload.Length)
+                throw new InvalidOperationException("The Level 100 early-flight change altered the mission payload length.");
+
+            int changedByteCount = 0;
+            int changedOffset = -1;
+            for (int index = 0; index < originalPayload.Length; index++)
+            {
+                if (originalPayload[index] == modifiedPayload[index])
+                    continue;
+
+                changedByteCount++;
+                changedOffset = index;
+                if (changedByteCount > 1)
+                    break;
+            }
+
+            if (changedByteCount != 1 || changedOffset != Level100FlightGateCommandOffset)
+                throw new InvalidOperationException("The Level 100 early-flight change must alter exactly the verified command byte.");
+        }
+
         private static void CopyDirectory(string sourceDirectory, string targetDirectory)
         {
             string sourceRoot = NormalizeExistingDirectory(sourceDirectory);
@@ -1407,6 +1779,28 @@ namespace Onslaught___Career_Editor
                         result.Level100TextModResult.ChangedByteCount,
                         ProofStatus = "Rendered in copied Level 100 retail gameplay on the supported Steam English specimen.",
                         ClaimBoundary = "One fixed-size TUTORIAL_01 subtitle replacement only; not a general language importer, script override, texture replacement, or AYA repacker.",
+                    },
+                Level100EarlyFlightMod = result.Level100EarlyFlightModResult is null
+                    ? null
+                    : new
+                    {
+                        result.Level100EarlyFlightModResult.SchemaVersion,
+                        result.Level100EarlyFlightModResult.GeneratedAt,
+                        result.Level100EarlyFlightModResult.Mutation,
+                        result.Level100EarlyFlightModResult.TargetRelativePath,
+                        result.Level100EarlyFlightModResult.BackupRelativePath,
+                        result.Level100EarlyFlightModResult.OriginalSize,
+                        result.Level100EarlyFlightModResult.OriginalSha256,
+                        result.Level100EarlyFlightModResult.ModifiedSize,
+                        result.Level100EarlyFlightModResult.ModifiedSha256,
+                        result.Level100EarlyFlightModResult.OriginalPayloadSha256,
+                        result.Level100EarlyFlightModResult.ModifiedPayloadSha256,
+                        result.Level100EarlyFlightModResult.ChangedPayloadOffset,
+                        result.Level100EarlyFlightModResult.ChangedByteCount,
+                        result.Level100EarlyFlightModResult.OriginalCommandIndex,
+                        result.Level100EarlyFlightModResult.ReplacementCommandIndex,
+                        ProofStatus = "The supported copied Level 100 archive enabled walker-to-jet transformation where the original archive rejected the same input sequence.",
+                        ClaimBoundary = "One compiled DisableFlightMode-to-EnableFlightMode command substitution only; not loose-MSL loading, a general mission-script editor/compiler, or a general AYA repacker.",
                     },
                 MusicSwap = result.MusicSwapResult is null
                     ? null
@@ -1565,6 +1959,11 @@ namespace Onslaught___Career_Editor
         {
             using FileStream stream = File.OpenRead(path);
             return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+        }
+
+        private static string ComputeSha256(byte[] bytes)
+        {
+            return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         }
 
         private static void RejectIfOutsideRoot(string path, string root)
