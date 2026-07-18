@@ -46,13 +46,18 @@ input/rendering harness. Its arena, targets, weapons, resources, jet/morph
 rules, and presentation are provisional unless a specific retained retail
 measurement says otherwise.
 
-Walker/jet forward speed, walker strafe, walker yaw, jet energy drain, and the
-walker-to-jet raw state interval have bounded retail measurements mapped into
-Core. The latter uses one clean Level 100 control and two repeated early-flight
-copies to map raw states `2 → 1 → 3` to an explicit 16-tick Core transition.
-Their presence does not make the surrounding movement or vehicle model
-retail-faithful; jet-to-walker, transform presentation, resources, weapons, and
-flight dynamics remain provisional.
+One clean Level 100 control and two fresh repeated copies establish the walker
+translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
+cap, `0.7` per-retail-update coast, yaw-velocity accumulation, and `0.8`
+retention. Core maps those 20 Hz responses into its fixed 30 Hz step. The same
+control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
+16-tick walker-to-jet transition. Jet forward speed and energy drain retain
+earlier bounded measurements.
+
+These slices do not make the surrounding vehicle model retail-faithful.
+Eight-way movement projection, terrain response, dash behavior, camera,
+jet-to-walker, transform presentation, resources, weapons, and flight dynamics
+remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, renders, advances, and exits.

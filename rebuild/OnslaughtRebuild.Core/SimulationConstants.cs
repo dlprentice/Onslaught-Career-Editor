@@ -6,28 +6,24 @@ public static class SimulationConstants
 {
     public const int TicksPerSecond = 30;
     public const int ArenaHalfExtent = 30_000;
-    // Milli-retail units/tick at 30 Hz ≈ 3.0 retail units/s (pair p27 envelope
-    // [2.85, 3.15]). Policy:
-    // reverse-engineering/game-mechanics/walker-forward-retail-to-core-translation-policy.md
-    // Schema: battleengine-walker-forward-scalar-response.v2
-    public const int WalkerSpeedPerTick = 100;
+    // Level 100 copied-retail runs repeated a 20 Hz walker response of
+    // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
+    // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.
+    public const int WalkerAccelerationPerTick = 33;
+    public const int WalkerVelocityRetentionNumerator = 7_884;
+    public const int WalkerVelocityRetentionDenominator = 10_000;
+    public const int WalkerMaximumSpeedPerTick = 100;
     // Milli-retail units/tick at 30 Hz ≈ 11.43 retail units/s (pair jet-p06
     // envelope [10.860, 12.003]). Policy:
     // reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
     // Schema: battleengine-jet-forward-scalar-response.v1
     public const int JetSpeedPerTick = 381;
-    // Milli-radians/tick at 30 Hz ≈ 0.0907 rad/s Look/Left hold (pair turn-p02
-    // envelope [0.0816, 0.0997]). Policy:
-    // reverse-engineering/game-mechanics/walker-turn-yaw-retail-to-core-translation-policy.md
-    // Schema: battleengine-walker-turn-yaw-scalar-response.v1
-    // Wired: LookX integrates continuous milli-rad yaw; FacingX/Z eight-way snap.
-    public const int WalkerLookYawRateMilliRadPerTick = 3;
-    // Milli-retail units/tick at 30 Hz ≈ 3.015 u/s Movement/Left path speed
-    // (pair strafe-p02). Policy:
-    // reverse-engineering/game-mechanics/walker-strafe-retail-to-core-translation-policy.md
-    // Schema: battleengine-walker-strafe-lateral-scalar-response.v1
-    // Not yet wired as a separate strafe axis in UpdateMovement (uses MoveX*speed).
-    public const int WalkerStrafeSpeedPerTick = 101;
+    // Retail body yaw integrates its velocity and retains exactly 0.8 each
+    // 50 ms update. These are the time-equivalent 30 Hz coefficients; the
+    // velocity is kept in integer micro-radians to preserve the coast.
+    public const int WalkerYawInputMicroRadPerTick = 10_444;
+    public const int WalkerYawRetentionNumerator = 861_774;
+    public const int WalkerYawRetentionDenominator = 1_000_000;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;
     public const int MaximumHull = 1_000;

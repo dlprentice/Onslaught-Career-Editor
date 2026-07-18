@@ -62,10 +62,11 @@ public sealed partial class FirstFlightWorldView : Node3D
             : previousPosition.Lerp(currentPosition, interpolationAlpha);
         _playerRoot.Position = playerPosition;
 
-        float targetYaw = Mathf.Atan2(current.FacingX, current.FacingZ);
+        float previousYaw = previous.FacingYawMicroRad / 1_000_000f;
+        float currentYaw = current.FacingYawMicroRad / 1_000_000f;
         _playerRoot.Rotation = new Vector3(
             0f,
-            Mathf.LerpAngle(_playerRoot.Rotation.Y, targetYaw, Mathf.Clamp(frameDelta * 12f, 0f, 1f)),
+            Mathf.LerpAngle(previousYaw, currentYaw, interpolationAlpha),
             0f);
 
         float desiredModeBlend = current.Transition == VehicleTransition.WalkerToJet

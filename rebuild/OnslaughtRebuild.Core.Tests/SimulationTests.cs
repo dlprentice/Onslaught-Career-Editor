@@ -13,36 +13,56 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void WalkerLookYawRate_MatchesAcceptedTurnP02Translation()
+    public void WalkerForward_AcceleratesToMeasuredCapAndCoastsAfterRelease()
     {
-        // Dual-accept steady ≈ 0.090657 rad/s → round(ω * 1000 / 30) = 3.
-        // Policy: walker-turn-yaw-retail-to-core-translation-policy.md
-        Assert.Equal(3, SimulationConstants.WalkerLookYawRateMilliRadPerTick);
-        const double measuredRadPerSec = 0.09065712988376617;
-        int mapped = (int)Math.Round(measuredRadPerSec * 1000.0 / SimulationConstants.TicksPerSecond);
-        Assert.Equal(SimulationConstants.WalkerLookYawRateMilliRadPerTick, mapped);
+        var simulation = new Simulation(1);
+
+        foreach (int expected in new[] { 33, 59, 79, 95, 100 })
+        {
+            WorldSnapshot state = simulation.Step(new SimInput(0, 1));
+            Assert.Equal(new SimVector2(0, expected), state.PlayerVelocity);
+        }
+
+        foreach (int expected in new[] { 78, 61, 48, 37, 29 })
+        {
+            WorldSnapshot state = simulation.Step(SimInput.Idle);
+            Assert.Equal(new SimVector2(0, expected), state.PlayerVelocity);
+        }
     }
 
     [Fact]
-    public void LookX_IntegratesWalkerLookYawRateAndSnapsFacing()
+    public void WalkerStrafe_UsesTheSameMeasuredResponseAsForward()
     {
         var simulation = new Simulation(1);
-        // Sector boundary ~785 milli-rad; rate is 3 mrad/tick → 262 ticks to sector 1.
-        for (int tick = 0; tick < 262; tick++)
+
+        foreach (int expected in new[] { 33, 59, 79, 95, 100 })
         {
-            simulation.Step(new SimInput(0, 0, LookX: 1));
+            WorldSnapshot state = simulation.Step(new SimInput(1, 0));
+            Assert.Equal(new SimVector2(expected, 0), state.PlayerVelocity);
+        }
+    }
+
+    [Fact]
+    public void WalkerLook_AcceleratesBodyYawAndCoastsAfterRelease()
+    {
+        var simulation = new Simulation(1);
+
+        foreach (int expected in new[] { 10_444, 19_444, 27_200, 33_884, 39_644 })
+        {
+            WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
+            Assert.Equal(expected, state.WalkerYawVelocityMicroRadPerTick);
         }
 
-        WorldSnapshot state = simulation.Snapshot;
-        Assert.Equal(1, state.FacingX);
-        Assert.Equal(1, state.FacingZ);
+        WorldSnapshot coast = simulation.Step(SimInput.Idle);
+        Assert.Equal(34_164, coast.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(164_780, coast.FacingYawMicroRad);
     }
 
     [Fact]
     public void MovementUsesBodyHeadingWithoutResettingLookYaw()
     {
         var simulation = new Simulation(1);
-        for (int tick = 0; tick < 262; tick++)
+        for (int tick = 0; tick < 20; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: 1));
         }
@@ -62,38 +82,20 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void LookX_TakesPrecedenceOverMoveFacingSnap()
-    {
-        var simulation = new Simulation(1);
-        // After enough Look ticks to leave sector 0, Move should not override while Look held.
-        for (int tick = 0; tick < 262; tick++)
-        {
-            simulation.Step(new SimInput(1, 0, LookX: 1));
-        }
-
-        WorldSnapshot state = simulation.Snapshot;
-        Assert.Equal(1, state.FacingX);
-        Assert.Equal(1, state.FacingZ);
-        // MoveX still applied velocity on X axis.
-        Assert.True(state.PlayerPosition.X > 0);
-    }
-
-    [Fact]
     public void LookX_OneTick_DoesNotYetLeaveForwardFacing()
     {
-        // Rate is 3 mrad/tick; sector width ~785 mrad → many ticks before snap.
         var simulation = new Simulation(1);
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
         Assert.Equal(0, state.FacingX);
         Assert.Equal(1, state.FacingZ);
+        Assert.Equal(10_444, state.FacingYawMicroRad);
     }
 
     [Fact]
     public void LookX_Negative_SnapsFacingLeftCardinal()
     {
         var simulation = new Simulation(1);
-        // 262 * (-3 mrad) ≈ −786 mrad → eight-way sector 6 → (−1, 0).
-        for (int tick = 0; tick < 262; tick++)
+        for (int tick = 0; tick < 20; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: -1));
         }
@@ -101,16 +103,6 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Snapshot;
         Assert.Equal(-1, state.FacingX);
         Assert.Equal(0, state.FacingZ);
-    }
-
-    [Fact]
-    public void WalkerStrafeSpeed_MatchesAcceptedStrafeP02Translation()
-    {
-        // Dual-accept steady ≈ 3.015 u/s → round(v * 1000 / 30) = 101.
-        Assert.Equal(101, SimulationConstants.WalkerStrafeSpeedPerTick);
-        const double measured = 3.015197590944186;
-        int mapped = (int)Math.Round(measured * 1000.0 / SimulationConstants.TicksPerSecond);
-        Assert.Equal(SimulationConstants.WalkerStrafeSpeedPerTick, mapped);
     }
 
     [Fact]
@@ -210,8 +202,7 @@ public sealed class SimulationTests
     public void RepeatedFire_DestroysTheForwardTargetDeterministically()
     {
         var simulation = new Simulation(0xA917BEEFu);
-        // Close to the forward target at z=14000 under WalkerSpeedPerTick=100
-        // (retail-informed milli-unit mapping; formerly 20 ticks at 350).
+        // Move toward the synthetic forward target under the measured walker cap.
         for (int tick = 0; tick < 70; tick++)
         {
             simulation.Step(new SimInput(0, 1));
@@ -296,13 +287,14 @@ public sealed class SimulationTests
         {
             WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
             Assert.Equal(SimVector2.Zero, blocked.PlayerPosition);
-            Assert.Equal(0, blocked.FacingYawMilliRad);
+            Assert.Equal(0, blocked.FacingYawMicroRad);
+            Assert.Equal(0, blocked.WalkerYawVelocityMicroRadPerTick);
             Assert.Empty(blocked.Projectiles);
         }
 
         WorldSnapshot active = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
         Assert.NotEqual(SimVector2.Zero, active.PlayerPosition);
-        Assert.NotEqual(0, active.FacingYawMilliRad);
+        Assert.NotEqual(0, active.FacingYawMicroRad);
         Assert.Single(active.Projectiles);
     }
 

@@ -31,15 +31,18 @@ public sealed class Simulation
     private SimVector2 _playerVelocity;
     private sbyte _facingX;
     private sbyte _facingZ;
-    // Continuous body yaw in milli-radians (0 = +Z). LookX integrates this;
-    // discrete Move still snaps facing when LookX is idle.
-    private int _facingYawMilliRad;
+    // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
+    private int _facingYawMicroRad;
+    private int _walkerYawVelocityMicroRadPerTick;
     private int _energy;
     private int _shield;
     private int _hull;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
     private int _targetsDestroyed;
+
+    // Jet handling remains provisional and outside this walker milestone.
+    private const int ProvisionalJetLookYawRateMicroRadPerTick = 3_000;
 
     public Simulation(uint seed)
     {
@@ -125,27 +128,65 @@ public sealed class Simulation
         if (_transformTicksRemaining != 0)
         {
             _playerVelocity = SimVector2.Zero;
+            _walkerYawVelocityMicroRadPerTick = 0;
             return;
         }
 
+        if (_mode == VehicleMode.Walker)
+        {
+            UpdateWalkerYaw(input.LookX);
+            UpdateWalkerMovement(input);
+            return;
+        }
+
+        _walkerYawVelocityMicroRadPerTick = 0;
         if (input.LookX != 0)
         {
-            _facingYawMilliRad += input.LookX * SimulationConstants.WalkerLookYawRateMilliRadPerTick;
-            _facingYawMilliRad = NormalizeMilliRad(_facingYawMilliRad);
+            _facingYawMicroRad = NormalizeMicroRad(
+                _facingYawMicroRad + (input.LookX * ProvisionalJetLookYawRateMicroRadPerTick));
             QuantizeFacingFromYaw();
         }
-        // Walker lateral uses dual-accepted strafe path speed; forward uses walker
-        // forward scalar. Jet keeps a single measured jet thrust speed for now.
-        int speedX = _mode == VehicleMode.Walker
-            ? SimulationConstants.WalkerStrafeSpeedPerTick
-            : SimulationConstants.JetSpeedPerTick;
-        int speedZ = _mode == VehicleMode.Walker
-            ? SimulationConstants.WalkerSpeedPerTick
-            : SimulationConstants.JetSpeedPerTick;
+
+        SimVector2 jetVelocity = ProjectLocalInput(
+            input,
+            SimulationConstants.JetSpeedPerTick,
+            SimulationConstants.JetSpeedPerTick);
+        MovePlayer(jetVelocity);
+    }
+
+    private void UpdateWalkerYaw(sbyte lookX)
+    {
+        _walkerYawVelocityMicroRadPerTick =
+            (int)((long)_walkerYawVelocityMicroRadPerTick *
+                SimulationConstants.WalkerYawRetentionNumerator /
+                SimulationConstants.WalkerYawRetentionDenominator) +
+            (lookX * SimulationConstants.WalkerYawInputMicroRadPerTick);
+        _facingYawMicroRad = NormalizeMicroRad(
+            _facingYawMicroRad + _walkerYawVelocityMicroRadPerTick);
+        QuantizeFacingFromYaw();
+    }
+
+    private void UpdateWalkerMovement(SimInput input)
+    {
+        SimVector2 acceleration = ProjectLocalInput(
+            input,
+            SimulationConstants.WalkerAccelerationPerTick,
+            SimulationConstants.WalkerAccelerationPerTick);
+        var velocity = new SimVector2(
+            RetainWalkerVelocity(_playerVelocity.X) + acceleration.X,
+            RetainWalkerVelocity(_playerVelocity.Z) + acceleration.Z);
+        MovePlayer(ClampMagnitude(velocity, SimulationConstants.WalkerMaximumSpeedPerTick));
+    }
+
+    private static int RetainWalkerVelocity(int velocity) =>
+        (int)((long)velocity * SimulationConstants.WalkerVelocityRetentionNumerator /
+            SimulationConstants.WalkerVelocityRetentionDenominator);
+
+    private SimVector2 ProjectLocalInput(SimInput input, int speedX, int speedZ)
+    {
         // Movement axes are local to the body. The pinned walker source rotates
-        // forward and strafe acceleration by heading; this integer eight-way
-        // projection keeps Core deterministic while the motion model remains a
-        // deliberately small handling slice.
+        // forward and strafe acceleration by heading. The current eight-way
+        // projection remains a bounded deterministic approximation.
         int forwardX = _facingX;
         int forwardZ = _facingZ;
         int headingScale = forwardX != 0 && forwardZ != 0 ? 181 : 256;
@@ -165,13 +206,18 @@ public sealed class Simulation
             velocityZ = velocityZ * 181 / 256;
         }
 
+        return new SimVector2(velocityX, velocityZ);
+    }
+
+    private void MovePlayer(SimVector2 velocity)
+    {
         SimVector2 nextPosition = new(
             Math.Clamp(
-                _playerPosition.X + velocityX,
+                _playerPosition.X + velocity.X,
                 -SimulationConstants.ArenaHalfExtent,
                 SimulationConstants.ArenaHalfExtent),
             Math.Clamp(
-                _playerPosition.Z + velocityZ,
+                _playerPosition.Z + velocity.Z,
                 -SimulationConstants.ArenaHalfExtent,
                 SimulationConstants.ArenaHalfExtent));
         _playerVelocity = new SimVector2(
@@ -180,21 +226,64 @@ public sealed class Simulation
         _playerPosition = nextPosition;
     }
 
-    /// <summary>
-    /// Full turn ≈ 2π rad ≈ 6283 milli-rad. Keeps yaw in (−half, half].
-    /// </summary>
-    private const int TwoPiMilliRad = 6283;
-
-    private static int NormalizeMilliRad(int milliRad)
+    private static SimVector2 ClampMagnitude(SimVector2 value, int maximum)
     {
-        int wrapped = milliRad % TwoPiMilliRad;
-        if (wrapped > TwoPiMilliRad / 2)
+        long magnitudeSquared = ((long)value.X * value.X) + ((long)value.Z * value.Z);
+        long maximumSquared = (long)maximum * maximum;
+        if (magnitudeSquared <= maximumSquared)
         {
-            wrapped -= TwoPiMilliRad;
+            return value;
         }
-        else if (wrapped <= -(TwoPiMilliRad / 2))
+
+        int magnitude = IntegerSquareRoot(magnitudeSquared);
+        if ((long)magnitude * magnitude < magnitudeSquared)
         {
-            wrapped += TwoPiMilliRad;
+            magnitude++;
+        }
+
+        return new SimVector2(
+            value.X * maximum / magnitude,
+            value.Z * maximum / magnitude);
+    }
+
+    private static int IntegerSquareRoot(long value)
+    {
+        int low = 0;
+        int high = 46_340;
+        int result = 0;
+        while (low <= high)
+        {
+            int middle = low + ((high - low) / 2);
+            long square = (long)middle * middle;
+            if (square <= value)
+            {
+                result = middle;
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle - 1;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Full turn rounded to integer micro-radians. Keeps yaw in (−half, half].
+    /// </summary>
+    private const int TwoPiMicroRad = 6_283_185;
+
+    private static int NormalizeMicroRad(int microRad)
+    {
+        int wrapped = microRad % TwoPiMicroRad;
+        if (wrapped > TwoPiMicroRad / 2)
+        {
+            wrapped -= TwoPiMicroRad;
+        }
+        else if (wrapped <= -(TwoPiMicroRad / 2))
+        {
+            wrapped += TwoPiMicroRad;
         }
 
         return wrapped;
@@ -203,8 +292,8 @@ public sealed class Simulation
     private void QuantizeFacingFromYaw()
     {
         // Eight-way snap from continuous yaw for FacingX/Z and fire aim.
-        int yaw = NormalizeMilliRad(_facingYawMilliRad);
-        int sector = ((yaw + TwoPiMilliRad) % TwoPiMilliRad) * 8 / TwoPiMilliRad;
+        int yaw = NormalizeMicroRad(_facingYawMicroRad);
+        int sector = (int)((long)((yaw + TwoPiMicroRad) % TwoPiMicroRad) * 8 / TwoPiMicroRad);
         (_facingX, _facingZ) = sector switch
         {
             0 => ((sbyte)0, (sbyte)1),
@@ -333,7 +422,8 @@ public sealed class Simulation
         _playerVelocity = SimVector2.Zero;
         _facingX = 0;
         _facingZ = 1;
-        _facingYawMilliRad = 0;
+        _facingYawMicroRad = 0;
+        _walkerYawVelocityMicroRadPerTick = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
         _hull = SimulationConstants.MaximumHull;
@@ -398,7 +488,8 @@ public sealed class Simulation
             _playerVelocity,
             _facingX,
             _facingZ,
-            _facingYawMilliRad,
+            _facingYawMicroRad,
+            _walkerYawVelocityMicroRadPerTick,
             _energy,
             _shield,
             _hull,

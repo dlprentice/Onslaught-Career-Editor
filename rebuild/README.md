@@ -60,11 +60,11 @@ trace hashes. Continuous body yaw is part of the snapshot/hash, and every input
 axis—including look—is part of the trace. Movement is projected relative to the
 body's deterministic eight-way heading.
 
-Retail measurements currently inform walker/jet forward speed, walker strafe,
-walker turn rate, jet energy drain, and the raw walker-to-jet state interval.
-Walker-to-jet now remains an explicit transition for 16 Core ticks before Jet
-mode commits; repeated transform input, movement, turning, and fire are blocked
-during that state. Acceleration/coast, camera tuning, jet-to-walker, transform
+Repeated Level 100 retail observations now inform walker acceleration, equal
+forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
+remains an explicit transition for 16 Core ticks before Jet mode commits;
+repeated transform input, movement, turning, and fire are blocked during that
+state. Eight-way movement projection, camera tuning, jet-to-walker, transform
 animation, resource semantics, weapons, terrain, collision, AI, missions,
 audio, campaign, and networking remain provisional or absent.
 

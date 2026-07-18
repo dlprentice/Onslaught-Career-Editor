@@ -17,6 +17,11 @@ Default values set in `CBattleEngineData::Initialise()`:
 
 ## Velocity
 
+These values are Stuart-source initialization defaults, not the active Steam
+Level 100 profile. Copied-runtime Level 100 observation instead establishes a
+`0.15` velocity cap, `0.7` retention, and equal forward/strafe response for that
+specific released configuration.
+
 | Property | Default Value | Description |
 |----------|---------------|-------------|
 | `mMaxAirVelocity` | 7.5 | Maximum jet mode speed |

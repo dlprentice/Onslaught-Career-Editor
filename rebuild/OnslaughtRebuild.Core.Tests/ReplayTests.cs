@@ -176,9 +176,9 @@ public sealed class ReplayTests
                 "schemaVersion": "onslaught-rebuild-command-tape.v1",
                 "name": "look-hold",
                 "seed": 1,
-                "durationTicks": 262,
+                "durationTicks": 20,
                 "spans": [
-                  { "startTick": 0, "durationTicks": 262, "moveX": 0, "moveZ": 0, "lookX": 1 }
+                  { "startTick": 0, "durationTicks": 20, "moveX": 0, "moveZ": 0, "lookX": 1 }
                 ]
               }
               """;
@@ -232,7 +232,8 @@ public sealed class ReplayTests
 
         Assert.Equal(idledResult.FinalState.FacingX, lookedResult.FinalState.FacingX);
         Assert.Equal(idledResult.FinalState.FacingZ, lookedResult.FinalState.FacingZ);
-        Assert.Equal(3, lookedResult.FinalState.FacingYawMilliRad);
+        Assert.Equal(10_444, lookedResult.FinalState.FacingYawMicroRad);
+        Assert.Equal(10_444, lookedResult.FinalState.WalkerYawVelocityMicroRadPerTick);
         Assert.NotEqual(idledResult.FinalStateHash, lookedResult.FinalStateHash);
         Assert.NotEqual(idledResult.TraceHash, lookedResult.TraceHash);
     }

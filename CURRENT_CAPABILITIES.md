@@ -142,10 +142,14 @@ snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
 The Godot Aquila Handling Lab is currently an input/rendering harness with a
-procedural arena, synthetic craft/targets, simplified movement, projectiles,
-energy, shield, and hull. Its walker-to-jet initiation now exposes Core's
-retail-timed 16-tick transition instead of switching to Jet immediately. It
-does not yet reproduce retail camera feel, terrain, missions, AI, weapon roster,
+procedural arena, synthetic craft/targets, projectiles, energy, shield, and
+hull. A clean Level 100 control and two fresh repeated safe-copy runs now
+establish the walker's acceleration, equal forward/strafe cap, frictional
+coast, and inertial body turning. The client renders Core's continuous yaw
+rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
+retail-timed 16-tick transition instead of switching to Jet immediately. The
+eight-way movement projection remains an approximation, and the lab does not
+yet reproduce retail camera feel, terrain, missions, AI, weapon roster,
 animation, audio, campaign, networking, or the rest of the transform model. Its
 purpose is to replace those placeholders with the smallest source-derived and
 retail-checked Aquila handling slice, then run a recognizable portion of Level

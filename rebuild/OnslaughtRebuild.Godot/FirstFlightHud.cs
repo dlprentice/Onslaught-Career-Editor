@@ -94,7 +94,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         {
             SetLabelText(_modeLabel, "WALKER MODE");
             SetLabelColor(_modeLabel, TextPrimary);
-            SetLabelText(_statusLabel, "Energy and shield regenerate");
+            SetLabelText(_statusLabel, "Measured acceleration, coast, and turn inertia");
         }
     }
 

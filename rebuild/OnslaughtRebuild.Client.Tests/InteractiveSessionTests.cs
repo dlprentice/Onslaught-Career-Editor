@@ -135,7 +135,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void ShortMovementPulse_MovesForOneTickOnly()
+    public void ShortMovementPulse_StartsAccelerationAndThenCoasts()
     {
         var session = new InteractiveSession(Seed);
 
@@ -143,8 +143,8 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult movementTick = session.AdvanceFrameTicks(333_334);
         FrameAdvanceResult idleTick = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerSpeedPerTick, movementTick.CurrentSnapshot.PlayerPosition.Z);
-        Assert.Equal(movementTick.CurrentSnapshot.PlayerPosition, idleTick.CurrentSnapshot.PlayerPosition);
+        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, movementTick.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(59, idleTick.CurrentSnapshot.PlayerPosition.Z);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
     }
 
@@ -158,7 +158,7 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerSpeedPerTick, result.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, result.CurrentSnapshot.PlayerPosition.Z);
         Assert.Single(result.CurrentSnapshot.Projectiles);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
         Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
@@ -217,7 +217,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void LookX_HeldRotatesFacingUsingWalkerLookYawRate()
+    public void LookX_HeldRotatesFacingUsingWalkerYawInertia()
     {
         var session = new InteractiveSession(1);
         // One Core step needs elapsedTicks such that elapsed * TPS >= PhaseUnitsPerStep.
@@ -225,7 +225,7 @@ public sealed class InteractiveSessionTests
             (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
         session.ObserveInput(new InteractiveInput(0, 0, false, false, false, LookX: 1));
         Assert.True(session.HasHeldOrPendingInput);
-        for (int i = 0; i < 262; i++)
+        for (int i = 0; i < 20; i++)
         {
             session.AdvanceFrameTicks(oneCoreStepTicks);
         }
@@ -308,7 +308,7 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
         session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerSpeedPerTick, session.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, session.CurrentSnapshot.PlayerPosition.Z);
         Assert.Single(session.CurrentSnapshot.Projectiles);
     }
 
