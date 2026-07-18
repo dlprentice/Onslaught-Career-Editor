@@ -36,7 +36,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v2' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v3' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 120 $report.tick
@@ -58,6 +58,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailAquilaSurfaceCount' 2 $report.retailAquilaSurfaceCount
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 2 $report.level100ObjectiveMarkerCount
+    Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount
+    Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 8192 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'targetVisualCount' 3 $report.targetVisualCount
     Assert-SmokeValue 'hudReady' $true $report.hudReady
     Assert-SmokeValue 'focusLossHandlerInputCleared' $true $report.focusLossHandlerInputCleared

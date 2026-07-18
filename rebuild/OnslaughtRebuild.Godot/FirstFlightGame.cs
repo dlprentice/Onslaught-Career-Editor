@@ -359,7 +359,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v2",
+                SchemaVersion = "onslaught-first-flight-smoke.v3",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -381,6 +381,8 @@ public sealed partial class FirstFlightGame : Node3D
                 RetailAquilaSurfaceCount = _world.RetailAquilaSurfaceCount,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
                 Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
+                RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
+                RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
                 TargetVisualCount = _world.TargetVisualCount,
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
@@ -442,6 +444,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required int RetailAquilaSurfaceCount { get; init; }
         public required int RetailLevel100FacilityCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }
+        public required int RetailLevel100TerrainVertexCount { get; init; }
+        public required int RetailLevel100TerrainTriangleCount { get; init; }
         public required int TargetVisualCount { get; init; }
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }

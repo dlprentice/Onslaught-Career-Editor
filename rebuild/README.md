@@ -19,9 +19,10 @@ synthetic arena or another layer of readiness tooling.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
 released Federation Aquila, Control Tower, and Tank Factory geometry at their
-authored opening positions. Core owns the released player start heading and
-the Target Zone 1 → Firing Range objective handoff, including both scripts'
-0.5-second event delay. The terrain plane, materials, combat targets, weapons,
+authored horizontal opening positions over the released coarse Level 100
+heightfield. Core owns the released player start heading and the Target Zone 1
+→ Firing Range objective handoff, including both scripts' 0.5-second event
+delay. Materials, terrain collision/response, combat targets, weapons,
 resources, and most mission behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
@@ -69,16 +70,18 @@ forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
 state. Eight-way movement projection, camera tuning, jet-to-walker, transform
-animation, resource semantics, weapons, terrain, collision, AI, the remaining mission,
+animation, resource semantics, weapons, terrain collision/response, AI, the remaining mission,
 audio, campaign, and networking remain provisional or absent.
 
 The client switches between deterministic static conversions of the released
 walker and jet meshes and loads two released Level 100 facility meshes. The
-retired synthetic arena boundary and placeholder structures are gone. Terrain,
-texture/material assignment, part articulation, transform animation, retail
-scale, tutorial dialogue and gates, collision, and the full mission remain
-unimplemented; three synthetic combat targets still exercise the older firing
-path and are not Level 100 parity.
+retired synthetic arena boundary, flat plane, and placeholder structures are
+gone. Godot renders the released 65×65 coarse heightfield and samples it for
+presentation placement, but deterministic Core still has no terrain elevation
+or collision. Texture/material assignment, part articulation, transform
+animation, retail scale, tutorial dialogue and gates, and the full mission
+remain unimplemented; three synthetic combat targets still exercise the older
+firing path and are not Level 100 parity.
 
 ## Verify
 

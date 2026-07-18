@@ -127,7 +127,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         panel.AddChild(stack);
         stack.AddChild(CreateLabel("LEVEL 100 OPENING SLICE", 22, TextPrimary));
         stack.AddChild(CreateLabel(
-            "Released Aquila + Level 100 facilities",
+            "Released terrain + facilities",
             13,
             TextMuted));
 

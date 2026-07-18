@@ -24,6 +24,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Node3D _playerBodyPivot = null!;
     private MeshInstance3D _walkerMesh = null!;
     private MeshInstance3D _jetMesh = null!;
+    private Level100HeightFieldAsset _level100Terrain = null!;
     private Camera3D _camera = null!;
     private ObjectiveMarkerVisual _targetZone1Marker = null!;
     private ObjectiveMarkerVisual _firingRangeMarker = null!;
@@ -50,11 +51,15 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int Level100ObjectiveMarkerCount => _level100ObjectiveMarkers.Count;
 
+    public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
+
+    public int RetailLevel100TerrainTriangleCount => _level100Terrain.TriangleCount;
+
     public void Initialize(WorldSnapshot snapshot)
     {
         Name = "WorldView";
         BuildEnvironment();
-        BuildLevel100OpeningGround();
+        BuildLevel100Terrain();
         BuildLevel100Facilities();
         BuildLevel100ObjectiveMarkers();
         BuildPlayer();
@@ -133,30 +138,20 @@ public sealed partial class FirstFlightWorldView : Node3D
         });
     }
 
-    private void BuildLevel100OpeningGround()
+    private void BuildLevel100Terrain()
     {
-        var groundMaterial = VisualPrimitives.CreateMaterial(new Color(0.075f, 0.105f, 0.095f), 0.05f, 0.92f);
+        _level100Terrain = Level100HeightFieldAsset.Load(
+            "res://Assets/Level100/Source/level100-heightfield.hfld.bin");
+        var terrainMaterial = VisualPrimitives.CreateMaterial(
+            new Color(0.16f, 0.22f, 0.20f),
+            0.02f,
+            0.96f);
         AddChild(new MeshInstance3D
         {
-            Name = "Level100ProvisionalGround",
-            Mesh = new PlaneMesh { Size = new Vector2(240f, 240f) },
-            MaterialOverride = groundMaterial,
+            Name = "RetailLevel100HeightField",
+            Mesh = _level100Terrain.Mesh,
+            MaterialOverride = terrainMaterial,
         });
-
-        var gridMaterial = VisualPrimitives.CreateMaterial(new Color(0.20f, 0.29f, 0.27f, 0.58f), 0f, 1f);
-        for (int coordinate = -110; coordinate <= 110; coordinate += 10)
-        {
-            AddChild(VisualPrimitives.CreateBox(
-                $"GridX{coordinate}",
-                new Vector3(0.035f, 0.025f, 220f),
-                new Vector3(coordinate, 0.018f, 0f),
-                gridMaterial));
-            AddChild(VisualPrimitives.CreateBox(
-                $"GridZ{coordinate}",
-                new Vector3(220f, 0.025f, 0.035f),
-                new Vector3(0f, 0.018f, coordinate),
-                gridMaterial));
-        }
     }
 
     private void BuildLevel100Facilities()
@@ -164,13 +159,15 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddLevel100Facility(
             "RetailControlTower",
             "res://Assets/Level100/level100-control-tower.obj",
-            new Vector3(-13.289886f, 0.09f, 5.603271f),
+            new Vector2(-13.289886f, 5.603271f),
+            0.0875791f,
             0f,
             new Color(0.42f, 0.53f, 0.56f));
         AddLevel100Facility(
             "RetailTankFactory",
             "res://Assets/Level100/level100-tank-factory.obj",
-            new Vector3(10.125f, 0.24f, 22.375f),
+            new Vector2(10.125f, 22.375f),
+            0.2383346f,
             1.7894337f,
             new Color(0.49f, 0.55f, 0.48f));
     }
@@ -178,14 +175,19 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void AddLevel100Facility(
         string name,
         string meshPath,
-        Vector3 position,
+        Vector2 relativePosition,
+        float meshBaseClearance,
         float retailYaw,
         Color color)
     {
         var root = new Node3D
         {
             Name = name,
-            Position = position,
+            Position = new Vector3(
+                relativePosition.X,
+                _level100Terrain.SampleRelativeHeight(relativePosition.X, relativePosition.Y) +
+                    meshBaseClearance,
+                relativePosition.Y),
             Rotation = new Vector3(0f, retailYaw, 0f),
         };
         var mesh = new MeshInstance3D
@@ -438,9 +440,14 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera.LookAt(focus, Vector3.Up);
     }
 
-    private static Vector3 ToWorld(SimVector2 position, float height)
+    private Vector3 ToWorld(SimVector2 position, float heightAboveTerrain)
     {
-        return new Vector3(position.X * UnitsToMeters, height, position.Z * UnitsToMeters);
+        float x = position.X * UnitsToMeters;
+        float z = position.Z * UnitsToMeters;
+        return new Vector3(
+            x,
+            _level100Terrain.SampleRelativeHeight(x, z) + heightAboveTerrain,
+            z);
     }
 
     private sealed record TargetVisual(

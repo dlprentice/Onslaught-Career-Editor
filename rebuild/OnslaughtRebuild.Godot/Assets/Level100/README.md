@@ -1,17 +1,18 @@
 # Level 100 opening assets
 
-These are the two released facility meshes consumed by the current Level 100
-opening slice. The project owner has permission to use, modify, and distribute
-the original game assets. They remain copyright of their original rights
-holders; `rebuild/LICENSE` covers reconstruction code and does not relicense
-the assets.
+These are the released heightfield and two facility meshes consumed by the
+current Level 100 opening slice. The project owner has permission to use,
+modify, and distribute the original game assets. They remain copyright of
+their original rights holders; `rebuild/LICENSE` covers reconstruction code
+and does not relicense the assets.
 
-The source archives came from the released PC game's
+The two source mesh archives came from the released PC game's
 `data/resources/meshes` directory. The deterministic OBJ outputs retain static
 geometry, normals, UVs, and base part transforms.
 
 | File | Role | SHA-256 |
 | --- | --- | --- |
+| `Source/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk consumed by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/m_fb_control_tower.msh.aya` | Released Control Tower CMSH archive | `86AF67E09DC2FD21C7023ACD53EBCB4171F3BF396F836DA85ECFDDA516588D91` |
 | `level100-control-tower.obj` | Static geometry consumed by Godot | `C9CBB5B1BB5C1215F5FED1EC4706CA77B99F6FB2DB740A28C012989EAD0D8C9A` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
@@ -30,6 +31,22 @@ py -3 rebuild/tools/cmsh_static_preview.py `
 Sorted outputs `candidate-0001.obj` and `candidate-0002.obj` correspond to the
 Control Tower and Tank Factory respectively and must match the hashes above
 before promotion.
+
+## Heightfield consumed by the slice
+
+The retained `HFLD` is the smallest exact terrain input used by the client. It
+comes from `100_res_PC.aya` → `ERES` → `ENGN` → `MAP!` and contains a
+5,084-byte `CHFD` metadata block followed by 663,552 bytes of signed 16-bit
+`HFDT` samples. The released loader at `0x0047F750` reads 64×64 tiles of 9×9
+samples. The released low-resolution vertex builder at `0x00544FC0` samples a
+65×65 grid at eight-unit intervals and multiplies heights by the `CHFD`
+scale `0.0009155832231044769`; the Godot client follows that exact coarse
+sampling pattern.
+
+The terrain mesh is translated so the authored player-one start
+`(288.6875, 243.25, -10)` is the reconstruction origin. The client samples the
+same retained heightfield to place presentation objects on the surface. This
+does not yet put terrain elevation or collision into deterministic Core.
 
 ## Authored placement consumed by the slice
 
@@ -56,7 +73,7 @@ world's horizontal X/Y plane. The current slice consumes:
 their event. `LevelScript.msl` activates Target Zone 1 first, then makes the
 Firing Range the objective after `Reached Target Zone 1`.
 
-The presentation currently uses a flat plane and neutral materials. Retail
-terrain elevation, collision, textures/material slots, authored lighting,
-facility animation, handedness validation, and complete Level 100 mission
-behavior are not established by this slice.
+The presentation currently uses neutral materials. Retail terrain textures,
+collision and movement response, authored lighting, facility animation,
+handedness validation, and complete Level 100 mission behavior are not
+established by this slice.
