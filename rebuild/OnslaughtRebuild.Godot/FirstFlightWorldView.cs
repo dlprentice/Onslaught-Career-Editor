@@ -160,16 +160,11 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         _level100Terrain = Level100HeightFieldAsset.Load(
             "res://Assets/Level100/Source/level100-heightfield.hfld.bin");
-        Texture2D terrainTexture = Level100TerrainAppearanceAsset.Load(
+        Material terrainMaterial = Level100TerrainAppearanceAsset.LoadMaterial(
             "res://Assets/Level100/Source/level100-mixer-set-10.mapt.bin",
             "res://Assets/Level100/Source/level100-mixer-map.mmap.bin",
+            "res://Assets/Level100/Textures/terrain-detail-00.texture.aya",
             _level100Terrain);
-        var terrainMaterial = new StandardMaterial3D
-        {
-            AlbedoTexture = terrainTexture,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            Roughness = 1f,
-        };
         AddChild(new MeshInstance3D
         {
             Name = "RetailLevel100HeightField",

@@ -163,12 +163,14 @@ static conversions. The exterior meshes and exact frame-25 first-person
 cockpit render from eight retained AYA-wrapped textures. Twelve exact released
 HUD textures, including Font13PS, replace the prototype overlay for the bounded
 crosshair, radar/radio frames, and current objective line. The released macro
-terrain blend, cube-25 sky, fog, and environment lighting replace their earlier
-placeholders. The eight-way movement projection remains an approximation, and
-the slice does not
+terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
+environment lighting replace their earlier placeholders. The detail texture
+uses both released coordinate scales and observed modulation modes; the moving
+cloud-shadow stage remains absent. The eight-way movement projection remains
+an approximation, and the slice does not
 yet reproduce terrain collision or the retail controller's procedural foot
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
-terrain-detail passes, facility destruction, transform animation, complete HUD
+cloud-shadow passes, facility destruction, transform animation, complete HUD
 state/contacts/radio behavior, audio, campaign, networking, or the rest of the
 transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the

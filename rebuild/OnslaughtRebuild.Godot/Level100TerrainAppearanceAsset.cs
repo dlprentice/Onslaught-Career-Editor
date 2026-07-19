@@ -28,9 +28,30 @@ internal static class Level100TerrainAppearanceAsset
     private static readonly uint MixerWeightsTag = Tag("MXRS");
     private static readonly uint MixerShadeTag = Tag("MSHD");
 
-    public static Texture2D Load(
+    private const string TerrainShaderCode = """
+        shader_type spatial;
+        render_mode unshaded;
+
+        uniform sampler2D macro_map : source_color, filter_linear_mipmap, repeat_disable;
+        uniform sampler2D detail_map : source_color, filter_linear_mipmap, repeat_enable;
+
+        void fragment() {
+            vec3 macro_color = texture(macro_map, UV).rgb;
+            vec2 retail_world_uv = UV * 512.0;
+            vec3 detail_primary = texture(detail_map, retail_world_uv).rgb;
+            vec3 detail_secondary = texture(
+                detail_map,
+                (retail_world_uv * 0.25) + vec2(0.3)).rgb;
+            vec3 stage_color = min(macro_color * 2.0, vec3(1.0));
+            stage_color *= detail_primary;
+            ALBEDO = min(stage_color * detail_secondary * 2.0, vec3(1.0));
+        }
+        """;
+
+    public static Material LoadMaterial(
         string mapTextureResourcePath,
         string mixerMapResourcePath,
+        string detailTextureResourcePath,
         Level100HeightFieldAsset heightField)
     {
         byte[] mapTexture = Godot.FileAccess.GetFileAsBytes(mapTextureResourcePath);
@@ -43,6 +64,10 @@ internal static class Level100TerrainAppearanceAsset
         if (heightField.MixerSet != 10)
         {
             throw new InvalidDataException("Level 100 does not select the retained mixer set 10.");
+        }
+        if (heightField.DetailTexture != 0)
+        {
+            throw new InvalidDataException("Level 100 does not select the retained terrain detail texture 00.");
         }
 
         MapTextureSlices textures = ParseMapTexture(mapTexture);
@@ -58,7 +83,30 @@ internal static class Level100TerrainAppearanceAsset
         {
             throw new InvalidDataException("Godot could not create the Level 100 landscape texture.");
         }
-        return ImageTexture.CreateFromImage(image);
+        Error mipmapResult = image.GenerateMipmaps();
+        if (mipmapResult != Error.Ok)
+        {
+            throw new InvalidDataException(
+                $"Godot could not generate Level 100 landscape mipmaps ({mipmapResult}).");
+        }
+
+        Texture2D macroTexture = ImageTexture.CreateFromImage(image);
+        Texture2D detailTexture = CuratedAyaTextureLoader.Load(
+            detailTextureResourcePath,
+            512,
+            512,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        var shader = new Shader
+        {
+            Code = TerrainShaderCode,
+        };
+        var material = new ShaderMaterial
+        {
+            Shader = shader,
+        };
+        material.SetShaderParameter("macro_map", macroTexture);
+        material.SetShaderParameter("detail_map", detailTexture);
+        return material;
     }
 
     private static MapTextureSlices ParseMapTexture(byte[] source)

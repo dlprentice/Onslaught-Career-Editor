@@ -1,8 +1,8 @@
 # Level 100 opening assets
 
-These are the released heightfield, macro terrain inputs, cube-25 sky, and two
-facility meshes consumed by the current Level 100 opening slice. The project
-owner has permission to use, modify, and distribute the original game assets.
+These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
+and two facility meshes consumed by the current Level 100 opening slice. The
+project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
 covers reconstruction code and does not relicense the assets.
 
@@ -15,6 +15,7 @@ geometry, normals, UVs, and base part transforms.
 | `Source/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk consumed by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/level100-mixer-set-10.mapt.bin` | Exact largest `MAPT` mip selected by the Level 100 `CHFD` mixer-set value | `C21576AE7EA75FA800AB4117C1479AEB70359A1ACC84EDD9508895EB339612F1` |
 | `Source/level100-mixer-map.mmap.bin` | Exact released `MMAP` material-weight and lighting-mask payload | `45045D248E27366080614C1AD26FC9E711BC9656F4F79210EAC63D2A20938361` |
+| `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
 | `Source/m_fb_control_tower.msh.aya` | Released Control Tower CMSH archive | `86AF67E09DC2FD21C7023ACD53EBCB4171F3BF396F836DA85ECFDDA516588D91` |
 | `level100-control-tower.obj` | Static intact geometry and base-material groups consumed by Godot | `9A2B9C287BFF21DD7E3B560EE36CC7D7CAFB99399B3003BF2E81A832FBD6F6BA` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
@@ -72,6 +73,17 @@ textures and palettes, all 4,096 `MCEL` material/weight records, and the 512×51
 `MSHD` lighting mask. It follows the released blend and RGB565 lighting path at
 `0x0047EFF0` to create the 512×512 macro landscape texture at load time.
 
+The `CHFD` detail selector is `0`, which the released loader formats as
+`mixers\detail00.tga`. `CDXLandscape__RenderTerrain` at `0x00545590` maps the
+macro texture once across the 512-unit landscape, maps that exact RGB detail
+texture once per world unit, and applies it again at quarter scale with a
+`(0.3, 0.3)` offset. In the observed Level 100 renderer state, the macro and
+second detail stages use `D3DTOP_MODULATE2X`; the first detail stage uses plain
+modulation. The Godot material preserves that sequence and treats the omitted
+moving cloud-shadow stage as neutral. The terrain indices now use Godot's
+front-facing winding, so the attached opening view renders the near ground
+instead of exposing the sky through back-face culling.
+
 The `CHFD` also selects cube 25 and supplies the fog color/density, sun,
 anti-sun and ambient colors, and sun vector. The five exact DXT1 cube textures
 use the released formatter order `cent`, `up`, `right`, `down`, `left` and the
@@ -79,9 +91,9 @@ use the released formatter order `cent`, `up`, `right`, `down`, `left` and the
 fog, matching the released no-depth world backdrop rather than treating it as
 distant terrain.
 
-This establishes the authored macro material layout and environment inputs,
-not pixel parity. The released repeating terrain-detail and cloud-shadow
-stages, overlay tile updates, separate visible-sun particle, trees, and distant
+This establishes the authored macro material layout, repeating terrain detail,
+and environment inputs, not pixel parity. The released moving cloud-shadow
+stage, overlay tile updates, separate visible-sun particle, trees, and distant
 props are not implemented.
 
 ## Authored placement consumed by the slice
@@ -119,7 +131,7 @@ preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two
 reference is not interpreted as a base texture or a guessed metallic map. The
 two retained render meshes represent the intact facilities; their released
 damage and destruction states are not implemented. Terrain collision and
-movement response, retail detail passes, facility animation, complete world
-population, and complete Level 100 mission behavior are not established by
+movement response, the moving cloud-shadow pass, facility animation, complete
+world population, and complete Level 100 mission behavior are not established by
 this slice. Core's provisional combat targets and the two trigger positions are
 not rendered as synthetic models or beacons in the Level 100 world.

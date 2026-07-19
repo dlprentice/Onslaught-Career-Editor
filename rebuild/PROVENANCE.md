@@ -51,14 +51,18 @@ maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
 The retained `HFLD` uses the released loader's 64×64 tiled sample layout,
-height scale, and 65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and the released
-`0x0047EFF0` blend path produce the 512×512 macro landscape texture. The client
+height scale, and 65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and
+the released
+`0x0047EFF0` blend path produce the 512×512 macro landscape texture. Level 100
+selects exact 512×512 DXT1 `detail00`; the released terrain render path at
+`0x00545590` supplies its two world-coordinate scales, offset, and observed
+modulation modes. The client
 preserves each retained mesh group's layer-zero `TEXR` assignment and directly
 decodes eight exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
 textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
-passes—including the shared layer-two `Chrome3` reference,
-terrain-detail/cloud stages, and
+passes—including the shared layer-two `Chrome3` reference, moving terrain
+cloud-shadow stage, and
 visible-sun particle—are not guessed. Terrain collision/response, targets,
 weapons, resources, jet/morph presentation, and unimplemented HUD behavior
 remain provisional unless specific retained evidence says otherwise.
@@ -126,9 +130,10 @@ A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four exterior meshes
 with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
 cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
-retained heightfield and exact macro terrain inputs, omits synthetic target and
+retained heightfield, exact macro terrain inputs, and selected detail texture,
+omits synthetic target and
 objective-marker scenery, renders, advances, preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or
-terrain-detail passes, procedural leg solving, collision, complete environment
-population, the complete mission, camera pitch/occlusion, full HUD behavior,
+moving cloud-shadow passes, procedural leg solving, collision, complete
+environment population, the complete mission, camera pitch/occlusion, full HUD behavior,
 timing, or visual parity.

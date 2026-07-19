@@ -21,6 +21,7 @@ internal sealed class Level100HeightFieldAsset
     private const int AntiSunColorOffset = 0x1080;
     private const int AmbientColorOffset = 0x108C;
     private const int SkyCubeOffset = 0x1090;
+    private const int DetailTextureOffset = 0x1094;
     private const int FogDensityOffset = 0x1098;
     private const int SunPositionOffset = 0x10A4;
     private const int TileCountPerAxis = 64;
@@ -42,6 +43,7 @@ internal sealed class Level100HeightFieldAsset
         float heightScale,
         byte mixerSet,
         byte skyCube,
+        byte detailTexture,
         uint fogColor,
         float fogDensity,
         uint sunColor,
@@ -53,6 +55,7 @@ internal sealed class Level100HeightFieldAsset
         _heightScale = heightScale;
         MixerSet = mixerSet;
         SkyCube = skyCube;
+        DetailTexture = detailTexture;
         FogColor = ToColor(fogColor);
         FogDensity = fogDensity;
         SunColor = ToColor(sunColor);
@@ -73,6 +76,8 @@ internal sealed class Level100HeightFieldAsset
     public byte MixerSet { get; }
 
     public byte SkyCube { get; }
+
+    public byte DetailTexture { get; }
 
     public Color FogColor { get; }
 
@@ -127,6 +132,7 @@ internal sealed class Level100HeightFieldAsset
 
         byte mixerSet = source[chfdPayloadOffset + MixerSetOffset];
         byte skyCube = source[chfdPayloadOffset + SkyCubeOffset];
+        byte detailTexture = source[chfdPayloadOffset + DetailTextureOffset];
         float fogDensity = ReadSingle(source, chfdPayloadOffset + FogDensityOffset);
         if (!float.IsFinite(fogDensity) || fogDensity < 0f)
         {
@@ -159,6 +165,7 @@ internal sealed class Level100HeightFieldAsset
             heightScale,
             mixerSet,
             skyCube,
+            detailTexture,
             ReadUInt32(source, chfdPayloadOffset + FogColorOffset),
             fogDensity,
             ReadUInt32(source, chfdPayloadOffset + SunColorOffset),
@@ -211,11 +218,11 @@ internal sealed class Level100HeightFieldAsset
                 int topLeft = (z * CoarseVertexCountPerAxis) + x;
                 int bottomLeft = topLeft + CoarseVertexCountPerAxis;
                 indices[index++] = topLeft;
-                indices[index++] = topLeft + 1;
                 indices[index++] = bottomLeft;
                 indices[index++] = topLeft + 1;
+                indices[index++] = topLeft + 1;
+                indices[index++] = bottomLeft;
                 indices[index++] = bottomLeft + 1;
-                indices[index++] = bottomLeft;
             }
         }
 

@@ -27,12 +27,14 @@ hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet and two facilities retain bounded static conversions. All four render
 with their exact retained layer-zero textures. The released macro terrain
-blend, cube-25 sky, fog, and environment light values now replace the procedural
-ground/sky. The default view uses the released first-person projection and exact
-walker cockpit at its runtime-selected `walk` pose. Twelve exact HUD textures
+blend, repeating detail texture, cube-25 sky, fog, and environment light values
+now replace the procedural ground/sky. The default view uses the released
+first-person projection and exact walker cockpit at its runtime-selected `walk`
+pose. Twelve exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
 crosshair, radar/radio frames, and current objective line. Secondary material
-and terrain-detail passes, terrain collision/response, combat targets, weapons,
+and moving cloud-shadow passes, terrain collision/response, combat targets,
+weapons,
 resources, and most mission
 behavior remain provisional.
 
@@ -95,13 +97,14 @@ Level 100 facility meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 presentation placement, generates the released 512×512 macro blend from exact
-`MAPT`/`MMAP` inputs, and renders the five exact cube-25 sky faces with `CHFD`
-fog and lighting values. Deterministic Core still has no terrain elevation or
-collision. The client preserves the base material groups and decodes eight exact
+`MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
+coordinate scales and modulation modes, and renders the five exact cube-25 sky
+faces with `CHFD` fog and lighting values. Deterministic Core still has no
+terrain elevation or collision. The client preserves the base material groups and decodes eight exact
 AYA-wrapped mesh textures for the Aquila, cockpit, and two facilities. It also
 uses twelve exact HUD textures, including the uncompressed released font atlas.
-The shared secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
-particle, facility destruction, procedural foot placement/terrain IK,
+The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
+visible-sun particle, facility destruction, procedural foot placement/terrain IK,
 transform animation, HUD contacts and state logic, radio portraits/video,
 tutorial dialogue and gates, and the full mission remain unimplemented. Core's
 three synthetic combat targets still exercise the older firing path, but the
