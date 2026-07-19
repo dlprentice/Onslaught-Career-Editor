@@ -12,6 +12,41 @@ public sealed class SimulationTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Simulation(0));
     }
 
+    [Theory]
+    [InlineData(73_904, 62_272, -11_153)]
+    [InlineData(73_895, 62_287, -11_161)]
+    [InlineData(73_647, 62_729, -11_469)]
+    public void Level100Terrain_MatchesCopiedRetailGroundSamples(
+        int retailXFixed,
+        int retailYFixed,
+        int expectedHeightUnits)
+    {
+        Assert.Equal(
+            expectedHeightUnits,
+            Level100Terrain.Instance.SampleHeightUnitsAtFixed(retailXFixed, retailYFixed));
+    }
+
+    [Fact]
+    public void WalkerGroundElevation_IsDeterministicCoreState()
+    {
+        var first = new Simulation(1);
+        var repeat = new Simulation(1);
+
+        Assert.Equal(211, first.Snapshot.PlayerGroundElevationMillimeters);
+        for (int tick = 0; tick < 40; tick++)
+        {
+            WorldSnapshot firstState = first.Step(new SimInput(-1, 1));
+            WorldSnapshot repeatState = repeat.Step(new SimInput(-1, 1));
+            Assert.Equal(
+                firstState.PlayerGroundElevationMillimeters,
+                repeatState.PlayerGroundElevationMillimeters);
+            Assert.Equal(StateHasher.ComputeHex(firstState), StateHasher.ComputeHex(repeatState));
+        }
+
+        Assert.Equal(new SimVector2(-2_705, 2_705), first.Snapshot.PlayerPosition);
+        Assert.Equal(332, first.Snapshot.PlayerGroundElevationMillimeters);
+    }
+
     [Fact]
     public void WalkerForward_AcceleratesToMeasuredCapAndCoastsAfterRelease()
     {

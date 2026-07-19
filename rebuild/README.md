@@ -20,8 +20,9 @@ synthetic arena or another layer of readiness tooling.
 The current Godot app is the **Level 100 Opening Slice**. It renders the
 released Federation Aquila, Control Tower, and Tank Factory geometry at their
 authored horizontal opening positions over the released coarse Level 100
-heightfield. Core owns the released player start heading and the Target Zone 1
-→ Firing Range objective handoff, including both scripts' 0.5-second event
+heightfield. Core owns the released player start heading, exact Level 100
+player-ground sampling, and the Target Zone 1 → Firing Range objective handoff,
+including both scripts' 0.5-second event
 delay. The walker is loaded directly from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
@@ -33,7 +34,7 @@ first-person projection and exact walker cockpit at its runtime-selected `walk`
 pose. Twelve exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
 crosshair, radar/radio frames, and current objective line. Secondary material
-and moving cloud-shadow passes, terrain collision/response, combat targets,
+and moving cloud-shadow passes, steep-slope and actor collision response, combat targets,
 weapons,
 resources, and most mission
 behavior remain provisional.
@@ -88,7 +89,8 @@ first-person view: the Aquila center of gravity, horizontal orientation column,
 walker cockpit. Camera pitch response and
 terrain clipping, eight-way movement projection,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
-collision/response, AI, the remaining mission, audio, campaign, and networking
+collision beyond grounded height following, AI, the remaining mission, audio,
+campaign, and networking
 remain provisional or absent.
 
 The client switches between the released walker's exact part hierarchy and a
@@ -96,15 +98,18 @@ deterministic static conversion of the released jet, and loads two released
 Level 100 facility meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
-presentation placement, generates the released 512×512 macro blend from exact
+static presentation placement, generates the released 512×512 macro blend from exact
 `MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
 coordinate scales and modulation modes, and renders the five exact cube-25 sky
-faces with `CHFD` fog and lighting values. Deterministic Core still has no
-terrain elevation or collision. The client preserves the base material groups and decodes eight exact
+faces with `CHFD` fog and lighting values. Deterministic Core embeds the same
+hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
+hashes the player's ground elevation. Godot adapts that Core value for the
+player rather than running an independent sampler. The client preserves the base material groups and decodes eight exact
 AYA-wrapped mesh textures for the Aquila, cockpit, and two facilities. It also
 uses twelve exact HUD textures, including the uncompressed released font atlas.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
-visible-sun particle, facility destruction, procedural foot placement/terrain IK,
+visible-sun particle, facility destruction, steep-slope sliding, actor/structure
+collision, procedural foot placement/terrain IK,
 transform animation, HUD contacts and state logic, radio portraits/video,
 tutorial dialogue and gates, and the full mission remain unimplemented. Core's
 three synthetic combat targets still exercise the older firing path, but the

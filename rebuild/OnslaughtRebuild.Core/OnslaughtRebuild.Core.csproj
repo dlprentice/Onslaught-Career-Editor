@@ -11,4 +11,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Level100\level100-heightfield.hfld.bin"
+                      LogicalName="OnslaughtRebuild.Core.Assets.Level100.level100-heightfield.hfld.bin" />
+  </ItemGroup>
+
 </Project>

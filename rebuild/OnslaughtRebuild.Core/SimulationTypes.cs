@@ -89,6 +89,7 @@ public sealed record WorldSnapshot(
     VehicleTransition Transition,
     SimVector2 PlayerPosition,
     SimVector2 PlayerVelocity,
+    int PlayerGroundElevationMillimeters,
     sbyte FacingX,
     sbyte FacingZ,
     int FacingYawMicroRad,

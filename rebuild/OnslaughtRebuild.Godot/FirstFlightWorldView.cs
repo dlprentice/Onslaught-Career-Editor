@@ -9,7 +9,8 @@ public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
     private const float RetailJetBaseClearance = 0.6706632f;
-    private const float RetailWalkerCenterOfGravityHeight = 1.9f;
+    private const float RetailWalkerCenterOfGravityHeight =
+        Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     private const float RetailVerticalFovDegrees = 58.7155f;
 
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
@@ -82,8 +83,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         float interpolationAlpha,
         float frameDelta)
     {
-        Vector3 previousPosition = ToWorld(previous.PlayerPosition, 0f);
-        Vector3 currentPosition = ToWorld(current.PlayerPosition, 0f);
+        Vector3 previousPosition = ToPlayerWorld(previous);
+        Vector3 currentPosition = ToPlayerWorld(current);
         bool resetJump = previousPosition.DistanceSquaredTo(currentPosition) > 100f;
         Vector3 playerPosition = resetJump
             ? currentPosition
@@ -158,8 +159,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildLevel100Terrain()
     {
-        _level100Terrain = Level100HeightFieldAsset.Load(
-            "res://Assets/Level100/Source/level100-heightfield.hfld.bin");
+        _level100Terrain = Level100HeightFieldAsset.Load();
         Material terrainMaterial = Level100TerrainAppearanceAsset.LoadMaterial(
             "res://Assets/Level100/Source/level100-mixer-set-10.mapt.bin",
             "res://Assets/Level100/Source/level100-mixer-map.mmap.bin",
@@ -434,6 +434,16 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera.Position = centerOfGravity;
         _camera.LookAt(centerOfGravity + forward, Vector3.Up);
         _level100Sky.Position = _camera.Position;
+    }
+
+    private static Vector3 ToPlayerWorld(WorldSnapshot snapshot)
+    {
+        float x = snapshot.PlayerPosition.X * UnitsToMeters;
+        float z = snapshot.PlayerPosition.Z * UnitsToMeters;
+        return new Vector3(
+            x,
+            snapshot.PlayerGroundElevationMillimeters * UnitsToMeters,
+            -z);
     }
 
     private Vector3 ToWorld(SimVector2 position, float heightAboveTerrain)

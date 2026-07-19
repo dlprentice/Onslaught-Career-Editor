@@ -51,7 +51,9 @@ maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
 The retained `HFLD` uses the released loader's 64×64 tiled sample layout,
-height scale, and 65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and
+height scale, and 65×65 coarse render sampling. Core embeds the hash-verified
+chunk and implements Steam's `0x0047EB80` 24.8 fixed-point signed interpolation
+for hashed player-ground elevation. Exact `MAPT`/`MMAP` inputs and
 the released
 `0x0047EFF0` blend path produce the 512×512 macro landscape texture. Level 100
 selects exact 512×512 DXT1 `detail00`; the released terrain render path at
@@ -63,7 +65,8 @@ textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference, moving terrain
 cloud-shadow stage, and
-visible-sun particle—are not guessed. Terrain collision/response, targets,
+visible-sun particle—are not guessed. Steep-slope sliding, actor/structure
+collision, targets,
 weapons, resources, jet/morph presentation, and unimplemented HUD behavior
 remain provisional unless specific retained evidence says otherwise.
 
@@ -84,6 +87,16 @@ retention. Core maps those 20 Hz responses into its fixed 30 Hz step. The same
 control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
 16-tick walker-to-jet transition. Jet forward speed and energy drain retain
 earlier bounded measurements.
+
+A separate idle Level 100 control held `(288.6875, 243.25, -12.111499)` for
+12 seconds with zero velocity, raw walker state `2`, and no terrain-slide flag.
+Two fresh mouse-axis forward runs repeated their first twelve released update
+states exactly before host-input cadence diverged. The route held zero vertical
+velocity, zero pitch/roll, and no terrain-slide flag; at three retained
+checkpoints, sampled units `-11153`, `-11161`, and `-11469` plus Stuart's
+1.9-unit `COfGHeight` reproduced the observed Z values. This establishes
+grounded height following on that route, not steep-slope sliding, body tilt, or
+arbitrary terrain collision.
 
 A clean copied Level 100 run starts player zero with current/preferred view `1`.
 After the opening fly-in, five uninterrupted samples held the same active camera
@@ -122,7 +135,8 @@ complete HUD state logic, contacts, radio portraits/video, weapon selection,
 damage presentation, tutorial timing, or pixel parity.
 
 These slices do not make the surrounding vehicle model retail-faithful.
-Eight-way movement projection, terrain response, dash behavior, camera pitch and
+Eight-way movement projection, terrain response beyond grounded height following,
+dash behavior, camera pitch and
 occlusion, jet-to-walker, transform presentation, resources, weapons, and flight
 dynamics remain provisional.
 
@@ -130,7 +144,8 @@ A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four exterior meshes
 with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
 cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
-retained heightfield, exact macro terrain inputs, and selected detail texture,
+retained heightfield, exact macro terrain inputs, selected detail texture, and
+Core-owned player ground elevation,
 omits synthetic target and
 objective-marker scenery, renders, advances, preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or

@@ -144,7 +144,8 @@ filesystem, clock, process, network, or GPU dependencies.
 The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
 heightfield plus Federation walker/jet, Control Tower, and Tank Factory
 geometry. Core starts at the released player-one heading and owns the authored
-Target Zone 1 → Firing Range trigger sequence, including each script's
+player ground elevation plus the Target Zone 1 → Firing Range trigger sequence,
+including each script's
 0.5-second event delay. The prior synthetic arena boundary, flat plane, and
 placeholder structures are gone. Terrain, retained meshes, facilities, sky,
 light, camera, and Core-relative positions now share the released
@@ -168,7 +169,7 @@ environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
 cloud-shadow stage remains absent. The eight-way movement projection remains
 an approximation, and the slice does not
-yet reproduce terrain collision or the retail controller's procedural foot
+yet reproduce steep-slope or actor collision response or the retail controller's procedural foot
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
 state/contacts/radio behavior, audio, campaign, networking, or the rest of the
@@ -176,8 +177,12 @@ transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
 remaining synthetic combat targets are Core handling fixtures and are no longer
 drawn as Level 100 scenery. Synthetic objective beacons are also absent.
-Terrain-following in the Godot host is presentation only; Core remains
-two-dimensional until retail collision behavior is implemented.
+Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point
+height sampler, and hashes the resulting walker ground elevation. Godot adapts
+that value for the player; static facilities and synthetic projectiles remain
+presentation-grounded. The observed route did not exercise a steep-slope flag,
+body tilt, or nonzero vertical velocity, so those behaviors remain outside the
+demonstrated slice.
 
 The project has full permission to use, modify, and distribute the original
 game assets. The remaining asset gap is technical integration and format

@@ -12,7 +12,7 @@ geometry, normals, UVs, and base part transforms.
 
 | File | Role | SHA-256 |
 | --- | --- | --- |
-| `Source/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk consumed by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
+| `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/level100-mixer-set-10.mapt.bin` | Exact largest `MAPT` mip selected by the Level 100 `CHFD` mixer-set value | `C21576AE7EA75FA800AB4117C1479AEB70359A1ACC84EDD9508895EB339612F1` |
 | `Source/level100-mixer-map.mmap.bin` | Exact released `MMAP` material-weight and lighting-mask payload | `45045D248E27366080614C1AD26FC9E711BC9656F4F79210EAC63D2A20938361` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
@@ -47,7 +47,7 @@ before promotion.
 
 ## Heightfield consumed by the slice
 
-The retained `HFLD` is the smallest exact terrain input used by the client. It
+The retained `HFLD` is the smallest exact terrain input used by Core and the client. It
 comes from `100_res_PC.aya` → `ERES` → `ENGN` → `MAP!` and contains a
 5,084-byte `CHFD` metadata block followed by 663,552 bytes of signed 16-bit
 `HFDT` samples. The released loader at `0x0047F750` reads 64×64 tiles of 9×9
@@ -57,13 +57,18 @@ scale `0.0009155832231044769`; the Godot client follows that exact coarse
 sampling pattern.
 
 The terrain mesh is translated so the authored player-one start
-`(288.6875, 243.25, -10)` is the reconstruction origin. The client samples the
-same retained heightfield to place presentation objects on the surface. BEA's
-`(X, Y, Z-down)` coordinates map to Godot `(X, -Z, -Y)`. At the start, the
-heightfield samples `-10.210713`; an attached copied-retail Battle Engine held
-`Z=-12.111499`, agreeing with the released 1.9-unit walker center-of-gravity
-height to within one millimeter. This does not yet put terrain elevation or
-collision into deterministic Core.
+`(288.6875, 243.25, -10)` is the reconstruction origin. BEA's
+`(X, Y, Z-down)` coordinates map to Godot `(X, -Z, -Y)`. Steam's sampler at
+`0x0047EB80` converts coordinates to 24.8 fixed point and truncates signed
+bilinear interpolation after each axis. Core now owns that exact sampler and a
+hashed player-ground elevation; Godot consumes the snapshot instead of
+independently lifting the player. At the start it produces HFLD unit `-11153`,
+ground `-10.211499`, and the copied-retail Battle Engine center
+`Z=-12.111499` after the released 1.9-unit center-of-gravity offset. Two later
+points on the repeated forward route likewise matched units `-11161` and
+`-11469`. The observed route held zero vertical velocity, zero pitch/roll, and
+no steep-slope flag, so steep-slope sliding and terrain-aware body tilt remain
+unimplemented rather than inferred.
 
 ## Terrain appearance and environment consumed by the slice
 
@@ -130,8 +135,8 @@ The presentation consumes the four exact layer-zero facility textures and
 preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two
 reference is not interpreted as a base texture or a guessed metallic map. The
 two retained render meshes represent the intact facilities; their released
-damage and destruction states are not implemented. Terrain collision and
-movement response, the moving cloud-shadow pass, facility animation, complete
+damage and destruction states are not implemented. Actor/structure collision,
+steep-slope response, the moving cloud-shadow pass, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Core's provisional combat targets and the two trigger positions are
 not rendered as synthetic models or beacons in the Level 100 world.

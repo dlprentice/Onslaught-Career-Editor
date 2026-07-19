@@ -53,7 +53,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 120 $report.tick
-    Assert-SmokeValue 'stateHash' 'da95b8d52e5870c8a328a127dabb147d5b641495e3a639df2125d488053aac22' $report.stateHash
+    Assert-SmokeValue 'stateHash' 'b094e4ad01bc7144448f7fbbdbd5b3f6aea9465031fe8bfce9bd8277511bf7cb' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'ReachTargetZone1' $report.level100Phase
@@ -73,7 +73,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailAquilaAnimatedPartCount' 20 $report.retailAquilaAnimatedPartCount
     Assert-SmokeNear 'retailAquilaStandingClearance' 0.059322417 $report.retailAquilaStandingClearance
     Assert-SmokeValue 'retailCockpitSurfaceCount' 2 $report.retailCockpitSurfaceCount
-    Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21071243 $report.level100PlayerStartRelativeHeight
+    Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21149921 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
     Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 0 $report.level100ObjectiveMarkerCount

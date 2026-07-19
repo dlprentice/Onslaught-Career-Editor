@@ -345,7 +345,7 @@ public sealed class ReplayTests
     }
 
     [Fact]
-    public void CoreProject_HasNoExternalOrCustomBuildInputs()
+    public void CoreProject_HasNoExternalOrCustomCodeInputs()
     {
         string projectPath = Path.Combine(
             AppContext.BaseDirectory,
@@ -376,8 +376,20 @@ public sealed class ReplayTests
             element => forbiddenElements.Contains(element.Name.LocalName, StringComparer.Ordinal));
         Assert.DoesNotContain(
             project.Descendants(),
-            element => linkedInputElements.Contains(element.Name.LocalName, StringComparer.Ordinal) &&
-                element.Attribute("Include") is not null);
+            element =>
+            {
+                if (!linkedInputElements.Contains(element.Name.LocalName, StringComparer.Ordinal) ||
+                    element.Attribute("Include") is not { Value: string include })
+                {
+                    return false;
+                }
+
+                string normalized = include.Replace('\\', '/');
+                return Path.IsPathRooted(include) ||
+                    normalized.Equals("..", StringComparison.Ordinal) ||
+                    normalized.StartsWith("../", StringComparison.Ordinal) ||
+                    normalized.Contains("/../", StringComparison.Ordinal);
+            });
         Assert.DoesNotContain("references/Onslaught", projectText, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("references\\Onslaught", projectText, StringComparison.OrdinalIgnoreCase);
     }

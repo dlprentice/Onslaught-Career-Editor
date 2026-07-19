@@ -24,13 +24,14 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(5);
+            writer.Write(6);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write((int)state.Mode);
             writer.Write((int)state.Transition);
             WriteVector(writer, state.PlayerPosition);
             WriteVector(writer, state.PlayerVelocity);
+            writer.Write(state.PlayerGroundElevationMillimeters);
             writer.Write(state.FacingX);
             writer.Write(state.FacingZ);
             writer.Write(state.FacingYawMicroRad);

@@ -29,6 +29,7 @@ public sealed class Simulation
     private VehicleTransition _transition;
     private SimVector2 _playerPosition;
     private SimVector2 _playerVelocity;
+    private int _playerGroundElevationMillimeters;
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -221,6 +222,8 @@ public sealed class Simulation
             nextPosition.X - _playerPosition.X,
             nextPosition.Z - _playerPosition.Z);
         _playerPosition = nextPosition;
+        _playerGroundElevationMillimeters =
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
     }
 
     private void UpdateLevel100Opening()
@@ -461,6 +464,8 @@ public sealed class Simulation
         _transition = VehicleTransition.None;
         _playerPosition = SimVector2.Zero;
         _playerVelocity = SimVector2.Zero;
+        _playerGroundElevationMillimeters =
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -528,6 +533,7 @@ public sealed class Simulation
             _transition,
             _playerPosition,
             _playerVelocity,
+            _playerGroundElevationMillimeters,
             _facingX,
             _facingZ,
             _facingYawMicroRad,
