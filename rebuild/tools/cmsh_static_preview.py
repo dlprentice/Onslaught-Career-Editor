@@ -319,13 +319,19 @@ def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
     cmvb = reader.expected(b"CMVB", "CMVB", length=296)
     if cmvb.payload[264] != 0:
         raise CmshProfileError("unsupported bones/reference graph", cmvb.offset, "REFR populated source PMVB")
-    stride, fvf, topology = struct.unpack_from("<III", cmvb.payload, 276)
-    if (stride, fvf, topology) not in {(36, 0x152, 4), (0, 0, 0)}:
-        raise CmshProfileError("unsupported profile", cmvb.offset, "REFR source stride/FVF/topology")
+    # A zero-group reference owns no vertex stream. Released meshes leave the
+    # otherwise-unused stride/FVF/topology words populated with non-semantic
+    # data, so framing and the zero group count are the complete contract here.
     reader.require_end()
 
 
-def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget) -> _Part:
+def _parse_part(
+    chunk: _Chunk,
+    part_index: int,
+    part_count: int,
+    budget: _Budget,
+    hierarchy_frame: int | None,
+) -> _Part:
     reader = _Reader(chunk.payload, origin=chunk.offset + 8, limit_role="MESP")
     cmsp = reader.expected(b"CMSP", "CMSP", length=316)
     payload = cmsp.payload
@@ -348,6 +354,9 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
+    hierarchy_orientation: tuple[float, ...] | None = None
+    hierarchy_position: tuple[float, float, float] | None = None
+    selected_frame = min(hierarchy_frame, hframes - 1) if hierarchy_frame is not None else None
     while reader.pos < len(reader.data):
         record = reader.chunk("MESP record")
         try:
@@ -389,9 +398,23 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
         elif record.tag == b"HORI":
             if len(record.payload) != hframes * 48:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HORI")
+            if selected_frame is not None:
+                hierarchy_orientation = _orientation(
+                    record.payload,
+                    selected_frame * 48,
+                    "selected hierarchy orientation",
+                    record.offset + 8,
+                )
         elif record.tag == b"HPOS":
             if len(record.payload) != hframes * 16:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HPOS")
+            if selected_frame is not None:
+                hierarchy_position = _position(
+                    record.payload,
+                    selected_frame * 16,
+                    "selected hierarchy position",
+                    record.offset + 8,
+                )
         elif record.tag == b"HFOV":
             if len(record.payload) != hframes * 4:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HFOV")
@@ -412,8 +435,14 @@ def _parse_part(chunk: _Chunk, part_index: int, part_count: int, budget: _Budget
         raise CmshProfileError("unexpected tag/order", chunk.offset, "complete MESP record order")
     if ("CHLD" in tags) != (child_count > 0):
         raise CmshProfileError("invalid declared length/count", chunk.offset, "CHLD presence")
-    rows = ((base[0], base[1], base[2]), (base[4], base[5], base[6]), (base[8], base[9], base[10]))
-    return _Part(_Transform(rows, position), vertices, groups, children, parent, reference)
+    selected_orientation = hierarchy_orientation if hierarchy_orientation is not None else base
+    selected_position = hierarchy_position if hierarchy_position is not None else position
+    rows = (
+        (selected_orientation[0], selected_orientation[1], selected_orientation[2]),
+        (selected_orientation[4], selected_orientation[5], selected_orientation[6]),
+        (selected_orientation[8], selected_orientation[9], selected_orientation[10]),
+    )
+    return _Part(_Transform(rows, selected_position), vertices, groups, children, parent, reference)
 
 
 def _checked_add(total: int, increment: int, limit: int, role: str) -> int:
@@ -479,7 +508,9 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
     return tuple(resolved)
 
 
-def parse_cmsh_stream(data: bytes) -> ParsedMesh:
+def parse_cmsh_stream(data: bytes, *, hierarchy_frame: int | None = None) -> ParsedMesh:
+    if hierarchy_frame is not None and hierarchy_frame < 0:
+        raise CmshProfileError("invalid declared length/count", 0, "hierarchy frame")
     if len(data) > MAX_INFLATE:
         raise CmshProfileError("limit exceeded", 0, "inflated CMSH stream")
     if len(data) < 380:
@@ -513,7 +544,12 @@ def parse_cmsh_stream(data: bytes) -> ParsedMesh:
         )
     part_chunks = [reader.expected(b"MESP", f"MESP {index}") for index in range(part_count)]
     budget = _Budget()
-    parts = _resolve_references(tuple(_parse_part(chunk, index, part_count, budget) for index, chunk in enumerate(part_chunks)))
+    parts = _resolve_references(
+        tuple(
+            _parse_part(chunk, index, part_count, budget, hierarchy_frame)
+            for index, chunk in enumerate(part_chunks)
+        )
+    )
     reader.absolute_limit = None
     siblings: list[bytes] = []
     while reader.pos < len(reader.data):
@@ -767,9 +803,10 @@ def convert_aya_bytes(
     *,
     include_vertex_attributes: bool = False,
     include_primary_material_groups: bool = False,
+    hierarchy_frame: int | None = None,
 ) -> bytes:
     return emit_obj(
-        parse_cmsh_stream(inflate_aya(source)),
+        parse_cmsh_stream(inflate_aya(source), hierarchy_frame=hierarchy_frame),
         include_vertex_attributes=include_vertex_attributes,
         include_primary_material_groups=include_primary_material_groups,
     )
@@ -811,6 +848,7 @@ def publish_anonymous_previews(
     *,
     include_vertex_attributes: bool = False,
     include_primary_material_groups: bool = False,
+    hierarchy_frame: int | None = None,
 ) -> tuple[int, int]:
     trusted_checkout = Path(__file__).resolve().parents[2]
     checkout = _absolute_lexical(checkout)
@@ -877,6 +915,7 @@ def publish_anonymous_previews(
                         data,
                         include_vertex_attributes=include_vertex_attributes,
                         include_primary_material_groups=include_primary_material_groups,
+                        hierarchy_frame=hierarchy_frame,
                     )
                 except CmshProfileError as error:
                     failures += 1
@@ -924,7 +963,14 @@ def _main(argv: Iterable[str] | None = None) -> int:
         action="store_true",
         help="emit one OBJ material group per MMPT using the resolved TEXR layer-0 texture index",
     )
+    parser.add_argument(
+        "--hierarchy-frame",
+        type=int,
+        help="select one authored hierarchy frame for every part, clamped to each part's available track",
+    )
     arguments = parser.parse_args(argv)
+    if arguments.hierarchy_frame is not None and arguments.hierarchy_frame < 0:
+        parser.error("--hierarchy-frame must be non-negative")
     try:
         matches, failures = publish_anonymous_previews(
             arguments.checkout,
@@ -932,6 +978,7 @@ def _main(argv: Iterable[str] | None = None) -> int:
             arguments.output,
             include_vertex_attributes=arguments.vertex_attributes,
             include_primary_material_groups=arguments.primary_material_groups,
+            hierarchy_frame=arguments.hierarchy_frame,
         )
     except (CmshProfileError, OSError) as error:
         print(f"preview failed: {error}", file=sys.stderr)

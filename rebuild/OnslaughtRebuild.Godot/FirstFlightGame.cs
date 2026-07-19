@@ -382,6 +382,7 @@ public sealed partial class FirstFlightGame : Node3D
                 RetailAquilaPartCount = _world.RetailAquilaPartCount,
                 RetailAquilaAnimatedPartCount = _world.RetailAquilaAnimatedPartCount,
                 RetailAquilaStandingClearance = _world.RetailAquilaStandingClearance,
+                RetailCockpitSurfaceCount = _world.RetailCockpitSurfaceCount,
                 Level100PlayerStartRelativeHeight = _world.Level100PlayerStartRelativeHeight,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
                 RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
@@ -451,6 +452,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required int RetailAquilaPartCount { get; init; }
         public required int RetailAquilaAnimatedPartCount { get; init; }
         public required float RetailAquilaStandingClearance { get; init; }
+        public required int RetailCockpitSurfaceCount { get; init; }
         public required float Level100PlayerStartRelativeHeight { get; init; }
         public required int RetailLevel100FacilityCount { get; init; }
         public required int RetailLevel100FacilitySurfaceCount { get; init; }

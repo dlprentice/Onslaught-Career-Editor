@@ -27,11 +27,13 @@ hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet and two facilities retain bounded static conversions. All four render
 with their exact retained layer-zero textures. The released macro terrain
-blend, cube-25 sky, fog, and environment
-light values now replace the procedural ground/sky. The Aquila uses the retained
-meshes' retail-unit scale and the released third-person walker's pitch-zero
-framing. Secondary material and terrain-detail passes, terrain
-collision/response, combat targets, weapons, resources, and most mission
+blend, cube-25 sky, fog, and environment light values now replace the procedural
+ground/sky. The default view uses the released first-person projection and exact
+walker cockpit at its runtime-selected `walk` pose. Twelve exact HUD textures
+and the released Font13PS atlas replace the prototype panels for the bounded
+crosshair, radar/radio frames, and current objective line. Secondary material
+and terrain-detail passes, terrain collision/response, combat targets, weapons,
+resources, and most mission
 behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
@@ -78,10 +80,10 @@ Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
-state. The presentation camera now uses the released third-person class's
-pitch-zero walker geometry; clean retail Level 100 still starts in first-person
-view, so this is not a claim that third-person is the mission default. Camera
-pitch response and terrain clipping, eight-way movement projection,
+state. The presentation camera now uses clean Level 100's released first-person
+view: the Aquila center of gravity, 58.7155-degree vertical field of view, 0.1
+near plane, and the authored frame-25 walker cockpit. Camera pitch response and
+terrain clipping, eight-way movement projection,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
 collision/response, AI, the remaining mission, audio, campaign, and networking
 remain provisional or absent.
@@ -94,12 +96,14 @@ gone. Godot renders the released 65×65 coarse heightfield and samples it for
 presentation placement, generates the released 512×512 macro blend from exact
 `MAPT`/`MMAP` inputs, and renders the five exact cube-25 sky faces with `CHFD`
 fog and lighting values. Deterministic Core still has no terrain elevation or
-collision. The client preserves the base material groups and decodes seven
-exact AYA-wrapped DXT2 textures for the Aquila and two facilities. The shared
-secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
+collision. The client preserves the base material groups and decodes eight exact
+AYA-wrapped mesh textures for the Aquila, cockpit, and two facilities. It also
+uses twelve exact HUD textures, including the uncompressed released font atlas.
+The shared secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
 particle, facility destruction, procedural foot placement/terrain IK,
-transform animation, retail HUD/cockpit, tutorial dialogue and gates, and the
-full mission remain unimplemented; three synthetic combat targets still
+transform animation, HUD contacts and state logic, radio portraits/video,
+tutorial dialogue and gates, and the full mission remain unimplemented; three
+synthetic combat targets still
 exercise the older firing path and are not Level 100 parity.
 
 ## Verify

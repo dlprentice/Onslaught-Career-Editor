@@ -155,14 +155,18 @@ walker now loads directly from its exact released AYA as a 63-part hierarchy
 with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
 `LegMotion` cycle from Core velocity. The jet and two facilities remain bounded
-static conversions. The four meshes render from seven exact retained
-AYA-wrapped DXT2 textures, while the released macro terrain blend, cube-25 sky,
-fog, and environment lighting replace their earlier placeholders. The
-eight-way movement projection remains an approximation, and the slice does not
+static conversions. The exterior meshes and exact frame-25 first-person
+cockpit render from eight retained AYA-wrapped textures. Twelve exact released
+HUD textures, including Font13PS, replace the prototype overlay for the bounded
+crosshair, radar/radio frames, and current objective line. The released macro
+terrain blend, cube-25 sky, fog, and environment lighting replace their earlier
+placeholders. The eight-way movement projection remains an approximation, and
+the slice does not
 yet reproduce terrain collision or the retail controller's procedural foot
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
-terrain-detail passes, facility destruction, transform animation, retail HUD,
-audio, campaign, networking, or the rest of the transform model.
+terrain-detail passes, facility destruction, transform animation, complete HUD
+state/contacts/radio behavior, audio, campaign, networking, or the rest of the
+transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
 remaining synthetic combat targets are handling fixtures, not Level 100
 parity. Terrain-following in the Godot host is presentation only; Core remains

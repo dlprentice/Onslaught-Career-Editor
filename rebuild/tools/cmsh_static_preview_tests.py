@@ -21,7 +21,14 @@ def _chunk(tag: bytes, payload: bytes) -> bytes:
     return tag + struct.pack("<I", len(payload)) + payload
 
 
-def _cmsp(*, part: int, children: int, base_position: tuple[float, float, float], rotated: bool) -> bytes:
+def _cmsp(
+    *,
+    part: int,
+    children: int,
+    base_position: tuple[float, float, float],
+    rotated: bool,
+    hierarchy_frames: int = 1,
+) -> bytes:
     payload = bytearray(316)
     identity = (1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
     orientation = (
@@ -34,7 +41,7 @@ def _cmsp(*, part: int, children: int, base_position: tuple[float, float, float]
     struct.pack_into("<4f", payload, 0x60, 0.0, 0.0, 0.0, 1.0)
     struct.pack_into("<4f", payload, 0x70, *base_position, 1.0)
     struct.pack_into("<III", payload, 0x88, part, 1, children)
-    struct.pack_into("<IIIIII", payload, 0xA8, 0, 0, 0, 0, 1, 1)
+    struct.pack_into("<IIIIII", payload, 0xA8, 0, 0, 0, 0, 1, hierarchy_frames)
     struct.pack_into("<I", payload, 0xC0, 0)
     return _chunk(b"CMSP", bytes(payload))
 
@@ -189,32 +196,63 @@ def _part(
     *,
     parent: bool,
     texrs: tuple[tuple[int, int, int, int, int, int], ...] | None = None,
+    hierarchy_positions: tuple[tuple[float, float, float], ...] | None = None,
 ) -> bytes:
+    selected_positions = hierarchy_positions or ((0.0, 0.0, 0.0),)
+    hierarchy_frames = len(selected_positions)
+    hierarchy_orientations = b"".join(
+        struct.pack("<12f", 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+        for _ in selected_positions
+    )
+    hierarchy_position_bytes = b"".join(
+        struct.pack("<4f", *position, 1.0)
+        for position in selected_positions
+    )
     if parent:
         records = (
             _chunk(b"CHLD", struct.pack("<I", 1))
             + _chunk(b"PRNT", struct.pack("<I", 0))
             + _bbox()
             + _chunk(b"VHFM", b"\x01")
-            + _chunk(b"HORI", bytes(48))
-            + _chunk(b"HPOS", bytes(16))
+            + _chunk(b"HORI", hierarchy_orientations)
+            + _chunk(b"HPOS", hierarchy_position_bytes)
             + _chunk(b"PBKT", b"opaque")
             + _chunk(b"CPOS", b"\x02\x03")
             + _chunk(b"CORI", b"\x04")
             + _pmvb(populated=False)
         )
-        return _chunk(b"MESP", _cmsp(part=0, children=1, base_position=(0.0, 0.0, 0.0), rotated=False) + records)
+        return _chunk(
+            b"MESP",
+            _cmsp(
+                part=0,
+                children=1,
+                base_position=(0.0, 0.0, 0.0),
+                rotated=False,
+                hierarchy_frames=hierarchy_frames,
+            )
+            + records,
+        )
     records = (
         _chunk(b"PRNT", struct.pack("<I", 0))
         + _bbox()
         + _chunk(b"VHFM", b"\x01")
-        + _chunk(b"HORI", bytes(48))
-        + _chunk(b"HPOS", bytes(16))
+        + _chunk(b"HORI", hierarchy_orientations)
+        + _chunk(b"HPOS", hierarchy_position_bytes)
         + _chunk(b"CPOS", b"")
         + _chunk(b"CORI", b"")
         + _pmvb(populated=True, texrs=texrs)
     )
-    return _chunk(b"MESP", _cmsp(part=1, children=0, base_position=(10.0, 20.0, 30.0), rotated=True) + records)
+    return _chunk(
+        b"MESP",
+        _cmsp(
+            part=1,
+            children=0,
+            base_position=(10.0, 20.0, 30.0),
+            rotated=True,
+            hierarchy_frames=hierarchy_frames,
+        )
+        + records,
+    )
 
 
 def _texture(name: str, *, metadata: bytes = bytes(20)) -> bytes:
@@ -233,6 +271,22 @@ def build_fixture_stream() -> bytes:
     struct.pack_into("<I", header, 0x164, 2)
     texture = _chunk(b"CMST", bytes(36)) + _chunk(b"MSHT", _chunk(b"TEXB", bytes(148)))
     return bytes(header) + texture + _part(parent=True) + _part(parent=False) + _chunk(b"BBOX", b"post")
+
+
+def build_hierarchy_frame_fixture_stream() -> bytes:
+    header = bytearray(380)
+    header[0:4] = b"CMSH"
+    struct.pack_into("<I", header, 4, 372)
+    struct.pack_into("<I", header, 0x0C, 1)
+    struct.pack_into("<I", header, 0x164, 2)
+    texture = _chunk(b"CMST", bytes(36)) + _chunk(b"MSHT", _chunk(b"TEXB", bytes(148)))
+    return (
+        bytes(header)
+        + texture
+        + _part(parent=True)
+        + _part(parent=False, hierarchy_positions=((1.0, 2.0, 3.0), (40.0, 50.0, 60.0)))
+        + _chunk(b"BBOX", b"post")
+    )
 
 
 def build_material_fixture_stream(
@@ -390,6 +444,16 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(EXPECTED_OBJ, result)
         _validate_obj_semantics(result)
 
+    def test_opt_in_hierarchy_frame_selects_and_clamps_authored_part_pose(self) -> None:
+        stream = build_hierarchy_frame_fixture_stream()
+
+        self.assertEqual((10.0, 20.0, 30.0), preview.parse_cmsh_stream(stream).parts[1].transform.position)
+        self.assertEqual((1.0, 2.0, 3.0), preview.parse_cmsh_stream(stream, hierarchy_frame=0).parts[1].transform.position)
+        self.assertEqual((40.0, 50.0, 60.0), preview.parse_cmsh_stream(stream, hierarchy_frame=1).parts[1].transform.position)
+        self.assertEqual((40.0, 50.0, 60.0), preview.parse_cmsh_stream(stream, hierarchy_frame=25).parts[1].transform.position)
+        with self.assertRaisesRegex(preview.CmshProfileError, "hierarchy frame"):
+            preview.parse_cmsh_stream(stream, hierarchy_frame=-1)
+
     def test_reference_fixture_emits_owner_and_instances_in_part_sequence_order(self) -> None:
         result = preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream()))
         self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
@@ -515,7 +579,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 with self.assertRaisesRegex(preview.CmshProfileError, "normal transform"):
                     preview.emit_obj(replace(mesh, parts=(mesh.parts[0], transformed)), include_vertex_attributes=True)
 
-    def test_cli_material_and_vertex_attribute_flags_are_explicit_and_forwarded(self) -> None:
+    def test_cli_opt_in_flags_are_explicit_and_forwarded(self) -> None:
         with mock.patch.object(preview, "publish_anonymous_previews", return_value=(2, 0)) as publish:
             status = preview._main(
                 [
@@ -527,6 +591,8 @@ class CmshStaticPreviewTests(unittest.TestCase):
                     "output",
                     "--vertex-attributes",
                     "--primary-material-groups",
+                    "--hierarchy-frame",
+                    "25",
                 ]
             )
 
@@ -537,6 +603,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
             Path("output"),
             include_vertex_attributes=True,
             include_primary_material_groups=True,
+            hierarchy_frame=25,
         )
 
     def test_opt_in_primary_material_groups_use_layer_zero_and_fail_closed(self) -> None:
@@ -716,19 +783,11 @@ class CmshStaticPreviewTests(unittest.TestCase):
 
         self.assertEqual(EXPECTED_REFERENCE_OBJ, result)
 
-    def test_reference_zero_sentinel_source_metadata_rejects_every_near_miss(self) -> None:
+    def test_reference_zero_group_source_ignores_unused_metadata_but_rejects_payload(self) -> None:
         malformed_cmvb = _chunk(b"PMVB", _chunk(b"CMVB", bytes(295)))
         populated_sentinel = _empty_reference_pmvb(stride=0, fvf=0, topology=0, group_count=1)
         cases = [
             ("populated", populated_sentinel, "unsupported bones/reference graph"),
-            ("stride48", _empty_reference_pmvb(stride=48, fvf=0, topology=0), "unsupported bones/reference graph"),
-            ("fvf_only", _empty_reference_pmvb(stride=0, fvf=0x152, topology=0), "unsupported bones/reference graph"),
-            ("topology_only", _empty_reference_pmvb(stride=0, fvf=0, topology=4), "unsupported bones/reference graph"),
-            ("stride_only", _empty_reference_pmvb(stride=36, fvf=0, topology=0), "unsupported bones/reference graph"),
-            ("fvf_topology", _empty_reference_pmvb(stride=0, fvf=0x152, topology=4), "unsupported bones/reference graph"),
-            ("stride_topology", _empty_reference_pmvb(stride=36, fvf=0, topology=4), "unsupported bones/reference graph"),
-            ("stride_fvf", _empty_reference_pmvb(stride=36, fvf=0x152, topology=0), "unsupported bones/reference graph"),
-            ("arbitrary", _empty_reference_pmvb(stride=1, fvf=2, topology=3), "unsupported bones/reference graph"),
             ("residue", _empty_reference_pmvb(stride=0, fvf=0, topology=0, residue=b"x"), "unsupported bones/reference graph"),
             (
                 "child",
@@ -748,6 +807,21 @@ class CmshStaticPreviewTests(unittest.TestCase):
             with self.subTest(case=case):
                 with self.assertRaisesRegex(preview.CmshProfileError, category):
                     preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        for stride, fvf, topology in ((48, 0, 0), (0, 0x152, 4), (1, 2, 3)):
+            parts = reference_fixture_parts()
+            parts[2] = _multipart_part(
+                2,
+                parent=0,
+                base_position=(40.0, 50.0, 60.0),
+                geometry=_empty_reference_pmvb(stride=stride, fvf=fvf, topology=topology),
+                reference_payload=struct.pack("<I", 1),
+            )
+            with self.subTest(stride=stride, fvf=fvf, topology=topology):
+                self.assertEqual(
+                    EXPECTED_REFERENCE_OBJ,
+                    preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream(parts))),
+                )
 
         unsupported_target = bytearray(_reference_geometry())
         cmvb = unsupported_target.find(b"CMVB")
@@ -868,7 +942,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
             with self.assertRaisesRegex(preview.CmshProfileError, "limit exceeded"):
                 preview.emit_obj(preview.parse_cmsh_stream(stream))
 
-    def test_reference_profile_does_not_admit_bones_or_stride48(self) -> None:
+    def test_reference_profile_rejects_bones_and_populated_stride48(self) -> None:
         bone_parts = reference_fixture_parts()
         bone_parts[2] = _multipart_part(
             2,
@@ -894,11 +968,14 @@ class CmshStaticPreviewTests(unittest.TestCase):
         source_stride_parts[2] = _multipart_part(
             2,
             parent=0,
+            base_position=(40.0, 50.0, 60.0),
             geometry=bytes(empty_stride48),
             reference_payload=struct.pack("<I", 1),
         )
-        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
-            preview.parse_cmsh_stream(build_reference_fixture_stream(source_stride_parts))
+        self.assertEqual(
+            EXPECTED_REFERENCE_OBJ,
+            preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream(source_stride_parts))),
+        )
 
     def test_parser_rejects_every_truncation_without_partial_output(self) -> None:
         stream = build_fixture_stream()

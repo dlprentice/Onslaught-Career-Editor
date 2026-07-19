@@ -12,6 +12,7 @@ internal static class CuratedAyaTextureLoader
     {
         Dxt1,
         Dxt2,
+        Rgba8,
     }
 
     private const int MaximumSourceBytes = 2 * 1024 * 1024;
@@ -30,15 +31,29 @@ internal static class CuratedAyaTextureLoader
         }
 
         byte[] dds = InflateAya(source);
-        ReadOnlySpan<byte> expectedFourCc = expectedCompression == Compression.Dxt1
-            ? "DXT1"u8
-            : "DXT2"u8;
-        if (dds.Length < 128 ||
-            !dds.AsSpan(0, 4).SequenceEqual("DDS "u8) ||
-            !dds.AsSpan(84, 4).SequenceEqual(expectedFourCc))
+        if (dds.Length < 128 || !dds.AsSpan(0, 4).SequenceEqual("DDS "u8))
         {
             throw new InvalidDataException(
-                $"Curated texture is not an AYA-wrapped {expectedCompression} DDS image.");
+                "Curated texture is not an AYA-wrapped DDS image.");
+        }
+        bool expectedPixelFormat = expectedCompression switch
+        {
+            Compression.Dxt1 => dds.AsSpan(84, 4).SequenceEqual("DXT1"u8),
+            Compression.Dxt2 => dds.AsSpan(84, 4).SequenceEqual("DXT2"u8),
+            Compression.Rgba8 =>
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(80, 4)) == 0x41 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(84, 4)) == 0 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(88, 4)) == 32 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(92, 4)) == 0x00FF0000 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(96, 4)) == 0x0000FF00 &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(100, 4)) == 0x000000FF &&
+                BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(104, 4)) == 0xFF000000,
+            _ => false,
+        };
+        if (!expectedPixelFormat)
+        {
+            throw new InvalidDataException(
+                $"Curated texture does not match the expected {expectedCompression} DDS pixel format.");
         }
 
         var image = new Image();

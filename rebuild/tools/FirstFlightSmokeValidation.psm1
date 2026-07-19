@@ -72,6 +72,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailAquilaPartCount' 63 $report.retailAquilaPartCount
     Assert-SmokeValue 'retailAquilaAnimatedPartCount' 20 $report.retailAquilaAnimatedPartCount
     Assert-SmokeNear 'retailAquilaStandingClearance' 0.059322417 $report.retailAquilaStandingClearance
+    Assert-SmokeValue 'retailCockpitSurfaceCount' 2 $report.retailCockpitSurfaceCount
     Assert-SmokeNear 'level100PlayerStartRelativeHeight' -0.21071243 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
     Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
@@ -130,34 +131,6 @@ function Test-FirstFlightSmokeEvidence {
             throw "First Flight world appears blank or under-rendered: $($worldColors.Count) sampled colors, $worldNonBlackSamples non-black samples."
         }
 
-        function Measure-BrightRegion {
-            param(
-                [int]$Left,
-                [int]$Top,
-                [int]$Right,
-                [int]$Bottom
-            )
-
-            $bright = 0
-            for ($regionY = $Top; $regionY -lt $Bottom; $regionY += 4) {
-                for ($regionX = $Left; $regionX -lt $Right; $regionX += 4) {
-                    $pixel = $bitmap.GetPixel($regionX, $regionY)
-                    if (($pixel.R + $pixel.G + $pixel.B) -gt 420) {
-                        $bright++
-                    }
-                }
-            }
-
-            return $bright
-        }
-
-        $identityBright = Measure-BrightRegion 28 26 350 186
-        $objectiveLeft = [Math]::Max(0, [int]($bitmap.Width / 2) - 220)
-        $objectiveBright = Measure-BrightRegion $objectiveLeft 26 ($objectiveLeft + 440) 80
-        $modeBright = Measure-BrightRegion ($bitmap.Width - 334) 26 ($bitmap.Width - 28) 108
-        if ($identityBright -lt 300 -or $objectiveBright -lt 45 -or $modeBright -lt 40) {
-            throw "First Flight HUD appears under-rendered: identity=$identityBright, objective=$objectiveBright, mode=$modeBright bright samples."
-        }
     }
     finally {
         $bitmap.Dispose()
@@ -174,7 +147,6 @@ function Test-FirstFlightSmokeEvidence {
         StateHash = [string]$report.stateHash
         SampledColorCount = $colors.Count
         NonBlackSampleCount = $nonBlackSamples
-        HudBrightSampleCount = $identityBright + $objectiveBright + $modeBright
         WorldSampledColorCount = $worldColors.Count
         WorldNonBlackSampleCount = $worldNonBlackSamples
         ScreenshotSha256 = $screenshotHash

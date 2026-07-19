@@ -10,9 +10,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float UnitsToMeters = 0.001f;
     private const float RetailJetBaseClearance = 0.6706632f;
     private const float RetailWalkerCenterOfGravityHeight = 1.9f;
-    private const float RetailThirdPersonRearOffset = 5f;
-    private const float RetailThirdPersonHeightOffset = 3.25f;
-    private const float RetailThirdPersonFocusOffset = 6f;
     private const float RetailVerticalFovDegrees = 58.7155f;
 
     private static readonly Color SteelDark = new(0.075f, 0.105f, 0.115f);
@@ -30,6 +27,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
     private MeshInstance3D _jetMesh = null!;
+    private MeshInstance3D _cockpitMesh = null!;
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Camera3D _camera = null!;
@@ -60,6 +58,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailAquilaAnimatedPartCount => _walkerAsset.AnimatedPartCount;
 
     public float RetailAquilaStandingClearance => _walkerAsset.StandingClearance;
+
+    public int RetailCockpitSurfaceCount => _cockpitMesh.Mesh?.GetSurfaceCount() ?? 0;
 
     public int RetailLevel100FacilityCount => _level100Facilities.Count;
 
@@ -395,20 +395,64 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         _camera = new Camera3D
         {
-            Name = "FollowCamera",
+            Name = "RetailFirstPersonCamera",
             Fov = RetailVerticalFovDegrees,
             Near = 0.1f,
             Far = 700f,
             Current = true,
         };
         AddChild(_camera);
+
+        Texture2D cockpitTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Aquila/Textures/cockpit.texture.aya",
+            512,
+            512);
+        Texture2D gunLightTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Aquila/Textures/bluegun-light.texture.aya",
+            64,
+            64);
+        var cockpitMaterial = new StandardMaterial3D
+        {
+            AlbedoTexture = cockpitTexture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            Roughness = 1f,
+        };
+        var gunLightMaterial = new StandardMaterial3D
+        {
+            AlbedoTexture = gunLightTexture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+            EmissionEnabled = true,
+            Emission = new Color(0.12f, 0.45f, 1f),
+            EmissionTexture = gunLightTexture,
+            EmissionEnergyMultiplier = 1.6f,
+        };
+        _cockpitMesh = new MeshInstance3D
+        {
+            Name = "RetailWalkerCockpit",
+            Mesh = CuratedObjMeshLoader.Load(
+                "res://Assets/Aquila/aquila-walker-cockpit.obj",
+                new Dictionary<string, Material>(StringComparer.Ordinal)
+                {
+                    ["texture-0000"] = gunLightMaterial,
+                    ["texture-0001"] = cockpitMaterial,
+                }),
+            Position = new Vector3(0f, -0.01f, -0.06f),
+            RotationDegrees = new Vector3(-90f, 0f, 0f),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+        _camera.AddChild(_cockpitMesh);
     }
 
     private void UpdatePlayerShape(WorldSnapshot snapshot)
     {
-        bool showJet = _modeBlend >= 0.5f;
-        _walkerAsset.Root.Visible = !showJet;
-        _jetMesh.Visible = showJet;
+        // Retail first person renders the authored internal cockpit instead of
+        // the player's exterior vehicle mesh.
+        _walkerAsset.Root.Visible = false;
+        _jetMesh.Visible = false;
 
         float transitionLift = snapshot.Transition == VehicleTransition.WalkerToJet
             ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
@@ -539,11 +583,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         Vector3 centerOfGravity = playerGroundPosition +
             (Vector3.Up * RetailWalkerCenterOfGravityHeight);
 
-        Vector3 focus = centerOfGravity + (forward * RetailThirdPersonFocusOffset);
-        Vector3 desired = centerOfGravity - (forward * RetailThirdPersonRearOffset) +
-            (Vector3.Up * RetailThirdPersonHeightOffset);
-        _camera.Position = desired;
-        _camera.LookAt(focus, Vector3.Up);
+        _camera.Position = centerOfGravity;
+        _camera.LookAt(centerOfGravity + forward, Vector3.Up);
         _level100Sky.Position = _camera.Position;
     }
 

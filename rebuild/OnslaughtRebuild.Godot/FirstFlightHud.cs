@@ -7,308 +7,304 @@ namespace OnslaughtRebuild.GodotClient;
 
 public sealed partial class FirstFlightHud : CanvasLayer
 {
-    private static readonly Color PanelBackground = new(0.025f, 0.035f, 0.045f, 0.92f);
-    private static readonly Color PanelBorder = new(0.24f, 0.33f, 0.38f, 0.9f);
-    private static readonly Color TextPrimary = new(0.92f, 0.96f, 0.97f);
-    private static readonly Color TextMuted = new(0.60f, 0.69f, 0.72f);
-    private static readonly Color Energy = new(0.13f, 0.80f, 0.88f);
-    private static readonly Color Shield = new(0.24f, 0.48f, 0.93f);
-    private static readonly Color Hull = new(0.32f, 0.78f, 0.43f);
-    private static readonly Color Alert = new(0.96f, 0.59f, 0.22f);
-
-    private Label _objectiveLabel = null!;
-    private Label _modeLabel = null!;
-    private Label _statusLabel = null!;
-    private ProgressBar _energyBar = null!;
-    private ProgressBar _shieldBar = null!;
-    private ProgressBar _hullBar = null!;
-    private PanelContainer _controlsPanel = null!;
-    private double _elapsed;
+    private RetailHudBaseLayer _baseLayer = null!;
+    private RetailHudGlowLayer _glowLayer = null!;
+    private RetailHudTextLayer _textLayer = null!;
 
     public bool IsReadyForSmoke =>
-        IsInstanceValid(_objectiveLabel) &&
-        IsInstanceValid(_modeLabel) &&
-        IsInstanceValid(_energyBar) &&
-        IsInstanceValid(_controlsPanel);
+        IsInstanceValid(_baseLayer) &&
+        IsInstanceValid(_glowLayer) &&
+        IsInstanceValid(_textLayer) &&
+        _baseLayer.IsReady &&
+        _glowLayer.IsReady &&
+        _textLayer.IsReady;
 
     public void Initialize()
     {
-        var root = new Control
-        {
-            Name = "HudRoot",
-            AnchorRight = 1f,
-            AnchorBottom = 1f,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        AddChild(root);
+        Texture2D crosshair = LoadHudTexture("crosshair-outline", 64, 64);
+        Texture2D circleDarkener = LoadHudTexture("circle-darkener", 128, 128);
+        Texture2D radioView = LoadHudTexture("radio-view", 128, 128);
+        Texture2D weaponFill = LoadHudTexture("weapon-fill", 128, 128);
+        Texture2D objectiveInnerCentre = LoadHudTexture("objective-inner-centre", 64, 128);
+        Texture2D objectiveInnerLeft = LoadHudTexture("objective-inner-left", 64, 128);
+        Texture2D objectiveInnerRight = LoadHudTexture("objective-inner-right", 64, 128);
+        Texture2D objectiveLeft = LoadHudTexture("objective-left", 128, 128);
+        Texture2D objectiveRight = LoadHudTexture("objective-right", 128, 128);
 
-        BuildIdentityPanel(root);
-        BuildObjectivePanel(root);
-        BuildModePanel(root);
-        BuildControlsPanel(root);
-        BuildReticle(root);
-    }
+        _baseLayer = new RetailHudBaseLayer(
+            crosshair,
+            circleDarkener,
+            radioView,
+            weaponFill,
+            objectiveInnerCentre,
+            objectiveInnerLeft,
+            objectiveInnerRight,
+            objectiveLeft,
+            objectiveRight);
+        AddFullScreenControl(_baseLayer);
 
-    public override void _Process(double delta)
-    {
-        _elapsed += delta;
-        if (_elapsed > 14d)
-        {
-            Color color = _controlsPanel.Modulate;
-            color.A = Mathf.MoveToward(color.A, 0.62f, (float)delta * 0.25f);
-            _controlsPanel.Modulate = color;
-        }
+        _glowLayer = new RetailHudGlowLayer(
+            LoadHudTexture(
+                "radar-outline",
+                128,
+                128,
+                CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadHudTexture(
+                "weapon-outline",
+                128,
+                128,
+                CuratedAyaTextureLoader.Compression.Dxt1));
+        AddFullScreenControl(_glowLayer);
+
+        _textLayer = new RetailHudTextLayer(
+            LoadHudTexture(
+                "font-13ps",
+                256,
+                256,
+                CuratedAyaTextureLoader.Compression.Rgba8));
+        AddFullScreenControl(_textLayer);
     }
 
     public void UpdateFromSnapshot(WorldSnapshot snapshot)
     {
-        SetProgressValue(_energyBar, snapshot.Energy);
-        SetProgressValue(_shieldBar, snapshot.Shield);
-        SetProgressValue(_hullBar, snapshot.Hull);
-
         string objective = snapshot.Level100Phase switch
         {
-            Level100OpeningPhase.ReachTargetZone1 => "OBJECTIVE  |  REACH TARGET ZONE 1",
+            Level100OpeningPhase.ReachTargetZone1 => "REACH TARGET ZONE 1",
             Level100OpeningPhase.TargetZone1DispatchPending => "TARGET ZONE 1 REACHED",
-            Level100OpeningPhase.ReachFiringRange => "OBJECTIVE  |  PROCEED TO FIRING RANGE",
+            Level100OpeningPhase.ReachFiringRange => "PROCEED TO FIRING RANGE",
             Level100OpeningPhase.FiringRangeDispatchPending => "FIRING RANGE REACHED",
-            _ => "LEVEL 100 OPENING SLICE COMPLETE",
+            _ => "OPENING SLICE COMPLETE",
         };
-        SetLabelText(_objectiveLabel, objective);
-        SetLabelColor(
-            _objectiveLabel,
-            snapshot.Level100Phase == Level100OpeningPhase.FiringRangeReached ? Hull : TextPrimary);
-
-        if (snapshot.Transition == VehicleTransition.WalkerToJet)
-        {
-            SetLabelText(_modeLabel, $"WALKER → JET  {snapshot.TransformTicksRemaining}/{SimulationConstants.WalkerToJetTransitionTicks}");
-            SetLabelColor(_modeLabel, Alert);
-            SetLabelText(_statusLabel, "Retail-timed transition | Movement, turning, and weapons locked");
-        }
-        else if (snapshot.TransformTicksRemaining > 0)
-        {
-            SetLabelText(_modeLabel, $"TRANSFORMING  {snapshot.TransformTicksRemaining}");
-            SetLabelColor(_modeLabel, Alert);
-            SetLabelText(_statusLabel, "Movement and weapons are locked during transformation");
-        }
-        else if (snapshot.Mode == VehicleMode.Jet)
-        {
-            SetLabelText(_modeLabel, "JET MODE");
-            SetLabelColor(_modeLabel, Energy);
-            SetLabelText(_statusLabel, "Fast movement | Energy drains | Shield offline");
-        }
-        else
-        {
-            SetLabelText(_modeLabel, "WALKER MODE");
-            SetLabelColor(_modeLabel, TextPrimary);
-            SetLabelText(_statusLabel, "Measured acceleration, coast, and turn inertia");
-        }
+        _textLayer.SetText(objective);
     }
 
     public void MarkInputActivity()
     {
-        _elapsed = 0d;
-        Color color = _controlsPanel.Modulate;
-        color.A = 1f;
-        _controlsPanel.Modulate = color;
+        // The released HUD has no persistent controls legend to reveal or fade.
     }
 
-    private void BuildIdentityPanel(Control root)
+    private static Texture2D LoadHudTexture(
+        string name,
+        int width,
+        int height,
+        CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2)
     {
-        var panel = CreatePanel("IdentityPanel");
-        panel.OffsetLeft = 24f;
-        panel.OffsetTop = 22f;
-        panel.OffsetRight = 354f;
-        panel.OffsetBottom = 190f;
-        root.AddChild(panel);
-
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 5);
-        panel.AddChild(stack);
-        stack.AddChild(CreateLabel("LEVEL 100 OPENING SLICE", 22, TextPrimary));
-        stack.AddChild(CreateLabel(
-            "Released terrain + facilities",
-            13,
-            TextMuted));
-
-        _energyBar = AddResourceRow(stack, "ENERGY", Energy);
-        _shieldBar = AddResourceRow(stack, "SHIELD", Shield);
-        _hullBar = AddResourceRow(stack, "HULL", Hull);
+        return CuratedAyaTextureLoader.Load(
+            $"res://Assets/Hud/{name}.texture.aya",
+            width,
+            height,
+            compression);
     }
 
-    private void BuildObjectivePanel(Control root)
+    private void AddFullScreenControl(Control control)
     {
-        var panel = CreatePanel("ObjectivePanel");
-        panel.AnchorLeft = 0.5f;
-        panel.AnchorRight = 0.5f;
-        panel.OffsetLeft = -225f;
-        panel.OffsetRight = 225f;
-        panel.OffsetTop = 22f;
-        panel.OffsetBottom = 82f;
-        root.AddChild(panel);
-
-        _objectiveLabel = CreateLabel("OBJECTIVE  |  REACH TARGET ZONE 1", 18, TextPrimary);
-        _objectiveLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _objectiveLabel.VerticalAlignment = VerticalAlignment.Center;
-        panel.AddChild(_objectiveLabel);
+        control.AnchorRight = 1f;
+        control.AnchorBottom = 1f;
+        control.MouseFilter = Control.MouseFilterEnum.Ignore;
+        AddChild(control);
     }
 
-    private void BuildModePanel(Control root)
+    private readonly record struct RetailHudLayout(float Scale, Vector2 Origin)
     {
-        var panel = CreatePanel("ModePanel");
-        panel.AnchorLeft = 1f;
-        panel.AnchorRight = 1f;
-        panel.OffsetLeft = -338f;
-        panel.OffsetRight = -24f;
-        panel.OffsetTop = 22f;
-        panel.OffsetBottom = 112f;
-        root.AddChild(panel);
+        private const float ReferenceWidth = 1600f;
+        private const float ReferenceHeight = 900f;
 
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 5);
-        panel.AddChild(stack);
-        _modeLabel = CreateLabel("WALKER MODE", 20, TextPrimary);
-        _modeLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        stack.AddChild(_modeLabel);
-        _statusLabel = CreateLabel("Energy and shield regenerate", 13, TextMuted);
-        _statusLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        _statusLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        stack.AddChild(_statusLabel);
-    }
-
-    private void BuildControlsPanel(Control root)
-    {
-        _controlsPanel = CreatePanel("ControlsPanel");
-        _controlsPanel.AnchorLeft = 0.5f;
-        _controlsPanel.AnchorRight = 0.5f;
-        _controlsPanel.AnchorTop = 1f;
-        _controlsPanel.AnchorBottom = 1f;
-        _controlsPanel.OffsetLeft = -390f;
-        _controlsPanel.OffsetRight = 390f;
-        _controlsPanel.OffsetTop = -70f;
-        _controlsPanel.OffsetBottom = -20f;
-        root.AddChild(_controlsPanel);
-
-        var controls = CreateLabel(
-            "WASD  MOVE     ←→  LOOK     SPACE  FIRE     Q  TRANSFORM     R  RESET     ESC  EXIT",
-            15,
-            TextPrimary);
-        controls.HorizontalAlignment = HorizontalAlignment.Center;
-        controls.VerticalAlignment = VerticalAlignment.Center;
-        _controlsPanel.AddChild(controls);
-    }
-
-    private static void BuildReticle(Control root)
-    {
-        var horizontal = new ColorRect
+        public static RetailHudLayout For(Vector2 size)
         {
-            Name = "ReticleHorizontal",
-            Color = new Color(0.90f, 0.95f, 0.95f, 0.78f),
-            AnchorLeft = 0.5f,
-            AnchorRight = 0.5f,
-            AnchorTop = 0.5f,
-            AnchorBottom = 0.5f,
-            OffsetLeft = -9f,
-            OffsetRight = 9f,
-            OffsetTop = -1f,
-            OffsetBottom = 1f,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        root.AddChild(horizontal);
+            float scale = Mathf.Min(size.X / ReferenceWidth, size.Y / ReferenceHeight);
+            return new RetailHudLayout(
+                scale,
+                new Vector2(
+                    (size.X - (ReferenceWidth * scale)) * 0.5f,
+                    (size.Y - (ReferenceHeight * scale)) * 0.5f));
+        }
 
-        var vertical = new ColorRect
+        public Rect2 Rect(float x, float y, float width, float height)
         {
-            Name = "ReticleVertical",
-            Color = horizontal.Color,
-            AnchorLeft = 0.5f,
-            AnchorRight = 0.5f,
-            AnchorTop = 0.5f,
-            AnchorBottom = 0.5f,
-            OffsetLeft = -1f,
-            OffsetRight = 1f,
-            OffsetTop = -9f,
-            OffsetBottom = 9f,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        root.AddChild(vertical);
-    }
+            return new Rect2(
+                Origin + (new Vector2(x, y) * Scale),
+                new Vector2(width, height) * Scale);
+        }
 
-    private static PanelContainer CreatePanel(string name)
-    {
-        var panel = new PanelContainer
+        public Vector2 Point(float x, float y)
         {
-            Name = name,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        panel.AddThemeStyleboxOverride(
-            "panel",
-            VisualPrimitives.CreatePanelStyle(PanelBackground, PanelBorder));
-        return panel;
-    }
-
-    private static Label CreateLabel(string text, int size, Color color)
-    {
-        var label = new Label
-        {
-            Text = text,
-            Modulate = color,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        label.AddThemeFontSizeOverride("font_size", size);
-        return label;
-    }
-
-    private static ProgressBar AddResourceRow(VBoxContainer parent, string labelText, Color fillColor)
-    {
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 8);
-        parent.AddChild(row);
-
-        var label = CreateLabel(labelText, 12, TextMuted);
-        label.CustomMinimumSize = new Vector2(54f, 16f);
-        row.AddChild(label);
-
-        var bar = new ProgressBar
-        {
-            MinValue = 0,
-            MaxValue = 1000,
-            Value = 1000,
-            ShowPercentage = false,
-            CustomMinimumSize = new Vector2(225f, 12f),
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        bar.AddThemeStyleboxOverride(
-            "background",
-            VisualPrimitives.CreatePanelStyle(new Color(0.07f, 0.09f, 0.10f, 0.95f), new Color(0.13f, 0.16f, 0.17f)));
-        bar.AddThemeStyleboxOverride(
-            "fill",
-            VisualPrimitives.CreatePanelStyle(fillColor, fillColor.Lightened(0.15f)));
-        row.AddChild(bar);
-        return bar;
-    }
-
-    private static void SetProgressValue(ProgressBar bar, double value)
-    {
-        if (!Mathf.IsEqualApprox((float)bar.Value, (float)value))
-        {
-            bar.Value = value;
+            return Origin + (new Vector2(x, y) * Scale);
         }
     }
 
-    private static void SetLabelText(Label label, string text)
+    private sealed partial class RetailHudBaseLayer(
+        Texture2D crosshair,
+        Texture2D circleDarkener,
+        Texture2D radioView,
+        Texture2D weaponFill,
+        Texture2D objectiveInnerCentre,
+        Texture2D objectiveInnerLeft,
+        Texture2D objectiveInnerRight,
+        Texture2D objectiveLeft,
+        Texture2D objectiveRight) : Control
     {
-        if (!string.Equals(label.Text, text, StringComparison.Ordinal))
+        private static readonly Color ObjectiveBacking = new(0.015f, 0.025f, 0.055f, 0.86f);
+        private static readonly Color RadioBlue = new(0.10f, 0.34f, 1f, 0.92f);
+        private static readonly Color WeaponGreen = new(0.24f, 1f, 0.38f, 0.82f);
+
+        public bool IsReady =>
+            crosshair.GetWidth() == 64 &&
+            circleDarkener.GetWidth() == 128 &&
+            radioView.GetWidth() == 128 &&
+            weaponFill.GetWidth() == 128 &&
+            objectiveInnerCentre.GetWidth() == 64 &&
+            objectiveInnerLeft.GetWidth() == 64 &&
+            objectiveInnerRight.GetWidth() == 64 &&
+            objectiveLeft.GetWidth() == 128 &&
+            objectiveRight.GetWidth() == 128;
+
+        public override void _Draw()
         {
-            label.Text = text;
+            RetailHudLayout layout = RetailHudLayout.For(Size);
+
+            Rect2 central = layout.Rect(704f, 354f, 192f, 192f);
+            DrawTextureRectRegion(
+                circleDarkener,
+                layout.Rect(726f, 376f, 148f, 148f),
+                new Rect2(0f, 0f, 98f, 98f),
+                new Color(1f, 1f, 1f, 0.28f));
+            DrawRotatedTexture(weaponFill, central, Mathf.Pi * 0.5f, WeaponGreen);
+            DrawTextureRect(
+                crosshair,
+                layout.Rect(752f, 402f, 96f, 96f),
+                false,
+                new Color(0.94f, 0.96f, 1f, 0.88f));
+
+            DrawTextureRectRegion(
+                radioView,
+                layout.Rect(1480f, 780f, 112f, 112f),
+                new Rect2(0f, 0f, 98f, 98f),
+                RadioBlue);
+
+            DrawTextureRect(
+                objectiveInnerLeft,
+                layout.Rect(638f, 789f, 64f, 128f),
+                false,
+                ObjectiveBacking);
+            DrawTextureRect(
+                objectiveInnerCentre,
+                layout.Rect(702f, 789f, 210f, 128f),
+                false,
+                ObjectiveBacking);
+            DrawTextureRect(
+                objectiveInnerRight,
+                layout.Rect(912f, 789f, 64f, 128f),
+                false,
+                ObjectiveBacking);
+            DrawTextureRect(objectiveLeft, layout.Rect(610f, 789f, 128f, 128f), false);
+            DrawTextureRect(objectiveRight, layout.Rect(870f, 789f, 128f, 128f), false);
+        }
+
+        private void DrawRotatedTexture(Texture2D texture, Rect2 rect, float rotation, Color modulate)
+        {
+            Vector2 center = rect.GetCenter();
+            DrawSetTransform(center, rotation, Vector2.One);
+            DrawTextureRect(
+                texture,
+                new Rect2(-rect.Size * 0.5f, rect.Size),
+                false,
+                modulate);
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
         }
     }
 
-    private static void SetLabelColor(Label label, Color color)
+    private sealed partial class RetailHudGlowLayer(
+        Texture2D radarOutline,
+        Texture2D weaponOutline) : Control
     {
-        if (!label.Modulate.IsEqualApprox(color))
+        public bool IsReady => radarOutline.GetWidth() == 128 && weaponOutline.GetWidth() == 128;
+
+        public override void _Ready()
         {
-            label.Modulate = color;
+            Material = new CanvasItemMaterial
+            {
+                BlendMode = CanvasItemMaterial.BlendModeEnum.Add,
+            };
+        }
+
+        public override void _Draw()
+        {
+            RetailHudLayout layout = RetailHudLayout.For(Size);
+            DrawTextureRect(
+                radarOutline,
+                layout.Rect(8f, 772f, 128f, 128f),
+                false,
+                new Color(0.74f, 0.70f, 0.54f, 0.86f));
+
+            Rect2 central = layout.Rect(704f, 354f, 192f, 192f);
+            Vector2 center = central.GetCenter();
+            DrawSetTransform(center, Mathf.Pi * 0.5f, Vector2.One);
+            DrawTextureRect(
+                weaponOutline,
+                new Rect2(-central.Size * 0.5f, central.Size),
+                false,
+                new Color(0.82f, 0.82f, 0.76f, 0.76f));
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
+    }
+
+    private sealed partial class RetailHudTextLayer(Texture2D fontAtlas) : Control
+    {
+        private const int FirstGlyph = 32;
+        private const int GlyphColumns = 16;
+        private const int GlyphCellSize = 16;
+        private const int GlyphAdvance = 8;
+        private string _text = string.Empty;
+
+        public bool IsReady => fontAtlas.GetWidth() == 256 && fontAtlas.GetHeight() == 256;
+
+        public void SetText(string text)
+        {
+            if (string.Equals(_text, text, StringComparison.Ordinal))
+            {
+                return;
+            }
+            _text = text;
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            if (_text.Length == 0)
+            {
+                return;
+            }
+
+            RetailHudLayout layout = RetailHudLayout.For(Size);
+            float glyphScale = layout.Scale;
+            float glyphAdvance = GlyphAdvance * glyphScale;
+            float left = (Size.X - (_text.Length * glyphAdvance)) * 0.5f;
+            float top = layout.Point(0f, 831f).Y;
+
+            for (int index = 0; index < _text.Length; index++)
+            {
+                int code = _text[index];
+                if (code is < FirstGlyph or >= FirstGlyph + 96)
+                {
+                    code = '?';
+                }
+                int glyph = code - FirstGlyph;
+                var source = new Rect2(
+                    (glyph % GlyphColumns) * GlyphCellSize,
+                    (glyph / GlyphColumns) * GlyphCellSize,
+                    GlyphCellSize,
+                    GlyphCellSize);
+                var destination = new Rect2(
+                    left + (index * glyphAdvance) - (4f * glyphScale),
+                    top,
+                    GlyphCellSize * glyphScale,
+                    GlyphCellSize * glyphScale);
+                DrawTextureRectRegion(
+                    fontAtlas,
+                    destination,
+                    source,
+                    new Color(0.96f, 0.97f, 1f, 0.96f));
+            }
         }
     }
 }
