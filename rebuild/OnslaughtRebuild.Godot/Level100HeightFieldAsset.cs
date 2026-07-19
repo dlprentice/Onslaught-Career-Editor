@@ -145,7 +145,7 @@ internal sealed class Level100HeightFieldAsset
         Vector3 sunlightDirection = new(
             beaLightDirection.X,
             -beaLightDirection.Z,
-            beaLightDirection.Y);
+            -beaLightDirection.Y);
 
         var samples = new short[HfdtPayloadSize / sizeof(short)];
         for (int index = 0; index < samples.Length; index++)
@@ -169,8 +169,8 @@ internal sealed class Level100HeightFieldAsset
 
     public float SampleRelativeHeight(float relativeX, float relativeZ)
     {
-        return SampleRetailHeight(relativeX + PlayerStartX, relativeZ + PlayerStartZ) -
-            PlayerStartElevation;
+        return PlayerStartElevation -
+            SampleRetailHeight(relativeX + PlayerStartX, relativeZ + PlayerStartZ);
     }
 
     private ArrayMesh BuildCoarseMesh()
@@ -185,15 +185,15 @@ internal sealed class Level100HeightFieldAsset
         {
             for (int x = 0; x <= MapExtent; x += TileWidth)
             {
-                float height = SampleRetailHeight(x, z) - PlayerStartElevation;
-                vertices[vertexIndex] = new Vector3(x - PlayerStartX, height, z - PlayerStartZ);
+                float height = PlayerStartElevation - SampleRetailHeight(x, z);
+                vertices[vertexIndex] = new Vector3(x - PlayerStartX, height, PlayerStartZ - z);
 
                 float left = SampleRetailHeight(Math.Max(0, x - TileWidth), z);
                 float right = SampleRetailHeight(Math.Min(MapExtent, x + TileWidth), z);
                 float back = SampleRetailHeight(x, Math.Max(0, z - TileWidth));
                 float forward = SampleRetailHeight(x, Math.Min(MapExtent, z + TileWidth));
                 normals[vertexIndex] = new Vector3(
-                    left - right,
+                    right - left,
                     TileWidth * 2f,
                     back - forward).Normalized();
                 textureCoordinates[vertexIndex] = new Vector2(

@@ -57,8 +57,12 @@ sampling pattern.
 
 The terrain mesh is translated so the authored player-one start
 `(288.6875, 243.25, -10)` is the reconstruction origin. The client samples the
-same retained heightfield to place presentation objects on the surface. This
-does not yet put terrain elevation or collision into deterministic Core.
+same retained heightfield to place presentation objects on the surface. BEA's
+`(X, Y, Z-down)` coordinates map to Godot `(X, -Z, -Y)`. At the start, the
+heightfield samples `-10.210713`; an attached copied-retail Battle Engine held
+`Z=-12.111499`, agreeing with the released 1.9-unit walker center-of-gravity
+height to within one millimeter. This does not yet put terrain elevation or
+collision into deterministic Core.
 
 ## Terrain appearance and environment consumed by the slice
 
@@ -101,6 +105,11 @@ world's horizontal X/Y plane. The current slice consumes:
 | Target Zone 1 | `(-43.1875, 33.5)` | radius `5` |
 | Firing Range | `(-69.6875, 72.75)` | radius `5` |
 
+After the retail opening fly-in, five uninterrupted read-only samples held the
+same first-person `CThingCamera`, position, yaw, and horizontal forward column
+`(-0.488029, 0.872827)`. The presentation uses that attached view direction;
+it does not infer placement from a transient fly-in frame.
+
 `TargetZone1.msl` and `FiringRange.msl` each wait 0.5 seconds before posting
 their event. `LevelScript.msl` activates Target Zone 1 first, then makes the
 Firing Range the objective after `Reached Target Zone 1`.
@@ -112,4 +121,5 @@ two retained render meshes represent the intact facilities; their released
 damage and destruction states are not implemented. Terrain collision and
 movement response, retail detail passes, facility animation, complete world
 population, and complete Level 100 mission behavior are not established by
-this slice.
+this slice. Core's provisional combat targets and the two trigger positions are
+not rendered as synthetic models or beacons in the Level 100 world.

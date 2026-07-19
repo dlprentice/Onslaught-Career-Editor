@@ -80,9 +80,10 @@ Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
-state. The presentation camera now uses clean Level 100's released first-person
-view: the Aquila center of gravity, 58.7155-degree vertical field of view, 0.1
-near plane, and the authored frame-25 walker cockpit. Camera pitch response and
+state. The presentation camera now uses clean Level 100's released attached
+first-person view: the Aquila center of gravity, horizontal orientation column,
+58.7155-degree vertical field of view, 0.1 near plane, and the authored frame-25
+walker cockpit. Camera pitch response and
 terrain clipping, eight-way movement projection,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
 collision/response, AI, the remaining mission, audio, campaign, and networking
@@ -102,9 +103,10 @@ uses twelve exact HUD textures, including the uncompressed released font atlas.
 The shared secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
 particle, facility destruction, procedural foot placement/terrain IK,
 transform animation, HUD contacts and state logic, radio portraits/video,
-tutorial dialogue and gates, and the full mission remain unimplemented; three
-synthetic combat targets still
-exercise the older firing path and are not Level 100 parity.
+tutorial dialogue and gates, and the full mission remain unimplemented. Core's
+three synthetic combat targets still exercise the older firing path, but the
+Level 100 presentation no longer draws them or synthetic objective beacons as
+retail scenery.
 
 ## Verify
 

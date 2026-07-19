@@ -46,10 +46,12 @@ Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
 of the jet, Control Tower, and Tank Factory meshes; their exact source/output
 hashes live with the assets. The released Level 100
 WRES placement records now set the player start heading, two nearby facility
-placements, and the Target Zone 1 and Firing Range trigger locations. The loose
-mission scripts establish their order and 0.5-second event delays. The retained
-`HFLD` uses the released loader's 64×64 tiled sample layout, height scale, and
-65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and the released
+placements, and the Target Zone 1 and Firing Range trigger locations. The client
+maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
+retained meshes, facilities, sky, light, camera, and Core-relative positions.
+The loose mission scripts establish their order and 0.5-second event delays.
+The retained `HFLD` uses the released loader's 64×64 tiled sample layout,
+height scale, and 65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and the released
 `0x0047EFF0` blend path produce the 512×512 macro landscape texture. The client
 preserves each retained mesh group's layer-zero `TEXR` assignment and directly
 decodes eight exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
@@ -79,11 +81,14 @@ control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
 16-tick walker-to-jet transition. Jet forward speed and energy drain retain
 earlier bounded measurements.
 
-A clean copied Level 100 run starts player zero with current/preferred view `1`
-and the first-person `CThingCamera` vtable at `0x005DBB88`. Its position is the
-Battle Engine position, and the Steam 16:9/zoom-1 projection term `0.5625`
-gives a 58.7155-degree vertical field of view. The cockpit pointer at Battle
-Engine offset `0x528` selected animation index `1`; the exact `cockpit2.msh`
+A clean copied Level 100 run starts player zero with current/preferred view `1`.
+After the opening fly-in, five uninterrupted samples held the same active camera
+pointer and first-person `CThingCamera` vtable `0x005DBB88`. The Battle Engine
+position remained `(288.6875, 243.25, -12.111499)`, yaw remained `0.509829998`,
+and the horizontal forward column remained `(-0.488029, 0.872827)`. The camera
+position is the Battle Engine position, and the Steam 16:9/zoom-1 projection term
+`0.5625` gives a 58.7155-degree vertical field of view. The cockpit pointer at
+Battle Engine offset `0x528` selected animation index `1`; the exact `cockpit2.msh`
 `CAMD` table identifies that as `walk`, authored hierarchy frame 25. Runtime
 also reported the cockpit render flag enabled and no local position offset.
 The retained 21-part cockpit converts deterministically at that frame and loads
@@ -121,8 +126,8 @@ A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four exterior meshes
 with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
 cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
-retained heightfield and exact macro terrain inputs, exposes both mission
-markers, renders, advances, preserves the expected
+retained heightfield and exact macro terrain inputs, omits synthetic target and
+objective-marker scenery, renders, advances, preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or
 terrain-detail passes, procedural leg solving, collision, complete environment
 population, the complete mission, camera pitch/occlusion, full HUD behavior,

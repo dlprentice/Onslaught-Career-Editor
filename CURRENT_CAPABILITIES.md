@@ -146,7 +146,11 @@ heightfield plus Federation walker/jet, Control Tower, and Tank Factory
 geometry. Core starts at the released player-one heading and owns the authored
 Target Zone 1 → Firing Range trigger sequence, including each script's
 0.5-second event delay. The prior synthetic arena boundary, flat plane, and
-placeholder structures are gone. A clean Level 100 control and two fresh repeated safe-copy runs now
+placeholder structures are gone. Terrain, retained meshes, facilities, sky,
+light, camera, and Core-relative positions now share the released
+`(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view uses the stable
+attached first-person camera endpoint after retail's fly-in. A clean Level 100
+control and two fresh repeated safe-copy runs now
 establish the walker's acceleration, equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
 rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
@@ -168,8 +172,9 @@ terrain-detail passes, facility destruction, transform animation, complete HUD
 state/contacts/radio behavior, audio, campaign, networking, or the rest of the
 transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
-remaining synthetic combat targets are handling fixtures, not Level 100
-parity. Terrain-following in the Godot host is presentation only; Core remains
+remaining synthetic combat targets are Core handling fixtures and are no longer
+drawn as Level 100 scenery. Synthetic objective beacons are also absent.
+Terrain-following in the Godot host is presentation only; Core remains
 two-dimensional until retail collision behavior is implemented.
 
 The project has full permission to use, modify, and distribute the original

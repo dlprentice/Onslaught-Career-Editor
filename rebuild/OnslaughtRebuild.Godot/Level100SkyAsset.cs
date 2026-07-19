@@ -89,6 +89,6 @@ internal static class Level100SkyAsset
         return new Vector3(
             beaPosition.X,
             -beaPosition.Z,
-            beaPosition.Y) * Radius;
+            -beaPosition.Y) * Radius;
     }
 }

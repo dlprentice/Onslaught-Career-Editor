@@ -12,17 +12,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailWalkerCenterOfGravityHeight = 1.9f;
     private const float RetailVerticalFovDegrees = 58.7155f;
 
-    private static readonly Color SteelDark = new(0.075f, 0.105f, 0.115f);
-    private static readonly Color Amber = new(0.96f, 0.52f, 0.16f);
-    private static readonly Color Green = new(0.30f, 0.70f, 0.39f);
-    private static readonly Color Cyan = new(0.14f, 0.78f, 0.92f);
-    private static readonly Color MutedMarker = new(0.25f, 0.34f, 0.37f);
-    private static readonly Color Wreck = new(0.13f, 0.12f, 0.11f);
-
-    private readonly Dictionary<int, TargetVisual> _targets = [];
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
     private readonly List<MeshInstance3D> _level100Facilities = [];
-    private readonly List<ObjectiveMarkerVisual> _level100ObjectiveMarkers = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -31,13 +22,11 @@ public sealed partial class FirstFlightWorldView : Node3D
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Camera3D _camera = null!;
-    private ObjectiveMarkerVisual _targetZone1Marker = null!;
-    private ObjectiveMarkerVisual _firingRangeMarker = null!;
     private float _modeBlend;
     private float _walkCycle = -Mathf.Pi;
     private int _lastWalkPoseTick = -1;
 
-    public int TargetVisualCount => _targets.Count;
+    public int TargetVisualCount => 0;
 
     public int ProjectileVisualCount => _projectiles.Count;
 
@@ -66,7 +55,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailLevel100FacilitySurfaceCount =>
         _level100Facilities.Sum(facility => facility.Mesh?.GetSurfaceCount() ?? 0);
 
-    public int Level100ObjectiveMarkerCount => _level100ObjectiveMarkers.Count;
+    public int Level100ObjectiveMarkerCount => 0;
 
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
 
@@ -82,9 +71,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildLevel100Terrain();
         BuildEnvironment();
         BuildLevel100Facilities();
-        BuildLevel100ObjectiveMarkers();
         BuildPlayer();
-        BuildTargets(snapshot);
         BuildCamera();
         Render(snapshot, snapshot, 0f, 0f);
     }
@@ -119,8 +106,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
         UpdateWalkerPose(current);
         UpdatePlayerShape(current);
-        UpdateLevel100ObjectiveMarkers(current);
-        UpdateTargets(current);
         UpdateProjectiles(current);
         UpdateCamera(playerPosition, playerYaw);
     }
@@ -245,7 +230,7 @@ public sealed partial class FirstFlightWorldView : Node3D
                 relativePosition.X,
                 _level100Terrain.SampleRelativeHeight(relativePosition.X, relativePosition.Y) +
                     meshBaseClearance,
-                relativePosition.Y),
+                -relativePosition.Y),
             Rotation = new Vector3(0f, retailYaw, 0f),
         };
         var mesh = new MeshInstance3D
@@ -257,48 +242,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(mesh);
         AddChild(root);
         _level100Facilities.Add(mesh);
-    }
-
-    private void BuildLevel100ObjectiveMarkers()
-    {
-        _targetZone1Marker = CreateObjectiveMarker(
-            "TargetZone1Marker",
-            SimulationConstants.Level100TargetZone1Position);
-        _firingRangeMarker = CreateObjectiveMarker(
-            "FiringRangeMarker",
-            SimulationConstants.Level100FiringRangePosition);
-    }
-
-    private ObjectiveMarkerVisual CreateObjectiveMarker(string name, SimVector2 position)
-    {
-        var material = VisualPrimitives.CreateMaterial(
-            new Color(MutedMarker, 0.20f),
-            0f,
-            0.48f,
-            MutedMarker);
-        var root = new Node3D
-        {
-            Name = name,
-            Position = ToWorld(position, 0f),
-        };
-        MeshInstance3D area = VisualPrimitives.CreateCylinder(
-            "TriggerArea",
-            SimulationConstants.Level100ObjectiveTriggerRadius * UnitsToMeters,
-            0.08f,
-            new Vector3(0f, 0.04f, 0f),
-            material);
-        MeshInstance3D beacon = VisualPrimitives.CreateCylinder(
-            "ObjectiveBeacon",
-            0.10f,
-            14f,
-            new Vector3(0f, 7f, 0f),
-            material);
-        root.AddChild(area);
-        root.AddChild(beacon);
-        AddChild(root);
-        var marker = new ObjectiveMarkerVisual(root, material);
-        _level100ObjectiveMarkers.Add(marker);
-        return marker;
     }
 
     private void BuildPlayer()
@@ -359,36 +302,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             Metallic = metallic,
             Roughness = roughness,
         };
-    }
-
-    private void BuildTargets(WorldSnapshot snapshot)
-    {
-        foreach (TargetSnapshot target in snapshot.Targets)
-        {
-            var material = VisualPrimitives.CreateMaterial(Amber, 0.38f, 0.42f, Amber);
-            var root = new Node3D
-            {
-                Name = $"TargetVisual{target.Id}",
-                Position = ToWorld(target.Position, 0f),
-            };
-            var baseMesh = VisualPrimitives.CreateCylinder("Base", 1.5f, 0.26f, new Vector3(0f, 0.13f, 0f), VisualPrimitives.CreateMaterial(SteelDark, 0.3f, 0.7f));
-            var body = VisualPrimitives.CreateCylinder("Body", 0.72f, 2.8f, new Vector3(0f, 1.55f, 0f), material);
-            var crossbar = VisualPrimitives.CreateBox("Crossbar", new Vector3(2.4f, 0.24f, 0.35f), new Vector3(0f, 2.55f, 0f), material);
-            var beacon = VisualPrimitives.CreateSphere("Beacon", 0.38f, new Vector3(0f, 3.05f, 0f), material);
-            var markerMaterial = VisualPrimitives.CreateMaterial(
-                new Color(1f, 0.52f, 0.12f, 0.24f),
-                0f,
-                0.4f,
-                new Color(1f, 0.38f, 0.06f));
-            var marker = VisualPrimitives.CreateCylinder("Marker", 0.07f, 8f, new Vector3(0f, 7.2f, 0f), markerMaterial);
-            root.AddChild(baseMesh);
-            root.AddChild(body);
-            root.AddChild(crossbar);
-            root.AddChild(beacon);
-            root.AddChild(marker);
-            AddChild(root);
-            _targets.Add(target.Id, new TargetVisual(root, body, crossbar, beacon, marker, material));
-        }
     }
 
     private void BuildCamera()
@@ -490,66 +403,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         _walkerAsset.SetWalkPose(_walkCycle, movementWeight);
     }
 
-    private void UpdateLevel100ObjectiveMarkers(WorldSnapshot snapshot)
-    {
-        SetObjectiveMarkerState(
-            _targetZone1Marker,
-            snapshot.Level100Phase is Level100OpeningPhase.ReachTargetZone1 or
-                Level100OpeningPhase.TargetZone1DispatchPending,
-            snapshot.Level100Phase >= Level100OpeningPhase.ReachFiringRange);
-        SetObjectiveMarkerState(
-            _firingRangeMarker,
-            snapshot.Level100Phase is Level100OpeningPhase.ReachFiringRange or
-                Level100OpeningPhase.FiringRangeDispatchPending,
-            snapshot.Level100Phase == Level100OpeningPhase.FiringRangeReached);
-    }
-
-    private static void SetObjectiveMarkerState(
-        ObjectiveMarkerVisual marker,
-        bool active,
-        bool complete)
-    {
-        Color color = complete ? Green : active ? Cyan : MutedMarker;
-        marker.Material.AlbedoColor = new Color(color, active ? 0.32f : 0.18f);
-        marker.Material.Emission = color;
-        marker.Material.EmissionEnergyMultiplier = active ? 3.0f : complete ? 1.5f : 0.6f;
-        marker.Root.Visible = active || complete;
-    }
-
-    private void UpdateTargets(WorldSnapshot snapshot)
-    {
-        foreach (TargetSnapshot target in snapshot.Targets)
-        {
-            TargetVisual visual = _targets[target.Id];
-            visual.Root.Position = ToWorld(target.Position, 0f);
-            if (target.IsActive)
-            {
-                float health = (float)target.Hull / SimulationConstants.TargetHull;
-                visual.Root.RotationDegrees = Vector3.Zero;
-                visual.Body.Scale = new Vector3(0.8f + (health * 0.2f), Mathf.Max(0.2f, health), 0.8f + (health * 0.2f));
-                visual.Body.Position = new Vector3(0f, 0.25f + (1.3f * health), 0f);
-                visual.Crossbar.Visible = true;
-                visual.Beacon.Visible = true;
-                visual.Marker.Visible = true;
-                visual.Material.AlbedoColor = Amber.Lerp(Green, 1f - health);
-                visual.Material.Emission = visual.Material.AlbedoColor;
-                visual.Material.EmissionEnergyMultiplier = 1.5f + (health * 1.2f);
-            }
-            else
-            {
-                visual.Root.RotationDegrees = new Vector3(0f, 0f, 67f);
-                visual.Body.Scale = new Vector3(1f, 0.42f, 1f);
-                visual.Body.Position = new Vector3(0f, 0.58f, 0f);
-                visual.Crossbar.Visible = false;
-                visual.Beacon.Visible = false;
-                visual.Marker.Visible = false;
-                visual.Material.AlbedoColor = Wreck;
-                visual.Material.Emission = Colors.Black;
-                visual.Material.EmissionEnergyMultiplier = 0f;
-            }
-        }
-    }
-
     private void UpdateProjectiles(WorldSnapshot snapshot)
     {
         var activeIds = new HashSet<int>();
@@ -579,7 +432,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdateCamera(Vector3 playerGroundPosition, float yaw)
     {
-        var forward = new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw));
+        var forward = new Vector3(-Mathf.Sin(yaw), 0f, -Mathf.Cos(yaw));
         Vector3 centerOfGravity = playerGroundPosition +
             (Vector3.Up * RetailWalkerCenterOfGravityHeight);
 
@@ -590,23 +443,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private Vector3 ToWorld(SimVector2 position, float heightAboveTerrain)
     {
+        // BEA uses X/Y horizontally and negative Z upward. Retained geometry
+        // therefore shares the Godot mapping (X, -Z, -Y).
         float x = position.X * UnitsToMeters;
         float z = position.Z * UnitsToMeters;
         return new Vector3(
             x,
             _level100Terrain.SampleRelativeHeight(x, z) + heightAboveTerrain,
-            z);
+            -z);
     }
-
-    private sealed record TargetVisual(
-        Node3D Root,
-        MeshInstance3D Body,
-        MeshInstance3D Crossbar,
-        MeshInstance3D Beacon,
-        MeshInstance3D Marker,
-        StandardMaterial3D Material);
-
-    private sealed record ObjectiveMarkerVisual(
-        Node3D Root,
-        StandardMaterial3D Material);
 }
