@@ -66,7 +66,7 @@ public sealed class InteractiveSessionTests
         session.AdvanceFrame(TimeSpan.FromMilliseconds(100));
 
         Assert.Equal(VehicleMode.Walker, result.CurrentSnapshot.Mode);
-        Assert.Equal(VehicleTransition.WalkerToJet, result.CurrentSnapshot.Transition);
+        Assert.Equal(VehicleTransition.None, result.CurrentSnapshot.Transition);
         Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
 
         for (int frame = 0; frame < 4; frame++)
@@ -74,7 +74,7 @@ public sealed class InteractiveSessionTests
             session.AdvanceFrame(TimeSpan.FromMilliseconds(100));
         }
 
-        Assert.Equal(VehicleMode.Jet, session.CurrentSnapshot.Mode);
+        Assert.Equal(VehicleMode.Walker, session.CurrentSnapshot.Mode);
         Assert.Equal(VehicleTransition.None, session.CurrentSnapshot.Transition);
         Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
     }
@@ -89,7 +89,7 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
         Assert.Equal(VehicleMode.Walker, result.CurrentSnapshot.Mode);
-        Assert.Equal(VehicleTransition.WalkerToJet, result.CurrentSnapshot.Transition);
+        Assert.Equal(VehicleTransition.None, result.CurrentSnapshot.Transition);
         Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
     }
 
@@ -115,7 +115,8 @@ public sealed class InteractiveSessionTests
 
         Assert.Equal(6, result.StepsAdvanced);
         Assert.Equal(6, session.Metrics.FireHeldTicksSampled);
-        Assert.True(result.CurrentSnapshot.Energy < SimulationConstants.MaximumEnergy);
+        Assert.Equal(SimulationConstants.MaximumEnergy, result.CurrentSnapshot.Energy);
+        Assert.Empty(result.CurrentSnapshot.Projectiles);
     }
 
     [Fact]
@@ -128,8 +129,8 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult firingTick = session.AdvanceFrameTicks(233_334);
         FrameAdvanceResult followingTick = session.AdvanceFrameTicks(333_334);
 
-        Assert.Single(firingTick.CurrentSnapshot.Projectiles);
-        Assert.Single(followingTick.CurrentSnapshot.Projectiles);
+        Assert.Empty(firingTick.CurrentSnapshot.Projectiles);
+        Assert.Empty(followingTick.CurrentSnapshot.Projectiles);
         Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
         Assert.Equal(0, session.Metrics.FireHeldTicksSampled);
     }
@@ -159,7 +160,7 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
         Assert.Equal(new SimVector2(-16, 29), result.CurrentSnapshot.PlayerPosition);
-        Assert.Single(result.CurrentSnapshot.Projectiles);
+        Assert.Empty(result.CurrentSnapshot.Projectiles);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
         Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
         Assert.Equal(1, session.Metrics.FireHeldTicksSampled);
@@ -215,8 +216,8 @@ public sealed class InteractiveSessionTests
             fine.AdvanceFrame(TimeSpan.FromMilliseconds(25));
         }
 
-        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 30, coarse.CurrentSnapshot.Tick);
-        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 30, fine.CurrentSnapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 30, coarse.CurrentSnapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 30, fine.CurrentSnapshot.Tick);
         Assert.Equal(StateHasher.ComputeHex(coarse.CurrentSnapshot), StateHasher.ComputeHex(fine.CurrentSnapshot));
     }
 
@@ -243,7 +244,7 @@ public sealed class InteractiveSessionTests
     {
         InteractiveSession session = CreatePlayingSession();
         var direct = new Simulation(Seed);
-        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
         {
             direct.Step(SimInput.Idle);
         }
@@ -317,7 +318,7 @@ public sealed class InteractiveSessionTests
         session.AdvanceFrameTicks(333_334);
 
         Assert.Equal(new SimVector2(-16, 29), session.CurrentSnapshot.PlayerPosition);
-        Assert.Single(session.CurrentSnapshot.Projectiles);
+        Assert.Empty(session.CurrentSnapshot.Projectiles);
     }
 
     [Fact]
@@ -361,22 +362,25 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ExercisesMovementFireTransformAndReset()
+    public void FirstFlightSmokeScenario_ExercisesThePoweredMovementHandoff()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
-        InteractiveInput opening = FirstFlightSmokeScenario.GetInputForTick(180);
-        InteractiveInput transform = FirstFlightSmokeScenario.GetInputForTick(210);
-        InteractiveInput reset = FirstFlightSmokeScenario.GetInputForTick(240);
-        InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(420);
+        InteractiveInput powered = FirstFlightSmokeScenario.GetInputForTick(
+            SimulationConstants.Level100PowerActivationTick);
+        InteractiveInput turning = FirstFlightSmokeScenario.GetInputForTick(
+            SimulationConstants.Level100PowerActivationTick + 30);
+        InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(
+            FirstFlightSmokeScenario.DurationTicks - 1);
 
         Assert.Equal(InteractiveInput.Idle, pan);
-        Assert.Equal((sbyte)1, opening.MoveZ);
-        Assert.True(opening.FireHeld);
-        Assert.True(transform.ToggleModeHeld);
-        Assert.True(reset.ResetHeld);
-        Assert.True(reset.FireHeld);
+        Assert.Equal((sbyte)1, powered.MoveZ);
+        Assert.False(powered.FireHeld);
+        Assert.Equal((sbyte)1, turning.LookX);
+        Assert.False(turning.ToggleModeHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
-        Assert.Equal(421, FirstFlightSmokeScenario.DurationTicks);
+        Assert.Equal(
+            SimulationConstants.Level100TargetZone1InstructionStartTick + 30,
+            FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
     }
 
@@ -407,7 +411,7 @@ public sealed class InteractiveSessionTests
         var session = new InteractiveSession(seed);
         const long oneCoreStepTicks =
             (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
-        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
         {
             session.AdvanceFrameTicks(oneCoreStepTicks);
         }

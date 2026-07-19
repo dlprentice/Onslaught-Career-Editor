@@ -30,6 +30,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Texture2D objectiveInnerRight = LoadHudTexture("objective-inner-right", 64, 128);
         Texture2D objectiveLeft = LoadHudTexture("objective-left", 128, 128);
         Texture2D objectiveRight = LoadHudTexture("objective-right", 128, 128);
+        Texture2D tatianaPortrait = LoadHudTexture("tatiana-portrait", 128, 128);
+        Texture2D technicianPortrait = LoadHudTexture("technician-portrait", 128, 128);
 
         _baseLayer = new RetailHudBaseLayer(
             crosshair,
@@ -40,7 +42,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
             objectiveInnerLeft,
             objectiveInnerRight,
             objectiveLeft,
-            objectiveRight);
+            objectiveRight,
+            tatianaPortrait,
+            technicianPortrait);
         AddFullScreenControl(_baseLayer);
 
         _glowLayer = new RetailHudGlowLayer(
@@ -67,16 +71,48 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     public void UpdateFromSnapshot(WorldSnapshot snapshot)
     {
+        string? message = GetTutorialMessageText(snapshot.Level100Message);
+        if (message is not null)
+        {
+            _baseLayer.SetSpeaker(snapshot.Level100Message == Level100TutorialMessage.TechnicianStatus
+                ? RetailHudSpeaker.Technician
+                : RetailHudSpeaker.Tatiana);
+            _textLayer.SetMessage(message);
+            return;
+        }
+
+        _baseLayer.SetSpeaker(RetailHudSpeaker.None);
         string objective = snapshot.Level100Phase switch
         {
+            Level100OpeningPhase.Briefing => string.Empty,
             Level100OpeningPhase.ReachTargetZone1 => "REACH TARGET ZONE 1",
             Level100OpeningPhase.TargetZone1DispatchPending => "TARGET ZONE 1 REACHED",
             Level100OpeningPhase.ReachFiringRange => "PROCEED TO FIRING RANGE",
             Level100OpeningPhase.FiringRangeDispatchPending => "FIRING RANGE REACHED",
             _ => "OPENING SLICE COMPLETE",
         };
-        _textLayer.SetText(objective);
+        _textLayer.SetObjective(objective);
     }
+
+    private static string? GetTutorialMessageText(Level100TutorialMessage message) => message switch
+    {
+        Level100TutorialMessage.HudIntroduction =>
+            "Welcome aboard. Now don't touch anything and I'll take you through the instrumentation you see before you.",
+        Level100TutorialMessage.ThreatCircle =>
+            "This is the threat circle. That notch indicates North. As for its other functions, I'll demonstrate them later.",
+        Level100TutorialMessage.Scanner =>
+            "The circle to the left is your scanner. Enemy units show up in red, friendly units in blue.",
+        Level100TutorialMessage.MessageLog =>
+            "If you ever need to review these messages, check out Aquila's message log in the Pause Menu.",
+        Level100TutorialMessage.TechnicianStatus => "All systems nominal.",
+        Level100TutorialMessage.MovementControls =>
+            "You have two primary controls.  One determines the direction of travel, and the other changes which way Aquila faces.",
+        Level100TutorialMessage.ReachTargetZone1 =>
+            "Okay, Hawk? I want you to manoeuvre the Battle Engine to the area marked on your HUD.",
+        Level100TutorialMessage.ScannerObjective =>
+            "Notice how objectives that you are given are marked as yellow dots on your scanner.",
+        _ => null,
+    };
 
     public void MarkInputActivity()
     {
@@ -132,6 +168,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
     }
 
+    private enum RetailHudSpeaker
+    {
+        None,
+        Tatiana,
+        Technician,
+    }
+
     private sealed partial class RetailHudBaseLayer(
         Texture2D crosshair,
         Texture2D circleDarkener,
@@ -141,11 +184,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Texture2D objectiveInnerLeft,
         Texture2D objectiveInnerRight,
         Texture2D objectiveLeft,
-        Texture2D objectiveRight) : Control
+        Texture2D objectiveRight,
+        Texture2D tatianaPortrait,
+        Texture2D technicianPortrait) : Control
     {
         private static readonly Color ObjectiveBacking = new(0.015f, 0.025f, 0.055f, 0.86f);
         private static readonly Color RadioBlue = new(0.10f, 0.34f, 1f, 0.92f);
         private static readonly Color WeaponGreen = new(0.24f, 1f, 0.38f, 0.82f);
+        private RetailHudSpeaker _speaker;
 
         public bool IsReady =>
             crosshair.GetWidth() == 64 &&
@@ -156,7 +202,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
             objectiveInnerLeft.GetWidth() == 64 &&
             objectiveInnerRight.GetWidth() == 64 &&
             objectiveLeft.GetWidth() == 128 &&
-            objectiveRight.GetWidth() == 128;
+            objectiveRight.GetWidth() == 128 &&
+            tatianaPortrait.GetWidth() == 128 &&
+            technicianPortrait.GetWidth() == 128;
+
+        public void SetSpeaker(RetailHudSpeaker speaker)
+        {
+            if (_speaker == speaker)
+            {
+                return;
+            }
+            _speaker = speaker;
+            QueueRedraw();
+        }
 
         public override void _Draw()
         {
@@ -175,6 +233,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 false,
                 new Color(0.94f, 0.96f, 1f, 0.88f));
 
+            Texture2D? portrait = _speaker switch
+            {
+                RetailHudSpeaker.Tatiana => tatianaPortrait,
+                RetailHudSpeaker.Technician => technicianPortrait,
+                _ => null,
+            };
+            if (portrait is not null)
+            {
+                DrawTextureRect(portrait, layout.Rect(1480f, 780f, 112f, 112f), false);
+            }
             DrawTextureRectRegion(
                 radioView,
                 layout.Rect(1480f, 780f, 112f, 112f),
@@ -254,23 +322,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private const int GlyphColumns = 16;
         private const int GlyphCellSize = 16;
         private const int GlyphAdvance = 8;
-        private string _text = string.Empty;
+        private const int MessageCharactersPerLine = 40;
+        private string[] _lines = [];
+        private bool _centered;
 
         public bool IsReady => fontAtlas.GetWidth() == 256 && fontAtlas.GetHeight() == 256;
 
-        public void SetText(string text)
+        public void SetObjective(string text)
         {
-            if (string.Equals(_text, text, StringComparison.Ordinal))
-            {
-                return;
-            }
-            _text = text;
-            QueueRedraw();
+            SetLines([text], centered: true);
+        }
+
+        public void SetMessage(string text)
+        {
+            SetLines(WrapMessage(text), centered: false);
         }
 
         public override void _Draw()
         {
-            if (_text.Length == 0)
+            if (_lines.Length == 0 || _lines.All(string.IsNullOrEmpty))
             {
                 return;
             }
@@ -278,33 +348,74 @@ public sealed partial class FirstFlightHud : CanvasLayer
             RetailHudLayout layout = RetailHudLayout.For(Size);
             float glyphScale = layout.Scale;
             float glyphAdvance = GlyphAdvance * glyphScale;
-            float left = (Size.X - (_text.Length * glyphAdvance)) * 0.5f;
-            float top = layout.Point(0f, 831f).Y;
-
-            for (int index = 0; index < _text.Length; index++)
+            float top = layout.Point(0f, _centered ? 831f : 817f).Y;
+            float lineAdvance = 17f * glyphScale;
+            for (int lineIndex = 0; lineIndex < _lines.Length; lineIndex++)
             {
-                int code = _text[index];
-                if (code is < FirstGlyph or >= FirstGlyph + 96)
+                string line = _lines[lineIndex];
+                float left = _centered
+                    ? (Size.X - (line.Length * glyphAdvance)) * 0.5f
+                    : layout.Point(650f, 0f).X;
+                for (int index = 0; index < line.Length; index++)
                 {
-                    code = '?';
+                    int code = line[index];
+                    if (code is < FirstGlyph or >= FirstGlyph + 96)
+                    {
+                        code = '?';
+                    }
+                    int glyph = code - FirstGlyph;
+                    var source = new Rect2(
+                        (glyph % GlyphColumns) * GlyphCellSize,
+                        (glyph / GlyphColumns) * GlyphCellSize,
+                        GlyphCellSize,
+                        GlyphCellSize);
+                    var destination = new Rect2(
+                        left + (index * glyphAdvance) - (4f * glyphScale),
+                        top + (lineIndex * lineAdvance),
+                        GlyphCellSize * glyphScale,
+                        GlyphCellSize * glyphScale);
+                    DrawTextureRectRegion(
+                        fontAtlas,
+                        destination,
+                        source,
+                        new Color(0.96f, 0.97f, 1f, 0.96f));
                 }
-                int glyph = code - FirstGlyph;
-                var source = new Rect2(
-                    (glyph % GlyphColumns) * GlyphCellSize,
-                    (glyph / GlyphColumns) * GlyphCellSize,
-                    GlyphCellSize,
-                    GlyphCellSize);
-                var destination = new Rect2(
-                    left + (index * glyphAdvance) - (4f * glyphScale),
-                    top,
-                    GlyphCellSize * glyphScale,
-                    GlyphCellSize * glyphScale);
-                DrawTextureRectRegion(
-                    fontAtlas,
-                    destination,
-                    source,
-                    new Color(0.96f, 0.97f, 1f, 0.96f));
             }
+        }
+
+        private void SetLines(string[] lines, bool centered)
+        {
+            if (_centered == centered && _lines.SequenceEqual(lines, StringComparer.Ordinal))
+            {
+                return;
+            }
+            _lines = lines;
+            _centered = centered;
+            QueueRedraw();
+        }
+
+        private static string[] WrapMessage(string text)
+        {
+            var lines = new List<string>();
+            var current = new System.Text.StringBuilder();
+            foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (current.Length > 0 && current.Length + 1 + word.Length > MessageCharactersPerLine)
+                {
+                    lines.Add(current.ToString());
+                    current.Clear();
+                }
+                if (current.Length > 0)
+                {
+                    current.Append(' ');
+                }
+                current.Append(word);
+            }
+            if (current.Length > 0)
+            {
+                lines.Add(current.ToString());
+            }
+            return lines.ToArray();
         }
     }
 }

@@ -49,21 +49,26 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v5' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v6' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
-    Assert-SmokeValue 'tick' 421 $report.tick
-    Assert-SmokeValue 'stateHash' 'fde1a448d8a6cdea195b2408d47a7afc21ac61bc72e6633c81fff071b402469e' $report.stateHash
+    Assert-SmokeValue 'tick' 1256 $report.tick
+    Assert-SmokeValue 'stateHash' '58b46d9b1d7979a2b7849b3b40a9fadd3fdf6bf19acc3794026bc78f21168b58' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'ReachTargetZone1' $report.level100Phase
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
+    Assert-SmokeValue 'level100TimelineTick' 1256 $report.level100TimelineTick
+    Assert-SmokeValue 'level100Message' 'ReachTargetZone1' $report.level100Message
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
-    Assert-SmokeValue 'totalSteps' 421 $report.totalSteps
-    Assert-SmokeValue 'toggleEdgesConsumed' 1 $report.toggleEdgesConsumed
-    Assert-SmokeValue 'resetEdgesConsumed' 1 $report.resetEdgesConsumed
-    Assert-SmokeValue 'resetGeneration' 1 $report.resetGeneration
-    Assert-SmokeValue 'fireHeldTicksSampled' 61 $report.fireHeldTicksSampled
+    Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
+    Assert-SmokeValue 'level100WeaponsEnabled' $false $report.level100WeaponsEnabled
+    Assert-SmokeValue 'tutorialVoicePlaying' $true $report.tutorialVoicePlaying
+    Assert-SmokeValue 'totalSteps' 1256 $report.totalSteps
+    Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
+    Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
+    Assert-SmokeValue 'resetGeneration' 0 $report.resetGeneration
+    Assert-SmokeValue 'fireHeldTicksSampled' 0 $report.fireHeldTicksSampled
     Assert-SmokeValue 'firePulseEdgesConsumed' 0 $report.firePulseEdgesConsumed
     Assert-SmokeValue 'movementPulseEdgesConsumed' 0 $report.movementPulseEdgesConsumed
     Assert-SmokeValue 'cappedFrameCount' 0 $report.cappedFrameCount

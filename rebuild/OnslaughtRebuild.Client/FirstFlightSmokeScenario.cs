@@ -6,9 +6,9 @@ namespace OnslaughtRebuild.Client;
 
 public static class FirstFlightSmokeScenario
 {
-    private const int PlayingStartTick = SimulationConstants.Level100OpeningPanTicks;
-    private const int PlayingDurationTicks = 120;
-    public const int DurationTicks = (SimulationConstants.Level100OpeningPanTicks * 2) + 61;
+    private const int PlayingStartTick = SimulationConstants.Level100PowerActivationTick;
+    private const int PlayingDurationTicks = 60;
+    public const int DurationTicks = SimulationConstants.Level100TargetZone1InstructionStartTick + 30;
 
     public static InteractiveInput GetInputForTick(int tick)
     {
@@ -25,32 +25,12 @@ public static class FirstFlightSmokeScenario
         int playingTick = tick - PlayingStartTick;
         if (playingTick < 30)
         {
-            return new InteractiveInput(0, 1, true, false, false);
-        }
-
-        if (playingTick == 30)
-        {
-            return new InteractiveInput(0, 0, false, true, false);
-        }
-
-        if (playingTick < 45)
-        {
-            return InteractiveInput.Idle;
+            return new InteractiveInput(0, 1, false, false, false);
         }
 
         if (playingTick < 60)
         {
-            return new InteractiveInput(1, 0, false, false, false);
-        }
-
-        if (playingTick == 60)
-        {
-            return new InteractiveInput(0, 0, true, false, true);
-        }
-
-        if (playingTick < 91)
-        {
-            return new InteractiveInput(0, 1, true, false, false);
+            return new InteractiveInput(0, 0, false, false, false, LookX: 1);
         }
 
         return InteractiveInput.Idle;

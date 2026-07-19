@@ -41,6 +41,11 @@ public sealed class Simulation
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
     private int _level100OpeningTicksRemaining;
+    private int _level100TimelineTick;
+    private Level100TutorialMessage _level100Message;
+    private bool _level100PowerEnabled;
+    private bool _level100FlightEnabled;
+    private bool _level100WeaponsEnabled;
     private Level100OpeningPhase _level100Phase;
     private int _level100DispatchTicksRemaining;
     private int _targetsDestroyed;
@@ -72,8 +77,7 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
-        bool level100PlayerControlEnabled = _level100OpeningTicksRemaining == 0;
-        SimInput playerInput = level100PlayerControlEnabled ? input : SimInput.Idle;
+        SimInput playerInput = _level100PowerEnabled ? input : SimInput.Idle;
 
         AdvanceTransition();
 
@@ -88,22 +92,62 @@ public sealed class Simulation
         UpdateResources();
         TryFire(playerInput);
         UpdateProjectiles();
-        AdvanceLevel100Opening();
+        AdvanceLevel100Timeline();
 
         return CreateSnapshot();
     }
 
-    private void AdvanceLevel100Opening()
+    private void AdvanceLevel100Timeline()
     {
         if (_level100OpeningTicksRemaining > 0)
         {
             _level100OpeningTicksRemaining--;
         }
+
+        _level100TimelineTick++;
+        _level100PowerEnabled =
+            _level100TimelineTick >= SimulationConstants.Level100PowerActivationTick;
+        _level100Message = MessageAtLevel100Tick(_level100TimelineTick);
+        if (_level100Phase == Level100OpeningPhase.Briefing &&
+            _level100TimelineTick >= SimulationConstants.Level100TargetZone1ActivationTick)
+        {
+            _level100Phase = Level100OpeningPhase.ReachTargetZone1;
+        }
     }
+
+    private static Level100TutorialMessage MessageAtLevel100Tick(int tick) => tick switch
+    {
+        >= SimulationConstants.Level100Hud01StartTick and
+            < SimulationConstants.Level100Hud01EndTick =>
+                Level100TutorialMessage.HudIntroduction,
+        >= SimulationConstants.Level100Hud02StartTick and
+            < SimulationConstants.Level100Hud02EndTick =>
+                Level100TutorialMessage.ThreatCircle,
+        >= SimulationConstants.Level100Hud06StartTick and
+            < SimulationConstants.Level100Hud06EndTick =>
+                Level100TutorialMessage.Scanner,
+        >= SimulationConstants.Level100MessageLogStartTick and
+            < SimulationConstants.Level100MessageLogEndTick =>
+                Level100TutorialMessage.MessageLog,
+        >= SimulationConstants.Level100TechnicianStartTick and
+            < SimulationConstants.Level100TechnicianEndTick =>
+                Level100TutorialMessage.TechnicianStatus,
+        >= SimulationConstants.Level100MovementInstructionStartTick and
+            < SimulationConstants.Level100MovementInstructionEndTick =>
+                Level100TutorialMessage.MovementControls,
+        >= SimulationConstants.Level100TargetZone1InstructionStartTick and
+            < SimulationConstants.Level100TargetZone1InstructionEndTick =>
+                Level100TutorialMessage.ReachTargetZone1,
+        >= SimulationConstants.Level100ScannerInstructionStartTick and
+            < SimulationConstants.Level100ScannerInstructionEndTick =>
+                Level100TutorialMessage.ScannerObjective,
+        _ => Level100TutorialMessage.None,
+    };
 
     private void TryToggleMode(SimInput input)
     {
         if (!input.HasAction(SimActions.ToggleMode) ||
+            !_level100FlightEnabled ||
             _transformTicksRemaining != 0 ||
             _energy < SimulationConstants.TransformEnergyThreshold)
         {
@@ -467,6 +511,7 @@ public sealed class Simulation
     private void TryFire(SimInput input)
     {
         if (!input.HasAction(SimActions.Fire) ||
+            !_level100WeaponsEnabled ||
             _transformTicksRemaining != 0 ||
             _fireCooldownTicksRemaining != 0 ||
             _energy < SimulationConstants.FireEnergyCost)
@@ -562,7 +607,12 @@ public sealed class Simulation
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
-        _level100Phase = Level100OpeningPhase.ReachTargetZone1;
+        _level100TimelineTick = 0;
+        _level100Message = Level100TutorialMessage.None;
+        _level100PowerEnabled = false;
+        _level100FlightEnabled = false;
+        _level100WeaponsEnabled = false;
+        _level100Phase = Level100OpeningPhase.Briefing;
         _level100DispatchTicksRemaining = 0;
         _targetsDestroyed = 0;
         _projectiles.Clear();
@@ -632,6 +682,11 @@ public sealed class Simulation
             _transformTicksRemaining,
             _fireCooldownTicksRemaining,
             _level100OpeningTicksRemaining,
+            _level100TimelineTick,
+            _level100Message,
+            _level100PowerEnabled,
+            _level100FlightEnabled,
+            _level100WeaponsEnabled,
             _level100Phase,
             _level100DispatchTicksRemaining,
             _nextProjectileId,

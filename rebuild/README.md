@@ -35,7 +35,11 @@ projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
 Twelve exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
-crosshair, radar/radio frames, and current objective line. Secondary material
+crosshair, radar/radio frames, and current objective line. The first eight
+released English tutorial messages now use their exact text, shipped voice
+clips, and static Tatiana/technician portrait frames. Core follows the observed
+power-on and Target Zone 1 activation boundaries while keeping flight and both
+weapons disabled. Secondary material
 and moving cloud-shadow passes, steep-slope and actor collision response, combat targets,
 weapons,
 resources, and most mission
@@ -65,18 +69,17 @@ Controls:
 
 | Input | Action |
 | --- | --- |
-| `W`, `A`, `S`, `D` | Move forward/back and strafe relative to body heading |
-| `←`, `→` | Turn body left/right |
-| `Space` | Fire the synthetic projectile |
-| `Q` | Begin walker-to-jet transition; reverse transition remains provisional |
+| `W`, `A`, `S`, `D` | Move forward/back and strafe after the tutorial powers the Aquila |
+| `←`, `→` | Turn body left/right after the same handoff |
 | `R` | Reset the slice |
 | `Esc` | Exit |
 
 ## Current truth
 
-Core currently provides integer positions, opening-objective state, resources,
-cooldowns, projectile interactions, reset behavior, ordered snapshots, and
-versioned SHA-256 state and trace hashes. Continuous body yaw and Level 100
+Core currently provides integer positions, opening tutorial/objective state,
+reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
+It retains provisional resource, cooldown, and projectile paths behind the
+disabled Level 100 weapon gates. Continuous body yaw and Level 100
 objective state are part of the snapshot/hash, and every input axis—including
 look—is part of the trace. Walker acceleration is projected through the body's
 continuous deterministic yaw; jet movement and projectile aim still use the
@@ -86,16 +89,19 @@ Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
-state. The presentation camera now uses clean Level 100's released opening
+state, but clean Level 100 keeps the flight gate closed throughout the current
+slice. The presentation camera now uses clean Level 100's released opening
 lifecycle: four orientation-relative spline points around the exterior Aquila,
 a six-second Steam pan, control-view handoff at 5.95 seconds, and then the
 attached first-person view at the Aquila center of gravity with its horizontal
 orientation column, 58.7155-degree vertical field of view, 0.1 near plane, and
 authored frame-25 walker cockpit. Core mirrors the released playing-state
-boundary by rejecting player input for the first 180 fixed ticks. Camera pitch response and
+camera boundary at 180 fixed ticks, then keeps movement/look gated until the
+mission powers the Aquila at tick 1000. Flight and weapons remain disabled.
+Camera pitch response and
 terrain clipping, jet movement and projectile heading,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
-collision beyond grounded height following, AI, the remaining mission, audio,
+collision beyond grounded height following, AI, the remaining mission and its audio,
 campaign, and networking
 remain provisional or absent.
 
@@ -116,8 +122,8 @@ uses twelve exact HUD textures, including the uncompressed released font atlas.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding, actor/structure
 collision, procedural foot placement/terrain IK,
-transform animation, HUD contacts and state logic, radio portraits/video,
-tutorial dialogue and gates, and the full mission remain unimplemented. Core's
+transform animation, HUD contacts and later state logic, animated radio
+portraits/video, and the remainder of the mission remain unimplemented. Core's
 three synthetic combat targets still exercise the older firing path, but the
 Level 100 presentation no longer draws them or synthetic objective beacons as
 retail scenery.

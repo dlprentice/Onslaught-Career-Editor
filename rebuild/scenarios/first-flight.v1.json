@@ -2,11 +2,11 @@
   "schemaVersion": "onslaught-rebuild-command-tape.v1",
   "name": "first-flight",
   "seed": 2836905711,
-  "durationTicks": 330,
+  "durationTicks": 1256,
   "spans": [
     {
-      "startTick": 180,
-      "durationTicks": 20,
+      "startTick": 1000,
+      "durationTicks": 30,
       "moveX": 0,
       "moveZ": 1,
       "toggleMode": false,
@@ -14,46 +14,11 @@
       "reset": false
     },
     {
-      "startTick": 200,
-      "durationTicks": 25,
-      "moveX": 0,
-      "moveZ": 0,
-      "toggleMode": false,
-      "fire": true,
-      "reset": false
-    },
-    {
-      "startTick": 225,
-      "durationTicks": 1,
-      "moveX": 0,
-      "moveZ": 0,
-      "toggleMode": true,
-      "fire": false,
-      "reset": false
-    },
-    {
-      "startTick": 240,
+      "startTick": 1030,
       "durationTicks": 30,
-      "moveX": 1,
-      "moveZ": 1,
-      "toggleMode": false,
-      "fire": false,
-      "reset": false
-    },
-    {
-      "startTick": 270,
-      "durationTicks": 1,
       "moveX": 0,
       "moveZ": 0,
-      "toggleMode": true,
-      "fire": false,
-      "reset": false
-    },
-    {
-      "startTick": 285,
-      "durationTicks": 30,
-      "moveX": -1,
-      "moveZ": 0,
+      "lookX": 1,
       "toggleMode": false,
       "fire": false,
       "reset": false

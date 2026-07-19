@@ -171,17 +171,15 @@ public sealed class ReplayTests
     [Fact]
     public void CommandSpan_LookX_RoundsTripsInJsonAndAffectsFacing()
     {
-        const string json = """
-              {
-                "schemaVersion": "onslaught-rebuild-command-tape.v1",
-                "name": "look-hold",
-                "seed": 1,
-                "durationTicks": 200,
-                "spans": [
-                  { "startTick": 180, "durationTicks": 20, "moveX": 0, "moveZ": 0, "lookX": 1 }
-                ]
-              }
-              """;
+        var source = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "look-hold",
+            1,
+            SimulationConstants.Level100PowerActivationTick + 20,
+            null,
+            null,
+            [new CommandSpan(SimulationConstants.Level100PowerActivationTick, 20, 0, 0, LookX: 1)]);
+        string json = CommandTapeCodec.Serialize(source);
         CommandTape tape = CommandTapeCodec.Deserialize(json);
         Assert.Equal(1, tape.Spans[0].LookX);
         ReplayResult result = ReplayRunner.Run(tape);
@@ -214,15 +212,15 @@ public sealed class ReplayTests
             CommandTape.CurrentSchemaVersion,
             "looked",
             1,
-            SimulationConstants.Level100OpeningPanTicks + 1,
+            SimulationConstants.Level100PowerActivationTick + 1,
             null,
             null,
-            [new CommandSpan(SimulationConstants.Level100OpeningPanTicks, 1, 0, 0, LookX: 1)]);
+            [new CommandSpan(SimulationConstants.Level100PowerActivationTick, 1, 0, 0, LookX: 1)]);
         var idled = new CommandTape(
             CommandTape.CurrentSchemaVersion,
             "idled",
             1,
-            SimulationConstants.Level100OpeningPanTicks + 1,
+            SimulationConstants.Level100PowerActivationTick + 1,
             null,
             null,
             []);

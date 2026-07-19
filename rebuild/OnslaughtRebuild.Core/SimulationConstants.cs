@@ -16,6 +16,29 @@ public static class SimulationConstants
     // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
     // so player actions are rejected for the first 180 Core ticks.
     public const int Level100OpeningPanTicks = 6 * TicksPerSecond;
+    // Three fresh uninterrupted copied-Steam runs observed the first Level 100
+    // message sequence. Retail installs the pan at game time 3.0, so these are
+    // 30 Hz ticks relative to that same opening-pan origin, rounded to the
+    // nearest Core boundary. The explicit gaps are the retail message queue's
+    // approximately 0.2-second handoffs.
+    public const int Level100Hud01StartTick = 182;
+    public const int Level100Hud01EndTick = 351;
+    public const int Level100Hud02StartTick = 357;
+    public const int Level100Hud02EndTick = 567;
+    public const int Level100Hud06StartTick = 573;
+    public const int Level100Hud06EndTick = 756;
+    public const int Level100MessageLogStartTick = 762;
+    public const int Level100MessageLogEndTick = 926;
+    public const int Level100TechnicianStartTick = 932;
+    public const int Level100TechnicianEndTick = 998;
+    public const int Level100PowerActivationTick = 1_000;
+    public const int Level100MovementInstructionStartTick = 1_004;
+    public const int Level100MovementInstructionEndTick = 1_220;
+    public const int Level100TargetZone1ActivationTick = 1_223;
+    public const int Level100TargetZone1InstructionStartTick = 1_226;
+    public const int Level100TargetZone1InstructionEndTick = 1_387;
+    public const int Level100ScannerInstructionStartTick = 1_393;
+    public const int Level100ScannerInstructionEndTick = 1_530;
     // TargetZone1.msl and FiringRange.msl each pause 0.5 seconds before
     // posting their event. Fifteen fixed Core ticks preserve that delay.
     public const int Level100ObjectiveDispatchTicks = 15;

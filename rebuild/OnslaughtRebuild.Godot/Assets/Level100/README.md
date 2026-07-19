@@ -1,7 +1,8 @@
 # Level 100 opening assets
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-and two facility meshes consumed by the current Level 100 opening slice. The
+two facility meshes, and first eight English tutorial voice clips consumed by
+the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
 covers reconstruction code and does not relicense the assets.
@@ -29,6 +30,14 @@ geometry, normals, UVs, and base part transforms.
 | `Sky/cube25-right.texture.aya` | Released 512×512 cube-25 right DXT1 texture | `830C9B965C76A4023C2415B7C8924CA32590562C850CC84E92C003E173263D11` |
 | `Sky/cube25-down.texture.aya` | Released 512×512 cube-25 down DXT1 texture | `4770829BA631E93FBC33DB2012754DA75A06BFCCC2FB2B36875E92032E22D19D` |
 | `Sky/cube25-left.texture.aya` | Released 512×512 cube-25 left DXT1 texture | `D7CBCE30E51473DDC89ED0C44326E598DAC4D2682F64EF20C19237AFD2CEBE14` |
+| `TutorialAudio/hud_01.ogg` | Released English `data/sounds/english/MessageBox/hud_01.ogg` | `BAE30243A2B5FE3DAE718181AC5B05D766F93D5E25B042FE1B04C71FC9347909` |
+| `TutorialAudio/hud_02.ogg` | Released English `data/sounds/english/MessageBox/hud_02.ogg` | `43AE0C306B7935A21D415338348508EABF3A61F8799C0FD0873C89919FB84A35` |
+| `TutorialAudio/hud_06.ogg` | Released English `data/sounds/english/MessageBox/hud_06.ogg` | `4ED80A12FA7D2AD07A044F95F94D52455413962B75E7689101DF6907711F3235` |
+| `TutorialAudio/tutorial_message_log.ogg` | Released English message-log instruction | `7A03FF8F3FAA4BE4B729E7619055379C62921E2EAEB67FC9711DAC0DFE273F8B` |
+| `TutorialAudio/tutorial_technician_01.ogg` | Released English technician status | `4792371453B4402454B922A481EB0968A099EFB13981FF1918AA6177FB6AE151` |
+| `TutorialAudio/tutorial_13_mod.ogg` | Released English movement instruction | `7EEE9087F86C00ABE4FEAB115B20E4E2F27A8E6D1ADC7318B1602446A7493E65` |
+| `TutorialAudio/tutorial_01.ogg` | Released English Target Zone 1 instruction | `48E40B07A77B5776F817ED8D8FFE1EFF1A978B10480CAB92019077E7B66784A8` |
+| `TutorialAudio/tutorial_scanner.ogg` | Released English objective-scanner instruction | `7A9535B1187B6E1FF276CEBC3906EC2102E5D166F381EE674113B4F09C2B3BD2` |
 
 Regenerate into an empty local output directory with:
 
@@ -137,6 +146,31 @@ first-person `CThingCamera`, position, yaw, and horizontal forward column
 `TargetZone1.msl` and `FiringRange.msl` each wait 0.5 seconds before posting
 their event. `LevelScript.msl` activates Target Zone 1 first, then makes the
 Firing Range the objective after `Reached Target Zone 1`.
+
+## First tutorial handoff
+
+Core tick zero is the observed retail pan start at game time `3.0`. Two fresh,
+uninterrupted app-owned Level 100 runs repeated the following message boundaries
+within one 50 ms retail sample; the retained intervals are half-open:
+
+| Message | Core ticks |
+| --- | --- |
+| HUD introduction | `182..351` |
+| Threat circle | `357..567` |
+| Scanner | `573..756` |
+| Message log | `762..926` |
+| Technician status | `932..998` |
+| Movement controls | `1004..1220` |
+| Reach Target Zone 1 | `1226..1387` |
+| Objective scanner | `1393..1530` |
+
+The released Battle Engine power flag at offset `0x580` changed from `0` to `1`
+at Core tick `1000`; its flight flag at `0x58C` and both initial weapon gates
+remained disabled. At tick `1223`, the unique object at Target Zone 1's authored
+position changed its `CThing` flags at offset `0x2C` from `0x0002` to `0x0022`,
+setting the released objective bit `0x20`. The current slice consumes those
+gates, exact English text, and exact voice clips. It does not infer later
+tutorial progression or draw an unobserved tactical marker.
 
 The presentation consumes the four exact layer-zero facility textures and
 preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two

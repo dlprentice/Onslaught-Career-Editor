@@ -26,13 +26,17 @@ the lower-center message/objective treatment.
 | `objective-left.texture.aya` | `hud%v2%ObjectiveLeft.tga(0)A8R8G8B8.aya` | `0AE835780D1AF6C01F0272A50AFDA141ABCA70EAA5C23D74E7FC3968B6D9194F` |
 | `objective-right.texture.aya` | `hud%v2%ObjectiveRight.tga(0)A8R8G8B8.aya` | `581F10446DB76ECE7AA7044B4C02F0431A79A7D606225D5C69A412C17F85078B` |
 | `font-13ps.texture.aya` | `mustbe_Font13PS.tga(0)A8R8G8B8.aya` | `7ACC088B75E729CBDC2782E239A7D18BA0EC409E1BC890109AA1020F5EE81DC0` |
+| `tatiana-portrait.texture.aya` | `MessageBox%tat_aa.tga(0)A8R8G8B8.aya` | `34D451A6FC31E399B99032230413A60F146B41A0FEA65E61561A37D8EC757CFD` |
+| `technician-portrait.texture.aya` | `MessageBox%technic_aa.tga(0)A8R8G8B8.aya` | `C4C1B11F4DDFB960AFC1C1D2A04020FADF997795ECCF651C07314141652F9603` |
 
 The renderer uses the source alpha for DXT2 layers and additive composition for
 the two X8 outline layers, matching their visible black-background sprite
 semantics. The 256×256 uncompressed Font13PS atlas contains the fixed 16×16
-ASCII cells used for the current objective line.
+ASCII cells used for the current objective line. The two 128×128 DXT2 portraits
+are the exact released static `aa` frames selected for Tatiana's and the
+technician's opening messages; no lip movement is synthesized.
 
-This slice does not claim complete HUD behavior. Radio portraits/video,
-tutorial dialogue timing, tactical contacts, weapon selection, damage states,
-target prediction, battleline rendering, split-screen composition, and other
-HUD components remain absent.
+This slice does not claim complete HUD behavior. Animated portrait/video frames,
+tactical contacts, weapon selection, damage states, target prediction,
+battleline rendering, split-screen composition, and later tutorial/mission HUD
+states remain absent.

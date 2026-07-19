@@ -109,10 +109,11 @@ uses the released orientation with local points `(0,10,-4.3)`, `(5,0,1.3)`,
 `(0,-9,-1.3)`, and `(0,-2.5,0)` through its order-three clamped quadratic
 `CBSpline`. The camera changed to the first-person `CThingCamera` at event time
 `8.95`; game state remained panning until `9.0`. `CPlayer__ReceiveButtonAction`
-at `0x004D3110` rejects normal player actions below playing state, so Core gates
-input for the corresponding 180 fixed ticks. `CPanCamera::GetShowHUD` is false;
-the control camera owns the HUD-visible handoff. Raw sampler output and copied
-games were disposable and are not retained.
+at `0x004D3110` rejects normal player actions below playing state. That establishes
+the 180-tick camera-state boundary, but does not itself enable Level 100 input;
+the later mission power gate is documented below. `CPanCamera::GetShowHUD` is
+false; the control camera owns the HUD-visible handoff. Raw sampler output and
+copied games were disposable and are not retained.
 
 A clean copied Level 100 run starts player zero with current/preferred view `1`.
 After that opening fly-in, five uninterrupted samples held the same active camera
@@ -146,9 +147,25 @@ Twelve retained HUD textures are exact released files named by the Steam
 binary. A clean copied-runtime frame establishes the bounded first-person
 composition now used by Godot: center crosshair/weapon layers, lower-left radar,
 lower-right radio frame, and lower-center message treatment. The current
-objective is rendered from the released Font13PS atlas. This does not establish
-complete HUD state logic, contacts, radio portraits/video, weapon selection,
-damage presentation, tutorial timing, or pixel parity.
+objective is rendered from the released Font13PS atlas. Exact 128×128 DXT2 `aa`
+frames supply the current static Tatiana and technician portraits; animated
+portrait/video behavior is not inferred.
+
+One clean control and two fresh, uninterrupted app-owned Level 100 runs then
+repeated the first eight message boundaries within one 50 ms retail sample.
+With Core tick zero aligned to Steam's game-time-`3.0` pan start, their intervals
+are HUD introduction `182..351`, threat circle `357..567`, scanner `573..756`,
+message log `762..926`, technician `932..998`, movement `1004..1220`, Target
+Zone 1 instruction `1226..1387`, and objective-scanner instruction `1393..1530`.
+The Battle Engine power flag at offset `0x580` changed `0 → 1` at tick `1000`;
+the released flight flag at `0x58C` and both initial weapon gates remained off.
+At tick `1223`, the object uniquely identified at Target Zone 1's authored
+position changed its `CThing` flags at offset `0x2C` from `0x0002` to `0x0022`,
+setting objective bit `0x20`. Exact English strings decoded from `english.dat`
+and the eight shipped English Ogg/Vorbis files drive the client. This establishes
+the bounded first-instruction sequence and initial gates, not later tutorial
+progression, animated portraits, tactical contacts, weapon behavior, or pixel
+parity.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration now uses the released continuous yaw basis; the eight-way
@@ -162,11 +179,12 @@ A native smoke proves the current client starts, loads the four exterior meshes
 with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
 cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
 retained heightfield, exact macro terrain inputs, selected detail texture, and
-Core-owned player ground elevation,
-omits synthetic target and
-objective-marker scenery, renders the fly-in/control/HUD handoff, advances,
-preserves the expected
+Core-owned player ground elevation. It also reaches the retail-timed Target Zone
+1 instruction with the exact static portrait, subtitle, and voice stream loaded,
+while reporting the demonstrated power, flight, weapon, message, and objective
+state. The same smoke omits synthetic target and objective-marker scenery,
+renders the fly-in/control/HUD handoff, advances, preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or
 moving cloud-shadow passes, procedural leg solving, collision, complete
 environment population, the complete mission, camera pitch/occlusion, full HUD behavior,
-timing, or visual parity.
+later timing, or visual parity.

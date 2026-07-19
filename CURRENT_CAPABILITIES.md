@@ -151,16 +151,19 @@ placeholder structures are gone. Terrain, retained meshes, facilities, sky,
 light, camera, and Core-relative positions now share the released
 `(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view follows the
 released four-point Level 100 pan around the exterior Aquila, switches to the
-retained first-person cockpit and HUD after 5.95 seconds, and enables player
-input after the full six-second retail interval. Core rejects movement, look,
-fire, and transform input during those first 180 deterministic ticks. Two fresh
+retained first-person cockpit and HUD after 5.95 seconds, and reaches the retail
+playing-camera state after six seconds. Level 100's script keeps the player
+deactivated beyond that camera handoff: Core enables movement/look only when the
+released power flag changes at tick 1000 relative to the pan start, while flight
+and both weapons remain disabled. Two fresh
 uninterrupted safe-copy runs repeated the same camera endpoints, six-second
 length, handoff, and playing-state boundary. A clean Level 100 control and two
 fresh repeated safe-copy runs also establish the walker's acceleration,
 equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
-rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
-retail-timed 16-tick transition instead of switching to Jet immediately. The
+rather than an eight-direction visual snap. Core retains the previously measured
+16-tick walker-to-jet transition, but the clean opening's flight gate keeps it
+unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
 with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
@@ -168,7 +171,12 @@ machine-observed Level 100 standing pose and follow the released 101-frame
 static conversions. The exterior meshes and exact frame-25 first-person
 cockpit render from eight retained AYA-wrapped textures. Twelve exact released
 HUD textures, including Font13PS, replace the prototype overlay for the bounded
-crosshair, radar/radio frames, and current objective line. The released macro
+crosshair, radar/radio frames, and current objective line. The first eight
+English tutorial messages through Target Zone 1 activation now use exact
+released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
+portrait frames. Two uninterrupted retail repetitions matched every retained
+message boundary within 50 ms; Core activates power at tick 1000 and Target Zone
+1 at tick 1223. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
@@ -178,10 +186,11 @@ eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response or the retail controller's procedural foot
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
-state/contacts/radio behavior, audio, campaign, networking, or the rest of the
-transform model. The camera slice does not yet reproduce cockpit pitch response,
+state/contacts/animated-radio behavior, later mission audio, campaign,
+networking, or the rest of the transform model. The camera slice does not yet
+reproduce cockpit pitch response,
 terrain occlusion, camera shake, or later scripted cameras.
-Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
+Later tutorial dialogue and eligibility changes are not implemented; the
 remaining synthetic combat targets are Core handling fixtures and are no longer
 drawn as Level 100 scenery. Synthetic objective beacons are also absent.
 Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point

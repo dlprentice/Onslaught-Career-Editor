@@ -48,7 +48,7 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Level100Opening_RejectsPlayerInputUntilTheRetailPanCompletes()
+    public void Level100Briefing_ReproducesRetailMessagesPowerAndObjectiveGates()
     {
         var simulation = new Simulation(1);
         var attemptedInput = new SimInput(
@@ -59,30 +59,62 @@ public sealed class SimulationTests
 
         Assert.Equal(SimulationConstants.Level100OpeningPanTicks, simulation.Snapshot.Level100OpeningTicksRemaining);
         Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
+        Assert.False(simulation.Snapshot.Level100FlightEnabled);
+        Assert.False(simulation.Snapshot.Level100WeaponsEnabled);
+        Assert.Equal(Level100OpeningPhase.Briefing, simulation.Snapshot.Level100Phase);
 
-        for (int tick = 1; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        for (int tick = 1; tick <= SimulationConstants.Level100OpeningPanTicks; tick++)
         {
             simulation.Step(attemptedInput);
         }
 
-        Assert.Equal(1, simulation.Snapshot.Level100OpeningTicksRemaining);
+        Assert.Equal(0, simulation.Snapshot.Level100OpeningTicksRemaining);
+        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
         Assert.Equal(SimVector2.Zero, simulation.Snapshot.PlayerPosition);
         Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, simulation.Snapshot.FacingYawMicroRad);
         Assert.Equal(VehicleTransition.None, simulation.Snapshot.Transition);
         Assert.Equal(SimulationConstants.MaximumEnergy, simulation.Snapshot.Energy);
         Assert.Empty(simulation.Snapshot.Projectiles);
 
-        WorldSnapshot handoff = simulation.Step(attemptedInput);
+        (int Start, int End, Level100TutorialMessage Message)[] messages =
+        [
+            (SimulationConstants.Level100Hud01StartTick, SimulationConstants.Level100Hud01EndTick, Level100TutorialMessage.HudIntroduction),
+            (SimulationConstants.Level100Hud02StartTick, SimulationConstants.Level100Hud02EndTick, Level100TutorialMessage.ThreatCircle),
+            (SimulationConstants.Level100Hud06StartTick, SimulationConstants.Level100Hud06EndTick, Level100TutorialMessage.Scanner),
+            (SimulationConstants.Level100MessageLogStartTick, SimulationConstants.Level100MessageLogEndTick, Level100TutorialMessage.MessageLog),
+            (SimulationConstants.Level100TechnicianStartTick, SimulationConstants.Level100TechnicianEndTick, Level100TutorialMessage.TechnicianStatus),
+            (SimulationConstants.Level100MovementInstructionStartTick, SimulationConstants.Level100MovementInstructionEndTick, Level100TutorialMessage.MovementControls),
+            (SimulationConstants.Level100TargetZone1InstructionStartTick, SimulationConstants.Level100TargetZone1InstructionEndTick, Level100TutorialMessage.ReachTargetZone1),
+            (SimulationConstants.Level100ScannerInstructionStartTick, SimulationConstants.Level100ScannerInstructionEndTick, Level100TutorialMessage.ScannerObjective),
+        ];
+        foreach ((int start, int end, Level100TutorialMessage message) in messages)
+        {
+            StepUntilLevel100Tick(simulation, start);
+            Assert.Equal(message, simulation.Snapshot.Level100Message);
+            StepUntilLevel100Tick(simulation, end);
+            Assert.Equal(Level100TutorialMessage.None, simulation.Snapshot.Level100Message);
+        }
+
+        var second = new Simulation(1);
+        StepUntilLevel100Tick(second, SimulationConstants.Level100PowerActivationTick - 1, attemptedInput);
+        Assert.False(second.Snapshot.Level100PlayerControlEnabled);
+        Assert.Equal(SimVector2.Zero, second.Snapshot.PlayerPosition);
+
+        WorldSnapshot handoff = second.Step(attemptedInput);
         Assert.True(handoff.Level100PlayerControlEnabled);
         Assert.Equal(SimVector2.Zero, handoff.PlayerPosition);
-        Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, handoff.FacingYawMicroRad);
-        Assert.Equal(VehicleTransition.None, handoff.Transition);
-        Assert.Empty(handoff.Projectiles);
 
-        WorldSnapshot playing = simulation.Step(new SimInput(0, 1, SimActions.Fire, LookX: 1));
+        WorldSnapshot playing = second.Step(new SimInput(0, 1, SimActions.Fire | SimActions.ToggleMode, LookX: 1));
         Assert.NotEqual(SimVector2.Zero, playing.PlayerPosition);
         Assert.NotEqual(SimulationConstants.Level100PlayerStartYawMicroRad, playing.FacingYawMicroRad);
-        Assert.Single(playing.Projectiles);
+        Assert.Equal(VehicleTransition.None, playing.Transition);
+        Assert.Empty(playing.Projectiles);
+
+        StepUntilLevel100Tick(second, SimulationConstants.Level100TargetZone1ActivationTick - 1);
+        Assert.Equal(Level100OpeningPhase.Briefing, second.Snapshot.Level100Phase);
+        Assert.Equal(
+            Level100OpeningPhase.ReachTargetZone1,
+            second.Step(SimInput.Idle).Level100Phase);
     }
 
     [Fact]
@@ -211,54 +243,6 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void ToggleMode_EntersMeasuredWalkerToJetTransitionBeforeCommittingJetMode()
-    {
-        Simulation simulation = CreatePlayingSimulation();
-
-        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
-
-        Assert.Equal(VehicleMode.Walker, state.Mode);
-        Assert.Equal(VehicleTransition.WalkerToJet, state.Transition);
-        Assert.Equal(0, state.Shield);
-        Assert.Equal(
-            SimulationConstants.MaximumEnergy -
-                SimulationConstants.TransformEnergyCost -
-                SimulationConstants.JetEnergyDrainPerTick,
-            state.Energy);
-        Assert.Equal(SimulationConstants.WalkerToJetTransitionTicks, state.TransformTicksRemaining);
-
-        for (int interval = 1; interval < SimulationConstants.WalkerToJetTransitionTicks; interval++)
-        {
-            state = simulation.Step(new SimInput(
-                0,
-                0,
-                interval == 1 ? SimActions.ToggleMode : SimActions.None));
-            Assert.Equal(VehicleMode.Walker, state.Mode);
-            Assert.Equal(VehicleTransition.WalkerToJet, state.Transition);
-            Assert.Equal(SimulationConstants.WalkerToJetTransitionTicks - interval, state.TransformTicksRemaining);
-        }
-
-        state = simulation.Step(SimInput.Idle);
-        Assert.Equal(VehicleMode.Jet, state.Mode);
-        Assert.Equal(VehicleTransition.None, state.Transition);
-        Assert.Equal(0, state.TransformTicksRemaining);
-    }
-
-    [Fact]
-    public void FirstTickFire_ConsumesResourcesAndAdvancesTheSpawnedProjectile()
-    {
-        Simulation simulation = CreatePlayingSimulation();
-
-        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
-
-        ProjectileSnapshot projectile = Assert.Single(state.Projectiles);
-        Assert.Equal(new SimVector2(0, SimulationConstants.ProjectileSpeedPerTick), projectile.Position);
-        Assert.Equal(SimulationConstants.ProjectileLifetimeTicks - 1, projectile.RemainingTicks);
-        Assert.Equal(SimulationConstants.MaximumEnergy - SimulationConstants.FireEnergyCost, state.Energy);
-        Assert.Equal(SimulationConstants.FireCooldownTicks, state.FireCooldownTicksRemaining);
-    }
-
-    [Fact]
     public void Reset_DominatesOtherActionsInTheSameInputSlot()
     {
         Simulation simulation = CreatePlayingSimulation();
@@ -269,7 +253,7 @@ public sealed class SimulationTests
             1,
             SimActions.Reset | SimActions.Fire | SimActions.ToggleMode));
 
-        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 2, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 2, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
@@ -335,19 +319,6 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void RepeatedFire_DestroysTheForwardTargetDeterministically()
-    {
-        Simulation simulation = CreatePlayingSimulation(0xA917BEEFu);
-        for (int tick = 0; tick < 40; tick++)
-        {
-            simulation.Step(new SimInput(0, 0, SimActions.Fire));
-        }
-
-        Assert.Equal(1, simulation.Snapshot.TargetsDestroyed);
-        Assert.False(simulation.Snapshot.Targets.Single(target => target.Id == 1).IsActive);
-    }
-
-    [Fact]
     public void Reset_RestoresDynamicStateWithoutRewindingReplayTick()
     {
         Simulation simulation = CreatePlayingSimulation(42);
@@ -356,38 +327,13 @@ public sealed class SimulationTests
 
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
 
-        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 3, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 3, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
         Assert.Equal(SimulationConstants.MaximumShield, reset.Shield);
         Assert.Equal(0, reset.TargetsDestroyed);
         Assert.Empty(reset.Projectiles);
-    }
-
-    [Fact]
-    public void StateHash_IncludesNextProjectileIdentityWhenNoProjectileIsActive()
-    {
-        Simulation fired = CreatePlayingSimulation();
-        Simulation didNotFire = CreatePlayingSimulation();
-
-        fired.Step(new SimInput(1, 0, SimActions.Fire));
-        didNotFire.Step(new SimInput(1, 0));
-        for (int tick = 1; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
-        {
-            fired.Step(SimInput.Idle);
-            didNotFire.Step(SimInput.Idle);
-        }
-
-        Assert.Empty(fired.Snapshot.Projectiles);
-        Assert.Empty(didNotFire.Snapshot.Projectiles);
-        Assert.NotEqual(
-            StateHasher.ComputeHex(fired.Snapshot),
-            StateHasher.ComputeHex(didNotFire.Snapshot));
-
-        WorldSnapshot firedAgain = fired.Step(new SimInput(0, 0, SimActions.Fire));
-        WorldSnapshot firstFire = didNotFire.Step(new SimInput(0, 0, SimActions.Fire));
-        Assert.NotEqual(firedAgain.Projectiles.Single().Id, firstFire.Projectiles.Single().Id);
     }
 
     [Fact]
@@ -404,65 +350,6 @@ public sealed class SimulationTests
         Assert.True(targets.IsReadOnly);
         Assert.True(projectiles.IsReadOnly);
         Assert.Throws<NotSupportedException>(() => targets[0] = targets[0] with { Hull = 0 });
-        Assert.Throws<NotSupportedException>(() => projectiles[0] = projectiles[0] with { RemainingTicks = 0 });
-    }
-
-    [Fact]
-    public void TransformPeriod_BlocksMovementAndFireUntilItCompletes()
-    {
-        Simulation simulation = CreatePlayingSimulation();
-        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
-
-        for (int tick = 1; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
-        {
-            WorldSnapshot blocked = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
-            Assert.Equal(SimVector2.Zero, blocked.PlayerPosition);
-            Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, blocked.FacingYawMicroRad);
-            Assert.Equal(0, blocked.WalkerYawVelocityMicroRadPerTick);
-            Assert.Empty(blocked.Projectiles);
-        }
-
-        WorldSnapshot active = simulation.Step(new SimInput(1, 0, SimActions.Fire, LookX: 1));
-        Assert.NotEqual(SimVector2.Zero, active.PlayerPosition);
-        Assert.NotEqual(0, active.FacingYawMicroRad);
-        Assert.Single(active.Projectiles);
-    }
-
-    [Fact]
-    public void EmptyJetEnergy_ForcesWalkerModeAndStartsTransformLock()
-    {
-        Simulation simulation = CreatePlayingSimulation();
-        simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
-
-        for (int tick = 0; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-
-        for (int tick = 0; tick < 1_000 && simulation.Snapshot.Mode == VehicleMode.Jet; tick++)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-
-        Assert.Equal(VehicleMode.Walker, simulation.Snapshot.Mode);
-        Assert.Equal(0, simulation.Snapshot.Energy);
-        Assert.Equal(SimulationConstants.TransformDurationTicks, simulation.Snapshot.TransformTicksRemaining);
-    }
-
-    [Fact]
-    public void FireCooldown_PreventsProjectileSpamWhileFireIsHeld()
-    {
-        Simulation simulation = CreatePlayingSimulation();
-        simulation.Step(new SimInput(1, 0, SimActions.Fire));
-
-        for (int tick = 1; tick < SimulationConstants.FireCooldownTicks; tick++)
-        {
-            simulation.Step(new SimInput(0, 0, SimActions.Fire));
-            Assert.Single(simulation.Snapshot.Projectiles);
-        }
-
-        simulation.Step(new SimInput(0, 0, SimActions.Fire));
-        Assert.Equal(2, simulation.Snapshot.Projectiles.Count);
     }
 
     private static void DriveToPhase(
@@ -484,12 +371,24 @@ public sealed class SimulationTests
     private static Simulation CreatePlayingSimulation(uint seed = 1)
     {
         var simulation = new Simulation(seed);
-        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
 
         Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
         return simulation;
+    }
+
+    private static void StepUntilLevel100Tick(
+        Simulation simulation,
+        int timelineTick,
+        SimInput? input = null)
+    {
+        while (simulation.Snapshot.Level100TimelineTick < timelineTick)
+        {
+            simulation.Step(input ?? SimInput.Idle);
+        }
+        Assert.Equal(timelineTick, simulation.Snapshot.Level100TimelineTick);
     }
 }

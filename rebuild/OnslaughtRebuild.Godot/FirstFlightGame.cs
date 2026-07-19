@@ -28,6 +28,8 @@ public sealed partial class FirstFlightGame : Node3D
     private readonly InteractiveSession _session = new(SimulationSeed);
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
+    private AudioStreamPlayer _tutorialVoice = null!;
+    private Level100TutorialMessage _playingTutorialMessage;
     private bool _smokeMode;
     private bool _smokeCompleting;
     private bool _focusLossHandlerInputCleared;
@@ -55,6 +57,9 @@ public sealed partial class FirstFlightGame : Node3D
             _hud.Initialize();
             _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
             _hud.Visible = _world.ShowHud;
+
+            _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
+            AddChild(_tutorialVoice);
         }
         catch (Exception exception)
         {
@@ -101,6 +106,7 @@ public sealed partial class FirstFlightGame : Node3D
             (float)delta);
         _hud.UpdateFromSnapshot(result.CurrentSnapshot);
         _hud.Visible = _world.ShowHud;
+        UpdateTutorialVoice(result.CurrentSnapshot.Level100Message);
 
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
@@ -245,6 +251,8 @@ public sealed partial class FirstFlightGame : Node3D
         SetSyntheticAction(MoveRightAction, input.MoveX > 0);
         SetSyntheticAction(MoveBackwardAction, input.MoveZ < 0);
         SetSyntheticAction(MoveForwardAction, input.MoveZ > 0);
+        SetSyntheticAction(LookLeftAction, input.LookX < 0);
+        SetSyntheticAction(LookRightAction, input.LookX > 0);
         SetSyntheticAction(FireAction, input.FireHeld);
         SetSyntheticAction(ToggleModeAction, input.ToggleModeHeld);
         SetSyntheticAction(ResetAction, input.ResetHeld);
@@ -270,6 +278,8 @@ public sealed partial class FirstFlightGame : Node3D
                      MoveBackwardAction,
                      MoveLeftAction,
                      MoveRightAction,
+                     LookLeftAction,
+                     LookRightAction,
                      FireAction,
                      ToggleModeAction,
                      ResetAction,
@@ -277,6 +287,52 @@ public sealed partial class FirstFlightGame : Node3D
         {
             Input.ActionRelease(action);
         }
+    }
+
+    private void UpdateTutorialVoice(Level100TutorialMessage message)
+    {
+        if (_playingTutorialMessage == message)
+        {
+            return;
+        }
+
+        _playingTutorialMessage = message;
+        _tutorialVoice.Stop();
+        string? resourcePath = message switch
+        {
+            Level100TutorialMessage.HudIntroduction =>
+                "res://Assets/Level100/TutorialAudio/hud_01.ogg",
+            Level100TutorialMessage.ThreatCircle =>
+                "res://Assets/Level100/TutorialAudio/hud_02.ogg",
+            Level100TutorialMessage.Scanner =>
+                "res://Assets/Level100/TutorialAudio/hud_06.ogg",
+            Level100TutorialMessage.MessageLog =>
+                "res://Assets/Level100/TutorialAudio/tutorial_message_log.ogg",
+            Level100TutorialMessage.TechnicianStatus =>
+                "res://Assets/Level100/TutorialAudio/tutorial_technician_01.ogg",
+            Level100TutorialMessage.MovementControls =>
+                "res://Assets/Level100/TutorialAudio/tutorial_13_mod.ogg",
+            Level100TutorialMessage.ReachTargetZone1 =>
+                "res://Assets/Level100/TutorialAudio/tutorial_01.ogg",
+            Level100TutorialMessage.ScannerObjective =>
+                "res://Assets/Level100/TutorialAudio/tutorial_scanner.ogg",
+            _ => null,
+        };
+        if (resourcePath is null)
+        {
+            _tutorialVoice.Stream = null;
+            return;
+        }
+
+        byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
+        _tutorialVoice.Stream = source.Length == 0
+            ? null
+            : AudioStreamOggVorbis.LoadFromBuffer(source);
+        if (_tutorialVoice.Stream is null)
+        {
+            throw new InvalidDataException($"Released tutorial voice is missing or invalid: {resourcePath}");
+        }
+        _tutorialVoice.Play();
     }
 
     private void RunFocusLossHandlerSmokeProbe()
@@ -361,7 +417,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v5",
+                SchemaVersion = "onslaught-first-flight-smoke.v6",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -370,7 +426,12 @@ public sealed partial class FirstFlightGame : Node3D
                 Mode = _session.CurrentSnapshot.Mode.ToString(),
                 Level100Phase = _session.CurrentSnapshot.Level100Phase.ToString(),
                 Level100OpeningTicksRemaining = _session.CurrentSnapshot.Level100OpeningTicksRemaining,
+                Level100TimelineTick = _session.CurrentSnapshot.Level100TimelineTick,
+                Level100Message = _session.CurrentSnapshot.Level100Message.ToString(),
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
+                Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
+                Level100WeaponsEnabled = _session.CurrentSnapshot.Level100WeaponsEnabled,
+                TutorialVoicePlaying = _tutorialVoice.Playing,
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
                 ResetEdgesConsumed = metrics.ResetEdgesConsumed,
@@ -444,7 +505,12 @@ public sealed partial class FirstFlightGame : Node3D
         public required string Mode { get; init; }
         public required string Level100Phase { get; init; }
         public required int Level100OpeningTicksRemaining { get; init; }
+        public required int Level100TimelineTick { get; init; }
+        public required string Level100Message { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
+        public required bool Level100FlightEnabled { get; init; }
+        public required bool Level100WeaponsEnabled { get; init; }
+        public required bool TutorialVoicePlaying { get; init; }
         public required long TotalSteps { get; init; }
         public required long ToggleEdgesConsumed { get; init; }
         public required long ResetEdgesConsumed { get; init; }

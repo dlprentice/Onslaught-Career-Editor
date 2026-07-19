@@ -16,11 +16,25 @@ public enum VehicleTransition
 
 public enum Level100OpeningPhase
 {
-    ReachTargetZone1 = 0,
-    TargetZone1DispatchPending = 1,
-    ReachFiringRange = 2,
-    FiringRangeDispatchPending = 3,
-    FiringRangeReached = 4,
+    Briefing = 0,
+    ReachTargetZone1 = 1,
+    TargetZone1DispatchPending = 2,
+    ReachFiringRange = 3,
+    FiringRangeDispatchPending = 4,
+    FiringRangeReached = 5,
+}
+
+public enum Level100TutorialMessage
+{
+    None = 0,
+    HudIntroduction = 1,
+    ThreatCircle = 2,
+    Scanner = 3,
+    MessageLog = 4,
+    TechnicianStatus = 5,
+    MovementControls = 6,
+    ReachTargetZone1 = 7,
+    ScannerObjective = 8,
 }
 
 [Flags]
@@ -100,6 +114,11 @@ public sealed record WorldSnapshot(
     int TransformTicksRemaining,
     int FireCooldownTicksRemaining,
     int Level100OpeningTicksRemaining,
+    int Level100TimelineTick,
+    Level100TutorialMessage Level100Message,
+    bool Level100PowerEnabled,
+    bool Level100FlightEnabled,
+    bool Level100WeaponsEnabled,
     Level100OpeningPhase Level100Phase,
     int Level100DispatchTicksRemaining,
     int NextProjectileId,
@@ -107,5 +126,5 @@ public sealed record WorldSnapshot(
     IReadOnlyList<TargetSnapshot> Targets,
     IReadOnlyList<ProjectileSnapshot> Projectiles)
 {
-    public bool Level100PlayerControlEnabled => Level100OpeningTicksRemaining == 0;
+    public bool Level100PlayerControlEnabled => Level100PowerEnabled;
 }
