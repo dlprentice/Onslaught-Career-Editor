@@ -43,8 +43,8 @@ public sealed class SimulationTests
             Assert.Equal(StateHasher.ComputeHex(firstState), StateHasher.ComputeHex(repeatState));
         }
 
-        Assert.Equal(new SimVector2(-2_705, 2_705), first.Snapshot.PlayerPosition);
-        Assert.Equal(332, first.Snapshot.PlayerGroundElevationMillimeters);
+        Assert.Equal(new SimVector2(-3_705, 1_007), first.Snapshot.PlayerPosition);
+        Assert.Equal(5, first.Snapshot.PlayerGroundElevationMillimeters);
     }
 
     [Fact]
@@ -52,16 +52,30 @@ public sealed class SimulationTests
     {
         var simulation = new Simulation(1);
 
-        foreach (int expected in new[] { 33, 59, 79, 95, 100 })
+        foreach (SimVector2 expected in new[]
+                 {
+                     new SimVector2(-16, 29),
+                     new SimVector2(-28, 51),
+                     new SimVector2(-38, 69),
+                     new SimVector2(-45, 83),
+                     new SimVector2(-47, 87),
+                 })
         {
             WorldSnapshot state = simulation.Step(new SimInput(0, 1));
-            Assert.Equal(new SimVector2(0, expected), state.PlayerVelocity);
+            Assert.Equal(expected, state.PlayerVelocity);
         }
 
-        foreach (int expected in new[] { 78, 61, 48, 37, 29 })
+        foreach (SimVector2 expected in new[]
+                 {
+                     new SimVector2(-37, 68),
+                     new SimVector2(-29, 53),
+                     new SimVector2(-22, 41),
+                     new SimVector2(-17, 32),
+                     new SimVector2(-13, 25),
+                 })
         {
             WorldSnapshot state = simulation.Step(SimInput.Idle);
-            Assert.Equal(new SimVector2(0, expected), state.PlayerVelocity);
+            Assert.Equal(expected, state.PlayerVelocity);
         }
     }
 
@@ -70,10 +84,17 @@ public sealed class SimulationTests
     {
         var simulation = new Simulation(1);
 
-        foreach (int expected in new[] { 33, 59, 79, 95, 100 })
+        foreach (SimVector2 expected in new[]
+                 {
+                     new SimVector2(29, 16),
+                     new SimVector2(51, 28),
+                     new SimVector2(69, 38),
+                     new SimVector2(83, 45),
+                     new SimVector2(87, 47),
+                 })
         {
             WorldSnapshot state = simulation.Step(new SimInput(1, 0));
-            Assert.Equal(new SimVector2(expected, 0), state.PlayerVelocity);
+            Assert.Equal(expected, state.PlayerVelocity);
         }
     }
 
@@ -94,7 +115,7 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void MovementUsesBodyHeadingWithoutResettingLookYaw()
+    public void WalkerMovementUsesContinuousBodyYawWithoutResettingLookYaw()
     {
         var simulation = new Simulation(1);
         for (int tick = 0; tick < 20; tick++)
@@ -105,8 +126,8 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Step(new SimInput(0, 1));
         Assert.Equal(1, state.FacingX);
         Assert.Equal(0, state.FacingZ);
-        Assert.True(state.PlayerPosition.X > 0);
-        Assert.Equal(0, state.PlayerPosition.Z);
+        Assert.Equal(1_635_706, state.FacingYawMicroRad);
+        Assert.Equal(new SimVector2(-33, -2), state.PlayerVelocity);
     }
 
     [Fact]
@@ -228,8 +249,10 @@ public sealed class SimulationTests
             simulation.Step(new SimInput(1, 1));
         }
 
-        Assert.True(simulation.Snapshot.PlayerPosition.X > 30_000);
-        Assert.True(simulation.Snapshot.PlayerPosition.Z > 30_000);
+        long distanceSquared =
+            ((long)simulation.Snapshot.PlayerPosition.X * simulation.Snapshot.PlayerPosition.X) +
+            ((long)simulation.Snapshot.PlayerPosition.Z * simulation.Snapshot.PlayerPosition.Z);
+        Assert.True(distanceSquared > 30_000L * 30_000L);
         Assert.NotEqual(SimVector2.Zero, simulation.Snapshot.PlayerVelocity);
     }
 
@@ -277,12 +300,6 @@ public sealed class SimulationTests
     public void RepeatedFire_DestroysTheForwardTargetDeterministically()
     {
         var simulation = new Simulation(0xA917BEEFu);
-        // Move toward the synthetic forward target under the measured walker cap.
-        for (int tick = 0; tick < 70; tick++)
-        {
-            simulation.Step(new SimInput(0, 1));
-        }
-
         for (int tick = 0; tick < 40; tick++)
         {
             simulation.Step(new SimInput(0, 0, SimActions.Fire));

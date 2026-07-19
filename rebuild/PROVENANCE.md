@@ -135,8 +135,9 @@ complete HUD state logic, contacts, radio portraits/video, weapon selection,
 damage presentation, tutorial timing, or pixel parity.
 
 These slices do not make the surrounding vehicle model retail-faithful.
-Eight-way movement projection, terrain response beyond grounded height following,
-dash behavior, camera pitch and
+Walker acceleration now uses the released continuous yaw basis; the eight-way
+projection remains only in provisional jet movement and projectile aim. Terrain
+response beyond grounded height following, dash behavior, camera pitch and
 occlusion, jet-to-walker, transform presentation, resources, weapons, and flight
 dynamics remain provisional.
 

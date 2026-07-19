@@ -143,8 +143,8 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult movementTick = session.AdvanceFrameTicks(333_334);
         FrameAdvanceResult idleTick = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, movementTick.CurrentSnapshot.PlayerPosition.Z);
-        Assert.Equal(59, idleTick.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(new SimVector2(-16, 29), movementTick.CurrentSnapshot.PlayerPosition);
+        Assert.Equal(new SimVector2(-28, 51), idleTick.CurrentSnapshot.PlayerPosition);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
     }
 
@@ -158,7 +158,7 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, result.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(new SimVector2(-16, 29), result.CurrentSnapshot.PlayerPosition);
         Assert.Single(result.CurrentSnapshot.Projectiles);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
         Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
@@ -308,7 +308,7 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
         session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(SimulationConstants.WalkerAccelerationPerTick, session.CurrentSnapshot.PlayerPosition.Z);
+        Assert.Equal(new SimVector2(-16, 29), session.CurrentSnapshot.PlayerPosition);
         Assert.Single(session.CurrentSnapshot.Projectiles);
     }
 

@@ -151,7 +151,7 @@ public sealed class Simulation
             QuantizeFacingFromYaw();
         }
 
-        SimVector2 jetVelocity = ProjectLocalInput(
+        SimVector2 jetVelocity = ProjectEightWayInput(
             input,
             SimulationConstants.JetSpeedPerTick,
             SimulationConstants.JetSpeedPerTick);
@@ -172,9 +172,8 @@ public sealed class Simulation
 
     private void UpdateWalkerMovement(SimInput input)
     {
-        SimVector2 acceleration = ProjectLocalInput(
+        SimVector2 acceleration = ProjectWalkerInput(
             input,
-            SimulationConstants.WalkerAccelerationPerTick,
             SimulationConstants.WalkerAccelerationPerTick);
         var velocity = new SimVector2(
             RetainWalkerVelocity(_playerVelocity.X) + acceleration.X,
@@ -186,11 +185,26 @@ public sealed class Simulation
         (int)((long)velocity * SimulationConstants.WalkerVelocityRetentionNumerator /
             SimulationConstants.WalkerVelocityRetentionDenominator);
 
-    private SimVector2 ProjectLocalInput(SimInput input, int speedX, int speedZ)
+    private SimVector2 ProjectWalkerInput(SimInput input, int acceleration)
     {
-        // Movement axes are local to the body. The pinned walker source rotates
-        // forward and strafe acceleration by heading. The current eight-way
-        // projection remains a bounded deterministic approximation.
+        int localX = input.MoveX * acceleration;
+        int localZ = input.MoveZ * acceleration;
+        if (input.MoveX != 0 && input.MoveZ != 0)
+        {
+            localX = localX * 181 / 256;
+            localZ = localZ * 181 / 256;
+        }
+
+        (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
+        return new SimVector2(
+            DivideRoundNearest(((long)localX * cos) - ((long)localZ * sin), FixedTrigScale),
+            DivideRoundNearest(((long)localX * sin) + ((long)localZ * cos), FixedTrigScale));
+    }
+
+    private SimVector2 ProjectEightWayInput(SimInput input, int speedX, int speedZ)
+    {
+        // Jet movement remains a bounded eight-way approximation. Walker
+        // acceleration uses the continuous released body-yaw basis above.
         int forwardX = _facingX;
         int forwardZ = _facingZ;
         int headingScale = forwardX != 0 && forwardZ != 0 ? 181 : 256;
@@ -211,6 +225,66 @@ public sealed class Simulation
         }
 
         return new SimVector2(velocityX, velocityZ);
+    }
+
+    private const int FixedTrigScale = 1 << 30;
+    private const int HalfPiMicroRad = 1_570_796;
+    private const int PiMicroRad = 3_141_593;
+    private const int CordicGainQ30 = 652_032_874;
+
+    // Integer CORDIC keeps the local-to-world rotation deterministic without
+    // introducing platform floating-point math into Core state updates.
+    private static ReadOnlySpan<int> CordicAnglesMicroRad =>
+    [
+        785_398, 463_648, 244_979, 124_355, 62_419, 31_240, 15_624,
+        7_812, 3_906, 1_953, 977, 488, 244, 122, 61, 31, 15, 8, 4, 2, 1,
+    ];
+
+    private static (int Sin, int Cos) FixedSinCos(int angleMicroRad)
+    {
+        int angle = NormalizeMicroRad(angleMicroRad);
+        int resultSign = 1;
+        if (angle > HalfPiMicroRad)
+        {
+            angle -= PiMicroRad;
+            resultSign = -1;
+        }
+        else if (angle < -HalfPiMicroRad)
+        {
+            angle += PiMicroRad;
+            resultSign = -1;
+        }
+
+        long x = CordicGainQ30;
+        long y = 0;
+        int remainder = angle;
+        ReadOnlySpan<int> angles = CordicAnglesMicroRad;
+        for (int index = 0; index < angles.Length; index++)
+        {
+            long previousX = x;
+            if (remainder >= 0)
+            {
+                x -= y >> index;
+                y += previousX >> index;
+                remainder -= angles[index];
+            }
+            else
+            {
+                x += y >> index;
+                y -= previousX >> index;
+                remainder += angles[index];
+            }
+        }
+
+        return ((int)y * resultSign, (int)x * resultSign);
+    }
+
+    private static int DivideRoundNearest(long numerator, int denominator)
+    {
+        long half = denominator / 2L;
+        return (int)(numerator >= 0
+            ? (numerator + half) / denominator
+            : (numerator - half) / denominator);
     }
 
     private void MovePlayer(SimVector2 velocity)

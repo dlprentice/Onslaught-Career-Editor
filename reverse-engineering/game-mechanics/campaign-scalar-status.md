@@ -47,6 +47,16 @@ Core keeps the observed 3.0-unit/s cap and maps the 20 Hz retention factors to
 100 handling slice, not terrain response, dash behavior, camera parity, jet
 handling, or a universal configuration profile.
 
+The same clean Level 100 start held yaw `0.509829998` and horizontal forward
+column `(-0.488029, 0.872827)` across five uninterrupted samples. Steam
+`CBattleEngineWalkerPart__Forward` (`0x00412d80`) and
+`CBattleEngineWalkerPart__StrafeLeft` (`0x00413160`) build their velocity
+vectors from the current yaw before adding them to the Battle Engine. Core now
+uses that continuous local-to-world basis with integer fixed-point trig; its
+first authored-start forward acceleration is `(-16, 29)` milli-units/tick.
+Analog input response, diagonals, dash behavior, and jet movement remain outside
+this bounded mapping.
+
 ## Observed, not implemented
 
 Jet-to-walker timing and the relationship between raw state changes, visual

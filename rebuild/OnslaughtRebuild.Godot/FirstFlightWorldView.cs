@@ -375,8 +375,8 @@ public sealed partial class FirstFlightWorldView : Node3D
             float velocityX = snapshot.PlayerVelocity.X * UnitsToMeters;
             float velocityZ = snapshot.PlayerVelocity.Z * UnitsToMeters;
             float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-            float forwardSpeed = (velocityX * Mathf.Sin(yaw)) + (velocityZ * Mathf.Cos(yaw));
-            float strafeSpeed = (velocityX * Mathf.Cos(yaw)) - (velocityZ * Mathf.Sin(yaw));
+            float forwardSpeed = (-velocityX * Mathf.Sin(yaw)) + (velocityZ * Mathf.Cos(yaw));
+            float strafeSpeed = (velocityX * Mathf.Cos(yaw)) + (velocityZ * Mathf.Sin(yaw));
             float cycleStep = Math.Abs(forwardSpeed) > Math.Abs(strafeSpeed)
                 ? forwardSpeed * 2.5f
                 : strafeSpeed * 3f;

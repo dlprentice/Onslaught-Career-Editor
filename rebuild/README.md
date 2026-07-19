@@ -76,8 +76,9 @@ Core currently provides integer positions, opening-objective state, resources,
 cooldowns, projectile interactions, reset behavior, ordered snapshots, and
 versioned SHA-256 state and trace hashes. Continuous body yaw and Level 100
 objective state are part of the snapshot/hash, and every input axis—including
-look—is part of the trace. Movement is projected relative to the body's
-deterministic eight-way heading.
+look—is part of the trace. Walker acceleration is projected through the body's
+continuous deterministic yaw; jet movement and projectile aim still use the
+older eight-way approximation.
 
 Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
@@ -87,7 +88,7 @@ state. The presentation camera now uses clean Level 100's released attached
 first-person view: the Aquila center of gravity, horizontal orientation column,
 58.7155-degree vertical field of view, 0.1 near plane, and the authored frame-25
 walker cockpit. Camera pitch response and
-terrain clipping, eight-way movement projection,
+terrain clipping, jet movement and projectile heading,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
 collision beyond grounded height following, AI, the remaining mission, audio,
 campaign, and networking

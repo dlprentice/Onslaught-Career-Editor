@@ -167,8 +167,9 @@ crosshair, radar/radio frames, and current objective line. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
-cloud-shadow stage remains absent. The eight-way movement projection remains
-an approximation, and the slice does not
+cloud-shadow stage remains absent. Walker acceleration now follows Core's
+continuous body yaw; jet translation and projectile heading retain the older
+eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response or the retail controller's procedural foot
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
