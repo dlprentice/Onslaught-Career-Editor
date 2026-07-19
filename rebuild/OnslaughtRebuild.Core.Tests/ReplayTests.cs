@@ -176,9 +176,9 @@ public sealed class ReplayTests
                 "schemaVersion": "onslaught-rebuild-command-tape.v1",
                 "name": "look-hold",
                 "seed": 1,
-                "durationTicks": 20,
+                "durationTicks": 200,
                 "spans": [
-                  { "startTick": 0, "durationTicks": 20, "moveX": 0, "moveZ": 0, "lookX": 1 }
+                  { "startTick": 180, "durationTicks": 20, "moveX": 0, "moveZ": 0, "lookX": 1 }
                 ]
               }
               """;
@@ -214,15 +214,15 @@ public sealed class ReplayTests
             CommandTape.CurrentSchemaVersion,
             "looked",
             1,
-            1,
+            SimulationConstants.Level100OpeningPanTicks + 1,
             null,
             null,
-            [new CommandSpan(0, 1, 0, 0, LookX: 1)]);
+            [new CommandSpan(SimulationConstants.Level100OpeningPanTicks, 1, 0, 0, LookX: 1)]);
         var idled = new CommandTape(
             CommandTape.CurrentSchemaVersion,
             "idled",
             1,
-            1,
+            SimulationConstants.Level100OpeningPanTicks + 1,
             null,
             null,
             []);

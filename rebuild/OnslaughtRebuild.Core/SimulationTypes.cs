@@ -99,9 +99,13 @@ public sealed record WorldSnapshot(
     int Hull,
     int TransformTicksRemaining,
     int FireCooldownTicksRemaining,
+    int Level100OpeningTicksRemaining,
     Level100OpeningPhase Level100Phase,
     int Level100DispatchTicksRemaining,
     int NextProjectileId,
     int TargetsDestroyed,
     IReadOnlyList<TargetSnapshot> Targets,
-    IReadOnlyList<ProjectileSnapshot> Projectiles);
+    IReadOnlyList<ProjectileSnapshot> Projectiles)
+{
+    public bool Level100PlayerControlEnabled => Level100OpeningTicksRemaining == 0;
+}

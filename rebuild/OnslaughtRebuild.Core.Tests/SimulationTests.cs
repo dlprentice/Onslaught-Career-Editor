@@ -29,8 +29,8 @@ public sealed class SimulationTests
     [Fact]
     public void WalkerGroundElevation_IsDeterministicCoreState()
     {
-        var first = new Simulation(1);
-        var repeat = new Simulation(1);
+        Simulation first = CreatePlayingSimulation();
+        Simulation repeat = CreatePlayingSimulation();
 
         Assert.Equal(211, first.Snapshot.PlayerGroundElevationMillimeters);
         for (int tick = 0; tick < 40; tick++)
@@ -48,9 +48,47 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void WalkerForward_AcceleratesToMeasuredCapAndCoastsAfterRelease()
+    public void Level100Opening_RejectsPlayerInputUntilTheRetailPanCompletes()
     {
         var simulation = new Simulation(1);
+        var attemptedInput = new SimInput(
+            0,
+            1,
+            SimActions.Fire | SimActions.ToggleMode,
+            LookX: 1);
+
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks, simulation.Snapshot.Level100OpeningTicksRemaining);
+        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
+
+        for (int tick = 1; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            simulation.Step(attemptedInput);
+        }
+
+        Assert.Equal(1, simulation.Snapshot.Level100OpeningTicksRemaining);
+        Assert.Equal(SimVector2.Zero, simulation.Snapshot.PlayerPosition);
+        Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, simulation.Snapshot.FacingYawMicroRad);
+        Assert.Equal(VehicleTransition.None, simulation.Snapshot.Transition);
+        Assert.Equal(SimulationConstants.MaximumEnergy, simulation.Snapshot.Energy);
+        Assert.Empty(simulation.Snapshot.Projectiles);
+
+        WorldSnapshot handoff = simulation.Step(attemptedInput);
+        Assert.True(handoff.Level100PlayerControlEnabled);
+        Assert.Equal(SimVector2.Zero, handoff.PlayerPosition);
+        Assert.Equal(SimulationConstants.Level100PlayerStartYawMicroRad, handoff.FacingYawMicroRad);
+        Assert.Equal(VehicleTransition.None, handoff.Transition);
+        Assert.Empty(handoff.Projectiles);
+
+        WorldSnapshot playing = simulation.Step(new SimInput(0, 1, SimActions.Fire, LookX: 1));
+        Assert.NotEqual(SimVector2.Zero, playing.PlayerPosition);
+        Assert.NotEqual(SimulationConstants.Level100PlayerStartYawMicroRad, playing.FacingYawMicroRad);
+        Assert.Single(playing.Projectiles);
+    }
+
+    [Fact]
+    public void WalkerForward_AcceleratesToMeasuredCapAndCoastsAfterRelease()
+    {
+        Simulation simulation = CreatePlayingSimulation();
 
         foreach (SimVector2 expected in new[]
                  {
@@ -82,7 +120,7 @@ public sealed class SimulationTests
     [Fact]
     public void WalkerStrafe_UsesTheSameMeasuredResponseAsForward()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         foreach (SimVector2 expected in new[]
                  {
@@ -101,7 +139,7 @@ public sealed class SimulationTests
     [Fact]
     public void WalkerLook_AcceleratesBodyYawAndCoastsAfterRelease()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         foreach (int expected in new[] { 10_444, 19_444, 27_200, 33_884, 39_644 })
         {
@@ -117,7 +155,7 @@ public sealed class SimulationTests
     [Fact]
     public void WalkerMovementUsesContinuousBodyYawWithoutResettingLookYaw()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         for (int tick = 0; tick < 20; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: 1));
@@ -140,7 +178,7 @@ public sealed class SimulationTests
     [Fact]
     public void LookX_OneTick_DoesNotYetLeaveForwardFacing()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
         Assert.Equal(0, state.FacingX);
         Assert.Equal(1, state.FacingZ);
@@ -150,7 +188,7 @@ public sealed class SimulationTests
     [Fact]
     public void LookX_Negative_TurnsLeftFromTheAuthoredStartYaw()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         for (int tick = 0; tick < 20; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: -1));
@@ -175,7 +213,7 @@ public sealed class SimulationTests
     [Fact]
     public void ToggleMode_EntersMeasuredWalkerToJetTransitionBeforeCommittingJetMode()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
@@ -209,7 +247,7 @@ public sealed class SimulationTests
     [Fact]
     public void FirstTickFire_ConsumesResourcesAndAdvancesTheSpawnedProjectile()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
 
@@ -223,7 +261,7 @@ public sealed class SimulationTests
     [Fact]
     public void Reset_DominatesOtherActionsInTheSameInputSlot()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         simulation.Step(new SimInput(1, 0, SimActions.Fire));
 
         WorldSnapshot reset = simulation.Step(new SimInput(
@@ -231,7 +269,7 @@ public sealed class SimulationTests
             1,
             SimActions.Reset | SimActions.Fire | SimActions.ToggleMode));
 
-        Assert.Equal(2, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 2, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
@@ -242,7 +280,7 @@ public sealed class SimulationTests
     [Fact]
     public void Movement_IsNotClampedByTheRetiredSyntheticArena()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         for (int tick = 0; tick < 500; tick++)
         {
@@ -259,7 +297,7 @@ public sealed class SimulationTests
     [Fact]
     public void Level100Opening_AdvancesThroughAuthoredTriggersAfterScriptDelay()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
 
         Assert.Equal(Level100OpeningPhase.ReachTargetZone1, simulation.Snapshot.Level100Phase);
         Assert.Equal(
@@ -299,7 +337,7 @@ public sealed class SimulationTests
     [Fact]
     public void RepeatedFire_DestroysTheForwardTargetDeterministically()
     {
-        var simulation = new Simulation(0xA917BEEFu);
+        Simulation simulation = CreatePlayingSimulation(0xA917BEEFu);
         for (int tick = 0; tick < 40; tick++)
         {
             simulation.Step(new SimInput(0, 0, SimActions.Fire));
@@ -312,13 +350,13 @@ public sealed class SimulationTests
     [Fact]
     public void Reset_RestoresDynamicStateWithoutRewindingReplayTick()
     {
-        var simulation = new Simulation(42);
+        Simulation simulation = CreatePlayingSimulation(42);
         simulation.Step(new SimInput(1, 0));
         simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
 
-        Assert.Equal(3, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 3, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
@@ -330,8 +368,8 @@ public sealed class SimulationTests
     [Fact]
     public void StateHash_IncludesNextProjectileIdentityWhenNoProjectileIsActive()
     {
-        var fired = new Simulation(1);
-        var didNotFire = new Simulation(1);
+        Simulation fired = CreatePlayingSimulation();
+        Simulation didNotFire = CreatePlayingSimulation();
 
         fired.Step(new SimInput(1, 0, SimActions.Fire));
         didNotFire.Step(new SimInput(1, 0));
@@ -355,7 +393,7 @@ public sealed class SimulationTests
     [Fact]
     public void SnapshotCollections_DoNotExposeMutableArrays()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
 
         Assert.False(state.Targets.GetType().IsArray);
@@ -372,7 +410,7 @@ public sealed class SimulationTests
     [Fact]
     public void TransformPeriod_BlocksMovementAndFireUntilItCompletes()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
         for (int tick = 1; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
@@ -393,7 +431,7 @@ public sealed class SimulationTests
     [Fact]
     public void EmptyJetEnergy_ForcesWalkerModeAndStartsTransformLock()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         simulation.Step(new SimInput(0, 0, SimActions.ToggleMode));
 
         for (int tick = 0; tick < SimulationConstants.WalkerToJetTransitionTicks; tick++)
@@ -414,7 +452,7 @@ public sealed class SimulationTests
     [Fact]
     public void FireCooldown_PreventsProjectileSpamWhileFireIsHeld()
     {
-        var simulation = new Simulation(1);
+        Simulation simulation = CreatePlayingSimulation();
         simulation.Step(new SimInput(1, 0, SimActions.Fire));
 
         for (int tick = 1; tick < SimulationConstants.FireCooldownTicks; tick++)
@@ -441,5 +479,17 @@ public sealed class SimulationTests
         }
 
         Assert.Equal(expectedPhase, simulation.Snapshot.Level100Phase);
+    }
+
+    private static Simulation CreatePlayingSimulation(uint seed = 1)
+    {
+        var simulation = new Simulation(seed);
+        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
+        return simulation;
     }
 }

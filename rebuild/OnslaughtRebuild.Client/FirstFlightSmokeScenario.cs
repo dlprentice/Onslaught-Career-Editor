@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Core;
+
 namespace OnslaughtRebuild.Client;
 
 public static class FirstFlightSmokeScenario
 {
-    public const int DurationTicks = 120;
+    private const int PlayingStartTick = SimulationConstants.Level100OpeningPanTicks;
+    private const int PlayingDurationTicks = 120;
+    public const int DurationTicks = (SimulationConstants.Level100OpeningPanTicks * 2) + 61;
 
     public static InteractiveInput GetInputForTick(int tick)
     {
@@ -13,32 +17,38 @@ public static class FirstFlightSmokeScenario
             throw new ArgumentOutOfRangeException(nameof(tick));
         }
 
-        if (tick < 30)
-        {
-            return new InteractiveInput(0, 1, true, false, false);
-        }
-
-        if (tick == 30)
-        {
-            return new InteractiveInput(0, 0, false, true, false);
-        }
-
-        if (tick < 45)
+        if (tick < PlayingStartTick || tick >= PlayingStartTick + PlayingDurationTicks)
         {
             return InteractiveInput.Idle;
         }
 
-        if (tick < 60)
+        int playingTick = tick - PlayingStartTick;
+        if (playingTick < 30)
+        {
+            return new InteractiveInput(0, 1, true, false, false);
+        }
+
+        if (playingTick == 30)
+        {
+            return new InteractiveInput(0, 0, false, true, false);
+        }
+
+        if (playingTick < 45)
+        {
+            return InteractiveInput.Idle;
+        }
+
+        if (playingTick < 60)
         {
             return new InteractiveInput(1, 0, false, false, false);
         }
 
-        if (tick == 60)
+        if (playingTick == 60)
         {
             return new InteractiveInput(0, 0, true, false, true);
         }
 
-        if (tick < 91)
+        if (playingTick < 91)
         {
             return new InteractiveInput(0, 1, true, false, false);
         }

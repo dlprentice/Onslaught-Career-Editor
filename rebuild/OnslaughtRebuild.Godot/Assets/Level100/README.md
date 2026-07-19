@@ -122,10 +122,17 @@ world's horizontal X/Y plane. The current slice consumes:
 | Target Zone 1 | `(-43.1875, 33.5)` | radius `5` |
 | Firing Range | `(-69.6875, 72.75)` | radius `5` |
 
-After the retail opening fly-in, five uninterrupted read-only samples held the
-same first-person `CThingCamera`, position, yaw, and horizontal forward column
-`(-0.488029, 0.872827)`. The presentation uses that attached view direction;
-it does not infer placement from a transient fly-in frame.
+Two fresh uninterrupted read-only runs repeated Steam's six-second full pan.
+`CPlayer__GotoPanView` (`0x004D2C10`) transforms local camera points
+`(0,10,-4.3)`, `(5,0,1.3)`, `(0,-9,-1.3)`, and `(0,-2.5,0)` by the stationary
+Aquila orientation and passes them to its order-three clamped quadratic spline.
+Both runs began at `(283.807220, 251.978271, -16.411499)`, handed off from the
+pan camera to the first-person camera after 5.95 seconds, and entered playing
+state after six seconds. The presentation consumes that path and keeps the
+exterior Aquila visible while the pan camera suppresses the cockpit and HUD.
+After the handoff, five uninterrupted read-only samples held the same
+first-person `CThingCamera`, position, yaw, and horizontal forward column
+`(-0.488029, 0.872827)`.
 
 `TargetZone1.msl` and `FiringRange.msl` each wait 0.5 seconds before posting
 their event. `LevelScript.msl` activates Target Zone 1 first, then makes the

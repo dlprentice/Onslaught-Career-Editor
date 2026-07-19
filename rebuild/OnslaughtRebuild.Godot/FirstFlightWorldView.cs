@@ -12,6 +12,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     private const float RetailVerticalFovDegrees = 58.7155f;
+    private const float RetailOpeningPanSeconds = 6f;
+    private const float RetailOpeningCameraHandoffSeconds = 5.95f;
 
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
     private readonly List<MeshInstance3D> _level100Facilities = [];
@@ -66,6 +68,10 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public float Level100PlayerStartRelativeHeight => _level100Terrain.SampleRelativeHeight(0f, 0f);
 
+    public bool ShowHud { get; private set; }
+
+    public bool OpeningPanActive => !ShowHud;
+
     public void Initialize(WorldSnapshot snapshot)
     {
         Name = "WorldView";
@@ -106,9 +112,12 @@ public sealed partial class FirstFlightWorldView : Node3D
             ? desiredModeBlend
             : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
         UpdateWalkerPose(current);
-        UpdatePlayerShape(current);
+        float openingElapsedTicks = GetOpeningElapsedTicks(previous, current, interpolationAlpha);
+        float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
+        ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
+        UpdatePlayerShape(current, ShowHud);
         UpdateProjectiles(current);
-        UpdateCamera(playerPosition, playerYaw);
+        UpdateCamera(playerPosition, playerYaw, openingElapsedSeconds, ShowHud);
     }
 
     private void BuildEnvironment()
@@ -303,7 +312,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         _camera = new Camera3D
         {
-            Name = "RetailFirstPersonCamera",
+            Name = "RetailOpeningAndFirstPersonCamera",
             Fov = RetailVerticalFovDegrees,
             Near = 0.1f,
             Far = 700f,
@@ -355,12 +364,13 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera.AddChild(_cockpitMesh);
     }
 
-    private void UpdatePlayerShape(WorldSnapshot snapshot)
+    private void UpdatePlayerShape(WorldSnapshot snapshot, bool attachedView)
     {
-        // Retail first person renders the authored internal cockpit instead of
-        // the player's exterior vehicle mesh.
-        _walkerAsset.Root.Visible = false;
+        // The released pan camera hides the HUD/cockpit and renders the
+        // exterior Aquila. Its first-person handoff reverses that visibility.
+        _walkerAsset.Root.Visible = !attachedView && snapshot.Mode == VehicleMode.Walker;
         _jetMesh.Visible = false;
+        _cockpitMesh.Visible = attachedView;
 
         float transitionLift = snapshot.Transition == VehicleTransition.WalkerToJet
             ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
@@ -425,15 +435,76 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
-    private void UpdateCamera(Vector3 playerGroundPosition, float yaw)
+    private void UpdateCamera(
+        Vector3 playerGroundPosition,
+        float yaw,
+        float openingElapsedSeconds,
+        bool attachedView)
     {
         var forward = new Vector3(-Mathf.Sin(yaw), 0f, -Mathf.Cos(yaw));
+        var right = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
         Vector3 centerOfGravity = playerGroundPosition +
             (Vector3.Up * RetailWalkerCenterOfGravityHeight);
 
-        _camera.Position = centerOfGravity;
-        _camera.LookAt(centerOfGravity + forward, Vector3.Up);
+        if (attachedView)
+        {
+            _camera.Position = centerOfGravity;
+            _camera.LookAt(centerOfGravity + forward, Vector3.Up);
+        }
+        else
+        {
+            Vector3 point0 = centerOfGravity + (forward * 10f) + (Vector3.Up * 4.3f);
+            Vector3 point1 = centerOfGravity + (right * 5f) - (Vector3.Up * 1.3f);
+            Vector3 point2 = centerOfGravity - (forward * 9f) + (Vector3.Up * 1.3f);
+            Vector3 point3 = centerOfGravity - (forward * 2.5f);
+            float fraction = Mathf.Clamp(openingElapsedSeconds / RetailOpeningPanSeconds, 0f, 0.999999f);
+            _camera.Position = EvaluateRetailOpeningSpline(point0, point1, point2, point3, fraction);
+            _camera.LookAt(centerOfGravity, Vector3.Up);
+        }
+
         _level100Sky.Position = _camera.Position;
+    }
+
+    private static float GetOpeningElapsedTicks(
+        WorldSnapshot previous,
+        WorldSnapshot current,
+        float interpolationAlpha)
+    {
+        float previousElapsed = SimulationConstants.Level100OpeningPanTicks -
+            previous.Level100OpeningTicksRemaining;
+        float currentElapsed = SimulationConstants.Level100OpeningPanTicks -
+            current.Level100OpeningTicksRemaining;
+        if (currentElapsed < previousElapsed)
+        {
+            return currentElapsed;
+        }
+
+        return Mathf.Lerp(previousElapsed, currentElapsed, interpolationAlpha);
+    }
+
+    private static Vector3 EvaluateRetailOpeningSpline(
+        Vector3 point0,
+        Vector3 point1,
+        Vector3 point2,
+        Vector3 point3,
+        float fraction)
+    {
+        // Steam CBSpline uses order 3 with knots [0,0,0,1,2,2,2] for these
+        // four points, so the released path is a clamped quadratic B-spline.
+        float u = fraction * 2f;
+        if (u < 1f)
+        {
+            float oneMinusU = 1f - u;
+            return (point0 * oneMinusU * oneMinusU) +
+                (point1 * (2f * u - 1.5f * u * u)) +
+                (point2 * (0.5f * u * u));
+        }
+
+        float twoMinusU = 2f - u;
+        float uMinusOne = u - 1f;
+        return (point1 * (0.5f * twoMinusU * twoMinusU)) +
+            (point2 * (2f * twoMinusU - 1.5f * twoMinusU * twoMinusU)) +
+            (point3 * (uMinusOne * uMinusOne));
     }
 
     private static Vector3 ToPlayerWorld(WorldSnapshot snapshot)

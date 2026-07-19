@@ -49,15 +49,17 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v4' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v5' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
-    Assert-SmokeValue 'tick' 120 $report.tick
-    Assert-SmokeValue 'stateHash' 'f60fdb6df6e5aa4cd4720176af197e91e6335ed7abb5028d765ab292451720d8' $report.stateHash
-    Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
+    Assert-SmokeValue 'tick' 421 $report.tick
+    Assert-SmokeValue 'stateHash' 'fde1a448d8a6cdea195b2408d47a7afc21ac61bc72e6633c81fff071b402469e' $report.stateHash
+    Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'ReachTargetZone1' $report.level100Phase
-    Assert-SmokeValue 'totalSteps' 120 $report.totalSteps
+    Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
+    Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
+    Assert-SmokeValue 'totalSteps' 421 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 1 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 1 $report.resetEdgesConsumed
     Assert-SmokeValue 'resetGeneration' 1 $report.resetGeneration
@@ -81,6 +83,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 8192 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount
     Assert-SmokeValue 'targetVisualCount' 0 $report.targetVisualCount
+    Assert-SmokeValue 'openingPanActive' $false $report.openingPanActive
+    Assert-SmokeValue 'hudVisible' $true $report.hudVisible
     Assert-SmokeValue 'hudReady' $true $report.hudReady
     Assert-SmokeValue 'focusLossHandlerInputCleared' $true $report.focusLossHandlerInputCleared
     Assert-SmokeValue 'focusLossHandlerNeutralRearmed' $true $report.focusLossHandlerNeutralRearmed

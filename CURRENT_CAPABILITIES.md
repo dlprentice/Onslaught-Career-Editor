@@ -149,10 +149,15 @@ including each script's
 0.5-second event delay. The prior synthetic arena boundary, flat plane, and
 placeholder structures are gone. Terrain, retained meshes, facilities, sky,
 light, camera, and Core-relative positions now share the released
-`(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view uses the stable
-attached first-person camera endpoint after retail's fly-in. A clean Level 100
-control and two fresh repeated safe-copy runs now
-establish the walker's acceleration, equal forward/strafe cap, frictional
+`(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view follows the
+released four-point Level 100 pan around the exterior Aquila, switches to the
+retained first-person cockpit and HUD after 5.95 seconds, and enables player
+input after the full six-second retail interval. Core rejects movement, look,
+fire, and transform input during those first 180 deterministic ticks. Two fresh
+uninterrupted safe-copy runs repeated the same camera endpoints, six-second
+length, handoff, and playing-state boundary. A clean Level 100 control and two
+fresh repeated safe-copy runs also establish the walker's acceleration,
+equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
 rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
 retail-timed 16-tick transition instead of switching to Jet immediately. The
@@ -174,7 +179,8 @@ yet reproduce steep-slope or actor collision response or the retail controller's
 placement, the rest of the mission, AI, weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
 state/contacts/radio behavior, audio, campaign, networking, or the rest of the
-transform model.
+transform model. The camera slice does not yet reproduce cockpit pitch response,
+terrain occlusion, camera shake, or later scripted cameras.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
 remaining synthetic combat targets are Core handling fixtures and are no longer
 drawn as Level 100 scenery. Synthetic objective beacons are also absent.

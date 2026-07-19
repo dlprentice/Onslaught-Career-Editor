@@ -98,8 +98,24 @@ checkpoints, sampled units `-11153`, `-11161`, and `-11469` plus Stuart's
 grounded height following on that route, not steep-slope sliding, body tilt, or
 arbitrary terrain collision.
 
+A pair of fresh, uninterrupted, no-input app-owned Level 100 runs repeated the
+same released opening-camera lifecycle. At event time `3.0`, Steam installed a
+`CPanCamera` (`0x004198D0`, vtable `0x005D92A8`) with length `6.0`, not Stuart's
+in-house `3.0` default. Both runs began at
+`(283.807220, 251.978271, -16.411499)` and ended at
+`(290.115509, 240.701736, -12.195276)` around the stationary Battle Engine at
+`(288.6875, 243.25, -12.111499)`. Steam's `CPlayer__GotoPanView` at `0x004D2C10`
+uses the released orientation with local points `(0,10,-4.3)`, `(5,0,1.3)`,
+`(0,-9,-1.3)`, and `(0,-2.5,0)` through its order-three clamped quadratic
+`CBSpline`. The camera changed to the first-person `CThingCamera` at event time
+`8.95`; game state remained panning until `9.0`. `CPlayer__ReceiveButtonAction`
+at `0x004D3110` rejects normal player actions below playing state, so Core gates
+input for the corresponding 180 fixed ticks. `CPanCamera::GetShowHUD` is false;
+the control camera owns the HUD-visible handoff. Raw sampler output and copied
+games were disposable and are not retained.
+
 A clean copied Level 100 run starts player zero with current/preferred view `1`.
-After the opening fly-in, five uninterrupted samples held the same active camera
+After that opening fly-in, five uninterrupted samples held the same active camera
 pointer and first-person `CThingCamera` vtable `0x005DBB88`. The Battle Engine
 position remained `(288.6875, 243.25, -12.111499)`, yaw remained `0.509829998`,
 and the horizontal forward column remained `(-0.488029, 0.872827)`. The camera
@@ -148,7 +164,8 @@ cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
 retained heightfield, exact macro terrain inputs, selected detail texture, and
 Core-owned player ground elevation,
 omits synthetic target and
-objective-marker scenery, renders, advances, preserves the expected
+objective-marker scenery, renders the fly-in/control/HUD handoff, advances,
+preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or
 moving cloud-shadow passes, procedural leg solving, collision, complete
 environment population, the complete mission, camera pitch/occlusion, full HUD behavior,

@@ -40,6 +40,7 @@ public sealed class Simulation
     private int _hull;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
+    private int _level100OpeningTicksRemaining;
     private Level100OpeningPhase _level100Phase;
     private int _level100DispatchTicksRemaining;
     private int _targetsDestroyed;
@@ -71,6 +72,9 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
+        bool level100PlayerControlEnabled = _level100OpeningTicksRemaining == 0;
+        SimInput playerInput = level100PlayerControlEnabled ? input : SimInput.Idle;
+
         AdvanceTransition();
 
         if (_fireCooldownTicksRemaining > 0)
@@ -78,14 +82,23 @@ public sealed class Simulation
             _fireCooldownTicksRemaining--;
         }
 
-        TryToggleMode(input);
-        UpdateMovement(input);
+        TryToggleMode(playerInput);
+        UpdateMovement(playerInput);
         UpdateLevel100Opening();
         UpdateResources();
-        TryFire(input);
+        TryFire(playerInput);
         UpdateProjectiles();
+        AdvanceLevel100Opening();
 
         return CreateSnapshot();
+    }
+
+    private void AdvanceLevel100Opening()
+    {
+        if (_level100OpeningTicksRemaining > 0)
+        {
+            _level100OpeningTicksRemaining--;
+        }
     }
 
     private void TryToggleMode(SimInput input)
@@ -548,6 +561,7 @@ public sealed class Simulation
         _hull = SimulationConstants.MaximumHull;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
+        _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
         _level100Phase = Level100OpeningPhase.ReachTargetZone1;
         _level100DispatchTicksRemaining = 0;
         _targetsDestroyed = 0;
@@ -617,6 +631,7 @@ public sealed class Simulation
             _hull,
             _transformTicksRemaining,
             _fireCooldownTicksRemaining,
+            _level100OpeningTicksRemaining,
             _level100Phase,
             _level100DispatchTicksRemaining,
             _nextProjectileId,

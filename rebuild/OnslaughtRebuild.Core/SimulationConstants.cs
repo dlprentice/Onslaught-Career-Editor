@@ -12,6 +12,10 @@ public static class SimulationConstants
     public static readonly SimVector2 Level100FiringRangePosition = new(-69_688, 72_750);
     public const int Level100PlayerStartYawMicroRad = 509_830;
     public const int Level100ObjectiveTriggerRadius = 5_000;
+    // Two fresh app-owned Steam Level 100 runs repeated a six-second opening
+    // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
+    // so player actions are rejected for the first 180 Core ticks.
+    public const int Level100OpeningPanTicks = 6 * TicksPerSecond;
     // TargetZone1.msl and FiringRange.msl each pause 0.5 seconds before
     // posting their event. Fifteen fixed Core ticks preserve that delay.
     public const int Level100ObjectiveDispatchTicks = 15;

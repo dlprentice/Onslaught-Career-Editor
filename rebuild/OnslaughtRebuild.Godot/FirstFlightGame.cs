@@ -54,6 +54,7 @@ public sealed partial class FirstFlightGame : Node3D
             AddChild(_hud);
             _hud.Initialize();
             _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+            _hud.Visible = _world.ShowHud;
         }
         catch (Exception exception)
         {
@@ -84,7 +85,7 @@ public sealed partial class FirstFlightGame : Node3D
 
         InteractiveInput input = SampleInput();
         _session.ObserveInput(input);
-        if (input != InteractiveInput.Idle)
+        if (input != InteractiveInput.Idle && _session.CurrentSnapshot.Level100PlayerControlEnabled)
         {
             _hud.MarkInputActivity();
         }
@@ -99,6 +100,7 @@ public sealed partial class FirstFlightGame : Node3D
             (float)result.InterpolationAlpha,
             (float)delta);
         _hud.UpdateFromSnapshot(result.CurrentSnapshot);
+        _hud.Visible = _world.ShowHud;
 
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
@@ -359,7 +361,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v4",
+                SchemaVersion = "onslaught-first-flight-smoke.v5",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -367,6 +369,8 @@ public sealed partial class FirstFlightGame : Node3D
                 TargetsDestroyed = _session.CurrentSnapshot.TargetsDestroyed,
                 Mode = _session.CurrentSnapshot.Mode.ToString(),
                 Level100Phase = _session.CurrentSnapshot.Level100Phase.ToString(),
+                Level100OpeningTicksRemaining = _session.CurrentSnapshot.Level100OpeningTicksRemaining,
+                Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
                 ResetEdgesConsumed = metrics.ResetEdgesConsumed,
@@ -391,6 +395,8 @@ public sealed partial class FirstFlightGame : Node3D
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
                 RetailLevel100SkySurfaceCount = _world.RetailLevel100SkySurfaceCount,
                 TargetVisualCount = _world.TargetVisualCount,
+                OpeningPanActive = _world.OpeningPanActive,
+                HudVisible = _world.ShowHud,
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
                 FocusLossHandlerNeutralRearmed = _focusLossHandlerNeutralRearmed,
@@ -437,6 +443,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required int TargetsDestroyed { get; init; }
         public required string Mode { get; init; }
         public required string Level100Phase { get; init; }
+        public required int Level100OpeningTicksRemaining { get; init; }
+        public required bool Level100PlayerControlEnabled { get; init; }
         public required long TotalSteps { get; init; }
         public required long ToggleEdgesConsumed { get; init; }
         public required long ResetEdgesConsumed { get; init; }
@@ -461,6 +469,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required int RetailLevel100TerrainTriangleCount { get; init; }
         public required int RetailLevel100SkySurfaceCount { get; init; }
         public required int TargetVisualCount { get; init; }
+        public required bool OpeningPanActive { get; init; }
+        public required bool HudVisible { get; init; }
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }
         public required bool FocusLossHandlerNeutralRearmed { get; init; }

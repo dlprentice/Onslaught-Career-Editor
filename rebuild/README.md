@@ -29,9 +29,11 @@ Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet and two facilities retain bounded static conversions. All four render
 with their exact retained layer-zero textures. The released macro terrain
 blend, repeating detail texture, cube-25 sky, fog, and environment light values
-now replace the procedural ground/sky. The default view uses the released
-first-person projection and exact walker cockpit at its runtime-selected `walk`
-pose. Twelve exact HUD textures
+now replace the procedural ground/sky. The opening view uses the released Level
+100 four-point exterior fly-in, then hands off to the released first-person
+projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
+remains hidden with the pan camera and appears at the control-camera handoff.
+Twelve exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
 crosshair, radar/radio frames, and current objective line. Secondary material
 and moving cloud-shadow passes, steep-slope and actor collision response, combat targets,
@@ -84,10 +86,13 @@ Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
-state. The presentation camera now uses clean Level 100's released attached
-first-person view: the Aquila center of gravity, horizontal orientation column,
-58.7155-degree vertical field of view, 0.1 near plane, and the authored frame-25
-walker cockpit. Camera pitch response and
+state. The presentation camera now uses clean Level 100's released opening
+lifecycle: four orientation-relative spline points around the exterior Aquila,
+a six-second Steam pan, control-view handoff at 5.95 seconds, and then the
+attached first-person view at the Aquila center of gravity with its horizontal
+orientation column, 58.7155-degree vertical field of view, 0.1 near plane, and
+authored frame-25 walker cockpit. Core mirrors the released playing-state
+boundary by rejecting player input for the first 180 fixed ticks. Camera pitch response and
 terrain clipping, jet movement and projectile heading,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
 collision beyond grounded height following, AI, the remaining mission, audio,

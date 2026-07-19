@@ -58,7 +58,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void HeldToggleLevel_IsConsumedOnOneTickOnly()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, false, true, false));
 
         FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromMilliseconds(100));
@@ -82,7 +82,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void PressAndReleaseBetweenTicks_LeavesOneLatchedEdge()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, false, true, false));
         session.ObserveInput(InteractiveInput.Idle);
 
@@ -96,7 +96,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void DuplicateEventAndLevelEdge_AreCoalescedBeforeTheTick()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.QueueToggleMode();
         session.ObserveInput(new InteractiveInput(0, 0, false, true, false));
 
@@ -108,7 +108,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void HeldFire_IsSampledOnEveryAdvancedTick()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
 
         FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromMilliseconds(200));
@@ -121,7 +121,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void ShortFirePulse_SurvivesUntilOneTickConsumesIt()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
 
         session.QueueFirePulse();
         session.AdvanceFrameTicks(100_000);
@@ -137,7 +137,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void ShortMovementPulse_StartsAccelerationAndThenCoasts()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
 
         session.QueueMovementPulse(0, 1);
         FrameAdvanceResult movementTick = session.AdvanceFrameTicks(333_334);
@@ -151,7 +151,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void PulseAndHeldState_AreCoalescedIntoOneSimulationInput()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.QueueMovementPulse(0, 1);
         session.QueueFirePulse();
         session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
@@ -166,16 +166,20 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void ResetDominatesItsTick_ButHeldFireContinuesOnTheNextTick()
+    public void ResetDominatesItsTick_AndRestartsTheOpeningInputGate()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, true, false, true));
 
         FrameAdvanceResult resetTick = session.AdvanceFrameTicks(333_334);
         FrameAdvanceResult followingTick = session.AdvanceFrameTicks(333_334);
 
         Assert.Empty(resetTick.CurrentSnapshot.Projectiles);
-        Assert.Single(followingTick.CurrentSnapshot.Projectiles);
+        Assert.Empty(followingTick.CurrentSnapshot.Projectiles);
+        Assert.False(followingTick.CurrentSnapshot.Level100PlayerControlEnabled);
+        Assert.Equal(
+            SimulationConstants.Level100OpeningPanTicks - 1,
+            followingTick.CurrentSnapshot.Level100OpeningTicksRemaining);
         Assert.Equal(1, session.Metrics.ResetEdgesConsumed);
         Assert.Equal(1, session.Metrics.ResetGeneration);
         Assert.Equal(2, session.Metrics.FireHeldTicksSampled);
@@ -195,8 +199,8 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FramePartitioning_DoesNotChangeStateForTheSameHeldInput()
     {
-        var coarse = new InteractiveSession(Seed);
-        var fine = new InteractiveSession(Seed);
+        InteractiveSession coarse = CreatePlayingSession();
+        InteractiveSession fine = CreatePlayingSession();
         var input = new InteractiveInput(1, 1, true, false, false);
         coarse.ObserveInput(input);
         fine.ObserveInput(input);
@@ -211,15 +215,15 @@ public sealed class InteractiveSessionTests
             fine.AdvanceFrame(TimeSpan.FromMilliseconds(25));
         }
 
-        Assert.Equal(30, coarse.CurrentSnapshot.Tick);
-        Assert.Equal(30, fine.CurrentSnapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 30, coarse.CurrentSnapshot.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 30, fine.CurrentSnapshot.Tick);
         Assert.Equal(StateHasher.ComputeHex(coarse.CurrentSnapshot), StateHasher.ComputeHex(fine.CurrentSnapshot));
     }
 
     [Fact]
     public void LookX_HeldRotatesFacingUsingWalkerYawInertia()
     {
-        var session = new InteractiveSession(1);
+        InteractiveSession session = CreatePlayingSession(1);
         // One Core step needs elapsedTicks such that elapsed * TPS >= PhaseUnitsPerStep.
         const long oneCoreStepTicks =
             (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
@@ -237,8 +241,12 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         var direct = new Simulation(Seed);
+        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            direct.Step(SimInput.Idle);
+        }
         var held = new InteractiveInput(0, 1, true, false, false);
         session.ObserveInput(held);
         session.AdvanceFrameTicks(1_000_000);
@@ -261,7 +269,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FocusLoss_ReleasesHeldInputAndDiscardsUnconsumedEdges()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
         session.QueueFirePulse();
@@ -280,7 +288,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FocusLoss_SuppressesHeldAndPulseInputUntilANeutralSample()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
         session.QueueFirePulse();
@@ -315,13 +323,15 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void SnapshotsExposePreviousAndCurrentSimulationStates()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(1, 0, false, false, false));
+
+        int startingTick = session.CurrentSnapshot.Tick;
 
         FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
 
-        Assert.Equal(0, result.PreviousSnapshot.Tick);
-        Assert.Equal(1, result.CurrentSnapshot.Tick);
+        Assert.Equal(startingTick, result.PreviousSnapshot.Tick);
+        Assert.Equal(startingTick + 1, result.CurrentSnapshot.Tick);
         Assert.Equal(0, result.PreviousSnapshot.PlayerPosition.X);
         Assert.True(result.CurrentSnapshot.PlayerPosition.X > 0);
     }
@@ -353,23 +363,26 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FirstFlightSmokeScenario_ExercisesMovementFireTransformAndReset()
     {
-        InteractiveInput opening = FirstFlightSmokeScenario.GetInputForTick(0);
-        InteractiveInput transform = FirstFlightSmokeScenario.GetInputForTick(30);
-        InteractiveInput reset = FirstFlightSmokeScenario.GetInputForTick(60);
-        InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(119);
+        InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
+        InteractiveInput opening = FirstFlightSmokeScenario.GetInputForTick(180);
+        InteractiveInput transform = FirstFlightSmokeScenario.GetInputForTick(210);
+        InteractiveInput reset = FirstFlightSmokeScenario.GetInputForTick(240);
+        InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(420);
 
+        Assert.Equal(InteractiveInput.Idle, pan);
         Assert.Equal((sbyte)1, opening.MoveZ);
         Assert.True(opening.FireHeld);
         Assert.True(transform.ToggleModeHeld);
         Assert.True(reset.ResetHeld);
         Assert.True(reset.FireHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
+        Assert.Equal(421, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
     }
 
     private static InteractiveSession RunInteractiveSequence()
     {
-        var session = new InteractiveSession(Seed);
+        InteractiveSession session = CreatePlayingSession();
         (long ElapsedTicks, InteractiveInput Input)[] frames =
         [
             (100_000, new InteractiveInput(0, 1, false, false, false)),
@@ -386,6 +399,20 @@ public sealed class InteractiveSessionTests
             session.AdvanceFrameTicks(elapsedTicks);
         }
 
+        return session;
+    }
+
+    private static InteractiveSession CreatePlayingSession(uint seed = Seed)
+    {
+        var session = new InteractiveSession(seed);
+        const long oneCoreStepTicks =
+            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
+        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
+        {
+            session.AdvanceFrameTicks(oneCoreStepTicks);
+        }
+
+        Assert.True(session.CurrentSnapshot.Level100PlayerControlEnabled);
         return session;
     }
 }
