@@ -52,19 +52,20 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v6' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
-    Assert-SmokeValue 'tick' 1256 $report.tick
-    Assert-SmokeValue 'stateHash' '58b46d9b1d7979a2b7849b3b40a9fadd3fdf6bf19acc3794026bc78f21168b58' $report.stateHash
+    Assert-SmokeValue 'tick' 1995 $report.tick
+    Assert-SmokeValue 'stateHash' '442bf376f04deccbb905f7bf40bd3e427ca9a09d795925cd81ae0954c0cfd909' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
-    Assert-SmokeValue 'level100Phase' 'ReachTargetZone1' $report.level100Phase
+    Assert-SmokeValue 'level100Phase' 'ReachFiringRange' $report.level100Phase
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
-    Assert-SmokeValue 'level100TimelineTick' 1256 $report.level100TimelineTick
-    Assert-SmokeValue 'level100Message' 'ReachTargetZone1' $report.level100Message
+    Assert-SmokeValue 'level100TimelineTick' 1995 $report.level100TimelineTick
+    Assert-SmokeValue 'level100Message' 'FiringRangeInstruction' $report.level100Message
+    Assert-SmokeValue 'level100EventMessageTicksRemaining' 132 $report.level100EventMessageTicksRemaining
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
     Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
     Assert-SmokeValue 'level100WeaponsEnabled' $false $report.level100WeaponsEnabled
     Assert-SmokeValue 'tutorialVoicePlaying' $true $report.tutorialVoicePlaying
-    Assert-SmokeValue 'totalSteps' 1256 $report.totalSteps
+    Assert-SmokeValue 'totalSteps' 1995 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
     Assert-SmokeValue 'resetGeneration' 0 $report.resetGeneration
@@ -83,7 +84,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21149921 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
     Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
-    Assert-SmokeValue 'level100ObjectiveMarkerCount' 0 $report.level100ObjectiveMarkerCount
+    Assert-SmokeValue 'level100ObjectiveMarkerCount' 1 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount
     Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 8192 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount

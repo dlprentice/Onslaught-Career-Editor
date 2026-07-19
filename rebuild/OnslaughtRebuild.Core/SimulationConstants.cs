@@ -11,7 +11,11 @@ public static class SimulationConstants
     public static readonly SimVector2 Level100TargetZone1Position = new(-43_188, 33_500);
     public static readonly SimVector2 Level100FiringRangePosition = new(-69_688, 72_750);
     public const int Level100PlayerStartYawMicroRad = 509_830;
-    public const int Level100ObjectiveTriggerRadius = 5_000;
+    // Each authored trigger has radius 5.0. Steam CBattleEngine::GetRadius at
+    // vtable slot 16 (0x0040DF80) returns 0.4 in single player, and two fresh
+    // copied-runtime runs changed objective state only after those spheres
+    // overlapped. Core stores the resulting 5.4-unit centre threshold.
+    public const int Level100ObjectiveTriggerRadius = 5_400;
     // Two fresh app-owned Steam Level 100 runs repeated a six-second opening
     // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
     // so player actions are rejected for the first 180 Core ticks.
@@ -39,9 +43,15 @@ public static class SimulationConstants
     public const int Level100TargetZone1InstructionEndTick = 1_387;
     public const int Level100ScannerInstructionStartTick = 1_393;
     public const int Level100ScannerInstructionEndTick = 1_530;
-    // TargetZone1.msl and FiringRange.msl each pause 0.5 seconds before
-    // posting their event. Fifteen fixed Core ticks preserve that delay.
-    public const int Level100ObjectiveDispatchTicks = 15;
+    // TargetZone1.msl pauses 0.5 seconds before posting its event. From the
+    // first released 20 Hz overlap update, two uninterrupted copies dispatched
+    // TUTORIAL_02 after 11 updates (about 0.55 seconds). Sixteen 30 Hz ticks
+    // preserve the observed update boundary without treating samples as time.
+    public const int Level100TargetZone1DispatchTicks = 16;
+    // The later FiringRange.msl dispatch remains source-only in this slice.
+    public const int Level100FiringRangeDispatchTicks = 15;
+    // tutorial_02.ogg ends at granule 237871 at 44.1 kHz (5.393900 s).
+    public const int Level100FiringRangeInstructionTicks = 162;
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.

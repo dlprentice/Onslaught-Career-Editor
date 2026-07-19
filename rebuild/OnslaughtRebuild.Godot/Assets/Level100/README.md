@@ -1,7 +1,7 @@
 # Level 100 opening assets
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-two facility meshes, and first eight English tutorial voice clips consumed by
+two facility meshes, and first nine English tutorial voice clips consumed by
 the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
@@ -38,6 +38,7 @@ geometry, normals, UVs, and base part transforms.
 | `TutorialAudio/tutorial_13_mod.ogg` | Released English movement instruction | `7EEE9087F86C00ABE4FEAB115B20E4E2F27A8E6D1ADC7318B1602446A7493E65` |
 | `TutorialAudio/tutorial_01.ogg` | Released English Target Zone 1 instruction | `48E40B07A77B5776F817ED8D8FFE1EFF1A978B10480CAB92019077E7B66784A8` |
 | `TutorialAudio/tutorial_scanner.ogg` | Released English objective-scanner instruction | `7A9535B1187B6E1FF276CEBC3906EC2102E5D166F381EE674113B4F09C2B3BD2` |
+| `TutorialAudio/tutorial_02.ogg` | Released English Firing Range assignment | `FA0533DE72B8D7702B83B709BA631BC8F7A42A5183BABCB147AE653A5D7A2904` |
 
 Regenerate into an empty local output directory with:
 
@@ -143,9 +144,9 @@ After the handoff, five uninterrupted read-only samples held the same
 first-person `CThingCamera`, position, yaw, and horizontal forward column
 `(-0.488029, 0.872827)`.
 
-`TargetZone1.msl` and `FiringRange.msl` each wait 0.5 seconds before posting
-their event. `LevelScript.msl` activates Target Zone 1 first, then makes the
-Firing Range the objective after `Reached Target Zone 1`.
+`TargetZone1.msl` and `FiringRange.msl` each request a 0.5-second wait before
+posting their event. `LevelScript.msl` activates Target Zone 1 first, then makes
+the Firing Range the objective after `Reached Target Zone 1`.
 
 ## First tutorial handoff
 
@@ -169,8 +170,18 @@ at Core tick `1000`; its flight flag at `0x58C` and both initial weapon gates
 remained disabled. At tick `1223`, the unique object at Target Zone 1's authored
 position changed its `CThing` flags at offset `0x2C` from `0x0002` to `0x0022`,
 setting the released objective bit `0x20`. The current slice consumes those
-gates, exact English text, and exact voice clips. It does not infer later
-tutorial progression or draw an unobserved tactical marker.
+gates, exact English text, and exact voice clips.
+
+Two later uninterrupted runs delivered the same copied `Movement/Left` then
+`Forward` input to player one. Target Zone 1's objective flag remained set
+until its radius-5 volume overlapped Steam's single-player Battle Engine radius
+of `0.4`; the last outside/first inside samples were `5.44/5.29` and
+`5.54/5.39` world units. Both runs then atomically cleared Target Zone 1,
+marked the Firing Range, and installed message ID `4458134` (`TUTORIAL_02`)
+after the same 11 released 20 Hz updates. Core maps that observed dispatch to
+16 ticks at 30 Hz. The client uses the exact 5.393900-second English voice,
+subtitle, and shipped 16x16 objective marker with the released radar transform.
+The later Firing Range trigger and tutorial sequence remain unobserved.
 
 The presentation consumes the four exact layer-zero facility textures and
 preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two

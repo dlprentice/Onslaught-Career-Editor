@@ -58,8 +58,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailLevel100FacilitySurfaceCount =>
         _level100Facilities.Sum(facility => facility.Mesh?.GetSurfaceCount() ?? 0);
 
-    public int Level100ObjectiveMarkerCount => 0;
-
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
 
     public int RetailLevel100TerrainTriangleCount => _level100Terrain.TriangleCount;

@@ -144,9 +144,8 @@ filesystem, clock, process, network, or GPU dependencies.
 The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
 heightfield plus Federation walker/jet, Control Tower, and Tank Factory
 geometry. Core starts at the released player-one heading and owns the authored
-player ground elevation plus the Target Zone 1 → Firing Range trigger sequence,
-including each script's
-0.5-second event delay. The prior synthetic arena boundary, flat plane, and
+player ground elevation plus the machine-observed Target Zone 1 → Firing Range
+trigger sequence. The prior synthetic arena boundary, flat plane, and
 placeholder structures are gone. Terrain, retained meshes, facilities, sky,
 light, camera, and Core-relative positions now share the released
 `(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view follows the
@@ -169,14 +168,15 @@ with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
 `LegMotion` cycle from Core velocity. The jet and two facilities remain bounded
 static conversions. The exterior meshes and exact frame-25 first-person
-cockpit render from eight retained AYA-wrapped textures. Twelve exact released
+cockpit render from eight retained AYA-wrapped textures. Thirteen exact released
 HUD textures, including Font13PS, replace the prototype overlay for the bounded
-crosshair, radar/radio frames, and current objective line. The first eight
-English tutorial messages through Target Zone 1 activation now use exact
+crosshair, radar/radio frames, active-objective marker, and current objective
+line. The first nine English tutorial messages through the Firing Range
+assignment now use exact
 released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
-portrait frames. Two uninterrupted retail repetitions matched every retained
-message boundary within 50 ms; Core activates power at tick 1000 and Target Zone
-1 at tick 1223. The released macro
+portrait frames. Repeated retail runs matched every retained opening boundary
+within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
+swap, and `TUTORIAL_02` dispatch. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
@@ -192,7 +192,8 @@ reproduce cockpit pitch response,
 terrain occlusion, camera shake, or later scripted cameras.
 Later tutorial dialogue and eligibility changes are not implemented; the
 remaining synthetic combat targets are Core handling fixtures and are no longer
-drawn as Level 100 scenery. Synthetic objective beacons are also absent.
+drawn as Level 100 scenery. The HUD marker is the shipped radar asset, not a
+world-space synthetic beacon.
 Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point
 height sampler, and hashes the resulting walker ground elevation. Godot adapts
 that value for the player; static facilities and synthetic projectiles remain

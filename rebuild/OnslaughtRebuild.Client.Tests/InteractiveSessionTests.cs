@@ -362,25 +362,23 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ExercisesThePoweredMovementHandoff()
+    public void FirstFlightSmokeScenario_ReachesTheFiringRangeAssignment()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
-        InteractiveInput powered = FirstFlightSmokeScenario.GetInputForTick(
-            SimulationConstants.Level100PowerActivationTick);
-        InteractiveInput turning = FirstFlightSmokeScenario.GetInputForTick(
-            SimulationConstants.Level100PowerActivationTick + 30);
+        InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
+            SimulationConstants.Level100TargetZone1ActivationTick + 57);
+        InteractiveInput forward = FirstFlightSmokeScenario.GetInputForTick(
+            SimulationConstants.Level100TargetZone1ActivationTick + 57 + 216);
         InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(
             FirstFlightSmokeScenario.DurationTicks - 1);
 
         Assert.Equal(InteractiveInput.Idle, pan);
-        Assert.Equal((sbyte)1, powered.MoveZ);
-        Assert.False(powered.FireHeld);
-        Assert.Equal((sbyte)1, turning.LookX);
-        Assert.False(turning.ToggleModeHeld);
+        Assert.Equal((sbyte)-1, strafe.MoveX);
+        Assert.False(strafe.FireHeld);
+        Assert.Equal((sbyte)1, forward.MoveZ);
+        Assert.False(forward.ToggleModeHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
-        Assert.Equal(
-            SimulationConstants.Level100TargetZone1InstructionStartTick + 30,
-            FirstFlightSmokeScenario.DurationTicks);
+        Assert.Equal(1_995, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
     }
 

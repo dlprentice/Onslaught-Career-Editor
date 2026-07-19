@@ -17,6 +17,7 @@ the lower-center message/objective treatment.
 | `crosshair-outline.texture.aya` | `hud%Crosshair Outline.tga(0)A8R8G8B8.aya` | `1E27B9771F3D0416C07EFF9AEDE6863CA6F081386C86259F635E3D9A02ADE5B2` |
 | `circle-darkener.texture.aya` | `hud%v2%CircleDarkener.tga(0)A8R8G8B8.aya` | `7BD18594757165DCDD8DADB618EA99EB500ED105DBE2D6A6F66BBCBC31C323A3` |
 | `radar-outline.texture.aya` | `hud%v2%RadarOutline.tga(0)X8R8G8B8.aya` | `507D465248F7321F2332413B2C6F461F3B3C45D87C52D86C38C43104043D7DC7` |
+| `compass-objective-marker.texture.aya` | `hud%v2%CompassObjectiveMarker.tga(0)A8R8G8B8.aya` | `E24FCA83DE34646A7328C313E7B89AC02C6BC4B04A69A74BF3EE81B3D57283DF` |
 | `radio-view.texture.aya` | `hud%v2%RadioView.tga(0)A8R8G8B8.aya` | `888D5A70AB812E23F75DB76AB2ED71CD2CCE04191EE282D525C86E337CC01778` |
 | `weapon-fill.texture.aya` | `hud%v2%WeaponFill.tga(0)A8R8G8B8.aya` | `E639910D70AE10B044423CD5025C300C61CB8A9B5765890FD1A011C7D4499C0D` |
 | `weapon-outline.texture.aya` | `hud%v2%WeaponOutline.tga(0)X8R8G8B8.aya` | `2E2DA786DB82C8FD76DE36D8D71FE744DDDDD364247467CBA1BFB9A95E52D62B` |
@@ -36,7 +37,13 @@ ASCII cells used for the current objective line. The two 128×128 DXT2 portraits
 are the exact released static `aa` frames selected for Tatiana's and the
 technician's opening messages; no lip movement is synthesized.
 
+The released `CHud__RenderTacticalRadarContacts` objective path rotates the
+marked thing by Battle Engine yaw, clamps it at 46 HUD units, and draws the
+white sprite with fixed ARGB tint `0xFFFFFF00`. The current slice applies that
+yellow-marker path only to the active authored objective; separate range/fade
+rules for general contacts are not implemented.
+
 This slice does not claim complete HUD behavior. Animated portrait/video frames,
-tactical contacts, weapon selection, damage states, target prediction,
+non-objective tactical contacts, weapon selection, damage states, target prediction,
 battleline rendering, split-screen composition, and later tutorial/mission HUD
 states remain absent.

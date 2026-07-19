@@ -21,9 +21,8 @@ The current Godot app is the **Level 100 Opening Slice**. It renders the
 released Federation Aquila, Control Tower, and Tank Factory geometry at their
 authored horizontal opening positions over the released coarse Level 100
 heightfield. Core owns the released player start heading, exact Level 100
-player-ground sampling, and the Target Zone 1 → Firing Range objective handoff,
-including both scripts' 0.5-second event
-delay. The walker is loaded directly from its exact released AYA as a 63-part
+player-ground sampling, and the machine-observed Target Zone 1 → Firing Range
+objective handoff. The walker is loaded directly from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet and two facilities retain bounded static conversions. All four render
@@ -33,9 +32,10 @@ now replace the procedural ground/sky. The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
 projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
-Twelve exact HUD textures
+Thirteen exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
-crosshair, radar/radio frames, and current objective line. The first eight
+crosshair, radar/radio frames, active-objective marker, and current objective
+line. The first nine
 released English tutorial messages now use their exact text, shipped voice
 clips, and static Tatiana/technician portrait frames. Core follows the observed
 power-on and Target Zone 1 activation boundaries while keeping flight and both
@@ -101,7 +101,8 @@ mission powers the Aquila at tick 1000. Flight and weapons remain disabled.
 Camera pitch response and
 terrain clipping, jet movement and projectile heading,
 jet-to-walker, transform animation, resource semantics, weapons, terrain
-collision beyond grounded height following, AI, the remaining mission and its audio,
+collision beyond grounded height following, AI, the mission after the Firing
+Range assignment and its audio,
 campaign, and networking
 remain provisional or absent.
 
@@ -118,11 +119,14 @@ hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the base material groups and decodes eight exact
 AYA-wrapped mesh textures for the Aquila, cockpit, and two facilities. It also
-uses twelve exact HUD textures, including the uncompressed released font atlas.
+uses thirteen exact HUD textures, including the uncompressed released font
+atlas and objective marker. The first observed player route uses Steam's
+5.4-unit overlap and delayed dispatch to replace Target Zone 1 with the Firing
+Range on that radar while playing the exact `TUTORIAL_02` line and voice.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding, actor/structure
 collision, procedural foot placement/terrain IK,
-transform animation, HUD contacts and later state logic, animated radio
+transform animation, non-objective HUD contacts and later state logic, animated radio
 portraits/video, and the remainder of the mission remain unimplemented. Core's
 three synthetic combat targets still exercise the older firing path, but the
 Level 100 presentation no longer draws them or synthetic objective beacons as

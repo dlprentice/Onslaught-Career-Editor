@@ -19,6 +19,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _glowLayer.IsReady &&
         _textLayer.IsReady;
 
+    public int Level100ObjectiveMarkerCount => _glowLayer.ObjectiveMarkerCount;
+
     public void Initialize()
     {
         Texture2D crosshair = LoadHudTexture("crosshair-outline", 64, 64);
@@ -57,7 +59,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 "weapon-outline",
                 128,
                 128,
-                CuratedAyaTextureLoader.Compression.Dxt1));
+                CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadHudTexture("compass-objective-marker", 16, 16));
         AddFullScreenControl(_glowLayer);
 
         _textLayer = new RetailHudTextLayer(
@@ -71,6 +74,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     public void UpdateFromSnapshot(WorldSnapshot snapshot)
     {
+        _glowLayer.SetObjectiveMarker(snapshot);
         string? message = GetTutorialMessageText(snapshot.Level100Message);
         if (message is not null)
         {
@@ -111,6 +115,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             "Okay, Hawk? I want you to manoeuvre the Battle Engine to the area marked on your HUD.",
         Level100TutorialMessage.ScannerObjective =>
             "Notice how objectives that you are given are marked as yellow dots on your scanner.",
+        Level100TutorialMessage.FiringRangeInstruction =>
+            "Now make your way to the firing range for target practice. I'll mark the location on your HUD again.",
         _ => null,
     };
 
@@ -283,9 +289,20 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     private sealed partial class RetailHudGlowLayer(
         Texture2D radarOutline,
-        Texture2D weaponOutline) : Control
+        Texture2D weaponOutline,
+        Texture2D objectiveMarker) : Control
     {
-        public bool IsReady => radarOutline.GetWidth() == 128 && weaponOutline.GetWidth() == 128;
+        private const float RadarWorldRadius = 46f;
+        private bool _objectiveMarkerVisible;
+        private Vector2 _objectiveMarkerOffset;
+
+        public bool IsReady =>
+            radarOutline.GetWidth() == 128 &&
+            weaponOutline.GetWidth() == 128 &&
+            objectiveMarker.GetWidth() == 16 &&
+            objectiveMarker.GetHeight() == 16;
+
+        public int ObjectiveMarkerCount => _objectiveMarkerVisible ? 1 : 0;
 
         public override void _Ready()
         {
@@ -293,6 +310,42 @@ public sealed partial class FirstFlightHud : CanvasLayer
             {
                 BlendMode = CanvasItemMaterial.BlendModeEnum.Add,
             };
+        }
+
+        public void SetObjectiveMarker(WorldSnapshot snapshot)
+        {
+            SimVector2? objective = snapshot.Level100Phase switch
+            {
+                Level100OpeningPhase.ReachTargetZone1 or
+                    Level100OpeningPhase.TargetZone1DispatchPending =>
+                        SimulationConstants.Level100TargetZone1Position,
+                Level100OpeningPhase.ReachFiringRange or
+                    Level100OpeningPhase.FiringRangeDispatchPending =>
+                        SimulationConstants.Level100FiringRangePosition,
+                _ => null,
+            };
+            if (!objective.HasValue)
+            {
+                SetMarkerState(false, Vector2.Zero);
+                return;
+            }
+
+            float deltaX = (objective.Value.X - snapshot.PlayerPosition.X) / 1_000f;
+            float deltaZ = (objective.Value.Z - snapshot.PlayerPosition.Z) / 1_000f;
+            float distanceSquared = (deltaX * deltaX) + (deltaZ * deltaZ);
+            float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
+            float sin = Mathf.Sin(yaw);
+            float cos = Mathf.Cos(yaw);
+            var offset = new Vector2(
+                (deltaX * cos) - (deltaZ * sin),
+                -((deltaX * sin) + (deltaZ * cos)));
+            float distance = Mathf.Sqrt(distanceSquared);
+            if (distance > RadarWorldRadius)
+            {
+                offset *= RadarWorldRadius / distance;
+            }
+
+            SetMarkerState(true, offset);
         }
 
         public override void _Draw()
@@ -303,6 +356,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 layout.Rect(8f, 772f, 128f, 128f),
                 false,
                 new Color(0.74f, 0.70f, 0.54f, 0.86f));
+            if (_objectiveMarkerVisible)
+            {
+                Vector2 radarCenter = layout.Point(69f, 836f) + (_objectiveMarkerOffset * layout.Scale);
+                DrawTextureRect(
+                    objectiveMarker,
+                    new Rect2(radarCenter - (Vector2.One * 8f * layout.Scale), Vector2.One * 16f * layout.Scale),
+                    false,
+                    new Color(1f, 1f, 0f, 1f));
+            }
 
             Rect2 central = layout.Rect(704f, 354f, 192f, 192f);
             Vector2 center = central.GetCenter();
@@ -313,6 +375,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 false,
                 new Color(0.82f, 0.82f, 0.76f, 0.76f));
             DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
+
+        private void SetMarkerState(bool visible, Vector2 offset)
+        {
+            if (_objectiveMarkerVisible == visible &&
+                _objectiveMarkerOffset.IsEqualApprox(offset))
+            {
+                return;
+            }
+
+            _objectiveMarkerVisible = visible;
+            _objectiveMarkerOffset = offset;
+            QueueRedraw();
         }
     }
 

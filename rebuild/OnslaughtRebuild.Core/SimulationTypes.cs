@@ -35,6 +35,7 @@ public enum Level100TutorialMessage
     MovementControls = 6,
     ReachTargetZone1 = 7,
     ScannerObjective = 8,
+    FiringRangeInstruction = 9,
 }
 
 [Flags]
@@ -116,6 +117,7 @@ public sealed record WorldSnapshot(
     int Level100OpeningTicksRemaining,
     int Level100TimelineTick,
     Level100TutorialMessage Level100Message,
+    int Level100EventMessageTicksRemaining,
     bool Level100PowerEnabled,
     bool Level100FlightEnabled,
     bool Level100WeaponsEnabled,

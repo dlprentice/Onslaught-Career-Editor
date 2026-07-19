@@ -143,7 +143,7 @@ Level 100 ground/start relationship, and copied-runtime framing independently
 agree on scale `1.0`; the client grounds the walker from its composed standing
 pose and each static mesh from its exact lower bound.
 
-Twelve retained HUD textures are exact released files named by the Steam
+Thirteen retained HUD textures are exact released files named by the Steam
 binary. A clean copied-runtime frame establishes the bounded first-person
 composition now used by Godot: center crosshair/weapon layers, lower-left radar,
 lower-right radio frame, and lower-center message treatment. The current
@@ -162,10 +162,21 @@ the released flight flag at `0x58C` and both initial weapon gates remained off.
 At tick `1223`, the object uniquely identified at Target Zone 1's authored
 position changed its `CThing` flags at offset `0x2C` from `0x0002` to `0x0022`,
 setting objective bit `0x20`. Exact English strings decoded from `english.dat`
-and the eight shipped English Ogg/Vorbis files drive the client. This establishes
-the bounded first-instruction sequence and initial gates, not later tutorial
-progression, animated portraits, tactical contacts, weapon behavior, or pixel
-parity.
+and the eight opening Ogg/Vorbis files drive the client.
+
+Two fresh uninterrupted player-input runs then repeated the first objective
+handoff. Target Zone 1's radius-5 volume remained active outside centre
+distances `5.44` and `5.54`, then overlapped the released Battle Engine's
+single-player `0.4` radius by distances `5.29` and `5.39`. Eleven 20 Hz updates
+later, both runs changed Target Zone 1 flags `0x22 → 0x02`, Firing Range flags
+`0x02 → 0x22`, and the active message to ID `4458134` in the same update. Steam
+Battle Engine vtable slot 16 at `0x0040DF80` independently returns `0.4` outside
+multiplayer. `CHud__RenderTacticalRadarContacts` at `0x00484C50` supplies the
+objective path's yaw rotation, 46-unit clamp, and fixed `0xFFFFFF00` tint used
+with the exact 16×16 DXT2 `CompassObjectiveMarker`. The ninth retained voice is exact
+`tutorial_02.ogg`, 237871 samples at 44.1 kHz. This establishes only Target Zone
+1 → Firing Range assignment, not the later Firing Range trigger, non-objective
+contacts, weapon behavior, or pixel parity.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration now uses the released continuous yaw basis; the eight-way
@@ -177,13 +188,14 @@ dynamics remain provisional.
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four exterior meshes
 with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
-cockpit, eight mesh textures, twelve HUD textures, five sky textures, the
+cockpit, eight mesh textures, thirteen HUD textures, five sky textures, the
 retained heightfield, exact macro terrain inputs, selected detail texture, and
 Core-owned player ground elevation. It also reaches the retail-timed Target Zone
 1 instruction with the exact static portrait, subtitle, and voice stream loaded,
 while reporting the demonstrated power, flight, weapon, message, and objective
-state. The same smoke omits synthetic target and objective-marker scenery,
-renders the fly-in/control/HUD handoff, advances, preserves the expected
+state. The same smoke omits synthetic target and world-marker scenery while
+rendering the active shipped radar marker. It renders the fly-in/control/HUD
+handoff, advances, preserves the expected
 deterministic Core hash, and exits. It does not prove secondary material or
 moving cloud-shadow passes, procedural leg solving, collision, complete
 environment population, the complete mission, camera pitch/occlusion, full HUD behavior,

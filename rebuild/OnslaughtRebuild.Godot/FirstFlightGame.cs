@@ -316,6 +316,8 @@ public sealed partial class FirstFlightGame : Node3D
                 "res://Assets/Level100/TutorialAudio/tutorial_01.ogg",
             Level100TutorialMessage.ScannerObjective =>
                 "res://Assets/Level100/TutorialAudio/tutorial_scanner.ogg",
+            Level100TutorialMessage.FiringRangeInstruction =>
+                "res://Assets/Level100/TutorialAudio/tutorial_02.ogg",
             _ => null,
         };
         if (resourcePath is null)
@@ -428,6 +430,8 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100OpeningTicksRemaining = _session.CurrentSnapshot.Level100OpeningTicksRemaining,
                 Level100TimelineTick = _session.CurrentSnapshot.Level100TimelineTick,
                 Level100Message = _session.CurrentSnapshot.Level100Message.ToString(),
+                Level100EventMessageTicksRemaining =
+                    _session.CurrentSnapshot.Level100EventMessageTicksRemaining,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100WeaponsEnabled = _session.CurrentSnapshot.Level100WeaponsEnabled,
@@ -451,7 +455,7 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100PlayerStartRelativeHeight = _world.Level100PlayerStartRelativeHeight,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
                 RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
-                Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
+                Level100ObjectiveMarkerCount = _hud.Level100ObjectiveMarkerCount,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
                 RetailLevel100SkySurfaceCount = _world.RetailLevel100SkySurfaceCount,
@@ -507,6 +511,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required int Level100OpeningTicksRemaining { get; init; }
         public required int Level100TimelineTick { get; init; }
         public required string Level100Message { get; init; }
+        public required int Level100EventMessageTicksRemaining { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
         public required bool Level100WeaponsEnabled { get; init; }

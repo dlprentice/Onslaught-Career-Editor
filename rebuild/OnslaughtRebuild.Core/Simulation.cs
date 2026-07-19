@@ -43,6 +43,7 @@ public sealed class Simulation
     private int _level100OpeningTicksRemaining;
     private int _level100TimelineTick;
     private Level100TutorialMessage _level100Message;
+    private int _level100EventMessageTicksRemaining;
     private bool _level100PowerEnabled;
     private bool _level100FlightEnabled;
     private bool _level100WeaponsEnabled;
@@ -77,6 +78,8 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
+        AdvanceLevel100EventMessage();
+
         SimInput playerInput = _level100PowerEnabled ? input : SimInput.Idle;
 
         AdvanceTransition();
@@ -107,7 +110,10 @@ public sealed class Simulation
         _level100TimelineTick++;
         _level100PowerEnabled =
             _level100TimelineTick >= SimulationConstants.Level100PowerActivationTick;
-        _level100Message = MessageAtLevel100Tick(_level100TimelineTick);
+        if (_level100EventMessageTicksRemaining == 0)
+        {
+            _level100Message = MessageAtLevel100Tick(_level100TimelineTick);
+        }
         if (_level100Phase == Level100OpeningPhase.Briefing &&
             _level100TimelineTick >= SimulationConstants.Level100TargetZone1ActivationTick)
         {
@@ -143,6 +149,20 @@ public sealed class Simulation
                 Level100TutorialMessage.ScannerObjective,
         _ => Level100TutorialMessage.None,
     };
+
+    private void AdvanceLevel100EventMessage()
+    {
+        if (_level100EventMessageTicksRemaining == 0)
+        {
+            return;
+        }
+
+        _level100EventMessageTicksRemaining--;
+        if (_level100EventMessageTicksRemaining == 0)
+        {
+            _level100Message = Level100TutorialMessage.None;
+        }
+    }
 
     private void TryToggleMode(SimInput input)
     {
@@ -364,14 +384,17 @@ public sealed class Simulation
             _level100DispatchTicksRemaining--;
             if (_level100DispatchTicksRemaining == 0)
             {
-                _level100Phase = _level100Phase switch
+                if (_level100Phase == Level100OpeningPhase.TargetZone1DispatchPending)
                 {
-                    Level100OpeningPhase.TargetZone1DispatchPending =>
-                        Level100OpeningPhase.ReachFiringRange,
-                    Level100OpeningPhase.FiringRangeDispatchPending =>
-                        Level100OpeningPhase.FiringRangeReached,
-                    _ => _level100Phase,
-                };
+                    _level100Phase = Level100OpeningPhase.ReachFiringRange;
+                    _level100Message = Level100TutorialMessage.FiringRangeInstruction;
+                    _level100EventMessageTicksRemaining =
+                        SimulationConstants.Level100FiringRangeInstructionTicks;
+                }
+                else if (_level100Phase == Level100OpeningPhase.FiringRangeDispatchPending)
+                {
+                    _level100Phase = Level100OpeningPhase.FiringRangeReached;
+                }
             }
 
             return;
@@ -393,7 +416,9 @@ public sealed class Simulation
         _level100Phase = _level100Phase == Level100OpeningPhase.ReachTargetZone1
             ? Level100OpeningPhase.TargetZone1DispatchPending
             : Level100OpeningPhase.FiringRangeDispatchPending;
-        _level100DispatchTicksRemaining = SimulationConstants.Level100ObjectiveDispatchTicks;
+        _level100DispatchTicksRemaining = _level100Phase == Level100OpeningPhase.TargetZone1DispatchPending
+            ? SimulationConstants.Level100TargetZone1DispatchTicks
+            : SimulationConstants.Level100FiringRangeDispatchTicks;
     }
 
     private static bool IsWithinLevel100Trigger(SimVector2 position, SimVector2 trigger)
@@ -609,6 +634,7 @@ public sealed class Simulation
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
         _level100TimelineTick = 0;
         _level100Message = Level100TutorialMessage.None;
+        _level100EventMessageTicksRemaining = 0;
         _level100PowerEnabled = false;
         _level100FlightEnabled = false;
         _level100WeaponsEnabled = false;
@@ -684,6 +710,7 @@ public sealed class Simulation
             _level100OpeningTicksRemaining,
             _level100TimelineTick,
             _level100Message,
+            _level100EventMessageTicksRemaining,
             _level100PowerEnabled,
             _level100FlightEnabled,
             _level100WeaponsEnabled,

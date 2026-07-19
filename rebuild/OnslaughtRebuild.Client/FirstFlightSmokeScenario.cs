@@ -6,9 +6,14 @@ namespace OnslaughtRebuild.Client;
 
 public static class FirstFlightSmokeScenario
 {
-    private const int PlayingStartTick = SimulationConstants.Level100PowerActivationTick;
-    private const int PlayingDurationTicks = 60;
-    public const int DurationTicks = SimulationConstants.Level100TargetZone1InstructionStartTick + 30;
+    // Begin after Target Zone 1 is active, then follow the same left/forward
+    // route used by the copied-retail observer. The shorter forward hold stops
+    // at Core's trigger rather than continuing past the objective.
+    private const int TargetZoneInputStartTick =
+        SimulationConstants.Level100TargetZone1ActivationTick + 57;
+    private const int LeftTicks = 216;
+    private const int ForwardTicks = 469;
+    public const int DurationTicks = 1_995;
 
     public static InteractiveInput GetInputForTick(int tick)
     {
@@ -17,20 +22,20 @@ public static class FirstFlightSmokeScenario
             throw new ArgumentOutOfRangeException(nameof(tick));
         }
 
-        if (tick < PlayingStartTick || tick >= PlayingStartTick + PlayingDurationTicks)
+        if (tick < TargetZoneInputStartTick)
         {
             return InteractiveInput.Idle;
         }
 
-        int playingTick = tick - PlayingStartTick;
-        if (playingTick < 30)
+        int routeTick = tick - TargetZoneInputStartTick;
+        if (routeTick < LeftTicks)
         {
-            return new InteractiveInput(0, 1, false, false, false);
+            return new InteractiveInput(-1, 0, false, false, false);
         }
 
-        if (playingTick < 60)
+        if (routeTick < LeftTicks + ForwardTicks)
         {
-            return new InteractiveInput(0, 0, false, false, false, LookX: 1);
+            return new InteractiveInput(0, 1, false, false, false);
         }
 
         return InteractiveInput.Idle;

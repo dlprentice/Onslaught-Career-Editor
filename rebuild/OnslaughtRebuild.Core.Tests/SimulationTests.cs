@@ -293,24 +293,37 @@ public sealed class SimulationTests
             SimulationConstants.Level100TargetZone1Position,
             Level100OpeningPhase.TargetZone1DispatchPending);
         Assert.Equal(
-            SimulationConstants.Level100ObjectiveDispatchTicks,
+            SimulationConstants.Level100TargetZone1DispatchTicks,
             simulation.Snapshot.Level100DispatchTicksRemaining);
 
-        for (int tick = 1; tick < SimulationConstants.Level100ObjectiveDispatchTicks; tick++)
+        for (int tick = 1; tick < SimulationConstants.Level100TargetZone1DispatchTicks; tick++)
         {
             WorldSnapshot pending = simulation.Step(SimInput.Idle);
             Assert.Equal(Level100OpeningPhase.TargetZone1DispatchPending, pending.Level100Phase);
         }
 
+        WorldSnapshot firingRangeAssignment = simulation.Step(SimInput.Idle);
+        Assert.Equal(Level100OpeningPhase.ReachFiringRange, firingRangeAssignment.Level100Phase);
         Assert.Equal(
-            Level100OpeningPhase.ReachFiringRange,
-            simulation.Step(SimInput.Idle).Level100Phase);
+            Level100TutorialMessage.FiringRangeInstruction,
+            firingRangeAssignment.Level100Message);
+        Assert.Equal(
+            SimulationConstants.Level100FiringRangeInstructionTicks,
+            firingRangeAssignment.Level100EventMessageTicksRemaining);
+
+        for (int tick = 1; tick < SimulationConstants.Level100FiringRangeInstructionTicks; tick++)
+        {
+            WorldSnapshot instruction = simulation.Step(SimInput.Idle);
+            Assert.Equal(Level100TutorialMessage.FiringRangeInstruction, instruction.Level100Message);
+        }
+
+        Assert.Equal(Level100TutorialMessage.None, simulation.Step(SimInput.Idle).Level100Message);
 
         DriveToPhase(
             simulation,
             SimulationConstants.Level100FiringRangePosition,
             Level100OpeningPhase.FiringRangeDispatchPending);
-        for (int tick = 0; tick < SimulationConstants.Level100ObjectiveDispatchTicks; tick++)
+        for (int tick = 0; tick < SimulationConstants.Level100FiringRangeDispatchTicks; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
