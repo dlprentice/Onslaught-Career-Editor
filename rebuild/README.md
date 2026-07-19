@@ -22,8 +22,12 @@ released Federation Aquila, Control Tower, and Tank Factory geometry at their
 authored horizontal opening positions over the released coarse Level 100
 heightfield. Core owns the released player start heading and the Target Zone 1
 → Firing Range objective handoff, including both scripts' 0.5-second event
-delay. The four released meshes render with their exact retained layer-zero
-textures. The released macro terrain blend, cube-25 sky, fog, and environment
+delay. The walker is loaded directly from its exact released AYA as a 63-part
+hierarchy; its twenty animated leg-chain parts begin in the stable retail
+Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
+The jet and two facilities retain bounded static conversions. All four render
+with their exact retained layer-zero textures. The released macro terrain
+blend, cube-25 sky, fog, and environment
 light values now replace the procedural ground/sky. The Aquila uses the retained
 meshes' retail-unit scale and the released third-person walker's pitch-zero
 framing. Secondary material and terrain-detail passes, terrain
@@ -82,8 +86,9 @@ jet-to-walker, transform animation, resource semantics, weapons, terrain
 collision/response, AI, the remaining mission, audio, campaign, and networking
 remain provisional or absent.
 
-The client switches between deterministic static conversions of the released
-walker and jet meshes and loads two released Level 100 facility meshes. The
+The client switches between the released walker's exact part hierarchy and a
+deterministic static conversion of the released jet, and loads two released
+Level 100 facility meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 presentation placement, generates the released 512×512 macro blend from exact
@@ -92,10 +97,10 @@ fog and lighting values. Deterministic Core still has no terrain elevation or
 collision. The client preserves the base material groups and decodes seven
 exact AYA-wrapped DXT2 textures for the Aquila and two facilities. The shared
 secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
-particle, facility destruction, part articulation, transform animation, retail
-HUD/cockpit, tutorial dialogue and gates, and the full mission remain
-unimplemented; three synthetic combat targets still exercise the older firing
-path and are not Level 100 parity.
+particle, facility destruction, procedural foot placement/terrain IK,
+transform animation, retail HUD/cockpit, tutorial dialogue and gates, and the
+full mission remain unimplemented; three synthetic combat targets still
+exercise the older firing path and are not Level 100 parity.
 
 ## Verify
 

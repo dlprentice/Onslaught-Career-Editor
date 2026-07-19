@@ -41,9 +41,10 @@ not provenance.
 ## Current slice
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
-infrastructure. The Godot Level 100 Opening Slice consumes static conversions
-of the released Federation walker, jet, Control Tower, and Tank Factory meshes;
-their exact source/output hashes live with the assets. The released Level 100
+infrastructure. The Godot Level 100 Opening Slice consumes the released
+Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
+of the jet, Control Tower, and Tank Factory meshes; their exact source/output
+hashes live with the assets. The released Level 100
 WRES placement records now set the player start heading, two nearby facility
 placements, and the Target Zone 1 and Firing Range trigger locations. The loose
 mission scripts establish their order and 0.5-second event delays. The retained
@@ -57,8 +58,18 @@ drive the Godot environment. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference,
 terrain-detail/cloud stages, and
 visible-sun particle—are not guessed. Terrain collision/response, targets,
-weapons, resources, articulation, jet/morph presentation, and cockpit/HUD
-remain provisional unless specific retained evidence says otherwise.
+weapons, resources, jet/morph presentation, and cockpit/HUD remain provisional
+unless specific retained evidence says otherwise.
+
+The exact walker AYA supplies 63 reciprocal parent/reference parts, 54 expanded
+base-material surfaces, and the 101-frame `LegMotion` table. At the authored
+Level 100 start `(288.6875, 243.25)`, yaw `0.509829998`, one fresh app-owned
+retail run in raw walker state `2` produced two identical complete pose-buffer
+hashes 100 ms apart. The client retains only the resulting twenty local
+leg-chain transforms and blends them toward the authored gait from deterministic
+Core velocity. This proves the stable opening stance and consumes an authored
+walk cycle; it does not reproduce the retail mech controller's per-frame
+terrain-aware leg solving or prove arbitrary-terrain foot contact.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -79,8 +90,9 @@ five units behind and 3.25 units above the 1.9-unit center of gravity, looking
 six units ahead. The Steam 16:9/zoom-1 projection term `0.5625` gives a
 58.7155-degree vertical field of view. Retained mesh bounds, the released
 Level 100 ground/start relationship, and copied-runtime framing independently
-agree on scale `1.0`; the client grounds each static mesh from its exact lower
-bound. These observations establish only this third-person pitch-zero
+agree on scale `1.0`; the client grounds the walker from its composed standing
+pose and each static mesh from its exact lower bound. These observations
+establish only this third-person pitch-zero
 presentation—not the clean mission's default view, cockpit, pitch response,
 occlusion, or terrain-clipping behavior.
 
@@ -91,9 +103,10 @@ dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four curated meshes
-with fourteen base-material surfaces, seven mesh textures, five sky textures,
-the retained heightfield and exact macro terrain inputs, exposes both mission
-markers, renders, advances, and exits. It does not prove secondary material or
-terrain-detail passes, collision, animation, complete environment population,
-the complete mission, camera behavior outside the bounded pitch-zero framing,
-timing, or visual parity.
+with 65 base-material surfaces (57 Aquila and eight facility), seven mesh
+textures, five sky textures, the retained heightfield and exact macro terrain
+inputs, exposes both mission markers, renders, advances, preserves the expected
+deterministic Core hash, and exits. It does not prove secondary material or
+terrain-detail passes, procedural leg solving, collision, complete environment
+population, the complete mission, camera behavior outside the bounded
+pitch-zero framing, timing, or visual parity.

@@ -151,13 +151,18 @@ establish the walker's acceleration, equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
 rather than an eight-direction visual snap. Walker-to-jet initiation also exposes Core's
 retail-timed 16-tick transition instead of switching to Jet immediately. The
-four meshes preserve their layer-zero material groups and render from seven
-exact retained AYA-wrapped DXT2 textures. The eight-way movement projection
-remains an approximation, and the slice does not yet reproduce retail camera
-feel, terrain textures or sky, terrain collision or movement response, the rest
-of the mission, AI, weapon roster, secondary/reflection material passes,
-facility destruction, part animation, retail HUD, audio, campaign, networking,
-or the rest of the transform model.
+walker now loads directly from its exact released AYA as a 63-part hierarchy
+with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
+machine-observed Level 100 standing pose and follow the released 101-frame
+`LegMotion` cycle from Core velocity. The jet and two facilities remain bounded
+static conversions. The four meshes render from seven exact retained
+AYA-wrapped DXT2 textures, while the released macro terrain blend, cube-25 sky,
+fog, and environment lighting replace their earlier placeholders. The
+eight-way movement projection remains an approximation, and the slice does not
+yet reproduce terrain collision or the retail controller's procedural foot
+placement, the rest of the mission, AI, weapon roster, secondary/reflection and
+terrain-detail passes, facility destruction, transform animation, retail HUD,
+audio, campaign, networking, or the rest of the transform model.
 Tutorial dialogue and flight/weapon eligibility gates are not implemented; the
 remaining synthetic combat targets are handling fixtures, not Level 100
 parity. Terrain-following in the Godot host is presentation only; Core remains

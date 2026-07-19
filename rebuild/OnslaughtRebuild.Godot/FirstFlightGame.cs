@@ -359,7 +359,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v3",
+                SchemaVersion = "onslaught-first-flight-smoke.v4",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -379,6 +379,10 @@ public sealed partial class FirstFlightGame : Node3D
                 PlayerVisualPresent = _world.PlayerVisualPresent,
                 RetailAquilaMeshesPresent = _world.RetailAquilaMeshesPresent,
                 RetailAquilaSurfaceCount = _world.RetailAquilaSurfaceCount,
+                RetailAquilaPartCount = _world.RetailAquilaPartCount,
+                RetailAquilaAnimatedPartCount = _world.RetailAquilaAnimatedPartCount,
+                RetailAquilaStandingClearance = _world.RetailAquilaStandingClearance,
+                Level100PlayerStartRelativeHeight = _world.Level100PlayerStartRelativeHeight,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
                 RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
                 Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
@@ -444,6 +448,10 @@ public sealed partial class FirstFlightGame : Node3D
         public required bool PlayerVisualPresent { get; init; }
         public required bool RetailAquilaMeshesPresent { get; init; }
         public required int RetailAquilaSurfaceCount { get; init; }
+        public required int RetailAquilaPartCount { get; init; }
+        public required int RetailAquilaAnimatedPartCount { get; init; }
+        public required float RetailAquilaStandingClearance { get; init; }
+        public required float Level100PlayerStartRelativeHeight { get; init; }
         public required int RetailLevel100FacilityCount { get; init; }
         public required int RetailLevel100FacilitySurfaceCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }

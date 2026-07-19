@@ -8,8 +8,6 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
-    private const float RetailAquilaScale = 1f;
-    private const float RetailWalkerBaseClearance = 0.00537145f;
     private const float RetailJetBaseClearance = 0.6706632f;
     private const float RetailWalkerCenterOfGravityHeight = 1.9f;
     private const float RetailThirdPersonRearOffset = 5f;
@@ -30,7 +28,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private readonly List<ObjectiveMarkerVisual> _level100ObjectiveMarkers = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
-    private MeshInstance3D _walkerMesh = null!;
+    private RetailAquilaWalkerAsset _walkerAsset = null!;
     private MeshInstance3D _jetMesh = null!;
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
@@ -38,6 +36,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private ObjectiveMarkerVisual _targetZone1Marker = null!;
     private ObjectiveMarkerVisual _firingRangeMarker = null!;
     private float _modeBlend;
+    private float _walkCycle = -Mathf.Pi;
+    private int _lastWalkPoseTick = -1;
 
     public int TargetVisualCount => _targets.Count;
 
@@ -46,14 +46,20 @@ public sealed partial class FirstFlightWorldView : Node3D
     public bool PlayerVisualPresent => IsInstanceValid(_playerRoot);
 
     public bool RetailAquilaMeshesPresent =>
-        IsInstanceValid(_walkerMesh) &&
+        IsInstanceValid(_walkerAsset.Root) &&
         IsInstanceValid(_jetMesh) &&
-        _walkerMesh.Mesh?.GetSurfaceCount() > 0 &&
+        _walkerAsset.SurfaceCount > 0 &&
         _jetMesh.Mesh?.GetSurfaceCount() > 0;
 
     public int RetailAquilaSurfaceCount =>
-        (_walkerMesh.Mesh?.GetSurfaceCount() ?? 0) +
+        _walkerAsset.SurfaceCount +
         (_jetMesh.Mesh?.GetSurfaceCount() ?? 0);
+
+    public int RetailAquilaPartCount => _walkerAsset.PartCount;
+
+    public int RetailAquilaAnimatedPartCount => _walkerAsset.AnimatedPartCount;
+
+    public float RetailAquilaStandingClearance => _walkerAsset.StandingClearance;
 
     public int RetailLevel100FacilityCount => _level100Facilities.Count;
 
@@ -67,6 +73,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailLevel100TerrainTriangleCount => _level100Terrain.TriangleCount;
 
     public int RetailLevel100SkySurfaceCount => _level100Sky.Mesh?.GetSurfaceCount() ?? 0;
+
+    public float Level100PlayerStartRelativeHeight => _level100Terrain.SampleRelativeHeight(0f, 0f);
 
     public void Initialize(WorldSnapshot snapshot)
     {
@@ -109,6 +117,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         _modeBlend = current.Transition == VehicleTransition.WalkerToJet
             ? desiredModeBlend
             : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
+        UpdateWalkerPose(current);
         UpdatePlayerShape(current);
         UpdateLevel100ObjectiveMarkers(current);
         UpdateTargets(current);
@@ -311,13 +320,13 @@ public sealed partial class FirstFlightWorldView : Node3D
             CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024, 1024),
             0.45f,
             0.42f);
-        Mesh walker = CuratedObjMeshLoader.Load(
-            "res://Assets/Aquila/aquila-walker.obj",
-            new Dictionary<string, Material>(StringComparer.Ordinal)
+        _walkerAsset = RetailAquilaWalkerAsset.Load(
+            "res://Assets/Aquila/Source/m_f_be1.msh.aya",
+            new Dictionary<int, Material>
             {
-                ["texture-0000"] = cockpit,
-                ["texture-0001"] = textureB,
-                ["texture-0003"] = textureA,
+                [0] = cockpit,
+                [1] = textureB,
+                [3] = textureA,
             });
         Mesh jet = CuratedObjMeshLoader.Load(
             "res://Assets/Aquila/aquila-jet.obj",
@@ -328,25 +337,17 @@ public sealed partial class FirstFlightWorldView : Node3D
                 ["texture-0004"] = textureA,
             });
 
-        // BEA's horizontal X/Y and negative-Z-up axes map to Godot's X/-Z and positive-Y axes.
-        _walkerMesh = new MeshInstance3D
-        {
-            Name = "RetailAquilaWalker",
-            Mesh = walker,
-            Position = new Vector3(0f, RetailWalkerBaseClearance, 0f),
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Scale = Vector3.One * RetailAquilaScale,
-        };
+        // The exact walker hierarchy performs BEA's X/Y/negative-Z-up mapping
+        // per part. The still-static jet retains the reviewed OBJ conversion.
         _jetMesh = new MeshInstance3D
         {
             Name = "RetailAquilaJet",
             Mesh = jet,
             Position = new Vector3(0f, RetailJetBaseClearance, 0f),
             RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Scale = Vector3.One * RetailAquilaScale,
             Visible = false,
         };
-        _playerBodyPivot.AddChild(_walkerMesh);
+        _playerBodyPivot.AddChild(_walkerAsset.Root);
         _playerBodyPivot.AddChild(_jetMesh);
     }
 
@@ -406,13 +407,43 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void UpdatePlayerShape(WorldSnapshot snapshot)
     {
         bool showJet = _modeBlend >= 0.5f;
-        _walkerMesh.Visible = !showJet;
+        _walkerAsset.Root.Visible = !showJet;
         _jetMesh.Visible = showJet;
 
         float transitionLift = snapshot.Transition == VehicleTransition.WalkerToJet
             ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
             : 0f;
         _playerBodyPivot.Position = new Vector3(0f, transitionLift, 0f);
+    }
+
+    private void UpdateWalkerPose(WorldSnapshot snapshot)
+    {
+        if (_lastWalkPoseTick != snapshot.Tick)
+        {
+            float velocityX = snapshot.PlayerVelocity.X * UnitsToMeters;
+            float velocityZ = snapshot.PlayerVelocity.Z * UnitsToMeters;
+            float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
+            float forwardSpeed = (velocityX * Mathf.Sin(yaw)) + (velocityZ * Mathf.Cos(yaw));
+            float strafeSpeed = (velocityX * Mathf.Cos(yaw)) - (velocityZ * Mathf.Sin(yaw));
+            float cycleStep = Math.Abs(forwardSpeed) > Math.Abs(strafeSpeed)
+                ? forwardSpeed * 2.5f
+                : strafeSpeed * 3f;
+            int elapsedTicks = _lastWalkPoseTick < 0
+                ? 0
+                : Math.Max(1, snapshot.Tick - _lastWalkPoseTick);
+            _walkCycle = Mathf.PosMod(_walkCycle + (cycleStep * elapsedTicks) + Mathf.Pi, Mathf.Tau) -
+                Mathf.Pi;
+            _lastWalkPoseTick = snapshot.Tick;
+        }
+
+        float speed = Mathf.Sqrt(
+            (snapshot.PlayerVelocity.X * snapshot.PlayerVelocity.X) +
+            (snapshot.PlayerVelocity.Z * snapshot.PlayerVelocity.Z));
+        float movementWeight = snapshot.Mode == VehicleMode.Walker &&
+            snapshot.Transition == VehicleTransition.None
+            ? Mathf.Clamp(speed / SimulationConstants.WalkerMaximumSpeedPerTick, 0f, 1f)
+            : 0f;
+        _walkerAsset.SetWalkPose(_walkCycle, movementWeight);
     }
 
     private void UpdateLevel100ObjectiveMarkers(WorldSnapshot snapshot)

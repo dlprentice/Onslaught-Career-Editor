@@ -14,6 +14,19 @@ function Assert-SmokeValue {
     }
 }
 
+function Assert-SmokeNear {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][double]$Expected,
+        [Parameter(Mandatory)][double]$Actual,
+        [double]$Tolerance = 0.00001
+    )
+
+    if ([Math]::Abs($Expected - $Actual) -gt $Tolerance) {
+        throw "First Flight smoke '$Name' mismatch: expected '$Expected' ± '$Tolerance', observed '$Actual'."
+    }
+}
+
 function Test-FirstFlightSmokeEvidence {
     [CmdletBinding()]
     param(
@@ -36,7 +49,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v3' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v4' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 120 $report.tick
@@ -55,7 +68,11 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'droppedElapsedTicks' 0 $report.droppedElapsedTicks
     Assert-SmokeValue 'playerVisualPresent' $true $report.playerVisualPresent
     Assert-SmokeValue 'retailAquilaMeshesPresent' $true $report.retailAquilaMeshesPresent
-    Assert-SmokeValue 'retailAquilaSurfaceCount' 6 $report.retailAquilaSurfaceCount
+    Assert-SmokeValue 'retailAquilaSurfaceCount' 57 $report.retailAquilaSurfaceCount
+    Assert-SmokeValue 'retailAquilaPartCount' 63 $report.retailAquilaPartCount
+    Assert-SmokeValue 'retailAquilaAnimatedPartCount' 20 $report.retailAquilaAnimatedPartCount
+    Assert-SmokeNear 'retailAquilaStandingClearance' 0.059322417 $report.retailAquilaStandingClearance
+    Assert-SmokeNear 'level100PlayerStartRelativeHeight' -0.21071243 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
     Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 2 $report.level100ObjectiveMarkerCount
