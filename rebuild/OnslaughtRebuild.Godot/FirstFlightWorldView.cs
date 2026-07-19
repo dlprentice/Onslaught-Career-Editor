@@ -32,6 +32,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Node3D _playerBodyPivot = null!;
     private MeshInstance3D _walkerMesh = null!;
     private MeshInstance3D _jetMesh = null!;
+    private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Camera3D _camera = null!;
     private ObjectiveMarkerVisual _targetZone1Marker = null!;
@@ -65,11 +66,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int RetailLevel100TerrainTriangleCount => _level100Terrain.TriangleCount;
 
+    public int RetailLevel100SkySurfaceCount => _level100Sky.Mesh?.GetSurfaceCount() ?? 0;
+
     public void Initialize(WorldSnapshot snapshot)
     {
         Name = "WorldView";
-        BuildEnvironment();
         BuildLevel100Terrain();
+        BuildEnvironment();
         BuildLevel100Facilities();
         BuildLevel100ObjectiveMarkers();
         BuildPlayer();
@@ -115,23 +118,19 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildEnvironment()
     {
-        var skyMaterial = new ProceduralSkyMaterial
-        {
-            SkyTopColor = new Color(0.025f, 0.055f, 0.075f),
-            SkyHorizonColor = new Color(0.24f, 0.32f, 0.34f),
-            GroundBottomColor = new Color(0.015f, 0.018f, 0.02f),
-            GroundHorizonColor = new Color(0.18f, 0.20f, 0.18f),
-        };
-        var sky = new Sky { SkyMaterial = skyMaterial };
         var environment = new Godot.Environment
         {
-            BackgroundMode = Godot.Environment.BGMode.Sky,
-            Sky = sky,
+            BackgroundMode = Godot.Environment.BGMode.Color,
+            BackgroundColor = _level100Terrain.FogColor,
             AmbientLightSource = Godot.Environment.AmbientSource.Color,
-            AmbientLightColor = new Color(0.42f, 0.50f, 0.53f),
-            AmbientLightEnergy = 0.65f,
-            ReflectedLightSource = Godot.Environment.ReflectionSource.Sky,
-            TonemapMode = Godot.Environment.ToneMapper.Filmic,
+            AmbientLightColor = _level100Terrain.AmbientColor,
+            AmbientLightEnergy = 1f,
+            TonemapMode = Godot.Environment.ToneMapper.Linear,
+            FogEnabled = true,
+            FogLightColor = _level100Terrain.FogColor,
+            FogLightEnergy = 1f,
+            FogDensity = _level100Terrain.FogDensity,
+            FogSkyAffect = 0f,
         };
         AddChild(new WorldEnvironment
         {
@@ -139,24 +138,44 @@ public sealed partial class FirstFlightWorldView : Node3D
             Environment = environment,
         });
 
-        AddChild(new DirectionalLight3D
+        var sun = new DirectionalLight3D
         {
             Name = "SunLight",
-            RotationDegrees = new Vector3(-52f, -28f, 0f),
-            LightColor = new Color(1f, 0.92f, 0.78f),
-            LightEnergy = 1.15f,
+            LightColor = _level100Terrain.SunColor,
+            LightEnergy = 1f,
             ShadowEnabled = true,
-        });
+        };
+        sun.LookAtFromPosition(Vector3.Zero, _level100Terrain.SunlightDirection, Vector3.Up);
+        AddChild(sun);
+
+        var antiSun = new DirectionalLight3D
+        {
+            Name = "AntiSunLight",
+            LightColor = _level100Terrain.AntiSunColor,
+            LightEnergy = 1f,
+            ShadowEnabled = false,
+        };
+        antiSun.LookAtFromPosition(Vector3.Zero, -_level100Terrain.SunlightDirection, Vector3.Up);
+        AddChild(antiSun);
+
+        _level100Sky = Level100SkyAsset.Create(_level100Terrain.SkyCube);
+        AddChild(_level100Sky);
     }
 
     private void BuildLevel100Terrain()
     {
         _level100Terrain = Level100HeightFieldAsset.Load(
             "res://Assets/Level100/Source/level100-heightfield.hfld.bin");
-        var terrainMaterial = VisualPrimitives.CreateMaterial(
-            new Color(0.16f, 0.22f, 0.20f),
-            0.02f,
-            0.96f);
+        Texture2D terrainTexture = Level100TerrainAppearanceAsset.Load(
+            "res://Assets/Level100/Source/level100-mixer-set-10.mapt.bin",
+            "res://Assets/Level100/Source/level100-mixer-map.mmap.bin",
+            _level100Terrain);
+        var terrainMaterial = new StandardMaterial3D
+        {
+            AlbedoTexture = terrainTexture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            Roughness = 1f,
+        };
         AddChild(new MeshInstance3D
         {
             Name = "RetailLevel100HeightField",
@@ -378,7 +397,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             Name = "FollowCamera",
             Fov = RetailVerticalFovDegrees,
             Near = 0.1f,
-            Far = 300f,
+            Far = 700f,
             Current = true,
         };
         AddChild(_camera);
@@ -494,6 +513,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             (Vector3.Up * RetailThirdPersonHeightOffset);
         _camera.Position = desired;
         _camera.LookAt(focus, Vector3.Up);
+        _level100Sky.Position = _camera.Position;
     }
 
     private Vector3 ToWorld(SimVector2 position, float heightAboveTerrain)

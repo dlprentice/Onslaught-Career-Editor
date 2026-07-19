@@ -15,6 +15,14 @@ internal sealed class Level100HeightFieldAsset
     private const int ChfdPayloadSize = 5_084;
     private const int HfdtPayloadSize = 663_552;
     private const int HeightScaleOffset = 0x102C;
+    private const int MixerSetOffset = 0x1030;
+    private const int FogColorOffset = 0x1078;
+    private const int SunColorOffset = 0x107C;
+    private const int AntiSunColorOffset = 0x1080;
+    private const int AmbientColorOffset = 0x108C;
+    private const int SkyCubeOffset = 0x1090;
+    private const int FogDensityOffset = 0x1098;
+    private const int SunPositionOffset = 0x10A4;
     private const int TileCountPerAxis = 64;
     private const int TileWidth = 8;
     private const int SamplesPerTileAxis = 9;
@@ -29,10 +37,30 @@ internal sealed class Level100HeightFieldAsset
     private readonly short[] _heightSamples;
     private readonly float _heightScale;
 
-    private Level100HeightFieldAsset(short[] heightSamples, float heightScale)
+    private Level100HeightFieldAsset(
+        short[] heightSamples,
+        float heightScale,
+        byte mixerSet,
+        byte skyCube,
+        uint fogColor,
+        float fogDensity,
+        uint sunColor,
+        uint antiSunColor,
+        uint ambientColor,
+        Vector3 sunlightDirection)
     {
         _heightSamples = heightSamples;
         _heightScale = heightScale;
+        MixerSet = mixerSet;
+        SkyCube = skyCube;
+        FogColor = ToColor(fogColor);
+        FogDensity = fogDensity;
+        SunColor = ToColor(sunColor);
+        AntiSunColor = ToColor(antiSunColor);
+        AmbientColor = ToColor(ambientColor);
+        SunColorRgb24 = sunColor;
+        AmbientColorRgb24 = ambientColor;
+        SunlightDirection = sunlightDirection;
         Mesh = BuildCoarseMesh();
     }
 
@@ -41,6 +69,26 @@ internal sealed class Level100HeightFieldAsset
     public int VertexCount => CoarseVertexCountPerAxis * CoarseVertexCountPerAxis;
 
     public int TriangleCount => TileCountPerAxis * TileCountPerAxis * 2;
+
+    public byte MixerSet { get; }
+
+    public byte SkyCube { get; }
+
+    public Color FogColor { get; }
+
+    public float FogDensity { get; }
+
+    public Color SunColor { get; }
+
+    public Color AntiSunColor { get; }
+
+    public Color AmbientColor { get; }
+
+    public uint SunColorRgb24 { get; }
+
+    public uint AmbientColorRgb24 { get; }
+
+    public Vector3 SunlightDirection { get; }
 
     public static Level100HeightFieldAsset Load(string resourcePath)
     {
@@ -77,6 +125,28 @@ internal sealed class Level100HeightFieldAsset
             throw new InvalidDataException("Level 100 HFLD has an invalid height scale.");
         }
 
+        byte mixerSet = source[chfdPayloadOffset + MixerSetOffset];
+        byte skyCube = source[chfdPayloadOffset + SkyCubeOffset];
+        float fogDensity = ReadSingle(source, chfdPayloadOffset + FogDensityOffset);
+        if (!float.IsFinite(fogDensity) || fogDensity < 0f)
+        {
+            throw new InvalidDataException("Level 100 HFLD has an invalid fog density.");
+        }
+
+        Vector3 beaSunPosition = new(
+            ReadSingle(source, chfdPayloadOffset + SunPositionOffset),
+            ReadSingle(source, chfdPayloadOffset + SunPositionOffset + sizeof(float)),
+            ReadSingle(source, chfdPayloadOffset + SunPositionOffset + (sizeof(float) * 2)));
+        if (!beaSunPosition.IsFinite() || beaSunPosition.IsZeroApprox())
+        {
+            throw new InvalidDataException("Level 100 HFLD has an invalid sun direction.");
+        }
+        Vector3 beaLightDirection = -beaSunPosition.Normalized();
+        Vector3 sunlightDirection = new(
+            beaLightDirection.X,
+            -beaLightDirection.Z,
+            beaLightDirection.Y);
+
         var samples = new short[HfdtPayloadSize / sizeof(short)];
         for (int index = 0; index < samples.Length; index++)
         {
@@ -84,7 +154,17 @@ internal sealed class Level100HeightFieldAsset
                 source.AsSpan(hfdtPayloadOffset + (index * sizeof(short)), sizeof(short)));
         }
 
-        return new Level100HeightFieldAsset(samples, heightScale);
+        return new Level100HeightFieldAsset(
+            samples,
+            heightScale,
+            mixerSet,
+            skyCube,
+            ReadUInt32(source, chfdPayloadOffset + FogColorOffset),
+            fogDensity,
+            ReadUInt32(source, chfdPayloadOffset + SunColorOffset),
+            ReadUInt32(source, chfdPayloadOffset + AntiSunColorOffset),
+            ReadUInt32(source, chfdPayloadOffset + AmbientColorOffset),
+            sunlightDirection);
     }
 
     public float SampleRelativeHeight(float relativeX, float relativeZ)
@@ -188,6 +268,20 @@ internal sealed class Level100HeightFieldAsset
         }
 
         return BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(offset, sizeof(uint)));
+    }
+
+    private static float ReadSingle(byte[] source, int offset)
+    {
+        return BitConverter.Int32BitsToSingle(
+            BinaryPrimitives.ReadInt32LittleEndian(source.AsSpan(offset, sizeof(float))));
+    }
+
+    private static Color ToColor(uint rgb)
+    {
+        return new Color(
+            ((rgb >> 16) & 0xFF) / 255f,
+            ((rgb >> 8) & 0xFF) / 255f,
+            (rgb & 0xFF) / 255f);
     }
 
     private static uint Tag(string value)

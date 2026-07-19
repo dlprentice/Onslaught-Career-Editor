@@ -23,10 +23,12 @@ authored horizontal opening positions over the released coarse Level 100
 heightfield. Core owns the released player start heading and the Target Zone 1
 → Firing Range objective handoff, including both scripts' 0.5-second event
 delay. The four released meshes render with their exact retained layer-zero
-textures. The Aquila uses the retained meshes' retail-unit scale and the
-released third-person walker's pitch-zero framing. Secondary material passes,
-terrain appearance and collision/response, combat targets, weapons, resources,
-and most mission behavior remain provisional.
+textures. The released macro terrain blend, cube-25 sky, fog, and environment
+light values now replace the procedural ground/sky. The Aquila uses the retained
+meshes' retail-unit scale and the released third-person walker's pitch-zero
+framing. Secondary material and terrain-detail passes, terrain
+collision/response, combat targets, weapons, resources, and most mission
+behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -84,13 +86,16 @@ The client switches between deterministic static conversions of the released
 walker and jet meshes and loads two released Level 100 facility meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
-presentation placement, but deterministic Core still has no terrain elevation
-or collision. The client preserves the base material groups and decodes seven
+presentation placement, generates the released 512×512 macro blend from exact
+`MAPT`/`MMAP` inputs, and renders the five exact cube-25 sky faces with `CHFD`
+fog and lighting values. Deterministic Core still has no terrain elevation or
+collision. The client preserves the base material groups and decodes seven
 exact AYA-wrapped DXT2 textures for the Aquila and two facilities. The shared
-secondary `Chrome3` pass, terrain textures and sky, facility destruction, part
-articulation, transform animation, retail HUD/cockpit, tutorial dialogue and
-gates, and the full mission remain unimplemented; three synthetic combat targets
-still exercise the older firing path and are not Level 100 parity.
+secondary `Chrome3` pass, repeating terrain-detail/cloud stages, visible-sun
+particle, facility destruction, part articulation, transform animation, retail
+HUD/cockpit, tutorial dialogue and gates, and the full mission remain
+unimplemented; three synthetic combat targets still exercise the older firing
+path and are not Level 100 parity.
 
 ## Verify
 

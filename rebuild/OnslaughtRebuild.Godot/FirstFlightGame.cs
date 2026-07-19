@@ -384,6 +384,7 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100ObjectiveMarkerCount = _world.Level100ObjectiveMarkerCount,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
+                RetailLevel100SkySurfaceCount = _world.RetailLevel100SkySurfaceCount,
                 TargetVisualCount = _world.TargetVisualCount,
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
@@ -448,6 +449,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required int Level100ObjectiveMarkerCount { get; init; }
         public required int RetailLevel100TerrainVertexCount { get; init; }
         public required int RetailLevel100TerrainTriangleCount { get; init; }
+        public required int RetailLevel100SkySurfaceCount { get; init; }
         public required int TargetVisualCount { get; init; }
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }

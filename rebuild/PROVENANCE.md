@@ -48,13 +48,17 @@ WRES placement records now set the player start heading, two nearby facility
 placements, and the Target Zone 1 and Firing Range trigger locations. The loose
 mission scripts establish their order and 0.5-second event delays. The retained
 `HFLD` uses the released loader's 64×64 tiled sample layout, height scale, and
-65×65 coarse render sampling. The client preserves each retained mesh group's
-layer-zero `TEXR` assignment and directly decodes seven exact AYA-wrapped DXT2
-base textures. The released renderer's later material passes—including the
-shared layer-two `Chrome3` reference—are not guessed. Terrain textures and
-collision/response, targets, weapons, resources, articulation, jet/morph
-presentation, and cockpit/HUD remain provisional unless specific retained
-evidence says otherwise.
+65×65 coarse render sampling. Exact `MAPT`/`MMAP` inputs and the released
+`0x0047EFF0` blend path produce the 512×512 macro landscape texture. The client
+preserves each retained mesh group's layer-zero `TEXR` assignment and directly
+decodes seven exact AYA-wrapped DXT2 base textures. Five exact DXT1 cube-25
+textures use the released face order and geometry; `CHFD` fog and light values
+drive the Godot environment. The released renderer's later material
+passes—including the shared layer-two `Chrome3` reference,
+terrain-detail/cloud stages, and
+visible-sun particle—are not guessed. Terrain collision/response, targets,
+weapons, resources, articulation, jet/morph presentation, and cockpit/HUD
+remain provisional unless specific retained evidence says otherwise.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -87,8 +91,9 @@ dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts, loads the four curated meshes
-with fourteen base-material surfaces and seven curated textures, loads the
-retained heightfield, exposes both mission markers, renders, advances, and
-exits. It does not prove secondary material passes, terrain appearance or
-collision, animation, the complete mission, camera behavior outside the bounded
-pitch-zero framing, timing, or visual parity.
+with fourteen base-material surfaces, seven mesh textures, five sky textures,
+the retained heightfield and exact macro terrain inputs, exposes both mission
+markers, renders, advances, and exits. It does not prove secondary material or
+terrain-detail passes, collision, animation, complete environment population,
+the complete mission, camera behavior outside the bounded pitch-zero framing,
+timing, or visual parity.

@@ -8,10 +8,20 @@ namespace OnslaughtRebuild.GodotClient;
 
 internal static class CuratedAyaTextureLoader
 {
+    internal enum Compression
+    {
+        Dxt1,
+        Dxt2,
+    }
+
     private const int MaximumSourceBytes = 2 * 1024 * 1024;
     private const int MaximumDdsBytes = 8 * 1024 * 1024;
 
-    public static Texture2D Load(string resourcePath, int expectedWidth, int expectedHeight)
+    public static Texture2D Load(
+        string resourcePath,
+        int expectedWidth,
+        int expectedHeight,
+        Compression expectedCompression = Compression.Dxt2)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         if (source.Length is 0 or > MaximumSourceBytes)
@@ -20,11 +30,15 @@ internal static class CuratedAyaTextureLoader
         }
 
         byte[] dds = InflateAya(source);
+        ReadOnlySpan<byte> expectedFourCc = expectedCompression == Compression.Dxt1
+            ? "DXT1"u8
+            : "DXT2"u8;
         if (dds.Length < 128 ||
             !dds.AsSpan(0, 4).SequenceEqual("DDS "u8) ||
-            !dds.AsSpan(84, 4).SequenceEqual("DXT2"u8))
+            !dds.AsSpan(84, 4).SequenceEqual(expectedFourCc))
         {
-            throw new InvalidDataException("Curated texture is not an AYA-wrapped DXT2 DDS image.");
+            throw new InvalidDataException(
+                $"Curated texture is not an AYA-wrapped {expectedCompression} DDS image.");
         }
 
         var image = new Image();

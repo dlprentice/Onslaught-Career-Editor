@@ -9,8 +9,9 @@ and browsing locally supplied media, catalogs, and project lore.
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
-currently renders the released Aquila walker/jet geometry inside a procedural
-arena and does not claim retail parity. The
+currently renders the released Aquila walker/jet, two Level 100 facilities,
+coarse terrain, macro terrain blend, and sky at their bounded reconstruction
+state; it does not claim retail parity. The
 project has permission to use, modify, and distribute the original game assets;
 integration into the rebuild remains implementation work, not a legal blocker.
 
