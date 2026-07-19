@@ -362,7 +362,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ReachesTheFirstFiringRangeExercise()
+    public void FirstFlightSmokeScenario_ReachesFiringRangeAndDestroysFirstTarget()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
         InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
@@ -373,7 +373,8 @@ public sealed class InteractiveSessionTests
             FirstFlightSmokeScenario.DurationTicks - 1);
         InteractiveInput firingRangeTurn = FirstFlightSmokeScenario.GetInputForTick(1_995);
         InteractiveInput firingRangeApproach = FirstFlightSmokeScenario.GetInputForTick(2_040);
-        InteractiveInput pulseCannonProof = FirstFlightSmokeScenario.GetInputForTick(3_139);
+        InteractiveInput firingRangeAim = FirstFlightSmokeScenario.GetInputForTick(3_139);
+        InteractiveInput pulseCannonProof = FirstFlightSmokeScenario.GetInputForTick(3_156);
 
         Assert.Equal(InteractiveInput.Idle, pan);
         Assert.Equal((sbyte)-1, strafe.MoveX);
@@ -382,10 +383,29 @@ public sealed class InteractiveSessionTests
         Assert.False(forward.ToggleModeHeld);
         Assert.Equal((sbyte)-1, firingRangeTurn.MoveX);
         Assert.Equal((sbyte)1, firingRangeApproach.MoveZ);
+        Assert.Equal((sbyte)-1, firingRangeAim.LookX);
         Assert.True(pulseCannonProof.FireHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
         Assert.Equal(3_228, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
+
+        var session = new InteractiveSession(Seed);
+        while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
+        {
+            session.ObserveInput(
+                FirstFlightSmokeScenario.GetInputForTick(session.CurrentSnapshot.Tick));
+            FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+            Assert.Equal(1, result.StepsAdvanced);
+        }
+
+        TargetSnapshot firstTarget = session.CurrentSnapshot.Targets.Single(target => target.Id == 1);
+        Assert.False(firstTarget.IsActive);
+        Assert.Equal(0, firstTarget.Hull);
+        Assert.Equal(1, session.CurrentSnapshot.TargetsDestroyed);
+        Assert.All(
+            session.CurrentSnapshot.Targets.Where(target => target.Id != 1),
+            target => Assert.True(target.IsActive));
+        Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
     }
 
     private static InteractiveSession RunInteractiveSequence()

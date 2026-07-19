@@ -40,10 +40,13 @@ line. The first fourteen
 released English tutorial messages now use their exact text, shipped voice
 clips, and static Tatiana/technician portrait frames. Core follows the observed
 power, objective, weapon-highlight, four-target, and Pulse Cannon activation
-boundaries while keeping flight disabled. Secondary material and moving
-cloud-shadow passes, steep-slope and actor collision response, target damage and
-destruction, weapon effects/resources, and most mission behavior remain
-provisional.
+boundaries while keeping flight disabled. A repeatedly observed lowest-charge
+Pulse Cannon path now gives Target Tank 1 its retail speed, direct-hit damage,
+four-hit deactivation, and the four exact textures named by its released
+medium-round effect. Secondary material and moving cloud-shadow passes,
+steep-slope and actor collision response, mesh-part damage variation, shot
+audio, impact/destruction effects, weapon resources, the other targets, and most
+mission behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -79,13 +82,13 @@ Controls:
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
-It retains provisional resource, cooldown, and projectile paths; the Pulse
-Cannon gate now opens only at the observed Firing Range boundary. Continuous
-body yaw and Level 100
-objective state are part of the snapshot/hash, and every input axis—including
+Resource and cooldown behavior remains provisional. The bounded Target Tank 1
+path uses the observed Pulse Cannon gate, continuous-yaw projectile heading,
+retail speed, direct-hit damage, and objective removal. Continuous body yaw and
+Level 100 objective state are part of the snapshot/hash, and every input axis—including
 look—is part of the trace. Walker acceleration is projected through the body's
-continuous deterministic yaw; jet movement and projectile aim still use the
-older eight-way approximation.
+continuous deterministic yaw; only jet movement retains the older eight-way
+approximation.
 
 Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
@@ -103,9 +106,10 @@ mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
 deactivates the player, then re-enables it with the Pulse Cannon; flight remains
 disabled.
 Camera pitch response and
-terrain clipping, jet movement and projectile heading,
+terrain clipping, jet movement,
 jet-to-walker, transform animation, resource semantics, the rest of the weapon
-model, terrain collision beyond grounded height following, AI, the mission
+model, shot audio, target mesh-part damage and hit/destruction effects, terrain collision
+beyond grounded height following, AI, the mission
 after the first Firing Range exercise,
 campaign, and networking
 remain provisional or absent.
@@ -123,7 +127,8 @@ hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the
 base material groups and decodes eleven exact AYA-wrapped mesh textures for the
-Aquila, cockpit, facilities, and range targets. It also
+Aquila, cockpit, facilities, and range targets plus the four exact 64×64
+textures named by the medium Pulse Bolt descriptor. It also
 uses thirteen exact HUD textures, including the uncompressed released font
 atlas and objective marker. The observed player route uses Steam's
 5.4-unit overlap and delayed dispatch to replace Target Zone 1 with the Firing
@@ -131,13 +136,18 @@ Range on that radar. A control and three repeated retail runs then establish the
 Firing Range's five-message sequence, current-weapon highlight, four objective
 targets, temporary player deactivation, and Pulse Cannon-only activation. The
 client uses the exact fourteen retained English lines and voices through that
-exercise.
+exercise. A no-fire control and two fresh firing repetitions then established
+the first charge bucket, definition speed `35`, `1.75`-unit released update,
+Target Tank 1 life `6`, direct-hit damage `1.8`, one glancing `1.0` hit, and
+four-shot objective removal. Core deliberately implements only the direct-hit
+Target 1 path; Godot removes its exact model and radar marker at destruction.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding, actor/structure
 collision, procedural foot placement/terrain IK,
 transform animation, non-objective HUD contacts and later state logic, animated
-radio portraits/video, target health/effects/destruction, and the remainder of
-the mission remain unimplemented. The old seeded synthetic targets are gone;
+radio portraits/video, other-target health, mesh-part damage variation, shot
+audio, impact/destruction effects, and the remainder of the mission remain
+unimplemented. The old seeded synthetic targets are gone;
 Core and Godot now share the four observed retail targets and shipped objective
 marker without adding world-space beacons.
 

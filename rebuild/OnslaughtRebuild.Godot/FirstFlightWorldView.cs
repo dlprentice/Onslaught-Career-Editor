@@ -15,7 +15,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailOpeningPanSeconds = 6f;
     private const float RetailOpeningCameraHandoffSeconds = 5.95f;
 
-    private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
+    private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly List<MeshInstance3D> _level100Facilities = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
     private Node3D _playerRoot = null!;
@@ -26,6 +26,10 @@ public sealed partial class FirstFlightWorldView : Node3D
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Camera3D _camera = null!;
+    private StandardMaterial3D _pulseBoltSparkMaterial = null!;
+    private StandardMaterial3D _pulseBoltTrailMaterial = null!;
+    private StandardMaterial3D _pulseBoltHaloMaterial = null!;
+    private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
     private float _modeBlend;
     private float _walkCycle = -Mathf.Pi;
     private int _lastWalkPoseTick = -1;
@@ -84,6 +88,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildLevel100Facilities();
         BuildLevel100Targets();
         BuildPlayer();
+        BuildPulseCannonPresentation();
         BuildCamera();
         Render(snapshot, snapshot, 0f, 0f);
     }
@@ -525,18 +530,22 @@ public sealed partial class FirstFlightWorldView : Node3D
         foreach (ProjectileSnapshot projectile in snapshot.Projectiles)
         {
             activeIds.Add(projectile.Id);
-            if (!_projectiles.TryGetValue(projectile.Id, out MeshInstance3D? visual))
+            if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
             {
-                visual = VisualPrimitives.CreateSphere(
-                    $"ProjectileVisual{projectile.Id}",
-                    0.21f,
-                    Vector3.Zero,
-                    VisualPrimitives.CreateMaterial(new Color(1f, 0.77f, 0.20f), 0f, 0.2f, new Color(1f, 0.48f, 0.08f)));
+                visual = CreatePulseBoltVisual(projectile.Id);
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
             }
 
             visual.Position = ToWorld(projectile.Position, 1.25f);
+            var direction = new Vector3(
+                projectile.Velocity.X,
+                0f,
+                -projectile.Velocity.Z);
+            if (!direction.IsZeroApprox())
+            {
+                visual.LookAt(visual.Position + direction.Normalized(), Vector3.Up);
+            }
         }
 
         foreach (int id in _projectiles.Keys.Where(id => !activeIds.Contains(id)).ToArray())
@@ -544,6 +553,87 @@ public sealed partial class FirstFlightWorldView : Node3D
             _projectiles[id].QueueFree();
             _projectiles.Remove(id);
         }
+    }
+
+    private void BuildPulseCannonPresentation()
+    {
+        Texture2D spark = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/pulse-bolt-blue-spark.texture.aya",
+            64,
+            64);
+        Texture2D trail = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/pulse-bolt-blue-trail.texture.aya",
+            64,
+            64,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        Texture2D halo = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya",
+            64,
+            64,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        Texture2D energyTrail = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/mech-pulse-medium-energy-trail.texture.aya",
+            64,
+            64,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        _pulseBoltSparkMaterial = CreatePulseParticleMaterial(spark, billboard: true);
+        _pulseBoltTrailMaterial = CreatePulseParticleMaterial(trail, billboard: false);
+        _pulseBoltHaloMaterial = CreatePulseParticleMaterial(halo, billboard: true);
+        _pulseBoltEnergyTrailMaterial = CreatePulseParticleMaterial(
+            energyTrail,
+            billboard: false);
+    }
+
+    private Node3D CreatePulseBoltVisual(int id)
+    {
+        var root = new Node3D { Name = $"RetailPulseBolt{id}" };
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "PulseBoltSprite",
+            Mesh = new QuadMesh { Size = new Vector2(0.5f, 0.5f) },
+            MaterialOverride = _pulseBoltSparkMaterial,
+        });
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "PulseBoltHalo",
+            Mesh = new QuadMesh { Size = new Vector2(0.6f, 0.6f) },
+            MaterialOverride = _pulseBoltHaloMaterial,
+        });
+        root.AddChild(VisualPrimitives.CreateCylinder(
+            "PulseBoltEnergyTrail",
+            0.25f,
+            0.2f,
+            new Vector3(0f, 0f, 0.1f),
+            _pulseBoltEnergyTrailMaterial,
+            new Vector3(90f, 0f, 0f)));
+        float trailLength = SimulationConstants.ProjectileSpeedPerTick / 1_000f;
+        root.AddChild(VisualPrimitives.CreateBox(
+            "PulseBoltTrail",
+            new Vector3(0.08f, 0.08f, trailLength),
+            new Vector3(0f, 0f, trailLength * 0.5f),
+            _pulseBoltTrailMaterial));
+        return root;
+    }
+
+    private static StandardMaterial3D CreatePulseParticleMaterial(
+        Texture2D texture,
+        bool billboard)
+    {
+        return new StandardMaterial3D
+        {
+            AlbedoTexture = texture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+            BillboardMode = billboard
+                ? BaseMaterial3D.BillboardModeEnum.Enabled
+                : BaseMaterial3D.BillboardModeEnum.Disabled,
+            EmissionEnabled = true,
+            Emission = Colors.White,
+            EmissionTexture = texture,
+            EmissionEnergyMultiplier = 1f,
+        };
     }
 
     private void UpdateCamera(

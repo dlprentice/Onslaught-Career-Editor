@@ -182,15 +182,23 @@ within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
 swap, and `TUTORIAL_02` dispatch. One control and three accepted Firing Range
 runs then repeated the same five-message sequence, current-weapon highlight,
 four objective pointers, temporary player deactivation, and Pulse Cannon-only
-activation. The released macro
+activation. A no-fire control and two fresh firing repetitions then established
+a bounded first-target lifecycle: first active charge bucket `10`, round speed
+`35`, movement `1.75` per released 20 Hz update, starting life `6`, direct-hit
+damage `1.8`, one observed glancing `1.0` hit, and destruction/objective removal
+on shot four. Core implements only the direct-hit Target Tank 1 path, and Godot
+removes its model and radar marker while consuming the four unique textures
+named by the released medium-round effect. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
 cloud-shadow stage remains absent. Walker acceleration now follows Core's
-continuous body yaw; jet translation and projectile heading retain the older
-eight-way approximation. The slice does not
-yet reproduce steep-slope or actor collision response or the retail controller's procedural foot
-placement, target health/effects/destruction, the rest of the mission, AI, the
+continuous body yaw; the bounded projectile path shares that heading while jet
+translation retains the older eight-way approximation. The slice does not
+yet reproduce steep-slope or actor collision response or the retail
+controller's procedural foot placement, other-target or mesh-part damage,
+shot audio, impact/destruction effects, the
+rest of the mission, AI, the
 remaining weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
 state/contacts/animated-radio behavior, later mission audio, campaign,
@@ -201,7 +209,7 @@ share the four observed retail targets. HUD markers use the shipped radar asset,
 not world-space synthetic beacons.
 Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point
 height sampler, and hashes the resulting walker ground elevation. Godot adapts
-that value for the player; static facilities and synthetic projectiles remain
+that value for the player; static facilities and projectile effects remain
 presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.

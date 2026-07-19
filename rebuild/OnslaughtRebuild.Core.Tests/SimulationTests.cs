@@ -382,6 +382,54 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void Level100FirstTarget_FourRetailSpeedFullHitsDestroyAndRemoveOnlyThatTarget()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == 1);
+        Assert.Equal(SimulationConstants.Level100TargetTankLife, target.Hull);
+
+        int[] expectedHull = [4_200, 2_400, 600, 0];
+        foreach (int expected in expectedHull)
+        {
+            AimAtTarget(simulation, target.Position);
+            WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+            ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
+            long speedSquared =
+                ((long)projectile.Velocity.X * projectile.Velocity.X) +
+                ((long)projectile.Velocity.Z * projectile.Velocity.Z);
+            Assert.InRange(
+                speedSquared,
+                (long)1_166 * 1_166,
+                (long)1_168 * 1_168);
+
+            for (int tick = 0; tick < 30; tick++)
+            {
+                WorldSnapshot state = simulation.Step(SimInput.Idle);
+                target = state.Targets.Single(item => item.Id == 1);
+                if (target.Hull == expected)
+                {
+                    break;
+                }
+            }
+
+            Assert.Equal(expected, target.Hull);
+        }
+
+        Assert.False(target.IsActive);
+        Assert.Equal(1, simulation.Snapshot.TargetsDestroyed);
+        Assert.All(
+            simulation.Snapshot.Targets.Where(item => item.Id is 2 or 3),
+            item =>
+            {
+                Assert.True(item.IsActive);
+                Assert.Equal(SimulationConstants.Level100TargetTankLife, item.Hull);
+            });
+        TargetSnapshot warehouse = simulation.Snapshot.Targets.Single(item => item.Id == 4);
+        Assert.True(warehouse.IsActive);
+        Assert.Equal(SimulationConstants.Level100TargetWarehouseLife, warehouse.Hull);
+    }
+
+    [Fact]
     public void Reset_RestoresDynamicStateWithoutRewindingReplayTick()
     {
         Simulation simulation = CreatePlayingSimulation(42);
@@ -441,6 +489,60 @@ public sealed class SimulationTests
 
         Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
         return simulation;
+    }
+
+    private static Simulation CreateFiringRangeExerciseSimulation()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        DriveToPhase(
+            simulation,
+            SimulationConstants.Level100TargetZone1Position,
+            Level100OpeningPhase.TargetZone1DispatchPending);
+        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1DispatchTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        DriveToPhase(
+            simulation,
+            SimulationConstants.Level100FiringRangePosition,
+            Level100OpeningPhase.FiringRangeDispatchPending);
+        for (int tick = 0; tick < SimulationConstants.Level100FiringRangeDispatchTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+        StepUntilFiringRangeSequenceTick(
+            simulation,
+            SimulationConstants.Level100PulseCannonActivationTick);
+        Assert.Equal(Level100OpeningPhase.FiringRangeExercise, simulation.Snapshot.Level100Phase);
+        return simulation;
+    }
+
+    private static void AimAtTarget(Simulation simulation, SimVector2 target)
+    {
+        for (int tick = 0; tick < 300; tick++)
+        {
+            WorldSnapshot state = simulation.Snapshot;
+            double desired = Math.Atan2(
+                -(target.X - state.PlayerPosition.X),
+                target.Z - state.PlayerPosition.Z);
+            double error = NormalizeRadians(desired - (state.FacingYawMicroRad / 1_000_000d));
+            if (Math.Abs(error) < 0.04d)
+            {
+                return;
+            }
+
+            simulation.Step(new SimInput(0, 0, LookX: (sbyte)Math.Sign(error)));
+        }
+
+        throw new Xunit.Sdk.XunitException("Could not aim the deterministic Core at Target Tank 1.");
+    }
+
+    private static double NormalizeRadians(double value)
+    {
+        while (value > Math.PI) value -= Math.Tau;
+        while (value <= -Math.PI) value += Math.Tau;
+        return value;
     }
 
     private static void StepUntilLevel100Tick(

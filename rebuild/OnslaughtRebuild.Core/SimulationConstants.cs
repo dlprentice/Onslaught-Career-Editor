@@ -123,9 +123,22 @@ public static class SimulationConstants
     public const int JetEnergyDrainPerTick = 17;
     public const int FireEnergyCost = 30;
     public const int FireCooldownTicks = 6;
-    public const int ProjectileSpeedPerTick = 1_200;
+    // Two fresh copied-Steam Level 100 repetitions created four lowest-charge
+    // Pulse Cannon rounds apiece. Every round carried definition speed 35 and
+    // moved exactly 1.75 units per released 20 Hz update. Core's nearest 30 Hz
+    // integer translation is 1.167 units per tick.
+    public const int ProjectileSpeedPerTick = 1_167;
     public const int ProjectileLifetimeTicks = 40;
-    public const int ProjectileDamage = 250;
-    public const int TargetHull = 1_000;
-    public const int TargetHitRadius = 2_200;
+    // The authored training tank starts at retail life 6. Direct mesh impacts
+    // repeatedly removed 1.8; glancing mesh-part impacts removed 1.0. Core does
+    // not yet model the retail mesh-part multiplier, so this bounded first-tank
+    // path represents a full hit and retains milli-life precision.
+    public const int Level100TargetTankLife = 6_000;
+    // The same copied-runtime objective reads identified the authored
+    // Warehouse at life 50; it remains non-damageable in this milestone.
+    public const int Level100TargetWarehouseLife = 50_000;
+    public const int Level100PulseCannonFullHitDamage = 1_800;
+    // Radius bounds the retained target-tank mesh in its horizontal plane
+    // (maximum source-vertex radius 1.447 units, rounded outward).
+    public const int Level100TargetTank1HitRadius = 1_450;
 }

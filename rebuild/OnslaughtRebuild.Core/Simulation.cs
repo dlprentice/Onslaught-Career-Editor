@@ -594,18 +594,13 @@ public sealed class Simulation
             return;
         }
 
-        int velocityX = _facingX * SimulationConstants.ProjectileSpeedPerTick;
-        int velocityZ = _facingZ * SimulationConstants.ProjectileSpeedPerTick;
-        if (_facingX != 0 && _facingZ != 0)
-        {
-            velocityX = velocityX * 181 / 256;
-            velocityZ = velocityZ * 181 / 256;
-        }
-
-        if (velocityX == 0 && velocityZ == 0)
-        {
-            velocityZ = SimulationConstants.ProjectileSpeedPerTick;
-        }
+        (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
+        int velocityX = DivideRoundNearest(
+            -(long)sin * SimulationConstants.ProjectileSpeedPerTick,
+            FixedTrigScale);
+        int velocityZ = DivideRoundNearest(
+            (long)cos * SimulationConstants.ProjectileSpeedPerTick,
+            FixedTrigScale);
 
         _energy -= SimulationConstants.FireEnergyCost;
         _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
@@ -621,7 +616,8 @@ public sealed class Simulation
     private void UpdateProjectiles()
     {
         long hitRadiusSquared =
-            (long)SimulationConstants.TargetHitRadius * SimulationConstants.TargetHitRadius;
+            (long)SimulationConstants.Level100TargetTank1HitRadius *
+            SimulationConstants.Level100TargetTank1HitRadius;
 
         for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
         {
@@ -636,6 +632,7 @@ public sealed class Simulation
             {
                 if (_level100FiringRangeSequenceTick <
                         SimulationConstants.Level100StaticTargetsActivationTick ||
+                    target.Id != 1 ||
                     !target.IsActive)
                 {
                     continue;
@@ -648,7 +645,9 @@ public sealed class Simulation
                     continue;
                 }
 
-                target.Hull = Math.Max(0, target.Hull - SimulationConstants.ProjectileDamage);
+                target.Hull = Math.Max(
+                    0,
+                    target.Hull - SimulationConstants.Level100PulseCannonFullHitDamage);
                 if (target.Hull == 0)
                 {
                     target.IsActive = false;
@@ -701,19 +700,31 @@ public sealed class Simulation
     private void BuildTargets()
     {
         _targets.Clear();
-        _targets.Add(CreateTarget(1, SimulationConstants.Level100TargetTank1Position));
-        _targets.Add(CreateTarget(2, SimulationConstants.Level100TargetTank2Position));
-        _targets.Add(CreateTarget(3, SimulationConstants.Level100TargetTank3Position));
-        _targets.Add(CreateTarget(4, SimulationConstants.Level100TargetWarehousePosition));
+        _targets.Add(CreateTarget(
+            1,
+            SimulationConstants.Level100TargetTank1Position,
+            SimulationConstants.Level100TargetTankLife));
+        _targets.Add(CreateTarget(
+            2,
+            SimulationConstants.Level100TargetTank2Position,
+            SimulationConstants.Level100TargetTankLife));
+        _targets.Add(CreateTarget(
+            3,
+            SimulationConstants.Level100TargetTank3Position,
+            SimulationConstants.Level100TargetTankLife));
+        _targets.Add(CreateTarget(
+            4,
+            SimulationConstants.Level100TargetWarehousePosition,
+            SimulationConstants.Level100TargetWarehouseLife));
     }
 
-    private static MutableTarget CreateTarget(int id, SimVector2 position)
+    private static MutableTarget CreateTarget(int id, SimVector2 position, int initialHull)
     {
         return new MutableTarget
         {
             Id = id,
             Position = position,
-            Hull = SimulationConstants.TargetHull,
+            Hull = initialHull,
             IsActive = true,
         };
     }

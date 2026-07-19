@@ -196,25 +196,46 @@ already demonstrated message post-roll/handoff, not variable wall-clock memory
 scan latency. The exact overlap-to-event endpoint was not separately sampled,
 so `FiringRange.msl`'s 0.5-second dispatch remains source-derived. This proves
 the first Pulse Cannon exercise's gates, objectives, ordering, text, and audio,
-not target damage/destruction, exercise completion, non-objective contacts, or
-pixel parity.
+not exercise completion, non-objective contacts, or pixel parity.
+
+A no-fire control and two fresh uninterrupted firing repetitions then followed
+the exact first-target pointer, player-owned round list, and objective set. Four
+releases at the first active charge bucket (`10`) created normal rounds with
+definition speed `35` and exact movement magnitude `1.75` per 20 Hz update.
+Target Tank 1 began at life `6` with no shield. Direct mesh hits removed `1.8`;
+one glancing mesh-part hit removed `1.0`. Both repetitions set the target's
+destroyed bit and removed it from the objective set on shot four.
+`CUnit__ApplyDamage` (`0x004F9A90`) receives the mesh-part index and
+`CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
+does not generalize the unmeasured part multiplier. It consumes only the
+direct-hit path, the retained mesh bound, and the nearest 30 Hz integer speed.
+The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
+five-entry particle descriptor references four unique texture archives: Blue
+Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
+authored base dimensions supply the bounded projectile presentation. Emitter,
+scroll, color, lifetime, impact audio/particles, and target destruction
+animation remain absent.
 
 These slices do not make the surrounding vehicle model retail-faithful.
-Walker acceleration now uses the released continuous yaw basis; the eight-way
-projection remains only in provisional jet movement and projectile aim. Terrain
+Walker acceleration and the bounded projectile path now use the released
+continuous yaw basis; the eight-way projection remains only in provisional jet
+movement. Terrain
 response beyond grounded height following, dash behavior, camera pitch and
-occlusion, jet-to-walker, transform presentation, Pulse Cannon effects and
-resources, the remaining weapons, and flight dynamics remain provisional.
+occlusion, jet-to-walker, transform presentation, Pulse Cannon shot audio,
+impact/destruction effects and resources, the remaining weapons, and flight
+dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts; loads 57 Aquila, eight
 facility, six target, and two cockpit material surfaces; decodes eleven mesh,
-thirteen HUD, and five sky textures; and consumes the retained heightfield,
-macro/detail terrain inputs, and Core-owned ground elevation. Its deterministic
-route reaches the first Firing Range exercise, renders four exact target models
-and four shipped objective markers, plays the fourteenth voice, demonstrates a
-Pulse Cannon fire input, preserves the expected Core hash, and exits at both
-supported viewports. It does not prove secondary material or cloud-shadow
-passes, procedural leg solving, collision, target damage/effects/destruction,
-exercise completion, complete environment population, the complete mission,
+four Pulse Bolt effect, thirteen HUD, and five sky textures; and consumes the
+retained heightfield, macro/detail terrain inputs, and Core-owned ground
+elevation. Its deterministic
+route reaches the first Firing Range exercise, renders the exact target models
+and shipped objective markers, plays the fourteenth voice, removes Target Tank
+1 after four bounded full hits, preserves the expected Core hash, and exits at
+both supported viewports. It does not prove secondary material or cloud-shadow
+passes, procedural leg solving, actor collision, other-target or mesh-part
+damage, shot audio, impact/destruction effects, exercise completion, complete environment
+population, the complete mission,
 camera pitch/occlusion, full HUD behavior, or visual parity.
