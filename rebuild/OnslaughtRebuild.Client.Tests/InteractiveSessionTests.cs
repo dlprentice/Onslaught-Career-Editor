@@ -362,7 +362,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ReachesTheFiringRangeAssignment()
+    public void FirstFlightSmokeScenario_ReachesTheFirstFiringRangeExercise()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
         InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
@@ -371,14 +371,20 @@ public sealed class InteractiveSessionTests
             SimulationConstants.Level100TargetZone1ActivationTick + 57 + 216);
         InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(
             FirstFlightSmokeScenario.DurationTicks - 1);
+        InteractiveInput firingRangeTurn = FirstFlightSmokeScenario.GetInputForTick(1_995);
+        InteractiveInput firingRangeApproach = FirstFlightSmokeScenario.GetInputForTick(2_040);
+        InteractiveInput pulseCannonProof = FirstFlightSmokeScenario.GetInputForTick(3_139);
 
         Assert.Equal(InteractiveInput.Idle, pan);
         Assert.Equal((sbyte)-1, strafe.MoveX);
         Assert.False(strafe.FireHeld);
         Assert.Equal((sbyte)1, forward.MoveZ);
         Assert.False(forward.ToggleModeHeld);
+        Assert.Equal((sbyte)-1, firingRangeTurn.MoveX);
+        Assert.Equal((sbyte)1, firingRangeApproach.MoveZ);
+        Assert.True(pulseCannonProof.FireHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
-        Assert.Equal(1_995, FirstFlightSmokeScenario.DurationTicks);
+        Assert.Equal(3_228, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
     }
 

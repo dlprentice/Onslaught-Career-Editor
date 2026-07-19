@@ -74,7 +74,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     public void UpdateFromSnapshot(WorldSnapshot snapshot)
     {
-        _glowLayer.SetObjectiveMarker(snapshot);
+        _glowLayer.SetSnapshot(snapshot);
         string? message = GetTutorialMessageText(snapshot.Level100Message);
         if (message is not null)
         {
@@ -93,7 +93,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Level100OpeningPhase.TargetZone1DispatchPending => "TARGET ZONE 1 REACHED",
             Level100OpeningPhase.ReachFiringRange => "PROCEED TO FIRING RANGE",
             Level100OpeningPhase.FiringRangeDispatchPending => "FIRING RANGE REACHED",
-            _ => "OPENING SLICE COMPLETE",
+            Level100OpeningPhase.FiringRangeBriefing => string.Empty,
+            Level100OpeningPhase.FiringRangeExercise when snapshot.Level100FireHelpVisible =>
+                "PRESS SPACE TO FIRE CURRENT WEAPON",
+            Level100OpeningPhase.FiringRangeExercise =>
+                "DESTROY THREE TANKS AND ONE BUILDING",
+            _ => string.Empty,
         };
         _textLayer.SetObjective(objective);
     }
@@ -117,6 +122,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
             "Notice how objectives that you are given are marked as yellow dots on your scanner.",
         Level100TutorialMessage.FiringRangeInstruction =>
             "Now make your way to the firing range for target practice. I'll mark the location on your HUD again.",
+        Level100TutorialMessage.WeaponSystems =>
+            "In a moment we're going to activate your weapon systems.",
+        Level100TutorialMessage.WeaponIndicator =>
+            "Here is your weapon indicator. This shows you what weapon is currently selected. It also allows you to keep track of its temperature or remaining ammo level.",
+        Level100TutorialMessage.PulseCannon =>
+            "The IS-5 Pulse Cannon is your primary weapon. It can be fired rapidly or charged up to release a larger round.",
+        Level100TutorialMessage.OpenFire =>
+            "Now destroy the three tanks and that building marked on your HUD.",
+        Level100TutorialMessage.PulseCannonEnergy =>
+            "As an energy weapon it never runs out of ammo but it can overheat. It is most effective against enemy vehicles or buildings.",
         _ => null,
     };
 
@@ -293,8 +308,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Texture2D objectiveMarker) : Control
     {
         private const float RadarWorldRadius = 46f;
-        private bool _objectiveMarkerVisible;
-        private Vector2 _objectiveMarkerOffset;
+        private Vector2[] _objectiveMarkerOffsets = [];
+        private bool _weaponHighlighted;
 
         public bool IsReady =>
             radarOutline.GetWidth() == 128 &&
@@ -302,7 +317,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             objectiveMarker.GetWidth() == 16 &&
             objectiveMarker.GetHeight() == 16;
 
-        public int ObjectiveMarkerCount => _objectiveMarkerVisible ? 1 : 0;
+        public int ObjectiveMarkerCount => _objectiveMarkerOffsets.Length;
 
         public override void _Ready()
         {
@@ -312,26 +327,40 @@ public sealed partial class FirstFlightHud : CanvasLayer
             };
         }
 
-        public void SetObjectiveMarker(WorldSnapshot snapshot)
+        public void SetSnapshot(WorldSnapshot snapshot)
         {
-            SimVector2? objective = snapshot.Level100Phase switch
+            SimVector2[] objectives = snapshot.Level100Phase switch
             {
                 Level100OpeningPhase.ReachTargetZone1 or
                     Level100OpeningPhase.TargetZone1DispatchPending =>
-                        SimulationConstants.Level100TargetZone1Position,
+                        [SimulationConstants.Level100TargetZone1Position],
                 Level100OpeningPhase.ReachFiringRange or
                     Level100OpeningPhase.FiringRangeDispatchPending =>
-                        SimulationConstants.Level100FiringRangePosition,
-                _ => null,
+                        [SimulationConstants.Level100FiringRangePosition],
+                _ when snapshot.Level100FiringRangeTargetsActive =>
+                    snapshot.Targets
+                        .Where(target => target.IsActive)
+                        .OrderBy(target => target.Id)
+                        .Select(target => target.Position)
+                        .ToArray(),
+                _ => [],
             };
-            if (!objective.HasValue)
+            Vector2[] offsets = objectives.Select(objective => ProjectMarker(snapshot, objective)).ToArray();
+            bool weaponHighlighted = snapshot.Level100CurrentWeaponHighlighted;
+            if (_weaponHighlighted == weaponHighlighted &&
+                _objectiveMarkerOffsets.SequenceEqual(offsets))
             {
-                SetMarkerState(false, Vector2.Zero);
                 return;
             }
+            _weaponHighlighted = weaponHighlighted;
+            _objectiveMarkerOffsets = offsets;
+            QueueRedraw();
+        }
 
-            float deltaX = (objective.Value.X - snapshot.PlayerPosition.X) / 1_000f;
-            float deltaZ = (objective.Value.Z - snapshot.PlayerPosition.Z) / 1_000f;
+        private static Vector2 ProjectMarker(WorldSnapshot snapshot, SimVector2 objective)
+        {
+            float deltaX = (objective.X - snapshot.PlayerPosition.X) / 1_000f;
+            float deltaZ = (objective.Z - snapshot.PlayerPosition.Z) / 1_000f;
             float distanceSquared = (deltaX * deltaX) + (deltaZ * deltaZ);
             float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
             float sin = Mathf.Sin(yaw);
@@ -345,7 +374,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 offset *= RadarWorldRadius / distance;
             }
 
-            SetMarkerState(true, offset);
+            return offset;
         }
 
         public override void _Draw()
@@ -356,9 +385,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 layout.Rect(8f, 772f, 128f, 128f),
                 false,
                 new Color(0.74f, 0.70f, 0.54f, 0.86f));
-            if (_objectiveMarkerVisible)
+            foreach (Vector2 markerOffset in _objectiveMarkerOffsets)
             {
-                Vector2 radarCenter = layout.Point(69f, 836f) + (_objectiveMarkerOffset * layout.Scale);
+                Vector2 radarCenter = layout.Point(69f, 836f) + (markerOffset * layout.Scale);
                 DrawTextureRect(
                     objectiveMarker,
                     new Rect2(radarCenter - (Vector2.One * 8f * layout.Scale), Vector2.One * 16f * layout.Scale),
@@ -373,21 +402,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 weaponOutline,
                 new Rect2(-central.Size * 0.5f, central.Size),
                 false,
-                new Color(0.82f, 0.82f, 0.76f, 0.76f));
+                _weaponHighlighted
+                    ? new Color(1f, 0.98f, 0.70f, 1f)
+                    : new Color(0.82f, 0.82f, 0.76f, 0.76f));
             DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-        }
-
-        private void SetMarkerState(bool visible, Vector2 offset)
-        {
-            if (_objectiveMarkerVisible == visible &&
-                _objectiveMarkerOffset.IsEqualApprox(offset))
-            {
-                return;
-            }
-
-            _objectiveMarkerVisible = visible;
-            _objectiveMarkerOffset = offset;
-            QueueRedraw();
         }
     }
 

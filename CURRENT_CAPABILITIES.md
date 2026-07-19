@@ -142,10 +142,11 @@ snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
 The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
-heightfield plus Federation walker/jet, Control Tower, and Tank Factory
-geometry. Core starts at the released player-one heading and owns the authored
-player ground elevation plus the machine-observed Target Zone 1 → Firing Range
-trigger sequence. The prior synthetic arena boundary, flat plane, and
+heightfield plus Federation walker/jet, Control Tower, Tank Factory, three
+training tanks, and target Warehouse geometry. Core starts at the released
+player-one heading and owns the authored player ground elevation plus the
+machine-observed objective and player gates through the first Firing Range
+exercise. The prior synthetic arena boundary, flat plane, and
 placeholder structures are gone. Terrain, retained meshes, facilities, sky,
 light, camera, and Core-relative positions now share the released
 `(X, Y, Z-down)` → Godot `(X, -Z, -Y)` mapping. The opening view follows the
@@ -153,8 +154,9 @@ released four-point Level 100 pan around the exterior Aquila, switches to the
 retained first-person cockpit and HUD after 5.95 seconds, and reaches the retail
 playing-camera state after six seconds. Level 100's script keeps the player
 deactivated beyond that camera handoff: Core enables movement/look only when the
-released power flag changes at tick 1000 relative to the pan start, while flight
-and both weapons remain disabled. Two fresh
+released power flag changes at tick 1000 relative to the pan start. The Firing
+Range later deactivates the player, then re-enables it with only the Pulse
+Cannon; flight remains disabled. Two fresh
 uninterrupted safe-copy runs repeated the same camera endpoints, six-second
 length, handoff, and playing-state boundary. A clean Level 100 control and two
 fresh repeated safe-copy runs also establish the walker's acceleration,
@@ -166,17 +168,21 @@ unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
 with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
-`LegMotion` cycle from Core velocity. The jet and two facilities remain bounded
-static conversions. The exterior meshes and exact frame-25 first-person
-cockpit render from eight retained AYA-wrapped textures. Thirteen exact released
+`LegMotion` cycle from Core velocity. The jet, two facilities, and two target
+types remain bounded static conversions. The exterior meshes and exact
+frame-25 first-person cockpit render from eleven retained AYA-wrapped textures.
+Thirteen exact released
 HUD textures, including Font13PS, replace the prototype overlay for the bounded
 crosshair, radar/radio frames, active-objective marker, and current objective
-line. The first nine English tutorial messages through the Firing Range
-assignment now use exact
+line. The first fourteen English tutorial messages through the first Pulse
+Cannon exercise now use exact
 released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
 portrait frames. Repeated retail runs matched every retained opening boundary
 within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
-swap, and `TUTORIAL_02` dispatch. The released macro
+swap, and `TUTORIAL_02` dispatch. One control and three accepted Firing Range
+runs then repeated the same five-message sequence, current-weapon highlight,
+four objective pointers, temporary player deactivation, and Pulse Cannon-only
+activation. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
@@ -184,16 +190,15 @@ cloud-shadow stage remains absent. Walker acceleration now follows Core's
 continuous body yaw; jet translation and projectile heading retain the older
 eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response or the retail controller's procedural foot
-placement, the rest of the mission, AI, weapon roster, secondary/reflection and
+placement, target health/effects/destruction, the rest of the mission, AI, the
+remaining weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, complete HUD
 state/contacts/animated-radio behavior, later mission audio, campaign,
 networking, or the rest of the transform model. The camera slice does not yet
-reproduce cockpit pitch response,
-terrain occlusion, camera shake, or later scripted cameras.
-Later tutorial dialogue and eligibility changes are not implemented; the
-remaining synthetic combat targets are Core handling fixtures and are no longer
-drawn as Level 100 scenery. The HUD marker is the shipped radar asset, not a
-world-space synthetic beacon.
+reproduce cockpit pitch response, terrain occlusion, camera shake, or later
+scripted cameras. The old seeded synthetic targets are gone; Core and Godot
+share the four observed retail targets. HUD markers use the shipped radar asset,
+not world-space synthetic beacons.
 Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point
 height sampler, and hashes the resulting walker ground elevation. Godot adapts
 that value for the player; static facilities and synthetic projectiles remain

@@ -43,10 +43,10 @@ not provenance.
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
-of the jet, Control Tower, and Tank Factory meshes; their exact source/output
-hashes live with the assets. The released Level 100
-WRES placement records now set the player start heading, two nearby facility
-placements, and the Target Zone 1 and Firing Range trigger locations. The client
+of the jet, Control Tower, Tank Factory, Target Tank, and Warehouse meshes;
+their exact source/output hashes live with the assets. The released Level 100
+WRES placement records now set the player start heading, nearby facilities,
+trigger locations, and four Firing Range targets. The client
 maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
@@ -173,30 +173,48 @@ later, both runs changed Target Zone 1 flags `0x22 → 0x02`, Firing Range flags
 Battle Engine vtable slot 16 at `0x0040DF80` independently returns `0.4` outside
 multiplayer. `CHud__RenderTacticalRadarContacts` at `0x00484C50` supplies the
 objective path's yaw rotation, 46-unit clamp, and fixed `0xFFFFFF00` tint used
-with the exact 16×16 DXT2 `CompassObjectiveMarker`. The ninth retained voice is exact
-`tutorial_02.ogg`, 237871 samples at 44.1 kHz. This establishes only Target Zone
-1 → Firing Range assignment, not the later Firing Range trigger, non-objective
-contacts, weapon behavior, or pixel parity.
+with the exact 16×16 DXT2 `CompassObjectiveMarker`. The ninth retained voice is
+exact `tutorial_02.ogg`, 237871 samples at 44.1 kHz.
+
+One clean control and three fresh uninterrupted runs then followed a
+predeclared observer from the Firing Range objective through the first weapon
+exercise. Steam's exact objective-list head at module RVA `0x455140` avoided a
+broad heap scan. Every accepted run cleared the range objective, deactivated the
+player, advanced through message IDs for `TUTORIAL_03`, `HUD_05`,
+`TUTORIAL_PULSE_CANNON`, `TUTORIAL_OPEN_FIRE`, and
+`TUTORIAL_PULSE_CANNON_2`, and added the same four `CThing` pointers as
+objectives at Open Fire. One second later the player power gate changed `0 → 1`
+and only the Pulse Cannon's active gate changed `0 → 1`. The copied `Fire`
+binding changed Steam's live current-weapon state, proving delivery to player
+one independently of the mission messages.
+
+The four pointers repeated bit-identical positions, yaws, and vtable identities
+for three Target Tanks and one Warehouse; their exact values and retained asset
+hashes live in the Level 100 asset README. The five new Ogg files supply exact
+voice lengths. Core consumes the released script's explicit pauses and the
+already demonstrated message post-roll/handoff, not variable wall-clock memory
+scan latency. The exact overlap-to-event endpoint was not separately sampled,
+so `FiringRange.msl`'s 0.5-second dispatch remains source-derived. This proves
+the first Pulse Cannon exercise's gates, objectives, ordering, text, and audio,
+not target damage/destruction, exercise completion, non-objective contacts, or
+pixel parity.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration now uses the released continuous yaw basis; the eight-way
 projection remains only in provisional jet movement and projectile aim. Terrain
 response beyond grounded height following, dash behavior, camera pitch and
-occlusion, jet-to-walker, transform presentation, resources, weapons, and flight
-dynamics remain provisional.
+occlusion, jet-to-walker, transform presentation, Pulse Cannon effects and
+resources, the remaining weapons, and flight dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts, loads the four exterior meshes
-with 65 base-material surfaces (57 Aquila and eight facility), the two-surface
-cockpit, eight mesh textures, thirteen HUD textures, five sky textures, the
-retained heightfield, exact macro terrain inputs, selected detail texture, and
-Core-owned player ground elevation. It also reaches the retail-timed Target Zone
-1 instruction with the exact static portrait, subtitle, and voice stream loaded,
-while reporting the demonstrated power, flight, weapon, message, and objective
-state. The same smoke omits synthetic target and world-marker scenery while
-rendering the active shipped radar marker. It renders the fly-in/control/HUD
-handoff, advances, preserves the expected
-deterministic Core hash, and exits. It does not prove secondary material or
-moving cloud-shadow passes, procedural leg solving, collision, complete
-environment population, the complete mission, camera pitch/occlusion, full HUD behavior,
-later timing, or visual parity.
+A native smoke proves the current client starts; loads 57 Aquila, eight
+facility, six target, and two cockpit material surfaces; decodes eleven mesh,
+thirteen HUD, and five sky textures; and consumes the retained heightfield,
+macro/detail terrain inputs, and Core-owned ground elevation. Its deterministic
+route reaches the first Firing Range exercise, renders four exact target models
+and four shipped objective markers, plays the fourteenth voice, demonstrates a
+Pulse Cannon fire input, preserves the expected Core hash, and exits at both
+supported viewports. It does not prove secondary material or cloud-shadow
+passes, procedural leg solving, collision, target damage/effects/destruction,
+exercise completion, complete environment population, the complete mission,
+camera pitch/occlusion, full HUD behavior, or visual parity.

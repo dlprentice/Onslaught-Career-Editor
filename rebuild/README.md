@@ -18,15 +18,16 @@ synthetic arena or another layer of readiness tooling.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
-released Federation Aquila, Control Tower, and Tank Factory geometry at their
-authored horizontal opening positions over the released coarse Level 100
-heightfield. Core owns the released player start heading, exact Level 100
-player-ground sampling, and the machine-observed Target Zone 1 → Firing Range
-objective handoff. The walker is loaded directly from its exact released AYA as a 63-part
+released Federation Aquila, Control Tower, Tank Factory, three training tanks,
+and target Warehouse at their authored positions over the released coarse
+Level 100 heightfield. Core owns the released player start heading, exact
+Level 100 player-ground sampling, and the machine-observed objective and player
+gates through the first Firing Range exercise. The walker is loaded directly
+from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
-The jet and two facilities retain bounded static conversions. All four render
-with their exact retained layer-zero textures. The released macro terrain
+The jet, two facilities, and two target types retain bounded static conversions
+and render with their exact retained layer-zero textures. The released macro terrain
 blend, repeating detail texture, cube-25 sky, fog, and environment light values
 now replace the procedural ground/sky. The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
@@ -35,15 +36,14 @@ remains hidden with the pan camera and appears at the control-camera handoff.
 Thirteen exact HUD textures
 and the released Font13PS atlas replace the prototype panels for the bounded
 crosshair, radar/radio frames, active-objective marker, and current objective
-line. The first nine
+line. The first fourteen
 released English tutorial messages now use their exact text, shipped voice
 clips, and static Tatiana/technician portrait frames. Core follows the observed
-power-on and Target Zone 1 activation boundaries while keeping flight and both
-weapons disabled. Secondary material
-and moving cloud-shadow passes, steep-slope and actor collision response, combat targets,
-weapons,
-resources, and most mission
-behavior remain provisional.
+power, objective, weapon-highlight, four-target, and Pulse Cannon activation
+boundaries while keeping flight disabled. Secondary material and moving
+cloud-shadow passes, steep-slope and actor collision response, target damage and
+destruction, weapon effects/resources, and most mission behavior remain
+provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -71,6 +71,7 @@ Controls:
 | --- | --- |
 | `W`, `A`, `S`, `D` | Move forward/back and strafe after the tutorial powers the Aquila |
 | `←`, `→` | Turn body left/right after the same handoff |
+| `Space` | Fire the Pulse Cannon after the Firing Range enables it |
 | `R` | Reset the slice |
 | `Esc` | Exit |
 
@@ -78,8 +79,9 @@ Controls:
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
-It retains provisional resource, cooldown, and projectile paths behind the
-disabled Level 100 weapon gates. Continuous body yaw and Level 100
+It retains provisional resource, cooldown, and projectile paths; the Pulse
+Cannon gate now opens only at the observed Firing Range boundary. Continuous
+body yaw and Level 100
 objective state are part of the snapshot/hash, and every input axis—including
 look—is part of the trace. Walker acceleration is projected through the body's
 continuous deterministic yaw; jet movement and projectile aim still use the
@@ -97,18 +99,20 @@ attached first-person view at the Aquila center of gravity with its horizontal
 orientation column, 58.7155-degree vertical field of view, 0.1 near plane, and
 authored frame-25 walker cockpit. Core mirrors the released playing-state
 camera boundary at 180 fixed ticks, then keeps movement/look gated until the
-mission powers the Aquila at tick 1000. Flight and weapons remain disabled.
+mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
+deactivates the player, then re-enables it with the Pulse Cannon; flight remains
+disabled.
 Camera pitch response and
 terrain clipping, jet movement and projectile heading,
-jet-to-walker, transform animation, resource semantics, weapons, terrain
-collision beyond grounded height following, AI, the mission after the Firing
-Range assignment and its audio,
+jet-to-walker, transform animation, resource semantics, the rest of the weapon
+model, terrain collision beyond grounded height following, AI, the mission
+after the first Firing Range exercise,
 campaign, and networking
 remain provisional or absent.
 
 The client switches between the released walker's exact part hierarchy and a
 deterministic static conversion of the released jet, and loads two released
-Level 100 facility meshes. The
+Level 100 facility meshes plus the Target Tank and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 static presentation placement, generates the released 512×512 macro blend from exact
@@ -117,20 +121,25 @@ coordinate scales and modulation modes, and renders the five exact cube-25 sky
 faces with `CHFD` fog and lighting values. Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
-player rather than running an independent sampler. The client preserves the base material groups and decodes eight exact
-AYA-wrapped mesh textures for the Aquila, cockpit, and two facilities. It also
+player rather than running an independent sampler. The client preserves the
+base material groups and decodes eleven exact AYA-wrapped mesh textures for the
+Aquila, cockpit, facilities, and range targets. It also
 uses thirteen exact HUD textures, including the uncompressed released font
-atlas and objective marker. The first observed player route uses Steam's
+atlas and objective marker. The observed player route uses Steam's
 5.4-unit overlap and delayed dispatch to replace Target Zone 1 with the Firing
-Range on that radar while playing the exact `TUTORIAL_02` line and voice.
+Range on that radar. A control and three repeated retail runs then establish the
+Firing Range's five-message sequence, current-weapon highlight, four objective
+targets, temporary player deactivation, and Pulse Cannon-only activation. The
+client uses the exact fourteen retained English lines and voices through that
+exercise.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding, actor/structure
 collision, procedural foot placement/terrain IK,
-transform animation, non-objective HUD contacts and later state logic, animated radio
-portraits/video, and the remainder of the mission remain unimplemented. Core's
-three synthetic combat targets still exercise the older firing path, but the
-Level 100 presentation no longer draws them or synthetic objective beacons as
-retail scenery.
+transform animation, non-objective HUD contacts and later state logic, animated
+radio portraits/video, target health/effects/destruction, and the remainder of
+the mission remain unimplemented. The old seeded synthetic targets are gone;
+Core and Godot now share the four observed retail targets and shipped objective
+marker without adding world-space beacons.
 
 ## Verify
 

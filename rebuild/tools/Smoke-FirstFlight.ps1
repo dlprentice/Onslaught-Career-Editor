@@ -40,7 +40,7 @@ function Invoke-FirstFlightNativeSmoke {
             '--smoke',
             "--report=$reportPath",
             "--screenshot=$screenshotPath") `
-        -TimeoutMilliseconds 45000 `
+        -TimeoutMilliseconds 75000 `
         -Description "First Flight native smoke '$Label'"
 
     if (-not [string]::IsNullOrWhiteSpace($processResult.StandardOutput)) {

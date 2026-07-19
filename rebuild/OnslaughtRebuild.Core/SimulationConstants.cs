@@ -10,6 +10,13 @@ public static class SimulationConstants
     // use midpoint-away-from-zero rounding in the integer simulation.
     public static readonly SimVector2 Level100TargetZone1Position = new(-43_188, 33_500);
     public static readonly SimVector2 Level100FiringRangePosition = new(-69_688, 72_750);
+    // Three fresh copied-retail runs read the exact four CThing pointers added
+    // to Steam's objective set by "Activate Static Targets". Coordinates are
+    // relative to the authored player start and rounded to integer millimetres.
+    public static readonly SimVector2 Level100TargetTank1Position = new(-67_764, 78_283);
+    public static readonly SimVector2 Level100TargetTank2Position = new(-78_750, 80_063);
+    public static readonly SimVector2 Level100TargetTank3Position = new(-71_875, 84_688);
+    public static readonly SimVector2 Level100TargetWarehousePosition = new(-86_313, 83_563);
     public const int Level100PlayerStartYawMicroRad = 509_830;
     // Each authored trigger has radius 5.0. Steam CBattleEngine::GetRadius at
     // vtable slot 16 (0x0040DF80) returns 0.4 in single player, and two fresh
@@ -48,10 +55,35 @@ public static class SimulationConstants
     // TUTORIAL_02 after 11 updates (about 0.55 seconds). Sixteen 30 Hz ticks
     // preserve the observed update boundary without treating samples as time.
     public const int Level100TargetZone1DispatchTicks = 16;
-    // The later FiringRange.msl dispatch remains source-only in this slice.
+    // FiringRange.msl requests the same 0.5-second pause. Three uninterrupted
+    // copied-retail runs then atomically removed the range objective, disabled
+    // the player, and began TUTORIAL_03; the exact overlap-to-event endpoint
+    // was not separately sampled, so this remains the released script delay.
     public const int Level100FiringRangeDispatchTicks = 15;
     // tutorial_02.ogg ends at granule 237871 at 44.1 kHz (5.393900 s).
     public const int Level100FiringRangeInstructionTicks = 162;
+    // The first Firing Range exercise is source-ordered and runtime-confirmed.
+    // Voice lengths are exact final Ogg granules rounded to 30 Hz. The 18-tick
+    // message post-roll and six-tick queue handoff are the repeated released
+    // behavior already consumed by the opening tutorial. PlayCharMessage for
+    // OPEN_FIRE is non-blocking: targets activate immediately, the player and
+    // Pulse Cannon return one second later, and HELP_FIRE queues after another
+    // two seconds. Pulse Cannon 2 starts after OPEN_FIRE's exact voice/post-roll
+    // completes instead of cutting the shipped recording short.
+    public const int Level100WeaponSystemsStartTick = 0;
+    public const int Level100WeaponSystemsEndTick = 97;
+    public const int Level100WeaponIndicatorStartTick = 103;
+    public const int Level100WeaponIndicatorEndTick = 363;
+    public const int Level100PulseCannonStartTick = 369;
+    public const int Level100PulseCannonEndTick = 590;
+    public const int Level100OpenFireStartTick = 596;
+    public const int Level100OpenFireEndTick = 708;
+    public const int Level100StaticTargetsActivationTick = Level100OpenFireStartTick;
+    public const int Level100PulseCannonActivationTick = Level100OpenFireStartTick + 30;
+    public const int Level100FireHelpActivationTick = Level100OpenFireStartTick + 90;
+    public const int Level100PulseCannonEnergyStartTick = Level100OpenFireEndTick + 6;
+    public const int Level100PulseCannonEnergyEndTick =
+        Level100PulseCannonEnergyStartTick + 243;
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.

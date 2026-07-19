@@ -17,6 +17,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private readonly Dictionary<int, MeshInstance3D> _projectiles = [];
     private readonly List<MeshInstance3D> _level100Facilities = [];
+    private readonly Dictionary<int, Node3D> _level100Targets = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -29,7 +30,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private float _walkCycle = -Mathf.Pi;
     private int _lastWalkPoseTick = -1;
 
-    public int TargetVisualCount => 0;
+    public int TargetVisualCount => _level100Targets.Values.Count(target => target.Visible);
 
     public int ProjectileVisualCount => _projectiles.Count;
 
@@ -58,6 +59,11 @@ public sealed partial class FirstFlightWorldView : Node3D
     public int RetailLevel100FacilitySurfaceCount =>
         _level100Facilities.Sum(facility => facility.Mesh?.GetSurfaceCount() ?? 0);
 
+    public int RetailLevel100TargetSurfaceCount =>
+        _level100Targets.Values
+            .SelectMany(target => target.GetChildren().OfType<MeshInstance3D>())
+            .Sum(target => target.Mesh?.GetSurfaceCount() ?? 0);
+
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
 
     public int RetailLevel100TerrainTriangleCount => _level100Terrain.TriangleCount;
@@ -76,6 +82,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildLevel100Terrain();
         BuildEnvironment();
         BuildLevel100Facilities();
+        BuildLevel100Targets();
         BuildPlayer();
         BuildCamera();
         Render(snapshot, snapshot, 0f, 0f);
@@ -114,6 +121,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
         UpdatePlayerShape(current, ShowHud);
+        UpdateLevel100Targets(current);
         UpdateProjectiles(current);
         UpdateCamera(playerPosition, playerYaw, openingElapsedSeconds, ShowHud);
     }
@@ -244,6 +252,111 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(mesh);
         AddChild(root);
         _level100Facilities.Add(mesh);
+    }
+
+    private void BuildLevel100Targets()
+    {
+        StandardMaterial3D tankMaterial = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/target-tank.texture.aya",
+                512,
+                512),
+            0.24f,
+            0.76f);
+        Mesh tankMesh = CuratedObjMeshLoader.Load(
+            "res://Assets/Level100/level100-target-tank.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = tankMaterial,
+            });
+
+        StandardMaterial3D warehouseM001 = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/target-warehouse-m001.texture.aya",
+                512,
+                512),
+            0.18f,
+            0.82f);
+        StandardMaterial3D warehouseM002 = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/target-warehouse-m002.texture.aya",
+                512,
+                512),
+            0.18f,
+            0.82f);
+        Mesh warehouseMesh = CuratedObjMeshLoader.Load(
+            "res://Assets/Level100/level100-target-warehouse.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = warehouseM001,
+                ["texture-0001"] = warehouseM001,
+                ["texture-0003"] = warehouseM002,
+            });
+
+        AddLevel100Target(
+            1,
+            "RetailTargetTank1",
+            SimulationConstants.Level100TargetTank1Position,
+            -0.0523363f,
+            tankMesh);
+        AddLevel100Target(
+            2,
+            "RetailTargetTank2",
+            SimulationConstants.Level100TargetTank2Position,
+            -2.1535792f,
+            tankMesh);
+        AddLevel100Target(
+            3,
+            "RetailTargetTank3",
+            SimulationConstants.Level100TargetTank3Position,
+            2.4043305f,
+            tankMesh);
+        AddLevel100Target(
+            4,
+            "RetailTargetWarehouse",
+            SimulationConstants.Level100TargetWarehousePosition,
+            -1.9708606f,
+            warehouseMesh);
+    }
+
+    private void AddLevel100Target(
+        int id,
+        string name,
+        SimVector2 position,
+        float retailYaw,
+        Mesh mesh)
+    {
+        float relativeX = position.X * UnitsToMeters;
+        float relativeY = position.Z * UnitsToMeters;
+        var root = new Node3D
+        {
+            Name = name,
+            Position = new Vector3(
+                relativeX,
+                _level100Terrain.SampleRelativeHeight(relativeX, relativeY),
+                -relativeY),
+            Rotation = new Vector3(0f, retailYaw, 0f),
+        };
+        root.AddChild(new MeshInstance3D
+        {
+            Name = $"{name}Geometry",
+            Mesh = mesh,
+            RotationDegrees = new Vector3(-90f, 0f, 0f),
+        });
+        AddChild(root);
+        _level100Targets.Add(id, root);
+    }
+
+    private void UpdateLevel100Targets(WorldSnapshot snapshot)
+    {
+        foreach (TargetSnapshot target in snapshot.Targets)
+        {
+            if (!_level100Targets.TryGetValue(target.Id, out Node3D? visual))
+            {
+                throw new InvalidDataException($"Core exposed unknown Level 100 target {target.Id}.");
+            }
+            visual.Visible = target.IsActive;
+        }
     }
 
     private void BuildPlayer()

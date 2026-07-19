@@ -46,9 +46,10 @@ public sealed class Simulation
     private int _level100EventMessageTicksRemaining;
     private bool _level100PowerEnabled;
     private bool _level100FlightEnabled;
-    private bool _level100WeaponsEnabled;
+    private bool _level100PulseCannonEnabled;
     private Level100OpeningPhase _level100Phase;
     private int _level100DispatchTicksRemaining;
+    private int _level100FiringRangeSequenceTick;
     private int _targetsDestroyed;
 
     // Jet handling remains provisional and outside this walker milestone.
@@ -79,6 +80,7 @@ public sealed class Simulation
         }
 
         AdvanceLevel100EventMessage();
+        AdvanceLevel100FiringRangeSequence();
 
         SimInput playerInput = _level100PowerEnabled ? input : SimInput.Idle;
 
@@ -108,9 +110,12 @@ public sealed class Simulation
         }
 
         _level100TimelineTick++;
-        _level100PowerEnabled =
-            _level100TimelineTick >= SimulationConstants.Level100PowerActivationTick;
-        if (_level100EventMessageTicksRemaining == 0)
+        if (_level100TimelineTick == SimulationConstants.Level100PowerActivationTick)
+        {
+            _level100PowerEnabled = true;
+        }
+        if (_level100EventMessageTicksRemaining == 0 &&
+            _level100FiringRangeSequenceTick < 0)
         {
             _level100Message = MessageAtLevel100Tick(_level100TimelineTick);
         }
@@ -163,6 +168,46 @@ public sealed class Simulation
             _level100Message = Level100TutorialMessage.None;
         }
     }
+
+    private void AdvanceLevel100FiringRangeSequence()
+    {
+        if (_level100FiringRangeSequenceTick < 0 ||
+            _level100FiringRangeSequenceTick >=
+                SimulationConstants.Level100PulseCannonEnergyEndTick)
+        {
+            return;
+        }
+
+        _level100FiringRangeSequenceTick++;
+        _level100Message = MessageAtFiringRangeTick(_level100FiringRangeSequenceTick);
+        if (_level100FiringRangeSequenceTick ==
+            SimulationConstants.Level100PulseCannonActivationTick)
+        {
+            _level100PowerEnabled = true;
+            _level100PulseCannonEnabled = true;
+            _level100Phase = Level100OpeningPhase.FiringRangeExercise;
+        }
+    }
+
+    private static Level100TutorialMessage MessageAtFiringRangeTick(int tick) => tick switch
+    {
+        >= SimulationConstants.Level100WeaponSystemsStartTick and
+            < SimulationConstants.Level100WeaponSystemsEndTick =>
+                Level100TutorialMessage.WeaponSystems,
+        >= SimulationConstants.Level100WeaponIndicatorStartTick and
+            < SimulationConstants.Level100WeaponIndicatorEndTick =>
+                Level100TutorialMessage.WeaponIndicator,
+        >= SimulationConstants.Level100PulseCannonStartTick and
+            < SimulationConstants.Level100PulseCannonEndTick =>
+                Level100TutorialMessage.PulseCannon,
+        >= SimulationConstants.Level100OpenFireStartTick and
+            < SimulationConstants.Level100OpenFireEndTick =>
+                Level100TutorialMessage.OpenFire,
+        >= SimulationConstants.Level100PulseCannonEnergyStartTick and
+            < SimulationConstants.Level100PulseCannonEnergyEndTick =>
+                Level100TutorialMessage.PulseCannonEnergy,
+        _ => Level100TutorialMessage.None,
+    };
 
     private void TryToggleMode(SimInput input)
     {
@@ -393,7 +438,12 @@ public sealed class Simulation
                 }
                 else if (_level100Phase == Level100OpeningPhase.FiringRangeDispatchPending)
                 {
-                    _level100Phase = Level100OpeningPhase.FiringRangeReached;
+                    _level100Phase = Level100OpeningPhase.FiringRangeBriefing;
+                    _level100FiringRangeSequenceTick = 0;
+                    _level100EventMessageTicksRemaining = 0;
+                    _level100Message = Level100TutorialMessage.WeaponSystems;
+                    _level100PowerEnabled = false;
+                    _level100PulseCannonEnabled = false;
                 }
             }
 
@@ -536,7 +586,7 @@ public sealed class Simulation
     private void TryFire(SimInput input)
     {
         if (!input.HasAction(SimActions.Fire) ||
-            !_level100WeaponsEnabled ||
+            !_level100PulseCannonEnabled ||
             _transformTicksRemaining != 0 ||
             _fireCooldownTicksRemaining != 0 ||
             _energy < SimulationConstants.FireEnergyCost)
@@ -584,7 +634,9 @@ public sealed class Simulation
             bool hit = false;
             foreach (MutableTarget target in _targets)
             {
-                if (!target.IsActive)
+                if (_level100FiringRangeSequenceTick <
+                        SimulationConstants.Level100StaticTargetsActivationTick ||
+                    !target.IsActive)
                 {
                     continue;
                 }
@@ -637,9 +689,10 @@ public sealed class Simulation
         _level100EventMessageTicksRemaining = 0;
         _level100PowerEnabled = false;
         _level100FlightEnabled = false;
-        _level100WeaponsEnabled = false;
+        _level100PulseCannonEnabled = false;
         _level100Phase = Level100OpeningPhase.Briefing;
         _level100DispatchTicksRemaining = 0;
+        _level100FiringRangeSequenceTick = -1;
         _targetsDestroyed = 0;
         _projectiles.Clear();
         BuildTargets();
@@ -647,25 +700,19 @@ public sealed class Simulation
 
     private void BuildTargets()
     {
-        var random = new DeterministicRandom(_seed);
         _targets.Clear();
-        _targets.Add(CreateTarget(1, 0, 14_000));
-        _targets.Add(CreateTarget(
-            2,
-            16_000 + random.NextRange(-1_500, 1_501),
-            -8_000 + random.NextRange(-1_500, 1_501)));
-        _targets.Add(CreateTarget(
-            3,
-            -18_000 + random.NextRange(-1_500, 1_501),
-            -12_000 + random.NextRange(-1_500, 1_501)));
+        _targets.Add(CreateTarget(1, SimulationConstants.Level100TargetTank1Position));
+        _targets.Add(CreateTarget(2, SimulationConstants.Level100TargetTank2Position));
+        _targets.Add(CreateTarget(3, SimulationConstants.Level100TargetTank3Position));
+        _targets.Add(CreateTarget(4, SimulationConstants.Level100TargetWarehousePosition));
     }
 
-    private static MutableTarget CreateTarget(int id, int x, int z)
+    private static MutableTarget CreateTarget(int id, SimVector2 position)
     {
         return new MutableTarget
         {
             Id = id,
-            Position = new SimVector2(x, z),
+            Position = position,
             Hull = SimulationConstants.TargetHull,
             IsActive = true,
         };
@@ -713,43 +760,14 @@ public sealed class Simulation
             _level100EventMessageTicksRemaining,
             _level100PowerEnabled,
             _level100FlightEnabled,
-            _level100WeaponsEnabled,
+            _level100PulseCannonEnabled,
             _level100Phase,
             _level100DispatchTicksRemaining,
+            _level100FiringRangeSequenceTick,
             _nextProjectileId,
             _targetsDestroyed,
             Array.AsReadOnly(targets),
             Array.AsReadOnly(projectiles));
     }
 
-    private sealed class DeterministicRandom
-    {
-        private uint _state;
-
-        public DeterministicRandom(uint seed)
-        {
-            _state = seed;
-        }
-
-        public int NextRange(int minimumInclusive, int maximumExclusive)
-        {
-            if (minimumInclusive >= maximumExclusive)
-            {
-                throw new ArgumentOutOfRangeException(nameof(maximumExclusive));
-            }
-
-            uint width = (uint)(maximumExclusive - minimumInclusive);
-            return minimumInclusive + (int)(NextUInt32() % width);
-        }
-
-        private uint NextUInt32()
-        {
-            uint value = _state;
-            value ^= value << 13;
-            value ^= value >> 17;
-            value ^= value << 5;
-            _state = value;
-            return value;
-        }
-    }
 }

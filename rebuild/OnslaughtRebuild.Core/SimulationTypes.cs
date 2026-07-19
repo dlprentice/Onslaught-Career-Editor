@@ -21,7 +21,8 @@ public enum Level100OpeningPhase
     TargetZone1DispatchPending = 2,
     ReachFiringRange = 3,
     FiringRangeDispatchPending = 4,
-    FiringRangeReached = 5,
+    FiringRangeBriefing = 5,
+    FiringRangeExercise = 6,
 }
 
 public enum Level100TutorialMessage
@@ -36,6 +37,11 @@ public enum Level100TutorialMessage
     ReachTargetZone1 = 7,
     ScannerObjective = 8,
     FiringRangeInstruction = 9,
+    WeaponSystems = 10,
+    WeaponIndicator = 11,
+    PulseCannon = 12,
+    OpenFire = 13,
+    PulseCannonEnergy = 14,
 }
 
 [Flags]
@@ -120,13 +126,28 @@ public sealed record WorldSnapshot(
     int Level100EventMessageTicksRemaining,
     bool Level100PowerEnabled,
     bool Level100FlightEnabled,
-    bool Level100WeaponsEnabled,
+    bool Level100PulseCannonEnabled,
     Level100OpeningPhase Level100Phase,
     int Level100DispatchTicksRemaining,
+    int Level100FiringRangeSequenceTick,
     int NextProjectileId,
     int TargetsDestroyed,
     IReadOnlyList<TargetSnapshot> Targets,
     IReadOnlyList<ProjectileSnapshot> Projectiles)
 {
     public bool Level100PlayerControlEnabled => Level100PowerEnabled;
+
+    public bool Level100FiringRangeTargetsActive =>
+        Level100FiringRangeSequenceTick >=
+            SimulationConstants.Level100StaticTargetsActivationTick;
+
+    public bool Level100CurrentWeaponHighlighted =>
+        Level100FiringRangeSequenceTick >=
+            SimulationConstants.Level100WeaponIndicatorStartTick &&
+        Level100FiringRangeSequenceTick <
+            SimulationConstants.Level100WeaponIndicatorEndTick;
+
+    public bool Level100FireHelpVisible =>
+        Level100FiringRangeSequenceTick >=
+            SimulationConstants.Level100FireHelpActivationTick;
 }

@@ -92,6 +92,7 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 !rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/*.aya
 !rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/*.aya
 !rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/*.aya
+!rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/*.ogg
 !rebuild/OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin
 !reverse-engineering/ghidra/
 !reverse-engineering/ghidra/**

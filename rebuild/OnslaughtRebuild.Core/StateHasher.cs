@@ -24,7 +24,7 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(9);
+            writer.Write(10);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write((int)state.Mode);
@@ -47,9 +47,10 @@ public static class StateHasher
             writer.Write(state.Level100EventMessageTicksRemaining);
             writer.Write(state.Level100PowerEnabled);
             writer.Write(state.Level100FlightEnabled);
-            writer.Write(state.Level100WeaponsEnabled);
+            writer.Write(state.Level100PulseCannonEnabled);
             writer.Write((int)state.Level100Phase);
             writer.Write(state.Level100DispatchTicksRemaining);
+            writer.Write(state.Level100FiringRangeSequenceTick);
             writer.Write(state.NextProjectileId);
             writer.Write(state.TargetsDestroyed);
 

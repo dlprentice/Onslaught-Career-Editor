@@ -1,13 +1,13 @@
 # Level 100 opening assets
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-two facility meshes, and first nine English tutorial voice clips consumed by
+four world meshes, and first fourteen English tutorial voice clips consumed by
 the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
 covers reconstruction code and does not relicense the assets.
 
-The two source mesh archives came from the released PC game's
+The four source mesh archives came from the released PC game's
 `data/resources/meshes` directory. The deterministic OBJ outputs retain static
 geometry, normals, UVs, and base part transforms.
 
@@ -21,10 +21,17 @@ geometry, normals, UVs, and base part transforms.
 | `level100-control-tower.obj` | Static intact geometry and base-material groups consumed by Godot | `9A2B9C287BFF21DD7E3B560EE36CC7D7CAFB99399B3003BF2E81A832FBD6F6BA` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
 | `level100-tank-factory.obj` | Static intact geometry and base-material groups consumed by Godot | `895813A6D8FD6938934957E934F23B58EC5C059E6CE8F8F9472BC4438B49D53C` |
+| `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
+| `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
+| `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
+| `level100-target-warehouse.obj` | Static intact Warehouse geometry and base-material groups consumed by Godot | `271ADEFEDCB0942A584014FF51FC7330769AB8FD95BC6EA5987BAC305C60F658` |
 | `Textures/facility-hanger-more-bits-lit.texture.aya` | Released 512×512 `meshtex%A8_FB_hangermorebits_lit.tga(0)A8R8G8B8.aya` base texture | `F04B96E9E2A121F74729F63194B01FAC58384B150F476B5E03D17B03B6DCC6E3` |
 | `Textures/facility-hanger-bits.texture.aya` | Released 512×512 `meshtex%FB_hangerbits.tga(0)A1R5G5B5.aya` base texture | `8E73098EAEB3C961B7CD63C3FBDF2338B22EFBE191BF956034DB9A69E71C041A` |
 | `Textures/facility-hanger-top-01.texture.aya` | Released 512×512 `meshtex%FB_hangertop01.tga(0)A1R5G5B5.aya` base texture | `54ADEB37D60FBC8209DBB75EB61FD39898B3F07E808E05C408DC740FF4647FD4` |
 | `Textures/facility-hanger-top-02.texture.aya` | Released 512×512 `meshtex%FB_hangertop02.tga(0)A1R5G5B5.aya` base texture | `E09455015CC79439AA33C5FB6B4A70B75DE9F2D5392AA7CD08BBF42D8FC6F78F` |
+| `Textures/target-tank.texture.aya` | Released 512×512 DXT2 Target Tank base texture | `97DDD1E18E45B19E249E91E881D773D80D36768A2CD48F6549A769C2559A7B7E` |
+| `Textures/target-warehouse-m001.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material groups 0 and 1 | `689B184AB8A5D03F33B69E5C35EDCFDFDEC12AA9B4B31F7C74CE5209F6236A49` |
+| `Textures/target-warehouse-m002.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material group 3 | `8FABADBE1C5AF067A740CF05DEBD1C952C628FD5FA3EA92B8202094704B8A20D` |
 | `Sky/cube25-cent.texture.aya` | Released 512×512 cube-25 center DXT1 texture | `1AAD6CC8F85B6BB7CCBB8D2C7B0E6AA31722A9ADBDE5A3F19B248430CA83469E` |
 | `Sky/cube25-up.texture.aya` | Released 512×512 cube-25 up DXT1 texture | `419E2424BCFD698058D72111FFA7D84FDC9022E03815DB7C0DA28403F4925F3C` |
 | `Sky/cube25-right.texture.aya` | Released 512×512 cube-25 right DXT1 texture | `830C9B965C76A4023C2415B7C8924CA32590562C850CC84E92C003E173263D11` |
@@ -39,6 +46,11 @@ geometry, normals, UVs, and base part transforms.
 | `TutorialAudio/tutorial_01.ogg` | Released English Target Zone 1 instruction | `48E40B07A77B5776F817ED8D8FFE1EFF1A978B10480CAB92019077E7B66784A8` |
 | `TutorialAudio/tutorial_scanner.ogg` | Released English objective-scanner instruction | `7A9535B1187B6E1FF276CEBC3906EC2102E5D166F381EE674113B4F09C2B3BD2` |
 | `TutorialAudio/tutorial_02.ogg` | Released English Firing Range assignment | `FA0533DE72B8D7702B83B709BA631BC8F7A42A5183BABCB147AE653A5D7A2904` |
+| `TutorialAudio/tutorial_03.ogg` | Released English weapon-system introduction | `8E3BBD3F680099F7664F473F73837BF3E6D09474B4426677DD6BF27B31177DC2` |
+| `TutorialAudio/hud_05.ogg` | Released English current-weapon indicator explanation | `66256D87557946647A51A2E8D49E044BC55AE370C4AD1C8E950B1D884EC082EB` |
+| `TutorialAudio/tutorial_pulse_cannon.ogg` | Released English IS-5 Pulse Cannon introduction | `2FDA4A38B4737E03647C03BAC38BFB36E7E6FF16B279007C04616C23857C25F8` |
+| `TutorialAudio/tutorial_open_fire.ogg` | Released English Firing Range target instruction | `04A1A65B45F75F4D1E85B0FAB6970125584EFBABE3609D7413E60B569A26D20C` |
+| `TutorialAudio/tutorial_pulse_cannon_2.ogg` | Released English Pulse Cannon energy explanation | `F4ECA49F26F61F0369C0D8B770300596695F8A62EC12269A4C9D1CB3F61B13E0` |
 
 Regenerate into an empty local output directory with:
 
@@ -51,9 +63,9 @@ py -3 rebuild/tools/cmsh_static_preview.py `
   --primary-material-groups
 ```
 
-Sorted outputs `candidate-0001.obj` and `candidate-0002.obj` correspond to the
-Control Tower and Tank Factory respectively and must match the hashes above
-before promotion.
+Sorted outputs `candidate-0001.obj` through `candidate-0004.obj` correspond to
+the Target Tank, Control Tower, Tank Factory, and Warehouse respectively and
+must match the hashes above before promotion.
 
 ## Heightfield consumed by the slice
 
@@ -131,6 +143,10 @@ world's horizontal X/Y plane. The current slice consumes:
 | Tank Factory | `(10.125, 22.375)` | yaw `1.789433718` |
 | Target Zone 1 | `(-43.1875, 33.5)` | radius `5` |
 | Firing Range | `(-69.6875, 72.75)` | radius `5` |
+| Target Tank 1 | `(-67.76434, 78.28299)` | yaw `-0.0523363` |
+| Target Tank 2 | `(-78.75, 80.0625)` | yaw `-2.1535792` |
+| Target Tank 3 | `(-71.875, 84.6875)` | yaw `2.4043305` |
+| Target Warehouse | `(-86.3125, 83.5625)` | yaw `-1.9708606` |
 
 Two fresh uninterrupted read-only runs repeated Steam's six-second full pan.
 `CPlayer__GotoPanView` (`0x004D2C10`) transforms local camera points
@@ -181,14 +197,33 @@ marked the Firing Range, and installed message ID `4458134` (`TUTORIAL_02`)
 after the same 11 released 20 Hz updates. Core maps that observed dispatch to
 16 ticks at 30 Hz. The client uses the exact 5.393900-second English voice,
 subtitle, and shipped 16x16 objective marker with the released radar transform.
-The later Firing Range trigger and tutorial sequence remain unobserved.
+One clean control and three fresh uninterrupted Firing Range runs then used a
+predeclared read-only observer over Steam's objective list, HUD weapon state,
+player/weapon gates, and message ID. All three accepted runs repeated the same
+sequence: the range objective cleared; the player deactivated; `TUTORIAL_03`,
+`HUD_05`, `TUTORIAL_PULSE_CANNON`, `TUTORIAL_OPEN_FIRE`, and
+`TUTORIAL_PULSE_CANNON_2` appeared in script order; four exact target pointers
+became objectives at Open Fire; and one second later the player and Pulse
+Cannon alone reactivated. The copied `Fire` binding changed the live selected
+weapon state, independently proving that input reached player one. Runtime
+positions and vtables identified three `m_f_pulsetank_training.msh` targets and
+one `m_m_warehouse.msh` target at the coordinates above.
 
-The presentation consumes the four exact layer-zero facility textures and
-preserves their mesh-group assignments. The shared `Chrome3.tga` layer-two
-reference is not interpreted as a base texture or a guessed metallic map. The
-two retained render meshes represent the intact facilities; their released
-damage and destruction states are not implemented. Actor/structure collision,
+The sequence in Core preserves the released script's explicit one- and
+two-second pauses, exact Ogg lengths, and the message post-roll/handoff already
+established by the opening tutorial. It does not convert variable wall-clock
+memory-scan latency into simulation timing. The exact overlap-to-Firing Range
+event boundary was not separately sampled, so its 0.5-second dispatch remains
+the released script delay rather than a new runtime measurement.
+
+The presentation consumes the exact layer-zero facility and target textures
+and preserves their mesh-group assignments. Shared higher-layer references are
+not interpreted as base textures or guessed metallic maps. The four retained
+render meshes represent intact facilities and targets; their released damage
+and destruction states are not implemented. Projectile impact still uses the
+provisional Core path and does not yet reproduce retail target health, effects,
+destruction, or exercise completion. Actor/structure collision,
 steep-slope response, the moving cloud-shadow pass, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
-this slice. Core's provisional combat targets and the two trigger positions are
-not rendered as synthetic models or beacons in the Level 100 world.
+this slice. Objective markers use the shipped HUD asset; no synthetic target or
+world-space beacon geometry is retained.

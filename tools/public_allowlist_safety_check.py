@@ -65,46 +65,6 @@ DENY_CONTAINS = (
 DENY_EXACT = {
 }
 
-ALLOW_EXACT = {
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-a.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-b.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/bluegun-light.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/cockpit.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_cockpit2.msh.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be1.msh.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/m_f_be2.msh.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker-cockpit.obj",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/circle-darkener.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/crosshair-outline.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/font-13ps.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-inner-centre.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-inner-left.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-inner-right.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-left.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-right.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/radar-outline.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/radio-view.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/weapon-fill.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/weapon-outline.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-cent.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-down.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-left.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-right.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-up.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-bits.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-01.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-02.texture.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya",
-    "rebuild/OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj",
-    "references/AYAResourceExtractor/BoxWithTextures.fbx",
-    "tests_shared/fixtures/gold_career_save.bin",
-}
-
 ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-a.texture.aya": "86f9f54ae97ba4e3782c65909d1d93b86566228b1132829ebb93816eb5a4705b",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/be-tex-b.texture.aya": "ea01431a4023abd517daf5a27066eb7edf706100fb3991566726fb4530490b60",
@@ -116,6 +76,7 @@ ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-jet.obj": "92a3495e278884b63649e114eddb7373b04af2aa92aab25c3f7184dd1140d821",
     "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/aquila-walker-cockpit.obj": "0e81a2b48ab2202620b3c0dccd08fe2ffbd76b5d668318d21f0ff72551dd5bd9",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/circle-darkener.texture.aya": "7bd18594757165dcdd8dadb618ea99eb500ed105dbe2d6a6f66bbcbc31c323a3",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/compass-objective-marker.texture.aya": "e24fca83de34646a7328c313e7b89ac02c6bc4b04a69a74bf3ee81b3d57283df",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/crosshair-outline.texture.aya": "1e27b9771f3d0416c07eff9aede6863ca6f081386c86259f635e3d9a02ade5b2",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/font-13ps.texture.aya": "7acc088b75e729cbdc2782e239a7d18ba0ec409e1bc890109aa1020f5ee81dc0",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-inner-centre.texture.aya": "fc42774e8c4f4534b65009807bfdb333443a9f5202c6a2c59dff0dddbed4f55b",
@@ -125,6 +86,8 @@ ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/objective-right.texture.aya": "581f10446db76ece7aa7044b4c02f0431a79a7d606225d5c69a412c17f85078b",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/radar-outline.texture.aya": "507d465248f7321f2332413b2c6f461f3b3c45d87c52d86c38c43104043d7dc7",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/radio-view.texture.aya": "888d5a70ab812e23f75db76ab2ed71cd2cce04191ee282d525c86e337cc01778",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/tatiana-portrait.texture.aya": "34d451a6fc31e399b99032230413a60f146b41a0fea65e61561a37d8ec757cfd",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/technician-portrait.texture.aya": "c4c1b11f4ddfb960afc1c1d2a04020fadf997795eccf651c07314141652f9603",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/weapon-fill.texture.aya": "e639910d70ae10b044423cd5025c300c61cb8a9b5765890fd1a011c7d4499c0d",
     "rebuild/OnslaughtRebuild.Godot/Assets/Hud/weapon-outline.texture.aya": "2e2da786db82c8fd76de36d8d71fe744ddddd364247467cba1bfb9a95e52d62b",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Sky/cube25-cent.texture.aya": "1aad6cc8f85b6bb7ccbb8d2c7b0e6aa31722a9adbde5a3f19b248430ca83469e",
@@ -136,14 +99,38 @@ ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya": "f04b96e9e2a121f74729f63194b01fac58384b150f476b5e03d17b03b6dcc6e3",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-01.texture.aya": "54adeb37d60fbc8209dbb75eb61fd39898b3f07e808e05c408dc740ff4647fd4",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-top-02.texture.aya": "e09455015cc79439aa33c5fb6b4a70b75de9f2d5392aa7cd08bbf42d8fc6f78f",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/target-tank.texture.aya": "97ddd1e18e45b19e249e91e881d773d80d36768a2cd48f6549a769c2559a7b7e",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/target-warehouse-m001.texture.aya": "689b184ab8a5d03f33b69e5c35edcfdfdec12aa9b4b31f7c74ce5209f6236a49",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/target-warehouse-m002.texture.aya": "8fabadbe1c5af067a740cf05debd1c952c628fd5fa3ea92b8202094704b8a20d",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/terrain-detail-00.texture.aya": "7c9c22169d13ed8b7d6ad69286bdb59cc88f9ae3bfb6a9d3a0503d320386bfef",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_f_pulsetank_training.msh.aya": "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_control_tower.msh.aya": "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_fb_tank_factory.msh.aya": "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/m_m_warehouse.msh.aya": "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15",
     "rebuild/OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin": "7a4c7c5b9400e2c8d2325cecb5c44701cd8a6e6f8609cbc8bc31d449c0620f5d",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-control-tower.obj": "9a2b9c287bff21dd7e3b560ee36cc7d7cafb99399b3003bf2e81a832fbd6f6ba",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-tank-factory.obj": "895813a6d8fd6938934957e934f23b58ec5c059e6ce8f8f9472bc4438b49d53c",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-target-tank.obj": "6d3827b58fe7a4728efe1efc6a7ced7a08a0b642891dcb1f18377a4b3d61d244",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/level100-target-warehouse.obj": "271adefedcb0942a584014ff51fc7330769ab8fd95bc6ea5987bac305c60f658",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/hud_01.ogg": "bae30243a2b5fe3dae718181ac5b05d766f93d5e25b042fe1b04c71fc9347909",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/hud_02.ogg": "43ae0c306b7935a21d415338348508eabf3a61f8799c0fd0873c89919fb84a35",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/hud_05.ogg": "66256d87557946647a51a2e8d49e044bc55ae370c4ad1c8e950b1d884ec082eb",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/hud_06.ogg": "4ed80a12fa7d2ad07a044f95f94d52455413962b75e7689101df6907711f3235",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_01.ogg": "48e40b07a77b5776f817ed8d8ffe1eff1a978b10480cab92019077e7b66784a8",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_02.ogg": "fa0533de72b8d7702b83b709ba631bc8f7a42a5183babcb147ae653a5d7a2904",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_03.ogg": "8e3bbd3f680099f7664f473f73837bf3e6d09474b4426677dd6bf27b31177dc2",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_13_mod.ogg": "7eee9087f86c00abe4feab115b20e4e2f27a8e6d1adc7318b1602446a7493e65",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_message_log.ogg": "7a03ff8f3faa4be4b729e7619055379c62921e2eaeb67fc9711dac0dfe273f8b",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_open_fire.ogg": "04a1a65b45f75f4d1e85b0fab6970125584efbabe3609d7413e60b569a26d20c",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_pulse_cannon.ogg": "2fda4a38b4737e03647c03bac38bfb36e7e6ff16b279007c04616c23857c25f8",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg": "f4eca49f26f61f0369c0d8b770300596695f8a62ec12269a4c9d1cb3f61b13e0",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_scanner.ogg": "7a9535b1187b6e1ff276cebc3906ec2102e5d166f381ee674113b4f09c2b3bd2",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_technician_01.ogg": "4792371453b4402454b922a481eb0968a099efb13981ff1918aa6177fb6ae151",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }
+
+ALLOW_EXACT = set(ALLOW_EXACT_SHA256)
 
 REVIEWED_GHIDRA_ROOT = "reverse-engineering/ghidra/"
 REVIEWED_GHIDRA_SUFFIXES = {".bak", ".dat", ".gbf", ".prp"}
@@ -293,16 +280,6 @@ MAGIC_DENY_SIGNATURES = (
     ("deny-magic-bink-video", b"BIK"),
     ("deny-magic-sqlite-db", b"SQLite format 3\x00"),
 )
-
-REVIEWED_MAGIC_COLLISIONS = {
-    (
-        "rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/facility-hanger-bits.texture.aya",
-        "deny-magic-executable",
-        1098,
-        b"MZ",
-    ),
-}
-
 
 @dataclass(frozen=True)
 class Finding:
@@ -512,7 +489,7 @@ def exact_allow_hash_findings(root: Path, path: str) -> list[Finding]:
 
 
 def magic_findings(root: Path, path: str) -> list[Finding]:
-    if is_text_file(path) or is_reviewed_payload(path):
+    if path in ALLOW_EXACT_SHA256 or is_text_file(path) or is_reviewed_payload(path):
         return []
     full_path = root / path
     if full_path.is_dir():
@@ -525,8 +502,6 @@ def magic_findings(root: Path, path: str) -> list[Finding]:
     for label, signature in MAGIC_DENY_SIGNATURES:
         offset = prefix.find(signature)
         if offset >= 0:
-            if (path, label, offset, signature) in REVIEWED_MAGIC_COLLISIONS:
-                continue
             if label == "deny-magic-webp-image" and (len(prefix) < offset + 12 or prefix[offset + 8 : offset + 12] != b"WEBP"):
                 findings.append(Finding(path, "deny-magic-riff-media", "RIFF"))
             else:

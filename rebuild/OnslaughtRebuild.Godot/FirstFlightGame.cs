@@ -318,6 +318,16 @@ public sealed partial class FirstFlightGame : Node3D
                 "res://Assets/Level100/TutorialAudio/tutorial_scanner.ogg",
             Level100TutorialMessage.FiringRangeInstruction =>
                 "res://Assets/Level100/TutorialAudio/tutorial_02.ogg",
+            Level100TutorialMessage.WeaponSystems =>
+                "res://Assets/Level100/TutorialAudio/tutorial_03.ogg",
+            Level100TutorialMessage.WeaponIndicator =>
+                "res://Assets/Level100/TutorialAudio/hud_05.ogg",
+            Level100TutorialMessage.PulseCannon =>
+                "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon.ogg",
+            Level100TutorialMessage.OpenFire =>
+                "res://Assets/Level100/TutorialAudio/tutorial_open_fire.ogg",
+            Level100TutorialMessage.PulseCannonEnergy =>
+                "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg",
             _ => null,
         };
         if (resourcePath is null)
@@ -419,7 +429,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v6",
+                SchemaVersion = "onslaught-first-flight-smoke.v7",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -432,9 +442,18 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100Message = _session.CurrentSnapshot.Level100Message.ToString(),
                 Level100EventMessageTicksRemaining =
                     _session.CurrentSnapshot.Level100EventMessageTicksRemaining,
+                Level100FiringRangeSequenceTick =
+                    _session.CurrentSnapshot.Level100FiringRangeSequenceTick,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
-                Level100WeaponsEnabled = _session.CurrentSnapshot.Level100WeaponsEnabled,
+                Level100PulseCannonEnabled =
+                    _session.CurrentSnapshot.Level100PulseCannonEnabled,
+                Level100FiringRangeTargetsActive =
+                    _session.CurrentSnapshot.Level100FiringRangeTargetsActive,
+                Level100FireHelpVisible =
+                    _session.CurrentSnapshot.Level100FireHelpVisible,
+                Level100CurrentWeaponHighlighted =
+                    _session.CurrentSnapshot.Level100CurrentWeaponHighlighted,
                 TutorialVoicePlaying = _tutorialVoice.Playing,
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
@@ -455,6 +474,7 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100PlayerStartRelativeHeight = _world.Level100PlayerStartRelativeHeight,
                 RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
                 RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
+                RetailLevel100TargetSurfaceCount = _world.RetailLevel100TargetSurfaceCount,
                 Level100ObjectiveMarkerCount = _hud.Level100ObjectiveMarkerCount,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
@@ -512,9 +532,13 @@ public sealed partial class FirstFlightGame : Node3D
         public required int Level100TimelineTick { get; init; }
         public required string Level100Message { get; init; }
         public required int Level100EventMessageTicksRemaining { get; init; }
+        public required int Level100FiringRangeSequenceTick { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
-        public required bool Level100WeaponsEnabled { get; init; }
+        public required bool Level100PulseCannonEnabled { get; init; }
+        public required bool Level100FiringRangeTargetsActive { get; init; }
+        public required bool Level100FireHelpVisible { get; init; }
+        public required bool Level100CurrentWeaponHighlighted { get; init; }
         public required bool TutorialVoicePlaying { get; init; }
         public required long TotalSteps { get; init; }
         public required long ToggleEdgesConsumed { get; init; }
@@ -535,6 +559,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required float Level100PlayerStartRelativeHeight { get; init; }
         public required int RetailLevel100FacilityCount { get; init; }
         public required int RetailLevel100FacilitySurfaceCount { get; init; }
+        public required int RetailLevel100TargetSurfaceCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }
         public required int RetailLevel100TerrainVertexCount { get; init; }
         public required int RetailLevel100TerrainTriangleCount { get; init; }
