@@ -188,7 +188,7 @@ public sealed class ReplayTests
     }
 
     [Fact]
-    public void CommandSpan_MissingLookX_DefaultsToZero()
+    public void CommandSpan_MissingLookAxes_DefaultsToZero()
     {
         const string json = """
               {
@@ -203,6 +203,7 @@ public sealed class ReplayTests
               """;
         CommandTape tape = CommandTapeCodec.Deserialize(json);
         Assert.Equal(0, tape.Spans[0].LookX);
+        Assert.Equal(0, tape.Spans[0].LookY);
     }
 
     [Fact]

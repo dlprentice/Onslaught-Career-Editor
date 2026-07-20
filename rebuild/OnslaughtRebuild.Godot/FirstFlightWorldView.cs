@@ -110,6 +110,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         float previousYaw = previous.FacingYawMicroRad / 1_000_000f;
         float currentYaw = current.FacingYawMicroRad / 1_000_000f;
         float playerYaw = Mathf.LerpAngle(previousYaw, currentYaw, interpolationAlpha);
+        float previousPitch = previous.FacingPitchMicroRad / 1_000_000f;
+        float currentPitch = current.FacingPitchMicroRad / 1_000_000f;
+        float playerPitch = Mathf.Lerp(previousPitch, currentPitch, interpolationAlpha);
         _playerRoot.Rotation = new Vector3(
             0f,
             playerYaw,
@@ -128,7 +131,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(current);
         UpdateProjectiles(current);
-        UpdateCamera(playerPosition, playerYaw, openingElapsedSeconds, ShowHud);
+        UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
     }
 
     private void BuildEnvironment()
@@ -537,10 +540,13 @@ public sealed partial class FirstFlightWorldView : Node3D
                 _projectiles.Add(projectile.Id, visual);
             }
 
-            visual.Position = ToWorld(projectile.Position, 1.25f);
+            visual.Position = new Vector3(
+                projectile.Position.X * UnitsToMeters,
+                projectile.ElevationMillimeters * UnitsToMeters,
+                -projectile.Position.Z * UnitsToMeters);
             var direction = new Vector3(
                 projectile.Velocity.X,
-                0f,
+                projectile.VerticalVelocityMillimetersPerTick,
                 -projectile.Velocity.Z);
             if (!direction.IsZeroApprox())
             {
@@ -639,10 +645,15 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void UpdateCamera(
         Vector3 playerGroundPosition,
         float yaw,
+        float pitch,
         float openingElapsedSeconds,
         bool attachedView)
     {
-        var forward = new Vector3(-Mathf.Sin(yaw), 0f, -Mathf.Cos(yaw));
+        float pitchCos = Mathf.Cos(pitch);
+        var forward = new Vector3(
+            -Mathf.Sin(yaw) * pitchCos,
+            -Mathf.Sin(pitch),
+            -Mathf.Cos(yaw) * pitchCos);
         var right = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
         Vector3 centerOfGravity = playerGroundPosition +
             (Vector3.Up * RetailWalkerCenterOfGravityHeight);

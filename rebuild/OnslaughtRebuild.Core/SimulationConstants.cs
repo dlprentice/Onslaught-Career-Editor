@@ -102,6 +102,15 @@ public static class SimulationConstants
     public const int WalkerYawInputMicroRadPerTick = 10_444;
     public const int WalkerYawRetentionNumerator = 861_774;
     public const int WalkerYawRetentionDenominator = 1_000_000;
+    // Steam injects 1/117 rad at 20 Hz and retains exactly 0.8 after each
+    // update. This is the time-equivalent 30 Hz input; pitch uses the same
+    // measured retention as yaw. Two uninterrupted Level 100 repetitions at
+    // the authored start stabilized at these absolute opening-slope bounds.
+    public const int WalkerPitchInputMicroRadPerTick = 3_938;
+    public const int WalkerPitchRetentionNumerator = WalkerYawRetentionNumerator;
+    public const int WalkerPitchRetentionDenominator = WalkerYawRetentionDenominator;
+    public const int WalkerPitchUpLimitMicroRad = -1_091_250;
+    public const int WalkerPitchDownLimitMicroRad = 532_123;
     public const int MaximumEnergy = 1_000;
     public const int MaximumShield = 1_000;
     public const int MaximumHull = 1_000;

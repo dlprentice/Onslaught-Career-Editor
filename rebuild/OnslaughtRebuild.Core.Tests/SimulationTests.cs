@@ -185,6 +185,45 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void WalkerVerticalLook_UsesMeasuredPitchInertiaCoastAndOpeningSlopeBounds()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+
+        (int Velocity, int Pitch)[] expected =
+        [
+            (-3_938, -3_938),
+            (-7_331, -11_269),
+            (-10_255, -21_524),
+            (-12_775, -34_299),
+            (-14_947, -49_246),
+        ];
+        foreach ((int velocity, int pitch) in expected)
+        {
+            WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookY: -1));
+            Assert.Equal(velocity, state.WalkerPitchVelocityMicroRadPerTick);
+            Assert.Equal(pitch, state.FacingPitchMicroRad);
+        }
+
+        WorldSnapshot coast = simulation.Step(SimInput.Idle);
+        Assert.Equal(-12_880, coast.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(-62_126, coast.FacingPitchMicroRad);
+
+        for (int tick = 0; tick < 100; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookY: -1));
+        }
+        Assert.Equal(SimulationConstants.WalkerPitchUpLimitMicroRad, simulation.Snapshot.FacingPitchMicroRad);
+        Assert.Equal(0, simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick);
+
+        for (int tick = 0; tick < 200; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookY: 1));
+        }
+        Assert.Equal(SimulationConstants.WalkerPitchDownLimitMicroRad, simulation.Snapshot.FacingPitchMicroRad);
+        Assert.Equal(0, simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick);
+    }
+
+    [Fact]
     public void WalkerMovementUsesContinuousBodyYawWithoutResettingLookYaw()
     {
         Simulation simulation = CreatePlayingSimulation();
@@ -201,10 +240,12 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void LookX_OutsideUnitRange_IsRejected()
+    public void LookAxes_OutsideUnitRange_AreRejected()
     {
-        var input = new SimInput(0, 0, LookX: 2);
-        Assert.Throws<ArgumentOutOfRangeException>(input.Validate);
+        Assert.Throws<ArgumentOutOfRangeException>(
+            new SimInput(0, 0, LookX: 2).Validate);
+        Assert.Throws<ArgumentOutOfRangeException>(
+            new SimInput(0, 0, LookY: -2).Validate);
     }
 
     [Fact]
@@ -427,6 +468,48 @@ public sealed class SimulationTests
         TargetSnapshot warehouse = simulation.Snapshot.Targets.Single(item => item.Id == 4);
         Assert.True(warehouse.IsActive);
         Assert.Equal(SimulationConstants.Level100TargetWarehouseLife, warehouse.Hull);
+    }
+
+    [Fact]
+    public void PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == 1);
+        AimAtTarget(simulation, target.Position);
+        for (int tick = 0; tick < 100; tick++)
+        {
+            simulation.Step(new SimInput(0, 0, LookY: -1));
+        }
+
+        WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
+        Assert.Equal(SimulationConstants.WalkerPitchUpLimitMicroRad, fired.FacingPitchMicroRad);
+        Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
+        long speedSquared =
+            ((long)projectile.Velocity.X * projectile.Velocity.X) +
+            ((long)projectile.Velocity.Z * projectile.Velocity.Z) +
+            ((long)projectile.VerticalVelocityMillimetersPerTick *
+                projectile.VerticalVelocityMillimetersPerTick);
+        Assert.InRange(speedSquared, (long)1_166 * 1_166, (long)1_168 * 1_168);
+        Assert.Equal(
+            fired.PlayerGroundElevationMillimeters +
+                Level100Terrain.WalkerCenterOfGravityMillimeters +
+                projectile.VerticalVelocityMillimetersPerTick,
+            projectile.ElevationMillimeters);
+
+        int firstElevation = projectile.ElevationMillimeters;
+        projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
+        Assert.Equal(
+            firstElevation + projectile.VerticalVelocityMillimetersPerTick,
+            projectile.ElevationMillimeters);
+        for (int tick = 0; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(
+            SimulationConstants.Level100TargetTankLife,
+            simulation.Snapshot.Targets.Single(item => item.Id == 1).Hull);
     }
 
     [Fact]

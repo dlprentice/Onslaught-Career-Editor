@@ -131,6 +131,30 @@ depth and 1 cm vertical presentation adjustment, selected against the clean
 retail frame to account for its OBJ transform and near-plane path; that adapter
 offset is not claimed as a retail model value.
 
+A no-input control and two uninterrupted repetitions then bound attached-view
+aim at the same authored start. `Look Up`, `Look Down`, and `Look Left` were
+bound only through each copied `defaultoptions.bea`; launch used
+`-skipfmv -level 100`. Raw state remained walker `2`, view remained `1`, and
+position remained `(288.6875, 243.25, -12.111499)` during the aim phases. The
+first vertical input changed pitch by `0.008547009` radians (`1/117`) and left
+stored velocity `0.0068376074`; subsequent coast retained exactly `0.8`. Both
+runs stabilized at pitch `+0.5321228`; their opposite endpoints were
+`-1.0911411` and `-1.0912496`. This establishes absolute bounds on the Level
+100 start slope, not the released terrain-normal rule elsewhere.
+
+For a bounded shot witness, a disposable one-byte copied-archive setup changed
+only the initial `Pulse Cannon Pod` call descriptor from `DisableWeapon` to
+`EnableWeapon`. Two fresh runs produced player-owned `CRound` objects whose
+unit directions were `(-0.226261, 0.404663, -0.886032)` and
+`(-0.226194, 0.404543, -0.886105)` in Steam X/Y/Z axes. Their contemporaneous
+BattleEngine yaw/pitch values predict
+`(-sin(yaw)cos(pitch), cos(yaw)cos(pitch), sin(pitch))` with maximum component
+error `0.00119`. Core consumes the 30 Hz time-equivalent pitch input `0.003938`,
+retention `0.861774`, the bounded start-slope endpoints, and that three-axis
+shot direction. Terrain-relative limits, mouse scaling, emitter origin,
+auto-aim, and vertical target collision remain unimplemented. The setup patch,
+copies, and raw samples were disposable.
+
 Separately, a disposable expected-byte-only change to the player constructor's
 preferred-view immediate
 from `1` to `2` selected the released third-person vtable at `0x005D9230`; the
@@ -223,9 +247,9 @@ animation remain absent.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration and the bounded projectile path now use the released
-continuous yaw basis; the eight-way projection remains only in provisional jet
+continuous yaw/pitch basis; the eight-way projection remains only in provisional jet
 movement. Terrain
-response beyond grounded height following, dash behavior, camera pitch and
+response beyond grounded height following, dash behavior, terrain-relative pitch and
 occlusion, jet-to-walker, transform presentation, Pulse Cannon shot audio,
 impact/destruction effects and resources, the remaining weapons, and flight
 dynamics remain provisional.
@@ -243,4 +267,4 @@ both supported viewports. It does not prove secondary material or cloud-shadow
 passes, procedural leg solving, actor collision, other-target or mesh-part
 damage, shot audio, impact/destruction effects, exercise completion, complete environment
 population, the complete mission,
-camera pitch/occlusion, full HUD behavior, or visual parity.
+terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

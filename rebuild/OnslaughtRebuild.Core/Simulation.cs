@@ -17,6 +17,8 @@ public sealed class Simulation
         public required int Id { get; init; }
         public SimVector2 Position { get; set; }
         public required SimVector2 Velocity { get; init; }
+        public int ElevationMillimeters { get; set; }
+        public required int VerticalVelocityMillimetersPerTick { get; init; }
         public int RemainingTicks { get; set; }
     }
 
@@ -35,6 +37,8 @@ public sealed class Simulation
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
     private int _facingYawMicroRad;
     private int _walkerYawVelocityMicroRadPerTick;
+    private int _facingPitchMicroRad;
+    private int _walkerPitchVelocityMicroRadPerTick;
     private int _energy;
     private int _shield;
     private int _hull;
@@ -255,17 +259,20 @@ public sealed class Simulation
         {
             _playerVelocity = SimVector2.Zero;
             _walkerYawVelocityMicroRadPerTick = 0;
+            _walkerPitchVelocityMicroRadPerTick = 0;
             return;
         }
 
         if (_mode == VehicleMode.Walker)
         {
             UpdateWalkerYaw(input.LookX);
+            UpdateWalkerPitch(input.LookY);
             UpdateWalkerMovement(input);
             return;
         }
 
         _walkerYawVelocityMicroRadPerTick = 0;
+        _walkerPitchVelocityMicroRadPerTick = 0;
         if (input.LookX != 0)
         {
             _facingYawMicroRad = NormalizeMicroRad(
@@ -290,6 +297,26 @@ public sealed class Simulation
         _facingYawMicroRad = NormalizeMicroRad(
             _facingYawMicroRad + _walkerYawVelocityMicroRadPerTick);
         QuantizeFacingFromYaw();
+    }
+
+    private void UpdateWalkerPitch(sbyte lookY)
+    {
+        _walkerPitchVelocityMicroRadPerTick =
+            (int)((long)_walkerPitchVelocityMicroRadPerTick *
+                SimulationConstants.WalkerPitchRetentionNumerator /
+                SimulationConstants.WalkerPitchRetentionDenominator) +
+            (lookY * SimulationConstants.WalkerPitchInputMicroRadPerTick);
+
+        int nextPitch = _facingPitchMicroRad + _walkerPitchVelocityMicroRadPerTick;
+        int clampedPitch = Math.Clamp(
+            nextPitch,
+            SimulationConstants.WalkerPitchUpLimitMicroRad,
+            SimulationConstants.WalkerPitchDownLimitMicroRad);
+        _facingPitchMicroRad = clampedPitch;
+        if (clampedPitch != nextPitch)
+        {
+            _walkerPitchVelocityMicroRadPerTick = 0;
+        }
     }
 
     private void UpdateWalkerMovement(SimInput input)
@@ -595,11 +622,18 @@ public sealed class Simulation
         }
 
         (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
+        (int pitchSin, int pitchCos) = FixedSinCos(_facingPitchMicroRad);
+        int horizontalSpeed = DivideRoundNearest(
+            (long)pitchCos * SimulationConstants.ProjectileSpeedPerTick,
+            FixedTrigScale);
         int velocityX = DivideRoundNearest(
-            -(long)sin * SimulationConstants.ProjectileSpeedPerTick,
+            -(long)sin * horizontalSpeed,
             FixedTrigScale);
         int velocityZ = DivideRoundNearest(
-            (long)cos * SimulationConstants.ProjectileSpeedPerTick,
+            (long)cos * horizontalSpeed,
+            FixedTrigScale);
+        int verticalVelocity = DivideRoundNearest(
+            -(long)pitchSin * SimulationConstants.ProjectileSpeedPerTick,
             FixedTrigScale);
 
         _energy -= SimulationConstants.FireEnergyCost;
@@ -609,6 +643,9 @@ public sealed class Simulation
             Id = _nextProjectileId++,
             Position = _playerPosition,
             Velocity = new SimVector2(velocityX, velocityZ),
+            ElevationMillimeters = _playerGroundElevationMillimeters +
+                Level100Terrain.WalkerCenterOfGravityMillimeters,
+            VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = SimulationConstants.ProjectileLifetimeTicks,
         });
     }
@@ -625,6 +662,7 @@ public sealed class Simulation
             projectile.Position = new SimVector2(
                 projectile.Position.X + projectile.Velocity.X,
                 projectile.Position.Z + projectile.Velocity.Z);
+            projectile.ElevationMillimeters += projectile.VerticalVelocityMillimetersPerTick;
             projectile.RemainingTicks--;
 
             bool hit = false;
@@ -633,7 +671,8 @@ public sealed class Simulation
                 if (_level100FiringRangeSequenceTick <
                         SimulationConstants.Level100StaticTargetsActivationTick ||
                     target.Id != 1 ||
-                    !target.IsActive)
+                    !target.IsActive ||
+                    projectile.VerticalVelocityMillimetersPerTick != 0)
                 {
                     continue;
                 }
@@ -677,6 +716,8 @@ public sealed class Simulation
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
+        _facingPitchMicroRad = 0;
+        _walkerPitchVelocityMicroRadPerTick = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
         _hull = SimulationConstants.MaximumHull;
@@ -745,6 +786,8 @@ public sealed class Simulation
                 projectile.Id,
                 projectile.Position,
                 projectile.Velocity,
+                projectile.ElevationMillimeters,
+                projectile.VerticalVelocityMillimetersPerTick,
                 projectile.RemainingTicks))
             .ToArray();
 
@@ -760,6 +803,8 @@ public sealed class Simulation
             _facingZ,
             _facingYawMicroRad,
             _walkerYawVelocityMicroRadPerTick,
+            _facingPitchMicroRad,
+            _walkerPitchVelocityMicroRadPerTick,
             _energy,
             _shield,
             _hull,

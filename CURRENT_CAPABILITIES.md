@@ -162,7 +162,13 @@ length, handoff, and playing-state boundary. A clean Level 100 control and two
 fresh repeated safe-copy runs also establish the walker's acceleration,
 equal forward/strafe cap, frictional
 coast, and inertial body turning. The client renders Core's continuous yaw
-rather than an eight-direction visual snap. Core retains the previously measured
+rather than an eight-direction visual snap. Two further repeated runs establish
+BattleEngine-owned vertical aim at the authored start: exact first input and
+`0.8` coast response, stable pitch endpoints `+0.532123` and about `-1.0912`,
+and a Pulse Cannon direction matching the crosshair-derived yaw/pitch vector
+within `0.00119` per component. Godot now pitches the retained retail cockpit
+and camera and renders the resulting three-dimensional Core projectile path.
+Core retains the previously measured
 16-tick walker-to-jet transition, but the clean opening's flight gate keeps it
 unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
@@ -194,7 +200,8 @@ terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
 cloud-shadow stage remains absent. Walker acceleration now follows Core's
-continuous body yaw; the bounded projectile path shares that heading while jet
+continuous body yaw; the bounded projectile path shares its yaw and vertical
+pitch while jet
 translation retains the older eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response or the retail
 controller's procedural foot placement, other-target or mesh-part damage,
@@ -205,7 +212,7 @@ cloud-shadow passes, facility destruction, transform animation, Steam's dynamic
 HUD ring/mask implementation, general contacts and animated-radio behavior,
 later mission audio, campaign,
 networking, or the rest of the transform model. The camera slice does not yet
-reproduce cockpit pitch response, terrain occlusion, camera shake, or later
+reproduce terrain-relative pitch limits, terrain occlusion, camera shake, or later
 scripted cameras. The old seeded synthetic targets are gone; Core and Godot
 share the four observed retail targets. HUD markers use the shipped radar asset,
 not world-space synthetic beacons.

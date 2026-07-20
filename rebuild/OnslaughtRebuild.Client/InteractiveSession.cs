@@ -76,7 +76,8 @@ public sealed class InteractiveSession
         _firePulsePending ||
         _movementPulseX != 0 ||
         _movementPulseZ != 0 ||
-        _input.LookX != 0;
+        _input.LookX != 0 ||
+        _input.LookY != 0;
 
     public InteractiveSessionMetrics Metrics => new(
         _totalSteps,
@@ -279,7 +280,7 @@ public sealed class InteractiveSession
             PreviousSnapshot = CurrentSnapshot;
             // Look is level-sampled every Core step while observed (same as Move).
             CurrentSnapshot = _simulation.Step(
-                new SimInput(moveX, moveZ, actions, _input.LookX));
+                new SimInput(moveX, moveZ, actions, _input.LookX, _input.LookY));
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;

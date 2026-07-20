@@ -240,6 +240,20 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void LookY_HeldPitchesTheBattleEngineThroughTheClientAdapter()
+    {
+        InteractiveSession session = CreatePlayingSession(1);
+        const long oneCoreStepTicks =
+            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
+        session.ObserveInput(new InteractiveInput(0, 0, false, false, false, LookY: -1));
+
+        session.AdvanceFrameTicks(oneCoreStepTicks);
+
+        Assert.Equal(-3_938, session.CurrentSnapshot.FacingPitchMicroRad);
+        Assert.Equal(-3_938, session.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+    }
+
+    [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
         InteractiveSession session = CreatePlayingSession();

@@ -62,10 +62,11 @@ public readonly record struct SimInput(
     sbyte MoveX,
     sbyte MoveZ,
     SimActions Actions = SimActions.None,
-    sbyte LookX = 0)
+    sbyte LookX = 0,
+    sbyte LookY = 0)
 {
     // Fire may be held. UI adapters must edge-sample ToggleMode and Reset.
-    // LookX is body look left/right (−1/0/+1); default 0 preserves prior tapes.
+    // LookX is body look left/right and LookY is screen up/down (−1/0/+1).
     public static SimInput Idle => new(0, 0);
 
     public bool HasAction(SimActions action) => (Actions & action) != 0;
@@ -87,6 +88,11 @@ public readonly record struct SimInput(
             throw new ArgumentOutOfRangeException(nameof(LookX), "LookX must be -1, 0, or 1.");
         }
 
+        if (LookY is < -1 or > 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(LookY), "LookY must be -1, 0, or 1.");
+        }
+
         const SimActions known = SimActions.ToggleMode | SimActions.Fire | SimActions.Reset;
         if ((Actions & ~known) != 0)
         {
@@ -101,6 +107,8 @@ public sealed record ProjectileSnapshot(
     int Id,
     SimVector2 Position,
     SimVector2 Velocity,
+    int ElevationMillimeters,
+    int VerticalVelocityMillimetersPerTick,
     int RemainingTicks);
 
 public sealed record WorldSnapshot(
@@ -115,6 +123,8 @@ public sealed record WorldSnapshot(
     sbyte FacingZ,
     int FacingYawMicroRad,
     int WalkerYawVelocityMicroRadPerTick,
+    int FacingPitchMicroRad,
+    int WalkerPitchVelocityMicroRadPerTick,
     int Energy,
     int Shield,
     int Hull,

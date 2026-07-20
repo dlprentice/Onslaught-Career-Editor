@@ -20,6 +20,8 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName MoveRightAction = "first_flight_move_right";
     private static readonly StringName LookLeftAction = "first_flight_look_left";
     private static readonly StringName LookRightAction = "first_flight_look_right";
+    private static readonly StringName LookUpAction = "first_flight_look_up";
+    private static readonly StringName LookDownAction = "first_flight_look_down";
     private static readonly StringName FireAction = "first_flight_fire";
     private static readonly StringName ToggleModeAction = "first_flight_toggle_mode";
     private static readonly StringName ResetAction = "first_flight_reset";
@@ -191,6 +193,8 @@ public sealed partial class FirstFlightGame : Node3D
         EnsureKeyAction(MoveRightAction, Key.D);
         EnsureKeyAction(LookLeftAction, Key.Left);
         EnsureKeyAction(LookRightAction, Key.Right);
+        EnsureKeyAction(LookUpAction, Key.Up);
+        EnsureKeyAction(LookDownAction, Key.Down);
         EnsureKeyAction(FireAction, Key.Space);
         EnsureKeyAction(ToggleModeAction, Key.Q);
         EnsureKeyAction(ResetAction, Key.R);
@@ -226,13 +230,15 @@ public sealed partial class FirstFlightGame : Node3D
         sbyte moveX = QuantizeAxis(Input.GetAxis(MoveLeftAction, MoveRightAction));
         sbyte moveZ = QuantizeAxis(Input.GetAxis(MoveBackwardAction, MoveForwardAction));
         sbyte lookX = QuantizeAxis(Input.GetAxis(LookLeftAction, LookRightAction));
+        sbyte lookY = QuantizeAxis(Input.GetAxis(LookUpAction, LookDownAction));
         return new InteractiveInput(
             moveX,
             moveZ,
             Input.IsActionPressed(FireAction),
             Input.IsActionPressed(ToggleModeAction),
             Input.IsActionPressed(ResetAction),
-            lookX);
+            lookX,
+            lookY);
     }
 
     private static sbyte QuantizeAxis(float value)
@@ -253,6 +259,8 @@ public sealed partial class FirstFlightGame : Node3D
         SetSyntheticAction(MoveForwardAction, input.MoveZ > 0);
         SetSyntheticAction(LookLeftAction, input.LookX < 0);
         SetSyntheticAction(LookRightAction, input.LookX > 0);
+        SetSyntheticAction(LookUpAction, input.LookY < 0);
+        SetSyntheticAction(LookDownAction, input.LookY > 0);
         SetSyntheticAction(FireAction, input.FireHeld);
         SetSyntheticAction(ToggleModeAction, input.ToggleModeHeld);
         SetSyntheticAction(ResetAction, input.ResetHeld);
@@ -280,6 +288,8 @@ public sealed partial class FirstFlightGame : Node3D
                      MoveRightAction,
                      LookLeftAction,
                      LookRightAction,
+                     LookUpAction,
+                     LookDownAction,
                      FireAction,
                      ToggleModeAction,
                      ResetAction,

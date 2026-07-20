@@ -64,6 +64,11 @@ animation, and camera/control settling have not been measured. The retired
 xform-p03 148-tick conversion used unmatched endpoints and is not a Core
 constant.
 
-Energy regeneration, shield behavior, fire cadence, projectile motion, camera
-behavior, and non-Level-100 movement configurations remain provisional or
-absent.
+At the Level 100 authored start, repeated copied-runtime input establishes the
+walker's `1/117`-radian vertical input, `0.8` pitch-velocity retention, and
+absolute held-input endpoints `+0.5321228` and `-1.0911411..-1.0912496`. The
+same BattleEngine yaw/pitch predicts two player-owned Pulse Cannon unit vectors
+within `0.00119` per component. Core consumes this bounded attached-view aim;
+terrain-relative pitch limits, mouse scaling, emitter origin, auto-aim, and
+vertical target collision remain absent. Energy regeneration, shield behavior,
+and non-Level-100 movement configurations remain provisional or absent.

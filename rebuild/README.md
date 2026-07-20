@@ -74,6 +74,7 @@ Controls:
 | --- | --- |
 | `W`, `A`, `S`, `D` | Move forward/back and strafe after the tutorial powers the Aquila |
 | `←`, `→` | Turn body left/right after the same handoff |
+| `↑`, `↓` | Aim the attached first-person view up/down |
 | `Space` | Fire the Pulse Cannon after the Firing Range enables it |
 | `R` | Reset the slice |
 | `Esc` | Exit |
@@ -99,14 +100,18 @@ slice. The presentation camera now uses clean Level 100's released opening
 lifecycle: four orientation-relative spline points around the exterior Aquila,
 a six-second Steam pan, control-view handoff at 5.95 seconds, and then the
 attached first-person view at the Aquila center of gravity with its horizontal
-orientation column, 58.7155-degree vertical field of view, 0.1 near plane, and
-authored frame-25 walker cockpit. Core mirrors the released playing-state
+orientation and BattleEngine-owned vertical pitch, 58.7155-degree vertical
+field of view, 0.1 near plane, and authored frame-25 walker cockpit. Core
+mirrors the released playing-state
 camera boundary at 180 fixed ticks, then keeps movement/look gated until the
 mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
 deactivates the player, then re-enables it with the Pulse Cannon; flight remains
-disabled.
-Camera pitch response and
-terrain clipping, jet movement,
+disabled. Walker pitch uses the released 20 Hz `1/117`-radian input and `0.8`
+retention translated to 30 Hz, with the two repeated absolute limits measured
+on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
+direction as the crosshair camera. Terrain-relative pitch limiting, emitter
+origin, vertical target collision, auto-aim, mouse response, terrain clipping,
+jet movement,
 jet-to-walker, transform animation, resource semantics, the rest of the weapon
 model, shot audio, target mesh-part damage and hit/destruction effects, terrain collision
 beyond grounded height following, AI, the mission

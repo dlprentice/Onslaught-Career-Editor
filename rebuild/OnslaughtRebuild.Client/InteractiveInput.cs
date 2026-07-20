@@ -10,12 +10,13 @@ public readonly record struct InteractiveInput(
     bool FireHeld,
     bool ToggleModeHeld,
     bool ResetHeld,
-    sbyte LookX = 0)
+    sbyte LookX = 0,
+    sbyte LookY = 0)
 {
     public static InteractiveInput Idle => new(0, 0, false, false, false);
 
     public void Validate()
     {
-        new SimInput(MoveX, MoveZ, LookX: LookX).Validate();
+        new SimInput(MoveX, MoveZ, LookX: LookX, LookY: LookY).Validate();
     }
 }

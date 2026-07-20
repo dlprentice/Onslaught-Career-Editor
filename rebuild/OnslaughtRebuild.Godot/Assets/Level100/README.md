@@ -164,6 +164,16 @@ After the handoff, five uninterrupted read-only samples held the same
 first-person `CThingCamera`, position, yaw, and horizontal forward column
 `(-0.488029, 0.872827)`.
 
+One idle control and two fresh repetitions at that same start bound vertical
+aim without moving the Aquila. Steam stored pitch and its inertial velocity on
+the player-one BattleEngine rather than on an independent camera: the first
+input was exactly `1/117` radian, coast retained `0.8`, and repeated held-input
+endpoints were `+0.5321228` and `-1.0911411..-1.0912496`. Two player-owned
+Pulse Cannon rounds then repeated the crosshair-derived unit direction within
+`0.00119` per component. These bounds apply to the authored start slope;
+terrain-relative limiting, mouse scaling, emitter origin, auto-aim, and
+vertical target collision are not claimed.
+
 `TargetZone1.msl` and `FiringRange.msl` each request a 0.5-second wait before
 posting their event. `LevelScript.msl` activates Target Zone 1 first, then makes
 the Firing Range the objective after `Reached Target Zone 1`.
