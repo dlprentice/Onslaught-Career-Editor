@@ -19,34 +19,27 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _glowLayer.IsReady &&
         _textLayer.IsReady;
 
-    public int Level100ObjectiveMarkerCount => _glowLayer.ObjectiveMarkerCount;
+    public int Level100ObjectiveMarkerCount => _baseLayer.ObjectiveMarkerCount;
 
     public void Initialize()
     {
-        Texture2D crosshair = LoadHudTexture("crosshair-outline", 64, 64);
-        Texture2D circleDarkener = LoadHudTexture("circle-darkener", 128, 128);
-        Texture2D radioView = LoadHudTexture("radio-view", 128, 128);
-        Texture2D weaponFill = LoadHudTexture("weapon-fill", 128, 128);
-        Texture2D objectiveInnerCentre = LoadHudTexture("objective-inner-centre", 64, 128);
-        Texture2D objectiveInnerLeft = LoadHudTexture("objective-inner-left", 64, 128);
-        Texture2D objectiveInnerRight = LoadHudTexture("objective-inner-right", 64, 128);
-        Texture2D objectiveLeft = LoadHudTexture("objective-left", 128, 128);
-        Texture2D objectiveRight = LoadHudTexture("objective-right", 128, 128);
-        Texture2D tatianaPortrait = LoadHudTexture("tatiana-portrait", 128, 128);
-        Texture2D technicianPortrait = LoadHudTexture("technician-portrait", 128, 128);
-
         _baseLayer = new RetailHudBaseLayer(
-            crosshair,
-            circleDarkener,
-            radioView,
-            weaponFill,
-            objectiveInnerCentre,
-            objectiveInnerLeft,
-            objectiveInnerRight,
-            objectiveLeft,
-            objectiveRight,
-            tatianaPortrait,
-            technicianPortrait);
+            LoadHudTexture("circle-darkener", 128, 128),
+            LoadHudTexture("radio-view", 128, 128),
+            LoadHudTexture("weapon-fill", 128, 128),
+            LoadHudTexture("radio-north", 32, 32),
+            LoadHudTexture("scanner-blob-small", 16, 16),
+            LoadHudTexture("forseti-icon", 64, 64),
+            LoadHudTexture("crosshair-primary", 64, 64),
+            LoadHudTexture("crosshair-secondary", 128, 128),
+            LoadHudTexture("crosshair-dot", 64, 64),
+            LoadHudTexture("objective-inner-centre", 64, 128),
+            LoadHudTexture("objective-inner-left", 64, 128),
+            LoadHudTexture("objective-inner-right", 64, 128),
+            LoadHudTexture("objective-left", 128, 128),
+            LoadHudTexture("objective-right", 128, 128),
+            LoadHudTexture("tatiana-portrait", 128, 128),
+            LoadHudTexture("technician-portrait", 128, 128));
         AddFullScreenControl(_baseLayer);
 
         _glowLayer = new RetailHudGlowLayer(
@@ -59,6 +52,21 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 "weapon-outline",
                 128,
                 128,
+                CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadHudTexture(
+                "battleline-outline",
+                128,
+                128,
+                CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadHudTexture(
+                "message-noise",
+                128,
+                128,
+                CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadHudTexture(
+                "bar-line",
+                16,
+                64,
                 CuratedAyaTextureLoader.Compression.Dxt1),
             LoadHudTexture("compass-objective-marker", 16, 16));
         AddFullScreenControl(_glowLayer);
@@ -74,33 +82,63 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     public void UpdateFromSnapshot(WorldSnapshot snapshot)
     {
-        _glowLayer.SetSnapshot(snapshot);
+        Vector2[] markerOffsets = GetMarkedPositions(snapshot)
+            .Select(position => ProjectRadarOffset(snapshot, position))
+            .ToArray();
         string? message = GetTutorialMessageText(snapshot.Level100Message);
-        if (message is not null)
-        {
-            _baseLayer.SetSpeaker(snapshot.Level100Message == Level100TutorialMessage.TechnicianStatus
+        RetailHudSpeaker speaker = message is null
+            ? RetailHudSpeaker.None
+            : snapshot.Level100Message == Level100TutorialMessage.TechnicianStatus
                 ? RetailHudSpeaker.Technician
-                : RetailHudSpeaker.Tatiana);
+                : RetailHudSpeaker.Tatiana;
+
+        _baseLayer.SetState(snapshot, speaker, markerOffsets);
+        _glowLayer.SetState(snapshot, message is not null, markerOffsets);
+        if (message is null)
+        {
+            _textLayer.Clear();
+        }
+        else
+        {
             _textLayer.SetMessage(message);
-            return;
+        }
+    }
+
+    private static SimVector2[] GetMarkedPositions(WorldSnapshot snapshot) => snapshot.Level100Phase switch
+    {
+        Level100OpeningPhase.ReachTargetZone1 or
+            Level100OpeningPhase.TargetZone1DispatchPending =>
+                [SimulationConstants.Level100TargetZone1Position],
+        Level100OpeningPhase.ReachFiringRange or
+            Level100OpeningPhase.FiringRangeDispatchPending =>
+                [SimulationConstants.Level100FiringRangePosition],
+        _ when snapshot.Level100FiringRangeTargetsActive =>
+            snapshot.Targets
+                .Where(target => target.IsActive)
+                .OrderBy(target => target.Id)
+                .Select(target => target.Position)
+                .ToArray(),
+        _ => [],
+    };
+
+    private static Vector2 ProjectRadarOffset(WorldSnapshot snapshot, SimVector2 objective)
+    {
+        const float radarRadius = 46f;
+        float deltaX = (objective.X - snapshot.PlayerPosition.X) / 1_000f;
+        float deltaZ = (objective.Z - snapshot.PlayerPosition.Z) / 1_000f;
+        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
+        float sin = Mathf.Sin(yaw);
+        float cos = Mathf.Cos(yaw);
+        var offset = new Vector2(
+            (deltaX * cos) - (deltaZ * sin),
+            -((deltaX * sin) + (deltaZ * cos)));
+        float distance = offset.Length();
+        if (distance > radarRadius)
+        {
+            offset *= radarRadius / distance;
         }
 
-        _baseLayer.SetSpeaker(RetailHudSpeaker.None);
-        string objective = snapshot.Level100Phase switch
-        {
-            Level100OpeningPhase.Briefing => string.Empty,
-            Level100OpeningPhase.ReachTargetZone1 => "REACH TARGET ZONE 1",
-            Level100OpeningPhase.TargetZone1DispatchPending => "TARGET ZONE 1 REACHED",
-            Level100OpeningPhase.ReachFiringRange => "PROCEED TO FIRING RANGE",
-            Level100OpeningPhase.FiringRangeDispatchPending => "FIRING RANGE REACHED",
-            Level100OpeningPhase.FiringRangeBriefing => string.Empty,
-            Level100OpeningPhase.FiringRangeExercise when snapshot.Level100FireHelpVisible =>
-                "PRESS SPACE TO FIRE CURRENT WEAPON",
-            Level100OpeningPhase.FiringRangeExercise =>
-                "DESTROY THREE TANKS AND ONE BUILDING",
-            _ => string.Empty,
-        };
-        _textLayer.SetObjective(objective);
+        return offset;
     }
 
     private static string? GetTutorialMessageText(Level100TutorialMessage message) => message switch
@@ -161,34 +199,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
         AddChild(control);
     }
 
-    private readonly record struct RetailHudLayout(float Scale, Vector2 Origin)
-    {
-        private const float ReferenceWidth = 1600f;
-        private const float ReferenceHeight = 900f;
-
-        public static RetailHudLayout For(Vector2 size)
-        {
-            float scale = Mathf.Min(size.X / ReferenceWidth, size.Y / ReferenceHeight);
-            return new RetailHudLayout(
-                scale,
-                new Vector2(
-                    (size.X - (ReferenceWidth * scale)) * 0.5f,
-                    (size.Y - (ReferenceHeight * scale)) * 0.5f));
-        }
-
-        public Rect2 Rect(float x, float y, float width, float height)
-        {
-            return new Rect2(
-                Origin + (new Vector2(x, y) * Scale),
-                new Vector2(width, height) * Scale);
-        }
-
-        public Vector2 Point(float x, float y)
-        {
-            return Origin + (new Vector2(x, y) * Scale);
-        }
-    }
-
     private enum RetailHudSpeaker
     {
         None,
@@ -197,10 +207,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
     }
 
     private sealed partial class RetailHudBaseLayer(
-        Texture2D crosshair,
         Texture2D circleDarkener,
         Texture2D radioView,
         Texture2D weaponFill,
+        Texture2D radioNorth,
+        Texture2D scannerBlobSmall,
+        Texture2D forsetiIcon,
+        Texture2D crosshairPrimary,
+        Texture2D crosshairSecondary,
+        Texture2D crosshairDot,
         Texture2D objectiveInnerCentre,
         Texture2D objectiveInnerLeft,
         Texture2D objectiveInnerRight,
@@ -209,95 +224,202 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Texture2D tatianaPortrait,
         Texture2D technicianPortrait) : Control
     {
-        private static readonly Color ObjectiveBacking = new(0.015f, 0.025f, 0.055f, 0.86f);
-        private static readonly Color RadioBlue = new(0.10f, 0.34f, 1f, 0.92f);
-        private static readonly Color WeaponGreen = new(0.24f, 1f, 0.38f, 0.82f);
+        private static readonly Color RadarBlue = new(0.16f, 0.28f, 0.88f, 0.92f);
+        private static readonly Color InstrumentGold = new(0.70f, 0.64f, 0.43f, 0.70f);
         private RetailHudSpeaker _speaker;
+        private Vector2[] _objectiveMarkerOffsets = [];
+        private float _facingYaw;
+        private bool _weaponHighlighted;
 
         public bool IsReady =>
-            crosshair.GetWidth() == 64 &&
-            circleDarkener.GetWidth() == 128 &&
-            radioView.GetWidth() == 128 &&
-            weaponFill.GetWidth() == 128 &&
-            objectiveInnerCentre.GetWidth() == 64 &&
-            objectiveInnerLeft.GetWidth() == 64 &&
-            objectiveInnerRight.GetWidth() == 64 &&
-            objectiveLeft.GetWidth() == 128 &&
-            objectiveRight.GetWidth() == 128 &&
-            tatianaPortrait.GetWidth() == 128 &&
-            technicianPortrait.GetWidth() == 128;
+            circleDarkener.GetSize() == new Vector2I(128, 128) &&
+            radioView.GetSize() == new Vector2I(128, 128) &&
+            weaponFill.GetSize() == new Vector2I(128, 128) &&
+            radioNorth.GetSize() == new Vector2I(32, 32) &&
+            scannerBlobSmall.GetSize() == new Vector2I(16, 16) &&
+            forsetiIcon.GetSize() == new Vector2I(64, 64) &&
+            crosshairPrimary.GetSize() == new Vector2I(64, 64) &&
+            crosshairSecondary.GetSize() == new Vector2I(128, 128) &&
+            crosshairDot.GetSize() == new Vector2I(64, 64) &&
+            objectiveInnerCentre.GetSize() == new Vector2I(64, 128) &&
+            objectiveInnerLeft.GetSize() == new Vector2I(64, 128) &&
+            objectiveInnerRight.GetSize() == new Vector2I(64, 128) &&
+            objectiveLeft.GetSize() == new Vector2I(128, 128) &&
+            objectiveRight.GetSize() == new Vector2I(128, 128) &&
+            tatianaPortrait.GetSize() == new Vector2I(128, 128) &&
+            technicianPortrait.GetSize() == new Vector2I(128, 128);
 
-        public void SetSpeaker(RetailHudSpeaker speaker)
+        public int ObjectiveMarkerCount => _objectiveMarkerOffsets.Length;
+
+        public void SetState(
+            WorldSnapshot snapshot,
+            RetailHudSpeaker speaker,
+            Vector2[] objectiveMarkerOffsets)
         {
-            if (_speaker == speaker)
+            float facingYaw = snapshot.FacingYawMicroRad / 1_000_000f;
+            bool weaponHighlighted = snapshot.Level100CurrentWeaponHighlighted;
+            if (_speaker == speaker &&
+                Mathf.IsEqualApprox(_facingYaw, facingYaw) &&
+                _weaponHighlighted == weaponHighlighted &&
+                _objectiveMarkerOffsets.SequenceEqual(objectiveMarkerOffsets))
             {
                 return;
             }
+
             _speaker = speaker;
+            _facingYaw = facingYaw;
+            _weaponHighlighted = weaponHighlighted;
+            _objectiveMarkerOffsets = objectiveMarkerOffsets;
             QueueRedraw();
         }
 
         public override void _Draw()
         {
-            RetailHudLayout layout = RetailHudLayout.For(Size);
-
-            Rect2 central = layout.Rect(704f, 354f, 192f, 192f);
-            DrawTextureRectRegion(
-                circleDarkener,
-                layout.Rect(726f, 376f, 148f, 148f),
-                new Rect2(0f, 0f, 98f, 98f),
-                new Color(1f, 1f, 1f, 0.28f));
-            DrawRotatedTexture(weaponFill, central, Mathf.Pi * 0.5f, WeaponGreen);
-            DrawTextureRect(
-                crosshair,
-                layout.Rect(752f, 402f, 96f, 96f),
-                false,
-                new Color(0.94f, 0.96f, 1f, 0.88f));
-
-            Texture2D? portrait = _speaker switch
+            DrawLowerLeftInstrument();
+            DrawBattleline();
+            if (_speaker != RetailHudSpeaker.None)
             {
-                RetailHudSpeaker.Tatiana => tatianaPortrait,
-                RetailHudSpeaker.Technician => technicianPortrait,
-                _ => null,
-            };
-            if (portrait is not null)
-            {
-                DrawTextureRect(portrait, layout.Rect(1480f, 780f, 112f, 112f), false);
+                DrawMessageFrame();
             }
-            DrawTextureRectRegion(
-                radioView,
-                layout.Rect(1480f, 780f, 112f, 112f),
-                new Rect2(0f, 0f, 98f, 98f),
-                RadioBlue);
-
-            DrawTextureRect(
-                objectiveInnerLeft,
-                layout.Rect(638f, 789f, 64f, 128f),
-                false,
-                ObjectiveBacking);
-            DrawTextureRect(
-                objectiveInnerCentre,
-                layout.Rect(702f, 789f, 210f, 128f),
-                false,
-                ObjectiveBacking);
-            DrawTextureRect(
-                objectiveInnerRight,
-                layout.Rect(912f, 789f, 64f, 128f),
-                false,
-                ObjectiveBacking);
-            DrawTextureRect(objectiveLeft, layout.Rect(610f, 789f, 128f, 128f), false);
-            DrawTextureRect(objectiveRight, layout.Rect(870f, 789f, 128f, 128f), false);
+            DrawCrosshair();
         }
 
-        private void DrawRotatedTexture(Texture2D texture, Rect2 rect, float rotation, Color modulate)
+        private void DrawLowerLeftInstrument()
         {
-            Vector2 center = rect.GetCenter();
-            DrawSetTransform(center, rotation, Vector2.One);
             DrawTextureRect(
-                texture,
-                new Rect2(-rect.Size * 0.5f, rect.Size),
+                radioView,
+                new Rect2(17f, Size.Y - 112f, 128f, 128f),
                 false,
-                modulate);
+                RadarBlue);
+            DrawTextureRect(
+                weaponFill,
+                new Rect2(9f, Size.Y - 141f, 128f, 128f),
+                false,
+                _weaponHighlighted
+                    ? new Color(1f, 0.91f, 0.56f, 0.94f)
+                    : InstrumentGold);
+
+            Vector2 radarCenter = new(69f, Size.Y - 64f);
+            foreach (Vector2 markerOffset in _objectiveMarkerOffsets)
+            {
+                DrawTextureRect(
+                    scannerBlobSmall,
+                    new Rect2(radarCenter + markerOffset - new Vector2(8f, 8f), new Vector2(16f, 16f)),
+                    false,
+                    new Color(1f, 0.92f, 0.08f, 1f));
+            }
+
+            Vector2 northCenter = new(65f, Size.Y - 64f);
+            Vector2 northPosition = northCenter + new Vector2(
+                Mathf.Sin(_facingYaw) * 45f,
+                -Mathf.Cos(_facingYaw) * 45f);
+            DrawCenteredRotated(
+                radioNorth,
+                northPosition,
+                new Vector2(32f, 32f),
+                _facingYaw,
+                new Color(0.88f, 0.90f, 0.78f, 0.90f));
+        }
+
+        private void DrawBattleline()
+        {
+            DrawTextureRect(
+                circleDarkener,
+                new Rect2(Size.X - 121f, Size.Y - 112f, 128f, 128f),
+                false,
+                new Color(1f, 1f, 1f, 0.76f));
+
+            if (_speaker == RetailHudSpeaker.None)
+            {
+                DrawTextureRect(
+                    forsetiIcon,
+                    new Rect2(Size.X - 104f, Size.Y - 96f, 64f, 64f),
+                    false);
+                return;
+            }
+
+            Texture2D portrait = _speaker == RetailHudSpeaker.Technician
+                ? technicianPortrait
+                : tatianaPortrait;
+            DrawTextureRect(
+                portrait,
+                new Rect2(Size.X - 121f, Size.Y - 112f, 96f, 96f),
+                false,
+                new Color(1f, 1f, 1f, 0.88f));
+        }
+
+        private void DrawMessageFrame()
+        {
+            const float frameWidth = 252f;
+            const float pieceHeight = 60f;
+            const float halfCap = 30f;
+            const float innerWidth = 30f;
+            float centerX = (Size.X * 0.5f) + 22f;
+            float centerY = Size.Y - 57f;
+            float left = centerX - (frameWidth * 0.5f);
+            float right = centerX + (frameWidth * 0.5f);
+            float top = centerY - (pieceHeight * 0.5f);
+
+            DrawTextureRect(
+                objectiveLeft,
+                new Rect2(left - halfCap, top, pieceHeight, pieceHeight),
+                false);
+            DrawTextureRect(
+                objectiveInnerLeft,
+                new Rect2(left - innerWidth, top, innerWidth, pieceHeight),
+                false);
+            DrawTextureRect(
+                objectiveRight,
+                new Rect2(right - halfCap, top, pieceHeight, pieceHeight),
+                false);
+            DrawTextureRect(
+                objectiveInnerRight,
+                new Rect2(right, top, innerWidth, pieceHeight),
+                false);
+
+            float remaining = frameWidth;
+            float x = left;
+            while (remaining > 0f)
+            {
+                float width = Mathf.Min(innerWidth, remaining);
+                DrawTextureRectRegion(
+                    objectiveInnerCentre,
+                    new Rect2(x, top, width, pieceHeight),
+                    new Rect2(0f, 0f, 64f * (width / innerWidth), 128f));
+                x += width;
+                remaining -= width;
+            }
+        }
+
+        private void DrawCrosshair()
+        {
+            Vector2 center = Size * 0.5f;
+            DrawTextureRect(
+                crosshairSecondary,
+                new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
+                false,
+                new Color(0.70f, 0.78f, 1f, 0.68f));
+            DrawTextureRect(
+                crosshairPrimary,
+                new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
+                false,
+                new Color(0.91f, 0.92f, 1f, 0.84f));
+            DrawTextureRect(
+                crosshairDot,
+                new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
+                false,
+                new Color(0.96f, 0.96f, 1f, 0.94f));
+        }
+
+        private void DrawCenteredRotated(
+            Texture2D texture,
+            Vector2 center,
+            Vector2 size,
+            float rotation,
+            Color modulate)
+        {
+            DrawSetTransform(center, rotation, Vector2.One);
+            DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
             DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
         }
     }
@@ -305,19 +427,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private sealed partial class RetailHudGlowLayer(
         Texture2D radarOutline,
         Texture2D weaponOutline,
+        Texture2D battlelineOutline,
+        Texture2D messageNoise,
+        Texture2D barLine,
         Texture2D objectiveMarker) : Control
     {
-        private const float RadarWorldRadius = 46f;
         private Vector2[] _objectiveMarkerOffsets = [];
+        private float _facingYaw;
+        private float _shieldFraction = 1f;
+        private float _hullFraction = 1f;
+        private bool _messageActive;
         private bool _weaponHighlighted;
 
         public bool IsReady =>
-            radarOutline.GetWidth() == 128 &&
-            weaponOutline.GetWidth() == 128 &&
-            objectiveMarker.GetWidth() == 16 &&
-            objectiveMarker.GetHeight() == 16;
-
-        public int ObjectiveMarkerCount => _objectiveMarkerOffsets.Length;
+            radarOutline.GetSize() == new Vector2I(128, 128) &&
+            weaponOutline.GetSize() == new Vector2I(128, 128) &&
+            battlelineOutline.GetSize() == new Vector2I(128, 128) &&
+            messageNoise.GetSize() == new Vector2I(128, 128) &&
+            barLine.GetSize() == new Vector2I(16, 64) &&
+            objectiveMarker.GetSize() == new Vector2I(16, 16);
 
         public override void _Ready()
         {
@@ -327,84 +455,151 @@ public sealed partial class FirstFlightHud : CanvasLayer
             };
         }
 
-        public void SetSnapshot(WorldSnapshot snapshot)
+        public void SetState(
+            WorldSnapshot snapshot,
+            bool messageActive,
+            Vector2[] objectiveMarkerOffsets)
         {
-            SimVector2[] objectives = snapshot.Level100Phase switch
-            {
-                Level100OpeningPhase.ReachTargetZone1 or
-                    Level100OpeningPhase.TargetZone1DispatchPending =>
-                        [SimulationConstants.Level100TargetZone1Position],
-                Level100OpeningPhase.ReachFiringRange or
-                    Level100OpeningPhase.FiringRangeDispatchPending =>
-                        [SimulationConstants.Level100FiringRangePosition],
-                _ when snapshot.Level100FiringRangeTargetsActive =>
-                    snapshot.Targets
-                        .Where(target => target.IsActive)
-                        .OrderBy(target => target.Id)
-                        .Select(target => target.Position)
-                        .ToArray(),
-                _ => [],
-            };
-            Vector2[] offsets = objectives.Select(objective => ProjectMarker(snapshot, objective)).ToArray();
+            float facingYaw = snapshot.FacingYawMicroRad / 1_000_000f;
+            float shieldFraction = Mathf.Clamp(
+                snapshot.Shield / (float)SimulationConstants.MaximumShield,
+                0f,
+                1f);
+            float hullFraction = Mathf.Clamp(
+                snapshot.Hull / (float)SimulationConstants.MaximumHull,
+                0f,
+                1f);
             bool weaponHighlighted = snapshot.Level100CurrentWeaponHighlighted;
-            if (_weaponHighlighted == weaponHighlighted &&
-                _objectiveMarkerOffsets.SequenceEqual(offsets))
+            if (Mathf.IsEqualApprox(_facingYaw, facingYaw) &&
+                Mathf.IsEqualApprox(_shieldFraction, shieldFraction) &&
+                Mathf.IsEqualApprox(_hullFraction, hullFraction) &&
+                _messageActive == messageActive &&
+                _weaponHighlighted == weaponHighlighted &&
+                _objectiveMarkerOffsets.SequenceEqual(objectiveMarkerOffsets))
             {
                 return;
             }
+
+            _facingYaw = facingYaw;
+            _shieldFraction = shieldFraction;
+            _hullFraction = hullFraction;
+            _messageActive = messageActive;
             _weaponHighlighted = weaponHighlighted;
-            _objectiveMarkerOffsets = offsets;
+            _objectiveMarkerOffsets = objectiveMarkerOffsets;
             QueueRedraw();
-        }
-
-        private static Vector2 ProjectMarker(WorldSnapshot snapshot, SimVector2 objective)
-        {
-            float deltaX = (objective.X - snapshot.PlayerPosition.X) / 1_000f;
-            float deltaZ = (objective.Z - snapshot.PlayerPosition.Z) / 1_000f;
-            float distanceSquared = (deltaX * deltaX) + (deltaZ * deltaZ);
-            float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-            float sin = Mathf.Sin(yaw);
-            float cos = Mathf.Cos(yaw);
-            var offset = new Vector2(
-                (deltaX * cos) - (deltaZ * sin),
-                -((deltaX * sin) + (deltaZ * cos)));
-            float distance = Mathf.Sqrt(distanceSquared);
-            if (distance > RadarWorldRadius)
-            {
-                offset *= RadarWorldRadius / distance;
-            }
-
-            return offset;
         }
 
         public override void _Draw()
         {
-            RetailHudLayout layout = RetailHudLayout.For(Size);
+            DrawLowerLeftOutlines();
+            DrawThreatCircle();
+            DrawBattlelineOutline();
+        }
+
+        private void DrawLowerLeftOutlines()
+        {
             DrawTextureRect(
                 radarOutline,
-                layout.Rect(8f, 772f, 128f, 128f),
+                new Rect2(17f, Size.Y - 112f, 128f, 128f),
                 false,
-                new Color(0.74f, 0.70f, 0.54f, 0.86f));
-            foreach (Vector2 markerOffset in _objectiveMarkerOffsets)
-            {
-                Vector2 radarCenter = layout.Point(69f, 836f) + (markerOffset * layout.Scale);
-                DrawTextureRect(
-                    objectiveMarker,
-                    new Rect2(radarCenter - (Vector2.One * 8f * layout.Scale), Vector2.One * 16f * layout.Scale),
-                    false,
-                    new Color(1f, 1f, 0f, 1f));
-            }
-
-            Rect2 central = layout.Rect(704f, 354f, 192f, 192f);
-            Vector2 center = central.GetCenter();
-            DrawSetTransform(center, Mathf.Pi * 0.5f, Vector2.One);
+                new Color(0.64f, 0.62f, 0.48f, 0.82f));
             DrawTextureRect(
                 weaponOutline,
-                new Rect2(-central.Size * 0.5f, central.Size),
+                new Rect2(9f, Size.Y - 141f, 128f, 128f),
                 false,
                 _weaponHighlighted
-                    ? new Color(1f, 0.98f, 0.70f, 1f)
-                    : new Color(0.82f, 0.82f, 0.76f, 0.76f));
+                    ? new Color(1f, 0.91f, 0.60f, 1f)
+                    : new Color(0.66f, 0.62f, 0.45f, 0.78f));
+        }
+
+        private void DrawThreatCircle()
+        {
+            Vector2 center = Size * 0.5f;
+            DrawArc(
+                center,
+                98f,
+                0f,
+                Mathf.Tau,
+                128,
+                new Color(0.76f, 0.82f, 1f, 0.20f),
+                2f,
+                true);
+
+            const float rightStart = -0.92f;
+            const float rightSweep = 1.84f;
+            DrawArc(
+                center,
+                96f,
+                rightStart,
+                rightStart + (rightSweep * _hullFraction),
+                48,
+                new Color(0.30f, 1f, 0.48f, 0.84f),
+                5f,
+                true);
+
+            const float leftStart = 2.27f;
+            const float leftSweep = 1.74f;
+            DrawArc(
+                center,
+                96f,
+                leftStart,
+                leftStart + (leftSweep * _shieldFraction),
+                48,
+                new Color(0.62f, 0.55f, 1f, 0.82f),
+                5f,
+                true);
+
+            Vector2 northPosition = center + new Vector2(
+                Mathf.Sin(_facingYaw) * 110f,
+                -Mathf.Cos(_facingYaw) * 110f);
+            DrawCenteredRotated(
+                barLine,
+                northPosition,
+                new Vector2(16f, 64f),
+                _facingYaw,
+                new Color(0.90f, 0.82f, 0.24f, 0.86f));
+
+            foreach (Vector2 markerOffset in _objectiveMarkerOffsets)
+            {
+                if (markerOffset.IsZeroApprox())
+                {
+                    continue;
+                }
+                Vector2 markerCenter = center + (markerOffset.Normalized() * 111.5f);
+                DrawTextureRect(
+                    objectiveMarker,
+                    new Rect2(markerCenter - new Vector2(8f, 8f), new Vector2(16f, 16f)),
+                    false,
+                    new Color(1f, 0.91f, 0.08f, 1f));
+            }
+        }
+
+        private void DrawBattlelineOutline()
+        {
+            if (_messageActive)
+            {
+                DrawTextureRect(
+                    messageNoise,
+                    new Rect2(Size.X - 137f, Size.Y - 128f, 128f, 128f),
+                    false,
+                    new Color(0.48f, 0.66f, 1f, 0.16f));
+            }
+            DrawTextureRect(
+                battlelineOutline,
+                new Rect2(Size.X - 121f, Size.Y - 112f, 128f, 128f),
+                false,
+                new Color(0.66f, 0.60f, 0.43f, 0.88f));
+        }
+
+        private void DrawCenteredRotated(
+            Texture2D texture,
+            Vector2 center,
+            Vector2 size,
+            float rotation,
+            Color modulate)
+        {
+            DrawSetTransform(center, rotation, Vector2.One);
+            DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
             DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
         }
     }
@@ -415,75 +610,73 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private const int GlyphColumns = 16;
         private const int GlyphCellSize = 16;
         private const int GlyphAdvance = 8;
-        private const int MessageCharactersPerLine = 40;
+        private const int MessageCharactersPerLine = 31;
+        private const int MaximumLines = 5;
         private string[] _lines = [];
-        private bool _centered;
 
-        public bool IsReady => fontAtlas.GetWidth() == 256 && fontAtlas.GetHeight() == 256;
+        public bool IsReady => fontAtlas.GetSize() == new Vector2I(256, 256);
 
-        public void SetObjective(string text)
+        public void Clear()
         {
-            SetLines([text], centered: true);
+            SetLines([]);
         }
 
         public void SetMessage(string text)
         {
-            SetLines(WrapMessage(text), centered: false);
+            SetLines(WrapMessage(text));
         }
 
         public override void _Draw()
         {
-            if (_lines.Length == 0 || _lines.All(string.IsNullOrEmpty))
+            if (_lines.Length == 0)
             {
                 return;
             }
 
-            RetailHudLayout layout = RetailHudLayout.For(Size);
-            float glyphScale = layout.Scale;
-            float glyphAdvance = GlyphAdvance * glyphScale;
-            float top = layout.Point(0f, _centered ? 831f : 817f).Y;
-            float lineAdvance = 17f * glyphScale;
+            float left = (Size.X * 0.5f) - 116f;
+            float top = Size.Y - 84f;
             for (int lineIndex = 0; lineIndex < _lines.Length; lineIndex++)
             {
                 string line = _lines[lineIndex];
-                float left = _centered
-                    ? (Size.X - (line.Length * glyphAdvance)) * 0.5f
-                    : layout.Point(650f, 0f).X;
                 for (int index = 0; index < line.Length; index++)
                 {
-                    int code = line[index];
-                    if (code is < FirstGlyph or >= FirstGlyph + 96)
-                    {
-                        code = '?';
-                    }
-                    int glyph = code - FirstGlyph;
-                    var source = new Rect2(
-                        (glyph % GlyphColumns) * GlyphCellSize,
-                        (glyph / GlyphColumns) * GlyphCellSize,
-                        GlyphCellSize,
-                        GlyphCellSize);
-                    var destination = new Rect2(
-                        left + (index * glyphAdvance) - (4f * glyphScale),
-                        top + (lineIndex * lineAdvance),
-                        GlyphCellSize * glyphScale,
-                        GlyphCellSize * glyphScale);
-                    DrawTextureRectRegion(
-                        fontAtlas,
-                        destination,
-                        source,
-                        new Color(0.96f, 0.97f, 1f, 0.96f));
+                    DrawGlyph(line[index], left + (index * GlyphAdvance), top + (lineIndex * 15f));
                 }
             }
         }
 
-        private void SetLines(string[] lines, bool centered)
+        private void DrawGlyph(char character, float x, float y)
         {
-            if (_centered == centered && _lines.SequenceEqual(lines, StringComparer.Ordinal))
+            int code = character;
+            if (code is < FirstGlyph or >= FirstGlyph + 96)
+            {
+                code = '?';
+            }
+            int glyph = code - FirstGlyph;
+            var source = new Rect2(
+                (glyph % GlyphColumns) * GlyphCellSize,
+                (glyph / GlyphColumns) * GlyphCellSize,
+                GlyphCellSize,
+                GlyphCellSize);
+            DrawTextureRectRegion(
+                fontAtlas,
+                new Rect2(x - 3f, y + 1f, GlyphCellSize, GlyphCellSize),
+                source,
+                new Color(0f, 0f, 0f, 0.75f));
+            DrawTextureRectRegion(
+                fontAtlas,
+                new Rect2(x - 4f, y, GlyphCellSize, GlyphCellSize),
+                source,
+                new Color(0.96f, 0.97f, 1f, 0.96f));
+        }
+
+        private void SetLines(string[] lines)
+        {
+            if (_lines.SequenceEqual(lines, StringComparer.Ordinal))
             {
                 return;
             }
             _lines = lines;
-            _centered = centered;
             QueueRedraw();
         }
 
@@ -496,6 +689,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 if (current.Length > 0 && current.Length + 1 + word.Length > MessageCharactersPerLine)
                 {
                     lines.Add(current.ToString());
+                    if (lines.Count == MaximumLines)
+                    {
+                        break;
+                    }
                     current.Clear();
                 }
                 if (current.Length > 0)
@@ -504,7 +701,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 }
                 current.Append(word);
             }
-            if (current.Length > 0)
+            if (lines.Count < MaximumLines && current.Length > 0)
             {
                 lines.Add(current.ToString());
             }

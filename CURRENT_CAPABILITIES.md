@@ -171,10 +171,11 @@ machine-observed Level 100 standing pose and follow the released 101-frame
 `LegMotion` cycle from Core velocity. The jet, two facilities, and two target
 types remain bounded static conversions. The exterior meshes and exact
 frame-25 first-person cockpit render from eleven retained AYA-wrapped textures.
-Thirteen exact released
-HUD textures, including Font13PS, replace the prototype overlay for the bounded
-crosshair, radar/radio frames, active-objective marker, and current objective
-line. The first fourteen English tutorial messages through the first Pulse
+Twenty-three exact released HUD textures, including Font13PS and the three v3
+crosshair layers, replace the prototype overlay for the bounded threat circle,
+lower-left scanner/weapon instrument, lower-right battleline/portrait,
+active-objective markers, and conditional message panel. The first fourteen
+English tutorial messages through the first Pulse
 Cannon exercise now use exact
 released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
 portrait frames. Repeated retail runs matched every retained opening boundary
@@ -200,8 +201,9 @@ controller's procedural foot placement, other-target or mesh-part damage,
 shot audio, impact/destruction effects, the
 rest of the mission, AI, the
 remaining weapon roster, secondary/reflection and
-cloud-shadow passes, facility destruction, transform animation, complete HUD
-state/contacts/animated-radio behavior, later mission audio, campaign,
+cloud-shadow passes, facility destruction, transform animation, Steam's dynamic
+HUD ring/mask implementation, general contacts and animated-radio behavior,
+later mission audio, campaign,
 networking, or the rest of the transform model. The camera slice does not yet
 reproduce cockpit pitch response, terrain occlusion, camera shake, or later
 scripted cameras. The old seeded synthetic targets are gone; Core and Godot

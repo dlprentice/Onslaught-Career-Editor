@@ -143,13 +143,18 @@ Level 100 ground/start relationship, and copied-runtime framing independently
 agree on scale `1.0`; the client grounds the walker from its composed standing
 pose and each static mesh from its exact lower bound.
 
-Thirteen retained HUD textures are exact released files named by the Steam
-binary. A clean copied-runtime frame establishes the bounded first-person
-composition now used by Godot: center crosshair/weapon layers, lower-left radar,
-lower-right radio frame, and lower-center message treatment. The current
-objective is rendered from the released Font13PS atlas. Exact 128×128 DXT2 `aa`
-frames supply the current static Tatiana and technician portraits; animated
-portrait/video behavior is not inferred.
+Twenty-three retained HUD textures are exact released files named by the Steam
+binary. A clean copied-runtime frame and the released render paths establish
+the bounded first-person composition now used by Godot: the generated central
+threat compass and three v3 crosshair layers, lower-left scanner/weapon stack,
+lower-right battleline with Forseti or message portrait, and a message-only
+segmented panel. `CHud__RenderObjectiveProgressGaugeAndHeadingNeedle` at
+`0x004858D0`, `CHud__RenderBattleline` at `0x00487D10`,
+`CMessageBox__RenderOverlay` at `0x004B8850`, and the `CDXCompass` render path
+provide the retained edge offsets, 45/46/96/98/110/111.5-unit radii, rotations,
+and state ownership. Exact 128×128 DXT2 `aa` frames supply the current static
+Tatiana and technician portraits; animated portrait/video behavior, Steam's
+dynamic 16-bit ring texture, and its special circle-mask state are not inferred.
 
 One clean control and two fresh, uninterrupted app-owned Level 100 runs then
 repeated the first eight message boundaries within one 50 ms retail sample.
@@ -228,7 +233,7 @@ dynamics remain provisional.
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts; loads 57 Aquila, eight
 facility, six target, and two cockpit material surfaces; decodes eleven mesh,
-four Pulse Bolt effect, thirteen HUD, and five sky textures; and consumes the
+four Pulse Bolt effect, twenty-three HUD, and five sky textures; and consumes the
 retained heightfield, macro/detail terrain inputs, and Core-owned ground
 elevation. Its deterministic
 route reaches the first Firing Range exercise, renders the exact target models

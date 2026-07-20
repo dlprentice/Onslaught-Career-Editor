@@ -33,10 +33,10 @@ now replace the procedural ground/sky. The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
 projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
-Thirteen exact HUD textures
-and the released Font13PS atlas replace the prototype panels for the bounded
-crosshair, radar/radio frames, active-objective marker, and current objective
-line. The first fourteen
+Twenty-three exact HUD textures and the released Font13PS atlas now compose the
+bounded v3 crosshair, threat compass, lower-left scanner/weapon instrument,
+lower-right battleline/portrait, active-objective markers, and conditional
+message panel. The first fourteen
 released English tutorial messages now use their exact text, shipped voice
 clips, and static Tatiana/technician portrait frames. Core follows the observed
 power, objective, weapon-highlight, four-target, and Pulse Cannon activation
@@ -128,9 +128,10 @@ hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the
 base material groups and decodes eleven exact AYA-wrapped mesh textures for the
 Aquila, cockpit, facilities, and range targets plus the four exact 64×64
-textures named by the medium Pulse Bolt descriptor. It also
-uses thirteen exact HUD textures, including the uncompressed released font
-atlas and objective marker. The observed player route uses Steam's
+textures named by the medium Pulse Bolt descriptor. It also uses twenty-three
+exact HUD textures, including the three released v3 crosshair layers,
+uncompressed font atlas, scanner/north sprites, battleline, portrait/noise
+treatment, and objective marker. The observed player route uses Steam's
 5.4-unit overlap and delayed dispatch to replace Target Zone 1 with the Firing
 Range on that radar. A control and three repeated retail runs then establish the
 Firing Range's five-message sequence, current-weapon highlight, four objective
@@ -144,8 +145,9 @@ Target 1 path; Godot removes its exact model and radar marker at destruction.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding, actor/structure
 collision, procedural foot placement/terrain IK,
-transform animation, non-objective HUD contacts and later state logic, animated
-radio portraits/video, other-target health, mesh-part damage variation, shot
+transform animation, general HUD contacts and later state logic, Steam's
+dynamic ring texture and circle-mask state, animated radio portraits/video,
+other-target health, mesh-part damage variation, shot
 audio, impact/destruction effects, and the remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;
 Core and Godot now share the four observed retail targets and shipped objective
