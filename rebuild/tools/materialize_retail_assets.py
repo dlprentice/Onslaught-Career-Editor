@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import math
 import os
 import re
 import shutil
@@ -28,6 +30,45 @@ LEVEL_ARCHIVE = "data/resources/100_res_PC.aya"
 LEVEL_ARCHIVE_SHA256 = "ed6350c0e214d00ab1bf6a7bd137fba3e77d0afe19a6dc4c0607f56ac037496a"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
+STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
+STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
+STATIC_WORLD_MANIFEST_SHA256 = "6dbd271df598f2a6940416c849e42bfc655cc368dca9959eb713d93486f920fb"
+STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
+    "eaac9e23666d45d6e0edd7bd9da264715ea5adc55809f0af181058ff586dc00d"
+)
+WATER_TEXTURE = "data/resources/dxtntextures/mixers%reflection00.tga(0)X8R8G8B8.aya"
+
+
+# Released physics-definition name -> exact loose mesh selected by Level 100.
+STATIC_MESH_BY_DEFINITION = {
+    "Control Tower": "fb_control_tower",
+    "Forseti Pulse Tank Factory": "fb_tank_factory",
+    "Forseti Repair Pad": "fb_health_pad",
+    "SAT Turret": "ft_sam",
+    "Iceberg 1": "iceberg1",
+    "Iceberg 2": "iceberg2",
+    "Iceberg 3": "iceberg3",
+    "Iceberg 4": "iceberg4",
+    "Blaster Turret": "ft_blaster",
+    "Pulse Turret": "ft_pulse",
+    "Forseti Research Building": "fb_research",
+    "Forseti Building 1": "FB_House_Type_A",
+    "Forseti Building 2": "FB_House_Type_B",
+    "Forseti Building 3": "FB_House_Type_C",
+    "Forseti Solar Pod": "FB_Solar_Pod",
+    "Forseti Radar Station": "FB_radar_station",
+    "Forseti Light Fighter Airfield": "fb_aircraft_factory",
+    "Forseti Docks": "FB_Docks",
+    "Hangar": "fb_hangar",
+    "Forseti Tall Building 1": "F_buildtall1",
+    "Forseti Tall Building 3": "F_buildtall3",
+    "Forseti City Building 1": "f-city1",
+    "Forseti City Building 2": "f-city2",
+    "Forseti City Building 3": "f-city3",
+}
+STATIC_MESH_KEYS = tuple(dict.fromkeys(STATIC_MESH_BY_DEFINITION.values())) + tuple(
+    f"pinesnow{variant}" for variant in range(4)
+)
 
 
 # Destination, released-install source, exact supported SHA-256.
@@ -68,20 +109,8 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Sky/cube25-right.texture.aya", "data/resources/dxtntextures/cubes%cube25_right.tga(0)X8R8G8B8.aya", "830c9b965c76a4023c2415b7c8924ca32590562c850cc84e92c003e173263d11"),
     (GODOT_ASSETS / "Level100/Sky/cube25-up.texture.aya", "data/resources/dxtntextures/cubes%cube25_up.tga(0)X8R8G8B8.aya", "419e2424bcfd698058d72111ffa7d84fdc9022e03815db7c0da28403f4925f3c"),
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
-    (GODOT_ASSETS / "Level100/Source/m_fb_control_tower.msh.aya", "data/resources/meshes/m_fb_control_tower.msh.aya", "86af67e09dc2fd21c7023acd53ebcb4171f3bf396f836da85ecfdda516588d91"),
-    (GODOT_ASSETS / "Level100/Source/m_fb_health_pad.msh.aya", "data/resources/meshes/m_fb_health_pad.msh.aya", "4ec6cb1d589c866acfa292232ca4f850967faea899c2f082329bff78e647ab44"),
-    (GODOT_ASSETS / "Level100/Source/m_fb_research.msh.aya", "data/resources/meshes/m_fb_research.msh.aya", "37ff4fb289e28d1be5b0421bfe0f4b659694166152c4af874d230e767002f0f1"),
-    (GODOT_ASSETS / "Level100/Source/m_fb_tank_factory.msh.aya", "data/resources/meshes/m_fb_tank_factory.msh.aya", "a507afda7b5c6b6b8bed275d442a53b28043bb9d5b65f9ea5bd6f5ff754bf6de"),
-    (GODOT_ASSETS / "Level100/Source/m_ft_blaster.msh.aya", "data/resources/meshes/m_ft_blaster.msh.aya", "9833cd459e00b1c2068f9db6be34ee0e6a3f2d0b01d780946a338d5682abb4cb"),
-    (GODOT_ASSETS / "Level100/Source/m_ft_pulse.msh.aya", "data/resources/meshes/m_ft_pulse.msh.aya", "1cc399936cdd171c44297dcbc6ef2ff2e187319de707d0f4c564e338a9770b9c"),
-    (GODOT_ASSETS / "Level100/Source/m_ft_sam.msh.aya", "data/resources/meshes/m_ft_sam.msh.aya", "9a82f27454863c19c05a8cdedcc99cc05300aed75b8e54467a980c94bf5ba4a2"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
-    (GODOT_ASSETS / "Level100/Textures/facility-hanger-bits.texture.aya", "data/resources/dxtntextures/meshtex%FB_hangerbits.tga(0)A1R5G5B5.aya", "8e73098eaeb3c961b7cd63c3fbdf2338b22efbe191bf956034db9a69e71c041a"),
-    (GODOT_ASSETS / "Level100/Textures/facility-hanger-more-bits-lit.texture.aya", "data/resources/dxtntextures/meshtex%A8_FB_hangermorebits_lit.tga(0)A8R8G8B8.aya", "f04b96e9e2a121f74729f63194b01fac58384b150f476b5e03d17b03b6dcc6e3"),
-    (GODOT_ASSETS / "Level100/Textures/facility-hanger-top-01.texture.aya", "data/resources/dxtntextures/meshtex%FB_hangertop01.tga(0)A1R5G5B5.aya", "54adeb37d60fbc8209dbb75eb61fd39898b3f07e808e05c408dc740ff4647fd4"),
-    (GODOT_ASSETS / "Level100/Textures/facility-hanger-top-02.texture.aya", "data/resources/dxtntextures/meshtex%FB_hangertop02.tga(0)A1R5G5B5.aya", "e09455015cc79439aa33c5fb6b4a70b75de9f2d5392aa7cd08bbf42d8fc6f78f"),
-    (GODOT_ASSETS / "Level100/Textures/facility-health-pad.texture.aya", "data/resources/dxtntextures/meshtex%fb_healthpad.tga(0)A1R5G5B5.aya", "4cb425f9ead9aeea065f73b69f5bb1dd0f659522a6b656e69c3f3ae0325a2543"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-halo.texture.aya", "data/resources/dxtntextures/Particle%Halo.tga(0)R5G6B5.aya", "cde6efc90dc7958c5bda425a04486e277beb85a7f1c33fb9074f369e92d58edb"),
     (GODOT_ASSETS / "Level100/Textures/pulse-bolt-blue-spark.texture.aya", "data/resources/dxtntextures/Particle%Blue Spark 2.tga(0)A4R4G4B4.aya", "b3730b1e9d7713910e0de4bd0cb0dcfefcb9ceb8f6402d50681a524adc0dcb08"),
@@ -95,9 +124,6 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m002.texture.aya", "data/resources/dxtntextures/meshtex%M_002.tga(0)A1R5G5B5.aya", "8fabadbe1c5af067a740cf05debd1c952c628fd5fa3ea92b8202094704b8a20d"),
     (GODOT_ASSETS / "Level100/Textures/terrain-cloud-shadow.texture.aya", "data/resources/dxtntextures/clouds%shadow.tga(0)A8R8G8B8.aya", "fc7441887e494e4b18f2b16179ed42c17801b128d71e29d653a4e8b792869519"),
     (GODOT_ASSETS / "Level100/Textures/terrain-detail-00.texture.aya", "data/resources/dxtntextures/mixers%detail00.tga(0)R5G6B5.aya", "7c9c22169d13ed8b7d6ad69286bdb59cc88f9ae3bfb6a9d3a0503d320386bfef"),
-    (GODOT_ASSETS / "Level100/Textures/turret-blaster-primary.texture.aya", "data/resources/dxtntextures/meshtex%f_ventura03.tga(0)A1R5G5B5.aya", "8eefb3a268f1e54b9db83e92d9a64bf5d800631a04a87c1c141080f9791f28f3"),
-    (GODOT_ASSETS / "Level100/Textures/turret-pulse-primary.texture.aya", "data/resources/dxtntextures/meshtex%fpulsetank.tga(0)A1R5G5B5.aya", "ccf2896ad3991755c4f5a8330fe16b89e9c6d719537c4f72ff4805ff176c3ece"),
-    (GODOT_ASSETS / "Level100/Textures/turret-sam-shared.texture.aya", "data/resources/dxtntextures/meshtex%f_SAM.tga(0)A1R5G5B5.aya", "a1fe2d7531676d38e874c48819aca69ed62955886f2efe9ad0046d85d1cb18fc"),
     (GODOT_ASSETS / "Level100/TutorialAudio/hud_01.ogg", "data/sounds/english/MessageBox/hud_01.ogg", "bae30243a2b5fe3dae718181ac5b05d766f93d5e25b042fe1b04c71fc9347909"),
     (GODOT_ASSETS / "Level100/TutorialAudio/hud_02.ogg", "data/sounds/english/MessageBox/hud_02.ogg", "43ae0c306b7935a21d415338348508eabf3a61f8799c0fd0873c89919fb84a35"),
     (GODOT_ASSETS / "Level100/TutorialAudio/hud_05.ogg", "data/sounds/english/MessageBox/hud_05.ogg", "66256d87557946647a51a2e8d49e044bc55ae370c4ad1c8e950b1d884ec082eb"),
@@ -130,13 +156,6 @@ MESHES = (
     (GODOT_ASSETS / "Aquila/aquila-jet.obj", GODOT_ASSETS / "Aquila/Source/m_f_be2.msh.aya", None, "92a3495e278884b63649e114eddb7373b04af2aa92aab25c3f7184dd1140d821"),
     (GODOT_ASSETS / "Aquila/aquila-walker-cockpit.obj", GODOT_ASSETS / "Aquila/Source/m_cockpit2.msh.aya", 25, "0e81a2b48ab2202620b3c0dccd08fe2ffbd76b5d668318d21f0ff72551dd5bd9"),
     (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "6d3827b58fe7a4728efe1efc6a7ced7a08a0b642891dcb1f18377a4b3d61d244"),
-    (GODOT_ASSETS / "Level100/level100-control-tower.obj", GODOT_ASSETS / "Level100/Source/m_fb_control_tower.msh.aya", None, "9a2b9c287bff21dd7e3b560ee36cc7d7cafb99399b3003bf2e81a832fbd6f6ba"),
-    (GODOT_ASSETS / "Level100/level100-health-pad.obj", GODOT_ASSETS / "Level100/Source/m_fb_health_pad.msh.aya", None, "ae988ed04713970174340d891580b11b6d8005ac7dc2e6b53289468a0b3cca31"),
-    (GODOT_ASSETS / "Level100/level100-research-building.obj", GODOT_ASSETS / "Level100/Source/m_fb_research.msh.aya", None, "ae989a8dbc9a2c7897e92e07b23a14d9b8908430bdb549eb6d43dd20a11a4394"),
-    (GODOT_ASSETS / "Level100/level100-tank-factory.obj", GODOT_ASSETS / "Level100/Source/m_fb_tank_factory.msh.aya", None, "895813a6d8fd6938934957e934f23b58ec5c059e6ce8f8f9472bc4438b49d53c"),
-    (GODOT_ASSETS / "Level100/level100-blaster-turret.obj", GODOT_ASSETS / "Level100/Source/m_ft_blaster.msh.aya", None, "2498f1d19fbe3afb3520a1b8316e00e381566b4b710abb923468125848f17df9"),
-    (GODOT_ASSETS / "Level100/level100-pulse-turret.obj", GODOT_ASSETS / "Level100/Source/m_ft_pulse.msh.aya", None, "2c0c3eeee9b13fba7f32f8751920d4eb1dc2ebaa8301520ce74c0637d886ef68"),
-    (GODOT_ASSETS / "Level100/level100-sat-turret.obj", GODOT_ASSETS / "Level100/Source/m_ft_sam.msh.aya", None, "a91921220b71255da098a0c578d320e7c2632dc3b9b74c8ff27b464cb74acc60"),
     (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "271adefedcb0942a584014ff51fc7330769ab8fd95bc6ea5987bac305c60f658"),
 )
 
@@ -177,7 +196,7 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
     return data
 
 
-def _all_outputs() -> tuple[tuple[Path, str], ...]:
+def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
     direct = tuple((path, expected) for path, _, expected in DIRECT_ASSETS)
     chunks = tuple((path, expected) for path, _, _, expected in CHUNKS)
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
@@ -185,15 +204,65 @@ def _all_outputs() -> tuple[tuple[Path, str], ...]:
     return direct + chunks + meshes + sounds
 
 
+def _resource_relative(resource_path: str) -> Path:
+    prefix = "res://Assets/Level100/StaticWorld/"
+    if not resource_path.startswith(prefix):
+        raise RuntimeError(f"static-world resource escaped its owner: {resource_path}")
+    suffix = resource_path[len("res://") :]
+    relative = Path("rebuild/OnslaughtRebuild.Godot") / Path(suffix)
+    if ".." in relative.parts:
+        raise RuntimeError(f"static-world resource has an invalid path: {resource_path}")
+    return relative
+
+
+def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
+    manifest_path = root / STATIC_WORLD_MANIFEST
+    manifest_bytes = manifest_path.read_bytes()
+    manifest_hash = _sha256(manifest_bytes)
+    if manifest_hash != STATIC_WORLD_MANIFEST_SHA256:
+        raise RuntimeError(
+            f"static-world manifest does not reproduce exactly (SHA-256 {manifest_hash})"
+        )
+    manifest = json.loads(manifest_bytes)
+    if (
+        manifest.get("schema") != "onslaught.level100-static-world.v1"
+        or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
+        or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
+        or manifest.get("unitRecordCount") != 35
+        or manifest.get("visibleObjectCount") != 33
+        or manifest.get("suppressedFernCount") != 753
+        or manifest.get("pineInstanceCount") != 1481
+        or len(manifest.get("objects", ())) != 33
+        or len(manifest.get("pines", ())) != 1481
+        or len(manifest.get("meshes", {})) != 28
+        or len(manifest.get("textures", {})) != 26
+    ):
+        raise RuntimeError("static-world manifest has unexpected identity or counts")
+
+    outputs: list[tuple[Path, str]] = [
+        (STATIC_WORLD_MANIFEST, STATIC_WORLD_MANIFEST_SHA256)
+    ]
+    for collection in (manifest["meshes"], manifest["textures"]):
+        for item in collection.values():
+            outputs.append((_resource_relative(item["resourcePath"]), item["sha256"]))
+    if len(outputs) != 55 or len({path for path, _ in outputs}) != len(outputs):
+        raise RuntimeError("static-world manifest has duplicate or missing outputs")
+    return tuple(outputs)
+
+
+def _all_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
+    return _fixed_outputs() + _static_world_outputs(root)
+
+
 def _outputs_ready() -> bool:
-    for relative, expected in _all_outputs():
-        path = ROOT / relative
-        try:
+    try:
+        for relative, expected in _all_outputs(ROOT):
+            path = ROOT / relative
             if _sha256(path.read_bytes()) != expected:
                 return False
-        except OSError:
-            return False
-    return True
+        return True
+    except (KeyError, OSError, RuntimeError, TypeError, ValueError):
+        return False
 
 
 def _steam_roots() -> list[Path]:
@@ -283,6 +352,352 @@ def _extract_chunk(raw: bytes, tag: bytes, expected_size: int, expected_hash: st
     return matches[0]
 
 
+def _chunk_payload(data: bytes, wanted_tag: bytes) -> bytes:
+    matches: list[bytes] = []
+    offset = 0
+    while offset < len(data):
+        if offset + 8 > len(data):
+            raise RuntimeError("Level 100 contains a truncated world chunk")
+        size = struct.unpack_from("<I", data, offset + 4)[0]
+        end = offset + 8 + size
+        if end > len(data):
+            raise RuntimeError("Level 100 contains an overrun world chunk")
+        if data[offset : offset + 4] == wanted_tag:
+            matches.append(data[offset + 8 : end])
+        offset = end
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"expected one {wanted_tag.decode('ascii')} world chunk, found {len(matches)}"
+        )
+    return matches[0]
+
+
+class _WorldReader:
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+        self.position = 0
+
+    def _take(self, size: int) -> bytes:
+        end = self.position + size
+        if size < 0 or end > len(self.data):
+            raise RuntimeError("Level 100 base-world data is truncated")
+        value = self.data[self.position : end]
+        self.position = end
+        return value
+
+    def uint8(self) -> int:
+        return self._take(1)[0]
+
+    def uint16(self) -> int:
+        return struct.unpack("<H", self._take(2))[0]
+
+    def int32(self) -> int:
+        return struct.unpack("<i", self._take(4))[0]
+
+    def single(self) -> float:
+        value = struct.unpack("<f", self._take(4))[0]
+        if not math.isfinite(value):
+            raise RuntimeError("Level 100 base-world data contains a non-finite value")
+        return value
+
+    def string8(self) -> str:
+        return self._take(self.uint8()).decode("ascii")
+
+    def c_string(self) -> str:
+        end = self.data.find(b"\0", self.position)
+        if end < 0:
+            raise RuntimeError("Level 100 base-world data has an unterminated string")
+        value = self.data[self.position : end].decode("ascii")
+        self.position = end + 1
+        return value
+
+
+def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list[list[float | int]], int]:
+    bswd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"BSWD")
+    reader = _WorldReader(bswd)
+    if (
+        reader.uint16() != 50
+        or tuple(reader.int32() for _ in range(3)) != (3, 42, 1)
+        or reader.int32() != 1
+        or reader.string8() != "Paladin Prototype"
+        or tuple(reader.int32() for _ in range(4)) != (1, 0, 0, 0)
+        or tuple(reader.int32() for _ in range(4)) != (-1, 0, 1, 0)
+        or reader.uint16() != 35
+    ):
+        raise RuntimeError("Level 100 base-world header is not the supported version-50 layout")
+
+    objects: list[dict[str, object]] = []
+    for ordinal in range(35):
+        thing_type = reader.int32()
+        position = [reader.single() for _ in range(3)]
+        yaw_pitch_roll = [reader.single() for _ in range(3)]
+        for _ in range(3):
+            reader.int32()
+        reader.c_string()
+        name = reader.c_string()
+        reader.c_string()
+        reader.int32()
+        reader.int32()
+
+        definition = ""
+        if thing_type in (8, 35):
+            definition = reader.string8()
+            reader.int32()
+        elif thing_type != 37:
+            raise RuntimeError(f"unsupported Level 100 base-world thing type {thing_type}")
+
+        if thing_type == 37:
+            continue
+        mesh_key = STATIC_MESH_BY_DEFINITION.get(definition)
+        if mesh_key is None:
+            raise RuntimeError(f"unmapped Level 100 physics definition: {definition}")
+        objects.append(
+            {
+                "definition": definition,
+                "mesh": mesh_key,
+                "name": name or definition,
+                "ordinal": ordinal,
+                "retailPosition": position,
+                "yaw": yaw_pitch_roll[0],
+            }
+        )
+
+    if reader.uint16() != 0 or reader.int32() != 2:
+        raise RuntimeError("Level 100 tree groups are not the supported explicit layout")
+    groups: dict[str, list[list[float | int]]] = {}
+    for _ in range(2):
+        group_name = reader.string8()
+        count = reader.int32()
+        if count < 0 or count > 4096 or group_name in groups:
+            raise RuntimeError("Level 100 has invalid explicit tree metadata")
+        instances: list[list[float | int]] = []
+        for _ in range(count):
+            x = reader.single()
+            y = reader.single()
+            variant = reader.int32()
+            if variant not in range(4):
+                raise RuntimeError("Level 100 has an unsupported tree variant")
+            instances.append([x, y, variant])
+        groups[group_name] = instances
+
+    ferns = groups.get("fernsnow")
+    pines = groups.get("pinesnow")
+    if (
+        len(objects) != 33
+        or ferns is None
+        or len(ferns) != 753
+        or pines is None
+        or len(pines) != 1481
+        or reader.position != 29_549
+    ):
+        raise RuntimeError("Level 100 base-world object/tree counts do not reproduce")
+    return objects, pines, len(ferns)
+
+
+def _slug(value: str) -> str:
+    result = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    if not result:
+        raise RuntimeError("retail asset name did not produce a safe local name")
+    return result
+
+
+def _texture_key(texture_ref: str) -> str:
+    name = texture_ref.replace("/", "\\").rsplit("\\", 1)[-1]
+    if name.lower().endswith(".tga"):
+        name = name[:-4]
+    return _slug(name)
+
+
+def _dds_metadata(source: bytes, inflate_aya_bytes) -> tuple[int, int, str]:
+    dds = inflate_aya_bytes(source)
+    if len(dds) < 128 or dds[:4] != b"DDS ":
+        raise RuntimeError("static-world texture is not an AYA-wrapped DDS image")
+    height = struct.unpack_from("<I", dds, 12)[0]
+    width = struct.unpack_from("<I", dds, 16)[0]
+    fourcc = dds[84:88]
+    compression = {b"DXT1": "Dxt1", b"DXT2": "Dxt2"}.get(fourcc)
+    if compression is None or width not in (128, 256, 512) or height != width:
+        raise RuntimeError("static-world texture has unsupported dimensions or compression")
+    return width, height, compression
+
+
+def _source_aggregate(source_data: dict[Path, bytes]) -> str:
+    rows = [
+        f"{path.as_posix()}|{len(data)}|{_sha256(data)}"
+        for path, data in source_data.items()
+    ]
+    rows.sort(key=str.casefold)
+    return _sha256(("\n".join(rows) + "\n").encode("utf-8"))
+
+
+def _materialize_static_world(
+    game_root: Path,
+    raw_level: bytes,
+    stage: Path,
+) -> tuple[tuple[Path, str], ...]:
+    tools_root = ROOT / "tools"
+    rebuild_tools = ROOT / "rebuild/tools"
+    sys.path.insert(0, str(tools_root))
+    sys.path.insert(0, str(rebuild_tools))
+    from aya_archive_inventory import build_asset_resolver, inflate_aya_bytes
+    from cmsh_static_preview import convert_aya_bytes, inflate_aya, parse_cmsh_stream
+
+    objects, pines, fern_count = _parse_static_world(raw_level)
+    resolver = build_asset_resolver(game_root / "data/resources")
+    source_data: dict[Path, bytes] = {}
+    mesh_inputs: dict[str, tuple[Path, bytes, dict[str, Path]]] = {}
+
+    for mesh_key in STATIC_MESH_KEYS:
+        matches = resolver.mesh_index.get(f"{mesh_key}.msh".lower(), [])
+        if len(matches) != 1:
+            raise RuntimeError(f"expected one exact loose mesh for {mesh_key}, found {len(matches)}")
+        source_path = Path(matches[0])
+        relative = source_path.relative_to(game_root)
+        data = source_path.read_bytes()
+        parsed = parse_cmsh_stream(inflate_aya(data))
+        materials: dict[str, Path] = {}
+        primary_indices = sorted(
+            {group.raw_texr_u32[0] for part in parsed.parts for group in part.groups}
+        )
+        for texture_index in primary_indices:
+            if texture_index >= len(parsed.textures):
+                raise RuntimeError(f"{mesh_key} has an unresolved primary material")
+            texture_ref = parsed.textures[texture_index].name
+            normalized_ref = texture_ref.lstrip("?").replace("/", "\\").strip().lower()
+            texture_matches = resolver.texture_index.get(normalized_ref, [])
+            if len(texture_matches) != 1:
+                raise RuntimeError(
+                    f"expected one exact texture for {mesh_key} {texture_ref}, found {len(texture_matches)}"
+                )
+            texture_path = Path(texture_matches[0])
+            texture_relative = texture_path.relative_to(game_root)
+            texture_data = texture_path.read_bytes()
+            source_data.setdefault(texture_relative, texture_data)
+            if source_data[texture_relative] != texture_data:
+                raise RuntimeError("static-world texture changed during materialization")
+            materials[f"texture-{texture_index:04d}"] = texture_relative
+        source_data[relative] = data
+        mesh_inputs[mesh_key] = (relative, data, materials)
+
+    water_relative = Path(WATER_TEXTURE)
+    source_data[water_relative] = (game_root / water_relative).read_bytes()
+    if len(source_data) != 54:
+        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 54")
+    aggregate = _source_aggregate(source_data)
+    if aggregate != STATIC_WORLD_SOURCE_AGGREGATE_SHA256:
+        raise RuntimeError(f"unsupported static-world source set (aggregate SHA-256 {aggregate})")
+
+    texture_records: dict[str, dict[str, object]] = {}
+    texture_key_by_source: dict[Path, str] = {}
+    outputs: list[tuple[Path, str]] = []
+    texture_sources = {
+        source
+        for _, _, materials in mesh_inputs.values()
+        for source in materials.values()
+    }
+    texture_sources.add(water_relative)
+    for source in sorted(texture_sources, key=lambda value: value.as_posix().casefold()):
+        is_water = source == water_relative
+        key = "water-reflection-00" if is_water else _texture_key(source.name.split("(0)", 1)[0])
+        if key in texture_records:
+            raise RuntimeError(f"static-world texture key is not unique: {key}")
+        data = source_data[source]
+        width, height, compression = _dds_metadata(data, inflate_aya_bytes)
+        destination = STATIC_WORLD_ROOT / "Textures" / f"{key}.texture.aya"
+        resource_path = f"res://Assets/Level100/StaticWorld/Textures/{key}.texture.aya"
+        target = stage / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        output_hash = _sha256(data)
+        outputs.append((destination, output_hash))
+        texture_key_by_source[source] = key
+        texture_records[key] = {
+            "compression": compression,
+            "height": height,
+            "resourcePath": resource_path,
+            "sha256": output_hash,
+            "sourcePath": source.as_posix(),
+            "width": width,
+        }
+
+    mesh_records: dict[str, dict[str, object]] = {}
+    for mesh_key in STATIC_MESH_KEYS:
+        source, data, materials = mesh_inputs[mesh_key]
+        obj = convert_aya_bytes(
+            data,
+            include_vertex_attributes=True,
+            include_primary_material_groups=True,
+        )
+        vertex_z = [
+            float(line.split()[3])
+            for line in obj.decode("utf-8").splitlines()
+            if line.startswith("v ")
+        ]
+        if not vertex_z or not all(math.isfinite(value) for value in vertex_z):
+            raise RuntimeError(f"static-world mesh {mesh_key} has invalid converted bounds")
+        slug = _slug(mesh_key)
+        destination = STATIC_WORLD_ROOT / "Meshes" / f"{slug}.obj"
+        resource_path = f"res://Assets/Level100/StaticWorld/Meshes/{slug}.obj"
+        target = stage / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(obj)
+        output_hash = _sha256(obj)
+        outputs.append((destination, output_hash))
+        mesh_records[mesh_key] = {
+            "baseClearance": -min(vertex_z),
+            "materials": {
+                surface: texture_key_by_source[texture_source]
+                for surface, texture_source in sorted(materials.items())
+            },
+            "resourcePath": resource_path,
+            "sha256": output_hash,
+            "sourcePath": source.as_posix(),
+        }
+
+    hfld = _extract_chunk(
+        raw_level,
+        b"HFLD",
+        668660,
+        "7a4c7c5b9400e2c8d2325cecb5c44701cd8a6e6f8609cbc8bc31d449c0620f5d",
+    )
+    water_level_bits = struct.unpack_from("<I", hfld, 16 + 0x1034)[0]
+    water_texture_index = hfld[16 + 0x1095]
+    if water_level_bits != 0xC10D70A4 or water_texture_index != 0:
+        raise RuntimeError("Level 100 water selection does not match the released HFLD")
+
+    manifest = {
+        "meshes": mesh_records,
+        "objects": objects,
+        "pineInstanceCount": len(pines),
+        "pines": pines,
+        "schema": "onslaught.level100-static-world.v1",
+        "sourceAggregateSha256": aggregate,
+        "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
+        "suppressedFernCount": fern_count,
+        "textures": texture_records,
+        "unitRecordCount": 35,
+        "visibleObjectCount": len(objects),
+        "water": {
+            "level": struct.unpack("<f", struct.pack("<I", water_level_bits))[0],
+            "texture": "water-reflection-00",
+            "textureIndex": water_texture_index,
+        },
+    }
+    manifest_bytes = (
+        json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    manifest_hash = _sha256(manifest_bytes)
+    if manifest_hash != STATIC_WORLD_MANIFEST_SHA256:
+        raise RuntimeError(
+            f"static-world manifest did not reproduce exactly (SHA-256 {manifest_hash})"
+        )
+    manifest_target = stage / STATIC_WORLD_MANIFEST
+    manifest_target.parent.mkdir(parents=True, exist_ok=True)
+    manifest_target.write_bytes(manifest_bytes)
+    outputs.append((STATIC_WORLD_MANIFEST, manifest_hash))
+    return tuple(outputs)
+
+
 def _xap_records(data: bytes) -> list[tuple[str, int, bytes]]:
     if len(data) < 8 or data[:4] != b"PCXP":
         raise RuntimeError("unsupported English XAP framing")
@@ -342,7 +757,7 @@ def _pcm_wav(pcm: bytes) -> bytes:
     )
 
 
-def _materialize(game_root: Path, stage: Path) -> None:
+def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     source_data: dict[Path, bytes] = {}
     for destination, source, expected in DIRECT_ASSETS:
         data = _read_exact(game_root / source, expected)
@@ -393,13 +808,16 @@ def _materialize(game_root: Path, stage: Path) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
 
-    for relative, expected in _all_outputs():
+    static_world_outputs = _materialize_static_world(game_root, raw_level, stage)
+    all_outputs = _fixed_outputs() + static_world_outputs
+    for relative, expected in all_outputs:
         if _sha256((stage / relative).read_bytes()) != expected:
             raise RuntimeError(f"staged retail asset failed final verification: {relative}")
+    return all_outputs
 
 
-def _publish(stage: Path) -> None:
-    for relative, expected in _all_outputs():
+def _publish(stage: Path, outputs: tuple[tuple[Path, str], ...]) -> None:
+    for relative, expected in outputs:
         source = stage / relative
         destination = ROOT / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -420,7 +838,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not args.force and args.game_root is None and _outputs_ready():
-        print(f"retail rebuild assets ready: {len(_all_outputs())} exact files")
+        print(f"retail rebuild assets ready: {len(_all_outputs(ROOT))} exact files")
         return 0
 
     try:
@@ -429,15 +847,15 @@ def main() -> int:
         work_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="materialize-retail-", dir=work_root) as temporary:
             stage = Path(temporary)
-            _materialize(game_root, stage)
-            _publish(stage)
+            outputs = _materialize(game_root, stage)
+            _publish(stage, outputs)
         if not _outputs_ready():
             raise RuntimeError("published retail assets failed final verification")
     except (OSError, RuntimeError, UnicodeError, ValueError) as error:
         print(f"retail asset materialization failed: {error}", file=sys.stderr)
         return 2
 
-    print(f"retail rebuild assets materialized: {len(_all_outputs())} exact files")
+    print(f"retail rebuild assets materialized: {len(_all_outputs(ROOT))} exact files")
     return 0
 
 

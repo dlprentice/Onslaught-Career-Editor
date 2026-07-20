@@ -492,8 +492,10 @@ public sealed partial class FirstFlightGame : Node3D
                 RetailAquilaStandingClearance = _world.RetailAquilaStandingClearance,
                 RetailCockpitSurfaceCount = _world.RetailCockpitSurfaceCount,
                 Level100PlayerStartRelativeHeight = _world.Level100PlayerStartRelativeHeight,
-                RetailLevel100FacilityCount = _world.RetailLevel100FacilityCount,
-                RetailLevel100FacilitySurfaceCount = _world.RetailLevel100FacilitySurfaceCount,
+                RetailLevel100StaticObjectCount = _world.RetailLevel100StaticObjectCount,
+                RetailLevel100StaticObjectSurfaceCount = _world.RetailLevel100StaticObjectSurfaceCount,
+                RetailLevel100PineCount = _world.RetailLevel100PineCount,
+                RetailLevel100WaterPresent = _world.RetailLevel100WaterPresent,
                 RetailLevel100TargetSurfaceCount = _world.RetailLevel100TargetSurfaceCount,
                 Level100ObjectiveMarkerCount = _hud.Level100ObjectiveMarkerCount,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
@@ -579,8 +581,10 @@ public sealed partial class FirstFlightGame : Node3D
         public required float RetailAquilaStandingClearance { get; init; }
         public required int RetailCockpitSurfaceCount { get; init; }
         public required float Level100PlayerStartRelativeHeight { get; init; }
-        public required int RetailLevel100FacilityCount { get; init; }
-        public required int RetailLevel100FacilitySurfaceCount { get; init; }
+        public required int RetailLevel100StaticObjectCount { get; init; }
+        public required int RetailLevel100StaticObjectSurfaceCount { get; init; }
+        public required int RetailLevel100PineCount { get; init; }
+        public required bool RetailLevel100WaterPresent { get; init; }
         public required int RetailLevel100TargetSurfaceCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }
         public required int RetailLevel100TerrainVertexCount { get; init; }

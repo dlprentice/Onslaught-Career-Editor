@@ -18,18 +18,20 @@ synthetic arena or another layer of readiness tooling.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
-locally materialized released Federation Aquila; eight mission-linked route structures comprising
-the Control Tower, Tank Factory, Health Pad, Research Facility, two Blaster
-Turrets, SAT Turret, and Pulse Turret; three training tanks; and the target
-Warehouse at their authored positions over the released coarse Level 100
-heightfield. Core owns the released player start heading, exact
+locally materialized released Federation Aquila; all 33 visible static objects
+serialized by Level 100; all 1,481 pine placements instantiated by the Steam
+world loader; the selected water level and base texture; three training tanks;
+and the target Warehouse at their authored positions over the released coarse
+Level 100 heightfield. Core owns the released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
-The jet, seven facility mesh types, and two target types retain bounded static
-conversions and render with their exact retained layer-zero textures. The
+The jet, 24 static-world mesh types, four pine variants, and two target types
+retain bounded static conversions and render with their exact layer-zero
+textures. Their lighting follows the released PC ambient, opposing
+sun/anti-sun, and `MODULATE2X` path rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
 cube-25 sky, fog, and environment light values now replace the procedural
 ground/sky. The opening view uses the released Level
@@ -71,7 +73,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 100 exact source/runtime files to ignored paths. For a custom
+materializes 133 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -137,8 +139,9 @@ campaign, and networking
 remain provisional or absent.
 
 The client switches between the released walker's exact part hierarchy and a
-deterministic static conversion of the released jet, and loads seven released
-facility mesh types as eight WRES-placed route structures plus the Target Tank
+deterministic static conversion of the released jet. It decodes Level 100's
+version-50 base-world records into 33 visible static instances, 24 mesh types,
+and 1,481 pines across four variants, while retaining the separate Target Tank
 and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
@@ -146,12 +149,14 @@ static presentation placement, generates the released 512×512 macro blend from 
 `MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
 coordinate scales, inserts the exact moving cloud-shadow stage with its released
 scroll and modulation, and renders the five exact cube-25 sky
-faces with `CHFD` fog and lighting values. Deterministic Core embeds the same
+faces with `CHFD` fog and lighting values. Static objects use the released
+ambient plus opposing sun/anti-sun fixed-function equation and stage-zero
+`MODULATE2X`. Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the
-base material groups and decodes fifteen exact AYA-wrapped mesh textures for the
-Aquila, cockpit, facilities, and range targets plus the four exact 64×64
+base material groups and decodes the exact AYA-wrapped primary textures selected
+by the Aquila, cockpit, static world, pines, and range targets plus the four exact 64×64
 textures named by the medium Pulse Bolt descriptor. It also uses twenty-three
 exact HUD textures, including the three released v3 crosshair layers,
 uncompressed font atlas, scanner/north sprites, battleline, portrait/noise
@@ -170,7 +175,9 @@ fixed center-aim attack line before terminal objective removal and the same
 Pulse-to-Vulcan gate. Core deliberately implements only those demonstrated
 paths. Godot removes each completed model and radar marker and presents retained
 shot, hit, tank-destruction, text, voice, and primary particle layers.
-The shared secondary `Chrome3` pass, visible-sun particle, facility destruction,
+The water currently reproduces the selected level and base texture, not Steam's
+reflection/refraction passes. The shared secondary `Chrome3` pass, visible-sun
+particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
 contact envelopes, procedural foot placement/terrain IK,

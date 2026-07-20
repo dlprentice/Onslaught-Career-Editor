@@ -17,7 +17,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailOpeningCameraHandoffSeconds = 5.95f;
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
-    private readonly List<MeshInstance3D> _level100Facilities = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
@@ -26,6 +25,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private MeshInstance3D _cockpitMesh = null!;
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
+    private Level100StaticWorldAsset _level100StaticWorld = null!;
     private Camera3D _camera = null!;
     private StandardMaterial3D _pulseBoltSparkMaterial = null!;
     private StandardMaterial3D _pulseBoltTrailMaterial = null!;
@@ -68,10 +68,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int RetailCockpitSurfaceCount => _cockpitMesh.Mesh?.GetSurfaceCount() ?? 0;
 
-    public int RetailLevel100FacilityCount => _level100Facilities.Count;
+    public int RetailLevel100StaticObjectCount => _level100StaticWorld.Objects.Count;
 
-    public int RetailLevel100FacilitySurfaceCount =>
-        _level100Facilities.Sum(facility => facility.Mesh?.GetSurfaceCount() ?? 0);
+    public int RetailLevel100StaticObjectSurfaceCount => _level100StaticWorld.SurfaceCount;
+
+    public int RetailLevel100PineCount => _level100StaticWorld.PineInstanceCount;
+
+    public bool RetailLevel100WaterPresent => IsInstanceValid(_level100StaticWorld.Water);
 
     public int RetailLevel100TargetSurfaceCount =>
         _level100Targets.Values
@@ -95,7 +98,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         Name = "WorldView";
         BuildLevel100Terrain();
         BuildEnvironment();
-        BuildLevel100Facilities();
+        BuildLevel100StaticWorld();
         BuildLevel100Targets();
         BuildPlayer();
         BuildPulseCannonPresentation();
@@ -207,164 +210,19 @@ public sealed partial class FirstFlightWorldView : Node3D
         });
     }
 
-    private void BuildLevel100Facilities()
+    private void BuildLevel100StaticWorld()
     {
-        var sharedFacilityMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
-        {
-            ["texture-0000"] = CreateRetailMaterial(
-                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya", 512, 512),
-                0.28f,
-                0.72f),
-            ["texture-0002"] = CreateRetailMaterial(
-                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-bits.texture.aya", 512, 512),
-                0.28f,
-                0.72f),
-            ["texture-0004"] = CreateRetailMaterial(
-                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-top-02.texture.aya", 512, 512),
-                0.28f,
-                0.72f),
-            ["texture-0006"] = CreateRetailMaterial(
-                CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-top-01.texture.aya", 512, 512),
-                0.28f,
-                0.72f),
-        };
-        AddLevel100Facility(
-            "RetailControlTower",
-            "res://Assets/Level100/level100-control-tower.obj",
-            new Vector2(-13.289886f, 5.603271f),
-            0.0875791f,
-            0f,
-            sharedFacilityMaterials);
-        AddLevel100Facility(
-            "RetailTankFactory",
-            "res://Assets/Level100/level100-tank-factory.obj",
-            new Vector2(10.125f, 22.375f),
-            0.2383346f,
-            1.7894337f,
-            sharedFacilityMaterials);
-        AddLevel100Facility(
-            "RetailHealthPad",
-            "res://Assets/Level100/level100-health-pad.obj",
-            new Vector2(-58.4375f, 10.5f),
-            0.06269801f,
-            0f,
-            new Dictionary<string, Material>(StringComparer.Ordinal)
-            {
-                ["texture-0000"] = CreateRetailMaterial(
-                    CuratedAyaTextureLoader.Load(
-                        "res://Assets/Level100/Textures/facility-health-pad.texture.aya",
-                        512,
-                        512),
-                    0.28f,
-                    0.72f),
-            });
-
-        StandardMaterial3D samTexture = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/turret-sam-shared.texture.aya",
-                512,
-                512),
-            0.24f,
-            0.76f);
-        var blasterMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
-        {
-            ["texture-0000"] = CreateRetailMaterial(
-                CuratedAyaTextureLoader.Load(
-                    "res://Assets/Level100/Textures/turret-blaster-primary.texture.aya",
-                    512,
-                    512),
-                0.24f,
-                0.76f),
-            ["texture-0002"] = samTexture,
-        };
-        AddLevel100Facility(
-            "RetailBlasterTurret01",
-            "res://Assets/Level100/level100-blaster-turret.obj",
-            new Vector2(-49.1875f, 23.25f),
-            0.22263069f,
-            0f,
-            blasterMaterials);
-        AddLevel100Facility(
-            "RetailBlasterTurret02",
-            "res://Assets/Level100/level100-blaster-turret.obj",
-            new Vector2(-17.3125f, -3.25f),
-            0.22263069f,
-            Mathf.Pi,
-            blasterMaterials);
-        AddLevel100Facility(
-            "RetailSatTurret03",
-            "res://Assets/Level100/level100-sat-turret.obj",
-            new Vector2(-36.1875f, 18f),
-            0.2282266f,
-            0f,
-            new Dictionary<string, Material>(StringComparer.Ordinal)
-            {
-                ["texture-0000"] = samTexture,
-            });
-        AddLevel100Facility(
-            "RetailPulseTurret04",
-            "res://Assets/Level100/level100-pulse-turret.obj",
-            new Vector2(-63.1875f, 38.75f),
-            0.22567694f,
-            0f,
-            new Dictionary<string, Material>(StringComparer.Ordinal)
-            {
-                ["texture-0000"] = CreateRetailMaterial(
-                    CuratedAyaTextureLoader.Load(
-                        "res://Assets/Level100/Textures/turret-pulse-primary.texture.aya",
-                        512,
-                        512),
-                    0.24f,
-                    0.76f),
-                ["texture-0002"] = samTexture,
-            });
-        AddLevel100Facility(
-            "RetailResearchBuilding",
-            "res://Assets/Level100/level100-research-building.obj",
-            new Vector2(-36.557114f, -0.6279602f),
-            0.18609762f,
-            2.4706359f,
-            sharedFacilityMaterials);
-    }
-
-    private void AddLevel100Facility(
-        string name,
-        string meshPath,
-        Vector2 relativePosition,
-        float meshBaseClearance,
-        float retailYaw,
-        IReadOnlyDictionary<string, Material> materials)
-    {
-        var root = new Node3D
-        {
-            Name = name,
-            Position = new Vector3(
-                relativePosition.X,
-                _level100Terrain.SampleRelativeHeight(relativePosition.X, relativePosition.Y) +
-                    meshBaseClearance,
-                -relativePosition.Y),
-            Rotation = new Vector3(0f, retailYaw, 0f),
-        };
-        var mesh = new MeshInstance3D
-        {
-            Name = $"{name}Geometry",
-            Mesh = CuratedObjMeshLoader.Load(meshPath, materials),
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-        };
-        root.AddChild(mesh);
-        AddChild(root);
-        _level100Facilities.Add(mesh);
+        _level100StaticWorld = Level100StaticWorldAsset.Load(_level100Terrain);
+        AddChild(_level100StaticWorld.Root);
     }
 
     private void BuildLevel100Targets()
     {
-        StandardMaterial3D tankMaterial = CreateRetailMaterial(
+        Material tankMaterial = CreateRetailMaterial(
             CuratedAyaTextureLoader.Load(
                 "res://Assets/Level100/Textures/target-tank.texture.aya",
                 512,
-                512),
-            0.24f,
-            0.76f);
+                512));
         Mesh tankMesh = CuratedObjMeshLoader.Load(
             "res://Assets/Level100/level100-target-tank.obj",
             new Dictionary<string, Material>(StringComparer.Ordinal)
@@ -372,20 +230,16 @@ public sealed partial class FirstFlightWorldView : Node3D
                 ["texture-0000"] = tankMaterial,
             });
 
-        StandardMaterial3D warehouseM001 = CreateRetailMaterial(
+        Material warehouseM001 = CreateRetailMaterial(
             CuratedAyaTextureLoader.Load(
                 "res://Assets/Level100/Textures/target-warehouse-m001.texture.aya",
                 512,
-                512),
-            0.18f,
-            0.82f);
-        StandardMaterial3D warehouseM002 = CreateRetailMaterial(
+                512));
+        Material warehouseM002 = CreateRetailMaterial(
             CuratedAyaTextureLoader.Load(
                 "res://Assets/Level100/Textures/target-warehouse-m002.texture.aya",
                 512,
-                512),
-            0.18f,
-            0.82f);
+                512));
         Mesh warehouseMesh = CuratedObjMeshLoader.Load(
             "res://Assets/Level100/level100-target-warehouse.obj",
             new Dictionary<string, Material>(StringComparer.Ordinal)
@@ -468,18 +322,12 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        StandardMaterial3D cockpit = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/cockpit.texture.aya", 512, 512),
-            0.45f,
-            0.42f);
-        StandardMaterial3D textureA = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-a.texture.aya", 512, 512),
-            0.45f,
-            0.42f);
-        StandardMaterial3D textureB = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024, 1024),
-            0.45f,
-            0.42f);
+        Material cockpit = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/cockpit.texture.aya", 512, 512));
+        Material textureA = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-a.texture.aya", 512, 512));
+        Material textureB = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024, 1024));
         _walkerAsset = RetailAquilaWalkerAsset.Load(
             "res://Assets/Aquila/Source/m_f_be1.msh.aya",
             new Dictionary<int, Material>
@@ -511,15 +359,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot.AddChild(_jetMesh);
     }
 
-    private static StandardMaterial3D CreateRetailMaterial(Texture2D texture, float metallic, float roughness)
-    {
-        return new StandardMaterial3D
-        {
-            AlbedoTexture = texture,
-            Metallic = metallic,
-            Roughness = roughness,
-        };
-    }
+    private Material CreateRetailMaterial(Texture2D texture) =>
+        RetailFixedFunctionMaterial.Create(texture, _level100Terrain);
 
     private void BuildCamera()
     {

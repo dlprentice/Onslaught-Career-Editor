@@ -44,10 +44,11 @@ not provenance.
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
-of the jet, seven facility mesh types, Target Tank, and Warehouse meshes; their
-exact source/output hashes live with the assets. The released Level 100 WRES
-placement records now set the player start heading, eight mission-linked route
-structures, trigger locations, and four Firing Range targets. The client
+of the jet, 24 Level 100 static-world mesh types, four pine variants, Target
+Tank, and Warehouse meshes; their exact source/output hashes live in the
+materializer and ignored generated manifest. The released Level 100 WRES
+records now set the player start heading, all 33 visible base-world objects,
+1,481 Steam-instantiated pines, trigger locations, and four Firing Range targets. The client
 maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
@@ -63,11 +64,16 @@ DXT1 moving cloud-shadow stage, scroll rates, and observed modulation modes.
 The macro compositor follows the released row-major tile, texel, weight, and
 shade-mask addressing. The client
 preserves each retained mesh group's layer-zero `TEXR` assignment and directly
-decodes fifteen exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
+decodes the exact primary AYA-wrapped textures selected by those meshes. The PC
+lighting setup at `CEngine::SetupLights` supplies packed ambient plus opposing
+sun and anti-sun directions; its directional colors divide by 256, and the
+base texture stage uses `MODULATE2X`. Five exact DXT1 cube-25
 textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference and visible-sun
-particle—are not guessed. Steep-slope sliding, structure collision
+particle—are not guessed. The exact HFLD water level and selected
+`reflection00` base texture are rendered, while reflection/refraction remain
+unimplemented. Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 presentation, and unimplemented HUD behavior remain provisional unless
 specific retained evidence says otherwise.
@@ -309,8 +315,9 @@ effects/resources, the remaining weapons, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts; loads 57 Aquila, twenty
-facility, six target, and two cockpit material surfaces; decodes fifteen mesh,
+A native smoke proves the current client starts; loads 57 Aquila, 105 static-world,
+six target, and two cockpit material surfaces; instantiates all 1,481 pines and
+the selected water plane; decodes the exact locally materialized primary mesh,
 nine Pulse/target-effect, twenty-three HUD, and five sky textures; validates
 three PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
@@ -323,5 +330,5 @@ both supported viewports. It does not prove secondary material passes,
 procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
-population, the complete mission,
+shading, water reflection/refraction, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

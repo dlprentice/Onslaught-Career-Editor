@@ -29,12 +29,14 @@ public sealed class Level100Terrain
     private const int HfdtPayloadSize = 663_552;
     private const int HeightScaleOffset = 0x102C;
     private const int MixerSetOffset = 0x1030;
+    private const int WaterLevelOffset = 0x1034;
     private const int FogColorOffset = 0x1078;
     private const int SunColorOffset = 0x107C;
     private const int AntiSunColorOffset = 0x1080;
     private const int AmbientColorOffset = 0x108C;
     private const int SkyCubeOffset = 0x1090;
     private const int DetailTextureOffset = 0x1094;
+    private const int WaterTextureOffset = 0x1095;
     private const int FogDensityOffset = 0x1098;
     private const int SunPositionOffset = 0x10A4;
     private const int TileCountPerAxis = 64;
@@ -58,6 +60,8 @@ public sealed class Level100Terrain
         byte mixerSet,
         byte skyCube,
         byte detailTexture,
+        float waterLevel,
+        byte waterTexture,
         uint fogColor,
         float fogDensity,
         uint sunColor,
@@ -74,6 +78,8 @@ public sealed class Level100Terrain
         MixerSet = mixerSet;
         SkyCube = skyCube;
         DetailTexture = detailTexture;
+        WaterLevel = waterLevel;
+        WaterTexture = waterTexture;
         FogColorRgb24 = fogColor;
         FogDensity = fogDensity;
         SunColorRgb24 = sunColor;
@@ -93,6 +99,10 @@ public sealed class Level100Terrain
     public byte SkyCube { get; }
 
     public byte DetailTexture { get; }
+
+    public float WaterLevel { get; }
+
+    public byte WaterTexture { get; }
 
     public uint FogColorRgb24 { get; }
 
@@ -244,10 +254,12 @@ public sealed class Level100Terrain
         }
 
         float fogDensity = ReadSingle(source, chfdPayloadOffset + FogDensityOffset);
+        float waterLevel = ReadSingle(source, chfdPayloadOffset + WaterLevelOffset);
         float sunPositionX = ReadSingle(source, chfdPayloadOffset + SunPositionOffset);
         float sunPositionY = ReadSingle(source, chfdPayloadOffset + SunPositionOffset + sizeof(float));
         float sunPositionZ = ReadSingle(source, chfdPayloadOffset + SunPositionOffset + (sizeof(float) * 2));
         if (!float.IsFinite(fogDensity) || fogDensity < 0f ||
+            !float.IsFinite(waterLevel) ||
             !float.IsFinite(sunPositionX) ||
             !float.IsFinite(sunPositionY) ||
             !float.IsFinite(sunPositionZ) ||
@@ -269,6 +281,8 @@ public sealed class Level100Terrain
             source[chfdPayloadOffset + MixerSetOffset],
             source[chfdPayloadOffset + SkyCubeOffset],
             source[chfdPayloadOffset + DetailTextureOffset],
+            waterLevel,
+            source[chfdPayloadOffset + WaterTextureOffset],
             ReadUInt32(source, chfdPayloadOffset + FogColorOffset),
             fogDensity,
             ReadUInt32(source, chfdPayloadOffset + SunColorOffset),

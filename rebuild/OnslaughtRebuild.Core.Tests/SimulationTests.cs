@@ -27,6 +27,15 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void Level100Terrain_ExposesReleasedWaterSelection()
+    {
+        Assert.Equal(
+            unchecked((int)0xC10D70A4),
+            BitConverter.SingleToInt32Bits(Level100Terrain.Instance.WaterLevel));
+        Assert.Equal(0, Level100Terrain.Instance.WaterTexture);
+    }
+
+    [Fact]
     public void WalkerGroundElevation_IsDeterministicCoreState()
     {
         Simulation first = CreatePlayingSimulation();

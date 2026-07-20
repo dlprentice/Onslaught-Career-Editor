@@ -142,10 +142,10 @@ snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
 The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
-heightfield plus Federation walker/jet, eight mission-linked route structures
-(Control Tower, Tank Factory, Health Pad, Research Facility, two Blaster
-Turrets, SAT Turret, and Pulse Turret), three training tanks, and target
-Warehouse geometry. Core starts at the released
+heightfield plus the Federation walker/jet, all 33 visible static objects in the
+released Level 100 base-world records, all 1,481 Steam-instantiated pines, the
+selected water plane/base texture, three training tanks, and target Warehouse
+geometry. Core starts at the released
 player-one heading and owns the authored player ground elevation plus the
 machine-observed objective and player gates through the first Firing Range
 exercise. The prior synthetic arena boundary, flat plane, and
@@ -176,11 +176,13 @@ unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
 with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
-`LegMotion` cycle from Core velocity. The jet, seven facility mesh types, and
-two target types remain bounded static conversions. Their conventional OBJ
+`LegMotion` cycle from Core velocity. The jet, 24 static-world mesh types, four
+pine variants, and two target types remain bounded static conversions. Their conventional OBJ
 front faces are adapted to Godot's clockwise winding instead of exposing
 interior/back faces. The exterior meshes and exact frame-25 first-person cockpit
-render from fifteen retained AYA-wrapped textures. One no-input control and two
+render from exact locally materialized AYA-wrapped textures. Static object
+shading uses the released PC ambient plus opposing sun/anti-sun lights and
+stage-zero `MODULATE2X`, not invented Godot metallic/roughness values. One no-input control and two
 fixed-yaw retail repetitions per facility establish circular walker contact only
 for the Control Tower and Tank Factory: inward motion is removed, while tangent
 motion slides around the tower. Core consumes those two observed envelopes; it
@@ -211,7 +213,9 @@ uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded
 presentation. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
-environment lighting replace their earlier placeholders. The detail texture
+environment lighting replace their earlier placeholders. The exact HFLD water
+height and selected base texture are present; Steam's water reflection and
+refraction passes are not yet reconstructed. The detail texture
 uses both released coordinate scales and observed modulation modes; the exact
 moving cloud-shadow texture now uses the released scale, scroll, and modulation.
 Walker acceleration now follows Core's
@@ -224,8 +228,8 @@ controller's procedural foot placement, the Warehouse's segmented-destruction
 path and rubble, mesh-part damage variation, secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
-remaining weapon roster, secondary/reflection and
-material passes, facility destruction, transform animation, Steam's dynamic
+remaining weapon roster, secondary mesh-material passes, facility destruction,
+water reflection/refraction, transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general
 contacts and animated-radio behavior,
 later mission audio, campaign,
@@ -236,7 +240,7 @@ share the four observed retail targets. HUD markers use the shipped radar asset,
 not world-space synthetic beacons.
 Core embeds the exact Level 100 HFLD, applies Steam's released fixed-point
 height sampler, and hashes the resulting walker ground elevation. Godot adapts
-that value for the player; static facilities and projectile effects remain
+that value for the player; static-world objects and projectile effects remain
 presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.

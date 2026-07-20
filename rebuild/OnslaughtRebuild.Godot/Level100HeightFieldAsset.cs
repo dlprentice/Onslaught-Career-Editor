@@ -29,12 +29,15 @@ internal sealed class Level100HeightFieldAsset
         MixerSet = terrain.MixerSet;
         SkyCube = terrain.SkyCube;
         DetailTexture = terrain.DetailTexture;
+        WaterLevel = terrain.WaterLevel;
+        WaterTexture = terrain.WaterTexture;
         FogColor = ToColor(terrain.FogColorRgb24);
         FogDensity = terrain.FogDensity;
         SunColor = ToColor(terrain.SunColorRgb24);
         AntiSunColor = ToColor(terrain.AntiSunColorRgb24);
         AmbientColor = ToColor(terrain.AmbientColorRgb24);
         SunColorRgb24 = terrain.SunColorRgb24;
+        AntiSunColorRgb24 = terrain.AntiSunColorRgb24;
         AmbientColorRgb24 = terrain.AmbientColorRgb24;
 
         var beaSunPosition = new Vector3(
@@ -61,6 +64,12 @@ internal sealed class Level100HeightFieldAsset
 
     public byte DetailTexture { get; }
 
+    public float WaterLevel { get; }
+
+    public float WaterRelativeHeight => PlayerStartElevation - WaterLevel;
+
+    public byte WaterTexture { get; }
+
     public Color FogColor { get; }
 
     public float FogDensity { get; }
@@ -72,6 +81,8 @@ internal sealed class Level100HeightFieldAsset
     public Color AmbientColor { get; }
 
     public uint SunColorRgb24 { get; }
+
+    public uint AntiSunColorRgb24 { get; }
 
     public uint AmbientColorRgb24 { get; }
 
