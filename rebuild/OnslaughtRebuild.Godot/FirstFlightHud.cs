@@ -25,11 +25,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
     {
         _baseLayer = new RetailHudBaseLayer(
             LoadHudTexture("circle-darkener", 128, 128),
+            LoadHudTexture("circle-mask", 128, 128),
             LoadHudTexture("radio-view", 128, 128),
             LoadHudTexture("weapon-fill", 128, 128),
             LoadHudTexture("radio-north", 32, 32),
             LoadHudTexture("scanner-blob-small", 16, 16),
-            LoadHudTexture("forseti-icon", 64, 64),
             LoadHudTexture("crosshair-primary", 64, 64),
             LoadHudTexture("crosshair-secondary", 128, 128),
             LoadHudTexture("crosshair-dot", 64, 64),
@@ -208,11 +208,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     private sealed partial class RetailHudBaseLayer(
         Texture2D circleDarkener,
+        Texture2D circleMask,
         Texture2D radioView,
         Texture2D weaponFill,
         Texture2D radioNorth,
         Texture2D scannerBlobSmall,
-        Texture2D forsetiIcon,
         Texture2D crosshairPrimary,
         Texture2D crosshairSecondary,
         Texture2D crosshairDot,
@@ -233,11 +233,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         public bool IsReady =>
             circleDarkener.GetSize() == new Vector2I(128, 128) &&
+            circleMask.GetSize() == new Vector2I(128, 128) &&
             radioView.GetSize() == new Vector2I(128, 128) &&
             weaponFill.GetSize() == new Vector2I(128, 128) &&
             radioNorth.GetSize() == new Vector2I(32, 32) &&
             scannerBlobSmall.GetSize() == new Vector2I(16, 16) &&
-            forsetiIcon.GetSize() == new Vector2I(64, 64) &&
             crosshairPrimary.GetSize() == new Vector2I(64, 64) &&
             crosshairSecondary.GetSize() == new Vector2I(128, 128) &&
             crosshairDot.GetSize() == new Vector2I(64, 64) &&
@@ -331,10 +331,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
             if (_speaker == RetailHudSpeaker.None)
             {
-                DrawTextureRect(
-                    forsetiIcon,
-                    new Rect2(Size.X - 104f, Size.Y - 96f, 64f, 64f),
-                    false);
                 return;
             }
 
@@ -346,46 +342,53 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 new Rect2(Size.X - 121f, Size.Y - 112f, 96f, 96f),
                 false,
                 new Color(1f, 1f, 1f, 0.88f));
+            DrawTextureRect(
+                circleMask,
+                new Rect2(Size.X - 121f, Size.Y - 112f, 128f, 128f),
+                false);
         }
 
         private void DrawMessageFrame()
         {
             const float frameWidth = 252f;
             const float pieceHeight = 60f;
-            const float halfCap = 30f;
             const float innerWidth = 30f;
+            var innerTint = new Color(0f, 0f, 0f, 144f / 255f);
             float centerX = (Size.X * 0.5f) + 22f;
-            float centerY = Size.Y - 57f;
-            float left = centerX - (frameWidth * 0.5f);
-            float right = centerX + (frameWidth * 0.5f);
+            float centerY = Size.Y - 41f;
+            float leftCenter = centerX - (frameWidth * 0.5f);
+            float rightCenter = centerX + (frameWidth * 0.5f);
             float top = centerY - (pieceHeight * 0.5f);
 
             DrawTextureRect(
                 objectiveLeft,
-                new Rect2(left - halfCap, top, pieceHeight, pieceHeight),
+                new Rect2(leftCenter - (pieceHeight * 0.5f), top, pieceHeight, pieceHeight),
                 false);
             DrawTextureRect(
                 objectiveInnerLeft,
-                new Rect2(left - innerWidth, top, innerWidth, pieceHeight),
-                false);
+                new Rect2(leftCenter - (innerWidth * 0.5f), top, innerWidth, pieceHeight),
+                false,
+                innerTint);
             DrawTextureRect(
                 objectiveRight,
-                new Rect2(right - halfCap, top, pieceHeight, pieceHeight),
+                new Rect2(rightCenter - (pieceHeight * 0.5f), top, pieceHeight, pieceHeight),
                 false);
             DrawTextureRect(
                 objectiveInnerRight,
-                new Rect2(right, top, innerWidth, pieceHeight),
-                false);
+                new Rect2(rightCenter - (innerWidth * 0.5f), top, innerWidth, pieceHeight),
+                false,
+                innerTint);
 
             float remaining = frameWidth;
-            float x = left;
+            float x = leftCenter;
             while (remaining > 0f)
             {
                 float width = Mathf.Min(innerWidth, remaining);
                 DrawTextureRectRegion(
                     objectiveInnerCentre,
-                    new Rect2(x, top, width, pieceHeight),
-                    new Rect2(0f, 0f, 64f * (width / innerWidth), 128f));
+                    new Rect2(x - (innerWidth * 0.5f), top, width, pieceHeight),
+                    new Rect2(0f, 0f, 64f * (width / innerWidth), 128f),
+                    innerTint);
                 x += width;
                 remaining -= width;
             }
@@ -397,18 +400,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawTextureRect(
                 crosshairSecondary,
                 new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
-                false,
-                new Color(0.70f, 0.78f, 1f, 0.68f));
+                false);
             DrawTextureRect(
                 crosshairPrimary,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false,
-                new Color(0.91f, 0.92f, 1f, 0.84f));
+                false);
             DrawTextureRect(
                 crosshairDot,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false,
-                new Color(0.96f, 0.96f, 1f, 0.94f));
+                false);
         }
 
         private void DrawCenteredRotated(
@@ -434,8 +434,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
     {
         private Vector2[] _objectiveMarkerOffsets = [];
         private float _facingYaw;
-        private float _shieldFraction = 1f;
-        private float _hullFraction = 1f;
         private bool _messageActive;
         private bool _weaponHighlighted;
 
@@ -461,18 +459,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Vector2[] objectiveMarkerOffsets)
         {
             float facingYaw = snapshot.FacingYawMicroRad / 1_000_000f;
-            float shieldFraction = Mathf.Clamp(
-                snapshot.Shield / (float)SimulationConstants.MaximumShield,
-                0f,
-                1f);
-            float hullFraction = Mathf.Clamp(
-                snapshot.Hull / (float)SimulationConstants.MaximumHull,
-                0f,
-                1f);
             bool weaponHighlighted = snapshot.Level100CurrentWeaponHighlighted;
             if (Mathf.IsEqualApprox(_facingYaw, facingYaw) &&
-                Mathf.IsEqualApprox(_shieldFraction, shieldFraction) &&
-                Mathf.IsEqualApprox(_hullFraction, hullFraction) &&
                 _messageActive == messageActive &&
                 _weaponHighlighted == weaponHighlighted &&
                 _objectiveMarkerOffsets.SequenceEqual(objectiveMarkerOffsets))
@@ -481,8 +469,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             _facingYaw = facingYaw;
-            _shieldFraction = shieldFraction;
-            _hullFraction = hullFraction;
             _messageActive = messageActive;
             _weaponHighlighted = weaponHighlighted;
             _objectiveMarkerOffsets = objectiveMarkerOffsets;
@@ -523,30 +509,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 128,
                 new Color(0.76f, 0.82f, 1f, 0.20f),
                 2f,
-                true);
-
-            const float rightStart = -0.92f;
-            const float rightSweep = 1.84f;
-            DrawArc(
-                center,
-                96f,
-                rightStart,
-                rightStart + (rightSweep * _hullFraction),
-                48,
-                new Color(0.30f, 1f, 0.48f, 0.84f),
-                5f,
-                true);
-
-            const float leftStart = 2.27f;
-            const float leftSweep = 1.74f;
-            DrawArc(
-                center,
-                96f,
-                leftStart,
-                leftStart + (leftSweep * _shieldFraction),
-                48,
-                new Color(0.62f, 0.55f, 1f, 0.82f),
-                5f,
                 true);
 
             Vector2 northPosition = center + new Vector2(
@@ -610,7 +572,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private const int GlyphColumns = 16;
         private const int GlyphCellSize = 16;
         private const int GlyphAdvance = 8;
-        private const int MessageCharactersPerLine = 31;
+        private const int MessageCharactersPerLine = 26;
         private const int MaximumLines = 5;
         private string[] _lines = [];
 
@@ -634,7 +596,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             float left = (Size.X * 0.5f) - 116f;
-            float top = Size.Y - 84f;
+            float top = Size.Y - 68f;
             for (int lineIndex = 0; lineIndex < _lines.Length; lineIndex++)
             {
                 string line = _lines[lineIndex];

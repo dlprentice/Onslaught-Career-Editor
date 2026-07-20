@@ -327,7 +327,7 @@ public sealed class Simulation
         var velocity = new SimVector2(
             RetainWalkerVelocity(_playerVelocity.X) + acceleration.X,
             RetainWalkerVelocity(_playerVelocity.Z) + acceleration.Z);
-        MovePlayer(ClampMagnitude(velocity, SimulationConstants.WalkerMaximumSpeedPerTick));
+        MoveWalker(ClampMagnitude(velocity, SimulationConstants.WalkerMaximumSpeedPerTick));
     }
 
     private static int RetainWalkerVelocity(int velocity) =>
@@ -436,11 +436,86 @@ public sealed class Simulation
             : (numerator - half) / denominator);
     }
 
+    private void MoveWalker(SimVector2 velocity)
+    {
+        SimVector2 nextPosition = new(
+            _playerPosition.X + velocity.X,
+            _playerPosition.Z + velocity.Z);
+        nextPosition = ResolveLevel100WalkerContact(
+            _playerPosition,
+            nextPosition,
+            SimulationConstants.Level100ControlTowerPosition,
+            SimulationConstants.Level100ControlTowerContactRadius);
+        nextPosition = ResolveLevel100WalkerContact(
+            _playerPosition,
+            nextPosition,
+            SimulationConstants.Level100TankFactoryPosition,
+            SimulationConstants.Level100TankFactoryContactRadius);
+        CommitPlayerPosition(nextPosition);
+    }
+
+    private static SimVector2 ResolveLevel100WalkerContact(
+        SimVector2 currentPosition,
+        SimVector2 nextPosition,
+        SimVector2 facilityPosition,
+        int contactRadius)
+    {
+        long offsetX = (long)nextPosition.X - facilityPosition.X;
+        long offsetZ = (long)nextPosition.Z - facilityPosition.Z;
+        long radiusSquared = (long)contactRadius * contactRadius;
+        long distanceSquared = (offsetX * offsetX) + (offsetZ * offsetZ);
+        if (distanceSquared >= radiusSquared)
+        {
+            return nextPosition;
+        }
+
+        if (distanceSquared == 0)
+        {
+            offsetX = (long)currentPosition.X - facilityPosition.X;
+            offsetZ = (long)currentPosition.Z - facilityPosition.Z;
+            distanceSquared = (offsetX * offsetX) + (offsetZ * offsetZ);
+            if (distanceSquared == 0)
+            {
+                return new SimVector2(facilityPosition.X + contactRadius, facilityPosition.Z);
+            }
+        }
+
+        int distance = IntegerSquareRoot(distanceSquared);
+        int resolvedX =
+            facilityPosition.X + DivideRoundNearest(offsetX * contactRadius, distance);
+        int resolvedZ =
+            facilityPosition.Z + DivideRoundNearest(offsetZ * contactRadius, distance);
+        while (true)
+        {
+            long resolvedOffsetX = (long)resolvedX - facilityPosition.X;
+            long resolvedOffsetZ = (long)resolvedZ - facilityPosition.Z;
+            if ((resolvedOffsetX * resolvedOffsetX) + (resolvedOffsetZ * resolvedOffsetZ) >=
+                radiusSquared)
+            {
+                return new SimVector2(resolvedX, resolvedZ);
+            }
+
+            if (Math.Abs(offsetX) >= Math.Abs(offsetZ))
+            {
+                resolvedX += Math.Sign(offsetX);
+            }
+            else
+            {
+                resolvedZ += Math.Sign(offsetZ);
+            }
+        }
+    }
+
     private void MovePlayer(SimVector2 velocity)
     {
         SimVector2 nextPosition = new(
             _playerPosition.X + velocity.X,
             _playerPosition.Z + velocity.Z);
+        CommitPlayerPosition(nextPosition);
+    }
+
+    private void CommitPlayerPosition(SimVector2 nextPosition)
+    {
         _playerVelocity = new SimVector2(
             nextPosition.X - _playerPosition.X,
             nextPosition.Z - _playerPosition.Z);

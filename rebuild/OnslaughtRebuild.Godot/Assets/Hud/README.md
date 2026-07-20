@@ -18,12 +18,12 @@ and the conditional lower-center message treatment.
 | `bar-line.texture.aya` | `hud%v2%BarLine.tga(0)X8R8G8B8.aya` | `16796E3A8ACFEC3529E03C29AFBEFBE28C92FFCCD5B05574F992E8F31976704D` |
 | `battleline-outline.texture.aya` | `hud%v2%BattleLineOutline.tga(0)X8R8G8B8.aya` | `B1C097B29DD81E2A0493F72A157CCD5AD249B5ABF758224C75DF4F93973D0405` |
 | `circle-darkener.texture.aya` | `hud%v2%CircleDarkener.tga(0)A8R8G8B8.aya` | `7BD18594757165DCDD8DADB618EA99EB500ED105DBE2D6A6F66BBCBC31C323A3` |
+| `circle-mask.texture.aya` | `hud%v2%CircleMask.tga(0)A8R8G8B8.aya` | `14D809F9B45F5153F82FA1F80152690B554710D83F91B8CBE203DE5CF18A9DFA` |
 | `radar-outline.texture.aya` | `hud%v2%RadarOutline.tga(0)X8R8G8B8.aya` | `507D465248F7321F2332413B2C6F461F3B3C45D87C52D86C38C43104043D7DC7` |
 | `compass-objective-marker.texture.aya` | `hud%v2%CompassObjectiveMarker.tga(0)A8R8G8B8.aya` | `E24FCA83DE34646A7328C313E7B89AC02C6BC4B04A69A74BF3EE81B3D57283DF` |
 | `crosshair-dot.texture.aya` | `hud%v3%hud_crosshair_dot.tga(0)A8R8G8B8.aya` | `19E1B35B885A36230E5A1D47A9910164B0CA177746649A15C146CEFCA29651DD` |
 | `crosshair-primary.texture.aya` | `hud%v3%hud_crosshair_primary.tga(0)A8R8G8B8.aya` | `310DAE2F7DD976F6CC724604737726885AFF96AB6BC507E41F90DCA60D134B17` |
 | `crosshair-secondary.texture.aya` | `hud%v3%hud_crosshair_secondary.tga(0)A8R8G8B8.aya` | `7B078344E64D1E78EF64A8E21BDD3787E059B628C6A442634E9D13BA7D3A0487` |
-| `forseti-icon.texture.aya` | `hud%ForsetiIcon.tga(0)A8R8G8B8.aya` | `0093B1A1A1E89327B90CEF93F06882DDED060A3023510CA0F49E6EBBF3666DA1` |
 | `message-noise.texture.aya` | `MessageBox%noisebig.tga(0)X8R8G8B8.aya` | `F5C43C330394DB9EB7C1E782F3F30FE847DE01D7CE9335D2C7F9FD24BABB1825` |
 | `radio-view.texture.aya` | `hud%v2%RadioView.tga(0)A8R8G8B8.aya` | `888D5A70AB812E23F75DB76AB2ED71CD2CCE04191EE282D525C86E337CC01778` |
 | `radio-north.texture.aya` | `hud%v2%RadioNorth.tga(0)A8R8G8B8.aya` | `E5DFD8DB4DD73E9AEEFFBB009FCA68D889572C996987BCE365B0B5B4D0A7ED85` |
@@ -48,11 +48,16 @@ technician's opening messages; no lip movement is synthesized.
 
 The released scanner path rotates contacts by Battle Engine yaw and clamps them
 at 46 HUD units. The north sprite follows the released 45-unit heading circle.
-The generated threat compass uses the released 96/98/110-unit radii, exact north
-bar and objective sprites, and deterministic Core hull/shield values; it does
-not reproduce Steam's dynamic 16-bit ring texture byte-for-byte.
+The target-marker pass draws the three released v3 crosshair textures at their
+native 64/128-pixel sizes. A separate bounded compass approximation supplies
+the outer ring, exact north bar, and objective sprites; it does not reproduce
+Steam's dynamic ring texture byte-for-byte.
 
-This slice does not claim complete HUD behavior. Steam's special circle-mask
-render state, animated portrait/video frames, general tactical contacts,
-weapon selection, damage flashes, target prediction, influence-map battleline,
-split-screen composition, and later mission HUD states remain absent.
+The retained CircleMask is the released black-outside/transparent-centre layer
+used to bound the static portrait frame. This slice does not claim complete HUD
+behavior. Steam's multi-stage mask render state, animated portrait/video
+frames, general tactical contacts, weapon selection, damage flashes, target
+prediction, influence-map battleline, split-screen composition, and later
+mission HUD states remain absent. Because Level 100 has a live influence map,
+the rebuild leaves the no-message battleline interior empty rather than showing
+Steam's unrelated empty-map Forseti fallback.

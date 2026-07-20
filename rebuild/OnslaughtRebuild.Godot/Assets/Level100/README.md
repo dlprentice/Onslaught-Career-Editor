@@ -1,13 +1,13 @@
 # Level 100 opening assets
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-four world meshes, four Pulse Cannon effect textures, and first fourteen English
+nine world meshes, four Pulse Cannon effect textures, and first fourteen English
 tutorial voice clips consumed by the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
 covers reconstruction code and does not relicense the assets.
 
-The four source mesh archives came from the released PC game's
+The nine source mesh archives came from the released PC game's
 `data/resources/meshes` directory. The deterministic OBJ outputs retain static
 geometry, normals, UVs, and base part transforms.
 
@@ -21,6 +21,16 @@ geometry, normals, UVs, and base part transforms.
 | `level100-control-tower.obj` | Static intact geometry and base-material groups consumed by Godot | `9A2B9C287BFF21DD7E3B560EE36CC7D7CAFB99399B3003BF2E81A832FBD6F6BA` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
 | `level100-tank-factory.obj` | Static intact geometry and base-material groups consumed by Godot | `895813A6D8FD6938934957E934F23B58EC5C059E6CE8F8F9472BC4438B49D53C` |
+| `Source/m_fb_health_pad.msh.aya` | Released Health Pad CMSH archive | `4EC6CB1D589C866ACFA292232CA4F850967FAEA899C2F082329BFF78E647AB44` |
+| `level100-health-pad.obj` | Static Health Pad geometry and base-material group consumed by Godot | `AE988ED04713970174340D891580B11B6D8005AC7DC2E6B53289468A0B3CCA31` |
+| `Source/m_fb_research.msh.aya` | Released Research Facility CMSH archive | `37FF4FB289E28D1BE5B0421BFE0F4B659694166152C4AF874D230E767002F0F1` |
+| `level100-research-building.obj` | Static Research Facility geometry and base-material groups consumed by Godot | `AE989A8DBC9A2C7897E92E07B23A14D9B8908430BDB549EB6D43DD20A11A4394` |
+| `Source/m_ft_blaster.msh.aya` | Released Federation Blaster Turret CMSH archive | `9833CD459E00B1C2068F9DB6BE34EE0E6A3F2D0B01D780946A338D5682ABB4CB` |
+| `level100-blaster-turret.obj` | Static Blaster Turret geometry and base-material groups consumed by Godot | `2498F1D19FBE3AFB3520A1B8316E00E381566B4B710ABB923468125848F17DF9` |
+| `Source/m_ft_pulse.msh.aya` | Released Federation Pulse Turret CMSH archive | `1CC399936CDD171C44297DCBC6EF2FF2E187319DE707D0F4C564E338A9770B9C` |
+| `level100-pulse-turret.obj` | Static Pulse Turret geometry and base-material groups consumed by Godot | `2C0C3EEEE9B13FBA7F32F8751920D4EB1DC2EBAA8301520CE74C0637D886EF68` |
+| `Source/m_ft_sam.msh.aya` | Released Federation SAM/SAT Turret CMSH archive | `9A82F27454863C19C05A8CDEDCC99CC05300AED75B8E54467A980C94BF5BA4A2` |
+| `level100-sat-turret.obj` | Static SAM/SAT Turret geometry and base-material group consumed by Godot | `A91921220B71255DA098A0C578D320E7C2632DC3B9B74C8FF27B464CB74ACC60` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
 | `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
@@ -29,6 +39,10 @@ geometry, normals, UVs, and base part transforms.
 | `Textures/facility-hanger-bits.texture.aya` | Released 512×512 `meshtex%FB_hangerbits.tga(0)A1R5G5B5.aya` base texture | `8E73098EAEB3C961B7CD63C3FBDF2338B22EFBE191BF956034DB9A69E71C041A` |
 | `Textures/facility-hanger-top-01.texture.aya` | Released 512×512 `meshtex%FB_hangertop01.tga(0)A1R5G5B5.aya` base texture | `54ADEB37D60FBC8209DBB75EB61FD39898B3F07E808E05C408DC740FF4647FD4` |
 | `Textures/facility-hanger-top-02.texture.aya` | Released 512×512 `meshtex%FB_hangertop02.tga(0)A1R5G5B5.aya` base texture | `E09455015CC79439AA33C5FB6B4A70B75DE9F2D5392AA7CD08BBF42D8FC6F78F` |
+| `Textures/facility-health-pad.texture.aya` | Released 512×512 `meshtex%fb_healthpad.tga(0)A1R5G5B5.aya` base texture | `4CB425F9EAD9AEEA065F73B69F5BB1DD0F659522A6B656E69C3F3AE0325A2543` |
+| `Textures/turret-blaster-primary.texture.aya` | Released 512×512 `meshtex%f_ventura03.tga(0)A1R5G5B5.aya` Blaster Turret base texture | `8EEFB3A268F1E54B9DB83E92D9A64BF5D800631A04A87C1C141080F9791F28F3` |
+| `Textures/turret-pulse-primary.texture.aya` | Released 512×512 `meshtex%fpulsetank.tga(0)A1R5G5B5.aya` Pulse Turret base texture | `CCF2896AD3991755C4F5A8330FE16B89E9C6D719537C4F72FF4805FF176C3ECE` |
+| `Textures/turret-sam-shared.texture.aya` | Released 512×512 `meshtex%f_SAM.tga(0)A1R5G5B5.aya` shared turret base texture | `A1FE2D7531676D38E874C48819ACA69ED62955886F2EFE9AD0046D85D1CB18FC` |
 | `Textures/target-tank.texture.aya` | Released 512×512 DXT2 Target Tank base texture | `97DDD1E18E45B19E249E91E881D773D80D36768A2CD48F6549A769C2559A7B7E` |
 | `Textures/target-warehouse-m001.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material groups 0 and 1 | `689B184AB8A5D03F33B69E5C35EDCFDFDEC12AA9B4B31F7C74CE5209F6236A49` |
 | `Textures/target-warehouse-m002.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material group 3 | `8FABADBE1C5AF067A740CF05DEBD1C952C628FD5FA3EA92B8202094704B8A20D` |
@@ -67,9 +81,10 @@ py -3 rebuild/tools/cmsh_static_preview.py `
   --primary-material-groups
 ```
 
-Sorted outputs `candidate-0001.obj` through `candidate-0004.obj` correspond to
-the Target Tank, Control Tower, Tank Factory, and Warehouse respectively and
-must match the hashes above before promotion.
+Sorted outputs `candidate-0001.obj` through `candidate-0009.obj` correspond to
+the Target Tank, Control Tower, Health Pad, Research Facility, Tank Factory,
+Blaster Turret, Pulse Turret, SAM/SAT Turret, and Warehouse respectively. All
+nine regenerated hashes must match the retained outputs above.
 
 ## Heightfield consumed by the slice
 
@@ -145,12 +160,30 @@ world's horizontal X/Y plane. The current slice consumes:
 | Player-one start | `(0, 0)` | yaw `0.509829998` |
 | Control Tower | `(-13.289886, 5.603271)` | yaw `0` |
 | Tank Factory | `(10.125, 22.375)` | yaw `1.789433718` |
+| Health Pad | `(-58.4375, 10.5)` | yaw `0` |
+| Blaster Turret 01 | `(-49.1875, 23.25)` | yaw `0` |
+| Blaster Turret 02 | `(-17.3125, -3.25)` | yaw `3.1415927` |
+| SAT Turret 03 | `(-36.1875, 18)` | yaw `0` |
+| Pulse Turret 04 | `(-63.1875, 38.75)` | yaw `0` |
+| Research Facility | `(-36.557114, -0.6279602)` | yaw `2.4706359` |
 | Target Zone 1 | `(-43.1875, 33.5)` | radius `5` |
 | Firing Range | `(-69.6875, 72.75)` | radius `5` |
 | Target Tank 1 | `(-67.76434, 78.28299)` | yaw `-0.0523363` |
 | Target Tank 2 | `(-78.75, 80.0625)` | yaw `-2.1535792` |
 | Target Tank 3 | `(-71.875, 84.6875)` | yaw `2.4043305` |
 | Target Warehouse | `(-86.3125, 83.5625)` | yaw `-1.9708606` |
+
+One no-input control and two fresh, uninterrupted fixed-yaw forward holds per
+facility establish the two route contacts consumed by Core. Steam repeated a
+`2.5736`-unit centre separation at the Control Tower while removing inward
+velocity and retaining tangent motion, so the walker visibly slid around it.
+At the Tank Factory, transient samples reached `8.3586..8.4267` units before
+the head-on response settled repeatedly at `8.4333` with zero planar velocity.
+Both observations held raw walker state `2`, stable yaw, and the expected
+`0.15`-unit released update speed before contact. Core rounds the stable
+envelopes to `2.574` and `8.434`; they include the released single-player
+BattleEngine radius and are not general building bounds, arbitrary collision,
+or destruction behavior.
 
 Two fresh uninterrupted read-only runs repeated Steam's six-second full pan.
 `CPlayer__GotoPanView` (`0x004D2C10`) transforms local camera points

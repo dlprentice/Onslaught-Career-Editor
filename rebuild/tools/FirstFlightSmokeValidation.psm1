@@ -86,8 +86,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeNear 'retailAquilaStandingClearance' 0.059322417 $report.retailAquilaStandingClearance
     Assert-SmokeValue 'retailCockpitSurfaceCount' 2 $report.retailCockpitSurfaceCount
     Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21149921 $report.level100PlayerStartRelativeHeight
-    Assert-SmokeValue 'retailLevel100FacilityCount' 2 $report.retailLevel100FacilityCount
-    Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 8 $report.retailLevel100FacilitySurfaceCount
+    Assert-SmokeValue 'retailLevel100FacilityCount' 8 $report.retailLevel100FacilityCount
+    Assert-SmokeValue 'retailLevel100FacilitySurfaceCount' 20 $report.retailLevel100FacilitySurfaceCount
     Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 6 $report.retailLevel100TargetSurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 3 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount

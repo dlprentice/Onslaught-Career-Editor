@@ -18,16 +18,18 @@ synthetic arena or another layer of readiness tooling.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
-released Federation Aquila, Control Tower, Tank Factory, three training tanks,
-and target Warehouse at their authored positions over the released coarse
-Level 100 heightfield. Core owns the released player start heading, exact
+released Federation Aquila; eight mission-linked route structures comprising
+the Control Tower, Tank Factory, Health Pad, Research Facility, two Blaster
+Turrets, SAT Turret, and Pulse Turret; three training tanks; and the target
+Warehouse at their authored positions over the released coarse Level 100
+heightfield. Core owns the released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
-The jet, two facilities, and two target types retain bounded static conversions
-and render with their exact retained layer-zero textures. The released macro terrain
+The jet, seven facility mesh types, and two target types retain bounded static
+conversions and render with their exact retained layer-zero textures. The released macro terrain
 blend, repeating detail texture, cube-25 sky, fog, and environment light values
 now replace the procedural ground/sky. The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
@@ -43,8 +45,10 @@ power, objective, weapon-highlight, four-target, and Pulse Cannon activation
 boundaries while keeping flight disabled. A repeatedly observed lowest-charge
 Pulse Cannon path now gives Target Tank 1 its retail speed, direct-hit damage,
 four-hit deactivation, and the four exact textures named by its released
-medium-round effect. Secondary material and moving cloud-shadow passes,
-steep-slope and actor collision response, mesh-part damage variation, shot
+medium-round effect. Core also reproduces only the observed circular walker
+contact and tangent slide for the Control Tower and Tank Factory. Secondary
+material and moving cloud-shadow passes, steep-slope and other actor/structure
+collision response, mesh-part damage variation, shot
 audio, impact/destruction effects, weapon resources, the other targets, and most
 mission behavior remain provisional.
 
@@ -120,8 +124,9 @@ campaign, and networking
 remain provisional or absent.
 
 The client switches between the released walker's exact part hierarchy and a
-deterministic static conversion of the released jet, and loads two released
-Level 100 facility meshes plus the Target Tank and Warehouse meshes. The
+deterministic static conversion of the released jet, and loads seven released
+facility mesh types as eight WRES-placed route structures plus the Target Tank
+and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 static presentation placement, generates the released 512×512 macro blend from exact
@@ -131,7 +136,7 @@ faces with `CHFD` fog and lighting values. Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the
-base material groups and decodes eleven exact AYA-wrapped mesh textures for the
+base material groups and decodes fifteen exact AYA-wrapped mesh textures for the
 Aquila, cockpit, facilities, and range targets plus the four exact 64×64
 textures named by the medium Pulse Bolt descriptor. It also uses twenty-three
 exact HUD textures, including the three released v3 crosshair layers,
@@ -148,10 +153,12 @@ Target Tank 1 life `6`, direct-hit damage `1.8`, one glancing `1.0` hit, and
 four-shot objective removal. Core deliberately implements only the direct-hit
 Target 1 path; Godot removes its exact model and radar marker at destruction.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
-visible-sun particle, facility destruction, steep-slope sliding, actor/structure
-collision, procedural foot placement/terrain IK,
+visible-sun particle, facility destruction, steep-slope sliding,
+actor/structure collision beyond the observed Control Tower and Tank Factory
+contact envelopes, procedural foot placement/terrain IK,
 transform animation, general HUD contacts and later state logic, Steam's
-dynamic ring texture and circle-mask state, animated radio portraits/video,
+dynamic ring texture, full multi-stage mask state and Level 100 influence map,
+animated radio portraits/video,
 other-target health, mesh-part damage variation, shot
 audio, impact/destruction effects, and the remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;

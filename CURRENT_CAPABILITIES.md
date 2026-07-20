@@ -142,8 +142,10 @@ snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
 The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
-heightfield plus Federation walker/jet, Control Tower, Tank Factory, three
-training tanks, and target Warehouse geometry. Core starts at the released
+heightfield plus Federation walker/jet, eight mission-linked route structures
+(Control Tower, Tank Factory, Health Pad, Research Facility, two Blaster
+Turrets, SAT Turret, and Pulse Turret), three training tanks, and target
+Warehouse geometry. Core starts at the released
 player-one heading and owns the authored player ground elevation plus the
 machine-observed objective and player gates through the first Firing Range
 exercise. The prior synthetic arena boundary, flat plane, and
@@ -174,9 +176,14 @@ unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
 with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
 machine-observed Level 100 standing pose and follow the released 101-frame
-`LegMotion` cycle from Core velocity. The jet, two facilities, and two target
-types remain bounded static conversions. The exterior meshes and exact
-frame-25 first-person cockpit render from eleven retained AYA-wrapped textures.
+`LegMotion` cycle from Core velocity. The jet, seven facility mesh types, and
+two target types remain bounded static conversions. The exterior meshes and
+exact frame-25 first-person cockpit render from fifteen retained AYA-wrapped
+textures. One no-input control and two fixed-yaw retail repetitions per
+facility establish circular walker contact only for the Control Tower and Tank
+Factory: inward motion is removed, while tangent motion slides around the
+tower. Core consumes those two observed envelopes; it does not claim general
+mesh collision.
 Twenty-three exact released HUD textures, including Font13PS and the three v3
 crosshair layers, replace the prototype overlay for the bounded threat circle,
 lower-left scanner/weapon instrument, lower-right battleline/portrait,
@@ -203,13 +210,15 @@ cloud-shadow stage remains absent. Walker acceleration now follows Core's
 continuous body yaw; the bounded projectile path shares its yaw and vertical
 pitch while jet
 translation retains the older eight-way approximation. The slice does not
-yet reproduce steep-slope or actor collision response or the retail
+yet reproduce steep-slope or actor collision response beyond those two
+observed facility envelopes, or the retail
 controller's procedural foot placement, other-target or mesh-part damage,
 shot audio, impact/destruction effects, the
 rest of the mission, AI, the
 remaining weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, Steam's dynamic
-HUD ring/mask implementation, general contacts and animated-radio behavior,
+HUD ring and full multi-stage mask/influence-map implementation, general
+contacts and animated-radio behavior,
 later mission audio, campaign,
 networking, or the rest of the transform model. The camera slice does not yet
 reproduce terrain-relative pitch limits, terrain occlusion, camera shake, or later

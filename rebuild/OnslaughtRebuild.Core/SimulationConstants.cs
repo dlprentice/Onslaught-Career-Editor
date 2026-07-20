@@ -17,6 +17,15 @@ public static class SimulationConstants
     public static readonly SimVector2 Level100TargetTank2Position = new(-78_750, 80_063);
     public static readonly SimVector2 Level100TargetTank3Position = new(-71_875, 84_688);
     public static readonly SimVector2 Level100TargetWarehousePosition = new(-86_313, 83_563);
+    // Two uninterrupted repetitions per facility drove the released walker
+    // into the same Level 100 structure with fixed body yaw. Steam removed the
+    // inward velocity and retained tangent motion (ECR_SLIDE). These are the
+    // observed centre-to-centre contact envelopes, including the 0.4-unit
+    // single-player BattleEngine radius; they are not general building bounds.
+    public static readonly SimVector2 Level100ControlTowerPosition = new(-13_290, 5_603);
+    public const int Level100ControlTowerContactRadius = 2_574;
+    public static readonly SimVector2 Level100TankFactoryPosition = new(10_125, 22_375);
+    public const int Level100TankFactoryContactRadius = 8_434;
     public const int Level100PlayerStartYawMicroRad = 509_830;
     // Each authored trigger has radius 5.0. Steam CBattleEngine::GetRadius at
     // vtable slot 16 (0x0040DF80) returns 0.4 in single player, and two fresh

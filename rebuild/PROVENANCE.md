@@ -43,10 +43,10 @@ not provenance.
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
-of the jet, Control Tower, Tank Factory, Target Tank, and Warehouse meshes;
-their exact source/output hashes live with the assets. The released Level 100
-WRES placement records now set the player start heading, nearby facilities,
-trigger locations, and four Firing Range targets. The client
+of the jet, seven facility mesh types, Target Tank, and Warehouse meshes; their
+exact source/output hashes live with the assets. The released Level 100 WRES
+placement records now set the player start heading, eight mission-linked route
+structures, trigger locations, and four Firing Range targets. The client
 maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
@@ -60,15 +60,15 @@ selects exact 512×512 DXT1 `detail00`; the released terrain render path at
 `0x00545590` supplies its two world-coordinate scales, offset, and observed
 modulation modes. The client
 preserves each retained mesh group's layer-zero `TEXR` assignment and directly
-decodes eight exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
+decodes fifteen exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
 textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference, moving terrain
 cloud-shadow stage, and
-visible-sun particle—are not guessed. Steep-slope sliding, actor/structure
-collision, targets,
-weapons, resources, jet/morph presentation, and unimplemented HUD behavior
-remain provisional unless specific retained evidence says otherwise.
+visible-sun particle—are not guessed. Steep-slope sliding, structure collision
+beyond the two observed facilities, targets, weapons, resources, jet/morph
+presentation, and unimplemented HUD behavior remain provisional unless
+specific retained evidence says otherwise.
 
 The exact walker AYA supplies 63 reciprocal parent/reference parts, 54 expanded
 base-material surfaces, and the 101-frame `LegMotion` table. At the authored
@@ -87,6 +87,17 @@ retention. Core maps those 20 Hz responses into its fixed 30 Hz step. The same
 control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
 16-tick walker-to-jet transition. Jet forward speed and energy drain retain
 earlier bounded measurements.
+
+One no-input control and two uninterrupted fixed-yaw forward holds per facility
+then establish the only retained structure contacts. The Control Tower repeated
+a `2.5736`-unit centre separation while removing inward velocity and retaining
+tangent motion; the Tank Factory settled at `8.4333` units and removed the
+head-on velocity. Both held raw walker state `2`, the expected `0.15`-unit
+released update speed before contact, and stable body yaw. Stuart's
+`ECR_SLIDE` response and the released single-player `0.4` BattleEngine radius
+support the interpretation. Core consumes rounded `2.574` and `8.434` contact
+envelopes only; these are not general mesh bounds, arbitrary actor collision,
+or facility-destruction behavior.
 
 A separate idle Level 100 control held `(288.6875, 243.25, -12.111499)` for
 12 seconds with zero velocity, raw walker state `2`, and no terrain-slide flag.
@@ -171,14 +182,16 @@ Twenty-three retained HUD textures are exact released files named by the Steam
 binary. A clean copied-runtime frame and the released render paths establish
 the bounded first-person composition now used by Godot: the generated central
 threat compass and three v3 crosshair layers, lower-left scanner/weapon stack,
-lower-right battleline with Forseti or message portrait, and a message-only
-segmented panel. `CHud__RenderObjectiveProgressGaugeAndHeadingNeedle` at
+lower-right battleline or message portrait, and a message-only segmented panel.
+`CHud__RenderObjectiveProgressGaugeAndHeadingNeedle` at
 `0x004858D0`, `CHud__RenderBattleline` at `0x00487D10`,
 `CMessageBox__RenderOverlay` at `0x004B8850`, and the `CDXCompass` render path
 provide the retained edge offsets, 45/46/96/98/110/111.5-unit radii, rotations,
 and state ownership. Exact 128×128 DXT2 `aa` frames supply the current static
-Tatiana and technician portraits; animated portrait/video behavior, Steam's
-dynamic 16-bit ring texture, and its special circle-mask state are not inferred.
+Tatiana and technician portraits, and the exact CircleMask bounds their square
+corners. Animated portrait/video behavior, Steam's dynamic 16-bit ring texture,
+full multi-stage mask render state, and the Level 100 influence map are not
+inferred.
 
 One clean control and two fresh, uninterrupted app-owned Level 100 runs then
 repeated the first eight message boundaries within one 50 ms retail sample.
@@ -255,8 +268,8 @@ impact/destruction effects and resources, the remaining weapons, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts; loads 57 Aquila, eight
-facility, six target, and two cockpit material surfaces; decodes eleven mesh,
+A native smoke proves the current client starts; loads 57 Aquila, twenty
+facility, six target, and two cockpit material surfaces; decodes fifteen mesh,
 four Pulse Bolt effect, twenty-three HUD, and five sky textures; and consumes the
 retained heightfield, macro/detail terrain inputs, and Core-owned ground
 elevation. Its deterministic
@@ -264,7 +277,8 @@ route reaches the first Firing Range exercise, renders the exact target models
 and shipped objective markers, plays the fourteenth voice, removes Target Tank
 1 after four bounded full hits, preserves the expected Core hash, and exits at
 both supported viewports. It does not prove secondary material or cloud-shadow
-passes, procedural leg solving, actor collision, other-target or mesh-part
+passes, procedural leg solving, collision beyond the two observed facilities,
+other-target or mesh-part
 damage, shot audio, impact/destruction effects, exercise completion, complete environment
 population, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

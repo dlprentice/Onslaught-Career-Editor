@@ -198,7 +198,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildLevel100Facilities()
     {
-        var facilityMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
+        var sharedFacilityMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
         {
             ["texture-0000"] = CreateRetailMaterial(
                 CuratedAyaTextureLoader.Load("res://Assets/Level100/Textures/facility-hanger-more-bits-lit.texture.aya", 512, 512),
@@ -223,14 +223,97 @@ public sealed partial class FirstFlightWorldView : Node3D
             new Vector2(-13.289886f, 5.603271f),
             0.0875791f,
             0f,
-            facilityMaterials);
+            sharedFacilityMaterials);
         AddLevel100Facility(
             "RetailTankFactory",
             "res://Assets/Level100/level100-tank-factory.obj",
             new Vector2(10.125f, 22.375f),
             0.2383346f,
             1.7894337f,
-            facilityMaterials);
+            sharedFacilityMaterials);
+        AddLevel100Facility(
+            "RetailHealthPad",
+            "res://Assets/Level100/level100-health-pad.obj",
+            new Vector2(-58.4375f, 10.5f),
+            0.06269801f,
+            0f,
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = CreateRetailMaterial(
+                    CuratedAyaTextureLoader.Load(
+                        "res://Assets/Level100/Textures/facility-health-pad.texture.aya",
+                        512,
+                        512),
+                    0.28f,
+                    0.72f),
+            });
+
+        StandardMaterial3D samTexture = CreateRetailMaterial(
+            CuratedAyaTextureLoader.Load(
+                "res://Assets/Level100/Textures/turret-sam-shared.texture.aya",
+                512,
+                512),
+            0.24f,
+            0.76f);
+        var blasterMaterials = new Dictionary<string, Material>(StringComparer.Ordinal)
+        {
+            ["texture-0000"] = CreateRetailMaterial(
+                CuratedAyaTextureLoader.Load(
+                    "res://Assets/Level100/Textures/turret-blaster-primary.texture.aya",
+                    512,
+                    512),
+                0.24f,
+                0.76f),
+            ["texture-0002"] = samTexture,
+        };
+        AddLevel100Facility(
+            "RetailBlasterTurret01",
+            "res://Assets/Level100/level100-blaster-turret.obj",
+            new Vector2(-49.1875f, 23.25f),
+            0.22263069f,
+            0f,
+            blasterMaterials);
+        AddLevel100Facility(
+            "RetailBlasterTurret02",
+            "res://Assets/Level100/level100-blaster-turret.obj",
+            new Vector2(-17.3125f, -3.25f),
+            0.22263069f,
+            Mathf.Pi,
+            blasterMaterials);
+        AddLevel100Facility(
+            "RetailSatTurret03",
+            "res://Assets/Level100/level100-sat-turret.obj",
+            new Vector2(-36.1875f, 18f),
+            0.2282266f,
+            0f,
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = samTexture,
+            });
+        AddLevel100Facility(
+            "RetailPulseTurret04",
+            "res://Assets/Level100/level100-pulse-turret.obj",
+            new Vector2(-63.1875f, 38.75f),
+            0.22567694f,
+            0f,
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["texture-0000"] = CreateRetailMaterial(
+                    CuratedAyaTextureLoader.Load(
+                        "res://Assets/Level100/Textures/turret-pulse-primary.texture.aya",
+                        512,
+                        512),
+                    0.24f,
+                    0.76f),
+                ["texture-0002"] = samTexture,
+            });
+        AddLevel100Facility(
+            "RetailResearchBuilding",
+            "res://Assets/Level100/level100-research-building.obj",
+            new Vector2(-36.557114f, -0.6279602f),
+            0.18609762f,
+            2.4706359f,
+            sharedFacilityMaterials);
     }
 
     private void AddLevel100Facility(

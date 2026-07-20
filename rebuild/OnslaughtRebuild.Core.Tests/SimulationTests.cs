@@ -320,6 +320,56 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void Level100ObservedFacilityContacts_PreserveSlideAndPreventEntry()
+    {
+        Simulation towerRun = CreatePlayingSimulation();
+        AimAtTargetAndSettle(towerRun, SimulationConstants.Level100ControlTowerPosition);
+        bool observedTowerSlide = false;
+        for (int tick = 0; tick < 260; tick++)
+        {
+            WorldSnapshot state = towerRun.Step(new SimInput(0, 1));
+            long offsetX = (long)state.PlayerPosition.X -
+                SimulationConstants.Level100ControlTowerPosition.X;
+            long offsetZ = (long)state.PlayerPosition.Z -
+                SimulationConstants.Level100ControlTowerPosition.Z;
+            long radius = SimulationConstants.Level100ControlTowerContactRadius;
+            Assert.True((offsetX * offsetX) + (offsetZ * offsetZ) >= radius * radius);
+            observedTowerSlide |=
+                Math.Abs(offsetX * state.PlayerVelocity.Z - offsetZ * state.PlayerVelocity.X) >
+                    40_000;
+        }
+
+        Assert.True(observedTowerSlide);
+
+        Simulation factoryRun = CreatePlayingSimulation();
+        AimAtTargetAndSettle(factoryRun, SimulationConstants.Level100TankFactoryPosition);
+        bool reachedFactory = false;
+        bool removedFactoryInwardMotion = false;
+        for (int tick = 0; tick < 360; tick++)
+        {
+            WorldSnapshot state = factoryRun.Step(new SimInput(0, 1));
+            long offsetX = (long)state.PlayerPosition.X -
+                SimulationConstants.Level100TankFactoryPosition.X;
+            long offsetZ = (long)state.PlayerPosition.Z -
+                SimulationConstants.Level100TankFactoryPosition.Z;
+            long radius = SimulationConstants.Level100TankFactoryContactRadius;
+            long distanceSquared = (offsetX * offsetX) + (offsetZ * offsetZ);
+            Assert.True(distanceSquared >= radius * radius);
+            reachedFactory |= distanceSquared <= (radius + 2L) * (radius + 2L);
+            if (distanceSquared <= (radius + 2L) * (radius + 2L))
+            {
+                long radialVelocity =
+                    (offsetX * state.PlayerVelocity.X) +
+                    (offsetZ * state.PlayerVelocity.Z);
+                removedFactoryInwardMotion |= radialVelocity >= -(radius * 2L);
+            }
+        }
+
+        Assert.True(reachedFactory);
+        Assert.True(removedFactoryInwardMotion);
+    }
+
+    [Fact]
     public void Level100Opening_AdvancesThroughAuthoredTriggersAfterScriptDelay()
     {
         Simulation simulation = CreatePlayingSimulation();
@@ -619,6 +669,38 @@ public sealed class SimulationTests
         }
 
         throw new Xunit.Sdk.XunitException("Could not aim the deterministic Core at Target Tank 1.");
+    }
+
+    private static void AimAtTargetAndSettle(Simulation simulation, SimVector2 target)
+    {
+        for (int tick = 0; tick < 1_200; tick++)
+        {
+            WorldSnapshot state = simulation.Snapshot;
+            double desired = Math.Atan2(
+                -(target.X - state.PlayerPosition.X),
+                target.Z - state.PlayerPosition.Z);
+            double error = NormalizeRadians(desired - (state.FacingYawMicroRad / 1_000_000d));
+            if (Math.Abs(error) < 0.035d &&
+                Math.Abs(state.WalkerYawVelocityMicroRadPerTick) < 7_000)
+            {
+                return;
+            }
+
+            double demand = error -
+                ((state.WalkerYawVelocityMicroRadPerTick / 1_000_000d) * 5d);
+            sbyte look = (sbyte)Math.Sign(demand);
+            simulation.Step(new SimInput(0, 0, LookX: look));
+        }
+
+        WorldSnapshot final = simulation.Snapshot;
+        double finalDesired = Math.Atan2(
+            -(target.X - final.PlayerPosition.X),
+            target.Z - final.PlayerPosition.Z);
+        double finalError = NormalizeRadians(
+            finalDesired - (final.FacingYawMicroRad / 1_000_000d));
+        throw new Xunit.Sdk.XunitException(
+            $"Could not settle the deterministic walker heading: error={finalError:F6}, " +
+            $"velocity={final.WalkerYawVelocityMicroRadPerTick}.");
     }
 
     private static double NormalizeRadians(double value)
