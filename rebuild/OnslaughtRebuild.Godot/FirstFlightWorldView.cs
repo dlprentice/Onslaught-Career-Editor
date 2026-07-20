@@ -634,7 +634,7 @@ public sealed partial class FirstFlightWorldView : Node3D
                 PlayPositionalSound(
                     $"PulseCannonFire{projectile.Id}",
                     _pulseCannonFireSound,
-                    ToWorld(projectile));
+                    ToSpawnWorld(projectile));
             }
 
             visual.Position = ToWorld(projectile);
@@ -659,7 +659,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             return;
         }
 
-        foreach (TargetSnapshot target in current.Targets.Where(item => item.Id is >= 1 and <= 3))
+        foreach (TargetSnapshot target in current.Targets.Where(item => item.Id is >= 1 and <= 4))
         {
             TargetSnapshot previousTarget = previous.Targets.Single(item => item.Id == target.Id);
             if (target.Hull >= previousTarget.Hull)
@@ -667,7 +667,19 @@ public sealed partial class FirstFlightWorldView : Node3D
                 continue;
             }
 
-            Vector3 effectPosition = _level100Targets[target.Id].Position + (Vector3.Up * 0.7f);
+            float effectHeight = target.Id == 4 ? 2f : 0.7f;
+            Vector3 effectPosition = _level100Targets[target.Id].Position +
+                (Vector3.Up * effectHeight);
+            if (target.Id == 4)
+            {
+                PlayPositionalSound(
+                    $"PulseImpact{target.Id}-{current.Tick}",
+                    _pulseImpactSmallSound,
+                    effectPosition);
+                SpawnPulseImpact(effectPosition, target.Id, current.Tick);
+                continue;
+            }
+
             if (target.IsActive)
             {
                 PlayPositionalSound(
@@ -981,6 +993,15 @@ public sealed partial class FirstFlightWorldView : Node3D
             projectile.Position.X * UnitsToMeters,
             projectile.ElevationMillimeters * UnitsToMeters,
             -projectile.Position.Z * UnitsToMeters);
+    }
+
+    private static Vector3 ToSpawnWorld(ProjectileSnapshot projectile)
+    {
+        return new Vector3(
+            (projectile.Position.X - projectile.Velocity.X) * UnitsToMeters,
+            (projectile.ElevationMillimeters -
+                projectile.VerticalVelocityMillimetersPerTick) * UnitsToMeters,
+            -(projectile.Position.Z - projectile.Velocity.Z) * UnitsToMeters);
     }
 
     private void UpdateCamera(

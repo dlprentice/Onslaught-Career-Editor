@@ -38,20 +38,22 @@ remains hidden with the pan camera and appears at the control-camera handoff.
 Twenty-three exact HUD textures and the released Font13PS atlas now compose the
 bounded v3 crosshair, threat compass, lower-left scanner/weapon instrument,
 lower-right battleline/portrait, active-objective markers, and conditional
-message panel. The first fourteen
-released English tutorial messages now use their exact text, shipped voice
+message panel. The first seventeen released English tutorial messages through
+the first exercise's Vulcan handoff now use their exact text, shipped voice
 clips, and static Tatiana/technician portrait frames. Core follows the observed
 power, objective, weapon-highlight, four-target, and Pulse Cannon activation
 boundaries while keeping flight disabled. Independently repeated lowest-charge
 Pulse Cannon runs now give all three training tanks their retail speed,
-direct-hit damage, and four-hit deactivation. Godot consumes the exact released
-round, impact, destruction, and sound assets required by that path.
+direct-hit damage, and four-hit deactivation. Two isolated Warehouse runs also
+repeat one fixed center-aim twelve-hit path and the released Vulcan handoff.
+Godot consumes the exact released round, impact, tank-destruction, sound, text,
+and voice assets required by that path.
 Core also reproduces only the observed circular walker
 contact and tangent slide for the Control Tower and Tank Factory. Secondary
 material and moving cloud-shadow passes, steep-slope and other actor/structure
 collision response, mesh-part damage variation, weapon resources, the target
-Warehouse's segmented-destruction path, secondary debris/effects, exercise
-completion, and most mission behavior remain provisional.
+Warehouse's segment-specific damage/rubble, secondary debris/effects, moving
+truck exercise, Vulcan firing, and most mission behavior remain provisional.
 
 The project has permission to use, modify, and distribute the original game
 assets. Exact source hashes and limitations live with the
@@ -114,14 +116,15 @@ deactivates the player, then re-enables it with the Pulse Cannon; flight remains
 disabled. Walker pitch uses the released 20 Hz `1/117`-radian input and `0.8`
 retention translated to 30 Hz, with the two repeated absolute limits measured
 on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
-direction as the crosshair camera. Terrain-relative pitch limiting, emitter
-origin, vertical target collision, auto-aim, mouse response, terrain clipping,
+direction as the crosshair camera and begin at the measured cockpit `Gun`
+emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
+mouse response, terrain clipping,
 jet movement,
 jet-to-walker, transform animation, resource semantics, the rest of the weapon
-model, the exact cockpit `Gun` emitter transform, target mesh-part damage,
+model, target mesh-part damage,
 secondary hit/destruction effects and debris, terrain collision
 beyond grounded height following, AI, the mission
-beyond the three demonstrated training tanks,
+beyond the first four-target exercise and its weapon handoff,
 campaign, and networking
 remain provisional or absent.
 
@@ -148,23 +151,25 @@ treatment, and objective marker. The observed player route uses Steam's
 Range on that radar. A control and three repeated retail runs then establish the
 Firing Range's five-message sequence, current-weapon highlight, four objective
 targets, temporary player deactivation, and Pulse Cannon-only activation. The
-client uses the exact fourteen retained English lines and voices through that
-exercise. A no-fire control and fresh isolated copied-runtime runs then
+client uses the exact seventeen retained English lines and voices through its
+Vulcan handoff. A no-fire control and fresh isolated copied-runtime runs then
 established the first charge bucket, definition speed `35`, `1.75`-unit released
 update, life `6`, direct-hit damage `1.8`, and four-shot objective removal for
 each of the three training tanks; one separate glancing hit removed `1.0`.
-Core deliberately implements only that direct-hit path. Godot removes each
-destroyed model and radar marker and presents retained shot, hit, and medium
-destruction sounds and primary particle layers.
+Two isolated Warehouse repetitions then required twelve normal hits along one
+fixed center-aim attack line before terminal objective removal and the same
+Pulse-to-Vulcan gate. Core deliberately implements only those demonstrated
+paths. Godot removes each completed model and radar marker and presents retained
+shot, hit, tank-destruction, text, voice, and primary particle layers.
 The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
 visible-sun particle, facility destruction, steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
 contact envelopes, procedural foot placement/terrain IK,
 transform animation, general HUD contacts and later state logic, Steam's
 dynamic ring texture, full multi-stage mask state and Level 100 influence map,
-animated radio portraits/video, the exact cockpit `Gun` emitter transform,
-Warehouse destructible-segment health, mesh-part damage variation, secondary
-particles/debris, exercise completion, and the remainder of the mission remain
+animated radio portraits/video, Warehouse segment-specific health and breakup,
+mesh-part damage variation, secondary particles/debris, the three moving trucks,
+Vulcan ballistics, and the remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;
 Core and Godot now share the four observed retail targets and shipped objective
 marker without adding world-space beacons.

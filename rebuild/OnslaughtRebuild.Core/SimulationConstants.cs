@@ -93,6 +93,24 @@ public static class SimulationConstants
     public const int Level100PulseCannonEnergyStartTick = Level100OpenFireEndTick + 6;
     public const int Level100PulseCannonEnergyEndTick =
         Level100PulseCannonEnergyStartTick + 243;
+    // Repeated copied-Steam runs completed the first four-target exercise by
+    // destroying the Warehouse. The released script then pauses one second,
+    // plays the exact 221-tick Vulcan introduction plus its 18-tick post-roll,
+    // enables the Vulcan/disables the Pulse Cannon at the non-blocking truck
+    // instruction, and queues the 164-tick ammo warning after the same
+    // six-tick message handoff used above.
+    public const int Level100VulcanCannonStartTick = 30;
+    public const int Level100VulcanCannonEndTick =
+        Level100VulcanCannonStartTick + 221 + 18;
+    public const int Level100VulcanActivationTick = Level100VulcanCannonEndTick;
+    public const int Level100OpenFireVulcanStartTick =
+        Level100VulcanActivationTick;
+    public const int Level100OpenFireVulcanEndTick =
+        Level100OpenFireVulcanStartTick + 103 + 18;
+    public const int Level100VulcanCannonAmmoStartTick =
+        Level100OpenFireVulcanEndTick + 6;
+    public const int Level100VulcanCannonAmmoEndTick =
+        Level100VulcanCannonAmmoStartTick + 164 + 18;
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
     // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.
@@ -148,16 +166,28 @@ public static class SimulationConstants
     // translation is 1.167 units per tick.
     public const int ProjectileSpeedPerTick = 1_167;
     public const int ProjectileLifetimeTicks = 40;
+    // A same-return capture of Steam CBattleEngine::GetLaunchPosition resolved
+    // cockpit emitter "Gun" index 1 relative to the live BattleEngine basis.
+    // Values are rounded to deterministic integer millimetres.
+    public const int PulseCannonEmitterRightMillimeters = -6;
+    public const int PulseCannonEmitterForwardMillimeters = 80;
+    public const int PulseCannonEmitterUpMillimeters = 259;
     // Each authored training tank starts at retail life 6. Direct mesh impacts
     // repeatedly removed 1.8; one glancing mesh-part impact removed 1.0. Core
     // does not yet model the retail mesh-part multiplier, so this bounded
     // three-tank path represents full hits and retains milli-life precision.
     public const int Level100TargetTankLife = 6_000;
-    // The same copied-runtime objective reads identified the authored
-    // Warehouse at life 50; it remains non-damageable in this milestone.
-    public const int Level100TargetWarehouseLife = 50_000;
+    // Two fresh uninterrupted copied-Steam repetitions removed the Warehouse
+    // objective after exactly twelve lowest-charge shots along one fixed
+    // center-aim attack line. This 12 * 1.8 envelope is not general Warehouse
+    // health and does not reproduce the retail controller's 28 segments or its
+    // other impact-point-dependent destruction paths.
+    public const int Level100TargetWarehouseCenterAimDamageEnvelope = 21_600;
     public const int Level100PulseCannonFullHitDamage = 1_800;
     // Radius bounds the retained target-tank mesh in its horizontal plane
     // (maximum source-vertex radius 1.447 units, rounded outward).
     public const int Level100TargetTankHitRadius = 1_450;
+    // Exact retained Warehouse OBJ horizontal vertex bound: 8.239447 units,
+    // rounded outward. This bounds only the demonstrated direct-hit path.
+    public const int Level100TargetWarehouseHorizontalBound = 8_240;
 }

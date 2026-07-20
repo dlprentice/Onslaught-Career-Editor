@@ -473,7 +473,7 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Level100TrainingTanks_FourRetailSpeedFullHitsDestroyEachAndLeaveWarehouseActive()
+    public void Level100FirstFiringRange_DestroysFourTargetsAndHandsOffToVulcan()
     {
         Simulation simulation = CreateFiringRangeExerciseSimulation();
         foreach (int targetId in new[] { 1, 2, 3 })
@@ -513,7 +513,71 @@ public sealed class SimulationTests
         Assert.Equal(3, simulation.Snapshot.TargetsDestroyed);
         TargetSnapshot warehouse = simulation.Snapshot.Targets.Single(item => item.Id == 4);
         Assert.True(warehouse.IsActive);
-        Assert.Equal(SimulationConstants.Level100TargetWarehouseLife, warehouse.Hull);
+        Assert.Equal(
+            SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope,
+            warehouse.Hull);
+
+        for (int hit = 1; hit <= 12; hit++)
+        {
+            int expected =
+                SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope -
+                (hit * SimulationConstants.Level100PulseCannonFullHitDamage);
+            AimAtTarget(simulation, warehouse.Position);
+            Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
+            for (int tick = 0; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
+            {
+                WorldSnapshot state = simulation.Step(SimInput.Idle);
+                warehouse = state.Targets.Single(item => item.Id == 4);
+                if (warehouse.Hull == expected)
+                {
+                    break;
+                }
+            }
+
+            Assert.Equal(expected, warehouse.Hull);
+        }
+
+        Assert.False(warehouse.IsActive);
+        Assert.Equal(4, simulation.Snapshot.TargetsDestroyed);
+        Assert.False(simulation.Snapshot.Level100FiringRangeTargetsActive);
+        Assert.Equal(
+            Level100OpeningPhase.FiringRangeVulcanBriefing,
+            simulation.Snapshot.Level100Phase);
+        Assert.Equal(0, simulation.Snapshot.Level100FiringRangeHandoffTick);
+        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
+        Assert.True(simulation.Snapshot.Level100PulseCannonEnabled);
+        Assert.False(simulation.Snapshot.Level100VulcanCannonEnabled);
+        Assert.Empty(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
+
+        StepUntilFiringRangeHandoffTick(
+            simulation,
+            SimulationConstants.Level100VulcanCannonStartTick);
+        Assert.Equal(Level100TutorialMessage.VulcanCannon, simulation.Snapshot.Level100Message);
+        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
+
+        StepUntilFiringRangeHandoffTick(
+            simulation,
+            SimulationConstants.Level100VulcanActivationTick);
+        Assert.Equal(
+            Level100OpeningPhase.FiringRangeVulcanExercise,
+            simulation.Snapshot.Level100Phase);
+        Assert.Equal(
+            Level100TutorialMessage.OpenFireVulcan,
+            simulation.Snapshot.Level100Message);
+        Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
+        Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
+        Assert.True(simulation.Snapshot.Level100VulcanCannonEnabled);
+
+        StepUntilFiringRangeHandoffTick(
+            simulation,
+            SimulationConstants.Level100VulcanCannonAmmoStartTick);
+        Assert.Equal(
+            Level100TutorialMessage.VulcanCannonAmmo,
+            simulation.Snapshot.Level100Message);
+        StepUntilFiringRangeHandoffTick(
+            simulation,
+            SimulationConstants.Level100VulcanCannonAmmoEndTick);
+        Assert.Equal(Level100TutorialMessage.None, simulation.Snapshot.Level100Message);
     }
 
     [Fact]
@@ -537,9 +601,37 @@ public sealed class SimulationTests
             ((long)projectile.VerticalVelocityMillimetersPerTick *
                 projectile.VerticalVelocityMillimetersPerTick);
         Assert.InRange(speedSquared, (long)1_166 * 1_166, (long)1_168 * 1_168);
+        double yaw = fired.FacingYawMicroRad / 1_000_000d;
+        double pitch = fired.FacingPitchMicroRad / 1_000_000d;
+        double emitterForwardPlane =
+            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
+            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
+        int expectedEmitterOffsetX = (int)Math.Round(
+            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
+            (emitterForwardPlane * Math.Sin(yaw)),
+            MidpointRounding.AwayFromZero);
+        int expectedEmitterOffsetZ = (int)Math.Round(
+            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
+            (emitterForwardPlane * Math.Cos(yaw)),
+            MidpointRounding.AwayFromZero);
+        Assert.InRange(
+            (projectile.Position.X - projectile.Velocity.X) - fired.PlayerPosition.X,
+            expectedEmitterOffsetX - 1,
+            expectedEmitterOffsetX + 1);
+        Assert.InRange(
+            (projectile.Position.Z - projectile.Velocity.Z) - fired.PlayerPosition.Z,
+            expectedEmitterOffsetZ - 1,
+            expectedEmitterOffsetZ + 1);
+        int emitterVerticalOffset = (int)Math.Round(
+            (-SimulationConstants.PulseCannonEmitterForwardMillimeters *
+                Math.Sin(fired.FacingPitchMicroRad / 1_000_000d)) +
+            (SimulationConstants.PulseCannonEmitterUpMillimeters *
+                Math.Cos(fired.FacingPitchMicroRad / 1_000_000d)),
+            MidpointRounding.AwayFromZero);
         Assert.Equal(
             fired.PlayerGroundElevationMillimeters +
                 Level100Terrain.WalkerCenterOfGravityMillimeters +
+                emitterVerticalOffset +
                 projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
 
@@ -725,5 +817,16 @@ public sealed class SimulationTests
             simulation.Step(SimInput.Idle);
         }
         Assert.Equal(sequenceTick, simulation.Snapshot.Level100FiringRangeSequenceTick);
+    }
+
+    private static void StepUntilFiringRangeHandoffTick(
+        Simulation simulation,
+        int handoffTick)
+    {
+        while (simulation.Snapshot.Level100FiringRangeHandoffTick < handoffTick)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(handoffTick, simulation.Snapshot.Level100FiringRangeHandoffTick);
     }
 }

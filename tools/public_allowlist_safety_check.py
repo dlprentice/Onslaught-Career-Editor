@@ -156,10 +156,13 @@ ALLOW_EXACT_SHA256 = {
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_13_mod.ogg": "7eee9087f86c00abe4feab115b20e4e2f27a8e6d1adc7318b1602446a7493e65",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_message_log.ogg": "7a03ff8f3faa4be4b729e7619055379c62921e2eaeb67fc9711dac0dfe273f8b",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_open_fire.ogg": "04a1a65b45f75f4d1e85b0fab6970125584efbabe3609d7413e60b569a26d20c",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_open_fire_2.ogg": "122782139a31fbd777a734e0979f4f0ab8a7308d1154d7215ce2af13d56e3237",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_pulse_cannon.ogg": "2fda4a38b4737e03647c03bac38bfb36e7e6ff16b279007c04616c23857c25f8",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg": "f4eca49f26f61f0369c0d8b770300596695f8a62ec12269a4c9d1cb3f61b13e0",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_scanner.ogg": "7a9535b1187b6e1ff276cebc3906ec2102e5d166f381ee674113b4f09c2b3bd2",
     "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_technician_01.ogg": "4792371453b4402454b922a481eb0968a099efb13981ff1918aa6177fb6ae151",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_vulcan_cannon.ogg": "7f483d8f3c876c8e9e8bd52b0369f1c54c39c83c174c0a43d5fb8674c069172c",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/tutorial_vulcan_cannon_2.ogg": "6f872ca07fcc4f49ffb0cb2536a460411139fe1d77d263198c0f423fcefa9d90",
     "references/AYAResourceExtractor/BoxWithTextures.fbx": "37526ffde1d48016fa8a2a05c5dfeb3cd0a30a8ab402ccce60a7f44addf8eed2",
     "tests_shared/fixtures/gold_career_save.bin": "0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb",
 }

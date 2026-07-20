@@ -49,11 +49,11 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v7' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v8' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    Assert-SmokeValue 'stateHash' '065b010502dcdbd84e966660f419ec779fddfcf914ade3324170939f7f8b13e2' $report.stateHash
+    Assert-SmokeValue 'stateHash' '3ba47e18dd264203a4129f44d7a627deeec97f1ea21704e7098f115a7d861df0' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'FiringRangeExercise' $report.level100Phase
@@ -62,9 +62,11 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100Message' 'PulseCannonEnergy' $report.level100Message
     Assert-SmokeValue 'level100EventMessageTicksRemaining' 0 $report.level100EventMessageTicksRemaining
     Assert-SmokeValue 'level100FiringRangeSequenceTick' 714 $report.level100FiringRangeSequenceTick
+    Assert-SmokeValue 'level100FiringRangeHandoffTick' -1 $report.level100FiringRangeHandoffTick
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
     Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
     Assert-SmokeValue 'level100PulseCannonEnabled' $true $report.level100PulseCannonEnabled
+    Assert-SmokeValue 'level100VulcanCannonEnabled' $false $report.level100VulcanCannonEnabled
     Assert-SmokeValue 'level100FiringRangeTargetsActive' $true $report.level100FiringRangeTargetsActive
     Assert-SmokeValue 'level100FireHelpVisible' $true $report.level100FireHelpVisible
     Assert-SmokeValue 'level100CurrentWeaponHighlighted' $false $report.level100CurrentWeaponHighlighted

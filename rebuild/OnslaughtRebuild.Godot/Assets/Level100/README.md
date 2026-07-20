@@ -2,7 +2,7 @@
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
 nine world meshes, nine Pulse Cannon/target-destruction effect textures,
-three weapon-effect sounds, and first fourteen English tutorial voice clips
+three weapon-effect sounds, and the first seventeen English tutorial voice clips
 consumed by the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
@@ -75,6 +75,9 @@ geometry, normals, UVs, and base part transforms.
 | `TutorialAudio/tutorial_pulse_cannon.ogg` | Released English IS-5 Pulse Cannon introduction | `2FDA4A38B4737E03647C03BAC38BFB36E7E6FF16B279007C04616C23857C25F8` |
 | `TutorialAudio/tutorial_open_fire.ogg` | Released English Firing Range target instruction | `04A1A65B45F75F4D1E85B0FAB6970125584EFBABE3609D7413E60B569A26D20C` |
 | `TutorialAudio/tutorial_pulse_cannon_2.ogg` | Released English Pulse Cannon energy explanation | `F4ECA49F26F61F0369C0D8B770300596695F8A62EC12269A4C9D1CB3F61B13E0` |
+| `TutorialAudio/tutorial_vulcan_cannon.ogg` | Released English Vulcan Cannon introduction | `7F483D8F3C876C8E9E8BD52B0369F1C54C39C83C174C0A43D5FB8674C069172C` |
+| `TutorialAudio/tutorial_open_fire_2.ogg` | Released English three-truck instruction | `122782139A31FBD777A734E0979F4F0AB8A7308D1154D7215CE2AF13D56E3237` |
+| `TutorialAudio/tutorial_vulcan_cannon_2.ogg` | Released English Vulcan ammunition warning | `6F872CA07FCC4F49FFB0CB2536A460411139FE1D77D263198C0F423FCEFA9D90` |
 | `SoundEffects/pulse-cannon-fire.wav` | Exact 44.1 kHz mono PCM decode of `Battle Engine\N_BE_pulse_cannon_fire` | `710FF06DB55BC694EFB8FF7D3A5AB658125E7CA0FE6B4733A805DA98B22B0277` |
 | `SoundEffects/pulse-impact-small.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_small` | `3296B13938928F54847A29E17307E7875E9933F8FD6381BF0DFCD260CD6FC131` |
 | `SoundEffects/target-tank-explosion-medium.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_medium` | `7228AE049CB0A9877E63671A65E51829443017B2C4981DF90A9C64D2F38B6D9C` |
@@ -213,7 +216,7 @@ input was exactly `1/117` radian, coast retained `0.8`, and repeated held-input
 endpoints were `+0.5321228` and `-1.0911411..-1.0912496`. Two player-owned
 Pulse Cannon rounds then repeated the crosshair-derived unit direction within
 `0.00119` per component. These bounds apply to the authored start slope;
-terrain-relative limiting, mouse scaling, emitter origin, auto-aim, and
+terrain-relative limiting, mouse scaling, auto-aim, and
 vertical target collision are not claimed.
 
 `TargetZone1.msl` and `FiringRange.msl` each request a 0.5-second wait before
@@ -272,6 +275,14 @@ memory-scan latency into simulation timing. The exact overlap-to-Firing Range
 event boundary was not separately sampled, so its 0.5-second dispatch remains
 the released script delay rather than a new runtime measurement.
 
+Two fresh app-owned copies isolated the Warehouse with the exact compiled
+LevelScript count byte changed from `4` to `1`. Twelve normal direct hits removed
+its objective in both runs. Player power then dropped to zero; after the
+one-second script pause and exact `tutorial_vulcan_cannon.ogg` duration, Steam
+reactivated the player with Pulse disabled and Vulcan enabled while adding three
+already-moving Target Truck objectives. Core consumes the weapon/message gate,
+not the unmeasured truck paths or Vulcan behavior.
+
 A no-fire control and fresh isolated copied-runtime runs followed each of the
 three Target Tank pointers and their player-owned normal rounds. Releasing at
 the first active charge bucket (`10`) created definition-speed-`35` projectiles
@@ -283,7 +294,10 @@ hit removed `1.0`. The released damage call receives a mesh-part index, so the
 differing multiplier is not generalized. Core represents only the demonstrated
 direct-hit path: speed `1167` millimetres per 30 Hz tick, `1.8` life per hit,
 the retained mesh's rounded `1.45`-unit horizontal bound, and independent
-four-hit removal for the three tanks. The
+four-hit removal for the three tanks. A same-return capture of released
+`CBattleEngine::GetLaunchPosition` resolved cockpit emitter `Gun` index 1 to
+`-0.005619` right, `+0.080066` forward, and `+0.259300` up in the live
+BattleEngine basis; Core consumes the rounded millimetre transform. The
 speed-`35` record in the released physics data names `Mech Pulse Bolt Medium`.
 Its five-entry particle descriptor references four unique textures:
 Blue Spark 2, Blue Trail, Halo, and Energy Trail. The presentation uses those
@@ -312,10 +326,14 @@ and preserves their mesh-group assignments. Shared higher-layer references are
 not interpreted as base textures or guessed metallic maps. The nine retained
 render meshes represent intact facilities and targets. All three Target Tanks
 have the bounded damage/deactivation path above plus the retained shot, impact,
-and medium-destruction sound and primary particle layers. The exact cockpit
-`Gun` emitter transform, Warehouse destructible-segment health path,
-mesh-part damage multipliers, secondary particles/debris, and exercise
-completion are not implemented. Actor/structure collision,
+and medium-destruction sound and primary particle layers. Two fresh isolated
+copied-retail runs required exactly twelve first-bucket direct hits to remove
+the 28-segment Warehouse objective, then repeated the released Vulcan handoff.
+Core retains only that effective damage envelope and the exact mesh's
+outward-rounded horizontal bound; Godot presents exact Pulse impacts and removes
+the completed objective. Retail segment selection, rubble/debris, mesh-part
+damage multipliers, the three moving trucks, and Vulcan firing are not
+implemented. Actor/structure collision,
 steep-slope response, the moving cloud-shadow pass, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Objective markers use the shipped HUD asset; no synthetic target or

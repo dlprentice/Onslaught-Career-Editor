@@ -23,6 +23,8 @@ public enum Level100OpeningPhase
     FiringRangeDispatchPending = 4,
     FiringRangeBriefing = 5,
     FiringRangeExercise = 6,
+    FiringRangeVulcanBriefing = 7,
+    FiringRangeVulcanExercise = 8,
 }
 
 public enum Level100TutorialMessage
@@ -42,6 +44,9 @@ public enum Level100TutorialMessage
     PulseCannon = 12,
     OpenFire = 13,
     PulseCannonEnergy = 14,
+    VulcanCannon = 15,
+    OpenFireVulcan = 16,
+    VulcanCannonAmmo = 17,
 }
 
 [Flags]
@@ -137,9 +142,11 @@ public sealed record WorldSnapshot(
     bool Level100PowerEnabled,
     bool Level100FlightEnabled,
     bool Level100PulseCannonEnabled,
+    bool Level100VulcanCannonEnabled,
     Level100OpeningPhase Level100Phase,
     int Level100DispatchTicksRemaining,
     int Level100FiringRangeSequenceTick,
+    int Level100FiringRangeHandoffTick,
     int NextProjectileId,
     int TargetsDestroyed,
     IReadOnlyList<TargetSnapshot> Targets,
@@ -149,7 +156,8 @@ public sealed record WorldSnapshot(
 
     public bool Level100FiringRangeTargetsActive =>
         Level100FiringRangeSequenceTick >=
-            SimulationConstants.Level100StaticTargetsActivationTick;
+            SimulationConstants.Level100StaticTargetsActivationTick &&
+        Targets.Any(target => target.Id is >= 1 and <= 4 && target.IsActive);
 
     public bool Level100CurrentWeaponHighlighted =>
         Level100FiringRangeSequenceTick >=
@@ -159,5 +167,7 @@ public sealed record WorldSnapshot(
 
     public bool Level100FireHelpVisible =>
         Level100FiringRangeSequenceTick >=
-            SimulationConstants.Level100FireHelpActivationTick;
+            SimulationConstants.Level100FireHelpActivationTick &&
+        Level100Phase == Level100OpeningPhase.FiringRangeExercise &&
+        Level100PulseCannonEnabled;
 }

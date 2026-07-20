@@ -170,6 +170,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             "Now destroy the three tanks and that building marked on your HUD.",
         Level100TutorialMessage.PulseCannonEnergy =>
             "As an energy weapon it never runs out of ammo but it can overheat. It is most effective against enemy vehicles or buildings.",
+        Level100TutorialMessage.VulcanCannon =>
+            "Aquila is also equipped with a rapid-fire Vulcan Cannon. It has limited target tracking facilities, so it's really easy to use.",
+        Level100TutorialMessage.OpenFireVulcan =>
+            "There are 3 trucks nearby. Try the Vulcan Cannon on them.",
+        Level100TutorialMessage.VulcanCannonAmmo =>
+            "You have limited ammo with this one and it's only really effective against infantry or lightly armoured units.",
         _ => null,
     };
 

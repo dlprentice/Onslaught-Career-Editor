@@ -187,10 +187,9 @@ mesh collision.
 Twenty-three exact released HUD textures, including Font13PS and the three v3
 crosshair layers, replace the prototype overlay for the bounded threat circle,
 lower-left scanner/weapon instrument, lower-right battleline/portrait,
-active-objective markers, and conditional message panel. The first fourteen
-English tutorial messages through the first Pulse
-Cannon exercise now use exact
-released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
+active-objective markers, and conditional message panel. The first seventeen
+English tutorial messages through the first exercise's Vulcan handoff now use
+exact released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
 portrait frames. Repeated retail runs matched every retained opening boundary
 within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
 swap, and `TUTORIAL_02` dispatch. One control and three accepted Firing Range
@@ -201,9 +200,15 @@ established the same bounded lifecycle for each of the three training tanks:
 first active charge bucket `10`, round speed `35`, movement `1.75` per released
 20 Hz update, starting life `6`, direct-hit damage `1.8`, and
 destruction/objective removal on shot four; one separate glancing hit removed
-`1.0`. Core implements only that direct-hit three-tank path. Godot removes each
-model and radar marker and consumes exact released round, impact,
-destruction, and sound assets for the bounded presentation. The released macro
+`1.0`. Two further isolated repetitions then removed the Warehouse objective
+after exactly twelve normal hits along one fixed center-aim attack line and
+repeated the released player-off,
+Vulcan-message, Pulse-off/Vulcan-on handoff. Core represents that result as a
+bounded effective damage envelope, not as the retail object's 28-segment
+destruction controller. Godot removes each completed objective and radar marker,
+uses the measured cockpit `Gun` emitter, and consumes exact released round,
+impact, tank-destruction, sound, text, and voice assets for the bounded
+presentation. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
@@ -214,7 +219,8 @@ translation retains the older eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response beyond those two
 observed facility envelopes, or the retail
 controller's procedural foot placement, the Warehouse's segmented-destruction
-path, mesh-part damage variation, secondary particles/debris, exercise completion, the rest of
+path and rubble, mesh-part damage variation, secondary particles/debris, the
+three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
 remaining weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, Steam's dynamic

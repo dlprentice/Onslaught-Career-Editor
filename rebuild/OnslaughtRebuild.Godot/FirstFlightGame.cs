@@ -338,6 +338,12 @@ public sealed partial class FirstFlightGame : Node3D
                 "res://Assets/Level100/TutorialAudio/tutorial_open_fire.ogg",
             Level100TutorialMessage.PulseCannonEnergy =>
                 "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg",
+            Level100TutorialMessage.VulcanCannon =>
+                "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon.ogg",
+            Level100TutorialMessage.OpenFireVulcan =>
+                "res://Assets/Level100/TutorialAudio/tutorial_open_fire_2.ogg",
+            Level100TutorialMessage.VulcanCannonAmmo =>
+                "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon_2.ogg",
             _ => null,
         };
         if (resourcePath is null)
@@ -439,7 +445,7 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v7",
+                SchemaVersion = "onslaught-first-flight-smoke.v8",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -454,10 +460,14 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100EventMessageTicksRemaining,
                 Level100FiringRangeSequenceTick =
                     _session.CurrentSnapshot.Level100FiringRangeSequenceTick,
+                Level100FiringRangeHandoffTick =
+                    _session.CurrentSnapshot.Level100FiringRangeHandoffTick,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100PulseCannonEnabled =
                     _session.CurrentSnapshot.Level100PulseCannonEnabled,
+                Level100VulcanCannonEnabled =
+                    _session.CurrentSnapshot.Level100VulcanCannonEnabled,
                 Level100FiringRangeTargetsActive =
                     _session.CurrentSnapshot.Level100FiringRangeTargetsActive,
                 Level100FireHelpVisible =
@@ -543,9 +553,11 @@ public sealed partial class FirstFlightGame : Node3D
         public required string Level100Message { get; init; }
         public required int Level100EventMessageTicksRemaining { get; init; }
         public required int Level100FiringRangeSequenceTick { get; init; }
+        public required int Level100FiringRangeHandoffTick { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
         public required bool Level100PulseCannonEnabled { get; init; }
+        public required bool Level100VulcanCannonEnabled { get; init; }
         public required bool Level100FiringRangeTargetsActive { get; init; }
         public required bool Level100FireHelpVisible { get; init; }
         public required bool Level100CurrentWeaponHighlighted { get; init; }

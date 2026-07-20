@@ -162,8 +162,8 @@ BattleEngine yaw/pitch values predict
 `(-sin(yaw)cos(pitch), cos(yaw)cos(pitch), sin(pitch))` with maximum component
 error `0.00119`. Core consumes the 30 Hz time-equivalent pitch input `0.003938`,
 retention `0.861774`, the bounded start-slope endpoints, and that three-axis
-shot direction. Terrain-relative limits, mouse scaling, emitter origin,
-auto-aim, and vertical target collision remain unimplemented. The setup patch,
+shot direction. Terrain-relative limits, mouse scaling, auto-aim, and vertical
+target collision remain unimplemented. The setup patch,
 copies, and raw samples were disposable.
 
 Separately, a disposable expected-byte-only change to the player constructor's
@@ -238,7 +238,7 @@ already demonstrated message post-roll/handoff, not variable wall-clock memory
 scan latency. The exact overlap-to-event endpoint was not separately sampled,
 so `FiringRange.msl`'s 0.5-second dispatch remains source-derived. This proves
 the first Pulse Cannon exercise's gates, objectives, ordering, text, and audio,
-not exercise completion, non-objective contacts, or pixel parity.
+but does not by itself prove completion, non-objective contacts, or pixel parity.
 
 A no-fire control and fresh isolated copied-runtime runs then followed each of
 the three Target Tank pointers, player-owned round list, and objective set. Four
@@ -251,10 +251,7 @@ objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
 `CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
 does not generalize the unmeasured part multiplier. It consumes only the
 three independently demonstrated direct-hit paths, the retained mesh bound,
-and the nearest 30 Hz integer speed. A controller intended to play the complete
-four-object range exercise could not repeat a sufficiently reliable keyboard-
-only aim sequence and is not retained; no integrated exercise-completion claim
-is made.
+and the nearest 30 Hz integer speed.
 The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
 five-entry particle descriptor references four unique texture archives: Blue
 Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
@@ -268,16 +265,37 @@ sprite layers, atlas ranges, scales, and lifetimes. Exact
 records 35, 105, and 102 supply the retained 44.1 kHz mono fire, small-impact,
 and medium-explosion PCM respectively. The record names, decoded lengths,
 high-nibble-first IMA-ADPCM output, and retained hashes were independently
-validated. The exact cockpit `Gun` emitter transform, descriptor color ranges,
-mode-1 tank-smoke blend, secondary emitters, debris, and wreck geometry remain
-absent.
+validated. A same-return CDB capture at released
+`CBattleEngine__GetLaunchPosition` (`0x0040C990`) then resolved cockpit emitter
+`Gun`, weapon index `1`, to `-0.005619` right, `+0.080066` forward, and
+`+0.259300` up in the live BattleEngine basis. Core consumes the corresponding
+rounded millimetre offset; the debugger stop supplied only that static return
+value, never timing. Descriptor color ranges, mode-1 tank-smoke blend,
+secondary emitters, debris, and wreck geometry remain absent.
 
 Static Steam and reference-source evidence establish that Warehouse damage is
-forwarded through a destructible-segment controller rather than the root life
-field used by the tanks. Its exact segment selection and destruction threshold
-were not reliably observed, so Core keeps the Warehouse active and
-non-damageable. The released script's zero-target continuation, Vulcan handoff,
-and truck activation therefore remain unimplemented rather than being inferred.
+forwarded through a 28-entry destructible-segment controller rather than the
+root life field used by the tanks. Two fresh uninterrupted app-owned copies
+isolated that objective by changing the compiled LevelScript target count from
+`4` to `1` at the exact serialized integer byte; archive length and every other
+payload byte remained unchanged. Each accepted run required an untouched
+Warehouse immediately before the first explicit `Fire`, used only the first
+active charge bucket (`10`), and removed the objective on exactly release 12.
+Earlier hits distributed damage across the root and mesh segments; the final
+hit flipped the controller threshold and cascaded the remaining intact parts.
+Core therefore represents only an effective `12 × 1.8` direct-hit envelope and
+the retained mesh's outward-rounded `8.240`-unit horizontal bound. It does not
+claim the retail segment-selection, rubble, debris, pickup, or landscape-damage
+behavior.
+
+Both isolated runs then repeated the released zero-target continuation: player
+power changed to `0`, `TUTORIAL_VULCAN_CANNON` played after the script's
+one-second pause, and player power returned with Vulcan active and Pulse Cannon
+inactive while three moving Target Truck objectives were added. The exact
+voice granules and established 18-tick post-roll place the Core weapon handoff
+at tick `269` after completion. The trucks had already advanced along their
+`FollowWaypointWait` paths when sampled, so their changing positions are not
+retained and the Vulcan exercise itself remains unimplemented.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration and the bounded projectile path now use the released
@@ -301,7 +319,7 @@ and shipped objective markers, plays the fourteenth voice, removes Target Tank
 presentation, preserves the expected Core hash, and exits at
 both supported viewports. It does not prove secondary material or cloud-shadow
 passes, procedural leg solving, collision beyond the two observed facilities,
-Warehouse or mesh-part damage beyond the three training tanks, secondary effects,
-exercise completion, complete environment
+the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
+secondary effects, complete environment
 population, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

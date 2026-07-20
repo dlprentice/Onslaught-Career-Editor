@@ -51,9 +51,11 @@ public sealed class Simulation
     private bool _level100PowerEnabled;
     private bool _level100FlightEnabled;
     private bool _level100PulseCannonEnabled;
+    private bool _level100VulcanCannonEnabled;
     private Level100OpeningPhase _level100Phase;
     private int _level100DispatchTicksRemaining;
     private int _level100FiringRangeSequenceTick;
+    private int _level100FiringRangeHandoffTick;
     private int _targetsDestroyed;
 
     // Jet handling remains provisional and outside this walker milestone.
@@ -85,6 +87,7 @@ public sealed class Simulation
 
         AdvanceLevel100EventMessage();
         AdvanceLevel100FiringRangeSequence();
+        AdvanceLevel100FiringRangeHandoff();
 
         SimInput playerInput = _level100PowerEnabled ? input : SimInput.Idle;
 
@@ -210,6 +213,43 @@ public sealed class Simulation
         >= SimulationConstants.Level100PulseCannonEnergyStartTick and
             < SimulationConstants.Level100PulseCannonEnergyEndTick =>
                 Level100TutorialMessage.PulseCannonEnergy,
+        _ => Level100TutorialMessage.None,
+    };
+
+    private void AdvanceLevel100FiringRangeHandoff()
+    {
+        if (_level100FiringRangeHandoffTick < 0 ||
+            _level100FiringRangeHandoffTick >=
+                SimulationConstants.Level100VulcanCannonAmmoEndTick)
+        {
+            return;
+        }
+
+        _level100FiringRangeHandoffTick++;
+        _level100Message = MessageAtFiringRangeHandoffTick(
+            _level100FiringRangeHandoffTick);
+        if (_level100FiringRangeHandoffTick ==
+            SimulationConstants.Level100VulcanActivationTick)
+        {
+            _level100PowerEnabled = true;
+            _level100PulseCannonEnabled = false;
+            _level100VulcanCannonEnabled = true;
+            _level100Phase = Level100OpeningPhase.FiringRangeVulcanExercise;
+        }
+    }
+
+    private static Level100TutorialMessage MessageAtFiringRangeHandoffTick(int tick) =>
+        tick switch
+    {
+        >= SimulationConstants.Level100VulcanCannonStartTick and
+            < SimulationConstants.Level100VulcanCannonEndTick =>
+                Level100TutorialMessage.VulcanCannon,
+        >= SimulationConstants.Level100OpenFireVulcanStartTick and
+            < SimulationConstants.Level100OpenFireVulcanEndTick =>
+                Level100TutorialMessage.OpenFireVulcan,
+        >= SimulationConstants.Level100VulcanCannonAmmoStartTick and
+            < SimulationConstants.Level100VulcanCannonAmmoEndTick =>
+                Level100TutorialMessage.VulcanCannonAmmo,
         _ => Level100TutorialMessage.None,
     };
 
@@ -710,16 +750,35 @@ public sealed class Simulation
         int verticalVelocity = DivideRoundNearest(
             -(long)pitchSin * SimulationConstants.ProjectileSpeedPerTick,
             FixedTrigScale);
+        int emitterForwardPlane = DivideRoundNearest(
+            ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters * pitchCos) +
+            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters * pitchSin),
+            FixedTrigScale);
+        int emitterVerticalOffset = DivideRoundNearest(
+            (-(long)SimulationConstants.PulseCannonEmitterForwardMillimeters * pitchSin) +
+            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters * pitchCos),
+            FixedTrigScale);
+        int emitterOffsetX = DivideRoundNearest(
+            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters * cos) -
+            ((long)emitterForwardPlane * sin),
+            FixedTrigScale);
+        int emitterOffsetZ = DivideRoundNearest(
+            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters * sin) +
+            ((long)emitterForwardPlane * cos),
+            FixedTrigScale);
 
         _energy -= SimulationConstants.FireEnergyCost;
         _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
         _projectiles.Add(new MutableProjectile
         {
             Id = _nextProjectileId++,
-            Position = _playerPosition,
+            Position = new SimVector2(
+                _playerPosition.X + emitterOffsetX,
+                _playerPosition.Z + emitterOffsetZ),
             Velocity = new SimVector2(velocityX, velocityZ),
             ElevationMillimeters = _playerGroundElevationMillimeters +
-                Level100Terrain.WalkerCenterOfGravityMillimeters,
+                Level100Terrain.WalkerCenterOfGravityMillimeters +
+                emitterVerticalOffset,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = SimulationConstants.ProjectileLifetimeTicks,
         });
@@ -727,10 +786,6 @@ public sealed class Simulation
 
     private void UpdateProjectiles()
     {
-        long hitRadiusSquared =
-            (long)SimulationConstants.Level100TargetTankHitRadius *
-            SimulationConstants.Level100TargetTankHitRadius;
-
         for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
         {
             MutableProjectile projectile = _projectiles[projectileIndex];
@@ -745,7 +800,7 @@ public sealed class Simulation
             {
                 if (_level100FiringRangeSequenceTick <
                         SimulationConstants.Level100StaticTargetsActivationTick ||
-                    target.Id is < 1 or > 3 ||
+                    target.Id is < 1 or > 4 ||
                     !target.IsActive ||
                     projectile.VerticalVelocityMillimetersPerTick != 0)
                 {
@@ -754,6 +809,10 @@ public sealed class Simulation
 
                 long deltaX = (long)projectile.Position.X - target.Position.X;
                 long deltaZ = (long)projectile.Position.Z - target.Position.Z;
+                int hitRadius = target.Id == 4
+                    ? SimulationConstants.Level100TargetWarehouseHorizontalBound
+                    : SimulationConstants.Level100TargetTankHitRadius;
+                long hitRadiusSquared = (long)hitRadius * hitRadius;
                 if ((deltaX * deltaX) + (deltaZ * deltaZ) > hitRadiusSquared)
                 {
                     continue;
@@ -766,6 +825,13 @@ public sealed class Simulation
                 {
                     target.IsActive = false;
                     _targetsDestroyed++;
+                    if (_level100FiringRangeHandoffTick < 0 &&
+                        _targets
+                            .Where(item => item.Id is >= 1 and <= 4)
+                            .All(item => !item.IsActive))
+                    {
+                        BeginLevel100VulcanHandoff();
+                    }
                 }
 
                 hit = true;
@@ -777,6 +843,14 @@ public sealed class Simulation
                 _projectiles.RemoveAt(projectileIndex);
             }
         }
+    }
+
+    private void BeginLevel100VulcanHandoff()
+    {
+        _level100FiringRangeHandoffTick = 0;
+        _level100Phase = Level100OpeningPhase.FiringRangeVulcanBriefing;
+        _level100PowerEnabled = false;
+        _level100Message = Level100TutorialMessage.None;
     }
 
     private void ResetDynamicState()
@@ -805,9 +879,11 @@ public sealed class Simulation
         _level100PowerEnabled = false;
         _level100FlightEnabled = false;
         _level100PulseCannonEnabled = false;
+        _level100VulcanCannonEnabled = false;
         _level100Phase = Level100OpeningPhase.Briefing;
         _level100DispatchTicksRemaining = 0;
         _level100FiringRangeSequenceTick = -1;
+        _level100FiringRangeHandoffTick = -1;
         _targetsDestroyed = 0;
         _projectiles.Clear();
         BuildTargets();
@@ -831,7 +907,7 @@ public sealed class Simulation
         _targets.Add(CreateTarget(
             4,
             SimulationConstants.Level100TargetWarehousePosition,
-            SimulationConstants.Level100TargetWarehouseLife));
+            SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope));
     }
 
     private static MutableTarget CreateTarget(int id, SimVector2 position, int initialHull)
@@ -892,9 +968,11 @@ public sealed class Simulation
             _level100PowerEnabled,
             _level100FlightEnabled,
             _level100PulseCannonEnabled,
+            _level100VulcanCannonEnabled,
             _level100Phase,
             _level100DispatchTicksRemaining,
             _level100FiringRangeSequenceTick,
+            _level100FiringRangeHandoffTick,
             _nextProjectileId,
             _targetsDestroyed,
             Array.AsReadOnly(targets),
