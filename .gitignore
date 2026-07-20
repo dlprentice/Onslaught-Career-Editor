@@ -75,6 +75,9 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 *.vid
 *.ogg
 *.wav
+!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/pulse-cannon-fire.wav
+!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/pulse-impact-small.wav
+!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/target-tank-explosion-medium.wav
 *.mp3
 *.mp4
 *.dds

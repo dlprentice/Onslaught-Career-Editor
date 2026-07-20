@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Buffers.Binary;
 using Godot;
 using OnslaughtRebuild.Core;
 
@@ -30,6 +31,15 @@ public sealed partial class FirstFlightWorldView : Node3D
     private StandardMaterial3D _pulseBoltTrailMaterial = null!;
     private StandardMaterial3D _pulseBoltHaloMaterial = null!;
     private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
+    private Texture2D _pulseImpactAnimatedTexture = null!;
+    private Texture2D _pulseImpactShockwaveTexture = null!;
+    private Texture2D _effectFlashMediumTexture = null!;
+    private Texture2D _targetTankExplosionAnimatedTexture = null!;
+    private Texture2D _targetTankExplosionFireballTexture = null!;
+    private AudioStream _pulseCannonFireSound = null!;
+    private AudioStream _pulseImpactSmallSound = null!;
+    private AudioStream _targetTankExplosionMediumSound = null!;
+    private int _lastTargetEffectTick = -1;
     private float _modeBlend;
     private float _walkCycle = -Mathf.Pi;
     private int _lastWalkPoseTick = -1;
@@ -130,7 +140,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(current);
-        UpdateProjectiles(current);
+        UpdateProjectiles(previous, current);
         UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
     }
 
@@ -610,10 +620,10 @@ public sealed partial class FirstFlightWorldView : Node3D
         _walkerAsset.SetWalkPose(_walkCycle, movementWeight);
     }
 
-    private void UpdateProjectiles(WorldSnapshot snapshot)
+    private void UpdateProjectiles(WorldSnapshot previous, WorldSnapshot current)
     {
         var activeIds = new HashSet<int>();
-        foreach (ProjectileSnapshot projectile in snapshot.Projectiles)
+        foreach (ProjectileSnapshot projectile in current.Projectiles)
         {
             activeIds.Add(projectile.Id);
             if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
@@ -621,12 +631,13 @@ public sealed partial class FirstFlightWorldView : Node3D
                 visual = CreatePulseBoltVisual(projectile.Id);
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
+                PlayPositionalSound(
+                    $"PulseCannonFire{projectile.Id}",
+                    _pulseCannonFireSound,
+                    ToWorld(projectile));
             }
 
-            visual.Position = new Vector3(
-                projectile.Position.X * UnitsToMeters,
-                projectile.ElevationMillimeters * UnitsToMeters,
-                -projectile.Position.Z * UnitsToMeters);
+            visual.Position = ToWorld(projectile);
             var direction = new Vector3(
                 projectile.Velocity.X,
                 projectile.VerticalVelocityMillimetersPerTick,
@@ -642,6 +653,40 @@ public sealed partial class FirstFlightWorldView : Node3D
             _projectiles[id].QueueFree();
             _projectiles.Remove(id);
         }
+
+        if (current.Tick == _lastTargetEffectTick || current.Tick == previous.Tick)
+        {
+            return;
+        }
+
+        foreach (TargetSnapshot target in current.Targets.Where(item => item.Id is >= 1 and <= 3))
+        {
+            TargetSnapshot previousTarget = previous.Targets.Single(item => item.Id == target.Id);
+            if (target.Hull >= previousTarget.Hull)
+            {
+                continue;
+            }
+
+            Vector3 effectPosition = _level100Targets[target.Id].Position + (Vector3.Up * 0.7f);
+            if (target.IsActive)
+            {
+                PlayPositionalSound(
+                    $"PulseImpact{target.Id}-{current.Tick}",
+                    _pulseImpactSmallSound,
+                    effectPosition);
+                SpawnPulseImpact(effectPosition, target.Id, current.Tick);
+            }
+            else
+            {
+                PlayPositionalSound(
+                    $"TargetTankExplosion{target.Id}",
+                    _targetTankExplosionMediumSound,
+                    effectPosition);
+                SpawnTargetTankDestruction(effectPosition, target.Id);
+            }
+        }
+
+        _lastTargetEffectTick = current.Tick;
     }
 
     private void BuildPulseCannonPresentation()
@@ -671,6 +716,211 @@ public sealed partial class FirstFlightWorldView : Node3D
         _pulseBoltEnergyTrailMaterial = CreatePulseParticleMaterial(
             energyTrail,
             billboard: false);
+
+        _pulseImpactAnimatedTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
+            256,
+            256);
+        _pulseImpactShockwaveTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya",
+            128,
+            128,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        _effectFlashMediumTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/effect-flash-medium.texture.aya",
+            128,
+            128,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        _targetTankExplosionAnimatedTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-tank-explosion-animated.texture.aya",
+            256,
+            256,
+            CuratedAyaTextureLoader.Compression.Dxt1);
+        _targetTankExplosionFireballTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-tank-explosion-fireball.texture.aya",
+            256,
+            256);
+
+        _pulseCannonFireSound = LoadAudioStream(
+            "res://Assets/Level100/SoundEffects/pulse-cannon-fire.wav");
+        _pulseImpactSmallSound = LoadAudioStream(
+            "res://Assets/Level100/SoundEffects/pulse-impact-small.wav");
+        _targetTankExplosionMediumSound = LoadAudioStream(
+            "res://Assets/Level100/SoundEffects/target-tank-explosion-medium.wav");
+    }
+
+    private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
+    {
+        Node3D root = CreateTimedEffect($"PulseImpact{targetId}-{tick}", position, 1.05d);
+        MeshInstance3D animatedBlob = CreateEffectSprite(
+            "BlueAnimatedBlob",
+            _pulseImpactAnimatedTexture,
+            1.4f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(animatedBlob);
+        AnimateAtlas(root, animatedBlob, frames: 15, columns: 4, rows: 4, 1d);
+        AnimateScale(animatedBlob, 1f, 1.07f, 1d);
+
+        MeshInstance3D flash = CreateEffectSprite(
+            "FlashMedium",
+            _effectFlashMediumTexture,
+            3f);
+        root.AddChild(flash);
+        AnimateScale(flash, 1f, 0f, 0.3d);
+
+        MeshInstance3D shockwave = CreateEffectSprite(
+            "PulseBlastShockwave",
+            _pulseImpactShockwaveTexture,
+            1f);
+        root.AddChild(shockwave);
+        AnimateScale(shockwave, 1f, 2f, 0.5d);
+    }
+
+    private void SpawnTargetTankDestruction(Vector3 position, int targetId)
+    {
+        Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.55d);
+        MeshInstance3D animatedExplosion = CreateEffectSprite(
+            "ExplosionAnimatedSprite",
+            _targetTankExplosionAnimatedTexture,
+            3f,
+            columns: 4,
+            rows: 2);
+        root.AddChild(animatedExplosion);
+        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 2, 0.5d);
+        AnimateScale(animatedExplosion, 1f, 1.3f / 1.5f, 0.5d);
+
+        MeshInstance3D fireball = CreateEffectSprite(
+            "ExplosionFireball",
+            _targetTankExplosionFireballTexture,
+            2f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(fireball);
+        AnimateAtlas(root, fireball, frames: 16, columns: 4, rows: 4, 1.5d);
+        AnimateScale(fireball, 1f, 0.5f, 1.5d);
+    }
+
+    private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
+    {
+        var root = new Node3D
+        {
+            Name = name,
+            Position = position,
+        };
+        AddChild(root);
+        var lifetime = new Godot.Timer
+        {
+            Name = "Lifetime",
+            OneShot = true,
+            WaitTime = lifetimeSeconds,
+        };
+        lifetime.Timeout += root.QueueFree;
+        root.AddChild(lifetime);
+        lifetime.Start();
+        return root;
+    }
+
+    private static MeshInstance3D CreateEffectSprite(
+        string name,
+        Texture2D texture,
+        float size,
+        int columns = 1,
+        int rows = 1)
+    {
+        StandardMaterial3D material = CreatePulseParticleMaterial(
+            texture,
+            billboard: true);
+        material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
+        return new MeshInstance3D
+        {
+            Name = name,
+            Mesh = new QuadMesh { Size = new Vector2(size, size) },
+            MaterialOverride = material,
+        };
+    }
+
+    private static void AnimateAtlas(
+        Node root,
+        MeshInstance3D sprite,
+        int frames,
+        int columns,
+        int rows,
+        double durationSeconds)
+    {
+        var material = (StandardMaterial3D)sprite.MaterialOverride;
+        Tween tween = root.CreateTween();
+        double frameDuration = durationSeconds / frames;
+        for (int frame = 0; frame < frames; frame++)
+        {
+            int capturedFrame = frame;
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedFrame % columns) / (float)columns,
+                    (capturedFrame / columns) / (float)rows,
+                    0f);
+            }));
+            tween.TweenInterval(frameDuration);
+        }
+    }
+
+    private static void AnimateScale(Node3D node, float start, float end, double durationSeconds)
+    {
+        node.Scale = Vector3.One * start;
+        node.CreateTween().TweenProperty(
+            node,
+            new NodePath("scale"),
+            Vector3.One * end,
+            durationSeconds);
+    }
+
+    private void PlayPositionalSound(string name, AudioStream stream, Vector3 position)
+    {
+        var player = new AudioStreamPlayer3D
+        {
+            Name = name,
+            Stream = stream,
+            Position = position,
+            MaxDistance = 80f,
+            UnitSize = 8f,
+        };
+        player.Finished += player.QueueFree;
+        AddChild(player);
+        player.Play();
+    }
+
+    private static AudioStream LoadAudioStream(string resourcePath)
+    {
+        byte[] wave = Godot.FileAccess.GetFileAsBytes(resourcePath);
+        if (wave.Length < 44 ||
+            !wave.AsSpan(0, 4).SequenceEqual("RIFF"u8) ||
+            !wave.AsSpan(8, 4).SequenceEqual("WAVE"u8) ||
+            !wave.AsSpan(12, 4).SequenceEqual("fmt "u8) ||
+            BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(16, 4)) != 16 ||
+            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(20, 2)) != 1 ||
+            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(22, 2)) != 1 ||
+            BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(24, 4)) != 44_100 ||
+            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(34, 2)) != 16 ||
+            !wave.AsSpan(36, 4).SequenceEqual("data"u8))
+        {
+            throw new InvalidDataException(
+                $"Curated audio '{resourcePath}' is not 44.1 kHz mono 16-bit PCM WAV.");
+        }
+
+        uint dataLength = BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(40, 4));
+        if (dataLength != wave.Length - 44)
+        {
+            throw new InvalidDataException($"Curated audio '{resourcePath}' has invalid WAV framing.");
+        }
+
+        return new AudioStreamWav
+        {
+            Format = AudioStreamWav.FormatEnum.Format16Bits,
+            MixRate = 44_100,
+            Stereo = false,
+            Data = wave.AsSpan(44).ToArray(),
+        };
     }
 
     private Node3D CreatePulseBoltVisual(int id)
@@ -723,6 +973,14 @@ public sealed partial class FirstFlightWorldView : Node3D
             EmissionTexture = texture,
             EmissionEnergyMultiplier = 1f,
         };
+    }
+
+    private static Vector3 ToWorld(ProjectileSnapshot projectile)
+    {
+        return new Vector3(
+            projectile.Position.X * UnitsToMeters,
+            projectile.ElevationMillimeters * UnitsToMeters,
+            -projectile.Position.Z * UnitsToMeters);
     }
 
     private void UpdateCamera(

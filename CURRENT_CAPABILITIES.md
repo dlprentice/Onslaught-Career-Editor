@@ -196,13 +196,14 @@ within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
 swap, and `TUTORIAL_02` dispatch. One control and three accepted Firing Range
 runs then repeated the same five-message sequence, current-weapon highlight,
 four objective pointers, temporary player deactivation, and Pulse Cannon-only
-activation. A no-fire control and two fresh firing repetitions then established
-a bounded first-target lifecycle: first active charge bucket `10`, round speed
-`35`, movement `1.75` per released 20 Hz update, starting life `6`, direct-hit
-damage `1.8`, one observed glancing `1.0` hit, and destruction/objective removal
-on shot four. Core implements only the direct-hit Target Tank 1 path, and Godot
-removes its model and radar marker while consuming the four unique textures
-named by the released medium-round effect. The released macro
+activation. A no-fire control and fresh isolated copied-runtime runs then
+established the same bounded lifecycle for each of the three training tanks:
+first active charge bucket `10`, round speed `35`, movement `1.75` per released
+20 Hz update, starting life `6`, direct-hit damage `1.8`, and
+destruction/objective removal on shot four; one separate glancing hit removed
+`1.0`. Core implements only that direct-hit three-tank path. Godot removes each
+model and radar marker and consumes exact released round, impact,
+destruction, and sound assets for the bounded presentation. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
 environment lighting replace their earlier placeholders. The detail texture
 uses both released coordinate scales and observed modulation modes; the moving
@@ -212,9 +213,9 @@ pitch while jet
 translation retains the older eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response beyond those two
 observed facility envelopes, or the retail
-controller's procedural foot placement, other-target or mesh-part damage,
-shot audio, impact/destruction effects, the
-rest of the mission, AI, the
+controller's procedural foot placement, the Warehouse's segmented-destruction
+path, mesh-part damage variation, secondary particles/debris, exercise completion, the rest of
+the mission, AI, the
 remaining weapon roster, secondary/reflection and
 cloud-shadow passes, facility destruction, transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general

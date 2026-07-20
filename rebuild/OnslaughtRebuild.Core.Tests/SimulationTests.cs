@@ -473,48 +473,44 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Level100FirstTarget_FourRetailSpeedFullHitsDestroyAndRemoveOnlyThatTarget()
+    public void Level100TrainingTanks_FourRetailSpeedFullHitsDestroyEachAndLeaveWarehouseActive()
     {
         Simulation simulation = CreateFiringRangeExerciseSimulation();
-        TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == 1);
-        Assert.Equal(SimulationConstants.Level100TargetTankLife, target.Hull);
-
-        int[] expectedHull = [4_200, 2_400, 600, 0];
-        foreach (int expected in expectedHull)
+        foreach (int targetId in new[] { 1, 2, 3 })
         {
-            AimAtTarget(simulation, target.Position);
-            WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
-            ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
-            long speedSquared =
-                ((long)projectile.Velocity.X * projectile.Velocity.X) +
-                ((long)projectile.Velocity.Z * projectile.Velocity.Z);
-            Assert.InRange(
-                speedSquared,
-                (long)1_166 * 1_166,
-                (long)1_168 * 1_168);
+            TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == targetId);
+            Assert.Equal(SimulationConstants.Level100TargetTankLife, target.Hull);
 
-            for (int tick = 0; tick < 30; tick++)
+            foreach (int expected in new[] { 4_200, 2_400, 600, 0 })
             {
-                WorldSnapshot state = simulation.Step(SimInput.Idle);
-                target = state.Targets.Single(item => item.Id == 1);
-                if (target.Hull == expected)
+                AimAtTarget(simulation, target.Position);
+                WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+                ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
+                long speedSquared =
+                    ((long)projectile.Velocity.X * projectile.Velocity.X) +
+                    ((long)projectile.Velocity.Z * projectile.Velocity.Z);
+                Assert.InRange(
+                    speedSquared,
+                    (long)1_166 * 1_166,
+                    (long)1_168 * 1_168);
+
+                for (int tick = 0; tick < 40; tick++)
                 {
-                    break;
+                    WorldSnapshot state = simulation.Step(SimInput.Idle);
+                    target = state.Targets.Single(item => item.Id == targetId);
+                    if (target.Hull == expected)
+                    {
+                        break;
+                    }
                 }
+
+                Assert.Equal(expected, target.Hull);
             }
 
-            Assert.Equal(expected, target.Hull);
+            Assert.False(target.IsActive);
         }
 
-        Assert.False(target.IsActive);
-        Assert.Equal(1, simulation.Snapshot.TargetsDestroyed);
-        Assert.All(
-            simulation.Snapshot.Targets.Where(item => item.Id is 2 or 3),
-            item =>
-            {
-                Assert.True(item.IsActive);
-                Assert.Equal(SimulationConstants.Level100TargetTankLife, item.Hull);
-            });
+        Assert.Equal(3, simulation.Snapshot.TargetsDestroyed);
         TargetSnapshot warehouse = simulation.Snapshot.Targets.Single(item => item.Id == 4);
         Assert.True(warehouse.IsActive);
         Assert.Equal(SimulationConstants.Level100TargetWarehouseLife, warehouse.Hull);
@@ -668,7 +664,7 @@ public sealed class SimulationTests
             simulation.Step(new SimInput(0, 0, LookX: (sbyte)Math.Sign(error)));
         }
 
-        throw new Xunit.Sdk.XunitException("Could not aim the deterministic Core at Target Tank 1.");
+        throw new Xunit.Sdk.XunitException("Could not aim the deterministic Core at the requested target.");
     }
 
     private static void AimAtTargetAndSettle(Simulation simulation, SimVector2 target)

@@ -240,45 +240,68 @@ so `FiringRange.msl`'s 0.5-second dispatch remains source-derived. This proves
 the first Pulse Cannon exercise's gates, objectives, ordering, text, and audio,
 not exercise completion, non-objective contacts, or pixel parity.
 
-A no-fire control and two fresh uninterrupted firing repetitions then followed
-the exact first-target pointer, player-owned round list, and objective set. Four
+A no-fire control and fresh isolated copied-runtime runs then followed each of
+the three Target Tank pointers, player-owned round list, and objective set. Four
 releases at the first active charge bucket (`10`) created normal rounds with
 definition speed `35` and exact movement magnitude `1.75` per 20 Hz update.
-Target Tank 1 began at life `6` with no shield. Direct mesh hits removed `1.8`;
-one glancing mesh-part hit removed `1.0`. Both repetitions set the target's
-destroyed bit and removed it from the objective set on shot four.
+Each tank began at life `6` with no shield. Direct mesh hits repeated
+`6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its destroyed bit and left the
+objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
 `CUnit__ApplyDamage` (`0x004F9A90`) receives the mesh-part index and
 `CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
 does not generalize the unmeasured part multiplier. It consumes only the
-direct-hit path, the retained mesh bound, and the nearest 30 Hz integer speed.
+three independently demonstrated direct-hit paths, the retained mesh bound,
+and the nearest 30 Hz integer speed. A controller intended to play the complete
+four-object range exercise could not repeat a sufficiently reliable keyboard-
+only aim sequence and is not retained; no integrated exercise-completion claim
+is made.
 The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
 five-entry particle descriptor references four unique texture archives: Blue
 Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
-authored base dimensions supply the bounded projectile presentation. Emitter,
-scroll, color, lifetime, impact audio/particles, and target destruction
-animation remain absent.
+authored base dimensions supply the bounded projectile presentation. Exact
+`data/ParticleSets/MainSet.par` (SHA-256
+`A51FE4419B55E1AF132E31C6B3CD8133C937745D8F4AB691EB5A0D81017DED06`)
+supplies the retained small-impact and medium tank-destruction primary
+sprite layers, atlas ranges, scales, and lifetimes. Exact
+`data/sounds/sounds_english_pc.xap` (SHA-256
+`658C15E3BAB844D65DD3C07C4AC880F16F741C0EA116F48C603449BBD4DDA8B7`)
+records 35, 105, and 102 supply the retained 44.1 kHz mono fire, small-impact,
+and medium-explosion PCM respectively. The record names, decoded lengths,
+high-nibble-first IMA-ADPCM output, and retained hashes were independently
+validated. The exact cockpit `Gun` emitter transform, descriptor color ranges,
+mode-1 tank-smoke blend, secondary emitters, debris, and wreck geometry remain
+absent.
+
+Static Steam and reference-source evidence establish that Warehouse damage is
+forwarded through a destructible-segment controller rather than the root life
+field used by the tanks. Its exact segment selection and destruction threshold
+were not reliably observed, so Core keeps the Warehouse active and
+non-damageable. The released script's zero-target continuation, Vulcan handoff,
+and truck activation therefore remain unimplemented rather than being inferred.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration and the bounded projectile path now use the released
 continuous yaw/pitch basis; the eight-way projection remains only in provisional jet
 movement. Terrain
 response beyond grounded height following, dash behavior, terrain-relative pitch and
-occlusion, jet-to-walker, transform presentation, Pulse Cannon shot audio,
-impact/destruction effects and resources, the remaining weapons, and flight
+occlusion, jet-to-walker, transform presentation, secondary Pulse Cannon
+effects/resources, the remaining weapons, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts; loads 57 Aquila, twenty
 facility, six target, and two cockpit material surfaces; decodes fifteen mesh,
-four Pulse Bolt effect, twenty-three HUD, and five sky textures; and consumes the
+nine Pulse/target-effect, twenty-three HUD, and five sky textures; validates
+three PCM sound envelopes; and consumes the
 retained heightfield, macro/detail terrain inputs, and Core-owned ground
 elevation. Its deterministic
 route reaches the first Firing Range exercise, renders the exact target models
 and shipped objective markers, plays the fourteenth voice, removes Target Tank
-1 after four bounded full hits, preserves the expected Core hash, and exits at
+1 after four bounded full hits with retained shot/impact/destruction
+presentation, preserves the expected Core hash, and exits at
 both supported viewports. It does not prove secondary material or cloud-shadow
 passes, procedural leg solving, collision beyond the two observed facilities,
-other-target or mesh-part
-damage, shot audio, impact/destruction effects, exercise completion, complete environment
+Warehouse or mesh-part damage beyond the three training tanks, secondary effects,
+exercise completion, complete environment
 population, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

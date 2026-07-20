@@ -1,8 +1,9 @@
 # Level 100 opening assets
 
 These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-nine world meshes, four Pulse Cannon effect textures, and first fourteen English
-tutorial voice clips consumed by the current Level 100 opening slice. The
+nine world meshes, nine Pulse Cannon/target-destruction effect textures,
+three weapon-effect sounds, and first fourteen English tutorial voice clips
+consumed by the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
 They remain copyright of their original rights holders; `rebuild/LICENSE`
 covers reconstruction code and does not relicense the assets.
@@ -50,6 +51,11 @@ geometry, normals, UVs, and base part transforms.
 | `Textures/pulse-bolt-blue-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Blue Trail.tga(0)R5G6B5.aya` Pulse Bolt trail | `2B4BC5CF8902D7EA8452F1068AC8F11514C8238A733CA33AAD7D6D0667688A63` |
 | `Textures/mech-pulse-medium-halo.texture.aya` | Exact released 64×64 DXT1 `Particle%Halo.tga(0)R5G6B5.aya` medium-round halo | `CDE6EFC90DC7958C5BDA425A04486E277BEB85A7F1C33FB9074F369E92D58EDB` |
 | `Textures/mech-pulse-medium-energy-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Energy Trail.tga(0)R5G6B5.aya` medium-round energy core | `64EDDC6B147C67886F41EF4D2BCC2A0606B453B01E4D93B9962F10CC07ABA92E` |
+| `Textures/pulse-impact-animated-blob.texture.aya` | Exact released 256×256 DXT2 `alparticle4` impact/smoke animation | `74085B280199E20B765640CFC3E417E6DA0FCBFB25384E129858A32F5DEB995D` |
+| `Textures/pulse-impact-shockwave.texture.aya` | Exact released 128×128 DXT1 `1telep` medium Pulse Bolt shockwave | `E92EFC3F5ADFA347E6B50F1E3D20AF4C6800D76853A2126D71237DFEFEEA9F10` |
+| `Textures/effect-flash-medium.texture.aya` | Exact released 128×128 DXT1 `sun2` medium impact flash | `D7FBFCB4EDB2167FEDC0A467D4501C9BBC2F6A2852C7873DAEC3953E6F518F5C` |
+| `Textures/target-tank-explosion-animated.texture.aya` | Exact released 256×256 DXT1 `alparticle6` medium explosion animation | `3C8FC30AD4923C56C3735CAAB5661A3F176EB661EAA678093870F51DE4204C9E` |
+| `Textures/target-tank-explosion-fireball.texture.aya` | Exact released 256×256 DXT2 `fireball` target-destruction layer | `E6C166669E351632A90B41C74782967923C78FC8BE644A1E8948D356806B23ED` |
 | `Sky/cube25-cent.texture.aya` | Released 512×512 cube-25 center DXT1 texture | `1AAD6CC8F85B6BB7CCBB8D2C7B0E6AA31722A9ADBDE5A3F19B248430CA83469E` |
 | `Sky/cube25-up.texture.aya` | Released 512×512 cube-25 up DXT1 texture | `419E2424BCFD698058D72111FFA7D84FDC9022E03815DB7C0DA28403F4925F3C` |
 | `Sky/cube25-right.texture.aya` | Released 512×512 cube-25 right DXT1 texture | `830C9B965C76A4023C2415B7C8924CA32590562C850CC84E92C003E173263D11` |
@@ -69,6 +75,9 @@ geometry, normals, UVs, and base part transforms.
 | `TutorialAudio/tutorial_pulse_cannon.ogg` | Released English IS-5 Pulse Cannon introduction | `2FDA4A38B4737E03647C03BAC38BFB36E7E6FF16B279007C04616C23857C25F8` |
 | `TutorialAudio/tutorial_open_fire.ogg` | Released English Firing Range target instruction | `04A1A65B45F75F4D1E85B0FAB6970125584EFBABE3609D7413E60B569A26D20C` |
 | `TutorialAudio/tutorial_pulse_cannon_2.ogg` | Released English Pulse Cannon energy explanation | `F4ECA49F26F61F0369C0D8B770300596695F8A62EC12269A4C9D1CB3F61B13E0` |
+| `SoundEffects/pulse-cannon-fire.wav` | Exact 44.1 kHz mono PCM decode of `Battle Engine\N_BE_pulse_cannon_fire` | `710FF06DB55BC694EFB8FF7D3A5AB658125E7CA0FE6B4733A805DA98B22B0277` |
+| `SoundEffects/pulse-impact-small.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_small` | `3296B13938928F54847A29E17307E7875E9933F8FD6381BF0DFCD260CD6FC131` |
+| `SoundEffects/target-tank-explosion-medium.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_medium` | `7228AE049CB0A9877E63671A65E51829443017B2C4981DF90A9C64D2F38B6D9C` |
 
 Regenerate into an empty local output directory with:
 
@@ -263,17 +272,18 @@ memory-scan latency into simulation timing. The exact overlap-to-Firing Range
 event boundary was not separately sampled, so its 0.5-second dispatch remains
 the released script delay rather than a new runtime measurement.
 
-A no-fire control and two fresh uninterrupted firing repetitions then followed
-the exact Target Tank 1 pointer and each player-owned normal round. Releasing at
+A no-fire control and fresh isolated copied-runtime runs followed each of the
+three Target Tank pointers and their player-owned normal rounds. Releasing at
 the first active charge bucket (`10`) created definition-speed-`35` projectiles
-that moved exactly `1.75` units per released 20 Hz update. Target Tank 1 began
-with life `6` and no shield. Direct mesh hits removed `1.8`; one observed
-glancing mesh-part hit removed `1.0`. Both repetitions set the destroyed flag
-and removed the target from Steam's objective set on the fourth shot. The
-released damage call receives a mesh-part index, so the differing multiplier is
-not generalized. Core represents only the demonstrated direct-hit path: speed
-`1167` millimetres per 30 Hz tick, `1.8` life per hit, the retained mesh's
-rounded `1.45`-unit horizontal bound, and Target 1 removal after four hits. The
+that moved exactly `1.75` units per released 20 Hz update. Each tank began with
+life `6` and no shield; direct mesh hits repeated the exact
+`6 → 4.2 → 2.4 → 0.6 → -1.2` sequence, set the destroyed flag, and removed that
+target from Steam's objective set on shot four. One separate glancing mesh-part
+hit removed `1.0`. The released damage call receives a mesh-part index, so the
+differing multiplier is not generalized. Core represents only the demonstrated
+direct-hit path: speed `1167` millimetres per 30 Hz tick, `1.8` life per hit,
+the retained mesh's rounded `1.45`-unit horizontal bound, and independent
+four-hit removal for the three tanks. The
 speed-`35` record in the released physics data names `Mech Pulse Bolt Medium`.
 Its five-entry particle descriptor references four unique textures:
 Blue Spark 2, Blue Trail, Halo, and Energy Trail. The presentation uses those
@@ -283,13 +293,29 @@ start width. The current ribbon spans one Core movement tick; the released
 five-point trail history, emitted secondary sprite, pulsation, color ranges,
 scrolling, and lifetimes are not yet reproduced.
 
+The exact released `data/ParticleSets/MainSet.par` (SHA-256
+`A51FE4419B55E1AF132E31C6B3CD8133C937745D8F4AB691EB5A0D81017DED06`)
+names the retained small-impact and medium tank-explosion layers. The
+presentation consumes the unambiguous bright sprite animation, scale, and
+lifetime values directly. Tank smoke's mode-1 blend cannot yet be reproduced
+without an opaque card and is omitted, along with descriptor color ranges,
+debris, wreck geometry, and the other subordinate emitters. The three PCM files
+above were
+decoded from exact `data/sounds/sounds_english_pc.xap` (SHA-256
+`658C15E3BAB844D65DD3C07C4AC880F16F741C0EA116F48C603449BBD4DDA8B7`)
+records 35, 105, and 102 respectively. Their `PSMP` names, declared decoded
+sizes, high-nibble-first IMA-ADPCM framing, and resulting WAV hashes were
+validated before retention; Godot validates the PCM envelope again at load.
+
 The presentation consumes the exact layer-zero facility and target textures
 and preserves their mesh-group assignments. Shared higher-layer references are
-not interpreted as base textures or guessed metallic maps. The four retained
-render meshes represent intact facilities and targets. Only Target Tank 1 has
-the bounded damage/deactivation path above; the other tanks, Warehouse,
-mesh-part damage multipliers, shot/impact audio and particles, destruction animation,
-debris, and exercise completion are not implemented. Actor/structure collision,
+not interpreted as base textures or guessed metallic maps. The nine retained
+render meshes represent intact facilities and targets. All three Target Tanks
+have the bounded damage/deactivation path above plus the retained shot, impact,
+and medium-destruction sound and primary particle layers. The exact cockpit
+`Gun` emitter transform, Warehouse destructible-segment health path,
+mesh-part damage multipliers, secondary particles/debris, and exercise
+completion are not implemented. Actor/structure collision,
 steep-slope response, the moving cloud-shadow pass, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Objective markers use the shipped HUD asset; no synthetic target or

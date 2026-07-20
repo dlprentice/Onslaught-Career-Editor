@@ -728,8 +728,8 @@ public sealed class Simulation
     private void UpdateProjectiles()
     {
         long hitRadiusSquared =
-            (long)SimulationConstants.Level100TargetTank1HitRadius *
-            SimulationConstants.Level100TargetTank1HitRadius;
+            (long)SimulationConstants.Level100TargetTankHitRadius *
+            SimulationConstants.Level100TargetTankHitRadius;
 
         for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
         {
@@ -745,7 +745,7 @@ public sealed class Simulation
             {
                 if (_level100FiringRangeSequenceTick <
                         SimulationConstants.Level100StaticTargetsActivationTick ||
-                    target.Id != 1 ||
+                    target.Id is < 1 or > 3 ||
                     !target.IsActive ||
                     projectile.VerticalVelocityMillimetersPerTick != 0)
                 {
