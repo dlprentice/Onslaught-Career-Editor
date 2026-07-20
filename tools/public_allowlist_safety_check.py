@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Hard-payload safety check for the public-primary repo.
 
-The public repository is now the working repository. Raw RE notes, scratch
-exports, state docs, and proof reports are allowed. This check only rejects
-actual copied game/runtime payload roots, build outputs, and obvious secret
-files. It is intentionally not a portable-app ZIP manifest and should not reject
-compact non-secret state batons, agent reports, `.codex` project history, or
-readiness summaries merely because a portable/export profile excludes them from
-the packaged artifact.
+The public repository is now the working repository. This check rejects exact
+local retail-materialization owners, copied game/runtime payload roots, build
+outputs, and obvious secret files. File extensions alone do not establish
+provenance, so ordinary project-authored or separately provided asset formats
+remain reviewable. This is intentionally not a portable-app ZIP manifest; the
+WinUI package has its own stricter payload boundary.
 """
 
 from __future__ import annotations
@@ -75,63 +74,52 @@ ALLOW_EXACT = set(ALLOW_EXACT_SHA256)
 REVIEWED_GHIDRA_ROOT = "reverse-engineering/ghidra/"
 REVIEWED_GHIDRA_SUFFIXES = {".bak", ".dat", ".gbf", ".prp"}
 
+RETAIL_MATERIALIZED_ROOTS = (
+    "rebuild/OnslaughtRebuild.Core/Assets/Level100/",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/",
+)
+RETAIL_MATERIALIZED_METADATA = {
+    "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/README.md",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md",
+}
+
 ALLOW_CDB_SCRIPT_PREFIXES: tuple[str, ...] = ()
 
-DENY_SUFFIXES = (
+DENY_OPERATIONAL_SUFFIXES = (
     ".7z",
-    ".aac",
     ".appx",
     ".appxbundle",
-    ".avi",
-    ".aya",
     ".bak",
     ".bea",
     ".bes",
     ".bik",
-    ".bin",
-    ".bmp",
-    ".bytes",
     ".cab",
     ".cue",
     ".crt",
-    ".dat",
     ".db",
-    ".dds",
     ".dll",
     ".dmp",
     ".etl",
     ".exe",
-    ".fbx",
-    ".flac",
     ".gbf",
     ".gdt",
     ".gpr",
-    ".gif",
     ".gz",
     ".gzf",
-    ".html",
-    ".htm",
     ".img",
     ".iso",
-    ".jpeg",
-    ".jpg",
     ".key",
     ".log",
     ".mso",
-    ".mkv",
-    ".mov",
-    ".mp3",
-    ".mp4",
     ".msi",
     ".msix",
     ".msixbundle",
-    ".ogg",
-    ".obj",
     ".pem",
     ".pfx",
-    ".pdf",
     ".pdb",
-    ".png",
     ".pyo",
     ".pyc",
     ".raw",
@@ -139,13 +127,8 @@ DENY_SUFFIXES = (
     ".sav",
     ".sqlite",
     ".tar",
-    ".tga",
     ".trx",
     ".vid",
-    ".wav",
-    ".webp",
-    ".wma",
-    ".xml",
     ".zip",
 )
 
@@ -214,11 +197,6 @@ MAGIC_DENY_SIGNATURES = (
     ("deny-magic-msi-ole-package", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"),
     ("deny-magic-cab-archive", b"MSCF"),
     ("deny-magic-pdb-symbols", b"Microsoft C/C++"),
-    ("deny-magic-png-image", b"\x89PNG\r\n\x1a\n"),
-    ("deny-magic-jpeg-image", b"\xff\xd8\xff"),
-    ("deny-magic-gif-image", b"GIF8"),
-    ("deny-magic-webp-image", b"RIFF"),
-    ("deny-magic-ogg-audio", b"OggS"),
     ("deny-magic-bink-video", b"BIK"),
     ("deny-magic-sqlite-db", b"SQLite format 3\x00"),
 )
@@ -382,14 +360,19 @@ def path_findings(path: str) -> list[Finding]:
         findings.append(Finding(path, "deny-env-file", name))
     if lower.startswith(tuple(prefix.lower() for prefix in DENY_ROOTS)):
         findings.append(Finding(path, "deny-root", path.split("/", 1)[0]))
+    if (
+        lower.startswith(tuple(prefix.lower() for prefix in RETAIL_MATERIALIZED_ROOTS))
+        and lower not in {item.lower() for item in RETAIL_MATERIALIZED_METADATA}
+    ):
+        findings.append(Finding(path, "deny-materialized-retail-output", path))
     if any(token.lower() in lower for token in DENY_CONTAINS):
         findings.append(Finding(path, "deny-generated-or-private-path", path))
     if lower.endswith(".cdb.txt") and not any(lower.startswith(prefix.lower()) for prefix in ALLOW_CDB_SCRIPT_PREFIXES):
         findings.append(Finding(path, "deny-raw-cdb-text-transcript", ".cdb.txt"))
     if lower.endswith(".txt") and "cdb" in name and "log" in name:
         findings.append(Finding(path, "deny-raw-cdb-text-transcript", name))
-    if lower.endswith(DENY_SUFFIXES):
-        findings.append(Finding(path, "deny-binary-or-private-suffix", Path(path).suffix.lower()))
+    if lower.endswith(DENY_OPERATIONAL_SUFFIXES):
+        findings.append(Finding(path, "deny-operational-payload-suffix", Path(path).suffix.lower()))
     return findings
 
 
@@ -444,10 +427,7 @@ def magic_findings(root: Path, path: str) -> list[Finding]:
     for label, signature in MAGIC_DENY_SIGNATURES:
         offset = prefix.find(signature)
         if offset >= 0:
-            if label == "deny-magic-webp-image" and (len(prefix) < offset + 12 or prefix[offset + 8 : offset + 12] != b"WEBP"):
-                findings.append(Finding(path, "deny-magic-riff-media", "RIFF"))
-            else:
-                findings.append(Finding(path, label, f"offset={offset} signature={signature.hex()}"))
+            findings.append(Finding(path, label, f"offset={offset} signature={signature.hex()}"))
             break
     return findings
 
@@ -600,17 +580,35 @@ def run_self_test() -> int:
         (root / "save-attempts" / "slot.bes").write_bytes(b"not ok")
         (root / "local-rom-input").mkdir()
         (root / "local-rom-input" / "payload.txt").write_text("local-only payload root\n", encoding="utf-8")
-        (root / "frame.webp").write_bytes(b"not ok")
+        (root / "project-assets").mkdir()
+        (root / "project-assets" / "frame.webp").write_bytes(b"RIFF\x00\x00\x00\x00WEBP")
+        (root / "project-assets" / "theme.ogg").write_bytes(b"OggS\x00project audio")
+        (root / "project-assets" / "effect.wav").write_bytes(b"RIFF\x00\x00\x00\x00WAVE")
+        (root / "project-assets" / "model.obj").write_text("project-authored model\n", encoding="utf-8")
+        (root / "project-assets" / "mesh.aya").write_bytes(b"project-authored mesh")
+        (root / "project-assets" / "data.bin").write_bytes(b"project-authored data")
         (root / "installer.msix").write_bytes(b"not ok")
         (root / "symbols.pdb").write_bytes(b"Microsoft C/C++ MSF 7.00\r\n\x1aDS\0\0\0")
         (root / "package.msi").write_bytes(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1not ok")
         (root / "cabinet.cab").write_bytes(b"MSCFnot ok")
         (root / "archive.7z").write_bytes(b"not ok")
         (root / "slot.sav").write_bytes(b"not ok")
-        (root / "retail-chunk.bin").write_bytes(b"not ok")
-        (root / "retail-model.obj").write_text("retail-derived model\n", encoding="utf-8")
-        (root / "manual.pdf").write_bytes(b"not ok")
-        (root / "screenshot.png").write_bytes(b"\x89PNG\r\n\x1a\nnot ok")
+        materialized_payloads = (
+            "rebuild/OnslaughtRebuild.Core/Assets/Level100/retail-chunk.bin",
+            "rebuild/OnslaughtRebuild.Godot/Assets/Aquila/retail-model.obj",
+            "rebuild/OnslaughtRebuild.Godot/Assets/Hud/retail-hud.aya",
+            "rebuild/OnslaughtRebuild.Godot/Assets/Level100/retail-terrain.bin",
+        )
+        for materialized_payload in materialized_payloads:
+            target = root / materialized_payload
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"local retail materialization")
+        (root / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Level100" / "README.md").write_text(
+            "# Materialization owner\n",
+            encoding="utf-8",
+        )
+        (root / "manual.pdf").write_bytes(b"%PDF-project documentation")
+        (root / "screenshot.png").write_bytes(b"\x89PNG\r\n\x1a\nproject screenshot")
         (root / "disguised-note.md").write_bytes(b"\x89PNG\r\n\x1a\nnot ok")
         (root / "padded-disguised-note.md").write_bytes((b"x" * 40) + b"\x89PNG\r\n\x1a\nnot ok")
         (root / "nul-note.md").write_bytes(b"text before\x00payload")
@@ -690,10 +688,10 @@ def run_self_test() -> int:
             "deny-root",
             "deny-codex-runtime-subtree",
             "deny-generated-or-private-path",
-            "deny-binary-or-private-suffix",
+            "deny-operational-payload-suffix",
+            "deny-materialized-retail-output",
             "deny-env-file",
             "deny-large-unreviewed-file",
-            "deny-magic-png-image",
             "deny-magic-pdb-symbols",
             "deny-magic-msi-ole-package",
             "deny-magic-cab-archive",
@@ -733,12 +731,33 @@ def run_self_test() -> int:
                 print("- AYAResourceExtractor fixture fbx was rejected for a reason other than hash mismatch")
                 print(f"- findings: {findings!r}")
                 return 1
-        for denied_payload in ("retail-chunk.bin", "retail-model.obj"):
+        for denied_payload in materialized_payloads:
             if not any(finding.path == denied_payload for finding in findings):
                 print("Public payload safety self-test: FAIL")
-                print(f"- tracked retail payload suffix was not rejected: {denied_payload}")
+                print(f"- local retail-materialization output was not rejected: {denied_payload}")
                 print(f"- findings: {findings!r}")
                 return 1
+        allowed_project_files = (
+            "project-assets/frame.webp",
+            "project-assets/theme.ogg",
+            "project-assets/effect.wav",
+            "project-assets/model.obj",
+            "project-assets/mesh.aya",
+            "project-assets/data.bin",
+            "manual.pdf",
+            "screenshot.png",
+            "manual.html",
+            "manual.xml",
+            "rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md",
+        )
+        unexpected_project_findings = [
+            finding for finding in findings if finding.path in allowed_project_files
+        ]
+        if unexpected_project_findings:
+            print("Public payload safety self-test: FAIL")
+            print("- legitimate authored/document asset formats were rejected")
+            print(f"- findings: {unexpected_project_findings!r}")
+            return 1
         if not any(finding.path == "tools/runtime-probes/allowed-observer.cdb.txt" for finding in findings):
             print("Public payload safety self-test: FAIL")
             print("- tracked CDB command scripts were not rejected")

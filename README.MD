@@ -50,7 +50,15 @@ Requirements:
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
 
-From the repository root:
+For a fresh checkout:
+
+```powershell
+git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git
+cd Onslaught-Career-Editor
+```
+
+For an existing checkout, initialize the pinned source references once with
+`git submodule update --init --recursive`. From the repository root:
 
 ```powershell
 npm test
@@ -102,6 +110,11 @@ not find a custom Steam library, run
 - Do not commit retail assets or their converted copies. Keep them in ignored
   local owners and retain credits/provenance when a deterministic recipe uses
   them. Parser success establishes format support, not visual fidelity.
+- File extension alone does not establish provenance. Project-authored or
+  specifically developer-provided assets may be tracked outside the reserved
+  retail-materialization owners when their file-level provenance, license, and
+  attribution are clear. Large opaque additions require an explicit reviewed
+  hash exception in the existing public-safety check.
 - Online multiplayer is not player-ready. The app exposes a local split-screen
   copied-profile preset only; Host/Join remains unavailable.
 

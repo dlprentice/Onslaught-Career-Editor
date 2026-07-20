@@ -9,7 +9,8 @@ generated inventories, handoff files, or replacement process machinery.
 
 1. Read [`AGENTS.md`](AGENTS.md), [`README.MD`](README.MD), and only the owning
    README or evidence files for your change.
-2. Confirm the branch, upstream, dirty state, and submodule pins before editing.
+2. Initialize source references with `git submodule update --init --recursive`,
+   then confirm the branch, upstream, dirty state, and submodule pins.
 3. Preserve unrelated work and keep `references/Onslaught` pinned unless a
    separately authorized source-reference update requires otherwise.
 4. Make the smallest coherent change that fixes a current product, contract,
@@ -58,6 +59,12 @@ for retail inputs, extraction, conversions, and experiments. Do not commit or
 package retail game assets or derived copies. Contribute the smallest exact
 recipe a current product or rebuild path consumes, with credits, provenance,
 and third-party terms intact.
+
+File extensions are not provenance. Small project-authored or specifically
+developer-provided assets may be committed in their owning source path when
+their origin, license, and attribution are clear. The rebuild materialization
+owners are reserved for local retail-derived outputs; large opaque additions
+require a reviewed hash exception in the existing public-safety check.
 
 Save edits must start from a real baseline and preserve unknown bytes. Retail
 executable mutation must target a verified copy, never an installed game

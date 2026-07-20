@@ -29,7 +29,9 @@
 - Do not track or redistribute retail game assets or derived conversions.
   Rebuild assets are materialized to ignored paths from a user-provided retail
   installation, with exact hashes, provenance, credits, and third-party terms
-  preserved.
+  preserved. File extensions are not provenance: project-authored or
+  specifically developer-provided assets may be tracked outside those reserved
+  local owners when their file-level provenance and terms are clear.
 - The GPL-licensed `rebuild/` lane may adapt the pinned GPL reference source and
   consume locally materialized retail data. Keep retail executables, decompiler
   output, and separately licensed third-party material outside it; retain any

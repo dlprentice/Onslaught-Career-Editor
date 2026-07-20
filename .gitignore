@@ -60,42 +60,35 @@ tmp*/
 /media/
 /GameProfiles/
 /PatchBench/
-reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
+/reverse-engineering/binary-analysis/scratch/
 
-# Game/runtime/binary payloads and secrets
+# Game/runtime payloads and secrets
 .env
 .env.*
 *.exe
 *.dll
 *.bes
 *.bea
-*.bin
-*.aya
 *.bik
 *.vid
-*.ogg
-*.wav
-*.mp3
-*.mp4
-*.dds
-*.fbx
 *.gzf
 *.zip
 *.gpr
 *.rep/
 *.gbf
 *.gdt
-*.bytes
 
-# Retail-derived rebuild outputs are materialized locally from a user-owned
-# installation and remain untracked. Source paths already match the payload
-# extension rules above; these two bounded OBJ roots need explicit coverage.
-/rebuild/OnslaughtRebuild.Godot/Assets/Aquila/*.obj
-/rebuild/OnslaughtRebuild.Godot/Assets/Level100/*.obj
+# These owners are reserved for exact retail-derived rebuild outputs
+# materialized locally from a user-provided installation. Legitimate authored
+# or separately provided assets belong in their normal source-owning path.
+/rebuild/OnslaughtRebuild.Core/Assets/Level100/**
+/rebuild/OnslaughtRebuild.Godot/Assets/Aquila/**
+/rebuild/OnslaughtRebuild.Godot/Assets/Hud/**
+/rebuild/OnslaughtRebuild.Godot/Assets/Level100/**
+!/rebuild/OnslaughtRebuild.Godot/Assets/Aquila/README.md
+!/rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md
+!/rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md
 
 # Canonical reviewed RE database exception.
 !reverse-engineering/ghidra/
 !reverse-engineering/ghidra/**
-
-# Narrow public-primary regression fixture exception.
-!tests_shared/fixtures/gold_career_save.bin
