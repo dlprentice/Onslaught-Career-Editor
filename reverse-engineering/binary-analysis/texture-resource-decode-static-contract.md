@@ -30,6 +30,6 @@ Static evidence does not prove runtime texture pixels, decompression/JPEG
 correctness, Direct3D resource behavior, exact layouts, third-party source
 identity, patch behavior, visual parity, or rebuild parity. Those require
 focused parser tests, controlled copied-runtime evidence, or renderer-specific
-validation as appropriate. Bulk decoded payloads remain local working data;
-curated original assets may enter an owning implementation under the project's
-confirmed permission and attribution boundary.
+validation as appropriate. Retail and bulk decoded payloads remain local working
+data; an owning implementation may retain exact recipes and provenance but not
+the asset bytes or converted copies.

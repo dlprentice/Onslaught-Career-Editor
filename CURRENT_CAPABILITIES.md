@@ -241,9 +241,10 @@ presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
-The project has full permission to use, modify, and distribute the original
-game assets. The remaining asset gap is technical integration and format
-fidelity, not a requirement that every user supply an unshipped private pack.
+The current source tree and release packages do not include retail game assets
+or their conversions. The rebuild materializes the exact currently consumed slice
+from a user-provided supported retail installation into ignored local paths.
+The remaining asset gap is technical integration and format fidelity.
 Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Evidence boundary
@@ -264,9 +265,9 @@ behavior directly.
 The published `v1.0.9` app is an unsigned portable Windows x64 ZIP. It does not
 currently include the retail executable, original asset set, saves, full Ghidra
 database, raw captures, installer/MSIX identity, signing, or rebuild client.
-Asset permission does not change that current package shape; any future bundled
-asset slice requires deliberate provenance, attribution, and third-party notice
-review.
+Repository licenses do not cover retail game data. Future releases must keep
+that user-supplied boundary unless a separately documented distribution basis
+and all applicable attribution and third-party terms are established.
 
 Use `npm run` for the current focused command surface. `npm test` checks the
 WinUI/AppCore product lane; rebuild, native-client, runtime, and release checks

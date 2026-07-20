@@ -52,8 +52,7 @@ path`. Wait for a private route before adding sensitive detail.
 
 Source-code bugs, documentation defects, redacted validation failures, feature
 requests, and already-tracked evidence summaries are normally safe to discuss
-publicly. Do not attach full local payloads merely because their contents may be
-authorized for project use.
+publicly. Do not attach full local retail payloads.
 
 ## License and asset boundary
 
@@ -61,8 +60,9 @@ The root MIT license covers the toolkit code and documentation. `rebuild/` and
 `references/Onslaught` are separately GPL-licensed; file-level and third-party
 notices remain applicable.
 
-The project owner has confirmed full permission for this project to use,
-modify, and distribute the original *Battle Engine Aquila* game assets. That
-permission does not relicense the retail executable, trademarks, source code,
-or third-party components. It also does not make bulk extraction, user saves,
-private captures, or machine-local data appropriate source artifacts.
+Retail game files and converted copies remain user-supplied local inputs and
+must not be committed, attached to reports, or included in packages. The
+repository licenses grant no rights in the retail executable, game assets,
+trademarks, or third-party components. The canonical reviewed Ghidra project,
+pinned reference submodules, and narrow documented save fixture are explicit
+repository exceptions with separate provenance and terms.

@@ -1,10 +1,10 @@
 # Game Assets And Mission Data
 
-These documents describe formats and relationships observed from the project
-owner's game data and the pinned AYA reference extractor. Current source and app
-packages do not bundle the full retail data set; see
+These documents describe formats and relationships observed from user-supplied
+game data and the pinned AYA reference extractor. Current source and app
+packages do not bundle retail asset payloads; see
 [`../project-meta/attribution.md`](../project-meta/attribution.md) for the
-project's asset permission and attribution boundary.
+project's attribution and distribution boundary.
 
 ## Asset formats and extraction
 

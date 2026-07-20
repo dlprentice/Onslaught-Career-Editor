@@ -22,10 +22,11 @@
     "test:tools": "py -3 tools\\aya_archive_inventory_tests.py && py -3 tools\\export_game_assets_tests.py && py -3 tools\\runtime_process_identity_test.py && py -3 tools\\runtime_proof_lab_hygiene_test.py && py -3 tools\\send_game_window_input_test.py && py -3 tools\\start_cdb_server_test.py",
     "test:lore-pack": "py -3 tools\\winui_lore_pack_builder.py --self-test",
     "release:winui-zip": "py -3 tools\\winui_lore_pack_builder.py --self-test && py -3 tools\\winui_zip_package_probe_test.py && py -3 tools\\winui_zip_package_probe.py --check --include-media-smoke",
-    "test:rebuild-core": "dotnet test .\\rebuild\\OnslaughtRebuild.Core.Tests\\OnslaughtRebuild.Core.Tests.csproj --nologo",
-    "test:rebuild-client": "dotnet test .\\rebuild\\OnslaughtRebuild.Client.Tests\\OnslaughtRebuild.Client.Tests.csproj --nologo",
+    "prepare:rebuild-assets": "py -3 .\\rebuild\\tools\\materialize_retail_assets.py",
+    "test:rebuild-core": "npm run prepare:rebuild-assets && dotnet test .\\rebuild\\OnslaughtRebuild.Core.Tests\\OnslaughtRebuild.Core.Tests.csproj --nologo",
+    "test:rebuild-client": "npm run prepare:rebuild-assets && dotnet test .\\rebuild\\OnslaughtRebuild.Client.Tests\\OnslaughtRebuild.Client.Tests.csproj --nologo",
     "test:rebuild": "npm run test:rebuild-core && npm run test:rebuild-client && py -3 .\\rebuild\\tools\\cmsh_static_preview_tests.py && pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\GodotToolchain.Tests.ps1",
-    "run:rebuild-headless": "dotnet run --project .\\rebuild\\OnslaughtRebuild.Headless\\OnslaughtRebuild.Headless.csproj --",
+    "run:rebuild-headless": "npm run prepare:rebuild-assets && dotnet run --project .\\rebuild\\OnslaughtRebuild.Headless\\OnslaughtRebuild.Headless.csproj --",
     "run:rebuild-godot": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Run-FirstFlight.ps1",
     "test:rebuild-godot-smoke": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Smoke-FirstFlight.ps1"
   }

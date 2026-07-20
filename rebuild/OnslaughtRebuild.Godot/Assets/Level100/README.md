@@ -1,18 +1,19 @@
 # Level 100 opening assets
 
-These are the released heightfield, macro/detail/cloud-shadow terrain inputs,
+This directory owns the ignored local released heightfield, macro/detail/cloud-shadow terrain inputs,
 cube-25 sky, nine world meshes, nine Pulse Cannon/target-destruction effect textures,
 three weapon-effect sounds, and the first seventeen English tutorial voice clips
-consumed by the current Level 100 opening slice. The
-project owner has permission to use, modify, and distribute the original game assets.
-They remain copyright of their original rights holders; `rebuild/LICENSE`
-covers reconstruction code and does not relicense the assets.
+consumed by the current Level 100 opening slice. Run
+`npm run prepare:rebuild-assets` to materialize the exact supported files from a
+user-provided retail installation. The payloads are not tracked in the current
+source tree or included in release packages and remain copyright of their
+respective rights holders; `rebuild/LICENSE` covers reconstruction code only.
 
 The nine source mesh archives came from the released PC game's
 `data/resources/meshes` directory. The deterministic OBJ outputs retain static
 geometry, normals, UVs, and base part transforms.
 
-| File | Role | SHA-256 |
+| Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
 | `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/level100-mixer-set-10.mapt.bin` | Exact largest `MAPT` mip selected by the Level 100 `CHFD` mixer-set value | `C21576AE7EA75FA800AB4117C1479AEB70359A1ACC84EDD9508895EB339612F1` |

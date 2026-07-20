@@ -2,7 +2,8 @@
 
 [CmdletBinding()]
 param(
-    [switch]$Offline
+    [switch]$Offline,
+    [string]$GameRoot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,6 +12,9 @@ Set-StrictMode -Version Latest
 $buildArguments = @{}
 if ($Offline) {
     $buildArguments.Offline = $true
+}
+if (-not [string]::IsNullOrWhiteSpace($GameRoot)) {
+    $buildArguments.GameRoot = $GameRoot
 }
 
 $toolchain = & (Join-Path $PSScriptRoot 'Build-FirstFlight.ps1') @buildArguments

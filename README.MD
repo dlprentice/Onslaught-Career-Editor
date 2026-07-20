@@ -6,15 +6,20 @@ Windows app for inspecting and safely editing real save/options files, preparing
 copied game profiles, applying evidence-backed patches to copied executables,
 and browsing locally supplied media, catalogs, and project lore.
 
+This is an unofficial community project. It is not affiliated with or endorsed
+by the game's publishers or rights holders. Repository licenses cover their
+respective project code and documentation; they grant no rights in the retail
+game, its assets, names, or trademarks.
+
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, two Level 100 facilities, coarse terrain,
 macro/detail terrain blend, and sky at their bounded reconstruction state; it
-does not claim retail parity. The
-project has permission to use, modify, and distribute the original game assets;
-integration into the rebuild remains implementation work, not a legal blocker.
+does not claim retail parity. The exact retail inputs used by that slice are
+materialized locally from the user's own installation and are not distributed
+as files in the current source tree or its release packages.
 
 ## Active surfaces
 
@@ -42,6 +47,8 @@ Requirements:
 - Node.js 24.x with npm 11.12.x
 - Python 3 through the Windows `py` launcher
 - PowerShell 7 for rebuild tooling
+- A lawfully obtained Battle Engine Aquila installation for retail-aware and
+  rebuild workflows
 
 From the repository root:
 
@@ -77,7 +84,10 @@ npm run run:rebuild-godot
 ```
 
 Its first run downloads and verifies the pinned Godot .NET archive into a
-per-user cache. It does not require a retail game install.
+per-user cache, detects the user's retail installation, and materializes the
+exact supported rebuild inputs to ignored local paths. If auto-detection does
+not find a custom Steam library, run
+`pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`.
 
 ## Data and mutation safety
 
@@ -89,10 +99,9 @@ per-user cache. It does not require a retail game install.
   transcripts, private captures, secrets, bulk extraction output, and build
   output out of Git. The reviewed canonical Ghidra project is the sole database
   exception under `reverse-engineering/ghidra/`.
-- The project owner's permission covers use, modification, and distribution of
-  original game assets. Curate only assets consumed by an active product or
-  rebuild slice, retain credits/provenance, and review third-party components
-  separately. Parser success establishes format support, not visual fidelity.
+- Do not commit retail assets or their converted copies. Keep them in ignored
+  local owners and retain credits/provenance when a deterministic recipe uses
+  them. Parser success establishes format support, not visual fidelity.
 - Online multiplayer is not player-ready. The app exposes a local split-screen
   copied-profile preset only; Host/Join remains unavailable.
 

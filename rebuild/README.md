@@ -18,7 +18,7 @@ synthetic arena or another layer of readiness tooling.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
-released Federation Aquila; eight mission-linked route structures comprising
+locally materialized released Federation Aquila; eight mission-linked route structures comprising
 the Control Tower, Tank Factory, Health Pad, Research Facility, two Blaster
 Turrets, SAT Turret, and Pulse Turret; three training tanks; and the target
 Warehouse at their authored positions over the released coarse Level 100
@@ -56,11 +56,11 @@ collision response, mesh-part damage variation, weapon resources, the target
 Warehouse's segment-specific damage/rubble, secondary debris/effects, moving
 truck exercise, Vulcan firing, and most mission behavior remain provisional.
 
-The project has permission to use, modify, and distribute the original game
-assets. Exact source hashes and limitations live with the
-[`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md) and
-[`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) assets. Add
-further assets only when a real implemented slice consumes them.
+Retail asset payloads and converted copies are not repository source. The
+bounded materializer verifies a supported user-provided installation and writes
+the exact current slice to ignored paths. Expected source hashes and limitations
+live with the [`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md) and
+[`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) recipes.
 
 ## Run
 
@@ -70,11 +70,18 @@ Install .NET 8, then from the repository root run:
 npm run run:rebuild-godot
 ```
 
-The first run downloads the pinned official Godot 4.7 .NET Windows archive to a
-per-user cache. The setup script verifies its URL, size, SHA-256, runtime
-identity, and extracted tree from
+The command first detects a lawfully obtained retail installation and
+materializes 100 exact source/runtime files to ignored paths. For a custom
+location, run
+`pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
+run also downloads the pinned official Godot 4.7 .NET Windows archive to a
+per-user cache. The setup script verifies its URL, size, SHA-256, runtime identity, and extracted tree from
 `toolchains/godot-4.7-stable-win-x64.json`. Later runs reuse the verified cache.
 Use `pwsh rebuild/tools/Run-FirstFlight.ps1 -Offline` to forbid downloads.
+
+`npm run prepare:rebuild-assets` performs the same exact local materialization
+without building or launching. Core, client, headless, and native smoke commands
+use that same owner; no separate manual extraction path is required.
 
 Controls:
 

@@ -31,8 +31,9 @@
 
 ### Rights Boundary
 
-The project owner has confirmed full permission for this project to use, modify,
-and distribute the original *Battle Engine Aquila* game assets. This is distinct
-from the MIT toolkit code, GPL rebuild/reference code, retail executable,
-trademark, and third-party component terms. Original credits and notices remain
-part of preservation rather than cleanup material.
+Onslaught Toolkit is an unofficial community project and is not affiliated with
+or endorsed by the game's publishers or rights holders. Users supply their own
+retail game data. The MIT toolkit and GPL rebuild/reference licenses do not
+grant rights in the game executable, assets, names, trademarks, or third-party
+components. Original credits and notices remain part of preservation rather
+than cleanup material.

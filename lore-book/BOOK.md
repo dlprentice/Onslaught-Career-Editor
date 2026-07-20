@@ -35,5 +35,6 @@ Project source links:
 - [Public roadmap](../roadmap/public-roadmap.md)
 
 Static notes and source references do not override observed retail behavior.
-The project has permission to use, modify, and distribute the original game
-assets; code, executable, trademark, and third-party terms remain distinct.
+Onslaught Toolkit is an unofficial community project, not affiliated with or
+endorsed by the game's publishers or rights holders. Users supply their own
+retail game data; project licenses do not grant rights in the game or its assets.

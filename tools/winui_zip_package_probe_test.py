@@ -632,24 +632,25 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertIn("zip_explorer_path_safety", failures)
 
     def test_zip_inspection_rejects_hard_payload_entries_inside_app_folder(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_root:
-            root = Path(temp_root)
-            publish_dir = root / "publish"
-            bundle_dir = root / "bundle"
-            zip_path = root / "payload.zip"
-            self._write_publish_payload(publish_dir)
-            probe.stage_portable_bundle(publish_dir, bundle_dir)
-            payload_path = bundle_dir / "app" / "game" / "BEA.exe"
-            payload_path.parent.mkdir(parents=True, exist_ok=True)
-            payload_path.write_bytes(b"not ok")
+        for file_name in ("BEA.exe", "terrain.bin", "facility.obj", "tutorial.ogg"):
+            with self.subTest(file_name=file_name), tempfile.TemporaryDirectory() as temp_root:
+                root = Path(temp_root)
+                publish_dir = root / "publish"
+                bundle_dir = root / "bundle"
+                zip_path = root / "payload.zip"
+                self._write_publish_payload(publish_dir)
+                probe.stage_portable_bundle(publish_dir, bundle_dir)
+                payload_path = bundle_dir / "app" / "game" / file_name
+                payload_path.parent.mkdir(parents=True, exist_ok=True)
+                payload_path.write_bytes(b"not ok")
 
-            folder_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
-            exit_code, _ = probe.create_zip(bundle_dir, zip_path)
-            self.assertEqual(exit_code, 0)
-            zip_failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
+                folder_failures = {item.key for item in probe.inspect_folder(bundle_dir, "bundle") if item.status == "FAIL"}
+                exit_code, _ = probe.create_zip(bundle_dir, zip_path)
+                self.assertEqual(exit_code, 0)
+                zip_failures = {item.key for item in probe.inspect_zip(zip_path) if item.status == "FAIL"}
 
-            self.assertIn("bundle_payload_safety", folder_failures)
-            self.assertIn("zip_payload_safety", zip_failures)
+                self.assertIn("bundle_payload_safety", folder_failures)
+                self.assertIn("zip_payload_safety", zip_failures)
 
     def test_zip_inspection_rejects_local_overlay_segments_inside_app_folder(self) -> None:
         for segment in ("local-rom-input", "mcps"):

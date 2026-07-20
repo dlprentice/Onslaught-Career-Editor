@@ -22,7 +22,7 @@ namespace Onslaught___Career_Editor
         int TrueViewDwordEndOffset);
 
     /// <summary>
-    /// Clean-room MissionScript SetSlot/GetSlot/SetSlotSave bitset codec over the retail
+    /// MissionScript SetSlot/GetSlot/SetSlotSave bitset codec over the documented retail
     /// true-view CCareer slot storage. This is pure buffer math; it performs no file I/O
     /// and proves no runtime MissionScript behavior.
     /// </summary>

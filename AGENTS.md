@@ -26,13 +26,14 @@
 - Keep public claims bounded to demonstrated source, static evidence, controlled copied-runtime evidence, or focused tests. Separate proven behavior from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation is local.
 - Preserve public/private, license, attribution, and provenance boundaries.
-- The project has permission to use, modify, and distribute the original game
-  assets. Add only curated assets owned by a current product or rebuild slice,
-  with provenance, credits, and third-party terms preserved; bulk extraction is
-  not source.
+- Do not track or redistribute retail game assets or derived conversions.
+  Rebuild assets are materialized to ignored paths from a user-provided retail
+  installation, with exact hashes, provenance, credits, and third-party terms
+  preserved.
 - The GPL-licensed `rebuild/` lane may adapt the pinned GPL reference source and
-  use authorized original assets. Keep retail executables, decompiler output,
-  and separately licensed third-party material outside it.
+  consume locally materialized retail data. Keep retail executables, decompiler
+  output, and separately licensed third-party material outside it; retain any
+  developer-provided material only under its own file-level provenance and terms.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation, filesystem, clock, process, network, and GPU APIs; clients and renderers adapt Core state rather than own simulation truth.
 
 ## Evidence

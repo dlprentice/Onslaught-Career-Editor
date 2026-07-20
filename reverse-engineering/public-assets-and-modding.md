@@ -1,20 +1,19 @@
 # Public Assets And Modding Overview
 
 Status: public-safe overview
-Last updated: 2026-07-17
+Last updated: 2026-07-20
 
-The project has full permission to use, modify, and distribute the original
-game assets. The current toolkit source and portable app remain intentionally
-small: they support resource analysis, copied-game workflows, and selected
-asset use rather than tracking a bulk retail extraction.
+The current toolkit source tree and portable app do not include retail game
+assets or converted copies. Resource analysis, copied-game workflows, and the
+rebuild read a user's lawfully obtained installation as local input.
 
 ## Public Boundary
 
 - Retail executable patching and local analysis still require a legally
   obtained installation or verified copied specimen.
-- Public changes may add curated original assets only when a live product or
-  rebuild slice consumes them and attribution/provenance is explicit. Do not
-  add bulk exports, saves, screenshots, copied executables, or raw proof bundles.
+- Public changes may add exact extraction/conversion recipes and bounded
+  provenance, not retail asset payloads. Do not add bulk exports, saves,
+  screenshots, copied executables, converted assets, or raw proof bundles.
 - Patches must target copied executables or app-owned roots, not the installed
   Steam folder.
 - Patch descriptions should say only what is byte-verified or runtime-proven.

@@ -15,7 +15,7 @@ Static contracts can support:
 - naming, subsystem ownership, and source-to-binary reasoning
 - patch planning against copied executables
 - save/options and asset/tooling contracts
-- clean-room rebuild planning
+- independent reconstruction planning
 
 Static contracts do not prove:
 

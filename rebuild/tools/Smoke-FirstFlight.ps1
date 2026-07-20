@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [CmdletBinding()]
-param([switch]$Offline)
+param(
+    [switch]$Offline,
+    [string]$GameRoot
+)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -76,6 +79,9 @@ function Invoke-FirstFlightNativeSmoke {
 $buildArguments = @{}
 if ($Offline) {
     $buildArguments.Offline = $true
+}
+if (-not [string]::IsNullOrWhiteSpace($GameRoot)) {
+    $buildArguments.GameRoot = $GameRoot
 }
 
 $toolchain = $null

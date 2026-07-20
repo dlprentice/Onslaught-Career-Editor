@@ -18,6 +18,11 @@ options, not a required sequence.
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Portable ZIP inputs or layout | `npm run release:winui-zip` |
 
+Rebuild commands materialize their exact retail inputs to ignored paths from a
+detected user installation. Run `npm run prepare:rebuild-assets` explicitly when
+only that boundary changed; pass `-- --game-root "<game folder>"` when Steam
+auto-detection cannot find a custom location.
+
 `npm test` is the focused default handoff for cross-cutting active-product work:
 one WinUI solution build, consequential AppCore write/parser safety contracts,
 and the static WinUI accessibility audit. It intentionally does not run broad

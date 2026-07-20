@@ -1,9 +1,9 @@
 # Public Roadmap
 
 The north star is a recognizable portion of the retail Level 100 tutorial in
-the replacement engine, using authorized original assets and retail-faithful
-Aquila handling. Research and tooling should directly advance that outcome or a
-concrete player-facing toolkit workflow.
+the replacement engine, using locally materialized user-supplied retail assets
+and retail-faithful Aquila handling. Research and tooling should directly
+advance that outcome or a concrete player-facing toolkit workflow.
 
 ## Near-term sequence
 
@@ -48,9 +48,9 @@ concrete player-facing toolkit workflow.
 - Never mutate an installed game or synthesize a save.
 - Preserve unknown bytes, expected-byte patching, backup/restore, licenses,
   credits, provenance, and third-party terms.
-- The project has full permission to use, modify, and distribute original game
-  assets. Add only the curated assets a live product/rebuild slice consumes;
-  bulk exports and raw lab evidence are not source.
+- Do not track or package retail game assets or converted copies. Keep exact
+  materialized inputs, bulk exports, and raw lab evidence local; source owns the
+  bounded recipe, provenance, and code that consume them.
 - A parser, patch write, state hash, or render smoke proves only its own
   contract. Player-visible and retail-behavior claims require direct automated
   observation.

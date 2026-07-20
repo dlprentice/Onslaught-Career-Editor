@@ -20,5 +20,5 @@ Canonical supporting evidence is
 [`aya-asset-format.md`](aya-asset-format.md), and
 [`extraction-pipeline.md`](extraction-pipeline.md). Corpus counts and generated
 assets are queried from the local corpus; tag recognition proves neither parser
-completeness nor asset fidelity. Distribution permission is recorded separately
-in [`../project-meta/attribution.md`](../project-meta/attribution.md).
+completeness nor asset fidelity. The user-supplied-data and attribution boundary
+is recorded in [`../project-meta/attribution.md`](../project-meta/attribution.md).

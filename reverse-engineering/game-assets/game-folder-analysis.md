@@ -192,7 +192,11 @@ Proprietary archive format, extractable with AYAResourceExtractor.
 
 ### XAP Format
 
-Voice pack archives - magic header needs analysis.
+The supported PC archive begins with `PCXP`, followed by a record count and
+fixed `PSMP` records containing a 64-byte name, decoded byte count, and raw
+high-nibble-first IMA-ADPCM payload. The rebuild materializer implements only
+the three exact English-bank records currently consumed by Level 100; other
+banks and broader format semantics remain unverified.
 
 ### MessageBox Voice Files
 
@@ -355,7 +359,7 @@ Found in level741 and level742 - these levels have special "hacking" gameplay. M
 | `.aya` | Resource archive | AYAResourceExtractor |
 | `.vid` | Bink video | RAD Video Tools |
 | `.ogg` | Vorbis audio | Standard players |
-| `.xap` | Voice pack archive | Unknown |
+| `.xap` | PCXP/PSMP sound bank; bounded IMA-ADPCM decode | `rebuild/tools/materialize_retail_assets.py` |
 | `.msl` | Mission script | Text-based, readable |
 | `.stf` | String table | Binary |
 | `.dat` | Various binary data | Per-file analysis needed |

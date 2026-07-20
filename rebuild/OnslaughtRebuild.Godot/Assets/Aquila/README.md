@@ -1,17 +1,18 @@
 # Aquila render and cockpit meshes
 
-This directory contains the original Federation Aquila render meshes and
-walker cockpit now used by the handling client. The project owner has
-permission to use, modify, and distribute the original game assets. These
-assets remain copyright of their original rights holders; `rebuild/LICENSE`
-covers the reconstruction code and does not relicense the assets.
+This directory owns the ignored local Federation Aquila render inputs used by
+the handling client. Run `npm run prepare:rebuild-assets` to materialize the
+exact supported files from a user-provided retail installation. The payloads
+are not tracked in the current source tree or included in release packages and
+remain copyright of their respective rights holders; `rebuild/LICENSE` covers
+reconstruction code only.
 
 The source files came from the released PC game's
 `data/resources/meshes` directory. Stuart Gillam's pinned source independently
 names `f_be1.msh` and `f_be2.msh` as the Federation walker and jet render
 meshes in `references/Onslaught/BattleEngine.cpp`.
 
-| File | Role | SHA-256 |
+| Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
 | `Source/m_f_be1.msh.aya` | Released walker CMSH archive consumed directly by Godot | `D4C8FA752229AF4111B31EFA5FF5928C892736FAA6A807915412767F3CD3C6B2` |
 | `Source/m_f_be2.msh.aya` | Released jet CMSH archive | `35AADA1313C3CBB796BA75DB071321035F7005096DA7C148A7514944F4772B4C` |

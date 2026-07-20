@@ -21,7 +21,7 @@ namespace Onslaught___Career_Editor
         bool IsReservedPreserve);
 
     /// <summary>
-    /// Clean-room MissionScript SetGoodieState/GetGoodieState codec over the retail
+    /// MissionScript SetGoodieState/GetGoodieState codec over the documented retail
     /// true-view CCareer Goodie storage. This is pure buffer math; it performs no
     /// file I/O and proves no runtime MissionScript behavior.
     /// </summary>

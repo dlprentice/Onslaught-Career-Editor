@@ -15,12 +15,13 @@ relicense this subtree or the pinned `references/Onslaught` source.
 - Controlled copied-runtime observations establish measured behavior.
 - Original design work, deterministic tests, public standards, and engine APIs
   may fill gaps that are clearly labelled provisional.
-- The project has full permission to use, modify, and distribute the original
-  game assets. Selected assets may enter the rebuild when an implemented slice
-  consumes them and their provenance, credits, and third-party terms are clear.
+- Retail assets are user-supplied local inputs. The source tree retains exact
+  hashes and bounded extraction/conversion recipes, while the materialized
+  payloads remain ignored and outside source/release packages.
 
-Do not import the retail executable, decompiler output, user saves, raw runtime
-captures, or separately licensed third-party code/media into this subtree.
+Do not import the retail executable, retail asset payloads or conversions,
+decompiler output, user saves, raw runtime captures, or separately licensed
+third-party code/media into this subtree.
 Never describe synthetic or source-only behavior as observed Steam behavior.
 
 ## Authority

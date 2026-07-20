@@ -1,10 +1,26 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [CmdletBinding()]
-param([switch]$Offline)
+param(
+    [switch]$Offline,
+    [string]$GameRoot
+)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$materializeArguments = @(
+    '-3',
+    (Join-Path $PSScriptRoot 'materialize_retail_assets.py')
+)
+if (-not [string]::IsNullOrWhiteSpace($GameRoot)) {
+    $materializeArguments += @('--game-root', $GameRoot)
+}
+
+& py @materializeArguments | ForEach-Object { Write-Host $_ }
+if ($LASTEXITCODE -ne 0) {
+    throw "Retail asset materialization failed with exit code $LASTEXITCODE."
+}
 
 $setupArguments = @{}
 if ($Offline) {

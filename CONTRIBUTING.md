@@ -54,10 +54,10 @@ normal-user promise without corresponding proven behavior.
 Never commit retail binaries, arbitrary saves, copied executables, full Ghidra
 stores/backups, debugger logs, private captures, credentials, or `.env*` files.
 Use the ignored locations described in [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
-for bulk extraction and experiments. The project has permission to use, modify,
-and distribute original game assets, but a contribution should add only the
-curated inputs a current product or rebuild path consumes, with credits,
-provenance, and third-party terms intact.
+for retail inputs, extraction, conversions, and experiments. Do not commit or
+package retail game assets or derived copies. Contribute the smallest exact
+recipe a current product or rebuild path consumes, with credits, provenance,
+and third-party terms intact.
 
 Save edits must start from a real baseline and preserve unknown bytes. Retail
 executable mutation must target a verified copy, never an installed game
@@ -73,8 +73,8 @@ evidence class and state what it does not prove.
 
 Before changing `rebuild/`, read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 and [`rebuild/README.md`](rebuild/README.md). GPL-compatible source adaptation
-and authorized original assets are permitted; retail executable/decompiler text
-and separately licensed third-party material are not.
+and locally materialized user-supplied retail data are permitted; retail
+executable/decompiler text and separately licensed third-party material are not.
 
 ## Validation
 

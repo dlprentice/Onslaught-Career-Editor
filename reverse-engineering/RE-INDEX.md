@@ -15,8 +15,9 @@ waves, superseded plans, and generated accounting.
 - Deterministic rebuild agreement does not re-prove retail behavior or establish
   gameplay, visual, or clean-room parity.
 - Retail executables, saves, debugger logs, and runtime frames remain untracked
-  local inputs. The reviewed canonical Ghidra project and the small authorized
-  asset set consumed by the rebuild are the explicit tracked exceptions.
+  local inputs. Retail assets and conversions are locally materialized and
+  ignored. The reviewed canonical Ghidra project and narrow save fixture are
+  the explicit tracked payload exceptions.
 
 ## Start here
 

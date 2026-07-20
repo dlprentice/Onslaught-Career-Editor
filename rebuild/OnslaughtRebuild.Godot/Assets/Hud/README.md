@@ -1,10 +1,11 @@
 # First-person HUD assets
 
-These are the exact released PC HUD textures consumed by the current Level 100
-first-person slice. The project owner has permission to use, modify, and
-distribute the original game assets. They remain copyright of their original
-rights holders; `rebuild/LICENSE` covers reconstruction code and does not
-relicense the assets.
+This directory owns the ignored local PC HUD textures consumed by the current
+Level 100 first-person slice. Run `npm run prepare:rebuild-assets` to
+materialize the exact supported files from a user-provided retail installation.
+The payloads are not tracked in the current source tree or included in release
+packages and remain copyright of their respective rights holders;
+`rebuild/LICENSE` covers reconstruction code only.
 
 The source files came from the released game's `data/resources/dxtntextures`
 directory. Their names are direct literals in the canonical Steam executable.

@@ -5,6 +5,10 @@ This ZIP package is the non-cert distribution shape for the WinUI 3 app.
 It is not an installer, MSIX package, Microsoft Store package, or signed
 installer release.
 
+Onslaught Toolkit is an unofficial community project. It is not affiliated
+with or endorsed by the game's publishers or rights holders. This package does
+not grant rights in Battle Engine Aquila or its assets.
+
 Quick start
 -----------
 
@@ -50,6 +54,7 @@ Safety notes
 - Full game assets, raw saves, private screenshots, raw/private proof JSON,
   generated media caches, and local test outputs are not included in this ZIP
   lane.
+- Game-aware workflows require the user's own lawfully obtained retail data.
 
 What this package shape proves
 ------------------------------

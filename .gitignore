@@ -75,9 +75,6 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 *.vid
 *.ogg
 *.wav
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/pulse-cannon-fire.wav
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/pulse-impact-small.wav
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/SoundEffects/target-tank-explosion-medium.wav
 *.mp3
 *.mp4
 *.dds
@@ -90,13 +87,13 @@ reverse-engineering/binary-analysis/scratch/**/MeshTextures/*.png
 *.gdt
 *.bytes
 
-# Reviewed source exceptions: active rebuild assets and canonical RE database.
-!rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source/*.aya
-!rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Textures/*.aya
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/*.aya
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/Textures/*.aya
-!rebuild/OnslaughtRebuild.Godot/Assets/Level100/TutorialAudio/*.ogg
-!rebuild/OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin
+# Retail-derived rebuild outputs are materialized locally from a user-owned
+# installation and remain untracked. Source paths already match the payload
+# extension rules above; these two bounded OBJ roots need explicit coverage.
+/rebuild/OnslaughtRebuild.Godot/Assets/Aquila/*.obj
+/rebuild/OnslaughtRebuild.Godot/Assets/Level100/*.obj
+
+# Canonical reviewed RE database exception.
 !reverse-engineering/ghidra/
 !reverse-engineering/ghidra/**
 

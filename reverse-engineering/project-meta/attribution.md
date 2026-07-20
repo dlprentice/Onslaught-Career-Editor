@@ -66,12 +66,15 @@
 ## Legal Status Note
 
 - Lost Toys Ltd dissolved in 2003.
-- The project owner has confirmed that this project has full permission to use,
-  modify, and distribute the original *Battle Engine Aquila* game assets for
-  preservation, modding, and reconstruction.
-- That asset permission is separate from repository code licenses. Preserve the
-  original game's credits and notices; executable, trademark, source-code, and
-  third-party middleware/component terms remain distinct where applicable.
+- Onslaught Toolkit is an unofficial community project and is not affiliated
+  with or endorsed by a publisher or rights holder of *Battle Engine Aquila*.
+- Users provide their own lawfully obtained retail game data. The current source
+  tree and release packages do not include retail game assets or converted
+  copies. Repository licenses grant no rights in the game executable,
+  assets, source code, names, trademarks, or third-party components.
+- Preserve the original game's credits and notices and all file-level,
+  source-code, and third-party terms. Developer-provided reference materials
+  retain their own documented provenance and licenses.
 - `references/Onslaught/` is tracked as a reference submodule in this public
   repo. Its contents keep their own provenance/licensing and are not bundled
   into the portable WinUI app ZIP.

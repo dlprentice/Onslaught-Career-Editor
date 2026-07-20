@@ -2,9 +2,9 @@
 
 Use ignored local directories for retail inputs and bulky/generated work. They
 are not source and must not be copied wholesale into a release candidate.
-Curated original assets may move into an owning product/rebuild path under the
-project's confirmed permission after provenance, attribution, and third-party
-terms are reviewed.
+The rebuild materializer writes its exact verified retail inputs to ignored
+asset paths so normal build and launch commands keep working without making the
+payloads repository source.
 
 Recommended owners:
 

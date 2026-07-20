@@ -47,6 +47,9 @@
                     <TextBlock Text="This app does not include the Battle Engine Aquila game itself. When a workflow needs game data, it reads your configured game install as read-only input."
                                AutomationProperties.AutomationId="AboutGameInstallBoundaryNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Onslaught Toolkit is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights holders, and its licenses grant no rights in the retail game or its assets."
+                               AutomationProperties.AutomationId="AboutAffiliationBoundaryNote"
+                               Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="This app is for retail Battle Engine Aquila saves, options, media, and copied-game workflows. It reads existing files and writes copied outputs; patching a copied game does not modify your installed game."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="This WinUI app is the primary user-facing Windows product lane. Maintainer infrastructure and historical app references remain separate from this user app."

@@ -49,7 +49,7 @@ names.
 1. Stuart source suggests architecture, ownership, vocabulary, and candidate logic.
 2. Steam binary static evidence establishes released code identity and structure.
 3. Copied-runtime observation establishes actual released behavior and measured values.
-4. Synthetic and authorized local exporter fixtures establish concrete format support.
+4. Synthetic and developer-provided local exporter fixtures establish concrete format support.
 5. The rebuild consumes an accepted contract; its own output cannot prove retail truth.
 
 The local exporter is bounded to trusted canonical retail input and process

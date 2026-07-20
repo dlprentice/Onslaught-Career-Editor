@@ -4,10 +4,9 @@ Status: active local analysis path
 
 The public repository contains parsers and exporters, not Battle Engine Aquila
 asset archives. Tools read a retail installation and write derived files to a
-separate ignored workspace. The project has permission to use, modify, and
-distribute original game assets, but bulk extraction remains local; only a
-curated, attributed asset set consumed by an active product/rebuild slice should
-enter source or packaging.
+separate ignored workspace. Retail assets and converted copies remain local;
+source retains only focused recipes, code, provenance, and conclusions consumed
+by an active product or rebuild slice.
 
 ## Supported flow
 

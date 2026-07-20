@@ -42,15 +42,18 @@ install anything by themselves.
   `export_asset_catalog.py`, `export_language_corpus.py`, and
   `export_video_manifest.py` operate on user-supplied local inputs and write to
   a separate local output root.
+- `rebuild/tools/materialize_retail_assets.py` verifies one supported retail
+  installation and reproduces the exact current rebuild inputs at ignored
+  runtime paths. Existing rebuild build/run/smoke commands invoke it directly.
 - `BeaAssetExportHarness/` is the bounded C# AYA/FBX export bridge.
 - `language_dat_decode.py`, `options_entries_decode.py`,
   `cheat_table_decode.py`, and `cardid_preset_manager.py` are focused format
   inspection utilities.
 
-Generated catalogs and bulk exports remain ignored local material. The project
-has permission to distribute original game assets, but only curated inputs with
-an active consumer belong in source. Passing an output safety test proves
-neither format completeness nor visual fidelity.
+Generated catalogs, retail assets, conversions, and bulk exports remain ignored
+local material. Source retains only the bounded recipe and implementation.
+Passing an output safety test proves neither format completeness nor visual
+fidelity.
 
 ## Ghidra and runtime research
 

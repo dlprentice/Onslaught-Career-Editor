@@ -91,10 +91,6 @@ game/steam_appid.txt -text
 *.webp -text
 *.zip -text
 
-# Reviewed game-derived inputs: preserve exact source bytes.
-rebuild/OnslaughtRebuild.Godot/Assets/Aquila/*.obj -text
-rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/*.aya -text
-rebuild/OnslaughtRebuild.Godot/Assets/Level100/Source/*.bin -text
-rebuild/OnslaughtRebuild.Godot/Assets/Level100/*.obj -text
+# Canonical reviewed RE database.
 reverse-engineering/ghidra/** binary
 reverse-engineering/ghidra/README.md text eol=lf
