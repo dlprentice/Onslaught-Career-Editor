@@ -49,6 +49,7 @@ LICENSE_TEMPLATE_ROOT = ROOT / "release" / "readiness" / "licenses"
 LICENSE_TEMPLATES = {
     "MIT": LICENSE_TEMPLATE_ROOT / "MIT.template.txt",
     "BSD-2-Clause": LICENSE_TEMPLATE_ROOT / "BSD-2-Clause.template.txt",
+    "LGPL-2.1-or-later": LICENSE_TEMPLATE_ROOT / "LGPL-2.1-or-later.txt",
 }
 PACKAGE_LICENSE_OVERRIDES = {
     "sharpdx": "MIT",
