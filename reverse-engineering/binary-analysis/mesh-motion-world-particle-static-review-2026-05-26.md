@@ -66,4 +66,4 @@ Mesh/resource bridge counts remain public-safe count evidence:
 - Runtime collision, physics, animation, render, particle, and world-occupancy behavior.
 - Runtime mesh/particle visual parity.
 - BEA patch behavior.
-- Clean-room rebuild parity.
+- Rebuild parity.

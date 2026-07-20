@@ -31,6 +31,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import winui_lore_pack_builder
+import generate_winui_third_party_notices as winui_third_party_notices
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "OnslaughtCareerEditor.WinUI" / "OnslaughtCareerEditor.WinUI.csproj"
@@ -40,6 +41,29 @@ DEFAULT_OUT_ROOT = ARTIFACTS_ROOT / "winui-zip-package-probe"
 APP_EXE = "OnslaughtCareerEditor.WinUI.exe"
 APP_PRI = "OnslaughtCareerEditor.WinUI.pri"
 NOTICES = "THIRD_PARTY_NOTICES.md"
+THIRD_PARTY_LICENSES_DIR = "THIRD_PARTY_LICENSES"
+THIRD_PARTY_LICENSES_INDEX = f"{THIRD_PARTY_LICENSES_DIR}/README.txt"
+DOTNET_LICENSE = f"{THIRD_PARTY_LICENSES_DIR}/DOTNET-LICENSE.txt"
+DOTNET_NOTICES = f"{THIRD_PARTY_LICENSES_DIR}/DOTNET-THIRD-PARTY-NOTICES.txt"
+LICENSE_TEMPLATE_ROOT = ROOT / "release" / "readiness" / "licenses"
+LICENSE_TEMPLATES = {
+    "MIT": LICENSE_TEMPLATE_ROOT / "MIT.template.txt",
+    "BSD-2-Clause": LICENSE_TEMPLATE_ROOT / "BSD-2-Clause.template.txt",
+}
+PACKAGE_LICENSE_OVERRIDES = {
+    "sharpdx": "MIT",
+    "sharpdx.direct3d11": "MIT",
+    "sharpdx.dxgi": "MIT",
+}
+# These old packages declare an SPDX expression or legacy license URL but do
+# not embed their exact tagged-source copyright notice in the nupkg.
+PACKAGE_COPYRIGHT_OVERRIDES = {
+    "markdig": "Copyright (c) 2018-2019, Alexandre Mutel\nAll rights reserved.",
+    "sharpdx": "Copyright (c) 2010-2014 SharpDX - Alexandre Mutel",
+    "sharpdx.direct3d11": "Copyright (c) 2010-2014 SharpDX - Alexandre Mutel",
+    "sharpdx.dxgi": "Copyright (c) 2010-2014 SharpDX - Alexandre Mutel",
+}
+PACKAGE_LICENSE_FILE_REGEX = re.compile(r"^(?:license|licence|copying|notice)(?:\..*)?$", re.IGNORECASE)
 ZIP_README_SOURCE = ROOT / "release" / "readiness" / "WINUI-ZIP-README.txt"
 ROOT_LAUNCHER = "Launch Onslaught Toolkit.cmd"
 ROOT_README = "README.MD"
@@ -84,7 +108,14 @@ REQUIRED_ROOT_FILES = (
 )
 REQUIRED_PAYLOAD_FILES = (
     REQUIRED_ROOT_FILES
-    + (LORE_BOOK_REQUIRED_FILE, LORE_PACK_INDEX_FILE, LORE_PACK_CONTENT_FILE)
+    + (
+        LORE_BOOK_REQUIRED_FILE,
+        LORE_PACK_INDEX_FILE,
+        LORE_PACK_CONTENT_FILE,
+        THIRD_PARTY_LICENSES_INDEX,
+        DOTNET_LICENSE,
+        DOTNET_NOTICES,
+    )
     + tuple(f"{APP_DIR}/{filename}" for filename in REQUIRED_APP_FILES)
 )
 DEFAULT_PACKAGE_NAME = "OnslaughtCareerEditor.WinUI-local-probe-win-x64.zip"
@@ -304,6 +335,249 @@ def copy_license(bundle_dir: Path) -> CheckResult:
     return CheckResult("bundle_license", "PASS", f"{relative(destination)} copied from repo license.")
 
 
+def published_nuget_packages(publish_dir: Path) -> dict[str, str]:
+    deps_path = publish_dir / "OnslaughtCareerEditor.WinUI.deps.json"
+    if not deps_path.is_file():
+        raise ValueError(f"{relative(deps_path)} is missing.")
+
+    data = json.loads(deps_path.read_text(encoding="utf-8"))
+    packages: dict[str, str] = {}
+    for key, row in data.get("libraries", {}).items():
+        if row.get("type") != "package" or "/" not in key:
+            continue
+        package_id, version = key.rsplit("/", 1)
+        packages[package_id.lower()] = version
+
+    # VideoLAN's native package contributes through MSBuild rather than the
+    # deps.json library table. It is part of the release only when the managed
+    # LibVLC wrapper is present in the published graph.
+    if "libvlcsharp" in packages:
+        direct_refs = winui_third_party_notices.parse_direct_package_refs(PROJECT)
+        native_version = direct_refs.get("videolan.libvlc.windows")
+        if not native_version:
+            raise ValueError("LibVLCSharp is published but VideoLAN.LibVLC.Windows is not pinned by the WinUI project.")
+        packages["videolan.libvlc.windows"] = native_version
+
+    return dict(sorted(packages.items()))
+
+
+def package_license_files(package_root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in package_root.rglob("*")
+        if path.is_file() and PACKAGE_LICENSE_FILE_REGEX.fullmatch(path.name)
+    )
+
+
+def normalize_license_expression(package_id: str, license_signal: str) -> str | None:
+    override = PACKAGE_LICENSE_OVERRIDES.get(package_id)
+    if override:
+        return override
+    lowered = license_signal.lower()
+    for expression in LICENSE_TEMPLATES:
+        if expression.lower() in lowered:
+            return expression
+    return None
+
+
+def safe_package_directory_name(package_id: str, version: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]", "_", f"{package_id}-{version}")
+
+
+def find_dotnet_distribution_root() -> Path | None:
+    candidates: list[Path] = []
+    env_root = os.environ.get("DOTNET_ROOT")
+    if env_root:
+        candidates.append(Path(env_root))
+    dotnet_exe = shutil.which("dotnet")
+    if dotnet_exe:
+        candidates.append(Path(dotnet_exe).resolve().parent)
+    for candidate in candidates:
+        if (candidate / "LICENSE.txt").is_file() and (candidate / "ThirdPartyNotices.txt").is_file():
+            return candidate
+    return None
+
+
+def copy_third_party_licenses(publish_dir: Path, bundle_dir: Path) -> CheckResult:
+    destination_root = bundle_dir / THIRD_PARTY_LICENSES_DIR
+    if destination_root.exists():
+        shutil.rmtree(destination_root)
+    destination_root.mkdir(parents=True)
+
+    dotnet_root = find_dotnet_distribution_root()
+    if dotnet_root is None:
+        return CheckResult("bundle_third_party_licenses", "FAIL", "The .NET distribution license/notice files could not be located.")
+    shutil.copy2(dotnet_root / "LICENSE.txt", bundle_dir / DOTNET_LICENSE)
+    shutil.copy2(dotnet_root / "ThirdPartyNotices.txt", bundle_dir / DOTNET_NOTICES)
+
+    try:
+        packages = published_nuget_packages(publish_dir)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return CheckResult("bundle_third_party_licenses", "FAIL", str(exc))
+
+    package_root = winui_third_party_notices.global_packages_root()
+    rows: list[tuple[str, str, str, str, list[str]]] = []
+    metadata_by_package: dict[str, dict[str, str]] = {}
+    for package_id, version in packages.items():
+        source_root = package_root / package_id / version
+        if not source_root.is_dir():
+            return CheckResult(
+                "bundle_third_party_licenses",
+                "FAIL",
+                f"Restored NuGet package is missing for {package_id} {version}.",
+            )
+        metadata = winui_third_party_notices.read_nuspec_metadata(package_id, version)
+        if not metadata:
+            return CheckResult(
+                "bundle_third_party_licenses",
+                "FAIL",
+                f"NuGet license metadata is missing for {package_id} {version}.",
+            )
+        metadata_by_package[package_id] = metadata
+
+        package_destination = destination_root / "packages" / safe_package_directory_name(package_id, version)
+        included_files: list[str] = []
+        for source in package_license_files(source_root):
+            target = package_destination / source.relative_to(source_root)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+            included_files.append(target.relative_to(destination_root).as_posix())
+
+        if not included_files:
+            expression = normalize_license_expression(package_id, metadata["license_signal"])
+            template = LICENSE_TEMPLATES.get(expression or "")
+            if template is None or not template.is_file():
+                return CheckResult(
+                    "bundle_third_party_licenses",
+                    "FAIL",
+                    f"No package-provided or reviewed standard license text covers {package_id} {version} ({metadata['license_signal']}).",
+                )
+            package_destination.mkdir(parents=True, exist_ok=True)
+            target = package_destination / "LICENSE.txt"
+            content = template.read_text(encoding="utf-8")
+            if "{copyright}" in content:
+                copyright_notice = PACKAGE_COPYRIGHT_OVERRIDES.get(package_id, metadata["copyright"])
+                if not copyright_notice:
+                    return CheckResult(
+                        "bundle_third_party_licenses",
+                        "FAIL",
+                        f"Copyright metadata is missing for templated license package {package_id} {version}.",
+                    )
+                content = content.replace("{copyright}", copyright_notice)
+            target.write_text(content, encoding="utf-8", newline="\n")
+            included_files.append(target.relative_to(destination_root).as_posix())
+
+        source_url = metadata["repository_url"] or metadata["project_url"]
+        rows.append(
+            (
+                winui_third_party_notices.display_id(package_id),
+                version,
+                metadata["license_signal"],
+                source_url,
+                included_files,
+            )
+        )
+
+    libvlc_lines: list[str] = []
+    wrapper_version = packages.get("libvlcsharp")
+    native_version = packages.get("videolan.libvlc.windows")
+    if wrapper_version and native_version:
+        wrapper_metadata = metadata_by_package["libvlcsharp"]
+        wrapper_source = wrapper_metadata["repository_url"] or wrapper_metadata["project_url"]
+        wrapper_commit = wrapper_metadata["repository_commit"]
+        wrapper_source_at_version = f"{wrapper_source}/-/tree/{wrapper_commit}" if wrapper_commit else wrapper_source
+        vlc_source_version = ".".join(native_version.split(".")[:3])
+        libvlc_lines = [
+            "LibVLC replacement and source",
+            "-----------------------------",
+            "",
+            "LibVLCSharp and VideoLAN.LibVLC.Windows are LGPL-2.1-or-later components",
+            "distributed as separate dynamically loaded files. The Toolkit does not",
+            "statically link them or apply installer/signature integrity enforcement.",
+            "After closing the Toolkit, a user may replace app\\LibVLCSharp.dll and the",
+            "app\\libvlc\\win-x64 directory with interface-compatible modified builds,",
+            "then restart the app. Replacement compatibility is the user's responsibility.",
+            "",
+            "Exact upstream source locations:",
+            f"- LibVLCSharp {wrapper_version}: {wrapper_source_at_version}",
+            f"- VLC {vlc_source_version} source used by VideoLAN.LibVLC.Windows {native_version}:",
+            f"  https://download.videolan.org/pub/videolan/vlc/{vlc_source_version}/vlc-{vlc_source_version}.tar.xz",
+            "- Native NuGet packaging source:",
+            "  https://code.videolan.org/videolan/libvlc-nuget",
+            "",
+        ]
+
+    lines = [
+        "Onslaught Toolkit - Third-Party Licenses",
+        "=========================================",
+        "",
+        "This directory accompanies the exact self-contained WinUI publish graph.",
+        "Package-specific license and notice files are copied from the restored",
+        "NuGet packages. Standard license texts are materialized only when a package",
+        "declares a recognized SPDX expression without embedding its own file.",
+        "",
+        ".NET runtime",
+        "------------",
+        "",
+        "The self-contained .NET runtime terms and third-party notices are in:",
+        "- DOTNET-LICENSE.txt",
+        "- DOTNET-THIRD-PARTY-NOTICES.txt",
+        "",
+        *libvlc_lines,
+        "Published package graph",
+        "-----------------------",
+        "",
+    ]
+    for package_id, version, license_signal, source_url, included_files in rows:
+        lines.append(f"{package_id} {version}")
+        lines.append(f"  Declared license: {license_signal}")
+        if source_url:
+            lines.append(f"  Source/project: {source_url}")
+        for included_file in included_files:
+            lines.append(f"  Included terms: {included_file}")
+        lines.append("")
+    lines.extend(
+        [
+            "These notices document the package boundary; they are not legal advice,",
+            "affiliation, endorsement, or permission for unrelated retail game assets.",
+            "",
+        ]
+    )
+    (bundle_dir / THIRD_PARTY_LICENSES_INDEX).write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+    package_count = len(rows)
+    license_file_count = sum(len(row[4]) for row in rows) + 2
+    return CheckResult(
+        "bundle_third_party_licenses",
+        "PASS",
+        f"Packaged {license_file_count} license/notice file(s) for .NET and {package_count} published NuGet package(s).",
+    )
+
+
+def keep_only_target_libvlc_runtime(app_dir: Path) -> CheckResult:
+    wrapper = app_dir / "LibVLCSharp.dll"
+    runtime_root = app_dir / "libvlc"
+    if not wrapper.is_file():
+        return CheckResult("bundle_libvlc_runtime", "PASS", "No LibVLCSharp payload is present in this synthetic package fixture.")
+
+    target_root = runtime_root / "win-x64"
+    required = (target_root / "libvlc.dll", target_root / "libvlccore.dll")
+    if any(not path.is_file() for path in required):
+        return CheckResult("bundle_libvlc_runtime", "FAIL", "The required win-x64 LibVLC runtime is missing.")
+
+    removed: list[str] = []
+    for candidate in sorted(runtime_root.iterdir()):
+        if candidate.is_dir() and candidate.name.lower() != "win-x64":
+            removed.append(candidate.name)
+            shutil.rmtree(candidate)
+    return CheckResult(
+        "bundle_libvlc_runtime",
+        "PASS",
+        "Retained the win-x64 LibVLC runtime and removed non-target architecture payloads"
+        + (": " + ", ".join(removed) if removed else "."),
+    )
+
+
 def copy_lore_book(bundle_dir: Path) -> CheckResult:
     destination = bundle_dir / LORE_BOOK_DIR
     required_source = LORE_BOOK_SOURCE / "BOOK.md"
@@ -454,9 +728,11 @@ def stage_portable_bundle(publish_dir: Path, bundle_dir: Path) -> list[CheckResu
     app_dir = bundle_dir / APP_DIR
     shutil.copytree(publish_dir, app_dir)
     checks = [
+        keep_only_target_libvlc_runtime(app_dir),
         write_launcher(bundle_dir),
         copy_zip_readme(bundle_dir),
         copy_license(bundle_dir),
+        copy_third_party_licenses(publish_dir, bundle_dir),
         copy_lore_book(bundle_dir),
         build_lore_pack(bundle_dir),
     ]
@@ -482,7 +758,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
     checks: list[CheckResult] = []
     root_files = sorted(name for name in names if "/" not in name.rstrip("/"))
     top_levels = sorted({name.rstrip("/").split("/", 1)[0] for name in names if name.rstrip("/")})
-    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR, LORE_BOOK_DIR, LORE_PACK_DIR}
+    allowed_top_levels = set(REQUIRED_ROOT_FILES) | {APP_DIR, LORE_BOOK_DIR, LORE_PACK_DIR, THIRD_PARTY_LICENSES_DIR}
     unexpected_top_levels = [name for name in top_levels if name not in allowed_top_levels]
     root_executables = [name for name in root_files if name.lower().endswith(".exe")]
     root_dlls = [name for name in root_files if name.lower().endswith(".dll")]
@@ -490,7 +766,7 @@ def inspect_root_layout_names(names: set[str], prefix: str) -> list[CheckResult]
         CheckResult(
             f"{prefix}_friendly_root_shape",
             "PASS" if not unexpected_top_levels else "FAIL",
-            "Top-level ZIP/folder entries are limited to launcher, readme, license, lore-book/, lore-pack/, and app/."
+            "Top-level ZIP/folder entries are limited to launcher, readme, licenses, lore-book/, lore-pack/, and app/."
             if not unexpected_top_levels
             else "Unexpected top-level entries: " + ", ".join(unexpected_top_levels[:12]),
         )

@@ -60,4 +60,4 @@ Variant vtable anchors to preserve:
 
 ## Evidence Boundary
 
-This map is static retail Ghidra evidence. It is suitable for clean-room planning and patch candidate scoping, but it does not prove runtime destructable-segment damage/break/rubble/cascade/pickup behavior, exact event payload schema, exact concrete layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, or rebuild parity.
+This map is static retail Ghidra evidence. It is suitable for independent reconstruction planning and patch candidate scoping, but it does not prove runtime destructable-segment damage/break/rubble/cascade/pickup behavior, exact event payload schema, exact concrete layouts, exact source-body identity, BEA patching behavior, gameplay outcomes, visual QA, or rebuild parity.

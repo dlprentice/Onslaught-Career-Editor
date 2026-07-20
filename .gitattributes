@@ -93,4 +93,4 @@ game/steam_appid.txt -text
 
 # Canonical reviewed RE database.
 reverse-engineering/ghidra/** binary
-reverse-engineering/ghidra/README.md text eol=lf
+reverse-engineering/ghidra/README.md text diff eol=lf

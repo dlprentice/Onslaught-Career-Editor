@@ -262,7 +262,7 @@ behavior directly.
 
 ## Distribution
 
-The published `v1.0.9` app is an unsigned portable Windows x64 ZIP. It does not
+The `v1.0.10` app is an unsigned portable Windows x64 ZIP. It does not
 currently include the retail executable, original asset set, saves, full Ghidra
 database, raw captures, installer/MSIX identity, signing, or rebuild client.
 Repository licenses do not cover retail game data. Future releases must keep

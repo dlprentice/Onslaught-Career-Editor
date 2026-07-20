@@ -11,7 +11,7 @@
     ],
     "runtimeExecution": false,
     "ghidraMutation": false,
-    "schemaPurpose": "static clean-room interpreter planning, not runtime proof"
+    "schemaPurpose": "static independent-interpreter planning, not runtime proof"
   },
   "staticContext": {
     "staticFunctionQuality": "6411/6411 = 100.00%",

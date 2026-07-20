@@ -13,7 +13,7 @@ waves, superseded plans, and generated accounting.
 - Controlled copied-runtime observations establish only the measured behavior
   and specimen described by their evidence.
 - Deterministic rebuild agreement does not re-prove retail behavior or establish
-  gameplay, visual, or clean-room parity.
+  gameplay, visual, or rebuild parity.
 - Retail executables, saves, debugger logs, and runtime frames remain untracked
   local inputs. Retail assets and conversions are locally materialized and
   ignored. The reviewed canonical Ghidra project and narrow save fixture are

@@ -14,10 +14,11 @@ owner; local working copies and historical backups remain untracked.
 The database retains program bytes needed by Ghidra together with functions,
 symbols, types, comments, references, and reviewed analysis state. It does not
 contain a standalone retail executable, save, debugger transcript, or runtime
-capture. The project owner has confirmed full distribution and reconstruction
-authority. Original game-derived material remains copyright of its original
-rights holders; the repository's source licenses do not independently
-relicense that material.
+capture. This canonical database is the repository's explicitly retained
+analysis artifact; its inclusion is not a claim of affiliation, endorsement,
+or broader permission for retail game assets. Original game-derived material
+remains copyright of its respective rights holders, and the repository's source
+licenses do not independently relicense that material.
 
 Open `BEA.gpr` from a disposable clone or local working copy. Ghidra may update
 project metadata when opening or upgrading it. Static database contents remain

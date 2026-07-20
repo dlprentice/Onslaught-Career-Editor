@@ -20,6 +20,11 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             probe.APP_EXE,
             probe.APP_PRI,
             probe.NOTICES,
+            "LibVLCSharp.dll",
+            "libvlc/win-x64/libvlc.dll",
+            "libvlc/win-x64/libvlccore.dll",
+            "libvlc/win-x86/libvlc.dll",
+            "libvlc/win-arm64/libvlc.dll",
             "support.dll",
             "patches/catalog/patches.v2.json",
             "patches/catalog/safe-copy-profiles.v1.json",
@@ -27,6 +32,10 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             path = publish_dir / relative_path
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(f"{relative_path}\n", encoding="utf-8")
+        (publish_dir / "OnslaughtCareerEditor.WinUI.deps.json").write_text(
+            json.dumps({"libraries": {}}),
+            encoding="utf-8",
+        )
 
     def test_stage_portable_bundle_keeps_publish_noise_under_app_folder(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
@@ -40,11 +49,17 @@ class WinUiZipPackageProbeTests(unittest.TestCase):
             self.assertTrue((bundle_dir / probe.ROOT_LAUNCHER).is_file())
             self.assertTrue((bundle_dir / probe.ROOT_README).is_file())
             self.assertTrue((bundle_dir / probe.ROOT_LICENSE).is_file())
+            self.assertTrue((bundle_dir / probe.THIRD_PARTY_LICENSES_INDEX).is_file())
+            self.assertTrue((bundle_dir / probe.DOTNET_LICENSE).is_file())
+            self.assertTrue((bundle_dir / probe.DOTNET_NOTICES).is_file())
             self.assertTrue((bundle_dir / "lore-book" / "BOOK.md").is_file())
             self.assertTrue((bundle_dir / "lore-pack" / "onslaught-lore.v1.index.json").is_file())
             self.assertTrue((bundle_dir / "lore-pack" / "onslaught-lore.v1.jsonl").is_file())
             self.assertTrue((bundle_dir / "app" / probe.APP_EXE).is_file())
             self.assertTrue((bundle_dir / "app" / "support.dll").is_file())
+            self.assertTrue((bundle_dir / "app" / "libvlc" / "win-x64" / "libvlc.dll").is_file())
+            self.assertFalse((bundle_dir / "app" / "libvlc" / "win-x86").exists())
+            self.assertFalse((bundle_dir / "app" / "libvlc" / "win-arm64").exists())
             self.assertFalse((bundle_dir / probe.APP_EXE).exists())
             self.assertFalse((bundle_dir / "support.dll").exists())
             launcher = (bundle_dir / probe.ROOT_LAUNCHER).read_text(encoding="utf-8")

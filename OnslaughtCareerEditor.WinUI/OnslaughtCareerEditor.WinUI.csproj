@@ -7,7 +7,7 @@
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RootNamespace>OnslaughtCareerEditor.WinUI</RootNamespace>
-    <Version>1.0.9</Version>
+    <Version>1.0.10</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWinUI>true</UseWinUI>
@@ -44,7 +44,7 @@
 
   <Target Name="CopyWinUINoticesToPublishDirectory" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
     <PropertyGroup>
-      <_WinUINoticeSource>$(MSBuildProjectDirectory)\..\release\readiness\THIRD_PARTY_NOTICES.winui-draft.md</_WinUINoticeSource>
+      <_WinUINoticeSource>$(MSBuildProjectDirectory)\..\release\readiness\THIRD_PARTY_NOTICES.winui.md</_WinUINoticeSource>
     </PropertyGroup>
     <Copy SourceFiles="$(_WinUINoticeSource)" DestinationFiles="$(PublishDir)THIRD_PARTY_NOTICES.md" Condition="Exists('$(_WinUINoticeSource)')" SkipUnchangedFiles="true" />
   </Target>

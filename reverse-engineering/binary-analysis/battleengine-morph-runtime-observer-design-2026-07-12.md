@@ -35,8 +35,8 @@ control flow, but it does not decide Steam behavior. The AYA exporter supplies
 format hypotheses and asset tooling. The rebuild is an evidence consumer and
 cannot validate the retail executable by agreeing with itself.
 
-The current implementation remains an RE-informed original-code rebuild, not a
-strict clean-room or parity-complete implementation.
+The current implementation remains an RE-informed original-code rebuild, not an
+organizationally isolated or parity-complete implementation.
 
 ## Scope
 

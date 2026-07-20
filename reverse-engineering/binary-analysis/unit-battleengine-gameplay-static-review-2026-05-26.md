@@ -64,4 +64,4 @@ Representative anchors include `CUnit__ApplyDamage`, `CUnit__GetCurrentHealthOrS
 - Runtime damage, AI, weapon, input, mode-switching, targeting, spawn, and projectile behavior.
 - Runtime mission/gameplay outcomes.
 - BEA patch behavior.
-- Clean-room rebuild parity.
+- Rebuild parity.

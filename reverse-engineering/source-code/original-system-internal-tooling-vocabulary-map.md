@@ -4,7 +4,7 @@ Status: source-only continuity map; context only, not readiness evidence
 Last updated: 2026-07-02
 
 This map records source-indexed internal editor, developer-tool, resource, and
-pipeline vocabulary that can help future clean-room planning. It is a context
+pipeline vocabulary that can help future independent reconstruction planning. It is a context
 companion for the current `tmm-arm4-readiness-gate` continuity lane, not a
 readiness-gate artifact.
 
@@ -23,7 +23,7 @@ launch BEA, attach CDB, mutate a Ghidra project, or patch an executable.
 ## Use
 
 Use this file as a compact index when deciding what original-system vocabulary
-needs higher-authority confirmation before it can inform a clean-room rebuild
+needs higher-authority confirmation before it can inform a rebuild
 contract. Link to the canonical docs for detail instead of copying complete
 inventories or tag catalogs here.
 
@@ -38,7 +38,7 @@ inventories or tag catalogs here.
 
 ## Source-Indexed Vocabulary
 
-| Area | Public anchor | Source/internal signal | Candidate clean-room use | Evidence ceiling | Higher authority still required | Still out of scope here |
+| Area | Public anchor | Source/internal signal | Candidate reconstruction use | Evidence ceiling | Higher authority still required | Still out of scope here |
 | --- | --- | --- | --- | --- | --- | --- |
 | Internal editor shell | [engine-system.md](core/engine-system.md) | `EditorD3DApp`, `EDITORBUILD`, `EDITORBUILD2`, `DEV_VERSION`, `LT_DEBUG` | Vocabulary for internal D3D8 editor-shell separation and future tool-facing UI boundaries | Tier C source-only context | Retail static or runtime evidence before any Steam-build editor/tool claim | Readiness-gate execution, tool launch, renderer implementation, visual proof, or parity |
 | Internal viewer/editor names | [source-code/_index.md](_index.md), [engine-system.md](core/engine-system.md) | Model viewer, cutscene editor, particle editor, and source-only flag names such as `-modelviewer` and `-cutsceneeditor` | Candidate labels for tool families that may need separate public-safe requirements later | Tier C source vocabulary only; flag names are not runnable instructions | Retail flag/static proof and separate command-boundary review before any executable use | Command arming, command arguments, shell traces, tool execution, or retail feature claims |

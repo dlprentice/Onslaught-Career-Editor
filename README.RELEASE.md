@@ -8,7 +8,8 @@ The candidate contains:
 
 - `Launch Onslaught Toolkit.cmd` at the ZIP root;
 - the self-contained WinUI payload under `app/`;
-- `LICENSE`, the generated third-party notices, and the package README;
+- `LICENSE`, the generated third-party notices and license bundle, and the
+  package README;
 - `lore-book/BOOK.md` plus a generated short-path `lore-pack/` built from the
   canonical public `lore/` library.
 
@@ -32,7 +33,7 @@ scratch space.
 
 For source-only release boundary changes, select the affected commands from
 [`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
-[`release/readiness/THIRD_PARTY_NOTICES.winui-draft.md`](release/readiness/THIRD_PARTY_NOTICES.winui-draft.md)
+[`release/readiness/THIRD_PARTY_NOTICES.winui.md`](release/readiness/THIRD_PARTY_NOTICES.winui.md)
 is generated from restored project dependencies and must agree with
 `npm run test:notices`.
 

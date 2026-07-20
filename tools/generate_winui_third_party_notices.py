@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a public-safe third-party notice draft for the WinUI lane."""
+"""Generate the public-safe third-party notice source for the WinUI lane."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "release" / "readiness" / "THIRD_PARTY_NOTICES.winui-draft.md"
+OUTPUT = ROOT / "release" / "readiness" / "THIRD_PARTY_NOTICES.winui.md"
 
 PROJECTS = [
     ("WinUI product", ROOT / "OnslaughtCareerEditor.WinUI" / "OnslaughtCareerEditor.WinUI.csproj"),
@@ -46,7 +46,7 @@ class PackageNotice:
     def posture(self) -> str:
         lower = f"{self.package_id} {self.license_signal}".lower()
         if "lgpl" in lower or "videolan" in lower or "libvlc" in lower:
-            return "LGPL/media redistribution review required before public binaries."
+            return "Ship as separate replaceable libraries with the LGPL license and exact upstream source links."
         if self.package_id.lower().startswith("microsoft."):
             return "Microsoft license/notice terms must be included as applicable."
         if self.lane == "Test-only":
@@ -141,8 +141,11 @@ def read_nuspec_metadata(package_id: str, version: str) -> dict[str, str]:
 
     return {
         "license_signal": license_signal or "not declared in local NuGet metadata",
+        "license_type": license_type,
+        "license_value": license_text,
         "project_url": child_text(metadata, "projectUrl"),
         "repository_url": child_attr(metadata, "repository", "url"),
+        "repository_commit": child_attr(metadata, "repository", "commit"),
         "copyright": child_text(metadata, "copyright"),
     }
 
@@ -200,11 +203,11 @@ def sanitize_cell(value: str) -> str:
 
 def render_markdown(notices: list[PackageNotice]) -> str:
     lines = [
-        "# WinUI Third-Party Notices Draft",
+        "# WinUI Third-Party Notices",
         "",
-        "Status: public-safe release readiness draft",
+        "Status: generated release notice source",
         "",
-        "This file is generated from the active WinUI product, AppCore/support, CLI/support, and test project dependency graph plus local NuGet package metadata. It is a source-controlled notice draft for review. It is not a signed-installer legal approval and is not proof that a final binary package contains every required notice file.",
+        "This file is generated from the active WinUI product, AppCore/support, CLI/support, and test project dependency graph plus local NuGet package metadata. Public ZIPs pair it with a generated `THIRD_PARTY_LICENSES/` bundle containing applicable package license/notice files and the .NET runtime notices.",
         "",
         "Retail executables, user saves, bulk extracted assets, raw captures, local NuGet cache paths, and local machine paths are intentionally omitted.",
         "",
@@ -212,17 +215,17 @@ def render_markdown(notices: list[PackageNotice]) -> str:
         "",
         "- Generate this file from the final restored/published dependency graph before any public binary release.",
         "- Include applicable package license and notice files in the final installer/ZIP/MSIX output.",
-        "- LGPL-bearing LibVLC packages require a focused redistribution review for the chosen binary shape.",
+        "- Keep the dynamically loaded LibVLC components replaceable and retain the matching LGPL notice, license, and source links.",
         "- Test-only dependencies are listed for repo transparency; they are not expected in the product runtime output unless test artifacts are distributed.",
         "",
         "## Package Notices",
         "",
-        "| Package | Version | Lane | Direct reference | License signal | Project/source | Release posture |",
-        "| --- | ---: | --- | --- | --- | --- | --- |",
+        "| Package | Version | Lane | Direct reference | License signal | Copyright | Project/source | Release posture |",
+        "| --- | ---: | --- | --- | --- | --- | --- | --- |",
     ]
 
     for notice in notices:
-        project_source = notice.project_url or notice.repository_url
+        project_source = notice.repository_url or notice.project_url
         direct_reference = ", ".join(sorted(notice.direct_in)) if notice.direct_in else "transitive"
         lines.append(
             "| "
@@ -233,6 +236,7 @@ def render_markdown(notices: list[PackageNotice]) -> str:
                     sanitize_cell(notice.lane),
                     sanitize_cell(direct_reference),
                     sanitize_cell(notice.license_signal),
+                    sanitize_cell(notice.copyright),
                     sanitize_cell(project_source),
                     sanitize_cell(notice.posture),
                 ]
@@ -247,15 +251,15 @@ def render_markdown(notices: list[PackageNotice]) -> str:
             "",
             "1. Publish the exact WinUI binary candidate.",
             "2. Re-run `py -3 tools\\generate_winui_third_party_notices.py --check` after restore/publish so dependency drift is visible.",
-            "3. Verify the package contains this notice draft or a final derivative plus package-provided license/notice files required by redistributed dependencies.",
-            "4. Document the LGPL strategy for `LibVLCSharp` and `VideoLAN.LibVLC.Windows`, including how users can replace or relink the LGPL-covered components if required by the final distribution shape.",
+            "3. Verify the package contains this notice plus the generated `THIRD_PARTY_LICENSES/` bundle for its actual published dependency graph.",
+            "4. Verify `THIRD_PARTY_LICENSES/README.txt` documents the separate LibVLC files, compatible replacement path, LGPL terms, and exact upstream source locations.",
             "5. Keep retail executables, user saves, bulk extraction output, and raw proof artifacts outside the release package.",
             "",
             "## Current Limitations",
             "",
-            "- This draft is generated from restored project assets and local NuGet metadata, not from a signed installer artifact.",
-            "- It does not embed full third-party license texts; final packaging must include license files where package terms require them.",
-            "- It does not grant legal approval for redistribution.",
+            "- This notice source is generated from restored project assets and local NuGet metadata, not from a signed installer artifact.",
+            "- The portable ZIP gate owns the final dependency-license bundle and checks it against the exact published graph.",
+            "- These notices record the distribution boundary; they are not legal advice or a rightsholder endorsement.",
             "",
         ]
     )

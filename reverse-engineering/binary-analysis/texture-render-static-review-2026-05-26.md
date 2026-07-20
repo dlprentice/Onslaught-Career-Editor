@@ -64,4 +64,4 @@ This is real installed-corpus/tooling evidence, but it is not a runtime-render c
 - Exact `CTexture`, `CDXTexture`, `CFastVB`, `CVBufTexture`, and Direct3D object layouts.
 - Native textured/animated WinUI 3D rendering.
 - In-game render correctness, animation behavior, material visual parity, and camera/render-state fidelity.
-- Clean-room rebuild parity.
+- Rebuild parity.

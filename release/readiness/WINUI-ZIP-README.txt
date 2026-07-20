@@ -19,6 +19,14 @@ Quick start
 4. Keep the files together; do not move the executable away from the
    app folder and its support files.
 
+Licenses
+--------
+
+- LICENSE contains the Onslaught Toolkit source license.
+- app\THIRD_PARTY_NOTICES.md identifies the restored dependency graph.
+- THIRD_PARTY_LICENSES\ contains the corresponding package terms, .NET runtime
+  notices, LibVLC source locations, and compatible-library replacement path.
+
 First run
 ---------
 
@@ -60,8 +68,9 @@ What this package shape proves
 ------------------------------
 
 The repository ZIP probe builds disposable WinUI publish output, stages a
-friendly portable root with this README, LICENSE, Launch Onslaught Toolkit.cmd,
-app\, lore-book\, and lore-pack\, creates this ZIP, writes a SHA-256 sidecar,
+friendly portable root with this README, LICENSE, THIRD_PARTY_LICENSES\,
+Launch Onslaught Toolkit.cmd, app\, lore-book\, and lore-pack\, creates this
+ZIP, writes a SHA-256 sidecar,
 rejects Explorer-unsafe long ZIP entry paths, verifies the generated Lore pack
 schema/hashes/content safety, rejects raw deep lore-book mirror leakage,
 extracts the ZIP, launches the extracted app from app\, runs native launch
