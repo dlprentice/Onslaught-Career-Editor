@@ -63,10 +63,11 @@ internal static class CuratedObjMeshLoader
                         throw new InvalidDataException("Curated mesh has a triangle without a material group.");
                     }
                     RequireFieldCount(fields, 4, "triangle");
-                    for (int field = 1; field < fields.Length; field++)
-                    {
-                        activeSurface.Indices.Add(ParseUnifiedIndex(fields[field]));
-                    }
+                    // Retained OBJ faces use the format's conventional counter-clockwise
+                    // front winding. Godot ArrayMesh defines clockwise triangles as front-facing.
+                    activeSurface.Indices.Add(ParseUnifiedIndex(fields[1]));
+                    activeSurface.Indices.Add(ParseUnifiedIndex(fields[3]));
+                    activeSurface.Indices.Add(ParseUnifiedIndex(fields[2]));
                     if (surfaces.Sum(surface => surface.Indices.Count) / 3 > MaximumTriangles)
                     {
                         throw new InvalidDataException("Curated mesh exceeds the triangle limit.");

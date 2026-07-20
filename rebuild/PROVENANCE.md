@@ -57,15 +57,16 @@ for hashed player-ground elevation. Exact `MAPT`/`MMAP` inputs and
 the released
 `0x0047EFF0` blend path produce the 512×512 macro landscape texture. Level 100
 selects exact 512×512 DXT1 `detail00`; the released terrain render path at
-`0x00545590` supplies its two world-coordinate scales, offset, and observed
-modulation modes. The client
+`0x00545590` supplies its two world-coordinate scales, offset, exact 256×256
+DXT1 moving cloud-shadow stage, scroll rates, and observed modulation modes.
+The macro compositor follows the released row-major tile, texel, weight, and
+shade-mask addressing. The client
 preserves each retained mesh group's layer-zero `TEXR` assignment and directly
 decodes fifteen exact AYA-wrapped mesh textures. Five exact DXT1 cube-25
 textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
-passes—including the shared layer-two `Chrome3` reference, moving terrain
-cloud-shadow stage, and
-visible-sun particle—are not guessed. Steep-slope sliding, structure collision
+passes—including the shared layer-two `Chrome3` reference and visible-sun
+particle—are not guessed. Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 presentation, and unimplemented HUD behavior remain provisional unless
 specific retained evidence says otherwise.
@@ -311,14 +312,14 @@ A native smoke proves the current client starts; loads 57 Aquila, twenty
 facility, six target, and two cockpit material surfaces; decodes fifteen mesh,
 nine Pulse/target-effect, twenty-three HUD, and five sky textures; validates
 three PCM sound envelopes; and consumes the
-retained heightfield, macro/detail terrain inputs, and Core-owned ground
-elevation. Its deterministic
+retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
+ground elevation. Its deterministic
 route reaches the first Firing Range exercise, renders the exact target models
 and shipped objective markers, plays the fourteenth voice, removes Target Tank
 1 after four bounded full hits with retained shot/impact/destruction
 presentation, preserves the expected Core hash, and exits at
-both supported viewports. It does not prove secondary material or cloud-shadow
-passes, procedural leg solving, collision beyond the two observed facilities,
+both supported viewports. It does not prove secondary material passes,
+procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
 population, the complete mission,

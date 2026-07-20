@@ -1,7 +1,7 @@
 # Level 100 opening assets
 
-These are the released heightfield, macro/detail terrain inputs, cube-25 sky,
-nine world meshes, nine Pulse Cannon/target-destruction effect textures,
+These are the released heightfield, macro/detail/cloud-shadow terrain inputs,
+cube-25 sky, nine world meshes, nine Pulse Cannon/target-destruction effect textures,
 three weapon-effect sounds, and the first seventeen English tutorial voice clips
 consumed by the current Level 100 opening slice. The
 project owner has permission to use, modify, and distribute the original game assets.
@@ -18,6 +18,7 @@ geometry, normals, UVs, and base part transforms.
 | `Source/level100-mixer-set-10.mapt.bin` | Exact largest `MAPT` mip selected by the Level 100 `CHFD` mixer-set value | `C21576AE7EA75FA800AB4117C1479AEB70359A1ACC84EDD9508895EB339612F1` |
 | `Source/level100-mixer-map.mmap.bin` | Exact released `MMAP` material-weight and lighting-mask payload | `45045D248E27366080614C1AD26FC9E711BC9656F4F79210EAC63D2A20938361` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
+| `Textures/terrain-cloud-shadow.texture.aya` | Exact released 256×256 DXT1 `clouds%shadow.tga(0)A8R8G8B8.aya` loaded by the landscape renderer | `FC7441887E494E4B18F2B16179ED42C17801B128D71E29D653A4E8B792869519` |
 | `Source/m_fb_control_tower.msh.aya` | Released Control Tower CMSH archive | `86AF67E09DC2FD21C7023ACD53EBCB4171F3BF396F836DA85ECFDDA516588D91` |
 | `level100-control-tower.obj` | Static intact geometry and base-material groups consumed by Godot | `9A2B9C287BFF21DD7E3B560EE36CC7D7CAFB99399B3003BF2E81A832FBD6F6BA` |
 | `Source/m_fb_tank_factory.msh.aya` | Released Tank Factory CMSH archive | `A507AFDA7B5C6B6B8BED275D442A53B28043BB9D5B65F9EA5BD6F5FF754BF6DE` |
@@ -137,10 +138,11 @@ macro texture once across the 512-unit landscape, maps that exact RGB detail
 texture once per world unit, and applies it again at quarter scale with a
 `(0.3, 0.3)` offset. In the observed Level 100 renderer state, the macro and
 second detail stages use `D3DTOP_MODULATE2X`; the first detail stage uses plain
-modulation. The Godot material preserves that sequence and treats the omitted
-moving cloud-shadow stage as neutral. The terrain indices now use Godot's
-front-facing winding, so the attached opening view renders the near ground
-instead of exposing the sky through back-face culling.
+modulation. Between the two detail stages, the exact released cloud-shadow
+texture repeats every 256 world units, scrolls by `(0.001, 0.0005)` per renderer
+time unit, and uses `D3DTOP_MODULATE2X`. The Godot shader preserves those four
+encoded-value operations before framebuffer conversion. The macro compositor
+uses the released row-major tile, source-texel, weight, and shade-mask axes.
 
 The `CHFD` also selects cube 25 and supplies the fog color/density, sun,
 anti-sun and ambient colors, and sun vector. The five exact DXT1 cube textures
@@ -150,8 +152,8 @@ fog, matching the released no-depth world backdrop rather than treating it as
 distant terrain.
 
 This establishes the authored macro material layout, repeating terrain detail,
-and environment inputs, not pixel parity. The released moving cloud-shadow
-stage, overlay tile updates, separate visible-sun particle, trees, and distant
+moving cloud-shadow stage, and environment inputs, not whole-scene pixel parity.
+Overlay tile updates, the separate visible-sun particle, trees, and distant
 props are not implemented.
 
 ## Authored placement consumed by the slice
@@ -334,7 +336,7 @@ outward-rounded horizontal bound; Godot presents exact Pulse impacts and removes
 the completed objective. Retail segment selection, rubble/debris, mesh-part
 damage multipliers, the three moving trucks, and Vulcan firing are not
 implemented. Actor/structure collision,
-steep-slope response, the moving cloud-shadow pass, facility animation, complete
+steep-slope response, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Objective markers use the shipped HUD asset; no synthetic target or
 world-space beacon geometry is retained.

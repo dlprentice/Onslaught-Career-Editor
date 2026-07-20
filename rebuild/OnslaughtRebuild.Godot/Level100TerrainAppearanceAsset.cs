@@ -32,8 +32,18 @@ internal static class Level100TerrainAppearanceAsset
         shader_type spatial;
         render_mode unshaded;
 
-        uniform sampler2D macro_map : source_color, filter_linear_mipmap, repeat_disable;
-        uniform sampler2D detail_map : source_color, filter_linear_mipmap, repeat_enable;
+        // D3D8's fixed-function texture stages modulated the stored texture values.
+        // Sample them as encoded values, reproduce that stage arithmetic, then hand
+        // Godot a linear result for its sRGB framebuffer conversion.
+        uniform sampler2D macro_map : filter_linear_mipmap, repeat_disable;
+        uniform sampler2D detail_map : filter_linear_mipmap, repeat_enable;
+        uniform sampler2D cloud_shadow_map : filter_linear_mipmap, repeat_enable;
+
+        vec3 srgb_to_linear(vec3 color) {
+            vec3 low = color / 12.92;
+            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
+            return mix(low, high, step(vec3(0.04045), color));
+        }
 
         void fragment() {
             vec3 macro_color = texture(macro_map, UV).rgb;
@@ -42,9 +52,14 @@ internal static class Level100TerrainAppearanceAsset
             vec3 detail_secondary = texture(
                 detail_map,
                 (retail_world_uv * 0.25) + vec2(0.3)).rgb;
+            vec3 cloud_shadow = texture(
+                cloud_shadow_map,
+                (retail_world_uv / 256.0) + vec2(TIME * 0.001, TIME * 0.0005)).rgb;
             vec3 stage_color = min(macro_color * 2.0, vec3(1.0));
             stage_color *= detail_primary;
-            ALBEDO = min(stage_color * detail_secondary * 2.0, vec3(1.0));
+            stage_color = min(stage_color * cloud_shadow * 2.0, vec3(1.0));
+            vec3 retail_color = min(stage_color * detail_secondary * 2.0, vec3(1.0));
+            ALBEDO = srgb_to_linear(retail_color);
         }
         """;
 
@@ -52,6 +67,7 @@ internal static class Level100TerrainAppearanceAsset
         string mapTextureResourcePath,
         string mixerMapResourcePath,
         string detailTextureResourcePath,
+        string cloudShadowResourcePath,
         Level100HeightFieldAsset heightField)
     {
         byte[] mapTexture = Godot.FileAccess.GetFileAsBytes(mapTextureResourcePath);
@@ -96,6 +112,11 @@ internal static class Level100TerrainAppearanceAsset
             512,
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        Texture2D cloudShadowTexture = CuratedAyaTextureLoader.Load(
+            cloudShadowResourcePath,
+            256,
+            256,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         var shader = new Shader
         {
             Code = TerrainShaderCode,
@@ -106,6 +127,7 @@ internal static class Level100TerrainAppearanceAsset
         };
         material.SetShaderParameter("macro_map", macroTexture);
         material.SetShaderParameter("detail_map", detailTexture);
+        material.SetShaderParameter("cloud_shadow_map", cloudShadowTexture);
         return material;
     }
 
@@ -225,12 +247,12 @@ internal static class Level100TerrainAppearanceAsset
                 int tileZ = z / TileSize;
                 int localX = x % TileSize;
                 int localZ = z % TileSize;
-                int cellIndex = (tileX * TileCountPerAxis) + tileZ;
+                int cellIndex = (tileZ * TileCountPerAxis) + tileX;
                 MixerCell cell = mixer.Cells[cellIndex];
 
                 int sourceX = localX + ((cellIndex & 1) != 0 ? TileSize : 0);
                 int sourceZ = localZ + ((cellIndex & 0x40) != 0 ? TileSize : 0);
-                int sourceTexel = (sourceX * MixerTextureWidth) + sourceZ;
+                int sourceTexel = (sourceZ * MixerTextureWidth) + sourceX;
                 uint color = ReadPaletteColor(textures, 0, sourceTexel);
 
                 for (int layer = 0; layer < cell.MaterialIds.Length; layer++)
@@ -238,7 +260,7 @@ internal static class Level100TerrainAppearanceAsset
                     byte materialId = cell.MaterialIds[layer];
                     uint candidate = ReadPaletteColor(textures, materialId, sourceTexel);
                     int weight = unchecked((sbyte)cell.Weights[
-                        (layer * MixerWeightCountPerLayer) + (localX * 9) + localZ]);
+                        (layer * MixerWeightCountPerLayer) + (localZ * 9) + localX]);
                     candidate = unchecked(candidate + (uint)(weight << 24));
                     int difference = unchecked((int)(candidate - color));
                     if (difference > 0x1FFFFFFF)
@@ -258,7 +280,7 @@ internal static class Level100TerrainAppearanceAsset
                 byte red = (byte)color;
                 byte green = (byte)(color >> 8);
                 byte blue = (byte)(color >> 16);
-                byte shadeIndex = mixer.Source[mixer.ShadeOffset + (x * MapSize) + z];
+                byte shadeIndex = mixer.Source[mixer.ShadeOffset + (z * MapSize) + x];
                 GradientEntry light = gradient[shadeIndex];
                 uint rgb565 = (((uint)green * light.Green & 0x07E00000) +
                     ((uint)blue * light.Blue & 0x001F0000) +

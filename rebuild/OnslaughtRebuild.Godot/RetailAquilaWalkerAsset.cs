@@ -478,10 +478,11 @@ internal sealed class RetailAquilaWalkerAsset
                 continue;
             }
 
-            // BEA-to-Godot axis conversion is a reflection, so reverse winding.
+            // MapVector's reflection already changes BEA's strip winding to the
+            // clockwise front-face order required by Godot ArrayMesh.
             triangles.Add(a);
-            triangles.Add(c);
             triangles.Add(b);
+            triangles.Add(c);
         }
         if (triangles.Count == 0)
         {

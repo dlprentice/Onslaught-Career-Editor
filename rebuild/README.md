@@ -29,9 +29,10 @@ from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet, seven facility mesh types, and two target types retain bounded static
-conversions and render with their exact retained layer-zero textures. The released macro terrain
-blend, repeating detail texture, cube-25 sky, fog, and environment light values
-now replace the procedural ground/sky. The opening view uses the released Level
+conversions and render with their exact retained layer-zero textures. The
+released macro terrain blend, repeating detail and moving cloud-shadow textures,
+cube-25 sky, fog, and environment light values now replace the procedural
+ground/sky. The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
 projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
@@ -50,7 +51,7 @@ Godot consumes the exact released round, impact, tank-destruction, sound, text,
 and voice assets required by that path.
 Core also reproduces only the observed circular walker
 contact and tangent slide for the Control Tower and Tank Factory. Secondary
-material and moving cloud-shadow passes, steep-slope and other actor/structure
+material passes, steep-slope and other actor/structure
 collision response, mesh-part damage variation, weapon resources, the target
 Warehouse's segment-specific damage/rubble, secondary debris/effects, moving
 truck exercise, Vulcan firing, and most mission behavior remain provisional.
@@ -136,7 +137,8 @@ retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot renders the released 65×65 coarse heightfield and samples it for
 static presentation placement, generates the released 512×512 macro blend from exact
 `MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
-coordinate scales and modulation modes, and renders the five exact cube-25 sky
+coordinate scales, inserts the exact moving cloud-shadow stage with its released
+scroll and modulation, and renders the five exact cube-25 sky
 faces with `CHFD` fog and lighting values. Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
@@ -161,8 +163,8 @@ fixed center-aim attack line before terminal objective removal and the same
 Pulse-to-Vulcan gate. Core deliberately implements only those demonstrated
 paths. Godot removes each completed model and radar marker and presents retained
 shot, hit, tank-destruction, text, voice, and primary particle layers.
-The shared secondary `Chrome3` pass, moving terrain cloud-shadow stage,
-visible-sun particle, facility destruction, steep-slope sliding,
+The shared secondary `Chrome3` pass, visible-sun particle, facility destruction,
+steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
 contact envelopes, procedural foot placement/terrain IK,
 transform animation, general HUD contacts and later state logic, Steam's

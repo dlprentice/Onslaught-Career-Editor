@@ -197,6 +197,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Level100/Source/level100-mixer-set-10.mapt.bin",
             "res://Assets/Level100/Source/level100-mixer-map.mmap.bin",
             "res://Assets/Level100/Textures/terrain-detail-00.texture.aya",
+            "res://Assets/Level100/Textures/terrain-cloud-shadow.texture.aya",
             _level100Terrain);
         AddChild(new MeshInstance3D
         {
