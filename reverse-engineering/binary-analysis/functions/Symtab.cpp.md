@@ -160,13 +160,15 @@ void CSymtab::ReadFromBuffer(DXMemBuffer* buffer) {
 
 ```cpp
 class CSymtab {
-    /* 0x00 */ void** vtable;           // Virtual function table
-    /* 0x04 */ CSymtabEntry** entries;  // CFlexArray data pointer
-    /* 0x08 */ int capacity;            // CFlexArray capacity
-    /* 0x0C */ int arrayCount;          // CFlexArray count
-    /* 0x10 */ int count;               // Total symbol count
+    /* 0x00 */ CSymtabEntry** entries;  // CFlexArray mData - element array
+    /* 0x04 */ int capacity;            // CFlexArray mCapacity
+    /* 0x08 */ int arrayCount;          // CFlexArray mCount - live element count
+    /* 0x0C */ int growth;              // CFlexArray mGrowth - growth factor
+    /* 0x10 */ int totalCount;          // Total symbol count (serialized tail; the `count`/`totalCount` field in the pseudocode above)
 };
 ```
+
+CSymtab is a CFlexArray (`mData@+0x00, mCapacity@+0x04, mCount@+0x08, mGrowth@+0x0C` - see `flexarray.cpp.md`) extended by the total-count field at `+0x10`: both functions above pass `this` directly to `CFlexArray__InitWithGrowth` (0x004241a0), which writes the array header at `+0x00`, and `ReadFromBuffer` reads the serialized total into `this+0x10`. Only `CSymtabEntry` carries a vtable (it is a CStringDataType-based object).
 
 ### CSymtabEntry (0x18 bytes / 24 bytes)
 
@@ -255,5 +257,5 @@ These are compiler-generated cleanup handlers for RAII/exception safety.
 
 ---
 
-*Last updated: 2025-12-16*
+*Last updated: 2026-07-21*
 *Static binary analysis using Ghidra-derived evidence*

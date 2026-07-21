@@ -203,10 +203,12 @@ The only observed xref is `CMissionScriptObjectCode__ClearFields`: it checks its
 | 0x008 | 4 | mCodeObject | Parent CScriptObjectCode* |
 | 0x00C | 4 | mInstructionCount | Number of instructions |
 | ... | ... | ... | ... |
+| 0x048 | 4 | mEventFunctions | CSPtrSet of CEventFunction* - the constructor accumulates event handler records here |
+| ... | ... | ... | ... |
 | 0x058 | 4 | mSymbolTable | Symbol table pointer |
-| 0x05C | 4 | mEventFunctionCount | Number of event handlers |
+| 0x05C | 4 | mEventGate | Execution gate flag - CallEvent (0x00539990) only tests it for non-zero before dispatching |
 | 0x060 | 4 | mDebugMode | Debug trace enabled flag |
-| 0x064 | 4 | mInstructionIndex | Current execution position |
+| 0x064 | 4 | mInstructionCountCopy | Instruction count (copy of the CFlexArray count at +0x0C; destructor loop bound) - the execution position is mIP at +0x214 |
 | 0x06C | 4 | mInitialized | Script initialized flag |
 | ... | ... | ... | ... |
 | 0x000-0x1FC | 512 | mStack[128] | Operand stack (128 x 4 bytes) |
@@ -218,6 +220,8 @@ The only observed xref is `CMissionScriptObjectCode__ClearFields`: it checks its
 | 0x21C | 4 | mSavedStackSize | Stack size at call entry |
 | 0x220 | 4 | mAbort | Abort execution flag |
 | 0x224 | 4 | mCallDepth | Nested call counter |
+
+Field evidence: `CScriptObjectCode__CallEvent` (0x00539990) tests `+0x5C` for non-zero as its execution gate and dispatches through the `CEventFunction` records the constructor accumulates in the CSPtrSet at `+0x48`, whose own count is the event-handler count. `+0x64` mirrors the CFlexArray instruction count at `+0x0C` and bounds the destructor loop at 0x005391a0. The execution position is `mIP` at `+0x214`, matching `missionscript-vm-datatype-opcode-schema.v1.json`, which anchors the instruction pointer there.
 
 ### CMissionScriptObjectCode Additional Fields
 
