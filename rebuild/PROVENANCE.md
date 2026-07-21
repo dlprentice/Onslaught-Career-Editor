@@ -62,7 +62,16 @@ selects exact 512×512 DXT1 `detail00`; the released terrain render path at
 `0x00545590` supplies its two world-coordinate scales, offset, exact 256×256
 DXT1 moving cloud-shadow stage, scroll rates, and observed modulation modes.
 The macro compositor follows the released row-major tile, texel, weight, and
-shade-mask addressing. The client preserves each retained mesh group's complete
+shade-mask addressing. `CHeightField__InitColorGradient` (`0x0047E8E0`) builds
+the 64-entry coefficients; the load tail at `0x0047F932` doubles, clamps, and
+masks them before `CLandscapeTexture__BlitTileRegionWithLightingMask` produces
+RGB565 texels. Steam's 20-byte terrain vertices contain position plus repeated
+landscape coordinates, but no normal or diffuse-color channel, so that prelit
+macro owns base terrain illumination. An uninterrupted copied-runtime sample
+measured the cloud offset advancing by `(0.01993, 0.00996)` cycles per wall-clock
+second and confirmed mipmapping enabled with anisotropic macro minification and
+the terrain capability and `MODULATE2X` paths.
+The client preserves each retained mesh group's complete
 six-slot `TEXR` assignment and directly decodes every AYA-wrapped texture
 selected by its active passes. The PC
 lighting setup at `CEngine::SetupLights` supplies packed ambient plus opposing

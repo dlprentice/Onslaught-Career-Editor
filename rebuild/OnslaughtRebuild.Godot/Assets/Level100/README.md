@@ -102,8 +102,13 @@ unimplemented rather than inferred.
 The retained `MAPT` and `MMAP` are exact chunks from the same released Level
 100 `ERES`. The client requires mixer set 10, six 256×256 indexed material
 textures and palettes, all 4,096 `MCEL` material/weight records, and the 512×512
-`MSHD` lighting mask. It follows the released blend and RGB565 lighting path at
-`0x0047EFF0` to create the 512×512 macro landscape texture at load time.
+`MSHD` lighting mask. It follows the released gradient builder at `0x0047E8E0`,
+the loader's doubling/clamping pass at `0x0047F932`, and blend path at
+`0x0047EFF0` to create the 512×512 RGB565 macro landscape texture at load time.
+The released 20-byte terrain vertices contain position plus repeated landscape
+coordinates, with no normal or diffuse-color channel; the prelit macro texture
+therefore owns the terrain's base illumination and the client does not invent a
+separate normal-lighting pass.
 
 The `CHFD` detail selector is `0`, which the released loader formats as
 `mixers\detail00.tga`. `CDXLandscape__RenderTerrain` at `0x00545590` maps the
@@ -112,10 +117,14 @@ texture once per world unit, and applies it again at quarter scale with a
 `(0.3, 0.3)` offset. In the observed Level 100 renderer state, the macro and
 second detail stages use `D3DTOP_MODULATE2X`; the first detail stage uses plain
 modulation. Between the two detail stages, the exact released cloud-shadow
-texture repeats every 256 world units, scrolls by `(0.001, 0.0005)` per renderer
-time unit, and uses `D3DTOP_MODULATE2X`. The Godot shader preserves those four
-encoded-value operations before framebuffer conversion. The macro compositor
-uses the released row-major tile, source-texel, weight, and shade-mask axes.
+texture repeats every 256 world units and uses `D3DTOP_MODULATE2X`. Its static
+increments are `(0.001, 0.0005)` per retail renderer-time unit; an uninterrupted
+copied-runtime sample measured `(0.01993, 0.00996)` texture cycles per wall-clock
+second, represented as `(0.02, 0.01)` against Godot's seconds-based `TIME`. The
+active Steam state enables mipmapping and uses anisotropic minification for the
+macro texture. The Godot shader preserves those four encoded-value operations
+before framebuffer conversion. The macro compositor uses the released row-major
+tile, source-texel, weight, and shade-mask axes.
 
 The `CHFD` also selects cube 25 and supplies the fog color/density, sun,
 anti-sun and ambient colors, and sun vector. The five exact DXT1 cube textures

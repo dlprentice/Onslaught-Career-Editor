@@ -35,7 +35,7 @@ internal static class Level100TerrainAppearanceAsset
         // D3D8's fixed-function texture stages modulated the stored texture values.
         // Sample them as encoded values, reproduce that stage arithmetic, then hand
         // Godot a linear result for its sRGB framebuffer conversion.
-        uniform sampler2D macro_map : filter_linear_mipmap, repeat_disable;
+        uniform sampler2D macro_map : filter_linear_mipmap_anisotropic, repeat_disable;
         uniform sampler2D detail_map : filter_linear_mipmap, repeat_enable;
         uniform sampler2D cloud_shadow_map : filter_linear_mipmap, repeat_enable;
         uniform vec3 fog_color;
@@ -64,7 +64,7 @@ internal static class Level100TerrainAppearanceAsset
                 (retail_world_uv * 0.25) + vec2(0.3)).rgb;
             vec3 cloud_shadow = texture(
                 cloud_shadow_map,
-                (retail_world_uv / 256.0) + vec2(TIME * 0.001, TIME * 0.0005)).rgb;
+                (retail_world_uv / 256.0) + vec2(TIME * 0.02, TIME * 0.01)).rgb;
             vec3 stage_color = min(macro_color * 2.0, vec3(1.0));
             stage_color *= detail_primary;
             stage_color = min(stage_color * cloud_shadow * 2.0, vec3(1.0));
