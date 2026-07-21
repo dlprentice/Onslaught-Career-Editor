@@ -26,6 +26,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Level100StaticWorldAsset _level100StaticWorld = null!;
+    private Texture2D _retailChrome3Texture = null!;
+    private Texture2D _warehouseOverlayTexture = null!;
     private Camera3D _camera = null!;
     private StandardMaterial3D _pulseBoltSparkMaterial = null!;
     private StandardMaterial3D _pulseBoltTrailMaterial = null!;
@@ -109,6 +111,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildLevel100Terrain();
         BuildEnvironment();
         BuildLevel100StaticWorld();
+        LoadSharedRetailMaterialTextures();
         BuildLevel100Targets();
         BuildPlayer();
         BuildPulseCannonPresentation();
@@ -199,37 +202,64 @@ public sealed partial class FirstFlightWorldView : Node3D
         AddChild(_level100StaticWorld.Root);
     }
 
+    private void LoadSharedRetailMaterialTextures()
+    {
+        _retailChrome3Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/StaticWorld/Textures/meshtex-chrome3.texture.aya",
+            128,
+            128);
+        _warehouseOverlayTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/material-overlay-a8trust5.texture.aya",
+            128,
+            128);
+    }
+
     private void BuildLevel100Targets()
     {
+        Texture2D tankTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-tank.texture.aya",
+            512,
+            512);
         Material tankMaterial = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/target-tank.texture.aya",
-                512,
-                512));
+            tankTexture,
+            reflection: RetailLayer(_retailChrome3Texture, 0.199999988f));
         Mesh tankMesh = CuratedObjMeshLoader.Load(
             "res://Assets/Level100/level100-target-tank.obj",
             new Dictionary<string, Material>(StringComparer.Ordinal)
             {
-                ["texture-0000"] = tankMaterial,
+                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    tankMaterial,
             });
 
-        Material warehouseM001 = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/target-warehouse-m001.texture.aya",
-                512,
-                512));
-        Material warehouseM002 = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load(
-                "res://Assets/Level100/Textures/target-warehouse-m002.texture.aya",
-                512,
-                512));
+        Texture2D warehouseM001Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-warehouse-m001.texture.aya",
+            512,
+            512);
+        Texture2D warehouseM002Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-warehouse-m002.texture.aya",
+            512,
+            512);
+        RetailTextureLayer warehouseOverlay = RetailLayer(
+            _warehouseOverlayTexture,
+            opacity: 1f,
+            scale: new Vector2(20f, 20f));
+        Material warehouseM001 = CreateRetailMaterial(warehouseM001Texture);
+        Material warehouseM001Overlay = CreateRetailMaterial(
+            warehouseM001Texture,
+            overlay: warehouseOverlay);
+        Material warehouseM002Overlay = CreateRetailMaterial(
+            warehouseM002Texture,
+            overlay: warehouseOverlay);
         Mesh warehouseMesh = CuratedObjMeshLoader.Load(
             "res://Assets/Level100/level100-target-warehouse.obj",
             new Dictionary<string, Material>(StringComparer.Ordinal)
             {
-                ["texture-0000"] = warehouseM001,
-                ["texture-0001"] = warehouseM001,
-                ["texture-0003"] = warehouseM002,
+                ["layers-00000000-ffffffff-ffffffff-ffffffff-ffffffff-ffffffff"] =
+                    warehouseM001,
+                ["layers-00000001-ffffffff-ffffffff-ffffffff-00000005-ffffffff"] =
+                    warehouseM001Overlay,
+                ["layers-00000003-ffffffff-ffffffff-ffffffff-00000005-ffffffff"] =
+                    warehouseM002Overlay,
             });
 
         AddLevel100Target(
@@ -305,27 +335,43 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot = new Node3D { Name = "BodyPivot" };
         _playerRoot.AddChild(_playerBodyPivot);
 
-        Material cockpit = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/cockpit.texture.aya", 512, 512));
-        Material textureA = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-a.texture.aya", 512, 512));
-        Material textureB = CreateRetailMaterial(
-            CuratedAyaTextureLoader.Load("res://Assets/Aquila/Textures/be-tex-b.texture.aya", 1024, 1024));
+        Texture2D cockpitTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Aquila/Textures/cockpit.texture.aya",
+            512,
+            512);
+        Texture2D textureA = CuratedAyaTextureLoader.Load(
+            "res://Assets/Aquila/Textures/be-tex-a.texture.aya",
+            512,
+            512);
+        Texture2D textureB = CuratedAyaTextureLoader.Load(
+            "res://Assets/Aquila/Textures/be-tex-b.texture.aya",
+            1024,
+            1024);
+        RetailTextureLayer chrome = RetailLayer(_retailChrome3Texture, 0.299999982f);
         _walkerAsset = RetailAquilaWalkerAsset.Load(
             "res://Assets/Aquila/Source/m_f_be1.msh.aya",
-            new Dictionary<int, Material>
+            new Dictionary<int, Texture2D>
             {
-                [0] = cockpit,
+                [0] = cockpitTexture,
                 [1] = textureB,
                 [3] = textureA,
-            });
+            },
+            _level100Terrain);
         Mesh jet = CuratedObjMeshLoader.Load(
             "res://Assets/Aquila/aquila-jet.obj",
             new Dictionary<string, Material>(StringComparer.Ordinal)
             {
-                ["texture-0000"] = cockpit,
-                ["texture-0002"] = textureB,
-                ["texture-0004"] = textureA,
+                ["layers-00000000-00000000-00000000-00000000-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(
+                        cockpitTexture,
+                        dot3: RetailLayer(cockpitTexture),
+                        reflection: RetailLayer(cockpitTexture)),
+                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(cockpitTexture, reflection: chrome),
+                ["layers-00000002-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(textureB, reflection: chrome),
+                ["layers-00000004-ffffffff-00000003-ffffffff-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(textureA, reflection: chrome),
             });
 
         // The exact walker hierarchy performs BEA's X/Y/negative-Z-up mapping
@@ -342,8 +388,21 @@ public sealed partial class FirstFlightWorldView : Node3D
         _playerBodyPivot.AddChild(_jetMesh);
     }
 
-    private Material CreateRetailMaterial(Texture2D texture) =>
-        RetailFixedFunctionMaterial.Create(texture, _level100Terrain);
+    private Material CreateRetailMaterial(
+        Texture2D texture,
+        RetailTextureLayer? dot3 = null,
+        RetailTextureLayer? reflection = null,
+        RetailTextureLayer? overlay = null) =>
+        RetailFixedFunctionMaterial.Create(
+            [RetailLayer(texture), dot3, reflection, null, overlay, null],
+            _level100Terrain);
+
+    private static RetailTextureLayer RetailLayer(
+        Texture2D texture,
+        float opacity = 1f,
+        Vector2? offset = null,
+        Vector2? scale = null) =>
+        new(texture, opacity, offset ?? Vector2.Zero, scale ?? Vector2.One);
 
     private void BuildCamera()
     {
@@ -365,7 +424,9 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Aquila/Textures/bluegun-light.texture.aya",
             64,
             64);
-        Material cockpitMaterial = CreateRetailMaterial(cockpitTexture);
+        Material cockpitMaterial = CreateRetailMaterial(
+            cockpitTexture,
+            reflection: RetailLayer(_retailChrome3Texture, 0.299999982f));
         var gunLightMaterial = new StandardMaterial3D
         {
             AlbedoTexture = gunLightTexture,
@@ -385,8 +446,10 @@ public sealed partial class FirstFlightWorldView : Node3D
                 "res://Assets/Aquila/aquila-walker-cockpit.obj",
                 new Dictionary<string, Material>(StringComparer.Ordinal)
                 {
-                    ["texture-0000"] = gunLightMaterial,
-                    ["texture-0001"] = cockpitMaterial,
+                    ["layers-00000000-ffffffff-ffffffff-ffffffff-ffffffff-ffffffff"] =
+                        gunLightMaterial,
+                    ["layers-00000001-ffffffff-00000002-ffffffff-ffffffff-ffffffff"] =
+                        cockpitMaterial,
                 }),
             Position = new Vector3(0f, -0.01f, -0.06f),
             RotationDegrees = new Vector3(-90f, 0f, 0f),

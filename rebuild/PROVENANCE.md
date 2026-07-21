@@ -62,9 +62,9 @@ selects exact 512×512 DXT1 `detail00`; the released terrain render path at
 `0x00545590` supplies its two world-coordinate scales, offset, exact 256×256
 DXT1 moving cloud-shadow stage, scroll rates, and observed modulation modes.
 The macro compositor follows the released row-major tile, texel, weight, and
-shade-mask addressing. The client
-preserves each retained mesh group's layer-zero `TEXR` assignment and directly
-decodes the exact primary AYA-wrapped textures selected by those meshes. The PC
+shade-mask addressing. The client preserves each retained mesh group's complete
+six-slot `TEXR` assignment and directly decodes every AYA-wrapped texture
+selected by its active passes. The PC
 lighting setup at `CEngine::SetupLights` supplies packed ambient plus opposing
 sun and anti-sun directions; its directional colors divide by 256, and the
 base texture stage uses `MODULATE2X`. Five exact DXT1 cube-25
@@ -73,9 +73,18 @@ Level 100's packed fog color `#D8D8FC`, density `0.0084`, and `D3DFOG_EXP` mode;
 the shared Godot material applies that exponential path from camera-space depth
 to terrain, static geometry, cockpit, targets, and water. Godot's
 `OUTPUT_IS_SRGB` contract selects the final transfer so the GL Compatibility
-renderer is not converted twice. The released renderer's later material
-passes—including the shared layer-two `Chrome3` reference and visible-sun
-particle—are not guessed. Water follows the released active fixed-function path:
+renderer is not converted twice. Steam
+`CMeshRenderer__RenderMeshWithLayerPasses` (`0x0054D530`) evaluates the slots in
+order; `CDXMeshVB__Load` (`0x0054E160`) treats only `0xFFFFFFFF` as absent.
+Controlled Level 100 runtime state enabled modes `0`, `1`, `2`, and `4` while
+disabling modes `3` and `5`. `CVBufTexture__RenderModePass` establishes mode 1
+as model-space `DOTPRODUCT3`, mode 2 as camera-space reflection coordinates with
+the released half-scale/offset matrix and texture-strength alpha, and mode 4 as
+the regular-UV alpha overlay using the serialized `TEXB` offset and scale. The
+runtime light vector `(-0.03407396, -0.9086333, 0.4162026)` matches normalized
+negative Level 100 sun position. These active passes are shared by the current
+static objects, targets, Aquila, jet, and cockpit; the visible-sun particle is
+still absent. Water follows the released active fixed-function path:
 the exact HFLD level and color, camera-following 25×25 grid, two caustic stages,
 authored `reflection00` imagery, sun-reflection stages, and two exact `SURF`
 shoreline bands. The optional advanced water path was inactive in controlled
@@ -152,7 +161,7 @@ Battle Engine offset `0x528` selected animation index `1`; the exact `cockpit2.m
 `CAMD` table identifies that as `walk`, authored hierarchy frame 25. Runtime
 also reported the cockpit render flag enabled and no local position offset.
 The retained 21-part cockpit converts deterministically at that frame and loads
-as two layer-zero texture surfaces. Godot's camera child uses a bounded 6 cm
+as two complete material-signature surfaces. Godot's camera child uses a bounded 6 cm
 depth and 1 cm vertical presentation adjustment, selected against the clean
 retail frame to account for its OBJ transform and near-plane path; that adapter
 offset is not claimed as a retail model value.
@@ -322,10 +331,10 @@ effects/resources, the remaining weapons, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts; loads 57 Aquila, 105 static-world,
+A native smoke proves the current client starts; loads 58 Aquila, 111 static-world,
 six target, and two cockpit material surfaces; instantiates all 1,481 pines and
 the 625-vertex/1,152-triangle camera-following water grid plus 2,056 shoreline
-triangles; decodes the exact locally materialized primary mesh, nine
+triangles; decodes the exact locally materialized mesh, nine
 Pulse/target-effect, twenty-three HUD, five sky, and five water textures;
 validates three PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
@@ -334,7 +343,7 @@ route reaches the first Firing Range exercise, renders the exact target models
 and shipped objective markers, plays the fourteenth voice, removes Target Tank
 1 after four bounded full hits with retained shot/impact/destruction
 presentation, preserves the expected Core hash, and exits at
-both supported viewports. It does not prove secondary material passes,
+both supported viewports. It does not prove disabled or unreferenced material modes,
 procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment

@@ -32,9 +32,9 @@ SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "c996971b3a20e1ba4cfaab937bcc5b834e53ee09430f63bb27854d2afcc43108"
+STATIC_WORLD_MANIFEST_SHA256 = "0aa1241779b1db7cc6880bbf583f63c3aeaf2b7c3c82671155a72fb2dabe8c24"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
-    "504b498bba966c58a7892730e5e0226087aa3d3e0693f328bdff9ea536200dfb"
+    "e3ab5a6c48143365bfbecf716effc5508e7be3d7b8a37d66c827b0994c5cf08a"
 )
 WATER_SURFACE_RESOURCE = STATIC_WORLD_ROOT / "Source/level100-water-surface.surf.bin"
 WATER_SURFACE_SHA256 = "c3177354fed3eb5a94dc72debf2465c32ab1d931de79e5e88ac431043d3e917d"
@@ -150,6 +150,7 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Textures/target-tank.texture.aya", "data/resources/dxtntextures/meshtex%f_pulsetank_training.tga(0)A1R5G5B5.aya", "97ddd1e18e45b19e249e91e881d773d80d36768a2cd48f6549a769c2559a7b7e"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m001.texture.aya", "data/resources/dxtntextures/meshtex%M_001.tga(0)A1R5G5B5.aya", "689b184ab8a5d03f33b69e5c35edcfdfdec12aa9b4b31f7c74ce5209f6236a49"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m002.texture.aya", "data/resources/dxtntextures/meshtex%M_002.tga(0)A1R5G5B5.aya", "8fabadbe1c5af067a740cf05debd1c952c628fd5fa3ea92b8202094704b8a20d"),
+    (GODOT_ASSETS / "Level100/Textures/material-overlay-a8trust5.texture.aya", "data/resources/dxtntextures/meshtex%a8trust5.tga(0)A8R8G8B8.aya", "4ccde973f9741c110a82f350e102f1a12c566ff3d3b1b4f5426f2bbf536be843"),
     (GODOT_ASSETS / "Level100/Textures/terrain-cloud-shadow.texture.aya", "data/resources/dxtntextures/clouds%shadow.tga(0)A8R8G8B8.aya", "fc7441887e494e4b18f2b16179ed42c17801b128d71e29d653a4e8b792869519"),
     (GODOT_ASSETS / "Level100/Textures/terrain-detail-00.texture.aya", "data/resources/dxtntextures/mixers%detail00.tga(0)R5G6B5.aya", "7c9c22169d13ed8b7d6ad69286bdb59cc88f9ae3bfb6a9d3a0503d320386bfef"),
     (GODOT_ASSETS / "Level100/TutorialAudio/hud_01.ogg", "data/sounds/english/MessageBox/hud_01.ogg", "bae30243a2b5fe3dae718181ac5b05d766f93d5e25b042fe1b04c71fc9347909"),
@@ -181,10 +182,10 @@ CHUNKS = (
 
 # Destination, source AYA destination above, hierarchy frame, exact OBJ SHA-256.
 MESHES = (
-    (GODOT_ASSETS / "Aquila/aquila-jet.obj", GODOT_ASSETS / "Aquila/Source/m_f_be2.msh.aya", None, "92a3495e278884b63649e114eddb7373b04af2aa92aab25c3f7184dd1140d821"),
-    (GODOT_ASSETS / "Aquila/aquila-walker-cockpit.obj", GODOT_ASSETS / "Aquila/Source/m_cockpit2.msh.aya", 25, "0e81a2b48ab2202620b3c0dccd08fe2ffbd76b5d668318d21f0ff72551dd5bd9"),
-    (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "6d3827b58fe7a4728efe1efc6a7ced7a08a0b642891dcb1f18377a4b3d61d244"),
-    (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "271adefedcb0942a584014ff51fc7330769ab8fd95bc6ea5987bac305c60f658"),
+    (GODOT_ASSETS / "Aquila/aquila-jet.obj", GODOT_ASSETS / "Aquila/Source/m_f_be2.msh.aya", None, "752bba6433617f78c5f89e6641b928b3e380c4089afc4e571e35ec8de34b4183"),
+    (GODOT_ASSETS / "Aquila/aquila-walker-cockpit.obj", GODOT_ASSETS / "Aquila/Source/m_cockpit2.msh.aya", 25, "793d9da21787a379eaa5077256f11bda74393099324f763153443d67fc92aa6c"),
+    (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "3a67f2bf49c9505855f73259d8d5829a7e0d1a0aed0f5a8802e82c4cf2c5df9f"),
+    (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "3883b651a9963813a4ab9982460425910be5d7f8f7edce15ade475cf6d8eb5ce"),
 )
 
 
@@ -253,7 +254,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v2"
+        manifest.get("schema") != "onslaught.level100-static-world.v3"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -263,7 +264,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
-        or len(manifest.get("textures", {})) != 30
+        or len(manifest.get("textures", {})) != 33
         or manifest.get("water", {}).get("surfaceSha256") != WATER_SURFACE_SHA256
     ):
         raise RuntimeError("static-world manifest has unexpected identity or counts")
@@ -280,7 +281,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
             manifest["water"]["surfaceSha256"],
         )
     )
-    if len(outputs) != 60 or len({path for path, _ in outputs}) != len(outputs):
+    if len(outputs) != 63 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -543,6 +544,28 @@ def _texture_key(texture_ref: str) -> str:
     return _slug(name)
 
 
+def _material_surface_name(texture_indices: tuple[int, int, int, int, int, int]) -> str:
+    return "layers-" + "-".join(f"{value:08x}" for value in texture_indices)
+
+
+def _texture_pass_metadata(raw: bytes) -> tuple[float, float, float, float, float]:
+    if len(raw) != 20:
+        raise RuntimeError("mesh texture metadata has an unexpected length")
+    values = struct.unpack("<5f", raw)
+    opacity, offset_u, offset_v, scale_u, scale_v = values
+    if (
+        not all(math.isfinite(value) for value in values)
+        or opacity < 0.0
+        or opacity > 1.0
+        or scale_u < 0.0
+        or scale_v < 0.0
+        or scale_u > 100.0
+        or scale_v > 100.0
+    ):
+        raise RuntimeError("mesh texture metadata is outside the supported retail envelope")
+    return opacity, offset_u, offset_v, scale_u, scale_v
+
+
 def _dds_metadata(source: bytes, inflate_aya_bytes) -> tuple[int, int, str]:
     dds = inflate_aya_bytes(source)
     if len(dds) < 128 or dds[:4] != b"DDS ":
@@ -589,7 +612,14 @@ def _materialize_static_world(
     objects, pines, fern_count = _parse_static_world(raw_level)
     resolver = build_asset_resolver(game_root / "data/resources")
     source_data: dict[Path, bytes] = {}
-    mesh_inputs: dict[str, tuple[Path, bytes, dict[str, Path]]] = {}
+    mesh_inputs: dict[
+        str,
+        tuple[
+            Path,
+            bytes,
+            dict[str, tuple[tuple[Path, float, float, float, float, float] | None, ...]],
+        ],
+    ] = {}
 
     for mesh_key in STATIC_MESH_KEYS:
         matches = resolver.mesh_index.get(f"{mesh_key}.msh".lower(), [])
@@ -599,13 +629,21 @@ def _materialize_static_world(
         relative = source_path.relative_to(game_root)
         data = source_path.read_bytes()
         parsed = parse_cmsh_stream(inflate_aya(data))
-        materials: dict[str, Path] = {}
-        primary_indices = sorted(
-            {group.raw_texr_u32[0] for part in parsed.parts for group in part.groups}
+        signatures = sorted(
+            {group.raw_texr_u32 for part in parsed.parts for group in part.groups}
         )
-        for texture_index in primary_indices:
+        referenced_indices = sorted(
+            {
+                texture_index
+                for signature in signatures
+                for texture_index in signature
+                if texture_index != 0xFFFFFFFF
+            }
+        )
+        texture_source_by_index: dict[int, Path] = {}
+        for texture_index in referenced_indices:
             if texture_index >= len(parsed.textures):
-                raise RuntimeError(f"{mesh_key} has an unresolved primary material")
+                raise RuntimeError(f"{mesh_key} has an unresolved material texture")
             texture_ref = parsed.textures[texture_index].name
             normalized_ref = texture_ref.lstrip("?").replace("/", "\\").strip().lower()
             texture_matches = resolver.texture_index.get(normalized_ref, [])
@@ -619,7 +657,25 @@ def _materialize_static_world(
             source_data.setdefault(texture_relative, texture_data)
             if source_data[texture_relative] != texture_data:
                 raise RuntimeError("static-world texture changed during materialization")
-            materials[f"texture-{texture_index:04d}"] = texture_relative
+            texture_source_by_index[texture_index] = texture_relative
+
+        materials: dict[
+            str,
+            tuple[tuple[Path, float, float, float, float, float] | None, ...],
+        ] = {}
+        for signature in signatures:
+            if signature[0] == 0xFFFFFFFF:
+                raise RuntimeError(f"{mesh_key} has no base material texture")
+            layers: list[tuple[Path, float, float, float, float, float] | None] = []
+            for texture_index in signature:
+                if texture_index == 0xFFFFFFFF:
+                    layers.append(None)
+                    continue
+                metadata = _texture_pass_metadata(
+                    parsed.textures[texture_index].raw_texb_metadata
+                )
+                layers.append((texture_source_by_index[texture_index], *metadata))
+            materials[_material_surface_name(signature)] = tuple(layers)
         source_data[relative] = data
         mesh_inputs[mesh_key] = (relative, data, materials)
 
@@ -628,8 +684,8 @@ def _materialize_static_world(
         source = Path(source_name)
         source_data[source] = _read_exact(game_root / source, expected_hash)
         water_sources[key] = source
-    if len(source_data) != 58:
-        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 58")
+    if len(source_data) != 61:
+        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 61")
     aggregate = _source_aggregate(source_data)
     if aggregate != STATIC_WORLD_SOURCE_AGGREGATE_SHA256:
         raise RuntimeError(f"unsupported static-world source set (aggregate SHA-256 {aggregate})")
@@ -638,9 +694,11 @@ def _materialize_static_world(
     texture_key_by_source: dict[Path, str] = {}
     outputs: list[tuple[Path, str]] = []
     texture_sources = {
-        source
+        layer[0]
         for _, _, materials in mesh_inputs.values()
-        for source in materials.values()
+        for layers in materials.values()
+        for layer in layers
+        if layer is not None
     }
     texture_sources.update(water_sources.values())
     for source in sorted(texture_sources, key=lambda value: value.as_posix().casefold()):
@@ -676,7 +734,7 @@ def _materialize_static_world(
         obj = convert_aya_bytes(
             data,
             include_vertex_attributes=True,
-            include_primary_material_groups=True,
+            include_material_layer_groups=True,
         )
         vertex_z = [
             float(line.split()[3])
@@ -696,8 +754,20 @@ def _materialize_static_world(
         mesh_records[mesh_key] = {
             "baseClearance": -min(vertex_z),
             "materials": {
-                surface: texture_key_by_source[texture_source]
-                for surface, texture_source in sorted(materials.items())
+                surface: {
+                    "layers": [
+                        None
+                        if layer is None
+                        else {
+                            "offset": [layer[2], layer[3]],
+                            "opacity": layer[1],
+                            "scale": [layer[4], layer[5]],
+                            "texture": texture_key_by_source[layer[0]],
+                        }
+                        for layer in layers
+                    ]
+                }
+                for surface, layers in sorted(materials.items())
             },
             "resourcePath": resource_path,
             "sha256": output_hash,
@@ -731,7 +801,7 @@ def _materialize_static_world(
         "objects": objects,
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v2",
+        "schema": "onslaught.level100-static-world.v3",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,
@@ -856,7 +926,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
         data = convert_aya_bytes(
             source_data[source_destination],
             include_vertex_attributes=True,
-            include_primary_material_groups=True,
+            include_material_layer_groups=True,
             hierarchy_frame=frame,
         )
         if _sha256(data) != expected:

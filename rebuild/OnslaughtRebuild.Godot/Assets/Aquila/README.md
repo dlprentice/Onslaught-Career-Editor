@@ -32,7 +32,7 @@ py -3 rebuild/tools/cmsh_static_preview.py `
   --input rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source `
   --output local-lab/rebuild-godot/generated/aquila `
   --vertex-attributes `
-  --primary-material-groups
+  --material-layer-groups
 ```
 
 The cockpit uses the same bounded converter with the clean retail walk pose:
@@ -43,7 +43,7 @@ py -3 rebuild/tools/cmsh_static_preview.py `
   --input rebuild/OnslaughtRebuild.Godot/Assets/Aquila/Source `
   --output local-lab/rebuild-godot/generated/aquila-frame25 `
   --vertex-attributes `
-  --primary-material-groups `
+  --material-layer-groups `
   --hierarchy-frame 25
 ```
 
@@ -52,13 +52,12 @@ the cockpit and jet. The cockpit must match the frame-25 hash above; the jet has
 one authored hierarchy frame and matches either invocation. The
 walker no longer uses the flattened `candidate-0002.obj`; the client validates
 and loads the exact retained AYA,
-preserving its 63-part parent/reference hierarchy and 54 layer-zero material
+preserving its 63-part parent/reference hierarchy and 54 six-slot material
 surfaces. Steam
-`CMeshRenderer__RenderMeshWithLayerPasses` establishes six ordered texture
-passes, and the pinned `AyaModelImporter.cs` also assigns primitives from
-`TEXR[0]`; the client therefore consumes only that unambiguous base layer. The
-shared `Chrome3.tga` reference occurs at layer two and remains intentionally
-unimplemented until its released blend semantics are established.
+`CMeshRenderer__RenderMeshWithLayerPasses` establishes the ordered texture
+passes and `CVBufTexture__RenderModePass` establishes the active base, DOT3,
+camera-space reflection, and alpha-overlay modes. The client consumes those
+exact `TEXR` signatures and their `TEXB` opacity/offset/scale metadata.
 
 The cockpit archive has 21 composed parts and seven geometry-owning parts. Its
 zero-group reference PMVB records contain no vertex stream; unused profile
@@ -66,9 +65,9 @@ words in those records are not interpreted. Clean copied-retail Level 100,
 Steam's first-person camera path, and Stuart's `cockpit2.msh` selection establish
 the asset's current role. Its `CAMD` table maps the selected runtime `walk`
 animation to authored frame 25. Godot consumes seven `cockpit.tga` groups and
-three blue-light groups, merged by texture into two surfaces. The shared
-`Chrome3.tga` secondary pass remains
-outside this bounded layer-zero rendering.
+three blue-light groups, merged by complete material signature into two
+surfaces; the cockpit material includes its released `Chrome3.tga` reflection
+pass.
 
 The released `LegMotion` table supplies the movement-driven 101-frame gait.
 One fresh copied-retail Level 100 run supplies the stable no-input local pose

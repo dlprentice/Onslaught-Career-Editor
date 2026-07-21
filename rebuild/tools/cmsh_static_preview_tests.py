@@ -590,7 +590,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                     "--output",
                     "output",
                     "--vertex-attributes",
-                    "--primary-material-groups",
+                    "--material-layer-groups",
                     "--hierarchy-frame",
                     "25",
                 ]
@@ -602,21 +602,24 @@ class CmshStaticPreviewTests(unittest.TestCase):
             Path("input"),
             Path("output"),
             include_vertex_attributes=True,
-            include_primary_material_groups=True,
+            include_material_layer_groups=True,
             hierarchy_frame=25,
         )
 
-    def test_opt_in_primary_material_groups_use_layer_zero_and_fail_closed(self) -> None:
+    def test_opt_in_material_layer_groups_preserve_all_slots_and_fail_closed(self) -> None:
         mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
 
         result = preview.emit_obj(
             mesh,
             include_vertex_attributes=True,
-            include_primary_material_groups=True,
+            include_material_layer_groups=True,
         )
 
         self.assertEqual(
-            [b"usemtl texture-0000", b"usemtl texture-0003"],
+            [
+                b"usemtl layers-00000000-00000001-00000002-00000003-00000000-00000001",
+                b"usemtl layers-00000003-00000002-00000001-00000000-00000003-00000002",
+            ],
             [line for line in result.splitlines() if line.startswith(b"usemtl ")],
         )
         malformed = replace(
@@ -626,14 +629,17 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 replace(
                     mesh.parts[1],
                     groups=(
-                        replace(mesh.parts[1].groups[0], raw_texr_u32=(0xFFFFFFFF, 1, 2, 3, 0, 1)),
+                        replace(
+                            mesh.parts[1].groups[0],
+                            raw_texr_u32=(0, 4, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
+                        ),
                         mesh.parts[1].groups[1],
                     ),
                 ),
             ),
         )
-        with self.assertRaisesRegex(preview.CmshProfileError, "unresolved primary texture"):
-            preview.emit_obj(malformed, include_primary_material_groups=True)
+        with self.assertRaisesRegex(preview.CmshProfileError, "unresolved material texture"):
+            preview.emit_obj(malformed, include_material_layer_groups=True)
 
     def test_material_report_retains_vertex_attributes_duplicate_names_and_six_unknown_positions(self) -> None:
         mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
@@ -660,12 +666,18 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertTrue(first.endswith(b"\n"))
         report = json.loads(first)
-        self.assertEqual("onslaught-cmsh-material-report.v0", report["schemaVersion"])
-        self.assertEqual([], report["acceptedSentinelU32"])
-        self.assertEqual(["UNKNOWN"] * 6, report["retailPositionSemantics"])
+        self.assertEqual("onslaught-cmsh-material-report.v1", report["schemaVersion"])
+        self.assertEqual([0xFFFFFFFF], report["acceptedSentinelU32"])
         self.assertEqual(
-            {"selectedPosition": 0, "scope": "pinned legacy importer reference behavior only"},
-            report["legacyReferenceBehavior"],
+            [
+                "base",
+                "dot3Lighting",
+                "environmentReflection",
+                "disabledProjective",
+                "alphaOverlay",
+                "disabled",
+            ],
+            report["retailPositionSemantics"],
         )
         self.assertEqual(["meshtex\\alpha.tga", "meshtex\\beta.tga", "meshtex\\alpha.tga", "meshtex\\delta.tga"], report["textures"])
         populated = report["parts"][1]
@@ -673,7 +685,10 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual(1, populated["geometrySourcePart"])
         self.assertEqual([0, 1, 2, 3, 0, 1], populated["groups"][0]["rawTexrU32"])
         self.assertEqual([3, 2, 1, 0, 3, 2], populated["groups"][1]["rawTexrU32"])
-        self.assertEqual(["UNKNOWN"] * 6, [row["retailSemantic"] for row in populated["groups"][0]["positions"]])
+        self.assertEqual(
+            report["retailPositionSemantics"],
+            [row["retailSemantic"] for row in populated["groups"][0]["positions"]],
+        )
         self.assertEqual(["resolved"] * 6, [row["status"] for row in populated["groups"][0]["positions"]])
         self.assertNotIn(b"materialRole", first)
         strings: list[str] = []
@@ -704,8 +719,8 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertEqual("\ufffdeshtex\\alpha.tga", report["textures"][0])
         self.assertTrue(all(not 0xD800 <= ord(character) <= 0xDFFF for character in report["textures"][0]))
 
-    def test_material_report_keeps_unsigned_max_raw_and_reports_every_out_of_range_value_unresolved(self) -> None:
-        self.assertEqual(frozenset(), preview.TEXR_SENTINEL_U32)
+    def test_material_report_distinguishes_unsigned_max_sentinel_from_unresolved_values(self) -> None:
+        self.assertEqual(frozenset({0xFFFFFFFF}), preview.TEXR_SENTINEL_U32)
         mesh = preview.parse_cmsh_stream(
             build_material_fixture_stream(texrs=((3, 4, 0xFFFFFFFF, 2, 5, 1), (3, 2, 1, 0, 3, 2)))
         )
@@ -714,12 +729,22 @@ class CmshStaticPreviewTests(unittest.TestCase):
         rows = report["parts"][1]["groups"][0]["positions"]
         self.assertEqual([3, 4, 0xFFFFFFFF, 2, 5, 1], [row["rawU32"] for row in rows])
         self.assertEqual(
-            ["resolved", "unresolved", "unresolved", "resolved", "unresolved", "resolved"],
+            ["resolved", "unresolved", "sentinel", "resolved", "unresolved", "resolved"],
             [row["status"] for row in rows],
         )
         self.assertEqual([3, 2, 1], [rows[index]["textureIndex"] for index in (0, 3, 5)])
         self.assertTrue(all("textureName" not in rows[index] and "textureIndex" not in rows[index] for index in (1, 2, 4)))
-        self.assertTrue(all(row["retailSemantic"] == "UNKNOWN" for row in rows))
+        self.assertEqual(
+            [
+                "base",
+                "dot3Lighting",
+                "environmentReflection",
+                "disabledProjective",
+                "alphaOverlay",
+                "disabled",
+            ],
+            [row["retailSemantic"] for row in rows],
+        )
 
     def test_material_report_retains_complete_declared_texture_table_through_limit(self) -> None:
         names = tuple(f"meshtex\\generated-{index:03d}.tga" for index in range(preview.MAX_TEXTURES))

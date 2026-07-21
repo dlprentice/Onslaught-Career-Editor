@@ -12,8 +12,9 @@ respective rights holders; `rebuild/LICENSE` covers reconstruction code only.
 `StaticWorld/level100-static-world.json` is a deterministic ignored manifest
 derived from the exact released Level 100 archive. It owns all 33 visible
 base-world objects, 24 selected static mesh types, four pine variants, 1,481
-pine transforms, 30 primary mesh/water textures, and their exact hashes. The
-materializer converts only those 28 meshes and verifies a 58-file retail source
+pine transforms, 33 mesh/water textures, their complete material signatures,
+and their exact hashes. The materializer converts only those 28 meshes and
+verifies a 61-file retail source
 set; those generated payloads are not mirrored in this document.
 
 | Local materialized file | Role | SHA-256 |
@@ -159,8 +160,11 @@ reflection/refraction.
 The PC renderer uses packed ambient plus directional sun and opposing anti-sun
 from `CHFD`. Directional channels are divided by 256 and the base texture stage
 uses `MODULATE2X`; the client reproduces that fixed-function equation for the
-current static meshes, pines, Aquila exterior, and range targets. Only primary
-`TEXR` assignments are claimed. Later mesh-material passes remain unresolved.
+current static meshes, pines, Aquila exterior, and range targets. It preserves
+all six `TEXR` slots and implements the active released DOT3-lighting,
+camera-space reflection, and alpha-overlay passes with each texture's serialized
+`TEXB` parameters. Released material modes disabled by the live Level 100
+renderer remain disabled.
 
 The Core origin is the released player-one start `(288.6875, 243.25)` in the
 world's horizontal X/Y plane. The current slice consumes:
@@ -311,9 +315,9 @@ records 35, 105, and 102 respectively. Their `PSMP` names, declared decoded
 sizes, high-nibble-first IMA-ADPCM framing, and resulting WAV hashes were
 validated before retention; Godot validates the PCM envelope again at load.
 
-The presentation consumes the exact layer-zero facility and target textures
-and preserves their mesh-group assignments. Shared higher-layer references are
-not interpreted as base textures or guessed metallic maps. The nine retained
+The presentation consumes the exact facility and target texture-pass signatures
+and preserves their mesh-group assignments. Higher-layer references follow the
+released mode dispatch rather than being guessed as generic metallic maps. The nine retained
 render meshes represent intact facilities and targets. All three Target Tanks
 have the bounded damage/deactivation path above plus the retained shot, impact,
 and medium-destruction sound and primary particle layers. Two fresh isolated

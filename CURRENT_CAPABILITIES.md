@@ -233,7 +233,7 @@ controller's procedural foot placement, the Warehouse's segmented-destruction
 path and rubble, mesh-part damage variation, secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
-remaining weapon roster, secondary mesh-material passes, facility destruction,
+remaining weapon roster, facility destruction,
 the inactive optional advanced water path and dynamic scene reflection/refraction,
 transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general

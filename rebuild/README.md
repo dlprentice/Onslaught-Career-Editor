@@ -29,8 +29,8 @@ from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts begin in the stable retail
 Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
 The jet, 24 static-world mesh types, four pine variants, and two target types
-retain bounded static conversions and render with their exact layer-zero
-textures. Their lighting follows the released PC ambient, opposing
+retain bounded static conversions and render with their complete active retail
+material passes. Their lighting follows the released PC ambient, opposing
 sun/anti-sun, and `MODULATE2X` path rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
 cube-25 sky, and exponential `CHFD` fog now replace the procedural ground/sky.
@@ -75,7 +75,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 133 exact source/runtime files to ignored paths. For a custom
+materializes 142 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -159,9 +159,10 @@ renderer contract rather than converting Compatibility output twice.
 Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
-player rather than running an independent sampler. The client preserves the
-base material groups and decodes the exact AYA-wrapped primary textures selected
-by the Aquila, cockpit, static world, pines, and range targets plus the four exact 64×64
+player rather than running an independent sampler. The client preserves each
+active mesh group's six ordered retail texture slots and decodes the exact
+AYA-wrapped textures selected by the Aquila, cockpit, static world, pines, and
+range targets plus the four exact 64×64
 textures named by the medium Pulse Bolt descriptor. It also uses twenty-three
 exact HUD textures, including the three released v3 crosshair layers,
 uncompressed font atlas, scanner/north sprites, battleline, portrait/noise
@@ -184,7 +185,7 @@ Water reproduces the fixed-function path active on the supported Steam specimen:
 its camera-following grid, Level 100 color, two caustic stages, authored
 reflection image, sun stages, and both exact shoreline bands. This is not a
 claim of dynamic scene reflection/refraction or the inactive optional advanced
-water path. The shared secondary `Chrome3` pass, visible-sun
+water path. The visible-sun
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory

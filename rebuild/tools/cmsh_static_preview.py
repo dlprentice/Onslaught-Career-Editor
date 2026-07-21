@@ -33,7 +33,7 @@ MAX_COORDINATE = 1_000_000.0
 MIN_NORMAL_DETERMINANT = 1e-8
 MAX_NORMAL_CONDITION = 1e8
 MIN_NORMAL_LENGTH = 1e-12
-TEXR_SENTINEL_U32: frozenset[int] = frozenset()
+TEXR_SENTINEL_U32: frozenset[int] = frozenset({0xFFFFFFFF})
 
 
 class CmshProfileError(ValueError):
@@ -632,7 +632,7 @@ def emit_obj(
     mesh: ParsedMesh,
     *,
     include_vertex_attributes: bool = False,
-    include_primary_material_groups: bool = False,
+    include_material_layer_groups: bool = False,
 ) -> bytes:
     lines: list[str] = []
     encoded_bytes = 0
@@ -724,11 +724,12 @@ def emit_obj(
             return str(vertex_index)
 
         for group in part.groups:
-            if include_primary_material_groups:
-                primary_texture = group.raw_texr_u32[0]
-                if primary_texture >= len(mesh.textures):
-                    raise CmshProfileError("OBJ rejection", 0, "unresolved primary texture")
-                append_line(f"usemtl texture-{primary_texture:04d}")
+            if include_material_layer_groups:
+                for texture_index in group.raw_texr_u32:
+                    if texture_index not in TEXR_SENTINEL_U32 and texture_index >= len(mesh.textures):
+                        raise CmshProfileError("OBJ rejection", 0, "unresolved material texture")
+                signature = "-".join(f"{texture_index:08x}" for texture_index in group.raw_texr_u32)
+                append_line(f"usemtl layers-{signature}")
             indices = group.indices
             for ordinal in range(len(indices) - 2):
                 if ordinal % 2 == 0:
@@ -766,10 +767,24 @@ def emit_material_report(mesh: ParsedMesh) -> bytes:
                 row: dict[str, object] = {
                     "position": position,
                     "rawU32": raw_u32,
-                    "retailSemantic": "UNKNOWN",
+                    "retailSemantic": (
+                        "base"
+                        if position == 0
+                        else "dot3Lighting"
+                        if position == 1
+                        else "environmentReflection"
+                        if position == 2
+                        else "disabledProjective"
+                        if position == 3
+                        else "alphaOverlay"
+                        if position == 4
+                        else "disabled"
+                    ),
                     "status": "unresolved",
                 }
-                if raw_u32 < len(mesh.textures):
+                if raw_u32 in TEXR_SENTINEL_U32:
+                    row["status"] = "sentinel"
+                elif raw_u32 < len(mesh.textures):
                     row["status"] = "resolved"
                     row["textureIndex"] = raw_u32
                     row["textureName"] = mesh.textures[raw_u32].name
@@ -783,13 +798,16 @@ def emit_material_report(mesh: ParsedMesh) -> bytes:
             }
         )
     report = {
-        "schemaVersion": "onslaught-cmsh-material-report.v0",
+        "schemaVersion": "onslaught-cmsh-material-report.v1",
         "acceptedSentinelU32": sorted(TEXR_SENTINEL_U32),
-        "retailPositionSemantics": ["UNKNOWN"] * 6,
-        "legacyReferenceBehavior": {
-            "selectedPosition": 0,
-            "scope": "pinned legacy importer reference behavior only",
-        },
+        "retailPositionSemantics": [
+            "base",
+            "dot3Lighting",
+            "environmentReflection",
+            "disabledProjective",
+            "alphaOverlay",
+            "disabled",
+        ],
         "textures": texture_names,
         "parts": parts,
     }
@@ -803,13 +821,13 @@ def convert_aya_bytes(
     source: bytes,
     *,
     include_vertex_attributes: bool = False,
-    include_primary_material_groups: bool = False,
+    include_material_layer_groups: bool = False,
     hierarchy_frame: int | None = None,
 ) -> bytes:
     return emit_obj(
         parse_cmsh_stream(inflate_aya(source), hierarchy_frame=hierarchy_frame),
         include_vertex_attributes=include_vertex_attributes,
-        include_primary_material_groups=include_primary_material_groups,
+        include_material_layer_groups=include_material_layer_groups,
     )
 
 
@@ -848,7 +866,7 @@ def publish_anonymous_previews(
     output_directory: Path,
     *,
     include_vertex_attributes: bool = False,
-    include_primary_material_groups: bool = False,
+    include_material_layer_groups: bool = False,
     hierarchy_frame: int | None = None,
 ) -> tuple[int, int]:
     trusted_checkout = Path(__file__).resolve().parents[2]
@@ -915,7 +933,7 @@ def publish_anonymous_previews(
                     obj = convert_aya_bytes(
                         data,
                         include_vertex_attributes=include_vertex_attributes,
-                        include_primary_material_groups=include_primary_material_groups,
+                        include_material_layer_groups=include_material_layer_groups,
                         hierarchy_frame=hierarchy_frame,
                     )
                 except CmshProfileError as error:
@@ -960,9 +978,9 @@ def _main(argv: Iterable[str] | None = None) -> int:
         help="include retained profile-v0 texture coordinates and normals in OBJ output",
     )
     parser.add_argument(
-        "--primary-material-groups",
+        "--material-layer-groups",
         action="store_true",
-        help="emit one OBJ material group per MMPT using the resolved TEXR layer-0 texture index",
+        help="emit one OBJ material group per MMPT using its complete six-slot TEXR signature",
     )
     parser.add_argument(
         "--hierarchy-frame",
@@ -978,7 +996,7 @@ def _main(argv: Iterable[str] | None = None) -> int:
             arguments.input,
             arguments.output,
             include_vertex_attributes=arguments.vertex_attributes,
-            include_primary_material_groups=arguments.primary_material_groups,
+            include_material_layer_groups=arguments.material_layer_groups,
             hierarchy_frame=arguments.hierarchy_frame,
         )
     except (CmshProfileError, OSError) as error:

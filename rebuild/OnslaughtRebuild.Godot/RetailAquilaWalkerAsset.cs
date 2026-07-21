@@ -62,7 +62,8 @@ internal sealed class RetailAquilaWalkerAsset
 
     public static RetailAquilaWalkerAsset Load(
         string resourcePath,
-        IReadOnlyDictionary<int, Material> materials)
+        IReadOnlyDictionary<int, Texture2D> textures,
+        Level100HeightFieldAsset terrain)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         string hash = Convert.ToHexString(SHA256.HashData(source));
@@ -89,7 +90,7 @@ internal sealed class RetailAquilaWalkerAsset
         ResolveAndValidateHierarchy(parsed.Parts);
         float[] clearances = BuildFrameClearances(parsed.Parts);
         float standingClearance = BuildStandingClearance(parsed.Parts);
-        Node3D[] partNodes = BuildPartNodes(parsed.Parts, materials, out Node3D root);
+        Node3D[] partNodes = BuildPartNodes(parsed, textures, terrain, out Node3D root);
         return new RetailAquilaWalkerAsset(
             parsed.Parts,
             partNodes,
@@ -200,11 +201,20 @@ internal sealed class RetailAquilaWalkerAsset
         }
 
         _ = ReadChunk(data, ref cursor, data.Length, "CMST", textureCount * 36);
+        var textures = new TextureMetadata[textureCount];
         for (int texture = 0; texture < textureCount; texture++)
         {
             Chunk msht = ReadChunk(data, ref cursor, data.Length, "MSHT", 156);
             int nested = msht.PayloadOffset;
-            _ = ReadChunk(data, ref nested, msht.EndOffset, "TEXB", 148);
+            Chunk texb = ReadChunk(data, ref nested, msht.EndOffset, "TEXB", 148);
+            textures[texture] = new TextureMetadata(
+                ReadSingle(data, texb.PayloadOffset),
+                new Vector2(
+                    ReadSingle(data, texb.PayloadOffset + 4),
+                    ReadSingle(data, texb.PayloadOffset + 8)),
+                new Vector2(
+                    ReadSingle(data, texb.PayloadOffset + 12),
+                    ReadSingle(data, texb.PayloadOffset + 16)));
             RequireEnd(nested, msht.EndOffset, "MSHT");
         }
 
@@ -237,7 +247,7 @@ internal sealed class RetailAquilaWalkerAsset
         _ = ReadChunk(data, ref cursor, data.Length, "BBOX", 48);
         _ = ReadChunk(data, ref cursor, data.Length, "CEMT", 3_404);
         RequireEnd(cursor, data.Length, "CMSH");
-        return new ParsedWalker(parts, expandedSurfaceCount);
+        return new ParsedWalker(parts, textures, expandedSurfaceCount);
     }
 
     private static Part ParsePart(byte[] data, Chunk mesp, int index, int partCount)
@@ -405,7 +415,9 @@ internal sealed class RetailAquilaWalkerAsset
             int[] strip = ReadIndices(data, ibuf, indexCount, vertexCount);
             groups[groupIndex] = new GeometryGroup(
                 BuildTriangles(strip),
-                ReadInt32(data, texr.PayloadOffset));
+                Enumerable.Range(0, 6)
+                    .Select(layer => ReadInt32(data, texr.PayloadOffset + (layer * sizeof(int))))
+                    .ToArray());
         }
         RequireEnd(cursor, pmvb.EndOffset, "PMVB");
         return new Geometry(
@@ -713,13 +725,16 @@ internal sealed class RetailAquilaWalkerAsset
     }
 
     private static Node3D[] BuildPartNodes(
-        Part[] parts,
-        IReadOnlyDictionary<int, Material> materials,
+        ParsedWalker parsed,
+        IReadOnlyDictionary<int, Texture2D> textures,
+        Level100HeightFieldAsset terrain,
         out Node3D root)
     {
+        Part[] parts = parsed.Parts;
         root = new Node3D { Name = "RetailAquilaWalker" };
         var nodes = new Node3D[parts.Length];
         var meshByGeometry = new Dictionary<Geometry, ArrayMesh>();
+        var materialBySignature = new Dictionary<string, Material>(StringComparer.Ordinal);
         for (int index = 0; index < parts.Length; index++)
         {
             Part part = parts[index];
@@ -742,7 +757,12 @@ internal sealed class RetailAquilaWalkerAsset
             {
                 if (!meshByGeometry.TryGetValue(part.Geometry, out ArrayMesh? mesh))
                 {
-                    mesh = BuildMesh(part.Geometry, materials);
+                    mesh = BuildMesh(
+                        part.Geometry,
+                        parsed.Textures,
+                        textures,
+                        terrain,
+                        materialBySignature);
                     meshByGeometry.Add(part.Geometry, mesh);
                 }
                 node.AddChild(new MeshInstance3D
@@ -755,15 +775,42 @@ internal sealed class RetailAquilaWalkerAsset
         return nodes;
     }
 
-    private static ArrayMesh BuildMesh(Geometry geometry, IReadOnlyDictionary<int, Material> materials)
+    private static ArrayMesh BuildMesh(
+        Geometry geometry,
+        IReadOnlyList<TextureMetadata> metadata,
+        IReadOnlyDictionary<int, Texture2D> textures,
+        Level100HeightFieldAsset terrain,
+        IDictionary<string, Material> materialBySignature)
     {
         var mesh = new ArrayMesh();
         foreach (GeometryGroup group in geometry.Groups)
         {
-            if (!materials.TryGetValue(group.PrimaryTexture, out Material? material))
+            string signature = MaterialSignature(group.TextureIndices);
+            if (!materialBySignature.TryGetValue(signature, out Material? material))
             {
-                throw new InvalidDataException(
-                    $"The retained Aquila walker references unmapped texture {group.PrimaryTexture}.");
+                var layers = new RetailTextureLayer?[6];
+                for (int index = 0; index < group.TextureIndices.Length; index++)
+                {
+                    int textureIndex = group.TextureIndices[index];
+                    if (textureIndex == -1)
+                    {
+                        continue;
+                    }
+                    if (textureIndex < 0 || textureIndex >= metadata.Count ||
+                        !textures.TryGetValue(textureIndex, out Texture2D? texture))
+                    {
+                        throw new InvalidDataException(
+                            $"The retained Aquila walker references unmapped texture {textureIndex}.");
+                    }
+                    TextureMetadata textureMetadata = metadata[textureIndex];
+                    layers[index] = new RetailTextureLayer(
+                        texture,
+                        textureMetadata.Opacity,
+                        textureMetadata.Offset,
+                        textureMetadata.Scale);
+                }
+                material = RetailFixedFunctionMaterial.Create(layers, terrain);
+                materialBySignature.Add(signature, material);
             }
 
             var arrays = new Godot.Collections.Array();
@@ -774,10 +821,21 @@ internal sealed class RetailAquilaWalkerAsset
             arrays[(int)Mesh.ArrayType.Index] = group.Triangles;
             int surface = mesh.GetSurfaceCount();
             mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-            mesh.SurfaceSetName(surface, $"texture-{group.PrimaryTexture:D4}");
+            mesh.SurfaceSetName(surface, signature);
             mesh.SurfaceSetMaterial(surface, material);
         }
         return mesh;
+    }
+
+    private static string MaterialSignature(IReadOnlyList<int> textureIndices)
+    {
+        if (textureIndices.Count != 6)
+        {
+            throw new InvalidDataException("The retained Aquila walker has an invalid material signature.");
+        }
+        return "layers-" + string.Join(
+            "-",
+            textureIndices.Select(value => unchecked((uint)value).ToString("x8")));
     }
 
     private static void ValidateLegMotion(byte[] data, Chunk camd)
@@ -990,7 +1048,10 @@ internal sealed class RetailAquilaWalkerAsset
         public int EndOffset => PayloadOffset + Length;
     }
 
-    private sealed record ParsedWalker(Part[] Parts, int ExpandedSurfaceCount);
+    private sealed record ParsedWalker(
+        Part[] Parts,
+        TextureMetadata[] Textures,
+        int ExpandedSurfaceCount);
 
     private sealed class Part(
         int index,
@@ -1036,7 +1097,9 @@ internal sealed class RetailAquilaWalkerAsset
         Vector2[] TextureCoordinates,
         GeometryGroup[] Groups);
 
-    private sealed record GeometryGroup(int[] Triangles, int PrimaryTexture);
+    private sealed record GeometryGroup(int[] Triangles, int[] TextureIndices);
+
+    private sealed record TextureMetadata(float Opacity, Vector2 Offset, Vector2 Scale);
 
     private readonly record struct BeaTransform(Matrix3 Rotation, Vector3 Position)
     {
