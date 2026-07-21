@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Buffers.Binary;
 using Godot;
@@ -34,7 +34,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private StandardMaterial3D _pulseBoltHaloMaterial = null!;
     private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
     private Texture2D _pulseImpactAnimatedTexture = null!;
-    private Texture2D _pulseImpactShockwaveTexture = null!;
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
@@ -615,11 +614,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
             256,
             256);
-        _pulseImpactShockwaveTexture = CuratedAyaTextureLoader.Load(
-            "res://Assets/Level100/Textures/pulse-impact-shockwave.texture.aya",
-            128,
-            128,
-            CuratedAyaTextureLoader.Compression.Dxt1);
         _effectFlashMediumTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/effect-flash-medium.texture.aya",
             128,
@@ -663,12 +657,6 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(flash);
         AnimateScale(flash, 1f, 0f, 0.3d);
 
-        MeshInstance3D shockwave = CreateEffectSprite(
-            "PulseBlastShockwave",
-            _pulseImpactShockwaveTexture,
-            1f);
-        root.AddChild(shockwave);
-        AnimateScale(shockwave, 1f, 2f, 0.5d);
     }
 
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
@@ -679,9 +667,9 @@ public sealed partial class FirstFlightWorldView : Node3D
             _targetTankExplosionAnimatedTexture,
             3f,
             columns: 4,
-            rows: 2);
+            rows: 4);
         root.AddChild(animatedExplosion);
-        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 2, 0.5d);
+        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 4, 0.5d);
         AnimateScale(animatedExplosion, 1f, 1.3f / 1.5f, 0.5d);
 
         MeshInstance3D fireball = CreateEffectSprite(
@@ -722,9 +710,17 @@ public sealed partial class FirstFlightWorldView : Node3D
         int columns = 1,
         int rows = 1)
     {
-        StandardMaterial3D material = CreatePulseParticleMaterial(
-            texture,
-            billboard: true);
+        StandardMaterial3D material = new StandardMaterial3D
+        {
+            AlbedoTexture = texture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+            BillboardMode = BaseMaterial3D.BillboardModeEnum.Enabled,
+            BillboardKeepScale = true,
+            DisableFog = true,
+        };
         material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
         return new MeshInstance3D
         {
