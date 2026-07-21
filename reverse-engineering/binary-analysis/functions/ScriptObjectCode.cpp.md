@@ -29,12 +29,13 @@ The VM is a **stack-based interpreter** with:
 
 ### CScriptObjectCode
 
-Base class for script execution. Contains:
-- Bytecode instruction array (via CFlexArray)
+Base class for script execution. The serialized code object contains:
+- Bytecode instruction array (inline CFlexArray)
 - Symbol table for variables
-- Event function list
-- Stack for operand manipulation
-- Runtime state (instruction pointer, flags)
+- Event function list (CSPtrSet)
+
+The operand stack and execution state (instruction pointer, flags) live in a
+separate VM runtime structure (see Key Structures below).
 
 **RTTI String:** Not directly found (base class)
 
@@ -194,30 +195,37 @@ The only observed xref is `CMissionScriptObjectCode__ClearFields`: it checks its
 
 ## Key Structures
 
-### CScriptObjectCode Runtime Layout (offset from `this`)
+### CScriptObjectCode (code object, serialized; constructor 0x00538ec0)
 
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
-| 0x000 | 4 | vtable | Virtual function table pointer |
-| 0x004 | 4 | mInstructions | CFlexArray of CAsmInstruction* |
-| 0x008 | 4 | mCodeObject | Parent CScriptObjectCode* |
-| 0x00C | 4 | mInstructionCount | Number of instructions |
-| ... | ... | ... | ... |
-| 0x058 | 4 | mSymbolTable | Symbol table pointer |
-| 0x05C | 4 | mEventFunctionCount | Number of event handlers |
-| 0x060 | 4 | mDebugMode | Debug trace enabled flag |
-| 0x064 | 4 | mInstructionIndex | Current execution position |
-| 0x06C | 4 | mInitialized | Script initialized flag |
-| ... | ... | ... | ... |
-| 0x000-0x1FC | 512 | mStack[128] | Operand stack (128 x 4 bytes) |
-| 0x200 | 4 | mStackPointer | Current stack depth |
-| 0x20C | 4 | mStackSize | (Alias for stack pointer) |
+| 0x000 | 4 | vtable | 0x005e4f54 |
+| 0x004 | 0x10 | mInstructions | Inline CFlexArray of CAsmInstruction* (mData@+0x04, mCapacity@+0x08, mCount@+0x0C, mGrowth@+0x10) |
+| 0x014 | 0x34 | mEventIPs | 13 serialized dwords; CallEvent (0x00539990) reads the event instruction pointer at +0x14 + event_index*4 |
+| 0x048 | 0x10 | mEventFunctions | CSPtrSet; the constructor appends one CEventFunction* per serialized event record |
+| 0x058 | 4 | mSymbolTable | CSymtab*, allocated and read by the constructor (ScriptObjectCode.cpp line 0x39) |
+| 0x05C | 4 | mRunInitializer | Serialized; when non-zero, CallEvent runs the VM once from instruction 0 (guarded by +0x6C) and then dispatches the event either way |
+| 0x060 | 4 | mDebugMode | Serialized; enables per-instruction trace logging |
+| 0x064 | 4 | mInstructionCountCopy | Instruction count, copied by the constructor from the CFlexArray count at +0x0C; destructor loop bound (0x005391a0) |
+| 0x068 | 4 | — | Schema anchor `script_object_code+0x68` (see missionscript-vm-datatype-opcode-schema.v1.json) |
+| 0x06C | 4 | mInitialized | 0 in the constructor; set to 1 after the one-time initializer run |
+
+### VM runtime state (the `this` of CallEvent/Run/Push; separate structure)
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x000 | 4 | vtable | CVM vtable 0x005e4f20; its destructor (0x00535350) clears the stack at +0x00C |
+| 0x008 | 4 | mCodeObject | Current CScriptObjectCode*, stored by CallEvent |
+| 0x00C | 0x200 | mStack[128] | Operand stack (128 x 4 bytes) |
+| 0x20C | 4 | mStackCount | Stack depth; CallEvent's "stack not empty" check |
 | 0x210 | 4 | mIsRunning | VM currently executing flag |
 | 0x214 | 4 | mIP | Instruction pointer |
 | 0x218 | 4 | mFlags | Execution flags |
-| 0x21C | 4 | mSavedStackSize | Stack size at call entry |
+| 0x21C | 4 | mSavedStackSize | Copy of mStackCount at call entry |
 | 0x220 | 4 | mAbort | Abort execution flag |
 | 0x224 | 4 | mCallDepth | Nested call counter |
+
+Field evidence (decompile read-back, canonical Ghidra project): the constructor (0x00538ec0) inits the flex array at `+0x04` and the CSPtrSet at `+0x48`, reads 13 dwords into `+0x14`, stores the symbol table at `+0x58`, reads `+0x60` then `+0x5C` from the buffer, and copies the flex count into `+0x64`. `CallEvent` (0x00539990) runs the initializer once when `object+0x6C == 0 && object+0x5C != 0` (setting `+0x6C` to 1 afterwards), then loads the event IP from `object+0x14 + event_index*4` into `vm+0x214` and runs; its stack checks use `vm+0x20C`, its call-entry save uses `vm+0x21C`, and `Push` operates on `vm+0x0C`. `mIP@+0x214` matches the `missionscript-vm-datatype-opcode-schema.v1.json` instruction-pointer anchor.
 
 ### CMissionScriptObjectCode Additional Fields
 
