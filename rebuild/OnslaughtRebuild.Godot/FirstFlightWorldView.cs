@@ -9,20 +9,24 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
-    private const float RetailJetBaseClearance = 0.6706632f;
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     private const float RetailVerticalFovDegrees = 58.7155f;
     private const float RetailOpeningPanSeconds = 6f;
     private const float RetailOpeningCameraHandoffSeconds = 5.95f;
+    private const float RetailAquilaAnimationHz = 20f;
+    private const float RetailJetWalkToFlySeconds = 25f / RetailAquilaAnimationHz;
+    // Steam enters the cockpit sequence with current=1/24 (virtual frame 27),
+    // while the external jet begins at current=0 (virtual frame 25).
+    private const float RetailCockpitWalkToFlySeconds = 23f / RetailAquilaAnimationHz;
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
-    private MeshInstance3D _jetMesh = null!;
-    private MeshInstance3D _cockpitMesh = null!;
+    private RetailAquilaWalkerAsset _jetAsset = null!;
+    private RetailAquilaWalkerAsset _cockpitAsset = null!;
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Level100StaticWorldAsset _level100StaticWorld = null!;
@@ -41,8 +45,12 @@ public sealed partial class FirstFlightWorldView : Node3D
     private AudioStream _pulseCannonFireSound = null!;
     private AudioStream _pulseImpactSmallSound = null!;
     private AudioStream _targetTankExplosionMediumSound = null!;
+    private AudioStream _aquilaTakeoffSound = null!;
+    private AudioStreamPlayer3D _aquilaInFlightSound = null!;
     private int _lastTargetEffectTick = -1;
-    private float _modeBlend;
+    private float _walkerToJetVisualElapsed = float.PositiveInfinity;
+    private VehicleTransition _previousTransition;
+    private VehicleMode _previousMode = VehicleMode.Walker;
 
     public int TargetVisualCount => _level100Targets.Values.Count(target => target.Visible);
 
@@ -52,13 +60,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool RetailAquilaMeshesPresent =>
         IsInstanceValid(_walkerAsset.Root) &&
-        IsInstanceValid(_jetMesh) &&
+        IsInstanceValid(_jetAsset.Root) &&
         _walkerAsset.SurfaceCount > 0 &&
-        _jetMesh.Mesh?.GetSurfaceCount() > 0;
+        _jetAsset.SurfaceCount > 0;
 
     public int RetailAquilaSurfaceCount =>
         _walkerAsset.SurfaceCount +
-        (_jetMesh.Mesh?.GetSurfaceCount() ?? 0);
+        _jetAsset.SurfaceCount;
 
     public int RetailAquilaPartCount => _walkerAsset.PartCount;
 
@@ -66,7 +74,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public float RetailAquilaStandingClearance => _walkerAsset.StandingClearance;
 
-    public int RetailCockpitSurfaceCount => _cockpitMesh.Mesh?.GetSurfaceCount() ?? 0;
+    public int RetailCockpitSurfaceCount => _cockpitAsset.SurfaceCount;
 
     public int RetailLevel100StaticObjectCount => _level100StaticWorld.Objects.Count;
 
@@ -142,13 +150,8 @@ public sealed partial class FirstFlightWorldView : Node3D
             playerYaw,
             0f);
 
-        float desiredModeBlend = current.Transition == VehicleTransition.WalkerToJet
-            ? 1f - (current.TransformTicksRemaining / (float)SimulationConstants.WalkerToJetTransitionTicks)
-            : current.Mode == VehicleMode.Jet ? 1f : 0f;
-        _modeBlend = current.Transition == VehicleTransition.WalkerToJet
-            ? desiredModeBlend
-            : Mathf.MoveToward(_modeBlend, desiredModeBlend, frameDelta * 8f);
         UpdateWalkerPose(current);
+        UpdateWalkerToJetPresentation(current, frameDelta);
         float openingElapsedTicks = GetOpeningElapsedTicks(previous, current, interpolationAlpha);
         float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
@@ -355,35 +358,40 @@ public sealed partial class FirstFlightWorldView : Node3D
                 [3] = textureA,
             },
             _level100Terrain);
-        Mesh jet = CuratedObjMeshLoader.Load(
-            "res://Assets/Aquila/aquila-jet.obj",
-            new Dictionary<string, Material>(StringComparer.Ordinal)
+        _jetAsset = RetailAquilaWalkerAsset.LoadJet(
+            "res://Assets/Aquila/Source/m_f_be2.msh.aya",
+            new Dictionary<int, Texture2D>
             {
-                ["layers-00000000-00000000-00000000-00000000-ffffffff-ffffffff"] =
-                    CreateRetailMaterial(
-                        cockpitTexture,
-                        dot3: RetailLayer(cockpitTexture),
-                        reflection: RetailLayer(cockpitTexture)),
-                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
-                    CreateRetailMaterial(cockpitTexture, reflection: chrome),
-                ["layers-00000002-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
-                    CreateRetailMaterial(textureB, reflection: chrome),
-                ["layers-00000004-ffffffff-00000003-ffffffff-ffffffff-ffffffff"] =
-                    CreateRetailMaterial(textureA, reflection: chrome),
-            });
-
-        // The exact walker hierarchy performs BEA's X/Y/negative-Z-up mapping
-        // per part. The still-static jet retains the reviewed OBJ conversion.
-        _jetMesh = new MeshInstance3D
-        {
-            Name = "RetailAquilaJet",
-            Mesh = jet,
-            Position = new Vector3(0f, RetailJetBaseClearance, 0f),
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Visible = false,
-        };
+                [0] = cockpitTexture,
+                [1] = _retailChrome3Texture,
+                [2] = textureB,
+                [3] = _retailChrome3Texture,
+                [4] = textureA,
+            },
+            _level100Terrain);
         _playerBodyPivot.AddChild(_walkerAsset.Root);
-        _playerBodyPivot.AddChild(_jetMesh);
+        _playerBodyPivot.AddChild(_jetAsset.Root);
+
+        _aquilaTakeoffSound = LoadAudioStream(
+            "res://Assets/Aquila/SoundEffects/engine-takeoff.wav");
+        AudioStream inFlightStream = LoadAudioStream(
+            "res://Assets/Aquila/SoundEffects/engine-inflight.wav");
+        if (inFlightStream is not AudioStreamWav inFlightWave)
+        {
+            throw new InvalidDataException("The retained Aquila in-flight sound is not PCM WAV.");
+        }
+        inFlightWave.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+        inFlightWave.LoopBegin = 0;
+        inFlightWave.LoopEnd = inFlightWave.Data.Length / sizeof(short);
+        _aquilaInFlightSound = new AudioStreamPlayer3D
+        {
+            Name = "RetailAquilaInFlightLoop",
+            Stream = inFlightWave,
+            Position = Vector3.Zero,
+            MaxDistance = 80f,
+            UnitSize = 8f,
+        };
+        _playerRoot.AddChild(_aquilaInFlightSound);
     }
 
     private Material CreateRetailMaterial(
@@ -422,9 +430,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Aquila/Textures/bluegun-light.texture.aya",
             64,
             64);
-        Material cockpitMaterial = CreateRetailMaterial(
-            cockpitTexture,
-            reflection: RetailLayer(_retailChrome3Texture, 0.299999982f));
         var gunLightMaterial = new StandardMaterial3D
         {
             AlbedoTexture = gunLightTexture,
@@ -437,37 +442,100 @@ public sealed partial class FirstFlightWorldView : Node3D
             EmissionTexture = gunLightTexture,
             EmissionEnergyMultiplier = 1.6f,
         };
-        _cockpitMesh = new MeshInstance3D
-        {
-            Name = "RetailWalkerCockpit",
-            Mesh = CuratedObjMeshLoader.Load(
-                "res://Assets/Aquila/aquila-walker-cockpit.obj",
-                new Dictionary<string, Material>(StringComparer.Ordinal)
-                {
-                    ["layers-00000000-ffffffff-ffffffff-ffffffff-ffffffff-ffffffff"] =
-                        gunLightMaterial,
-                    ["layers-00000001-ffffffff-00000002-ffffffff-ffffffff-ffffffff"] =
-                        cockpitMaterial,
-                }),
-            Position = new Vector3(0f, -0.01f, -0.06f),
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        };
-        _camera.AddChild(_cockpitMesh);
+        _cockpitAsset = RetailAquilaWalkerAsset.LoadCockpit(
+            "res://Assets/Aquila/Source/m_cockpit2.msh.aya",
+            new Dictionary<int, Texture2D>
+            {
+                [0] = gunLightTexture,
+                [1] = cockpitTexture,
+                [2] = _retailChrome3Texture,
+            },
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["layers-00000000-ffffffff-ffffffff-ffffffff-ffffffff-ffffffff"] =
+                    gunLightMaterial,
+            },
+            _level100Terrain);
+        _camera.AddChild(_cockpitAsset.Root);
     }
 
     private void UpdatePlayerShape(WorldSnapshot snapshot, bool attachedView)
     {
         // The released pan camera hides the HUD/cockpit and renders the
         // exterior Aquila. Its first-person handoff reverses that visibility.
-        _walkerAsset.Root.Visible = !attachedView && snapshot.Mode == VehicleMode.Walker;
-        _jetMesh.Visible = false;
-        _cockpitMesh.Visible = attachedView;
+        bool showingJet = snapshot.Transition == VehicleTransition.WalkerToJet ||
+            snapshot.Mode == VehicleMode.Jet;
+        _walkerAsset.Root.Visible = !attachedView && !showingJet;
+        _jetAsset.Root.Visible = !attachedView && showingJet;
+        _cockpitAsset.Root.Visible = attachedView;
+        _playerBodyPivot.Position = Vector3.Zero;
+    }
 
-        float transitionLift = snapshot.Transition == VehicleTransition.WalkerToJet
-            ? Mathf.Sin(_modeBlend * Mathf.Pi) * 0.28f
-            : 0f;
-        _playerBodyPivot.Position = new Vector3(0f, transitionLift, 0f);
+    private void UpdateWalkerToJetPresentation(WorldSnapshot snapshot, float frameDelta)
+    {
+        bool transitionStarted = snapshot.Transition == VehicleTransition.WalkerToJet &&
+            _previousTransition != VehicleTransition.WalkerToJet;
+        bool returnedToWalker = snapshot.Transition == VehicleTransition.None &&
+            snapshot.Mode == VehicleMode.Walker &&
+            (_previousTransition == VehicleTransition.WalkerToJet ||
+             _previousMode == VehicleMode.Jet);
+
+        if (transitionStarted)
+        {
+            _walkerToJetVisualElapsed = 0f;
+            PlayAttachedSound("RetailAquilaTakeoff", _aquilaTakeoffSound);
+            if (!_aquilaInFlightSound.Playing)
+            {
+                _aquilaInFlightSound.Play();
+            }
+        }
+        else if (returnedToWalker)
+        {
+            _walkerToJetVisualElapsed = float.PositiveInfinity;
+            _aquilaInFlightSound.Stop();
+        }
+
+        if (float.IsFinite(_walkerToJetVisualElapsed))
+        {
+            _walkerToJetVisualElapsed = Math.Min(
+                _walkerToJetVisualElapsed + Math.Max(0f, frameDelta),
+                RetailJetWalkToFlySeconds);
+            int jetStep = Math.Min(
+                Mathf.FloorToInt(_walkerToJetVisualElapsed * RetailAquilaAnimationHz),
+                25);
+            _jetAsset.SetVirtualFrame(25f + jetStep);
+
+            if (_walkerToJetVisualElapsed < RetailCockpitWalkToFlySeconds)
+            {
+                int cockpitStep = Math.Min(
+                    Mathf.FloorToInt(_walkerToJetVisualElapsed * RetailAquilaAnimationHz),
+                    22);
+                _cockpitAsset.SetVirtualFrame(27f + cockpitStep);
+            }
+            else
+            {
+                _cockpitAsset.SetVirtualFrame(0f);
+            }
+
+            if (_walkerToJetVisualElapsed >= RetailJetWalkToFlySeconds)
+            {
+                _jetAsset.SetVirtualFrame(0f);
+                _walkerToJetVisualElapsed = float.PositiveInfinity;
+            }
+        }
+        else if (snapshot.Mode == VehicleMode.Jet)
+        {
+            _jetAsset.SetVirtualFrame(0f);
+            _cockpitAsset.SetVirtualFrame(0f);
+        }
+        else
+        {
+            _jetAsset.SetVirtualFrame(25f);
+            _cockpitAsset.SetVirtualFrame(25f);
+        }
+
+        _previousTransition = snapshot.Transition;
+        _previousMode = snapshot.Mode;
     }
 
     private void UpdateWalkerPose(WorldSnapshot snapshot)
@@ -775,6 +843,21 @@ public sealed partial class FirstFlightWorldView : Node3D
         };
         player.Finished += player.QueueFree;
         AddChild(player);
+        player.Play();
+    }
+
+    private void PlayAttachedSound(string name, AudioStream stream)
+    {
+        var player = new AudioStreamPlayer3D
+        {
+            Name = name,
+            Stream = stream,
+            Position = Vector3.Zero,
+            MaxDistance = 80f,
+            UnitSize = 8f,
+        };
+        player.Finished += player.QueueFree;
+        _playerRoot.AddChild(player);
         player.Play();
     }
 

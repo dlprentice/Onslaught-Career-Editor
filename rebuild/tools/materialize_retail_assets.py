@@ -188,8 +188,6 @@ CHUNKS = (
 
 # Destination, source AYA destination above, hierarchy frame, exact OBJ SHA-256.
 MESHES = (
-    (GODOT_ASSETS / "Aquila/aquila-jet.obj", GODOT_ASSETS / "Aquila/Source/m_f_be2.msh.aya", None, "752bba6433617f78c5f89e6641b928b3e380c4089afc4e571e35ec8de34b4183"),
-    (GODOT_ASSETS / "Aquila/aquila-walker-cockpit.obj", GODOT_ASSETS / "Aquila/Source/m_cockpit2.msh.aya", 25, "793d9da21787a379eaa5077256f11bda74393099324f763153443d67fc92aa6c"),
     (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "3a67f2bf49c9505855f73259d8d5829a7e0d1a0aed0f5a8802e82c4cf2c5df9f"),
     (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "3883b651a9963813a4ab9982460425910be5d7f8f7edce15ade475cf6d8eb5ce"),
 )
@@ -197,6 +195,8 @@ MESHES = (
 
 # Destination, zero-based XAP record, exact record name, exact WAV SHA-256.
 SOUNDS = (
+    (GODOT_ASSETS / "Aquila/SoundEffects/engine-inflight.wav", 23, "Battle Engine\\N_BE_engine_inflight", "0e6eb03aa2c2991c0e59c3483956b1c608a79700e0de179c855491cff548ac04"),
+    (GODOT_ASSETS / "Aquila/SoundEffects/engine-takeoff.wav", 25, "Battle Engine\\N_BE_engine_takeoff", "3698a4419c000ab982cbc92c6553ac2639272fb85930df52a26528b232f00798"),
     (GODOT_ASSETS / "Level100/SoundEffects/pulse-cannon-fire.wav", 35, "Battle Engine\\N_BE_pulse_cannon_fire", "710ff06db55bc694efb8ff7d3a5ab658125e7ca0fe6b4733a805da98b22b0277"),
     (GODOT_ASSETS / "Level100/SoundEffects/target-tank-explosion-medium.wav", 102, "Impact\\N_I_explosion_medium", "7228ae049cb0a9877e63671a65e51829443017b2c4981df90a9c64d2f38b6d9c"),
     (GODOT_ASSETS / "Level100/SoundEffects/pulse-impact-small.wav", 105, "Impact\\N_I_explosion_small", "3296b13938928f54847a29e17307e7875e9933f8fd6381bf0dfcd260cd6fc131"),

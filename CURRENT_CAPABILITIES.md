@@ -95,8 +95,15 @@ modified fresh copies bound Transform through copied `defaultoptions.bea` and
 delivered retail action `0x21` to player one's BattleEngine. The control stayed
 in raw walker state `2`; both modified runs repeated `2 → 1 → 3`, with the
 raw transition lasting 535.359–537.249 ms. Deterministic Core maps only that
-walker-to-jet state to 16 ticks at 30 Hz. Jet-to-walker timing, animation,
-camera, resources, weapons, and flight dynamics remain unproven.
+walker-to-jet state to 16 ticks at 30 Hz. A later clean control and two fresh
+modified repetitions established the separate released presentation: the
+renderer swaps to the 54-part jet hierarchy at transition entry, external
+`walktofly` runs for about 1.24 seconds, and the 21-part cockpit completes its
+independent transition after about 1.14 seconds while the first-person camera
+remains attached. Godot now consumes those exact hierarchies, authored frames,
+and takeoff/in-flight PCM records without extending Core's state duration.
+Jet-to-walker presentation, exact sound mixing, resources, weapons, and flight
+dynamics remain unproven.
 
 The patch catalog's original/replacement bytes and copied-target rules are
 automatically checked. A byte-correct patch is not automatically proof of its
@@ -177,20 +184,24 @@ Steam sensitivity `1.5`, the Godot adapter preserves pointer magnitude, applies
 the released centered-offset mapping and recentering rate, and feeds Core's
 released inertial walker yaw/pitch response. Other sensitivity settings,
 inversion, and jet mouse response are not yet claimed.
-Core retains the previously measured
-16-tick walker-to-jet transition, but the clean opening's flight gate keeps it
-unavailable until later tutorial progression is implemented. The
-walker now loads directly from its exact released AYA as a 63-part hierarchy
-with 54 base-material surfaces. Its twenty leg-chain parts consume four
+Core retains the previously measured 16-tick walker-to-jet transition, but the
+clean opening's flight gate keeps it unavailable until later tutorial
+progression is implemented. The walker, jet, and first-person cockpit now load
+directly from their exact released AYA files as 63-, 54-, and 21-part
+hierarchies with 54, 58, and 10 material surfaces. The external jet and cockpit
+advance through their separately timed authored `walktofly` frames after the
+released transition-entry mesh swap, then select looping `fly` frame 0. The
+exact takeoff effect and in-flight loop begin at that same boundary. The
+walker's twenty leg-chain parts consume four
 deterministic Core foot contacts. Core reproduces the released diagonal step
 scheduling, 400-phase-unit-per-second swing, 0.4-unit lift, and exact Level 100
 heightfield contact; Godot selects each leg's `LegMotion` frame by required
-root-to-foot extension rather than replaying one synthetic gait cycle. The jet,
-24 static-world mesh types, four
-pine variants, and two target types remain bounded static conversions. Their conventional OBJ
+root-to-foot extension rather than replaying one synthetic gait cycle. The 24
+static-world mesh types, four pine variants, and two target types remain bounded
+static conversions. Their conventional OBJ
 front faces are adapted to Godot's clockwise winding instead of exposing
-interior/back faces. The exterior meshes and exact frame-25 first-person cockpit
-render from exact locally materialized AYA-wrapped textures. Static object
+interior/back faces. Aquila and exterior meshes render from exact locally
+materialized AYA-wrapped textures. Static object
 shading uses the released PC ambient plus opposing sun/anti-sun lights and
 stage-zero `MODULATE2X`, not invented Godot metallic/roughness values. One no-input control and two
 fixed-yaw retail repetitions per facility establish circular walker contact only
@@ -254,7 +265,7 @@ three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
 remaining weapon roster, facility destruction,
 the inactive optional advanced-water path and dynamic scene reflection/refraction,
-transform animation, Steam's dynamic
+jet-to-walker presentation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general
 contacts, other portraits/video, and exact portrait RNG phase,
 later mission audio, campaign,

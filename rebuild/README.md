@@ -29,9 +29,10 @@ from its exact released AYA as a 63-part
 hierarchy; its twenty animated leg-chain parts consume four deterministic Core
 foot contacts. The released controller's diagonal swing scheduling and Level 100
 height contacts select independent `LegMotion` extension poses for each leg.
-The jet, 24 static-world mesh types, four pine variants, and two target types
-retain bounded static conversions and render with their complete active retail
-material passes. Their lighting follows the released PC ambient, opposing
+The exact 54-part jet and 21-part cockpit hierarchies own the bounded
+walker-to-jet presentation. The 24 static-world mesh types, four pine variants,
+and two target types retain bounded static conversions. All render with their
+complete active retail material passes. Their lighting follows the released PC ambient, opposing
 sun/anti-sun, and `MODULATE2X` path rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
 cube-25 sky, and exponential `CHFD` fog now replace the procedural ground/sky.
@@ -116,7 +117,13 @@ forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
 remains an explicit transition for 16 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
 state, but clean Level 100 keeps the flight gate closed throughout the current
-slice. The presentation camera now uses clean Level 100's released opening
+slice. A separate clean control and two early-flight copied-runtime repetitions
+establish that Steam swaps to its 54-part jet hierarchy at transition entry,
+runs the external `walktofly` animation for about 1.24 seconds, and independently
+changes the 21-part cockpit over about 1.14 seconds without replacing the
+attached camera. Godot consumes those exact authored hierarchies and the exact
+takeoff/in-flight PCM records while leaving Core's shorter state transition
+unchanged. The presentation camera now uses clean Level 100's released opening
 lifecycle: four orientation-relative spline points around the exterior Aquila,
 a six-second Steam pan, control-view handoff at 5.95 seconds, and then the
 attached first-person view at the Aquila center of gravity with its horizontal
@@ -134,7 +141,8 @@ emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
 terrain clipping, mouse inversion and sensitivity settings other than the
 copied Steam `1.5` baseline,
 jet movement,
-jet-to-walker, transform animation, resource semantics, the rest of the weapon
+jet-to-walker presentation, exact transform sound mixing, resource semantics,
+the rest of the weapon
 model, target mesh-part damage,
 secondary hit/destruction effects and debris, terrain collision
 beyond grounded height following, AI, the mission
@@ -142,8 +150,9 @@ beyond the first four-target exercise and its weapon handoff,
 campaign, and networking
 remain provisional or absent.
 
-The client switches between the released walker's exact part hierarchy and a
-deterministic static conversion of the released jet. It decodes Level 100's
+The client switches between the released walker's and jet's exact part
+hierarchies and independently animates the exact first-person cockpit. It
+decodes Level 100's
 version-50 base-world records into 33 visible static instances, 24 mesh types,
 and 1,481 pines across four variants, while retaining the separate Target Tank
 and Warehouse meshes. The
@@ -199,7 +208,7 @@ particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
 contact envelopes, exact toe-normal alignment and CMC body sway,
-transform animation, general HUD contacts and later state logic, Steam's
+jet-to-walker presentation, general HUD contacts and later state logic, Steam's
 dynamic ring texture, full multi-stage mask state and Level 100 influence map,
 other radio portraits/video and exact portrait RNG phase, Warehouse
 segment-specific health and breakup,

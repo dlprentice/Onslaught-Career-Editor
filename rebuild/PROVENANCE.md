@@ -43,10 +43,11 @@ not provenance.
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
-Federation walker's exact 63-part AYA hierarchy plus bounded static conversions
-of the jet, 24 Level 100 static-world mesh types, four pine variants, Target
-Tank, and Warehouse meshes; their exact source/output hashes live in the
-materializer and ignored generated manifest. The released Level 100 WRES
+Federation walker, jet, and cockpit as exact 63-, 54-, and 21-part AYA
+hierarchies, plus bounded static conversions of 24 Level 100 static-world mesh
+types, four pine variants, Target Tank, and Warehouse meshes. Their exact
+source/output hashes live in the materializer and ignored generated manifest.
+The released Level 100 WRES
 records now set the player start heading, all 33 visible base-world objects,
 1,481 Steam-instantiated pines, trigger locations, and four Firing Range targets. The client
 maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
@@ -117,7 +118,7 @@ reflection/refraction and pixel identity outside this bounded active pass are
 not claimed.
 Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
-presentation, and unimplemented HUD behavior remain provisional unless
+handling, reverse-transform presentation, and unimplemented HUD behavior remain provisional unless
 specific retained evidence says otherwise.
 
 The exact walker AYA supplies 63 reciprocal parent/reference parts, 54 expanded
@@ -151,6 +152,24 @@ retention. Core maps those 20 Hz responses into its fixed 30 Hz step. The same
 control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
 16-tick walker-to-jet transition. Jet forward speed and energy drain retain
 earlier bounded measurements.
+
+A later clean control and two fresh copies with only the proven Level 100
+early-flight byte change isolated the corresponding presentation. Transform was
+bound through copied `defaultoptions.bea`; launches used only `-skipfmv -level
+100`. The clean control delivered the same action but remained in walker state
+`2` with no render, animation, cockpit, or camera change. Both modified runs
+swapped the active render reader as state `1` began, committed state `3` after
+540.045 and 549.598 ms, and retained one first-person camera pointer/vtable.
+Steam `CBattleEngine::Morph` (`0x0040A580`) and the render-reader swap
+(`0x00406460`) establish that the 54-part jet hierarchy owns the external
+transition. `CBattleEngine::FinishedPlayingCurrentAnimation` (`0x0040EEB0`)
+then changes its `walktofly` animation, virtual frames 25–50 at 20 Hz, to
+looping `fly` frame 0 after 1.243 and 1.241 seconds. The 21-part cockpit begins
+its independent `walktofly` path one step into its 26–50 table, displays frames
+27–49, and selects `fly` frame 0 after 1.138 and 1.141 seconds. The same entry
+starts exact XAP records 25 (`N_BE_engine_takeoff`) and 23
+(`N_BE_engine_inflight`). Runtime copies, sampler output, and debugger helpers
+were disposable; only the consumed hashes and timings are retained.
 
 One no-input control and two uninterrupted fixed-yaw forward holds per facility
 then establish the only retained structure contacts. The Control Tower repeated
@@ -197,11 +216,10 @@ position is the Battle Engine position, and the Steam 16:9/zoom-1 projection ter
 Battle Engine offset `0x528` selected animation index `1`; the exact `cockpit2.msh`
 `CAMD` table identifies that as `walk`, authored hierarchy frame 25. Runtime
 also reported the cockpit render flag enabled and no local position offset.
-The retained 21-part cockpit converts deterministically at that frame and loads
-as two complete material-signature surfaces. Godot's camera child uses a bounded 6 cm
-depth and 1 cm vertical presentation adjustment, selected against the clean
-retail frame to account for its OBJ transform and near-plane path; that adapter
-offset is not claimed as a retail model value.
+The retained 21-part cockpit loads its exact hierarchy as ten material-group
+surfaces at that frame. Godot's camera child uses a bounded 6 cm depth and 1 cm
+vertical presentation adjustment selected against the clean retail frame and
+near-plane path; that adapter offset is not claimed as a retail model value.
 
 A no-input control and two uninterrupted repetitions then bound attached-view
 aim at the same authored start. `Look Up`, `Look Down`, and `Look Left` were
@@ -384,17 +402,17 @@ Walker acceleration and the bounded projectile path now use the released
 continuous yaw/pitch basis; the eight-way projection remains only in provisional jet
 movement. Terrain
 response beyond grounded height following, dash behavior, terrain-relative pitch and
-occlusion, jet-to-walker, transform presentation, secondary Pulse Cannon
+occlusion, jet-to-walker presentation, exact transform sound mixing, secondary Pulse Cannon
 effects/resources, the remaining weapons, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts; loads 58 Aquila, 111 static-world,
-six target, and two cockpit material surfaces; instantiates all 1,481 pines and
+A native smoke proves the current client starts; loads 112 Aquila, 111 static-world,
+six target, and ten cockpit material surfaces; instantiates all 1,481 pines and
 the 625-vertex/1,152-triangle camera-following water grid plus 2,056 shoreline
 triangles; decodes the exact locally materialized mesh, nine
 Pulse/target-effect, twenty-nine HUD, five sky, and five water textures;
-validates three PCM sound envelopes; and consumes the
+validates five PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
 ground elevation. Its deterministic
 route reaches the first Firing Range exercise, renders the exact target models

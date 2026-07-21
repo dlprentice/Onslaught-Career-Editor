@@ -9,8 +9,9 @@ using Godot;
 namespace OnslaughtRebuild.GodotClient;
 
 /// <summary>
-/// Loads the one retained Federation walker specimen as its authored part hierarchy.
-/// This is intentionally not a general AYA or CMSH importer.
+/// Loads the exact walker, jet, and cockpit specimens consumed by this slice as
+/// their authored part hierarchies. This is intentionally not a general AYA or
+/// CMSH importer.
 /// </summary>
 internal sealed class RetailAquilaWalkerAsset
 {
@@ -26,6 +27,71 @@ internal sealed class RetailAquilaWalkerAsset
     private const int ExpectedAnimatedPartCount = 20;
     private const int MaximumInflatedLength = 2 * 1024 * 1024;
     private const float TransformTolerance = 0.0001f;
+    private static readonly AssetProfile s_walkerProfile = new(
+        "Aquila walker",
+        "RetailAquilaWalker",
+        ExpectedSourceSha256,
+        ExpectedSourceLength,
+        ExpectedInflatedLength,
+        ExpectedTextureCount,
+        ExpectedPartCount,
+        ExpectedExpandedSurfaceCount,
+        ExpectedAnimatedPartCount,
+        3_404,
+        true,
+        0f,
+        1f,
+        Vector3.Zero,
+        true,
+        [
+            new AnimationMode("walk", 1, 1, 1, 1f),
+            new AnimationMode("transform", 1, 1, 0, 0f),
+            new AnimationMode("LegMotion", 1, 100, 99, 1f / 99f),
+        ]);
+    private static readonly AssetProfile s_jetProfile = new(
+        "Aquila jet",
+        "RetailAquilaJet",
+        "35AADA1313C3CBB796BA75DB071321035F7005096DA7C148A7514944F4772B4C",
+        334_813,
+        965_200,
+        6,
+        54,
+        58,
+        37,
+        2_044,
+        false,
+        null,
+        25f,
+        new Vector3(0f, 0.6706632f, 0f),
+        true,
+        [
+            new AnimationMode("walk", 25, 25, 1, 1f),
+            new AnimationMode("walktofly", 25, 50, 25, 0.04f),
+            new AnimationMode("flytowalk", 0, 25, 25, 0.04f),
+            new AnimationMode("fly", 0, 0, 1, 1f),
+        ]);
+    private static readonly AssetProfile s_cockpitProfile = new(
+        "Aquila cockpit",
+        "RetailAquilaCockpit",
+        "008B9292C59A5564BA3696F65D5BD51030D3E57250BC792D9D2B7F01292CDD4A",
+        31_750,
+        137_757,
+        3,
+        21,
+        10,
+        6,
+        4_084,
+        false,
+        null,
+        25f,
+        new Vector3(0f, -0.01f, -0.06f),
+        false,
+        [
+            new AnimationMode("walktofly", 26, 50, 24, 1f / 24f),
+            new AnimationMode("walk", 25, 25, 1, 1f),
+            new AnimationMode("flytowalk", 1, 25, 24, 1f / 24f),
+            new AnimationMode("fly", 0, 0, 1, 1f),
+        ]);
     private static readonly LegDefinition[] s_legs =
     [
         new(0, 18, 25, [18, 21, 22, 23, 24]),
@@ -37,6 +103,7 @@ internal sealed class RetailAquilaWalkerAsset
     private readonly Part[] _parts;
     private readonly Node3D[] _partNodes;
     private readonly float[][] _legFrameLengths;
+    private readonly AssetProfile _profile;
 
     private RetailAquilaWalkerAsset(
         Part[] parts,
@@ -45,16 +112,26 @@ internal sealed class RetailAquilaWalkerAsset
         float[][] legFrameLengths,
         float standingClearance,
         int surfaceCount,
-        int animatedPartCount)
+        int animatedPartCount,
+        AssetProfile profile)
     {
         _parts = parts;
         _partNodes = partNodes;
+        _profile = profile;
         Root = root;
         _legFrameLengths = legFrameLengths;
         SurfaceCount = surfaceCount;
         AnimatedPartCount = animatedPartCount;
         StandingClearance = standingClearance;
-        SetStandingPose();
+        if (profile.IsWalker)
+        {
+            SetStandingPose();
+        }
+        else
+        {
+            SetVirtualFrame(profile.InitialFrame);
+            Root.Position = profile.RootOffset;
+        }
     }
 
     public Node3D Root { get; }
@@ -71,33 +148,60 @@ internal sealed class RetailAquilaWalkerAsset
         string resourcePath,
         IReadOnlyDictionary<int, Texture2D> textures,
         Level100HeightFieldAsset terrain)
+        => LoadExact(s_walkerProfile, resourcePath, textures, terrain, null);
+
+    public static RetailAquilaWalkerAsset LoadJet(
+        string resourcePath,
+        IReadOnlyDictionary<int, Texture2D> textures,
+        Level100HeightFieldAsset terrain)
+        => LoadExact(s_jetProfile, resourcePath, textures, terrain, null);
+
+    public static RetailAquilaWalkerAsset LoadCockpit(
+        string resourcePath,
+        IReadOnlyDictionary<int, Texture2D> textures,
+        IReadOnlyDictionary<string, Material> materialOverrides,
+        Level100HeightFieldAsset terrain)
+        => LoadExact(s_cockpitProfile, resourcePath, textures, terrain, materialOverrides);
+
+    private static RetailAquilaWalkerAsset LoadExact(
+        AssetProfile profile,
+        string resourcePath,
+        IReadOnlyDictionary<int, Texture2D> textures,
+        Level100HeightFieldAsset terrain,
+        IReadOnlyDictionary<string, Material>? materialOverrides)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         string hash = Convert.ToHexString(SHA256.HashData(source));
-        if (source.Length != ExpectedSourceLength ||
-            !string.Equals(hash, ExpectedSourceSha256, StringComparison.Ordinal))
+        if (source.Length != profile.SourceLength ||
+            !string.Equals(hash, profile.SourceSha256, StringComparison.Ordinal))
         {
-            throw new InvalidDataException("The retained Aquila walker source does not match its reviewed specimen.");
+            throw new InvalidDataException($"The retained {profile.DisplayName} source does not match its reviewed specimen.");
         }
 
         byte[] data = InflateAya(source);
-        if (data.Length != ExpectedInflatedLength)
+        if (data.Length != profile.InflatedLength)
         {
-            throw new InvalidDataException("The retained Aquila walker has an unexpected decoded length.");
+            throw new InvalidDataException($"The retained {profile.DisplayName} has an unexpected decoded length.");
         }
 
-        ParsedWalker parsed = ParseExactWalker(data);
-        if (parsed.Parts.Length != ExpectedPartCount ||
-            parsed.ExpandedSurfaceCount != ExpectedExpandedSurfaceCount ||
-            parsed.Parts.Count(part => part.HorizontalFrameCount > 1) != ExpectedAnimatedPartCount)
+        ParsedAsset parsed = ParseExactAsset(data, profile);
+        if (parsed.Parts.Length != profile.PartCount ||
+            parsed.ExpandedSurfaceCount != profile.ExpandedSurfaceCount ||
+            parsed.Parts.Count(part => part.HorizontalFrameCount > 1) != profile.AnimatedPartCount)
         {
-            throw new InvalidDataException("The retained Aquila walker does not match its reviewed hierarchy.");
+            throw new InvalidDataException($"The retained {profile.DisplayName} does not match its reviewed hierarchy.");
         }
 
-        ResolveAndValidateHierarchy(parsed.Parts);
-        float[][] legFrameLengths = BuildLegFrameLengths(parsed.Parts);
-        float standingClearance = BuildStandingClearance(parsed.Parts);
-        Node3D[] partNodes = BuildPartNodes(parsed, textures, terrain, out Node3D root);
+        ResolveAndValidateHierarchy(parsed.Parts, profile.BasePoseValidationFrame, profile.InitialFrame, profile.DisplayName);
+        float[][] legFrameLengths = profile.IsWalker ? BuildLegFrameLengths(parsed.Parts) : [];
+        float standingClearance = profile.IsWalker ? BuildStandingClearance(parsed.Parts) : 0f;
+        Node3D[] partNodes = BuildPartNodes(
+            parsed,
+            textures,
+            terrain,
+            profile,
+            materialOverrides,
+            out Node3D root);
         return new RetailAquilaWalkerAsset(
             parsed.Parts,
             partNodes,
@@ -105,7 +209,20 @@ internal sealed class RetailAquilaWalkerAsset
             legFrameLengths,
             standingClearance,
             parsed.ExpandedSurfaceCount,
-            ExpectedAnimatedPartCount);
+            profile.AnimatedPartCount,
+            profile);
+    }
+
+    public void SetVirtualFrame(float virtualFrame)
+    {
+        if (_profile.IsWalker)
+        {
+            throw new InvalidOperationException("The walker hierarchy is driven by its grounded leg pose.");
+        }
+        for (int index = 0; index < _parts.Length; index++)
+        {
+            _partNodes[index].Transform = ToGodotTransform(_parts[index].GetTransform(virtualFrame));
+        }
     }
 
     public void SetGroundContactPose(IReadOnlyList<Vector3> contactsInPlayerSpace)
@@ -250,15 +367,15 @@ internal sealed class RetailAquilaWalkerAsset
         return output.ToArray();
     }
 
-    private static ParsedWalker ParseExactWalker(byte[] data)
+    private static ParsedAsset ParseExactAsset(byte[] data, AssetProfile profile)
     {
         int cursor = 0;
         Chunk cmsh = ReadChunk(data, ref cursor, data.Length, "CMSH", 372);
         int textureCount = ReadInt32(data, cmsh.PayloadOffset + 4);
         int partCount = ReadInt32(data, cmsh.PayloadOffset + 0x15C);
-        if (textureCount != ExpectedTextureCount || partCount != ExpectedPartCount)
+        if (textureCount != profile.TextureCount || partCount != profile.PartCount)
         {
-            throw new InvalidDataException("The retained Aquila walker has unexpected CMSH counts.");
+            throw new InvalidDataException($"The retained {profile.DisplayName} has unexpected CMSH counts.");
         }
 
         _ = ReadChunk(data, ref cursor, data.Length, "CMST", textureCount * 36);
@@ -284,7 +401,7 @@ internal sealed class RetailAquilaWalkerAsset
         for (int index = 0; index < partCount; index++)
         {
             Chunk mesp = ReadChunk(data, ref cursor, data.Length, "MESP");
-            parts[index] = ParsePart(data, mesp, index, partCount);
+            parts[index] = ParsePart(data, mesp, index, partCount, profile.DisplayName);
         }
 
         foreach (Part part in parts)
@@ -294,24 +411,29 @@ internal sealed class RetailAquilaWalkerAsset
             {
                 if (reference >= part.Index || parts[reference].Reference is not null)
                 {
-                    throw new InvalidDataException("The retained Aquila walker has an unsupported geometry reference.");
+                    throw new InvalidDataException($"The retained {profile.DisplayName} has an unsupported geometry reference.");
                 }
                 geometry = parts[reference].Geometry;
                 part.Geometry = geometry ?? throw new InvalidDataException(
-                    "The retained Aquila walker references an empty geometry part.");
+                    $"The retained {profile.DisplayName} references an empty geometry part.");
             }
             expandedSurfaceCount += geometry?.Groups.Length ?? 0;
         }
 
-        Chunk camd = ReadChunk(data, ref cursor, data.Length, "CAMD", 108);
-        ValidateLegMotion(data, camd);
+        Chunk camd = ReadChunk(data, ref cursor, data.Length, "CAMD", profile.AnimationModes.Length * 36);
+        ValidateAnimations(data, camd, profile);
         _ = ReadChunk(data, ref cursor, data.Length, "BBOX", 48);
-        _ = ReadChunk(data, ref cursor, data.Length, "CEMT", 3_404);
+        _ = ReadChunk(data, ref cursor, data.Length, "CEMT", profile.CemtLength);
         RequireEnd(cursor, data.Length, "CMSH");
-        return new ParsedWalker(parts, textures, expandedSurfaceCount);
+        return new ParsedAsset(parts, textures, expandedSurfaceCount);
     }
 
-    private static Part ParsePart(byte[] data, Chunk mesp, int index, int partCount)
+    private static Part ParsePart(
+        byte[] data,
+        Chunk mesp,
+        int index,
+        int partCount,
+        string displayName)
     {
         int cursor = mesp.PayloadOffset;
         Chunk cmsp = ReadChunk(data, ref cursor, mesp.EndOffset, "CMSP", 316);
@@ -319,10 +441,10 @@ internal sealed class RetailAquilaWalkerAsset
         int childCount = ReadInt32(data, cmsp.PayloadOffset + 0x90);
         int virtualFrameCount = ReadInt32(data, cmsp.PayloadOffset + 0xB8);
         int horizontalFrameCount = ReadInt32(data, cmsp.PayloadOffset + 0xBC);
-        if (number != index || childCount is < 0 or > ExpectedPartCount ||
+        if (number != index || childCount is < 0 || childCount > partCount ||
             virtualFrameCount is < 1 or > 101 || horizontalFrameCount is < 1 or > 101)
         {
-            throw new InvalidDataException("The retained Aquila walker has invalid part metadata.");
+            throw new InvalidDataException($"The retained {displayName} has invalid part metadata.");
         }
 
         string name = ReadFixedString(data, cmsp.PayloadOffset + 0xDC, 32);
@@ -383,6 +505,17 @@ internal sealed class RetailAquilaWalkerAsset
                     part.Positions = ReadPositions(data, chunk, horizontalFrameCount);
                     break;
 
+                case "HFOV":
+                    if (chunk.Length != horizontalFrameCount * sizeof(float))
+                    {
+                        throw new InvalidDataException($"The retained {displayName} has invalid field-of-view frames.");
+                    }
+                    for (int frame = 0; frame < horizontalFrameCount; frame++)
+                    {
+                        _ = ReadSingle(data, chunk.PayloadOffset + (frame * sizeof(float)));
+                    }
+                    break;
+
                 case "PMVB":
                     part.Geometry = ParseGeometry(data, chunk, part.Reference is not null);
                     break;
@@ -417,7 +550,11 @@ internal sealed class RetailAquilaWalkerAsset
         int topology = ReadInt32(data, cmvb.PayloadOffset + 284);
         if (isReference)
         {
-            if (groupCount != 0 || (stride, fvf, topology) is not ((36, 0x152, 4) or (0, 0, 0)))
+            // A zero-group reference owns no vertex stream. Released meshes
+            // leave the otherwise-unused stride/FVF/topology words populated
+            // with non-semantic data; the earlier reviewed geometry owner is
+            // the complete source for this part.
+            if (groupCount != 0)
             {
                 throw new InvalidDataException("The retained Aquila walker has an invalid referenced geometry source.");
             }
@@ -564,7 +701,11 @@ internal sealed class RetailAquilaWalkerAsset
         return triangles.ToArray();
     }
 
-    private static void ResolveAndValidateHierarchy(Part[] parts)
+    private static void ResolveAndValidateHierarchy(
+        Part[] parts,
+        float? basePoseValidationFrame,
+        float initialFrame,
+        string displayName)
     {
         int[] claimedParents = Enumerable.Repeat(-1, parts.Length).ToArray();
         foreach (Part parent in parts)
@@ -591,7 +732,10 @@ internal sealed class RetailAquilaWalkerAsset
                 {
                     throw new InvalidDataException("The retained Aquila walker root is also claimed as a child.");
                 }
-                globals[index] = part.GetTransform(0f);
+                if (basePoseValidationFrame is float frame)
+                {
+                    globals[index] = part.GetTransform(frame);
+                }
             }
             else
             {
@@ -600,17 +744,33 @@ internal sealed class RetailAquilaWalkerAsset
                 {
                     throw new InvalidDataException("The retained Aquila walker hierarchy is not reciprocal.");
                 }
-                globals[index] = BeaTransform.Compose(globals[parent], part.GetTransform(0f));
+                if (basePoseValidationFrame is float frame)
+                {
+                    globals[index] = BeaTransform.Compose(
+                        globals[parent],
+                        part.GetTransform(frame));
+                }
             }
 
-            if (!globals[index].ApproximatelyEquals(part.BaseGlobalTransform, TransformTolerance))
+            if (basePoseValidationFrame is float validationFrame &&
+                !globals[index].ApproximatelyEquals(part.BaseGlobalTransform, TransformTolerance))
             {
-                throw new InvalidDataException("The retained Aquila walker frame-zero hierarchy is inconsistent.");
+                throw new InvalidDataException(
+                    $"The retained {displayName} authored hierarchy is inconsistent at part {index} '{part.Name}' for frame {validationFrame}.");
             }
         }
         if (rootCount != 1)
         {
             throw new InvalidDataException("The retained Aquila walker must have one hierarchy root.");
+        }
+
+        // Steam's animated renderer recursively composes the VHFM-mapped
+        // HPOS/HORI transform through the parent pointer. The serialized base
+        // transform happens to match the reviewed walker pose, but is not an
+        // animated-frame invariant for the jet or cockpit hierarchies.
+        if (BuildGlobalTransforms(parts, initialFrame).Any(transform => !transform.IsFinite))
+        {
+            throw new InvalidDataException($"The retained {displayName} has an invalid composed pose.");
         }
     }
 
@@ -815,13 +975,15 @@ internal sealed class RetailAquilaWalkerAsset
     }
 
     private static Node3D[] BuildPartNodes(
-        ParsedWalker parsed,
+        ParsedAsset parsed,
         IReadOnlyDictionary<int, Texture2D> textures,
         Level100HeightFieldAsset terrain,
+        AssetProfile profile,
+        IReadOnlyDictionary<string, Material>? materialOverrides,
         out Node3D root)
     {
         Part[] parts = parsed.Parts;
-        root = new Node3D { Name = "RetailAquilaWalker" };
+        root = new Node3D { Name = profile.RootName };
         var nodes = new Node3D[parts.Length];
         var meshByGeometry = new Dictionary<Geometry, ArrayMesh>();
         var materialBySignature = new Dictionary<string, Material>(StringComparer.Ordinal);
@@ -831,7 +993,9 @@ internal sealed class RetailAquilaWalkerAsset
             var node = new Node3D
             {
                 Name = $"Part{index:D2}-{SanitizeNodeName(part.Name)}",
-                Transform = ToGodotTransform(part.GetStandingTransform()),
+                Transform = ToGodotTransform(profile.IsWalker
+                    ? part.GetStandingTransform()
+                    : part.GetTransform(profile.InitialFrame)),
             };
             nodes[index] = node;
             if (part.Parent is int parent)
@@ -852,13 +1016,17 @@ internal sealed class RetailAquilaWalkerAsset
                         parsed.Textures,
                         textures,
                         terrain,
-                        materialBySignature);
+                        materialBySignature,
+                        materialOverrides);
                     meshByGeometry.Add(part.Geometry, mesh);
                 }
                 node.AddChild(new MeshInstance3D
                 {
                     Name = "Geometry",
                     Mesh = mesh,
+                    CastShadow = profile.CastShadow
+                        ? GeometryInstance3D.ShadowCastingSetting.On
+                        : GeometryInstance3D.ShadowCastingSetting.Off,
                 });
             }
         }
@@ -870,7 +1038,8 @@ internal sealed class RetailAquilaWalkerAsset
         IReadOnlyList<TextureMetadata> metadata,
         IReadOnlyDictionary<int, Texture2D> textures,
         Level100HeightFieldAsset terrain,
-        IDictionary<string, Material> materialBySignature)
+        IDictionary<string, Material> materialBySignature,
+        IReadOnlyDictionary<string, Material>? materialOverrides)
     {
         var mesh = new ArrayMesh();
         foreach (GeometryGroup group in geometry.Groups)
@@ -878,28 +1047,36 @@ internal sealed class RetailAquilaWalkerAsset
             string signature = MaterialSignature(group.TextureIndices);
             if (!materialBySignature.TryGetValue(signature, out Material? material))
             {
-                var layers = new RetailTextureLayer?[6];
-                for (int index = 0; index < group.TextureIndices.Length; index++)
+                if (materialOverrides is not null &&
+                    materialOverrides.TryGetValue(signature, out Material? materialOverride))
                 {
-                    int textureIndex = group.TextureIndices[index];
-                    if (textureIndex == -1)
-                    {
-                        continue;
-                    }
-                    if (textureIndex < 0 || textureIndex >= metadata.Count ||
-                        !textures.TryGetValue(textureIndex, out Texture2D? texture))
-                    {
-                        throw new InvalidDataException(
-                            $"The retained Aquila walker references unmapped texture {textureIndex}.");
-                    }
-                    TextureMetadata textureMetadata = metadata[textureIndex];
-                    layers[index] = new RetailTextureLayer(
-                        texture,
-                        textureMetadata.Opacity,
-                        textureMetadata.Offset,
-                        textureMetadata.Scale);
+                    material = materialOverride;
                 }
-                material = RetailFixedFunctionMaterial.Create(layers, terrain);
+                else
+                {
+                    var layers = new RetailTextureLayer?[6];
+                    for (int index = 0; index < group.TextureIndices.Length; index++)
+                    {
+                        int textureIndex = group.TextureIndices[index];
+                        if (textureIndex == -1)
+                        {
+                            continue;
+                        }
+                        if (textureIndex < 0 || textureIndex >= metadata.Count ||
+                            !textures.TryGetValue(textureIndex, out Texture2D? texture))
+                        {
+                            throw new InvalidDataException(
+                                $"The retained Aquila asset references unmapped texture {textureIndex}.");
+                        }
+                        TextureMetadata textureMetadata = metadata[textureIndex];
+                        layers[index] = new RetailTextureLayer(
+                            texture,
+                            textureMetadata.Opacity,
+                            textureMetadata.Offset,
+                            textureMetadata.Scale);
+                    }
+                    material = RetailFixedFunctionMaterial.Create(layers, terrain);
+                }
                 materialBySignature.Add(signature, material);
             }
 
@@ -928,24 +1105,29 @@ internal sealed class RetailAquilaWalkerAsset
             textureIndices.Select(value => unchecked((uint)value).ToString("x8")));
     }
 
-    private static void ValidateLegMotion(byte[] data, Chunk camd)
+    private static void ValidateAnimations(byte[] data, Chunk camd, AssetProfile profile)
     {
         const int entryLength = 36;
-        if (camd.Length != entryLength * 3)
+        if (camd.Length != entryLength * profile.AnimationModes.Length)
         {
-            throw new InvalidDataException("The retained Aquila walker has an unexpected animation table.");
+            throw new InvalidDataException($"The retained {profile.DisplayName} has an unexpected animation table.");
         }
-        int entry = camd.PayloadOffset + (entryLength * 2);
-        string name = ReadFixedString(data, entry, 16);
-        int start = ReadInt32(data, entry + 20);
-        int end = ReadInt32(data, entry + 24);
-        int span = ReadInt32(data, entry + 28);
-        float increment = ReadSingle(data, entry + 32);
-        if (!string.Equals(name, "LegMotion", StringComparison.Ordinal) ||
-            start != ExpectedLegMotionStart || end != ExpectedLegMotionEnd || span != 99 ||
-            Math.Abs(increment - (1f / 99f)) > 0.000001f)
+        for (int index = 0; index < profile.AnimationModes.Length; index++)
         {
-            throw new InvalidDataException("The retained Aquila walker has an unexpected LegMotion range.");
+            int entry = camd.PayloadOffset + (entryLength * index);
+            AnimationMode expected = profile.AnimationModes[index];
+            string name = ReadFixedString(data, entry, 16);
+            int start = ReadInt32(data, entry + 20);
+            int end = ReadInt32(data, entry + 24);
+            int span = ReadInt32(data, entry + 28);
+            float increment = ReadSingle(data, entry + 32);
+            if (!string.Equals(name, expected.Name, StringComparison.Ordinal) ||
+                start != expected.Start || end != expected.End || span != expected.Span ||
+                Math.Abs(increment - expected.Increment) > 0.000001f)
+            {
+                throw new InvalidDataException(
+                    $"The retained {profile.DisplayName} has an unexpected '{expected.Name}' animation range.");
+            }
         }
     }
 
@@ -1138,10 +1320,35 @@ internal sealed class RetailAquilaWalkerAsset
         public int EndOffset => PayloadOffset + Length;
     }
 
-    private sealed record ParsedWalker(
+    private sealed record ParsedAsset(
         Part[] Parts,
         TextureMetadata[] Textures,
         int ExpandedSurfaceCount);
+
+    private sealed record AssetProfile(
+        string DisplayName,
+        string RootName,
+        string SourceSha256,
+        int SourceLength,
+        int InflatedLength,
+        int TextureCount,
+        int PartCount,
+        int ExpandedSurfaceCount,
+        int AnimatedPartCount,
+        int CemtLength,
+        bool IsWalker,
+        float? BasePoseValidationFrame,
+        float InitialFrame,
+        Vector3 RootOffset,
+        bool CastShadow,
+        AnimationMode[] AnimationModes);
+
+    private sealed record AnimationMode(
+        string Name,
+        int Start,
+        int End,
+        int Span,
+        float Increment);
 
     private sealed record LegDefinition(
         int Id,
@@ -1199,6 +1406,8 @@ internal sealed class RetailAquilaWalkerAsset
 
     private readonly record struct BeaTransform(Matrix3 Rotation, Vector3 Position)
     {
+        public bool IsFinite => Rotation.IsFinite && Position.IsFinite();
+
         public Vector3 TransformPoint(Vector3 point) => Rotation.Transform(point) + Position;
 
         public static BeaTransform Compose(BeaTransform parent, BeaTransform child) =>

@@ -82,11 +82,11 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'droppedElapsedTicks' 0 $report.droppedElapsedTicks
     Assert-SmokeValue 'playerVisualPresent' $true $report.playerVisualPresent
     Assert-SmokeValue 'retailAquilaMeshesPresent' $true $report.retailAquilaMeshesPresent
-    Assert-SmokeValue 'retailAquilaSurfaceCount' 58 $report.retailAquilaSurfaceCount
+    Assert-SmokeValue 'retailAquilaSurfaceCount' 112 $report.retailAquilaSurfaceCount
     Assert-SmokeValue 'retailAquilaPartCount' 63 $report.retailAquilaPartCount
     Assert-SmokeValue 'retailAquilaAnimatedPartCount' 20 $report.retailAquilaAnimatedPartCount
     Assert-SmokeNear 'retailAquilaStandingClearance' 0.059322417 $report.retailAquilaStandingClearance
-    Assert-SmokeValue 'retailCockpitSurfaceCount' 2 $report.retailCockpitSurfaceCount
+    Assert-SmokeValue 'retailCockpitSurfaceCount' 10 $report.retailCockpitSurfaceCount
     Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21149921 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100StaticObjectCount' 33 $report.retailLevel100StaticObjectCount
     Assert-SmokeValue 'retailLevel100StaticObjectSurfaceCount' 111 $report.retailLevel100StaticObjectSurfaceCount
