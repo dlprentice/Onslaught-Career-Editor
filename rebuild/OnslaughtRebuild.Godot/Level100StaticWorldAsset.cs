@@ -362,12 +362,22 @@ internal static class RetailFixedFunctionMaterial
         uniform vec3 sun_color;
         uniform vec3 anti_sun_color;
         uniform vec3 sunlight_direction;
+        uniform vec3 fog_color;
+        uniform float fog_density;
         varying vec3 world_normal;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
         }
 
         void vertex() {
@@ -385,7 +395,8 @@ internal static class RetailFixedFunctionMaterial
             vec3 light_color = ambient_color + (sun_color * sun) +
                 (anti_sun_color * anti_sun);
             vec3 retail_color = min(texture_color.rgb * light_color * 2.0, vec3(1.0));
-            ALBEDO = srgb_to_linear(retail_color);
+            retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
         }
         """;
 
@@ -400,6 +411,11 @@ internal static class RetailFixedFunctionMaterial
         material.SetShaderParameter("sun_color", ToVector(terrain.SunColorRgb24, 256f));
         material.SetShaderParameter("anti_sun_color", ToVector(terrain.AntiSunColorRgb24, 256f));
         material.SetShaderParameter("sunlight_direction", terrain.SunlightDirection);
+        material.SetShaderParameter("fog_color", new Vector3(
+            terrain.FogColor.R,
+            terrain.FogColor.G,
+            terrain.FogColor.B));
+        material.SetShaderParameter("fog_density", terrain.FogDensity);
         return material;
     }
 

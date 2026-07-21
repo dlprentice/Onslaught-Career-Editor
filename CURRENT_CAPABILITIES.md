@@ -213,8 +213,9 @@ destruction controller. Godot removes each completed objective and radar marker,
 uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded
 presentation. The released macro
-terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fog, and
-environment lighting replace their earlier placeholders. Water now uses the
+terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fixed-function
+ambient/sun/anti-sun lighting, exponential fog, and renderer-correct final color
+transfer replace their earlier placeholders. Water now uses the
 released camera-following 25×25 grid, exact Level 100 height and color, two
 animated caustic stages, authored `reflection00` imagery, sun-reflection stages,
 and both exact `SURF` shoreline bands. This reconstructs the fixed-function path

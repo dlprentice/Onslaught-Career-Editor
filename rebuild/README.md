@@ -33,8 +33,10 @@ retain bounded static conversions and render with their exact layer-zero
 textures. Their lighting follows the released PC ambient, opposing
 sun/anti-sun, and `MODULATE2X` path rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
-cube-25 sky, fog, and environment light values now replace the procedural
-ground/sky. The opening view uses the released Level
+cube-25 sky, and exponential `CHFD` fog now replace the procedural ground/sky.
+The shared fixed-function shader also owns the renderer-aware final color
+transfer, so the Compatibility renderer does not apply the old double transfer.
+The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
 projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
@@ -149,9 +151,12 @@ static presentation placement, generates the released 512×512 macro blend from 
 `MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
 coordinate scales, inserts the exact moving cloud-shadow stage with its released
 scroll and modulation, and renders the five exact cube-25 sky
-faces with `CHFD` fog and lighting values. Static objects use the released
-ambient plus opposing sun/anti-sun fixed-function equation and stage-zero
-`MODULATE2X`. Deterministic Core embeds the same
+faces with `CHFD` fog and lighting values. Terrain, static objects, cockpit,
+targets, and water share the released exponential fog color/density path. Static
+objects use the released ambient plus opposing sun/anti-sun fixed-function
+equation and stage-zero `MODULATE2X`; final color transfer follows Godot's active
+renderer contract rather than converting Compatibility output twice.
+Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves the

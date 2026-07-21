@@ -68,8 +68,12 @@ decodes the exact primary AYA-wrapped textures selected by those meshes. The PC
 lighting setup at `CEngine::SetupLights` supplies packed ambient plus opposing
 sun and anti-sun directions; its directional colors divide by 256, and the
 base texture stage uses `MODULATE2X`. Five exact DXT1 cube-25
-textures use the released face order and geometry; `CHFD` fog and light values
-drive the Godot environment. The released renderer's later material
+textures use the released face order and geometry. Steam runtime state confirms
+Level 100's packed fog color `#D8D8FC`, density `0.0084`, and `D3DFOG_EXP` mode;
+the shared Godot material applies that exponential path from camera-space depth
+to terrain, static geometry, cockpit, targets, and water. Godot's
+`OUTPUT_IS_SRGB` contract selects the final transfer so the GL Compatibility
+renderer is not converted twice. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference and visible-sun
 particle—are not guessed. Water follows the released active fixed-function path:
 the exact HFLD level and color, camera-following 25×25 grid, two caustic stages,

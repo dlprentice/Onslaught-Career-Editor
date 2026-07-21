@@ -164,41 +164,13 @@ public sealed partial class FirstFlightWorldView : Node3D
         {
             BackgroundMode = Godot.Environment.BGMode.Color,
             BackgroundColor = _level100Terrain.FogColor,
-            AmbientLightSource = Godot.Environment.AmbientSource.Color,
-            AmbientLightColor = _level100Terrain.AmbientColor,
-            AmbientLightEnergy = 1f,
             TonemapMode = Godot.Environment.ToneMapper.Linear,
-            FogEnabled = true,
-            FogLightColor = _level100Terrain.FogColor,
-            FogLightEnergy = 1f,
-            FogDensity = _level100Terrain.FogDensity,
-            FogSkyAffect = 0f,
         };
         AddChild(new WorldEnvironment
         {
             Name = "WorldEnvironment",
             Environment = environment,
         });
-
-        var sun = new DirectionalLight3D
-        {
-            Name = "SunLight",
-            LightColor = _level100Terrain.SunColor,
-            LightEnergy = 1f,
-            ShadowEnabled = true,
-        };
-        sun.LookAtFromPosition(Vector3.Zero, _level100Terrain.SunlightDirection, Vector3.Up);
-        AddChild(sun);
-
-        var antiSun = new DirectionalLight3D
-        {
-            Name = "AntiSunLight",
-            LightColor = _level100Terrain.AntiSunColor,
-            LightEnergy = 1f,
-            ShadowEnabled = false,
-        };
-        antiSun.LookAtFromPosition(Vector3.Zero, -_level100Terrain.SunlightDirection, Vector3.Up);
-        AddChild(antiSun);
 
         _level100Sky = Level100SkyAsset.Create(_level100Terrain.SkyCube);
         AddChild(_level100Sky);
@@ -393,13 +365,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Aquila/Textures/bluegun-light.texture.aya",
             64,
             64);
-        var cockpitMaterial = new StandardMaterial3D
-        {
-            AlbedoTexture = cockpitTexture,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-            Roughness = 1f,
-        };
+        Material cockpitMaterial = CreateRetailMaterial(cockpitTexture);
         var gunLightMaterial = new StandardMaterial3D
         {
             AlbedoTexture = gunLightTexture,

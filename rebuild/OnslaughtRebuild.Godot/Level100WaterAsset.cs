@@ -41,12 +41,22 @@ internal sealed class Level100WaterAsset
         uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_enable;
         uniform vec3 water_color;
         uniform vec2 retail_origin;
+        uniform vec3 fog_color;
+        uniform float fog_density;
         varying vec3 water_world_position;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
         }
 
         void vertex() {
@@ -81,7 +91,8 @@ internal sealed class Level100WaterAsset
             // Released D3D8 stages: water diffuse × caustic × caustic,
             // followed by the reflection texture's additive stage.
             vec3 retail_color = min((water_color * caustic_0 * caustic_1) + reflected, vec3(1.0));
-            ALBEDO = srgb_to_linear(retail_color);
+            retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
             ALPHA = COLOR.a;
         }
         """;
@@ -91,11 +102,21 @@ internal sealed class Level100WaterAsset
         render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
 
         uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
+        uniform vec3 fog_color;
+        uniform float fog_density;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
         }
 
         void fragment() {
@@ -104,7 +125,8 @@ internal sealed class Level100WaterAsset
             // The released first SURF pass uses D3DTOP_MODULATEALPHA_ADDCOLOR
             // with the wave texture as Arg1 and vertex diffuse as Arg2.
             vec3 retail_color = min(wave.rgb + (wave.a * COLOR.rgb), vec3(1.0));
-            ALBEDO = srgb_to_linear(retail_color);
+            retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
             ALPHA = COLOR.a;
         }
         """;
@@ -114,16 +136,29 @@ internal sealed class Level100WaterAsset
         render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
 
         uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
+        uniform vec3 fog_color;
+        uniform float fog_density;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
         }
 
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
+        }
+
         void fragment() {
             vec4 wave = texture(waves_texture, UV + vec2(0.0, mod(TIME * 3.0, 1.0)));
-            ALBEDO = srgb_to_linear(wave.rgb * COLOR.rgb);
+            vec3 retail_color = apply_retail_fog(
+                wave.rgb * COLOR.rgb,
+                max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
             ALPHA = wave.a * COLOR.a;
         }
         """;
@@ -135,11 +170,21 @@ internal sealed class Level100WaterAsset
         uniform sampler2D sun_reflection_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D sun_blob_texture : filter_linear_mipmap, repeat_disable;
         uniform vec3 sun_reflection_color;
+        uniform vec3 fog_color;
+        uniform float fog_density;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
         }
 
         void fragment() {
@@ -171,7 +216,8 @@ internal sealed class Level100WaterAsset
             vec3 retail_color = min(
                 (sun_reflection_color * reflection_a.rgb * reflection_b.rgb) + blob.rgb,
                 vec3(1.0));
-            ALBEDO = srgb_to_linear(retail_color);
+            retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
             ALPHA = 1.0;
         }
         """;
@@ -224,6 +270,7 @@ internal sealed class Level100WaterAsset
         gridMaterial.SetShaderParameter("retail_origin", new Vector2(
             Level100HeightFieldAsset.PlayerStartX,
             Level100HeightFieldAsset.PlayerStartZ));
+        SetFogParameters(gridMaterial, terrain);
 
         var grid = new MeshInstance3D
         {
@@ -239,12 +286,14 @@ internal sealed class Level100WaterAsset
             Shader = _shorelineOverlayShader ??= new Shader { Code = ShorelineOverlayShaderCode },
         };
         shorelineOverlayMaterial.SetShaderParameter("waves_texture", waves);
+        SetFogParameters(shorelineOverlayMaterial, terrain);
         var shorelineMaterial = new ShaderMaterial
         {
             Shader = _shorelinePrimaryShader ??= new Shader { Code = ShorelinePrimaryShaderCode },
             NextPass = shorelineOverlayMaterial,
         };
         shorelineMaterial.SetShaderParameter("waves_texture", waves);
+        SetFogParameters(shorelineMaterial, terrain);
         var shoreline = new MeshInstance3D
         {
             Name = "RetailAuthoredShorelineBands",
@@ -267,6 +316,7 @@ internal sealed class Level100WaterAsset
             0xE8 / 255f,
             0xE8 / 255f,
             0xFF / 255f));
+        SetFogParameters(sunMaterial, terrain);
         var sun = new MeshInstance3D
         {
             Name = "RetailWaterSunReflection",
@@ -283,6 +333,17 @@ internal sealed class Level100WaterAsset
             terrain.WaterRelativeHeight,
             terrain.SunlightDirection,
             SurfaceSegmentCount * 4);
+    }
+
+    private static void SetFogParameters(
+        ShaderMaterial material,
+        Level100HeightFieldAsset terrain)
+    {
+        material.SetShaderParameter("fog_color", new Vector3(
+            terrain.FogColor.R,
+            terrain.FogColor.G,
+            terrain.FogColor.B));
+        material.SetShaderParameter("fog_density", terrain.FogDensity);
     }
 
     public void Update(Vector3 cameraPosition)

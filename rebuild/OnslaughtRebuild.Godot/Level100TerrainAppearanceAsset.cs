@@ -38,11 +38,21 @@ internal static class Level100TerrainAppearanceAsset
         uniform sampler2D macro_map : filter_linear_mipmap, repeat_disable;
         uniform sampler2D detail_map : filter_linear_mipmap, repeat_enable;
         uniform sampler2D cloud_shadow_map : filter_linear_mipmap, repeat_enable;
+        uniform vec3 fog_color;
+        uniform float fog_density;
 
-        vec3 srgb_to_linear(vec3 color) {
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
             vec3 low = color / 12.92;
             vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
             return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        vec3 apply_retail_fog(vec3 color, float view_depth) {
+            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
+            return mix(fog_color, color, visibility);
         }
 
         void fragment() {
@@ -59,7 +69,8 @@ internal static class Level100TerrainAppearanceAsset
             stage_color *= detail_primary;
             stage_color = min(stage_color * cloud_shadow * 2.0, vec3(1.0));
             vec3 retail_color = min(stage_color * detail_secondary * 2.0, vec3(1.0));
-            ALBEDO = srgb_to_linear(retail_color);
+            retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
+            ALBEDO = retail_output(retail_color);
         }
         """;
 
@@ -128,6 +139,11 @@ internal static class Level100TerrainAppearanceAsset
         material.SetShaderParameter("macro_map", macroTexture);
         material.SetShaderParameter("detail_map", detailTexture);
         material.SetShaderParameter("cloud_shadow_map", cloudShadowTexture);
+        material.SetShaderParameter("fog_color", new Vector3(
+            heightField.FogColor.R,
+            heightField.FogColor.G,
+            heightField.FogColor.B));
+        material.SetShaderParameter("fog_density", heightField.FogDensity);
         return material;
     }
 
