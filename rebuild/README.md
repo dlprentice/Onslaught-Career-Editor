@@ -92,9 +92,8 @@ Controls:
 
 | Input | Action |
 | --- | --- |
-| `W`, `A`, `S`, `D` | Move forward/back and strafe after the tutorial powers the Aquila |
-| `←`, `→` | Turn body left/right after the same handoff |
-| `↑`, `↓` | Aim the attached first-person view up/down |
+| `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
+| Mouse or trackpad | Turn the body and aim the attached first-person view |
 | `Space` | Fire the Pulse Cannon after the Firing Range enables it |
 | `R` | Reset the slice |
 | `Esc` | Exit |
@@ -131,7 +130,7 @@ retention translated to 30 Hz, with the two repeated absolute limits measured
 on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
 direction as the crosshair camera and begin at the measured cockpit `Gun`
 emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
-mouse response, terrain clipping,
+exact retail mouse sensitivity/response, terrain clipping,
 jet movement,
 jet-to-walker, transform animation, resource semantics, the rest of the weapon
 model, target mesh-part damage,

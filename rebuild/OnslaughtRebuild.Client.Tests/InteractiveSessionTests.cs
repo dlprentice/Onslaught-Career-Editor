@@ -254,6 +254,28 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void ShortLookPulse_SurvivesUntilOneTickConsumesIt()
+    {
+        InteractiveSession session = CreatePlayingSession(1);
+        int startingYaw = session.CurrentSnapshot.FacingYawMicroRad;
+
+        session.QueueLookPulse(1, -1);
+        FrameAdvanceResult beforeTick = session.AdvanceFrameTicks(100_000);
+
+        Assert.Equal(0, beforeTick.StepsAdvanced);
+        Assert.True(session.HasHeldOrPendingInput);
+
+        FrameAdvanceResult lookTick = session.AdvanceFrameTicks(233_334);
+
+        Assert.Equal(1, lookTick.StepsAdvanced);
+        Assert.False(session.HasHeldOrPendingInput);
+        Assert.Equal(startingYaw + 10_444, lookTick.CurrentSnapshot.FacingYawMicroRad);
+        Assert.Equal(10_444, lookTick.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-3_938, lookTick.CurrentSnapshot.FacingPitchMicroRad);
+        Assert.Equal(-3_938, lookTick.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+    }
+
+    [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
         InteractiveSession session = CreatePlayingSession();
@@ -287,6 +309,7 @@ public sealed class InteractiveSessionTests
         InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
+        session.QueueLookPulse(-1, -1);
         session.QueueFirePulse();
 
         session.ReleaseAllInput();
@@ -306,11 +329,13 @@ public sealed class InteractiveSessionTests
         InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
+        session.QueueLookPulse(-1, -1);
         session.QueueFirePulse();
 
         session.SuspendInputUntilReleased();
         session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
         session.QueueMovementPulse(1, 0);
+        session.QueueLookPulse(1, 0);
         session.QueueFirePulse();
         session.QueueToggleMode();
         session.QueueReset();

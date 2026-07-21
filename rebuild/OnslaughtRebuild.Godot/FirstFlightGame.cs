@@ -62,6 +62,11 @@ public sealed partial class FirstFlightGame : Node3D
 
             _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
             AddChild(_tutorialVoice);
+
+            if (!_smokeMode)
+            {
+                Input.MouseMode = Input.MouseModeEnum.Captured;
+            }
         }
         catch (Exception exception)
         {
@@ -120,38 +125,51 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Input(InputEvent inputEvent)
     {
-        if (_smokeMode || inputEvent is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+        if (_smokeMode)
+        {
+            return;
+        }
+
+        if (inputEvent is InputEventMouseMotion mouseMotion)
+        {
+            sbyte lookX = QuantizeAxis(mouseMotion.ScreenRelative.X);
+            sbyte lookY = QuantizeAxis(mouseMotion.ScreenRelative.Y);
+            if (lookX != 0 || lookY != 0)
+            {
+                _session.QueueLookPulse(lookX, lookY);
+            }
+            return;
+        }
+
+        if (inputEvent is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
         {
             return;
         }
 
         bool togglePressed = inputEvent.IsActionPressed(ToggleModeAction) ||
-            keyEvent.PhysicalKeycode == Key.Q ||
-            keyEvent.Keycode == Key.Q;
+            IsKey(keyEvent, Key.Q);
         bool resetPressed = inputEvent.IsActionPressed(ResetAction) ||
-            keyEvent.PhysicalKeycode == Key.R ||
-            keyEvent.Keycode == Key.R;
+            IsKey(keyEvent, Key.R);
         bool exitPressed = inputEvent.IsActionPressed(ExitAction) ||
-            keyEvent.PhysicalKeycode == Key.Escape ||
-            keyEvent.Keycode == Key.Escape;
+            IsKey(keyEvent, Key.Escape);
 
-        if (keyEvent.PhysicalKeycode == Key.W || keyEvent.Keycode == Key.W)
+        if (IsKey(keyEvent, Key.W) || IsKey(keyEvent, Key.Up))
         {
             _session.QueueMovementPulse(0, 1);
         }
-        if (keyEvent.PhysicalKeycode == Key.S || keyEvent.Keycode == Key.S)
+        if (IsKey(keyEvent, Key.S) || IsKey(keyEvent, Key.Down))
         {
             _session.QueueMovementPulse(0, -1);
         }
-        if (keyEvent.PhysicalKeycode == Key.A || keyEvent.Keycode == Key.A)
+        if (IsKey(keyEvent, Key.A) || IsKey(keyEvent, Key.Left))
         {
             _session.QueueMovementPulse(-1, 0);
         }
-        if (keyEvent.PhysicalKeycode == Key.D || keyEvent.Keycode == Key.D)
+        if (IsKey(keyEvent, Key.D) || IsKey(keyEvent, Key.Right))
         {
             _session.QueueMovementPulse(1, 0);
         }
-        if (keyEvent.PhysicalKeycode == Key.Space || keyEvent.Keycode == Key.Space)
+        if (IsKey(keyEvent, Key.Space))
         {
             _session.QueueFirePulse();
         }
@@ -177,24 +195,40 @@ public sealed partial class FirstFlightGame : Node3D
         if (what == NotificationWMWindowFocusOut && (!_smokeMode || _smokeCompleting))
         {
             _session.SuspendInputUntilReleased();
+            if (!_smokeMode)
+            {
+                Input.MouseMode = Input.MouseModeEnum.Visible;
+            }
+        }
+        else if (what == NotificationWMWindowFocusIn && !_smokeMode)
+        {
+            Input.MouseMode = Input.MouseModeEnum.Captured;
         }
     }
 
     public override void _ExitTree()
     {
+        if (!_smokeMode)
+        {
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+        }
         ReleaseSyntheticInput();
     }
 
     private static void ConfigureInputMap()
     {
         EnsureKeyAction(MoveForwardAction, Key.W);
+        EnsureKeyAction(MoveForwardAction, Key.Up);
         EnsureKeyAction(MoveBackwardAction, Key.S);
+        EnsureKeyAction(MoveBackwardAction, Key.Down);
         EnsureKeyAction(MoveLeftAction, Key.A);
+        EnsureKeyAction(MoveLeftAction, Key.Left);
         EnsureKeyAction(MoveRightAction, Key.D);
-        EnsureKeyAction(LookLeftAction, Key.Left);
-        EnsureKeyAction(LookRightAction, Key.Right);
-        EnsureKeyAction(LookUpAction, Key.Up);
-        EnsureKeyAction(LookDownAction, Key.Down);
+        EnsureKeyAction(MoveRightAction, Key.Right);
+        EnsureUnboundAction(LookLeftAction);
+        EnsureUnboundAction(LookRightAction);
+        EnsureUnboundAction(LookUpAction);
+        EnsureUnboundAction(LookDownAction);
         EnsureKeyAction(FireAction, Key.Space);
         EnsureKeyAction(ToggleModeAction, Key.Q);
         EnsureKeyAction(ResetAction, Key.R);
@@ -224,6 +258,19 @@ public sealed partial class FirstFlightGame : Node3D
             InputMap.ActionAddEvent(action, new InputEventKey { Keycode = key });
         }
     }
+
+    private static void EnsureUnboundAction(StringName action)
+    {
+        if (!InputMap.HasAction(action))
+        {
+            InputMap.AddAction(action, 0.2f);
+        }
+
+        InputMap.ActionEraseEvents(action);
+    }
+
+    private static bool IsKey(InputEventKey input, Key key) =>
+        input.PhysicalKeycode == key || input.Keycode == key;
 
     private static InteractiveInput SampleInput()
     {
@@ -368,11 +415,13 @@ public sealed partial class FirstFlightGame : Node3D
         var heldInput = new InteractiveInput(1, 1, true, true, true);
         _session.ObserveInput(heldInput);
         _session.QueueMovementPulse(-1, -1);
+        _session.QueueLookPulse(-1, -1);
         _session.QueueFirePulse();
 
         _Notification((int)NotificationWMWindowFocusOut);
         _session.ObserveInput(heldInput);
         _session.QueueMovementPulse(1, 0);
+        _session.QueueLookPulse(1, 0);
         _session.QueueFirePulse();
         _session.QueueToggleMode();
         _session.QueueReset();

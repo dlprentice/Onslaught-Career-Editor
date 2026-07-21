@@ -41,6 +41,8 @@ public sealed class InteractiveSession
     private bool _firePulsePending;
     private sbyte _movementPulseX;
     private sbyte _movementPulseZ;
+    private sbyte _lookPulseX;
+    private sbyte _lookPulseY;
     private bool _inputSuspendedUntilReleased;
     private long _interpolationPhase;
     private long _totalSteps;
@@ -76,6 +78,8 @@ public sealed class InteractiveSession
         _firePulsePending ||
         _movementPulseX != 0 ||
         _movementPulseZ != 0 ||
+        _lookPulseX != 0 ||
+        _lookPulseY != 0 ||
         _input.LookX != 0 ||
         _input.LookY != 0;
 
@@ -173,6 +177,30 @@ public sealed class InteractiveSession
         }
     }
 
+    public void QueueLookPulse(sbyte lookX, sbyte lookY)
+    {
+        new SimInput(0, 0, LookX: lookX, LookY: lookY).Validate();
+        if (lookX == 0 && lookY == 0)
+        {
+            throw new ArgumentException("A look pulse must contain a nonzero axis.");
+        }
+
+        if (_inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        if (lookX != 0)
+        {
+            _lookPulseX = lookX;
+        }
+
+        if (lookY != 0)
+        {
+            _lookPulseY = lookY;
+        }
+    }
+
     public void ReleaseAllInput()
     {
         ClearInputState();
@@ -195,6 +223,8 @@ public sealed class InteractiveSession
         _firePulsePending = false;
         _movementPulseX = 0;
         _movementPulseZ = 0;
+        _lookPulseX = 0;
+        _lookPulseY = 0;
     }
 
     public FrameAdvanceResult AdvanceFrame(TimeSpan elapsed)
@@ -227,6 +257,8 @@ public sealed class InteractiveSession
             bool firePulse = firstStep && _firePulsePending;
             sbyte moveX = _input.MoveX;
             sbyte moveZ = _input.MoveZ;
+            sbyte lookX = _input.LookX;
+            sbyte lookY = _input.LookY;
             if (firstStep)
             {
                 if (moveX == 0)
@@ -237,6 +269,16 @@ public sealed class InteractiveSession
                 if (moveZ == 0)
                 {
                     moveZ = _movementPulseZ;
+                }
+
+                if (lookX == 0)
+                {
+                    lookX = _lookPulseX;
+                }
+
+                if (lookY == 0)
+                {
+                    lookY = _lookPulseY;
                 }
             }
 
@@ -270,6 +312,8 @@ public sealed class InteractiveSession
                 _firePulsePending = false;
                 _movementPulseX = 0;
                 _movementPulseZ = 0;
+                _lookPulseX = 0;
+                _lookPulseY = 0;
             }
 
             if (_input.FireHeld)
@@ -278,9 +322,10 @@ public sealed class InteractiveSession
             }
 
             PreviousSnapshot = CurrentSnapshot;
-            // Look is level-sampled every Core step while observed (same as Move).
+            // Held look is level-sampled every Core step; a short mouse delta is
+            // consumed once on the first available step.
             CurrentSnapshot = _simulation.Step(
-                new SimInput(moveX, moveZ, actions, _input.LookX, _input.LookY));
+                new SimInput(moveX, moveZ, actions, lookX, lookY));
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;

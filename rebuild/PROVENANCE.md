@@ -190,6 +190,15 @@ shot direction. Terrain-relative limits, mouse scaling, auto-aim, and vertical
 target collision remain unimplemented. The setup patch,
 copies, and raw samples were disposable.
 
+The copied Steam options bind Movement Forward/Backward/Left/Right to both
+`WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the
+mouse axes. A fresh no-input control held position
+`(288.6875, 243.25, -12.111499)`, yaw `0.50983`, and pitch `0` exactly steady
+for 1.205 seconds. One bounded mouse delta then left position unchanged while
+yaw changed to `-0.93120325` and pitch to `0.4867003`. The Godot adapter follows
+that input ownership; exact Steam sensitivity and mouse-response scaling remain
+unclaimed.
+
 Separately, a disposable expected-byte-only change to the player constructor's
 preferred-view immediate
 from `1` to `2` selected the released third-person vtable at `0x005D9230`; the
