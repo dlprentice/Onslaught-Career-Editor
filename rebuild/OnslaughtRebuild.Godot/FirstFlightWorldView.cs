@@ -74,7 +74,17 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int RetailLevel100PineCount => _level100StaticWorld.PineInstanceCount;
 
-    public bool RetailLevel100WaterPresent => IsInstanceValid(_level100StaticWorld.Water);
+    public bool RetailLevel100WaterPresent =>
+        IsInstanceValid(_level100StaticWorld.Water.Root);
+
+    public int RetailLevel100WaterGridVertexCount =>
+        _level100StaticWorld.Water.GridVertexCount;
+
+    public int RetailLevel100WaterGridTriangleCount =>
+        _level100StaticWorld.Water.GridTriangleCount;
+
+    public int RetailLevel100ShorelineTriangleCount =>
+        _level100StaticWorld.Water.ShorelineTriangleCount;
 
     public int RetailLevel100TargetSurfaceCount =>
         _level100Targets.Values
@@ -145,6 +155,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdateLevel100Targets(current);
         UpdateProjectiles(previous, current);
         UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
+        _level100StaticWorld.Water.Update(_camera.GlobalPosition);
     }
 
     private void BuildEnvironment()

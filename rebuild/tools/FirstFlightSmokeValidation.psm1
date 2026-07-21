@@ -49,7 +49,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v8' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v9' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
@@ -92,6 +92,9 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailLevel100StaticObjectSurfaceCount' 105 $report.retailLevel100StaticObjectSurfaceCount
     Assert-SmokeValue 'retailLevel100PineCount' 1481 $report.retailLevel100PineCount
     Assert-SmokeValue 'retailLevel100WaterPresent' $true $report.retailLevel100WaterPresent
+    Assert-SmokeValue 'retailLevel100WaterGridVertexCount' 625 $report.retailLevel100WaterGridVertexCount
+    Assert-SmokeValue 'retailLevel100WaterGridTriangleCount' 1152 $report.retailLevel100WaterGridTriangleCount
+    Assert-SmokeValue 'retailLevel100ShorelineTriangleCount' 2056 $report.retailLevel100ShorelineTriangleCount
     Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 6 $report.retailLevel100TargetSurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 3 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount

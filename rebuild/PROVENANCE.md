@@ -71,9 +71,12 @@ base texture stage uses `MODULATE2X`. Five exact DXT1 cube-25
 textures use the released face order and geometry; `CHFD` fog and light values
 drive the Godot environment. The released renderer's later material
 passes—including the shared layer-two `Chrome3` reference and visible-sun
-particle—are not guessed. The exact HFLD water level and selected
-`reflection00` base texture are rendered, while reflection/refraction remain
-unimplemented. Steep-slope sliding, structure collision
+particle—are not guessed. Water follows the released active fixed-function path:
+the exact HFLD level and color, camera-following 25×25 grid, two caustic stages,
+authored `reflection00` imagery, sun-reflection stages, and two exact `SURF`
+shoreline bands. The optional advanced water path was inactive in controlled
+Steam observation; dynamic scene reflection/refraction is not claimed.
+Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 presentation, and unimplemented HUD behavior remain provisional unless
 specific retained evidence says otherwise.
@@ -317,9 +320,10 @@ dynamics remain provisional.
 A passing replay proves repeatability of the encoded state and input history.
 A native smoke proves the current client starts; loads 57 Aquila, 105 static-world,
 six target, and two cockpit material surfaces; instantiates all 1,481 pines and
-the selected water plane; decodes the exact locally materialized primary mesh,
-nine Pulse/target-effect, twenty-three HUD, and five sky textures; validates
-three PCM sound envelopes; and consumes the
+the 625-vertex/1,152-triangle camera-following water grid plus 2,056 shoreline
+triangles; decodes the exact locally materialized primary mesh, nine
+Pulse/target-effect, twenty-three HUD, five sky, and five water textures;
+validates three PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
 ground elevation. Its deterministic
 route reaches the first Firing Range exercise, renders the exact target models
@@ -330,5 +334,6 @@ both supported viewports. It does not prove secondary material passes,
 procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
-shading, water reflection/refraction, the complete mission,
+shading, the inactive optional advanced water path or dynamic scene
+reflection/refraction, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

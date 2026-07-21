@@ -12,8 +12,8 @@ respective rights holders; `rebuild/LICENSE` covers reconstruction code only.
 `StaticWorld/level100-static-world.json` is a deterministic ignored manifest
 derived from the exact released Level 100 archive. It owns all 33 visible
 base-world objects, 24 selected static mesh types, four pine variants, 1,481
-pine transforms, 26 primary mesh/water textures, and their exact hashes. The
-materializer converts only those 28 meshes and verifies a 54-file retail source
+pine transforms, 30 primary mesh/water textures, and their exact hashes. The
+materializer converts only those 28 meshes and verifies a 58-file retail source
 set; those generated payloads are not mirrored in this document.
 
 | Local materialized file | Role | SHA-256 |
@@ -23,6 +23,12 @@ set; those generated payloads are not mirrored in this document.
 | `Source/level100-mixer-map.mmap.bin` | Exact released `MMAP` material-weight and lighting-mask payload | `45045D248E27366080614C1AD26FC9E711BC9656F4F79210EAC63D2A20938361` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
 | `Textures/terrain-cloud-shadow.texture.aya` | Exact released 256×256 DXT1 `clouds%shadow.tga(0)A8R8G8B8.aya` loaded by the landscape renderer | `FC7441887E494E4B18F2B16179ED42C17801B128D71E29D653A4E8B792869519` |
+| `StaticWorld/Source/level100-water-surface.surf.bin` | Exact released 18,572-byte `SURF` shoreline payload | `C3177354FED3EB5A94DC72DEBF2465C32AB1D931DE79E5E88AC431043D3E917D` |
+| `StaticWorld/Textures/water-reflection-00.texture.aya` | Exact released 512×512 DXT1 authored water reflection image | `41117238976776B114B8AF4D1E4FBCCD3AFB90245F46F59B353E83663CAC7B6E` |
+| `StaticWorld/Textures/water-caustic-00.texture.aya` | Exact released 64×64 DXT1 caustic stage | `7F34EE7D90CA483893C3ED8B0BF01BDF07B9A0B0F4A48F9DF5FEFD961D796F0A` |
+| `StaticWorld/Textures/water-waves.texture.aya` | Exact released 128×128 DXT1 shoreline-wave stage | `6EC848D1F9801BE12F3A6591D6A4F5D5ECF1FC9F21D1A4242E1D681D826AB078` |
+| `StaticWorld/Textures/water-sun-blob.texture.aya` | Exact released 128×128 RGBA8 water-sun blob | `5D97F24F514383C928C58C7F333BF489888B6A402004213FFBAAAAD2EF30A53E` |
+| `StaticWorld/Textures/water-sun-reflection.texture.aya` | Exact released 64×64 RGBA8 sun-reflection stage | `A65940D6CDFE93F8B8820EFB883FD33166AEC63863ED894673466F3F58527AB4` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
 | `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
@@ -141,10 +147,14 @@ chooses the highest visible support before applying each converted mesh's base
 clearance. Existing collision remains intentionally limited to the separately
 observed Control Tower and Tank Factory envelopes.
 
-Level 100's `HFLD` selects water level `-8.84000015258789` and texture index
-zero, the exact 512×512 DXT1 `mixers%reflection00` asset. The current client
-renders that plane and base texture; the released reflection/refraction renderer
-and shoreline refinement are not yet reconstructed.
+Level 100's `HFLD` selects water level `-8.84000015258789`, color `#21213D`,
+and texture index zero. The active Steam path renders a 25×25 camera-following
+grid with two animated `caustic00` stages, authored `reflection00` imagery, and
+the exact `sunreflect`/`sunblob` stages. The nested `SURF` payload supplies 514
+three-contour records; the client reproduces its two authored shoreline bands
+and wave overlay. Controlled runtime observation found the optional advanced
+water path inactive, so this implementation does not claim dynamic scene
+reflection/refraction.
 
 The PC renderer uses packed ambient plus directional sun and opposing anti-sun
 from `CHFD`. Directional channels are divided by 256 and the base texture stage

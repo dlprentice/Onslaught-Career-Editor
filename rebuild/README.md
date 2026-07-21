@@ -20,9 +20,9 @@ synthetic arena or another layer of readiness tooling.
 The current Godot app is the **Level 100 Opening Slice**. It renders the
 locally materialized released Federation Aquila; all 33 visible static objects
 serialized by Level 100; all 1,481 pine placements instantiated by the Steam
-world loader; the selected water level and base texture; three training tanks;
-and the target Warehouse at their authored positions over the released coarse
-Level 100 heightfield. Core owns the released player start heading, exact
+world loader; the released active-path water grid and authored shoreline; three
+training tanks; and the target Warehouse at their authored positions over the
+released coarse Level 100 heightfield. Core owns the released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
@@ -175,8 +175,11 @@ fixed center-aim attack line before terminal objective removal and the same
 Pulse-to-Vulcan gate. Core deliberately implements only those demonstrated
 paths. Godot removes each completed model and radar marker and presents retained
 shot, hit, tank-destruction, text, voice, and primary particle layers.
-The water currently reproduces the selected level and base texture, not Steam's
-reflection/refraction passes. The shared secondary `Chrome3` pass, visible-sun
+Water reproduces the fixed-function path active on the supported Steam specimen:
+its camera-following grid, Level 100 color, two caustic stages, authored
+reflection image, sun stages, and both exact shoreline bands. This is not a
+claim of dynamic scene reflection/refraction or the inactive optional advanced
+water path. The shared secondary `Chrome3` pass, visible-sun
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory

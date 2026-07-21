@@ -32,11 +32,39 @@ SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "6dbd271df598f2a6940416c849e42bfc655cc368dca9959eb713d93486f920fb"
+STATIC_WORLD_MANIFEST_SHA256 = "c996971b3a20e1ba4cfaab937bcc5b834e53ee09430f63bb27854d2afcc43108"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
-    "eaac9e23666d45d6e0edd7bd9da264715ea5adc55809f0af181058ff586dc00d"
+    "504b498bba966c58a7892730e5e0226087aa3d3e0693f328bdff9ea536200dfb"
 )
-WATER_TEXTURE = "data/resources/dxtntextures/mixers%reflection00.tga(0)X8R8G8B8.aya"
+WATER_SURFACE_RESOURCE = STATIC_WORLD_ROOT / "Source/level100-water-surface.surf.bin"
+WATER_SURFACE_SHA256 = "c3177354fed3eb5a94dc72debf2465c32ab1d931de79e5e88ac431043d3e917d"
+WATER_TEXTURES = (
+    (
+        "water-reflection-00",
+        "data/resources/dxtntextures/mixers%reflection00.tga(0)X8R8G8B8.aya",
+        "41117238976776b114b8af4d1e4fbccd3afb90245f46f59b353e83663cac7b6e",
+    ),
+    (
+        "water-caustic-00",
+        "data/resources/dxtntextures/mixers%caustic00.tga(0)A8R8G8B8.aya",
+        "7f34ee7d90ca483893c3ed8b0bf01bdf07b9a0b0f4a48f9df5fefd961d796f0a",
+    ),
+    (
+        "water-waves",
+        "data/resources/dxtntextures/mixers%waves.tga(0)R5G6B5.aya",
+        "6ec848d1f9801be12f3a6591d6a4f5d5ecf1fc9f21d1a4242e1d681d826ab078",
+    ),
+    (
+        "water-sun-blob",
+        "data/resources/textures/mustbe_sunblob.tga(0)A8R8G8B8.aya",
+        "5d97f24f514383c928c58c7f333bf489888b6a402004213ffbaaaad2ef30a53e",
+    ),
+    (
+        "water-sun-reflection",
+        "data/resources/textures/mustbe_sunreflect.tga(0)A8R8G8B8.aya",
+        "a65940d6cdfe93f8b8820efb883fd33166aec63863ed894673466f3f58527ab4",
+    ),
+)
 
 
 # Released physics-definition name -> exact loose mesh selected by Level 100.
@@ -225,7 +253,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v1"
+        manifest.get("schema") != "onslaught.level100-static-world.v2"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -235,7 +263,8 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
-        or len(manifest.get("textures", {})) != 26
+        or len(manifest.get("textures", {})) != 30
+        or manifest.get("water", {}).get("surfaceSha256") != WATER_SURFACE_SHA256
     ):
         raise RuntimeError("static-world manifest has unexpected identity or counts")
 
@@ -245,7 +274,13 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
     for collection in (manifest["meshes"], manifest["textures"]):
         for item in collection.values():
             outputs.append((_resource_relative(item["resourcePath"]), item["sha256"]))
-    if len(outputs) != 55 or len({path for path, _ in outputs}) != len(outputs):
+    outputs.append(
+        (
+            _resource_relative(manifest["water"]["surfaceResourcePath"]),
+            manifest["water"]["surfaceSha256"],
+        )
+    )
+    if len(outputs) != 60 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -516,7 +551,16 @@ def _dds_metadata(source: bytes, inflate_aya_bytes) -> tuple[int, int, str]:
     width = struct.unpack_from("<I", dds, 16)[0]
     fourcc = dds[84:88]
     compression = {b"DXT1": "Dxt1", b"DXT2": "Dxt2"}.get(fourcc)
-    if compression is None or width not in (128, 256, 512) or height != width:
+    if (
+        compression is None
+        and fourcc == b"\0\0\0\0"
+        and struct.unpack_from("<I", dds, 80)[0] == 0x41
+        and struct.unpack_from("<I", dds, 88)[0] == 32
+        and struct.unpack_from("<IIII", dds, 92)
+        == (0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)
+    ):
+        compression = "Rgba8"
+    if compression is None or width not in (64, 128, 256, 512) or height != width:
         raise RuntimeError("static-world texture has unsupported dimensions or compression")
     return width, height, compression
 
@@ -579,10 +623,13 @@ def _materialize_static_world(
         source_data[relative] = data
         mesh_inputs[mesh_key] = (relative, data, materials)
 
-    water_relative = Path(WATER_TEXTURE)
-    source_data[water_relative] = (game_root / water_relative).read_bytes()
-    if len(source_data) != 54:
-        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 54")
+    water_sources: dict[str, Path] = {}
+    for key, source_name, expected_hash in WATER_TEXTURES:
+        source = Path(source_name)
+        source_data[source] = _read_exact(game_root / source, expected_hash)
+        water_sources[key] = source
+    if len(source_data) != 58:
+        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 58")
     aggregate = _source_aggregate(source_data)
     if aggregate != STATIC_WORLD_SOURCE_AGGREGATE_SHA256:
         raise RuntimeError(f"unsupported static-world source set (aggregate SHA-256 {aggregate})")
@@ -595,10 +642,13 @@ def _materialize_static_world(
         for _, _, materials in mesh_inputs.values()
         for source in materials.values()
     }
-    texture_sources.add(water_relative)
+    texture_sources.update(water_sources.values())
     for source in sorted(texture_sources, key=lambda value: value.as_posix().casefold()):
-        is_water = source == water_relative
-        key = "water-reflection-00" if is_water else _texture_key(source.name.split("(0)", 1)[0])
+        water_key = next(
+            (key for key, value in water_sources.items() if value == source),
+            None,
+        )
+        key = water_key or _texture_key(source.name.split("(0)", 1)[0])
         if key in texture_records:
             raise RuntimeError(f"static-world texture key is not unique: {key}")
         data = source_data[source]
@@ -665,12 +715,23 @@ def _materialize_static_world(
     if water_level_bits != 0xC10D70A4 or water_texture_index != 0:
         raise RuntimeError("Level 100 water selection does not match the released HFLD")
 
+    water_surface = _extract_chunk(
+        raw_level,
+        b"SURF",
+        18_572,
+        WATER_SURFACE_SHA256,
+    )
+    water_surface_target = stage / WATER_SURFACE_RESOURCE
+    water_surface_target.parent.mkdir(parents=True, exist_ok=True)
+    water_surface_target.write_bytes(water_surface)
+    outputs.append((WATER_SURFACE_RESOURCE, WATER_SURFACE_SHA256))
+
     manifest = {
         "meshes": mesh_records,
         "objects": objects,
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v1",
+        "schema": "onslaught.level100-static-world.v2",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,
@@ -678,9 +739,18 @@ def _materialize_static_world(
         "unitRecordCount": 35,
         "visibleObjectCount": len(objects),
         "water": {
+            "causticTexture": "water-caustic-00",
             "level": struct.unpack("<f", struct.pack("<I", water_level_bits))[0],
-            "texture": "water-reflection-00",
+            "reflectionTexture": "water-reflection-00",
+            "sunBlobTexture": "water-sun-blob",
+            "sunReflectionTexture": "water-sun-reflection",
+            "surfaceResourcePath": (
+                "res://Assets/Level100/StaticWorld/Source/"
+                "level100-water-surface.surf.bin"
+            ),
+            "surfaceSha256": WATER_SURFACE_SHA256,
             "textureIndex": water_texture_index,
+            "wavesTexture": "water-waves",
         },
     }
     manifest_bytes = (

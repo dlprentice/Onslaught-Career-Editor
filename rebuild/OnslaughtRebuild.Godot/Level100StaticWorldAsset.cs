@@ -11,7 +11,7 @@ internal sealed class Level100StaticWorldAsset
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const string ManifestSha256 =
-        "6DBD271DF598F2A6940416C849E42BFC655CC368DCA9959EB713D93486F920FB";
+        "C996971B3A20E1BA4CFAAB937BCC5B834E53EE09430F63BB27854D2AFCC43108";
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string StaticResourcePrefix = "res://Assets/Level100/StaticWorld/";
@@ -21,7 +21,7 @@ internal sealed class Level100StaticWorldAsset
         IReadOnlyList<MeshInstance3D> objects,
         int surfaceCount,
         int pineInstanceCount,
-        MeshInstance3D water)
+        Level100WaterAsset water)
     {
         Root = root;
         Objects = objects;
@@ -38,7 +38,7 @@ internal sealed class Level100StaticWorldAsset
 
     public int PineInstanceCount { get; }
 
-    public MeshInstance3D Water { get; }
+    public Level100WaterAsset Water { get; }
 
     public static Level100StaticWorldAsset Load(Level100HeightFieldAsset terrain)
     {
@@ -103,7 +103,7 @@ internal sealed class Level100StaticWorldAsset
         }
 
         int pineCount = AddPines(root, manifest, terrain, meshes);
-        MeshInstance3D water = AddWater(root, manifest, terrain, textures);
+        Level100WaterAsset water = AddWater(root, manifest, terrain, textures);
         int surfaceCount = objects.Sum(item => item.Mesh?.GetSurfaceCount() ?? 0);
         return new Level100StaticWorldAsset(root, objects, surfaceCount, pineCount, water);
     }
@@ -154,25 +154,22 @@ internal sealed class Level100StaticWorldAsset
         return total;
     }
 
-    private static MeshInstance3D AddWater(
+    private static Level100WaterAsset AddWater(
         Node3D root,
         Manifest manifest,
         Level100HeightFieldAsset terrain,
         IReadOnlyDictionary<string, Texture2D> textures)
     {
-        var water = new MeshInstance3D
-        {
-            Name = "RetailLevel100Water",
-            Mesh = new PlaneMesh { Size = new Vector2(512f, 512f) },
-            MaterialOverride = RetailFixedFunctionMaterial.CreateWater(
-                textures[manifest.Water.Texture]),
-            Position = new Vector3(
-                256f - Level100HeightFieldAsset.PlayerStartX,
-                terrain.WaterRelativeHeight,
-                Level100HeightFieldAsset.PlayerStartZ - 256f),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        };
-        root.AddChild(water);
+        Level100WaterAsset water = Level100WaterAsset.Create(
+            terrain,
+            textures[manifest.Water.ReflectionTexture],
+            textures[manifest.Water.CausticTexture],
+            textures[manifest.Water.WavesTexture],
+            textures[manifest.Water.SunBlobTexture],
+            textures[manifest.Water.SunReflectionTexture],
+            manifest.Water.SurfaceResourcePath,
+            manifest.Water.SurfaceSha256);
+        root.AddChild(water.Root);
         return water;
     }
 
@@ -212,7 +209,7 @@ internal sealed class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v1") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v2") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||
@@ -223,11 +220,16 @@ internal sealed class Level100StaticWorldAsset
             manifest.Objects.Length != 33 ||
             manifest.Pines.Length != 1481 ||
             manifest.Meshes.Count != 28 ||
-            manifest.Textures.Count != 26 ||
+            manifest.Textures.Count != 30 ||
             manifest.Water.TextureIndex != terrain.WaterTexture ||
             BitConverter.SingleToInt32Bits(checked((float)manifest.Water.Level)) !=
                 BitConverter.SingleToInt32Bits(terrain.WaterLevel) ||
-            !manifest.Textures.ContainsKey(manifest.Water.Texture))
+            !manifest.Textures.ContainsKey(manifest.Water.ReflectionTexture) ||
+            !manifest.Textures.ContainsKey(manifest.Water.CausticTexture) ||
+            !manifest.Textures.ContainsKey(manifest.Water.WavesTexture) ||
+            !manifest.Textures.ContainsKey(manifest.Water.SunBlobTexture) ||
+            !manifest.Textures.ContainsKey(manifest.Water.SunReflectionTexture) ||
+            string.IsNullOrWhiteSpace(manifest.Water.SurfaceSha256))
         {
             throw new InvalidDataException("Level 100 static-world identity or counts do not match retail.");
         }
@@ -282,6 +284,7 @@ internal sealed class Level100StaticWorldAsset
                 throw new InvalidDataException("Level 100 has invalid static-world texture dimensions.");
             }
         }
+        RequireOwnedResource(manifest.Water.SurfaceResourcePath);
     }
 
     private static void RequireOwnedResource(string resourcePath)
@@ -334,16 +337,21 @@ internal sealed class Level100StaticWorldAsset
 
     private sealed record WaterDefinition
     {
+        public string CausticTexture { get; init; } = string.Empty;
         public double Level { get; init; }
-        public string Texture { get; init; } = string.Empty;
+        public string ReflectionTexture { get; init; } = string.Empty;
+        public string SunBlobTexture { get; init; } = string.Empty;
+        public string SunReflectionTexture { get; init; } = string.Empty;
+        public string SurfaceResourcePath { get; init; } = string.Empty;
+        public string SurfaceSha256 { get; init; } = string.Empty;
         public int TextureIndex { get; init; }
+        public string WavesTexture { get; init; } = string.Empty;
     }
 }
 
 internal static class RetailFixedFunctionMaterial
 {
     private static Shader? _objectShader;
-    private static Shader? _waterShader;
 
     private const string ShaderCode = """
         shader_type spatial;
@@ -381,23 +389,6 @@ internal static class RetailFixedFunctionMaterial
         }
         """;
 
-    private const string WaterShaderCode = """
-        shader_type spatial;
-        render_mode unshaded, cull_disabled;
-
-        uniform sampler2D water_texture : filter_linear_mipmap, repeat_disable;
-
-        vec3 srgb_to_linear(vec3 color) {
-            vec3 low = color / 12.92;
-            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
-            return mix(low, high, step(vec3(0.04045), color));
-        }
-
-        void fragment() {
-            ALBEDO = srgb_to_linear(texture(water_texture, UV).rgb);
-        }
-        """;
-
     public static ShaderMaterial Create(Texture2D texture, Level100HeightFieldAsset terrain)
     {
         var material = new ShaderMaterial
@@ -409,16 +400,6 @@ internal static class RetailFixedFunctionMaterial
         material.SetShaderParameter("sun_color", ToVector(terrain.SunColorRgb24, 256f));
         material.SetShaderParameter("anti_sun_color", ToVector(terrain.AntiSunColorRgb24, 256f));
         material.SetShaderParameter("sunlight_direction", terrain.SunlightDirection);
-        return material;
-    }
-
-    public static ShaderMaterial CreateWater(Texture2D texture)
-    {
-        var material = new ShaderMaterial
-        {
-            Shader = _waterShader ??= new Shader { Code = WaterShaderCode },
-        };
-        material.SetShaderParameter("water_texture", texture);
         return material;
     }
 
