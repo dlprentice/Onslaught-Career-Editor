@@ -133,6 +133,13 @@ public sealed record ProjectileSnapshot(
     int VerticalVelocityMillimetersPerTick,
     int RemainingTicks);
 
+public sealed record WalkerFootContactSnapshot(
+    int Id,
+    SimVector2 Position,
+    int GroundElevationMillimeters,
+    int StepPhase,
+    int LiftMillimeters);
+
 public sealed record WorldSnapshot(
     int Tick,
     uint Seed,
@@ -167,7 +174,8 @@ public sealed record WorldSnapshot(
     int NextProjectileId,
     int TargetsDestroyed,
     IReadOnlyList<TargetSnapshot> Targets,
-    IReadOnlyList<ProjectileSnapshot> Projectiles)
+    IReadOnlyList<ProjectileSnapshot> Projectiles,
+    IReadOnlyList<WalkerFootContactSnapshot> WalkerFeet)
 {
     public bool Level100PlayerControlEnabled => Level100PowerEnabled;
 

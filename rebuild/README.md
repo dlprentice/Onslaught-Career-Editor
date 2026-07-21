@@ -26,8 +26,9 @@ released coarse Level 100 heightfield. Core owns the released player start headi
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
-hierarchy; its twenty animated leg-chain parts begin in the stable retail
-Level 100 standing pose and follow the released `LegMotion` cycle as Core moves.
+hierarchy; its twenty animated leg-chain parts consume four deterministic Core
+foot contacts. The released controller's diagonal swing scheduling and Level 100
+height contacts select independent `LegMotion` extension poses for each leg.
 The jet, 24 static-world mesh types, four pine variants, and two target types
 retain bounded static conversions and render with their complete active retail
 material passes. Their lighting follows the released PC ambient, opposing
@@ -197,7 +198,7 @@ reflection/refraction, or pixel identity outside this bounded pass. The visible-
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
-contact envelopes, procedural foot placement/terrain IK,
+contact envelopes, exact toe-normal alignment and CMC body sway,
 transform animation, general HUD contacts and later state logic, Steam's
 dynamic ring texture, full multi-stage mask state and Level 100 influence map,
 other radio portraits/video and exact portrait RNG phase, Warehouse

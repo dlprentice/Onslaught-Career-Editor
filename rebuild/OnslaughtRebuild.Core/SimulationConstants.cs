@@ -118,6 +118,27 @@ public static class SimulationConstants
     public const int WalkerVelocityRetentionNumerator = 7_884;
     public const int WalkerVelocityRetentionDenominator = 10_000;
     public const int WalkerMaximumSpeedPerTick = 100;
+    // Canonical Steam CMCMech state at the authored Level 100 start supplies
+    // these four body-local Footbase offsets in the released controller order:
+    // front-left, front-right, rear-left, rear-right. Two uninterrupted slope
+    // traversals repeated the same planted endpoints. The controller advances
+    // each swing at 400 phase units/second through phase 180, lifts the foot
+    // 0.4 units, uses a 1.0-unit moving threshold (0.05 while stationary), and
+    // permits at most two legs in the first half of a normal swing.
+    public static IReadOnlyList<SimVector2> WalkerFootStanceOffsetsMillimeters { get; } =
+        Array.AsReadOnly<SimVector2>(
+        [
+            new(-957, 1_078),
+            new(937, 1_089),
+            new(-882, -1_527),
+            new(937, -1_505),
+        ]);
+    public const int WalkerFootMovingThresholdMillimeters = 1_000;
+    public const int WalkerFootStationaryThresholdMillimeters = 50;
+    public const int WalkerFootLiftMillimeters = 400;
+    public const int WalkerFootPhaseEnd = 180;
+    public const int WalkerFootPhaseUnitsPerSecond = 400;
+    public const int WalkerFootMaximumEarlySwings = 2;
     // Milli-retail units/tick at 30 Hz ≈ 11.43 retail units/s (pair jet-p06
     // envelope [10.860, 12.003]). Policy:
     // reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md

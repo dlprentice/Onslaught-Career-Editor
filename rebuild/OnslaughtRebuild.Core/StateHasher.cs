@@ -24,7 +24,7 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(12);
+            writer.Write(13);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write((int)state.Mode);
@@ -80,6 +80,19 @@ public static class StateHasher
                 writer.Write(projectile.ElevationMillimeters);
                 writer.Write(projectile.VerticalVelocityMillimetersPerTick);
                 writer.Write(projectile.RemainingTicks);
+            }
+
+            WalkerFootContactSnapshot[] walkerFeet = state.WalkerFeet
+                .OrderBy(foot => foot.Id)
+                .ToArray();
+            writer.Write(walkerFeet.Length);
+            foreach (WalkerFootContactSnapshot foot in walkerFeet)
+            {
+                writer.Write(foot.Id);
+                WriteVector(writer, foot.Position);
+                writer.Write(foot.GroundElevationMillimeters);
+                writer.Write(foot.StepPhase);
+                writer.Write(foot.LiftMillimeters);
             }
         }
 

@@ -69,12 +69,13 @@ three blue-light groups, merged by complete material signature into two
 surfaces; the cockpit material includes its released `Chrome3.tga` reflection
 pass.
 
-The released `LegMotion` table supplies the movement-driven 101-frame gait.
-One fresh copied-retail Level 100 run supplies the stable no-input local pose
-for the twenty leg-chain parts that the retail mech controller adjusts at the
-authored start; two read-only samples 100 ms apart had the same complete pose
-hash. This establishes the opening stance and a bounded authored gait, not the
-retail controller's procedural terrain IK, arbitrary-slope foot placement,
-transform animation, or damage states. The client consumes both retained meshes
+The released `LegMotion` table supplies 100 usable per-leg extension poses, not
+one shared movement-driven gait. Steam `CMCMech` identifies four exact five-part
+chains and selects the closest frame independently for each planted-foot
+distance. Core owns the four deterministic contacts and released diagonal swing
+subset over the Level 100 HFLD; Godot only adapts those contacts to the retained
+hierarchy. This establishes bounded slope-aware foot placement, not exact
+toe-normal alignment, CMC body sway, non-heightfield contact, transform
+animation, or damage states. The client consumes both retained meshes
 at scale `1.0`; copied-runtime framing independently agrees with the raw
 retail-unit dimensions.

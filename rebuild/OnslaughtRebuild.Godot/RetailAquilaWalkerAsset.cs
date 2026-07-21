@@ -26,16 +26,23 @@ internal sealed class RetailAquilaWalkerAsset
     private const int ExpectedAnimatedPartCount = 20;
     private const int MaximumInflatedLength = 2 * 1024 * 1024;
     private const float TransformTolerance = 0.0001f;
+    private static readonly LegDefinition[] s_legs =
+    [
+        new(0, 18, 25, [18, 21, 22, 23, 24]),
+        new(1, 28, 34, [28, 30, 31, 32, 33]),
+        new(2, 46, 55, [46, 51, 52, 53, 54]),
+        new(3, 3, 12, [3, 8, 9, 10, 11]),
+    ];
 
     private readonly Part[] _parts;
     private readonly Node3D[] _partNodes;
-    private readonly float[] _frameClearances;
+    private readonly float[][] _legFrameLengths;
 
     private RetailAquilaWalkerAsset(
         Part[] parts,
         Node3D[] partNodes,
         Node3D root,
-        float[] frameClearances,
+        float[][] legFrameLengths,
         float standingClearance,
         int surfaceCount,
         int animatedPartCount)
@@ -43,11 +50,11 @@ internal sealed class RetailAquilaWalkerAsset
         _parts = parts;
         _partNodes = partNodes;
         Root = root;
-        _frameClearances = frameClearances;
+        _legFrameLengths = legFrameLengths;
         SurfaceCount = surfaceCount;
         AnimatedPartCount = animatedPartCount;
         StandingClearance = standingClearance;
-        SetWalkPose(-Mathf.Pi, 0f);
+        SetStandingPose();
     }
 
     public Node3D Root { get; }
@@ -88,48 +95,102 @@ internal sealed class RetailAquilaWalkerAsset
         }
 
         ResolveAndValidateHierarchy(parsed.Parts);
-        float[] clearances = BuildFrameClearances(parsed.Parts);
+        float[][] legFrameLengths = BuildLegFrameLengths(parsed.Parts);
         float standingClearance = BuildStandingClearance(parsed.Parts);
         Node3D[] partNodes = BuildPartNodes(parsed, textures, terrain, out Node3D root);
         return new RetailAquilaWalkerAsset(
             parsed.Parts,
             partNodes,
             root,
-            clearances,
+            legFrameLengths,
             standingClearance,
             parsed.ExpandedSurfaceCount,
             ExpectedAnimatedPartCount);
     }
 
-    public void SetWalkPose(float walkCycle, float movementWeight)
+    public void SetGroundContactPose(IReadOnlyList<Vector3> contactsInPlayerSpace)
     {
-        float weight = Mathf.Clamp(movementWeight, 0f, 1f);
-        float wrappedCycle = Mathf.PosMod(walkCycle + Mathf.Pi, Mathf.Tau) - Mathf.Pi;
-        float cycleRatio = (wrappedCycle + Mathf.Pi) / Mathf.Tau;
-        float virtualFrame = ExpectedLegMotionStart +
-            (cycleRatio * (ExpectedLegMotionEnd - ExpectedLegMotionStart));
-
-        for (int index = 0; index < _parts.Length; index++)
+        ArgumentNullException.ThrowIfNull(contactsInPlayerSpace);
+        if (contactsInPlayerSpace.Count != s_legs.Length)
         {
-            BeaTransform standing = _parts[index].GetStandingTransform();
-            BeaTransform gait = _parts[index].GetTransform(virtualFrame);
-            _partNodes[index].Transform = ToGodotTransform(
-                BeaTransform.Interpolate(standing, gait, weight));
+            throw new ArgumentException(
+                "The retained Aquila walker requires exactly four foot contacts.",
+                nameof(contactsInPlayerSpace));
         }
 
-        float gaitClearance = InterpolateClearance(virtualFrame);
-        Root.Position = new Vector3(
-            0f,
-            Mathf.Lerp(StandingClearance, gaitClearance, weight),
-            0f);
+        SetStandingPose();
+        foreach (LegDefinition leg in s_legs)
+        {
+            Vector3 target = contactsInPlayerSpace[leg.Id] - Root.Position;
+            Transform3D[] standingGlobals = BuildCurrentGlobalTransforms();
+            Vector3 standingAnchor = standingGlobals[leg.RootPart].Origin;
+            int frame = FindClosestLegFrame(
+                leg.Id,
+                standingAnchor.DistanceTo(target));
+
+            foreach (int partIndex in leg.AnimatedParts)
+            {
+                _partNodes[partIndex].Transform =
+                    ToGodotTransform(_parts[partIndex].GetTransform(frame));
+            }
+
+            Transform3D[] posedGlobals = BuildCurrentGlobalTransforms();
+            Transform3D rootGlobal = posedGlobals[leg.RootPart];
+            Vector3 source = posedGlobals[leg.FootPart].Origin - rootGlobal.Origin;
+            Vector3 desired = target - rootGlobal.Origin;
+            if (source.LengthSquared() <= 0.000001f ||
+                desired.LengthSquared() <= 0.000001f)
+            {
+                continue;
+            }
+
+            var correction = new Basis(new Quaternion(
+                source.Normalized(),
+                desired.Normalized()));
+            rootGlobal.Basis = correction * rootGlobal.Basis;
+            _partNodes[leg.RootPart].Transform = _parts[leg.RootPart].Parent is int parent
+                ? posedGlobals[parent].AffineInverse() * rootGlobal
+                : rootGlobal;
+        }
     }
 
-    private float InterpolateClearance(float virtualFrame)
+    private void SetStandingPose()
     {
-        float clamped = Mathf.Clamp(virtualFrame, ExpectedLegMotionStart, ExpectedLegMotionEnd);
-        int first = Mathf.FloorToInt(clamped);
-        int second = Math.Min(first + 1, ExpectedLegMotionEnd);
-        return Mathf.Lerp(_frameClearances[first], _frameClearances[second], clamped - first);
+        for (int index = 0; index < _parts.Length; index++)
+        {
+            _partNodes[index].Transform =
+                ToGodotTransform(_parts[index].GetStandingTransform());
+        }
+
+        Root.Position = new Vector3(0f, StandingClearance, 0f);
+    }
+
+    private Transform3D[] BuildCurrentGlobalTransforms()
+    {
+        var globals = new Transform3D[_parts.Length];
+        for (int index = 0; index < _parts.Length; index++)
+        {
+            globals[index] = _parts[index].Parent is int parent
+                ? globals[parent] * _partNodes[index].Transform
+                : _partNodes[index].Transform;
+        }
+        return globals;
+    }
+
+    private int FindClosestLegFrame(int legId, float desiredLength)
+    {
+        int closestFrame = ExpectedLegMotionStart;
+        float closestDelta = float.PositiveInfinity;
+        for (int frame = ExpectedLegMotionStart; frame <= ExpectedLegMotionEnd; frame++)
+        {
+            float delta = Math.Abs(_legFrameLengths[legId][frame] - desiredLength);
+            if (delta < closestDelta)
+            {
+                closestDelta = delta;
+                closestFrame = frame;
+            }
+        }
+        return closestFrame;
     }
 
     private static byte[] InflateAya(byte[] source)
@@ -553,14 +614,43 @@ internal sealed class RetailAquilaWalkerAsset
         }
     }
 
-    private static float[] BuildFrameClearances(Part[] parts)
+    private static float[][] BuildLegFrameLengths(Part[] parts)
     {
-        var result = new float[ExpectedLegMotionEnd + 1];
-        for (int frame = 0; frame <= ExpectedLegMotionEnd; frame++)
+        var result = new float[s_legs.Length][];
+        foreach (LegDefinition leg in s_legs)
         {
-            result[frame] = BuildClearance(parts, frame, useObservedStandingPose: false);
+            result[leg.Id] = new float[ExpectedLegMotionEnd + 1];
+        }
+
+        for (int frame = ExpectedLegMotionStart; frame <= ExpectedLegMotionEnd; frame++)
+        {
+            BeaTransform[] globals = BuildGlobalTransforms(parts, frame);
+            foreach (LegDefinition leg in s_legs)
+            {
+                float length = globals[leg.RootPart].Position.DistanceTo(
+                    globals[leg.FootPart].Position);
+                if (!float.IsFinite(length) || length <= 0f)
+                {
+                    throw new InvalidDataException(
+                        "The retained Aquila walker has an invalid LegMotion extension.");
+                }
+                result[leg.Id][frame] = length;
+            }
         }
         return result;
+    }
+
+    private static BeaTransform[] BuildGlobalTransforms(Part[] parts, float virtualFrame)
+    {
+        var globals = new BeaTransform[parts.Length];
+        for (int index = 0; index < parts.Length; index++)
+        {
+            BeaTransform local = parts[index].GetTransform(virtualFrame);
+            globals[index] = parts[index].Parent is int parent
+                ? BeaTransform.Compose(globals[parent], local)
+                : local;
+        }
+        return globals;
     }
 
     private static float BuildStandingClearance(Part[] parts) =>
@@ -1052,6 +1142,12 @@ internal sealed class RetailAquilaWalkerAsset
         Part[] Parts,
         TextureMetadata[] Textures,
         int ExpandedSurfaceCount);
+
+    private sealed record LegDefinition(
+        int Id,
+        int RootPart,
+        int FootPart,
+        int[] AnimatedParts);
 
     private sealed class Part(
         int index,

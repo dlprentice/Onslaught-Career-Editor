@@ -121,14 +121,28 @@ presentation, and unimplemented HUD behavior remain provisional unless
 specific retained evidence says otherwise.
 
 The exact walker AYA supplies 63 reciprocal parent/reference parts, 54 expanded
-base-material surfaces, and the 101-frame `LegMotion` table. At the authored
-Level 100 start `(288.6875, 243.25)`, yaw `0.509829998`, one fresh app-owned
-retail run in raw walker state `2` produced two identical complete pose-buffer
-hashes 100 ms apart. The client retains only the resulting twenty local
-leg-chain transforms and blends them toward the authored gait from deterministic
-Core velocity. This proves the stable opening stance and consumes an authored
-walk cycle; it does not reproduce the retail mech controller's per-frame
-terrain-aware leg solving or prove arbitrary-terrain foot contact.
+base-material surfaces, and the 100 usable frames in `LegMotion`. Steam
+`CMCMech` does not replay those frames as one gait cycle: it precomputes each
+leg's root-to-`Footbase` extension and chooses the closest frame independently
+for the current planted-foot distance. The retained chains are legs
+`18/21/22/23/24`, `28/30/31/32/33`, `46/51/52/53/54`, and
+`3/8/9/10/11`, with Footbase parts `25`, `34`, `55`, and `12`.
+
+One fresh no-input control and two uninterrupted copied-retail repetitions used
+the same three-second idle, twelve-second forward hold, and fifteen-second rest
+over the authored Level 100 slope. Both active runs repeated the exact start
+`(288.6875, 243.25, -12.111499)` and end
+`(270.926941, 275.010376, -12.886998)`, then settled all four phase/lift fields
+to zero. Steam `CMCMech` establishes the consumed controller contract: body-local
+foot offsets `(-0.957,1.078)`, `(0.937,1.089)`, `(-0.882,-1.527)`, and
+`(0.937,-1.505)`; diagonal scheduling with at most two early swings; phase rate
+`400` per second through `180`; `0.4` lift; and moving/stationary thresholds
+`1.0`/`0.05`. Every planted foot repeated the exact HFLD height while the final
+contacts spanned about `0.96` vertical units. Core consumes that fixed-step
+controller subset and Godot directs each exact five-part chain toward its Core
+contact. Retail keeps the Battle Engine body level at its 1.9-unit clearance;
+exact toe-normal alignment, CMC sway, non-heightfield surfaces, and steep-slope
+response remain outside this proof.
 
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
@@ -149,18 +163,12 @@ support the interpretation. Core consumes rounded `2.574` and `8.434` contact
 envelopes only; these are not general mesh bounds, arbitrary actor collision,
 or facility-destruction behavior.
 
-A fresh no-input Level 100 control held
-`(288.6875, 243.25, -12.111499)` with zero velocity and unchanged yaw, pitch,
-and gait phase. Two fresh copies then repeated the same uninterrupted pointer,
-forward, coast, and strafe sequence. Both active runs ended at the same sampled
-position, yaw, and pitch and traversed a `6.232587`-radian gait-phase range.
-Steam `CBattleEngineWalkerPart::UpdateWalkCycle` at `0x00412AD0` corroborates
-the retained authored-cycle rule: dominant local forward velocity advances the
-phase by `2.5`, dominant local strafe by `3.0`, with wrapping at `±π`. The
-released mech controller's sampled ground normal remained
-`(0, 0, -0.99999976)` throughout this short route. This establishes the current
-gait phase and flat-route grounding, not the controller's arbitrary-slope foot
-solving, body tilt, or steep-slope behavior.
+A fresh no-input Level 100 control and two repeated pointer, forward, coast, and
+strafe runs also traversed a `6.232587`-radian
+`CBattleEngineWalkerPart::UpdateWalkCycle` scalar. Static `CMCMech` analysis now
+establishes that this separate scalar does not index every leg through
+`LegMotion`; the retired renderer incorrectly conflated the two. The sampled
+ground normal remained `(0, 0, -0.99999976)` on that earlier flat route.
 
 A pair of fresh, uninterrupted, no-input app-owned Level 100 runs repeated the
 same released opening-camera lifecycle. At event time `3.0`, Steam installed a

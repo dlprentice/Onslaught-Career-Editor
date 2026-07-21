@@ -22,9 +22,20 @@ public sealed class Simulation
         public int RemainingTicks { get; set; }
     }
 
+    private sealed class MutableWalkerFoot
+    {
+        public required int Id { get; init; }
+        public required SimVector2 StanceOffset { get; init; }
+        public SimVector2 Position { get; set; }
+        public int GroundElevationMillimeters { get; set; }
+        public int PhaseThirds { get; set; }
+        public int LiftMillimeters { get; set; }
+    }
+
     private readonly uint _seed;
     private readonly List<MutableTarget> _targets = [];
     private readonly List<MutableProjectile> _projectiles = [];
+    private readonly List<MutableWalkerFoot> _walkerFeet = [];
     private int _tick;
     private int _nextProjectileId;
     private VehicleMode _mode;
@@ -32,6 +43,7 @@ public sealed class Simulation
     private SimVector2 _playerPosition;
     private SimVector2 _playerVelocity;
     private int _playerGroundElevationMillimeters;
+    private int _playerGroundDeltaMillimeters;
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -100,6 +112,7 @@ public sealed class Simulation
 
         TryToggleMode(playerInput);
         UpdateMovement(playerInput);
+        UpdateWalkerFeet();
         UpdateLevel100Opening();
         UpdateResources();
         TryFire(playerInput);
@@ -295,6 +308,7 @@ public sealed class Simulation
 
     private void UpdateMovement(SimInput input)
     {
+        _playerGroundDeltaMillimeters = 0;
         if (_transformTicksRemaining != 0)
         {
             _playerVelocity = SimVector2.Zero;
@@ -573,12 +587,177 @@ public sealed class Simulation
 
     private void CommitPlayerPosition(SimVector2 nextPosition)
     {
+        int previousGroundElevation = _playerGroundElevationMillimeters;
         _playerVelocity = new SimVector2(
             nextPosition.X - _playerPosition.X,
             nextPosition.Z - _playerPosition.Z);
         _playerPosition = nextPosition;
         _playerGroundElevationMillimeters =
             Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
+        _playerGroundDeltaMillimeters =
+            _playerGroundElevationMillimeters - previousGroundElevation;
+    }
+
+    private void UpdateWalkerFeet()
+    {
+        if (_mode != VehicleMode.Walker || _transition != VehicleTransition.None)
+        {
+            AlignWalkerFeetToNaturalTargets();
+            return;
+        }
+
+        long playerDisplacementSquared =
+            ((long)_playerVelocity.X * _playerVelocity.X) +
+            ((long)_playerVelocity.Z * _playerVelocity.Z) +
+            ((long)_playerGroundDeltaMillimeters * _playerGroundDeltaMillimeters);
+        bool ownerMoved = playerDisplacementSquared > 10L * 10L;
+        int threshold = ownerMoved
+            ? SimulationConstants.WalkerFootMovingThresholdMillimeters
+            : SimulationConstants.WalkerFootStationaryThresholdMillimeters;
+
+        for (int footIndex = 0; footIndex < _walkerFeet.Count; footIndex++)
+        {
+            MutableWalkerFoot foot = _walkerFeet[footIndex];
+            SimVector2 targetPosition = NaturalWalkerFootPosition(foot.StanceOffset);
+            int targetGround =
+                Level100Terrain.Instance.SampleGroundElevationMillimeters(targetPosition);
+            int deltaX = targetPosition.X - foot.Position.X;
+            int deltaZ = targetPosition.Z - foot.Position.Z;
+            int deltaGround = targetGround - foot.GroundElevationMillimeters;
+
+            if (foot.PhaseThirds == 0)
+            {
+                long distanceSquared =
+                    ((long)deltaX * deltaX) +
+                    ((long)deltaZ * deltaZ) +
+                    ((long)deltaGround * deltaGround);
+                if (distanceSquared > (long)threshold * threshold &&
+                    CanBeginWalkerFootSwing(footIndex, distanceSquared, threshold))
+                {
+                    // Released CMCMech enters phase one without moving or
+                    // lifting the planted point until its next update.
+                    foot.PhaseThirds = 3;
+                }
+                continue;
+            }
+
+            foot.PhaseThirds +=
+                SimulationConstants.WalkerFootPhaseUnitsPerSecond * 3 /
+                SimulationConstants.TicksPerSecond;
+            if (foot.PhaseThirds >=
+                (SimulationConstants.WalkerFootPhaseEnd + 1) * 3)
+            {
+                foot.PhaseThirds = 0;
+                foot.LiftMillimeters = 0;
+                continue;
+            }
+
+            int phaseDenominator = SimulationConstants.WalkerFootPhaseEnd * 3;
+            foot.Position = new SimVector2(
+                foot.Position.X + DivideRoundNearest(
+                    (long)deltaX * foot.PhaseThirds,
+                    phaseDenominator),
+                foot.Position.Z + DivideRoundNearest(
+                    (long)deltaZ * foot.PhaseThirds,
+                    phaseDenominator));
+            foot.GroundElevationMillimeters =
+                Level100Terrain.Instance.SampleGroundElevationMillimeters(foot.Position);
+            int phaseAngleMicroRad = DivideRoundNearest(
+                (long)foot.PhaseThirds * PiMicroRad,
+                phaseDenominator);
+            (int phaseSin, _) = FixedSinCos(phaseAngleMicroRad);
+            foot.LiftMillimeters = Math.Max(
+                0,
+                DivideRoundNearest(
+                    (long)phaseSin * SimulationConstants.WalkerFootLiftMillimeters,
+                    FixedTrigScale));
+        }
+    }
+
+    private bool CanBeginWalkerFootSwing(
+        int footIndex,
+        long distanceSquared,
+        int threshold)
+    {
+        long forcedThreshold = threshold * 2L;
+        if (distanceSquared > forcedThreshold * forcedThreshold)
+        {
+            return true;
+        }
+
+        int earlySwings = _walkerFeet.Count(foot =>
+            foot.PhaseThirds > 0 &&
+            foot.PhaseThirds <= (SimulationConstants.WalkerFootPhaseEnd / 2) * 3);
+        if (earlySwings >= SimulationConstants.WalkerFootMaximumEarlySwings)
+        {
+            return false;
+        }
+
+        bool sameParityReady = false;
+        bool predecessorClear = true;
+        for (int otherIndex = 0; otherIndex < _walkerFeet.Count; otherIndex++)
+        {
+            int otherPhase = _walkerFeet[otherIndex].PhaseThirds;
+            bool otherReady = otherPhase == 0 ||
+                otherPhase > (SimulationConstants.WalkerFootPhaseEnd / 2) * 3;
+            if (otherReady && otherIndex != footIndex)
+            {
+                if ((otherIndex & 1) == (footIndex & 1))
+                {
+                    sameParityReady = true;
+                }
+            }
+            else if (otherIndex == footIndex - 1)
+            {
+                predecessorClear = false;
+            }
+        }
+
+        return sameParityReady && predecessorClear;
+    }
+
+    private void BuildWalkerFeet()
+    {
+        _walkerFeet.Clear();
+        for (int index = 0;
+             index < SimulationConstants.WalkerFootStanceOffsetsMillimeters.Count;
+             index++)
+        {
+            SimVector2 stance = SimulationConstants.WalkerFootStanceOffsetsMillimeters[index];
+            SimVector2 position = NaturalWalkerFootPosition(stance);
+            _walkerFeet.Add(new MutableWalkerFoot
+            {
+                Id = index,
+                StanceOffset = stance,
+                Position = position,
+                GroundElevationMillimeters =
+                    Level100Terrain.Instance.SampleGroundElevationMillimeters(position),
+            });
+        }
+    }
+
+    private void AlignWalkerFeetToNaturalTargets()
+    {
+        foreach (MutableWalkerFoot foot in _walkerFeet)
+        {
+            foot.Position = NaturalWalkerFootPosition(foot.StanceOffset);
+            foot.GroundElevationMillimeters =
+                Level100Terrain.Instance.SampleGroundElevationMillimeters(foot.Position);
+            foot.PhaseThirds = 0;
+            foot.LiftMillimeters = 0;
+        }
+    }
+
+    private SimVector2 NaturalWalkerFootPosition(SimVector2 stanceOffset)
+    {
+        (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
+        return new SimVector2(
+            _playerPosition.X + DivideRoundNearest(
+                ((long)stanceOffset.X * cos) - ((long)stanceOffset.Z * sin),
+                FixedTrigScale),
+            _playerPosition.Z + DivideRoundNearest(
+                ((long)stanceOffset.X * sin) + ((long)stanceOffset.Z * cos),
+                FixedTrigScale));
     }
 
     private void UpdateLevel100Opening()
@@ -879,6 +1058,7 @@ public sealed class Simulation
         _playerVelocity = SimVector2.Zero;
         _playerGroundElevationMillimeters =
             Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
+        _playerGroundDeltaMillimeters = 0;
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -903,6 +1083,7 @@ public sealed class Simulation
         _level100FiringRangeHandoffTick = -1;
         _targetsDestroyed = 0;
         _projectiles.Clear();
+        BuildWalkerFeet();
         BuildTargets();
     }
 
@@ -958,6 +1139,19 @@ public sealed class Simulation
                 projectile.VerticalVelocityMillimetersPerTick,
                 projectile.RemainingTicks))
             .ToArray();
+        WalkerFootContactSnapshot[] walkerFeet = _walkerFeet
+            .OrderBy(foot => foot.Id)
+            .Select(foot => new WalkerFootContactSnapshot(
+                foot.Id,
+                foot.Position,
+                foot.GroundElevationMillimeters,
+                foot.PhaseThirds == 0
+                    ? 0
+                    : Math.Min(
+                        SimulationConstants.WalkerFootPhaseEnd,
+                        DivideRoundNearest(foot.PhaseThirds, 3)),
+                foot.LiftMillimeters))
+            .ToArray();
 
         return new WorldSnapshot(
             _tick,
@@ -993,7 +1187,8 @@ public sealed class Simulation
             _nextProjectileId,
             _targetsDestroyed,
             Array.AsReadOnly(targets),
-            Array.AsReadOnly(projectiles));
+            Array.AsReadOnly(projectiles),
+            Array.AsReadOnly(walkerFeet));
     }
 
 }

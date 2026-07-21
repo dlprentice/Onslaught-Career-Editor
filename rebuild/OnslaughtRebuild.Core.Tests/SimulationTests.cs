@@ -57,6 +57,48 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void WalkerFeet_RepeatReleasedDiagonalStepsAndSettleOnTheLevel100Slope()
+    {
+        Simulation first = CreatePlayingSimulation();
+        Simulation repeat = CreatePlayingSimulation();
+        int[]? firstSwing = null;
+
+        for (int tick = 0; tick < 360; tick++)
+        {
+            WorldSnapshot firstState = first.Step(new SimInput(0, 1));
+            WorldSnapshot repeatState = repeat.Step(new SimInput(0, 1));
+            Assert.Equal(StateHasher.ComputeHex(firstState), StateHasher.ComputeHex(repeatState));
+            firstSwing ??= firstState.WalkerFeet.Any(foot => foot.StepPhase > 0)
+                ? firstState.WalkerFeet
+                    .Where(foot => foot.StepPhase > 0)
+                    .Select(foot => foot.Id)
+                    .ToArray()
+                : null;
+        }
+
+        Assert.NotNull(firstSwing);
+        Assert.Equal([0, 3], firstSwing!);
+        for (int tick = 0; tick < 450; tick++)
+        {
+            WorldSnapshot firstState = first.Step(SimInput.Idle);
+            WorldSnapshot repeatState = repeat.Step(SimInput.Idle);
+            Assert.Equal(StateHasher.ComputeHex(firstState), StateHasher.ComputeHex(repeatState));
+        }
+
+        Assert.All(first.Snapshot.WalkerFeet, foot =>
+        {
+            Assert.Equal(0, foot.StepPhase);
+            Assert.Equal(0, foot.LiftMillimeters);
+            Assert.Equal(
+                Level100Terrain.Instance.SampleGroundElevationMillimeters(foot.Position),
+                foot.GroundElevationMillimeters);
+        });
+        Assert.True(
+            first.Snapshot.WalkerFeet.Max(foot => foot.GroundElevationMillimeters) -
+            first.Snapshot.WalkerFeet.Min(foot => foot.GroundElevationMillimeters) >= 500);
+    }
+
+    [Fact]
     public void Level100Briefing_ReproducesRetailMessagesPowerAndObjectiveGates()
     {
         var simulation = new Simulation(1);

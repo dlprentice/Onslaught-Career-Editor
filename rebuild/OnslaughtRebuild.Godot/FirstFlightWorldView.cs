@@ -43,8 +43,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private AudioStream _targetTankExplosionMediumSound = null!;
     private int _lastTargetEffectTick = -1;
     private float _modeBlend;
-    private float _walkCycle = -Mathf.Pi;
-    private int _lastWalkPoseTick = -1;
 
     public int TargetVisualCount => _level100Targets.Values.Count(target => target.Visible);
 
@@ -474,32 +472,28 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void UpdateWalkerPose(WorldSnapshot snapshot)
     {
-        if (_lastWalkPoseTick != snapshot.Tick)
+        if (snapshot.WalkerFeet.Count != 4)
         {
-            float velocityX = snapshot.PlayerVelocity.X * UnitsToMeters;
-            float velocityZ = snapshot.PlayerVelocity.Z * UnitsToMeters;
-            float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-            float forwardSpeed = (-velocityX * Mathf.Sin(yaw)) + (velocityZ * Mathf.Cos(yaw));
-            float strafeSpeed = (velocityX * Mathf.Cos(yaw)) + (velocityZ * Mathf.Sin(yaw));
-            float cycleStep = Math.Abs(forwardSpeed) > Math.Abs(strafeSpeed)
-                ? forwardSpeed * 2.5f
-                : strafeSpeed * 3f;
-            int elapsedTicks = _lastWalkPoseTick < 0
-                ? 0
-                : Math.Max(1, snapshot.Tick - _lastWalkPoseTick);
-            _walkCycle = Mathf.PosMod(_walkCycle + (cycleStep * elapsedTicks) + Mathf.Pi, Mathf.Tau) -
-                Mathf.Pi;
-            _lastWalkPoseTick = snapshot.Tick;
+            throw new InvalidDataException("Core did not expose four Aquila foot contacts.");
         }
 
-        float speed = Mathf.Sqrt(
-            (snapshot.PlayerVelocity.X * snapshot.PlayerVelocity.X) +
-            (snapshot.PlayerVelocity.Z * snapshot.PlayerVelocity.Z));
-        float movementWeight = snapshot.Mode == VehicleMode.Walker &&
-            snapshot.Transition == VehicleTransition.None
-            ? Mathf.Clamp(speed / SimulationConstants.WalkerMaximumSpeedPerTick, 0f, 1f)
-            : 0f;
-        _walkerAsset.SetWalkPose(_walkCycle, movementWeight);
+        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
+        Basis worldToPlayer = new Basis(Vector3.Up, yaw).Inverse();
+        var contacts = new Vector3[4];
+        foreach (WalkerFootContactSnapshot foot in snapshot.WalkerFeet)
+        {
+            if (foot.Id < 0 || foot.Id >= contacts.Length)
+            {
+                throw new InvalidDataException($"Core exposed unknown Aquila foot {foot.Id}.");
+            }
+            var worldOffset = new Vector3(
+                (foot.Position.X - snapshot.PlayerPosition.X) * UnitsToMeters,
+                (foot.GroundElevationMillimeters + foot.LiftMillimeters -
+                    snapshot.PlayerGroundElevationMillimeters) * UnitsToMeters,
+                -(foot.Position.Z - snapshot.PlayerPosition.Z) * UnitsToMeters);
+            contacts[foot.Id] = worldToPlayer * worldOffset;
+        }
+        _walkerAsset.SetGroundContactPose(contacts);
     }
 
     private void UpdateProjectiles(WorldSnapshot previous, WorldSnapshot current)

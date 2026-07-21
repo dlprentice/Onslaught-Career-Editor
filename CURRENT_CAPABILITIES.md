@@ -181,9 +181,12 @@ Core retains the previously measured
 16-tick walker-to-jet transition, but the clean opening's flight gate keeps it
 unavailable until later tutorial progression is implemented. The
 walker now loads directly from its exact released AYA as a 63-part hierarchy
-with 54 base-material surfaces. Its twenty leg-chain parts begin in a stable
-machine-observed Level 100 standing pose and follow the released 101-frame
-`LegMotion` cycle from Core velocity. The jet, 24 static-world mesh types, four
+with 54 base-material surfaces. Its twenty leg-chain parts consume four
+deterministic Core foot contacts. Core reproduces the released diagonal step
+scheduling, 400-phase-unit-per-second swing, 0.4-unit lift, and exact Level 100
+heightfield contact; Godot selects each leg's `LegMotion` frame by required
+root-to-foot extension rather than replaying one synthetic gait cycle. The jet,
+24 static-world mesh types, four
 pine variants, and two target types remain bounded static conversions. Their conventional OBJ
 front faces are adapted to Godot's clockwise winding instead of exposing
 interior/back faces. The exterior meshes and exact frame-25 first-person cockpit
@@ -244,8 +247,8 @@ continuous body yaw; the bounded projectile path shares its yaw and vertical
 pitch while jet
 translation retains the older eight-way approximation. The slice does not
 yet reproduce steep-slope or actor collision response beyond those two
-observed facility envelopes, or the retail
-controller's procedural foot placement, the Warehouse's segmented-destruction
+observed facility envelopes, exact toe-normal alignment or CMC body sway, the
+Warehouse's segmented-destruction
 path and rubble, mesh-part damage variation, secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the

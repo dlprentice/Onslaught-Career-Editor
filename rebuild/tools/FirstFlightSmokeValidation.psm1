@@ -53,7 +53,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    Assert-SmokeValue 'stateHash' '3ba47e18dd264203a4129f44d7a627deeec97f1ea21704e7098f115a7d861df0' $report.stateHash
+    Assert-SmokeValue 'stateHash' '2dde8b37facedfb84a45c1fb7da32e1440563847277e0ad95d6c34a93b46da4b' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'FiringRangeExercise' $report.level100Phase
