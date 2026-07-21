@@ -32,7 +32,7 @@ SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "0aa1241779b1db7cc6880bbf583f63c3aeaf2b7c3c82671155a72fb2dabe8c24"
+STATIC_WORLD_MANIFEST_SHA256 = "acb4ffa4532340af9584614e66ec43af9993570cfc0a34deb00f58d1d41b3b71"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "e3ab5a6c48143365bfbecf716effc5508e7be3d7b8a37d66c827b0994c5cf08a"
 )
@@ -260,7 +260,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v3"
+        manifest.get("schema") != "onslaught.level100-static-world.v4"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -271,6 +271,15 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
         or len(manifest.get("textures", {})) != 33
+        or manifest.get("textures", {})
+        .get("meshtex-a8-fb-hangermorebits-lit", {})
+        .get("blendTextureAlpha")
+        is not True
+        or sum(
+            item.get("blendTextureAlpha") is True
+            for item in manifest.get("textures", {}).values()
+        )
+        != 1
         or manifest.get("water", {}).get("surfaceSha256") != WATER_SURFACE_SHA256
     ):
         raise RuntimeError("static-world manifest has unexpected identity or counts")
@@ -572,6 +581,47 @@ def _texture_pass_metadata(raw: bytes) -> tuple[float, float, float, float, floa
     return opacity, offset_u, offset_v, scale_u, scale_v
 
 
+def _texture_blend_alpha_flags(raw_level: bytes) -> dict[str, bool]:
+    """Read the released CTexture +0xB4 mode from Level 100's DXTX records."""
+    marker = b"DXTX\x6c\x01\x00\x00CTEX\x58\x01\x00\x00"
+    flags: dict[str, bool] = {}
+    record_count = 0
+    offset = 0
+    while True:
+        offset = raw_level.find(marker, offset)
+        if offset < 0:
+            break
+        payload_start = offset + len(marker)
+        payload_end = payload_start + 344
+        if payload_end > len(raw_level):
+            raise RuntimeError("Level 100 has a truncated CTexture record")
+        payload = raw_level[payload_start:payload_end]
+        name_bytes = payload[8:72].split(b"\0", 1)[0]
+        try:
+            name = name_bytes.decode("ascii")
+        except UnicodeDecodeError as error:
+            raise RuntimeError("Level 100 has a non-ASCII CTexture name") from error
+        normalized = name.replace("/", "\\").strip().lower()
+        raw_flag = struct.unpack_from("<I", payload, 0xB4)[0]
+        if not normalized or raw_flag not in (0, 1):
+            raise RuntimeError("Level 100 has an unsupported CTexture record")
+        flag = raw_flag == 1
+        previous = flags.setdefault(normalized, flag)
+        if previous != flag:
+            raise RuntimeError(f"Level 100 CTexture mode disagrees for {name}")
+        record_count += 1
+        offset = payload_end
+
+    if (
+        record_count != 273
+        or len(flags) != 265
+        or {name for name, enabled in flags.items() if enabled}
+        != {"meshtex\\a8_fb_hangermorebits_lit.tga"}
+    ):
+        raise RuntimeError("Level 100 CTexture modes do not match the released archive")
+    return flags
+
+
 def _dds_metadata(source: bytes, inflate_aya_bytes) -> tuple[int, int, str]:
     dds = inflate_aya_bytes(source)
     if len(dds) < 128 or dds[:4] != b"DDS ":
@@ -616,8 +666,10 @@ def _materialize_static_world(
     from cmsh_static_preview import convert_aya_bytes, inflate_aya, parse_cmsh_stream
 
     objects, pines, fern_count = _parse_static_world(raw_level)
+    texture_blend_flags = _texture_blend_alpha_flags(raw_level)
     resolver = build_asset_resolver(game_root / "data/resources")
     source_data: dict[Path, bytes] = {}
+    texture_blend_by_source: dict[Path, bool] = {}
     mesh_inputs: dict[
         str,
         tuple[
@@ -663,6 +715,19 @@ def _materialize_static_world(
             source_data.setdefault(texture_relative, texture_data)
             if source_data[texture_relative] != texture_data:
                 raise RuntimeError("static-world texture changed during materialization")
+            if normalized_ref not in texture_blend_flags:
+                raise RuntimeError(
+                    f"Level 100 has no CTexture mode for {texture_ref}"
+                )
+            blend_flag = texture_blend_flags[normalized_ref]
+            previous_blend = texture_blend_by_source.setdefault(
+                texture_relative,
+                blend_flag,
+            )
+            if previous_blend != blend_flag:
+                raise RuntimeError(
+                    f"Level 100 CTexture mode disagrees for {texture_ref}"
+                )
             texture_source_by_index[texture_index] = texture_relative
 
         materials: dict[
@@ -726,6 +791,7 @@ def _materialize_static_world(
         outputs.append((destination, output_hash))
         texture_key_by_source[source] = key
         texture_records[key] = {
+            "blendTextureAlpha": texture_blend_by_source.get(source, False),
             "compression": compression,
             "height": height,
             "resourcePath": resource_path,
@@ -807,7 +873,7 @@ def _materialize_static_world(
         "objects": objects,
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v3",
+        "schema": "onslaught.level100-static-world.v4",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,

@@ -11,7 +11,7 @@ internal sealed class Level100StaticWorldAsset
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const string ManifestSha256 =
-        "0AA1241779B1DB7CC6880BBF583F63C3AEAF2B7C3C82671155A72FB2DABE8C24";
+        "ACB4FFA4532340AF9584614E66EC43AF9993570CFC0A34DEB00F58D1D41B3B71";
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string StaticResourcePrefix = "res://Assets/Level100/StaticWorld/";
@@ -57,7 +57,11 @@ internal sealed class Level100StaticWorldAsset
         {
             var surfaceMaterials = definition.Materials.ToDictionary(
                 pair => pair.Key,
-                pair => (Material)CreateMaterial(pair.Value, textures, terrain),
+                pair => (Material)CreateMaterial(
+                    pair.Value,
+                    textures,
+                    manifest.Textures,
+                    terrain),
                 StringComparer.Ordinal);
             ArrayMesh mesh = CuratedObjMeshLoader.Load(definition.ResourcePath, surfaceMaterials);
             meshes.Add(key, mesh);
@@ -189,6 +193,7 @@ internal sealed class Level100StaticWorldAsset
     private static ShaderMaterial CreateMaterial(
         MaterialDefinition definition,
         IReadOnlyDictionary<string, Texture2D> textures,
+        IReadOnlyDictionary<string, TextureDefinition> textureDefinitions,
         Level100HeightFieldAsset terrain)
     {
         RetailTextureLayer?[] layers = definition.Layers
@@ -202,7 +207,8 @@ internal sealed class Level100StaticWorldAsset
                         checked((float)layer.Offset[1])),
                     new Vector2(
                         checked((float)layer.Scale[0]),
-                        checked((float)layer.Scale[1]))))
+                        checked((float)layer.Scale[1])),
+                    textureDefinitions[layer.Texture].BlendTextureAlpha))
             .ToArray();
         return RetailFixedFunctionMaterial.Create(layers, terrain);
     }
@@ -226,7 +232,7 @@ internal sealed class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v3") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v4") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||
@@ -238,6 +244,12 @@ internal sealed class Level100StaticWorldAsset
             manifest.Pines.Length != 1481 ||
             manifest.Meshes.Count != 28 ||
             manifest.Textures.Count != 33 ||
+            !manifest.Textures.TryGetValue(
+                "meshtex-a8-fb-hangermorebits-lit",
+                out TextureDefinition? blendTexture) ||
+            blendTexture is null ||
+            !blendTexture.BlendTextureAlpha ||
+            manifest.Textures.Values.Count(texture => texture.BlendTextureAlpha) != 1 ||
             manifest.Water.TextureIndex != terrain.WaterTexture ||
             BitConverter.SingleToInt32Bits(checked((float)manifest.Water.Level)) !=
                 BitConverter.SingleToInt32Bits(terrain.WaterLevel) ||
@@ -382,6 +394,7 @@ internal sealed class Level100StaticWorldAsset
 
     private sealed record TextureDefinition
     {
+        public bool BlendTextureAlpha { get; init; }
         public string Compression { get; init; } = string.Empty;
         public int Height { get; init; }
         public string ResourcePath { get; init; } = string.Empty;
@@ -415,7 +428,8 @@ internal sealed record RetailTextureLayer(
     Texture2D Texture,
     float Opacity,
     Vector2 Offset,
-    Vector2 Scale);
+    Vector2 Scale,
+    bool BlendTextureAlpha = false);
 
 internal static class RetailFixedFunctionMaterial
 {
@@ -432,6 +446,7 @@ internal static class RetailFixedFunctionMaterial
         uniform float has_dot3;
         uniform float has_reflection;
         uniform float has_overlay;
+        uniform float base_blend_texture_alpha;
         uniform vec2 dot3_offset;
         uniform vec2 dot3_scale;
         uniform float reflection_opacity;
@@ -471,7 +486,7 @@ internal static class RetailFixedFunctionMaterial
 
         void fragment() {
             vec4 texture_color = texture(base_texture, UV);
-            if (texture_color.a < 0.5) {
+            if (base_blend_texture_alpha < 0.5 && texture_color.a < 0.5) {
                 discard;
             }
             vec3 normal = normalize(world_normal);
@@ -480,6 +495,9 @@ internal static class RetailFixedFunctionMaterial
             vec3 light_color = ambient_color + (sun_color * sun) +
                 (anti_sun_color * anti_sun);
             vec3 retail_color = min(texture_color.rgb * light_color * 2.0, vec3(1.0));
+            if (base_blend_texture_alpha > 0.5) {
+                retail_color = mix(retail_color, texture_color.rgb, texture_color.a);
+            }
 
             if (has_dot3 > 0.5) {
                 vec3 dot3_sample = texture(
@@ -566,6 +584,9 @@ internal static class RetailFixedFunctionMaterial
         material.SetShaderParameter("has_dot3", dot3Layer is null ? 0f : 1f);
         material.SetShaderParameter("has_reflection", reflectionLayer is null ? 0f : 1f);
         material.SetShaderParameter("has_overlay", overlayLayer is null ? 0f : 1f);
+        material.SetShaderParameter(
+            "base_blend_texture_alpha",
+            baseLayer.BlendTextureAlpha ? 1f : 0f);
         material.SetShaderParameter("dot3_offset", dot3Layer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("dot3_scale", dot3Layer?.Scale ?? Vector2.One);
         material.SetShaderParameter("reflection_opacity", reflectionLayer?.Opacity ?? 0f);

@@ -69,7 +69,8 @@ lighting setup at `CEngine::SetupLights` supplies packed ambient plus opposing
 sun and anti-sun directions; its directional colors divide by 256, and the
 base texture stage uses `MODULATE2X`. Five exact DXT1 cube-25
 textures use the released face order and geometry. Steam runtime state confirms
-Level 100's packed fog color `#D8D8FC`, density `0.0084`, and `D3DFOG_EXP` mode;
+Level 100's terrain capability flag and `MODULATE2X` state are both enabled, as
+well as packed fog color `#D8D8FC`, density `0.0084`, and `D3DFOG_EXP` mode;
 the shared Godot material applies that exponential path from camera-space depth
 to terrain, static geometry, cockpit, targets, and water. Godot's
 `OUTPUT_IS_SRGB` contract selects the final transfer so the GL Compatibility
@@ -80,15 +81,22 @@ Controlled Level 100 runtime state enabled modes `0`, `1`, `2`, and `4` while
 disabling modes `3` and `5`. `CVBufTexture__RenderModePass` establishes mode 1
 as model-space `DOTPRODUCT3`, mode 2 as camera-space reflection coordinates with
 the released half-scale/offset matrix and texture-strength alpha, and mode 4 as
-the regular-UV alpha overlay using the serialized `TEXB` offset and scale. The
+the regular-UV alpha overlay using the serialized `TEXB` offset and scale. Its
+special base path tests `CTexture +0xB4`, disables alpha test/blending, and uses
+`BLENDTEXTUREALPHA`; parsing all 273 Level 100 `DXTX/CTEX` records identifies only
+`meshtex\\A8_FB_hangermorebits_lit.tga` for that path. The client therefore blends
+that texture over the lit current color while retaining normal alpha cutouts for
+the other currently materialized base textures. The
 runtime light vector `(-0.03407396, -0.9086333, 0.4162026)` matches normalized
 negative Level 100 sun position. These active passes are shared by the current
 static objects, targets, Aquila, jet, and cockpit; the visible-sun particle is
-still absent. Water follows the released active fixed-function path:
-the exact HFLD level and color, camera-following 25×25 grid, two caustic stages,
-authored `reflection00` imagery, sun-reflection stages, and two exact `SURF`
-shoreline bands. The optional advanced water path was inactive in controlled
-Steam observation; dynamic scene reflection/refraction is not claimed.
+still absent. Water follows the released active fixed-function path: the exact
+HFLD level and color, camera-following 25×25 grid, two caustic stages, authored
+`reflection00` imagery sampled at the released absolute-world `1/256` transform,
+sun-reflection stages, and two exact `SURF` shoreline bands. The animated
+half-scale reflection transform belongs to the optional advanced path, which was
+inactive in controlled Steam observation. Full visible sun/shoreline composition
+and dynamic scene reflection/refraction are not claimed.
 Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 presentation, and unimplemented HUD behavior remain provisional unless

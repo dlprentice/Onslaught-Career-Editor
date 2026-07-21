@@ -66,7 +66,6 @@ internal sealed class Level100WaterAsset
         void fragment() {
             // Steam advances these fixed-function texture transforms with the
             // frame delta in milliseconds: 0.003 and 0.05 per millisecond.
-            float reflection_phase = mod(TIME * 3.0, 1.0);
             float caustic_phase = mod(TIME * 50.0, 6.28318530718);
             vec2 retail_xy = vec2(
                 water_world_position.x + retail_origin.x,
@@ -83,7 +82,10 @@ internal sealed class Level100WaterAsset
                 (retail_xy.x * 0.1) - (retail_xy.y * 0.03));
             caustic_b += vec2(sin(second_phase), cos(second_phase)) * 0.1;
 
-            vec2 reflection_uv = (retail_xy * 0.5) + vec2(0.0, reflection_phase);
+            // The active Steam path uses the camera/world translation with a
+            // 1/256 texture transform. The animated 1/2-scale transform belongs
+            // to the optional advanced path, which Level 100 does not enable.
+            vec2 reflection_uv = retail_xy / 256.0;
             vec3 caustic_0 = texture(caustic_texture, caustic_a).rgb;
             vec3 caustic_1 = texture(caustic_texture, caustic_b).rgb;
             vec3 reflected = texture(reflection_texture, reflection_uv).rgb;

@@ -219,12 +219,18 @@ impact, tank-destruction, sound, text, and voice assets for the bounded
 presentation. The released macro
 terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fixed-function
 ambient/sun/anti-sun lighting, exponential fog, and renderer-correct final color
-transfer replace their earlier placeholders. Water now uses the
+transfer replace their earlier placeholders. Copied-runtime state confirms that
+Level 100 enables the released terrain capability and `MODULATE2X` paths. The
+one Level 100 base texture whose released `CTexture` record selects
+texture-alpha blending now preserves its lit exterior under transparent texels
+instead of exposing the facility interior. Water now uses the
 released camera-following 25×25 grid, exact Level 100 height and color, two
 animated caustic stages, authored `reflection00` imagery, sun-reflection stages,
-and both exact `SURF` shoreline bands. This reconstructs the fixed-function path
-observed on the supported Steam specimen; it does not claim dynamic scene
-reflection or refraction. The detail texture
+and both exact `SURF` shoreline bands. Its active reflection stage uses the
+released absolute-world `1/256` transform rather than the inactive advanced
+path's animated half-scale transform. This reconstructs the bounded active
+fixed-function path observed on the supported Steam specimen; it does not claim
+complete water appearance, dynamic scene reflection, or refraction. The detail texture
 uses both released coordinate scales and observed modulation modes; the exact
 moving cloud-shadow texture now uses the released scale, scroll, and modulation.
 Walker acceleration now follows Core's
@@ -238,7 +244,8 @@ path and rubble, mesh-part damage variation, secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
 remaining weapon roster, facility destruction,
-the inactive optional advanced water path and dynamic scene reflection/refraction,
+the inactive optional advanced water path, full sun/shoreline water composition,
+and dynamic scene reflection/refraction,
 transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general
 contacts, other portraits/video, and exact portrait RNG phase,

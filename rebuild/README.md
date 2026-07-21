@@ -155,7 +155,10 @@ faces with `CHFD` fog and lighting values. Terrain, static objects, cockpit,
 targets, and water share the released exponential fog color/density path. Static
 objects use the released ambient plus opposing sun/anti-sun fixed-function
 equation and stage-zero `MODULATE2X`; final color transfer follows Godot's active
-renderer contract rather than converting Compatibility output twice.
+renderer contract rather than converting Compatibility output twice. The one
+Level 100 base texture flagged for fixed-function texture-alpha blending retains
+its lit exterior below transparent texels instead of becoming a cutout; ordinary
+alpha-tested foliage remains unchanged.
 Deterministic Core embeds the same
 hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
@@ -184,9 +187,10 @@ paths. Godot removes each completed model and radar marker and presents retained
 shot, hit, tank-destruction, text, voice, and primary particle layers.
 Water reproduces the fixed-function path active on the supported Steam specimen:
 its camera-following grid, Level 100 color, two caustic stages, authored
-reflection image, sun stages, and both exact shoreline bands. This is not a
-claim of dynamic scene reflection/refraction or the inactive optional advanced
-water path. The visible-sun
+reflection image with the released absolute-world `1/256` transform, sun stages,
+and both exact shoreline bands. This is not a claim of complete water appearance,
+dynamic scene reflection/refraction, or the inactive optional advanced water
+path; full sun and shoreline composition remain incomplete. The visible-sun
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
