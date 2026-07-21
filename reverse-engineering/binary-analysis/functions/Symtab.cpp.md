@@ -50,10 +50,10 @@ CSymtab* CSymtab::Clone(CSymtab* source) {
     CSymtab* newSymtab = OID__AllocObject(0x14, 0x18, "Symtab.cpp", 180);
     if (newSymtab) {
         CFlexArray__InitWithGrowth(newSymtab, 16, 1);
-        newSymtab->count = 0;
+        newSymtab->totalCount = 0;              // +0x10
     }
 
-    int numEntries = source->count;
+    int numEntries = source->arrayCount;        // +0x08 (CFlexArray count)
     for (int i = 0; i < numEntries; i++) {
         CSymtabEntry* srcEntry = source->entries[i];
 
@@ -76,7 +76,7 @@ CSymtab* CSymtab::Clone(CSymtab* source) {
         // Check for duplicates by name
         const char* newName = newEntry->GetName();
         bool found = false;
-        for (int j = 0; j < newSymtab->count; j++) {
+        for (int j = 0; j < newSymtab->totalCount; j++) {   // +0x10 scan bound
             if (strcmp(newSymtab->entries[j]->GetName(), newName) == 0) {
                 found = true;
                 break;
@@ -84,9 +84,9 @@ CSymtab* CSymtab::Clone(CSymtab* source) {
         }
 
         if (!found) {
-            newEntry->index = newSymtab->count;
-            CFlexArray__Add(newSymtab, newEntry);
-            newSymtab->count++;
+            newEntry->refCount = newSymtab->totalCount;  // entry +0x10 receives the table position
+            CFlexArray__Add(newSymtab, newEntry);        // advances arrayCount (+0x08)
+            newSymtab->totalCount++;                     // +0x10
         }
     }
 
@@ -145,7 +145,7 @@ void CSymtab::ReadFromBuffer(DXMemBuffer* buffer) {
             buffer->ReadBytes(&entry->flags, 4);      // offset 0x14
         }
 
-        CFlexArray__Add(this, entry);
+        CFlexArray__Add(this, entry);         // advances arrayCount (+0x08)
     }
 
     buffer->ReadBytes(&this->totalCount, 4);  // offset 0x10
