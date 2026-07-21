@@ -22,7 +22,7 @@ Wave616 hardened the saved Ghidra metadata for the core `CDXSurf` cluster withou
 
 Queue telemetry after Wave616 is `6093` total functions, `3172` commented, `2921` commentless, `1260` exact-undefined signatures, and `1056` `param_N` signatures. Comment-backed proxy is `3172/6093 = 52.06%`; strict clean-signature proxy is `3127/6093 = 51.32%`. The verified Ghidra backup is `[maintainer-local-ghidra-backup-root]\BEA_20260520-020900_post_wave616_cdxsurf_core_verified` with `19` files, `161614727` bytes, and `DiffCount=0`.
 
-Runtime water/render behavior remains unproven. Exact `CDXSurf`, `CVBuffer`, `CVBufTexture`, `CDXTexture`, render-state, D3D, and serialized wave-strip layouts, concrete source identity, BEA patching, and rebuild parity remain deferred.
+Controlled copied-Steam observation on 2026-07-21 now bounds the active main-water path: both `CDXSurf__Render` calls execute, the optional advanced-water flag remains zero, and uninterrupted sampling establishes the consumed phase and scroll rates. Exact lower-level `CDXSurf`, `CVBuffer`, `CVBufTexture`, `CDXTexture`, and render-state layouts beyond the fields used by that active path remain deferred.
 
 ## Class: CDXSurf
 
@@ -74,5 +74,5 @@ Wave616 bounds only the slots below through static saved-Ghidra evidence. Slots 
 - Recover or intentionally defer function boundaries for vtable pointer targets `0x00558600` and `0x00556e90`.
 - Prove or reject exact source-body identity for the CDXSurf methods against retail behavior rather than debug-path proximity.
 - Recover concrete `CDXSurf`, strip-entry, `CVBuffer`, `CVBufTexture`, `CDXTexture`, and render-state layouts.
-- Prove runtime water rendering, Goodies render-target behavior, and D3D output through copied-profile runtime evidence.
+- Keep Goodies render-target behavior and inactive advanced-water reflection/refraction outside the bounded active-path claim until separately observed.
 - Keep BEA patching and rebuild parity out of scope until separate evidence exists.

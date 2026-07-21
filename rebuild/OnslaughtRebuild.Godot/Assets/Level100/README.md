@@ -151,11 +151,15 @@ observed Control Tower and Tank Factory envelopes.
 Level 100's `HFLD` selects water level `-8.84000015258789`, color `#21213D`,
 and texture index zero. The active Steam path renders a 25×25 camera-following
 grid with two animated `caustic00` stages, authored `reflection00` imagery, and
-the exact `sunreflect`/`sunblob` stages. The nested `SURF` payload supplies 514
-three-contour records; the client reproduces its two authored shoreline bands
-and wave overlay. Controlled runtime observation found the optional advanced
-water path inactive, so this implementation does not claim dynamic scene
-reflection/refraction.
+the exact `sunreflect`/`sunblob` stages. Its active shared wave stage uses the
+released `waves + diffuse * current` operation. The sun textures shape an
+alpha-tested `#E8E8FF` patch scaled from camera height. The nested `SURF`
+payload supplies 514 three-contour records; the client reproduces the first
+shore pass and the later unfogged `SRCALPHA`/`ONE` wave pass in released order.
+Controlled copied-runtime observation measured the caustic phase at `1` radian
+per second and both wave scrolls at `0.06` texture cycles per second. The
+optional advanced-water path remained inactive, so this implementation does
+not claim dynamic scene reflection/refraction.
 
 The PC renderer uses packed ambient plus directional sun and opposing anti-sun
 from `CHFD`. Directional channels are divided by 256 and the base texture stage

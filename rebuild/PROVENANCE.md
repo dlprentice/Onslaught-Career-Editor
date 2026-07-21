@@ -93,10 +93,19 @@ static objects, targets, Aquila, jet, and cockpit; the visible-sun particle is
 still absent. Water follows the released active fixed-function path: the exact
 HFLD level and color, camera-following 25×25 grid, two caustic stages, authored
 `reflection00` imagery sampled at the released absolute-world `1/256` transform,
-sun-reflection stages, and two exact `SURF` shoreline bands. The animated
-half-scale reflection transform belongs to the optional advanced path, which was
-inactive in controlled Steam observation. Full visible sun/shoreline composition
-and dynamic scene reflection/refraction are not claimed.
+the shared wave `MULTIPLYADD`, and two exact `SURF` shoreline bands. Static
+Steam evidence at `CWaterRenderSystem__RenderMainPass` (`0x0055B6C0`) establishes
+the first-shoreline, grid, alpha-tested sun, and late additive-shoreline order.
+The sun uses texture-factor color `#E8E8FF`, alpha reference `0xC0`, and a quad
+whose center, half-width, and half-length are respectively `6`, `2`, and `8`
+times camera height. The late shore pass uses `SRCALPHA`/`ONE`, no depth write,
+and no fog. One uninterrupted copied-Steam sample measured the main phase at
+`1` radian per second and both wave scrolls at `0.06` texture cycles per second;
+the client advances those presentation phases from frame delta outside Core.
+The animated half-scale reflection transform belongs to the optional advanced
+path, which remained inactive in controlled Steam observation. Dynamic scene
+reflection/refraction and pixel identity outside this bounded active pass are
+not claimed.
 Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 presentation, and unimplemented HUD behavior remain provisional unless
@@ -369,6 +378,6 @@ both supported viewports. It does not prove disabled or unreferenced material mo
 procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
-shading, the inactive optional advanced water path or dynamic scene
+shading, the inactive optional advanced-water path or dynamic scene
 reflection/refraction, the complete mission,
 terrain-relative pitch/occlusion, full HUD behavior, or visual parity.

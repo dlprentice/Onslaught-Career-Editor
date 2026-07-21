@@ -158,7 +158,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdateLevel100Targets(current);
         UpdateProjectiles(previous, current);
         UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
-        _level100StaticWorld.Water.Update(_camera.GlobalPosition);
+        _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
     }
 
     private void BuildEnvironment()

@@ -228,9 +228,12 @@ released camera-following 25×25 grid, exact Level 100 height and color, two
 animated caustic stages, authored `reflection00` imagery, sun-reflection stages,
 and both exact `SURF` shoreline bands. Its active reflection stage uses the
 released absolute-world `1/256` transform rather than the inactive advanced
-path's animated half-scale transform. This reconstructs the bounded active
-fixed-function path observed on the supported Steam specimen; it does not claim
-complete water appearance, dynamic scene reflection, or refraction. The detail texture
+path's animated half-scale transform. The client now also reproduces the shared
+wave `MULTIPLYADD`, camera-height-scaled alpha-tested sun patch, late additive
+shore pass, released pass order, and measured animation rates. This reconstructs
+the bounded active fixed-function path observed on the supported Steam specimen;
+it does not claim the inactive advanced path, dynamic scene reflection/refraction,
+or general renderer pixel identity. The detail texture
 uses both released coordinate scales and observed modulation modes; the exact
 moving cloud-shadow texture now uses the released scale, scroll, and modulation.
 Walker acceleration now follows Core's
@@ -244,8 +247,7 @@ path and rubble, mesh-part damage variation, secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
 remaining weapon roster, facility destruction,
-the inactive optional advanced water path, full sun/shoreline water composition,
-and dynamic scene reflection/refraction,
+the inactive optional advanced-water path and dynamic scene reflection/refraction,
 transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general
 contacts, other portraits/video, and exact portrait RNG phase,

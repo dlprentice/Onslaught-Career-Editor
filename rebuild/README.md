@@ -188,9 +188,11 @@ shot, hit, tank-destruction, text, voice, and primary particle layers.
 Water reproduces the fixed-function path active on the supported Steam specimen:
 its camera-following grid, Level 100 color, two caustic stages, authored
 reflection image with the released absolute-world `1/256` transform, sun stages,
-and both exact shoreline bands. This is not a claim of complete water appearance,
-dynamic scene reflection/refraction, or the inactive optional advanced water
-path; full sun and shoreline composition remain incomplete. The visible-sun
+the shared wave `MULTIPLYADD`, the camera-height-scaled alpha-tested sun patch,
+and both exact shoreline passes in released order. Its measured caustic phase
+and wave scroll advance at `1` radian and `0.06` texture cycles per second. This
+does not claim the inactive optional advanced-water path, dynamic scene
+reflection/refraction, or pixel identity outside this bounded pass. The visible-sun
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory

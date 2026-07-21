@@ -22,6 +22,9 @@ internal sealed class Level100WaterAsset
     private const int SurfaceSegmentCount = 514;
     private const int SurfaceSourceLength = 18_572;
     private const float ShorelineDepthBias = 0.002f;
+    private const float CausticPhaseRadiansPerSecond = 1f;
+    private const float WaveScrollPerSecond = 0.06f;
+    private const float SunCenterDistancePerHeight = 6f;
 
     private static Shader? _gridShader;
     private static Shader? _shorelinePrimaryShader;
@@ -30,17 +33,27 @@ internal sealed class Level100WaterAsset
 
     private readonly MeshInstance3D _grid;
     private readonly MeshInstance3D _sunReflection;
+    private readonly ShaderMaterial _gridMaterial;
+    private readonly ShaderMaterial _shorelinePrimaryMaterial;
+    private readonly ShaderMaterial _shorelineOverlayMaterial;
+    private readonly ShaderMaterial _sunReflectionMaterial;
     private readonly float _waterHeight;
     private readonly Vector3 _sunlightDirection;
+    private float _causticPhase;
+    private float _mainWaveScroll;
+    private float _overlayWaveScroll;
 
     private const string GridShaderCode = """
         shader_type spatial;
-        render_mode unshaded, blend_mix, depth_draw_opaque, cull_disabled;
+        render_mode unshaded, blend_mix, depth_draw_always, cull_disabled;
 
         uniform sampler2D caustic_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_enable;
+        uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
         uniform vec3 water_color;
         uniform vec2 retail_origin;
+        uniform float caustic_phase;
+        uniform float main_wave_scroll;
         uniform vec3 fog_color;
         uniform float fog_density;
         varying vec3 water_world_position;
@@ -64,9 +77,6 @@ internal sealed class Level100WaterAsset
         }
 
         void fragment() {
-            // Steam advances these fixed-function texture transforms with the
-            // frame delta in milliseconds: 0.003 and 0.05 per millisecond.
-            float caustic_phase = mod(TIME * 50.0, 6.28318530718);
             vec2 retail_xy = vec2(
                 water_world_position.x + retail_origin.x,
                 retail_origin.y - water_world_position.z);
@@ -89,10 +99,13 @@ internal sealed class Level100WaterAsset
             vec3 caustic_0 = texture(caustic_texture, caustic_a).rgb;
             vec3 caustic_1 = texture(caustic_texture, caustic_b).rgb;
             vec3 reflected = texture(reflection_texture, reflection_uv).rgb;
+            vec3 wave = texture(waves_texture, vec2(0.0, main_wave_scroll)).rgb;
 
-            // Released D3D8 stages: water diffuse × caustic × caustic,
-            // followed by the reflection texture's additive stage.
-            vec3 retail_color = min((water_color * caustic_0 * caustic_1) + reflected, vec3(1.0));
+            // The grid has only TEXCOORD0 while the shared wave stage selects
+            // TEXCOORD1, so D3D supplies (0,0) before the half-scale/scroll
+            // transform. The stage then performs wave + diffuse * current.
+            vec3 base_water = min((water_color * caustic_0 * caustic_1) + reflected, vec3(1.0));
+            vec3 retail_color = min(wave + (COLOR.rgb * base_water), vec3(1.0));
             retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
             ALBEDO = retail_output(retail_color);
             ALPHA = COLOR.a;
@@ -101,11 +114,18 @@ internal sealed class Level100WaterAsset
 
     private const string ShorelinePrimaryShaderCode = """
         shader_type spatial;
-        render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+        render_mode unshaded, blend_mix, depth_draw_always, cull_disabled;
 
+        uniform sampler2D caustic_texture : filter_linear_mipmap, repeat_enable;
+        uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
+        uniform vec3 water_color;
+        uniform vec2 retail_origin;
+        uniform float caustic_phase;
+        uniform float main_wave_scroll;
         uniform vec3 fog_color;
         uniform float fog_density;
+        varying vec3 water_world_position;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -121,12 +141,34 @@ internal sealed class Level100WaterAsset
             return mix(fog_color, color, visibility);
         }
 
-        void fragment() {
-            vec4 wave = texture(waves_texture, UV + vec2(0.0, mod(TIME * 3.0, 1.0)));
+        void vertex() {
+            water_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+        }
 
-            // The released first SURF pass uses D3DTOP_MODULATEALPHA_ADDCOLOR
-            // with the wave texture as Arg1 and vertex diffuse as Arg2.
-            vec3 retail_color = min(wave.rgb + (wave.a * COLOR.rgb), vec3(1.0));
+        void fragment() {
+            vec2 retail_xy = vec2(
+                water_world_position.x + retail_origin.x,
+                retail_origin.y - water_world_position.z);
+            vec2 caustic_a = vec2(
+                (retail_xy.x * 0.1) + (retail_xy.y * 0.03),
+                (retail_xy.x * 0.03) - (retail_xy.y * 0.1));
+            caustic_a += vec2(sin(caustic_phase), cos(caustic_phase)) * 0.1;
+            float second_phase = caustic_phase + 3.14159265359;
+            vec2 caustic_b = vec2(
+                (retail_xy.x * 0.03) + (retail_xy.y * 0.1),
+                (retail_xy.x * 0.1) - (retail_xy.y * 0.03));
+            caustic_b += vec2(sin(second_phase), cos(second_phase)) * 0.1;
+            vec3 caustic_0 = texture(caustic_texture, caustic_a).rgb;
+            vec3 caustic_1 = texture(caustic_texture, caustic_b).rgb;
+            vec3 reflected = texture(reflection_texture, retail_xy / 256.0).rgb;
+            vec4 wave = texture(
+                waves_texture,
+                (UV * 0.5) + vec2(0.0, main_wave_scroll));
+
+            // Stage 3 is D3DTOP_MULTIPLYADD with CURRENT as Arg0,
+            // waves as Arg1, and vertex diffuse as Arg2.
+            vec3 base_water = min((water_color * caustic_0 * caustic_1) + reflected, vec3(1.0));
+            vec3 retail_color = min(wave.rgb + (COLOR.rgb * base_water), vec3(1.0));
             retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
             ALBEDO = retail_output(retail_color);
             ALPHA = COLOR.a;
@@ -135,11 +177,10 @@ internal sealed class Level100WaterAsset
 
     private const string ShorelineOverlayShaderCode = """
         shader_type spatial;
-        render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+        render_mode unshaded, blend_add, depth_draw_never, cull_disabled;
 
         uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
-        uniform vec3 fog_color;
-        uniform float fog_density;
+        uniform float overlay_wave_scroll;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -150,16 +191,11 @@ internal sealed class Level100WaterAsset
             return mix(low, high, step(vec3(0.04045), color));
         }
 
-        vec3 apply_retail_fog(vec3 color, float view_depth) {
-            float visibility = clamp(exp(-fog_density * view_depth), 0.0, 1.0);
-            return mix(fog_color, color, visibility);
-        }
-
         void fragment() {
-            vec4 wave = texture(waves_texture, UV + vec2(0.0, mod(TIME * 3.0, 1.0)));
-            vec3 retail_color = apply_retail_fog(
-                wave.rgb * COLOR.rgb,
-                max(-VERTEX.z, 0.0));
+            vec4 wave = texture(
+                waves_texture,
+                (UV * 0.5) + vec2(0.0, overlay_wave_scroll));
+            vec3 retail_color = wave.rgb * COLOR.rgb;
             ALBEDO = retail_output(retail_color);
             ALPHA = wave.a * COLOR.a;
         }
@@ -167,13 +203,16 @@ internal sealed class Level100WaterAsset
 
     private const string SunReflectionShaderCode = """
         shader_type spatial;
-        render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+        render_mode unshaded, depth_draw_always, cull_disabled;
 
         uniform sampler2D sun_reflection_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D sun_blob_texture : filter_linear_mipmap, repeat_disable;
         uniform vec3 sun_reflection_color;
+        uniform vec2 retail_origin;
+        uniform float caustic_phase;
         uniform vec3 fog_color;
         uniform float fog_density;
+        varying vec3 water_world_position;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -189,35 +228,36 @@ internal sealed class Level100WaterAsset
             return mix(fog_color, color, visibility);
         }
 
+        void vertex() {
+            water_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+        }
+
         void fragment() {
-            float reflection_phase = mod(TIME * 3.0, 1.0);
-            float caustic_phase = mod(TIME * 50.0, 6.28318530718);
+            vec2 retail_xy = vec2(
+                water_world_position.x + retail_origin.x,
+                retail_origin.y - water_world_position.z);
             vec2 reflection_a_uv = vec2(
-                (UV.x * 0.1) + (UV.y * 0.03),
-                (UV.x * 0.03) - (UV.y * 0.1));
+                (retail_xy.x * 0.1) + (retail_xy.y * 0.03),
+                (retail_xy.x * 0.03) - (retail_xy.y * 0.1));
             reflection_a_uv += vec2(sin(caustic_phase), cos(caustic_phase)) * 0.1;
 
             float second_phase = caustic_phase + 3.14159265359;
             vec2 reflection_b_uv = vec2(
-                (UV.x * 0.03) + (UV.y * 0.1),
-                (UV.x * 0.1) - (UV.y * 0.03));
+                (retail_xy.x * 0.03) + (retail_xy.y * 0.1),
+                (retail_xy.x * 0.1) - (retail_xy.y * 0.03));
             reflection_b_uv += vec2(sin(second_phase), cos(second_phase)) * 0.1;
 
             vec4 reflection_a = texture(sun_reflection_texture, reflection_a_uv);
             vec4 reflection_b = texture(sun_reflection_texture, reflection_b_uv);
-            vec4 blob = texture(
-                sun_blob_texture,
-                (UV * 0.5) + vec2(0.0, reflection_phase));
+            vec4 blob = texture(sun_blob_texture, UV);
 
-            // The released sun pass modulates the two sun-reflection stages,
-            // adds sunblob, and rejects fragments below alpha reference 0xc0.
-            float retail_alpha = reflection_a.a + reflection_b.a + blob.a;
+            // RGB selects the texture factor; the three textures only shape
+            // the additive alpha chain used by the 0xc0 alpha test.
+            float retail_alpha = min(reflection_a.a + reflection_b.a + blob.a, 1.0);
             if (retail_alpha <= (192.0 / 255.0)) {
                 discard;
             }
-            vec3 retail_color = min(
-                (sun_reflection_color * reflection_a.rgb * reflection_b.rgb) + blob.rgb,
-                vec3(1.0));
+            vec3 retail_color = sun_reflection_color;
             retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
             ALBEDO = retail_output(retail_color);
             ALPHA = 1.0;
@@ -228,6 +268,10 @@ internal sealed class Level100WaterAsset
         Node3D root,
         MeshInstance3D grid,
         MeshInstance3D sunReflection,
+        ShaderMaterial gridMaterial,
+        ShaderMaterial shorelinePrimaryMaterial,
+        ShaderMaterial shorelineOverlayMaterial,
+        ShaderMaterial sunReflectionMaterial,
         float waterHeight,
         Vector3 sunlightDirection,
         int shorelineTriangleCount)
@@ -235,6 +279,10 @@ internal sealed class Level100WaterAsset
         Root = root;
         _grid = grid;
         _sunReflection = sunReflection;
+        _gridMaterial = gridMaterial;
+        _shorelinePrimaryMaterial = shorelinePrimaryMaterial;
+        _shorelineOverlayMaterial = shorelineOverlayMaterial;
+        _sunReflectionMaterial = sunReflectionMaterial;
         _waterHeight = waterHeight;
         _sunlightDirection = sunlightDirection;
         ShorelineTriangleCount = shorelineTriangleCount;
@@ -265,6 +313,7 @@ internal sealed class Level100WaterAsset
         };
         gridMaterial.SetShaderParameter("reflection_texture", reflection);
         gridMaterial.SetShaderParameter("caustic_texture", caustic);
+        gridMaterial.SetShaderParameter("waves_texture", waves);
         gridMaterial.SetShaderParameter("water_color", new Vector3(
             0x21 / 255f,
             0x21 / 255f,
@@ -272,6 +321,9 @@ internal sealed class Level100WaterAsset
         gridMaterial.SetShaderParameter("retail_origin", new Vector2(
             Level100HeightFieldAsset.PlayerStartX,
             Level100HeightFieldAsset.PlayerStartZ));
+        gridMaterial.SetShaderParameter("caustic_phase", 0f);
+        gridMaterial.SetShaderParameter("main_wave_scroll", 0f);
+        gridMaterial.RenderPriority = 1;
         SetFogParameters(gridMaterial, terrain);
 
         var grid = new MeshInstance3D
@@ -288,25 +340,46 @@ internal sealed class Level100WaterAsset
             Shader = _shorelineOverlayShader ??= new Shader { Code = ShorelineOverlayShaderCode },
         };
         shorelineOverlayMaterial.SetShaderParameter("waves_texture", waves);
-        SetFogParameters(shorelineOverlayMaterial, terrain);
+        shorelineOverlayMaterial.SetShaderParameter("overlay_wave_scroll", 0f);
+        shorelineOverlayMaterial.RenderPriority = 3;
         var shorelineMaterial = new ShaderMaterial
         {
             Shader = _shorelinePrimaryShader ??= new Shader { Code = ShorelinePrimaryShaderCode },
-            NextPass = shorelineOverlayMaterial,
         };
+        shorelineMaterial.SetShaderParameter("reflection_texture", reflection);
+        shorelineMaterial.SetShaderParameter("caustic_texture", caustic);
         shorelineMaterial.SetShaderParameter("waves_texture", waves);
+        shorelineMaterial.SetShaderParameter("water_color", new Vector3(
+            0x21 / 255f,
+            0x21 / 255f,
+            0x3D / 255f));
+        shorelineMaterial.SetShaderParameter("retail_origin", new Vector2(
+            Level100HeightFieldAsset.PlayerStartX,
+            Level100HeightFieldAsset.PlayerStartZ));
+        shorelineMaterial.SetShaderParameter("caustic_phase", 0f);
+        shorelineMaterial.SetShaderParameter("main_wave_scroll", 0f);
+        shorelineMaterial.RenderPriority = 0;
         SetFogParameters(shorelineMaterial, terrain);
+        ArrayMesh shorelineMesh = BuildShorelineMesh(
+            surfaceResourcePath,
+            surfaceSha256);
         var shoreline = new MeshInstance3D
         {
             Name = "RetailAuthoredShorelineBands",
-            Mesh = BuildShorelineMesh(
-                surfaceResourcePath,
-                surfaceSha256,
-                shorelineMaterial),
+            Mesh = shorelineMesh,
+            MaterialOverride = shorelineMaterial,
             Position = Vector3.Up * ShorelineDepthBias,
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         };
         root.AddChild(shoreline);
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "RetailAdditiveShorelineWaves",
+            Mesh = shorelineMesh,
+            MaterialOverride = shorelineOverlayMaterial,
+            Position = Vector3.Up * ShorelineDepthBias,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        });
 
         var sunMaterial = new ShaderMaterial
         {
@@ -318,6 +391,11 @@ internal sealed class Level100WaterAsset
             0xE8 / 255f,
             0xE8 / 255f,
             0xFF / 255f));
+        sunMaterial.SetShaderParameter("retail_origin", new Vector2(
+            Level100HeightFieldAsset.PlayerStartX,
+            Level100HeightFieldAsset.PlayerStartZ));
+        sunMaterial.SetShaderParameter("caustic_phase", 0f);
+        sunMaterial.RenderPriority = 2;
         SetFogParameters(sunMaterial, terrain);
         var sun = new MeshInstance3D
         {
@@ -332,6 +410,10 @@ internal sealed class Level100WaterAsset
             root,
             grid,
             sun,
+            gridMaterial,
+            shorelineMaterial,
+            shorelineOverlayMaterial,
+            sunMaterial,
             terrain.WaterRelativeHeight,
             terrain.SunlightDirection,
             SurfaceSegmentCount * 4);
@@ -348,34 +430,49 @@ internal sealed class Level100WaterAsset
         material.SetShaderParameter("fog_density", terrain.FogDensity);
     }
 
-    public void Update(Vector3 cameraPosition)
+    public void Update(Vector3 cameraPosition, float frameDelta)
     {
+        if (float.IsFinite(frameDelta) && frameDelta > 0f)
+        {
+            _causticPhase = Mathf.PosMod(
+                _causticPhase + (frameDelta * CausticPhaseRadiansPerSecond),
+                Mathf.Tau);
+            _mainWaveScroll = Mathf.PosMod(
+                _mainWaveScroll + (frameDelta * WaveScrollPerSecond),
+                1f);
+            _overlayWaveScroll = Mathf.PosMod(
+                _overlayWaveScroll + (frameDelta * WaveScrollPerSecond),
+                1f);
+        }
+        _gridMaterial.SetShaderParameter("caustic_phase", _causticPhase);
+        _gridMaterial.SetShaderParameter("main_wave_scroll", _mainWaveScroll);
+        _shorelinePrimaryMaterial.SetShaderParameter("caustic_phase", _causticPhase);
+        _shorelinePrimaryMaterial.SetShaderParameter("main_wave_scroll", _mainWaveScroll);
+        _shorelineOverlayMaterial.SetShaderParameter("overlay_wave_scroll", _overlayWaveScroll);
+        _sunReflectionMaterial.SetShaderParameter("caustic_phase", _causticPhase);
+
         _grid.Position = new Vector3(cameraPosition.X, _waterHeight, cameraPosition.Z);
 
-        Vector3 reflectedLight = _sunlightDirection.Bounce(Vector3.Up).Normalized();
-        Vector3 ray = -reflectedLight;
-        if (ray.Y >= -0.0001f || cameraPosition.Y <= _waterHeight)
+        float cameraHeight = cameraPosition.Y - _waterHeight;
+        Vector3 projectedSun = new(_sunlightDirection.X, 0f, _sunlightDirection.Z);
+        if (cameraHeight <= 0f || projectedSun.LengthSquared() <= 0.000001f)
         {
             _sunReflection.Visible = false;
             return;
         }
 
-        float distance = (_waterHeight - cameraPosition.Y) / ray.Y;
-        if (!float.IsFinite(distance) || distance <= 0f || distance > 2_000f)
-        {
-            _sunReflection.Visible = false;
-            return;
-        }
-
-        Vector3 center = cameraPosition + (ray * distance);
+        projectedSun = projectedSun.Normalized();
+        Vector3 center = cameraPosition +
+            (projectedSun * cameraHeight * SunCenterDistancePerHeight);
         _sunReflection.Position = new Vector3(
             center.X,
             _waterHeight + (ShorelineDepthBias * 2f),
             center.Z);
         _sunReflection.Rotation = new Vector3(
             0f,
-            Mathf.Atan2(ray.X, ray.Z),
+            Mathf.Atan2(projectedSun.X, projectedSun.Z),
             0f);
+        _sunReflection.Scale = new Vector3(cameraHeight, 1f, cameraHeight);
         _sunReflection.Visible = true;
     }
 
@@ -427,8 +524,7 @@ internal sealed class Level100WaterAsset
 
     private static ArrayMesh BuildShorelineMesh(
         string resourcePath,
-        string expectedSha256,
-        Material material)
+        string expectedSha256)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         if (source.Length != SurfaceSourceLength ||
@@ -477,8 +573,6 @@ internal sealed class Level100WaterAsset
         var mesh = new ArrayMesh();
         AddShorelineBand(mesh, contours, 0, 1, innerBand: true);
         AddShorelineBand(mesh, contours, 1, 2, innerBand: false);
-        mesh.SurfaceSetMaterial(0, material);
-        mesh.SurfaceSetMaterial(1, material);
         return mesh;
     }
 
@@ -549,10 +643,10 @@ internal sealed class Level100WaterAsset
     {
         Vector3[] vertices =
         [
-            new(-6f, 0f, -8f),
-            new(6f, 0f, -8f),
-            new(-6f, 0f, 8f),
-            new(6f, 0f, 8f),
+            new(-2f, 0f, -8f),
+            new(2f, 0f, -8f),
+            new(-2f, 0f, 8f),
+            new(2f, 0f, 8f),
         ];
         Vector2[] uvs =
         [
