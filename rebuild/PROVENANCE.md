@@ -202,7 +202,7 @@ Level 100 ground/start relationship, and copied-runtime framing independently
 agree on scale `1.0`; the client grounds the walker from its composed standing
 pose and each static mesh from its exact lower bound.
 
-Twenty-three retained HUD textures are exact released files named by the Steam
+Twenty-nine retained HUD textures are exact released files named by the Steam
 binary. A clean copied-runtime frame and the released render paths establish
 the bounded first-person composition now used by Godot: the generated central
 threat compass and three v3 crosshair layers, lower-left scanner/weapon stack,
@@ -211,11 +211,16 @@ lower-right battleline or message portrait, and a message-only segmented panel.
 `0x004858D0`, `CHud__RenderBattleline` at `0x00487D10`,
 `CMessageBox__RenderOverlay` at `0x004B8850`, and the `CDXCompass` render path
 provide the retained edge offsets, 45/46/96/98/110/111.5-unit radii, rotations,
-and state ownership. Exact 128×128 DXT2 `aa` frames supply the current static
-Tatiana and technician portraits, and the exact CircleMask bounds their square
-corners. Animated portrait/video behavior, Steam's dynamic 16-bit ring texture,
-full multi-stage mask render state, and the Level 100 influence map are not
-inferred.
+packed tints, and state ownership. `CMessageBox__RenderOverlay` supplies the
+native 120-pixel bar pieces, bottom-centre anchors, five 15-pixel line offsets,
+and 26-character wrap width. `CDXFont__CreateFromTexture` scans alpha above
+`0x10` to derive each proportional glyph width. Exact 128×128 DXT2
+`oo`/`ee`/`mm`/`aa` frames supply the four Tatiana and technician poses, while
+`CMessageBox__RenderBattleLinePulseSprites` supplies their ordering and
+8/12/40/40 selection weights. The client makes that selection deterministic at
+its presentation cadence; exact retail RNG phase, audio-phoneme sync, other
+portrait/video behavior, Steam's dynamic 16-bit ring texture, full multi-stage
+mask render state, and the Level 100 influence map are not inferred.
 
 One clean control and two fresh, uninterrupted app-owned Level 100 runs then
 repeated the first eight message boundaries within one 50 ms retail sample.
@@ -335,7 +340,7 @@ A native smoke proves the current client starts; loads 58 Aquila, 111 static-wor
 six target, and two cockpit material surfaces; instantiates all 1,481 pines and
 the 625-vertex/1,152-triangle camera-following water grid plus 2,056 shoreline
 triangles; decodes the exact locally materialized mesh, nine
-Pulse/target-effect, twenty-three HUD, five sky, and five water textures;
+Pulse/target-effect, twenty-nine HUD, five sky, and five water textures;
 validates three PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
 ground elevation. Its deterministic

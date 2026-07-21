@@ -40,12 +40,13 @@ The opening view uses the released Level
 100 four-point exterior fly-in, then hands off to the released first-person
 projection and exact walker cockpit at its runtime-selected `walk` pose. The HUD
 remains hidden with the pan camera and appears at the control-camera handoff.
-Twenty-three exact HUD textures and the released Font13PS atlas now compose the
+Twenty-nine exact HUD textures and the released Font13PS atlas now compose the
 bounded v3 crosshair, threat compass, lower-left scanner/weapon instrument,
 lower-right battleline/portrait, active-objective markers, and conditional
 message panel. The first seventeen released English tutorial messages through
 the first exercise's Vulcan handoff now use their exact text, shipped voice
-clips, and static Tatiana/technician portrait frames. Core follows the observed
+clips, proportional font metrics, and four released Tatiana/technician portrait
+poses. Core follows the observed
 power, objective, weapon-highlight, four-target, and Pulse Cannon activation
 boundaries while keeping flight disabled. Independently repeated lowest-charge
 Pulse Cannon runs now give all three training tanks their retail speed,
@@ -75,7 +76,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 142 exact source/runtime files to ignored paths. For a custom
+materializes 148 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -163,10 +164,11 @@ player rather than running an independent sampler. The client preserves each
 active mesh group's six ordered retail texture slots and decodes the exact
 AYA-wrapped textures selected by the Aquila, cockpit, static world, pines, and
 range targets plus the four exact 64×64
-textures named by the medium Pulse Bolt descriptor. It also uses twenty-three
+textures named by the medium Pulse Bolt descriptor. It also uses twenty-nine
 exact HUD textures, including the three released v3 crosshair layers,
-uncompressed font atlas, scanner/north sprites, battleline, portrait/noise
-treatment, and objective marker. The observed player route uses Steam's
+uncompressed proportional font atlas, scanner/north sprites, battleline,
+four-pose Tatiana/technician portrait/noise treatment, and objective marker. The
+observed player route uses Steam's
 5.4-unit overlap and delayed dispatch to replace Target Zone 1 with the Firing
 Range on that radar. A control and three repeated retail runs then establish the
 Firing Range's five-message sequence, current-weapon highlight, four objective
@@ -192,7 +194,8 @@ actor/structure collision beyond the observed Control Tower and Tank Factory
 contact envelopes, procedural foot placement/terrain IK,
 transform animation, general HUD contacts and later state logic, Steam's
 dynamic ring texture, full multi-stage mask state and Level 100 influence map,
-animated radio portraits/video, Warehouse segment-specific health and breakup,
+other radio portraits/video and exact portrait RNG phase, Warehouse
+segment-specific health and breakup,
 mesh-part damage variation, secondary particles/debris, the three moving trucks,
 Vulcan ballistics, and the remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;

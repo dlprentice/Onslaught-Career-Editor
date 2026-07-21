@@ -37,15 +37,24 @@ and the conditional lower-center message treatment.
 | `objective-left.texture.aya` | `hud%v2%ObjectiveLeft.tga(0)A8R8G8B8.aya` | `0AE835780D1AF6C01F0272A50AFDA141ABCA70EAA5C23D74E7FC3968B6D9194F` |
 | `objective-right.texture.aya` | `hud%v2%ObjectiveRight.tga(0)A8R8G8B8.aya` | `581F10446DB76ECE7AA7044B4C02F0431A79A7D606225D5C69A412C17F85078B` |
 | `font-13ps.texture.aya` | `mustbe_Font13PS.tga(0)A8R8G8B8.aya` | `7ACC088B75E729CBDC2782E239A7D18BA0EC409E1BC890109AA1020F5EE81DC0` |
+| `tatiana-portrait-oo.texture.aya` | `MessageBox%tat_oo.tga(0)A8R8G8B8.aya` | `39F40088069A8C68584A5A0CDA9E5AE7D4E4E5A248A12F0D0A240B8D3668621E` |
+| `tatiana-portrait-ee.texture.aya` | `MessageBox%tat_ee.tga(0)A8R8G8B8.aya` | `4A4A17B72BBAFAE2B324E3A0A1C847226A288FEAA7C4273C45AA2DE8AEA3F99A` |
+| `tatiana-portrait-mm.texture.aya` | `MessageBox%tat_mm.tga(0)A8R8G8B8.aya` | `802D8E22D8D304E12589A547F22AC2F2D5771B96AEA47306B3B2BBF752730DE5` |
 | `tatiana-portrait.texture.aya` | `MessageBox%tat_aa.tga(0)A8R8G8B8.aya` | `34D451A6FC31E399B99032230413A60F146B41A0FEA65E61561A37D8EC757CFD` |
+| `technician-portrait-oo.texture.aya` | `MessageBox%technic_oo.tga(0)A8R8G8B8.aya` | `B28A3818B8EF37DECFD8779D7ACAE74C657B5D510EDD2332587864F2A1E58A2C` |
+| `technician-portrait-ee.texture.aya` | `MessageBox%technic_ee.tga(0)A8R8G8B8.aya` | `05326C603E8C9224C5BAB488A32AB9E9E19CA5B3FB424BC700AF97AE71C2527F` |
+| `technician-portrait-mm.texture.aya` | `MessageBox%technic_mm.tga(0)A8R8G8B8.aya` | `263A2C107D6463A717DDEF20CC113CADFB585BD8ECBB1DB479F049843DCF3636` |
 | `technician-portrait.texture.aya` | `MessageBox%technic_aa.tga(0)A8R8G8B8.aya` | `C4C1B11F4DDFB960AFC1C1D2A04020FADF997795ECCF651C07314141652F9603` |
 
 The renderer uses the source alpha for DXT2 layers and additive composition for
 the X8 outline, bar, and message-noise layers, matching their visible
-black-background sprite semantics. The 256×256 uncompressed Font13PS atlas
-contains the fixed 16×16 ASCII cells used by the message box. The two 128×128 DXT2 portraits
-are the exact released static `aa` frames selected for Tatiana's and the
-technician's opening messages; no lip movement is synthesized.
+black-background sprite semantics. The released font loader scans alpha within
+each 16×16 Font13PS cell to derive proportional glyph widths; the client follows
+that path rather than imposing a fixed advance. The eight 128×128 portraits are
+the released `oo`, `ee`, `mm`, and `aa` frames for Tatiana and the technician.
+The client uses their released order and 8/12/40/40 selection weights at a
+deterministic presentation cadence; it does not claim audio-phoneme lip sync or
+byte-identical retail RNG phase.
 
 The released scanner path rotates contacts by Battle Engine yaw and clamps them
 at 46 HUD units. The north sprite follows the released 45-unit heading circle.
@@ -55,10 +64,12 @@ the outer ring, exact north bar, and objective sprites; it does not reproduce
 Steam's dynamic ring texture byte-for-byte.
 
 The retained CircleMask is the released black-outside/transparent-centre layer
-used to bound the static portrait frame. This slice does not claim complete HUD
-behavior. Steam's multi-stage mask render state, animated portrait/video
-frames, general tactical contacts, weapon selection, damage flashes, target
-prediction, influence-map battleline, split-screen composition, and later
-mission HUD states remain absent. Because Level 100 has a live influence map,
-the rebuild leaves the no-message battleline interior empty rather than showing
-Steam's unrelated empty-map Forseti fallback.
+used to bound the portrait frames. The message bar uses Steam's native 120-pixel
+pieces, bottom-centre anchors, `0x90000000` inner tint, and five-line layout.
+This slice does not claim complete HUD behavior. Steam's full multi-stage mask
+render state, other speakers and video portraits, general tactical contacts,
+weapon selection, damage flashes, target prediction, influence-map battleline,
+split-screen composition, and later mission HUD states remain absent. Because
+Level 100 has a live influence map, the rebuild leaves the no-message
+battleline interior empty rather than showing Steam's unrelated empty-map
+Forseti fallback.

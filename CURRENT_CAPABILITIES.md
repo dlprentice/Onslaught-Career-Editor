@@ -188,13 +188,14 @@ fixed-yaw retail repetitions per facility establish circular walker contact only
 for the Control Tower and Tank Factory: inward motion is removed, while tangent
 motion slides around the tower. Core consumes those two observed envelopes; it
 does not claim general mesh collision.
-Twenty-three exact released HUD textures, including Font13PS and the three v3
+Twenty-nine exact released HUD textures, including Font13PS and the three v3
 crosshair layers, replace the prototype overlay for the bounded threat circle,
 lower-left scanner/weapon instrument, lower-right battleline/portrait,
 active-objective markers, and conditional message panel. The first seventeen
 English tutorial messages through the first exercise's Vulcan handoff now use
-exact released strings, shipped Ogg/Vorbis voices, and static Tatiana/technician
-portrait frames. Repeated retail runs matched every retained opening boundary
+exact released strings, shipped Ogg/Vorbis voices, proportional font metrics,
+the native 120-pixel message composition, and four released
+Tatiana/technician portrait poses. Repeated retail runs matched every retained opening boundary
 within 50 ms, then repeated Target Zone 1's 5.4-unit overlap, delayed objective
 swap, and `TUTORIAL_02` dispatch. One control and three accepted Firing Range
 runs then repeated the same five-message sequence, current-weapon highlight,
@@ -237,7 +238,7 @@ remaining weapon roster, facility destruction,
 the inactive optional advanced water path and dynamic scene reflection/refraction,
 transform animation, Steam's dynamic
 HUD ring and full multi-stage mask/influence-map implementation, general
-contacts and animated-radio behavior,
+contacts, other portraits/video, and exact portrait RNG phase,
 later mission audio, campaign,
 networking, or the rest of the transform model. The camera slice does not yet
 reproduce terrain-relative pitch limits, terrain occlusion, camera shake, or later

@@ -38,8 +38,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
             LoadHudTexture("objective-inner-right", 64, 128),
             LoadHudTexture("objective-left", 128, 128),
             LoadHudTexture("objective-right", 128, 128),
-            LoadHudTexture("tatiana-portrait", 128, 128),
-            LoadHudTexture("technician-portrait", 128, 128));
+            [
+                LoadHudTexture("tatiana-portrait-oo", 128, 128),
+                LoadHudTexture("tatiana-portrait-ee", 128, 128),
+                LoadHudTexture("tatiana-portrait-mm", 128, 128),
+                LoadHudTexture("tatiana-portrait", 128, 128),
+            ],
+            [
+                LoadHudTexture("technician-portrait-oo", 128, 128),
+                LoadHudTexture("technician-portrait-ee", 128, 128),
+                LoadHudTexture("technician-portrait-mm", 128, 128),
+                LoadHudTexture("technician-portrait", 128, 128),
+            ]);
         AddFullScreenControl(_baseLayer);
 
         _glowLayer = new RetailHudGlowLayer(
@@ -197,6 +207,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             compression);
     }
 
+    private static Color RetailColor(uint argb) => new(
+        ((argb >> 16) & 0xff) / 255f,
+        ((argb >> 8) & 0xff) / 255f,
+        (argb & 0xff) / 255f,
+        ((argb >> 24) & 0xff) / 255f);
+
     private void AddFullScreenControl(Control control)
     {
         control.AnchorRight = 1f;
@@ -227,14 +243,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Texture2D objectiveInnerRight,
         Texture2D objectiveLeft,
         Texture2D objectiveRight,
-        Texture2D tatianaPortrait,
-        Texture2D technicianPortrait) : Control
+        Texture2D[] tatianaPortraits,
+        Texture2D[] technicianPortraits) : Control
     {
-        private static readonly Color RadarBlue = new(0.16f, 0.28f, 0.88f, 0.92f);
-        private static readonly Color InstrumentGold = new(0.70f, 0.64f, 0.43f, 0.70f);
         private RetailHudSpeaker _speaker;
         private Vector2[] _objectiveMarkerOffsets = [];
         private float _facingYaw;
+        private int _portraitPoseIndex = 3;
         private bool _weaponHighlighted;
 
         public bool IsReady =>
@@ -252,8 +267,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             objectiveInnerRight.GetSize() == new Vector2I(64, 128) &&
             objectiveLeft.GetSize() == new Vector2I(128, 128) &&
             objectiveRight.GetSize() == new Vector2I(128, 128) &&
-            tatianaPortrait.GetSize() == new Vector2I(128, 128) &&
-            technicianPortrait.GetSize() == new Vector2I(128, 128);
+            PortraitSetIsReady(tatianaPortraits) &&
+            PortraitSetIsReady(technicianPortraits);
 
         public int ObjectiveMarkerCount => _objectiveMarkerOffsets.Length;
 
@@ -263,9 +278,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Vector2[] objectiveMarkerOffsets)
         {
             float facingYaw = snapshot.FacingYawMicroRad / 1_000_000f;
+            int portraitPoseIndex = speaker == RetailHudSpeaker.None
+                ? 3
+                : SelectPortraitPose(snapshot.Tick);
             bool weaponHighlighted = snapshot.Level100CurrentWeaponHighlighted;
             if (_speaker == speaker &&
                 Mathf.IsEqualApprox(_facingYaw, facingYaw) &&
+                _portraitPoseIndex == portraitPoseIndex &&
                 _weaponHighlighted == weaponHighlighted &&
                 _objectiveMarkerOffsets.SequenceEqual(objectiveMarkerOffsets))
             {
@@ -274,6 +293,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
             _speaker = speaker;
             _facingYaw = facingYaw;
+            _portraitPoseIndex = portraitPoseIndex;
             _weaponHighlighted = weaponHighlighted;
             _objectiveMarkerOffsets = objectiveMarkerOffsets;
             QueueRedraw();
@@ -296,14 +316,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 radioView,
                 new Rect2(17f, Size.Y - 112f, 128f, 128f),
                 false,
-                RadarBlue);
+                RetailColor(0x6fffffff));
             DrawTextureRect(
                 weaponFill,
                 new Rect2(9f, Size.Y - 141f, 128f, 128f),
                 false,
                 _weaponHighlighted
-                    ? new Color(1f, 0.91f, 0.56f, 0.94f)
-                    : InstrumentGold);
+                    ? RetailColor(0x7f7fff3f)
+                    : RetailColor(0x3f000000));
 
             Vector2 radarCenter = new(69f, Size.Y - 64f);
             foreach (Vector2 markerOffset in _objectiveMarkerOffsets)
@@ -324,7 +344,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 northPosition,
                 new Vector2(32f, 32f),
                 _facingYaw,
-                new Color(0.88f, 0.90f, 0.78f, 0.90f));
+                RetailColor(0xff5f7fff));
         }
 
         private void DrawBattleline()
@@ -340,26 +360,26 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
 
-            Texture2D portrait = _speaker == RetailHudSpeaker.Technician
-                ? technicianPortrait
-                : tatianaPortrait;
+            Texture2D portrait = (_speaker == RetailHudSpeaker.Technician
+                ? technicianPortraits
+                : tatianaPortraits)[_portraitPoseIndex];
             DrawTextureRect(
                 portrait,
                 new Rect2(Size.X - 121f, Size.Y - 112f, 96f, 96f),
                 false,
-                new Color(1f, 1f, 1f, 0.88f));
+                Colors.White);
             DrawTextureRect(
                 circleMask,
-                new Rect2(Size.X - 121f, Size.Y - 112f, 128f, 128f),
+                new Rect2(Size.X - 137f, Size.Y - 128f, 128f, 128f),
                 false);
         }
 
         private void DrawMessageFrame()
         {
             const float frameWidth = 252f;
-            const float pieceHeight = 60f;
-            const float innerWidth = 30f;
-            var innerTint = new Color(0f, 0f, 0f, 144f / 255f);
+            const float pieceHeight = 120f;
+            const float innerWidth = 60f;
+            Color innerTint = RetailColor(0x90000000);
             float centerX = (Size.X * 0.5f) + 22f;
             float centerY = Size.Y - 41f;
             float leftCenter = centerX - (frameWidth * 0.5f);
@@ -372,7 +392,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 false);
             DrawTextureRect(
                 objectiveInnerLeft,
-                new Rect2(leftCenter - (innerWidth * 0.5f), top, innerWidth, pieceHeight),
+                new Rect2(leftCenter - innerWidth, top, innerWidth, pieceHeight),
                 false,
                 innerTint);
             DrawTextureRect(
@@ -381,7 +401,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 false);
             DrawTextureRect(
                 objectiveInnerRight,
-                new Rect2(rightCenter - (innerWidth * 0.5f), top, innerWidth, pieceHeight),
+                new Rect2(rightCenter, top, innerWidth, pieceHeight),
                 false,
                 innerTint);
 
@@ -392,12 +412,33 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 float width = Mathf.Min(innerWidth, remaining);
                 DrawTextureRectRegion(
                     objectiveInnerCentre,
-                    new Rect2(x - (innerWidth * 0.5f), top, width, pieceHeight),
+                    new Rect2(x, top, width, pieceHeight),
                     new Rect2(0f, 0f, 64f * (width / innerWidth), 128f),
                     innerTint);
                 x += width;
                 remaining -= width;
             }
+        }
+
+        private static bool PortraitSetIsReady(Texture2D[] portraits) =>
+            portraits.Length == 4 &&
+            portraits.All(portrait => portrait.GetSize() == new Vector2I(128, 128));
+
+        private static int SelectPortraitPose(int simulationTick)
+        {
+            // Retail changes among oo/ee/mm/aa at a 50 ms cadence with weighted
+            // random selection. Core advances at 30 Hz, so every third tick is
+            // one stable 100 ms presentation interval rather than frame-rate state.
+            uint value = unchecked((uint)((simulationTick / 3) + 123456));
+            value = unchecked((value * 214013u) + 2531011u);
+            int sample = (int)((value >> 16) & 0xff) * 100 / 256;
+            return sample switch
+            {
+                < 8 => 0,
+                < 20 => 1,
+                < 60 => 2,
+                _ => 3,
+            };
         }
 
         private void DrawCrosshair()
@@ -494,14 +535,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 radarOutline,
                 new Rect2(17f, Size.Y - 112f, 128f, 128f),
                 false,
-                new Color(0.64f, 0.62f, 0.48f, 0.82f));
+                RetailColor(0xff6f8faf));
             DrawTextureRect(
                 weaponOutline,
                 new Rect2(9f, Size.Y - 141f, 128f, 128f),
                 false,
                 _weaponHighlighted
-                    ? new Color(1f, 0.91f, 0.60f, 1f)
-                    : new Color(0.66f, 0.62f, 0.45f, 0.78f));
+                    ? RetailColor(0xff7fff3f)
+                    : RetailColor(0xff7f7f7f));
         }
 
         private void DrawThreatCircle()
@@ -556,7 +597,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 battlelineOutline,
                 new Rect2(Size.X - 121f, Size.Y - 112f, 128f, 128f),
                 false,
-                new Color(0.66f, 0.60f, 0.43f, 0.88f));
+                RetailColor(0xff6f8faf));
         }
 
         private void DrawCenteredRotated(
@@ -572,17 +613,26 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
     }
 
-    private sealed partial class RetailHudTextLayer(Texture2D fontAtlas) : Control
+    private sealed partial class RetailHudTextLayer : Control
     {
         private const int FirstGlyph = 32;
         private const int GlyphColumns = 16;
         private const int GlyphCellSize = 16;
-        private const int GlyphAdvance = 8;
         private const int MessageCharactersPerLine = 26;
         private const int MaximumLines = 5;
+        private readonly Texture2D _fontAtlas;
+        private readonly int[] _glyphWidths;
         private string[] _lines = [];
 
-        public bool IsReady => fontAtlas.GetSize() == new Vector2I(256, 256);
+        public RetailHudTextLayer(Texture2D fontAtlas)
+        {
+            _fontAtlas = fontAtlas;
+            _glyphWidths = MeasureGlyphWidths(fontAtlas.GetImage());
+        }
+
+        public bool IsReady =>
+            _fontAtlas.GetSize() == new Vector2I(256, 256) &&
+            _glyphWidths.Length == 96;
 
         public void Clear()
         {
@@ -606,14 +656,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
             for (int lineIndex = 0; lineIndex < _lines.Length; lineIndex++)
             {
                 string line = _lines[lineIndex];
+                float x = left;
                 for (int index = 0; index < line.Length; index++)
                 {
-                    DrawGlyph(line[index], left + (index * GlyphAdvance), top + (lineIndex * 15f));
+                    x += DrawGlyph(line[index], x, top + (lineIndex * 15f));
                 }
             }
         }
 
-        private void DrawGlyph(char character, float x, float y)
+        private int DrawGlyph(char character, float x, float y)
         {
             int code = character;
             if (code is < FirstGlyph or >= FirstGlyph + 96)
@@ -621,21 +672,54 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 code = '?';
             }
             int glyph = code - FirstGlyph;
+            int glyphWidth = _glyphWidths[glyph];
             var source = new Rect2(
                 (glyph % GlyphColumns) * GlyphCellSize,
                 (glyph / GlyphColumns) * GlyphCellSize,
-                GlyphCellSize,
+                glyphWidth,
                 GlyphCellSize);
             DrawTextureRectRegion(
-                fontAtlas,
-                new Rect2(x - 3f, y + 1f, GlyphCellSize, GlyphCellSize),
+                _fontAtlas,
+                new Rect2(x, y, glyphWidth, GlyphCellSize),
                 source,
-                new Color(0f, 0f, 0f, 0.75f));
+                Colors.Black);
             DrawTextureRectRegion(
-                fontAtlas,
-                new Rect2(x - 4f, y, GlyphCellSize, GlyphCellSize),
+                _fontAtlas,
+                new Rect2(x - 1f, y - 1f, glyphWidth, GlyphCellSize),
                 source,
-                new Color(0.96f, 0.97f, 1f, 0.96f));
+                Colors.White);
+            return glyphWidth + 1;
+        }
+
+        private static int[] MeasureGlyphWidths(Image image)
+        {
+            var widths = new int[96];
+            widths[0] = 8;
+            for (int glyph = 1; glyph < widths.Length; glyph++)
+            {
+                int cellX = (glyph % GlyphColumns) * GlyphCellSize;
+                int cellY = (glyph / GlyphColumns) * GlyphCellSize;
+                int rightmost = cellX;
+                for (int x = cellX + 14; x >= cellX; x--)
+                {
+                    bool occupied = false;
+                    for (int y = cellY; y < cellY + 15; y++)
+                    {
+                        if (image.GetPixel(x, y).A > (16f / 255f))
+                        {
+                            occupied = true;
+                            break;
+                        }
+                    }
+                    if (occupied)
+                    {
+                        rightmost = x;
+                        break;
+                    }
+                }
+                widths[glyph] = (rightmost - cellX) + 2;
+            }
+            return widths;
         }
 
         private void SetLines(string[] lines)
