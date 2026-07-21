@@ -255,6 +255,32 @@ public sealed class SimulationTests
             new SimInput(0, 0, LookX: 2).Validate);
         Assert.Throws<ArgumentOutOfRangeException>(
             new SimInput(0, 0, LookY: -2).Validate);
+        Assert.Throws<ArgumentOutOfRangeException>(
+            new SimInput(0, 0, LookXAnalogPermille: 1_001).Validate);
+        Assert.Throws<ArgumentOutOfRangeException>(
+            new SimInput(0, 0, LookYAnalogPermille: -1_001).Validate);
+    }
+
+    [Fact]
+    public void WalkerAnalogLook_IsProportionalAndUsesTheSameRetailCoast()
+    {
+        Simulation half = CreatePlayingSimulation();
+        Simulation full = CreatePlayingSimulation();
+
+        WorldSnapshot halfInput = half.Step(new SimInput(0, 0, LookXAnalogPermille: 500));
+        WorldSnapshot fullInput = full.Step(new SimInput(0, 0, LookXAnalogPermille: 1_000));
+
+        Assert.Equal(5_222, halfInput.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(10_444, fullInput.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(
+            halfInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad,
+            (fullInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad) / 2);
+
+        WorldSnapshot coast = half.Step(SimInput.Idle);
+        Assert.Equal(4_500, coast.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(
+            halfInput.FacingYawMicroRad + coast.WalkerYawVelocityMicroRadPerTick,
+            coast.FacingYawMicroRad);
     }
 
     [Fact]

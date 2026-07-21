@@ -276,6 +276,31 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void PointerMotion_PreservesMagnitudeAndRetailRecenteringCoast()
+    {
+        InteractiveSession session = CreatePlayingSession(1);
+        int startingYaw = session.CurrentSnapshot.FacingYawMicroRad;
+        const long oneCoreStepTicks =
+            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
+
+        session.QueuePointerMotionMilliPixels(80_000, -40_000);
+        FrameAdvanceResult first = session.AdvanceFrameTicks(oneCoreStepTicks);
+
+        Assert.Equal(3_812, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-721, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(startingYaw + 3_812, first.CurrentSnapshot.FacingYawMicroRad);
+        Assert.True(session.HasHeldOrPendingInput);
+
+        FrameAdvanceResult second = session.AdvanceFrameTicks(oneCoreStepTicks);
+
+        Assert.Equal(5_959, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-1_125, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(
+            first.CurrentSnapshot.FacingYawMicroRad + 5_959,
+            second.CurrentSnapshot.FacingYawMicroRad);
+    }
+
+    [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
         InteractiveSession session = CreatePlayingSession();
@@ -310,6 +335,7 @@ public sealed class InteractiveSessionTests
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
         session.QueueLookPulse(-1, -1);
+        session.QueuePointerMotionMilliPixels(-10_000, 10_000);
         session.QueueFirePulse();
 
         session.ReleaseAllInput();
@@ -330,12 +356,14 @@ public sealed class InteractiveSessionTests
         session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
         session.QueueMovementPulse(-1, -1);
         session.QueueLookPulse(-1, -1);
+        session.QueuePointerMotionMilliPixels(-10_000, 10_000);
         session.QueueFirePulse();
 
         session.SuspendInputUntilReleased();
         session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
         session.QueueMovementPulse(1, 0);
         session.QueueLookPulse(1, 0);
+        session.QueuePointerMotionMilliPixels(10_000, -10_000);
         session.QueueFirePulse();
         session.QueueToggleMode();
         session.QueueReset();

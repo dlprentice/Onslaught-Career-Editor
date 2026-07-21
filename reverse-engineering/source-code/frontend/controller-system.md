@@ -60,6 +60,29 @@ Note: these are safe to re-verify via address-level read-back after any Ghidra r
 - A third key-state vtable entry exists (`0x00514870`), which is not present in `references/Onslaught/Controller.h` (likely a release-edge table).
 - POV hat helpers exist (`0x005148b0`/`0x00514900`) and compute sin/cos from DirectInput POV degrees.
 
+### Steam mouse-axis mapping
+
+For mouse push types `0x0B..0x0E`, Steam `CController__DoMappings` at
+`0x0042DB40` computes the dispatched analogue axis as:
+
+```text
+clamp(g_MouseSensitivity * centeredCursorPixels * 0.004333333, -1, 1)
+```
+
+`Input__UpdateCursorCenterWithWindowScale` at `0x0042DA00` retains `10/17` of
+the centered displacement per 20 Hz update. This is a displacement with
+gradual recentering, not a sign-only mouse event. Stuart's player path routes the
+axes to `BattleEngine::Rotate` and `BattleEngine::Pitch`; the corresponding
+walker inputs add `axis * GroundTurnRate/75` and `axis/117`, after which the
+BattleEngine retains angular velocity by `0.8` per released update.
+
+A no-input control and two uninterrupted app-owned Level 100 copies configured
+with sensitivity `1.5` through copied `defaultoptions.bea` repeated the same
+pointer/movement sequence without focus loss. Both active runs produced the
+same sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and gait
+range `6.232587`. This bounds the released walker path for that sensitivity; it
+does not establish inversion, every sensitivity setting, or jet mouse response.
+
 ### Debug Keyboard Shortcuts
 
 **Source/internal mapping with Steam caveat:** These debug-key bindings exist in internal/source code; in the Steam retail build analyzed here, their gameplay handlers are not observed as active:

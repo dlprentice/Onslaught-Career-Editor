@@ -32,6 +32,17 @@ public sealed class InteractiveSession
     public const long PhaseUnitsPerStep = TimeSpan.TicksPerSecond;
     public const long MaximumFrameElapsedTicks = TimeSpan.TicksPerSecond / 4;
 
+    // Steam CController::DoMappings maps a centered mouse displacement with
+    // sensitivity 1.5 and scalar 0.004333333, then clamps the analogue axis.
+    // Input__UpdateCursorCenterWithWindowScale recenters by 10/17 at 20 Hz;
+    // 702049/1000000 is the time-equivalent retention at Core's 30 Hz step.
+    private const int PointerOffsetScale = 1_000;
+    private const int PointerOffsetRetentionNumerator = 702_049;
+    private const int PointerOffsetRetentionDenominator = 1_000_000;
+    private const int PointerAxisNumerator = 13;
+    private const int PointerAxisDenominator = 2_000;
+    private const int MaximumPointerOffsetMilliPixels = 1_000_000;
+
     private readonly Simulation _simulation;
     private InteractiveInput _input;
     private bool _toggleLevelWasHeld;
@@ -43,6 +54,8 @@ public sealed class InteractiveSession
     private sbyte _movementPulseZ;
     private sbyte _lookPulseX;
     private sbyte _lookPulseY;
+    private int _pointerOffsetXMilliPixels;
+    private int _pointerOffsetYMilliPixels;
     private bool _inputSuspendedUntilReleased;
     private long _interpolationPhase;
     private long _totalSteps;
@@ -80,6 +93,8 @@ public sealed class InteractiveSession
         _movementPulseZ != 0 ||
         _lookPulseX != 0 ||
         _lookPulseY != 0 ||
+        _pointerOffsetXMilliPixels != 0 ||
+        _pointerOffsetYMilliPixels != 0 ||
         _input.LookX != 0 ||
         _input.LookY != 0;
 
@@ -201,6 +216,22 @@ public sealed class InteractiveSession
         }
     }
 
+    public void QueuePointerMotionMilliPixels(int deltaX, int deltaY)
+    {
+        if (deltaX == 0 && deltaY == 0)
+        {
+            throw new ArgumentException("Pointer motion must contain a nonzero axis.");
+        }
+
+        if (_inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        _pointerOffsetXMilliPixels = AddPointerOffset(_pointerOffsetXMilliPixels, deltaX);
+        _pointerOffsetYMilliPixels = AddPointerOffset(_pointerOffsetYMilliPixels, deltaY);
+    }
+
     public void ReleaseAllInput()
     {
         ClearInputState();
@@ -225,6 +256,8 @@ public sealed class InteractiveSession
         _movementPulseZ = 0;
         _lookPulseX = 0;
         _lookPulseY = 0;
+        _pointerOffsetXMilliPixels = 0;
+        _pointerOffsetYMilliPixels = 0;
     }
 
     public FrameAdvanceResult AdvanceFrame(TimeSpan elapsed)
@@ -259,6 +292,10 @@ public sealed class InteractiveSession
             sbyte moveZ = _input.MoveZ;
             sbyte lookX = _input.LookX;
             sbyte lookY = _input.LookY;
+            _pointerOffsetXMilliPixels = RetainPointerOffset(_pointerOffsetXMilliPixels);
+            _pointerOffsetYMilliPixels = RetainPointerOffset(_pointerOffsetYMilliPixels);
+            short pointerLookX = ToPointerAxisPermille(_pointerOffsetXMilliPixels);
+            short pointerLookY = ToPointerAxisPermille(_pointerOffsetYMilliPixels);
             if (firstStep)
             {
                 if (moveX == 0)
@@ -322,10 +359,17 @@ public sealed class InteractiveSession
             }
 
             PreviousSnapshot = CurrentSnapshot;
-            // Held look is level-sampled every Core step; a short mouse delta is
-            // consumed once on the first available step.
+            // Held digital look is level-sampled. Pointer motion enters as a
+            // magnitude-preserving analogue axis and recenters across steps.
             CurrentSnapshot = _simulation.Step(
-                new SimInput(moveX, moveZ, actions, lookX, lookY));
+                new SimInput(
+                    moveX,
+                    moveZ,
+                    actions,
+                    lookX,
+                    lookY,
+                    pointerLookX,
+                    pointerLookY));
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;
@@ -338,5 +382,34 @@ public sealed class InteractiveSession
             PhaseUnitsPerStep,
             PreviousSnapshot,
             CurrentSnapshot);
+    }
+
+    private static int AddPointerOffset(int current, int delta)
+    {
+        long combined = (long)current + delta;
+        return (int)Math.Clamp(
+            combined,
+            -MaximumPointerOffsetMilliPixels,
+            MaximumPointerOffsetMilliPixels);
+    }
+
+    private static int RetainPointerOffset(int value)
+    {
+        long scaled = (long)value * PointerOffsetRetentionNumerator;
+        int retained = (int)(scaled >= 0
+            ? (scaled + (PointerOffsetRetentionDenominator / 2)) /
+                PointerOffsetRetentionDenominator
+            : (scaled - (PointerOffsetRetentionDenominator / 2)) /
+                PointerOffsetRetentionDenominator);
+        return Math.Abs(retained) < PointerOffsetScale / 2 ? 0 : retained;
+    }
+
+    private static short ToPointerAxisPermille(int offsetMilliPixels)
+    {
+        long scaled = (long)offsetMilliPixels * PointerAxisNumerator;
+        long rounded = scaled >= 0
+            ? (scaled + (PointerAxisDenominator / 2)) / PointerAxisDenominator
+            : (scaled - (PointerAxisDenominator / 2)) / PointerAxisDenominator;
+        return (short)Math.Clamp(rounded, -1_000, 1_000);
     }
 }

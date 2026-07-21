@@ -223,7 +223,8 @@ input was exactly `1/117` radian, coast retained `0.8`, and repeated held-input
 endpoints were `+0.5321228` and `-1.0911411..-1.0912496`. Two player-owned
 Pulse Cannon rounds then repeated the crosshair-derived unit direction within
 `0.00119` per component. These bounds apply to the authored start slope;
-terrain-relative limiting, mouse scaling, auto-aim, and
+terrain-relative limiting, mouse inversion and sensitivity settings other than
+the copied Steam `1.5` baseline, auto-aim, and
 vertical target collision are not claimed.
 
 `TargetZone1.msl` and `FiringRange.msl` each request a 0.5-second wait before

@@ -57,7 +57,7 @@ public static class ReplayRunner
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(Encoding.ASCII.GetBytes("ONSLAUGHT-REBUILD-TRACE"));
-            writer.Write(2);
+            writer.Write(3);
         }
 
         return stream.ToArray();
@@ -73,6 +73,9 @@ public static class ReplayRunner
             writer.Write(input.MoveX);
             writer.Write(input.MoveZ);
             writer.Write(input.LookX);
+            writer.Write(input.LookY);
+            writer.Write(input.LookXAnalogPermille);
+            writer.Write(input.LookYAnalogPermille);
             writer.Write((byte)input.Actions);
             writer.Write(stateBytes.Length);
             writer.Write(stateBytes);

@@ -305,8 +305,8 @@ public sealed class Simulation
 
         if (_mode == VehicleMode.Walker)
         {
-            UpdateWalkerYaw(input.LookX);
-            UpdateWalkerPitch(input.LookY);
+            UpdateWalkerYaw(input.LookX, input.LookXAnalogPermille);
+            UpdateWalkerPitch(input.LookY, input.LookYAnalogPermille);
             UpdateWalkerMovement(input);
             return;
         }
@@ -327,25 +327,31 @@ public sealed class Simulation
         MovePlayer(jetVelocity);
     }
 
-    private void UpdateWalkerYaw(sbyte lookX)
+    private void UpdateWalkerYaw(sbyte lookX, short analogPermille)
     {
+        int inputPermille = ResolveLookInputPermille(lookX, analogPermille);
         _walkerYawVelocityMicroRadPerTick =
             (int)((long)_walkerYawVelocityMicroRadPerTick *
                 SimulationConstants.WalkerYawRetentionNumerator /
                 SimulationConstants.WalkerYawRetentionDenominator) +
-            (lookX * SimulationConstants.WalkerYawInputMicroRadPerTick);
+            ScaleLookInput(
+                SimulationConstants.WalkerYawInputMicroRadPerTick,
+                inputPermille);
         _facingYawMicroRad = NormalizeMicroRad(
             _facingYawMicroRad + _walkerYawVelocityMicroRadPerTick);
         QuantizeFacingFromYaw();
     }
 
-    private void UpdateWalkerPitch(sbyte lookY)
+    private void UpdateWalkerPitch(sbyte lookY, short analogPermille)
     {
+        int inputPermille = ResolveLookInputPermille(lookY, analogPermille);
         _walkerPitchVelocityMicroRadPerTick =
             (int)((long)_walkerPitchVelocityMicroRadPerTick *
                 SimulationConstants.WalkerPitchRetentionNumerator /
                 SimulationConstants.WalkerPitchRetentionDenominator) +
-            (lookY * SimulationConstants.WalkerPitchInputMicroRadPerTick);
+            ScaleLookInput(
+                SimulationConstants.WalkerPitchInputMicroRadPerTick,
+                inputPermille);
 
         int nextPitch = _facingPitchMicroRad + _walkerPitchVelocityMicroRadPerTick;
         int clampedPitch = Math.Clamp(
@@ -357,6 +363,17 @@ public sealed class Simulation
         {
             _walkerPitchVelocityMicroRadPerTick = 0;
         }
+    }
+
+    private static int ResolveLookInputPermille(sbyte digital, short analog) =>
+        Math.Clamp((digital * 1_000) + analog, -1_000, 1_000);
+
+    private static int ScaleLookInput(int fullScale, int inputPermille)
+    {
+        long scaled = (long)fullScale * inputPermille;
+        return (int)(scaled >= 0
+            ? (scaled + 500) / 1_000
+            : (scaled - 500) / 1_000);
     }
 
     private void UpdateWalkerMovement(SimInput input)

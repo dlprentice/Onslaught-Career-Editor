@@ -130,7 +130,8 @@ retention translated to 30 Hz, with the two repeated absolute limits measured
 on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
 direction as the crosshair camera and begin at the measured cockpit `Gun`
 emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
-exact retail mouse sensitivity/response, terrain clipping,
+terrain clipping, mouse inversion and sensitivity settings other than the
+copied Steam `1.5` baseline,
 jet movement,
 jet-to-walker, transform animation, resource semantics, the rest of the weapon
 model, target mesh-part damage,

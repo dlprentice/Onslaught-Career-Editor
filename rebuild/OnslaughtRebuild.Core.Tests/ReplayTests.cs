@@ -188,6 +188,37 @@ public sealed class ReplayTests
     }
 
     [Fact]
+    public void CommandSpan_AnalogLook_RoundTripsAndRepeatsIdentically()
+    {
+        var source = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "analog-look",
+            1,
+            SimulationConstants.Level100PowerActivationTick + 2,
+            null,
+            null,
+            [new CommandSpan(
+                SimulationConstants.Level100PowerActivationTick,
+                1,
+                0,
+                0,
+                LookXAnalogPermille: 365,
+                LookYAnalogPermille: -183)]);
+
+        string json = CommandTapeCodec.Serialize(source);
+        CommandTape tape = CommandTapeCodec.Deserialize(json);
+        ReplayResult first = ReplayRunner.Run(tape);
+        ReplayResult second = ReplayRunner.Run(tape);
+
+        Assert.Equal(365, tape.Spans[0].LookXAnalogPermille);
+        Assert.Equal(-183, tape.Spans[0].LookYAnalogPermille);
+        Assert.Equal(first.FinalStateHash, second.FinalStateHash);
+        Assert.Equal(first.TraceHash, second.TraceHash);
+        Assert.NotEqual(SimulationConstants.Level100PlayerStartYawMicroRad, first.FinalState.FacingYawMicroRad);
+        Assert.NotEqual(0, first.FinalState.FacingPitchMicroRad);
+    }
+
+    [Fact]
     public void CommandSpan_MissingLookAxes_DefaultsToZero()
     {
         const string json = """
@@ -204,6 +235,8 @@ public sealed class ReplayTests
         CommandTape tape = CommandTapeCodec.Deserialize(json);
         Assert.Equal(0, tape.Spans[0].LookX);
         Assert.Equal(0, tape.Spans[0].LookY);
+        Assert.Equal(0, tape.Spans[0].LookXAnalogPermille);
+        Assert.Equal(0, tape.Spans[0].LookYAnalogPermille);
     }
 
     [Fact]

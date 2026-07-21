@@ -68,10 +68,13 @@ public readonly record struct SimInput(
     sbyte MoveZ,
     SimActions Actions = SimActions.None,
     sbyte LookX = 0,
-    sbyte LookY = 0)
+    sbyte LookY = 0,
+    short LookXAnalogPermille = 0,
+    short LookYAnalogPermille = 0)
 {
     // Fire may be held. UI adapters must edge-sample ToggleMode and Reset.
-    // LookX is body look left/right and LookY is screen up/down (−1/0/+1).
+    // LookX is body look left/right and LookY is screen up/down (-1/0/+1).
+    // Analog look is the deterministic -1000..1000 axis produced by an input adapter.
     public static SimInput Idle => new(0, 0);
 
     public bool HasAction(SimActions action) => (Actions & action) != 0;
@@ -96,6 +99,20 @@ public readonly record struct SimInput(
         if (LookY is < -1 or > 1)
         {
             throw new ArgumentOutOfRangeException(nameof(LookY), "LookY must be -1, 0, or 1.");
+        }
+
+        if (LookXAnalogPermille is < -1_000 or > 1_000)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(LookXAnalogPermille),
+                "LookXAnalogPermille must be between -1000 and 1000.");
+        }
+
+        if (LookYAnalogPermille is < -1_000 or > 1_000)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(LookYAnalogPermille),
+                "LookYAnalogPermille must be between -1000 and 1000.");
         }
 
         const SimActions known = SimActions.ToggleMode | SimActions.Fire | SimActions.Reset;

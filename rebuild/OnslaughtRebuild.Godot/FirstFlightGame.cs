@@ -132,11 +132,25 @@ public sealed partial class FirstFlightGame : Node3D
 
         if (inputEvent is InputEventMouseMotion mouseMotion)
         {
-            sbyte lookX = QuantizeAxis(mouseMotion.ScreenRelative.X);
-            sbyte lookY = QuantizeAxis(mouseMotion.ScreenRelative.Y);
-            if (lookX != 0 || lookY != 0)
+            if (_session.CurrentSnapshot.Mode == VehicleMode.Walker &&
+                _session.CurrentSnapshot.Transition == VehicleTransition.None)
             {
-                _session.QueueLookPulse(lookX, lookY);
+                int deltaX = ToMilliPixels(mouseMotion.ScreenRelative.X);
+                int deltaY = ToMilliPixels(mouseMotion.ScreenRelative.Y);
+                if (deltaX != 0 || deltaY != 0)
+                {
+                    _session.QueuePointerMotionMilliPixels(deltaX, deltaY);
+                }
+            }
+            else
+            {
+                sbyte lookX = QuantizeAxis(mouseMotion.ScreenRelative.X);
+                sbyte lookY = QuantizeAxis(mouseMotion.ScreenRelative.Y);
+                if (lookX != 0 || lookY != 0)
+                {
+                    // Jet input remains on its existing provisional digital path.
+                    _session.QueueLookPulse(lookX, lookY);
+                }
             }
             return;
         }
@@ -298,6 +312,12 @@ public sealed partial class FirstFlightGame : Node3D
         };
     }
 
+    private static int ToMilliPixels(float value) =>
+        (int)Math.Clamp(
+            Math.Round(value * 1_000f, MidpointRounding.AwayFromZero),
+            -1_000_000d,
+            1_000_000d);
+
     private static void ApplySyntheticInput(InteractiveInput input)
     {
         SetSyntheticAction(MoveLeftAction, input.MoveX < 0);
@@ -416,12 +436,14 @@ public sealed partial class FirstFlightGame : Node3D
         _session.ObserveInput(heldInput);
         _session.QueueMovementPulse(-1, -1);
         _session.QueueLookPulse(-1, -1);
+        _session.QueuePointerMotionMilliPixels(-10_000, 10_000);
         _session.QueueFirePulse();
 
         _Notification((int)NotificationWMWindowFocusOut);
         _session.ObserveInput(heldInput);
         _session.QueueMovementPulse(1, 0);
         _session.QueueLookPulse(1, 0);
+        _session.QueuePointerMotionMilliPixels(10_000, -10_000);
         _session.QueueFirePulse();
         _session.QueueToggleMode();
         _session.QueueReset();

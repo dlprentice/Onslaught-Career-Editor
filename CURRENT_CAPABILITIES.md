@@ -172,8 +172,11 @@ and a Pulse Cannon direction matching the crosshair-derived yaw/pitch vector
 within `0.00119` per component. Godot now pitches the retained retail cockpit
 and camera and renders the resulting three-dimensional Core projectile path.
 It also follows the released input ownership: `WASD` and arrow keys move the
-Battle Engine, while mouse or trackpad motion owns look and aim. Exact retail
-mouse sensitivity and response scaling are not claimed.
+Battle Engine, while mouse or trackpad motion owns look and aim. At copied
+Steam sensitivity `1.5`, the Godot adapter preserves pointer magnitude, applies
+the released centered-offset mapping and recentering rate, and feeds Core's
+released inertial walker yaw/pitch response. Other sensitivity settings,
+inversion, and jet mouse response are not yet claimed.
 Core retains the previously measured
 16-tick walker-to-jet transition, but the clean opening's flight gate keeps it
 unavailable until later tutorial progression is implemented. The

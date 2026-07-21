@@ -149,15 +149,18 @@ support the interpretation. Core consumes rounded `2.574` and `8.434` contact
 envelopes only; these are not general mesh bounds, arbitrary actor collision,
 or facility-destruction behavior.
 
-A separate idle Level 100 control held `(288.6875, 243.25, -12.111499)` for
-12 seconds with zero velocity, raw walker state `2`, and no terrain-slide flag.
-Two fresh mouse-axis forward runs repeated their first twelve released update
-states exactly before host-input cadence diverged. The route held zero vertical
-velocity, zero pitch/roll, and no terrain-slide flag; at three retained
-checkpoints, sampled units `-11153`, `-11161`, and `-11469` plus Stuart's
-1.9-unit `COfGHeight` reproduced the observed Z values. This establishes
-grounded height following on that route, not steep-slope sliding, body tilt, or
-arbitrary terrain collision.
+A fresh no-input Level 100 control held
+`(288.6875, 243.25, -12.111499)` with zero velocity and unchanged yaw, pitch,
+and gait phase. Two fresh copies then repeated the same uninterrupted pointer,
+forward, coast, and strafe sequence. Both active runs ended at the same sampled
+position, yaw, and pitch and traversed a `6.232587`-radian gait-phase range.
+Steam `CBattleEngineWalkerPart::UpdateWalkCycle` at `0x00412AD0` corroborates
+the retained authored-cycle rule: dominant local forward velocity advances the
+phase by `2.5`, dominant local strafe by `3.0`, with wrapping at `±π`. The
+released mech controller's sampled ground normal remained
+`(0, 0, -0.99999976)` throughout this short route. This establishes the current
+gait phase and flat-route grounding, not the controller's arbitrary-slope foot
+solving, body tilt, or steep-slope behavior.
 
 A pair of fresh, uninterrupted, no-input app-owned Level 100 runs repeated the
 same released opening-camera lifecycle. At event time `3.0`, Steam installed a
@@ -212,18 +215,25 @@ BattleEngine yaw/pitch values predict
 `(-sin(yaw)cos(pitch), cos(yaw)cos(pitch), sin(pitch))` with maximum component
 error `0.00119`. Core consumes the 30 Hz time-equivalent pitch input `0.003938`,
 retention `0.861774`, the bounded start-slope endpoints, and that three-axis
-shot direction. Terrain-relative limits, mouse scaling, auto-aim, and vertical
+shot direction. Terrain-relative limits, mouse inversion, auto-aim, and vertical
 target collision remain unimplemented. The setup patch,
 copies, and raw samples were disposable.
 
 The copied Steam options bind Movement Forward/Backward/Left/Right to both
 `WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the
-mouse axes. A fresh no-input control held position
-`(288.6875, 243.25, -12.111499)`, yaw `0.50983`, and pitch `0` exactly steady
-for 1.205 seconds. One bounded mouse delta then left position unchanged while
-yaw changed to `-0.93120325` and pitch to `0.4867003`. The Godot adapter follows
-that input ownership; exact Steam sensitivity and mouse-response scaling remain
-unclaimed.
+mouse axes. Steam `CController::DoMappings` at `0x0042DB40` maps each centered
+cursor displacement as `clamp(sensitivity * pixels * 0.004333333, -1, 1)`;
+`Input::UpdateCursorCenterWithWindowScale` at `0x0042DA00` retains `10/17` of
+that displacement per 20 Hz update. Stuart's player and BattleEngine paths
+corroborate that the resulting analogue axes add walker yaw at
+`GroundTurnRate/75`, pitch at `1/117`, and then retain angular velocity by
+`0.8`. One no-input control and two fresh uninterrupted copies configured only
+through `defaultoptions.bea` repeated the same sensitivity-`1.5` pointer and
+movement sequence without focus loss; both active runs produced the same
+sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and checkpoint
+states. The Godot adapter consumes that bounded proportional mapping at its
+30 Hz fixed step. Other sensitivity values, inversion, and jet mouse response
+remain unproven.
 
 Separately, a disposable expected-byte-only change to the player constructor's
 preferred-view immediate
