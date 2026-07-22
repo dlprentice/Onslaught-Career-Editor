@@ -229,6 +229,47 @@ camera-space reflection, and alpha-overlay passes with each texture's serialized
 `TEXB` parameters. Released material modes disabled by the live Level 100
 renderer remain disabled.
 
+The nearby compared facility is base-world ordinal 1, `Tank Factory`, backed by
+`m_fb_tank_factory.msh.aya`. Its four material assignments are exactly
+`(0,-,1,-,-,-)`, `(2,-,1,-,-,-)`, `(4,-,3,-,-,-)`, and
+`(6,-,5,-,-,-)`: the ordinary base texture is in slot 0, the matching
+`meshtex\Chrome3.tga` record is in reflection slot 2, and the other slots are
+`0xFFFFFFFF`. Every Chrome3 `TEXB` record has strength
+`0.19999998807907104`, zero offset, and unit scale. The valid texels in every
+Chrome3 mip are opaque, and all 2,457 facility vertices have diffuse alpha
+`255`. `CMeshRenderer__RenderMeshWithLayerPasses` (`0x0054D530`) therefore
+rounds `255 * strength` to `51`; the binary initializes the secondary-pass
+percentage to `100`, so `CVBufTexture__SetupSecondaryBlend` (`0x00558EF0`)
+publishes `D3DRS_TEXTUREFACTOR = 0x33FFFFFF` on this path.
+
+Mode 2 is a later draw of the same geometry, not an emissive texture mixed into
+the base draw. It retains stage 0 `COLOROP=MODULATE2X` with
+`TEXTURE,DIFFUSE`, stage 0 `ALPHAOP=MODULATE` with `TEXTURE,DIFFUSE`, and then
+uses stage 1 `MODULATE` with `CURRENT,TFACTOR`; the white texture-factor RGB
+leaves color unchanged while its byte alpha scales source alpha. The framebuffer
+blend is `SRCALPHA,INVSRCALPHA`. In normalized notation, the compared facility
+therefore uses `Cr=saturate(2*Tchrome.rgb*Dlit.rgb)`,
+`Ar=Tchrome.a*Dlit.a*(51/255)`, and
+`C=Ar*Cr+(1-Ar)*Cbase`. Texture-stage results saturate to `[0,1]`; the
+application-provided factor is exactly 8-bit, while further internal combiner
+fractional precision is device-owned rather than encoded by BEA. The client
+accordingly quantizes the factor and saturates the operation without inventing
+additional byte-rounding steps.
+
+`CVBufTexture__RenderModePass` (`0x005588F0`) selects
+`D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR`, `COUNT2`, and the released matrix
+`diag(0.5,-0.5,1,1)` with translation `(0.5,0.5,0)`, producing
+`(0.5*R.x+0.5,-0.5*R.y+0.5)` from the per-vertex camera-space reflection
+vector. The draw inherits the world stage-0 sampler: wrapping U/V, linear
+magnification and mip interpolation, anisotropic minification capped at 4, and
+mip LOD bias `-1`. The D3D8 path has no sRGB texture read/write state, so its
+texture arithmetic is on encoded channel values; `retail_output` performs only
+the transfer required by Godot's active output contract. Released exponential
+fog is applied after the texture cascade and before target blending. Applying
+that same fog once after the client's source-alpha composition is algebraically
+identical for these coplanar passes because both draws share depth, fog factor,
+and fog color.
+
 The Core origin is the released player-one start `(288.6875, 243.25)` in the
 world's horizontal X/Y plane. The current slice consumes:
 

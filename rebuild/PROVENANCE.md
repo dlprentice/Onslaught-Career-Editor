@@ -122,9 +122,16 @@ order; `CDXMeshVB__Load` (`0x0054E160`) treats only `0xFFFFFFFF` as absent.
 Controlled Level 100 runtime state enabled modes `0`, `1`, `2`, and `4` while
 disabling modes `3` and `5`. `CVBufTexture__RenderModePass` establishes mode 1
 as model-space `DOTPRODUCT3`, mode 2 as camera-space reflection coordinates with
-the released half-scale/offset matrix and texture-strength alpha, and mode 4 as
-the regular-UV alpha overlay using the serialized `TEXB` offset and scale. Its
-special base path tests `CTexture +0xB4`, disables alpha test/blending, and uses
+the released half-scale/offset matrix, and mode 4 as the regular-UV alpha overlay
+using the serialized `TEXB` offset and scale. For the Level 100 Tank Factory,
+all four material groups own `Chrome3` in slot 2 at serialized strength
+`0.19999998807907104`. Mode 2 is a separate draw which retains the active lit
+stage-0 `MODULATE2X`; stage 1 multiplies its otherwise-opaque source alpha by
+the byte-quantized `0x33FFFFFF` texture factor before
+`SRCALPHA`/`INVSRCALPHA` framebuffer blending. It inherits the world's wrapping,
+linear-mip, anisotropic stage-0 sampler and `-1` LOD bias. The client preserves
+that encoded-channel, saturating equation rather than blending raw Chrome3 RGB.
+Its special base path tests `CTexture +0xB4`, disables alpha test/blending, and uses
 `BLENDTEXTUREALPHA`; parsing all 273 Level 100 `DXTX/CTEX` records identifies only
 `meshtex\\A8_FB_hangermorebits_lit.tga` for that path. The client therefore blends
 that texture over the lit current color while retaining normal alpha cutouts for

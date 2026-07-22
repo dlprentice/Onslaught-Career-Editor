@@ -612,7 +612,7 @@ internal static class RetailFixedFunctionMaterial
 
         uniform sampler2D base_texture : filter_linear_mipmap_anisotropic, repeat_enable;
         uniform sampler2D dot3_texture : filter_linear_mipmap, repeat_enable;
-        uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_disable;
+        uniform sampler2D reflection_texture : filter_linear_mipmap_anisotropic, repeat_enable;
         uniform sampler2D overlay_texture : filter_linear_mipmap, repeat_enable;
         uniform float has_dot3;
         uniform float has_reflection;
@@ -620,7 +620,7 @@ internal static class RetailFixedFunctionMaterial
         uniform float base_blend_texture_alpha;
         uniform vec2 dot3_offset;
         uniform vec2 dot3_scale;
-        uniform float reflection_opacity;
+        uniform float reflection_factor_alpha;
         uniform vec2 overlay_offset;
         uniform vec2 overlay_scale;
         uniform float overlay_opacity;
@@ -671,8 +671,8 @@ internal static class RetailFixedFunctionMaterial
         }
 
         void fragment() {
-            // Steam's high static-world pass applies a -1 mip bias only to
-            // stage zero; later material stages retain their default bias.
+            // Steam's high static-world renderer applies a -1 mip bias to
+            // hardware stage zero.
             vec4 texture_color = texture(base_texture, UV, -1.0);
             if (base_blend_texture_alpha < 0.5 && texture_color.a < 0.5) {
                 discard;
@@ -700,12 +700,24 @@ internal static class RetailFixedFunctionMaterial
             }
 
             if (has_reflection > 0.5) {
-                vec4 reflection_color = texture(reflection_texture, reflection_uv);
+                // Mode 2 is another stage-zero world draw. It inherits the
+                // lit MODULATE2X color operation and stage-zero sampler state;
+                // stage one only scales its alpha with texture factor.
+                vec4 reflection_color = texture(
+                    reflection_texture,
+                    reflection_uv,
+                    -1.0);
+                vec3 reflection_stage_color = min(
+                    reflection_color.rgb * vertex_light_color * 2.0,
+                    vec3(1.0));
                 float reflection_alpha = clamp(
-                    reflection_color.a * reflection_opacity,
+                    reflection_color.a * reflection_factor_alpha,
                     0.0,
                     1.0);
-                retail_color = mix(retail_color, reflection_color.rgb, reflection_alpha);
+                retail_color = mix(
+                    retail_color,
+                    reflection_stage_color,
+                    reflection_alpha);
             }
 
             if (has_overlay > 0.5) {
@@ -765,7 +777,9 @@ internal static class RetailFixedFunctionMaterial
             baseLayer.BlendTextureAlpha ? 1f : 0f);
         material.SetShaderParameter("dot3_offset", dot3Layer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("dot3_scale", dot3Layer?.Scale ?? Vector2.One);
-        material.SetShaderParameter("reflection_opacity", reflectionLayer?.Opacity ?? 0f);
+        material.SetShaderParameter(
+            "reflection_factor_alpha",
+            ToTextureFactorAlpha(reflectionLayer?.Opacity ?? 0f));
         material.SetShaderParameter("overlay_offset", overlayLayer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("overlay_scale", overlayLayer?.Scale ?? Vector2.One);
         material.SetShaderParameter("overlay_opacity", overlayLayer?.Opacity ?? 0f);
@@ -785,4 +799,13 @@ internal static class RetailFixedFunctionMaterial
         ((rgb >> 16) & 0xFF) / divisor,
         ((rgb >> 8) & 0xFF) / divisor,
         (rgb & 0xFF) / divisor);
+
+    private static float ToTextureFactorAlpha(float strength)
+    {
+        int alpha = Math.Clamp(
+            (int)MathF.Round(strength * byte.MaxValue, MidpointRounding.ToEven),
+            byte.MinValue,
+            byte.MaxValue);
+        return alpha / (float)byte.MaxValue;
+    }
 }
