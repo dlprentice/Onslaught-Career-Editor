@@ -5,6 +5,13 @@ using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
+internal readonly record struct Level100TerrainTileSelection(
+    int TileX,
+    int TileY,
+    int GeometryLevel,
+    int TextureLevel,
+    int EdgeFlags);
+
 internal sealed class Level100HeightFieldAsset
 {
     public const float PlayerStartX =
@@ -17,11 +24,30 @@ internal sealed class Level100HeightFieldAsset
         Level100Terrain.PlayerStartReferenceElevationMillimeters / 1_000f;
 
     private const int TileCountPerAxis = 64;
+    private const int TileCount = TileCountPerAxis * TileCountPerAxis;
     private const int TileWidth = 8;
-    private const int MapExtent = TileCountPerAxis * TileWidth;
-    private const int HighDetailVertexCountPerAxis = MapExtent + 1;
+    private const int RootGeometryLevel = -1;
+    private const float CameraSmoothing = 0.03f;
+    private const float FinestGeometryRadiusSquared = 32f * 32f;
+    private const float RootTextureRadiusSquared = 128f * 128f;
+
+    // CLandscapeIB edge bits: top, right, bottom, left.
+    private const int StitchTop = 1;
+    private const int StitchRight = 2;
+    private const int StitchBottom = 4;
+    private const int StitchLeft = 8;
 
     private readonly Level100Terrain _terrain;
+    private readonly float[] _tileComplexity = new float[TileCount];
+    private readonly float[] _tileMidHeight = new float[TileCount];
+    private readonly int[] _geometryLevels = new int[TileCount];
+    private readonly int[] _textureLevels = new int[TileCount];
+    private readonly int[] _edgeFlags = new int[TileCount];
+    private readonly List<Level100TerrainTileSelection> _selections = new(TileCount);
+    private bool _hasSmoothedCamera;
+    private Vector3 _smoothedCamera;
+    private Vector3 _smoothedForward;
+    private ulong _meshSignature;
 
     private Level100HeightFieldAsset(Level100Terrain terrain)
     {
@@ -49,14 +75,36 @@ internal sealed class Level100HeightFieldAsset
             beaLightDirection.X,
             -beaLightDirection.Z,
             -beaLightDirection.Y);
-        Mesh = BuildHighDetailMesh();
+
+        for (int tileY = 0; tileY < TileCountPerAxis; tileY++)
+        {
+            for (int tileX = 0; tileX < TileCountPerAxis; tileX++)
+            {
+                int tileIndex = TileIndex(tileX, tileY);
+                _tileComplexity[tileIndex] = terrain.GetTileComplexityScore(tileX, tileY);
+                int minimum = int.MaxValue;
+                int maximum = int.MinValue;
+                for (int localY = 0; localY <= TileWidth; localY++)
+                {
+                    for (int localX = 0; localX <= TileWidth; localX++)
+                    {
+                        int sample = terrain.SampleGridHeightUnits(
+                            (tileX * TileWidth) + localX,
+                            (tileY * TileWidth) + localY);
+                        minimum = Math.Min(minimum, sample);
+                        maximum = Math.Max(maximum, sample);
+                    }
+                }
+                _tileMidHeight[tileIndex] = ((minimum + maximum) * 0.5f) * terrain.HeightScale;
+            }
+        }
     }
 
-    public ArrayMesh Mesh { get; }
+    public ArrayMesh Mesh { get; } = new();
 
-    public int VertexCount => HighDetailVertexCountPerAxis * HighDetailVertexCountPerAxis;
+    public int VertexCount { get; private set; }
 
-    public int TriangleCount => MapExtent * MapExtent * 2;
+    public int TriangleCount { get; private set; }
 
     public byte MixerSet { get; }
 
@@ -93,66 +141,337 @@ internal sealed class Level100HeightFieldAsset
     public float SampleRelativeHeight(float relativeX, float relativeZ) =>
         PlayerStartElevation - SampleRetailHeight(relativeX + PlayerStartX, relativeZ + PlayerStartZ);
 
-    private ArrayMesh BuildHighDetailMesh()
+    public IReadOnlyList<Level100TerrainTileSelection> Update(Camera3D camera)
     {
-        var vertices = new Vector3[VertexCount];
-        var normals = new Vector3[VertexCount];
-        var textureCoordinates = new Vector2[VertexCount];
-        var indices = new int[TriangleCount * 3];
+        Vector3 cameraPosition = camera.GlobalPosition;
+        Vector3 cameraForward = -camera.GlobalTransform.Basis.Z;
+        var retailCamera = new Vector3(
+            cameraPosition.X + PlayerStartX,
+            PlayerStartZ - cameraPosition.Z,
+            PlayerStartElevation - cameraPosition.Y);
+        var retailForward = new Vector3(
+            cameraForward.X,
+            -cameraForward.Z,
+            -cameraForward.Y);
 
-        int vertexIndex = 0;
-        for (int z = 0; z <= MapExtent; z++)
+        if (!_hasSmoothedCamera)
         {
-            for (int x = 0; x <= MapExtent; x++)
-            {
-                float height = PlayerStartElevation - SampleGridRetailHeight(x, z);
-                vertices[vertexIndex] = new Vector3(x - PlayerStartX, height, PlayerStartZ - z);
+            _smoothedCamera = retailCamera;
+            _smoothedForward = retailForward;
+            _hasSmoothedCamera = true;
+        }
+        else
+        {
+            _smoothedCamera = _smoothedCamera.Lerp(retailCamera, CameraSmoothing);
+            _smoothedForward = _smoothedForward.Lerp(retailForward, CameraSmoothing);
+        }
 
-                int leftX = Math.Max(0, x - 1);
-                int rightX = Math.Min(MapExtent, x + 1);
-                int backZ = Math.Max(0, z - 1);
-                int forwardZ = Math.Min(MapExtent, z + 1);
-                float left = SampleGridRetailHeight(leftX, z);
-                float right = SampleGridRetailHeight(rightX, z);
-                float back = SampleGridRetailHeight(x, backZ);
-                float forward = SampleGridRetailHeight(x, forwardZ);
-                normals[vertexIndex] = new Vector3(
-                    (right - left) / (rightX - leftX),
-                    1f,
-                    (back - forward) / (forwardZ - backZ)).Normalized();
-                textureCoordinates[vertexIndex] = new Vector2(
-                    x / (float)MapExtent,
-                    z / (float)MapExtent);
-                vertexIndex++;
+        SelectTiles();
+        ulong signature = ComputeSignature();
+        if (signature != _meshSignature || Mesh.GetSurfaceCount() == 0)
+        {
+            BuildSelectedMesh();
+            _meshSignature = signature;
+        }
+        return _selections;
+    }
+
+    private void SelectTiles()
+    {
+        for (int tileY = 0; tileY < TileCountPerAxis; tileY++)
+        {
+            for (int tileX = 0; tileX < TileCountPerAxis; tileX++)
+            {
+                int tileIndex = TileIndex(tileX, tileY);
+                float offsetX = ((tileX * TileWidth) + (TileWidth * 0.5f)) - _smoothedCamera.X;
+                float offsetY = ((tileY * TileWidth) + (TileWidth * 0.5f)) - _smoothedCamera.Y;
+                float offsetHeight = _tileMidHeight[tileIndex] - _smoothedCamera.Z;
+                float distanceSquared =
+                    (offsetX * offsetX) +
+                    (offsetY * offsetY) +
+                    (offsetHeight * offsetHeight);
+
+                float projectedSize = 8f;
+                if (distanceSquared >= FinestGeometryRadiusSquared)
+                {
+                    projectedSize =
+                        (256f + _tileComplexity[tileIndex]) /
+                        MathF.Sqrt(distanceSquared);
+                }
+                int roundedSize = Math.Clamp((int)MathF.Round(projectedSize), 0, 8);
+                int geometryLevel = roundedSize switch
+                {
+                    <= 1 => RootGeometryLevel,
+                    <= 3 => 0,
+                    <= 7 => 1,
+                    _ => 2,
+                };
+                _geometryLevels[tileIndex] = geometryLevel;
+                _textureLevels[tileIndex] = geometryLevel == RootGeometryLevel
+                    ? 0
+                    : SelectTextureLevel(offsetX, offsetY, offsetHeight, distanceSquared);
             }
         }
 
-        int index = 0;
-        for (int z = 0; z < MapExtent; z++)
+        Array.Clear(_edgeFlags);
+        for (int tileY = 0; tileY < TileCountPerAxis; tileY++)
         {
-            for (int x = 0; x < MapExtent; x++)
+            for (int tileX = 0; tileX < TileCountPerAxis; tileX++)
             {
-                int topLeft = (z * HighDetailVertexCountPerAxis) + x;
-                int bottomLeft = topLeft + HighDetailVertexCountPerAxis;
-                indices[index++] = topLeft;
-                indices[index++] = bottomLeft;
-                indices[index++] = topLeft + 1;
-                indices[index++] = topLeft + 1;
-                indices[index++] = bottomLeft;
-                indices[index++] = bottomLeft + 1;
+                int tileIndex = TileIndex(tileX, tileY);
+                int level = _geometryLevels[tileIndex];
+                if (level == RootGeometryLevel)
+                {
+                    continue;
+                }
+
+                int flags = 0;
+                if (tileY > 0 && _geometryLevels[TileIndex(tileX, tileY - 1)] < level)
+                {
+                    flags |= StitchTop;
+                }
+                if (tileX + 1 < TileCountPerAxis &&
+                    _geometryLevels[TileIndex(tileX + 1, tileY)] < level)
+                {
+                    flags |= StitchRight;
+                }
+                if (tileY + 1 < TileCountPerAxis &&
+                    _geometryLevels[TileIndex(tileX, tileY + 1)] < level)
+                {
+                    flags |= StitchBottom;
+                }
+                if (tileX > 0 && _geometryLevels[TileIndex(tileX - 1, tileY)] < level)
+                {
+                    flags |= StitchLeft;
+                }
+                _edgeFlags[tileIndex] = flags;
+            }
+        }
+
+        _selections.Clear();
+        for (int tileY = 0; tileY < TileCountPerAxis; tileY++)
+        {
+            for (int tileX = 0; tileX < TileCountPerAxis; tileX++)
+            {
+                int tileIndex = TileIndex(tileX, tileY);
+                _selections.Add(new Level100TerrainTileSelection(
+                    tileX,
+                    tileY,
+                    _geometryLevels[tileIndex],
+                    _textureLevels[tileIndex],
+                    _edgeFlags[tileIndex]));
+            }
+        }
+    }
+
+    private int SelectTextureLevel(
+        float offsetX,
+        float offsetY,
+        float offsetHeight,
+        float distanceSquared)
+    {
+        if (distanceSquared > RootTextureRadiusSquared)
+        {
+            return 0;
+        }
+
+        float verticalTerm = Math.Max((offsetHeight * offsetHeight) - 64f, 0f);
+        if (ShiftedDistanceSquared(offsetX, offsetY, verticalTerm, 60f) >= 64f * 64f)
+        {
+            return 1;
+        }
+        if (ShiftedDistanceSquared(offsetX, offsetY, verticalTerm, 28f) >= 32f * 32f)
+        {
+            return 2;
+        }
+        if (ShiftedDistanceSquared(offsetX, offsetY, verticalTerm, 12f) >= 16f * 16f)
+        {
+            return 3;
+        }
+        return 4;
+    }
+
+    private float ShiftedDistanceSquared(
+        float offsetX,
+        float offsetY,
+        float verticalTerm,
+        float forwardDistance)
+    {
+        float shiftedX = offsetX - (_smoothedForward.X * forwardDistance);
+        float shiftedY = offsetY - (_smoothedForward.Y * forwardDistance);
+        return (shiftedX * shiftedX) + (shiftedY * shiftedY) + verticalTerm;
+    }
+
+    private ulong ComputeSignature()
+    {
+        const ulong offsetBasis = 14_695_981_039_346_656_037UL;
+        const ulong prime = 1_099_511_628_211UL;
+        ulong result = offsetBasis;
+        for (int index = 0; index < TileCount; index++)
+        {
+            result ^= (uint)(_geometryLevels[index] + 1);
+            result *= prime;
+            result ^= (uint)_textureLevels[index];
+            result *= prime;
+            result ^= (uint)_edgeFlags[index];
+            result *= prime;
+        }
+        return result;
+    }
+
+    private void BuildSelectedMesh()
+    {
+        var vertices = new List<Vector3>(40_000);
+        var textureCoordinates = new List<Vector2>(40_000);
+        var textureLevels = new List<Vector2>(40_000);
+        var indices = new List<int>(120_000);
+
+        foreach (Level100TerrainTileSelection selection in _selections)
+        {
+            int step = selection.GeometryLevel == RootGeometryLevel
+                ? TileWidth
+                : 4 >> selection.GeometryLevel;
+            int cellCount = TileWidth / step;
+            int vertexCountPerAxis = cellCount + 1;
+            int baseVertex = vertices.Count;
+            int retailOriginX = selection.TileX * TileWidth;
+            int retailOriginY = selection.TileY * TileWidth;
+
+            for (int localY = 0; localY <= cellCount; localY++)
+            {
+                int retailY = retailOriginY + (localY * step);
+                for (int localX = 0; localX <= cellCount; localX++)
+                {
+                    int retailX = retailOriginX + (localX * step);
+                    float height = PlayerStartElevation - SampleGridRetailHeight(retailX, retailY);
+                    vertices.Add(new Vector3(
+                        retailX - PlayerStartX,
+                        height,
+                        PlayerStartZ - retailY));
+                    textureCoordinates.Add(new Vector2(retailX, retailY));
+                    textureLevels.Add(new Vector2(selection.TextureLevel, 0f));
+                }
+            }
+
+            foreach (int localIndex in BuildRetailTileIndices(
+                         cellCount,
+                         selection.EdgeFlags))
+            {
+                indices.Add(baseVertex + localIndex);
             }
         }
 
         var arrays = new Godot.Collections.Array();
         arrays.Resize((int)Godot.Mesh.ArrayType.Max);
-        arrays[(int)Godot.Mesh.ArrayType.Vertex] = vertices;
-        arrays[(int)Godot.Mesh.ArrayType.Normal] = normals;
-        arrays[(int)Godot.Mesh.ArrayType.TexUV] = textureCoordinates;
-        arrays[(int)Godot.Mesh.ArrayType.Index] = indices;
+        arrays[(int)Godot.Mesh.ArrayType.Vertex] = vertices.ToArray();
+        arrays[(int)Godot.Mesh.ArrayType.TexUV] = textureCoordinates.ToArray();
+        arrays[(int)Godot.Mesh.ArrayType.TexUV2] = textureLevels.ToArray();
+        arrays[(int)Godot.Mesh.ArrayType.Index] = indices.ToArray();
 
-        var mesh = new ArrayMesh();
-        mesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays);
-        return mesh;
+        Mesh.ClearSurfaces();
+        Mesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays);
+        VertexCount = vertices.Count;
+        TriangleCount = indices.Count / 3;
+    }
+
+    private static int[] BuildRetailTileIndices(
+        int cellCount,
+        int edgeFlags)
+    {
+        int vertexCountPerAxis = cellCount + 1;
+        var working = new int[cellCount * cellCount * 6];
+        int write = 0;
+        for (int localY = 0; localY < cellCount; localY++)
+        {
+            for (int localX = 0; localX < cellCount; localX++)
+            {
+                int topLeft = (localY * vertexCountPerAxis) + localX;
+                int bottomLeft = topLeft + vertexCountPerAxis;
+                int bottomRight = bottomLeft + 1;
+                working[write++] = topLeft;
+                working[write++] = bottomLeft;
+                working[write++] = bottomRight;
+                working[write++] = topLeft;
+                working[write++] = bottomRight;
+                working[write++] = topLeft + 1;
+            }
+        }
+
+        if ((edgeFlags & StitchTop) != 0)
+        {
+            int cursor = 6;
+            for (int pair = 0; pair < cellCount / 2; pair++)
+            {
+                working[cursor - 1]++;
+                working[cursor]++;
+                ClearTriangle(working, cursor + 3);
+                cursor += 12;
+            }
+        }
+
+        if ((edgeFlags & StitchRight) != 0)
+        {
+            int cursor = (cellCount * 6) - 6;
+            for (int pair = 0; pair < cellCount / 2; pair++)
+            {
+                working[cursor + 2] -= vertexCountPerAxis;
+                working[cursor + (cellCount * 6) + 5] -= vertexCountPerAxis;
+                ClearTriangle(working, cursor + 3);
+                cursor += cellCount * 12;
+            }
+            if ((edgeFlags & StitchTop) != 0)
+            {
+                ClearTriangle(working, (cellCount * 6) - 6);
+            }
+        }
+
+        if ((edgeFlags & StitchLeft) != 0)
+        {
+            int cursor = 0;
+            for (int pair = 0; pair < cellCount / 2; pair++)
+            {
+                working[cursor + 1] += vertexCountPerAxis;
+                working[cursor + (cellCount * 6) + 3] += vertexCountPerAxis;
+                ClearTriangle(working, cursor + (cellCount * 6));
+                cursor += cellCount * 12;
+            }
+        }
+
+        if ((edgeFlags & StitchBottom) != 0)
+        {
+            int cursor = (cellCount - 1) * cellCount * 6;
+            for (int pair = 0; pair < cellCount / 2; pair++)
+            {
+                working[cursor + 4]--;
+                working[cursor + 7]--;
+                ClearTriangle(working, cursor);
+                cursor += 12;
+            }
+            if ((edgeFlags & StitchLeft) != 0)
+            {
+                ClearTriangle(working, ((cellCount - 1) * cellCount * 6) + 3);
+            }
+        }
+
+        var result = new List<int>(working.Length);
+        for (int index = 0; index < working.Length; index += 3)
+        {
+            if (working[index] == 0 && working[index + 1] == 0 && working[index + 2] == 0)
+            {
+                continue;
+            }
+            result.Add(working[index]);
+            result.Add(working[index + 1]);
+            result.Add(working[index + 2]);
+        }
+        return result.ToArray();
+    }
+
+    private static void ClearTriangle(int[] indices, int start)
+    {
+        indices[start] = 0;
+        indices[start + 1] = 0;
+        indices[start + 2] = 0;
     }
 
     private float SampleRetailHeight(float x, float z)
@@ -167,9 +486,15 @@ internal sealed class Level100HeightFieldAsset
 
     private static int ToFixedCoordinate(float coordinate)
     {
-        float clamped = Math.Clamp(coordinate, 0f, MathF.BitDecrement(MapExtent));
+        float clamped = Math.Clamp(
+            coordinate,
+            0f,
+            MathF.BitDecrement(Level100Terrain.MapExtentRetailUnits));
         return (int)MathF.Floor(clamped * Level100Terrain.FixedPointUnitsPerRetailUnit);
     }
+
+    private static int TileIndex(int tileX, int tileY) =>
+        (tileY * TileCountPerAxis) + tileX;
 
     private static Color ToColor(uint rgb) => new(
         ((rgb >> 16) & 0xFF) / 255f,

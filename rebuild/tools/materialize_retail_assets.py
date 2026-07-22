@@ -40,6 +40,24 @@ ROOT_TERRAIN_TEXTURE = (
 ROOT_TERRAIN_TEXTURE_SHA256 = (
     "6eb202f450926097930bedca440f0163a1886572981e3c69b4edf9289a68ae2b"
 )
+TERRAIN_HIERARCHY_SOURCE = (
+    GODOT_ASSETS / "Level100/Source/level100-terrain-hierarchy.bin"
+)
+# Compact runtime source for the five released 512x512 logical landscape
+# caches. This contains only the exact indexed MAPT levels and the Level 100
+# mixer/lighting/shadow records needed to rebuild camera-local cache tiles.
+TERRAIN_HIERARCHY_SOURCE_SHA256 = (
+    "541eacd0aa75fae8befb8a3e1505ea52ae6b1f6c1367c15c65d7dd23b7cfe977"
+)
+
+LANDSCAPE_MAP_TEXTURES = (
+    # Logical cache level, source width, framed MAPT size, exact framed hash.
+    (0, 16, 7_788, "04aa2a1630e427a2916c5d3a4ba2be676d5b575022f559de1753d2101727b711"),
+    (1, 32, 12_396, "cf7ed8810bd323d404c88e66bcc6789dc30b1179b4270551cd04423022c2ef77"),
+    (2, 64, 30_828, "ec9d2f0dbaff2189610a98aa4aac5845463bff55db4b9919b1ee1b94facd269f"),
+    (3, 128, 104_556, "dc29acbb0941515080e55c2679de84fc4604f59eed4294a28f471dfeed9b5edb"),
+    (4, 256, 399_468, "c21576ae7ea75fa800ab4117c1479aeb70359a1acc84edd9508895eb339612f1"),
+)
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
 STATIC_WORLD_MANIFEST_SHA256 = "c24dbd570df8d0f0ad0663918bcd6f9557931dfcf9b0bc5feedf246ab947b9e5"
@@ -251,7 +269,10 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
 def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
     direct = tuple((path, expected) for path, _, expected in DIRECT_ASSETS)
     chunks = tuple((path, expected) for path, _, _, expected in CHUNKS)
-    derived = ((ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),)
+    derived = (
+        (ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),
+        (TERRAIN_HIERARCHY_SOURCE, TERRAIN_HIERARCHY_SOURCE_SHA256),
+    )
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
     sounds = tuple((path, expected) for path, _, _, expected in SOUNDS)
     return direct + chunks + derived + meshes + sounds
@@ -1140,31 +1161,55 @@ def _require_chunk(source: bytes, offset: int, tag: bytes, payload_size: int) ->
     return offset + 8
 
 
-def _parse_root_map_texture(raw_level: bytes) -> tuple[bytes, tuple[int, ...]]:
-    source = _extract_chunk(
-        raw_level,
-        b"MAPT",
-        7_788,
-        "04aa2a1630e427a2916c5d3a4ba2be676d5b575022f559de1753d2101727b711",
-    )
+def _parse_map_texture(
+    raw_level: bytes,
+    width: int,
+    framed_size: int,
+    expected_hash: str,
+) -> tuple[bytes, tuple[int, ...]]:
+    source = _extract_chunk(raw_level, b"MAPT", framed_size, expected_hash)
     _require_chunk(source, 0, b"MAPT", len(source) - 8)
     cmtx = _require_chunk(source, 8, b"CMTX", 76)
     if (
         struct.unpack_from("<I", source, cmtx)[0] != 0xDEAD
         or struct.unpack_from("<I", source, cmtx + 8)[0] != 0xDEAD
-        or struct.unpack_from("<iii", source, cmtx + 0x10) != (256, 6, 16)
+        or struct.unpack_from("<iii", source, cmtx + 0x10)
+        != (width * width, 6, width)
     ):
-        raise RuntimeError("Level 100 root MAPT metadata changed")
+        raise RuntimeError(f"Level 100 {width}x{width} MAPT metadata changed")
 
     data_header = cmtx + 76
-    data_offset = _require_chunk(source, data_header, b"DATA", 1_536)
-    palette_header = data_offset + 1_536
+    data_size = width * width * 6
+    data_offset = _require_chunk(source, data_header, b"DATA", data_size)
+    palette_header = data_offset + data_size
     palette_offset = _require_chunk(source, palette_header, b"PALT", 6_144)
     if palette_offset + 6_144 != len(source):
         raise RuntimeError("Level 100 root MAPT has trailing data")
-    return source[data_offset : data_offset + 1_536], struct.unpack_from(
+    return source[data_offset : data_offset + data_size], struct.unpack_from(
         "<1536I", source, palette_offset
     )
+
+
+def _parse_root_map_texture(raw_level: bytes) -> tuple[bytes, tuple[int, ...]]:
+    _, width, framed_size, expected_hash = LANDSCAPE_MAP_TEXTURES[0]
+    return _parse_map_texture(raw_level, width, framed_size, expected_hash)
+
+
+def _parse_landscape_map_textures(
+    raw_level: bytes,
+) -> tuple[tuple[int, bytes, tuple[int, ...]], ...]:
+    result: list[tuple[int, bytes, tuple[int, ...]]] = []
+    for logical_level, width, framed_size, expected_hash in LANDSCAPE_MAP_TEXTURES:
+        data, palettes = _parse_map_texture(
+            raw_level,
+            width,
+            framed_size,
+            expected_hash,
+        )
+        if logical_level != int(math.log2(width // 16)):
+            raise RuntimeError("landscape MAPT logical-level ordering changed")
+        result.append((width, data, palettes))
+    return tuple(result)
 
 
 def _parse_root_mixer_map(
@@ -1216,7 +1261,9 @@ def _parse_root_mixer_map(
     return cells, shade
 
 
-def _static_shadow_mask(raw_level: bytes) -> bytes:
+def _static_shadow_cells(
+    raw_level: bytes,
+) -> tuple[bytes, tuple[bytes | None, ...]]:
     source = _extract_chunk(
         raw_level,
         b"SSHD",
@@ -1319,7 +1366,13 @@ def _static_shadow_mask(raw_level: bytes) -> bytes:
         != "0c67274b69599bf3832e6bc9e988a6436151c1a495aef720081c724f4111c03b"
     ):
         raise RuntimeError("Level 100 root static-shadow mask did not reproduce")
-    return bytes(result)
+    return bytes(result), tuple(
+        bytes(cell) if cell is not None else None for cell in grid
+    )
+
+
+def _static_shadow_mask(raw_level: bytes) -> bytes:
+    return _static_shadow_cells(raw_level)[0]
 
 
 def _lighting_gradient(sun_color: int, ambient_color: int) -> list[tuple[int, int, int]]:
@@ -1350,11 +1403,10 @@ def _f32(value: float) -> float:
     return struct.unpack("<f", struct.pack("<f", value))[0]
 
 
-def _apply_pine_shadows(
-    pixels: list[int],
+def _pine_shadow_source(
     raw_level: bytes,
     raw_base: bytes,
-) -> None:
+) -> tuple[bytes, tuple[tuple[int, int, int], ...]]:
     dmkr = _extract_chunk(
         raw_base,
         b"DMKR",
@@ -1364,7 +1416,6 @@ def _apply_pine_shadows(
     if len(dmkr) != 5_465 or struct.unpack_from("<I", dmkr)[0] != 6:
         raise RuntimeError("base DMKR metadata changed")
     alpha = dmkr[4:]
-    level_offsets = (0, 1, 5, 21, 85, 341, 1_365)
     _, pines, _ = _parse_static_world(raw_level)
     views = _pine_imposter_views(raw_level)
     descriptors: list[tuple[int, int, int]] = []
@@ -1396,6 +1447,16 @@ def _apply_pine_shadows(
         if level <= 0:
             continue
         descriptors.append((top_x >> 4, top_y >> 4, level))
+    return alpha, tuple(descriptors)
+
+
+def _apply_pine_shadows(
+    pixels: list[int],
+    raw_level: bytes,
+    raw_base: bytes,
+) -> None:
+    alpha, descriptors = _pine_shadow_source(raw_level, raw_base)
+    level_offsets = (0, 1, 5, 21, 85, 341, 1_365)
 
     for top_x, top_y, level in reversed(descriptors):
         dimension = 1 << level
@@ -1477,6 +1538,56 @@ def _render_root_terrain(raw_level: bytes, raw_base: bytes, height_field: bytes)
     return struct.pack("<262144H", *pixels)
 
 
+def _render_terrain_hierarchy_source(raw_level: bytes, raw_base: bytes) -> bytes:
+    maps = _parse_landscape_map_textures(raw_level)
+    cells, shade = _parse_root_mixer_map(raw_level)
+    _, shadow_cells = _static_shadow_cells(raw_level)
+    pine_alpha, pine_descriptors = _pine_shadow_source(raw_level, raw_base)
+    if (
+        len(cells) != 4_096
+        or len(shade) != 512 * 512
+        or sum(shadow is not None for shadow in shadow_cells) != 211
+        or len(pine_alpha) != 5_461
+        or len(pine_descriptors) != 1_481
+    ):
+        raise RuntimeError("Level 100 terrain hierarchy source counts changed")
+
+    output = bytearray(b"LTH1")
+    output.extend(struct.pack("<II", 1, len(maps)))
+    for width, data, palettes in maps:
+        output.extend(struct.pack("<II", width, len(data)))
+        output.extend(data)
+        output.extend(struct.pack("<I", len(palettes)))
+        output.extend(struct.pack(f"<{len(palettes)}I", *palettes))
+
+    output.extend(struct.pack("<I", len(cells)))
+    for material_ids, weights in cells:
+        output.append(len(material_ids))
+        output.extend(bytes(material_ids))
+        output.extend(weights)
+
+    output.extend(struct.pack("<I", len(shade)))
+    output.extend(shade)
+
+    populated_shadows: list[tuple[int, bytes]] = []
+    for tile_y in range(64):
+        for tile_x in range(64):
+            shadow = shadow_cells[(tile_x * 64) + tile_y]
+            if shadow is not None:
+                populated_shadows.append(((tile_y * 64) + tile_x, shadow))
+    output.extend(struct.pack("<I", len(populated_shadows)))
+    for tile_index, shadow in populated_shadows:
+        output.extend(struct.pack("<H", tile_index))
+        output.extend(shadow)
+
+    output.extend(struct.pack("<I", len(pine_alpha)))
+    output.extend(pine_alpha)
+    output.extend(struct.pack("<I", len(pine_descriptors)))
+    for top_x, top_y, level in pine_descriptors:
+        output.extend(struct.pack("<hhB", top_x, top_y, level))
+    return bytes(output)
+
+
 def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     source_data: dict[Path, bytes] = {}
     for destination, source, expected in DIRECT_ASSETS:
@@ -1512,6 +1623,17 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     root_terrain_target = stage / ROOT_TERRAIN_TEXTURE
     root_terrain_target.parent.mkdir(parents=True, exist_ok=True)
     root_terrain_target.write_bytes(root_terrain)
+
+    terrain_hierarchy = _render_terrain_hierarchy_source(raw_level, raw_base)
+    terrain_hierarchy_hash = _sha256(terrain_hierarchy)
+    if terrain_hierarchy_hash != TERRAIN_HIERARCHY_SOURCE_SHA256:
+        raise RuntimeError(
+            "Level 100 terrain hierarchy did not reproduce exactly "
+            f"(SHA-256 {terrain_hierarchy_hash})"
+        )
+    terrain_hierarchy_target = stage / TERRAIN_HIERARCHY_SOURCE
+    terrain_hierarchy_target.parent.mkdir(parents=True, exist_ok=True)
+    terrain_hierarchy_target.write_bytes(terrain_hierarchy)
 
     rebuild_tools = ROOT / "rebuild/tools"
     sys.path.insert(0, str(rebuild_tools))

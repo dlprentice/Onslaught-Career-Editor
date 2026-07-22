@@ -88,6 +88,12 @@ texture. The materializer processes all 1,481 pine placements through the
 released stamp rules and verifies the exact
 RGB565 payload as SHA-256
 `6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B`.
+The archive serializes seven `MAPT` sources; the single-player landscape calls
+`CDXLandscape__CreateMipLevels` (`0x005447E0`) with five and selects mixer widths
+`16/32/64/128/256`. Those sources, all variable-length `MMAP` records, the
+lighting mask, sparse structure-shadow cells, and pine shadow descriptors are
+retained in the 1,382,734-byte hierarchy payload with SHA-256
+`541EACD0AA75FAE8BEFB8A3E1505EA52AE6B1F6C1367C15C65D7DD23B7CFE977`.
 Level 100
 selects exact 512×512 DXT1 `detail00`; the released terrain render path at
 `0x00545590` supplies its two world-coordinate scales, offset, exact 256×256
@@ -103,7 +109,9 @@ measured the cloud offset advancing by `(0.01993, 0.00996)` cycles per wall-cloc
 second. Stage 0 wraps and plainly modulates the root texture, stage 1 plainly
 modulates detail, and the cloud and rotated-detail stages use `MODULATE2X`.
 Steam uses anisotropic root minification, but its five logical landscape levels
-are separate one-level 512×512 caches rather than one hardware mip chain.
+are separate one-level 512×512 cyclic caches rather than one hardware mip chain.
+Their absolute-coordinate spans are `512/256/128/64/32`; cache ownership follows
+the selected landscape tile rather than normalized mesh UVs.
 The client preserves each retained mesh group's complete
 six-slot `TEXR` assignment and directly decodes every AYA-wrapped texture
 selected by its active passes. The PC
@@ -153,10 +161,17 @@ and no fog. One uninterrupted copied-Steam sample measured the main phase at
 `1` radian per second and both wave scrolls at `0.06` texture cycles per second;
 the client advances those presentation phases from frame delta outside Core.
 The animated half-scale reflection transform belongs to the optional advanced
-path, which remained inactive in controlled Steam observation. Dynamic scene
-reflection/refraction, Steam's dynamic terrain patch LOD topology, and pixel
-identity outside this bounded active pass are
-not claimed.
+path, which remained inactive in controlled Steam observation. Static analysis
+of `CDXLandscape__UpdateLOD` (`0x00546B40`) and
+`CLandscapeIB__CreateIndexBuffer` (`0x0048DF20`) establishes the complete
+eight-step base, the 4/2/1-step grids and 16 edge-stitch index variants,
+midpoint-error LOD score, camera-smoothed texture rings, and absolute cache
+coordinates. It does not establish the exact stateful gamut-row
+clipping or the exhaustion/reuse order of Steam's bounded `800/300/90` patch
+pools; the client emits eight-step coverage for unselected tiles plus the
+selected patches and leaves triangle clipping to Godot's renderer. Dynamic scene
+reflection/refraction and pixel identity outside this bounded active pass are not
+claimed.
 Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph
 handling, reverse-transform presentation, and unimplemented HUD behavior remain provisional unless

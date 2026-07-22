@@ -184,6 +184,93 @@ public sealed class Level100Terrain
     }
 
     /// <summary>
+    /// Returns the released PC patch-complexity score for one 8x8 terrain
+    /// tile. Steam evaluates the missing midpoint error at 2-, 4-, and 8-unit
+    /// subdivisions, retains the greatest integer average, applies the HFLD
+    /// height scale, then the fixed 128 projection factor. Presentation clients
+    /// use this value for terrain geometry LOD; simulation does not consume it.
+    /// </summary>
+    public float GetTileComplexityScore(int tileX, int tileY)
+    {
+        if ((uint)tileX >= TileCountPerAxis)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tileX));
+        }
+        if ((uint)tileY >= TileCountPerAxis)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tileY));
+        }
+
+        int greatestAverage = 0;
+        for (int step = 2; step <= TileWidth; step <<= 1)
+        {
+            int halfStep = step >> 1;
+            int cellCount = TileWidth / step;
+            int errorSum = 0;
+
+            for (int localY = 0; localY < TileWidth; localY += step)
+            {
+                for (int localX = 0; localX < TileWidth; localX += step)
+                {
+                    int topLeft = TileSample(tileX, tileY, localX, localY);
+                    errorSum += Math.Abs(
+                        ((topLeft + TileSample(
+                            tileX,
+                            tileY,
+                            localX + step,
+                            localY + step)) / 2) -
+                        TileSample(
+                            tileX,
+                            tileY,
+                            localX + halfStep,
+                            localY + halfStep));
+                    errorSum += Math.Abs(
+                        ((topLeft + TileSample(
+                            tileX,
+                            tileY,
+                            localX + step,
+                            localY)) / 2) -
+                        TileSample(
+                            tileX,
+                            tileY,
+                            localX + halfStep,
+                            localY));
+                    errorSum += Math.Abs(
+                        ((topLeft + TileSample(
+                            tileX,
+                            tileY,
+                            localX,
+                            localY + step)) / 2) -
+                        TileSample(
+                            tileX,
+                            tileY,
+                            localX,
+                            localY + halfStep));
+                }
+
+                errorSum += Math.Abs(
+                    ((TileSample(tileX, tileY, TileWidth, localY) +
+                      TileSample(tileX, tileY, TileWidth, localY + step)) / 2) -
+                    TileSample(tileX, tileY, TileWidth, localY + halfStep));
+            }
+
+            for (int localX = 0; localX < TileWidth; localX += step)
+            {
+                errorSum += Math.Abs(
+                    ((TileSample(tileX, tileY, localX, TileWidth) +
+                      TileSample(tileX, tileY, localX + step, TileWidth)) / 2) -
+                    TileSample(tileX, tileY, localX + halfStep, TileWidth));
+            }
+
+            int average = errorSum / ((cellCount * 3 + 2) * cellCount);
+            greatestAverage = Math.Max(greatestAverage, average);
+        }
+
+        float scaled = HeightScale * greatestAverage;
+        return scaled * 128f;
+    }
+
+    /// <summary>
     /// Returns Level 100 ground elevation relative to the authored -10-unit
     /// presentation plane. Core positions are millimetres from player start.
     /// </summary>
@@ -291,6 +378,19 @@ public sealed class Level100Terrain
             sunPositionX,
             sunPositionY,
             sunPositionZ);
+    }
+
+    private int TileSample(
+        int tileX,
+        int tileY,
+        int localX,
+        int localY)
+    {
+        int sampleIndex =
+            (((tileX * TileCountPerAxis) + tileY) * SamplesPerTile) +
+            (localY * SamplesPerTileAxis) +
+            localX;
+        return _heightSamples[sampleIndex];
     }
 
     private static (int Significand, long Denominator) DecodePositiveFloatScale(int bits)

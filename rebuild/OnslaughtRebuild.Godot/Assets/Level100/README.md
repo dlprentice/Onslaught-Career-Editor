@@ -22,6 +22,7 @@ generated payloads are not mirrored in this document.
 | --- | --- | --- |
 | `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
 | `Source/level100-root-terrain.rgb565.bin` | Exact initial 512x512 root landscape pixels reconstructed from the released Level 100 and base archives | `6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B` |
+| `Source/level100-terrain-hierarchy.bin` | Exact retained sources for the five released logical landscape caches | `541EACD0AA75FAE8BEFB8A3E1505EA52AE6B1F6C1367C15C65D7DD23B7CFE977` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
 | `Textures/terrain-cloud-shadow.texture.aya` | Exact released 256×256 DXT1 `clouds%shadow.tga(0)A8R8G8B8.aya` loaded by the landscape renderer | `FC7441887E494E4B18F2B16179ED42C17801B128D71E29D653A4E8B792869519` |
 | `StaticWorld/Source/level100-water-surface.surf.bin` | Exact released 18,572-byte `SURF` shoreline payload | `C3177354FED3EB5A94DC72DEBF2465C32AB1D931DE79E5E88AC431043D3E917D` |
@@ -79,10 +80,12 @@ The retained `HFLD` is the smallest exact terrain input used by Core and the cli
 comes from `100_res_PC.aya` → `ERES` → `ENGN` → `MAP!` and contains a
 5,084-byte `CHFD` metadata block followed by 663,552 bytes of signed 16-bit
 `HFDT` samples. The released loader at `0x0047F750` reads 64×64 tiles of 9×9
-samples. The Godot client renders all 513×513 unit-lattice samples at the
-`CHFD` scale `0.0009155832231044769`. Steam's high renderer dynamically selects
-1/2/4-step patches; the current single Godot mesh deliberately does not claim
-that runtime LOD topology.
+samples. The Godot client uses the released 65×65 eight-step lattice for coarse
+selections and camera-selected 4/2/1-step tile grids at the `CHFD` scale
+`0.0009155832231044769`. It uses the recovered midpoint-error score, projected
+distance thresholds, released triangle diagonal, and all 16 edge-stitch index
+variants. Eight-step tiles cover every rejected selection so the mesh cannot
+develop holes.
 
 The terrain mesh is translated so the authored player-one start
 `(288.6875, 243.25, -10)` is the reconstruction origin. BEA's
@@ -100,15 +103,18 @@ unimplemented rather than inferred.
 
 ## Terrain appearance and environment consumed by the slice
 
-The materializer reconstructs Steam's exact initial root texture from `MAPT`
-mixer set 10, its six 256×256 indexed materials and palettes, all 4,096 `MMAP`
-material/weight records, and the 512×512 lighting mask in the released Level 100
-archive. It follows the gradient builder at `0x0047E8E0`, the load tail at
+The materializer retains Steam's five selected `MAPT` sources from mixer set 10:
+six indexed materials and palettes at each of widths `16/32/64/128/256`, all
+4,096 variable-length `MMAP` material/weight records, and the 512×512 lighting
+mask in the released Level 100 archive. It follows the gradient builder at
+`0x0047E8E0`, the load tail at
 `0x0047F932`, and blend path at `0x0047EFF0`. Before packing RGB565 it also
 applies all 30 initially active `SSHD` structure-shadow owners and then processes
 all 1,481 `pinesnow` placements through the exact `DMKR` shadow-stamp rules from
-`data/resources/base_res_PC.aya`. The verified 512×512 result is published as
-one ignored local payload instead of retaining duplicate MAPT/MMAP intermediates.
+`data/resources/base_res_PC.aya`. The exact initial Level 0 result remains
+independently verified by its RGB565 hash. The compact ignored hierarchy payload
+retains the sources needed to repaint all five logical caches without duplicating
+the retail archives.
 The released 20-byte terrain vertices contain position plus repeated landscape
 coordinates, with no normal or diffuse-color channel; the prelit macro texture
 therefore owns the terrain's base illumination and the client does not invent a
@@ -127,11 +133,15 @@ increments are `(0.001, 0.0005)` per retail renderer-time unit; an uninterrupted
 copied-runtime sample measured `(0.01993, 0.00996)` texture cycles per wall-clock
 second, represented as `(0.02, 0.01)` against Godot's seconds-based `TIME`. The
 active Steam state uses anisotropic minification for the root cache, but each of
-its five logical landscape levels is a separate one-level 512×512 RGB565
-texture—not a hardware macro mip chain. The current slice consumes the exact
-root level and preserves those four encoded-value operations before framebuffer
-conversion. Dynamic 1/2/4-step patch selection and the other four logical
-landscape textures remain outside this slice.
+its five logical landscape levels is a separate one-level 512×512 RGB565 cyclic
+cache—not a hardware macro mip chain. Their absolute-coordinate spans are
+`512/256/128/64/32`. After the released `0.03` camera smoothing, selection uses
+the root beyond 128 units, then forward-shifted rings with thresholds
+`64/32/16` and shifts `60/28/12`; the innermost ring owns Level 4. The client
+repaints the selected cache slots from the retained fixed-point compositor inputs
+and passes each vertex's absolute landscape coordinate and logical cache owner to
+the material. Exact stateful gamut clipping and bounded patch-pool reuse order
+remain unclaimed.
 
 The `CHFD` also selects cube 25 and supplies the fog color/density, sun,
 anti-sun and ambient colors, and sun vector. The five exact DXT1 cube textures
@@ -142,7 +152,8 @@ distant terrain.
 
 This establishes the authored macro material layout, repeating terrain detail,
 moving cloud-shadow stage, and environment inputs, not whole-scene pixel parity.
-Overlay tile updates and the separate visible-sun particle are not implemented.
+Terrain-damage and other post-load overlay updates, and the separate visible-sun
+particle, are not implemented; initial structure and pine shadow stamps are.
 
 ## Authored placement consumed by the slice
 

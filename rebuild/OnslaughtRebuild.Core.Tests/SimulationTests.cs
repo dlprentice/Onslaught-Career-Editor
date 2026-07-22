@@ -35,6 +35,22 @@ public sealed class SimulationTests
         Assert.Equal(0, Level100Terrain.Instance.WaterTexture);
     }
 
+    [Theory]
+    [InlineData(36, 30, 0x420C2A31)]
+    [InlineData(36, 31, 0x416C43B1)]
+    [InlineData(35, 30, 0x41A9B2A7)]
+    [InlineData(0, 0, 0x00000000)]
+    public void Level100Terrain_ReproducesReleasedPatchComplexity(
+        int tileX,
+        int tileY,
+        int expectedFloatBits)
+    {
+        Assert.Equal(
+            expectedFloatBits,
+            BitConverter.SingleToInt32Bits(
+                Level100Terrain.Instance.GetTileComplexityScore(tileX, tileY)));
+    }
+
     [Fact]
     public void WalkerGroundElevation_IsDeterministicCoreState()
     {

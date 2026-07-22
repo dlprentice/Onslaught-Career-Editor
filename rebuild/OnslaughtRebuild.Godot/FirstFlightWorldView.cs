@@ -29,6 +29,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private RetailAquilaWalkerAsset _cockpitAsset = null!;
     private MeshInstance3D _level100Sky = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
+    private Level100TerrainAppearanceAsset _level100TerrainAppearance = null!;
     private Level100StaticWorldAsset _level100StaticWorld = null!;
     private Texture2D _retailChrome3Texture = null!;
     private Texture2D _warehouseOverlayTexture = null!;
@@ -161,6 +162,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdateLevel100Targets(current);
         UpdateProjectiles(previous, current);
         UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
+        IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
+            _level100Terrain.Update(_camera);
+        _level100TerrainAppearance.Update(terrainSelection);
         _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
     }
 
@@ -185,8 +189,9 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void BuildLevel100Terrain()
     {
         _level100Terrain = Level100HeightFieldAsset.Load();
-        Material terrainMaterial = Level100TerrainAppearanceAsset.LoadMaterial(
+        _level100TerrainAppearance = Level100TerrainAppearanceAsset.Load(
             "res://Assets/Level100/Source/level100-root-terrain.rgb565.bin",
+            "res://Assets/Level100/Source/level100-terrain-hierarchy.bin",
             "res://Assets/Level100/Textures/terrain-detail-00.texture.aya",
             "res://Assets/Level100/Textures/terrain-cloud-shadow.texture.aya",
             _level100Terrain);
@@ -194,7 +199,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         {
             Name = "RetailLevel100HeightField",
             Mesh = _level100Terrain.Mesh,
-            MaterialOverride = terrainMaterial,
+            MaterialOverride = _level100TerrainAppearance.Material,
         });
     }
 

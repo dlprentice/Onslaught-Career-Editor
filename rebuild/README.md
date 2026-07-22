@@ -159,13 +159,17 @@ version-50 base-world records into 33 visible static instances, 24 mesh types,
 and 1,481 pines across four atlas-billboard variants, while retaining the
 separate Target Tank and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
-gone. Godot renders all 513×513 unit-lattice positions decoded from the released
-tiled HFLD and uses the same data for static presentation placement. The local
-materializer reconstructs the exact initial 512×512 RGB565 root texture from
-Level 100's `MAPT`/`MMAP`, lighting, structure shadows, and the released shadow
-rules over all 1,481 pine placements. Godot loads that verified result, applies
-the exact Level 100 detail texture at both released
-coordinate transforms, including the rotated quarter-scale pass, inserts the exact moving cloud-shadow stage with its released
+gone. Godot uses the released 65×65 eight-step lattice for coarse selections and
+camera-selected 4/2/1-step tile grids from the exact tiled HFLD. Selection uses
+the recovered height-error score and distance thresholds; topology uses the
+released triangle diagonal, all 16 edge-stitch variants, and absolute landscape
+coordinates. The local materializer retains the exact sources for Steam's five
+logical 512×512 RGB565 caches and independently verifies the initial root texture
+from Level 100's `MAPT`/`MMAP`, lighting, structure shadows, and the released
+shadow rules over all 1,481 pine placements. Godot updates one cyclic cache per
+logical level through that compositor and applies the exact Level 100 detail
+texture at both released coordinate transforms, including the rotated
+quarter-scale pass, inserts the exact moving cloud-shadow stage with its released
 scroll and modulation, and renders the five exact cube-25 sky
 faces with `CHFD` fog and lighting values. Terrain, static objects, cockpit,
 targets, and water share the released exponential fog color/density path. Static
@@ -208,8 +212,9 @@ the camera-height-scaled alpha-tested sun patch, and both exact shoreline passes
 in released order. Steam disables the wave stage for the main grid; the measured
 wave animation belongs only to the authored shoreline passes. Its measured caustic phase
 and wave scroll advance at `1` radian and `0.06` texture cycles per second. This
-does not claim Steam's dynamic 1/2/4-step terrain patch LOD topology, the inactive optional advanced-water path, dynamic scene
-reflection/refraction, or pixel identity outside this bounded pass. The visible-sun
+does not claim Steam's exact stateful gamut/frustum clipping or bounded terrain
+pool exhaustion/reuse order, the inactive optional advanced-water path, dynamic
+scene reflection/refraction, or pixel identity outside this bounded pass. The visible-sun
 particle, facility destruction,
 steep-slope sliding,
 actor/structure collision beyond the observed Control Tower and Tank Factory
