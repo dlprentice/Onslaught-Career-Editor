@@ -11,10 +11,58 @@ internal sealed class Level100StaticWorldAsset
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const string ManifestSha256 =
-        "ACB4FFA4532340AF9584614E66EC43AF9993570CFC0A34DEB00F58D1D41B3B71";
+        "C24DBD570DF8D0F0AD0663918BCD6F9557931DFCF9B0BC5FEEDF246AB947B9E5";
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string StaticResourcePrefix = "res://Assets/Level100/StaticWorld/";
+    private const string PineBillboardShaderCode = """
+        shader_type spatial;
+        render_mode unshaded, cull_disabled;
+
+        uniform sampler2D atlas : filter_nearest, repeat_disable;
+        uniform vec4 atlas_rect;
+        uniform vec3 fog_color;
+        uniform float fog_density;
+        varying float view_depth;
+
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
+            vec3 low = color / 12.92;
+            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
+            return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        void vertex() {
+            vec3 center = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+            vec3 camera_right = normalize(vec3(
+                INV_VIEW_MATRIX[0].x,
+                0.0,
+                INV_VIEW_MATRIX[0].z));
+            vec3 world_position = center +
+                (camera_right * VERTEX.x) +
+                vec3(0.0, VERTEX.y, 0.0);
+            vec3 camera_position = (VIEW_MATRIX * vec4(world_position, 1.0)).xyz;
+            POSITION = PROJECTION_MATRIX * vec4(camera_position, 1.0);
+            view_depth = max(-camera_position.z, 0.0);
+        }
+
+        void fragment() {
+            vec4 texel = texture(
+                atlas,
+                atlas_rect.xy + (UV * atlas_rect.zw));
+            if (texel.a < (8.0 / 255.0)) {
+                discard;
+            }
+            float visibility = clamp(
+                exp(-fog_density * view_depth),
+                0.0,
+                1.0);
+            vec3 tree_color = min(texel.rgb * 2.0, vec3(1.0));
+            ALBEDO = retail_output(mix(fog_color, tree_color, visibility));
+        }
+        """;
 
     private Level100StaticWorldAsset(
         Node3D root,
@@ -102,7 +150,7 @@ internal sealed class Level100StaticWorldAsset
             objects.Add(geometry);
         }
 
-        int pineCount = AddPines(root, manifest, terrain, meshes);
+        int pineCount = AddPines(root, manifest, terrain, textures);
         Level100WaterAsset water = AddWater(root, manifest, terrain, textures);
         int surfaceCount = objects.Sum(item => item.Mesh?.GetSurfaceCount() ?? 0);
         return new Level100StaticWorldAsset(root, objects, surfaceCount, pineCount, water);
@@ -112,46 +160,89 @@ internal sealed class Level100StaticWorldAsset
         Node3D root,
         Manifest manifest,
         Level100HeightFieldAsset terrain,
-        IReadOnlyDictionary<string, ArrayMesh> meshes)
+        IReadOnlyDictionary<string, Texture2D> textures)
     {
         int total = 0;
+        Texture2D atlas = textures[manifest.PineBillboards.Texture];
         for (int variant = 0; variant < 4; variant++)
         {
-            double[][] instances = manifest.Pines
-                .Where(item => checked((int)item[2]) == variant)
-                .ToArray();
-            string meshKey = $"pinesnow{variant}";
-            float baseClearance = checked((float)manifest.Meshes[meshKey].BaseClearance);
-            var multiMesh = new MultiMesh
+            PineBillboardVariant definition = manifest.PineBillboards.Variants[variant];
+            Vector3 centerOffset = ToGodotVector(definition.CenterOffset);
+            for (int viewIndex = 0; viewIndex < definition.Views.Length; viewIndex++)
             {
-                TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
-                Mesh = meshes[meshKey],
-                InstanceCount = instances.Length,
-            };
-            var meshBasis = new Basis(Vector3.Right, -Mathf.Pi / 2f);
-            for (int index = 0; index < instances.Length; index++)
-            {
-                float retailX = checked((float)instances[index][0]);
-                float retailY = checked((float)instances[index][1]);
-                float relativeX = retailX - Level100HeightFieldAsset.PlayerStartX;
-                float relativeZ = retailY - Level100HeightFieldAsset.PlayerStartZ;
-                float height = Math.Max(
-                    terrain.SampleRelativeHeight(relativeX, relativeZ),
-                    terrain.WaterRelativeHeight);
-                multiMesh.SetInstanceTransform(
-                    index,
-                    new Transform3D(
-                        meshBasis,
-                        new Vector3(relativeX, height + baseClearance, -relativeZ)));
+                double[] view = definition.Views[viewIndex];
+                (double[] Pine, int Ordinal)[] instances = manifest.Pines
+                    .Select((pine, ordinal) => (Pine: pine, Ordinal: ordinal))
+                    .Where(item =>
+                        checked((int)item.Pine[2]) == variant &&
+                        (item.Ordinal & 3) == viewIndex)
+                    .ToArray();
+                float halfWidth = checked((float)view[4]);
+                float halfHeight = checked((float)view[5]);
+                var mesh = new QuadMesh
+                {
+                    Size = new Vector2(halfWidth * 2f, halfHeight * 2f),
+                    Material = CreatePineBillboardMaterial(atlas, view, terrain),
+                };
+                var multiMesh = new MultiMesh
+                {
+                    TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
+                    Mesh = mesh,
+                    InstanceCount = instances.Length,
+                };
+                for (int index = 0; index < instances.Length; index++)
+                {
+                    float retailX = checked((float)instances[index].Pine[0]);
+                    float retailY = checked((float)instances[index].Pine[1]);
+                    float relativeX = retailX - Level100HeightFieldAsset.PlayerStartX;
+                    float relativeZ = retailY - Level100HeightFieldAsset.PlayerStartZ;
+                    float height = Math.Max(
+                        terrain.SampleRelativeHeight(relativeX, relativeZ),
+                        terrain.WaterRelativeHeight);
+                    multiMesh.SetInstanceTransform(
+                        index,
+                        new Transform3D(
+                            Basis.Identity,
+                            new Vector3(relativeX, height, -relativeZ) + centerOffset));
+                }
+                root.AddChild(new MultiMeshInstance3D
+                {
+                    Name = $"RetailPineSnow{variant}View{viewIndex}Instances",
+                    Multimesh = multiMesh,
+                });
+                total += instances.Length;
             }
-            root.AddChild(new MultiMeshInstance3D
-            {
-                Name = $"RetailPineSnow{variant}Instances",
-                Multimesh = multiMesh,
-            });
-            total += instances.Length;
         }
         return total;
+    }
+
+    private static Vector3 ToGodotVector(double[] beaVector) =>
+        new(
+            checked((float)beaVector[0]),
+            -checked((float)beaVector[2]),
+            -checked((float)beaVector[1]));
+
+    private static ShaderMaterial CreatePineBillboardMaterial(
+        Texture2D atlas,
+        double[] view,
+        Level100HeightFieldAsset terrain)
+    {
+        var material = new ShaderMaterial
+        {
+            Shader = new Shader { Code = PineBillboardShaderCode },
+        };
+        material.SetShaderParameter("atlas", atlas);
+        material.SetShaderParameter("atlas_rect", new Vector4(
+            checked((float)view[0]),
+            checked((float)view[2]),
+            checked((float)(view[1] - view[0])),
+            checked((float)(view[3] - view[2]))));
+        material.SetShaderParameter("fog_color", new Vector3(
+            terrain.FogColor.R,
+            terrain.FogColor.G,
+            terrain.FogColor.B));
+        material.SetShaderParameter("fog_density", terrain.FogDensity);
+        return material;
     }
 
     private static Level100WaterAsset AddWater(
@@ -232,7 +323,7 @@ internal sealed class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v4") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v6") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||
@@ -242,8 +333,9 @@ internal sealed class Level100StaticWorldAsset
             manifest.PineInstanceCount != 1481 ||
             manifest.Objects.Length != 33 ||
             manifest.Pines.Length != 1481 ||
-            manifest.Meshes.Count != 28 ||
-            manifest.Textures.Count != 33 ||
+            manifest.Meshes.Count != 24 ||
+            manifest.Textures.Count != 31 ||
+            !IsValidPineBillboards(manifest.PineBillboards, manifest.Textures) ||
             !manifest.Textures.TryGetValue(
                 "meshtex-a8-fb-hangermorebits-lit",
                 out TextureDefinition? blendTexture) ||
@@ -317,6 +409,52 @@ internal sealed class Level100StaticWorldAsset
         RequireOwnedResource(manifest.Water.SurfaceResourcePath);
     }
 
+    private static bool IsValidPineBillboards(
+        PineBillboardDefinition definition,
+        IReadOnlyDictionary<string, TextureDefinition> textures)
+    {
+        if (!textures.TryGetValue(definition.Texture, out TextureDefinition? texture) ||
+            texture is null ||
+            texture.Width != 1024 ||
+            texture.Height != 256 ||
+            !StringComparer.Ordinal.Equals(texture.Compression, "Dxt2") ||
+            definition.Variants.Length != 4)
+        {
+            return false;
+        }
+
+        int[][] expectedCenters =
+        [
+            [unchecked((int)0xBCCC7F20), 0x39BA4000, unchecked((int)0xBF6303AA)],
+            [0x3D8FAD60, unchecked((int)0xBDA96080), unchecked((int)0xBF696408)],
+            [0x3C9B2D60, unchecked((int)0xBDF5D470), unchecked((int)0xBF6A0AB4)],
+            [0x3D429CA0, 0x3CD68540, unchecked((int)0xBF506532)],
+        ];
+        for (int variant = 0; variant < definition.Variants.Length; variant++)
+        {
+            PineBillboardVariant item = definition.Variants[variant];
+            if (item.CenterOffset.Length != 3 || item.Views.Length != 4 ||
+                !item.CenterOffset.All(double.IsFinite) ||
+                item.Views.Any(view =>
+                    view.Length != 6 ||
+                    !view.All(double.IsFinite) ||
+                    view[0] < 0.0 || view[0] >= view[1] || view[1] > 1.0 ||
+                    view[2] < 0.0 || view[2] >= view[3] || view[3] > 1.0 ||
+                    view[4] <= 0.0 || view[5] <= 0.0))
+            {
+                return false;
+            }
+            int[] centerBits = item.CenterOffset
+                .Select(value => BitConverter.SingleToInt32Bits(checked((float)value)))
+                .ToArray();
+            if (!centerBits.SequenceEqual(expectedCenters[variant]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static bool IsValidMaterial(
         MaterialDefinition material,
         IReadOnlyDictionary<string, TextureDefinition> textures)
@@ -365,6 +503,7 @@ internal sealed class Level100StaticWorldAsset
         public int VisibleObjectCount { get; init; }
         public int SuppressedFernCount { get; init; }
         public int PineInstanceCount { get; init; }
+        public PineBillboardDefinition PineBillboards { get; init; } = new();
         public Dictionary<string, MeshDefinition> Meshes { get; init; } = [];
         public Dictionary<string, TextureDefinition> Textures { get; init; } = [];
         public WorldObject[] Objects { get; init; } = [];
@@ -377,6 +516,18 @@ internal sealed class Level100StaticWorldAsset
         public double BaseClearance { get; init; }
         public Dictionary<string, MaterialDefinition> Materials { get; init; } = [];
         public string ResourcePath { get; init; } = string.Empty;
+    }
+
+    private sealed record PineBillboardDefinition
+    {
+        public string Texture { get; init; } = string.Empty;
+        public PineBillboardVariant[] Variants { get; init; } = [];
+    }
+
+    private sealed record PineBillboardVariant
+    {
+        public double[] CenterOffset { get; init; } = [];
+        public double[][] Views { get; init; } = [];
     }
 
     private sealed record MaterialDefinition
@@ -439,7 +590,7 @@ internal static class RetailFixedFunctionMaterial
         shader_type spatial;
         render_mode unshaded, cull_back;
 
-        uniform sampler2D base_texture : filter_linear_mipmap, repeat_enable;
+        uniform sampler2D base_texture : filter_linear_mipmap_anisotropic, repeat_enable;
         uniform sampler2D dot3_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_disable;
         uniform sampler2D overlay_texture : filter_linear_mipmap, repeat_enable;
@@ -459,9 +610,9 @@ internal static class RetailFixedFunctionMaterial
         uniform vec3 sunlight_direction;
         uniform vec3 fog_color;
         uniform float fog_density;
-        varying vec3 world_normal;
-        varying vec3 view_normal;
+        varying vec3 vertex_light_color;
         varying vec3 model_light_direction;
+        varying vec2 reflection_uv;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -478,23 +629,37 @@ internal static class RetailFixedFunctionMaterial
         }
 
         void vertex() {
-            world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);
-            view_normal = normalize(mat3(VIEW_MATRIX) * world_normal);
+            vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);
+            float sun = max(dot(world_normal, -sunlight_direction), 0.0);
+            float anti_sun = max(dot(world_normal, sunlight_direction), 0.0);
+            vertex_light_color = ambient_color + (sun_color * sun) +
+                (anti_sun_color * anti_sun);
             model_light_direction = normalize(
                 transpose(mat3(MODEL_MATRIX)) * sunlight_direction);
+
+            // D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR generates
+            // 2(N.E)N-E per vertex. Steam then applies [.5,0;0,-.5]
+            // and the (.5,.5) offset before interpolating the coordinates.
+            vec3 view_position = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            vec3 view_normal = normalize(MODELVIEW_NORMAL_MATRIX * NORMAL);
+            vec3 eye = normalize(-view_position);
+            vec3 reflection_vector =
+                (2.0 * dot(view_normal, eye) * view_normal) - eye;
+            reflection_uv = vec2(
+                (reflection_vector.x * 0.5) + 0.5,
+                (reflection_vector.y * -0.5) + 0.5);
         }
 
         void fragment() {
-            vec4 texture_color = texture(base_texture, UV);
+            // Steam's high static-world pass applies a -1 mip bias only to
+            // stage zero; later material stages retain their default bias.
+            vec4 texture_color = texture(base_texture, UV, -1.0);
             if (base_blend_texture_alpha < 0.5 && texture_color.a < 0.5) {
                 discard;
             }
-            vec3 normal = normalize(world_normal);
-            float sun = max(dot(normal, -sunlight_direction), 0.0);
-            float anti_sun = max(dot(normal, sunlight_direction), 0.0);
-            vec3 light_color = ambient_color + (sun_color * sun) +
-                (anti_sun_color * anti_sun);
-            vec3 retail_color = min(texture_color.rgb * light_color * 2.0, vec3(1.0));
+            vec3 retail_color = min(
+                texture_color.rgb * vertex_light_color * 2.0,
+                vec3(1.0));
             if (base_blend_texture_alpha > 0.5) {
                 retail_color = mix(retail_color, texture_color.rgb, texture_color.a);
             }
@@ -515,15 +680,6 @@ internal static class RetailFixedFunctionMaterial
             }
 
             if (has_reflection > 0.5) {
-                vec3 reflection_vector = reflect(
-                    normalize(VERTEX),
-                    normalize(view_normal));
-                vec2 reflection_uv = clamp(
-                    vec2(
-                        (reflection_vector.x * 0.5) + 0.5,
-                        (reflection_vector.y * -0.5) + 0.5),
-                    vec2(0.0),
-                    vec2(1.0));
                 vec4 reflection_color = texture(reflection_texture, reflection_uv);
                 float reflection_alpha = clamp(
                     reflection_color.a * reflection_opacity,

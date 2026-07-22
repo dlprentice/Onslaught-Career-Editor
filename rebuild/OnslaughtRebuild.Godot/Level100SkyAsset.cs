@@ -11,6 +11,24 @@ internal static class Level100SkyAsset
     private const float MinUv = 1f / 512f;
     private const float MaxUv = 511f / 512f;
     private const float SideBottomUv = 383.5f / 512f;
+    private const string SkyShaderCode = """
+        shader_type spatial;
+        render_mode unshaded, cull_disabled, depth_draw_never, fog_disabled;
+
+        uniform sampler2D sky_texture : source_color, filter_linear_mipmap, repeat_disable;
+
+        void vertex() {
+            POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+            // Godot uses a different reversed-Z far value in Compatibility
+            // and Forward+/Mobile. Keep the backdrop just inside that value
+            // while never writing depth, so it cannot hide world geometry.
+            POSITION.z = (CLIP_SPACE_FAR + 0.000001) * POSITION.w;
+        }
+
+        void fragment() {
+            ALBEDO = texture(sky_texture, UV).rgb;
+        }
+        """;
 
     // Steam's formatter indexes the five suffix pointers in this exact order.
     private static readonly string[] FaceNames = ["cent", "up", "right", "down", "left"];
@@ -48,6 +66,7 @@ internal static class Level100SkyAsset
         }
 
         var mesh = new ArrayMesh();
+        var shader = new Shader { Code = SkyShaderCode };
         for (int faceIndex = 0; faceIndex < FaceNames.Length; faceIndex++)
         {
             Vector3[] vertices = BeaFaceVertices[faceIndex]
@@ -67,14 +86,12 @@ internal static class Level100SkyAsset
                 512,
                 512,
                 CuratedAyaTextureLoader.Compression.Dxt1);
-            mesh.SurfaceSetMaterial(faceIndex, new StandardMaterial3D
+            var material = new ShaderMaterial
             {
-                AlbedoTexture = texture,
-                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-                DisableFog = true,
-                TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmaps,
-            });
+                Shader = shader,
+            };
+            material.SetShaderParameter("sky_texture", texture);
+            mesh.SurfaceSetMaterial(faceIndex, material);
         }
 
         return new MeshInstance3D

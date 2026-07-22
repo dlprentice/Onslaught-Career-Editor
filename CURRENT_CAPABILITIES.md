@@ -148,8 +148,9 @@ reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
-The Godot Level 100 Opening Slice now uses the released 65×65 coarse Level 100
-heightfield plus the Federation walker/jet, all 33 visible static objects in the
+The Godot Level 100 Opening Slice now uses all 513×513 unit-lattice positions
+decoded from the released tiled Level 100 HFLD, plus the Federation walker/jet,
+all 33 visible static objects in the
 released Level 100 base-world records, all 1,481 Steam-instantiated pines, the
 released active-path water grid and authored shoreline, three training tanks,
 and target Warehouse
@@ -197,9 +198,11 @@ deterministic Core foot contacts. Core reproduces the released diagonal step
 scheduling, 400-phase-unit-per-second swing, 0.4-unit lift, and exact Level 100
 heightfield contact; Godot selects each leg's `LegMotion` frame by required
 root-to-foot extension rather than replaying one synthetic gait cycle. The 24
-static-world mesh types, four pine variants, and two target types remain bounded
-static conversions. Their conventional OBJ
-front faces are adapted to Godot's clockwise winding instead of exposing
+static-world mesh types and two target types remain bounded static conversions.
+The 1,481 standing pines instead use Steam's released `Imposters_100` atlas with
+four standing cards for each of four exact variants, their sizes, and their
+mesh-center offsets selected by Level 100. The converted static-world and target OBJ front faces are adapted to
+Godot's clockwise winding instead of exposing
 interior/back faces. Aquila and exterior meshes render from exact locally
 materialized AYA-wrapped textures. Static object
 shading uses the released PC ambient plus opposing sun/anti-sun lights and
@@ -233,11 +236,13 @@ bounded effective damage envelope, not as the retail object's 28-segment
 destruction controller. Godot removes each completed objective and radar marker,
 uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded
-presentation. The released macro
-terrain blend, exact Level 100 repeating detail texture, cube-25 sky, fixed-function
+presentation. The exact initial root terrain now includes the released macro
+blend, structure shadows, and pine-shadow rules over all 1,481 placements. Its repeating Level
+100 detail texture, cube-25 sky, fixed-function
 ambient/sun/anti-sun lighting, exponential fog, and renderer-correct final color
-transfer replace their earlier placeholders. Copied-runtime state confirms that
-Level 100 enables the released terrain capability and `MODULATE2X` paths. The
+transfer replace their earlier placeholders. Copied-runtime state confirms the
+released Level 100 terrain path; static analysis fixes its stage order to plain
+macro/detail modulation followed by `MODULATE2X` cloud/rotated-detail stages. The
 one Level 100 base texture whose released `CTexture` record selects
 texture-alpha blending now preserves its lit exterior under transparent texels
 instead of exposing the facility interior. Water now uses the
@@ -245,19 +250,20 @@ released camera-following 25×25 grid, exact Level 100 height and color, two
 animated caustic stages, authored `reflection00` imagery, sun-reflection stages,
 and both exact `SURF` shoreline bands. Its active reflection stage uses the
 released absolute-world `1/256` transform rather than the inactive advanced
-path's animated half-scale transform. The client now also reproduces the shared
-wave `MULTIPLYADD`, camera-height-scaled alpha-tested sun patch, late additive
-shore pass, released pass order, and measured animation rates. This reconstructs
+path's animated half-scale transform. Steam disables the wave stage before the
+main grid draw; the client applies its measured animation only to the authored
+shoreline passes, alongside the camera-height-scaled alpha-tested sun patch,
+late additive shore pass, released pass order, and measured animation rates. This reconstructs
 the bounded active fixed-function path observed on the supported Steam specimen;
 it does not claim the inactive advanced path, dynamic scene reflection/refraction,
-or general renderer pixel identity. The detail texture
-uses both released coordinate scales and observed modulation modes; the exact
+or general renderer pixel identity. The detail texture uses the released
+identity and rotated quarter-scale transforms and observed modulation modes; the exact
 moving cloud-shadow texture now uses the released scale, scroll, and modulation.
 Walker acceleration now follows Core's
 continuous body yaw; the bounded projectile path shares its yaw and vertical
 pitch while jet
 translation retains the older eight-way approximation. The slice does not
-yet reproduce steep-slope or actor collision response beyond those two
+yet reproduce Steam's dynamic 1/2/4-step terrain patch topology, steep-slope or actor collision response beyond those two
 observed facility envelopes, exact toe-normal alignment or CMC body sway, the
 Warehouse's segmented-destruction
 path and rubble, mesh-part damage variation, secondary particles/debris, the

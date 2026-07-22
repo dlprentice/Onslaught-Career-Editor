@@ -1,9 +1,10 @@
 # Level 100 opening assets
 
-This directory owns the ignored local released heightfield, macro/detail/cloud-shadow terrain inputs,
-cube-25 sky, two Firing Range target meshes, nine Pulse Cannon/target-destruction effect textures,
-three weapon-effect sounds, and the first seventeen English tutorial voice clips
-consumed by the current Level 100 opening slice. Run
+This directory owns the ignored local released heightfield,
+macro/detail/cloud-shadow terrain inputs, cube-25 sky, standing-pine imposter
+atlas, two Firing Range target meshes, nine Pulse Cannon/target-destruction
+effect textures, three weapon-effect sounds, and the first seventeen English
+tutorial voice clips consumed by the current Level 100 opening slice. Run
 `npm run prepare:rebuild-assets` to materialize the exact supported files from a
 user-provided retail installation. The payloads are not tracked in the current
 source tree or included in release packages and remain copyright of their
@@ -11,17 +12,16 @@ respective rights holders; `rebuild/LICENSE` covers reconstruction code only.
 
 `StaticWorld/level100-static-world.json` is a deterministic ignored manifest
 derived from the exact released Level 100 archive. It owns all 33 visible
-base-world objects, 24 selected static mesh types, four pine variants, 1,481
-pine transforms, 33 mesh/water textures, their complete material signatures,
-and their exact hashes. The materializer converts only those 28 meshes and
-verifies a 61-file retail source
-set; those generated payloads are not mirrored in this document.
+base-world objects, 24 selected static mesh types, 1,481 pine transforms, four
+exact standing-billboard records, 31 mesh/water/pine-atlas textures, their
+active material signatures, and their exact hashes. The materializer converts
+only those 24 static meshes and verifies a 59-file retail source set; those
+generated payloads are not mirrored in this document.
 
 | Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
 | `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
-| `Source/level100-mixer-set-10.mapt.bin` | Exact largest `MAPT` mip selected by the Level 100 `CHFD` mixer-set value | `C21576AE7EA75FA800AB4117C1479AEB70359A1ACC84EDD9508895EB339612F1` |
-| `Source/level100-mixer-map.mmap.bin` | Exact released `MMAP` material-weight and lighting-mask payload | `45045D248E27366080614C1AD26FC9E711BC9656F4F79210EAC63D2A20938361` |
+| `Source/level100-root-terrain.rgb565.bin` | Exact initial 512x512 root landscape pixels reconstructed from the released Level 100 and base archives | `6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
 | `Textures/terrain-cloud-shadow.texture.aya` | Exact released 256×256 DXT1 `clouds%shadow.tga(0)A8R8G8B8.aya` loaded by the landscape renderer | `FC7441887E494E4B18F2B16179ED42C17801B128D71E29D653A4E8B792869519` |
 | `StaticWorld/Source/level100-water-surface.surf.bin` | Exact released 18,572-byte `SURF` shoreline payload | `C3177354FED3EB5A94DC72DEBF2465C32AB1D931DE79E5E88AC431043D3E917D` |
@@ -30,6 +30,7 @@ set; those generated payloads are not mirrored in this document.
 | `StaticWorld/Textures/water-waves.texture.aya` | Exact released 128×128 DXT1 shoreline-wave stage | `6EC848D1F9801BE12F3A6591D6A4F5D5ECF1FC9F21D1A4242E1D681D826AB078` |
 | `StaticWorld/Textures/water-sun-blob.texture.aya` | Exact released 128×128 RGBA8 water-sun blob | `5D97F24F514383C928C58C7F333BF489888B6A402004213FFBAAAAD2EF30A53E` |
 | `StaticWorld/Textures/water-sun-reflection.texture.aya` | Exact released 64×64 RGBA8 sun-reflection stage | `A65940D6CDFE93F8B8820EFB883FD33166AEC63863ED894673466F3F58527AB4` |
+| `StaticWorld/Textures/pine-imposters-100.texture.aya` | Exact released 1024×256 DXT2 standing-tree atlas | `7368BA0C586221FF1B1572CEE8F84DE2BF6DB426C005A73A10BAD54A938AD882` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
 | `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
@@ -78,10 +79,10 @@ The retained `HFLD` is the smallest exact terrain input used by Core and the cli
 comes from `100_res_PC.aya` → `ERES` → `ENGN` → `MAP!` and contains a
 5,084-byte `CHFD` metadata block followed by 663,552 bytes of signed 16-bit
 `HFDT` samples. The released loader at `0x0047F750` reads 64×64 tiles of 9×9
-samples. The released low-resolution vertex builder at `0x00544FC0` samples a
-65×65 grid at eight-unit intervals and multiplies heights by the `CHFD`
-scale `0.0009155832231044769`; the Godot client follows that exact coarse
-sampling pattern.
+samples. The Godot client renders all 513×513 unit-lattice samples at the
+`CHFD` scale `0.0009155832231044769`. Steam's high renderer dynamically selects
+1/2/4-step patches; the current single Godot mesh deliberately does not claim
+that runtime LOD topology.
 
 The terrain mesh is translated so the authored player-one start
 `(288.6875, 243.25, -10)` is the reconstruction origin. BEA's
@@ -99,12 +100,15 @@ unimplemented rather than inferred.
 
 ## Terrain appearance and environment consumed by the slice
 
-The retained `MAPT` and `MMAP` are exact chunks from the same released Level
-100 `ERES`. The client requires mixer set 10, six 256×256 indexed material
-textures and palettes, all 4,096 `MCEL` material/weight records, and the 512×512
-`MSHD` lighting mask. It follows the released gradient builder at `0x0047E8E0`,
-the loader's doubling/clamping pass at `0x0047F932`, and blend path at
-`0x0047EFF0` to create the 512×512 RGB565 macro landscape texture at load time.
+The materializer reconstructs Steam's exact initial root texture from `MAPT`
+mixer set 10, its six 256×256 indexed materials and palettes, all 4,096 `MMAP`
+material/weight records, and the 512×512 lighting mask in the released Level 100
+archive. It follows the gradient builder at `0x0047E8E0`, the load tail at
+`0x0047F932`, and blend path at `0x0047EFF0`. Before packing RGB565 it also
+applies all 30 initially active `SSHD` structure-shadow owners and then processes
+all 1,481 `pinesnow` placements through the exact `DMKR` shadow-stamp rules from
+`data/resources/base_res_PC.aya`. The verified 512×512 result is published as
+one ignored local payload instead of retaining duplicate MAPT/MMAP intermediates.
 The released 20-byte terrain vertices contain position plus repeated landscape
 coordinates, with no normal or diffuse-color channel; the prelit macro texture
 therefore owns the terrain's base illumination and the client does not invent a
@@ -113,18 +117,21 @@ separate normal-lighting pass.
 The `CHFD` detail selector is `0`, which the released loader formats as
 `mixers\detail00.tga`. `CDXLandscape__RenderTerrain` at `0x00545590` maps the
 macro texture once across the 512-unit landscape, maps that exact RGB detail
-texture once per world unit, and applies it again at quarter scale with a
-`(0.3, 0.3)` offset. In the observed Level 100 renderer state, the macro and
-second detail stages use `D3DTOP_MODULATE2X`; the first detail stage uses plain
-modulation. Between the two detail stages, the exact released cloud-shadow
-texture repeats every 256 world units and uses `D3DTOP_MODULATE2X`. Its static
+texture once per world unit, and applies it again through the released
+quarter-scale one-radian rotation plus `(0.3, 0.3)` offset. In the released
+Level 100 render path, the wrapping macro and first detail stages use plain
+`D3DTOP_MODULATE`; the cloud-shadow and rotated second-detail stages use
+`D3DTOP_MODULATE2X`. The exact cloud-shadow texture repeats every 256 world
+units. Its static
 increments are `(0.001, 0.0005)` per retail renderer-time unit; an uninterrupted
 copied-runtime sample measured `(0.01993, 0.00996)` texture cycles per wall-clock
 second, represented as `(0.02, 0.01)` against Godot's seconds-based `TIME`. The
-active Steam state enables mipmapping and uses anisotropic minification for the
-macro texture. The Godot shader preserves those four encoded-value operations
-before framebuffer conversion. The macro compositor uses the released row-major
-tile, source-texel, weight, and shade-mask axes.
+active Steam state uses anisotropic minification for the root cache, but each of
+its five logical landscape levels is a separate one-level 512×512 RGB565
+texture—not a hardware macro mip chain. The current slice consumes the exact
+root level and preserves those four encoded-value operations before framebuffer
+conversion. Dynamic 1/2/4-step patch selection and the other four logical
+landscape textures remain outside this slice.
 
 The `CHFD` also selects cube 25 and supplies the fog color/density, sun,
 anti-sun and ambient colors, and sun vector. The five exact DXT1 cube textures
@@ -146,8 +153,25 @@ visible static objects and two nonvisual markers. The materializer preserves
 all 33 object definitions, positions, Z values, and yaws in its exact ignored
 manifest. The same stream contains 753 `fernsnow` and 1,481 `pinesnow` records;
 the Steam loader deliberately skips `fern*`/`bush*` groups, so the client
-instantiates only the 1,481 pines, with exact positions and four authored mesh
-variants. This is released loader behavior, not visual thinning by the rebuild.
+instantiates only the 1,481 pines. Steam's ordinary standing-tree path draws one
+vertical billboard per placement from the exact `Imposters_100` atlas. Each of
+the four `pinesnow` variants contributes four exact standing `VIEW` records and
+one mesh-level bounding-box center. Retail derives the view choice from an
+allocation address; the deterministic client uses placement ordinal modulo four
+to retain the same four-card distribution without treating allocator identity as
+simulation state. It does not draw the full pine mesh for this path. This is
+released loader behavior, not visual thinning by the rebuild.
+The released standing-tree draw deliberately uses point minification and
+magnification with mip filtering disabled and alpha reference `8`; close trees
+therefore retain the atlas's pixelated silhouette rather than switching to a
+hidden high-detail mesh. A copied Steam runtime read found capability global
+`0x008554FC = 1`, selecting the white-texture-factor `MODULATE2X` branch; the
+client doubles and clamps the atlas color before applying fog. Independent BC2
+decoding reproduces Godot's atlas pixels exactly; the source alpha contains only
+`0` and `255`.
+Steam also has non-standing `VIEW` records, a separate elevated-tree supplement,
+and a falling-tree path. Their complete selection contract is not yet
+established, so none is inferred here.
 
 The 33 static records select 24 mesh types: nearby facilities and turrets,
 houses, city/tall buildings, an airfield, docks, hangar, radar, solar pod, and
@@ -160,8 +184,9 @@ observed Control Tower and Tank Factory envelopes.
 Level 100's `HFLD` selects water level `-8.84000015258789`, color `#21213D`,
 and texture index zero. The active Steam path renders a 25×25 camera-following
 grid with two animated `caustic00` stages, authored `reflection00` imagery, and
-the exact `sunreflect`/`sunblob` stages. Its active shared wave stage uses the
-released `waves + diffuse * current` operation. The sun textures shape an
+the exact `sunreflect`/`sunblob` stages. Steam disables texture stage 3 before
+the main grid draw; the released wave operations apply only to the authored
+shoreline passes. The sun textures shape an
 alpha-tested `#E8E8FF` patch scaled from camera height. The nested `SURF`
 payload supplies 514 three-contour records; the client reproduces the first
 shore pass and the later unfogged `SRCALPHA`/`ONE` wave pass in released order.
@@ -173,7 +198,7 @@ not claim dynamic scene reflection/refraction.
 The PC renderer uses packed ambient plus directional sun and opposing anti-sun
 from `CHFD`. Directional channels are divided by 256 and the base texture stage
 uses `MODULATE2X`; the client reproduces that fixed-function equation for the
-current static meshes, pines, Aquila exterior, and range targets. It preserves
+current static meshes, Aquila exterior, and range targets. It preserves
 all six `TEXR` slots and implements the active released DOT3-lighting,
 camera-space reflection, and alpha-overlay passes with each texture's serialized
 `TEXB` parameters. Released material modes disabled by the live Level 100

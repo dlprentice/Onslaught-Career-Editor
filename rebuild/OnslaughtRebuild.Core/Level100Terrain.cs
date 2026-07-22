@@ -154,8 +154,8 @@ public sealed class Level100Terrain
     }
 
     /// <summary>
-    /// Returns an exact integer HFLD sample for the released 65×65 coarse
-    /// render grid, including its 512-unit far edge.
+    /// Returns an exact integer HFLD lattice sample, including the 512-unit
+    /// far edge. The released heightfield stores one sample per retail unit.
     /// </summary>
     public int SampleGridHeightUnits(int retailX, int retailY)
     {

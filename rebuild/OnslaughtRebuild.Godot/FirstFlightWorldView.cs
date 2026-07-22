@@ -48,6 +48,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private AudioStream _aquilaTakeoffSound = null!;
     private AudioStreamPlayer3D _aquilaInFlightSound = null!;
     private int _lastTargetEffectTick = -1;
+    private float _particlePresentationSeconds;
     private float _walkerToJetVisualElapsed = float.PositiveInfinity;
     private VehicleTransition _previousTransition;
     private VehicleMode _previousMode = VehicleMode.Walker;
@@ -131,6 +132,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         float interpolationAlpha,
         float frameDelta)
     {
+        _particlePresentationSeconds += Math.Max(frameDelta, 0f);
         Vector3 previousPosition = ToPlayerWorld(previous);
         Vector3 currentPosition = ToPlayerWorld(current);
         bool resetJump = previousPosition.DistanceSquaredTo(currentPosition) > 100f;
@@ -184,8 +186,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         _level100Terrain = Level100HeightFieldAsset.Load();
         Material terrainMaterial = Level100TerrainAppearanceAsset.LoadMaterial(
-            "res://Assets/Level100/Source/level100-mixer-set-10.mapt.bin",
-            "res://Assets/Level100/Source/level100-mixer-map.mmap.bin",
+            "res://Assets/Level100/Source/level100-root-terrain.rgb565.bin",
             "res://Assets/Level100/Textures/terrain-detail-00.texture.aya",
             "res://Assets/Level100/Textures/terrain-cloud-shadow.texture.aya",
             _level100Terrain);
@@ -715,7 +716,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             columns: 4,
             rows: 4);
         root.AddChild(animatedBlob);
-        AnimateAtlas(root, animatedBlob, frames: 15, columns: 4, rows: 4, 1d);
+        AnimatePulseImpactBlob(root, animatedBlob);
         AnimateScale(animatedBlob, 1f, 1.07f, 1d);
 
         MeshInstance3D flash = CreateEffectSprite(
@@ -725,12 +726,14 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(flash);
         AnimateScale(flash, 1f, 0f, 0.3d);
 
-        MeshInstance3D shockwave = CreateEffectSprite(
-            "PulseBlastShockwave",
-            _pulseImpactShockwaveTexture,
-            1f);
-        root.AddChild(shockwave);
-        AnimateScale(shockwave, 1f, 2f, 0.5d);
+        MeshInstance3D blastSphere = CreatePulseBlastSphere(
+            _pulseImpactShockwaveTexture);
+        root.AddChild(blastSphere);
+        AnimatePulseBlast(
+            root,
+            blastSphere,
+            _particlePresentationSeconds,
+            0.5d);
     }
 
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
@@ -741,9 +744,9 @@ public sealed partial class FirstFlightWorldView : Node3D
             _targetTankExplosionAnimatedTexture,
             3f,
             columns: 4,
-            rows: 2);
+            rows: 4);
         root.AddChild(animatedExplosion);
-        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 2, 0.5d);
+        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 4, 0.5d);
         AnimateScale(animatedExplosion, 1f, 1.3f / 1.5f, 0.5d);
 
         MeshInstance3D fireball = CreateEffectSprite(
@@ -784,9 +787,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         int columns = 1,
         int rows = 1)
     {
-        StandardMaterial3D material = CreatePulseParticleMaterial(
-            texture,
-            billboard: true);
+        StandardMaterial3D material = CreateEffectMaterial(texture, billboard: true);
         material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
         return new MeshInstance3D
         {
@@ -794,6 +795,73 @@ public sealed partial class FirstFlightWorldView : Node3D
             Mesh = new QuadMesh { Size = new Vector2(size, size) },
             MaterialOverride = material,
         };
+    }
+
+    private static MeshInstance3D CreatePulseBlastSphere(Texture2D texture)
+    {
+        StandardMaterial3D material = CreateEffectMaterial(texture, billboard: false);
+        material.Uv1Scale = new Vector3(2f, 2f, 1f);
+        return new MeshInstance3D
+        {
+            Name = "PulseBlastSphere",
+            Mesh = new SphereMesh
+            {
+                Radius = 0.5f,
+                Height = 1f,
+                RadialSegments = 10,
+                Rings = 10,
+            },
+            MaterialOverride = material,
+        };
+    }
+
+    private static void AnimatePulseBlast(
+        Node root,
+        MeshInstance3D sphere,
+        float globalSeconds,
+        double durationSeconds)
+    {
+        var material = (StandardMaterial3D)sphere.MaterialOverride;
+        float initialV = Mathf.PosMod(-2f * globalSeconds, 1f);
+        Action<float> update = normalizedAge =>
+        {
+            // MainSet's Shockwave Medium Growth is
+            // radius = 0.6*sin(normalized age)+0.4. The mesh has radius 0.5.
+            float radius = (0.6f * MathF.Sin(normalizedAge)) + 0.4f;
+            sphere.Scale = Vector3.One * (radius / 0.5f);
+            material.Uv1Offset = new Vector3(0f, initialV - normalizedAge, 0f);
+            material.AlbedoColor = Colors.White.Lerp(Colors.Black, normalizedAge);
+        };
+        update(0f);
+        root.CreateTween().TweenMethod(
+            Callable.From<float>(update),
+            0f,
+            1f,
+            durationSeconds);
+    }
+
+    private static void AnimatePulseImpactBlob(Node root, MeshInstance3D sprite)
+    {
+        var material = (StandardMaterial3D)sprite.MaterialOverride;
+        int startFrame = (int)(GD.Randi() % 15u);
+        Tween tween = root.CreateTween();
+        const int frameAdvances = 14;
+        const double frameIntervalSeconds = 1d / frameAdvances;
+        for (int step = 0; step <= frameAdvances; step++)
+        {
+            int capturedFrame = (startFrame + step) % 15;
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedFrame % 4) / 4f,
+                    (capturedFrame / 4) / 4f,
+                    0f);
+            }));
+            if (step < frameAdvances)
+            {
+                tween.TweenInterval(frameIntervalSeconds);
+            }
+        }
     }
 
     private static void AnimateAtlas(
@@ -943,6 +1011,24 @@ public sealed partial class FirstFlightWorldView : Node3D
             Emission = Colors.White,
             EmissionTexture = texture,
             EmissionEnergyMultiplier = 1f,
+        };
+    }
+
+    private static StandardMaterial3D CreateEffectMaterial(
+        Texture2D texture,
+        bool billboard)
+    {
+        return new StandardMaterial3D
+        {
+            AlbedoTexture = texture,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            BlendMode = BaseMaterial3D.BlendModeEnum.Add,
+            BillboardMode = billboard
+                ? BaseMaterial3D.BillboardModeEnum.Enabled
+                : BaseMaterial3D.BillboardModeEnum.Disabled,
+            BillboardKeepScale = billboard,
         };
     }
 

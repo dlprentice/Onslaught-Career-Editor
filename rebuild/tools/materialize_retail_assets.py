@@ -28,13 +28,27 @@ GODOT_ASSETS = Path("rebuild/OnslaughtRebuild.Godot/Assets")
 CORE_ASSETS = Path("rebuild/OnslaughtRebuild.Core/Assets")
 LEVEL_ARCHIVE = "data/resources/100_res_PC.aya"
 LEVEL_ARCHIVE_SHA256 = "ed6350c0e214d00ab1bf6a7bd137fba3e77d0afe19a6dc4c0607f56ac037496a"
+BASE_ARCHIVE = "data/resources/base_res_PC.aya"
+BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
+ROOT_TERRAIN_TEXTURE = (
+    GODOT_ASSETS / "Level100/Source/level100-root-terrain.rgb565.bin"
+)
+# Exact initial root texture produced by the released compositor reconstructed
+# below. The materializer refuses to publish if those pixels do not reproduce.
+ROOT_TERRAIN_TEXTURE_SHA256 = (
+    "6eb202f450926097930bedca440f0163a1886572981e3c69b4edf9289a68ae2b"
+)
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "acb4ffa4532340af9584614e66ec43af9993570cfc0a34deb00f58d1d41b3b71"
+STATIC_WORLD_MANIFEST_SHA256 = "c24dbd570df8d0f0ad0663918bcd6f9557931dfcf9b0bc5feedf246ab947b9e5"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
-    "e3ab5a6c48143365bfbecf716effc5508e7be3d7b8a37d66c827b0994c5cf08a"
+    "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
+)
+PINE_IMPOSTER_TEXTURE = (
+    "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
+    "7368ba0c586221ff1b1572cee8f84de2bf6db426c005a73a10bad54a938ad882",
 )
 WATER_SURFACE_RESOURCE = STATIC_WORLD_ROOT / "Source/level100-water-surface.surf.bin"
 WATER_SURFACE_SHA256 = "c3177354fed3eb5a94dc72debf2465c32ab1d931de79e5e88ac431043d3e917d"
@@ -94,8 +108,13 @@ STATIC_MESH_BY_DEFINITION = {
     "Forseti City Building 2": "f-city2",
     "Forseti City Building 3": "f-city3",
 }
-STATIC_MESH_KEYS = tuple(dict.fromkeys(STATIC_MESH_BY_DEFINITION.values())) + tuple(
-    f"pinesnow{variant}" for variant in range(4)
+STATIC_MESH_KEYS = tuple(dict.fromkeys(STATIC_MESH_BY_DEFINITION.values()))
+PINE_MESH_KEYS = tuple(f"pinesnow{variant}" for variant in range(4))
+PINE_MESH_SHA256 = (
+    "d428a6ed49d460a5729c357618c3837e399e7d265ae6127899cd1911eb7a0481",
+    "51984637f702b0215f0bd841977d8c9602201fb9f8392f7b110e285cde1ed102",
+    "d717735ac741f7267b746546feebece60e7515048c0fdf46586c79e85c4087eb",
+    "f9f5031421b5c9913a2f8865cabe31feb25e692e0c33934e1a537ab675793b3a",
 )
 
 
@@ -181,8 +200,6 @@ DIRECT_ASSETS = (
 
 CHUNKS = (
     (CORE_ASSETS / "Level100/level100-heightfield.hfld.bin", b"HFLD", 668660, "7a4c7c5b9400e2c8d2325cecb5c44701cd8a6e6f8609cbc8bc31d449c0620f5d"),
-    (GODOT_ASSETS / "Level100/Source/level100-mixer-set-10.mapt.bin", b"MAPT", 399468, "c21576ae7ea75fa800ab4117c1479aeb70359a1acc84edd9508895eb339612f1"),
-    (GODOT_ASSETS / "Level100/Source/level100-mixer-map.mmap.bin", b"MMAP", 877597, "45045d248e27366080614c1ad26fc9e711bc9656f4f79210eac63d2a20938361"),
 )
 
 
@@ -234,9 +251,10 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
 def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
     direct = tuple((path, expected) for path, _, expected in DIRECT_ASSETS)
     chunks = tuple((path, expected) for path, _, _, expected in CHUNKS)
+    derived = ((ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),)
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
     sounds = tuple((path, expected) for path, _, _, expected in SOUNDS)
-    return direct + chunks + meshes + sounds
+    return direct + chunks + derived + meshes + sounds
 
 
 def _resource_relative(resource_path: str) -> Path:
@@ -260,7 +278,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v4"
+        manifest.get("schema") != "onslaught.level100-static-world.v6"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -269,8 +287,11 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or manifest.get("pineInstanceCount") != 1481
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("pines", ())) != 1481
-        or len(manifest.get("meshes", {})) != 28
-        or len(manifest.get("textures", {})) != 33
+        or len(manifest.get("meshes", {})) != 24
+        or len(manifest.get("textures", {})) != 31
+        or manifest.get("pineBillboards", {}).get("texture")
+        != "pine-imposters-100"
+        or len(manifest.get("pineBillboards", {}).get("variants", ())) != 4
         or manifest.get("textures", {})
         .get("meshtex-a8-fb-hangermorebits-lit", {})
         .get("blendTextureAlpha")
@@ -296,7 +317,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
             manifest["water"]["surfaceSha256"],
         )
     )
-    if len(outputs) != 63 or len({path for path, _ in outputs}) != len(outputs):
+    if len(outputs) != 57 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -374,7 +395,12 @@ def _game_candidates(explicit: Path | None) -> list[Path]:
 
 def _resolve_game_root(explicit: Path | None) -> Path:
     for candidate in _game_candidates(explicit):
-        if (candidate / "BEA.exe").is_file() and (candidate / LEVEL_ARCHIVE).is_file() and (candidate / SOUND_BANK).is_file():
+        if (
+            (candidate / "BEA.exe").is_file()
+            and (candidate / LEVEL_ARCHIVE).is_file()
+            and (candidate / BASE_ARCHIVE).is_file()
+            and (candidate / SOUND_BANK).is_file()
+        ):
             return candidate
     if explicit is not None:
         raise RuntimeError(f"not a complete Battle Engine Aquila installation: {explicit}")
@@ -403,19 +429,23 @@ def _extract_chunk(raw: bytes, tag: bytes, expected_size: int, expected_hash: st
     return matches[0]
 
 
-def _chunk_payload(data: bytes, wanted_tag: bytes) -> bytes:
-    matches: list[bytes] = []
+def _chunk_records(data: bytes) -> list[tuple[bytes, bytes]]:
+    records: list[tuple[bytes, bytes]] = []
     offset = 0
     while offset < len(data):
         if offset + 8 > len(data):
-            raise RuntimeError("Level 100 contains a truncated world chunk")
+            raise RuntimeError("retail data contains a truncated chunk")
         size = struct.unpack_from("<I", data, offset + 4)[0]
         end = offset + 8 + size
         if end > len(data):
-            raise RuntimeError("Level 100 contains an overrun world chunk")
-        if data[offset : offset + 4] == wanted_tag:
-            matches.append(data[offset + 8 : end])
+            raise RuntimeError("retail data contains an overrun chunk")
+        records.append((data[offset : offset + 4], data[offset + 8 : end]))
         offset = end
+    return records
+
+
+def _chunk_payload(data: bytes, wanted_tag: bytes) -> bytes:
+    matches = [payload for tag, payload in _chunk_records(data) if tag == wanted_tag]
     if len(matches) != 1:
         raise RuntimeError(
             f"expected one {wanted_tag.decode('ascii')} world chunk, found {len(matches)}"
@@ -653,6 +683,82 @@ def _source_aggregate(source_data: dict[Path, bytes]) -> str:
     return _sha256(("\n".join(rows) + "\n").encode("utf-8"))
 
 
+PINE_CENTER_BITS = {
+    0: (0xBCCC7F20, 0x39BA4000, 0xBF6303AA),
+    1: (0x3D8FAD60, 0xBDA96080, 0xBF696408),
+    2: (0x3C9B2D60, 0xBDF5D470, 0xBF6A0AB4),
+    3: (0x3D429CA0, 0x3CD68540, 0xBF506532),
+}
+
+
+def _pine_imposter_views(raw_level: bytes) -> list[list[list[float]]]:
+    outer = _chunk_payload(raw_level, b"IMPS")
+    if len(outer) != 10_208:
+        raise RuntimeError("Level 100 has an unexpected outer IMPS envelope")
+    payload = _chunk_payload(outer, b"IMPS")
+    if len(payload) != 10_200 or payload.count(b"Imposters_100\0") != 1:
+        raise RuntimeError("Level 100 does not select the expected imposter atlas")
+
+    views: list[list[list[float]]] = []
+    for variant in range(4):
+        name = f"pinesnow{variant}.MSH".encode("ascii")
+        name_offset = payload.find(name)
+        if name_offset < 0 or payload.find(name, name_offset + 1) >= 0:
+            raise RuntimeError(f"Level 100 has an ambiguous {name.decode()} imposter")
+        record_offset = payload.rfind(b"IMPT", 0, name_offset)
+        if record_offset < 0:
+            raise RuntimeError(f"Level 100 has no IMPT owner for {name.decode()}")
+        record_size = struct.unpack_from("<I", payload, record_offset + 4)[0]
+        record_end = record_offset + 8 + record_size
+        if record_size != 248 or not (record_offset < name_offset < record_end):
+            raise RuntimeError(f"Level 100 has an invalid {name.decode()} IMPT record")
+        view_offset = payload.find(b"VIEW", name_offset, record_end)
+        if (
+            view_offset < 0
+            or payload.find(b"VIEW", view_offset + 1, record_end) >= 0
+            or struct.unpack_from("<I", payload, view_offset + 4)[0] != 144
+            or view_offset + 152 != record_end
+        ):
+            raise RuntimeError(f"Level 100 has invalid {name.decode()} VIEW data")
+        view_payload = payload[view_offset + 8 : record_end]
+        all_views = [
+            list(struct.unpack_from("<6f", view_payload, index * 24))
+            for index in range(6)
+        ]
+        standing_views = all_views[:4]
+        if any(
+            len(view) != 6
+            or not all(math.isfinite(value) for value in view)
+            or not (0.0 <= view[0] < view[1] <= 1.0)
+            or not (0.0 <= view[2] < view[3] <= 1.0)
+            or view[4] <= 0.0
+            or view[5] <= 0.0
+            for view in standing_views
+        ):
+            raise RuntimeError(f"Level 100 {name.decode()} standing views are invalid")
+        views.append(standing_views)
+    return views
+
+
+def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]:
+    inflated = inflate_aya(source)
+    outer_offset = len(inflated) - 56
+    inner_offset = outer_offset + 8
+    if (
+        outer_offset < 0
+        or inflated[outer_offset : outer_offset + 4] != b"BBOX"
+        or struct.unpack_from("<I", inflated, outer_offset + 4)[0] != 48
+        or inflated[inner_offset : inner_offset + 4] != b"BBOX"
+        or struct.unpack_from("<I", inflated, inner_offset + 4)[0] != 40
+        or inner_offset + 48 != len(inflated)
+    ):
+        raise RuntimeError(f"pinesnow{variant} has no exact final global BBOX")
+    center_bits = struct.unpack_from("<3I", inflated, inner_offset + 8)
+    if center_bits != PINE_CENTER_BITS[variant]:
+        raise RuntimeError(f"pinesnow{variant} global BBOX center changed")
+    return list(struct.unpack("<3f", struct.pack("<3I", *center_bits)))
+
+
 def _materialize_static_world(
     game_root: Path,
     raw_level: bytes,
@@ -750,13 +856,34 @@ def _materialize_static_world(
         source_data[relative] = data
         mesh_inputs[mesh_key] = (relative, data, materials)
 
+    pine_views = _pine_imposter_views(raw_level)
+    pine_centers: list[list[float]] = []
+    for variant, mesh_key in enumerate(PINE_MESH_KEYS):
+        matches = resolver.mesh_index.get(f"{mesh_key}.msh".lower(), [])
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"expected one exact loose mesh for {mesh_key}, found {len(matches)}"
+            )
+        source_path = Path(matches[0])
+        relative = source_path.relative_to(game_root)
+        data = _read_exact(source_path, PINE_MESH_SHA256[variant])
+        source_data[relative] = data
+        pine_centers.append(_pine_global_center(data, inflate_aya, variant))
+
+    pine_atlas_source = Path(PINE_IMPOSTER_TEXTURE[0])
+    pine_atlas_data = _read_exact(
+        game_root / pine_atlas_source,
+        PINE_IMPOSTER_TEXTURE[1],
+    )
+    source_data[pine_atlas_source] = pine_atlas_data
+
     water_sources: dict[str, Path] = {}
     for key, source_name, expected_hash in WATER_TEXTURES:
         source = Path(source_name)
         source_data[source] = _read_exact(game_root / source, expected_hash)
         water_sources[key] = source
-    if len(source_data) != 61:
-        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 61")
+    if len(source_data) != 59:
+        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 59")
     aggregate = _source_aggregate(source_data)
     if aggregate != STATIC_WORLD_SOURCE_AGGREGATE_SHA256:
         raise RuntimeError(f"unsupported static-world source set (aggregate SHA-256 {aggregate})")
@@ -799,6 +926,28 @@ def _materialize_static_world(
             "sourcePath": source.as_posix(),
             "width": width,
         }
+
+    pine_atlas_key = "pine-imposters-100"
+    pine_atlas_destination = (
+        STATIC_WORLD_ROOT / "Textures/pine-imposters-100.texture.aya"
+    )
+    pine_atlas_resource_path = (
+        "res://Assets/Level100/StaticWorld/Textures/"
+        "pine-imposters-100.texture.aya"
+    )
+    pine_atlas_target = stage / pine_atlas_destination
+    pine_atlas_target.parent.mkdir(parents=True, exist_ok=True)
+    pine_atlas_target.write_bytes(pine_atlas_data)
+    outputs.append((pine_atlas_destination, PINE_IMPOSTER_TEXTURE[1]))
+    texture_records[pine_atlas_key] = {
+        "blendTextureAlpha": False,
+        "compression": "Dxt2",
+        "height": 256,
+        "resourcePath": pine_atlas_resource_path,
+        "sha256": PINE_IMPOSTER_TEXTURE[1],
+        "sourcePath": pine_atlas_source.as_posix(),
+        "width": 1024,
+    }
 
     mesh_records: dict[str, dict[str, object]] = {}
     for mesh_key in STATIC_MESH_KEYS:
@@ -871,9 +1020,19 @@ def _materialize_static_world(
     manifest = {
         "meshes": mesh_records,
         "objects": objects,
+        "pineBillboards": {
+            "texture": pine_atlas_key,
+            "variants": [
+                {
+                    "centerOffset": pine_centers[variant],
+                    "views": pine_views[variant],
+                }
+                for variant in range(4)
+            ],
+        },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v4",
+        "schema": "onslaught.level100-static-world.v6",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,
@@ -969,6 +1128,355 @@ def _pcm_wav(pcm: bytes) -> bytes:
     )
 
 
+def _require_chunk(source: bytes, offset: int, tag: bytes, payload_size: int) -> int:
+    if (
+        offset < 0
+        or offset + 8 > len(source)
+        or source[offset : offset + 4] != tag
+        or struct.unpack_from("<I", source, offset + 4)[0] != payload_size
+        or offset + 8 + payload_size > len(source)
+    ):
+        raise RuntimeError(f"Level 100 has invalid {tag.decode('ascii')} framing")
+    return offset + 8
+
+
+def _parse_root_map_texture(raw_level: bytes) -> tuple[bytes, tuple[int, ...]]:
+    source = _extract_chunk(
+        raw_level,
+        b"MAPT",
+        7_788,
+        "04aa2a1630e427a2916c5d3a4ba2be676d5b575022f559de1753d2101727b711",
+    )
+    _require_chunk(source, 0, b"MAPT", len(source) - 8)
+    cmtx = _require_chunk(source, 8, b"CMTX", 76)
+    if (
+        struct.unpack_from("<I", source, cmtx)[0] != 0xDEAD
+        or struct.unpack_from("<I", source, cmtx + 8)[0] != 0xDEAD
+        or struct.unpack_from("<iii", source, cmtx + 0x10) != (256, 6, 16)
+    ):
+        raise RuntimeError("Level 100 root MAPT metadata changed")
+
+    data_header = cmtx + 76
+    data_offset = _require_chunk(source, data_header, b"DATA", 1_536)
+    palette_header = data_offset + 1_536
+    palette_offset = _require_chunk(source, palette_header, b"PALT", 6_144)
+    if palette_offset + 6_144 != len(source):
+        raise RuntimeError("Level 100 root MAPT has trailing data")
+    return source[data_offset : data_offset + 1_536], struct.unpack_from(
+        "<1536I", source, palette_offset
+    )
+
+
+def _parse_root_mixer_map(
+    raw_level: bytes,
+) -> tuple[list[tuple[tuple[int, ...], bytes]], bytes]:
+    source = _extract_chunk(
+        raw_level,
+        b"MMAP",
+        877_597,
+        "45045d248e27366080614c1ad26fc9e711bc9656f4f79210eac63d2a20938361",
+    )
+    _require_chunk(source, 0, b"MMAP", len(source) - 8)
+    cells: list[tuple[tuple[int, ...], bytes]] = []
+    position = 8
+    for cell_index in range(64 * 64):
+        if position + 8 > len(source) or source[position : position + 4] != b"MCEL":
+            raise RuntimeError(f"Level 100 MMAP cell {cell_index} is not framed")
+        cell_size = struct.unpack_from("<I", source, position + 4)[0]
+        cell_payload = _require_chunk(
+            source,
+            position,
+            b"MCEL",
+            cell_size,
+        )
+        record = _require_chunk(source, cell_payload, b"CMCL", 20)
+        layer_count = struct.unpack_from("<i", source, record)[0]
+        if (
+            layer_count not in range(1, 6)
+            or struct.unpack_from("<I", source, record + 4)[0] != 0xDEAD
+        ):
+            raise RuntimeError(f"Level 100 MMAP cell {cell_index} is invalid")
+        material_ids = struct.unpack_from(f"<{layer_count}H", source, record + 8)
+        if any(material_id >= 6 for material_id in material_ids):
+            raise RuntimeError(f"Level 100 MMAP cell {cell_index} selects an invalid material")
+        weights_header = record + 20
+        weights_size = layer_count * 81
+        weights = _require_chunk(source, weights_header, b"MXRS", weights_size)
+        if cell_size != 36 + weights_size:
+            raise RuntimeError(f"Level 100 MMAP cell {cell_index} has an invalid envelope")
+        cells.append((material_ids, source[weights : weights + weights_size]))
+        position += 8 + cell_size
+
+    shade_offset = _require_chunk(source, position, b"MSHD", 512 * 512)
+    if shade_offset + (512 * 512) != len(source):
+        raise RuntimeError("Level 100 MMAP has trailing data")
+    shade = source[shade_offset:]
+    if any(value > 63 for value in shade):
+        raise RuntimeError("Level 100 MMAP contains an invalid shade index")
+    return cells, shade
+
+
+def _static_shadow_mask(raw_level: bytes) -> bytes:
+    source = _extract_chunk(
+        raw_level,
+        b"SSHD",
+        483_608,
+        "d64b2d1503a59ab8aec15bcc92a3736bf23b6104ed0b557d1710f06dd74a5c0a",
+    )
+    shds = _chunk_payload(source[8:], b"SHDS")
+    children = _chunk_records(shds)
+    if (
+        len(children) != 2
+        or children[0][0] != b"DATA"
+        or len(children[0][1]) != 4
+        or children[1][0] != b"SDAT"
+    ):
+        raise RuntimeError("Level 100 SSHD has an unexpected envelope")
+    owner_count = struct.unpack_from("<I", children[0][1])[0]
+    owners = _chunk_records(children[1][1])
+    if owner_count != 30 or len(owners) != owner_count or any(tag != b"CSSD" for tag, _ in owners):
+        raise RuntimeError("Level 100 SSHD owner count changed")
+
+    grid: list[bytearray | None] = [None] * (64 * 64)
+    part_count = 0
+    active_part_count = 0
+    populated_cell_count = 0
+    for _, owner in owners:
+        if len(owner) < 24:
+            raise RuntimeError("Level 100 CSSD is truncated")
+        expected_parts = struct.unpack_from("<I", owner, 16)[0]
+        parts = _chunk_records(owner[24:])
+        if len(parts) != expected_parts or any(tag != b"SSPT" for tag, _ in parts):
+            raise RuntimeError("Level 100 CSSD part count changed")
+        part_count += len(parts)
+        for _, part in parts:
+            if len(part) < 20:
+                raise RuntimeError("Level 100 SSPT is truncated")
+            min_x, min_y, width, height, has_map = struct.unpack_from("<iiiii", part)
+            if has_map not in (0, 1):
+                raise RuntimeError(
+                    "Level 100 SSPT metadata is invalid: "
+                    f"{min_x},{min_y},{width},{height},{has_map}"
+                )
+            if has_map == 0:
+                if len(part) != 20:
+                    raise RuntimeError("Level 100 empty SSPT has trailing data")
+                continue
+            if width <= 0 or height <= 0:
+                raise RuntimeError("Level 100 mapped SSPT has an invalid extent")
+            active_part_count += 1
+            smap = _chunk_payload(part[20:], b"SMAP")
+            cursor = 0
+            for local_y in range(height):
+                for local_x in range(width):
+                    if cursor + 4 > len(smap):
+                        raise RuntimeError("Level 100 SMAP is truncated")
+                    present = struct.unpack_from("<I", smap, cursor)[0]
+                    cursor += 4
+                    if present not in (0, 1):
+                        raise RuntimeError("Level 100 SMAP has an invalid cell flag")
+                    if present == 0:
+                        continue
+                    if cursor + 512 > len(smap):
+                        raise RuntimeError("Level 100 SMAP bitmap is truncated")
+                    bits = smap[cursor : cursor + 512]
+                    cursor += 512
+                    cell_x = min_x + local_x
+                    cell_y = min_y + local_y
+                    if not (0 <= cell_x < 64 and 0 <= cell_y < 64):
+                        raise RuntimeError("Level 100 SMAP cell escaped the terrain")
+                    grid_index = (cell_x * 64) + cell_y
+                    destination = grid[grid_index]
+                    if destination is None:
+                        destination = bytearray(512)
+                        grid[grid_index] = destination
+                    for index, value in enumerate(bits):
+                        destination[index] |= value
+                    populated_cell_count += 1
+            if cursor != len(smap):
+                raise RuntimeError("Level 100 SMAP has trailing data")
+
+    if (part_count, active_part_count, populated_cell_count) != (335, 275, 910):
+        raise RuntimeError("Level 100 SSHD coverage changed")
+    result = bytearray(512 * 512)
+    for cell_y in range(64):
+        for cell_x in range(64):
+            bits = grid[(cell_x * 64) + cell_y]
+            if bits is None:
+                continue
+            for local_y in range(8):
+                source_y = local_y * 8
+                for local_x in range(8):
+                    source_x = local_x * 8
+                    source_bit = (source_y * 64) + source_x
+                    if bits[source_bit >> 3] & (1 << (source_bit & 7)):
+                        target_x = (cell_x * 8) + local_x
+                        target_y = (cell_y * 8) + local_y
+                        result[(target_y * 512) + target_x] = 1
+    if (
+        sum(result) != 5_051
+        or _sha256(result)
+        != "0c67274b69599bf3832e6bc9e988a6436151c1a495aef720081c724f4111c03b"
+    ):
+        raise RuntimeError("Level 100 root static-shadow mask did not reproduce")
+    return bytes(result)
+
+
+def _lighting_gradient(sun_color: int, ambient_color: int) -> list[tuple[int, int, int]]:
+    red_base = (((ambient_color >> 16) & 0xFF) << 8) // (((sun_color >> 16) & 0xFE) + 1)
+    green_base = (ambient_color & 0xFF00) // (((sun_color >> 8) & 0xFE) + 1)
+    blue_base = ((ambient_color & 0xFF) << 8) // ((sun_color & 0xFE) + 1)
+    red = red_base << 8
+    green = green_base << 8
+    blue = blue_base << 8
+    result: list[tuple[int, int, int]] = []
+    for _ in range(64):
+        red_value = min(((red >> 8) << 16) * 2, 0x00F80000) & 0x00F80000
+        green_value = min(((green >> 8) << 11) * 2, 0x0007E000) & 0x0007E000
+        blue_value = min(((blue >> 3) & 0xFFFFFFE0) * 2, 0x00001F00) & 0x00001F00
+        result.append((red_value, green_value, blue_value))
+        red += (255 - red_base) * 4
+        green += (255 - green_base) * 4
+        blue += (255 - blue_base) * 4
+    return result
+
+
+def _signed32(value: int) -> int:
+    value &= 0xFFFFFFFF
+    return value - 0x100000000 if value & 0x80000000 else value
+
+
+def _f32(value: float) -> float:
+    return struct.unpack("<f", struct.pack("<f", value))[0]
+
+
+def _apply_pine_shadows(
+    pixels: list[int],
+    raw_level: bytes,
+    raw_base: bytes,
+) -> None:
+    dmkr = _extract_chunk(
+        raw_base,
+        b"DMKR",
+        5_473,
+        "c9c9d88dbf4248e967616fdd0d4a59b8528251e13daf16b14b974582e94fb7f1",
+    )[8:]
+    if len(dmkr) != 5_465 or struct.unpack_from("<I", dmkr)[0] != 6:
+        raise RuntimeError("base DMKR metadata changed")
+    alpha = dmkr[4:]
+    level_offsets = (0, 1, 5, 21, 85, 341, 1_365)
+    _, pines, _ = _parse_static_world(raw_level)
+    views = _pine_imposter_views(raw_level)
+    descriptors: list[tuple[int, int, int]] = []
+    last_x = 0.0
+    last_y = 0.0
+    for x_value, y_value, variant_value in pines:
+        variant = int(variant_value)
+        x = _f32(_f32(float(x_value)) - _f32(0.4))
+        y = _f32(_f32(float(y_value)) + _f32(0.1))
+        delta_x = _f32(x - last_x)
+        delta_y = _f32(y - last_y)
+        distance_squared = _f32(_f32(delta_x * delta_x) + _f32(delta_y * delta_y))
+        if distance_squared < _f32(0.01):
+            continue
+        last_x = x
+        last_y = y
+        metric = max(views[variant][0][4], views[variant][0][5])
+        bucket = min(int(round(_f32(_f32(metric) * _f32(6.0)))), 6)
+        high_size = 1 << bucket
+        center_x = int(round(_f32(x * _f32(16.0))))
+        center_y = int(round(_f32(y * _f32(16.0))))
+        top_x = center_x - (high_size >> 1)
+        top_y = center_y - (high_size >> 1)
+        cell_x = top_x >> 7
+        cell_y = top_y >> 7
+        if not (0 <= cell_x < 64 and 0 <= cell_y < 64):
+            continue
+        level = bucket - 4
+        if level <= 0:
+            continue
+        descriptors.append((top_x >> 4, top_y >> 4, level))
+
+    for top_x, top_y, level in reversed(descriptors):
+        dimension = 1 << level
+        source_offset = level_offsets[level]
+        for source_y in range(dimension):
+            target_y = top_y + source_y
+            if not 0 <= target_y < 512:
+                continue
+            for source_x in range(dimension):
+                target_x = top_x + source_x
+                if not 0 <= target_x < 512:
+                    continue
+                amount = alpha[source_offset + (source_y * dimension) + source_x]
+                if amount >= 32:
+                    continue
+                target_index = (target_y * 512) + target_x
+                destination = pixels[target_index]
+                pair = ((destination << 16) | destination) & 0x07E0F81F
+                scaled = ((pair * amount) >> 5) & 0x07E0F81F
+                pixels[target_index] = ((scaled >> 16) + scaled) & 0xFFFF
+
+
+def _render_root_terrain(raw_level: bytes, raw_base: bytes, height_field: bytes) -> bytes:
+    map_data, palettes = _parse_root_map_texture(raw_level)
+    cells, shade = _parse_root_mixer_map(raw_level)
+    static_shadow = _static_shadow_mask(raw_level)
+    chfd = _require_chunk(height_field, 8, b"CHFD", 5_084)
+    if height_field[chfd + 0x1030] != 10 or height_field[chfd + 0x1094] != 0:
+        raise RuntimeError("Level 100 no longer selects mixer set 10 and detail texture 00")
+    sun_color = struct.unpack_from("<I", height_field, chfd + 0x107C)[0]
+    ambient_color = struct.unpack_from("<I", height_field, chfd + 0x108C)[0]
+    gradient = _lighting_gradient(sun_color, ambient_color)
+    pixels = [0] * (512 * 512)
+
+    for y in range(512):
+        for x in range(512):
+            tile_x = x // 8
+            tile_y = y // 8
+            local_x = x & 7
+            local_y = y & 7
+            cell_index = (tile_y * 64) + tile_x
+            material_ids, weights = cells[cell_index]
+            source_x = local_x + (8 if cell_index & 1 else 0)
+            source_y = local_y + (8 if cell_index & 0x40 else 0)
+            texel = (source_y * 16) + source_x
+            palette_index = map_data[texel]
+            color = palettes[palette_index]
+            for layer, material_id in enumerate(material_ids):
+                palette_index = map_data[(material_id * 256) + texel]
+                candidate = palettes[(material_id * 256) + palette_index]
+                weight = struct.unpack("b", bytes((weights[(layer * 81) + (local_y * 9) + local_x],)))[0]
+                candidate = (candidate + ((weight << 24) & 0xFFFFFFFF)) & 0xFFFFFFFF
+                difference = _signed32(candidate - color)
+                if difference > 0x1FFFFFFF:
+                    color = candidate
+                elif difference >= 0:
+                    blend = difference >> 26
+                    color = (
+                        (((color & 0x00F8F8FF) * (7 - blend) +
+                          (candidate & 0x00F8F8FF) * blend) >> 3)
+                        + (candidate & 0xFF000000)
+                    ) & 0xFFFFFFFF
+
+            red = color & 0xFF
+            green = (color >> 8) & 0xFF
+            blue = (color >> 16) & 0xFF
+            shade_x = min(x + 1, 511)
+            shade_y = min(y + 1, 511)
+            shade_index = shade[(shade_y * 512) + shade_x]
+            shade_index >>= static_shadow[(y * 512) + x]
+            light_red, light_green, light_blue = gradient[shade_index]
+            pixels[(y * 512) + x] = (
+                ((green * light_green & 0x07E00000) +
+                 (blue * light_blue & 0x001F0000) +
+                 (red * light_red & 0xF8000000)) >> 16
+            ) & 0xFFFF
+
+    _apply_pine_shadows(pixels, raw_level, raw_base)
+    return struct.pack("<262144H", *pixels)
+
+
 def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     source_data: dict[Path, bytes] = {}
     for destination, source, expected in DIRECT_ASSETS:
@@ -984,11 +1492,26 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     from aya_archive_inventory import inflate_aya_bytes
 
     raw_level = inflate_aya_bytes(level_archive)
+    chunk_data: dict[bytes, bytes] = {}
     for destination, tag, expected_size, expected in CHUNKS:
         data = _extract_chunk(raw_level, tag, expected_size, expected)
+        chunk_data[tag] = data
         target = stage / destination
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+
+    base_archive = _read_exact(game_root / BASE_ARCHIVE, BASE_ARCHIVE_SHA256)
+    raw_base = inflate_aya_bytes(base_archive)
+    root_terrain = _render_root_terrain(raw_level, raw_base, chunk_data[b"HFLD"])
+    root_terrain_hash = _sha256(root_terrain)
+    if root_terrain_hash != ROOT_TERRAIN_TEXTURE_SHA256:
+        raise RuntimeError(
+            "Level 100 root terrain did not reproduce exactly "
+            f"(SHA-256 {root_terrain_hash})"
+        )
+    root_terrain_target = stage / ROOT_TERRAIN_TEXTURE
+    root_terrain_target.parent.mkdir(parents=True, exist_ok=True)
+    root_terrain_target.write_bytes(root_terrain)
 
     rebuild_tools = ROOT / "rebuild/tools"
     sys.path.insert(0, str(rebuild_tools))

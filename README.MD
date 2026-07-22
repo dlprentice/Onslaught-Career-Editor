@@ -16,8 +16,8 @@ GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by
-Level 100, 1,481 released pine placements, water, coarse terrain, the released
-macro/detail terrain blend, and sky at their bounded reconstruction state; it
+Level 100, 1,481 released pine placements, water, the complete height lattice,
+the released macro/detail terrain blend, and sky at their bounded reconstruction state; it
 does not claim retail parity. The exact retail inputs used by that slice are
 materialized locally from the user's own installation and are not distributed
 as files in the current source tree or its release packages.

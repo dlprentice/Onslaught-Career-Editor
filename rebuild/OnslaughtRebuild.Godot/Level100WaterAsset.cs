@@ -49,11 +49,9 @@ internal sealed class Level100WaterAsset
 
         uniform sampler2D caustic_texture : filter_linear_mipmap, repeat_enable;
         uniform sampler2D reflection_texture : filter_linear_mipmap, repeat_enable;
-        uniform sampler2D waves_texture : filter_linear_mipmap, repeat_enable;
         uniform vec3 water_color;
         uniform vec2 retail_origin;
         uniform float caustic_phase;
-        uniform float main_wave_scroll;
         uniform vec3 fog_color;
         uniform float fog_density;
         varying vec3 water_world_position;
@@ -99,13 +97,12 @@ internal sealed class Level100WaterAsset
             vec3 caustic_0 = texture(caustic_texture, caustic_a).rgb;
             vec3 caustic_1 = texture(caustic_texture, caustic_b).rgb;
             vec3 reflected = texture(reflection_texture, reflection_uv).rgb;
-            vec3 wave = texture(waves_texture, vec2(0.0, main_wave_scroll)).rgb;
 
-            // The grid has only TEXCOORD0 while the shared wave stage selects
-            // TEXCOORD1, so D3D supplies (0,0) before the half-scale/scroll
-            // transform. The stage then performs wave + diffuse * current.
+            // Steam disables texture stage 3 before switching to the one-UV
+            // grid vertex format. The animated waves stage remains active only
+            // for the authored shoreline passes.
             vec3 base_water = min((water_color * caustic_0 * caustic_1) + reflected, vec3(1.0));
-            vec3 retail_color = min(wave + (COLOR.rgb * base_water), vec3(1.0));
+            vec3 retail_color = min(COLOR.rgb * base_water, vec3(1.0));
             retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
             ALBEDO = retail_output(retail_color);
             ALPHA = COLOR.a;
@@ -313,7 +310,6 @@ internal sealed class Level100WaterAsset
         };
         gridMaterial.SetShaderParameter("reflection_texture", reflection);
         gridMaterial.SetShaderParameter("caustic_texture", caustic);
-        gridMaterial.SetShaderParameter("waves_texture", waves);
         gridMaterial.SetShaderParameter("water_color", new Vector3(
             0x21 / 255f,
             0x21 / 255f,
@@ -322,7 +318,6 @@ internal sealed class Level100WaterAsset
             Level100HeightFieldAsset.PlayerStartX,
             Level100HeightFieldAsset.PlayerStartZ));
         gridMaterial.SetShaderParameter("caustic_phase", 0f);
-        gridMaterial.SetShaderParameter("main_wave_scroll", 0f);
         gridMaterial.RenderPriority = 1;
         SetFogParameters(gridMaterial, terrain);
 
@@ -445,7 +440,6 @@ internal sealed class Level100WaterAsset
                 1f);
         }
         _gridMaterial.SetShaderParameter("caustic_phase", _causticPhase);
-        _gridMaterial.SetShaderParameter("main_wave_scroll", _mainWaveScroll);
         _shorelinePrimaryMaterial.SetShaderParameter("caustic_phase", _causticPhase);
         _shorelinePrimaryMaterial.SetShaderParameter("main_wave_scroll", _mainWaveScroll);
         _shorelineOverlayMaterial.SetShaderParameter("overlay_wave_scroll", _overlayWaveScroll);

@@ -97,8 +97,8 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailLevel100ShorelineTriangleCount' 2056 $report.retailLevel100ShorelineTriangleCount
     Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 6 $report.retailLevel100TargetSurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 3 $report.level100ObjectiveMarkerCount
-    Assert-SmokeValue 'retailLevel100TerrainVertexCount' 4225 $report.retailLevel100TerrainVertexCount
-    Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 8192 $report.retailLevel100TerrainTriangleCount
+    Assert-SmokeValue 'retailLevel100TerrainVertexCount' 263169 $report.retailLevel100TerrainVertexCount
+    Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 524288 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount
     Assert-SmokeValue 'targetVisualCount' 3 $report.targetVisualCount
     Assert-SmokeValue 'openingPanActive' $false $report.openingPanActive

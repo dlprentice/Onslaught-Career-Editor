@@ -45,8 +45,16 @@ The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker, jet, and cockpit as exact 63-, 54-, and 21-part AYA
 hierarchies, plus bounded static conversions of 24 Level 100 static-world mesh
-types, four pine variants, Target Tank, and Warehouse meshes. Their exact
-source/output hashes live in the materializer and ignored generated manifest.
+types, Target Tank, and Warehouse meshes. Its standing-forest path uses the
+exact `Imposters_100` atlas, four standing `VIEW` records for each of four pine
+variants, and mesh-center offsets for the 1,481 pines rather than converted tree
+meshes. Retail's address-derived view choice is represented by deterministic
+placement ordinal modulo four. Exact source/output hashes
+live in the materializer and ignored generated manifest.
+`CDXTrees__Render` uses point min/mag filtering, no mip filter, and alpha
+reference `8` for this standing-tree batch; it has no near-distance mesh swap.
+A copied Steam runtime read found `0x008554FC = 1`, selecting its white-factor
+`MODULATE2X` color path, which the client applies before fog.
 The released Level 100 WRES
 records now set the player start heading, all 33 visible base-world objects,
 1,481 Steam-instantiated pines, trigger locations, and four Firing Range targets. The client
@@ -54,11 +62,15 @@ maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
 The loose mission scripts establish their order and 0.5-second event delays.
 The retained `HFLD` uses the released loader's 64×64 tiled sample layout,
-height scale, and 65×65 coarse render sampling. Core embeds the hash-verified
+height scale, and complete 513×513 sample lattice. Core embeds the hash-verified
 chunk and implements Steam's `0x0047EB80` 24.8 fixed-point signed interpolation
-for hashed player-ground elevation. Exact `MAPT`/`MMAP` inputs and
-the released
-`0x0047EFF0` blend path produce the 512×512 macro landscape texture. Level 100
+for hashed player-ground elevation. The released `MAPT`/`MMAP`, lighting-gradient,
+30-owner `SSHD`, and base `DMKR` paths produce the initial 512×512 root landscape
+texture. The materializer processes all 1,481 pine placements through the
+released stamp rules and verifies the exact
+RGB565 payload as SHA-256
+`6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B`.
+Level 100
 selects exact 512×512 DXT1 `detail00`; the released terrain render path at
 `0x00545590` supplies its two world-coordinate scales, offset, exact 256×256
 DXT1 moving cloud-shadow stage, scroll rates, and observed modulation modes.
@@ -70,8 +82,10 @@ RGB565 texels. Steam's 20-byte terrain vertices contain position plus repeated
 landscape coordinates, but no normal or diffuse-color channel, so that prelit
 macro owns base terrain illumination. An uninterrupted copied-runtime sample
 measured the cloud offset advancing by `(0.01993, 0.00996)` cycles per wall-clock
-second and confirmed mipmapping enabled with anisotropic macro minification and
-the terrain capability and `MODULATE2X` paths.
+second. Stage 0 wraps and plainly modulates the root texture, stage 1 plainly
+modulates detail, and the cloud and rotated-detail stages use `MODULATE2X`.
+Steam uses anisotropic root minification, but its five logical landscape levels
+are separate one-level 512×512 caches rather than one hardware mip chain.
 The client preserves each retained mesh group's complete
 six-slot `TEXR` assignment and directly decodes every AYA-wrapped texture
 selected by its active passes. The PC
@@ -103,7 +117,8 @@ static objects, targets, Aquila, jet, and cockpit; the visible-sun particle is
 still absent. Water follows the released active fixed-function path: the exact
 HFLD level and color, camera-following 25×25 grid, two caustic stages, authored
 `reflection00` imagery sampled at the released absolute-world `1/256` transform,
-the shared wave `MULTIPLYADD`, and two exact `SURF` shoreline bands. Static
+the stage-3 disable before the main grid, shoreline-only wave passes, and two
+exact `SURF` shoreline bands. Static
 Steam evidence at `CWaterRenderSystem__RenderMainPass` (`0x0055B6C0`) establishes
 the first-shoreline, grid, alpha-tested sun, and late additive-shoreline order.
 The sun uses texture-factor color `#E8E8FF`, alpha reference `0xC0`, and a quad
@@ -114,7 +129,8 @@ and no fog. One uninterrupted copied-Steam sample measured the main phase at
 the client advances those presentation phases from frame delta outside Core.
 The animated half-scale reflection transform belongs to the optional advanced
 path, which remained inactive in controlled Steam observation. Dynamic scene
-reflection/refraction and pixel identity outside this bounded active pass are
+reflection/refraction, Steam's dynamic terrain patch LOD topology, and pixel
+identity outside this bounded active pass are
 not claimed.
 Steep-slope sliding, structure collision
 beyond the two observed facilities, targets, weapons, resources, jet/morph

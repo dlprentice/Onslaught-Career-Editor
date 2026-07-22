@@ -22,7 +22,7 @@ locally materialized released Federation Aquila; all 33 visible static objects
 serialized by Level 100; all 1,481 pine placements instantiated by the Steam
 world loader; the released active-path water grid and authored shoreline; three
 training tanks; and the target Warehouse at their authored positions over the
-released coarse Level 100 heightfield. Core owns the released player start heading, exact
+exact Level 100 heightfield lattice. Core owns the released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
@@ -30,10 +30,12 @@ hierarchy; its twenty animated leg-chain parts consume four deterministic Core
 foot contacts. The released controller's diagonal swing scheduling and Level 100
 height contacts select independent `LegMotion` extension poses for each leg.
 The exact 54-part jet and 21-part cockpit hierarchies own the bounded
-walker-to-jet presentation. The 24 static-world mesh types, four pine variants,
-and two target types retain bounded static conversions. All render with their
-complete active retail material passes. Their lighting follows the released PC ambient, opposing
-sun/anti-sun, and `MODULATE2X` path rather than approximate Godot PBR values. The
+walker-to-jet presentation. The 24 static-world mesh types and two target types
+retain bounded static conversions. The 1,481 standing pines use Steam's exact
+`Imposters_100` atlas billboard path instead of converted tree meshes. The
+converted meshes render with their active retained retail material passes and
+follow the released PC ambient, opposing sun/anti-sun, and `MODULATE2X` path
+rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
 cube-25 sky, and exponential `CHFD` fog now replace the procedural ground/sky.
 The shared fixed-function shader also owns the renderer-aware final color
@@ -78,7 +80,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 148 exact source/runtime files to ignored paths. For a custom
+materializes 141 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -154,13 +156,16 @@ The client switches between the released walker's and jet's exact part
 hierarchies and independently animates the exact first-person cockpit. It
 decodes Level 100's
 version-50 base-world records into 33 visible static instances, 24 mesh types,
-and 1,481 pines across four variants, while retaining the separate Target Tank
-and Warehouse meshes. The
+and 1,481 pines across four atlas-billboard variants, while retaining the
+separate Target Tank and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
-gone. Godot renders the released 65×65 coarse heightfield and samples it for
-static presentation placement, generates the released 512×512 macro blend from exact
-`MAPT`/`MMAP` inputs, applies the exact Level 100 detail texture at both released
-coordinate scales, inserts the exact moving cloud-shadow stage with its released
+gone. Godot renders all 513×513 unit-lattice positions decoded from the released
+tiled HFLD and uses the same data for static presentation placement. The local
+materializer reconstructs the exact initial 512×512 RGB565 root texture from
+Level 100's `MAPT`/`MMAP`, lighting, structure shadows, and the released shadow
+rules over all 1,481 pine placements. Godot loads that verified result, applies
+the exact Level 100 detail texture at both released
+coordinate transforms, including the rotated quarter-scale pass, inserts the exact moving cloud-shadow stage with its released
 scroll and modulation, and renders the five exact cube-25 sky
 faces with `CHFD` fog and lighting values. Terrain, static objects, cockpit,
 targets, and water share the released exponential fog color/density path. Static
@@ -175,8 +180,8 @@ hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves each
 active mesh group's six ordered retail texture slots and decodes the exact
-AYA-wrapped textures selected by the Aquila, cockpit, static world, pines, and
-range targets plus the four exact 64×64
+AYA-wrapped textures selected by the Aquila, cockpit, static world, standing
+pine atlas, and range targets plus the four exact 64×64
 textures named by the medium Pulse Bolt descriptor. It also uses twenty-nine
 exact HUD textures, including the three released v3 crosshair layers,
 uncompressed proportional font atlas, scanner/north sprites, battleline,
@@ -199,10 +204,11 @@ shot, hit, tank-destruction, text, voice, and primary particle layers.
 Water reproduces the fixed-function path active on the supported Steam specimen:
 its camera-following grid, Level 100 color, two caustic stages, authored
 reflection image with the released absolute-world `1/256` transform, sun stages,
-the shared wave `MULTIPLYADD`, the camera-height-scaled alpha-tested sun patch,
-and both exact shoreline passes in released order. Its measured caustic phase
+the camera-height-scaled alpha-tested sun patch, and both exact shoreline passes
+in released order. Steam disables the wave stage for the main grid; the measured
+wave animation belongs only to the authored shoreline passes. Its measured caustic phase
 and wave scroll advance at `1` radian and `0.06` texture cycles per second. This
-does not claim the inactive optional advanced-water path, dynamic scene
+does not claim Steam's dynamic 1/2/4-step terrain patch LOD topology, the inactive optional advanced-water path, dynamic scene
 reflection/refraction, or pixel identity outside this bounded pass. The visible-sun
 particle, facility destruction,
 steep-slope sliding,

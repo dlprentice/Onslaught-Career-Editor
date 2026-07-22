@@ -19,7 +19,7 @@ internal sealed class Level100HeightFieldAsset
     private const int TileCountPerAxis = 64;
     private const int TileWidth = 8;
     private const int MapExtent = TileCountPerAxis * TileWidth;
-    private const int CoarseVertexCountPerAxis = TileCountPerAxis + 1;
+    private const int HighDetailVertexCountPerAxis = MapExtent + 1;
 
     private readonly Level100Terrain _terrain;
 
@@ -49,14 +49,14 @@ internal sealed class Level100HeightFieldAsset
             beaLightDirection.X,
             -beaLightDirection.Z,
             -beaLightDirection.Y);
-        Mesh = BuildCoarseMesh();
+        Mesh = BuildHighDetailMesh();
     }
 
     public ArrayMesh Mesh { get; }
 
-    public int VertexCount => CoarseVertexCountPerAxis * CoarseVertexCountPerAxis;
+    public int VertexCount => HighDetailVertexCountPerAxis * HighDetailVertexCountPerAxis;
 
-    public int TriangleCount => TileCountPerAxis * TileCountPerAxis * 2;
+    public int TriangleCount => MapExtent * MapExtent * 2;
 
     public byte MixerSet { get; }
 
@@ -93,7 +93,7 @@ internal sealed class Level100HeightFieldAsset
     public float SampleRelativeHeight(float relativeX, float relativeZ) =>
         PlayerStartElevation - SampleRetailHeight(relativeX + PlayerStartX, relativeZ + PlayerStartZ);
 
-    private ArrayMesh BuildCoarseMesh()
+    private ArrayMesh BuildHighDetailMesh()
     {
         var vertices = new Vector3[VertexCount];
         var normals = new Vector3[VertexCount];
@@ -101,21 +101,25 @@ internal sealed class Level100HeightFieldAsset
         var indices = new int[TriangleCount * 3];
 
         int vertexIndex = 0;
-        for (int z = 0; z <= MapExtent; z += TileWidth)
+        for (int z = 0; z <= MapExtent; z++)
         {
-            for (int x = 0; x <= MapExtent; x += TileWidth)
+            for (int x = 0; x <= MapExtent; x++)
             {
                 float height = PlayerStartElevation - SampleGridRetailHeight(x, z);
                 vertices[vertexIndex] = new Vector3(x - PlayerStartX, height, PlayerStartZ - z);
 
-                float left = SampleGridRetailHeight(Math.Max(0, x - TileWidth), z);
-                float right = SampleGridRetailHeight(Math.Min(MapExtent, x + TileWidth), z);
-                float back = SampleGridRetailHeight(x, Math.Max(0, z - TileWidth));
-                float forward = SampleGridRetailHeight(x, Math.Min(MapExtent, z + TileWidth));
+                int leftX = Math.Max(0, x - 1);
+                int rightX = Math.Min(MapExtent, x + 1);
+                int backZ = Math.Max(0, z - 1);
+                int forwardZ = Math.Min(MapExtent, z + 1);
+                float left = SampleGridRetailHeight(leftX, z);
+                float right = SampleGridRetailHeight(rightX, z);
+                float back = SampleGridRetailHeight(x, backZ);
+                float forward = SampleGridRetailHeight(x, forwardZ);
                 normals[vertexIndex] = new Vector3(
-                    right - left,
-                    TileWidth * 2f,
-                    back - forward).Normalized();
+                    (right - left) / (rightX - leftX),
+                    1f,
+                    (back - forward) / (forwardZ - backZ)).Normalized();
                 textureCoordinates[vertexIndex] = new Vector2(
                     x / (float)MapExtent,
                     z / (float)MapExtent);
@@ -124,12 +128,12 @@ internal sealed class Level100HeightFieldAsset
         }
 
         int index = 0;
-        for (int z = 0; z < TileCountPerAxis; z++)
+        for (int z = 0; z < MapExtent; z++)
         {
-            for (int x = 0; x < TileCountPerAxis; x++)
+            for (int x = 0; x < MapExtent; x++)
             {
-                int topLeft = (z * CoarseVertexCountPerAxis) + x;
-                int bottomLeft = topLeft + CoarseVertexCountPerAxis;
+                int topLeft = (z * HighDetailVertexCountPerAxis) + x;
+                int bottomLeft = topLeft + HighDetailVertexCountPerAxis;
                 indices[index++] = topLeft;
                 indices[index++] = bottomLeft;
                 indices[index++] = topLeft + 1;
