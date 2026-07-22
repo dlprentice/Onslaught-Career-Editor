@@ -98,6 +98,7 @@ internal sealed class Level100TerrainAppearanceAsset
     private readonly ImageTexture[] _macroTextures = new ImageTexture[5];
     private readonly byte[][] _cacheBytes = new byte[5][];
     private readonly int[][] _slotOwners = new int[5][];
+    private readonly int[][] _occupiedSlots = new int[5][];
     private readonly ShaderMaterial _material;
 
     private Level100TerrainAppearanceAsset(
@@ -114,13 +115,17 @@ internal sealed class Level100TerrainAppearanceAsset
         _macroTextures[0] = CreateRgb565Texture(rootTexture);
         _cacheBytes[0] = rootTexture;
         _slotOwners[0] = [];
+        _occupiedSlots[0] = [];
 
         for (int level = 1; level <= 4; level++)
         {
             _cacheBytes[level] = new byte[RootTextureLength];
             _macroTextures[level] = CreateRgb565Texture(_cacheBytes[level]);
             int tilesPerAxis = TileCountPerAxis >> level;
-            _slotOwners[level] = Enumerable.Repeat(-1, tilesPerAxis * tilesPerAxis).ToArray();
+            int slotCount = tilesPerAxis * tilesPerAxis;
+            _slotOwners[level] = new int[slotCount];
+            Array.Fill(_slotOwners[level], -1);
+            _occupiedSlots[level] = new int[slotCount];
         }
 
         var shader = new Shader
@@ -189,14 +194,12 @@ internal sealed class Level100TerrainAppearanceAsset
 
     public void Update(IReadOnlyList<Level100TerrainTileSelection> selections)
     {
-        var occupiedSlots = new int[5][];
         for (int level = 1; level <= 4; level++)
         {
-            occupiedSlots[level] = Enumerable
-                .Repeat(-1, _slotOwners[level].Length)
-                .ToArray();
+            Array.Fill(_occupiedSlots[level], -1);
         }
-        var changed = new bool[5];
+        Span<bool> changed = stackalloc bool[5];
+        changed.Clear();
 
         foreach (Level100TerrainTileSelection selection in selections)
         {
@@ -211,13 +214,13 @@ internal sealed class Level100TerrainAppearanceAsset
             int slotY = selection.TileY & (tilesPerAxis - 1);
             int slot = (slotY * tilesPerAxis) + slotX;
             int tileIndex = (selection.TileY * TileCountPerAxis) + selection.TileX;
-            if (occupiedSlots[level][slot] >= 0 &&
-                occupiedSlots[level][slot] != tileIndex)
+            if (_occupiedSlots[level][slot] >= 0 &&
+                _occupiedSlots[level][slot] != tileIndex)
             {
                 throw new InvalidDataException(
                     $"Level 100 landscape cache {level} selected aliased active tiles.");
             }
-            occupiedSlots[level][slot] = tileIndex;
+            _occupiedSlots[level][slot] = tileIndex;
 
             if (_slotOwners[level][slot] == tileIndex)
             {

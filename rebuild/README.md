@@ -80,7 +80,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 141 exact source/runtime files to ignored paths. For a custom
+materializes 142 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a

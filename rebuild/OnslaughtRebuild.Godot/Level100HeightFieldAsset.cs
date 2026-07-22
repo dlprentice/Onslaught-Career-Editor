@@ -36,6 +36,11 @@ internal sealed class Level100HeightFieldAsset
     private const int StitchRight = 2;
     private const int StitchBottom = 4;
     private const int StitchLeft = 8;
+    private const int StitchVariantCount = 16;
+
+    private static readonly int[] s_rootTileIndices = BuildRetailTileIndices(1, 0);
+    private static readonly int[][] s_patchTileIndexVariants =
+        BuildRetailPatchIndexVariants();
 
     private readonly Level100Terrain _terrain;
     private readonly float[] _tileComplexity = new float[TileCount];
@@ -353,8 +358,8 @@ internal sealed class Level100HeightFieldAsset
                 }
             }
 
-            foreach (int localIndex in BuildRetailTileIndices(
-                         cellCount,
+            foreach (int localIndex in GetRetailTileIndices(
+                         selection.GeometryLevel,
                          selection.EdgeFlags))
             {
                 indices.Add(baseVertex + localIndex);
@@ -372,6 +377,28 @@ internal sealed class Level100HeightFieldAsset
         Mesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays);
         VertexCount = vertices.Count;
         TriangleCount = indices.Count / 3;
+    }
+
+    private static ReadOnlySpan<int> GetRetailTileIndices(
+        int geometryLevel,
+        int edgeFlags) =>
+        geometryLevel == RootGeometryLevel
+            ? s_rootTileIndices
+            : s_patchTileIndexVariants[(geometryLevel * StitchVariantCount) + edgeFlags];
+
+    private static int[][] BuildRetailPatchIndexVariants()
+    {
+        var result = new int[3 * StitchVariantCount][];
+        for (int geometryLevel = 0; geometryLevel < 3; geometryLevel++)
+        {
+            int cellCount = 2 << geometryLevel;
+            for (int edgeFlags = 0; edgeFlags < StitchVariantCount; edgeFlags++)
+            {
+                result[(geometryLevel * StitchVariantCount) + edgeFlags] =
+                    BuildRetailTileIndices(cellCount, edgeFlags);
+            }
+        }
+        return result;
     }
 
     private static int[] BuildRetailTileIndices(
