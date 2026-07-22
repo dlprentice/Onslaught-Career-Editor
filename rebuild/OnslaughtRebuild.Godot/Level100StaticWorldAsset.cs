@@ -14,6 +14,8 @@ internal sealed class Level100StaticWorldAsset
         "C24DBD570DF8D0F0AD0663918BCD6F9557931DFCF9B0BC5FEEDF246AB947B9E5";
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
+    private const string SatTurretDefinition = "SAT Turret";
+    private const string SatTurretMesh = "ft_sam";
     private const string StaticResourcePrefix = "res://Assets/Level100/StaticWorld/";
     private const string PineBillboardShaderCode = """
         shader_type spatial;
@@ -129,13 +131,18 @@ internal sealed class Level100StaticWorldAsset
                 Math.Max(
                     terrain.SampleRelativeHeight(relativeX, relativeZ),
                     terrain.WaterRelativeHeight));
+            float verticalClearance = StringComparer.Ordinal.Equals(
+                worldObject.Definition,
+                SatTurretDefinition)
+                    ? 0f
+                    : checked((float)meshDefinition.BaseClearance);
 
             var objectRoot = new Node3D
             {
                 Name = $"RetailWorldObject{worldObject.Ordinal:D2}",
                 Position = new Vector3(
                     relativeX,
-                    relativeHeight + checked((float)meshDefinition.BaseClearance),
+                    relativeHeight + verticalClearance,
                     -relativeZ),
                 Rotation = new Vector3(0f, checked((float)worldObject.Yaw), 0f),
             };
@@ -378,9 +385,21 @@ internal sealed class Level100StaticWorldAsset
         {
             throw new InvalidDataException("Level 100 static-world ordinals are not unique.");
         }
+        WorldObject[] satTurrets = manifest.Objects
+            .Where(item => StringComparer.Ordinal.Equals(item.Definition, SatTurretDefinition))
+            .ToArray();
+        if (satTurrets.Length != 1 ||
+            !StringComparer.Ordinal.Equals(satTurrets[0].Mesh, SatTurretMesh) ||
+            manifest.Objects.Any(item =>
+                StringComparer.Ordinal.Equals(item.Mesh, SatTurretMesh) &&
+                !StringComparer.Ordinal.Equals(item.Definition, SatTurretDefinition)))
+        {
+            throw new InvalidDataException("Level 100 SAT Turret identity does not match retail.");
+        }
         foreach (WorldObject worldObject in manifest.Objects)
         {
-            if (worldObject.RetailPosition.Length != 3 ||
+            if (string.IsNullOrWhiteSpace(worldObject.Definition) ||
+                worldObject.RetailPosition.Length != 3 ||
                 !worldObject.RetailPosition.All(double.IsFinite) ||
                 !double.IsFinite(worldObject.Yaw) ||
                 !manifest.Meshes.ContainsKey(worldObject.Mesh))
@@ -554,6 +573,7 @@ internal sealed class Level100StaticWorldAsset
 
     private sealed record WorldObject
     {
+        public string Definition { get; init; } = string.Empty;
         public string Mesh { get; init; } = string.Empty;
         public string Name { get; init; } = string.Empty;
         public int Ordinal { get; init; }

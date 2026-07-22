@@ -176,10 +176,35 @@ established, so none is inferred here.
 The 33 static records select 24 mesh types: nearby facilities and turrets,
 houses, city/tall buildings, an airfield, docks, hangar, radar, solar pod, and
 four iceberg types. Every instance is placed through the common retail
-`(X, Y, Z-down)` to Godot mapping. The released clip-to-ground/water rule
-chooses the highest visible support before applying each converted mesh's base
-clearance. Existing collision remains intentionally limited to the separately
-observed Control Tower and Tank Factory envelopes.
+`(X, Y, Z-down)` to Godot mapping. Existing collision remains intentionally
+limited to the separately observed Control Tower and Tank Factory envelopes.
+
+The Federation base turret in the supplied comparison is the WRES object named
+`Turret 03`, not a Firing Range Target Tank. Its object ordinal is `3`, WRES
+thing type is `8` (`CUnitInitThing`), definition is exactly `SAT Turret`, and
+its zero-based `default physics.dat` Unit-statement index is `58`. The serialized
+behavior child `5` resolves through the released factories to behavior `4` and
+`CCannon::Init`. WRES authors position `(252.5, 261.25, -0.0)` with zero
+yaw/pitch/roll. Its exact `m_ft_sam.msh.aya` conversion has 16 parts:
+`base -> turretbase -> support -> barrel -> Emit01..08`, with `Emit09..12`
+parented directly to `base`. The converted vertical bounds are
+`-0.22822660952806473..0.7794696986675262`, so the mesh lower edge is
+`0.22822660952806473` below its authored pivot.
+
+Stuart's `CThing::Init` clips that authored pivot through `MAP.Collide`, then
+through `MAP.GetWaterLevel` for things that cannot go underwater. The Steam
+body at `0x004F34A0` follows the same order: the `CCannon` vtable's `+0xB0`
+slot returns `1`, the released HFLD sampler is called at `0x0047EB80`, and its
+`+0xC4` slot returns `0` before the water comparison against `0x006FBDFC`.
+At this X/Y, HFLD unit `-10485` produces terrain Z
+`-9.599889755249023`; water Z is `-8.84000015258789`, so the released initial
+transform is position `(252.5, 261.25, -9.599889755249023)` with identity
+orientation. The client therefore places every object whose definition is
+exactly `SAT Turret` with its pivot on that support (Godot Y
+`-0.40011024475097656`), preserving the authored lower skirt below terrain.
+The other static types retain their existing converted lower-bound clearance;
+their individual released grounding relationships are not generalized from
+this turret.
 
 Level 100's `HFLD` selects water level `-8.84000015258789`, color `#21213D`,
 and texture index zero. The active Steam path renders a 25×25 camera-following

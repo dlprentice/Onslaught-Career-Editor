@@ -60,6 +60,24 @@ records now set the player start heading, all 33 visible base-world objects,
 1,481 Steam-instantiated pines, trigger locations, and four Firing Range targets. The client
 maps BEA `(X, Y, Z-down)` consistently to Godot `(X, -Z, -Y)` for terrain,
 retained meshes, facilities, sky, light, camera, and Core-relative positions.
+The supplied base-turret comparison resolves specifically to WRES type `8`
+(`CUnitInitThing`), object `Turret 03`, definition `SAT Turret`, physics Unit
+index `58`, mesh `ft_sam`, and released runtime class `CCannon`; it is not a
+Target Tank. The authored transform is `(252.5, 261.25, -0.0)` with zero
+yaw/pitch/roll. Stuart's `CThing::Init` clips the authored pivot through
+`MAP.Collide` and then the water level, while Steam `CThing__Init` at
+`0x004F34A0` dispatches the `CCannon` clip slot (`+0xB0`, true), samples HFLD
+at `0x0047EB80`, then dispatches its underwater slot (`+0xC4`, false). HFLD
+unit `-10485` gives terrain Z `-9.599889755249023`, above water in the released
+Z-down relationship, so the initial retail transform is
+`(252.5, 261.25, -9.599889755249023)` with identity orientation. The 16-part
+mesh hierarchy is `base -> turretbase -> support -> barrel -> Emit01..08`, with
+`Emit09..12` directly below `base`; its lower bound is
+`-0.22822660952806473` relative to the pivot. The client now consumes the
+manifest's existing definition and omits only the `SAT Turret` lower-bound lift,
+preserving its authored below-pivot skirt without a per-instance offset. The
+remaining static types keep their prior converted clearances and are not
+claimed to share this released grounding relationship.
 The loose mission scripts establish their order and 0.5-second event delays.
 The retained `HFLD` uses the released loader's 64×64 tiled sample layout,
 height scale, and complete 513×513 sample lattice. Core embeds the hash-verified
@@ -287,7 +305,9 @@ geometry: camera five units behind and 3.25 units above the 1.9-unit center of
 gravity, looking six units ahead. Retained mesh bounds, the released
 Level 100 ground/start relationship, and copied-runtime framing independently
 agree on scale `1.0`; the client grounds the walker from its composed standing
-pose and each static mesh from its exact lower bound.
+pose. Static placement retains measured lower-bound metadata, but only the
+`SAT Turret` currently has the type-specific released pivot-grounding correction
+described above.
 
 Twenty-nine retained HUD textures are exact released files named by the Steam
 binary. A clean copied-runtime frame and the released render paths establish
