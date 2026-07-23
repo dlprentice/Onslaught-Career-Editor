@@ -394,6 +394,98 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void AuthenticPauseFreezesOneSessionAndRequiresNeutralInputAfterResume()
+    {
+        InteractiveSession session = CreatePlayingSession();
+        int startingTick = session.CurrentSnapshot.Tick;
+        string startingHash = StateHasher.ComputeHex(session.CurrentSnapshot);
+        InteractiveSessionMetrics startingMetrics = session.Metrics;
+        long startingPhase = session.InterpolationPhase;
+        session.ObserveInput(new InteractiveInput(1, 1, true, true, true));
+        session.QueueMovementPulse(-1, -1);
+        session.QueueLookPulse(1, -1);
+        session.QueuePointerMotionMilliPixels(10_000, -10_000);
+        session.QueueFirePulse();
+
+        session.SetAuthenticMenuPaused(true);
+
+        Assert.Equal(InteractivePauseReason.AuthenticMenu, session.PauseReasons);
+        Assert.True(session.IsPaused);
+        Assert.True(session.IsAuthenticMenuPaused);
+        Assert.True(session.InputSuspendedUntilReleased);
+        Assert.False(session.HasHeldOrPendingInput);
+
+        session.ObserveInput(InteractiveInput.Idle);
+        session.QueueMovementPulse(0, 1);
+        FrameAdvanceResult pausedFrame = session.AdvanceFrame(TimeSpan.FromSeconds(1));
+
+        Assert.Equal(0, pausedFrame.StepsAdvanced);
+        Assert.False(pausedFrame.FrameTimeCapped);
+        Assert.Empty(pausedFrame.Level100MissionEvents);
+        Assert.Equal(startingTick, session.CurrentSnapshot.Tick);
+        Assert.Equal(startingPhase, session.InterpolationPhase);
+        Assert.Equal(startingHash, StateHasher.ComputeHex(session.CurrentSnapshot));
+        Assert.Equal(startingMetrics, session.Metrics);
+
+        session.SetAuthenticMenuPaused(false);
+
+        Assert.False(session.IsPaused);
+        Assert.True(session.InputSuspendedUntilReleased);
+        session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
+        Assert.True(session.InputSuspendedUntilReleased);
+        Assert.False(session.HasHeldOrPendingInput);
+        session.ObserveInput(InteractiveInput.Idle);
+        Assert.False(session.InputSuspendedUntilReleased);
+    }
+
+    [Fact]
+    public void PauseResumePreservesTheSameCoreInputTapeTraceAndFinalHash()
+    {
+        InteractiveSession uninterrupted = CreatePlayingSession();
+        InteractiveSession paused = CreatePlayingSession();
+        InteractiveInput[] tape =
+        [
+            new InteractiveInput(0, 1, false, false, false),
+            InteractiveInput.Idle,
+            new InteractiveInput(0, 0, true, false, false),
+            InteractiveInput.Idle,
+            new InteractiveInput(0, 0, false, true, false),
+            InteractiveInput.Idle,
+            new InteractiveInput(1, 0, false, false, false),
+        ];
+        var uninterruptedTrace = new List<string>();
+        var pausedTrace = new List<string>();
+
+        for (int index = 0; index < tape.Length; index++)
+        {
+            if (index == 2)
+            {
+                paused.SetAuthenticMenuPaused(true);
+                Assert.Equal(0, paused.AdvanceFrame(TimeSpan.FromSeconds(1)).StepsAdvanced);
+                paused.ObserveInput(new InteractiveInput(1, 1, true, true, true));
+                paused.QueuePointerMotionMilliPixels(100_000, -100_000);
+                paused.SetAuthenticMenuPaused(false);
+                paused.ObserveInput(InteractiveInput.Idle);
+            }
+
+            uninterrupted.ObserveInput(tape[index]);
+            paused.ObserveInput(tape[index]);
+            FrameAdvanceResult directFrame = uninterrupted.AdvanceFrameTicks(OneCoreStepTicks);
+            FrameAdvanceResult resumedFrame = paused.AdvanceFrameTicks(OneCoreStepTicks);
+            Assert.Equal(1, directFrame.StepsAdvanced);
+            Assert.Equal(1, resumedFrame.StepsAdvanced);
+            uninterruptedTrace.Add(StateHasher.ComputeHex(directFrame.CurrentSnapshot));
+            pausedTrace.Add(StateHasher.ComputeHex(resumedFrame.CurrentSnapshot));
+        }
+
+        Assert.Equal(uninterruptedTrace, pausedTrace);
+        Assert.Equal(
+            StateHasher.ComputeHex(uninterrupted.CurrentSnapshot),
+            StateHasher.ComputeHex(paused.CurrentSnapshot));
+        Assert.Equal(uninterrupted.Metrics, paused.Metrics);
+    }
+
+    [Fact]
     public void SnapshotsExposePreviousAndCurrentSimulationStates()
     {
         InteractiveSession session = CreatePlayingSession();

@@ -549,6 +549,26 @@ The PC `SetMasterVolume` tangent curve and externally supplied game-sound mix
 are presentation-only adapter inputs, so audio applies but never advances a
 failure fade or other ducking timeline.
 
+Tracked Steam function summaries for `PauseMenu__Init` at `0x004CDE60`,
+`CPauseMenu__Render` at `0x004D11D0`, input dispatch at `0x004D15D0`, action
+dispatch at `0x004D0810`, and resume helper `0x004D06E0` identify the retained
+Level 100 root, Retry/Quit confirmation, safe default to No, and back behavior.
+The retained English table supplies the localized copy; three exact locally
+materialized pause textures and the existing HUD fonts supply the asset inputs.
+The current renderer's placement, fade gate, circle transition, colors, and hit
+regions are bounded reconstruction presentation, not a claim of exact visual or
+runtime parity.
+
+Stuart's source demonstrates the single paused-game flag, blocked event advance,
+sample pause/unpause, and kill-then-Select level-exit boundary. The client owns
+one `AuthenticMenu` pause reason: it advances zero Core steps, clears held and
+pending input, pauses the existing gameplay-audio owner, and resumes only after
+a neutral input sample. Continue resumes the same session; confirmed Retry and
+Quit complete that existing audio boundary once before calling the existing
+frontend lifecycle, whose teardown preserves the new Select cue. Message Log,
+Briefing, and settings rows are visible but disabled because no canonical
+integrated owner exists; no substitute subpage or settings state is inferred.
+
 Stuart's Level 100 entry calls `PlaySelection(MUS_TUTORIAL)`. The playlist is
 alphabetically ordered and `GetSong` is zero-based, so selection index `3`
 resolves to exact `data/Music/BEA_04(Master).ogg` (SHA-256

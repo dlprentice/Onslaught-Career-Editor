@@ -86,10 +86,12 @@ tmp*/
 /rebuild/OnslaughtRebuild.Godot/Assets/Frontend/**
 /rebuild/OnslaughtRebuild.Godot/Assets/Hud/**
 /rebuild/OnslaughtRebuild.Godot/Assets/Level100/**
+/rebuild/OnslaughtRebuild.Godot/Assets/PauseMenu/**
 !/rebuild/OnslaughtRebuild.Godot/Assets/Aquila/README.md
 !/rebuild/OnslaughtRebuild.Godot/Assets/Frontend/README.md
 !/rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md
 !/rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md
+!/rebuild/OnslaughtRebuild.Godot/Assets/PauseMenu/README.md
 
 # Canonical reviewed RE database exception.
 !reverse-engineering/ghidra/

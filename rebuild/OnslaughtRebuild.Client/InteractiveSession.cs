@@ -28,6 +28,13 @@ public readonly record struct FrameAdvanceResult(
         (double)InterpolationPhase / InterpolationPhaseScale;
 }
 
+[Flags]
+public enum InteractivePauseReason
+{
+    None = 0,
+    AuthenticMenu = 1,
+}
+
 public sealed class InteractiveSession
 {
     public const long PhaseUnitsPerStep = TimeSpan.TicksPerSecond;
@@ -58,6 +65,7 @@ public sealed class InteractiveSession
     private sbyte _lookPulseY;
     private int _pointerOffsetXMilliPixels;
     private int _pointerOffsetYMilliPixels;
+    private InteractivePauseReason _pauseReasons;
     private bool _inputSuspendedUntilReleased;
     private long _interpolationPhase;
     private long _totalSteps;
@@ -83,6 +91,13 @@ public sealed class InteractiveSession
     public WorldSnapshot CurrentSnapshot { get; private set; }
 
     public long InterpolationPhase => _interpolationPhase;
+
+    public InteractivePauseReason PauseReasons => _pauseReasons;
+
+    public bool IsPaused => _pauseReasons != InteractivePauseReason.None;
+
+    public bool IsAuthenticMenuPaused =>
+        (_pauseReasons & InteractivePauseReason.AuthenticMenu) != 0;
 
     public bool InputSuspendedUntilReleased => _inputSuspendedUntilReleased;
 
@@ -117,6 +132,11 @@ public sealed class InteractiveSession
     {
         input.Validate();
 
+        if (IsPaused)
+        {
+            return;
+        }
+
         if (_inputSuspendedUntilReleased)
         {
             if (input != InteractiveInput.Idle)
@@ -144,7 +164,7 @@ public sealed class InteractiveSession
 
     public void QueueToggleMode()
     {
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -154,7 +174,7 @@ public sealed class InteractiveSession
 
     public void QueueReset()
     {
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -164,7 +184,7 @@ public sealed class InteractiveSession
 
     public void QueueFirePulse()
     {
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -180,7 +200,7 @@ public sealed class InteractiveSession
             throw new ArgumentException("A movement pulse must contain a nonzero axis.");
         }
 
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -204,7 +224,7 @@ public sealed class InteractiveSession
             throw new ArgumentException("A look pulse must contain a nonzero axis.");
         }
 
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -227,7 +247,7 @@ public sealed class InteractiveSession
             throw new ArgumentException("Pointer motion must contain a nonzero axis.");
         }
 
-        if (_inputSuspendedUntilReleased)
+        if (IsPaused || _inputSuspendedUntilReleased)
         {
             return;
         }
@@ -240,6 +260,11 @@ public sealed class InteractiveSession
     {
         ClearInputState();
         _inputSuspendedUntilReleased = false;
+    }
+
+    public void SetAuthenticMenuPaused(bool paused)
+    {
+        SetPauseReason(InteractivePauseReason.AuthenticMenu, paused);
     }
 
     public void SuspendInputUntilReleased()
@@ -264,6 +289,20 @@ public sealed class InteractiveSession
         _pointerOffsetYMilliPixels = 0;
     }
 
+    private void SetPauseReason(InteractivePauseReason reason, bool paused)
+    {
+        InteractivePauseReason updated = paused
+            ? _pauseReasons | reason
+            : _pauseReasons & ~reason;
+        if (updated == _pauseReasons)
+        {
+            return;
+        }
+
+        _pauseReasons = updated;
+        SuspendInputUntilReleased();
+    }
+
     public FrameAdvanceResult AdvanceFrame(TimeSpan elapsed)
     {
         return AdvanceFrameTicks(elapsed.Ticks);
@@ -281,6 +320,18 @@ public sealed class InteractiveSession
         if (elapsedTicks < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(elapsedTicks), "Elapsed time cannot be negative.");
+        }
+
+        if (IsPaused)
+        {
+            return new FrameAdvanceResult(
+                0,
+                false,
+                _interpolationPhase,
+                PhaseUnitsPerStep,
+                PreviousSnapshot,
+                CurrentSnapshot,
+                Array.Empty<Level100MissionEvent>());
         }
 
         long boundedElapsedTicks = Math.Min(elapsedTicks, MaximumFrameElapsedTicks);

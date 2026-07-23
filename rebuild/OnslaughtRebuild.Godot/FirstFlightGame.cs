@@ -26,15 +26,19 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
+    private readonly Level100PauseMenu _pauseMenu = new();
     private Level100Audio _audio = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
+    private FirstFlightPauseMenu _pauseView = null!;
     private Level100HudAssetCatalog _hudAssetCatalog = null!;
     private RetailFrontendFlow? _frontend;
     private bool _level100WorldCreated;
     private bool _gameplayActive;
+    private bool _pauseExitAudioCompleted;
     private bool _smokeMode;
     private bool _smokeCompleting;
+    private bool _windowHasFocus;
     private bool _focusLossHandlerInputCleared;
     private bool _focusLossHandlerNeutralRearmed;
     private bool _smokeSawClickToStart;
@@ -62,8 +66,6 @@ public sealed partial class FirstFlightGame : Node3D
     private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
     private SmokeReport? _smokeReport;
 
-    public event Action? GameplayPauseRequested;
-
     public event Action<RetailFrontendAudioCue>? FrontendAudioCueRequested;
 
     public override void _Ready()
@@ -78,6 +80,7 @@ public sealed partial class FirstFlightGame : Node3D
 
             Window window = GetWindow();
             window.Title = "Onslaught Rebuild - Battle Engine Aquila";
+            _windowHasFocus = window.HasFocus();
 
             _audio = new Level100Audio();
             AddChild(_audio);
@@ -123,6 +126,11 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _Process(double delta)
     {
+        if (_level100WorldCreated)
+        {
+            _pauseView.AdvanceAnimation(delta);
+        }
+
         if (_smokeMode && !_gameplayActive)
         {
             DriveSmokeFrontend();
@@ -141,6 +149,11 @@ public sealed partial class FirstFlightGame : Node3D
         }
 
         if (_smokeCompleting)
+        {
+            return;
+        }
+
+        if (_session.IsPaused)
         {
             return;
         }
@@ -230,6 +243,44 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        bool authenticPausePressed =
+            (inputEvent is InputEventKey pauseKey &&
+                pauseKey.Pressed && !pauseKey.Echo && IsKey(pauseKey, Key.Escape)) ||
+            (inputEvent is InputEventJoypadButton pauseButton &&
+                pauseButton.Pressed && pauseButton.ButtonIndex == JoyButton.Start);
+        if (authenticPausePressed)
+        {
+            if (_pauseMenu.IsOpen)
+            {
+                if (_pauseView.InputReady)
+                {
+                    ForwardFrontendAudioCue(RetailFrontendAudioCue.Back);
+                    HandlePauseAction(_pauseMenu.Cancel());
+                    _pauseView.Refresh();
+                }
+            }
+            else if (!_pauseView.IsClosing)
+            {
+                OpenAuthenticPauseMenu();
+            }
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_pauseMenu.IsOpen)
+        {
+            if (HandleAuthenticPauseInput(inputEvent))
+            {
+                GetViewport().SetInputAsHandled();
+            }
+            return;
+        }
+
+        if (_session.IsPaused)
+        {
+            return;
+        }
+
         if (inputEvent is InputEventMouseMotion mouseMotion)
         {
             if (_session.CurrentSnapshot.Mode == VehicleMode.Walker &&
@@ -257,13 +308,6 @@ public sealed partial class FirstFlightGame : Node3D
 
         if (inputEvent is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
         {
-            return;
-        }
-
-        if (IsKey(keyEvent, Key.Escape))
-        {
-            GameplayPauseRequested?.Invoke();
-            GetViewport().SetInputAsHandled();
             return;
         }
 
@@ -304,25 +348,194 @@ public sealed partial class FirstFlightGame : Node3D
 
     }
 
-    public override void _Notification(int what)
+    private bool HandleAuthenticPauseInput(InputEvent inputEvent)
     {
-        if (!_gameplayActive)
+        if (!_pauseView.InputReady)
         {
-            return;
+            return false;
         }
 
-        if (what == NotificationWMWindowFocusOut && (!_smokeMode || _smokeCompleting))
+        if (inputEvent is InputEventMouseMotion mouseMotion)
         {
-            _session.SuspendInputUntilReleased();
-            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
-            _smokeCursorReleasedOnFocusLoss =
-                _requestedCursorMode == RetailFrontendCursorMode.Visible;
+            if (_pauseView.TryHover(mouseMotion.Position))
+            {
+                ForwardFrontendAudioCue(RetailFrontendAudioCue.Move);
+            }
+            return true;
+        }
+
+        if (inputEvent is InputEventMouseButton mouseButton && mouseButton.Pressed)
+        {
+            if (mouseButton.ButtonIndex == MouseButton.WheelUp)
+            {
+                MovePauseSelection(-1);
+                return true;
+            }
+            if (mouseButton.ButtonIndex == MouseButton.WheelDown)
+            {
+                MovePauseSelection(1);
+                return true;
+            }
+            if (mouseButton.ButtonIndex == MouseButton.Left &&
+                _pauseView.TryPointAt(mouseButton.Position, out bool moved))
+            {
+                if (moved)
+                {
+                    ForwardFrontendAudioCue(RetailFrontendAudioCue.Move);
+                }
+                ActivatePauseSelection();
+                return true;
+            }
+            return false;
+        }
+
+        if (inputEvent is InputEventJoypadButton joypadButton && joypadButton.Pressed)
+        {
+            switch (joypadButton.ButtonIndex)
+            {
+                case JoyButton.DpadUp:
+                    MovePauseSelection(-1);
+                    return true;
+                case JoyButton.DpadDown:
+                    MovePauseSelection(1);
+                    return true;
+                case JoyButton.A:
+                    ActivatePauseSelection();
+                    return true;
+                case JoyButton.B:
+                    ForwardFrontendAudioCue(RetailFrontendAudioCue.Back);
+                    HandlePauseAction(_pauseMenu.Cancel());
+                    _pauseView.Refresh();
+                    return true;
+            }
+            return false;
+        }
+
+        if (inputEvent is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+        {
+            return false;
+        }
+
+        if (IsKey(keyEvent, Key.Up))
+        {
+            MovePauseSelection(-1);
+            return true;
+        }
+        if (IsKey(keyEvent, Key.Down))
+        {
+            MovePauseSelection(1);
+            return true;
+        }
+        if (IsKey(keyEvent, Key.Enter) ||
+            IsKey(keyEvent, Key.KpEnter) ||
+            IsKey(keyEvent, Key.Space))
+        {
+            ActivatePauseSelection();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void MovePauseSelection(int direction)
+    {
+        if (_pauseMenu.MoveSelection(direction))
+        {
+            ForwardFrontendAudioCue(RetailFrontendAudioCue.Move);
+            _pauseView.Refresh();
+        }
+    }
+
+    private void ActivatePauseSelection()
+    {
+        Level100PauseAction action = _pauseMenu.ActivateSelected();
+        if (action is not Level100PauseAction.RetryLevel and
+            not Level100PauseAction.ReturnToFrontend)
+        {
+            ForwardFrontendAudioCue(RetailFrontendAudioCue.Select);
+        }
+        HandlePauseAction(action);
+        _pauseView.Refresh();
+    }
+
+    private void OpenAuthenticPauseMenu()
+    {
+        _pauseMenu.Open();
+        _session.SetAuthenticMenuPaused(true);
+        _audio.SetGameplayPaused(true);
+        _pauseView.Open();
+        UpdateGameplayCursorMode();
+    }
+
+    private void HandlePauseAction(Level100PauseAction action)
+    {
+        switch (action)
+        {
+            case Level100PauseAction.None:
+                return;
+            case Level100PauseAction.Resume:
+                ResumeFromAuthenticPause();
+                return;
+            case Level100PauseAction.RetryLevel:
+                CompletePauseExitAudio();
+                CloseAuthenticPauseForLifecycle();
+                RestartLevel100();
+                return;
+            case Level100PauseAction.ReturnToFrontend:
+                CompletePauseExitAudio();
+                CloseAuthenticPauseForLifecycle();
+                LeaveLevel100ForMainMenu();
+                return;
+            default:
+                throw new InvalidOperationException($"Unsupported pause action {action}.");
+        }
+    }
+
+    private void CompletePauseExitAudio()
+    {
+        _audio.StopForLevelExit(playFrontendSelect: true);
+        _pauseExitAudioCompleted = true;
+        RaiseFrontendAudioCueRequested(RetailFrontendAudioCue.Select);
+    }
+
+    private void ResumeFromAuthenticPause()
+    {
+        _session.SetAuthenticMenuPaused(false);
+        _audio.SetGameplayPaused(false);
+        _pauseView.Close();
+        UpdateGameplayCursorMode();
+    }
+
+    private void CloseAuthenticPauseForLifecycle()
+    {
+        _pauseMenu.Reset();
+        _session.SetAuthenticMenuPaused(false);
+        _audio.SetGameplayPaused(false);
+        _pauseView.Reset();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMWindowFocusOut)
+        {
+            _windowHasFocus = false;
+            if (_gameplayActive && (!_smokeMode || _smokeCompleting))
+            {
+                _session.SuspendInputUntilReleased();
+                UpdateGameplayCursorMode();
+                _smokeCursorReleasedOnFocusLoss =
+                    _requestedCursorMode == RetailFrontendCursorMode.Visible;
+            }
         }
         else if (what == NotificationWMWindowFocusIn)
         {
-            ApplyFrontendCursorMode(RetailFrontendCursorMode.Captured);
-            _smokeCursorRecapturedOnFocusGain =
-                _requestedCursorMode == RetailFrontendCursorMode.Captured;
+            _windowHasFocus = true;
+            if (_gameplayActive)
+            {
+                UpdateGameplayCursorMode();
+                _smokeCursorRecapturedOnFocusGain =
+                    _requestedCursorMode == RetailFrontendCursorMode.Captured;
+            }
         }
     }
 
@@ -443,6 +656,10 @@ public sealed partial class FirstFlightGame : Node3D
             _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
+        _pauseView = new FirstFlightPauseMenu();
+        AddChild(_pauseView);
+        _pauseView.Initialize(_pauseMenu);
+
         ConsumeLevel100MissionEvents(
             _session.AdvanceFrameTicks(0).Level100MissionEvents);
         _hud.UpdateFromSnapshot(
@@ -481,6 +698,7 @@ public sealed partial class FirstFlightGame : Node3D
         }
 
         _gameplayActive = true;
+        UpdateGameplayCursorMode();
         if (_smokeMode)
         {
             if (_smokePhase == SmokePhase.ColdFrontend)
@@ -504,6 +722,10 @@ public sealed partial class FirstFlightGame : Node3D
 
     private void SuspendFrontendGameplay()
     {
+        if (_level100WorldCreated && _session.IsAuthenticMenuPaused)
+        {
+            CloseAuthenticPauseForLifecycle();
+        }
         _gameplayActive = false;
         _session.ReleaseAllInput();
     }
@@ -524,9 +746,18 @@ public sealed partial class FirstFlightGame : Node3D
 
         _world.Visible = false;
         _hud.Visible = false;
-        _audio.StopLevel100Audio();
+        _pauseView.Visible = false;
+        _pauseMenu.Reset();
+        _session.SetAuthenticMenuPaused(false);
+        _audio.SetGameplayPaused(false);
+        if (!_pauseExitAudioCompleted)
+        {
+            _audio.StopLevel100Audio();
+        }
+        _pauseExitAudioCompleted = false;
         _world.QueueFree();
         _hud.QueueFree();
+        _pauseView.QueueFree();
         _level100WorldCreated = false;
     }
 
@@ -631,9 +862,22 @@ public sealed partial class FirstFlightGame : Node3D
         };
     }
 
+    private void UpdateGameplayCursorMode()
+    {
+        ApplyFrontendCursorMode(
+            !_windowHasFocus || _session.IsPaused
+                ? RetailFrontendCursorMode.Visible
+                : RetailFrontendCursorMode.Captured);
+    }
+
     private void ForwardFrontendAudioCue(RetailFrontendAudioCue cue)
     {
         _audio.PlayFrontendCue(cue.ToString());
+        RaiseFrontendAudioCueRequested(cue);
+    }
+
+    private void RaiseFrontendAudioCueRequested(RetailFrontendAudioCue cue)
+    {
         FrontendAudioCueRequested?.Invoke(cue);
     }
 

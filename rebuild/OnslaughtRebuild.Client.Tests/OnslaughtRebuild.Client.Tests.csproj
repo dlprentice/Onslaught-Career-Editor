@@ -42,6 +42,18 @@
     <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world.json"
              Link="Assets\Level100\StaticWorld\level100-static-world.json"
              CopyToOutputDirectory="Always" />
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightGame.cs"
+             Link="godot-pause-source\FirstFlightGame.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
+             Link="godot-pause-source\FirstFlightPauseMenu.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Level100Audio.cs"
+             Link="godot-pause-source\Level100Audio.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\tools\materialize_retail_assets.py"
+             Link="godot-pause-source\materialize_retail_assets.py"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

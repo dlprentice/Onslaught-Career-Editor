@@ -119,7 +119,8 @@ Controls:
 | --- | --- |
 | Mouse, `Up`, `Down` | Navigate the frontend |
 | Click, `Space`, `Enter` | Leave click-to-start or select the highlighted frontend item |
-| `Esc` | Return from frontend level selection; gameplay `Esc` is reserved for the pause owner |
+| `Esc` | Return from frontend level selection; open/close the gameplay pause root |
+| Mouse, wheel, `Up`, `Down`, `Enter`, controller D-pad/A/B/Start | Navigate or close the gameplay pause root |
 | `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
 | Mouse or trackpad | Turn the body and aim the attached first-person view |
 | `Space` | Fire the Pulse Cannon after the Firing Range enables it |
@@ -136,12 +137,16 @@ debrief layout—the mission/HUD presentation owner supplies that overlay and
 its exact `Level100MissionFailureReason`. `RestartLevel100` replaces the one
 deterministic Level 100 session through the existing Loading edge;
 `LeaveLevel100ForMainMenu` disposes it and returns to the same frontend shell.
-A pause owner calls those methods while the frontend lifecycle remains in
-Gameplay, and gameplay `Esc` raises `GameplayPauseRequested` for that owner; it
-does not quit or create a second world/session owner. The current opening slice
-does not synthesize terminal events, rank, kill summary, unlock, save, or
-campaign progression. `FrontendAudioCueRequested` exposes Move, Select, and
-Back cue identities without loading or playing the materialized WAVs.
+The gameplay pause owner freezes that same deterministic session with zero Core
+steps, discards pending gameplay input, pauses the existing Level 100 audio
+owner, and routes its cursor through the frontend's sole mouse-mode writer.
+Continue resumes after a neutral input sample; Retry and Quit call those
+existing lifecycle seams after the audio owner completes its kill-then-Select
+exit boundary once. Message Log, Briefing, and the three settings rows remain
+visible but disabled until canonical integrated owners exist. The current
+opening slice does not synthesize terminal events, rank, kill summary, unlock,
+save, or campaign progression. `FrontendAudioCueRequested` is an observation
+seam, not a parallel state owner.
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
