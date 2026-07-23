@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Client;
-using OnslaughtRebuild.Core;
-using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -118,51 +116,6 @@ public sealed class RetailFrontendSessionTests
         Assert.Throws<InvalidOperationException>(frontend.CompleteLevel100Load);
     }
 
-    [Theory]
-    [InlineData(Level100MissionFailureReason.TutorialBroken)]
-    [InlineData(Level100MissionFailureReason.PlayerDeath)]
-    [InlineData(Level100MissionFailureReason.WaterLoss)]
-    public void FailureHandoffConsumesTheAuthoritativeMissionSnapshot(
-        Level100MissionFailureReason reason)
-    {
-        var frontend = AtGameplay();
-        Level100MissionSnapshot terminal = FailureTerminal(reason);
-
-        Assert.True(frontend.TryAcceptMissionTerminal(terminal));
-
-        Assert.Equal(RetailFrontendScreen.TerminalHandoff, frontend.Screen);
-        Assert.Equal(RetailFrontendSignal.None, frontend.Confirm());
-        Assert.Equal(RetailFrontendSignal.None, frontend.Back());
-        Assert.False(frontend.MovePrevious());
-        Assert.False(frontend.MoveNext());
-
-        Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, frontend.RestartLevel100());
-        Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
-        Assert.True(frontend.ConsumeLevel100LaunchRequest());
-    }
-
-    [Fact]
-    public void SuccessHandoffUsesMissionTypesAndHasNoFrontendButtonDefaults()
-    {
-        var frontend = AtGameplay();
-        Level100MissionSnapshot terminal = CreateMission().Snapshot with
-        {
-            Outcome = Level100MissionOutcome.Won,
-            TerminalState = Level100MissionTerminalState.FrontEndHandoffReady,
-            FailureReason = Level100MissionFailureReason.None,
-        };
-
-        Assert.True(frontend.TryAcceptMissionTerminal(terminal));
-
-        Assert.Equal(RetailFrontendScreen.TerminalHandoff, frontend.Screen);
-        Assert.Equal(RetailFrontendSignal.None, frontend.Confirm());
-        Assert.Equal(
-            RetailFrontendSignal.ReturnToMainMenuRequested,
-            frontend.LeaveLevel100ForMainMenu());
-        Assert.Equal(RetailFrontendScreen.MainMenu, frontend.Screen);
-        Assert.Equal(RetailFrontendMenuItemKind.NewGame, frontend.SelectedMainItem.Kind);
-    }
-
     [Fact]
     public void GameplayTransitionsExposePauseOwnedRestartAndExitLevelSeams()
     {
@@ -182,10 +135,9 @@ public sealed class RetailFrontendSessionTests
     }
 
     [Fact]
-    public void TerminalHandoffRejectsPrematureOrInconsistentMissionState()
+    public void LifecycleTransitionsRequireActiveGameplay()
     {
         var frontend = AtMainMenu();
-        Assert.False(frontend.TryAcceptMissionTerminal(CreateMission().Snapshot));
         Assert.Throws<InvalidOperationException>(() =>
         {
             _ = frontend.RestartLevel100();
@@ -194,65 +146,6 @@ public sealed class RetailFrontendSessionTests
         {
             _ = frontend.LeaveLevel100ForMainMenu();
         });
-
-        frontend = AtGameplay();
-        Level100Mission mission = CreateMission();
-        Assert.True(mission.ReportPlayerDeath());
-        Assert.False(frontend.TryAcceptMissionTerminal(mission.Snapshot));
-
-        Level100MissionSnapshot inconsistent = mission.Snapshot with
-        {
-            TerminalState = Level100MissionTerminalState.FailureMenuReady,
-            FailureReason = Level100MissionFailureReason.None,
-        };
-        Assert.False(frontend.TryAcceptMissionTerminal(inconsistent));
-    }
-
-    private static Level100MissionSnapshot FailureTerminal(
-        Level100MissionFailureReason reason)
-    {
-        Level100Mission mission = CreateMission();
-        mission.DrainEvents();
-        switch (reason)
-        {
-            case Level100MissionFailureReason.TutorialBroken:
-                Assert.True(mission.SubmitInput(Level100MissionInput.BrokeTutorial));
-                for (int tick = 0;
-                     mission.Snapshot.Outcome == Level100MissionOutcome.Running && tick < 500;
-                     tick++)
-                {
-                    mission.AdvanceTick(SimulationConstants.MaximumHull);
-                }
-                Assert.Equal(Level100MissionOutcome.Lost, mission.Snapshot.Outcome);
-                break;
-            case Level100MissionFailureReason.PlayerDeath:
-                Assert.True(mission.ReportPlayerDeath());
-                break;
-            case Level100MissionFailureReason.WaterLoss:
-                Assert.True(mission.ReportWaterLoss());
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(reason));
-        }
-
-        for (int tick = 0; tick < Level100MissionTiming.FailureMenuDelayTicks; tick++)
-        {
-            mission.AdvanceTick(SimulationConstants.MaximumHull);
-        }
-        Assert.Equal(reason, mission.Snapshot.FailureReason);
-        Assert.Equal(
-            Level100MissionTerminalState.FailureMenuReady,
-            mission.Snapshot.TerminalState);
-        return mission.Snapshot;
-    }
-
-    private static Level100Mission CreateMission()
-    {
-        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
-        var actors = new Level100ActorRegistry(definitions);
-        Level100ActorId player = actors.GetThingRef("Player 1") ??
-            throw new InvalidOperationException("Test actor definitions omitted Player 1.");
-        return new Level100Mission(actors, player);
     }
 
     private static RetailFrontendSession AtMainMenu()

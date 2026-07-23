@@ -136,15 +136,14 @@ Controls:
 
 ## Current truth
 
-The frontend consumes the authoritative `WorldSnapshot.Level100Mission`
-terminal state directly. It accepts mission-owned success only at
-`FrontEndHandoffReady` and mission-owned failures at `FailureMenuReady` or
-`FailureCountdownElapsed`; it defines no parallel result or failure-reason
-vocabulary. It does not render the in-game terminal overlay or claim the later
-debrief layout—the mission/HUD presentation owner supplies that overlay and
-its exact `Level100MissionFailureReason`. `RestartLevel100` replaces the one
-deterministic Level 100 session through the existing Loading edge;
-`LeaveLevel100ForMainMenu` disposes it and returns to the same frontend shell.
+The frontend owns only click-to-start, Main Menu, the Level 100-only selector,
+and Loading. Each launch request makes the host construct a fresh canonical
+`InteractiveSession` from the materialized Level 100 actor definitions before
+gameplay activation. The frontend does not inspect
+`WorldSnapshot.Level100Mission` or own gameplay, save, result, or later
+campaign-selection state. `RestartLevel100` returns through the same Loading
+edge; `LeaveLevel100ForMainMenu` disposes the active world and returns to the
+same frontend shell.
 The gameplay pause owner freezes that same deterministic session with zero Core
 steps, discards pending gameplay input, pauses the existing Level 100 audio
 owner, and routes its cursor through the frontend's sole mouse-mode writer.
@@ -154,7 +153,7 @@ exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
 opening slice does not synthesize terminal events, rank, kill summary, unlock,
 save, or campaign progression. `FrontendAudioCueRequested` is an observation
-seam, not a parallel state owner.
+seam; the existing Level 100 audio owner remains the sole playback owner.
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
@@ -300,10 +299,9 @@ result. Files are limited to 8 MiB and one invocation to 100,000 total steps.
 The native smoke builds with the pinned engine, enters through cold
 click-to-start → Main Menu → level select → Loading → gameplay, runs the bounded
 scripted input sequence, and checks the final deterministic state. It then
-checks focus/cursor policy, the mission terminal handoff, a fresh retry, and
-return to the same Main Menu with the Level 100 world released. It writes
-structured report and log evidence only; it has no screenshot or visual-parity
-machinery.
+checks focus/cursor policy, a fresh retry, and return to the same Main Menu with
+the Level 100 world released. It writes structured report and log evidence
+only; it has no screenshot or visual-parity machinery.
 
 Read [PROVENANCE.md](PROVENANCE.md) before implementation work. Retail behavior
 claims must point to the smallest relevant binary/source/runtime evidence; Core

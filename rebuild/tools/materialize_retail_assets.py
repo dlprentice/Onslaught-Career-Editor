@@ -90,7 +90,7 @@ LEVEL100_HUD_MANIFEST_SHA256 = (
 )
 FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
-    "417621f3ccc82f6b738d5d4f1c2c2a5d95984d88d82db3846e8f073aed367c12"
+    "b27d7b1b3f8cd8aa22b664cacf7c87a8b0907c7dea4c4f07dff8da763dbb70f3"
 )
 ROOT_TERRAIN_TEXTURE = (
     GODOT_ASSETS / "Level100/Source/level100-root-terrain.rgb565.bin"
@@ -399,19 +399,6 @@ FRONTEND_TEXT_IDS = {
     "selectLevel": 0x0E89F10A,
     "level100": 0x28672C3F,
     "loading": 0x003848A7,
-    "victory": 0x0088B6AB,
-    "defeat": 0x003F3384,
-    "primaryObjectives": 0xCD8BC48F,
-    "complete": 0x00E848AC,
-    "incomplete": 0x03905856,
-    "retry": 0x000CADA9,
-    "level100Objective1": 0x06936EBA,
-    "level100Objective2": 0x069FF355,
-    "level100Objective3": 0x06AC77F0,
-    "level100Objective4": 0x06B8FC8B,
-    "lossTutorialBroken": 0x422E890F,
-    "lossPlayerDeath": 0x033E2E5E,
-    "lossWater": 0x036A7C43,
 }
 
 

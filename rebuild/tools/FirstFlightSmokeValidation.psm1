@@ -46,21 +46,21 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v12' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v13' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
-    Assert-SmokeValue 'tick' 3244 $report.tick
-    Assert-SmokeValue 'stateHash' 'c35f0796ef588ca3cd4f36a08bb2371956c071053af03ec3242e050f0d725974' $report.stateHash
+    Assert-SmokeValue 'tick' 3228 $report.tick
+    Assert-SmokeValue 'stateHash' '8aa52c8c8089d5ec921588b57eac29ded0c1a3d90d9bdf5c0b419e867c10910e' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
-    Assert-SmokeValue 'level100MissionTick' 3244 $report.level100MissionTick
-    Assert-SmokeValue 'level100MissionOutcome' 'Lost' $report.level100MissionOutcome
-    Assert-SmokeValue 'level100TerminalState' 'FailureMenuReady' $report.level100TerminalState
+    Assert-SmokeValue 'level100MissionTick' 3228 $report.level100MissionTick
+    Assert-SmokeValue 'level100MissionOutcome' 'Running' $report.level100MissionOutcome
+    Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
     Assert-SmokeValue 'level100PlayingMessageId' -257967449 $report.level100PlayingMessageId
     Assert-SmokeValue 'level100DeliveredMessageCount' 14 $report.level100DeliveredMessageCount
     Assert-SmokeValue 'level100DeliveredHelpCount' 1 $report.level100DeliveredHelpCount
-    Assert-SmokeValue 'level100PlayerControlEnabled' $false $report.level100PlayerControlEnabled
+    Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
     Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
     Assert-SmokeValue 'level100PulseCannonEnabled' $true $report.level100PulseCannonEnabled
     Assert-SmokeValue 'level100VulcanCannonEnabled' $false $report.level100VulcanCannonEnabled
@@ -69,7 +69,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100MessagePlaybackAvailable' $true $report.level100MessagePlaybackAvailable
     Assert-SmokeValue 'level100MessagePlaying' $true $report.level100MessagePlaying
     Assert-SmokeValue 'tutorialVoicePlaying' $true $report.tutorialVoicePlaying
-    Assert-SmokeValue 'totalSteps' 3244 $report.totalSteps
+    Assert-SmokeValue 'totalSteps' 3228 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
     Assert-SmokeValue 'resetGeneration' 0 $report.resetGeneration
@@ -114,9 +114,6 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'cursorPolicyCapturedAtGameplay' $true $report.cursorPolicyCapturedAtGameplay
     Assert-SmokeValue 'focusLossCursorPolicyVisible' $true $report.focusLossCursorPolicyVisible
     Assert-SmokeValue 'focusGainCursorPolicyCaptured' $true $report.focusGainCursorPolicyCaptured
-    Assert-SmokeValue 'missionTerminalHandoffEntered' $true $report.missionTerminalHandoffEntered
-    Assert-SmokeValue 'missionFailureReason' 'PlayerDeath' $report.missionFailureReason
-    Assert-SmokeValue 'terminalCursorPolicyVisible' $true $report.terminalCursorPolicyVisible
     Assert-SmokeValue 'retryRequested' $true $report.retryRequested
     Assert-SmokeValue 'retryGameplayActivated' $true $report.retryGameplayActivated
     Assert-SmokeValue 'retrySessionFresh' $true $report.retrySessionFresh

@@ -57,7 +57,7 @@ the vtable at `0x005DBAE4`, input/action/render entries
 `0x004606B0`/`0x00460B40`; only released world 100 is exposed. The loading page
 uses the exact image and `Loading...` text established by
 `CConsole__RenderLoadingScreen` (`0x0042C810`). Twenty-one exact AYA textures,
-three exact XAP PCM decodes, and twenty-three English strings decoded from the
+three exact XAP PCM decodes, and ten English strings decoded from the
 supported shipped table are materialized to ignored frontend paths. This lane
 emits move/select/back cue identities; it does not load or play those WAVs, so
 the integrating audio owner remains singular.
@@ -67,19 +67,15 @@ Result ownership is deliberately split at the evidence boundary. Stuart's
 establish an in-game terminal overlay; Steam's later CFEPDebriefing vtable at
 `0x005DB9C0` resolves to initializer `0x00456780`, input `0x004568A0`, process
 `0x00456930`, and render `0x00456DD0`. This frontend implements neither visual
-surface, and the HUD does not invent a replacement. The frontend consumes the
-mission-owned
-`Level100MissionSnapshot` only when its exact `Level100MissionTerminalState` is
-ready, then retains only a terminal lifecycle handoff plus explicit retry and
-Main Menu transitions. Shipped Level 100 script provides
+surface, does not inspect mission terminal state, and does not invent a result
+lifecycle. Shipped Level 100 script provides
 `LevelLostString(LOSE_TUTORIAL_BROKE)`; Stuart's game system also identifies
-generic player-death and water failures. Their three exact English strings are
-materialized. The deterministic mission owns `Level100MissionOutcome` and
-`Level100MissionFailureReason`; the frontend copies neither into a second
-vocabulary. Exact `Mission Complete`, `Retry`, `Back`, and failure text remains
-available to the separate result owner, but no terminal overlay, selected
-default, summary compositor, rank/kill data, progression, save, or later
-campaign selection is claimed here.
+generic player-death and water failures. Exact terminal strings remain in the
+separate HUD-event manifest for a future result owner and are not duplicated in
+the frontend localization. The deterministic mission alone owns
+`Level100MissionOutcome` and `Level100MissionFailureReason`. No terminal
+overlay, selected default, summary compositor, rank/kill data, progression,
+save, or later campaign selection is claimed here.
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
@@ -445,7 +441,7 @@ final horizontal projection. It leaves selected
 weapon, selection-panel state, weapon resources, classified contacts, threats,
 damage flashes, target prediction, active-help lifetime, and influence values
 absent until their mechanics owners exist. The HUD does not draw a parallel
-terminal/result screen; mission outcome handoff remains owned by the frontend.
+terminal/result screen, and this frontend does not own mission outcome handoff.
 This is an ownership boundary, not a claim that every released HUD value or
 render pass is complete.
 Steam's exact dynamically written 16-bit ring pixels and exact portrait RNG
@@ -664,11 +660,9 @@ retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
 ground elevation. Its deterministic route enters through the cold click page,
 Main Menu, world-100 selection, and Loading before it reaches the first Firing
 Range exercise, renders the exact target models and shipped objective markers,
-resolves the fourteenth message, removes Target Tank
-1 after four bounded full hits with retained shot/impact/destruction
-presentation, preserves the expected Core hash, exercises focus/cursor release,
-the mission terminal handoff, fresh retry, and return to the same Main Menu,
-then exits.
+resolves the fourteenth message, samples the bounded four-shot input sequence,
+preserves the expected Core hash, exercises focus/cursor release, requests a
+fresh retry, and returns to the same Main Menu before exiting.
 The smoke produces no screenshot and proves no viewport or pixel parity. It
 does not prove disabled or unreferenced material modes,
 procedural leg solving, collision beyond the two observed facilities,

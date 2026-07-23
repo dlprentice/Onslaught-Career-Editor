@@ -1,7 +1,7 @@
 # Released frontend assets
 
 This directory owns the ignored, locally materialized retail inputs used by the
-bounded startup → main menu → Level 100 → terminal-handoff path. Run
+bounded startup → main menu → Level 100 → loading path. Run
 `npm run prepare:rebuild-assets` to verify a user-provided Steam installation
 and reproduce these exact files. The payloads remain outside Git and release
 packages and remain copyright of their respective rights holders;
@@ -14,15 +14,11 @@ working main-menu actions. Continue, Load Game, Multiplayer, Goodies, and
 Options remain visible but explicitly unavailable. Level select exposes only
 `1.00 - Training Level` (world 100).
 
-The current gameplay slice does not yet reach Level 100's full `LevelWon` or
-`LevelLostString` conditions. The frontend therefore accepts only the
-mission-owned `Level100MissionSnapshot` terminal handoff without inventing a
-trigger, result vocabulary, or compositor. The released in-game terminal
-overlay and later CFEPDebriefing surface are both outside this lane and are not
-substituted by the HUD. Explicit retry constructs a
-fresh deterministic Level 100 session, while Exit Level discards it and returns
-to the bounded shell. There are no frontend result buttons or default result
-selection.
+This lane ends when Loading hands a fresh canonical Level 100 session to the
+gameplay host. The gameplay pause owner's Retry and Quit actions reuse that
+loading/Main Menu lifecycle. Mission outcomes, terminal overlays, later
+CFEPDebriefing, saves, and subsequent campaign selection remain outside this
+lane.
 
 ## Materialized inputs
 
@@ -52,7 +48,7 @@ selection.
 | `SoundEffects/move.wav` | Exact 44.1 kHz PCM decode of XAP record 42, `Front End\N_FE_move`; consumed by the integrating audio lane, not this flow | `76B2458E9C5854DAF7237EA81B4F288AE09963BC10E7651E81E858FDB68CE83B` |
 | `SoundEffects/select.wav` | Exact 44.1 kHz PCM decode of XAP record 43, `Front End\N_FE_select`; consumed by the integrating audio lane, not this flow | `F84144C80405FE9F745B8CF4BD352D7FA4F8C0A8BA481C770C2C7C0A9053ADE1` |
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
-| `english.json` | Ten menu/launch and thirteen result/loss strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `417621F3CCC82F6B738D5D4F1C2C2A5D95984D88D82DB3846E8F073AED367C12` |
+| `english.json` | Ten menu/launch strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `B27D7B1B3F8CD8AA22B664CACF7C87A8B0907C7DEA4C4F07DFF8DA763DBB70F3` |
 
 ## Evidence boundary
 

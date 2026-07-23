@@ -52,9 +52,6 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeCursorCapturedAtGameplay;
     private bool _smokeCursorReleasedOnFocusLoss;
     private bool _smokeCursorRecapturedOnFocusGain;
-    private bool _smokeMissionTerminalHandoffEntered;
-    private string _smokeMissionFailureReason = string.Empty;
-    private bool _smokeCursorVisibleForTerminal;
     private bool _smokeRetryRequested;
     private bool _smokeRetryGameplayActivated;
     private bool _smokeRetrySessionFresh;
@@ -75,9 +72,6 @@ public sealed partial class FirstFlightGame : Node3D
         {
             ConfigureInputMap();
             ParseUserArguments();
-            _session = new InteractiveSession(
-                SimulationSeed,
-                Level100StaticWorldAsset.LoadActorDefinitions());
 
             Window window = GetWindow();
             window.Title = "Onslaught Rebuild - Battle Engine Aquila";
@@ -107,9 +101,8 @@ public sealed partial class FirstFlightGame : Node3D
     }
 
     /// <summary>
-    /// Pause/mission-terminal integration seam. The frontend enters Loading
-    /// and the existing host replaces its one Level 100 session/world when
-    /// requested.
+    /// Pause integration seam. The frontend enters Loading and the existing
+    /// host replaces its one Level 100 session/world when requested.
     /// </summary>
     public void RestartLevel100()
     {
@@ -117,8 +110,8 @@ public sealed partial class FirstFlightGame : Node3D
     }
 
     /// <summary>
-    /// Pause/mission-terminal integration seam for Exit Level. This returns
-    /// to the existing frontend shell; it never quits the application.
+    /// Pause integration seam for Exit Level. This returns to the existing
+    /// frontend shell; it never quits the application.
     /// </summary>
     public void LeaveLevel100ForMainMenu()
     {
@@ -187,45 +180,13 @@ public sealed partial class FirstFlightGame : Node3D
             _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
-        if (_frontend!.TryAcceptMissionTerminal(result.CurrentSnapshot.Level100Mission))
-        {
-            return;
-        }
-
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
             _smokeCompleting = true;
             RunFocusLossHandlerSmokeProbe();
-            FrameAdvanceResult terminalFrame = _session.AdvanceFrameTicks(
-                SmokeFrameElapsedTicks,
-                [new Level100PlayerDeathFact()]);
-            ConsumeFrameEvents(terminalFrame);
-            for (int tick = 0;
-                 tick < Level100MissionTiming.FailureMenuDelayTicks &&
-                 _session.CurrentSnapshot.Level100Mission.TerminalState !=
-                    Level100MissionTerminalState.FailureMenuReady;
-                 tick++)
-            {
-                terminalFrame = _session.AdvanceFrameTicks(SmokeFrameElapsedTicks);
-                ConsumeFrameEvents(terminalFrame);
-            }
-            _hud.UpdateFromSnapshot(
-                _session.CurrentSnapshot,
-                _audio.CharacterMessagePlayback);
-            Level100MissionSnapshot terminal = _session.CurrentSnapshot.Level100Mission;
-            if (!_frontend.TryAcceptMissionTerminal(terminal))
-            {
-                throw new InvalidOperationException(
-                    "Frontend did not accept the mission-owned terminal handoff.");
-            }
-            _smokeMissionTerminalHandoffEntered =
-                _frontend.CurrentScreen == RetailFrontendScreen.TerminalHandoff;
-            _smokeMissionFailureReason = terminal.FailureReason.ToString();
-            _smokeCursorVisibleForTerminal =
-                _requestedCursorMode == RetailFrontendCursorMode.Visible;
             _smokeReport = CaptureSmokeReport();
             RestartLevel100();
-            _smokeRetryRequested = _frontend.CurrentScreen == RetailFrontendScreen.Loading;
+            _smokeRetryRequested = _frontend!.CurrentScreen == RetailFrontendScreen.Loading;
             _smokeCursorHiddenAtLoading &=
                 _requestedCursorMode == RetailFrontendCursorMode.Hidden;
             _smokePhase = SmokePhase.AwaitingRetryGameplay;
@@ -670,8 +631,8 @@ public sealed partial class FirstFlightGame : Node3D
             if (_level100WorldCreated)
             {
                 DestroyLevel100World();
-                _session = CreateSession();
             }
+            _session = CreateSession();
             CreateLevel100World();
             _frontend!.MarkLevel100Ready();
         }
@@ -729,7 +690,6 @@ public sealed partial class FirstFlightGame : Node3D
     {
         SuspendFrontendGameplay();
         DestroyLevel100World();
-        _session = CreateSession();
     }
 
     private void DestroyLevel100World()
@@ -754,6 +714,7 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.QueueFree();
         _pauseView.QueueFree();
         _level100WorldCreated = false;
+        _session = null!;
     }
 
     private static InteractiveSession CreateSession() =>
@@ -786,11 +747,10 @@ public sealed partial class FirstFlightGame : Node3D
     private RetailFrontendFlow RequireLevel100Frontend()
     {
         if (_frontend is null ||
-            _frontend.CurrentScreen is not RetailFrontendScreen.Gameplay and
-                not RetailFrontendScreen.TerminalHandoff)
+            _frontend.CurrentScreen != RetailFrontendScreen.Gameplay)
         {
             throw new InvalidOperationException(
-                "A Level 100 restart or Main Menu return requires gameplay or its mission terminal handoff.");
+                "A Level 100 restart or Main Menu return requires active gameplay.");
         }
 
         return _frontend;
@@ -1043,7 +1003,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v12",
+            SchemaVersion = "onslaught-first-flight-smoke.v13",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -1130,9 +1090,6 @@ public sealed partial class FirstFlightGame : Node3D
             report.CursorPolicyCapturedAtGameplay = _smokeCursorCapturedAtGameplay;
             report.FocusLossCursorPolicyVisible = _smokeCursorReleasedOnFocusLoss;
             report.FocusGainCursorPolicyCaptured = _smokeCursorRecapturedOnFocusGain;
-            report.MissionTerminalHandoffEntered = _smokeMissionTerminalHandoffEntered;
-            report.MissionFailureReason = _smokeMissionFailureReason;
-            report.TerminalCursorPolicyVisible = _smokeCursorVisibleForTerminal;
             report.RetryRequested = _smokeRetryRequested;
             report.RetryGameplayActivated = _smokeRetryGameplayActivated;
             report.RetrySessionFresh = _smokeRetrySessionFresh;
@@ -1240,9 +1197,6 @@ public sealed partial class FirstFlightGame : Node3D
         public bool CursorPolicyCapturedAtGameplay { get; set; }
         public bool FocusLossCursorPolicyVisible { get; set; }
         public bool FocusGainCursorPolicyCaptured { get; set; }
-        public bool MissionTerminalHandoffEntered { get; set; }
-        public string MissionFailureReason { get; set; } = string.Empty;
-        public bool TerminalCursorPolicyVisible { get; set; }
         public bool RetryRequested { get; set; }
         public bool RetryGameplayActivated { get; set; }
         public bool RetrySessionFresh { get; set; }

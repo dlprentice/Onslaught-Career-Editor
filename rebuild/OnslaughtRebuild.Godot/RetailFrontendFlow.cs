@@ -3,7 +3,6 @@
 using System.Text.Json;
 using Godot;
 using OnslaughtRebuild.Client;
-using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -99,17 +98,6 @@ public sealed partial class RetailFrontendFlow : Control
         _level100Ready = true;
     }
 
-    public bool TryAcceptMissionTerminal(Level100MissionSnapshot mission)
-    {
-        if (!_session.TryAcceptMissionTerminal(mission))
-        {
-            return false;
-        }
-
-        PresentTerminalHandoff();
-        return true;
-    }
-
     public void RestartLevel100()
     {
         RetailFrontendScreen origin = _session.Screen;
@@ -187,8 +175,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     public override void _Input(InputEvent inputEvent)
     {
-        if (_session.Screen is RetailFrontendScreen.Loading or RetailFrontendScreen.Gameplay or
-            RetailFrontendScreen.TerminalHandoff)
+        if (_session.Screen is RetailFrontendScreen.Loading or RetailFrontendScreen.Gameplay)
         {
             return;
         }
@@ -495,17 +482,6 @@ public sealed partial class RetailFrontendFlow : Control
             GetTree().Quit(0);
         }
         QueueRedraw();
-    }
-
-    private void PresentTerminalHandoff()
-    {
-        // The released terminal/result compositor is a separate presentation
-        // owner. This bounded frontend retains only its lifecycle handoff.
-        Visible = false;
-        SetProcessInput(false);
-        SetProcess(false);
-        CursorModeRequested?.Invoke(RetailFrontendCursorMode.Visible);
-        GameplaySuspended?.Invoke();
     }
 
     private void ResumeFrontendForNavigation(RetailFrontendScreen origin)

@@ -2,8 +2,6 @@
 
 namespace OnslaughtRebuild.Client;
 
-using OnslaughtRebuild.Core;
-
 /// <summary>
 /// Presentation-owned state for the bounded released-frontend path into Level 100.
 /// Gameplay state remains exclusively owned by <see cref="InteractiveSession"/>.
@@ -146,42 +144,9 @@ public sealed class RetailFrontendSession
     }
 
     /// <summary>
-    /// Accepts only the authoritative mission-owned terminal snapshot at the
-    /// point where its HUD/mission presentation can expose retry or hand off
-    /// to the later frontend. No result vocabulary or summary data is copied.
-    /// </summary>
-    public bool TryAcceptMissionTerminal(Level100MissionSnapshot mission)
-    {
-        if (Screen != RetailFrontendScreen.Gameplay)
-        {
-            return false;
-        }
-
-        bool ready = mission.Outcome switch
-        {
-            Level100MissionOutcome.Won =>
-                mission.TerminalState == Level100MissionTerminalState.FrontEndHandoffReady &&
-                mission.FailureReason == Level100MissionFailureReason.None,
-            Level100MissionOutcome.Lost =>
-                (mission.TerminalState is Level100MissionTerminalState.FailureMenuReady or
-                    Level100MissionTerminalState.FailureCountdownElapsed) &&
-                mission.FailureReason != Level100MissionFailureReason.None,
-            _ => false,
-        };
-        if (!ready)
-        {
-            return false;
-        }
-
-        Screen = RetailFrontendScreen.TerminalHandoff;
-        return true;
-    }
-
-    /// <summary>
-    /// Restarts the bounded Level 100 run from gameplay, a pause owned by the
-    /// gameplay presenter, or a later mission terminal handoff. Pause is
-    /// intentionally not a second frontend state machine: it leaves this
-    /// lifecycle in Gameplay.
+    /// Restarts the bounded Level 100 run from a pause owned by the gameplay
+    /// presenter. Pause is intentionally not a second frontend state machine:
+    /// it leaves this lifecycle in Gameplay.
     /// </summary>
     public RetailFrontendSignal RestartLevel100()
     {
@@ -192,8 +157,7 @@ public sealed class RetailFrontendSession
     }
 
     /// <summary>
-    /// Leaves gameplay, a gameplay-owned pause, or a mission terminal handoff
-    /// for the existing startup/main-menu shell.
+    /// Leaves a gameplay-owned pause for the existing startup/main-menu shell.
     /// </summary>
     public RetailFrontendSignal LeaveLevel100ForMainMenu()
     {
@@ -204,11 +168,10 @@ public sealed class RetailFrontendSession
 
     private void RequireLevel100Transition(string operation)
     {
-        if (Screen is not RetailFrontendScreen.Gameplay and
-            not RetailFrontendScreen.TerminalHandoff)
+        if (Screen != RetailFrontendScreen.Gameplay)
         {
             throw new InvalidOperationException(
-                $"{operation} requires Level 100 gameplay or its mission terminal handoff.");
+                $"{operation} requires an active Level 100 lifecycle.");
         }
     }
 
@@ -228,7 +191,6 @@ public enum RetailFrontendScreen
     LevelSelect,
     Loading,
     Gameplay,
-    TerminalHandoff,
 }
 
 public enum RetailFrontendSignal

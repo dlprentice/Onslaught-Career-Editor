@@ -767,7 +767,9 @@ public sealed class InteractiveSessionTests
         Assert.Equal(3_228, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
-        var session = new InteractiveSession(Seed, ActorDefinitions);
+        var session = new InteractiveSession(
+            Seed,
+            LoadMaterializedActorDefinitions());
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
         {
             session.ObserveInput(
@@ -790,7 +792,7 @@ public sealed class InteractiveSessionTests
         Assert.Null(waypoint.DueTick);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
         Assert.Equal(
-            "1edf8c169caaae95cab6959715940b36570091fb146d61fd07414838ec9236c1",
+            "8aa52c8c8089d5ec921588b57eac29ded0c1a3d90d9bdf5c0b419e867c10910e",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 
