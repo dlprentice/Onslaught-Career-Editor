@@ -54,26 +54,26 @@ internal sealed class Level100TerrainAppearanceAsset
             return mix(fog_color, color, visibility);
         }
 
-        vec3 sample_macro_map(int level) {
+        vec3 sample_macro_map(int level, vec2 retail_world_uv) {
             if (level == 4) {
-                return texture(macro_map_4, UV / 32.0).rgb;
+                return texture(macro_map_4, retail_world_uv / 32.0).rgb;
             }
             if (level == 3) {
-                return texture(macro_map_3, UV / 64.0).rgb;
+                return texture(macro_map_3, retail_world_uv / 64.0).rgb;
             }
             if (level == 2) {
-                return texture(macro_map_2, UV / 128.0).rgb;
+                return texture(macro_map_2, retail_world_uv / 128.0).rgb;
             }
             if (level == 1) {
-                return texture(macro_map_1, UV / 256.0).rgb;
+                return texture(macro_map_1, retail_world_uv / 256.0).rgb;
             }
-            return texture(macro_map_0, UV / 512.0).rgb;
+            return texture(macro_map_0, retail_world_uv / 512.0).rgb;
         }
 
         void fragment() {
-            int macro_level = int(clamp(floor(UV2.x + 0.5), 0.0, 4.0));
-            vec3 macro_color = sample_macro_map(macro_level);
             vec2 retail_world_uv = UV;
+            int macro_level = int(clamp(floor(UV2.x + 0.5), 0.0, 4.0));
+            vec3 macro_color = sample_macro_map(macro_level, retail_world_uv);
             vec3 detail_primary = texture(detail_map, retail_world_uv).rgb;
             vec2 detail_secondary_uv = vec2(
                 (0.1350755765 * retail_world_uv.x) -

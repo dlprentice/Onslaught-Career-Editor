@@ -765,7 +765,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v11",
+            SchemaVersion = "onslaught-first-flight-smoke.v12",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -820,6 +820,10 @@ public sealed partial class FirstFlightGame : Node3D
                     _world.RetailLevel100ShorelineTriangleCount,
                 RetailLevel100TargetSurfaceCount = _world.RetailLevel100TargetSurfaceCount,
                 Level100ObjectiveMarkerCount = _hud.Level100ObjectiveMarkerCount,
+                Level100DeliveredMessageCount = _hud.Level100DeliveredMessageCount,
+                Level100DeliveredHelpCount = _hud.Level100DeliveredHelpCount,
+                Level100MessagePlaybackAvailable = _hud.Level100MessagePlaybackAvailable,
+                Level100MessagePlaying = _hud.Level100MessagePlaying,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
                 RetailLevel100TerrainTriangleCount = _world.RetailLevel100TerrainTriangleCount,
                 RetailLevel100SkySurfaceCount = _world.RetailLevel100SkySurfaceCount,
@@ -935,6 +939,10 @@ public sealed partial class FirstFlightGame : Node3D
         public required int RetailLevel100ShorelineTriangleCount { get; init; }
         public required int RetailLevel100TargetSurfaceCount { get; init; }
         public required int Level100ObjectiveMarkerCount { get; init; }
+        public required int Level100DeliveredMessageCount { get; init; }
+        public required int Level100DeliveredHelpCount { get; init; }
+        public required bool Level100MessagePlaybackAvailable { get; init; }
+        public required bool Level100MessagePlaying { get; init; }
         public required int RetailLevel100TerrainVertexCount { get; init; }
         public required int RetailLevel100TerrainTriangleCount { get; init; }
         public required int RetailLevel100SkySurfaceCount { get; init; }

@@ -263,7 +263,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private static Texture2D[] ApplyReleasedPortraitMask(Texture2D[] source, Texture2D circleMask)
     {
         Image maskImage = circleMask.GetImage();
-        maskImage.Convert(Image.Format.Rgba8);
+        MakeCpuReadable(maskImage);
         return source.Select(portrait => ApplyReleasedPortraitMask(portrait, maskImage)).ToArray();
     }
 
@@ -273,7 +273,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         const int portraitSize = 96;
         const int portraitInset = (sourceSize - portraitSize) / 2;
         Image sourceImage = source.GetImage();
-        sourceImage.Convert(Image.Format.Rgba8);
+        MakeCpuReadable(sourceImage);
         sourceImage.Resize(portraitSize, portraitSize, Image.Interpolation.Bilinear);
         Image masked = Image.CreateEmpty(sourceSize, sourceSize, false, Image.Format.Rgba8);
         for (int y = 0; y < sourceSize; y++)
@@ -290,6 +290,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
         return ImageTexture.CreateFromImage(masked);
+    }
+
+    private static void MakeCpuReadable(Image image)
+    {
+        if (image.IsCompressed() && image.Decompress() != Error.Ok)
+        {
+            throw new InvalidDataException("Released HUD texture could not be decompressed for portrait masking.");
+        }
+
+        if (image.GetFormat() != Image.Format.Rgba8)
+        {
+            image.Convert(Image.Format.Rgba8);
+        }
     }
 
     private static Texture2D LoadHudTexture(
