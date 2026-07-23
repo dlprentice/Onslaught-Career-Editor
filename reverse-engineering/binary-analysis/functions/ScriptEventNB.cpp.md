@@ -279,16 +279,17 @@ void CScriptEventNB::UpdateWaypointFollowing() {
         }
     }
 
-    // Schedule next update in 2000ms
-    float delay = -1.0f;
-    FUN_0044b370(2000, this, &delay, 0, 0, 0);
+    // Schedule event ID 2000 (0x7d0) for the next frame.
+    float nextFrame = -1.0f;
+    FUN_0044b370(2000, this, &nextFrame, 0, 0, 0);
 }
 ```
 
 **Key Details:**
 - Calculates 2D distance to current waypoint
 - Arrival thresholds: 2.0f (default), 4.0f (large units), or custom via vtable
-- Schedules next update after 2000ms
+- Schedules event ID `2000` for `NEXT_FRAME` (`-1.0f`), so this is a
+  next-frame waypoint check rather than a 2000 ms timer
 - Detects infinite waypoint loops
 - Error message at 0x0064fe50: "ERROR: Waypoint points to previous"
 
@@ -304,7 +305,7 @@ void CScriptEventNB::HandleMessage(int param_1) {
     short msgId = *(short*)(param_1 + 4);
 
     if (msgId == 2000) {
-        // Timer tick - update waypoint following
+        // Event 2000 - update waypoint following
         UpdateWaypointFollowing();
     }
     else if (msgId == 0x7d1) {  // 2001
@@ -336,7 +337,7 @@ void CScriptEventNB::HandleMessage(int param_1) {
 ```
 
 **Key Details:**
-- Message ID 2000: Timer tick for waypoint updates
+- Message ID 2000: next-frame waypoint update event
 - Message ID 0x7d1 (2001): Object destroyed notification
 - Message ID 0x7d2 (2002): Unknown purpose, state-dependent
 - Global state variable DAT_008a9ac0 controls behavior
@@ -467,7 +468,7 @@ Offsets formerly listed from `0x58` through `0x6c` came from the now-moved `CScr
 
 | ID | Hex | Purpose |
 |----|-----|---------|
-| 2000 | 0x7d0 | Timer tick - waypoint update |
+| 2000 | 0x7d0 | Next-frame waypoint update event |
 | 2001 | 0x7d1 | Object destroyed notification |
 | 2002 | 0x7d2 | Unknown state-dependent action |
 
@@ -506,14 +507,17 @@ Offsets formerly listed from `0x58` through `0x6c` came from the now-moved `CScr
 | 0x004e5bd0 | CSPtrSet__Remove | Remove entry from list (returns node to pool) |
 | 0x004e5c60 | CSPtrSet__Clear | List cleanup |
 | 0x004bac40 | CMonitor__Shutdown | Base monitor cleanup helper (formerly `FUN_004bac40`) |
-| 0x0044b370 | FUN_0044b370 | Timer scheduling |
+| 0x0044b370 | FUN_0044b370 | Event scheduling; this call uses `NEXT_FRAME` |
 | 0x00441740 | CConsole__Printf (`FUN_00441740`) | Debug/error output |
 
 ---
 
 ## Notes
 
-1. **Non-Blocking Design**: The "NB" suffix indicates these script events don't block the game loop. Waypoint following and event posting happen asynchronously with timer-based updates every 2000ms.
+1. **Non-Blocking Design**: The "NB" suffix indicates these script events don't
+   block the game loop. Waypoint following and event posting happen
+   asynchronously; the waypoint update reschedules event ID `2000` for the next
+   frame.
 
 2. **Event System**: The system uses a publisher-subscriber pattern where events are posted by name and listeners execute their CEventFunction callbacks when their name matches.
 

@@ -60,7 +60,7 @@ arity, runtime dispatch effect, or complete command semantics.
 | 0x005381a0 | IScript__LevelLost | Declare the current level LOST (`LevelLost()`) |
 | 0x005381c0 | IScript__LevelLostString | Declare the current level LOST with a text id (`LevelLostString(message_id)`) |
 | 0x005381e0 | IScript__LevelWon | Declare the current level WON (`LevelWon()`) |
-| 0x005383c0 | IScript__ScheduleEvent | Schedule a timed event (2000ms delay) |
+| 0x005383c0 | IScript__ScheduleEvent | Schedule `PostEvent` payload as event ID `2000` for `NEXT_FRAME` (`-1.0f`) |
 | 0x0052ff30 | ScriptCommandRegistry__InitBuiltins | Wave864 built-in command descriptor registry initializer; 144 contiguous 0x40-byte records |
 
 ## Key Patterns
