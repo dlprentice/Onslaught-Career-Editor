@@ -23,6 +23,7 @@ public readonly record struct FrameAdvanceResult(
     WorldSnapshot PreviousSnapshot,
     WorldSnapshot CurrentSnapshot,
     IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
+    IReadOnlyList<AquilaFlightEvent> AquilaFlightEvents,
     IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents)
 {
     public double InterpolationAlpha =>
@@ -54,6 +55,7 @@ public sealed class InteractiveSession
 
     private readonly Simulation _simulation;
     private readonly List<Level100MissionEvent> _undeliveredLevel100MissionEvents = [];
+    private readonly List<AquilaFlightEvent> _undeliveredAquilaFlightEvents = [];
     private readonly List<Level100DestructionEvent>
         _undeliveredLevel100DestructionEvents = [];
     private InteractiveInput _input;
@@ -87,6 +89,8 @@ public sealed class InteractiveSession
         CurrentSnapshot = PreviousSnapshot;
         _undeliveredLevel100MissionEvents.AddRange(
             CurrentSnapshot.Level100MissionEvents);
+        _undeliveredAquilaFlightEvents.AddRange(
+            CurrentSnapshot.AquilaFlightEventLog);
         _undeliveredLevel100DestructionEvents.AddRange(
             CurrentSnapshot.Level100DestructionEvents);
     }
@@ -337,6 +341,7 @@ public sealed class InteractiveSession
                 PreviousSnapshot,
                 CurrentSnapshot,
                 Array.Empty<Level100MissionEvent>(),
+                Array.Empty<AquilaFlightEvent>(),
                 Array.Empty<Level100DestructionEvent>());
         }
 
@@ -365,6 +370,8 @@ public sealed class InteractiveSession
         int stepsAdvanced = 0;
         var level100MissionEvents = new List<Level100MissionEvent>();
         level100MissionEvents.AddRange(_undeliveredLevel100MissionEvents);
+        var aquilaFlightEvents = new List<AquilaFlightEvent>();
+        aquilaFlightEvents.AddRange(_undeliveredAquilaFlightEvents);
         var level100DestructionEvents = new List<Level100DestructionEvent>();
         level100DestructionEvents.AddRange(
             _undeliveredLevel100DestructionEvents);
@@ -404,6 +411,10 @@ public sealed class InteractiveSession
             }
 
             SimActions actions = _input.FireHeld || firePulse ? SimActions.Fire : SimActions.None;
+            if (_input.LandingJetsHeld)
+            {
+                actions |= SimActions.LandingJets;
+            }
             if (firstStep)
             {
                 if (_toggleEdgePending)
@@ -456,6 +467,7 @@ public sealed class InteractiveSession
                     pointerLookY),
                 firstStep ? level100Facts : null);
             level100MissionEvents.AddRange(CurrentSnapshot.Level100MissionEvents);
+            aquilaFlightEvents.AddRange(CurrentSnapshot.AquilaFlightEventLog);
             level100DestructionEvents.AddRange(
                 CurrentSnapshot.Level100DestructionEvents);
             _interpolationPhase -= PhaseUnitsPerStep;
@@ -471,8 +483,10 @@ public sealed class InteractiveSession
             PreviousSnapshot,
             CurrentSnapshot,
             Array.AsReadOnly(level100MissionEvents.ToArray()),
+            Array.AsReadOnly(aquilaFlightEvents.ToArray()),
             Array.AsReadOnly(level100DestructionEvents.ToArray()));
         _undeliveredLevel100MissionEvents.Clear();
+        _undeliveredAquilaFlightEvents.Clear();
         _undeliveredLevel100DestructionEvents.Clear();
         return result;
     }

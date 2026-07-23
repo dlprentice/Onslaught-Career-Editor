@@ -16,7 +16,8 @@ public sealed record CommandSpan(
     sbyte LookX = 0,
     sbyte LookY = 0,
     short LookXAnalogPermille = 0,
-    short LookYAnalogPermille = 0)
+    short LookYAnalogPermille = 0,
+    bool LandingJets = false)
 {
     [JsonIgnore]
     public int EndTickExclusive => checked(StartTick + DurationTicks);
@@ -37,6 +38,11 @@ public sealed record CommandSpan(
         if (Reset)
         {
             actions |= SimActions.Reset;
+        }
+
+        if (LandingJets)
+        {
+            actions |= SimActions.LandingJets;
         }
 
         return new SimInput(

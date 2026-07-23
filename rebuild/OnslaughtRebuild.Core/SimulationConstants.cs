@@ -64,11 +64,83 @@ public static class SimulationConstants
     public const int WalkerFootPhaseEnd = 180;
     public const int WalkerFootPhaseUnitsPerSecond = 400;
     public const int WalkerFootMaximumEarlySwings = 2;
-    // Milli-retail units/tick at 30 Hz ≈ 11.43 retail units/s (pair jet-p06
-    // envelope [10.860, 12.003]). Policy:
-    // reverse-engineering/game-mechanics/jet-forward-retail-to-core-translation-policy.md
-    // Schema: battleengine-jet-forward-scalar-response.v1
-    public const int JetSpeedPerTick = 381;
+    // Level 100 names "Paladin Prototype", which is absent from the shipped
+    // table. UBattleEngineDataManager::Load prepends each record, so the
+    // GetConfiguration(0) fallback is the final shipped record, Blaster.
+    // Its 0.3/0.9 retail-unit 20 Hz target velocities map to 30 Hz here.
+    public const int JetMinimumSpeedPerTick = 200;
+    public const int JetMaximumSpeedPerTick = 600;
+    public const int JetTargetCorrectionNumerator = 27_031;
+    public const int JetTargetCorrectionDenominator = 1_000_000;
+    // CBattleEngineJetPart::YawLeft/YawRight add body-local vx / 300 once per
+    // released 20 Hz update. Mapping that acceleration to the 30 Hz Core's
+    // milli-world-unit velocity gives 40/27 per full-input tick.
+    public const int JetStrafeAccelerationNumerator = 40;
+    public const int JetStrafeAccelerationDenominator = 27;
+    public const int JetYawInputMicroRadPerTick = 9_805;
+    public const int JetPitchInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
+    public const int JetRollInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
+    public const int JetInputRampTicks = 45;
+    public const int JetTransformAlignmentTicks = 75;
+    public const int JetStrafeAlignmentTicks = 120;
+    public const int JetPitchSoftLimitMicroRad = 1_170_000;
+    public const int JetRollAutoLevelNumerator = 979_899;
+    public const int JetRollAutoLevelDenominator = 1_000_000;
+    public const int JetNearSurfaceFrictionNumerator = 993_322;
+    public const int JetCruiseFrictionNumerator = 986_576;
+    public const int JetLowAltitudeFrictionNumerator = 979_899;
+    public const int JetFrictionDenominator = 1_000_000;
+    public const int JetGroundedRetentionNumerator = 966_382;
+    public const int JetGroundedForwardCouplingNumerator = 31_951;
+    public const int JetGroundedResponseDenominator = 1_000_000;
+    public const int JetDescendingGroundEffectRetentionNumerator = 932_170;
+    public const int JetDescendingGroundEffectRetentionDenominator = 1_000_000;
+    public const int JetGroundFollowNumerator = 9_215;
+    public const int JetGroundFollowDenominator = 1_000_000;
+    public const int JetSkimRetentionNumerator = WalkerYawRetentionNumerator;
+    public const int JetSkimRetentionDenominator = WalkerYawRetentionDenominator;
+    public const int JetGroundEffectHeightMillimeters = 5_000;
+    public const int JetSkimHeightMillimeters = 500;
+    public const int JetSkimMinimumHorizontalSpeedPerTick = 200;
+    // One retail world-unit per released 20 Hz update expressed as a 30 Hz
+    // Core speed. This conversion scale is independent of Blaster's 0.9 target.
+    public const int RetailVelocityUnitPerUpdateAsCoreSpeed = 667;
+    public const int JetGroundedSlowSpeedPerTick = 67;
+    public const int JetAutoLandSpeedPerTick = 17;
+    public const int JetAutoLandDelayTicks = 75;
+    public const int JetAutoLandEligibilityTicks = 30;
+    public const int JetStallSpeedPerTick = 100;
+    public const int JetStallDelayTicks = 75;
+    public const int JetGravityPerTick = 2;
+    public const int WalkerGravityPerTick = 4;
+    public const int MorphIntoWalkerGravityPerTick = 1;
+    // Grounded walk-to-fly injects 0.7 retail velocity once. Converting its
+    // released 20 Hz velocity unit to Core's 30 Hz step gives 467 mm/tick.
+    public const int WalkerToJetLiftImpulsePerTick = 467;
+    public const int WalkerVerticalRetentionNumerator = 788_374;
+    public const int WalkerVerticalRetentionDenominator = 1_000_000;
+    // Held walker landing jets add -2.5% horizontal velocity and -7.5%
+    // downward velocity per released 20 Hz update. These are the equivalent
+    // 30 Hz retention factors; the action has no energy cost.
+    public const int WalkerLandingJetHorizontalRetentionNumerator = 983_263;
+    public const int WalkerLandingJetVerticalRetentionNumerator = 949_353;
+    public const int WalkerLandingJetRetentionDenominator = 1_000_000;
+    public const int WalkerLandingJetMinimumDescentPerTick = 7;
+    public const int WalkerToJetPitchInputMicroRadPerTick = 6_911;
+    public const int WalkerToJetAirborneTransitionTicks = 3;
+    public const int RecentGroundContactTicks = 18;
+    public const int Level100MaximumElevationMillimeters = 140_000;
+    public const int Level100MapEdgeSlowdownMillimeters = 20_000;
+    public const int Level100SteepSlopeGradientSquaredThreshold = 704_088;
+    // CBattleEngine::DeclareOnGround uses 0.2 outside pure walker state and
+    // 0.4 in walker state. These are the corresponding 30 Hz velocities.
+    public const int JetGroundImpactThresholdPerTick = 133;
+    public const int WalkerGroundImpactThresholdPerTick = 267;
+    // DeclareInWater starts the failure path once the centre is within 0.2
+    // retail units of the water plane.
+    public const int WaterFailureClearanceMillimeters = 200;
+    public const int WalkerTerrainPitchCorrectionNumerator = 13_823;
+    public const int WalkerTerrainPitchCorrectionDenominator = 1_000_000;
     // Retail body yaw integrates its velocity and retains exactly 0.8 each
     // 50 ms update. These are the time-equivalent 30 Hz coefficients; the
     // velocity is kept in integer micro-radians to preserve the coast.
@@ -77,32 +149,43 @@ public static class SimulationConstants
     public const int WalkerYawRetentionDenominator = 1_000_000;
     // Steam injects 1/117 rad at 20 Hz and retains exactly 0.8 after each
     // update. This is the time-equivalent 30 Hz input; pitch uses the same
-    // measured retention as yaw. Two uninterrupted Level 100 repetitions at
-    // the authored start stabilized at these absolute opening-slope bounds.
+    // measured retention as yaw. Source/static terrain-relative soft limits
+    // replace the earlier start-slope-only absolute clamps.
     public const int WalkerPitchInputMicroRadPerTick = 3_938;
     public const int WalkerPitchRetentionNumerator = WalkerYawRetentionNumerator;
     public const int WalkerPitchRetentionDenominator = WalkerYawRetentionDenominator;
-    public const int WalkerPitchUpLimitMicroRad = -1_091_250;
-    public const int WalkerPitchDownLimitMicroRad = 532_123;
-    public const int MaximumEnergy = 1_000;
-    public const int MaximumShield = 1_000;
+    // Two uninterrupted copied-retail repetitions at the authored Level 100
+    // start stabilized at these absolute endpoints. They remain evidence
+    // anchors while the source-derived terrain-relative limiter is used; they
+    // are not reapplied as global clamps on every slope.
+    public const int ObservedWalkerPitchUpLimitAtLevel100StartMicroRad = -1_091_250;
+    public const int ObservedWalkerPitchDownLimitAtLevel100StartMicroRad = 532_123;
+    // Energy uses the accepted milli-retail policy: 1000 Core units equal one
+    // retail energy unit. Blaster stores eight energy units and requires one
+    // to begin walker-to-jet morphing.
+    public const int MaximumEnergy = 8_000;
+    // The released WalkerPart assigns shields from the same energy store on
+    // every non-jet update. This alias preserves the public snapshot field
+    // without inventing a second capacity or regeneration curve.
+    public const int MaximumShield = MaximumEnergy;
     public const int MaximumHull = 1_000;
-    public const int TransformEnergyThreshold = 200;
-    public const int TransformEnergyCost = 120;
+    // Morph itself does not spend energy, and jet-to-walker has no energy gate.
+    public const int TransformEnergyThreshold = 1_000;
     // Two fresh copied-retail Level 100 runs held raw BattleEngine state 1
     // for 535.359-537.249 ms before state 3. Sixteen 30 Hz Core intervals
     // are 533.333 ms and preserve those exact state-transition endpoints.
     public const int WalkerToJetTransitionTicks = 16;
-    // Still synthetic for the unmeasured jet-to-walker/empty-energy paths.
-    public const int TransformDurationTicks = 15;
+    public const int JetToWalkerTransitionTicks = 15;
     // Walker regen still provisional (no dual-accept yet).
     public const int WalkerEnergyRegenerationPerTick = 4;
-    public const int WalkerShieldRegenerationPerTick = 2;
-    // Milli-energy units/tick at 30 Hz ≈ 0.51 retail energy units/s drain
-    // (pair energy-p02 envelope |r| ∈ [0.471, 0.562]). Policy:
-    // reverse-engineering/game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md
-    // Schema: battleengine-jet-energy-drain-scalar-response.v1
-    public const int JetEnergyDrainPerTick = 17;
+    // Level 100 falls back to Blaster, whose shipped minimum/maximum air costs
+    // are .005/.01 retail energy per 20 Hz update. Under the accepted
+    // milli-retail energy scale, their exact 30 Hz equivalents are 10/3 and
+    // 20/3 Core units per tick. The accumulator interpolates between them by
+    // throttle without discarding the fractional thirds.
+    public const int JetMinimumEnergyDrainThirdsPerTick = 10;
+    public const int JetMaximumEnergyDrainThirdsPerTick = 20;
+    public const int JetEnergyDrainFractionDenominator = 3;
     public const int FireEnergyCost = 30;
     public const int FireCooldownTicks = 6;
     // Fresh copied-Steam Level 100 runs independently repeated four

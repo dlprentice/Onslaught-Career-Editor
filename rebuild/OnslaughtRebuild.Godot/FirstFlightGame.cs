@@ -23,6 +23,7 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName LookDownAction = "first_flight_look_down";
     private static readonly StringName FireAction = "first_flight_fire";
     private static readonly StringName ToggleModeAction = "first_flight_toggle_mode";
+    private static readonly StringName LandingJetsAction = "first_flight_landing_jets";
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
@@ -175,15 +176,12 @@ public sealed partial class FirstFlightGame : Node3D
             ? SmokeFrameElapsedTicks
             : Math.Max(0L, (long)Math.Round(delta * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
         FrameAdvanceResult result = _session.AdvanceFrameTicks(elapsedTicks);
-        ConsumeLevel100MissionEvents(result.Level100MissionEvents);
+        ConsumeFrameEvents(result);
         _world.Render(
             result.PreviousSnapshot,
             result.CurrentSnapshot,
             (float)result.InterpolationAlpha,
             (float)delta);
-        _world.ConsumeLevel100DestructionEvents(
-            result.Level100DestructionEvents,
-            result.CurrentSnapshot.Tick);
         _hud.UpdateFromSnapshot(
             result.CurrentSnapshot,
             _audio.CharacterMessagePlayback);
@@ -201,10 +199,7 @@ public sealed partial class FirstFlightGame : Node3D
             FrameAdvanceResult terminalFrame = _session.AdvanceFrameTicks(
                 SmokeFrameElapsedTicks,
                 [new Level100PlayerDeathFact()]);
-            ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
-            _world.ConsumeLevel100DestructionEvents(
-                terminalFrame.Level100DestructionEvents,
-                terminalFrame.CurrentSnapshot.Tick);
+            ConsumeFrameEvents(terminalFrame);
             for (int tick = 0;
                  tick < Level100MissionTiming.FailureMenuDelayTicks &&
                  _session.CurrentSnapshot.Level100Mission.TerminalState !=
@@ -212,10 +207,7 @@ public sealed partial class FirstFlightGame : Node3D
                  tick++)
             {
                 terminalFrame = _session.AdvanceFrameTicks(SmokeFrameElapsedTicks);
-                ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
-                _world.ConsumeLevel100DestructionEvents(
-                    terminalFrame.Level100DestructionEvents,
-                    terminalFrame.CurrentSnapshot.Tick);
+                ConsumeFrameEvents(terminalFrame);
             }
             _hud.UpdateFromSnapshot(
                 _session.CurrentSnapshot,
@@ -292,24 +284,13 @@ public sealed partial class FirstFlightGame : Node3D
 
         if (inputEvent is InputEventMouseMotion mouseMotion)
         {
-            if (_session.CurrentSnapshot.Mode == VehicleMode.Walker &&
-                _session.CurrentSnapshot.Transition == VehicleTransition.None)
+            if (_session.CurrentSnapshot.Transition == VehicleTransition.None)
             {
                 int deltaX = ToMilliPixels(mouseMotion.ScreenRelative.X);
                 int deltaY = ToMilliPixels(mouseMotion.ScreenRelative.Y);
                 if (deltaX != 0 || deltaY != 0)
                 {
                     _session.QueuePointerMotionMilliPixels(deltaX, deltaY);
-                }
-            }
-            else
-            {
-                sbyte lookX = QuantizeAxis(mouseMotion.ScreenRelative.X);
-                sbyte lookY = QuantizeAxis(mouseMotion.ScreenRelative.Y);
-                if (lookX != 0 || lookY != 0)
-                {
-                    // Jet input remains on its existing provisional digital path.
-                    _session.QueueLookPulse(lookX, lookY);
                 }
             }
             return;
@@ -573,6 +554,7 @@ public sealed partial class FirstFlightGame : Node3D
         EnsureUnboundAction(LookDownAction);
         EnsureKeyAction(FireAction, Key.Space);
         EnsureKeyAction(ToggleModeAction, Key.Q);
+        EnsureKeyAction(LandingJetsAction, Key.Shift);
         EnsureKeyAction(ResetAction, Key.R);
     }
 
@@ -626,7 +608,8 @@ public sealed partial class FirstFlightGame : Node3D
             Input.IsActionPressed(ToggleModeAction),
             Input.IsActionPressed(ResetAction),
             lookX,
-            lookY);
+            lookY,
+            Input.IsActionPressed(LandingJetsAction));
     }
 
     private static sbyte QuantizeAxis(float value)
@@ -669,11 +652,7 @@ public sealed partial class FirstFlightGame : Node3D
         AddChild(_pauseView);
         _pauseView.Initialize(_pauseMenu);
 
-        FrameAdvanceResult initialFrame = _session.AdvanceFrameTicks(0);
-        ConsumeLevel100MissionEvents(initialFrame.Level100MissionEvents);
-        _world.ConsumeLevel100DestructionEvents(
-            initialFrame.Level100DestructionEvents,
-            initialFrame.CurrentSnapshot.Tick);
+        ConsumeFrameEvents(_session.AdvanceFrameTicks(0));
         _hud.UpdateFromSnapshot(
             _session.CurrentSnapshot,
             _audio.CharacterMessagePlayback);
@@ -934,6 +913,7 @@ public sealed partial class FirstFlightGame : Node3D
                      LookDownAction,
                      FireAction,
                      ToggleModeAction,
+                     LandingJetsAction,
                      ResetAction,
                  })
         {
@@ -951,6 +931,40 @@ public sealed partial class FirstFlightGame : Node3D
                 _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
             }
         }
+    }
+
+    private void ConsumeFrameEvents(FrameAdvanceResult result)
+    {
+        ConsumeLevel100MissionEvents(result.Level100MissionEvents);
+        foreach (AquilaFlightEvent flightEvent in result.AquilaFlightEvents)
+        {
+            switch (flightEvent.Kind)
+            {
+                case AquilaFlightEvents.WalkerToJetStarted:
+                    _audio.PlayAquilaTransition(AquilaTransitionCue.Takeoff);
+                    break;
+                case AquilaFlightEvents.JetToWalkerStarted:
+                    _audio.PlayAquilaTransition(AquilaTransitionCue.Landing);
+                    break;
+                case AquilaFlightEvents.TransformCompleted
+                    when flightEvent.Mode == VehicleMode.Jet:
+                    _audio.PlayAquilaTransition(AquilaTransitionCue.InFlight);
+                    break;
+                case AquilaFlightEvents.TransformCompleted
+                    when flightEvent.Mode == VehicleMode.Walker:
+                    _audio.StopAquilaFlightLoop();
+                    break;
+                case AquilaFlightEvents.JetWeaponFireRequested
+                    when flightEvent.Weapon == AquilaJetWeapon.MechVulcanCannon:
+                    _audio.PlayOnAquila(Level100EffectCue.VulcanCannonFire);
+                    break;
+            }
+        }
+        _audio.SetAquilaFlightPitch(
+            result.CurrentSnapshot.JetThrusterPermille / 1_000f);
+        _world.ConsumeLevel100DestructionEvents(
+            result.Level100DestructionEvents,
+            result.CurrentSnapshot.Tick);
     }
 
     private void RunFocusLossHandlerSmokeProbe()

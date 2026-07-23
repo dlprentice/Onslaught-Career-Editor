@@ -15,9 +15,11 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailOpeningCameraHandoffSeconds = 5.95f;
     private const float RetailAquilaAnimationHz = 20f;
     private const float RetailJetWalkToFlySeconds = 25f / RetailAquilaAnimationHz;
+    private const float RetailJetFlyToWalkSeconds = 25f / RetailAquilaAnimationHz;
     // Steam enters the cockpit sequence with current=1/24 (virtual frame 27),
     // while the external jet begins at current=0 (virtual frame 25).
     private const float RetailCockpitWalkToFlySeconds = 23f / RetailAquilaAnimationHz;
+    private const float RetailCockpitFlyToWalkSeconds = 24f / RetailAquilaAnimationHz;
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
@@ -45,6 +47,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _targetTankExplosionFireballTexture = null!;
     private float _particlePresentationSeconds;
     private float _walkerToJetVisualElapsed = float.PositiveInfinity;
+    private float _jetToWalkerVisualElapsed = float.PositiveInfinity;
     private VehicleTransition _previousTransition;
     private VehicleMode _previousMode = VehicleMode.Walker;
 
@@ -145,20 +148,34 @@ public sealed partial class FirstFlightWorldView : Node3D
         float previousPitch = previous.FacingPitchMicroRad / 1_000_000f;
         float currentPitch = current.FacingPitchMicroRad / 1_000_000f;
         float playerPitch = Mathf.Lerp(previousPitch, currentPitch, interpolationAlpha);
+        float previousRoll = previous.BodyRollMicroRad / 1_000_000f;
+        float currentRoll = current.BodyRollMicroRad / 1_000_000f;
+        float playerRoll = Mathf.LerpAngle(previousRoll, currentRoll, interpolationAlpha);
         _playerRoot.Rotation = new Vector3(
             0f,
             playerYaw,
             0f);
+        bool renderFlightAttitude = current.Mode == VehicleMode.Jet &&
+            current.Transition == VehicleTransition.None;
+        _playerBodyPivot.Rotation = renderFlightAttitude
+            ? new Vector3(-playerPitch, 0f, -playerRoll)
+            : Vector3.Zero;
 
         UpdateWalkerPose(current);
-        UpdateWalkerToJetPresentation(current, frameDelta);
+        UpdateAquilaTransitionPresentation(current, frameDelta);
         float openingElapsedTicks = GetOpeningElapsedTicks(previous, current, interpolationAlpha);
         float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(current);
         UpdateProjectiles(current);
-        UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
+        UpdateCamera(
+            playerPosition,
+            playerYaw,
+            playerPitch,
+            playerRoll,
+            openingElapsedSeconds,
+            ShowHud);
         IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
             _level100Terrain.Update(_camera);
         _level100TerrainAppearance.Update(terrainSelection);
@@ -481,30 +498,46 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         // The released pan camera hides the HUD/cockpit and renders the
         // exterior Aquila. Its first-person handoff reverses that visibility.
-        bool showingJet = snapshot.Transition == VehicleTransition.WalkerToJet ||
+        bool showingJet =
+            float.IsFinite(_walkerToJetVisualElapsed) ||
+            float.IsFinite(_jetToWalkerVisualElapsed) ||
+            snapshot.Transition != VehicleTransition.None ||
             snapshot.Mode == VehicleMode.Jet;
         _walkerAsset.Root.Visible = !attachedView && !showingJet;
         _jetAsset.Root.Visible = !attachedView && showingJet;
         _cockpitAsset.Root.Visible = attachedView;
-        _playerBodyPivot.Position = Vector3.Zero;
+        _playerBodyPivot.Position = showingJet
+            ? Vector3.Up * RetailWalkerCenterOfGravityHeight
+            : Vector3.Zero;
     }
 
-    private void UpdateWalkerToJetPresentation(WorldSnapshot snapshot, float frameDelta)
+    private void UpdateAquilaTransitionPresentation(WorldSnapshot snapshot, float frameDelta)
     {
-        bool transitionStarted = snapshot.Transition == VehicleTransition.WalkerToJet &&
+        bool walkerToJetStarted =
+            snapshot.Transition == VehicleTransition.WalkerToJet &&
             _previousTransition != VehicleTransition.WalkerToJet;
+        bool jetToWalkerStarted =
+            snapshot.Transition == VehicleTransition.JetToWalker &&
+            _previousTransition != VehicleTransition.JetToWalker;
         bool returnedToWalker = snapshot.Transition == VehicleTransition.None &&
             snapshot.Mode == VehicleMode.Walker &&
-            (_previousTransition == VehicleTransition.WalkerToJet ||
+            (_previousTransition != VehicleTransition.None ||
              _previousMode == VehicleMode.Jet);
 
-        if (transitionStarted)
+        if (walkerToJetStarted)
         {
             _walkerToJetVisualElapsed = 0f;
+            _jetToWalkerVisualElapsed = float.PositiveInfinity;
+        }
+        else if (jetToWalkerStarted)
+        {
+            _walkerToJetVisualElapsed = float.PositiveInfinity;
+            _jetToWalkerVisualElapsed = 0f;
         }
         else if (returnedToWalker)
         {
             _walkerToJetVisualElapsed = float.PositiveInfinity;
+            _jetToWalkerVisualElapsed = float.PositiveInfinity;
         }
 
         if (float.IsFinite(_walkerToJetVisualElapsed))
@@ -533,6 +566,30 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 _jetAsset.SetVirtualFrame(0f);
                 _walkerToJetVisualElapsed = float.PositiveInfinity;
+            }
+        }
+        else if (float.IsFinite(_jetToWalkerVisualElapsed))
+        {
+            _jetToWalkerVisualElapsed = Math.Min(
+                _jetToWalkerVisualElapsed + Math.Max(0f, frameDelta),
+                RetailJetFlyToWalkSeconds);
+            int jetStep = Math.Min(
+                Mathf.FloorToInt(_jetToWalkerVisualElapsed * RetailAquilaAnimationHz),
+                25);
+            _jetAsset.SetVirtualFrame(jetStep);
+
+            int cockpitStep = Math.Min(
+                Mathf.FloorToInt(_jetToWalkerVisualElapsed * RetailAquilaAnimationHz),
+                24);
+            _cockpitAsset.SetVirtualFrame(1f + cockpitStep);
+            if (_jetToWalkerVisualElapsed >= RetailCockpitFlyToWalkSeconds)
+            {
+                _cockpitAsset.SetVirtualFrame(25f);
+            }
+            if (_jetToWalkerVisualElapsed >= RetailJetFlyToWalkSeconds)
+            {
+                _jetAsset.SetVirtualFrame(25f);
+                _jetToWalkerVisualElapsed = float.PositiveInfinity;
             }
         }
         else if (snapshot.Mode == VehicleMode.Jet)
@@ -944,6 +1001,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         Vector3 playerGroundPosition,
         float yaw,
         float pitch,
+        float roll,
         float openingElapsedSeconds,
         bool attachedView)
     {
@@ -953,13 +1011,17 @@ public sealed partial class FirstFlightWorldView : Node3D
             -Mathf.Sin(pitch),
             -Mathf.Cos(yaw) * pitchCos);
         var right = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
+        Vector3 levelUp = right.Cross(forward).Normalized();
+        Vector3 bodyUp =
+            (levelUp * Mathf.Cos(roll)) +
+            (right * Mathf.Sin(roll));
         Vector3 centerOfGravity = playerGroundPosition +
             (Vector3.Up * RetailWalkerCenterOfGravityHeight);
 
         if (attachedView)
         {
             _camera.Position = centerOfGravity;
-            _camera.LookAt(centerOfGravity + forward, Vector3.Up);
+            _camera.LookAt(centerOfGravity + forward, bodyUp);
         }
         else
         {
@@ -1023,7 +1085,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         float z = snapshot.PlayerPosition.Z * UnitsToMeters;
         return new Vector3(
             x,
-            snapshot.PlayerGroundElevationMillimeters * UnitsToMeters,
+            (snapshot.PlayerElevationMillimeters -
+                Level100Terrain.WalkerCenterOfGravityMillimeters) * UnitsToMeters,
             -z);
     }
 

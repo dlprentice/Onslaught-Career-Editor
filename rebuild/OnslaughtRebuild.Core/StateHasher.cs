@@ -24,7 +24,7 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(23);
+            writer.Write(28);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -37,16 +37,45 @@ public static class StateHasher
             WriteVector(writer, state.PlayerVelocity);
             writer.Write(state.PlayerGroundElevationMillimeters);
             writer.Write(state.PlayerGroundDeltaMillimeters);
+            writer.Write(state.PlayerElevationMillimeters);
+            writer.Write(state.PlayerVerticalVelocityMillimetersPerTick);
+            writer.Write(state.PlayerOnGround);
+            writer.Write(state.PlayerInWater);
+            writer.Write(state.PlayerWaterFailure);
+            writer.Write(state.PlayerOnSteepSlope);
+            writer.Write(state.LandingJetsActive);
+            writer.Write(state.GroundImpactSpeedMillimetersPerTick);
+            writer.Write(state.AquilaFlightEventLog.Count);
+            foreach (AquilaFlightEvent flightEvent in state.AquilaFlightEventLog)
+            {
+                writer.Write(flightEvent.Tick);
+                writer.Write((ushort)flightEvent.Kind);
+                writer.Write((int)flightEvent.Mode);
+                writer.Write((int)flightEvent.Transition);
+                writer.Write((byte)flightEvent.Weapon);
+            }
             writer.Write(state.FacingX);
             writer.Write(state.FacingZ);
             writer.Write(state.FacingYawMicroRad);
             writer.Write(state.WalkerYawVelocityMicroRadPerTick);
             writer.Write(state.FacingPitchMicroRad);
             writer.Write(state.WalkerPitchVelocityMicroRadPerTick);
+            writer.Write(state.BodyRollMicroRad);
+            writer.Write(state.RollVelocityMicroRadPerTick);
             writer.Write(state.Energy);
             writer.Write(state.Shield);
             writer.Write(state.Hull);
             writer.Write(state.TransformTicksRemaining);
+            writer.Write(state.WalkerToJetUsesTakeoffLift);
+            writer.Write(state.WalkerToJetLiftApplied);
+            writer.Write(state.TicksSinceGroundContact);
+            writer.Write(state.JetTicksSinceTransform);
+            writer.Write(state.JetStrafeTicksRemaining);
+            writer.Write(state.JetStrafeAccelerationRemainder);
+            writer.Write(state.JetEnergyDrainRemainderThirds);
+            writer.Write(state.JetThrusterPermille);
+            writer.Write(state.JetGroundedSlowTicks);
+            writer.Write(state.JetStallTicks);
             writer.Write(state.FireCooldownTicksRemaining);
             writer.Write(state.Level100OpeningTicksRemaining);
             writer.Write(state.Level100PlayerActive);

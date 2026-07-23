@@ -21,6 +21,11 @@ public sealed class Level100Terrain
     public const int PlayerStartRetailYFixed = 62_272;
     public const int PlayerStartReferenceElevationMillimeters = -10_000;
     public const int WalkerCenterOfGravityMillimeters = 1_900;
+    public const int WaterElevationMillimeters = -1_160;
+    public const int MinimumRelativeXMillimeters = -288_688;
+    public const int MaximumRelativeXMillimeters = 223_313;
+    public const int MinimumRelativeZMillimeters = -243_250;
+    public const int MaximumRelativeZMillimeters = 268_750;
 
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-heightfield.hfld.bin";
@@ -308,6 +313,43 @@ public sealed class Level100Terrain
         return checked((int)RoundDivideAwayFromZero(
             relativeGroundNumerator,
             _heightScaleDenominator));
+    }
+
+    /// <summary>
+    /// Returns terrain rise in millimetres per retail unit along Core X/Z.
+    /// This is the integer counterpart of the one-lattice central difference
+    /// used by the Level 100 presentation mesh. At an edge it becomes the
+    /// corresponding one-sided difference.
+    /// </summary>
+    public SimVector2 SampleGroundGradientPermille(SimVector2 relativePosition)
+    {
+        if (relativePosition.X < MinimumRelativeXMillimeters ||
+            relativePosition.X > MaximumRelativeXMillimeters ||
+            relativePosition.Z < MinimumRelativeZMillimeters ||
+            relativePosition.Z > MaximumRelativeZMillimeters)
+        {
+            return SimVector2.Zero;
+        }
+
+        int leftX = Math.Max(MinimumRelativeXMillimeters, relativePosition.X - 1_000);
+        int rightX = Math.Min(MaximumRelativeXMillimeters, relativePosition.X + 1_000);
+        int backZ = Math.Max(MinimumRelativeZMillimeters, relativePosition.Z - 1_000);
+        int forwardZ = Math.Min(MaximumRelativeZMillimeters, relativePosition.Z + 1_000);
+
+        int riseX = SampleGroundElevationMillimeters(
+            new SimVector2(rightX, relativePosition.Z)) -
+            SampleGroundElevationMillimeters(new SimVector2(leftX, relativePosition.Z));
+        int riseZ = SampleGroundElevationMillimeters(
+            new SimVector2(relativePosition.X, forwardZ)) -
+            SampleGroundElevationMillimeters(new SimVector2(relativePosition.X, backZ));
+
+        return new SimVector2(
+            checked((int)RoundDivideAwayFromZero(
+                (long)riseX * 1_000,
+                Math.Max(1, rightX - leftX))),
+            checked((int)RoundDivideAwayFromZero(
+                (long)riseZ * 1_000,
+                Math.Max(1, forwardZ - backZ))));
     }
 
     private static Level100Terrain LoadEmbedded()

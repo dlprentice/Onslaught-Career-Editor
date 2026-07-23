@@ -12,7 +12,39 @@ public enum VehicleTransition
 {
     None = 0,
     WalkerToJet = 1,
+    JetToWalker = 2,
 }
+
+public enum AquilaJetWeapon : byte
+{
+    None = 0,
+    MechVulcanCannon = 1,
+    SpreadPod = 2,
+}
+
+[Flags]
+public enum AquilaFlightEvents : ushort
+{
+    None = 0,
+    TransformRejected = 1 << 0,
+    WalkerToJetStarted = 1 << 1,
+    JetToWalkerStarted = 1 << 2,
+    TransformCompleted = 1 << 3,
+    Touchdown = 1 << 4,
+    EnteredWater = 1 << 5,
+    WaterSkim = 1 << 6,
+    StallStarted = 1 << 7,
+    GroundImpactDamageThresholdCrossed = 1 << 8,
+    WaterFailureStarted = 1 << 9,
+    JetWeaponFireRequested = 1 << 10,
+}
+
+public sealed record AquilaFlightEvent(
+    int Tick,
+    AquilaFlightEvents Kind,
+    VehicleMode Mode,
+    VehicleTransition Transition,
+    AquilaJetWeapon Weapon = AquilaJetWeapon.None);
 
 [Flags]
 public enum SimActions : byte
@@ -21,6 +53,7 @@ public enum SimActions : byte
     ToggleMode = 1 << 0,
     Fire = 1 << 1,
     Reset = 1 << 2,
+    LandingJets = 1 << 3,
 }
 
 public readonly record struct SimVector2(int X, int Z)
@@ -37,7 +70,8 @@ public readonly record struct SimInput(
     short LookXAnalogPermille = 0,
     short LookYAnalogPermille = 0)
 {
-    // Fire may be held. UI adapters must edge-sample ToggleMode and Reset.
+    // Fire and LandingJets may be held. UI adapters must edge-sample
+    // ToggleMode and Reset.
     // LookX is body look left/right and LookY is screen up/down (-1/0/+1).
     // Analog look is the deterministic -1000..1000 axis produced by an input adapter.
     public static SimInput Idle => new(0, 0);
@@ -80,7 +114,10 @@ public readonly record struct SimInput(
                 "LookYAnalogPermille must be between -1000 and 1000.");
         }
 
-        const SimActions known = SimActions.ToggleMode | SimActions.Fire | SimActions.Reset;
+        const SimActions known = SimActions.ToggleMode |
+            SimActions.Fire |
+            SimActions.Reset |
+            SimActions.LandingJets;
         if ((Actions & ~known) != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(Actions), "Input contains an unknown action bit.");
@@ -191,16 +228,37 @@ public sealed record WorldSnapshot(
     SimVector2 PlayerVelocity,
     int PlayerGroundElevationMillimeters,
     int PlayerGroundDeltaMillimeters,
+    int PlayerElevationMillimeters,
+    int PlayerVerticalVelocityMillimetersPerTick,
+    bool PlayerOnGround,
+    bool PlayerInWater,
+    bool PlayerWaterFailure,
+    bool PlayerOnSteepSlope,
+    bool LandingJetsActive,
+    int GroundImpactSpeedMillimetersPerTick,
+    IReadOnlyList<AquilaFlightEvent> AquilaFlightEventLog,
     sbyte FacingX,
     sbyte FacingZ,
     int FacingYawMicroRad,
     int WalkerYawVelocityMicroRadPerTick,
     int FacingPitchMicroRad,
     int WalkerPitchVelocityMicroRadPerTick,
+    int BodyRollMicroRad,
+    int RollVelocityMicroRadPerTick,
     int Energy,
     int Shield,
     int Hull,
     int TransformTicksRemaining,
+    bool WalkerToJetUsesTakeoffLift,
+    bool WalkerToJetLiftApplied,
+    int TicksSinceGroundContact,
+    int JetTicksSinceTransform,
+    int JetStrafeTicksRemaining,
+    int JetStrafeAccelerationRemainder,
+    int JetEnergyDrainRemainderThirds,
+    int JetThrusterPermille,
+    int JetGroundedSlowTicks,
+    int JetStallTicks,
     int FireCooldownTicksRemaining,
     int Level100OpeningTicksRemaining,
     bool Level100PlayerActive,
@@ -262,6 +320,14 @@ public sealed record WorldSnapshot(
                 actor.Health,
                 actor.Active && actor.Lifecycle != Level100ActorLifecycle.Destroyed))
             .ToArray());
+
+    public int PlayerAltitudeAboveGroundMillimeters =>
+        PlayerElevationMillimeters - PlayerGroundElevationMillimeters;
+
+    public int PlayerAltitudeAboveSurfaceMillimeters =>
+        PlayerElevationMillimeters - Math.Max(
+            PlayerGroundElevationMillimeters,
+            Level100Terrain.WaterElevationMillimeters);
 
     public bool Level100FiringRangeTargetsActive =>
         Level100StaticTargetsArmed &&

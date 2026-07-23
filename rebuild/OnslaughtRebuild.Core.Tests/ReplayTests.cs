@@ -224,6 +224,33 @@ public sealed class ReplayTests
     }
 
     [Fact]
+    public void CommandSpan_LandingJets_RoundTripsAsAHeldDeterministicAction()
+    {
+        var source = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "landing-jets",
+            1,
+            1_001,
+            null,
+            null,
+            [new CommandSpan(
+                1_000,
+                1,
+                0,
+                0,
+                LandingJets: true)]);
+
+        CommandTape tape = CommandTapeCodec.Deserialize(CommandTapeCodec.Serialize(source));
+        ReplayResult first = ReplayRunner.Run(tape, ActorDefinitions);
+        ReplayResult second = ReplayRunner.Run(tape, ActorDefinitions);
+
+        Assert.True(tape.Spans[0].LandingJets);
+        Assert.True(first.FinalState.LandingJetsActive);
+        Assert.Equal(first.FinalStateHash, second.FinalStateHash);
+        Assert.Equal(first.TraceHash, second.TraceHash);
+    }
+
+    [Fact]
     public void CommandSpan_MissingLookAxes_DefaultsToZero()
     {
         const string json = """

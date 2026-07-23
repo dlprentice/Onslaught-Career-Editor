@@ -11,7 +11,8 @@ public readonly record struct InteractiveInput(
     bool ToggleModeHeld,
     bool ResetHeld,
     sbyte LookX = 0,
-    sbyte LookY = 0)
+    sbyte LookY = 0,
+    bool LandingJetsHeld = false)
 {
     public static InteractiveInput Idle => new(0, 0, false, false, false);
 

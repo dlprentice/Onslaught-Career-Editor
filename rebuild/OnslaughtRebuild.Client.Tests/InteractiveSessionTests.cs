@@ -125,6 +125,40 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void FlightDisabledSession_ConsumesTheTransformEdgeIntoCanonicalRejection()
+    {
+        InteractiveSession session = CreatePlayingSession();
+        session.QueueToggleMode();
+
+        FrameAdvanceResult result = session.AdvanceFrame(
+            TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(VehicleTransition.None, result.CurrentSnapshot.Transition);
+        Assert.Empty(result.CurrentSnapshot.AquilaFlightEventLog);
+        AquilaFlightEvent rejected = Assert.Single(result.AquilaFlightEvents);
+        Assert.Equal(AquilaFlightEvents.TransformRejected, rejected.Kind);
+        Assert.True(rejected.Tick < result.CurrentSnapshot.Tick);
+        Assert.Equal(1, session.Metrics.ToggleEdgesConsumed);
+    }
+
+    [Fact]
+    public void LandingJetsHeld_AreLevelSampledIntoCore()
+    {
+        InteractiveSession session = CreatePlayingSession();
+        session.ObserveInput(new InteractiveInput(
+            0,
+            0,
+            false,
+            false,
+            false,
+            LandingJetsHeld: true));
+
+        FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+
+        Assert.True(result.CurrentSnapshot.LandingJetsActive);
+    }
+
+    [Fact]
     public void ShortFirePulse_SurvivesUntilOneTickConsumesIt()
     {
         InteractiveSession session = CreatePlayingSession();
@@ -755,6 +789,9 @@ public sealed class InteractiveSessionTests
         Assert.Equal("Target Tank Path 1", waypoint.WaitArgument);
         Assert.Null(waypoint.DueTick);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
+        Assert.Equal(
+            "1edf8c169caaae95cab6959715940b36570091fb146d61fd07414838ec9236c1",
+            StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 
     private static InteractiveSession RunInteractiveSequence()

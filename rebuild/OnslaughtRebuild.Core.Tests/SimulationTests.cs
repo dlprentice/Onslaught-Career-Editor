@@ -38,6 +38,7 @@ public sealed class SimulationTests
             unchecked((int)0xC10D70A4),
             BitConverter.SingleToInt32Bits(Level100Terrain.Instance.WaterLevel));
         Assert.Equal(0, Level100Terrain.Instance.WaterTexture);
+        Assert.Equal(-1_160, Level100Terrain.WaterElevationMillimeters);
     }
 
     [Theory]
@@ -93,7 +94,7 @@ public sealed class SimulationTests
         Level100ActorSnapshot player = state.Level100Actors.Actors.Single(actor =>
             actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine);
         Assert.Equal(
-            state.PlayerGroundDeltaMillimeters,
+            state.PlayerVerticalVelocityMillimetersPerTick,
             player.Pose.LinearVelocityMillimetersPerTick.Y);
 
         string hash = StateHasher.ComputeHex(state);
@@ -294,8 +295,15 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void WalkerVerticalLook_UsesMeasuredPitchInertiaCoastAndOpeningSlopeBounds()
+    public void WalkerVerticalLook_UsesMeasuredInertiaAndReleasedTerrainRelativeLimits()
     {
+        Assert.Equal(
+            -1_091_250,
+            SimulationConstants.ObservedWalkerPitchUpLimitAtLevel100StartMicroRad);
+        Assert.Equal(
+            532_123,
+            SimulationConstants.ObservedWalkerPitchDownLimitAtLevel100StartMicroRad);
+
         Simulation simulation = CreatePlayingSimulation();
 
         (int Velocity, int Pitch)[] expected =
@@ -321,15 +329,15 @@ public sealed class SimulationTests
         {
             simulation.Step(new SimInput(0, 0, LookY: -1));
         }
-        Assert.Equal(SimulationConstants.WalkerPitchUpLimitMicroRad, simulation.Snapshot.FacingPitchMicroRad);
-        Assert.Equal(0, simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.InRange(simulation.Snapshot.FacingPitchMicroRad, -1_000_000, -800_000);
+        Assert.True(simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick <= 0);
 
         for (int tick = 0; tick < 200; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookY: 1));
         }
-        Assert.Equal(SimulationConstants.WalkerPitchDownLimitMicroRad, simulation.Snapshot.FacingPitchMicroRad);
-        Assert.Equal(0, simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.InRange(simulation.Snapshot.FacingPitchMicroRad, 600_000, 850_000);
+        Assert.True(simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick >= 0);
     }
 
     [Fact]
@@ -434,11 +442,11 @@ public sealed class SimulationTests
         Level100ActorSnapshot player = state.Level100Actors.Actors.Single(actor =>
             actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine);
         Assert.Equal(state.PlayerPosition.X, player.Pose.PositionMillimeters.X);
-        Assert.Equal(state.PlayerGroundElevationMillimeters, player.Pose.PositionMillimeters.Y);
+        Assert.Equal(state.PlayerElevationMillimeters, player.Pose.PositionMillimeters.Y);
         Assert.Equal(state.PlayerPosition.Z, player.Pose.PositionMillimeters.Z);
         Assert.Equal(state.PlayerVelocity.X, player.Pose.LinearVelocityMillimetersPerTick.X);
         Assert.Equal(
-            state.PlayerGroundDeltaMillimeters,
+            state.PlayerVerticalVelocityMillimetersPerTick,
             player.Pose.LinearVelocityMillimetersPerTick.Y);
         Assert.Equal(state.PlayerVelocity.Z, player.Pose.LinearVelocityMillimetersPerTick.Z);
         Assert.Equal(state.Hull, player.Health);
@@ -506,14 +514,44 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void JetEnergyDrain_MatchesAcceptedEnergyP02Translation()
+    public void JetEnergyDrain_UsesTheLevel100BlasterThrottleCurve()
     {
-        // Dual-accept mid |rate| ≈ 0.5169 energy units/s → round(|r|*1000/30)=17.
-        // Policy: jet-energy-drain-retail-to-core-translation-policy.md
-        Assert.Equal(17, SimulationConstants.JetEnergyDrainPerTick);
-        const double midAbsRate = 0.5169068149241056;
-        int mapped = (int)Math.Round(midAbsRate * 1000.0 / SimulationConstants.TicksPerSecond);
-        Assert.Equal(SimulationConstants.JetEnergyDrainPerTick, mapped);
+        // Level 100 resolves to Blaster. Its shipped .005/.01 energy costs per
+        // 20 Hz update map exactly to 10/3 and 20/3 milli-energy per Core tick.
+        Assert.Equal(8_000, SimulationConstants.MaximumEnergy);
+        Assert.Equal(
+            SimulationConstants.MaximumEnergy,
+            SimulationConstants.MaximumShield);
+        Assert.Equal(10, SimulationConstants.JetMinimumEnergyDrainThirdsPerTick);
+        Assert.Equal(20, SimulationConstants.JetMaximumEnergyDrainThirdsPerTick);
+        Assert.Equal(3, SimulationConstants.JetEnergyDrainFractionDenominator);
+        Assert.Equal(40, SimulationConstants.JetStrafeAccelerationNumerator);
+        Assert.Equal(27, SimulationConstants.JetStrafeAccelerationDenominator);
+    }
+
+    [Fact]
+    public void CanonicalFlightGate_RejectsTransformUntilReleasedMissionEnablesIt()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+
+        WorldSnapshot rejected = simulation.Step(
+            new SimInput(0, 0, SimActions.ToggleMode));
+
+        Assert.False(rejected.Level100FlightEnabled);
+        Assert.Equal(VehicleMode.Walker, rejected.Mode);
+        Assert.Equal(VehicleTransition.None, rejected.Transition);
+        Assert.Contains(
+            rejected.AquilaFlightEventLog,
+            item => item.Kind == AquilaFlightEvents.TransformRejected);
+        Assert.Equal(
+            rejected.PlayerGroundElevationMillimeters +
+                Level100Terrain.WalkerCenterOfGravityMillimeters,
+            rejected.PlayerElevationMillimeters);
+        Level100ActorSnapshot player = rejected.Level100Actors.Actors.Single(actor =>
+            actor.Name == "Player 1");
+        Assert.Equal(
+            rejected.PlayerElevationMillimeters,
+            player.Pose!.PositionMillimeters.Y);
     }
 
     [Fact]
@@ -686,7 +724,7 @@ public sealed class SimulationTests
 
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
-        Assert.Equal(SimulationConstants.WalkerPitchUpLimitMicroRad, fired.FacingPitchMicroRad);
+        Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);
         Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
         long speedSquared =
             ((long)projectile.Velocity.X * projectile.Velocity.X) +
@@ -722,8 +760,7 @@ public sealed class SimulationTests
                 Math.Cos(fired.FacingPitchMicroRad / 1_000_000d)),
             MidpointRounding.AwayFromZero);
         Assert.Equal(
-            fired.PlayerGroundElevationMillimeters +
-                Level100Terrain.WalkerCenterOfGravityMillimeters +
+            fired.PlayerElevationMillimeters +
                 emitterVerticalOffset +
                 projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
@@ -771,11 +808,15 @@ public sealed class SimulationTests
         Assert.False(state.Projectiles.GetType().IsArray);
         Assert.False(state.Level100MissionEvents.GetType().IsArray);
         Assert.False(state.Level100TriggerActors.GetType().IsArray);
+        Assert.False(state.AquilaFlightEventLog.GetType().IsArray);
 
         var targets = Assert.IsAssignableFrom<IList<TargetSnapshot>>(state.Targets);
         var projectiles = Assert.IsAssignableFrom<IList<ProjectileSnapshot>>(state.Projectiles);
+        var flightEvents =
+            Assert.IsAssignableFrom<IList<AquilaFlightEvent>>(state.AquilaFlightEventLog);
         Assert.True(targets.IsReadOnly);
         Assert.True(projectiles.IsReadOnly);
+        Assert.True(flightEvents.IsReadOnly);
         Assert.Throws<NotSupportedException>(() => targets[0] = targets[0] with { Hull = 0 });
     }
 
