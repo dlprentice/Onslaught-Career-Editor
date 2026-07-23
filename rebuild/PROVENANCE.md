@@ -45,16 +45,25 @@ The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker, jet, and cockpit as exact 63-, 54-, and 21-part AYA
 hierarchies, plus bounded static conversions of 24 Level 100 static-world mesh
-types, Target Tank, and Warehouse meshes. Its standing-forest path uses the
-exact `Imposters_100` atlas, four standing `VIEW` records for each of four pine
-variants, and mesh-center offsets for the 1,481 pines rather than converted tree
-meshes. Retail's address-derived view choice is represented by deterministic
-placement ordinal modulo four. Exact source/output hashes
-live in the materializer and ignored generated manifest.
-`CDXTrees__Render` uses point min/mag filtering, no mip filter, and alpha
-reference `8` for this standing-tree batch; it has no near-distance mesh swap.
-A copied Steam runtime read found `0x008554FC = 1`, selecting its white-factor
-`MODULATE2X` color path, which the client applies before fog.
+types, four `pinesnow` variants, Target Tank, and Warehouse meshes. Static Steam
+evidence separates three tree owners. `CRTTree` submits each exact pine mesh at
+or inside the selected profile's horizontal mesh-quality distance and queues
+its six-view imposter outside that boundary. The supported high-quality
+`defaultoptions.bea` snapshot stores `70.0` at OptionsTail `+0x0C` (file
+`0x26CA`), and manifest v7 owns that value. After the world and global-imposter
+passes, `CDXTrees` submits one standing fast card selected by
+`(tree_object_address >> 4) & 3` and a fifth-view horizontal card only when the
+camera differs from sampled ground height by more than 20 units. A manifest
+ordinal is not the retail selection input. The client preserves the close,
+six-face far, always-on standing, and height-gated horizontal owners separately.
+It does not infer Steam identity from its own heap. Manifest v7 instead pins an
+explicit phase-0 ordinal cycle for deterministic reconstruction and validates
+all 1,481 selected views with counts `371/370/370/370`. Steam's exact tree
+allocation/view sequence and address-selector phase remain the precise
+unresolved runtime boundary. Exact
+source/output hashes live in the materializer and ignored generated manifest;
+detailed card, atlas, and render-state evidence lives in the Level 100 asset note and
+`reverse-engineering/binary-analysis/functions/DXTrees.cpp.md`.
 The released Level 100 WRES
 records now set the player start heading, all 33 visible base-world objects,
 1,481 Steam-instantiated pines, trigger locations, and four Firing Range targets. The client

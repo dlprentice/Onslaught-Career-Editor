@@ -60,14 +60,21 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "c24dbd570df8d0f0ad0663918bcd6f9557931dfcf9b0bc5feedf246ab947b9e5"
+STATIC_WORLD_MANIFEST_SHA256 = "0a96d2677c4b05e92f8df0665f4f6481dff8da5ea9300a0a692eda64cf666075"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
-    "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
+    "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
 PINE_IMPOSTER_TEXTURE = (
     "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
     "7368ba0c586221ff1b1572cee8f84de2bf6db426c005a73a10bad54a938ad882",
 )
+# The bounded high-quality reconstruction profile selects the released value
+# persisted at defaultoptions.bea OptionsTail +0x0C (file offset 0x26CA).
+PINE_MESH_QUALITY_DISTANCE = 70.0
+# Steam's fast standing view is address-derived, but the exact runtime owner
+# sequence and phase are unresolved. This reconstruction-owned phase makes the
+# four-view assignment deterministic without inferring a retail heap identity.
+PINE_FAST_STANDING_VIEW_PHASE = 0
 WATER_SURFACE_RESOURCE = STATIC_WORLD_ROOT / "Source/level100-water-surface.surf.bin"
 WATER_SURFACE_SHA256 = "c3177354fed3eb5a94dc72debf2465c32ab1d931de79e5e88ac431043d3e917d"
 WATER_TEXTURES = (
@@ -126,8 +133,8 @@ STATIC_MESH_BY_DEFINITION = {
     "Forseti City Building 2": "f-city2",
     "Forseti City Building 3": "f-city3",
 }
-STATIC_MESH_KEYS = tuple(dict.fromkeys(STATIC_MESH_BY_DEFINITION.values()))
 PINE_MESH_KEYS = tuple(f"pinesnow{variant}" for variant in range(4))
+STATIC_MESH_KEYS = tuple(dict.fromkeys(STATIC_MESH_BY_DEFINITION.values())) + PINE_MESH_KEYS
 PINE_MESH_SHA256 = (
     "d428a6ed49d460a5729c357618c3837e399e7d265ae6127899cd1911eb7a0481",
     "51984637f702b0215f0bd841977d8c9602201fb9f8392f7b110e285cde1ed102",
@@ -299,7 +306,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v6"
+        manifest.get("schema") != "onslaught.level100-static-world.v7"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -308,11 +315,20 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or manifest.get("pineInstanceCount") != 1481
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("pines", ())) != 1481
-        or len(manifest.get("meshes", {})) != 24
-        or len(manifest.get("textures", {})) != 31
+        or len(manifest.get("meshes", {})) != 28
+        or len(manifest.get("textures", {})) != 34
         or manifest.get("pineBillboards", {}).get("texture")
         != "pine-imposters-100"
+        or manifest.get("pineBillboards", {}).get("meshQualityDistance")
+        != PINE_MESH_QUALITY_DISTANCE
+        or manifest.get("pineBillboards", {}).get("fastStandingViewPhase")
+        != PINE_FAST_STANDING_VIEW_PHASE
         or len(manifest.get("pineBillboards", {}).get("variants", ())) != 4
+        or any(
+            len(variant.get("centerOffset", ())) != 3
+            or len(variant.get("views", ())) != 6
+            for variant in manifest.get("pineBillboards", {}).get("variants", ())
+        )
         or manifest.get("textures", {})
         .get("meshtex-a8-fb-hangermorebits-lit", {})
         .get("blendTextureAlpha")
@@ -338,7 +354,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
             manifest["water"]["surfaceSha256"],
         )
     )
-    if len(outputs) != 57 or len({path for path, _ in outputs}) != len(outputs):
+    if len(outputs) != 64 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -746,7 +762,6 @@ def _pine_imposter_views(raw_level: bytes) -> list[list[list[float]]]:
             list(struct.unpack_from("<6f", view_payload, index * 24))
             for index in range(6)
         ]
-        standing_views = all_views[:4]
         if any(
             len(view) != 6
             or not all(math.isfinite(value) for value in view)
@@ -754,10 +769,10 @@ def _pine_imposter_views(raw_level: bytes) -> list[list[list[float]]]:
             or not (0.0 <= view[2] < view[3] <= 1.0)
             or view[4] <= 0.0
             or view[5] <= 0.0
-            for view in standing_views
+            for view in all_views
         ):
-            raise RuntimeError(f"Level 100 {name.decode()} standing views are invalid")
-        views.append(standing_views)
+            raise RuntimeError(f"Level 100 {name.decode()} imposter views are invalid")
+        views.append(all_views)
     return views
 
 
@@ -812,7 +827,13 @@ def _materialize_static_world(
             raise RuntimeError(f"expected one exact loose mesh for {mesh_key}, found {len(matches)}")
         source_path = Path(matches[0])
         relative = source_path.relative_to(game_root)
-        data = source_path.read_bytes()
+        if mesh_key in PINE_MESH_KEYS:
+            data = _read_exact(
+                source_path,
+                PINE_MESH_SHA256[PINE_MESH_KEYS.index(mesh_key)],
+            )
+        else:
+            data = source_path.read_bytes()
         parsed = parse_cmsh_stream(inflate_aya(data))
         signatures = sorted(
             {group.raw_texr_u32 for part in parsed.parts for group in part.groups}
@@ -878,19 +899,10 @@ def _materialize_static_world(
         mesh_inputs[mesh_key] = (relative, data, materials)
 
     pine_views = _pine_imposter_views(raw_level)
-    pine_centers: list[list[float]] = []
-    for variant, mesh_key in enumerate(PINE_MESH_KEYS):
-        matches = resolver.mesh_index.get(f"{mesh_key}.msh".lower(), [])
-        if len(matches) != 1:
-            raise RuntimeError(
-                f"expected one exact loose mesh for {mesh_key}, found {len(matches)}"
-            )
-        source_path = Path(matches[0])
-        relative = source_path.relative_to(game_root)
-        data = _read_exact(source_path, PINE_MESH_SHA256[variant])
-        source_data[relative] = data
-        pine_centers.append(_pine_global_center(data, inflate_aya, variant))
-
+    pine_centers = [
+        _pine_global_center(mesh_inputs[mesh_key][1], inflate_aya, variant)
+        for variant, mesh_key in enumerate(PINE_MESH_KEYS)
+    ]
     pine_atlas_source = Path(PINE_IMPOSTER_TEXTURE[0])
     pine_atlas_data = _read_exact(
         game_root / pine_atlas_source,
@@ -903,8 +915,8 @@ def _materialize_static_world(
         source = Path(source_name)
         source_data[source] = _read_exact(game_root / source, expected_hash)
         water_sources[key] = source
-    if len(source_data) != 59:
-        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 59")
+    if len(source_data) != 62:
+        raise RuntimeError(f"static-world source set has {len(source_data)} files instead of 62")
     aggregate = _source_aggregate(source_data)
     if aggregate != STATIC_WORLD_SOURCE_AGGREGATE_SHA256:
         raise RuntimeError(f"unsupported static-world source set (aggregate SHA-256 {aggregate})")
@@ -1042,6 +1054,8 @@ def _materialize_static_world(
         "meshes": mesh_records,
         "objects": objects,
         "pineBillboards": {
+            "fastStandingViewPhase": PINE_FAST_STANDING_VIEW_PHASE,
+            "meshQualityDistance": PINE_MESH_QUALITY_DISTANCE,
             "texture": pine_atlas_key,
             "variants": [
                 {
@@ -1053,7 +1067,7 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v6",
+        "schema": "onslaught.level100-static-world.v7",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,

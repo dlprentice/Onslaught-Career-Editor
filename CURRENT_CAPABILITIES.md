@@ -198,10 +198,16 @@ deterministic Core foot contacts. Core reproduces the released diagonal step
 scheduling, 400-phase-unit-per-second swing, 0.4-unit lift, and exact Level 100
 heightfield contact; Godot selects each leg's `LegMotion` frame by required
 root-to-foot extension rather than replaying one synthetic gait cycle. The 24
-static-world mesh types and two target types remain bounded static conversions.
-The 1,481 standing pines instead use Steam's released `Imposters_100` atlas with
-four standing cards for each of four exact variants, their sizes, and their
-mesh-center offsets selected by Level 100. The converted static-world and target OBJ front faces are adapted to
+non-tree static-world mesh types, four `pinesnow` variants, and two target types
+remain bounded static conversions. The 1,481 pine placements use exact released
+meshes through the selected high-quality 70-unit horizontal boundary and exact
+six-view atlas geometry beyond it. A separate fast-tree owner adds its always-on
+camera-facing standing card and its camera-height-gated horizontal card. Its
+standing view uses a manifest-pinned phase-0 ordinal cycle only as a
+deterministic reconstruction; all 1,481 assignments and their four counts are
+checked. Steam's exact owner allocation/view sequence and address-selector
+phase remain unresolved. The
+converted static-world and target OBJ front faces are adapted to
 Godot's clockwise winding instead of exposing
 interior/back faces. Aquila and exterior meshes render from exact locally
 materialized AYA-wrapped textures. Static object

@@ -1,8 +1,8 @@
 # Level 100 opening assets
 
 This directory owns the ignored local released heightfield,
-macro/detail/cloud-shadow terrain inputs, cube-25 sky, standing-pine imposter
-atlas, two Firing Range target meshes, nine Pulse Cannon/target-destruction
+macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
+two Firing Range target meshes, nine Pulse Cannon/target-destruction
 effect textures, three weapon-effect sounds, and the first seventeen English
 tutorial voice clips consumed by the current Level 100 opening slice. Run
 `npm run prepare:rebuild-assets` to materialize the exact supported files from a
@@ -12,11 +12,11 @@ respective rights holders; `rebuild/LICENSE` covers reconstruction code only.
 
 `StaticWorld/level100-static-world.json` is a deterministic ignored manifest
 derived from the exact released Level 100 archive. It owns all 33 visible
-base-world objects, 24 selected static mesh types, 1,481 pine transforms, four
-exact standing-billboard records, 31 mesh/water/pine-atlas textures, their
-active material signatures, and their exact hashes. The materializer converts
-only those 24 static meshes and verifies a 59-file retail source set; those
-generated payloads are not mirrored in this document.
+base-world objects, 24 selected non-tree mesh types, four pine mesh variants,
+1,481 pine transforms, 34 mesh/water/imposter textures, their active material
+signatures, and their exact hashes. The materializer converts those 28 meshes
+and verifies a 62-file retail source set; those generated payloads are not
+mirrored in this document.
 
 | Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
@@ -31,7 +31,6 @@ generated payloads are not mirrored in this document.
 | `StaticWorld/Textures/water-waves.texture.aya` | Exact released 128×128 DXT1 shoreline-wave stage | `6EC848D1F9801BE12F3A6591D6A4F5D5ECF1FC9F21D1A4242E1D681D826AB078` |
 | `StaticWorld/Textures/water-sun-blob.texture.aya` | Exact released 128×128 RGBA8 water-sun blob | `5D97F24F514383C928C58C7F333BF489888B6A402004213FFBAAAAD2EF30A53E` |
 | `StaticWorld/Textures/water-sun-reflection.texture.aya` | Exact released 64×64 RGBA8 sun-reflection stage | `A65940D6CDFE93F8B8820EFB883FD33166AEC63863ED894673466F3F58527AB4` |
-| `StaticWorld/Textures/pine-imposters-100.texture.aya` | Exact released 1024×256 DXT2 standing-tree atlas | `7368BA0C586221FF1B1572CEE8F84DE2BF6DB426C005A73A10BAD54A938AD882` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
 | `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
@@ -164,25 +163,95 @@ visible static objects and two nonvisual markers. The materializer preserves
 all 33 object definitions, positions, Z values, and yaws in its exact ignored
 manifest. The same stream contains 753 `fernsnow` and 1,481 `pinesnow` records;
 the Steam loader deliberately skips `fern*`/`bush*` groups, so the client
-instantiates only the 1,481 pines. Steam's ordinary standing-tree path draws one
-vertical billboard per placement from the exact `Imposters_100` atlas. Each of
-the four `pinesnow` variants contributes four exact standing `VIEW` records and
-one mesh-level bounding-box center. Retail derives the view choice from an
-allocation address; the deterministic client uses placement ordinal modulo four
-to retain the same four-card distribution without treating allocator identity as
-simulation state. It does not draw the full pine mesh for this path. This is
-released loader behavior, not visual thinning by the rebuild.
-The released standing-tree draw deliberately uses point minification and
-magnification with mip filtering disabled and alpha reference `8`; close trees
-therefore retain the atlas's pixelated silhouette rather than switching to a
-hidden high-detail mesh. A copied Steam runtime read found capability global
-`0x008554FC = 1`, selecting the white-texture-factor `MODULATE2X` branch; the
-client doubles and clamps the atlas color before applying fog. Independent BC2
-decoding reproduces Godot's atlas pixels exactly; the source alpha contains only
-`0` and `255`.
-Steam also has non-standing `VIEW` records, a separate elevated-tree supplement,
-and a falling-tree path. Their complete selection contract is not yet
-established, so none is inferred here.
+instantiates only the 1,481 pines. Steam does not explain those trees with one
+all-distance billboard owner. The static ownership trace is:
+
+- `CRTTree__Init` at `0x004DD7B0` retains both the selected `pinesnow0..3`
+  `CMesh` and a six-view `CImposter`. `CRTTree__VFuncSlot02_BuildRenderOutputs`
+  at `0x004DD960` submits the full mesh when squared horizontal camera distance
+  is at or below `g_MeshQualityDistance²`, or while the tree is falling. The
+  supported image initializes that option-backed global to `30.0`; boot-time
+  `CCareer::Load(flag=0)` then applies `defaultoptions.bea` OptionsTail `+0x0C`.
+  The installed max-quality snapshot read for this milestone stores `70.0`
+  (`0x428C0000`) at file offset `0x26CA`; manifest v7 selects that released
+  high-quality value. A separate capability branch can write `45.0`.
+- Outside that boundary, `CRTTree__VFuncSlot03_UpdateVisibilityState` at
+  `0x004DD850` queues `CDXEngine__RenderImposterBillboardSet` at `0x00543300`.
+  That helper emits all six `VIEW` records for the tree, not one chosen card:
+  four successive vertical faces at approximately 90-degree rotations and two
+  faces tilted by `+π/2` and `+3π/2`. Each half-extent is multiplied by `0.99`.
+- After the normal world and global-imposter passes, `CDXTrees__Render` at
+  `0x0055AA10` draws a separate fast-tree batch. Its primary card uses one of
+  `VIEW` 0..3. The unlabelled CTree virtual target at `0x004F6540` returns
+  `(tree_object_address >> 4) & 3`; placement ordinal is not an input. Its
+  secondary horizontal card uses `VIEW` 4 and a half-size equal to the selected
+  standing frame half-width times `0.7`. That secondary batch is drawn only when
+  absolute camera-height versus sampled-ground-height delta exceeds `20.0`.
+
+Both card owners add the mesh's final global-BBOX center to the tree position.
+The exact BEA `(X,Y,Z)` centers for `pinesnow0..3` are
+`(-.024962962,.000355244,-.886774659)`,
+`(.070154905,-.082703590,-.911682606)`,
+`(.018942535,-.120034099,-.914225817)`, and
+`(.047512651,.026186585,-.814044118)`. The fast primary buffer stores signed
+half-width/half-height lanes that the tree shader expands around this center as
+a camera-facing vertical card. Its secondary buffer writes a literal X/Y square
+at the center's Z. The general imposter helper instead transforms right/up basis
+vectors and constructs each face as `center ± right ± up`.
+
+The exact 1024×256 BC2 `Imposters_100` atlas has SHA-256
+`7368BA0C586221FF1B1572CEE8F84DE2BF6DB426C005A73A10BAD54A938AD882`.
+Every serialized view occupies a 32×32 cell: all V ranges are `[0, 0.125]`,
+each U interval below is 0.03125 wide, and the pairs are half-width ×
+half-height.
+
+| Mesh | `VIEW` U intervals 0..5 | Half-extents 0..5 |
+| --- | --- | --- |
+| `pinesnow0` | `[0,.03125]`, `[.03125,.0625]`, `[.0625,.09375]`, `[.09375,.125]`, `[.125,.15625]`, `[.15625,.1875]` | `.783503950×.976928771`, `.699241579×.976928771`, `.783503890×.976928651`, `.699241519×.976928651`, `.783503950×.699241459`, `.783503950×.699241459` |
+| `pinesnow1` | `[.375,.40625]`, `[.40625,.4375]`, `[.4375,.46875]`, `[.46875,.5]`, `[.5,.53125]`, `[.53125,.5625]` | `.650126278×.982503712`, `.743201494×.982503653`, `.650126219×.982503593`, `.743201494×.982503653`, `.650126278×.743201435`, `.650126278×.743201435` |
+| `pinesnow2` | `[.5625,.59375]`, `[.59375,.625]`, `[.625,.65625]`, `[.65625,.6875]`, `[.6875,.71875]`, `[.71875,.75]` | `.815672159×.995326340`, `.781502008×.995326340`, `.815672100×.995326221`, `.781501949×.995326221`, `.815672159×.781501889`, `.815672159×.781501889` |
+| `pinesnow3` | `[.1875,.21875]`, `[.21875,.25]`, `[.25,.28125]`, `[.28125,.3125]`, `[.3125,.34375]`, `[.34375,.375]` | `.899441719×.888172686`, `.889750004×.888172686`, `.899441659×.888172567`, `.889749944×.888172567`, `.899441719×.889749885`, `.899441719×.889749885` |
+
+The close owner uses the ordinary world-object fixed-function path: alpha test
+is enabled with reference `8` and greater-or-equal comparison; stage zero uses
+linear magnification, anisotropic minification, linear mip filtering, maximum
+anisotropy `4`, and LOD bias `-1`. Its vertex lighting is ambient plus
+directional sun and opposing anti-sun, followed by base `MODULATE2X` and the
+active CHFD fog. The global six-card pass switches min/mag to point while
+retaining the restored linear mip filter and alpha reference `8`. `CRTTree`
+selects that helper's secondary buffer, whose lighting flag is off and whose
+white factor feeds `MODULATE2X` before fog. The fast batch uses point min/mag,
+disables mip filtering, and keeps reference `8`. Both atlas paths retain the
+default wrap address mode. A copied Steam read found `0x008554FC = 1`, selecting
+the fast batch's same unlit white-factor `MODULATE2X` branch before fog.
+Independent BC2 decoding found only `0` and `255` alpha in the atlas.
+
+The four close meshes are not cards: their exact converted topology is
+`674/499`, `411/270`, `586/396`, and `598/396` vertices/triangles for
+`pinesnow0..3`. They select three exact 256×256 BC2 snowy bark/needle textures.
+The authored placement data also proves overlap: only 15 pine owners lie inside
+the proof profile's 30-unit boundary at player start, while 616 lie inside the
+selected 70-unit high-quality boundary. The nearest six form a cluster only
+3.51–5.21 units from the start. One retail tree contributes either mesh or
+six-face imposter work depending on range, plus the separate fast-card pass;
+nearby tree owners can also overlap in the image.
+
+The current slice preserves those owners separately. It renders the exact four
+meshes at or inside the manifest's selected 70-unit cutoff and all six fixed
+imposter faces outside it, then adds the camera-facing fast standing card for
+every placement and the `VIEW`-4 horizontal card only above the strict 20-unit
+camera/ground delta. Manifest v7 explicitly pins fast-standing-view
+reconstruction phase `0`; the client maps placement ordinal plus that phase
+across `VIEW` 0..3 and checks all 1,481 assignments and their
+`371/370/370/370` counts. This is a deterministic reconstruction choice, not a
+claim about Steam owner identity. Steam's exact tree allocation/view sequence
+and the two-bit phase consumed by its address-derived selector remain the
+precise unresolved runtime boundary.
+The height gate adapts the retained Level 100 HFLD ground sampler for the
+released `CStaticShadows` query; exact `CStaticShadows` interpolation has not
+been independently equated to that adapter. Falling-tree retention,
+`CDXTrees::HideTree`, other user-selected quality distances, and pixel-level
+fixed-function/Godot sampler equivalence remain outside this slice.
 
 The 33 static records select 24 mesh types: nearby facilities and turrets,
 houses, city/tall buildings, an airfield, docks, hangar, radar, solar pod, and

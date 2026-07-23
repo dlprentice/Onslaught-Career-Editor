@@ -6,23 +6,76 @@ using Godot;
 
 namespace OnslaughtRebuild.GodotClient;
 
-internal sealed class Level100StaticWorldAsset
+internal sealed partial class Level100StaticWorldAsset
 {
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const string ManifestSha256 =
-        "C24DBD570DF8D0F0AD0663918BCD6F9557931DFCF9B0BC5FEEDF246AB947B9E5";
+        "0A96D2677C4B05E92F8DF0665F4F6481DFF8DA5EA9300A0A692EDA64CF666075";
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string SatTurretDefinition = "SAT Turret";
     private const string SatTurretMesh = "ft_sam";
     private const string StaticResourcePrefix = "res://Assets/Level100/StaticWorld/";
-    private const string PineBillboardShaderCode = """
+    private const string PineFarImposterShaderCode = """
         shader_type spatial;
         render_mode unshaded, cull_disabled;
 
-        uniform sampler2D atlas : filter_nearest, repeat_disable;
-        uniform vec4 atlas_rect;
+        uniform sampler2D atlas : filter_nearest_mipmap, repeat_enable;
+        uniform vec3 fog_color;
+        uniform float fog_density;
+        uniform float mesh_distance_squared;
+        varying float face_alignment;
+        varying float horizontal_distance_squared;
+        varying float view_depth;
+
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
+            vec3 low = color / 12.92;
+            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
+            return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        void vertex() {
+            vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);
+            face_alignment = dot(
+                world_normal,
+                CAMERA_POSITION_WORLD - world_position);
+            vec2 horizontal_offset =
+                MODEL_MATRIX[3].xz - CAMERA_POSITION_WORLD.xz;
+            horizontal_distance_squared = dot(
+                horizontal_offset,
+                horizontal_offset);
+            vec3 camera_position = (VIEW_MATRIX * vec4(world_position, 1.0)).xyz;
+            view_depth = max(-camera_position.z, 0.0);
+        }
+
+        void fragment() {
+            if (horizontal_distance_squared <= mesh_distance_squared ||
+                face_alignment <= 0.0) {
+                discard;
+            }
+            vec4 texel = texture(atlas, UV);
+            if (texel.a < (8.0 / 255.0)) {
+                discard;
+            }
+            float visibility = clamp(
+                exp(-fog_density * view_depth),
+                0.0,
+                1.0);
+            vec3 tree_color = min(texel.rgb * 2.0, vec3(1.0));
+            ALBEDO = retail_output(mix(fog_color, tree_color, visibility));
+        }
+        """;
+    private const string PineFastImposterShaderCode = """
+        shader_type spatial;
+        render_mode unshaded, cull_disabled;
+
+        uniform sampler2D atlas : filter_nearest, repeat_enable;
+        uniform float camera_facing;
         uniform vec3 fog_color;
         uniform float fog_density;
         varying float view_depth;
@@ -37,23 +90,26 @@ internal sealed class Level100StaticWorldAsset
         }
 
         void vertex() {
-            vec3 center = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-            vec3 camera_right = normalize(vec3(
-                INV_VIEW_MATRIX[0].x,
-                0.0,
-                INV_VIEW_MATRIX[0].z));
-            vec3 world_position = center +
-                (camera_right * VERTEX.x) +
-                vec3(0.0, VERTEX.y, 0.0);
+            vec3 world_position;
+            if (camera_facing > 0.5) {
+                vec3 center = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+                vec3 camera_right = normalize(vec3(
+                    INV_VIEW_MATRIX[0].x,
+                    0.0,
+                    INV_VIEW_MATRIX[0].z));
+                world_position = center +
+                    (camera_right * VERTEX.x) +
+                    vec3(0.0, VERTEX.y, 0.0);
+            } else {
+                world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            }
             vec3 camera_position = (VIEW_MATRIX * vec4(world_position, 1.0)).xyz;
             POSITION = PROJECTION_MATRIX * vec4(camera_position, 1.0);
             view_depth = max(-camera_position.z, 0.0);
         }
 
         void fragment() {
-            vec4 texel = texture(
-                atlas,
-                atlas_rect.xy + (UV * atlas_rect.zw));
+            vec4 texel = texture(atlas, UV);
             if (texel.a < (8.0 / 255.0)) {
                 discard;
             }
@@ -65,6 +121,9 @@ internal sealed class Level100StaticWorldAsset
             ALBEDO = retail_output(mix(fog_color, tree_color, visibility));
         }
         """;
+
+    private static Shader? _pineFarImposterShader;
+    private static Shader? _pineFastImposterShader;
 
     private Level100StaticWorldAsset(
         Node3D root,
@@ -94,6 +153,7 @@ internal sealed class Level100StaticWorldAsset
     {
         Manifest manifest = LoadManifest();
         ValidateManifest(manifest, terrain);
+        float pineMeshDistance = checked((float)manifest.PineBillboards.MeshQualityDistance);
 
         var root = new Node3D { Name = "RetailLevel100StaticWorld" };
         var textures = new Dictionary<string, Texture2D>(StringComparer.Ordinal);
@@ -111,7 +171,10 @@ internal sealed class Level100StaticWorldAsset
                     pair.Value,
                     textures,
                     manifest.Textures,
-                    terrain),
+                    terrain,
+                    key.StartsWith("pinesnow", StringComparison.Ordinal)
+                        ? pineMeshDistance
+                        : 0f),
                 StringComparer.Ordinal);
             ArrayMesh mesh = CuratedObjMeshLoader.Load(definition.ResourcePath, surfaceMaterials);
             meshes.Add(key, mesh);
@@ -157,7 +220,7 @@ internal sealed class Level100StaticWorldAsset
             objects.Add(geometry);
         }
 
-        int pineCount = AddPines(root, manifest, terrain, textures);
+        int pineCount = AddPines(root, manifest, terrain, meshes, textures);
         Level100WaterAsset water = AddWater(root, manifest, terrain, textures);
         int surfaceCount = objects.Sum(item => item.Mesh?.GetSurfaceCount() ?? 0);
         return new Level100StaticWorldAsset(root, objects, surfaceCount, pineCount, water);
@@ -167,90 +230,433 @@ internal sealed class Level100StaticWorldAsset
         Node3D root,
         Manifest manifest,
         Level100HeightFieldAsset terrain,
+        IReadOnlyDictionary<string, ArrayMesh> meshes,
         IReadOnlyDictionary<string, Texture2D> textures)
     {
-        int total = 0;
+        PinePlacement[] placements = BuildPinePlacements(
+            manifest.Pines,
+            manifest.PineBillboards.FastStandingViewPhase,
+            terrain);
+        AddClosePineMeshes(root, manifest, meshes, placements);
+
         Texture2D atlas = textures[manifest.PineBillboards.Texture];
+        AddFarPineImposters(root, manifest, terrain, atlas, placements);
+        AddFastPineImposters(root, manifest, terrain, atlas, placements);
+        return placements.Length;
+    }
+
+    private static PinePlacement[] BuildPinePlacements(
+        IReadOnlyList<double[]> pines,
+        int fastStandingViewPhase,
+        Level100HeightFieldAsset terrain)
+    {
+        int[] fastViews = SelectFastPineViews(pines.Count, fastStandingViewPhase);
+        var placements = new PinePlacement[pines.Count];
+        for (int ordinal = 0; ordinal < pines.Count; ordinal++)
+        {
+            double[] pine = pines[ordinal];
+            float retailX = checked((float)pine[0]);
+            float retailY = checked((float)pine[1]);
+            float relativeX = retailX - Level100HeightFieldAsset.PlayerStartX;
+            float relativeZ = retailY - Level100HeightFieldAsset.PlayerStartZ;
+            float height = Math.Max(
+                terrain.SampleRelativeHeight(relativeX, relativeZ),
+                terrain.WaterRelativeHeight);
+            placements[ordinal] = new PinePlacement(
+                checked((int)pine[2]),
+                new Vector3(relativeX, height, -relativeZ),
+                fastViews[ordinal]);
+        }
+        return placements;
+    }
+
+    private static int[] SelectFastPineViews(int count, int reconstructionPhase)
+    {
+        // Steam selects from the CTree address, but its exact allocation order
+        // and two-bit phase are not established. Manifest v7 therefore pins an
+        // authored reconstruction phase so the four views remain deterministic.
+        if (reconstructionPhase is < 0 or > 3)
+        {
+            throw new InvalidDataException("Level 100 has an invalid fast-pine reconstruction phase.");
+        }
+
+        var views = new int[count];
+        for (int ordinal = 0; ordinal < count; ordinal++)
+        {
+            views[ordinal] = (ordinal + reconstructionPhase) & 3;
+        }
+        if (!HasExpectedFastPineViewCoverage(views, reconstructionPhase))
+        {
+            throw new InvalidDataException("Level 100 fast-pine reconstruction coverage changed.");
+        }
+        return views;
+    }
+
+    private static bool HasExpectedFastPineViewCoverage(
+        IReadOnlyList<int> views,
+        int reconstructionPhase)
+    {
+        if (views.Count != 1481)
+        {
+            return false;
+        }
+
+        int[] counts = new int[4];
+        for (int ordinal = 0; ordinal < views.Count; ordinal++)
+        {
+            int view = views[ordinal];
+            if (view != ((ordinal + reconstructionPhase) & 3))
+            {
+                return false;
+            }
+            counts[view]++;
+        }
+
+        int[] expectedCounts = [370, 370, 370, 370];
+        expectedCounts[reconstructionPhase]++;
+        return counts.SequenceEqual(expectedCounts);
+    }
+
+    private static void AddClosePineMeshes(
+        Node3D root,
+        Manifest manifest,
+        IReadOnlyDictionary<string, ArrayMesh> meshes,
+        IReadOnlyList<PinePlacement> placements)
+    {
+        for (int variant = 0; variant < 4; variant++)
+        {
+            PinePlacement[] instances = placements
+                .Where(item => item.Variant == variant)
+                .ToArray();
+            string meshKey = $"pinesnow{variant}";
+            float baseClearance = checked((float)manifest.Meshes[meshKey].BaseClearance);
+            var multiMesh = new MultiMesh
+            {
+                TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
+                Mesh = meshes[meshKey],
+                InstanceCount = instances.Length,
+            };
+            var meshBasis = new Basis(Vector3.Right, -Mathf.Pi / 2f);
+            for (int index = 0; index < instances.Length; index++)
+            {
+                multiMesh.SetInstanceTransform(
+                    index,
+                    new Transform3D(
+                        meshBasis,
+                        instances[index].GroundOrigin + (Vector3.Up * baseClearance)));
+            }
+            root.AddChild(new MultiMeshInstance3D
+            {
+                Name = $"RetailPineSnow{variant}CloseMeshInstances",
+                Multimesh = multiMesh,
+            });
+        }
+    }
+
+    private static void AddFarPineImposters(
+        Node3D root,
+        Manifest manifest,
+        Level100HeightFieldAsset terrain,
+        Texture2D atlas,
+        IReadOnlyList<PinePlacement> placements)
+    {
+        ShaderMaterial material = CreatePineImposterMaterial(
+            atlas,
+            terrain,
+            cameraFacing: false,
+            meshQualityDistance: manifest.PineBillboards.MeshQualityDistance);
+        for (int variant = 0; variant < 4; variant++)
+        {
+            PinePlacement[] instances = placements
+                .Where(item => item.Variant == variant)
+                .ToArray();
+            ArrayMesh mesh = CreateFarPineImposterMesh(
+                manifest.PineBillboards.Variants[variant],
+                material);
+            var multiMesh = new MultiMesh
+            {
+                TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
+                Mesh = mesh,
+                InstanceCount = instances.Length,
+            };
+            for (int index = 0; index < instances.Length; index++)
+            {
+                multiMesh.SetInstanceTransform(
+                    index,
+                    new Transform3D(Basis.Identity, instances[index].GroundOrigin));
+            }
+            root.AddChild(new MultiMeshInstance3D
+            {
+                Name = $"RetailPineSnow{variant}FarSixFaceInstances",
+                Multimesh = multiMesh,
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            });
+        }
+    }
+
+    private static void AddFastPineImposters(
+        Node3D root,
+        Manifest manifest,
+        Level100HeightFieldAsset terrain,
+        Texture2D atlas,
+        IReadOnlyList<PinePlacement> placements)
+    {
+        var fastRoot = new PineFastImposterRoot
+        {
+            Name = "RetailPineFastImposters",
+        };
+        fastRoot.Initialize(terrain);
+        root.AddChild(fastRoot);
+
+        ShaderMaterial standingMaterial = CreatePineImposterMaterial(
+            atlas,
+            terrain,
+            cameraFacing: true,
+            meshQualityDistance: null);
+        ShaderMaterial elevatedMaterial = CreatePineImposterMaterial(
+            atlas,
+            terrain,
+            cameraFacing: false,
+            meshQualityDistance: null);
         for (int variant = 0; variant < 4; variant++)
         {
             PineBillboardVariant definition = manifest.PineBillboards.Variants[variant];
             Vector3 centerOffset = ToGodotVector(definition.CenterOffset);
-            for (int viewIndex = 0; viewIndex < definition.Views.Length; viewIndex++)
+            for (int viewIndex = 0; viewIndex < 4; viewIndex++)
             {
-                double[] view = definition.Views[viewIndex];
-                (double[] Pine, int Ordinal)[] instances = manifest.Pines
-                    .Select((pine, ordinal) => (Pine: pine, Ordinal: ordinal))
-                    .Where(item =>
-                        checked((int)item.Pine[2]) == variant &&
-                        (item.Ordinal & 3) == viewIndex)
+                PinePlacement[] instances = placements
+                    .Where(item => item.Variant == variant && item.FastView == viewIndex)
                     .ToArray();
-                float halfWidth = checked((float)view[4]);
-                float halfHeight = checked((float)view[5]);
-                var mesh = new QuadMesh
-                {
-                    Size = new Vector2(halfWidth * 2f, halfHeight * 2f),
-                    Material = CreatePineBillboardMaterial(atlas, view, terrain),
-                };
-                var multiMesh = new MultiMesh
-                {
-                    TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
-                    Mesh = mesh,
-                    InstanceCount = instances.Length,
-                };
-                for (int index = 0; index < instances.Length; index++)
-                {
-                    float retailX = checked((float)instances[index].Pine[0]);
-                    float retailY = checked((float)instances[index].Pine[1]);
-                    float relativeX = retailX - Level100HeightFieldAsset.PlayerStartX;
-                    float relativeZ = retailY - Level100HeightFieldAsset.PlayerStartZ;
-                    float height = Math.Max(
-                        terrain.SampleRelativeHeight(relativeX, relativeZ),
-                        terrain.WaterRelativeHeight);
-                    multiMesh.SetInstanceTransform(
-                        index,
-                        new Transform3D(
-                            Basis.Identity,
-                            new Vector3(relativeX, height, -relativeZ) + centerOffset));
-                }
-                root.AddChild(new MultiMeshInstance3D
-                {
-                    Name = $"RetailPineSnow{variant}View{viewIndex}Instances",
-                    Multimesh = multiMesh,
-                });
-                total += instances.Length;
+                double[] standingView = definition.Views[viewIndex];
+                ArrayMesh standingMesh = CreateQuadMesh(
+                    Vector3.Zero,
+                    Vector3.Right * checked((float)standingView[4]),
+                    Vector3.Up * checked((float)standingView[5]),
+                    standingView,
+                    standingMaterial);
+                fastRoot.AddChild(CreatePineMultiMeshNode(
+                    $"RetailPineSnow{variant}FastStandingView{viewIndex}Instances",
+                    standingMesh,
+                    instances,
+                    centerOffset));
+
+                float elevatedHalfSize = checked((float)(standingView[4] * 0.7));
+                ArrayMesh elevatedMesh = CreateQuadMesh(
+                    Vector3.Zero,
+                    Vector3.Right * elevatedHalfSize,
+                    Vector3.Forward * elevatedHalfSize,
+                    definition.Views[4],
+                    elevatedMaterial);
+                fastRoot.AddElevated(CreatePineMultiMeshNode(
+                    $"RetailPineSnow{variant}FastElevatedView{viewIndex}Instances",
+                    elevatedMesh,
+                    instances,
+                    centerOffset));
             }
         }
-        return total;
     }
 
-    private static Vector3 ToGodotVector(double[] beaVector) =>
-        new(
-            checked((float)beaVector[0]),
-            -checked((float)beaVector[2]),
-            -checked((float)beaVector[1]));
-
-    private static ShaderMaterial CreatePineBillboardMaterial(
-        Texture2D atlas,
-        double[] view,
-        Level100HeightFieldAsset terrain)
+    private static MultiMeshInstance3D CreatePineMultiMeshNode(
+        string name,
+        ArrayMesh mesh,
+        IReadOnlyList<PinePlacement> instances,
+        Vector3 centerOffset)
     {
+        var multiMesh = new MultiMesh
+        {
+            TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
+            Mesh = mesh,
+            InstanceCount = instances.Count,
+        };
+        for (int index = 0; index < instances.Count; index++)
+        {
+            multiMesh.SetInstanceTransform(
+                index,
+                new Transform3D(
+                    Basis.Identity,
+                    instances[index].GroundOrigin + centerOffset));
+        }
+        return new MultiMeshInstance3D
+        {
+            Name = name,
+            Multimesh = multiMesh,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+    }
+
+    private static ArrayMesh CreateFarPineImposterMesh(
+        PineBillboardVariant definition,
+        Material material)
+    {
+        Vector3[] rawRights =
+        [
+            Vector3.Right,
+            new Vector3(0f, -1f, 0f),
+            Vector3.Left,
+            new Vector3(0f, 1f, 0f),
+            Vector3.Right,
+            Vector3.Right,
+        ];
+        Vector3[] rawUps =
+        [
+            Vector3.Back,
+            Vector3.Back,
+            Vector3.Back,
+            Vector3.Back,
+            new Vector3(0f, -1f, 0f),
+            new Vector3(0f, 1f, 0f),
+        ];
+        Vector3 center = ToGodotVector(definition.CenterOffset);
+        var vertices = new Vector3[24];
+        var normals = new Vector3[24];
+        var textureCoordinates = new Vector2[24];
+        var indices = new int[36];
+        for (int face = 0; face < 6; face++)
+        {
+            double[] view = definition.Views[face];
+            Vector3 right = ToGodotVector(rawRights[face]) *
+                checked((float)(view[4] * 0.99));
+            Vector3 up = ToGodotVector(rawUps[face]) *
+                checked((float)(view[5] * 0.99));
+            Vector3 normal = ToGodotVector(rawUps[face].Cross(rawRights[face])).Normalized();
+            AddQuad(
+                vertices,
+                normals,
+                textureCoordinates,
+                indices,
+                face,
+                center,
+                right,
+                up,
+                normal,
+                view);
+        }
+        return CreateArrayMesh(vertices, normals, textureCoordinates, indices, material);
+    }
+
+    private static ArrayMesh CreateQuadMesh(
+        Vector3 center,
+        Vector3 right,
+        Vector3 up,
+        double[] view,
+        Material material)
+    {
+        var vertices = new Vector3[4];
+        var normals = new Vector3[4];
+        var textureCoordinates = new Vector2[4];
+        var indices = new int[6];
+        AddQuad(
+            vertices,
+            normals,
+            textureCoordinates,
+            indices,
+            0,
+            center,
+            right,
+            up,
+            up.Cross(right).Normalized(),
+            view);
+        return CreateArrayMesh(vertices, normals, textureCoordinates, indices, material);
+    }
+
+    private static void AddQuad(
+        Vector3[] vertices,
+        Vector3[] normals,
+        Vector2[] textureCoordinates,
+        int[] indices,
+        int quadIndex,
+        Vector3 center,
+        Vector3 right,
+        Vector3 up,
+        Vector3 normal,
+        double[] view)
+    {
+        int vertex = quadIndex * 4;
+        vertices[vertex] = center - right - up;
+        vertices[vertex + 1] = center + right - up;
+        vertices[vertex + 2] = center + right + up;
+        vertices[vertex + 3] = center - right + up;
+        for (int index = 0; index < 4; index++)
+        {
+            normals[vertex + index] = normal;
+        }
+        float u0 = checked((float)view[0]);
+        float u1 = checked((float)view[1]);
+        float v0 = checked((float)view[2]);
+        float v1 = checked((float)view[3]);
+        textureCoordinates[vertex] = new Vector2(u0, v0);
+        textureCoordinates[vertex + 1] = new Vector2(u1, v0);
+        textureCoordinates[vertex + 2] = new Vector2(u1, v1);
+        textureCoordinates[vertex + 3] = new Vector2(u0, v1);
+        int triangle = quadIndex * 6;
+        indices[triangle] = vertex;
+        indices[triangle + 1] = vertex + 1;
+        indices[triangle + 2] = vertex + 2;
+        indices[triangle + 3] = vertex + 2;
+        indices[triangle + 4] = vertex + 3;
+        indices[triangle + 5] = vertex;
+    }
+
+    private static ArrayMesh CreateArrayMesh(
+        Vector3[] vertices,
+        Vector3[] normals,
+        Vector2[] textureCoordinates,
+        int[] indices,
+        Material material)
+    {
+        var arrays = new Godot.Collections.Array();
+        arrays.Resize((int)Godot.Mesh.ArrayType.Max);
+        arrays[(int)Godot.Mesh.ArrayType.Vertex] = vertices;
+        arrays[(int)Godot.Mesh.ArrayType.Normal] = normals;
+        arrays[(int)Godot.Mesh.ArrayType.TexUV] = textureCoordinates;
+        arrays[(int)Godot.Mesh.ArrayType.Index] = indices;
+        var mesh = new ArrayMesh();
+        mesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays);
+        mesh.SurfaceSetMaterial(0, material);
+        return mesh;
+    }
+
+    private static ShaderMaterial CreatePineImposterMaterial(
+        Texture2D atlas,
+        Level100HeightFieldAsset terrain,
+        bool cameraFacing,
+        double? meshQualityDistance)
+    {
+        bool far = meshQualityDistance.HasValue;
         var material = new ShaderMaterial
         {
-            Shader = new Shader { Code = PineBillboardShaderCode },
+            Shader = far
+                ? _pineFarImposterShader ??= new Shader { Code = PineFarImposterShaderCode }
+                : _pineFastImposterShader ??= new Shader { Code = PineFastImposterShaderCode },
+            RenderPriority = far ? 0 : 1,
         };
         material.SetShaderParameter("atlas", atlas);
-        material.SetShaderParameter("atlas_rect", new Vector4(
-            checked((float)view[0]),
-            checked((float)view[2]),
-            checked((float)(view[1] - view[0])),
-            checked((float)(view[3] - view[2]))));
         material.SetShaderParameter("fog_color", new Vector3(
             terrain.FogColor.R,
             terrain.FogColor.G,
             terrain.FogColor.B));
         material.SetShaderParameter("fog_density", terrain.FogDensity);
+        if (far)
+        {
+            float distance = checked((float)meshQualityDistance!.Value);
+            material.SetShaderParameter("mesh_distance_squared", distance * distance);
+        }
+        else
+        {
+            material.SetShaderParameter("camera_facing", cameraFacing ? 1f : 0f);
+        }
         return material;
     }
+
+    private static Vector3 ToGodotVector(double[] beaVector) => new(
+        checked((float)beaVector[0]),
+        -checked((float)beaVector[2]),
+        -checked((float)beaVector[1]));
+
+    private static Vector3 ToGodotVector(Vector3 beaVector) => new(
+        beaVector.X,
+        -beaVector.Z,
+        -beaVector.Y);
 
     private static Level100WaterAsset AddWater(
         Node3D root,
@@ -292,7 +698,8 @@ internal sealed class Level100StaticWorldAsset
         MaterialDefinition definition,
         IReadOnlyDictionary<string, Texture2D> textures,
         IReadOnlyDictionary<string, TextureDefinition> textureDefinitions,
-        Level100HeightFieldAsset terrain)
+        Level100HeightFieldAsset terrain,
+        float maximumHorizontalDistance)
     {
         RetailTextureLayer?[] layers = definition.Layers
             .Select(layer => layer is null
@@ -308,7 +715,11 @@ internal sealed class Level100StaticWorldAsset
                         checked((float)layer.Scale[1])),
                     textureDefinitions[layer.Texture].BlendTextureAlpha))
             .ToArray();
-        return RetailFixedFunctionMaterial.Create(layers, terrain);
+        return RetailFixedFunctionMaterial.Create(
+            layers,
+            terrain,
+            maximumHorizontalDistance,
+            maximumHorizontalDistance > 0f ? 8f / 255f : 0.5f);
     }
 
     private static Manifest LoadManifest()
@@ -330,7 +741,7 @@ internal sealed class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v6") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v7") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||
@@ -340,8 +751,10 @@ internal sealed class Level100StaticWorldAsset
             manifest.PineInstanceCount != 1481 ||
             manifest.Objects.Length != 33 ||
             manifest.Pines.Length != 1481 ||
-            manifest.Meshes.Count != 24 ||
-            manifest.Textures.Count != 31 ||
+            manifest.Meshes.Count != 28 ||
+            manifest.Textures.Count != 34 ||
+            Enumerable.Range(0, 4).Any(variant =>
+                !manifest.Meshes.ContainsKey($"pinesnow{variant}")) ||
             !IsValidPineBillboards(manifest.PineBillboards, manifest.Textures) ||
             !manifest.Textures.TryGetValue(
                 "meshtex-a8-fb-hangermorebits-lit",
@@ -359,7 +772,8 @@ internal sealed class Level100StaticWorldAsset
             !manifest.Textures.ContainsKey(manifest.Water.SunReflectionTexture) ||
             string.IsNullOrWhiteSpace(manifest.Water.SurfaceSha256))
         {
-            throw new InvalidDataException("Level 100 static-world identity or counts do not match retail.");
+            throw new InvalidDataException(
+                "Level 100 static-world identity, counts, or reconstruction profile changed.");
         }
 
         int[] variants = new int[4];
@@ -437,6 +851,9 @@ internal sealed class Level100StaticWorldAsset
             texture.Width != 1024 ||
             texture.Height != 256 ||
             !StringComparer.Ordinal.Equals(texture.Compression, "Dxt2") ||
+            BitConverter.SingleToInt32Bits(checked((float)definition.MeshQualityDistance)) !=
+                BitConverter.SingleToInt32Bits(70f) ||
+            definition.FastStandingViewPhase != 0 ||
             definition.Variants.Length != 4)
         {
             return false;
@@ -452,7 +869,7 @@ internal sealed class Level100StaticWorldAsset
         for (int variant = 0; variant < definition.Variants.Length; variant++)
         {
             PineBillboardVariant item = definition.Variants[variant];
-            if (item.CenterOffset.Length != 3 || item.Views.Length != 4 ||
+            if (item.CenterOffset.Length != 3 || item.Views.Length != 6 ||
                 !item.CenterOffset.All(double.IsFinite) ||
                 item.Views.Any(view =>
                     view.Length != 6 ||
@@ -539,6 +956,8 @@ internal sealed class Level100StaticWorldAsset
 
     private sealed record PineBillboardDefinition
     {
+        public int FastStandingViewPhase { get; init; }
+        public double MeshQualityDistance { get; init; }
         public string Texture { get; init; } = string.Empty;
         public PineBillboardVariant[] Variants { get; init; } = [];
     }
@@ -547,6 +966,44 @@ internal sealed class Level100StaticWorldAsset
     {
         public double[] CenterOffset { get; init; } = [];
         public double[][] Views { get; init; } = [];
+    }
+
+    private readonly record struct PinePlacement(
+        int Variant,
+        Vector3 GroundOrigin,
+        int FastView);
+
+    private sealed partial class PineFastImposterRoot : Node3D
+    {
+        private readonly Node3D _elevated = new()
+        {
+            Name = "HeightGatedElevatedCards",
+            Visible = false,
+        };
+        private Level100HeightFieldAsset? _terrain;
+
+        public void Initialize(Level100HeightFieldAsset terrain)
+        {
+            _terrain = terrain;
+            AddChild(_elevated);
+        }
+
+        public void AddElevated(MultiMeshInstance3D node) => _elevated.AddChild(node);
+
+        public override void _Process(double delta)
+        {
+            Camera3D? camera = GetViewport().GetCamera3D();
+            if (camera is null || _terrain is null)
+            {
+                _elevated.Visible = false;
+                return;
+            }
+            Vector3 cameraPosition = camera.GlobalPosition;
+            float sampledGroundHeight = _terrain.SampleRelativeHeight(
+                cameraPosition.X,
+                -cameraPosition.Z);
+            _elevated.Visible = MathF.Abs(cameraPosition.Y - sampledGroundHeight) > 20f;
+        }
     }
 
     private sealed record MaterialDefinition
@@ -618,6 +1075,7 @@ internal static class RetailFixedFunctionMaterial
         uniform float has_reflection;
         uniform float has_overlay;
         uniform float base_blend_texture_alpha;
+        uniform float alpha_reference;
         uniform vec2 dot3_offset;
         uniform vec2 dot3_scale;
         uniform float reflection_factor_alpha;
@@ -630,9 +1088,11 @@ internal static class RetailFixedFunctionMaterial
         uniform vec3 sunlight_direction;
         uniform vec3 fog_color;
         uniform float fog_density;
+        uniform float maximum_horizontal_distance_squared;
         varying vec3 vertex_light_color;
         varying vec3 model_light_direction;
         varying vec2 reflection_uv;
+        varying float horizontal_distance_squared;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -649,6 +1109,13 @@ internal static class RetailFixedFunctionMaterial
         }
 
         void vertex() {
+            // MultiMesh instance position is available through MODEL_MATRIX
+            // here, so carry its camera distance into the fragment stage.
+            vec2 horizontal_offset =
+                MODEL_MATRIX[3].xz - CAMERA_POSITION_WORLD.xz;
+            horizontal_distance_squared = dot(
+                horizontal_offset,
+                horizontal_offset);
             vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);
             float sun = max(dot(world_normal, -sunlight_direction), 0.0);
             float anti_sun = max(dot(world_normal, sunlight_direction), 0.0);
@@ -671,10 +1138,14 @@ internal static class RetailFixedFunctionMaterial
         }
 
         void fragment() {
+            if (maximum_horizontal_distance_squared >= 0.0 &&
+                horizontal_distance_squared > maximum_horizontal_distance_squared) {
+                discard;
+            }
             // Steam's high static-world renderer applies a -1 mip bias to
             // hardware stage zero.
             vec4 texture_color = texture(base_texture, UV, -1.0);
-            if (base_blend_texture_alpha < 0.5 && texture_color.a < 0.5) {
+            if (base_blend_texture_alpha < 0.5 && texture_color.a < alpha_reference) {
                 discard;
             }
             vec3 retail_color = min(
@@ -752,11 +1223,21 @@ internal static class RetailFixedFunctionMaterial
 
     public static ShaderMaterial Create(
         IReadOnlyList<RetailTextureLayer?> layers,
-        Level100HeightFieldAsset terrain)
+        Level100HeightFieldAsset terrain,
+        float maximumHorizontalDistance = 0f,
+        float alphaReference = 0.5f)
     {
         if (layers.Count != 6 || layers[0] is not RetailTextureLayer baseLayer)
         {
             throw new InvalidDataException("Retail material requires one base layer and six exact slots.");
+        }
+        if (!float.IsFinite(maximumHorizontalDistance) || maximumHorizontalDistance < 0f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumHorizontalDistance));
+        }
+        if (!float.IsFinite(alphaReference) || alphaReference is < 0f or > 1f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(alphaReference));
         }
         RetailTextureLayer? dot3Layer = layers[1];
         RetailTextureLayer? reflectionLayer = layers[2];
@@ -775,6 +1256,7 @@ internal static class RetailFixedFunctionMaterial
         material.SetShaderParameter(
             "base_blend_texture_alpha",
             baseLayer.BlendTextureAlpha ? 1f : 0f);
+        material.SetShaderParameter("alpha_reference", alphaReference);
         material.SetShaderParameter("dot3_offset", dot3Layer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("dot3_scale", dot3Layer?.Scale ?? Vector2.One);
         material.SetShaderParameter(
@@ -792,6 +1274,11 @@ internal static class RetailFixedFunctionMaterial
             terrain.FogColor.G,
             terrain.FogColor.B));
         material.SetShaderParameter("fog_density", terrain.FogDensity);
+        material.SetShaderParameter(
+            "maximum_horizontal_distance_squared",
+            maximumHorizontalDistance > 0f
+                ? maximumHorizontalDistance * maximumHorizontalDistance
+                : -1f);
         return material;
     }
 

@@ -19,10 +19,10 @@ synthetic arena or another layer of readiness tooling.
 
 The current Godot app is the **Level 100 Opening Slice**. It renders the
 locally materialized released Federation Aquila; all 33 visible static objects
-serialized by Level 100; all 1,481 pine placements instantiated by the Steam
-world loader; the released active-path water grid and authored shoreline; three
-training tanks; and the target Warehouse at their authored positions over the
-exact Level 100 heightfield lattice. Core owns the released player start heading, exact
+serialized by Level 100; exact close meshes for the 1,481 pine placements
+instantiated by the Steam world loader; the released active-path water grid and
+authored shoreline; three training tanks; and the target Warehouse at their
+authored positions over the exact Level 100 heightfield lattice. Core owns the released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
@@ -30,10 +30,14 @@ hierarchy; its twenty animated leg-chain parts consume four deterministic Core
 foot contacts. The released controller's diagonal swing scheduling and Level 100
 height contacts select independent `LegMotion` extension poses for each leg.
 The exact 54-part jet and 21-part cockpit hierarchies own the bounded
-walker-to-jet presentation. The 24 static-world mesh types and two target types
-retain bounded static conversions. The 1,481 standing pines use Steam's exact
-`Imposters_100` atlas billboard path instead of converted tree meshes. The
-converted meshes render with their active retained retail material passes and
+walker-to-jet presentation. The 24 non-tree static-world mesh types, four pine
+variants, and two target types retain bounded static conversions. The 1,481
+pine placements use their exact meshes inside the selected released
+high-quality 70-unit boundary and their six-face imposters outside it. The
+separate fast-tree owner adds one camera-facing standing card at every range
+and its height-gated horizontal card above the released 20-unit camera/ground
+delta. The converted meshes render with
+their active retained retail material passes and
 follow the released PC ambient, opposing sun/anti-sun, and `MODULATE2X` path
 rather than approximate Godot PBR values. The
 released macro terrain blend, repeating detail and moving cloud-shadow textures,
@@ -80,7 +84,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 142 exact source/runtime files to ignored paths. For a custom
+materializes 149 exact source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -156,7 +160,7 @@ The client switches between the released walker's and jet's exact part
 hierarchies and independently animates the exact first-person cockpit. It
 decodes Level 100's
 version-50 base-world records into 33 visible static instances, 24 mesh types,
-and 1,481 pines across four atlas-billboard variants, while retaining the
+and 1,481 pines across four authored mesh variants, while retaining the
 separate Target Tank and Warehouse meshes. The
 retired synthetic arena boundary, flat plane, and placeholder structures are
 gone. Godot uses the released 65×65 eight-step lattice for coarse selections and
@@ -184,8 +188,8 @@ hash-verified HFLD, applies Steam's 24.8 fixed-point signed interpolation, and
 hashes the player's ground elevation. Godot adapts that Core value for the
 player rather than running an independent sampler. The client preserves each
 active mesh group's six ordered retail texture slots and decodes the exact
-AYA-wrapped textures selected by the Aquila, cockpit, static world, standing
-pine atlas, and range targets plus the four exact 64×64
+AYA-wrapped textures selected by the Aquila, cockpit, static world, close pine
+meshes, and range targets plus the four exact 64×64
 textures named by the medium Pulse Bolt descriptor. It also uses twenty-nine
 exact HUD textures, including the three released v3 crosshair layers,
 uncompressed proportional font atlas, scanner/north sprites, battleline,

@@ -2,11 +2,49 @@
 
 > DirectX-specific tree rendering system for environmental vegetation
 > Source: `[maintainer-local-source-export-root]\DXTrees.cpp` (debug path at 0x006529b0)
-> Last updated: 2026-05-20
+> Last updated: 2026-07-22
 
 ## Overview
 
-DXTrees.cpp implements the `CDXTrees` class which handles DirectX-specific rendering of environmental trees (vegetation billboards). The class manages two vertex/index buffers for rendering tree sprites as camera-facing quads.
+DXTrees.cpp implements the specialized fast-tree batch rendered after ordinary
+world objects and the global `CImposter` batch. It is not the owner of the close
+tree mesh/far-imposter decision. `CDXTrees` keeps one buffer for standing cards
+and one for a height-gated horizontal supplement.
+
+## Focused retail-tree correction (2026-07-22)
+
+This focused read-back supersedes the older shadow/LOD guesses later in this
+note:
+
+- `CRTTree__Init` (`0x004DD7B0`) owns both a `CMesh` and a six-view
+  `CImposter`. `CRTTree__VFuncSlot02_BuildRenderOutputs` (`0x004DD960`) submits
+  the mesh when horizontal camera distance is at or inside
+  `g_MeshQualityDistance`, or while the tree is falling. The image value at
+  `0x006321A0` is `30.0`; boot options can overwrite it from
+  `defaultoptions.bea` OptionsTail `+0x0C`. The installed max-quality snapshot
+  read on 2026-07-22 stores `70.0` (`0x428C0000`) there. The separate capability
+  branch in `CRTTree__Init` writes `45.0`.
+- `CRTTree__VFuncSlot03_UpdateVisibilityState` (`0x004DD850`) queues
+  `CDXEngine__RenderImposterBillboardSet` (`0x00543300`) outside that boundary.
+  The helper calls `CDXImposter__BuildQuadGeometry` six times: four faces whose
+  basis advances by about `-π/2`, then two faces tilted by `+π/2` and `+3π/2`.
+  Serialized half-extents are scaled by `0.99`. The exact six atlas cells and
+  extents for every Level 100 pine are recorded in the
+  [Level 100 asset note](../../../rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md).
+- `CDXTrees__BuildTreeGeometry` emits an additional primary standing card per
+  tree. Its CTree virtual selector at `0x004F6540` computes
+  `(tree_object_address >> 4) & 3`; a placement ordinal is not equivalent static
+  evidence. The second buffer is a horizontal square using serialized `VIEW` 4
+  and half-size `selected_standing_half_width * 0.7`.
+- `CDXTrees__Render` always draws the primary buffer. It draws the horizontal
+  buffer only when absolute camera-height minus sampled-ground-height exceeds
+  `20.0`; that comparison is not horizontal range LOD.
+- Default/world rendering enables alpha test with reference `8` and
+  greater-or-equal comparison. The close mesh pass uses anisotropic stage-zero
+  minification, linear mip filtering, max anisotropy `4`, and `-1` mip bias.
+  The fast batch uses point min/mag, no mip filtering, and alpha reference `8`.
+  The observed `0x008554FC = 1` chooses its unlit white-factor `MODULATE2X`
+  branch before active Level 100 fog.
 
 ## Wave841 Shared Default/False VFunc09
 
@@ -31,9 +69,9 @@ Read-back evidence verified `9` metadata rows, `9` tag rows, `12` xref rows, `33
 The pass moved the queue to `6093` total functions, `3185` commented, `2908` commentless, `1247` exact-undefined signatures, and `1056` `param_N` signatures; the next queue head is `0x0055d5e0 DirectSoundCreate8`. This is static retail Ghidra evidence only. Runtime vegetation rendering, runtime tree destruction visibility, exact `CDXTrees`/`CRTTree`/`CVBufTexture`/render-state layouts, exact source-body identity, BEA patching, and rebuild parity remain deferred.
 
 **Key Features:**
-- Billboard sprite rendering for distant trees
-- Two separate vertex buffers (main + shadow/secondary)
-- Quadtree-based spatial queries for visible trees
+- One standing fast card per retained tree owner
+- A separate camera-elevation-gated horizontal card buffer
+- Quadtree-based enumeration of tree owners
 - Vertex buffer locking for dynamic hiding of destroyed trees
 
 ## Class Structure
@@ -175,7 +213,7 @@ Iterates through the world quadtree to find all tree objects and builds vertex/i
 4. Configure index format: 0x65, 2 bytes per index
 5. Iterate through quadtree levels (4 down to 0)
 6. For each cell, query CMapWho for tree objects (flag 0x2000000)
-7. For each tree, create a billboard quad (4 vertices, 6 indices)
+7. For each tree, create one encoded standing quad and one horizontal quad (4 vertices and 6 indices each)
 8. Add vertices with UV coordinates from tree texture atlas
 
 **Key Constants:**
@@ -226,7 +264,7 @@ void CDXTrees::BuildTreeGeometry() {
 ### CDXTrees__Render (0x0055aa10)
 **Render Trees**
 
-Renders all tree billboards using the prepared vertex/index buffers.
+Renders both prepared fast-tree buffers.
 
 **Algorithm:**
 1. Check if tree count > 0
@@ -234,11 +272,11 @@ Renders all tree billboards using the prepared vertex/index buffers.
 3. Set up render states (blending, alpha test, etc.)
 4. Bind texture
 5. Render first buffer (main trees)
-6. Optionally render second buffer based on distance check (> 20 units)
+6. Render the second buffer only when camera-to-sampled-ground height delta is greater than 20 units
 7. Restore render states
 
 **Key Features:**
-- Distance-based LOD (checks 20.0 unit threshold)
+- Camera-elevation gate for the horizontal supplement (20.0-unit threshold)
 - Multiple render state changes for alpha blending
 - Uses CVBufTexture::RenderIndexed and RenderIndexedNoValidate
 
@@ -257,9 +295,9 @@ void CDXTrees::Render() {
     // Render main buffer
     m_pTreeBuffer1->RenderIndexedNoValidate(0, 0, 0);
 
-    // Distance check for secondary buffer
-    float dist = GetCameraDistance();
-    if (abs(currentDist - dist) > 20.0f) {
+    // Height check for horizontal supplemental buffer
+    float groundHeight = StaticShadows.SampleHeight(cameraPosition.xy);
+    if (abs(cameraPosition.z - groundHeight) > 20.0f) {
         m_pTreeBuffer2->RenderIndexed(0, 0, 0, 0);
     }
 
@@ -347,7 +385,7 @@ note for the individual falling-tree path.
 
 ## Notes
 
-1. **Two-Buffer System**: The class maintains two separate vertex buffers. The first appears to be the main tree buffer, while the second may be for shadows or LOD purposes.
+1. **Two-Buffer System**: The first buffer owns standing fast cards. The second owns horizontal `VIEW`-4 cards gated by camera height above/below sampled ground; it is not a shadow buffer or horizontal-distance LOD.
 
 2. **Quadtree Integration**: Tree geometry is built by iterating through the CMapWho quadtree system, which provides efficient spatial queries.
 
