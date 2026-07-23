@@ -73,11 +73,12 @@ The path-specific Godot audio owner also retains all 51 accepted English Level
 100 character messages, the released tutorial music selection, and the exact
 menu, Aquila, weapon, warning, actor, repair, hit, destruction, and debris PCM
 records required through mission return. It centralizes pause/resume/stop and
-loop ownership. The mission message path consumes the ordered client frame
-envelope; other lanes must pass their typed events and current actor/resource
-state once those contracts land. Audio does not own mission waits, objectives,
-frontend pages, or pause actions. This does not claim those later mechanics are
-implemented in the current Core slice.
+loop ownership. Playback consumes ordered mission-message, Aquila-flight, and
+destruction envelopes from the client frame result. The Aquila source binds to
+the native `Player 1` ActorId and follows its full three-dimensional registry
+pose; pause, frontend, and level-exit state remain supplied by their existing
+owners. Audio does not own mission waits, objectives, actor mechanics, frontend
+pages, or pause actions. Retained cues without canonical events remain silent.
 The wired mission still reproduces only the observed circular walker contact
 and tangent slide for the Control Tower and Tank Factory. Pulse projectiles
 consume identity, active state, full pose/basis, velocity, health and lifecycle

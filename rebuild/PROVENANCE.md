@@ -541,10 +541,15 @@ lifecycle architecture. Canonical Steam bodies at `0x00404DD0`
 `CFrontEnd__PlaySound`, `0x0046FAE0`/`0x0046FB00` game unpause/pause, and
 `0x004E1B20` `CSoundManager__UpdateStatus` independently retain the released
 effect identities and pause boundary. The adapter consumes ordered numeric
-`Level100MessageRequested` events from `FrameAdvanceResult`; it exposes event-
-driven entry points for frontend, flight, actor, impact, and pause owners rather
-than defining their state. Character-message clips queue by exact retained ID;
-script waits and playback-duration gates remain deterministic mission state.
+`Level100MessageRequested`, `AquilaFlightEvent`, and
+`Level100DestructionEvent` streams from `FrameAdvanceResult`. Its Aquila
+emitter binds to the canonical `Player 1` Battle Engine ActorId and updates from
+that actor's full three-dimensional registry pose; impact and destruction
+samples use the contact positions carried by their owning events. Character-
+message clips queue by exact retained ID, while frontend and pause lifecycles
+call the same adapter directly. No playback edge is inferred from a presentation
+snapshot delta. Script waits and playback-duration gates remain deterministic
+mission state.
 The PC `SetMasterVolume` tangent curve and externally supplied game-sound mix
 are presentation-only adapter inputs, so audio applies but never advances a
 failure fade or other ducking timeline.
@@ -587,7 +592,11 @@ facility medium-building destruction, Battle Engine huge destruction, and the
 repair idle/charge/full triplet. No substitute sound is selected for a missing
 assignment. The materializer verifies the decoded WAV envelopes, all 51 voice
 Ogg hashes, and the tutorial-music Ogg hash; playback/mixing and stream lifetime
-remain exclusively in the Godot adapter.
+remain exclusively in the Godot adapter. The integrated flight stream currently
+drives takeoff/in-flight/landing and Mech Vulcan playback, and the destruction
+stream drives Pulse impacts plus target/facility terminal effects. Pulse launch,
+missile, warning, trainer, transport, repair, and debris records remain retained
+but silent until their canonical mechanics or actor events are present.
 
 Static Steam and reference-source evidence establish that Warehouse damage is
 forwarded through a 28-entry destructible-segment controller rather than the

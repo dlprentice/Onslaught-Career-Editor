@@ -635,9 +635,13 @@ public sealed partial class FirstFlightGame : Node3D
             throw new InvalidOperationException("The Level 100 world is already created.");
         }
 
+        WorldSnapshot snapshot = _session.CurrentSnapshot;
         _world = new FirstFlightWorldView();
         AddChild(_world);
-        _world.Initialize(_session.CurrentSnapshot, _audio);
+        _world.Initialize(snapshot);
+        _audio.BindAquila(
+            RequirePlayerAquilaActorId(snapshot.Level100Actors),
+            snapshot.Level100Actors);
         _audio.StartTutorialMusic();
 
         _hud = new FirstFlightHud();
@@ -754,6 +758,30 @@ public sealed partial class FirstFlightGame : Node3D
 
     private static InteractiveSession CreateSession() =>
         new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+
+    private static Level100ActorId RequirePlayerAquilaActorId(
+        Level100ActorRegistrySnapshot actors)
+    {
+        Level100ActorId? playerActorId = null;
+        foreach (Level100ActorSnapshot actor in actors.Actors)
+        {
+            if (!StringComparer.Ordinal.Equals(actor.Name, "Player 1") ||
+                actor.ThingTypeMask != Level100ReleasedThingTypeMasks.BattleEngine)
+            {
+                continue;
+            }
+            if (playerActorId.HasValue)
+            {
+                throw new InvalidDataException(
+                    "Level 100 has multiple Player 1 Battle Engine actors.");
+            }
+            playerActorId = actor.ActorId;
+        }
+
+        return playerActorId ??
+            throw new InvalidDataException(
+                "Level 100 is missing its Player 1 Battle Engine actor.");
+    }
 
     private RetailFrontendFlow RequireLevel100Frontend()
     {
@@ -935,36 +963,16 @@ public sealed partial class FirstFlightGame : Node3D
 
     private void ConsumeFrameEvents(FrameAdvanceResult result)
     {
+        _audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
-        foreach (AquilaFlightEvent flightEvent in result.AquilaFlightEvents)
-        {
-            switch (flightEvent.Kind)
-            {
-                case AquilaFlightEvents.WalkerToJetStarted:
-                    _audio.PlayAquilaTransition(AquilaTransitionCue.Takeoff);
-                    break;
-                case AquilaFlightEvents.JetToWalkerStarted:
-                    _audio.PlayAquilaTransition(AquilaTransitionCue.Landing);
-                    break;
-                case AquilaFlightEvents.TransformCompleted
-                    when flightEvent.Mode == VehicleMode.Jet:
-                    _audio.PlayAquilaTransition(AquilaTransitionCue.InFlight);
-                    break;
-                case AquilaFlightEvents.TransformCompleted
-                    when flightEvent.Mode == VehicleMode.Walker:
-                    _audio.StopAquilaFlightLoop();
-                    break;
-                case AquilaFlightEvents.JetWeaponFireRequested
-                    when flightEvent.Weapon == AquilaJetWeapon.MechVulcanCannon:
-                    _audio.PlayOnAquila(Level100EffectCue.VulcanCannonFire);
-                    break;
-            }
-        }
+        _audio.ConsumeAquilaFlightEvents(result.AquilaFlightEvents);
         _audio.SetAquilaFlightPitch(
             result.CurrentSnapshot.JetThrusterPermille / 1_000f);
         _world.ConsumeLevel100DestructionEvents(
             result.Level100DestructionEvents,
             result.CurrentSnapshot.Tick);
+        _audio.ConsumeLevel100DestructionEvents(
+            result.Level100DestructionEvents);
     }
 
     private void RunFocusLossHandlerSmokeProbe()

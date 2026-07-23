@@ -199,15 +199,17 @@ The copied `default physics.dat` assignments narrow actor audio further:
   launch effect.
 
 The adapter exposes `PlayFrontendCue`, numeric `QueueCharacterMessage`,
-`PlayAquilaTransition`, `PlayOnAquila`, `PlayAt`, `PlayTerminalCue`, explicit
-trainer/transport/repair loop setters, sound/music option inputs,
+ordered Aquila-flight and destruction-event consumers, `PlayTerminalCue`,
+explicit trainer/transport/repair loop setters, sound/music option inputs,
 `SetGameplayMix`, `SetGameplayPaused`, and level-exit stop ownership. Mission,
 native flight/weapon, dynamic-actor, impact/destruction, frontend, pause, and
-result states remain owned by their source lanes. Only the ordered mission
-message envelope is connected on this branch; the other accepted owners still
-need to publish and route ordered cue events. The presentation does not infer
-any cue from snapshot deltas and does not own mission progress, waits,
-objectives, frontend pages, or pause actions.
+result states remain owned by their source lanes. The active Aquila emitter is
+selected by the canonical `Player 1` Battle Engine ActorId and follows its full
+three-dimensional registry pose; destruction samples use their typed event
+positions. The presentation infers no cue from snapshot deltas and owns no
+mission progress, waits, objectives, frontend pages, or pause actions. Retained
+warning, Pulse-launch, missile, trainer, transport, repair, and debris cues stay
+silent until their canonical source events are integrated.
 
 ## Heightfield consumed by the slice
 

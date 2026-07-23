@@ -2,6 +2,7 @@
 
 using System.Buffers.Binary;
 using Godot;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -41,6 +42,7 @@ public sealed partial class Level100Audio : Node3D
     private AudioStreamPlayer _tutorialMusic = null!;
     private AudioStreamOggVorbis? _tutorialMusicStream;
     private Node3D? _aquila;
+    private Level100ActorId? _aquilaActorId;
     private AudioStreamPlayer3D? _aquilaFlightLoop;
     private AudioStreamPlayer3D? _aquilaWarningLoop;
     private AquilaWarningAudioState _aquilaWarningState;
@@ -151,18 +153,47 @@ public sealed partial class Level100Audio : Node3D
         _tutorialMusic.Stream = null;
     }
 
-    public void BindAquila(Node3D aquila)
+    public void BindAquila(
+        Level100ActorId actorId,
+        Level100ActorRegistrySnapshot actors)
     {
-        ArgumentNullException.ThrowIfNull(aquila);
-        if (_aquila == aquila)
+        ArgumentNullException.ThrowIfNull(actors);
+        if (_aquilaActorId == actorId &&
+            GodotObject.IsInstanceValid(_aquila))
         {
+            UpdateAquilaPose(actors);
             return;
         }
 
         StopLoop(ref _aquilaFlightLoop);
         StopLoop(ref _aquilaWarningLoop);
         _aquilaWarningState = AquilaWarningAudioState.Normal;
-        _aquila = aquila;
+        ReleaseAquilaBinding();
+        _aquilaActorId = actorId;
+        _aquila = new Node3D
+        {
+            Name = $"RetailAquilaAudioActor{actorId.Value}",
+        };
+        AddChild(_aquila);
+        UpdateAquilaPose(actors);
+    }
+
+    // The native actor registry remains the sole position owner. This anchor
+    // retains no velocity, lifecycle, resource, or mission state of its own.
+    public void UpdateAquilaPose(Level100ActorRegistrySnapshot actors)
+    {
+        ArgumentNullException.ThrowIfNull(actors);
+        if (!_aquilaActorId.HasValue ||
+            !GodotObject.IsInstanceValid(_aquila))
+        {
+            throw new InvalidOperationException(
+                "The Level 100 Aquila audio owner is not bound.");
+        }
+
+        Level100ActorSnapshot actor = RequireActor(
+            actors,
+            _aquilaActorId.Value);
+        _aquila!.Position = ToGodotWorld(actor.Pose.PositionMillimeters);
     }
 
     // The flight owner calls this once for each ordered mechanics event. This
@@ -206,6 +237,36 @@ public sealed partial class Level100Audio : Node3D
     }
 
     public void StopAquilaFlightLoop() => StopLoop(ref _aquilaFlightLoop);
+
+    public void ConsumeAquilaFlightEvents(
+        IReadOnlyList<AquilaFlightEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (AquilaFlightEvent flightEvent in events)
+        {
+            switch (flightEvent.Kind)
+            {
+                case AquilaFlightEvents.WalkerToJetStarted:
+                    PlayAquilaTransition(AquilaTransitionCue.Takeoff);
+                    break;
+                case AquilaFlightEvents.JetToWalkerStarted:
+                    PlayAquilaTransition(AquilaTransitionCue.Landing);
+                    break;
+                case AquilaFlightEvents.TransformCompleted
+                    when flightEvent.Mode == VehicleMode.Jet:
+                    PlayAquilaTransition(AquilaTransitionCue.InFlight);
+                    break;
+                case AquilaFlightEvents.TransformCompleted
+                    when flightEvent.Mode == VehicleMode.Walker:
+                    StopAquilaFlightLoop();
+                    break;
+                case AquilaFlightEvents.JetWeaponFireRequested
+                    when flightEvent.Weapon == AquilaJetWeapon.MechVulcanCannon:
+                    PlayOnAquila(Level100EffectCue.VulcanCannonFire);
+                    break;
+            }
+        }
+    }
 
     public void SetAquilaFlightPitch(float thrusterFraction)
     {
@@ -269,7 +330,33 @@ public sealed partial class Level100Audio : Node3D
         PlayAttached(aquila, $"Retail{cue}", Level100AudioCatalog.GetEffect(cue));
     }
 
-    public void PlayAt(Level100EffectCue cue, Vector3 worldPosition)
+    public void ConsumeLevel100DestructionEvents(
+        IReadOnlyList<Level100DestructionEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (Level100DestructionEvent item in events)
+        {
+            Level100EffectCue? cue = item.EffectKind switch
+            {
+                Level100DestructionEffectKind.None => null,
+                Level100DestructionEffectKind.PulseImpact =>
+                    Level100EffectCue.PulseImpact,
+                Level100DestructionEffectKind.TargetDestroyed =>
+                    Level100EffectCue.TargetOrTrainerDestroyed,
+                Level100DestructionEffectKind.FacilityDestroyed =>
+                    Level100EffectCue.FacilityDestroyed,
+                _ => throw new InvalidDataException(
+                    $"Core exposed unknown Level 100 destruction effect " +
+                    $"{item.EffectKind}."),
+            };
+            if (cue.HasValue)
+            {
+                PlayAt(cue.Value, ToGodotWorld(item.Position));
+            }
+        }
+    }
+
+    private void PlayAt(Level100EffectCue cue, Vector3 worldPosition)
     {
         if (cue is not (
             Level100EffectCue.DroneVulcanFire or
@@ -473,6 +560,7 @@ public sealed partial class Level100Audio : Node3D
     {
         StopAllSamples();
         StopTutorialMusic();
+        ReleaseAquilaBinding();
     }
 
     public void StopForLevelExit(bool playFrontendSelect)
@@ -811,6 +899,42 @@ public sealed partial class Level100Audio : Node3D
 
     private static bool IsPlaying(AudioStreamPlayer3D? player) =>
         GodotObject.IsInstanceValid(player) && player!.Playing;
+
+    private static Level100ActorSnapshot RequireActor(
+        Level100ActorRegistrySnapshot actors,
+        Level100ActorId actorId)
+    {
+        foreach (Level100ActorSnapshot actor in actors.Actors)
+        {
+            if (actor.ActorId == actorId)
+            {
+                return actor;
+            }
+        }
+
+        throw new InvalidDataException(
+            $"Level 100 audio actor {actorId.Value} is absent from the native registry.");
+    }
+
+    private static Vector3 ToGodotWorld(SimVector3 position) => new(
+        position.X * 0.001f,
+        position.Y * 0.001f,
+        -position.Z * 0.001f);
+
+    private static Vector3 ToGodotWorld(Level100Vector3 position) => new(
+        position.X * 0.001f,
+        -position.Z * 0.001f,
+        -position.Y * 0.001f);
+
+    private void ReleaseAquilaBinding()
+    {
+        if (GodotObject.IsInstanceValid(_aquila))
+        {
+            _aquila!.QueueFree();
+        }
+        _aquila = null;
+        _aquilaActorId = null;
+    }
 
     private static AudioStreamOggVorbis LoadOgg(string resourcePath, bool looping)
     {

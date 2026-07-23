@@ -23,7 +23,6 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
-    private Level100Audio _audio = null!;
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -110,18 +109,15 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool OpeningPanActive => !ShowHud;
 
-    public void Initialize(WorldSnapshot snapshot, Level100Audio audio)
+    public void Initialize(WorldSnapshot snapshot)
     {
-        ArgumentNullException.ThrowIfNull(audio);
         Name = "WorldView";
-        _audio = audio;
         BuildLevel100Terrain();
         BuildEnvironment();
         BuildLevel100StaticWorld();
         LoadSharedRetailMaterialTextures();
         BuildLevel100Targets();
         BuildPlayer();
-        audio.BindAquila(_playerRoot);
         BuildPulseCannonPresentation();
         BuildCamera();
         Render(snapshot, snapshot, 0f, 0f);
@@ -199,16 +195,11 @@ public sealed partial class FirstFlightWorldView : Node3D
                     break;
                 case Level100DestructionEffectKind.PulseImpact:
                     SpawnPulseImpact(position, item.ActorId, tick);
-                    _audio.PlayAt(Level100EffectCue.PulseImpact, position);
                     break;
                 case Level100DestructionEffectKind.TargetDestroyed:
                     SpawnTargetTankDestruction(position, item.ActorId);
-                    _audio.PlayAt(
-                        Level100EffectCue.TargetOrTrainerDestroyed,
-                        position);
                     break;
                 case Level100DestructionEffectKind.FacilityDestroyed:
-                    _audio.PlayAt(Level100EffectCue.FacilityDestroyed, position);
                     break;
                 default:
                     throw new InvalidDataException(

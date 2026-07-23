@@ -198,4 +198,5 @@ public sealed class Level100AudioCatalogTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             Level100AudioCatalog.ToRetailOptionMix(1.01f));
     }
+
 }
