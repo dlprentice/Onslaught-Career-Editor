@@ -17,9 +17,9 @@ Options remain visible but explicitly unavailable. Level select exposes only
 The current gameplay slice does not yet reach Level 100's full `LevelWon` or
 `LevelLostString` conditions. The frontend therefore accepts only the
 mission-owned `Level100MissionSnapshot` terminal handoff without inventing a
-trigger, result vocabulary, or compositor. The mission/HUD owner is responsible
-for the released in-game terminal overlay; the later CFEPDebriefing surface is
-also outside this lane. Explicit retry constructs a
+trigger, result vocabulary, or compositor. The released in-game terminal
+overlay and later CFEPDebriefing surface are both outside this lane and are not
+substituted by the HUD. Explicit retry constructs a
 fresh deterministic Level 100 session, while Exit Level discards it and returns
 to the bounded shell. There are no frontend result buttons or default result
 selection.

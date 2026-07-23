@@ -67,8 +67,8 @@ Result ownership is deliberately split at the evidence boundary. Stuart's
 establish an in-game terminal overlay; Steam's later CFEPDebriefing vtable at
 `0x005DB9C0` resolves to initializer `0x00456780`, input `0x004568A0`, process
 `0x00456930`, and render `0x00456DD0`. This frontend implements neither visual
-surface. The mission/HUD lane owns the terminal overlay, including its
-FONT_NORMAL/FONT_SMALL text. The frontend consumes the mission-owned
+surface, and the HUD does not invent a replacement. The frontend consumes the
+mission-owned
 `Level100MissionSnapshot` only when its exact `Level100MissionTerminalState` is
 ready, then retains only a terminal lifecycle handoff plus explicit retry and
 Main Menu transitions. Shipped Level 100 script provides
@@ -76,7 +76,8 @@ Main Menu transitions. Shipped Level 100 script provides
 generic player-death and water failures. Their three exact English strings are
 materialized. The deterministic mission owns `Level100MissionOutcome` and
 `Level100MissionFailureReason`; the frontend copies neither into a second
-vocabulary and owns no localized terminal state. No result buttons, selected
+vocabulary. Exact `Mission Complete`, `Retry`, `Back`, and failure text remains
+available to the separate result owner, but no terminal overlay, selected
 default, summary compositor, rank/kill data, progression, save, or later
 campaign selection is claimed here.
 
@@ -379,25 +380,74 @@ pose. Static placement retains measured lower-bound metadata, but only the
 `SAT Turret` currently has the type-specific released pivot-grounding correction
 described above.
 
-Twenty-nine retained HUD textures are exact released files named by the Steam
-binary. A clean copied-runtime frame and the released render paths establish
-the bounded first-person composition now used by Godot: the generated central
-threat compass and three v3 crosshair layers, lower-left scanner/weapon stack,
-lower-right battleline or message portrait, and a message-only segmented panel.
+Fifty-four retained HUD textures and `Dial.raw` are exact released files named
+by the Steam binary or the pinned Stuart weapon resource path. A clean
+copied-runtime frame,
+the complete Level 100 mission script, and the released render paths establish
+the first-person composition now used by Godot: the central threat compass and
+target layers, classified lower-left scanner/weapon stack, lower-right Level
+100 influence map or message portrait, objective/world markers, and the
+conditional segmented message panel.
 `CHud__RenderObjectiveProgressGaugeAndHeadingNeedle` at
 `0x004858D0`, `CHud__RenderBattleline` at `0x00487D10`,
 `CMessageBox__RenderOverlay` at `0x004B8850`, and the `CDXCompass` render path
-provide the retained edge offsets, 45/46/96/98/110/111.5-unit radii, rotations,
-packed tints, and state ownership. `CMessageBox__RenderOverlay` supplies the
-native 120-pixel bar pieces, bottom-centre anchors, five 15-pixel line offsets,
-and 26-character wrap width. `CDXFont__CreateFromTexture` scans alpha above
-`0x10` to derive each proportional glyph width. Exact 128×128 DXT2
-`oo`/`ee`/`mm`/`aa` frames supply the four Tatiana and technician poses, while
-`CMessageBox__RenderBattleLinePulseSprites` supplies their ordering and
-8/12/40/40 selection weights. The client makes that selection deterministic at
-its presentation cadence; exact retail RNG phase, audio-phoneme sync, other
-portrait/video behavior, Steam's dynamic 16-bit ring texture, full multi-stage
-mask render state, and the Level 100 influence map are not inferred.
+provide the retained edge offsets, 45/46-unit scanner north/contact radii, and
+111.5/96/110/98-unit threat, damage, gauge-needle, and objective radii plus
+rotations, packed tints, and state ownership.
+`CDXCompass__BuildByteSpriteOverlayTexture` identifies `Dial.raw` frame zero as
+the heading-rotated north treatment. `CDXCompass__BuildRingGeometry` supplies
+the 50/40 segment counts and 31/27-percent thickness inputs. Level 100's version-1
+BSWD supplies 13 translated radius-10 nodes and 22 exact links.
+`CDXBattleLine__BuildMesh` establishes that the released interior is a
+continuously triangulated terrain-extent mesh with inserted influence points
+and relaxed edges, not a drawing of the BSWD links. Its dynamic influence
+magnitudes and render mesh are not available from the current mission producer,
+so Godot retains the typed state consumer but draws no inferred interior.
+
+`CMessageBox__RenderOverlay` supplies the native 120-pixel bar pieces,
+bottom-centre anchors, and five 15-pixel line offsets. `CDXFont__CreateFromTexture`
+scans alpha above `0x10` to derive proportional glyph widths. The client uses
+those released Font13PS metrics to wrap and paginate within the 232×76 text
+rectangle and clips every glyph and shadow draw to that rectangle; it does not
+use a fixed character-count estimate. Exact 128×128 DXT2 `oo`/`ee`/`mm`/`aa`
+frames supply the four Tatiana, technician, and Kramer poses. The released
+CircleMask is opaque at the square corners and transparent at its portrait
+aperture, so the client first applies the released 0.75 portrait scale, then
+multiplies every portrait's alpha by inverse mask alpha before normal alpha
+composition. This is the retained mask operation that prevents the opaque black
+source square from being rendered.
+
+`CMessageBox__RenderBattleLinePulseSprites` supplies portrait ordering and
+8/12/40/40 selection weights. Static evidence does not expose Steam's
+process-global RNG seed/initial phase, and this owner does not establish phoneme
+analysis. The HUD accepts read-only active-message/playback state from the
+integrated audio owner. Page advancement follows actual playback position, and
+the deterministic weighted portrait sample remains a presentation
+reconstruction rather than a claim of Steam's exact RNG phase. A deterministic
+ignored manifest is derived from exact
+`LevelScript.msl`, Level 100 `English.txt`, global `text.stf`, and `english.dat`;
+Godot verifies its hash and uses native signed ID/text/audio identities while
+validating the ordered `PlayCharMessage` speaker/highlight identities. The
+presentation projection drains the actual mission events and preserves their
+speaker, message, highlight, and help order without feeding HUD timing back
+into Core or using a C# fallback message catalog.
+The Level 100 script and its
+51 exact English audio references use
+only Tatiana, the technician, and Kramer; there is no Level 100 video command or
+Bink portrait asset.
+
+The canonical mission snapshot supplies enabled weapon gates and HUD emphasis;
+its ordered events supply message and help delivery. The canonical actor
+registry supplies active objective identities and full three-dimensional poses.
+The Godot projection retains those values for rendering and leaves selected
+weapon, selection-panel state, weapon resources, classified contacts, threats,
+damage flashes, target prediction, active-help lifetime, and influence values
+absent until their mechanics owners exist. The HUD does not draw a parallel
+terminal/result screen; mission outcome handoff remains owned by the frontend.
+This is an ownership boundary, not a claim that every released HUD value or
+render pass is complete.
+Steam's exact dynamically written 16-bit ring pixels and exact portrait RNG
+initial phase remain unproven.
 
 One clean control and two fresh, uninterrupted app-owned Level 100 runs then
 repeated the first eight message boundaries within one 50 ms retail sample.
@@ -553,17 +603,18 @@ visuals, remaining weapon simulation, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.
-A native smoke proves the current client starts; loads 112 Aquila, 111 static-world,
+A prior native smoke on the opening-slice base proved the client starts; loads
+112 Aquila, 111 static-world,
 six target, and ten cockpit material surfaces; instantiates all 1,481 pines and
 the 625-vertex/1,152-triangle camera-following water grid plus 2,056 shoreline
 triangles; decodes the exact locally materialized mesh, nine
-Pulse/target-effect, twenty-nine HUD, five sky, and five water textures;
+Pulse/target-effect, twenty-nine then-retained HUD, five sky, and five water textures;
 validates five PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
 ground elevation. Its deterministic route enters through the cold click page,
 Main Menu, world-100 selection, and Loading before it reaches the first Firing
-Range exercise, renders the exact target models
-and shipped objective markers, plays the fourteenth voice, removes Target Tank
+Range exercise, renders the exact target models and shipped objective markers,
+resolves the fourteenth message, removes Target Tank
 1 after four bounded full hits with retained shot/impact/destruction
 presentation, preserves the expected Core hash, exercises focus/cursor release,
 the mission terminal handoff, fresh retry, and return to the same Main Menu,
@@ -574,5 +625,9 @@ procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
 shading, the inactive optional advanced-water path or dynamic scene
-reflection/refraction, the complete mission,
-terrain-relative pitch/occlusion, full HUD behavior, or visual parity.
+reflection/refraction, the complete mission simulation, later HUD state
+production, terrain-relative pitch/occlusion, exact dynamic ring pixels, exact
+portrait RNG phase, or visual parity. This HUD milestone deliberately did not
+launch Godot or retail; its additional assets and renderer paths are covered by
+exact hash materialization, managed compilation, and deterministic Core tests,
+not a new runtime visual-parity claim.

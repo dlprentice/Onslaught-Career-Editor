@@ -499,8 +499,8 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void PresentTerminalHandoff()
     {
-        // The mission/HUD owner renders the released in-game terminal overlay.
-        // This frontend only retains the later lifecycle handoff.
+        // The released terminal/result compositor is a separate presentation
+        // owner. This bounded frontend retains only its lifecycle handoff.
         Visible = false;
         SetProcessInput(false);
         SetProcess(false);

@@ -46,18 +46,20 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v11' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v12' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    Assert-SmokeValue 'stateHash' '5920a3d3dc7b67dc02b2fb736f8547e48dd395087b0a67a3ef6c3128795582c1' $report.stateHash
+    Assert-SmokeValue 'stateHash' '3b7d889184f92165b20c0dae68862671a9fecc9ab19321fdc4d7a4f42051c346' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'FiringRangeExercise' $report.level100Phase
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
     Assert-SmokeValue 'level100TimelineTick' 3228 $report.level100TimelineTick
-    Assert-SmokeValue 'level100Message' 'PulseCannonEnergy' $report.level100Message
-    Assert-SmokeValue 'level100EventMessageTicksRemaining' 0 $report.level100EventMessageTicksRemaining
+    Assert-SmokeValue 'level100ActiveMessage' 'PulseCannonEnergy' $report.level100ActiveMessage
+    Assert-SmokeValue 'level100ActiveMessageTicksRemaining' 182 $report.level100ActiveMessageTicksRemaining
+    Assert-SmokeValue 'level100DeliveredMessageCount' 14 $report.level100DeliveredMessageCount
+    Assert-SmokeValue 'level100DeliveredHelpCount' 1 $report.level100DeliveredHelpCount
     Assert-SmokeValue 'level100FiringRangeSequenceTick' 714 $report.level100FiringRangeSequenceTick
     Assert-SmokeValue 'level100FiringRangeHandoffTick' -1 $report.level100FiringRangeHandoffTick
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
@@ -65,9 +67,10 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100PulseCannonEnabled' $true $report.level100PulseCannonEnabled
     Assert-SmokeValue 'level100VulcanCannonEnabled' $false $report.level100VulcanCannonEnabled
     Assert-SmokeValue 'level100FiringRangeTargetsActive' $true $report.level100FiringRangeTargetsActive
-    Assert-SmokeValue 'level100FireHelpVisible' $true $report.level100FireHelpVisible
-    Assert-SmokeValue 'level100CurrentWeaponHighlighted' $false $report.level100CurrentWeaponHighlighted
-    Assert-SmokeValue 'tutorialVoicePlaying' $true $report.tutorialVoicePlaying
+    Assert-SmokeValue 'level100FireHelpDelivered' $true $report.level100FireHelpDelivered
+    Assert-SmokeValue 'level100CurrentWeaponEmphasized' $false $report.level100CurrentWeaponEmphasized
+    Assert-SmokeValue 'level100MessagePlaybackAvailable' $false $report.level100MessagePlaybackAvailable
+    Assert-SmokeValue 'level100MessagePlaying' $false $report.level100MessagePlaying
     Assert-SmokeValue 'totalSteps' 3228 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
@@ -93,7 +96,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailLevel100WaterGridTriangleCount' 1152 $report.retailLevel100WaterGridTriangleCount
     Assert-SmokeValue 'retailLevel100ShorelineTriangleCount' 2056 $report.retailLevel100ShorelineTriangleCount
     Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 6 $report.retailLevel100TargetSurfaceCount
-    Assert-SmokeValue 'level100ObjectiveMarkerCount' 3 $report.level100ObjectiveMarkerCount
+    Assert-SmokeValue 'level100ObjectiveMarkerCount' 1 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 263169 $report.retailLevel100TerrainVertexCount
     Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 524288 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount

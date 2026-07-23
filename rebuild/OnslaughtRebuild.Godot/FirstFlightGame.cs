@@ -29,6 +29,7 @@ public sealed partial class FirstFlightGame : Node3D
     private Level100Audio _audio = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
+    private Level100HudAssetCatalog _hudAssetCatalog = null!;
     private RetailFrontendFlow? _frontend;
     private bool _level100WorldCreated;
     private bool _gameplayActive;
@@ -56,8 +57,6 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeReturnedToMainMenu;
     private bool _smokeWorldReleasedAtMainMenu;
     private bool _smokeCursorVisibleAtMainMenu;
-    private int? _hudAudioSpeakerId;
-    private int? _hudAudioMessageId;
     private string? _smokeReportPath;
     private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Visible;
     private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
@@ -82,6 +81,7 @@ public sealed partial class FirstFlightGame : Node3D
 
             _audio = new Level100Audio();
             AddChild(_audio);
+            _hudAssetCatalog = Level100HudAssetCatalog.Load();
 
             _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
             _frontend.Initialize();
@@ -163,13 +163,14 @@ public sealed partial class FirstFlightGame : Node3D
             : Math.Max(0L, (long)Math.Round(delta * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
         FrameAdvanceResult result = _session.AdvanceFrameTicks(elapsedTicks);
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
-        SynchronizeHudCharacterMessage();
         _world.Render(
             result.PreviousSnapshot,
             result.CurrentSnapshot,
             (float)result.InterpolationAlpha,
             (float)delta);
-        _hud.UpdateFromSnapshot(result.CurrentSnapshot);
+        _hud.UpdateFromSnapshot(
+            result.CurrentSnapshot,
+            _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
         if (_frontend!.TryAcceptMissionTerminal(result.CurrentSnapshot.Level100Mission))
@@ -194,6 +195,9 @@ public sealed partial class FirstFlightGame : Node3D
                 terminalFrame = _session.AdvanceFrameTicks(SmokeFrameElapsedTicks);
                 ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
             }
+            _hud.UpdateFromSnapshot(
+                _session.CurrentSnapshot,
+                _audio.CharacterMessagePlayback);
             Level100MissionSnapshot terminal = _session.CurrentSnapshot.Level100Mission;
             if (!_frontend.TryAcceptMissionTerminal(terminal))
             {
@@ -433,14 +437,17 @@ public sealed partial class FirstFlightGame : Node3D
 
         _hud = new FirstFlightHud();
         AddChild(_hud);
-        _hud.Initialize();
-        _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+        _hud.Initialize(_hudAssetCatalog);
+        _hud.UpdateFromSnapshot(
+            _session.CurrentSnapshot,
+            _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
         ConsumeLevel100MissionEvents(
             _session.AdvanceFrameTicks(0).Level100MissionEvents);
-        SynchronizeHudCharacterMessage();
-        _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+        _hud.UpdateFromSnapshot(
+            _session.CurrentSnapshot,
+            _audio.CharacterMessagePlayback);
         _level100WorldCreated = true;
     }
 
@@ -520,8 +527,6 @@ public sealed partial class FirstFlightGame : Node3D
         _audio.StopLevel100Audio();
         _world.QueueFree();
         _hud.QueueFree();
-        _hudAudioSpeakerId = null;
-        _hudAudioMessageId = null;
         _level100WorldCreated = false;
     }
 
@@ -682,37 +687,13 @@ public sealed partial class FirstFlightGame : Node3D
 
     private void ConsumeLevel100MissionEvents(IReadOnlyList<Level100MissionEvent> events)
     {
+        _hud.ConsumeMissionEvents(events);
         foreach (Level100MissionEvent missionEvent in events)
         {
             if (missionEvent is Level100MessageRequested message)
             {
                 _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
             }
-        }
-    }
-
-    private void SynchronizeHudCharacterMessage()
-    {
-        Level100MessagePlaybackState playback = _audio.CharacterMessagePlayback;
-        if (playback.ActiveSpeakerId.HasValue && playback.ActiveMessageId.HasValue)
-        {
-            if (_hudAudioSpeakerId != playback.ActiveSpeakerId ||
-                _hudAudioMessageId != playback.ActiveMessageId)
-            {
-                _hud.ShowTutorialMessage(
-                    playback.ActiveSpeakerId.Value,
-                    playback.ActiveMessageId.Value);
-                _hudAudioSpeakerId = playback.ActiveSpeakerId;
-                _hudAudioMessageId = playback.ActiveMessageId;
-            }
-            return;
-        }
-
-        if (_hudAudioMessageId.HasValue)
-        {
-            _hud.ClearTutorialMessage();
-            _hudAudioSpeakerId = null;
-            _hudAudioMessageId = null;
         }
     }
 

@@ -65,6 +65,25 @@ ENGLISH_LANGUAGE_TABLE = "data/language/english.dat"
 ENGLISH_LANGUAGE_TABLE_SHA256 = (
     "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a"
 )
+LEVEL100_MISSION_DATA_ROOT = GODOT_ASSETS / "Level100/MissionData"
+LEVEL100_LEVEL_SCRIPT = LEVEL100_MISSION_DATA_ROOT / "LevelScript.msl"
+LEVEL100_LEVEL_SCRIPT_SHA256 = (
+    "d51f8864564b5bde872092ec822df5af49daac16563f500719135f1a8c6c04a4"
+)
+LEVEL100_ENGLISH_SOURCE = LEVEL100_MISSION_DATA_ROOT / "English.txt"
+LEVEL100_ENGLISH_SOURCE_SHA256 = (
+    "ee48f3bed1c3c872ccc975146318aa0b5da3df88bff6b0a60671f0d23f9ce478"
+)
+LEVEL100_TEXT_STF = LEVEL100_MISSION_DATA_ROOT / "text.stf"
+LEVEL100_TEXT_STF_SHA256 = (
+    "fd318d6c2304eb8ffcfa718357c1715aadad69915f39851b19f442d8263b56ae"
+)
+LEVEL100_ENGLISH_DAT = LEVEL100_MISSION_DATA_ROOT / "english.dat"
+LEVEL100_ENGLISH_DAT_SHA256 = ENGLISH_LANGUAGE_TABLE_SHA256
+LEVEL100_HUD_MANIFEST = LEVEL100_MISSION_DATA_ROOT / "level100-hud-events.json"
+LEVEL100_HUD_MANIFEST_SHA256 = (
+    "3e1992bc9d8ac8033f23a8f5894eddba60279a4a8348b1a319f28ee9c5b7b6d7"
+)
 FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
     "417621f3ccc82f6b738d5d4f1c2c2a5d95984d88d82db3846e8f073aed367c12"
@@ -189,15 +208,36 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Aquila/Textures/be-tex-b.texture.aya", "data/resources/dxtntextures/meshtex%BE_texB.tga(0)A1R5G5B5.aya", "ea01431a4023abd517daf5a27066eb7edf706100fb3991566726fb4530490b60"),
     (GODOT_ASSETS / "Aquila/Textures/bluegun-light.texture.aya", "data/resources/dxtntextures/meshtex%A8_bluegunlight_LIT.tga(0)A8R8G8B8.aya", "85858e7809a974b74f3db5a169e081fc9dd506558f1ca99fa47c7832d8552fc5"),
     (GODOT_ASSETS / "Aquila/Textures/cockpit.texture.aya", "data/resources/dxtntextures/meshtex%cockpit.tga(0)A1R5G5B5.aya", "c62d0c668226f056db7455c8a5a8fa7d55ab7621ade1e58392d6aaad3c00f0cc"),
+    (LEVEL100_LEVEL_SCRIPT, "data/MissionScripts/level100/LevelScript.msl", LEVEL100_LEVEL_SCRIPT_SHA256),
+    (LEVEL100_ENGLISH_SOURCE, "data/MissionScripts/level100/English.txt", LEVEL100_ENGLISH_SOURCE_SHA256),
+    (LEVEL100_TEXT_STF, "data/MissionScripts/text/text.stf", LEVEL100_TEXT_STF_SHA256),
+    (LEVEL100_ENGLISH_DAT, ENGLISH_LANGUAGE_TABLE, LEVEL100_ENGLISH_DAT_SHA256),
     (GODOT_ASSETS / "Hud/bar-line.texture.aya", "data/resources/dxtntextures/hud%v2%BarLine.tga(0)X8R8G8B8.aya", "16796e3a8acfec3529e03c29afbefbe28c92ffccd5b05574f992e8f31976704d"),
+    (GODOT_ASSETS / "Hud/battleline-marker.texture.aya", "data/resources/dxtntextures/hud%marker.tga(0)A8R8G8B8.aya", "ab14538237bdd38486add4f5e9f38cfca0069496ceee5faf1268e50eab319be7"),
     (GODOT_ASSETS / "Hud/battleline-outline.texture.aya", "data/resources/dxtntextures/hud%v2%BattleLineOutline.tga(0)X8R8G8B8.aya", "b1c097b29dd81e2a0493f72a157ccd5ad249b5abf758224c75df4f93973d0405"),
     (GODOT_ASSETS / "Hud/circle-darkener.texture.aya", "data/resources/dxtntextures/hud%v2%CircleDarkener.tga(0)A8R8G8B8.aya", "7bd18594757165dcdd8dadb618ea99eb500ed105dbe2d6a6f66bbcbc31c323a3"),
     (GODOT_ASSETS / "Hud/circle-mask.texture.aya", "data/resources/dxtntextures/hud%v2%CircleMask.tga(0)A8R8G8B8.aya", "14d809f9b45f5153f82fa1f80152690b554710d83f91b8cbe203de5cf18a9dfa"),
     (GODOT_ASSETS / "Hud/compass-objective-marker.texture.aya", "data/resources/dxtntextures/hud%v2%CompassObjectiveMarker.tga(0)A8R8G8B8.aya", "e24fca83de34646a7328c313e7b89ac02c6bc4b04a69a74bf3ee81b3d57283df"),
     (GODOT_ASSETS / "Hud/crosshair-dot.texture.aya", "data/resources/dxtntextures/hud%v3%hud_crosshair_dot.tga(0)A8R8G8B8.aya", "19e1b35b885a36230e5a1d47a9910164b0ca177746649a15c146cefca29651dd"),
+    (GODOT_ASSETS / "Hud/crosshair-enemy.texture.aya", "data/resources/dxtntextures/hud%Crosshair Enemy.tga(0)A8R8G8B8.aya", "6a5c0d6dc22ea911ba783e630b5f623ab027ff45da094c5816263f7b87db98ea"),
+    (GODOT_ASSETS / "Hud/crosshair-friend.texture.aya", "data/resources/dxtntextures/hud%Crosshair Friend.tga(0)A8R8G8B8.aya", "75b827ac9560846ad85904032249f707d84a74a432d3b732116f0e89a3621895"),
+    (GODOT_ASSETS / "Hud/crosshair-outline.texture.aya", "data/resources/dxtntextures/hud%Crosshair Outline.tga(0)A8R8G8B8.aya", "1e27b9771f3d0416c07eff9aede6863ca6f081386c86259f635e3d9a02ade5b2"),
+    (GODOT_ASSETS / "Hud/crosshair-predictor.texture.aya", "data/resources/dxtntextures/hud%Crosshair Predictor.tga(0)A8R8G8B8.aya", "519b30e4edee809d3fe660ccb866feeea2ace4485b75373c98293afb6e730aa5"),
     (GODOT_ASSETS / "Hud/crosshair-primary.texture.aya", "data/resources/dxtntextures/hud%v3%hud_crosshair_primary.tga(0)A8R8G8B8.aya", "310dae2f7dd976f6cc724604737726885aff96ab6bc507e41f90dca60d134b17"),
     (GODOT_ASSETS / "Hud/crosshair-secondary.texture.aya", "data/resources/dxtntextures/hud%v3%hud_crosshair_secondary.tga(0)A8R8G8B8.aya", "7b078344e64d1e78ef64a8e21bdd3787e059b628c6a442634e9d13ba7d3a0487"),
+    (GODOT_ASSETS / "Hud/damage-flash.texture.aya", "data/resources/dxtntextures/hud%v2%DamageFlash.tga(0)X8R8G8B8.aya", "8a25ec2e0ba8e66d86217684125d2e245dae3eddeb327ee2a7b144e2b45391c0"),
+    (GODOT_ASSETS / "Hud/dial.raw", "data/Dial.raw", "2c57b657b92cd8bd73ca8c8986e8ce60aaffb065fdde09940053a2dd6d59671c"),
     (GODOT_ASSETS / "Hud/font-13ps.texture.aya", "data/resources/textures/mustbe_Font13PS.tga(0)A8R8G8B8.aya", "7acc088b75e729cbdc2782e239a7d18ba0ec409e1bc890109aa1020f5ee81dc0"),
+    (GODOT_ASSETS / "Hud/font-22.texture.aya", "data/resources/textures/mustbe_font22.512.tga(0)A8R8G8B8.aya", "acc8dbdd60839c0f9686250025672cf9c370530114bc44910df09be487b247c6"),
+    (GODOT_ASSETS / "Hud/guns-darken.texture.aya", "data/resources/dxtntextures/hud%v2%GunsDarken.tga(0)A8R8G8B8.aya", "0054e526a0980c5f89fc1271e7d34cfb551fc2567f6259f0be11d63100ab12b1"),
+    (GODOT_ASSETS / "Hud/guns-front.texture.aya", "data/resources/dxtntextures/hud%v2%GunsFront.tga(0)X8R8G8B8.aya", "4ce73b693e83c01812ebca6ddd64edcfbebd4f85720ab7f5b87e425c9ece1a06"),
+    (GODOT_ASSETS / "Hud/guns-outline.texture.aya", "data/resources/dxtntextures/hud%v2%GunsOutline.tga(0)X8R8G8B8.aya", "e80dc5fb51a2c29dc696d85b3bea036c427261d1bbe8f1db14a531fba996cffd"),
+    (GODOT_ASSETS / "Hud/guns-side.texture.aya", "data/resources/dxtntextures/hud%v2%GunsSide.tga(0)X8R8G8B8.aya", "52d46b47d26d6c779fe8a7e0e77dc13f6bcf91849869ea9ec81c3fa190164594"),
+    (GODOT_ASSETS / "Hud/guns-top.texture.aya", "data/resources/dxtntextures/hud%v2%GunsTop.tga(0)X8R8G8B8.aya", "d8b09af12efad59e9a25b91930bf9b8215f028c4e766eacc815c073a5e63304f"),
+    (GODOT_ASSETS / "Hud/kramer-portrait-oo.texture.aya", "data/resources/dxtntextures/MessageBox%FC_Kramer_oo.tga(0)A8R8G8B8.aya", "f4887e775c5ebcac182b5caabae0c11ffe3fab8aa32ff14ddcd9ce33d1bd50b3"),
+    (GODOT_ASSETS / "Hud/kramer-portrait-ee.texture.aya", "data/resources/dxtntextures/MessageBox%FC_Kramer_ee.tga(0)A8R8G8B8.aya", "0b34a213a25e0ebc48a74f8cf73cf27bbb817f4cdffbc79cd294a7d2858b9bde"),
+    (GODOT_ASSETS / "Hud/kramer-portrait-mm.texture.aya", "data/resources/dxtntextures/MessageBox%FC_Kramer_mm.tga(0)A8R8G8B8.aya", "69ed961309997f300be094b6ba899d182b91c145fbf07f80fc2e0f8c8d149689"),
+    (GODOT_ASSETS / "Hud/kramer-portrait.texture.aya", "data/resources/dxtntextures/MessageBox%FC_Kramer_aa.tga(0)A8R8G8B8.aya", "c6fe448e1d88e52c8abc0ad96c386b774b8d979ab07eb6ff2a4cbf069e99106b"),
     (GODOT_ASSETS / "Hud/message-noise.texture.aya", "data/resources/dxtntextures/MessageBox%noisebig.tga(0)X8R8G8B8.aya", "f5c43c330394db9eb7c1e782f3f30fe847de01d7ce9335d2c7f9fd24babb1825"),
     (GODOT_ASSETS / "Hud/objective-inner-centre.texture.aya", "data/resources/dxtntextures/hud%v2%ObjectiveInnerCentre.tga(0)A8R8G8B8.aya", "fc42774e8c4f4534b65009807bfdb333443a9f5202c6a2c59dff0dddbed4f55b"),
     (GODOT_ASSETS / "Hud/objective-inner-left.texture.aya", "data/resources/dxtntextures/hud%v2%ObjectiveInnerLeft.tga(0)A8R8G8B8.aya", "70030aace505e8e3d7f56dde0b9c6a929f3d2c61912fc03ac816746b6d8a96bd"),
@@ -207,7 +247,11 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Hud/radar-outline.texture.aya", "data/resources/dxtntextures/hud%v2%RadarOutline.tga(0)X8R8G8B8.aya", "507d465248f7321f2332413b2c6f461f3b3c45d87c52d86c38c43104043d7dc7"),
     (GODOT_ASSETS / "Hud/radio-north.texture.aya", "data/resources/dxtntextures/hud%v2%RadioNorth.tga(0)A8R8G8B8.aya", "e5dfd8db4dd73e9aeeffbb009fca68d889572c996987bce365b0b5b4d0a7ed85"),
     (GODOT_ASSETS / "Hud/radio-view.texture.aya", "data/resources/dxtntextures/hud%v2%RadioView.tga(0)A8R8G8B8.aya", "888d5a70ab812e23f75db76ab2ed71cd2cce04191ee282d525c86e337cc01778"),
+    (GODOT_ASSETS / "Hud/scanner-blob-medium.texture.aya", "data/resources/dxtntextures/hud%ScannerBlobMedium.tga(0)A8R8G8B8.aya", "b7f9d3d0b6a2c80933673514b8d032589b1de2e4c60bcc362df39e6244d71853"),
+    (GODOT_ASSETS / "Hud/scanner-blob-large.texture.aya", "data/resources/dxtntextures/hud%ScannerBlobLarge.tga(0)A8R8G8B8.aya", "791327844e9700103afad1572de3b4426e48088ed958033b227e256ffbed4152"),
+    (GODOT_ASSETS / "Hud/scanner-blob-repair-pad.texture.aya", "data/resources/dxtntextures/hud%ScannerBlobRepairPad.tga(0)A8R8G8B8.aya", "bddf99cbdd816a5ecd32e04e01a1f2db356202b64015426e3aff446268ec6469"),
     (GODOT_ASSETS / "Hud/scanner-blob-small.texture.aya", "data/resources/dxtntextures/hud%ScannerBlobSmall.tga(0)A8R8G8B8.aya", "d7e9d287536f23e67bf35f678ec75d1a349353ae1d9d00b87ce09f6bd03641e4"),
+    (GODOT_ASSETS / "Hud/screen-marker.texture.aya", "data/resources/dxtntextures/hud%v3%ScreenMarker.tga(0)X8R8G8B8.aya", "c5ec9c34386546a327a0e7188156e9a6b0259feda301320c111b1b7062c30a49"),
     (GODOT_ASSETS / "Hud/tatiana-portrait-oo.texture.aya", "data/resources/dxtntextures/MessageBox%tat_oo.tga(0)A8R8G8B8.aya", "39f40088069a8c68584a5a0cda9e5ae7d4e4e5a248a12f0d0a240b8d3668621e"),
     (GODOT_ASSETS / "Hud/tatiana-portrait-ee.texture.aya", "data/resources/dxtntextures/MessageBox%tat_ee.tga(0)A8R8G8B8.aya", "4a4a17b72bbafae2b324e3a0a1c847226a288feaa7c4273c45aa2de8aea3f99a"),
     (GODOT_ASSETS / "Hud/tatiana-portrait-mm.texture.aya", "data/resources/dxtntextures/MessageBox%tat_mm.tga(0)A8R8G8B8.aya", "802d8e22d8d304e12589a547f22ac2f2d5771b96aea47306b3b2bbf752730de5"),
@@ -216,8 +260,13 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Hud/technician-portrait-ee.texture.aya", "data/resources/dxtntextures/MessageBox%technic_ee.tga(0)A8R8G8B8.aya", "05326c603e8c9224c5bab488a32ab9e9e19ca5b3fb424bc700af97ae71c2527f"),
     (GODOT_ASSETS / "Hud/technician-portrait-mm.texture.aya", "data/resources/dxtntextures/MessageBox%technic_mm.tga(0)A8R8G8B8.aya", "263a2c107d6463a717ddef20cc113cadfb585bd8ecbb1db479f049843dcf3636"),
     (GODOT_ASSETS / "Hud/technician-portrait.texture.aya", "data/resources/dxtntextures/MessageBox%technic_aa.tga(0)A8R8G8B8.aya", "c4c1b11f4ddfb960afc1c1d2a04020fadf997795eccf651c07314141652f9603"),
+    (GODOT_ASSETS / "Hud/target-sighted.texture.aya", "data/resources/dxtntextures/hud%v3%hud_target_sighted.tga(0)A8R8G8B8.aya", "6caafcdc20228617b86bd7f4010e718e1d681ee52b0e904d73e6f16369bcaa88"),
+    (GODOT_ASSETS / "Hud/threat-flash.texture.aya", "data/resources/dxtntextures/hud%v2%ThreatFlash.tga(0)X8R8G8B8.aya", "43f5fb70d318f4969f43147c225a399d233edcea577592f14876ac542bd57f50"),
     (GODOT_ASSETS / "Hud/weapon-fill.texture.aya", "data/resources/dxtntextures/hud%v2%WeaponFill.tga(0)A8R8G8B8.aya", "e639910d70ae10b044423cd5025c300c61cb8a9b5765890fd1a011c7d4499c0d"),
+    (GODOT_ASSETS / "Hud/weapon-plasma-cannon.texture.aya", "data/resources/dxtntextures/hud%Weapon Plasma Cannon.tga(0)A8R8G8B8.aya", "d5165347be203c17f302250ae20e83ae5b9525938b15ca8c6aceb0d4392f06df"),
+    (GODOT_ASSETS / "Hud/weapon-vulcan-cannon.texture.aya", "data/resources/dxtntextures/hud%Weapon Vulcan Cannon.tga(0)A8R8G8B8.aya", "20d3c6d31b2815af0b0a7de5aa993164d911ac527205b40892f19f07ee34f3b8"),
     (GODOT_ASSETS / "Hud/weapon-outline.texture.aya", "data/resources/dxtntextures/hud%v2%WeaponOutline.tga(0)X8R8G8B8.aya", "2e2da786db82c8fd76de36d8d71fe744ddddd364247467cba1bfb9a95e52d62b"),
+    (GODOT_ASSETS / "Hud/offscreen-arrow.texture.aya", "data/resources/dxtntextures/hud%v3%offscreenarrow.tga(0)A8R8G8B8.aya", "8bbf5f0898a7796668e8a1a2bc6393c077b14beb7623585856709bdd937d35d2"),
     (GODOT_ASSETS / "Level100/Sky/cube25-cent.texture.aya", "data/resources/dxtntextures/cubes%cube25_cent.tga(0)X8R8G8B8.aya", "1aad6cc8f85b6bb7ccbb8d2c7b0e6aa31722a9adbde5a3f19b248430ca83469e"),
     (GODOT_ASSETS / "Level100/Sky/cube25-down.texture.aya", "data/resources/dxtntextures/cubes%cube25_down.tga(0)X8R8G8B8.aya", "4770829ba631e93fbc33db2012754da75a06bfccc2fb2b36875e92032e22d19d"),
     (GODOT_ASSETS / "Level100/Sky/cube25-left.texture.aya", "data/resources/dxtntextures/cubes%cube25_left.tga(0)X8R8G8B8.aya", "d7cbce30e51473ddc89ed0c44326e598dac4d2682f64ef20c19237afd2cebe14"),
@@ -437,6 +486,233 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
     return data
 
 
+def _materialize_level100_hud_manifest(stage: Path) -> str:
+    level_script_path = stage / LEVEL100_LEVEL_SCRIPT
+    english_source_path = stage / LEVEL100_ENGLISH_SOURCE
+    text_stf_path = stage / LEVEL100_TEXT_STF
+    english_dat_path = stage / LEVEL100_ENGLISH_DAT
+
+    level_script = level_script_path.read_text(encoding="windows-1252")
+    english_source = english_source_path.read_text(encoding="windows-1252")
+    text_stf = text_stf_path.read_text(encoding="windows-1252")
+
+    speaker_by_token = {
+        "P_TATIANA": "Tatiana",
+        "P_TECHNICIAN": "Technician",
+        "P_KRAMER": "Kramer",
+    }
+    play_events: list[dict[str, object]] = []
+    current_highlight = "None"
+    for line in level_script.splitlines():
+        highlight_match = re.search(r"\bHighlightHudPart\s*\(\s*(\w+)\s*\)", line)
+        if highlight_match:
+            current_highlight = highlight_match.group(1)
+
+        play_match = re.search(
+            r"\bPlayCharMessage(Wait)?\s*\(\s*(\w+)\s*,\s*(\w+)",
+            line,
+        )
+        if play_match:
+            wait_token, speaker_token, symbol = play_match.groups()
+            if speaker_token not in speaker_by_token:
+                raise RuntimeError(
+                    f"Level 100 script uses an unsupported HUD speaker: {speaker_token}"
+                )
+            play_events.append(
+                {
+                    "highlightSymbol": current_highlight,
+                    "speaker": speaker_by_token[speaker_token],
+                    "symbol": symbol,
+                    "waitsForCompletion": wait_token is not None,
+                }
+            )
+
+        unhighlight_match = re.search(
+            r"\bUnHighlightHudPart\s*\(\s*(\w+)\s*\)",
+            line,
+        )
+        if unhighlight_match:
+            if current_highlight != unhighlight_match.group(1):
+                raise RuntimeError("Level 100 script unhighlights a different HUD part")
+            current_highlight = "None"
+
+    if current_highlight != "None":
+        raise RuntimeError("Level 100 script leaves a HUD highlight active")
+    play_symbols = {str(event["symbol"]) for event in play_events}
+    if len(play_events) != 45 or len(play_symbols) != 43:
+        raise RuntimeError(
+            "Level 100 PlayCharMessage event identity changed: "
+            f"{len(play_events)} calls/{len(play_symbols)} messages"
+        )
+
+    english_message_symbols: list[str] = []
+    seen_english_message_symbols: set[str] = set()
+    for match in re.finditer(
+        r"^\[([^\]]+)\]\s*//\s*\w+\s*$",
+        english_source,
+        re.MULTILINE,
+    ):
+        symbol = match.group(1)
+        if symbol in seen_english_message_symbols:
+            raise RuntimeError(f"Level 100 English source repeats a message: {symbol}")
+        seen_english_message_symbols.add(symbol)
+        english_message_symbols.append(symbol)
+    if len(english_message_symbols) != 51:
+        raise RuntimeError(
+            "Level 100 English callback-message count changed: "
+            f"{len(english_message_symbols)}"
+        )
+
+    modified_symbols = {
+        symbol.removesuffix("_MOD"): symbol
+        for symbol in play_symbols
+        if symbol.endswith("_MOD")
+    }
+    message_symbols = [
+        modified_symbols.get(symbol, symbol) for symbol in english_message_symbols
+    ]
+    if len(message_symbols) != 51 or len(set(message_symbols)) != 51:
+        raise RuntimeError(
+            f"Level 100 released HUD-message union changed: {len(message_symbols)}"
+        )
+    if not play_symbols.issubset(message_symbols):
+        raise RuntimeError("Level 100 English callback order omits a played message")
+
+    symbol_to_signed_id: dict[str, int] = {}
+    for line in text_stf.splitlines():
+        match = re.match(r"^#define\s+(\S+)\s+(-?\d+)\s*$", line.strip())
+        if not match:
+            continue
+        symbol, raw_value = match.groups()
+        value = int(raw_value, 10)
+        if symbol in symbol_to_signed_id and symbol_to_signed_id[symbol] != value:
+            raise RuntimeError(f"text.stf changes a symbol ID: {symbol}")
+        symbol_to_signed_id[symbol] = value
+
+    tools_root = ROOT / "tools"
+    if str(tools_root) not in sys.path:
+        sys.path.insert(0, str(tools_root))
+    from language_dat_decode import entry_record, parse_lang_dat
+
+    language = parse_lang_dat(english_dat_path)
+    english_dat = english_dat_path.read_bytes()
+    entries_by_id = {entry.text_id: entry for entry in language.entries}
+
+    def native_record(symbol: str) -> tuple[int, dict[str, object]]:
+        try:
+            signed_id = symbol_to_signed_id[symbol]
+            entry = entries_by_id[signed_id & 0xFFFFFFFF]
+        except KeyError as error:
+            raise RuntimeError(
+                f"released text data is missing Level 100 symbol: {symbol}"
+            ) from error
+        return signed_id, entry_record(language, english_dat, entry)
+
+    messages: list[dict[str, object]] = []
+    for symbol in message_symbols:
+        signed_id, native = native_record(symbol)
+        audio = native["audio"]
+        text = native["text"]
+        if not isinstance(audio, str) or not audio or Path(audio).name != audio:
+            raise RuntimeError(
+                f"released Level 100 message has invalid audio identity: {symbol}"
+            )
+        if not isinstance(text, str) or not text:
+            raise RuntimeError(
+                f"released Level 100 message has no native text: {symbol}"
+            )
+        audio_file = f"{audio.lower()}.ogg"
+        if not (
+            stage / GODOT_ASSETS / "Level100/TutorialAudio" / audio_file
+        ).is_file():
+            raise RuntimeError(
+                f"released Level 100 message audio is not materialized: {audio_file}"
+            )
+        messages.append(
+            {
+                "audioFile": audio_file,
+                "symbol": symbol,
+                "text": text,
+                "textId": signed_id,
+            }
+        )
+
+    native_play_events: list[dict[str, object]] = []
+    for event_index, event in enumerate(play_events):
+        symbol = str(event["symbol"])
+        signed_id, _ = native_record(symbol)
+        native_play_events.append(
+            {
+                "eventIndex": event_index,
+                "highlightSymbol": event["highlightSymbol"],
+                "speaker": event["speaker"],
+                "symbol": symbol,
+                "textId": signed_id,
+                "waitsForCompletion": event["waitsForCompletion"],
+            }
+        )
+
+    help_symbols = re.findall(r"\bAddHelpMessage\s*\(\s*(\w+)\s*\)", level_script)
+    if len(help_symbols) != 6 or len(set(help_symbols)) != 6:
+        raise RuntimeError(
+            f"Level 100 help-message count changed: {len(help_symbols)}"
+        )
+    help_messages: list[dict[str, object]] = []
+    for symbol in help_symbols:
+        signed_id, native = native_record(symbol)
+        text = native["text"]
+        if not isinstance(text, str) or not text:
+            raise RuntimeError(
+                f"released Level 100 help message has no native text: {symbol}"
+            )
+        help_messages.append(
+            {"symbol": symbol, "text": text, "textId": signed_id}
+        )
+
+    terminal_strings: dict[str, dict[str, object]] = {}
+    for key, symbol in (
+        ("missionComplete", "IG_MISSION_COMPLETE"),
+        ("retry", "GI_RETRY"),
+        ("back", "GI_BACK"),
+        ("tutorialBroken", "LOSE_TUTORIAL_BROKE"),
+        ("playerDeath", "GAME_OVER_DEATH"),
+        ("water", "GAME_OVER_WATER"),
+    ):
+        signed_id, native = native_record(symbol)
+        text = native["text"]
+        if not isinstance(text, str) or not text:
+            raise RuntimeError(
+                f"released terminal string has no native text: {symbol}"
+            )
+        terminal_strings[key] = {
+            "symbol": symbol,
+            "text": text,
+            "textId": signed_id,
+        }
+
+    payload = {
+        "help": help_messages,
+        "messages": messages,
+        "playCharEvents": native_play_events,
+        "schemaVersion": "onslaught.level100-hud-events.v3",
+        "sources": {
+            "englishDatSha256": _sha256(english_dat),
+            "englishSourceSha256": _sha256(english_source_path.read_bytes()),
+            "levelScriptSha256": _sha256(level_script_path.read_bytes()),
+            "textStfSha256": _sha256(text_stf_path.read_bytes()),
+        },
+        "terminalStrings": terminal_strings,
+    }
+    data = (
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    manifest_hash = _sha256(data)
+    target = stage / LEVEL100_HUD_MANIFEST
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return manifest_hash
+
+
 def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
     direct = tuple(
         (path, expected) for path, _, expected in DIRECT_ASSETS + FRONTEND_ASSETS
@@ -450,6 +726,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
+        (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
     )
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
     sounds = tuple((path, expected) for path, _, _, expected in SOUNDS)
@@ -2412,6 +2689,12 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     frontend_localization_target = stage / FRONTEND_LOCALIZATION
     frontend_localization_target.parent.mkdir(parents=True, exist_ok=True)
     frontend_localization_target.write_bytes(frontend_localization)
+    hud_manifest_hash = _materialize_level100_hud_manifest(stage)
+    if hud_manifest_hash != LEVEL100_HUD_MANIFEST_SHA256:
+        raise RuntimeError(
+            "Level 100 HUD manifest did not reproduce exactly "
+            f"(SHA-256 {hud_manifest_hash})"
+        )
 
     level_archive = _read_exact(game_root / LEVEL_ARCHIVE, LEVEL_ARCHIVE_SHA256)
     tools_root = ROOT / "tools"
