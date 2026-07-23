@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class SimulationTests
 {
+    private static readonly Level100TutorialProgress CompletedTutorialSlots =
+        new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
+
     [Fact]
     public void Constructor_RejectsZeroSeed()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Simulation(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new Simulation(0, Level100TestActorDefinitions.Create()));
     }
 
     [Theory]
@@ -73,6 +78,49 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void CanonicalHashRetainsResetBaselineGroundDeltaAndExactFootPhase()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        WorldSnapshot state = simulation.Step(new SimInput(0, 1));
+        for (int tick = 0;
+             state.WalkerFeet.All(foot => foot.PhaseThirds == 0) && tick < 120;
+             tick++)
+        {
+            state = simulation.Step(new SimInput(0, 1));
+        }
+
+        Assert.Contains(state.WalkerFeet, foot => foot.PhaseThirds > 0);
+        Level100ActorSnapshot player = state.Level100Actors.Actors.Single(actor =>
+            actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine);
+        Assert.Equal(
+            state.PlayerGroundDeltaMillimeters,
+            player.Pose.LinearVelocityMillimetersPerTick.Y);
+
+        string hash = StateHasher.ComputeHex(state);
+        Assert.NotEqual(hash, StateHasher.ComputeHex(state with
+        {
+            PlayerGroundDeltaMillimeters = state.PlayerGroundDeltaMillimeters + 1,
+        }));
+        WalkerFootContactSnapshot changedFoot = state.WalkerFeet[0] with
+        {
+            PhaseThirds = state.WalkerFeet[0].PhaseThirds + 1,
+        };
+        Assert.NotEqual(hash, StateHasher.ComputeHex(state with
+        {
+            WalkerFeet = state.WalkerFeet
+                .Select((foot, index) => index == 0 ? changedFoot : foot)
+                .ToArray(),
+        }));
+        Assert.NotEqual(hash, StateHasher.ComputeHex(state with
+        {
+            InitialLevel100TutorialProgress = default,
+        }));
+
+        WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
+        Assert.Equal(CompletedTutorialSlots, reset.InitialLevel100TutorialProgress);
+    }
+
+    [Fact]
     public void WalkerFeet_RepeatReleasedDiagonalStepsAndSettleOnTheLevel100Slope()
     {
         Simulation first = CreatePlayingSimulation();
@@ -115,9 +163,9 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Level100Briefing_ReproducesRetailMessagesPowerAndObjectiveGates()
+    public void Level100FirstRun_AppliesReleasedMessagesActivationAndTriggerCommands()
     {
-        var simulation = new Simulation(1);
+        var simulation = new Simulation(1, Level100TestActorDefinitions.Create());
         var attemptedInput = new SimInput(
             0,
             1,
@@ -128,11 +176,22 @@ public sealed class SimulationTests
         Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
         Assert.False(simulation.Snapshot.Level100FlightEnabled);
         Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
-        Assert.Equal(Level100OpeningPhase.Briefing, simulation.Snapshot.Level100Phase);
+        Assert.Empty(simulation.Snapshot.Level100Mission.PendingEvents);
+        Assert.Contains(
+            simulation.Snapshot.Level100MissionEvents.OfType<Level100MessageRequested>(),
+            message => message.MessageId == 292562);
+
+        var messages = simulation.Snapshot.Level100MissionEvents
+            .OfType<Level100MessageRequested>()
+            .Select(message => message.MessageId)
+            .ToList();
 
         for (int tick = 1; tick <= SimulationConstants.Level100OpeningPanTicks; tick++)
         {
-            simulation.Step(attemptedInput);
+            WorldSnapshot state = simulation.Step(attemptedInput);
+            messages.AddRange(state.Level100MissionEvents
+                .OfType<Level100MessageRequested>()
+                .Select(message => message.MessageId));
         }
 
         Assert.Equal(0, simulation.Snapshot.Level100OpeningTicksRemaining);
@@ -143,45 +202,28 @@ public sealed class SimulationTests
         Assert.Equal(SimulationConstants.MaximumEnergy, simulation.Snapshot.Energy);
         Assert.Empty(simulation.Snapshot.Projectiles);
 
-        (int Start, int End, Level100TutorialMessage Message)[] messages =
-        [
-            (SimulationConstants.Level100Hud01StartTick, SimulationConstants.Level100Hud01EndTick, Level100TutorialMessage.HudIntroduction),
-            (SimulationConstants.Level100Hud02StartTick, SimulationConstants.Level100Hud02EndTick, Level100TutorialMessage.ThreatCircle),
-            (SimulationConstants.Level100Hud06StartTick, SimulationConstants.Level100Hud06EndTick, Level100TutorialMessage.Scanner),
-            (SimulationConstants.Level100MessageLogStartTick, SimulationConstants.Level100MessageLogEndTick, Level100TutorialMessage.MessageLog),
-            (SimulationConstants.Level100TechnicianStartTick, SimulationConstants.Level100TechnicianEndTick, Level100TutorialMessage.TechnicianStatus),
-            (SimulationConstants.Level100MovementInstructionStartTick, SimulationConstants.Level100MovementInstructionEndTick, Level100TutorialMessage.MovementControls),
-            (SimulationConstants.Level100TargetZone1InstructionStartTick, SimulationConstants.Level100TargetZone1InstructionEndTick, Level100TutorialMessage.ReachTargetZone1),
-            (SimulationConstants.Level100ScannerInstructionStartTick, SimulationConstants.Level100ScannerInstructionEndTick, Level100TutorialMessage.ScannerObjective),
-        ];
-        foreach ((int start, int end, Level100TutorialMessage message) in messages)
-        {
-            StepUntilLevel100Tick(simulation, start);
-            Assert.Equal(message, simulation.Snapshot.Level100Message);
-            StepUntilLevel100Tick(simulation, end);
-            Assert.Equal(Level100TutorialMessage.None, simulation.Snapshot.Level100Message);
-        }
+        AdvanceUntil(
+            simulation,
+            state => string.Equals(
+                state.Level100Mission.NavigationObjective,
+                "Target Zone 1",
+                StringComparison.Ordinal),
+            1_000,
+            state => messages.AddRange(state.Level100MissionEvents
+                .OfType<Level100MessageRequested>()
+                .Select(message => message.MessageId)));
 
-        var second = new Simulation(1);
-        StepUntilLevel100Tick(second, SimulationConstants.Level100PowerActivationTick - 1, attemptedInput);
-        Assert.False(second.Snapshot.Level100PlayerControlEnabled);
-        Assert.Equal(SimVector2.Zero, second.Snapshot.PlayerPosition);
-
-        WorldSnapshot handoff = second.Step(attemptedInput);
-        Assert.True(handoff.Level100PlayerControlEnabled);
-        Assert.Equal(SimVector2.Zero, handoff.PlayerPosition);
-
-        WorldSnapshot playing = second.Step(new SimInput(0, 1, SimActions.Fire | SimActions.ToggleMode, LookX: 1));
-        Assert.NotEqual(SimVector2.Zero, playing.PlayerPosition);
-        Assert.NotEqual(SimulationConstants.Level100PlayerStartYawMicroRad, playing.FacingYawMicroRad);
-        Assert.Equal(VehicleTransition.None, playing.Transition);
-        Assert.Empty(playing.Projectiles);
-
-        StepUntilLevel100Tick(second, SimulationConstants.Level100TargetZone1ActivationTick - 1);
-        Assert.Equal(Level100OpeningPhase.Briefing, second.Snapshot.Level100Phase);
         Assert.Equal(
-            Level100OpeningPhase.ReachTargetZone1,
-            second.Step(SimInput.Idle).Level100Phase);
+            [292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830, 175347826],
+            messages);
+        Assert.Equal(1_005, simulation.Snapshot.Level100Mission.Tick);
+        Assert.True(simulation.Snapshot.Level100PlayerActive);
+        Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
+        Level100TriggerActorSnapshot trigger = simulation.Snapshot.Level100TriggerActors
+            .Single(item => item.Trigger == Level100MissionTrigger.TargetZone1);
+        Assert.True(trigger.Active);
+        Assert.True(trigger.IsObjective);
+        Assert.False(trigger.Reached);
     }
 
     [Fact]
@@ -307,6 +349,62 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void SnapshotPlayerOwners_AgreeAfterMovementDamageActivationDeathAndReset()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+
+        WorldSnapshot state = simulation.Step(
+            new SimInput(1, 1, SimActions.ToggleMode, LookX: 1),
+            [new Level100PlayerDamageFact(137)]);
+
+        AssertCanonicalPlayer(state);
+        Assert.Equal(VehicleTransition.None, state.Transition);
+
+        state = simulation.Step(
+            SimInput.Idle,
+            [new Level100ActorActivationFact(
+                state.Level100Actors.Actors.Single(actor =>
+                    actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine).ActorId,
+                false)]);
+        AssertCanonicalPlayer(state);
+        Assert.False(state.Level100PlayerActive);
+
+        Level100ActorId playerId = state.Level100Actors.Actors.Single(actor =>
+            actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine).ActorId;
+        state = simulation.Step(
+            SimInput.Idle,
+            [new Level100ActorActivationFact(playerId, true),
+             new Level100PlayerDamageFact(SimulationConstants.MaximumHull)]);
+        AssertCanonicalPlayer(state);
+        Assert.Equal(0, state.Hull);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, state.Level100Actors.Actors.Single(
+            actor => actor.ActorId == playerId).Lifecycle);
+
+        state = simulation.Step(new SimInput(0, 0, SimActions.Reset));
+        AssertCanonicalPlayer(state);
+        Assert.Equal(SimulationConstants.MaximumHull, state.Hull);
+        Assert.Equal(Level100ActorLifecycle.Alive, state.Level100Actors.Actors.Single(
+            actor => actor.ActorId == playerId).Lifecycle);
+    }
+
+    private static void AssertCanonicalPlayer(WorldSnapshot state)
+    {
+        Level100ActorSnapshot player = state.Level100Actors.Actors.Single(actor =>
+            actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine);
+        Assert.Equal(state.PlayerPosition.X, player.Pose.PositionMillimeters.X);
+        Assert.Equal(state.PlayerGroundElevationMillimeters, player.Pose.PositionMillimeters.Y);
+        Assert.Equal(state.PlayerPosition.Z, player.Pose.PositionMillimeters.Z);
+        Assert.Equal(state.PlayerVelocity.X, player.Pose.LinearVelocityMillimetersPerTick.X);
+        Assert.Equal(
+            state.PlayerGroundDeltaMillimeters,
+            player.Pose.LinearVelocityMillimetersPerTick.Y);
+        Assert.Equal(state.PlayerVelocity.Z, player.Pose.LinearVelocityMillimetersPerTick.Z);
+        Assert.Equal(state.Hull, player.Health);
+        Assert.Equal(state.Level100PlayerActive, player.Active);
+        Assert.Equal(state.Mode == VehicleMode.Jet, state.Level100ActorScripts.PlayerInJetMode);
+    }
+
+    [Fact]
     public void LookAxes_OutsideUnitRange_AreRejected()
     {
         Assert.Throws<ArgumentOutOfRangeException>(
@@ -387,7 +485,7 @@ public sealed class SimulationTests
             1,
             SimActions.Reset | SimActions.Fire | SimActions.ToggleMode));
 
-        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 2, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 2, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
@@ -463,214 +561,74 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void Level100Opening_AdvancesThroughAuthoredTriggersAfterScriptDelay()
+    public void Level100Triggers_UsePhysicalActorsAndReleasedSideScriptDispatch()
     {
         Simulation simulation = CreatePlayingSimulation();
 
-        Assert.Equal(Level100OpeningPhase.ReachTargetZone1, simulation.Snapshot.Level100Phase);
-        Assert.Equal(
-            SimulationConstants.Level100PlayerStartYawMicroRad,
-            simulation.Snapshot.FacingYawMicroRad);
-
-        DriveToPhase(
+        AdvanceUntilNavigation(simulation, "Target Zone 1", 500);
+        Assert.True(Trigger(simulation, Level100MissionTrigger.TargetZone1).Active);
+        Level100ActorScriptContinuationSnapshot targetZonePause =
+            DriveUntilTriggerPause(simulation, Level100MissionTrigger.TargetZone1);
+        Level100TriggerActorSnapshot targetZone = Trigger(
             simulation,
-            SimulationConstants.Level100TargetZone1Position,
-            Level100OpeningPhase.TargetZone1DispatchPending);
-        Assert.Equal(
-            SimulationConstants.Level100TargetZone1DispatchTicks,
-            simulation.Snapshot.Level100DispatchTicksRemaining);
+            Level100MissionTrigger.TargetZone1);
+        Assert.False(targetZone.Reached);
+        Assert.Equal(Level100ActorScriptWaitKind.Pause, targetZonePause.WaitKind);
+        Assert.Equal(15, targetZonePause.DueTick - simulation.Snapshot.Tick);
 
-        for (int tick = 1; tick < SimulationConstants.Level100TargetZone1DispatchTicks; tick++)
+        for (int tick = 1; tick < 15; tick++)
         {
-            WorldSnapshot pending = simulation.Step(SimInput.Idle);
-            Assert.Equal(Level100OpeningPhase.TargetZone1DispatchPending, pending.Level100Phase);
+            Assert.False(Trigger(
+                simulation.Step(SimInput.Idle),
+                Level100MissionTrigger.TargetZone1).Reached);
         }
 
         WorldSnapshot firingRangeAssignment = simulation.Step(SimInput.Idle);
-        Assert.Equal(Level100OpeningPhase.ReachFiringRange, firingRangeAssignment.Level100Phase);
-        Assert.Equal(
-            Level100TutorialMessage.FiringRangeInstruction,
-            firingRangeAssignment.Level100Message);
-        Assert.Equal(
-            SimulationConstants.Level100FiringRangeInstructionTicks,
-            firingRangeAssignment.Level100EventMessageTicksRemaining);
+        Assert.True(Trigger(firingRangeAssignment, Level100MissionTrigger.TargetZone1).Reached);
+        Assert.Equal("Firing Range", firingRangeAssignment.Level100Mission.NavigationObjective);
+        Assert.Contains(
+            firingRangeAssignment.Level100MissionEvents.OfType<Level100MessageRequested>(),
+            message => message.MessageId == 4458134);
 
-        for (int tick = 1; tick < SimulationConstants.Level100FiringRangeInstructionTicks; tick++)
-        {
-            WorldSnapshot instruction = simulation.Step(SimInput.Idle);
-            Assert.Equal(Level100TutorialMessage.FiringRangeInstruction, instruction.Level100Message);
-        }
-
-        Assert.Equal(Level100TutorialMessage.None, simulation.Step(SimInput.Idle).Level100Message);
-
-        DriveToPhase(
-            simulation,
-            SimulationConstants.Level100FiringRangePosition,
-            Level100OpeningPhase.FiringRangeDispatchPending);
-        for (int tick = 0; tick < SimulationConstants.Level100FiringRangeDispatchTicks; tick++)
+        Level100ActorScriptContinuationSnapshot firingRangePause =
+            DriveUntilTriggerPause(simulation, Level100MissionTrigger.FiringRange);
+        Assert.Equal(Level100ActorScriptWaitKind.Pause, firingRangePause.WaitKind);
+        Assert.Equal(15, firingRangePause.DueTick - simulation.Snapshot.Tick);
+        for (int tick = 0; tick < 15; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
 
-        Assert.Equal(Level100OpeningPhase.FiringRangeBriefing, simulation.Snapshot.Level100Phase);
-        Assert.Equal(0, simulation.Snapshot.Level100FiringRangeSequenceTick);
-        Assert.Equal(Level100TutorialMessage.WeaponSystems, simulation.Snapshot.Level100Message);
-        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
-        Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
-        Assert.False(simulation.Snapshot.Level100FiringRangeTargetsActive);
+        Assert.True(Trigger(simulation, Level100MissionTrigger.FiringRange).Reached);
         Assert.Equal(
-            [
-                SimulationConstants.Level100TargetTank1Position,
-                SimulationConstants.Level100TargetTank2Position,
-                SimulationConstants.Level100TargetTank3Position,
-                SimulationConstants.Level100TargetWarehousePosition,
-            ],
-            simulation.Snapshot.Targets.Select(target => target.Position));
-
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100WeaponIndicatorStartTick);
-        Assert.Equal(Level100TutorialMessage.WeaponIndicator, simulation.Snapshot.Level100Message);
-        Assert.True(simulation.Snapshot.Level100CurrentWeaponHighlighted);
-
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100PulseCannonStartTick);
-        Assert.Equal(Level100TutorialMessage.PulseCannon, simulation.Snapshot.Level100Message);
-        Assert.False(simulation.Snapshot.Level100CurrentWeaponHighlighted);
-
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100StaticTargetsActivationTick);
-        Assert.Equal(Level100TutorialMessage.OpenFire, simulation.Snapshot.Level100Message);
+            Level100PrimaryObjectiveStatus.Complete,
+            simulation.Snapshot.Level100Mission.PrimaryObjectives[0].Status);
         Assert.True(simulation.Snapshot.Level100FiringRangeTargetsActive);
         Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
-        Assert.Empty(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
+        for (int tick = 0; tick < 30; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
 
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100PulseCannonActivationTick);
-        Assert.Equal(Level100OpeningPhase.FiringRangeExercise, simulation.Snapshot.Level100Phase);
-        Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
         Assert.True(simulation.Snapshot.Level100PulseCannonEnabled);
         Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
-
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100FireHelpActivationTick);
-        Assert.True(simulation.Snapshot.Level100FireHelpVisible);
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100PulseCannonEnergyStartTick);
-        Assert.Equal(Level100TutorialMessage.PulseCannonEnergy, simulation.Snapshot.Level100Message);
     }
 
     [Fact]
-    public void Level100FirstFiringRange_DestroysFourTargetsAndHandsOffToVulcan()
+    public void Level100SimulationFailureTape_FirstRunRetainsLossTextAndExactTicks()
     {
-        Simulation simulation = CreateFiringRangeExerciseSimulation();
-        foreach (int targetId in new[] { 1, 2, 3 })
-        {
-            TargetSnapshot target = simulation.Snapshot.Targets.Single(item => item.Id == targetId);
-            Assert.Equal(SimulationConstants.Level100TargetTankLife, target.Hull);
+        DeterministicSimulationTape first = RunLevel100FailureTape();
+        DeterministicSimulationTape repeat = RunLevel100FailureTape();
 
-            foreach (int expected in new[] { 4_200, 2_400, 600, 0 })
-            {
-                AimAtTarget(simulation, target.Position);
-                WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
-                ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
-                long speedSquared =
-                    ((long)projectile.Velocity.X * projectile.Velocity.X) +
-                    ((long)projectile.Velocity.Z * projectile.Velocity.Z);
-                Assert.InRange(
-                    speedSquared,
-                    (long)1_166 * 1_166,
-                    (long)1_168 * 1_168);
-
-                for (int tick = 0; tick < 40; tick++)
-                {
-                    WorldSnapshot state = simulation.Step(SimInput.Idle);
-                    target = state.Targets.Single(item => item.Id == targetId);
-                    if (target.Hull == expected)
-                    {
-                        break;
-                    }
-                }
-
-                Assert.Equal(expected, target.Hull);
-            }
-
-            Assert.False(target.IsActive);
-        }
-
-        Assert.Equal(3, simulation.Snapshot.TargetsDestroyed);
-        TargetSnapshot warehouse = simulation.Snapshot.Targets.Single(item => item.Id == 4);
-        Assert.True(warehouse.IsActive);
+        Assert.Equal(first.Hashes, repeat.Hashes);
+        Assert.Equal(Level100MissionOutcome.Lost, first.Snapshot.Level100Mission.Outcome);
+        Assert.Equal(Level100MissionFailureReason.TutorialBroken,
+            first.Snapshot.Level100Mission.FailureReason);
+        Assert.Equal(1_110_345_999, first.Snapshot.Level100Mission.FailureTextId);
         Assert.Equal(
-            SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope,
-            warehouse.Hull);
-
-        for (int hit = 1; hit <= 12; hit++)
-        {
-            int expected =
-                SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope -
-                (hit * SimulationConstants.Level100PulseCannonFullHitDamage);
-            AimAtTarget(simulation, warehouse.Position);
-            Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
-            for (int tick = 0; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
-            {
-                WorldSnapshot state = simulation.Step(SimInput.Idle);
-                warehouse = state.Targets.Single(item => item.Id == 4);
-                if (warehouse.Hull == expected)
-                {
-                    break;
-                }
-            }
-
-            Assert.Equal(expected, warehouse.Hull);
-        }
-
-        Assert.False(warehouse.IsActive);
-        Assert.Equal(4, simulation.Snapshot.TargetsDestroyed);
-        Assert.False(simulation.Snapshot.Level100FiringRangeTargetsActive);
-        Assert.Equal(
-            Level100OpeningPhase.FiringRangeVulcanBriefing,
-            simulation.Snapshot.Level100Phase);
-        Assert.Equal(0, simulation.Snapshot.Level100FiringRangeHandoffTick);
-        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
-        Assert.True(simulation.Snapshot.Level100PulseCannonEnabled);
-        Assert.False(simulation.Snapshot.Level100VulcanCannonEnabled);
-        Assert.Empty(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
-
-        StepUntilFiringRangeHandoffTick(
-            simulation,
-            SimulationConstants.Level100VulcanCannonStartTick);
-        Assert.Equal(Level100TutorialMessage.VulcanCannon, simulation.Snapshot.Level100Message);
-        Assert.False(simulation.Snapshot.Level100PlayerControlEnabled);
-
-        StepUntilFiringRangeHandoffTick(
-            simulation,
-            SimulationConstants.Level100VulcanActivationTick);
-        Assert.Equal(
-            Level100OpeningPhase.FiringRangeVulcanExercise,
-            simulation.Snapshot.Level100Phase);
-        Assert.Equal(
-            Level100TutorialMessage.OpenFireVulcan,
-            simulation.Snapshot.Level100Message);
-        Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
-        Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
-        Assert.True(simulation.Snapshot.Level100VulcanCannonEnabled);
-
-        StepUntilFiringRangeHandoffTick(
-            simulation,
-            SimulationConstants.Level100VulcanCannonAmmoStartTick);
-        Assert.Equal(
-            Level100TutorialMessage.VulcanCannonAmmo,
-            simulation.Snapshot.Level100Message);
-        StepUntilFiringRangeHandoffTick(
-            simulation,
-            SimulationConstants.Level100VulcanCannonAmmoEndTick);
-        Assert.Equal(Level100TutorialMessage.None, simulation.Snapshot.Level100Message);
+            Level100MissionTerminalState.FailureCountdownElapsed,
+            first.Snapshot.Level100Mission.TerminalState);
+        Assert.Equal(0, first.Snapshot.Level100Mission.TerminalTicksRemaining);
     }
 
     [Fact]
@@ -752,7 +710,7 @@ public sealed class SimulationTests
 
         WorldSnapshot reset = simulation.Step(new SimInput(0, 0, SimActions.Reset));
 
-        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 3, reset.Tick);
+        Assert.Equal(SimulationConstants.Level100OpeningPanTicks + 3, reset.Tick);
         Assert.Equal(VehicleMode.Walker, reset.Mode);
         Assert.Equal(SimVector2.Zero, reset.PlayerPosition);
         Assert.Equal(SimulationConstants.MaximumEnergy, reset.Energy);
@@ -769,6 +727,8 @@ public sealed class SimulationTests
 
         Assert.False(state.Targets.GetType().IsArray);
         Assert.False(state.Projectiles.GetType().IsArray);
+        Assert.False(state.Level100MissionEvents.GetType().IsArray);
+        Assert.False(state.Level100TriggerActors.GetType().IsArray);
 
         var targets = Assert.IsAssignableFrom<IList<TargetSnapshot>>(state.Targets);
         var projectiles = Assert.IsAssignableFrom<IList<ProjectileSnapshot>>(state.Projectiles);
@@ -777,26 +737,70 @@ public sealed class SimulationTests
         Assert.Throws<NotSupportedException>(() => targets[0] = targets[0] with { Hull = 0 });
     }
 
-    private static void DriveToPhase(
+    private static void DriveIntoTrigger(
         Simulation simulation,
-        SimVector2 destination,
-        Level100OpeningPhase expectedPhase)
+        Level100MissionTrigger trigger)
     {
-        for (int tick = 0; tick < 2_000 && simulation.Snapshot.Level100Phase != expectedPhase; tick++)
+        Level100ActorScriptContinuationSnapshot pause =
+            DriveUntilTriggerPause(simulation, trigger);
+        int dueTick = Assert.IsType<int>(pause.DueTick);
+        while (simulation.Snapshot.Tick < dueTick)
         {
-            SimVector2 position = simulation.Snapshot.PlayerPosition;
-            sbyte moveX = (sbyte)Math.Sign(destination.X - position.X);
-            sbyte moveZ = (sbyte)Math.Sign(destination.Z - position.Z);
+            simulation.Step(SimInput.Idle);
+        }
+
+        Assert.True(Trigger(simulation, trigger).Reached);
+    }
+
+    private static Level100ActorScriptContinuationSnapshot DriveUntilTriggerPause(
+        Simulation simulation,
+        Level100MissionTrigger trigger)
+    {
+        Level100TriggerActorSnapshot releasedActor = Trigger(simulation, trigger);
+        Assert.True(releasedActor.Active);
+        SimVector2 destination = releasedActor.Position;
+        for (int tick = 0; tick < 4_000; tick++)
+        {
+            WorldSnapshot state = simulation.Snapshot;
+            Level100ActorSnapshot actor = state.Level100Actors.Actors.Single(
+                item => item.Trigger == trigger);
+            Level100ActorScriptContinuationSnapshot? pause = state.Level100ActorScripts.Instances
+                .Single(item => item.ActorId == actor.ActorId)
+                .Continuations
+                .SingleOrDefault(item => item.WaitKind == Level100ActorScriptWaitKind.Pause);
+            if (pause is not null)
+            {
+                return pause;
+            }
+
+            long deltaX = (long)destination.X - state.PlayerPosition.X;
+            long deltaZ = (long)destination.Z - state.PlayerPosition.Z;
+            double yaw = state.FacingYawMicroRad / 1_000_000d;
+            double localX = (deltaX * Math.Cos(yaw)) + (deltaZ * Math.Sin(yaw));
+            double localZ = (-deltaX * Math.Sin(yaw)) + (deltaZ * Math.Cos(yaw));
+            sbyte moveX = (sbyte)Math.Sign(localX);
+            sbyte moveZ = (sbyte)Math.Sign(localZ);
             simulation.Step(new SimInput(moveX, moveZ));
         }
 
-        Assert.Equal(expectedPhase, simulation.Snapshot.Level100Phase);
+        Level100ActorSnapshot stalledPlayer = simulation.Snapshot.Level100Actors.Actors.Single(
+            actor => actor.Name == "Player 1");
+        throw new Xunit.Sdk.XunitException(
+            $"Did not start released trigger actor {trigger}; " +
+            $"position={simulation.Snapshot.PlayerPosition}; " +
+            $"playerActive={simulation.Snapshot.Level100PlayerActive}; " +
+            $"controlEnabled={simulation.Snapshot.Level100PlayerControlEnabled}; " +
+            $"navigation={simulation.Snapshot.Level100Mission.NavigationObjective}; " +
+            $"playerScript={stalledPlayer.ScriptName}.");
     }
 
     private static Simulation CreatePlayingSimulation(uint seed = 1)
     {
-        var simulation = new Simulation(seed);
-        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
+        var simulation = new Simulation(
+            seed,
+            Level100TestActorDefinitions.Create(),
+            CompletedTutorialSlots);
+        for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
@@ -808,29 +812,86 @@ public sealed class SimulationTests
     private static Simulation CreateFiringRangeExerciseSimulation()
     {
         Simulation simulation = CreatePlayingSimulation();
-        DriveToPhase(
-            simulation,
-            SimulationConstants.Level100TargetZone1Position,
-            Level100OpeningPhase.TargetZone1DispatchPending);
-        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1DispatchTicks; tick++)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-
-        DriveToPhase(
-            simulation,
-            SimulationConstants.Level100FiringRangePosition,
-            Level100OpeningPhase.FiringRangeDispatchPending);
-        for (int tick = 0; tick < SimulationConstants.Level100FiringRangeDispatchTicks; tick++)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-        StepUntilFiringRangeSequenceTick(
-            simulation,
-            SimulationConstants.Level100PulseCannonActivationTick);
-        Assert.Equal(Level100OpeningPhase.FiringRangeExercise, simulation.Snapshot.Level100Phase);
+        AdvanceUntilNavigation(simulation, "Target Zone 1", 500);
+        DriveIntoTrigger(simulation, Level100MissionTrigger.TargetZone1);
+        AdvanceUntilNavigation(simulation, "Firing Range", 100);
+        DriveIntoTrigger(simulation, Level100MissionTrigger.FiringRange);
+        AdvanceUntil(simulation, state => state.Level100FiringRangeTargetsActive, 100);
+        AdvanceUntil(simulation, state => state.Level100PulseCannonEnabled, 100);
         return simulation;
     }
+
+    private static DeterministicSimulationTape RunLevel100FailureTape()
+    {
+        var simulation = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        var hashes = new List<string> { StateHasher.ComputeHex(simulation.Snapshot) };
+        WorldSnapshot snapshot = simulation.Step(
+            SimInput.Idle,
+            [new Level100MissionInputFact(Level100MissionInput.BrokeTutorial)]);
+        hashes.Add(StateHasher.ComputeHex(snapshot));
+        for (int tick = 0;
+             tick < 500 && snapshot.Level100Mission.Outcome != Level100MissionOutcome.Lost;
+             tick++)
+        {
+            snapshot = simulation.Step(SimInput.Idle);
+            hashes.Add(StateHasher.ComputeHex(snapshot));
+        }
+
+        Assert.Equal(Level100MissionOutcome.Lost, snapshot.Level100Mission.Outcome);
+        Assert.Equal(
+            Level100MissionTiming.FailureCountdownTicks,
+            snapshot.Level100Mission.TerminalTicksRemaining);
+        for (int tick = 0; tick < Level100MissionTiming.FailureCountdownTicks; tick++)
+        {
+            snapshot = simulation.Step(SimInput.Idle);
+            hashes.Add(StateHasher.ComputeHex(snapshot));
+        }
+
+        return new DeterministicSimulationTape(snapshot, hashes.AsReadOnly());
+    }
+
+    private static void AdvanceUntilNavigation(
+        Simulation simulation,
+        string thingName,
+        int maximumTicks) => AdvanceUntil(
+            simulation,
+            state => string.Equals(
+                state.Level100Mission.NavigationObjective,
+                thingName,
+                StringComparison.Ordinal),
+            maximumTicks);
+
+    private static void AdvanceUntil(
+        Simulation simulation,
+        Func<WorldSnapshot, bool> predicate,
+        int maximumTicks,
+        Action<WorldSnapshot>? observe = null)
+    {
+        for (int tick = 0; tick < maximumTicks && !predicate(simulation.Snapshot); tick++)
+        {
+            WorldSnapshot state = simulation.Step(SimInput.Idle);
+            observe?.Invoke(state);
+        }
+
+        Assert.True(
+            predicate(simulation.Snapshot),
+            $"Condition was not reached by simulation tick {simulation.Snapshot.Tick}.");
+    }
+
+    private static Level100TriggerActorSnapshot Trigger(
+        Simulation simulation,
+        Level100MissionTrigger trigger) => Trigger(simulation.Snapshot, trigger);
+
+    private static Level100TriggerActorSnapshot Trigger(
+        WorldSnapshot snapshot,
+        Level100MissionTrigger trigger) => snapshot.Level100TriggerActors
+            .Single(item => item.Trigger == trigger);
+
+    private sealed record DeterministicSimulationTape(
+        WorldSnapshot Snapshot,
+        IReadOnlyList<string> Hashes);
 
     private static void AimAtTarget(Simulation simulation, SimVector2 target)
     {
@@ -891,35 +952,4 @@ public sealed class SimulationTests
         return value;
     }
 
-    private static void StepUntilLevel100Tick(
-        Simulation simulation,
-        int timelineTick,
-        SimInput? input = null)
-    {
-        while (simulation.Snapshot.Level100TimelineTick < timelineTick)
-        {
-            simulation.Step(input ?? SimInput.Idle);
-        }
-        Assert.Equal(timelineTick, simulation.Snapshot.Level100TimelineTick);
-    }
-
-    private static void StepUntilFiringRangeSequenceTick(Simulation simulation, int sequenceTick)
-    {
-        while (simulation.Snapshot.Level100FiringRangeSequenceTick < sequenceTick)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-        Assert.Equal(sequenceTick, simulation.Snapshot.Level100FiringRangeSequenceTick);
-    }
-
-    private static void StepUntilFiringRangeHandoffTick(
-        Simulation simulation,
-        int handoffTick)
-    {
-        while (simulation.Snapshot.Level100FiringRangeHandoffTick < handoffTick)
-        {
-            simulation.Step(SimInput.Idle);
-        }
-        Assert.Equal(handoffTick, simulation.Snapshot.Level100FiringRangeHandoffTick);
-    }
 }

@@ -2,17 +2,22 @@
 
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Client.Tests;
 
 public sealed class InteractiveSessionTests
 {
+    private const int FirstRunControlTick = 790;
+    private static Level100ActorDefinitionSet ActorDefinitions =>
+        Level100TestActorDefinitions.Create();
+    private const long OneCoreStepTicks = 333_334;
     private const uint Seed = 0x4F4E534Cu;
 
     [Fact]
     public void RationalAccumulator_DoesNotTruncateThirtyHertzStep()
     {
-        var session = new InteractiveSession(Seed);
+        var session = new InteractiveSession(Seed, ActorDefinitions);
 
         FrameAdvanceResult beforeBoundary = session.AdvanceFrameTicks(333_333);
         FrameAdvanceResult afterBoundary = session.AdvanceFrameTicks(1);
@@ -27,7 +32,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void FourQuarterSecondFrames_AdvanceExactlyThirtyTicks()
     {
-        var session = new InteractiveSession(Seed);
+        var session = new InteractiveSession(Seed, ActorDefinitions);
 
         FrameAdvanceResult result = default;
         for (int frame = 0; frame < 4; frame++)
@@ -44,7 +49,7 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void LongFrame_IsCappedAndReportedWithoutSkippingSimulationTicks()
     {
-        var session = new InteractiveSession(Seed);
+        var session = new InteractiveSession(Seed, ActorDefinitions);
 
         FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromSeconds(1));
 
@@ -216,8 +221,8 @@ public sealed class InteractiveSessionTests
             fine.AdvanceFrame(TimeSpan.FromMilliseconds(25));
         }
 
-        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 30, coarse.CurrentSnapshot.Tick);
-        Assert.Equal(SimulationConstants.Level100TargetZone1ActivationTick + 30, fine.CurrentSnapshot.Tick);
+        Assert.Equal(FirstRunControlTick + 30, coarse.CurrentSnapshot.Tick);
+        Assert.Equal(FirstRunControlTick + 30, fine.CurrentSnapshot.Tick);
         Assert.Equal(StateHasher.ComputeHex(coarse.CurrentSnapshot), StateHasher.ComputeHex(fine.CurrentSnapshot));
     }
 
@@ -304,8 +309,8 @@ public sealed class InteractiveSessionTests
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
     {
         InteractiveSession session = CreatePlayingSession();
-        var direct = new Simulation(Seed);
-        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
+        var direct = new Simulation(Seed, ActorDefinitions);
+        for (int tick = 0; tick < FirstRunControlTick; tick++)
         {
             direct.Step(SimInput.Idle);
         }
@@ -407,11 +412,48 @@ public sealed class InteractiveSessionTests
     [Fact]
     public void InvalidInputAndElapsedTime_AreRejected()
     {
-        var session = new InteractiveSession(Seed);
+        var session = new InteractiveSession(Seed, ActorDefinitions);
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             session.ObserveInput(new InteractiveInput(2, 0, false, false, false)));
         Assert.Throws<ArgumentOutOfRangeException>(() => session.AdvanceFrameTicks(-1));
+        WorldSnapshot before = session.CurrentSnapshot;
+        Assert.Throws<ArgumentException>(() => session.AdvanceFrameTicks(
+            1,
+            [new Level100PlayerDeathFact()]));
+        Assert.Same(before, session.CurrentSnapshot);
+    }
+
+    [Fact]
+    public void FrameMissionEvents_AggregateEverySimulationStepInOrder()
+    {
+        var session = new InteractiveSession(Seed, ActorDefinitions);
+        for (int tick = 0; tick < 168; tick++)
+        {
+            session.AdvanceFrameTicks(OneCoreStepTicks);
+        }
+
+        FrameAdvanceResult frame = session.AdvanceFrameTicks(666_667);
+
+        Assert.Equal(2, frame.StepsAdvanced);
+        Level100MessageRequested message = Assert.Single(
+            frame.Level100MissionEvents.OfType<Level100MessageRequested>());
+        Assert.Equal(293386, message.MessageId);
+        Assert.Empty(frame.CurrentSnapshot.Level100MissionEvents);
+    }
+
+    [Fact]
+    public void ClientLevel100FailureTape_FirstRunRepeatsLossTextAndHashes()
+    {
+        ClientMissionTape first = RunClientFailureTape();
+        ClientMissionTape repeat = RunClientFailureTape();
+
+        Assert.Equal(first.Hashes, repeat.Hashes);
+        Assert.Equal(Level100MissionOutcome.Lost, first.Snapshot.Level100Mission.Outcome);
+        Assert.Equal(1_110_345_999, first.Snapshot.Level100Mission.FailureTextId);
+        Assert.Equal(
+            Level100MissionTerminalState.FailureCountdownElapsed,
+            first.Snapshot.Level100Mission.TerminalState);
     }
 
     [Fact]
@@ -429,13 +471,64 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ReachesFiringRangeAndDestroysFirstTarget()
+    public void MaterializedLevel100ActorDefinitions_OwnCompleteWorldAndAuthoredSpawns()
+    {
+        Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+
+        Assert.Equal(44, definitions.Actors.Count);
+        Assert.Equal(33, definitions.Actors.Count(actor =>
+            actor.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)));
+        Assert.Equal(3, definitions.Actors.Count(actor =>
+            actor.DefinitionIdentity.StartsWith("wres:rlwd:", StringComparison.Ordinal) &&
+            actor.TargetGroup == Level100MissionTargetGroup.StaticTargets));
+        Assert.Equal(5, definitions.Actors.Count(actor => actor.Trigger.HasValue));
+        Assert.Single(definitions.Actors, actor => actor.ThingTypeMask ==
+            Level100ReleasedThingTypeMasks.BattleEngine);
+        Assert.Contains(definitions.Actors, actor => actor.Name == "Transporter");
+        Assert.Contains(definitions.Actors, actor => actor.Name == "Air Trainer");
+        Assert.Equal(10, definitions.Spawns.Count);
+        Assert.Equal(64, definitions.IdentitySha256.Length);
+        Assert.Null(definitions.Actors.Single(actor => actor.Name == "Airfield").ScriptName);
+        Assert.Null(definitions.Actors.Single(actor => actor.Name == "Hangar").ScriptName);
+
+        Level100SpawnDefinition trainer = definitions.Spawns.Single(spawn =>
+            spawn.ScriptName == "AirTrainer");
+        Assert.Equal("wres:bswd:0023", trainer.OwnerDefinitionIdentity);
+        Assert.Equal(
+            BitConverter.SingleToInt32Bits(-0.099276736f),
+            trainer.AuthoredEmitterTransform.LocalPositionFloatBits.X);
+
+        var registry = new Level100ActorRegistry(definitions);
+        Level100ActorId trainerId = Assert.Single(registry.SpawnThing(
+            registry.GetThingRef("Airfield")!.Value,
+            "Air Trainer",
+            "SpawnerB",
+            1,
+            "AirTrainer"));
+        Assert.Equal(trainer.InitialPose, registry.GetActor(trainerId).Pose);
+        Assert.DoesNotContain(registry.Snapshot.Actors, actor => actor.Pose is null);
+    }
+
+    [Fact]
+    public void MaterializedLevel100ActorDefinitions_RepeatFailureHashes()
+    {
+        Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+
+        ClientMissionTape failure = RunClientFailureTape(definitions);
+        ClientMissionTape repeatedFailure = RunClientFailureTape(definitions);
+
+        Assert.Equal(failure.Hashes, repeatedFailure.Hashes);
+        Assert.Equal(Level100MissionOutcome.Lost, failure.Snapshot.Level100Mission.Outcome);
+    }
+
+    [Fact]
+    public void FirstFlightSmokeScenario_ReachesFiringRangeAndPreservesWaypointBoundary()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
         InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
-            SimulationConstants.Level100TargetZone1ActivationTick + 57);
+            FirstFlightSmokeScenario.TargetZoneInputStartTick);
         InteractiveInput forward = FirstFlightSmokeScenario.GetInputForTick(
-            SimulationConstants.Level100TargetZone1ActivationTick + 57 + 216);
+            FirstFlightSmokeScenario.TargetZoneInputStartTick + 216);
         InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(
             FirstFlightSmokeScenario.DurationTicks - 1);
         InteractiveInput firingRangeTurn = FirstFlightSmokeScenario.GetInputForTick(1_995);
@@ -456,7 +549,7 @@ public sealed class InteractiveSessionTests
         Assert.Equal(3_228, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
-        var session = new InteractiveSession(Seed);
+        var session = new InteractiveSession(Seed, ActorDefinitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
         {
             session.ObserveInput(
@@ -466,12 +559,17 @@ public sealed class InteractiveSessionTests
         }
 
         TargetSnapshot firstTarget = session.CurrentSnapshot.Targets.Single(target => target.Id == 1);
-        Assert.False(firstTarget.IsActive);
-        Assert.Equal(0, firstTarget.Hull);
-        Assert.Equal(1, session.CurrentSnapshot.TargetsDestroyed);
-        Assert.All(
-            session.CurrentSnapshot.Targets.Where(target => target.Id != 1),
-            target => Assert.True(target.IsActive));
+        Assert.True(firstTarget.IsActive);
+        Assert.Equal(SimulationConstants.Level100TargetTankLife, firstTarget.Hull);
+        Assert.Equal(0, session.CurrentSnapshot.TargetsDestroyed);
+        Level100ActorScriptInstanceSnapshot targetScript =
+            session.CurrentSnapshot.Level100ActorScripts.Instances.Single(item =>
+                item.ActorId == firstTarget.ActorId);
+        Level100ActorScriptContinuationSnapshot waypoint = Assert.Single(
+            targetScript.Continuations);
+        Assert.Equal(Level100ActorScriptWaitKind.FollowWaypoint, waypoint.WaitKind);
+        Assert.Equal("Target Tank Path 1", waypoint.WaitArgument);
+        Assert.Null(waypoint.DueTick);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
     }
 
@@ -497,17 +595,96 @@ public sealed class InteractiveSessionTests
         return session;
     }
 
+    private static ClientMissionTape RunClientFailureTape(
+        Level100ActorDefinitionSet? actorDefinitions = null)
+    {
+        var tape = new ClientMissionTape(actorDefinitions);
+        tape.Step([new Level100MissionInputFact(Level100MissionInput.BrokeTutorial)]);
+        tape.AdvanceUntil(
+            state => state.Level100Mission.Outcome == Level100MissionOutcome.Lost,
+            500);
+        tape.Advance(Level100MissionTiming.FailureCountdownTicks);
+        return tape;
+    }
+
+    private sealed class ClientMissionTape
+    {
+        private readonly InteractiveSession _session;
+
+        internal ClientMissionTape(Level100ActorDefinitionSet? actorDefinitions = null)
+        {
+            _session = new InteractiveSession(
+                0x100u,
+                actorDefinitions ?? Level100TestActorDefinitions.Create());
+            Capture(_session.CurrentSnapshot.Level100MissionEvents);
+        }
+
+        internal WorldSnapshot Snapshot => _session.CurrentSnapshot;
+
+        internal List<Level100MissionEvent> Events { get; } = [];
+
+        internal List<string> Hashes { get; } = [];
+
+        internal void Step(IReadOnlyList<Level100SimulationFact>? facts = null) =>
+            Step(InteractiveInput.Idle, facts);
+
+        internal void Step(
+            InteractiveInput input,
+            IReadOnlyList<Level100SimulationFact>? facts = null)
+        {
+            _session.ObserveInput(input);
+            FrameAdvanceResult result = _session.AdvanceFrameTicks(OneCoreStepTicks, facts);
+            Assert.Equal(1, result.StepsAdvanced);
+            Assert.Empty(result.CurrentSnapshot.Level100Mission.PendingEvents);
+            Capture(result.Level100MissionEvents);
+        }
+
+        internal void Advance(int ticks)
+        {
+            for (int tick = 0; tick < ticks; tick++)
+            {
+                Step();
+            }
+        }
+
+        internal void AdvanceUntil(Func<WorldSnapshot, bool> predicate, int maximumTicks)
+        {
+            for (int tick = 0; tick < maximumTicks && !predicate(Snapshot); tick++)
+            {
+                Step();
+            }
+
+            Assert.True(predicate(Snapshot),
+                $"Condition was not reached by client tick {Snapshot.Tick}.");
+        }
+
+        private void Capture(IReadOnlyList<Level100MissionEvent> events)
+        {
+            Events.AddRange(events);
+            Hashes.Add(StateHasher.ComputeHex(Snapshot));
+        }
+    }
+
     private static InteractiveSession CreatePlayingSession(uint seed = Seed)
     {
-        var session = new InteractiveSession(seed);
-        const long oneCoreStepTicks =
-            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
-        for (int tick = 0; tick < SimulationConstants.Level100TargetZone1ActivationTick; tick++)
+        var session = new InteractiveSession(seed, ActorDefinitions);
+        for (int tick = 0; tick < FirstRunControlTick; tick++)
         {
-            session.AdvanceFrameTicks(oneCoreStepTicks);
+            session.AdvanceFrameTicks(OneCoreStepTicks);
         }
 
         Assert.True(session.CurrentSnapshot.Level100PlayerControlEnabled);
         return session;
+    }
+
+    private static Level100ActorDefinitionSet LoadMaterializedActorDefinitions()
+    {
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "Assets",
+            "Level100",
+            "StaticWorld",
+            "level100-static-world.json");
+        return Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(path));
     }
 }

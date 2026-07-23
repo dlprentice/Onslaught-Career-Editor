@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\TestSupport\Level100TestActorDefinitions.cs"
+             Link="TestSupport\Level100TestActorDefinitions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\OnslaughtRebuild.Client\**\*.cs"
              Exclude="..\OnslaughtRebuild.Client\bin\**;..\OnslaughtRebuild.Client\obj\**"
              Link="client-source\%(RecursiveDir)%(Filename)%(Extension)"
@@ -32,6 +37,9 @@
     <Content Include="..\OnslaughtRebuild.Client\OnslaughtRebuild.Client.csproj"
              Link="client-project\OnslaughtRebuild.Client.csproj"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world.json"
+             Link="Assets\Level100\StaticWorld\level100-static-world.json"
+             CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>

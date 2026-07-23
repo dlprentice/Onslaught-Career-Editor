@@ -28,6 +28,35 @@ GODOT_ASSETS = Path("rebuild/OnslaughtRebuild.Godot/Assets")
 CORE_ASSETS = Path("rebuild/OnslaughtRebuild.Core/Assets")
 LEVEL_ARCHIVE = "data/resources/100_res_PC.aya"
 LEVEL_ARCHIVE_SHA256 = "ed6350c0e214d00ab1bf6a7bd137fba3e77d0afe19a6dc4c0607f56ac037496a"
+LEVEL100_SCRIPT_ROOT = CORE_ASSETS / "Level100/Scripts"
+LEVEL100_SCRIPT_OBJECTS = (
+    ("AirborneDrone1", 920, "7209f0752e4715d1b3dbd9d102cda997f65b3d4ff38a37a5c382d4bb5f364f28"),
+    ("AirborneDrone2", 952, "6491cb323adb7758176c0afce12ec8d84e025323bdc4014f1f452c881102ed17"),
+    ("AirTrainer", 625, "9549f63b5bd964dfafb1cd002685144311db2e53b01d79b8a1be47d68f0da9d7"),
+    ("BattleEngine", 990, "b68d9e176051f6fec4fb84d344c51998047cf635a40dd56cc87c30ec1156ab26"),
+    ("Facilities", 564, "3f19d9cb84a06a898aea98cf2236301f4b81739c874a018093ca8f1e3a9b6ed2"),
+    ("FiringRange", 913, "8b05629d4a350005322333c1442e068f3f50707e65ab810c665c82f34bd7a7c9"),
+    ("Flyby", 394, "20039756aba7f0b79a5f9bccc3c45f6b17a0e6ec27e05b406f4c40c3254e1444"),
+    ("Hangar", 3419, "f5d42f5c58e9874d97965971b7e2a7cdede12a039eaf3ab699965da61568d073"),
+    ("LevelScript", 20586, "73eb349b9c4b5c5d7294b2183cd4d4aebe024c5d3c8cda9be685bd1463ed6fb1"),
+    ("Setup", 2402, "986e2b60afa62df15c9ad52fc04538a8eab8473a4eab46fc1844e67d7a85d1e0"),
+    ("StaticTarget", 1011, "6670ab8cf964b037fb29f4feff19790a1e15c9fc45504e71fc259eadda9e8a54"),
+    ("StaticTarget2", 1016, "28281145def2cdd0576b4ab9c6cb9e47f36c37f59397b3a941f46b15f334b8c3"),
+    ("TankFactory", 3790, "44577134d213c3e8362fcedfe8344cbc3ac1346623f89408a16d32d685703892"),
+    ("TargetTank1", 1278, "50839be04b6d72e29ecf6b1519c43baa9f826cda3d3c1bd0ebe56eedc292d305"),
+    ("TargetTank2", 739, "331a5ecdf7122014d3eb70827f30b348ba2d8c80a58971c4764d040b4da7dc09"),
+    ("TargetTruck1", 1299, "cca2f36f70d0751e62cf5a66e4fc23a12a2f77d98f9eb8579f28d8625e72ebbb"),
+    ("TargetTruck2", 1299, "7c00c14b9de87873f21848cd28696a331cf0b5902548988030ef3192c438a2b6"),
+    ("TargetTruck3", 1299, "8b864edfa626bbb9f45e06c6cc73b71d6b68c3ae41469fc4cd61a453d0386c52"),
+    ("TargetZone1", 969, "50269961be899b4f50025300ff1af8bb220437b36f9e8bce1cd2806e7617d56c"),
+    ("TargetZone2", 1092, "8a4b727dcf0f9e249c7c1ab0155326004356f0ad5dd84f226148db794a884af3"),
+    ("TargetZone3", 1118, "222c44814482a69ff716b785d01a0bc7b508f19fc60774f2067db5d8bd1ca90d"),
+    ("TargetZone4", 1092, "026a70263ede8daaed00d324dbe13160bcb4882a10e10f7bfe384f62896b2e8f"),
+    ("Transporter", 408, "15cf230e674d80bb92fecefc4f16c708d3c969c02aa1384c4142de47dbf35a5f"),
+    ("Turret", 835, "462614eaa5222bd3be759d4b8d0217d695c3afbbf36e334fbdc256a906797c71"),
+    ("Weather", 540, "369ca18aba315a853404779b931d45bed0d692d5bad38536a41c4d4706650ce4"),
+)
+LEVEL100_SCRIPT_SHA256 = {name: sha256 for name, _, sha256 in LEVEL100_SCRIPT_OBJECTS}
 BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
@@ -60,7 +89,7 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "0a96d2677c4b05e92f8df0665f4f6481dff8da5ea9300a0a692eda64cf666075"
+STATIC_WORLD_MANIFEST_SHA256 = "54218263e799e9af77247ac570fbd27178331ea1c0c266017da35ee8d16a5498"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -279,6 +308,10 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
     derived = (
         (ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),
         (TERRAIN_HIERARCHY_SOURCE, TERRAIN_HIERARCHY_SOURCE_SHA256),
+        *(
+            (LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin", expected)
+            for name, _, expected in LEVEL100_SCRIPT_OBJECTS
+        ),
     )
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
     sounds = tuple((path, expected) for path, _, _, expected in SOUNDS)
@@ -306,7 +339,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v7"
+        manifest.get("schema") != "onslaught.level100-static-world.v10"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -314,6 +347,8 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or manifest.get("suppressedFernCount") != 753
         or manifest.get("pineInstanceCount") != 1481
         or len(manifest.get("objects", ())) != 33
+        or len(manifest.get("actorDefinitions", ())) != 44
+        or len(manifest.get("spawnDefinitions", ())) != 10
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
         or len(manifest.get("textures", {})) != 34
@@ -521,6 +556,12 @@ class _WorldReader:
     def string8(self) -> str:
         return self._take(self.uint8()).decode("ascii")
 
+    def string32(self) -> str:
+        size = self.int32()
+        if size < 0 or size > 1_048_576:
+            raise RuntimeError("Level 100 world data has an invalid string length")
+        return self._take(size).decode("ascii")
+
     def c_string(self) -> str:
         end = self.data.find(b"\0", self.position)
         if end < 0:
@@ -549,13 +590,14 @@ def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list
         thing_type = reader.int32()
         position = [reader.single() for _ in range(3)]
         yaw_pitch_roll = [reader.single() for _ in range(3)]
-        for _ in range(3):
-            reader.int32()
-        reader.c_string()
+        mesh_number = reader.int32()
+        allegiance = reader.int32()
+        target = reader.int32()
+        script = reader.c_string()
         name = reader.c_string()
-        reader.c_string()
-        reader.int32()
-        reader.int32()
+        spawn_script = reader.c_string()
+        active = reader.int32()
+        attach_scripts = reader.int32()
 
         definition = ""
         if thing_type in (8, 35):
@@ -572,10 +614,19 @@ def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list
         objects.append(
             {
                 "definition": definition,
+                "active": active != 0,
+                "allegiance": allegiance,
+                "attachScripts": attach_scripts != 0,
                 "mesh": mesh_key,
+                "meshNumber": mesh_number,
                 "name": name or definition,
                 "ordinal": ordinal,
+                "retailOrientation": yaw_pitch_roll,
                 "retailPosition": position,
+                "script": script,
+                "spawnScript": spawn_script,
+                "target": target,
+                "thingType": thing_type,
                 "yaw": yaw_pitch_roll[0],
             }
         )
@@ -610,6 +661,148 @@ def _parse_static_world(raw_level: bytes) -> tuple[list[dict[str, object]], list
     ):
         raise RuntimeError("Level 100 base-world object/tree counts do not reproduce")
     return objects, pines, len(ferns)
+
+
+LEVEL100_SCRIPT_NAMES = tuple(item[0] for item in LEVEL100_SCRIPT_OBJECTS)
+
+
+def _skip_level100_script_value(reader: _WorldReader) -> None:
+    value_type = reader.int32()
+    if value_type == 0:
+        return
+    if value_type in (1, 2, 4, 5):
+        reader.int32()
+        return
+    if value_type == 3:
+        reader.string32()
+        return
+    if value_type == 6:
+        for _ in range(3):
+            reader.int32()
+        return
+    raise RuntimeError(f"Level 100 script object has unsupported value type {value_type}")
+
+
+def _skip_level100_script_object(reader: _WorldReader) -> tuple[str, int]:
+    name = reader.string32()
+    instruction_count = reader.int32()
+    if instruction_count < 0 or instruction_count > 20_000:
+        raise RuntimeError("Level 100 script object has an invalid instruction count")
+    reader._take(instruction_count * 8)
+    reader._take(13 * 4)
+    symbol_count = reader.int32()
+    if symbol_count < 0 or symbol_count > 4_096:
+        raise RuntimeError("Level 100 script object has an invalid symbol count")
+    for ordinal in range(symbol_count):
+        reader.string32()
+        _skip_level100_script_value(reader)
+        reader.int32()
+        if reader.int32() != ordinal or reader.int32() != 1:
+            raise RuntimeError("Level 100 script object has invalid symbol metadata")
+    if reader.int32() != symbol_count:
+        raise RuntimeError("Level 100 script object has an invalid symbol trailer")
+    event_count = reader.int32()
+    if event_count < 0 or event_count > 256:
+        raise RuntimeError("Level 100 script object has an invalid event count")
+    for _ in range(event_count):
+        reader.int32()
+        if reader.int32() != 1:
+            raise RuntimeError("Level 100 script event parameter count changed")
+        reader.int32()
+    if reader.int32() != 0 or reader.int32() not in (0, 1):
+        raise RuntimeError("Level 100 script object has an invalid trailer")
+    payload_end = reader.position
+    if reader._take(10) != b"end_script":
+        raise RuntimeError("Level 100 script object end marker changed")
+    return name, payload_end
+
+
+def _parse_level_world_scripts(
+    raw_level: bytes,
+) -> tuple[_WorldReader, dict[str, bytes]]:
+    rlwd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"RLWD")
+    reader = _WorldReader(rlwd)
+    if (
+        reader.uint16() != 50
+        or tuple(reader.int32() for _ in range(3)) != (3, 41, 100)
+        or reader.int32() != 1
+        or reader.string8() != "Aquila Prototype"
+        or tuple(reader.int32() for _ in range(4)) != (0, 0, 0, 0)
+        or reader.int32() != 1
+        or reader.int32() != len(LEVEL100_SCRIPT_NAMES)
+    ):
+        raise RuntimeError("Level 100 level-world header is not the supported version-50 layout")
+    scripts: dict[str, bytes] = {}
+    for expected_name, expected_size, expected_hash in LEVEL100_SCRIPT_OBJECTS:
+        start = reader.position
+        name, payload_end = _skip_level100_script_object(reader)
+        payload = rlwd[start:payload_end]
+        if (
+            name != expected_name
+            or len(payload) != expected_size
+            or _sha256(payload) != expected_hash
+            or name in scripts
+        ):
+            raise RuntimeError(
+                f"Level 100 compiled script {expected_name} changed "
+                f"(name={name!r}, size={len(payload)}, SHA-256={_sha256(payload)})"
+            )
+        scripts[name] = payload
+    return reader, scripts
+
+
+def _parse_level_world_actors(raw_level: bytes) -> list[dict[str, object]]:
+    reader, _ = _parse_level_world_scripts(raw_level)
+    if reader.int32() != 1 or reader.int32() != 0 or reader.uint16() != 45:
+        raise RuntimeError("Level 100 initial-actor header changed")
+
+    actors: list[dict[str, object]] = []
+    for ordinal in range(45):
+        thing_type = reader.int32()
+        position = [reader.single() for _ in range(3)]
+        orientation = [reader.single() for _ in range(3)]
+        mesh_number = reader.int32()
+        allegiance = reader.int32()
+        target = reader.int32()
+        script = reader.c_string()
+        name = reader.c_string()
+        spawn_script = reader.c_string()
+        active = reader.int32()
+        attach_scripts = reader.int32()
+        definition = ""
+        radius: float | None = None
+        if thing_type in (8, 35):
+            definition = reader.string8()
+            if reader.int32() != -1:
+                raise RuntimeError("Level 100 level-world unit definition trailer changed")
+        elif thing_type == 15:
+            reader.int32()
+            reader.int32()
+        elif thing_type == 36:
+            radius = reader.single()
+        elif thing_type not in (18, 27, 37):
+            raise RuntimeError(f"unsupported Level 100 level-world thing type {thing_type}")
+        actors.append(
+            {
+                "active": active != 0,
+                "allegiance": allegiance,
+                "attachScripts": attach_scripts != 0,
+                "definition": definition,
+                "meshNumber": mesh_number,
+                "name": name,
+                "ordinal": ordinal,
+                "radius": radius,
+                "retailOrientation": orientation,
+                "retailPosition": position,
+                "script": script,
+                "spawnScript": spawn_script,
+                "target": target,
+                "thingType": thing_type,
+            }
+        )
+    if reader.uint16() != 0 or reader.int32() != 2:
+        raise RuntimeError("Level 100 initial-actor records did not end at the tree groups")
+    return actors
 
 
 def _slug(value: str) -> str:
@@ -795,6 +988,374 @@ def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]
     return list(struct.unpack("<3f", struct.pack("<3I", *center_bits)))
 
 
+LEVEL100_PLAYER_START_X = 288.6875
+LEVEL100_PLAYER_START_Y = 243.25
+
+LEVEL100_SETUP_SCRIPT_BINDINGS = {
+    "Tank Factory": "TankFactory",
+    "Airfield": "Hangar",
+    "Turret 01": "Turret",
+    "Turret 02": "Turret",
+    "Turret 03": "Turret",
+    "Turret 04": "Turret",
+    "Radar Station": "Facilities",
+    "Forseti Research Building 1": "Facilities",
+    "Health Pad": "Facilities",
+    "Control Tower": "Facilities",
+}
+
+
+def _round_away_from_zero(value: float) -> int:
+    if not math.isfinite(value):
+        raise RuntimeError("Level 100 actor data contains a non-finite value")
+    return math.floor(value + 0.5) if value >= 0 else math.ceil(value - 0.5)
+
+
+def _float_bits(value: float) -> int:
+    return struct.unpack("<i", struct.pack("<f", value))[0]
+
+
+def _normalize_angle(value: float) -> float:
+    while value > math.pi:
+        value -= math.tau
+    while value < -math.pi:
+        value += math.tau
+    return value
+
+
+def _actor_pose(
+    retail_position: list[float] | tuple[float, float, float],
+    retail_orientation: list[float] | tuple[float, float, float],
+    retail_basis: list[list[float]] | tuple[tuple[float, float, float], ...] | None = None,
+) -> dict[str, list[int]]:
+    basis = retail_basis or _retail_basis(retail_orientation)
+    core_basis = _change_basis_retail_to_core(basis)
+    return {
+        "angularVelocityMicroRadiansPerTick": [0, 0, 0],
+        "basisFloatBits": [
+            _float_bits(component) for row in core_basis for component in row
+        ],
+        "linearVelocityMillimetersPerTick": [0, 0, 0],
+        "positionMillimeters": [
+            _round_away_from_zero((retail_position[0] - LEVEL100_PLAYER_START_X) * 1_000.0),
+            _round_away_from_zero(retail_position[2] * 1_000.0),
+            _round_away_from_zero((retail_position[1] - LEVEL100_PLAYER_START_Y) * 1_000.0),
+        ],
+    }
+
+
+def _retail_basis(
+    retail_orientation: list[float] | tuple[float, float, float],
+) -> list[list[float]]:
+    yaw, pitch, roll = retail_orientation
+    # Every authored Level 100 actor uses yaw only. Preserve that released
+    # contract explicitly rather than inventing an unobserved Euler order.
+    if pitch != 0.0 or roll != 0.0:
+        raise RuntimeError("Level 100 authored actor uses an unresolved pitch/roll basis")
+    cosine = math.cos(yaw)
+    sine = math.sin(yaw)
+    return [[cosine, -sine, 0.0], [sine, cosine, 0.0], [0.0, 0.0, 1.0]]
+
+
+def _matrix_multiply(left, right) -> list[list[float]]:
+    return [
+        [sum(left[row][axis] * right[axis][column] for axis in range(3))
+         for column in range(3)]
+        for row in range(3)
+    ]
+
+
+def _matrix_vector(matrix, vector) -> list[float]:
+    return [sum(matrix[row][axis] * vector[axis] for axis in range(3)) for row in range(3)]
+
+
+def _change_basis_retail_to_core(retail_basis) -> list[list[float]]:
+    # Core axes are retail X,Z,Y. The permutation is its own inverse.
+    permutation = [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]]
+    return _matrix_multiply(_matrix_multiply(permutation, retail_basis), permutation)
+
+
+def _authored_transform(position, orientation) -> dict[str, list[int]]:
+    basis = _retail_basis(orientation)
+    return {
+        "retailBasisFloatBits": [
+            _float_bits(component) for row in basis for component in row
+        ],
+        "retailEulerFloatBits": [_float_bits(component) for component in orientation],
+        "retailPositionFloatBits": [_float_bits(component) for component in position],
+    }
+
+
+def _mesh_emitters(inflated: bytes, parsed) -> dict[str, dict[str, object]]:
+    offset = inflated.find(b"CEMT")
+    if offset < 0 or offset + 12 > len(inflated):
+        return {}
+    size = struct.unpack_from("<I", inflated, offset + 4)[0]
+    end = offset + 8 + size
+    if end > len(inflated):
+        raise RuntimeError("Level 100 mesh has a truncated CEMT payload")
+    cursor = offset + 8
+    record_size = struct.unpack_from("<I", inflated, cursor)[0]
+    cursor += 4
+    if record_size != 336 or (size - 4) % (record_size + 4) != 0:
+        raise RuntimeError("Level 100 mesh has an unsupported CEMT layout")
+    result: dict[str, dict[str, object]] = {}
+    for _ in range((size - 4) // (record_size + 4)):
+        record = inflated[cursor : cursor + record_size]
+        part_index = struct.unpack_from("<I", inflated, cursor + record_size)[0]
+        cursor += record_size + 4
+        if part_index >= len(parsed.parts):
+            raise RuntimeError("Level 100 CEMT refers to an invalid mesh part")
+        name = record[76:332].split(b"\0", 1)[0].decode("ascii")
+        if not name.startswith("Spawner"):
+            continue
+        if name in result:
+            raise RuntimeError(f"Level 100 mesh has duplicate emitter {name}")
+        transform = parsed.parts[part_index].transform
+        result[name] = {
+            "basis": transform.rows,
+            "partOrdinal": part_index,
+            "position": transform.position,
+        }
+    if cursor != end:
+        raise RuntimeError("Level 100 CEMT payload did not reproduce")
+    return result
+
+
+def _spawn_pose(
+    owner: dict[str, object],
+    emitter: dict[str, object],
+) -> dict[str, list[int]]:
+    owner_position = owner["retailPosition"]
+    owner_orientation = owner["retailOrientation"]
+    local_position = emitter["position"]
+    local_basis = emitter["basis"]
+    if not isinstance(owner_position, list) or not isinstance(owner_orientation, list):
+        raise RuntimeError("Level 100 spawn owner has invalid authored transform data")
+    owner_basis = _retail_basis(owner_orientation)
+    world_basis = _matrix_multiply(owner_basis, local_basis)
+    translated = _matrix_vector(owner_basis, local_position)
+    world_position = [
+        owner_position[axis] + translated[axis] for axis in range(3)
+    ]
+    world_yaw = math.atan2(world_basis[1][0], world_basis[0][0])
+    return _actor_pose(
+        world_position,
+        [_normalize_angle(world_yaw), 0.0, 0.0],
+        world_basis,
+    )
+
+
+def _build_actor_definition_set(
+    objects: list[dict[str, object]],
+    level_actors: list[dict[str, object]],
+    emitters_by_mesh: dict[str, dict[str, dict[str, object]]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    actor_definitions: list[dict[str, object]] = []
+
+    def add_actor(
+        *,
+        identity: str,
+        name: str,
+        definition_name: str | None,
+        script_name: str | None,
+        mesh_binding: str | None,
+        is_static: bool,
+        active: bool,
+        health: int,
+        authored_transform: dict[str, list[int]],
+        pose: dict[str, list[int]],
+        thing_type_mask: int = 0,
+        target_group: str = "None",
+        target_ordinal: int = 0,
+        trigger: str | None = None,
+    ) -> None:
+        actor_definitions.append(
+            {
+                "active": active,
+                "authoredOrder": len(actor_definitions),
+                "authoredTransform": authored_transform,
+                "definitionIdentity": identity,
+                "definitionName": definition_name,
+                "initialHealth": health,
+                "initialPose": pose,
+                "isStatic": is_static,
+                "meshBinding": mesh_binding,
+                "name": name,
+                "scriptName": script_name,
+                "thingTypeMask": thing_type_mask,
+                "targetGroup": target_group,
+                "targetOrdinal": target_ordinal,
+                "trigger": trigger,
+            }
+        )
+
+    static_by_name: dict[str, dict[str, object]] = {}
+    for item in objects:
+        name = str(item["name"])
+        if name in LEVEL100_SETUP_SCRIPT_BINDINGS and name in static_by_name:
+            raise RuntimeError(f"Level 100 has duplicate mission actor name {name}")
+        static_by_name[name] = item
+        add_actor(
+            identity=f"wres:bswd:{int(item['ordinal']):04d}",
+            name=name,
+            definition_name=str(item["definition"]),
+            # The released Setup program assigns these scripts at runtime.
+            script_name=str(item["script"]) or None,
+            mesh_binding=str(item["mesh"]),
+            is_static=True,
+            active=bool(item["active"]),
+            health=0,
+            authored_transform=_authored_transform(
+                item["retailPosition"], item["retailOrientation"]
+            ),
+            pose=_actor_pose(item["retailPosition"], item["retailOrientation"]),
+        )
+
+    trigger_by_name = {
+        "Target Zone 1": "TargetZone1",
+        "Firing Range": "FiringRange",
+        "Target Zone 2": "TargetZone2",
+        "Target Zone 3": "TargetZone3",
+        "Target Zone 4": "TargetZone4",
+    }
+    target_by_record = {
+        9: ("Target Tank 2", "m_f_pulsetank_training.msh.aya", "StaticTargets", 2, 6_000),
+        11: ("Target Warehouse", "m_m_warehouse.msh.aya", "StaticTargets", 4, 21_600),
+        12: ("Target Tank 3", "m_f_pulsetank_training.msh.aya", "StaticTargets", 3, 6_000),
+        # The authored actor is the distinct Flyby instance. Airfield later spawns
+        # the AirTrainer mission actor through SpawnerB.
+        40: ("Air Trainer", "m_FA_F24_training.msh.aya", "None", 0, 0),
+    }
+    physical_actor_ordinals = {
+        0, 9, 11, 12, 13, 14, 15, 16, 19, 21, 40,
+    }
+    for item in level_actors:
+        ordinal = int(item["ordinal"])
+        if ordinal not in physical_actor_ordinals:
+            continue
+        serialized_name = str(item["name"])
+        if ordinal == 0:
+            name = "Player 1"
+            definition_name = "BattleEngine"
+            mesh_binding = "m_f_be1.msh.aya"
+        elif ordinal in target_by_record:
+            name, mesh_binding, _, _, _ = target_by_record[ordinal]
+            definition_name = str(item["definition"])
+        elif serialized_name:
+            name = serialized_name
+            definition_name = str(item["definition"]) or {
+                36: "General Volume",
+            }.get(int(item["thingType"]), f"Level Actor Type {item['thingType']}")
+            mesh_binding = None
+        else:
+            name = {21: "Transporter"}.get(ordinal, f"Level Actor {ordinal:02d}")
+            definition_name = str(item["definition"]) or {
+                15: "BattleEngine",
+            }.get(int(item["thingType"]), f"Level Actor Type {item['thingType']}")
+            mesh_binding = None
+
+        if ordinal == 21:
+            mesh_binding = "m_f_lifter.msh.aya"
+
+        target_group = "None"
+        target_ordinal = 0
+        health = 0
+        if ordinal in target_by_record:
+            _, _, target_group, target_ordinal, health = target_by_record[ordinal]
+        trigger = trigger_by_name.get(serialized_name)
+        if trigger is not None:
+            if item["thingType"] != 36 or item["radius"] != 5.0:
+                raise RuntimeError(f"Level 100 trigger {serialized_name} changed")
+
+        add_actor(
+            identity=f"wres:rlwd:{ordinal:04d}",
+            name=name,
+            definition_name=definition_name,
+            script_name=str(item["script"]) or None,
+            mesh_binding=mesh_binding,
+            is_static=int(item["thingType"]) not in (8, 15),
+            active=bool(item["active"]),
+            health=health,
+            authored_transform=_authored_transform(
+                item["retailPosition"], item["retailOrientation"]
+            ),
+            pose=_actor_pose(item["retailPosition"], item["retailOrientation"]),
+            thing_type_mask=8 if ordinal == 0 else 0,
+            target_group=target_group,
+            target_ordinal=target_ordinal,
+            trigger=trigger,
+        )
+
+    if len(actor_definitions) != 44:
+        raise RuntimeError(
+            f"Level 100 actor definition set has {len(actor_definitions)} actors instead of 44"
+        )
+
+    owner_identity = {
+        "Tank Factory": "wres:bswd:0001",
+        "Airfield": "wres:bswd:0023",
+    }
+    spawn_rows = (
+        ("Tank Factory", "Target Tank", "SpawnerA", "TargetTank1", "m_f_pulsetank_training.msh.aya", "StaticTargets", 1, 4),
+        ("Tank Factory", "Target Truck", "SpawnerA", "TargetTruck1", "m_f_truck_training.msh.aya", "TargetTrucks", 1, 3),
+        ("Tank Factory", "Target Truck", "SpawnerA", "TargetTruck2", "m_f_truck_training.msh.aya", "TargetTrucks", 2, 3),
+        ("Tank Factory", "Target Truck", "SpawnerA", "TargetTruck3", "m_f_truck_training.msh.aya", "TargetTrucks", 3, 3),
+        ("Tank Factory", "Target Tank", "SpawnerA", "TargetTank2", "m_f_pulsetank_training.msh.aya", "MovingTargets", 0, 6),
+        ("Tank Factory", "Target Truck", "SpawnerA", "TargetTank2", "m_f_truck_training.msh.aya", "MovingTargets", 0, 6),
+        ("Airfield", "Air Trainer", "SpawnerB", "AirTrainer", "m_FA_F24_training.msh.aya", "AirTrainer", 1, 1),
+        ("Airfield", "Target Drone", "SpawnerB", "AirborneDrone1", "m_FA_F24_training.msh.aya", "AirborneTargets1", 0, 3),
+        ("Airfield", "Target Drone", "SpawnerA", "AirborneDrone2", "m_FA_F24_training.msh.aya", "AirborneTargets2", 0, 6),
+        ("Airfield", "Target Drone", "SpawnerB", "AirborneDrone2", "m_FA_F24_training.msh.aya", "AirborneTargets2", 0, 6),
+    )
+    spawn_definitions: list[dict[str, object]] = []
+    for (
+        owner_name,
+        definition_name,
+        spawner_name,
+        script_name,
+        mesh_binding,
+        target_group,
+        fixed_ordinal,
+        maximum_group_actors,
+    ) in spawn_rows:
+        owner = static_by_name[owner_name]
+        emitter = emitters_by_mesh[str(owner["mesh"])][spawner_name]
+        local_position = emitter["position"]
+        local_basis = emitter["basis"]
+        spawn_definitions.append(
+            {
+                "active": True,
+                "authoredEmitterTransform": {
+                    "localBasisFloatBits": [
+                        _float_bits(component)
+                        for row in local_basis
+                        for component in row
+                    ],
+                    "localPositionFloatBits": [
+                        _float_bits(component) for component in local_position
+                    ],
+                },
+                "authoredOrder": len(spawn_definitions),
+                "definitionIdentity": (
+                    f"spawn:{owner_name}:{definition_name}:{spawner_name}:{script_name}"
+                ),
+                "definitionName": definition_name,
+                "fixedTargetOrdinal": fixed_ordinal,
+                "initialHealth": 6_000 if definition_name == "Target Tank" else 0,
+                "initialPose": _spawn_pose(owner, emitter),
+                "maximumGroupActors": maximum_group_actors,
+                "meshBinding": mesh_binding,
+                "ownerDefinitionIdentity": owner_identity[owner_name],
+                "scriptName": script_name,
+                "spawnerName": spawner_name,
+                "targetGroup": target_group,
+                "thingTypeMask": 0,
+            }
+        )
+    return actor_definitions, spawn_definitions
+
+
 def _materialize_static_world(
     game_root: Path,
     raw_level: bytes,
@@ -808,6 +1369,7 @@ def _materialize_static_world(
     from cmsh_static_preview import convert_aya_bytes, inflate_aya, parse_cmsh_stream
 
     objects, pines, fern_count = _parse_static_world(raw_level)
+    level_actors = _parse_level_world_actors(raw_level)
     texture_blend_flags = _texture_blend_alpha_flags(raw_level)
     resolver = build_asset_resolver(game_root / "data/resources")
     source_data: dict[Path, bytes] = {}
@@ -820,6 +1382,7 @@ def _materialize_static_world(
             dict[str, tuple[tuple[Path, float, float, float, float, float] | None, ...]],
         ],
     ] = {}
+    emitters_by_mesh: dict[str, dict[str, dict[str, object]]] = {}
 
     for mesh_key in STATIC_MESH_KEYS:
         matches = resolver.mesh_index.get(f"{mesh_key}.msh".lower(), [])
@@ -834,7 +1397,10 @@ def _materialize_static_world(
             )
         else:
             data = source_path.read_bytes()
-        parsed = parse_cmsh_stream(inflate_aya(data))
+        inflated = inflate_aya(data)
+        parsed = parse_cmsh_stream(inflated)
+        if mesh_key in ("fb_tank_factory", "fb_aircraft_factory"):
+            emitters_by_mesh[mesh_key] = _mesh_emitters(inflated, parsed)
         signatures = sorted(
             {group.raw_texr_u32 for part in parsed.parts for group in part.groups}
         )
@@ -897,6 +1463,18 @@ def _materialize_static_world(
             materials[_material_surface_name(signature)] = tuple(layers)
         source_data[relative] = data
         mesh_inputs[mesh_key] = (relative, data, materials)
+
+    if (
+        set(emitters_by_mesh) != {"fb_tank_factory", "fb_aircraft_factory"}
+        or set(emitters_by_mesh["fb_tank_factory"]) != {"SpawnerA", "SpawnerB"}
+        or set(emitters_by_mesh["fb_aircraft_factory"]) != {"SpawnerA", "SpawnerB"}
+    ):
+        raise RuntimeError("Level 100 authored spawner emitters changed")
+    actor_definitions, spawn_definitions = _build_actor_definition_set(
+        objects,
+        level_actors,
+        emitters_by_mesh,
+    )
 
     pine_views = _pine_imposter_views(raw_level)
     pine_centers = [
@@ -1051,6 +1629,14 @@ def _materialize_static_world(
     outputs.append((WATER_SURFACE_RESOURCE, WATER_SURFACE_SHA256))
 
     manifest = {
+        "actorDefinitionProvenance": {
+            "baseWorld": "100_res_PC.aya WRES/WRLD/BSWD v50 records 0..34",
+            "compiledScripts": "100_res_PC.aya WRES/WRLD/RLWD ordered Level 100 object code",
+            "levelWorld": "100_res_PC.aya WRES/WRLD/RLWD v50 initial actors 0..44",
+            "spawnerTransforms": "exact CEMT named emitter part transforms from the released Tank Factory and Airfield meshes",
+            "startupSpawn": "TankFactory compiled initializer plus exact SpawnerA CEMT transform; no settled target pose is pre-seeded",
+        },
+        "actorDefinitions": actor_definitions,
         "meshes": mesh_records,
         "objects": objects,
         "pineBillboards": {
@@ -1067,13 +1653,14 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v7",
+        "schema": "onslaught.level100-static-world.v10",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,
         "textures": texture_records,
         "unitRecordCount": 35,
         "visibleObjectCount": len(objects),
+        "spawnDefinitions": spawn_definitions,
         "water": {
             "causticTexture": "water-caustic-00",
             "level": struct.unpack("<f", struct.pack("<I", water_level_bits))[0],
@@ -1617,6 +2204,12 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     from aya_archive_inventory import inflate_aya_bytes
 
     raw_level = inflate_aya_bytes(level_archive)
+    _, scripts = _parse_level_world_scripts(raw_level)
+    for name, payload in scripts.items():
+        script_target = stage / LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin"
+        script_target.parent.mkdir(parents=True, exist_ok=True)
+        script_target.write_bytes(payload)
+
     chunk_data: dict[bytes, bytes] = {}
     for destination, tag, expected_size, expected in CHUNKS:
         data = _extract_chunk(raw_level, tag, expected_size, expected)

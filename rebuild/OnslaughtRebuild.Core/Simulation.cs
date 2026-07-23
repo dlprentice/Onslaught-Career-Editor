@@ -4,16 +4,11 @@ namespace OnslaughtRebuild.Core;
 
 public sealed class Simulation
 {
-    private sealed class MutableTarget
-    {
-        public required int Id { get; init; }
-        public required SimVector2 Position { get; init; }
-        public int Hull { get; set; }
-        public bool IsActive { get; set; }
-    }
-
     private sealed class MutableProjectile
     {
+        // Rounds are deterministic ammunition state, not script actors. They
+        // enter the actor runtime only as the released external Ammunition
+        // type mask carried by a hit fact.
         public required int Id { get; init; }
         public SimVector2 Position { get; set; }
         public required SimVector2 Velocity { get; init; }
@@ -33,17 +28,20 @@ public sealed class Simulation
     }
 
     private readonly uint _seed;
-    private readonly List<MutableTarget> _targets = [];
     private readonly List<MutableProjectile> _projectiles = [];
     private readonly List<MutableWalkerFoot> _walkerFeet = [];
+    private readonly List<Level100MissionEvent> _level100MissionEvents = [];
+    private readonly List<Level100ActorScriptCommand> _level100ActorScriptCommands = [];
+    private readonly Level100TutorialProgress _level100TutorialProgress;
+    private readonly Level100ActorDefinitionSet _level100ActorDefinitions;
+    private Level100Mission _level100Mission = null!;
+    private Level100ActorRegistry _level100Actors = null!;
+    private Level100ActorScriptRuntime _level100ActorScripts = null!;
+    private Level100ActorId _level100PlayerActorId;
     private int _tick;
     private int _nextProjectileId;
     private VehicleMode _mode;
     private VehicleTransition _transition;
-    private SimVector2 _playerPosition;
-    private SimVector2 _playerVelocity;
-    private int _playerGroundElevationMillimeters;
-    private int _playerGroundDeltaMillimeters;
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -53,27 +51,23 @@ public sealed class Simulation
     private int _walkerPitchVelocityMicroRadPerTick;
     private int _energy;
     private int _shield;
-    private int _hull;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
     private int _level100OpeningTicksRemaining;
-    private int _level100TimelineTick;
-    private Level100TutorialMessage _level100Message;
-    private int _level100EventMessageTicksRemaining;
-    private bool _level100PowerEnabled;
     private bool _level100FlightEnabled;
     private bool _level100PulseCannonEnabled;
     private bool _level100VulcanCannonEnabled;
-    private Level100OpeningPhase _level100Phase;
-    private int _level100DispatchTicksRemaining;
-    private int _level100FiringRangeSequenceTick;
-    private int _level100FiringRangeHandoffTick;
-    private int _targetsDestroyed;
+    private bool _level100MechVulcanCannonEnabled;
+    private bool _level100MissilePodEnabled;
+    private int _level100HudEmphasisMask;
 
     // Jet handling remains provisional and outside this walker milestone.
     private const int ProvisionalJetLookYawRateMicroRadPerTick = 3_000;
 
-    public Simulation(uint seed)
+    public Simulation(
+        uint seed,
+        Level100ActorDefinitionSet level100ActorDefinitions,
+        Level100TutorialProgress tutorialProgress = default)
     {
         if (seed == 0)
         {
@@ -81,12 +75,17 @@ public sealed class Simulation
         }
 
         _seed = seed;
+        _level100ActorDefinitions = level100ActorDefinitions ??
+            throw new ArgumentNullException(nameof(level100ActorDefinitions));
+        _level100TutorialProgress = tutorialProgress;
         ResetDynamicState();
     }
 
     public WorldSnapshot Snapshot => CreateSnapshot();
 
-    public WorldSnapshot Step(SimInput input)
+    public WorldSnapshot Step(
+        SimInput input,
+        IReadOnlyList<Level100SimulationFact>? level100Facts = null)
     {
         input.Validate();
         _tick++;
@@ -97,11 +96,21 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
-        AdvanceLevel100EventMessage();
-        AdvanceLevel100FiringRangeSequence();
-        AdvanceLevel100FiringRangeHandoff();
+        _level100MissionEvents.Clear();
+        _level100ActorScriptCommands.Clear();
+        AdvanceOpeningCamera();
+        SyncLevel100PlayerState();
+        _level100ActorScripts.AdvanceTick();
+        PumpLevel100EventBus();
+        _level100Mission.AdvanceTick(PlayerHull);
+        PumpLevel100EventBus();
+        ApplyLevel100Facts(level100Facts);
 
-        SimInput playerInput = _level100PowerEnabled ? input : SimInput.Idle;
+        SimInput playerInput = _level100Mission.Outcome == Level100MissionOutcome.Running &&
+            Level100PlayerActive &&
+            _level100OpeningTicksRemaining == 0
+            ? input
+            : SimInput.Idle;
 
         AdvanceTransition();
 
@@ -113,158 +122,390 @@ public sealed class Simulation
         TryToggleMode(playerInput);
         UpdateMovement(playerInput);
         UpdateWalkerFeet();
-        UpdateLevel100Opening();
+        UpdateLevel100TriggerActors();
         UpdateResources();
         TryFire(playerInput);
         UpdateProjectiles();
-        AdvanceLevel100Timeline();
+        SyncLevel100PlayerState();
 
         return CreateSnapshot();
     }
 
-    private void AdvanceLevel100Timeline()
+    private void AdvanceOpeningCamera()
     {
         if (_level100OpeningTicksRemaining > 0)
         {
             _level100OpeningTicksRemaining--;
         }
+    }
 
-        _level100TimelineTick++;
-        if (_level100TimelineTick == SimulationConstants.Level100PowerActivationTick)
+    private Level100ActorPoseSnapshot PlayerPose =>
+        _level100Actors.GetPose(_level100PlayerActorId);
+
+    private SimVector2 PlayerPosition
+    {
+        get
         {
-            _level100PowerEnabled = true;
-        }
-        if (_level100EventMessageTicksRemaining == 0 &&
-            _level100FiringRangeSequenceTick < 0)
-        {
-            _level100Message = MessageAtLevel100Tick(_level100TimelineTick);
-        }
-        if (_level100Phase == Level100OpeningPhase.Briefing &&
-            _level100TimelineTick >= SimulationConstants.Level100TargetZone1ActivationTick)
-        {
-            _level100Phase = Level100OpeningPhase.ReachTargetZone1;
+            Level100ActorPoseSnapshot pose = PlayerPose;
+            return new SimVector2(
+                pose.PositionMillimeters.X,
+                pose.PositionMillimeters.Z);
         }
     }
 
-    private static Level100TutorialMessage MessageAtLevel100Tick(int tick) => tick switch
+    private SimVector2 PlayerVelocity
     {
-        >= SimulationConstants.Level100Hud01StartTick and
-            < SimulationConstants.Level100Hud01EndTick =>
-                Level100TutorialMessage.HudIntroduction,
-        >= SimulationConstants.Level100Hud02StartTick and
-            < SimulationConstants.Level100Hud02EndTick =>
-                Level100TutorialMessage.ThreatCircle,
-        >= SimulationConstants.Level100Hud06StartTick and
-            < SimulationConstants.Level100Hud06EndTick =>
-                Level100TutorialMessage.Scanner,
-        >= SimulationConstants.Level100MessageLogStartTick and
-            < SimulationConstants.Level100MessageLogEndTick =>
-                Level100TutorialMessage.MessageLog,
-        >= SimulationConstants.Level100TechnicianStartTick and
-            < SimulationConstants.Level100TechnicianEndTick =>
-                Level100TutorialMessage.TechnicianStatus,
-        >= SimulationConstants.Level100MovementInstructionStartTick and
-            < SimulationConstants.Level100MovementInstructionEndTick =>
-                Level100TutorialMessage.MovementControls,
-        >= SimulationConstants.Level100TargetZone1InstructionStartTick and
-            < SimulationConstants.Level100TargetZone1InstructionEndTick =>
-                Level100TutorialMessage.ReachTargetZone1,
-        >= SimulationConstants.Level100ScannerInstructionStartTick and
-            < SimulationConstants.Level100ScannerInstructionEndTick =>
-                Level100TutorialMessage.ScannerObjective,
-        _ => Level100TutorialMessage.None,
-    };
+        get
+        {
+            Level100ActorPoseSnapshot pose = PlayerPose;
+            return new SimVector2(
+                pose.LinearVelocityMillimetersPerTick.X,
+                pose.LinearVelocityMillimetersPerTick.Z);
+        }
+    }
 
-    private void AdvanceLevel100EventMessage()
+    private int PlayerGroundElevationMillimeters =>
+        PlayerPose.PositionMillimeters.Y;
+
+    private int PlayerGroundDeltaMillimeters =>
+        PlayerPose.LinearVelocityMillimetersPerTick.Y;
+
+    private int PlayerHull => _level100Actors.GetHealth(_level100PlayerActorId);
+
+    private bool Level100PlayerActive => _level100Actors.IsActive(_level100PlayerActorId);
+
+    private void CommitLevel100PlayerPose(
+        SimVector2 position,
+        int groundElevationMillimeters,
+        SimVector2 velocity,
+        int groundDeltaMillimeters)
     {
-        if (_level100EventMessageTicksRemaining == 0)
+        (int yawSinFixed, int yawCosFixed) = FixedSinCos(_facingYawMicroRad);
+        (int pitchSinFixed, int pitchCosFixed) = FixedSinCos(_facingPitchMicroRad);
+        float yawSin = (float)yawSinFixed / FixedTrigScale;
+        float yawCos = (float)yawCosFixed / FixedTrigScale;
+        float pitchSin = (float)pitchSinFixed / FixedTrigScale;
+        float pitchCos = (float)pitchCosFixed / FixedTrigScale;
+        static int Bits(float value) => BitConverter.SingleToInt32Bits(value);
+
+        var basis = new Level100FloatBasis3Bits(
+            Bits(yawCos), Bits(0f), Bits(-yawSin),
+            Bits(yawSin * pitchSin), Bits(pitchCos), Bits(yawCos * pitchSin),
+            Bits(yawSin * pitchCos), Bits(-pitchSin), Bits(yawCos * pitchCos));
+        _level100Actors.SetPose(
+            _level100PlayerActorId,
+            new Level100ActorPoseSnapshot(
+                new SimVector3(
+                    position.X,
+                    groundElevationMillimeters,
+                    position.Z),
+                basis,
+                new SimVector3(
+                    velocity.X,
+                    groundDeltaMillimeters,
+                    velocity.Z),
+                new SimVector3(
+                    _walkerPitchVelocityMicroRadPerTick,
+                    _walkerYawVelocityMicroRadPerTick,
+                    0)));
+    }
+
+    private void SyncLevel100PlayerState()
+    {
+        Level100ActorPoseSnapshot pose = PlayerPose;
+        CommitLevel100PlayerPose(
+            new SimVector2(
+                pose.PositionMillimeters.X,
+                pose.PositionMillimeters.Z),
+            pose.PositionMillimeters.Y,
+            new SimVector2(
+                pose.LinearVelocityMillimetersPerTick.X,
+                pose.LinearVelocityMillimetersPerTick.Z),
+            pose.LinearVelocityMillimetersPerTick.Y);
+        _level100ActorScripts.SetPlayerInJetMode(_mode == VehicleMode.Jet);
+    }
+
+    private void DestroyLevel100PlayerActor()
+    {
+        if (_level100Actors.GetLifecycle(_level100PlayerActorId) ==
+            Level100ActorLifecycle.Destroyed)
         {
             return;
         }
 
-        _level100EventMessageTicksRemaining--;
-        if (_level100EventMessageTicksRemaining == 0)
-        {
-            _level100Message = Level100TutorialMessage.None;
-        }
+        _level100Actors.ReportStartedDying(_level100PlayerActorId);
+        _level100Actors.ReportDied(_level100PlayerActorId);
+        DrainAndDispatchLevel100ActorFacts();
     }
 
-    private void AdvanceLevel100FiringRangeSequence()
+    private void ApplyLevel100Facts(IReadOnlyList<Level100SimulationFact>? facts)
     {
-        if (_level100FiringRangeSequenceTick < 0 ||
-            _level100FiringRangeSequenceTick >=
-                SimulationConstants.Level100PulseCannonEnergyEndTick)
+        if (facts is null)
         {
             return;
         }
 
-        _level100FiringRangeSequenceTick++;
-        _level100Message = MessageAtFiringRangeTick(_level100FiringRangeSequenceTick);
-        if (_level100FiringRangeSequenceTick ==
-            SimulationConstants.Level100PulseCannonActivationTick)
+        foreach (Level100SimulationFact fact in facts)
         {
-            _level100PowerEnabled = true;
-            _level100PulseCannonEnabled = true;
-            _level100Phase = Level100OpeningPhase.FiringRangeExercise;
+            ArgumentNullException.ThrowIfNull(fact);
+            switch (fact)
+            {
+                case Level100ActorHitFact hit:
+                    _level100Actors.ReportHit(
+                        hit.ActorId,
+                        hit.OtherActorId,
+                        hit.OtherThingTypeMask);
+                    DrainAndDispatchLevel100ActorFacts();
+                    break;
+                case Level100ActorStartedDyingFact startedDying:
+                    _level100Actors.ReportStartedDying(startedDying.ActorId);
+                    DrainAndDispatchLevel100ActorFacts();
+                    break;
+                case Level100ActorDiedFact died:
+                    _level100Actors.ReportDied(died.ActorId);
+                    DrainAndDispatchLevel100ActorFacts();
+                    break;
+                case Level100ActorPoseFact pose:
+                    if (pose.ActorId == _level100PlayerActorId)
+                    {
+                        throw new InvalidOperationException(
+                            "Player pose is owned by the deterministic vehicle simulation.");
+                    }
+                    _level100Actors.SetPose(pose.ActorId, pose.Pose);
+                    break;
+                case Level100ActorActivationFact activation:
+                    if (activation.Active)
+                    {
+                        _level100Actors.Activate(activation.ActorId);
+                    }
+                    else
+                    {
+                        _level100Actors.Deactivate(activation.ActorId);
+                    }
+                    break;
+                case Level100ActorObjectiveFact objective:
+                    _level100Actors.SetObjective(objective.ActorId, objective.IsObjective);
+                    break;
+                case Level100ActorHealthFact health:
+                    _level100Actors.SetHealth(health.ActorId, health.Health);
+                    break;
+                case Level100SpawnThingFact spawn:
+                    IReadOnlyList<Level100ActorId> spawned = _level100Actors.SpawnThing(
+                        spawn.OwnerActorId,
+                        spawn.DefinitionName,
+                        spawn.SpawnerName,
+                        spawn.Count,
+                        spawn.ScriptName);
+                    foreach (Level100ActorId actorId in spawned)
+                    {
+                        _level100ActorScripts.AttachAndInitializeSpawnedActor(
+                            actorId,
+                            spawn.ScriptName);
+                    }
+                    break;
+                case Level100MissionInputFact missionInput:
+                    _level100Mission.SubmitInput(missionInput.Input);
+                    break;
+                case Level100PlayerDamageFact damage:
+                    if (damage.Damage <= 0)
+                    {
+                        throw new ArgumentOutOfRangeException(
+                            nameof(facts),
+                            "Player damage must be positive.");
+                    }
+
+                    int hull = Math.Max(0, PlayerHull - damage.Damage);
+                    _level100Actors.SetHealth(_level100PlayerActorId, hull);
+                    _level100Mission.ReportPlayerHitDuringEvasion();
+                    if (hull == 0)
+                    {
+                        DestroyLevel100PlayerActor();
+                        _level100Mission.ReportPlayerDeath();
+                    }
+                    break;
+                case Level100PlayerDeathFact:
+                    DestroyLevel100PlayerActor();
+                    _level100Mission.ReportPlayerDeath();
+                    break;
+                case Level100WaterLossFact:
+                    _level100Mission.ReportWaterLoss();
+                    break;
+                case Level100ActorScriptWaitCompletedFact completed:
+                    if (!_level100ActorScripts.CompleteMechanicsWait(
+                            completed.ActorId,
+                            completed.WaitKind,
+                            completed.Argument))
+                    {
+                        throw new InvalidOperationException(
+                            $"Actor {completed.ActorId} has no matching script mechanics wait.");
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(facts),
+                        $"Unknown Level 100 fact type {fact.GetType().Name}.");
+            }
+
+            PumpLevel100EventBus();
         }
     }
 
-    private static Level100TutorialMessage MessageAtFiringRangeTick(int tick) => tick switch
+    private void ApplyWeaponAvailability(Level100WeaponAvailabilityChanged weapon)
     {
-        >= SimulationConstants.Level100WeaponSystemsStartTick and
-            < SimulationConstants.Level100WeaponSystemsEndTick =>
-                Level100TutorialMessage.WeaponSystems,
-        >= SimulationConstants.Level100WeaponIndicatorStartTick and
-            < SimulationConstants.Level100WeaponIndicatorEndTick =>
-                Level100TutorialMessage.WeaponIndicator,
-        >= SimulationConstants.Level100PulseCannonStartTick and
-            < SimulationConstants.Level100PulseCannonEndTick =>
-                Level100TutorialMessage.PulseCannon,
-        >= SimulationConstants.Level100OpenFireStartTick and
-            < SimulationConstants.Level100OpenFireEndTick =>
-                Level100TutorialMessage.OpenFire,
-        >= SimulationConstants.Level100PulseCannonEnergyStartTick and
-            < SimulationConstants.Level100PulseCannonEnergyEndTick =>
-                Level100TutorialMessage.PulseCannonEnergy,
-        _ => Level100TutorialMessage.None,
-    };
-
-    private void AdvanceLevel100FiringRangeHandoff()
-    {
-        if (_level100FiringRangeHandoffTick < 0 ||
-            _level100FiringRangeHandoffTick >=
-                SimulationConstants.Level100VulcanCannonAmmoEndTick)
+        switch (weapon.Weapon)
         {
-            return;
-        }
-
-        _level100FiringRangeHandoffTick++;
-        _level100Message = MessageAtFiringRangeHandoffTick(
-            _level100FiringRangeHandoffTick);
-        if (_level100FiringRangeHandoffTick ==
-            SimulationConstants.Level100VulcanActivationTick)
-        {
-            _level100PowerEnabled = true;
-            _level100PulseCannonEnabled = false;
-            _level100VulcanCannonEnabled = true;
-            _level100Phase = Level100OpeningPhase.FiringRangeVulcanExercise;
+            case Level100MissionWeapon.PulseCannonPod:
+                _level100PulseCannonEnabled = weapon.Enabled;
+                break;
+            case Level100MissionWeapon.MechTwinVulcanCannon:
+                _level100VulcanCannonEnabled = weapon.Enabled;
+                break;
+            case Level100MissionWeapon.MechVulcanCannon:
+                _level100MechVulcanCannonEnabled = weapon.Enabled;
+                break;
+            case Level100MissionWeapon.MissilePod:
+                _level100MissilePodEnabled = weapon.Enabled;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(weapon));
         }
     }
 
-    private static Level100TutorialMessage MessageAtFiringRangeHandoffTick(int tick) =>
-        tick switch
+    private void ApplyHudEmphasis(Level100HudEmphasisChanged emphasis)
     {
-        >= SimulationConstants.Level100VulcanCannonStartTick and
-            < SimulationConstants.Level100VulcanCannonEndTick =>
-                Level100TutorialMessage.VulcanCannon,
-        >= SimulationConstants.Level100OpenFireVulcanStartTick and
-            < SimulationConstants.Level100OpenFireVulcanEndTick =>
-                Level100TutorialMessage.OpenFireVulcan,
-        >= SimulationConstants.Level100VulcanCannonAmmoStartTick and
-            < SimulationConstants.Level100VulcanCannonAmmoEndTick =>
-                Level100TutorialMessage.VulcanCannonAmmo,
-        _ => Level100TutorialMessage.None,
-    };
+        if (emphasis.PartId is < 0 or > 30)
+        {
+            throw new InvalidOperationException(
+                $"Released Level 100 requested unsupported HUD part {emphasis.PartId}.");
+        }
+
+        int bit = 1 << emphasis.PartId;
+        _level100HudEmphasisMask = emphasis.Emphasized
+            ? _level100HudEmphasisMask | bit
+            : _level100HudEmphasisMask & ~bit;
+    }
+
+    private void ApplyLevel100ActorCommand(Level100ActorCommandRequested command)
+    {
+        switch (command.Command)
+        {
+            case Level100ActorCommand.Activate:
+                _level100Actors.Activate(command.ActorId);
+                break;
+            case Level100ActorCommand.Deactivate:
+                _level100Actors.Deactivate(command.ActorId);
+                break;
+            case Level100ActorCommand.SetObjective:
+                _level100Actors.SetObjective(command.ActorId, true);
+                break;
+            case Level100ActorCommand.UnsetObjective:
+                _level100Actors.SetObjective(command.ActorId, false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(command));
+        }
+    }
+
+    private void ApplyLevel100SpawnRequest(Level100SpawnThingRequested spawn)
+    {
+        IReadOnlyList<Level100ActorId> spawned = _level100Actors.SpawnThing(
+            spawn.OwnerActorId,
+            spawn.DefinitionName,
+            spawn.SpawnerName,
+            spawn.Count,
+            spawn.ScriptName);
+        foreach (Level100ActorId actorId in spawned)
+        {
+            _level100ActorScripts.AttachAndInitializeSpawnedActor(
+                actorId,
+                spawn.ScriptName);
+        }
+    }
+
+    private void DrainAndDispatchLevel100ActorFacts()
+    {
+        foreach (Level100ActorFactSnapshot fact in _level100Actors.DrainFacts())
+        {
+            _level100ActorScripts.DispatchFact(fact);
+            PumpLevel100EventBus();
+        }
+    }
+
+    private void PumpLevel100EventBus()
+    {
+        for (int pass = 0; pass < 1_000; pass++)
+        {
+            IReadOnlyList<Level100MissionEvent> missionEvents = _level100Mission.DrainEvents();
+            foreach (Level100MissionEvent missionEvent in missionEvents)
+            {
+                _level100MissionEvents.Add(missionEvent);
+                ApplyLevel100MissionEvent(missionEvent);
+            }
+
+            IReadOnlyList<Level100ActorScriptEventPosted> actorEvents =
+                _level100ActorScripts.DrainPostedEvents();
+            IReadOnlyList<Level100ActorScriptCommand> actorCommands =
+                _level100ActorScripts.DrainCommands();
+            _level100ActorScriptCommands.AddRange(actorCommands);
+            foreach (Level100ActorScriptEventPosted actorEvent in actorEvents)
+            {
+                if (actorEvent.ActorId is { } actorId)
+                {
+                    Level100ActorSnapshot actor = _level100Actors.GetActor(actorId);
+                    if (actor.Trigger.HasValue &&
+                        actor.TriggerEntered &&
+                        !actor.TriggerEventDispatched)
+                    {
+                        _level100Actors.MarkTriggerEventDispatched(actorId);
+                    }
+                }
+
+                _level100Mission.QueueExternalEvent(actorEvent.EventName);
+            }
+
+            if (missionEvents.Count == 0 && actorEvents.Count == 0 && actorCommands.Count == 0)
+            {
+                return;
+            }
+        }
+
+        throw new InvalidOperationException("Level 100 script event bus did not settle.");
+    }
+
+    private void ApplyLevel100MissionEvent(Level100MissionEvent missionEvent)
+    {
+        switch (missionEvent)
+        {
+            case Level100PlayerActivationChanged activation:
+                if (activation.Active)
+                {
+                    _level100Actors.Activate(_level100PlayerActorId);
+                }
+                else
+                {
+                    _level100Actors.Deactivate(_level100PlayerActorId);
+                }
+                break;
+            case Level100FlightModeAvailabilityChanged flight:
+                _level100FlightEnabled = flight.Enabled;
+                break;
+            case Level100WeaponAvailabilityChanged weapon:
+                ApplyWeaponAvailability(weapon);
+                break;
+            case Level100HudEmphasisChanged emphasis:
+                ApplyHudEmphasis(emphasis);
+                break;
+            case Level100ActorCommandRequested actorCommand:
+                ApplyLevel100ActorCommand(actorCommand);
+                break;
+            case Level100SpawnThingRequested spawn:
+                ApplyLevel100SpawnRequest(spawn);
+                break;
+            case Level100MissionEventPosted posted:
+                _level100ActorScripts.PublishEvent(posted.EventName);
+                break;
+        }
+    }
 
     private void TryToggleMode(SimInput input)
     {
@@ -308,10 +549,18 @@ public sealed class Simulation
 
     private void UpdateMovement(SimInput input)
     {
-        _playerGroundDeltaMillimeters = 0;
+        Level100ActorPoseSnapshot player = PlayerPose;
+        SimVector2 position = new(
+            player.PositionMillimeters.X,
+            player.PositionMillimeters.Z);
+        int groundElevation = player.PositionMillimeters.Y;
+        SimVector2 velocity = new(
+            player.LinearVelocityMillimetersPerTick.X,
+            player.LinearVelocityMillimetersPerTick.Z);
+        CommitLevel100PlayerPose(position, groundElevation, velocity, 0);
         if (_transformTicksRemaining != 0)
         {
-            _playerVelocity = SimVector2.Zero;
+            CommitLevel100PlayerPose(position, groundElevation, SimVector2.Zero, 0);
             _walkerYawVelocityMicroRadPerTick = 0;
             _walkerPitchVelocityMicroRadPerTick = 0;
             return;
@@ -396,8 +645,8 @@ public sealed class Simulation
             input,
             SimulationConstants.WalkerAccelerationPerTick);
         var velocity = new SimVector2(
-            RetainWalkerVelocity(_playerVelocity.X) + acceleration.X,
-            RetainWalkerVelocity(_playerVelocity.Z) + acceleration.Z);
+            RetainWalkerVelocity(PlayerVelocity.X) + acceleration.X,
+            RetainWalkerVelocity(PlayerVelocity.Z) + acceleration.Z);
         MoveWalker(ClampMagnitude(velocity, SimulationConstants.WalkerMaximumSpeedPerTick));
     }
 
@@ -509,16 +758,17 @@ public sealed class Simulation
 
     private void MoveWalker(SimVector2 velocity)
     {
+        SimVector2 currentPosition = PlayerPosition;
         SimVector2 nextPosition = new(
-            _playerPosition.X + velocity.X,
-            _playerPosition.Z + velocity.Z);
+            currentPosition.X + velocity.X,
+            currentPosition.Z + velocity.Z);
         nextPosition = ResolveLevel100WalkerContact(
-            _playerPosition,
+            currentPosition,
             nextPosition,
             SimulationConstants.Level100ControlTowerPosition,
             SimulationConstants.Level100ControlTowerContactRadius);
         nextPosition = ResolveLevel100WalkerContact(
-            _playerPosition,
+            currentPosition,
             nextPosition,
             SimulationConstants.Level100TankFactoryPosition,
             SimulationConstants.Level100TankFactoryContactRadius);
@@ -579,23 +829,27 @@ public sealed class Simulation
 
     private void MovePlayer(SimVector2 velocity)
     {
+        SimVector2 currentPosition = PlayerPosition;
         SimVector2 nextPosition = new(
-            _playerPosition.X + velocity.X,
-            _playerPosition.Z + velocity.Z);
+            currentPosition.X + velocity.X,
+            currentPosition.Z + velocity.Z);
         CommitPlayerPosition(nextPosition);
     }
 
     private void CommitPlayerPosition(SimVector2 nextPosition)
     {
-        int previousGroundElevation = _playerGroundElevationMillimeters;
-        _playerVelocity = new SimVector2(
-            nextPosition.X - _playerPosition.X,
-            nextPosition.Z - _playerPosition.Z);
-        _playerPosition = nextPosition;
-        _playerGroundElevationMillimeters =
-            Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
-        _playerGroundDeltaMillimeters =
-            _playerGroundElevationMillimeters - previousGroundElevation;
+        SimVector2 previousPosition = PlayerPosition;
+        int previousGroundElevation = PlayerGroundElevationMillimeters;
+        SimVector2 velocity = new(
+            nextPosition.X - previousPosition.X,
+            nextPosition.Z - previousPosition.Z);
+        int groundElevation =
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(nextPosition);
+        CommitLevel100PlayerPose(
+            nextPosition,
+            groundElevation,
+            velocity,
+            groundElevation - previousGroundElevation);
     }
 
     private void UpdateWalkerFeet()
@@ -607,9 +861,9 @@ public sealed class Simulation
         }
 
         long playerDisplacementSquared =
-            ((long)_playerVelocity.X * _playerVelocity.X) +
-            ((long)_playerVelocity.Z * _playerVelocity.Z) +
-            ((long)_playerGroundDeltaMillimeters * _playerGroundDeltaMillimeters);
+            ((long)PlayerVelocity.X * PlayerVelocity.X) +
+            ((long)PlayerVelocity.Z * PlayerVelocity.Z) +
+            ((long)PlayerGroundDeltaMillimeters * PlayerGroundDeltaMillimeters);
         bool ownerMoved = playerDisplacementSquared > 10L * 10L;
         int threshold = ownerMoved
             ? SimulationConstants.WalkerFootMovingThresholdMillimeters
@@ -750,63 +1004,49 @@ public sealed class Simulation
 
     private SimVector2 NaturalWalkerFootPosition(SimVector2 stanceOffset)
     {
+        SimVector2 playerPosition = PlayerPosition;
         (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
         return new SimVector2(
-            _playerPosition.X + DivideRoundNearest(
+            playerPosition.X + DivideRoundNearest(
                 ((long)stanceOffset.X * cos) - ((long)stanceOffset.Z * sin),
                 FixedTrigScale),
-            _playerPosition.Z + DivideRoundNearest(
+            playerPosition.Z + DivideRoundNearest(
                 ((long)stanceOffset.X * sin) + ((long)stanceOffset.Z * cos),
                 FixedTrigScale));
     }
 
-    private void UpdateLevel100Opening()
+    private void UpdateLevel100TriggerActors()
     {
-        if (_level100DispatchTicksRemaining > 0)
+        DrainAndDispatchLevel100ActorFacts();
+
+        foreach (Level100ActorSnapshot trigger in _level100Actors.Snapshot.Actors
+            .Where(actor => actor.Trigger.HasValue && actor.Pose is not null)
+            .OrderBy(actor => actor.ActorId.Value))
         {
-            _level100DispatchTicksRemaining--;
-            if (_level100DispatchTicksRemaining == 0)
+            if (trigger.TriggerEventDispatched || trigger.TriggerEntered)
             {
-                if (_level100Phase == Level100OpeningPhase.TargetZone1DispatchPending)
-                {
-                    _level100Phase = Level100OpeningPhase.ReachFiringRange;
-                    _level100Message = Level100TutorialMessage.FiringRangeInstruction;
-                    _level100EventMessageTicksRemaining =
-                        SimulationConstants.Level100FiringRangeInstructionTicks;
-                }
-                else if (_level100Phase == Level100OpeningPhase.FiringRangeDispatchPending)
-                {
-                    _level100Phase = Level100OpeningPhase.FiringRangeBriefing;
-                    _level100FiringRangeSequenceTick = 0;
-                    _level100EventMessageTicksRemaining = 0;
-                    _level100Message = Level100TutorialMessage.WeaponSystems;
-                    _level100PowerEnabled = false;
-                    _level100PulseCannonEnabled = false;
-                }
+                continue;
             }
 
-            return;
+            Level100MissionJetModeState jetModeState =
+                Level100MissionTiming.JetModeState(_mode, _transition);
+            SimVector2 triggerPosition = new(
+                trigger.Pose!.PositionMillimeters.X,
+                trigger.Pose.PositionMillimeters.Z);
+            if (trigger.Active &&
+                (!Level100MissionTiming.RequiresNotInJetMode(trigger.Trigger!.Value) ||
+                 jetModeState ==
+                    Level100MissionJetModeState.NotInJetMode) &&
+                IsWithinLevel100Trigger(PlayerPosition, triggerPosition))
+            {
+                // The side actor owns its factual overlap and released pause;
+                // LevelScript sees only the resulting named event.
+                _level100Actors.BeginTriggerDispatch(
+                    trigger.ActorId,
+                    jetModeState);
+                DrainAndDispatchLevel100ActorFacts();
+            }
         }
-
-        SimVector2? trigger = _level100Phase switch
-        {
-            Level100OpeningPhase.ReachTargetZone1 =>
-                SimulationConstants.Level100TargetZone1Position,
-            Level100OpeningPhase.ReachFiringRange =>
-                SimulationConstants.Level100FiringRangePosition,
-            _ => null,
-        };
-        if (!trigger.HasValue || !IsWithinLevel100Trigger(_playerPosition, trigger.Value))
-        {
-            return;
-        }
-
-        _level100Phase = _level100Phase == Level100OpeningPhase.ReachTargetZone1
-            ? Level100OpeningPhase.TargetZone1DispatchPending
-            : Level100OpeningPhase.FiringRangeDispatchPending;
-        _level100DispatchTicksRemaining = _level100Phase == Level100OpeningPhase.TargetZone1DispatchPending
-            ? SimulationConstants.Level100TargetZone1DispatchTicks
-            : SimulationConstants.Level100FiringRangeDispatchTicks;
     }
 
     private static bool IsWithinLevel100Trigger(SimVector2 position, SimVector2 trigger)
@@ -965,14 +1205,15 @@ public sealed class Simulation
 
         _energy -= SimulationConstants.FireEnergyCost;
         _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+        SimVector2 playerPosition = PlayerPosition;
         _projectiles.Add(new MutableProjectile
         {
             Id = _nextProjectileId++,
             Position = new SimVector2(
-                _playerPosition.X + emitterOffsetX,
-                _playerPosition.Z + emitterOffsetZ),
+                playerPosition.X + emitterOffsetX,
+                playerPosition.Z + emitterOffsetZ),
             Velocity = new SimVector2(velocityX, velocityZ),
-            ElevationMillimeters = _playerGroundElevationMillimeters +
+            ElevationMillimeters = PlayerGroundElevationMillimeters +
                 Level100Terrain.WalkerCenterOfGravityMillimeters +
                 emitterVerticalOffset,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
@@ -992,20 +1233,25 @@ public sealed class Simulation
             projectile.RemainingTicks--;
 
             bool hit = false;
-            foreach (MutableTarget target in _targets)
+            foreach (Level100ActorSnapshot target in _level100Actors.Snapshot.Actors
+                .Where(actor =>
+                    actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
+                    actor.Pose is not null)
+                .OrderBy(actor => actor.TargetOrdinal))
             {
-                if (_level100FiringRangeSequenceTick <
-                        SimulationConstants.Level100StaticTargetsActivationTick ||
-                    target.Id is < 1 or > 4 ||
-                    !target.IsActive ||
+                if (!target.IsObjective ||
+                    !target.Active ||
+                    target.Lifecycle == Level100ActorLifecycle.Destroyed ||
                     projectile.VerticalVelocityMillimetersPerTick != 0)
                 {
                     continue;
                 }
 
-                long deltaX = (long)projectile.Position.X - target.Position.X;
-                long deltaZ = (long)projectile.Position.Z - target.Position.Z;
-                int hitRadius = target.Id == 4
+                long deltaX = (long)projectile.Position.X -
+                    target.Pose!.PositionMillimeters.X;
+                long deltaZ = (long)projectile.Position.Z -
+                    target.Pose.PositionMillimeters.Z;
+                int hitRadius = target.TargetOrdinal == 4
                     ? SimulationConstants.Level100TargetWarehouseHorizontalBound
                     : SimulationConstants.Level100TargetTankHitRadius;
                 long hitRadiusSquared = (long)hitRadius * hitRadius;
@@ -1014,21 +1260,20 @@ public sealed class Simulation
                     continue;
                 }
 
-                target.Hull = Math.Max(
+                int health = Math.Max(
                     0,
-                    target.Hull - SimulationConstants.Level100PulseCannonFullHitDamage);
-                if (target.Hull == 0)
+                    target.Health - SimulationConstants.Level100PulseCannonFullHitDamage);
+                _level100Actors.ReportHit(
+                    target.ActorId,
+                    otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
+                _level100Actors.SetHealth(target.ActorId, health);
+                if (health == 0)
                 {
-                    target.IsActive = false;
-                    _targetsDestroyed++;
-                    if (_level100FiringRangeHandoffTick < 0 &&
-                        _targets
-                            .Where(item => item.Id is >= 1 and <= 4)
-                            .All(item => !item.IsActive))
-                    {
-                        BeginLevel100VulcanHandoff();
-                    }
+                    _level100Actors.ReportStartedDying(target.ActorId);
+                    _level100Actors.ReportDied(target.ActorId);
                 }
+
+                DrainAndDispatchLevel100ActorFacts();
 
                 hit = true;
                 break;
@@ -1041,24 +1286,11 @@ public sealed class Simulation
         }
     }
 
-    private void BeginLevel100VulcanHandoff()
-    {
-        _level100FiringRangeHandoffTick = 0;
-        _level100Phase = Level100OpeningPhase.FiringRangeVulcanBriefing;
-        _level100PowerEnabled = false;
-        _level100Message = Level100TutorialMessage.None;
-    }
-
     private void ResetDynamicState()
     {
         _nextProjectileId = 1;
         _mode = VehicleMode.Walker;
         _transition = VehicleTransition.None;
-        _playerPosition = SimVector2.Zero;
-        _playerVelocity = SimVector2.Zero;
-        _playerGroundElevationMillimeters =
-            Level100Terrain.Instance.SampleGroundElevationMillimeters(_playerPosition);
-        _playerGroundDeltaMillimeters = 0;
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -1066,69 +1298,52 @@ public sealed class Simulation
         _walkerPitchVelocityMicroRadPerTick = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
-        _hull = SimulationConstants.MaximumHull;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
-        _level100TimelineTick = 0;
-        _level100Message = Level100TutorialMessage.None;
-        _level100EventMessageTicksRemaining = 0;
-        _level100PowerEnabled = false;
-        _level100FlightEnabled = false;
+        _level100FlightEnabled = true;
         _level100PulseCannonEnabled = false;
         _level100VulcanCannonEnabled = false;
-        _level100Phase = Level100OpeningPhase.Briefing;
-        _level100DispatchTicksRemaining = 0;
-        _level100FiringRangeSequenceTick = -1;
-        _level100FiringRangeHandoffTick = -1;
-        _targetsDestroyed = 0;
+        _level100MechVulcanCannonEnabled = false;
+        _level100MissilePodEnabled = false;
+        _level100HudEmphasisMask = 0;
         _projectiles.Clear();
+        _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        _level100PlayerActorId = _level100Actors.GetThingRef("Player 1") ??
+            throw new InvalidOperationException("Level 100 Player is missing.");
+        _level100Actors.SetHealth(_level100PlayerActorId, SimulationConstants.MaximumHull);
+        _level100Actors.Activate(_level100PlayerActorId);
+        SimVector2 initialPosition = SimVector2.Zero;
+        CommitLevel100PlayerPose(
+            initialPosition,
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(initialPosition),
+            SimVector2.Zero,
+            0);
         BuildWalkerFeet();
-        BuildTargets();
-    }
-
-    private void BuildTargets()
-    {
-        _targets.Clear();
-        _targets.Add(CreateTarget(
-            1,
-            SimulationConstants.Level100TargetTank1Position,
-            SimulationConstants.Level100TargetTankLife));
-        _targets.Add(CreateTarget(
-            2,
-            SimulationConstants.Level100TargetTank2Position,
-            SimulationConstants.Level100TargetTankLife));
-        _targets.Add(CreateTarget(
-            3,
-            SimulationConstants.Level100TargetTank3Position,
-            SimulationConstants.Level100TargetTankLife));
-        _targets.Add(CreateTarget(
-            4,
-            SimulationConstants.Level100TargetWarehousePosition,
-            SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope));
-    }
-
-    private static MutableTarget CreateTarget(int id, SimVector2 position, int initialHull)
-    {
-        return new MutableTarget
-        {
-            Id = id,
-            Position = position,
-            Hull = initialHull,
-            IsActive = true,
-        };
+        _level100ActorScripts = new Level100ActorScriptRuntime(
+            _level100Actors,
+            _level100PlayerActorId);
+        _level100ActorScripts.InitializeReleasedScripts();
+        _level100MissionEvents.Clear();
+        _level100ActorScriptCommands.Clear();
+        _level100Mission = new Level100Mission(
+            _level100Actors,
+            _level100PlayerActorId,
+            _level100TutorialProgress,
+            PlayerHull);
+        SyncLevel100PlayerState();
+        PumpLevel100EventBus();
     }
 
     private WorldSnapshot CreateSnapshot()
     {
-        TargetSnapshot[] targets = _targets
-            .OrderBy(target => target.Id)
-            .Select(target => new TargetSnapshot(
-                target.Id,
-                target.Position,
-                target.Hull,
-                target.IsActive))
-            .ToArray();
+        Level100ActorSnapshot player = _level100Actors.GetActor(_level100PlayerActorId);
+        SimVector2 playerPosition = new(
+            player.Pose.PositionMillimeters.X,
+            player.Pose.PositionMillimeters.Z);
+        SimVector2 playerVelocity = new(
+            player.Pose.LinearVelocityMillimetersPerTick.X,
+            player.Pose.LinearVelocityMillimetersPerTick.Z);
         ProjectileSnapshot[] projectiles = _projectiles
             .OrderBy(projectile => projectile.Id)
             .Select(projectile => new ProjectileSnapshot(
@@ -1145,22 +1360,19 @@ public sealed class Simulation
                 foot.Id,
                 foot.Position,
                 foot.GroundElevationMillimeters,
-                foot.PhaseThirds == 0
-                    ? 0
-                    : Math.Min(
-                        SimulationConstants.WalkerFootPhaseEnd,
-                        DivideRoundNearest(foot.PhaseThirds, 3)),
+                foot.PhaseThirds,
                 foot.LiftMillimeters))
             .ToArray();
-
         return new WorldSnapshot(
             _tick,
             _seed,
+            _level100TutorialProgress,
             _mode,
             _transition,
-            _playerPosition,
-            _playerVelocity,
-            _playerGroundElevationMillimeters,
+            playerPosition,
+            playerVelocity,
+            player.Pose.PositionMillimeters.Y,
+            player.Pose.LinearVelocityMillimetersPerTick.Y,
             _facingX,
             _facingZ,
             _facingYawMicroRad,
@@ -1169,24 +1381,23 @@ public sealed class Simulation
             _walkerPitchVelocityMicroRadPerTick,
             _energy,
             _shield,
-            _hull,
+            player.Health,
             _transformTicksRemaining,
             _fireCooldownTicksRemaining,
             _level100OpeningTicksRemaining,
-            _level100TimelineTick,
-            _level100Message,
-            _level100EventMessageTicksRemaining,
-            _level100PowerEnabled,
+            player.Active,
             _level100FlightEnabled,
             _level100PulseCannonEnabled,
             _level100VulcanCannonEnabled,
-            _level100Phase,
-            _level100DispatchTicksRemaining,
-            _level100FiringRangeSequenceTick,
-            _level100FiringRangeHandoffTick,
+            _level100MechVulcanCannonEnabled,
+            _level100MissilePodEnabled,
+            _level100HudEmphasisMask,
+            _level100Mission.Snapshot,
+            Array.AsReadOnly(_level100MissionEvents.ToArray()),
+            _level100Actors.Snapshot,
+            _level100ActorScripts.Snapshot,
+            Array.AsReadOnly(_level100ActorScriptCommands.ToArray()),
             _nextProjectileId,
-            _targetsDestroyed,
-            Array.AsReadOnly(targets),
             Array.AsReadOnly(projectiles),
             Array.AsReadOnly(walkerFeet));
     }

@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\TestSupport\Level100TestActorDefinitions.cs"
+             Link="TestSupport\Level100TestActorDefinitions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\scenarios\*.json" Link="scenarios\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\OnslaughtRebuild.Core\**\*.cs"
              Exclude="..\OnslaughtRebuild.Core\bin\**;..\OnslaughtRebuild.Core\obj\**"

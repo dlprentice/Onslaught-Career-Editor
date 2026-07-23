@@ -13,11 +13,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OnslaughtRebuild.Client\OnslaughtRebuild.Client.csproj" />
     <ProjectReference Include="..\OnslaughtRebuild.Core\OnslaughtRebuild.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\scenarios\*.json" Link="scenarios\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\OnslaughtRebuild.Godot\Assets\Level100\StaticWorld\level100-static-world.json"
+             Link="Assets\Level100\StaticWorld\level100-static-world.json"
+             CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>

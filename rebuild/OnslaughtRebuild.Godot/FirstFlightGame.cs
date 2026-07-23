@@ -27,11 +27,11 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
     private static readonly StringName ExitAction = "first_flight_exit";
 
-    private readonly InteractiveSession _session = new(SimulationSeed);
+    private InteractiveSession _session = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
     private AudioStreamPlayer _tutorialVoice = null!;
-    private Level100TutorialMessage _playingTutorialMessage;
+    private int? _playingTutorialMessageId;
     private bool _smokeMode;
     private bool _smokeCompleting;
     private bool _focusLossHandlerInputCleared;
@@ -45,6 +45,9 @@ public sealed partial class FirstFlightGame : Node3D
         {
             ConfigureInputMap();
             ParseUserArguments();
+            _session = new InteractiveSession(
+                SimulationSeed,
+                Level100StaticWorldAsset.LoadActorDefinitions());
 
             Window window = GetWindow();
             window.Title = "Onslaught Rebuild - Level 100 Opening Slice";
@@ -62,6 +65,9 @@ public sealed partial class FirstFlightGame : Node3D
 
             _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
             AddChild(_tutorialVoice);
+            _tutorialVoice.Finished += OnTutorialVoiceFinished;
+            ConsumeLevel100MissionEvents(_session.CurrentSnapshot.Level100MissionEvents);
+            _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
 
             if (!_smokeMode)
             {
@@ -106,6 +112,7 @@ public sealed partial class FirstFlightGame : Node3D
             ? SmokeFrameElapsedTicks
             : Math.Max(0L, (long)Math.Round(delta * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
         FrameAdvanceResult result = _session.AdvanceFrameTicks(elapsedTicks);
+        ConsumeLevel100MissionEvents(result.Level100MissionEvents);
         _world.Render(
             result.PreviousSnapshot,
             result.CurrentSnapshot,
@@ -113,7 +120,6 @@ public sealed partial class FirstFlightGame : Node3D
             (float)delta);
         _hud.UpdateFromSnapshot(result.CurrentSnapshot);
         _hud.Visible = _world.ShowHud;
-        UpdateTutorialVoice(result.CurrentSnapshot.Level100Message);
 
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
@@ -366,50 +372,54 @@ public sealed partial class FirstFlightGame : Node3D
         }
     }
 
-    private void UpdateTutorialVoice(Level100TutorialMessage message)
+    private void ConsumeLevel100MissionEvents(IReadOnlyList<Level100MissionEvent> events)
     {
-        if (_playingTutorialMessage == message)
+        foreach (Level100MessageRequested message in events.OfType<Level100MessageRequested>())
         {
-            return;
+            _hud.ShowTutorialMessage(message.SpeakerId, message.MessageId);
+            UpdateTutorialVoice(message.MessageId);
         }
+    }
 
-        _playingTutorialMessage = message;
+    private void UpdateTutorialVoice(int messageId)
+    {
+        _playingTutorialMessageId = messageId;
         _tutorialVoice.Stop();
-        string? resourcePath = message switch
+        string? resourcePath = messageId switch
         {
-            Level100TutorialMessage.HudIntroduction =>
+            292562 =>
                 "res://Assets/Level100/TutorialAudio/hud_01.ogg",
-            Level100TutorialMessage.ThreatCircle =>
+            293386 =>
                 "res://Assets/Level100/TutorialAudio/hud_02.ogg",
-            Level100TutorialMessage.Scanner =>
+            296682 =>
                 "res://Assets/Level100/TutorialAudio/hud_06.ogg",
-            Level100TutorialMessage.MessageLog =>
+            -1575499396 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_message_log.ogg",
-            Level100TutorialMessage.TechnicianStatus =>
+            -257967449 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_technician_01.ogg",
-            Level100TutorialMessage.MovementControls =>
+            82987417 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_13_mod.ogg",
-            Level100TutorialMessage.ReachTargetZone1 =>
+            4422830 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_01.ogg",
-            Level100TutorialMessage.ScannerObjective =>
+            175347826 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_scanner.ogg",
-            Level100TutorialMessage.FiringRangeInstruction =>
+            4458134 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_02.ogg",
-            Level100TutorialMessage.WeaponSystems =>
+            4493438 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_03.ogg",
-            Level100TutorialMessage.WeaponIndicator =>
+            295858 =>
                 "res://Assets/Level100/TutorialAudio/hud_05.ogg",
-            Level100TutorialMessage.PulseCannon =>
+            1339691000 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon.ogg",
-            Level100TutorialMessage.OpenFire =>
+            669198996 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_open_fire.ogg",
-            Level100TutorialMessage.PulseCannonEnergy =>
+            -1715818922 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg",
-            Level100TutorialMessage.VulcanCannon =>
+            -1616775312 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon.ogg",
-            Level100TutorialMessage.OpenFireVulcan =>
+            -1860407443 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_open_fire_2.ogg",
-            Level100TutorialMessage.VulcanCannonAmmo =>
+            864965454 =>
                 "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon_2.ogg",
             _ => null,
         };
@@ -428,6 +438,12 @@ public sealed partial class FirstFlightGame : Node3D
             throw new InvalidDataException($"Released tutorial voice is missing or invalid: {resourcePath}");
         }
         _tutorialVoice.Play();
+    }
+
+    private void OnTutorialVoiceFinished()
+    {
+        _playingTutorialMessageId = null;
+        _hud.ClearTutorialMessage();
     }
 
     private void RunFocusLossHandlerSmokeProbe()
@@ -516,23 +532,20 @@ public sealed partial class FirstFlightGame : Node3D
             string engineVersion = versionInfo["string"].AsString();
             var report = new SmokeReport
             {
-                SchemaVersion = "onslaught-first-flight-smoke.v9",
+                SchemaVersion = "onslaught-first-flight-smoke.v10",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
                 StateHash = StateHasher.ComputeHex(_session.CurrentSnapshot),
                 TargetsDestroyed = _session.CurrentSnapshot.TargetsDestroyed,
                 Mode = _session.CurrentSnapshot.Mode.ToString(),
-                Level100Phase = _session.CurrentSnapshot.Level100Phase.ToString(),
                 Level100OpeningTicksRemaining = _session.CurrentSnapshot.Level100OpeningTicksRemaining,
-                Level100TimelineTick = _session.CurrentSnapshot.Level100TimelineTick,
-                Level100Message = _session.CurrentSnapshot.Level100Message.ToString(),
-                Level100EventMessageTicksRemaining =
-                    _session.CurrentSnapshot.Level100EventMessageTicksRemaining,
-                Level100FiringRangeSequenceTick =
-                    _session.CurrentSnapshot.Level100FiringRangeSequenceTick,
-                Level100FiringRangeHandoffTick =
-                    _session.CurrentSnapshot.Level100FiringRangeHandoffTick,
+                Level100MissionTick = _session.CurrentSnapshot.Level100Mission.Tick,
+                Level100MissionOutcome =
+                    _session.CurrentSnapshot.Level100Mission.Outcome.ToString(),
+                Level100TerminalState =
+                    _session.CurrentSnapshot.Level100Mission.TerminalState.ToString(),
+                Level100PlayingMessageId = _playingTutorialMessageId,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100PulseCannonEnabled =
@@ -541,8 +554,6 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100VulcanCannonEnabled,
                 Level100FiringRangeTargetsActive =
                     _session.CurrentSnapshot.Level100FiringRangeTargetsActive,
-                Level100FireHelpVisible =
-                    _session.CurrentSnapshot.Level100FireHelpVisible,
                 Level100CurrentWeaponHighlighted =
                     _session.CurrentSnapshot.Level100CurrentWeaponHighlighted,
                 TutorialVoicePlaying = _tutorialVoice.Playing,
@@ -626,19 +637,16 @@ public sealed partial class FirstFlightGame : Node3D
         public required string StateHash { get; init; }
         public required int TargetsDestroyed { get; init; }
         public required string Mode { get; init; }
-        public required string Level100Phase { get; init; }
         public required int Level100OpeningTicksRemaining { get; init; }
-        public required int Level100TimelineTick { get; init; }
-        public required string Level100Message { get; init; }
-        public required int Level100EventMessageTicksRemaining { get; init; }
-        public required int Level100FiringRangeSequenceTick { get; init; }
-        public required int Level100FiringRangeHandoffTick { get; init; }
+        public required int Level100MissionTick { get; init; }
+        public required string Level100MissionOutcome { get; init; }
+        public required string Level100TerminalState { get; init; }
+        public int? Level100PlayingMessageId { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
         public required bool Level100PulseCannonEnabled { get; init; }
         public required bool Level100VulcanCannonEnabled { get; init; }
         public required bool Level100FiringRangeTargetsActive { get; init; }
-        public required bool Level100FireHelpVisible { get; init; }
         public required bool Level100CurrentWeaponHighlighted { get; init; }
         public required bool TutorialVoicePlaying { get; init; }
         public required long TotalSteps { get; init; }

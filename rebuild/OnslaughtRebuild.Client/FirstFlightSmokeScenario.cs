@@ -10,8 +10,9 @@ public static class FirstFlightSmokeScenario
     // routes used by the copied-retail observer. Each forward hold stops at
     // Core's trigger. The final fixed yaw and four-shot sequence exercises the
     // bounded full-hit lifecycle demonstrated against retail Target Tank 1.
-    private const int TargetZoneInputStartTick =
-        SimulationConstants.Level100TargetZone1ActivationTick + 57;
+    // Exact first-run LevelScript waits assign Target Zone 1 at tick 1005;
+    // this tape begins its observed route 57 ticks later.
+    public const int TargetZoneInputStartTick = 1_062;
     private const int LeftTicks = 216;
     private const int ForwardTicks = 469;
     private const int FiringRangeInputStartTick = 1_995;

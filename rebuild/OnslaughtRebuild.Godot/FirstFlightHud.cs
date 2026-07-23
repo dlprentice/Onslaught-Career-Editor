@@ -10,6 +10,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private RetailHudBaseLayer _baseLayer = null!;
     private RetailHudGlowLayer _glowLayer = null!;
     private RetailHudTextLayer _textLayer = null!;
+    private int? _messageId;
+    private RetailHudSpeaker _speaker;
 
     public bool IsReadyForSmoke =>
         IsInstanceValid(_baseLayer) &&
@@ -95,12 +97,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Vector2[] markerOffsets = GetMarkedPositions(snapshot)
             .Select(position => ProjectRadarOffset(snapshot, position))
             .ToArray();
-        string? message = GetTutorialMessageText(snapshot.Level100Message);
-        RetailHudSpeaker speaker = message is null
-            ? RetailHudSpeaker.None
-            : snapshot.Level100Message == Level100TutorialMessage.TechnicianStatus
-                ? RetailHudSpeaker.Technician
-                : RetailHudSpeaker.Tatiana;
+        string? message = _messageId.HasValue
+            ? GetTutorialMessageText(_messageId.Value)
+            : null;
+        RetailHudSpeaker speaker = message is null ? RetailHudSpeaker.None : _speaker;
 
         _baseLayer.SetState(snapshot, speaker, markerOffsets);
         _glowLayer.SetState(snapshot, message is not null, markerOffsets);
@@ -114,22 +114,37 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
     }
 
-    private static SimVector2[] GetMarkedPositions(WorldSnapshot snapshot) => snapshot.Level100Phase switch
+    public void ShowTutorialMessage(int speakerId, int messageId)
     {
-        Level100OpeningPhase.ReachTargetZone1 or
-            Level100OpeningPhase.TargetZone1DispatchPending =>
-                [SimulationConstants.Level100TargetZone1Position],
-        Level100OpeningPhase.ReachFiringRange or
-            Level100OpeningPhase.FiringRangeDispatchPending =>
-                [SimulationConstants.Level100FiringRangePosition],
-        _ when snapshot.Level100FiringRangeTargetsActive =>
-            snapshot.Targets
+        _messageId = messageId;
+        _speaker = speakerId == 1_508_464
+            ? RetailHudSpeaker.Tatiana
+            : RetailHudSpeaker.Technician;
+    }
+
+    public void ClearTutorialMessage()
+    {
+        _messageId = null;
+        _speaker = RetailHudSpeaker.None;
+    }
+
+    private static SimVector2[] GetMarkedPositions(WorldSnapshot snapshot)
+    {
+        if (snapshot.Level100FiringRangeTargetsActive)
+        {
+            return snapshot.Targets
                 .Where(target => target.IsActive)
                 .OrderBy(target => target.Id)
                 .Select(target => target.Position)
-                .ToArray(),
-        _ => [],
-    };
+                .ToArray();
+        }
+
+        return snapshot.Level100TriggerActors
+            .Where(trigger => trigger.IsObjective && !trigger.Reached)
+            .OrderBy(trigger => trigger.Trigger)
+            .Select(trigger => trigger.Position)
+            .ToArray();
+    }
 
     private static Vector2 ProjectRadarOffset(WorldSnapshot snapshot, SimVector2 objective)
     {
@@ -151,40 +166,40 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return offset;
     }
 
-    private static string? GetTutorialMessageText(Level100TutorialMessage message) => message switch
+    private static string? GetTutorialMessageText(int messageId) => messageId switch
     {
-        Level100TutorialMessage.HudIntroduction =>
+        292562 =>
             "Welcome aboard. Now don't touch anything and I'll take you through the instrumentation you see before you.",
-        Level100TutorialMessage.ThreatCircle =>
+        293386 =>
             "This is the threat circle. That notch indicates North. As for its other functions, I'll demonstrate them later.",
-        Level100TutorialMessage.Scanner =>
+        296682 =>
             "The circle to the left is your scanner. Enemy units show up in red, friendly units in blue.",
-        Level100TutorialMessage.MessageLog =>
+        -1575499396 =>
             "If you ever need to review these messages, check out Aquila's message log in the Pause Menu.",
-        Level100TutorialMessage.TechnicianStatus => "All systems nominal.",
-        Level100TutorialMessage.MovementControls =>
+        -257967449 => "All systems nominal.",
+        82987417 =>
             "You have two primary controls.  One determines the direction of travel, and the other changes which way Aquila faces.",
-        Level100TutorialMessage.ReachTargetZone1 =>
+        4422830 =>
             "Okay, Hawk? I want you to manoeuvre the Battle Engine to the area marked on your HUD.",
-        Level100TutorialMessage.ScannerObjective =>
+        175347826 =>
             "Notice how objectives that you are given are marked as yellow dots on your scanner.",
-        Level100TutorialMessage.FiringRangeInstruction =>
+        4458134 =>
             "Now make your way to the firing range for target practice. I'll mark the location on your HUD again.",
-        Level100TutorialMessage.WeaponSystems =>
+        4493438 =>
             "In a moment we're going to activate your weapon systems.",
-        Level100TutorialMessage.WeaponIndicator =>
+        295858 =>
             "Here is your weapon indicator. This shows you what weapon is currently selected. It also allows you to keep track of its temperature or remaining ammo level.",
-        Level100TutorialMessage.PulseCannon =>
+        1339691000 =>
             "The IS-5 Pulse Cannon is your primary weapon. It can be fired rapidly or charged up to release a larger round.",
-        Level100TutorialMessage.OpenFire =>
+        669198996 =>
             "Now destroy the three tanks and that building marked on your HUD.",
-        Level100TutorialMessage.PulseCannonEnergy =>
+        -1715818922 =>
             "As an energy weapon it never runs out of ammo but it can overheat. It is most effective against enemy vehicles or buildings.",
-        Level100TutorialMessage.VulcanCannon =>
+        -1616775312 =>
             "Aquila is also equipped with a rapid-fire Vulcan Cannon. It has limited target tracking facilities, so it's really easy to use.",
-        Level100TutorialMessage.OpenFireVulcan =>
+        -1860407443 =>
             "There are 3 trucks nearby. Try the Vulcan Cannon on them.",
-        Level100TutorialMessage.VulcanCannonAmmo =>
+        864965454 =>
             "You have limited ammo with this one and it's only really effective against infantry or lightly armoured units.",
         _ => null,
     };

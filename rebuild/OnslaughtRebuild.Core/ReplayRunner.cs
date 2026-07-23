@@ -14,12 +14,15 @@ public static class ReplayRunner
 {
     private static readonly byte[] s_traceHeader = CreateTraceHeader();
 
-    public static ReplayResult Run(CommandTape tape)
+    public static ReplayResult Run(
+        CommandTape tape,
+        Level100ActorDefinitionSet level100ActorDefinitions)
     {
         ArgumentNullException.ThrowIfNull(tape);
+        ArgumentNullException.ThrowIfNull(level100ActorDefinitions);
         tape.Validate();
 
-        var simulation = new Simulation(tape.Seed);
+        var simulation = new Simulation(tape.Seed, level100ActorDefinitions);
         using IncrementalHash trace = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         trace.AppendData(s_traceHeader);
         int spanIndex = 0;

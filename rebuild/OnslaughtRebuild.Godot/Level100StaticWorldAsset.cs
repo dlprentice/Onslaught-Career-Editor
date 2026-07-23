@@ -3,6 +3,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
+using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -11,7 +13,7 @@ internal sealed partial class Level100StaticWorldAsset
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
     private const string ManifestSha256 =
-        "0A96D2677C4B05E92F8DF0665F4F6481DFF8DA5EA9300A0A692EDA64CF666075";
+        Level100ActorDefinitionManifest.ExpectedManifestSha256;
     private const string SourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string SatTurretDefinition = "SAT Turret";
@@ -148,6 +150,9 @@ internal sealed partial class Level100StaticWorldAsset
     public int PineInstanceCount { get; }
 
     public Level100WaterAsset Water { get; }
+
+    public static Level100ActorDefinitionSet LoadActorDefinitions() =>
+        Level100ActorDefinitionManifest.Decode(LoadManifestBytes());
 
     public static Level100StaticWorldAsset Load(Level100HeightFieldAsset terrain)
     {
@@ -724,6 +729,15 @@ internal sealed partial class Level100StaticWorldAsset
 
     private static Manifest LoadManifest()
     {
+        byte[] source = LoadManifestBytes();
+        return JsonSerializer.Deserialize<Manifest>(source, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+        }) ?? throw new InvalidDataException("The Level 100 static-world manifest is empty.");
+    }
+
+    private static byte[] LoadManifestBytes()
+    {
         byte[] source = Godot.FileAccess.GetFileAsBytes(ManifestPath);
         if (source.Length is < 1 or > 512_000 ||
             !StringComparer.Ordinal.Equals(
@@ -733,15 +747,12 @@ internal sealed partial class Level100StaticWorldAsset
             throw new InvalidDataException(
                 "The locally materialized Level 100 static-world manifest is missing or changed.");
         }
-        return JsonSerializer.Deserialize<Manifest>(source, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        }) ?? throw new InvalidDataException("The Level 100 static-world manifest is empty.");
+        return source;
     }
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v7") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v10") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||

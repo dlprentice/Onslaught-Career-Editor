@@ -21,7 +21,8 @@ public readonly record struct FrameAdvanceResult(
     long InterpolationPhase,
     long InterpolationPhaseScale,
     WorldSnapshot PreviousSnapshot,
-    WorldSnapshot CurrentSnapshot)
+    WorldSnapshot CurrentSnapshot,
+    IReadOnlyList<Level100MissionEvent> Level100MissionEvents)
 {
     public double InterpolationAlpha =>
         (double)InterpolationPhase / InterpolationPhaseScale;
@@ -67,9 +68,9 @@ public sealed class InteractiveSession
     private long _cappedFrameCount;
     private long _droppedElapsedTicks;
 
-    public InteractiveSession(uint seed)
+    public InteractiveSession(uint seed, Level100ActorDefinitionSet level100ActorDefinitions)
     {
-        _simulation = new Simulation(seed);
+        _simulation = new Simulation(seed, level100ActorDefinitions);
         PreviousSnapshot = _simulation.Snapshot;
         CurrentSnapshot = PreviousSnapshot;
     }
@@ -267,9 +268,27 @@ public sealed class InteractiveSession
 
     public FrameAdvanceResult AdvanceFrameTicks(long elapsedTicks)
     {
+        return AdvanceFrameTicks(elapsedTicks, null);
+    }
+
+    public FrameAdvanceResult AdvanceFrameTicks(
+        long elapsedTicks,
+        IReadOnlyList<Level100SimulationFact>? level100Facts)
+    {
         if (elapsedTicks < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(elapsedTicks), "Elapsed time cannot be negative.");
+        }
+
+        long boundedElapsedTicks = Math.Min(elapsedTicks, MaximumFrameElapsedTicks);
+        long prospectivePhase = checked(
+            _interpolationPhase +
+            (boundedElapsedTicks * SimulationConstants.TicksPerSecond));
+        if (level100Facts is { Count: > 0 } && prospectivePhase < PhaseUnitsPerStep)
+        {
+            throw new ArgumentException(
+                "Level 100 facts must be supplied on a frame that advances a simulation step.",
+                nameof(level100Facts));
         }
 
         bool frameTimeCapped = elapsedTicks > MaximumFrameElapsedTicks;
@@ -284,6 +303,7 @@ public sealed class InteractiveSession
             _interpolationPhase + (elapsedTicks * SimulationConstants.TicksPerSecond));
 
         int stepsAdvanced = 0;
+        var level100MissionEvents = new List<Level100MissionEvent>();
         while (_interpolationPhase >= PhaseUnitsPerStep)
         {
             bool firstStep = stepsAdvanced == 0;
@@ -369,7 +389,9 @@ public sealed class InteractiveSession
                     lookX,
                     lookY,
                     pointerLookX,
-                    pointerLookY));
+                    pointerLookY),
+                firstStep ? level100Facts : null);
+            level100MissionEvents.AddRange(CurrentSnapshot.Level100MissionEvents);
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;
@@ -381,7 +403,8 @@ public sealed class InteractiveSession
             _interpolationPhase,
             PhaseUnitsPerStep,
             PreviousSnapshot,
-            CurrentSnapshot);
+            CurrentSnapshot,
+            Array.AsReadOnly(level100MissionEvents.ToArray()));
     }
 
     private static int AddPointerOffset(int current, int delta)

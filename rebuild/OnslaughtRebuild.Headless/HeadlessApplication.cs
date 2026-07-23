@@ -3,6 +3,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.Headless;
@@ -12,6 +13,7 @@ public static class HeadlessApplication
     private const long MaximumTapeBytes = 8 * 1024 * 1024;
     private const long MaximumReplaySteps = 100_000;
     private const string BuiltInTapeFileName = "first-flight.v1.json";
+    private const string Level100ActorManifestFileName = "level100-static-world.json";
 
     private sealed record Options(
         string TapePath,
@@ -41,11 +43,12 @@ public static class HeadlessApplication
             CommandTape tape = CommandTapeCodec.Deserialize(ReadTape(options.TapePath));
             ValidateWorkBudget(tape, options.RepeatCount);
             VerificationExpectation expectation = ResolveExpectation(options, tape);
+            Level100ActorDefinitionSet actorDefinitions = LoadActorDefinitions();
 
-            ReplayResult first = ReplayRunner.Run(tape);
+            ReplayResult first = ReplayRunner.Run(tape, actorDefinitions);
             for (int run = 1; run < options.RepeatCount; run++)
             {
-                ReplayResult repeated = ReplayRunner.Run(tape);
+                ReplayResult repeated = ReplayRunner.Run(tape, actorDefinitions);
                 if (!string.Equals(first.TraceHash, repeated.TraceHash, StringComparison.Ordinal) ||
                     !string.Equals(first.FinalStateHash, repeated.FinalStateHash, StringComparison.Ordinal))
                 {
@@ -217,6 +220,17 @@ public static class HeadlessApplication
     private static string ResolveDefaultTapePath()
     {
         return Path.Combine(AppContext.BaseDirectory, "scenarios", BuiltInTapeFileName);
+    }
+
+    private static Level100ActorDefinitionSet LoadActorDefinitions()
+    {
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "Assets",
+            "Level100",
+            "StaticWorld",
+            Level100ActorManifestFileName);
+        return Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(path));
     }
 
     private static void PrintHelp(TextWriter output)

@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class ReplayTests
 {
+    private static Level100ActorDefinitionSet ActorDefinitions =>
+        Level100TestActorDefinitions.Create();
+
+    private const int FirstRunControlTick = 790;
     [Fact]
     public void FirstFlightReplay_IsDeterministic()
     {
         CommandTape tape = LoadFirstFlightTape();
 
-        ReplayResult first = ReplayRunner.Run(tape);
-        ReplayResult second = ReplayRunner.Run(tape);
+        ReplayResult first = ReplayRunner.Run(tape, ActorDefinitions);
+        ReplayResult second = ReplayRunner.Run(tape, ActorDefinitions);
 
         Assert.Equal(first.FinalStateHash, second.FinalStateHash);
         Assert.Equal(first.TraceHash, second.TraceHash);
@@ -28,8 +33,8 @@ public sealed class ReplayTests
 
         Assert.EndsWith("\n", serialized, StringComparison.Ordinal);
         Assert.DoesNotContain("\r", serialized, StringComparison.Ordinal);
-        ReplayResult original = ReplayRunner.Run(tape);
-        ReplayResult replayed = ReplayRunner.Run(roundTripped);
+        ReplayResult original = ReplayRunner.Run(tape, ActorDefinitions);
+        ReplayResult replayed = ReplayRunner.Run(roundTripped, ActorDefinitions);
         Assert.Equal(original.FinalStateHash, replayed.FinalStateHash);
         Assert.Equal(original.TraceHash, replayed.TraceHash);
         Assert.Equal(tape.Spans.Count, roundTripped.Spans.Count);
@@ -175,14 +180,14 @@ public sealed class ReplayTests
             CommandTape.CurrentSchemaVersion,
             "look-hold",
             1,
-            SimulationConstants.Level100PowerActivationTick + 20,
+            FirstRunControlTick + 20,
             null,
             null,
-            [new CommandSpan(SimulationConstants.Level100PowerActivationTick, 20, 0, 0, LookX: 1)]);
+            [new CommandSpan(FirstRunControlTick, 20, 0, 0, LookX: 1)]);
         string json = CommandTapeCodec.Serialize(source);
         CommandTape tape = CommandTapeCodec.Deserialize(json);
         Assert.Equal(1, tape.Spans[0].LookX);
-        ReplayResult result = ReplayRunner.Run(tape);
+        ReplayResult result = ReplayRunner.Run(tape, ActorDefinitions);
         Assert.Equal(1, result.FinalState.FacingX);
         Assert.Equal(0, result.FinalState.FacingZ);
     }
@@ -194,11 +199,11 @@ public sealed class ReplayTests
             CommandTape.CurrentSchemaVersion,
             "analog-look",
             1,
-            SimulationConstants.Level100PowerActivationTick + 2,
+            FirstRunControlTick + 2,
             null,
             null,
             [new CommandSpan(
-                SimulationConstants.Level100PowerActivationTick,
+                FirstRunControlTick,
                 1,
                 0,
                 0,
@@ -207,8 +212,8 @@ public sealed class ReplayTests
 
         string json = CommandTapeCodec.Serialize(source);
         CommandTape tape = CommandTapeCodec.Deserialize(json);
-        ReplayResult first = ReplayRunner.Run(tape);
-        ReplayResult second = ReplayRunner.Run(tape);
+        ReplayResult first = ReplayRunner.Run(tape, ActorDefinitions);
+        ReplayResult second = ReplayRunner.Run(tape, ActorDefinitions);
 
         Assert.Equal(365, tape.Spans[0].LookXAnalogPermille);
         Assert.Equal(-183, tape.Spans[0].LookYAnalogPermille);
@@ -246,21 +251,21 @@ public sealed class ReplayTests
             CommandTape.CurrentSchemaVersion,
             "looked",
             1,
-            SimulationConstants.Level100PowerActivationTick + 1,
+            FirstRunControlTick + 1,
             null,
             null,
-            [new CommandSpan(SimulationConstants.Level100PowerActivationTick, 1, 0, 0, LookX: 1)]);
+            [new CommandSpan(FirstRunControlTick, 1, 0, 0, LookX: 1)]);
         var idled = new CommandTape(
             CommandTape.CurrentSchemaVersion,
             "idled",
             1,
-            SimulationConstants.Level100PowerActivationTick + 1,
+            FirstRunControlTick + 1,
             null,
             null,
             []);
 
-        ReplayResult lookedResult = ReplayRunner.Run(looked);
-        ReplayResult idledResult = ReplayRunner.Run(idled);
+        ReplayResult lookedResult = ReplayRunner.Run(looked, ActorDefinitions);
+        ReplayResult idledResult = ReplayRunner.Run(idled, ActorDefinitions);
 
         Assert.Equal(idledResult.FinalState.FacingX, lookedResult.FinalState.FacingX);
         Assert.Equal(idledResult.FinalState.FacingZ, lookedResult.FinalState.FacingZ);
@@ -293,8 +298,8 @@ public sealed class ReplayTests
             null,
             [new CommandSpan(1, 1, 0, 0, Reset: true)]);
 
-        ReplayResult moved = ReplayRunner.Run(movedThenReset);
-        ReplayResult idled = ReplayRunner.Run(idledThenReset);
+        ReplayResult moved = ReplayRunner.Run(movedThenReset, ActorDefinitions);
+        ReplayResult idled = ReplayRunner.Run(idledThenReset, ActorDefinitions);
         Assert.Equal(moved.FinalStateHash, idled.FinalStateHash);
 
         Assert.NotEqual(moved.TraceHash, idled.TraceHash);
