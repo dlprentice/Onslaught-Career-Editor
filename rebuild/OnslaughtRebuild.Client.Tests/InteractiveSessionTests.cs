@@ -550,6 +550,62 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void FrameDestructionEvents_AggregateEverySimulationStepInOrder()
+    {
+        var session = new InteractiveSession(Seed, ActorDefinitions);
+        while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
+        {
+            session.ObserveInput(
+                FirstFlightSmokeScenario.GetInputForTick(session.CurrentSnapshot.Tick));
+            session.AdvanceFrameTicks(OneCoreStepTicks);
+        }
+
+        TargetSnapshot target = session.CurrentSnapshot.Targets.Single(item => item.Id == 1);
+        Level100ActorPoseSnapshot contactPose =
+            PlaceTargetCenterAtPulseEmitter(session.CurrentSnapshot);
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+
+        FrameAdvanceResult frame = session.AdvanceFrameTicks(
+            InteractiveSession.MaximumFrameElapsedTicks,
+            [new Level100ActorPoseFact(target.ActorId, contactPose)]);
+
+        Assert.Equal(7, frame.StepsAdvanced);
+        Level100DestructionEvent[] targetEvents = frame.Level100DestructionEvents
+            .Where(item => item.ActorId == target.ActorId.Value)
+            .ToArray();
+        Assert.Equal(
+            new[]
+            {
+                Level100DestructionEventKind.PulseImpact,
+                Level100DestructionEventKind.SegmentDamaged,
+                Level100DestructionEventKind.PulseImpact,
+                Level100DestructionEventKind.SegmentDamaged,
+            },
+            targetEvents.Select(item => item.Kind));
+        Assert.All(
+            targetEvents.Where(item =>
+                item.Kind == Level100DestructionEventKind.PulseImpact),
+            item => Assert.Equal(
+                Level100DestructionEffectKind.PulseImpact,
+                item.EffectKind));
+        float pulseDamage =
+            BitConverter.UInt32BitsToSingle(Level100DestructionState.PulseDamageBits);
+        float afterFirstHit = 6f - pulseDamage;
+        float afterSecondHit = afterFirstHit - pulseDamage;
+        Assert.Equal(
+            new[]
+            {
+                BitConverter.SingleToUInt32Bits(afterFirstHit),
+                BitConverter.SingleToUInt32Bits(afterSecondHit),
+            },
+            targetEvents
+                .Where(item => item.Kind == Level100DestructionEventKind.SegmentDamaged)
+                .Select(item => item.RemainingHealthBits));
+        Assert.Equal(2, frame.CurrentSnapshot.Level100DestructionEvents.Count);
+        Assert.Empty(session.AdvanceFrameTicks(0).Level100DestructionEvents);
+    }
+
+    [Fact]
     public void ClientLevel100FailureTape_FirstRunRepeatsLossTextAndHashes()
     {
         ClientMissionTape first = RunClientFailureTape();
@@ -803,6 +859,48 @@ public sealed class InteractiveSessionTests
 
         Assert.True(session.CurrentSnapshot.Level100PlayerControlEnabled);
         return session;
+    }
+
+    private static Level100ActorPoseSnapshot PlaceTargetCenterAtPulseEmitter(
+        WorldSnapshot state)
+    {
+        double yaw = state.FacingYawMicroRad / 1_000_000d;
+        double pitch = state.FacingPitchMicroRad / 1_000_000d;
+        double emitterForwardPlane =
+            (SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Cos(pitch)) +
+            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Sin(pitch));
+        int emitterOffsetX = (int)Math.Round(
+            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Cos(yaw)) -
+            (emitterForwardPlane * Math.Sin(yaw)),
+            MidpointRounding.AwayFromZero);
+        int emitterOffsetZ = (int)Math.Round(
+            (SimulationConstants.PulseCannonEmitterRightMillimeters * Math.Sin(yaw)) +
+            (emitterForwardPlane * Math.Cos(yaw)),
+            MidpointRounding.AwayFromZero);
+        int emitterVerticalOffset = (int)Math.Round(
+            (-SimulationConstants.PulseCannonEmitterForwardMillimeters * Math.Sin(pitch)) +
+            (SimulationConstants.PulseCannonEmitterUpMillimeters * Math.Cos(pitch)),
+            MidpointRounding.AwayFromZero);
+        var emitter = new SimVector3(
+            state.PlayerPosition.X + emitterOffsetX,
+            state.PlayerGroundElevationMillimeters +
+                Level100Terrain.WalkerCenterOfGravityMillimeters +
+                emitterVerticalOffset,
+            state.PlayerPosition.Z + emitterOffsetZ);
+
+        // The released Target Tank root broadphase center is contact-local
+        // (43,-228,-275). Core is (retail X, up=-retail Z, retail Y).
+        return new Level100ActorPoseSnapshot(
+            new SimVector3(
+                emitter.X - 43,
+                emitter.Y - 275,
+                emitter.Z + 228),
+            new Level100FloatBasis3Bits(
+                BitConverter.SingleToInt32Bits(1f), 0, 0,
+                0, BitConverter.SingleToInt32Bits(1f), 0,
+                0, 0, BitConverter.SingleToInt32Bits(1f)),
+            SimVector3.Zero,
+            SimVector3.Zero);
     }
 
     private static Level100ActorDefinitionSet LoadMaterializedActorDefinitions()

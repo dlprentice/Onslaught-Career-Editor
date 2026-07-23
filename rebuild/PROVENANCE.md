@@ -597,12 +597,31 @@ isolated that objective by changing the compiled LevelScript target count from
 payload byte remained unchanged. Each accepted run required an untouched
 Warehouse immediately before the first explicit `Fire`, used only the first
 active charge bucket (`10`), and removed the objective on exactly release 12.
-Earlier hits distributed damage across the root and mesh segments; the final
-hit flipped the controller threshold and cascaded the remaining intact parts.
-Core therefore represents only an effective `12 × 1.8` direct-hit envelope and
-the retained mesh's outward-rounded `8.240`-unit horizontal bound. It does not
-claim the retail segment-selection, rubble, debris, pickup, or landscape-damage
-behavior.
+The fixed-aim observer could not identify which segments received each earlier
+hit or the precise child-break order on the terminal hit, so it does not prove
+a synchronous cascade of the remaining intact parts. Core follows the static
+controller evidence instead: `CDestructableSegmentsController__ProcessNode`
+(`0x00444C10`) uses each non-root segment's greatest BBOX half extent as its
+weight; `CDestructableSegment__VFunc11` (`0x00442870`) scales that weight by the
+definition maximum life; and `CDestroyableCoreSegment__VFunc11` (`0x00443590`)
+applies the `5.0` core multiplier and zeros the first core root. The controller
+sums active, unbroken segments' initial health—not partially reduced current
+health—and reports terminal when root core children are gone or that sum is
+strictly below `30%` of cached total health. Only the contacted depleted
+segment detaches. Child-cascade scheduling uses the shared CRT random owner,
+whose live phase is unresolved, so Core stops at a typed terminal effect
+boundary without inventing cascade timing or debris trajectories.
+
+`CMeshCollisionVolume__VFunc_03` (`0x004AC6E0`) uses each part's BBOX as
+rejection metadata before dispatching mesh mode to the one-sided swept-sphere
+triangle path at `0x00478510`; explicit sphere and cylinder owners retain their
+analytic primitive dispatch in Steam. This bounded Core owner consumes only the
+hash-verified, deterministically millimetre-quantized mesh projection needed by
+the current Pulse path rather than exposing unused generic primitive APIs or
+claiming bit-identical collision geometry. The canonical actor registry remains the
+sole owner of identity, definition/mesh binding, active state, full pose,
+velocity, health and lifecycle; destruction reports hit/dying/died facts back
+through that owner.
 
 Both isolated runs then repeated the released zero-target continuation: player
 power changed to `0`, `TUTORIAL_VULCAN_CANNON` played after the script's

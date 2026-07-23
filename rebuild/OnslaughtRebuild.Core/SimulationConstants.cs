@@ -118,22 +118,9 @@ public static class SimulationConstants
     public const int PulseCannonEmitterRightMillimeters = -6;
     public const int PulseCannonEmitterForwardMillimeters = 80;
     public const int PulseCannonEmitterUpMillimeters = 259;
-    // Each authored training tank starts at retail life 6. Direct mesh impacts
-    // repeatedly removed 1.8; one glancing mesh-part impact removed 1.0. Core
-    // does not yet model the retail mesh-part multiplier, so this bounded
-    // three-tank path represents full hits and retains milli-life precision.
+    // The released definitions retain life in float units. Registry health
+    // carries the same values in milli-life while the contact owner applies
+    // exact 1.8 medium-pulse damage to the contacted part.
     public const int Level100TargetTankLife = 6_000;
-    // Two fresh uninterrupted copied-Steam repetitions removed the Warehouse
-    // objective after exactly twelve lowest-charge shots along one fixed
-    // center-aim attack line. This 12 * 1.8 envelope is not general Warehouse
-    // health and does not reproduce the retail controller's 28 segments or its
-    // other impact-point-dependent destruction paths.
-    public const int Level100TargetWarehouseCenterAimDamageEnvelope = 21_600;
-    public const int Level100PulseCannonFullHitDamage = 1_800;
-    // Radius bounds the retained target-tank mesh in its horizontal plane
-    // (maximum source-vertex radius 1.447 units, rounded outward).
-    public const int Level100TargetTankHitRadius = 1_450;
-    // Exact retained Warehouse OBJ horizontal vertex bound: 8.239447 units,
-    // rounded outward. This bounds only the demonstrated direct-hit path.
-    public const int Level100TargetWarehouseHorizontalBound = 8_240;
+    public const int Level100TargetWarehouseLife = 50_000;
 }

@@ -276,14 +276,32 @@ public sealed class Level100Terrain
     /// </summary>
     public int SampleGroundElevationMillimeters(SimVector2 relativePosition)
     {
-        int retailXFixed = checked(
-            PlayerStartRetailXFixed +
-            (int)FloorDivide((long)relativePosition.X * FixedPointUnitsPerRetailUnit, 1_000));
-        int retailYFixed = checked(
-            PlayerStartRetailYFixed +
-            (int)FloorDivide((long)relativePosition.Z * FixedPointUnitsPerRetailUnit, 1_000));
-        int heightUnits = SampleHeightUnitsAtFixed(retailXFixed, retailYFixed);
+        (int retailXFixed, int retailYFixed) =
+            GetRetailFixedCoordinates(relativePosition);
+        return SampleGroundElevationMillimetersAtFixed(
+            retailXFixed,
+            retailYFixed);
+    }
 
+    internal (int X, int Y) GetRetailFixedCoordinates(
+        SimVector2 relativePosition) =>
+        (
+            checked(
+                PlayerStartRetailXFixed +
+                (int)FloorDivide(
+                    (long)relativePosition.X * FixedPointUnitsPerRetailUnit,
+                    1_000)),
+            checked(
+                PlayerStartRetailYFixed +
+                (int)FloorDivide(
+                    (long)relativePosition.Z * FixedPointUnitsPerRetailUnit,
+                    1_000)));
+
+    internal int SampleGroundElevationMillimetersAtFixed(
+        int retailXFixed,
+        int retailYFixed)
+    {
+        int heightUnits = SampleHeightUnitsAtFixed(retailXFixed, retailYFixed);
         long relativeGroundNumerator =
             ((long)PlayerStartReferenceElevationMillimeters * _heightScaleDenominator) -
             ((long)heightUnits * _heightScaleSignificand * 1_000L);

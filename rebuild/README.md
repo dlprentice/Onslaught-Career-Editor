@@ -78,12 +78,19 @@ envelope; other lanes must pass their typed events and current actor/resource
 state once those contracts land. Audio does not own mission waits, objectives,
 frontend pages, or pause actions. This does not claim those later mechanics are
 implemented in the current Core slice.
-Core also reproduces only the observed circular walker
-contact and tangent slide for the Control Tower and Tank Factory. Secondary
-material passes, steep-slope and other actor/structure
-collision response, mesh-part damage variation, weapon resources, the target
-Warehouse's segment-specific damage/rubble, secondary debris/effects, moving
-truck exercise, Vulcan firing, and most mission behavior remain provisional.
+The wired mission still reproduces only the observed circular walker contact
+and tangent slide for the Control Tower and Tank Factory. Pulse projectiles
+consume identity, active state, full pose/basis, velocity, health and lifecycle
+from the canonical actor registry. Their dependency-inverted contact owner uses
+BBOX only for broadphase and a hash-verified, millimetre-quantized mesh
+projection for narrowphase. The Warehouse path applies
+the evidenced extent-weighted segment health, `5.0` core multiplier,
+core-child/strict-`30%` terminal rules, and reports ordered hit/dying/died facts
+without owning objectives or mission progression. The client consumes the
+ordered typed impact/terminal effects across every Core step in a rendered
+frame. Secondary material passes, steep-slope and broader actor/structure
+collision, unmeasured mesh-part damage variation, retail debris RNG/bounce,
+moving trucks, Vulcan firing, and most mission behavior remain provisional.
 
 Retail asset payloads and converted copies are not repository source. The
 bounded materializer verifies a supported user-provided installation and writes

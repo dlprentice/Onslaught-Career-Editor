@@ -237,9 +237,10 @@ destruction/objective removal on shot four; one separate glancing hit removed
 `1.0`. Two further isolated repetitions then removed the Warehouse objective
 after exactly twelve normal hits along one fixed center-aim attack line and
 repeated the released player-off,
-Vulcan-message, Pulse-off/Vulcan-on handoff. Core represents that result as a
-bounded effective damage envelope, not as the retail object's 28-segment
-destruction controller. Godot removes each completed objective and radar marker,
+Vulcan-message, Pulse-off/Vulcan-on handoff. That observation remains a bounded
+runtime comparison; Core now uses the released object's 28-segment controller
+rules rather than encoding twelve hits as generic Warehouse health. Godot
+removes each completed objective and radar marker,
 uses the measured cockpit `Gun` emitter, and consumes exact released round,
 impact, tank-destruction, sound, text, and voice assets for the bounded
 presentation. The exact initial root terrain now includes the released macro
@@ -265,14 +266,28 @@ it does not claim the inactive advanced path, dynamic scene reflection/refractio
 or general renderer pixel identity. The detail texture uses the released
 identity and rotated quarter-scale transforms and observed modulation modes; the exact
 moving cloud-shadow texture now uses the released scale, scroll, and modulation.
+Core's projectile path now consumes canonical-registry actor identity,
+hash-verified mesh binding, active state, full three-dimensional pose/basis and
+velocity. The released medium-pulse swept sphere uses BBOX only for broadphase
+and deterministically millimetre-quantized projected mesh
+topology for contact. Target Tanks retain their four-hit direct
+path; Warehouse contacts now drive the evidenced extent-weighted 28-segment
+state, `5.0` core multiplier, core-child/strict-30% terminal tests, and
+`Hit`/dying/died facts consumed by the released mission scripts. Segment and
+typed effect state is deterministic and hashed. Godot consumes the ordered
+Pulse-impact and terminal effect events, including their existing audio and
+target-destruction presentation. It still removes the complete target at
+terminal; detached Warehouse parts, rubble, and retail-random secondary debris
+are not yet presented.
 Walker acceleration now follows Core's
 continuous body yaw; the bounded projectile path shares its yaw and vertical
 pitch while jet
 translation retains the older eight-way approximation. The slice does not
-yet reproduce Steam's dynamic 1/2/4-step terrain patch topology, steep-slope or actor collision response beyond those two
-observed facility envelopes, exact toe-normal alignment or CMC body sway, the
-Warehouse's segmented-destruction
-path and rubble, mesh-part damage variation, secondary particles/debris, the
+yet reproduce Steam's dynamic 1/2/4-step terrain patch topology, steep-slope or
+wire the available actor contact path into walker movement beyond those two
+observed facility envelopes, exact toe-normal alignment or CMC body sway,
+resolved Warehouse rubble trajectories,
+mesh-part damage variation, retail-random secondary particles/debris, the
 three moving truck targets, Vulcan firing, the rest of
 the mission, AI, the
 remaining weapon roster, facility destruction,

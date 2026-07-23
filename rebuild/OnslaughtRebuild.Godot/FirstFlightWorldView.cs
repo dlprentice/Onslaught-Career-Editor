@@ -21,6 +21,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Node3D> _level100Targets = [];
+    private Level100Audio _audio = null!;
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -42,7 +43,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
-    private int _lastTargetEffectTick = -1;
     private float _particlePresentationSeconds;
     private float _walkerToJetVisualElapsed = float.PositiveInfinity;
     private VehicleTransition _previousTransition;
@@ -111,6 +111,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     {
         ArgumentNullException.ThrowIfNull(audio);
         Name = "WorldView";
+        _audio = audio;
         BuildLevel100Terrain();
         BuildEnvironment();
         BuildLevel100StaticWorld();
@@ -156,12 +157,48 @@ public sealed partial class FirstFlightWorldView : Node3D
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(current);
-        UpdateProjectiles(previous, current);
+        UpdateProjectiles(current);
         UpdateCamera(playerPosition, playerYaw, playerPitch, openingElapsedSeconds, ShowHud);
         IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
             _level100Terrain.Update(_camera);
         _level100TerrainAppearance.Update(terrainSelection);
         _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
+    }
+
+    public void ConsumeLevel100DestructionEvents(
+        IReadOnlyList<Level100DestructionEvent> events,
+        int tick)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (Level100DestructionEvent item in events)
+        {
+            Vector3 position = new(
+                item.Position.X * UnitsToMeters,
+                -item.Position.Z * UnitsToMeters,
+                -item.Position.Y * UnitsToMeters);
+            switch (item.EffectKind)
+            {
+                case Level100DestructionEffectKind.None:
+                    break;
+                case Level100DestructionEffectKind.PulseImpact:
+                    SpawnPulseImpact(position, item.ActorId, tick);
+                    _audio.PlayAt(Level100EffectCue.PulseImpact, position);
+                    break;
+                case Level100DestructionEffectKind.TargetDestroyed:
+                    SpawnTargetTankDestruction(position, item.ActorId);
+                    _audio.PlayAt(
+                        Level100EffectCue.TargetOrTrainerDestroyed,
+                        position);
+                    break;
+                case Level100DestructionEffectKind.FacilityDestroyed:
+                    _audio.PlayAt(Level100EffectCue.FacilityDestroyed, position);
+                    break;
+                default:
+                    throw new InvalidDataException(
+                        $"Core exposed unknown Level 100 destruction effect " +
+                        $"{item.EffectKind}.");
+            }
+        }
     }
 
     private void BuildEnvironment()
@@ -539,7 +576,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         _walkerAsset.SetGroundContactPose(contacts);
     }
 
-    private void UpdateProjectiles(WorldSnapshot previous, WorldSnapshot current)
+    private void UpdateProjectiles(WorldSnapshot current)
     {
         var activeIds = new HashSet<int>();
         foreach (ProjectileSnapshot projectile in current.Projectiles)
@@ -568,40 +605,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             _projectiles[id].QueueFree();
             _projectiles.Remove(id);
         }
-
-        if (current.Tick == _lastTargetEffectTick || current.Tick == previous.Tick)
-        {
-            return;
-        }
-
-        foreach (TargetSnapshot target in current.Targets.Where(item => item.Id is >= 1 and <= 4))
-        {
-            TargetSnapshot previousTarget = previous.Targets.Single(item => item.Id == target.Id);
-            if (target.Hull >= previousTarget.Hull)
-            {
-                continue;
-            }
-
-            float effectHeight = target.Id == 4 ? 2f : 0.7f;
-            Vector3 effectPosition = _level100Targets[target.Id].Position +
-                (Vector3.Up * effectHeight);
-            if (target.Id == 4)
-            {
-                SpawnPulseImpact(effectPosition, target.Id, current.Tick);
-                continue;
-            }
-
-            if (target.IsActive)
-            {
-                SpawnPulseImpact(effectPosition, target.Id, current.Tick);
-            }
-            else
-            {
-                SpawnTargetTankDestruction(effectPosition, target.Id);
-            }
-        }
-
-        _lastTargetEffectTick = current.Tick;
     }
 
     private void BuildPulseCannonPresentation()

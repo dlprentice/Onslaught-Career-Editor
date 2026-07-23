@@ -181,6 +181,9 @@ public sealed partial class FirstFlightGame : Node3D
             result.CurrentSnapshot,
             (float)result.InterpolationAlpha,
             (float)delta);
+        _world.ConsumeLevel100DestructionEvents(
+            result.Level100DestructionEvents,
+            result.CurrentSnapshot.Tick);
         _hud.UpdateFromSnapshot(
             result.CurrentSnapshot,
             _audio.CharacterMessagePlayback);
@@ -199,6 +202,9 @@ public sealed partial class FirstFlightGame : Node3D
                 SmokeFrameElapsedTicks,
                 [new Level100PlayerDeathFact()]);
             ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
+            _world.ConsumeLevel100DestructionEvents(
+                terminalFrame.Level100DestructionEvents,
+                terminalFrame.CurrentSnapshot.Tick);
             for (int tick = 0;
                  tick < Level100MissionTiming.FailureMenuDelayTicks &&
                  _session.CurrentSnapshot.Level100Mission.TerminalState !=
@@ -207,6 +213,9 @@ public sealed partial class FirstFlightGame : Node3D
             {
                 terminalFrame = _session.AdvanceFrameTicks(SmokeFrameElapsedTicks);
                 ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
+                _world.ConsumeLevel100DestructionEvents(
+                    terminalFrame.Level100DestructionEvents,
+                    terminalFrame.CurrentSnapshot.Tick);
             }
             _hud.UpdateFromSnapshot(
                 _session.CurrentSnapshot,
@@ -660,8 +669,11 @@ public sealed partial class FirstFlightGame : Node3D
         AddChild(_pauseView);
         _pauseView.Initialize(_pauseMenu);
 
-        ConsumeLevel100MissionEvents(
-            _session.AdvanceFrameTicks(0).Level100MissionEvents);
+        FrameAdvanceResult initialFrame = _session.AdvanceFrameTicks(0);
+        ConsumeLevel100MissionEvents(initialFrame.Level100MissionEvents);
+        _world.ConsumeLevel100DestructionEvents(
+            initialFrame.Level100DestructionEvents,
+            initialFrame.CurrentSnapshot.Tick);
         _hud.UpdateFromSnapshot(
             _session.CurrentSnapshot,
             _audio.CharacterMessagePlayback);

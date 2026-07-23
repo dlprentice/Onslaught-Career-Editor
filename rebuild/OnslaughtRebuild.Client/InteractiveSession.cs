@@ -22,7 +22,8 @@ public readonly record struct FrameAdvanceResult(
     long InterpolationPhaseScale,
     WorldSnapshot PreviousSnapshot,
     WorldSnapshot CurrentSnapshot,
-    IReadOnlyList<Level100MissionEvent> Level100MissionEvents)
+    IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
+    IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents)
 {
     public double InterpolationAlpha =>
         (double)InterpolationPhase / InterpolationPhaseScale;
@@ -53,6 +54,8 @@ public sealed class InteractiveSession
 
     private readonly Simulation _simulation;
     private readonly List<Level100MissionEvent> _undeliveredLevel100MissionEvents = [];
+    private readonly List<Level100DestructionEvent>
+        _undeliveredLevel100DestructionEvents = [];
     private InteractiveInput _input;
     private bool _toggleLevelWasHeld;
     private bool _resetLevelWasHeld;
@@ -84,6 +87,8 @@ public sealed class InteractiveSession
         CurrentSnapshot = PreviousSnapshot;
         _undeliveredLevel100MissionEvents.AddRange(
             CurrentSnapshot.Level100MissionEvents);
+        _undeliveredLevel100DestructionEvents.AddRange(
+            CurrentSnapshot.Level100DestructionEvents);
     }
 
     public WorldSnapshot PreviousSnapshot { get; private set; }
@@ -331,7 +336,8 @@ public sealed class InteractiveSession
                 PhaseUnitsPerStep,
                 PreviousSnapshot,
                 CurrentSnapshot,
-                Array.Empty<Level100MissionEvent>());
+                Array.Empty<Level100MissionEvent>(),
+                Array.Empty<Level100DestructionEvent>());
         }
 
         long boundedElapsedTicks = Math.Min(elapsedTicks, MaximumFrameElapsedTicks);
@@ -359,6 +365,9 @@ public sealed class InteractiveSession
         int stepsAdvanced = 0;
         var level100MissionEvents = new List<Level100MissionEvent>();
         level100MissionEvents.AddRange(_undeliveredLevel100MissionEvents);
+        var level100DestructionEvents = new List<Level100DestructionEvent>();
+        level100DestructionEvents.AddRange(
+            _undeliveredLevel100DestructionEvents);
         while (_interpolationPhase >= PhaseUnitsPerStep)
         {
             bool firstStep = stepsAdvanced == 0;
@@ -447,6 +456,8 @@ public sealed class InteractiveSession
                     pointerLookY),
                 firstStep ? level100Facts : null);
             level100MissionEvents.AddRange(CurrentSnapshot.Level100MissionEvents);
+            level100DestructionEvents.AddRange(
+                CurrentSnapshot.Level100DestructionEvents);
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;
@@ -459,8 +470,10 @@ public sealed class InteractiveSession
             PhaseUnitsPerStep,
             PreviousSnapshot,
             CurrentSnapshot,
-            Array.AsReadOnly(level100MissionEvents.ToArray()));
+            Array.AsReadOnly(level100MissionEvents.ToArray()),
+            Array.AsReadOnly(level100DestructionEvents.ToArray()));
         _undeliveredLevel100MissionEvents.Clear();
+        _undeliveredLevel100DestructionEvents.Clear();
         return result;
     }
 

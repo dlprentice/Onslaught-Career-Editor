@@ -61,6 +61,10 @@ BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
+PHYSICS_DEFINITIONS = "data/default physics.dat"
+PHYSICS_DEFINITIONS_SHA256 = (
+    "e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14"
+)
 ENGLISH_LANGUAGE_TABLE = "data/language/english.dat"
 ENGLISH_LANGUAGE_TABLE_SHA256 = (
     "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a"
@@ -116,9 +120,20 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "40abd1e6de57b3ab2bf7e61172be1059bb43845dedf1e586999687d20ad4b9c1"
+STATIC_WORLD_MANIFEST_SHA256 = "bda1c98e675513d5f5dacd1f013e61728525000bd6da5219250aafd39798903f"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
+)
+LEVEL100_CONTACT_ASSET = (
+    CORE_ASSETS / "Level100/level100-contact-owners.json"
+)
+LEVEL100_CONTACT_ASSET_SHA256 = (
+    "fe5f109526e39231ea3d02898a035dbc7eb842b7b37776ec5efda7ba45f138b0"
+)
+# Aggregate of the 24 collision-bearing facility meshes only. The accepted
+# static-world aggregate above additionally owns the four tree meshes.
+LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256 = (
+    "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
 )
 PINE_IMPOSTER_TEXTURE = (
     "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
@@ -489,6 +504,47 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
     return data
 
 
+def _physics_records(data: bytes) -> dict[tuple[int, str], dict[int, bytes]]:
+    if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
+        raise RuntimeError("unsupported physics-definition framing")
+    offset = 2
+    records: dict[tuple[int, str], dict[int, bytes]] = {}
+    record_count = 0
+    while struct.unpack_from("<i", data, offset)[0] != -1:
+        record_type, _declared_size = struct.unpack_from("<II", data, offset)
+        offset += 8
+        name_end = data.index(0, offset)
+        name = data[offset:name_end].decode("ascii")
+        offset = name_end + 1
+        fields: dict[int, bytes] = {}
+        while True:
+            field_id, size = struct.unpack_from("<II", data, offset)
+            offset += 8
+            value = data[offset : offset + size]
+            offset += size
+            marker = struct.unpack_from("<i", data, offset)[0]
+            offset += 4
+            fields[field_id] = value
+            if marker == -1:
+                break
+            if marker != 0:
+                raise RuntimeError(
+                    f"physics record has an invalid continuation: {name}"
+                )
+        records[(record_type, name)] = fields
+        record_count += 1
+    if offset + 4 != len(data) or record_count != 777:
+        raise RuntimeError("physics-definition record count changed")
+    return records
+
+
+def _definition_string(fields: dict[int, bytes], field_id: int) -> str:
+    value = fields[field_id]
+    if not value or value[-1] != 0:
+        raise RuntimeError(f"physics string field {field_id} is not terminated")
+    return value[:-1].decode("ascii")
+
+
 def _materialize_level100_hud_manifest(stage: Path) -> str:
     level_script_path = stage / LEVEL100_LEVEL_SCRIPT
     english_source_path = stage / LEVEL100_ENGLISH_SOURCE
@@ -820,7 +876,8 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
             manifest["water"]["surfaceSha256"],
         )
     )
-    if len(outputs) != 64 or len({path for path, _ in outputs}) != len(outputs):
+    outputs.append((LEVEL100_CONTACT_ASSET, LEVEL100_CONTACT_ASSET_SHA256))
+    if len(outputs) != 65 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -1737,7 +1794,7 @@ def _build_actor_definition_set(
     }
     target_by_record = {
         9: ("Target Tank 2", "m_f_pulsetank_training.msh.aya", "StaticTargets", 2, 6_000),
-        11: ("Target Warehouse", "m_m_warehouse.msh.aya", "StaticTargets", 4, 21_600),
+        11: ("Target Warehouse", "m_m_warehouse.msh.aya", "StaticTargets", 4, 50_000),
         12: ("Target Tank 3", "m_f_pulsetank_training.msh.aya", "StaticTargets", 3, 6_000),
         # The authored actor is the distinct Flyby instance. Airfield later spawns
         # the AirTrainer mission actor through SpawnerB.
@@ -1870,6 +1927,251 @@ def _build_actor_definition_set(
             }
         )
     return actor_definitions, spawn_definitions
+
+
+def _round_scaled_away(value: float, scale: int) -> int:
+    scaled = value * scale
+    return math.floor(scaled + 0.5) if scaled >= 0 else math.ceil(scaled - 0.5)
+
+
+def _contact_part_records(parsed) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for index, part in enumerate(parsed.parts):
+        rows = part.transform.rows
+        local = part.bounding_box.center
+        if (
+            part.bounding_box.valid not in {0, 1}
+            or not all(
+                math.isfinite(value)
+                for value in (
+                    *local,
+                    *part.bounding_box.half_extents,
+                    part.bounding_box.radius,
+                )
+            )
+            or any(value < 0 for value in part.bounding_box.half_extents)
+            or part.bounding_box.radius < 0
+        ):
+            raise RuntimeError(f"mesh part {part.name} has an invalid collision BBOX")
+        center = [
+            sum(rows[axis][component] * local[component] for component in range(3))
+            + part.transform.position[axis]
+            for axis in range(3)
+        ]
+        vertices: list[int] = []
+        for vertex in part.vertices:
+            position = vertex.position
+            transformed = [
+                sum(rows[axis][component] * position[component] for component in range(3))
+                + part.transform.position[axis]
+                for axis in range(3)
+            ]
+            if not all(math.isfinite(value) for value in transformed):
+                raise RuntimeError(
+                    f"mesh part {part.name} has a non-finite contact vertex"
+                )
+            vertices.extend(
+                _round_scaled_away(value, 1_000) for value in transformed
+            )
+
+        triangles: list[int] = []
+        for group in part.groups:
+            indices = group.indices
+            for ordinal in range(len(indices) - 2):
+                if ordinal % 2 == 0:
+                    a, b, c = indices[ordinal : ordinal + 3]
+                else:
+                    b, a, c = indices[ordinal : ordinal + 3]
+                if len({a, b, c}) == 3:
+                    triangles.extend((a, b, c))
+
+        half_extents = [
+            math.ceil(value * 1_000.0)
+            for value in part.bounding_box.half_extents
+        ]
+        segment_value = max(part.bounding_box.half_extents)
+        records.append(
+            {
+                "centerMillimeters": [
+                    _round_scaled_away(value, 1_000) for value in center
+                ],
+                "collidable": (
+                    part.bounding_box.valid == 1
+                    and all(value > 0 for value in half_extents)
+                    and bool(part.vertices)
+                ),
+                "halfExtentsMillimeters": half_extents,
+                "index": index,
+                "name": part.name,
+                "orientationPartsPerMillion": [
+                    _round_scaled_away(value, 1_000_000)
+                    for row in rows
+                    for value in row
+                ],
+                "parent": -1 if part.parent is None else part.parent,
+                "reference": -1 if part.reference is None else part.reference,
+                "segmentValueBits": struct.unpack(
+                    "<I", struct.pack("<f", segment_value)
+                )[0],
+                "triangles": triangles,
+                "type": part.part_type,
+                "verticesMillimeters": vertices,
+            }
+        )
+    return records
+
+
+def _level100_contact_asset(
+    objects: list[dict[str, object]],
+    mesh_inputs: dict[str, tuple[Path, bytes, dict]],
+    mesh_records: dict[str, dict[str, object]],
+    parse_cmsh_stream,
+    inflate_aya,
+    game_root: Path,
+) -> bytes:
+    contact_mesh_keys = set(STATIC_MESH_BY_DEFINITION.values())
+    parsed_static = {
+        mesh_key: parse_cmsh_stream(inflate_aya(source[1]))
+        for mesh_key, source in mesh_inputs.items()
+        if mesh_key in contact_mesh_keys
+    }
+    instances: list[dict[str, object]] = []
+    for world_object in sorted(objects, key=lambda item: int(item["ordinal"])):
+        mesh_key = str(world_object["mesh"])
+        position = world_object["retailPosition"]
+        yaw_pitch_roll = world_object["retailOrientation"]
+        instances.append(
+            {
+                "authoredElevationMillimeters": _round_scaled_away(
+                    -10.0 - float(position[2]),
+                    1_000,
+                ),
+                "baseClearanceMillimeters": (
+                    0
+                    if world_object["definition"] == "SAT Turret"
+                    else _round_scaled_away(
+                        float(mesh_records[mesh_key]["baseClearance"]),
+                        1_000,
+                    )
+                ),
+                "definition": world_object["definition"],
+                "id": world_object["ordinal"],
+                "name": world_object["name"],
+                "positionMillimeters": [
+                    _round_scaled_away(float(position[0]) - 288.6875, 1_000),
+                    _round_scaled_away(float(position[1]) - 243.25, 1_000),
+                ],
+                "retailPositionBits": [
+                    struct.unpack("<I", struct.pack("<f", float(value)))[0]
+                    for value in position
+                ],
+                "retailYawPitchRollBits": [
+                    struct.unpack("<I", struct.pack("<f", float(value)))[0]
+                    for value in yaw_pitch_roll
+                ],
+                "rootMode": "authored-terrain-water",
+            }
+        )
+
+    definitions = [
+        {
+            "definition": definition,
+            "mesh": mesh_key,
+            "parts": _contact_part_records(parsed_static[mesh_key]),
+        }
+        for definition, mesh_key in STATIC_MESH_BY_DEFINITION.items()
+    ]
+
+    physics = _physics_records(
+        _read_exact(game_root / PHYSICS_DEFINITIONS, PHYSICS_DEFINITIONS_SHA256)
+    )
+    direct_hashes = {
+        Path(source_name).name.casefold(): expected_hash
+        for _, source_name, expected_hash in DIRECT_ASSETS
+    }
+    target_definitions: list[dict[str, object]] = []
+    target_source_hashes: dict[str, str] = {}
+    for definition in ("Target Tank", "Warehouse"):
+        fields = physics[(1, definition)]
+        mesh_name = _definition_string(fields, 9)
+        if not mesh_name.casefold().endswith(".msh"):
+            mesh_name += ".msh"
+        source_name = f"m_{mesh_name}.aya"
+        expected_hash = direct_hashes.get(source_name.casefold())
+        if expected_hash is None:
+            raise RuntimeError(
+                f"Level 100 target definition has no retained mesh: {definition}"
+            )
+        source = _read_exact(
+            game_root / "data/resources/meshes" / source_name,
+            expected_hash,
+        )
+        parsed = parse_cmsh_stream(inflate_aya(source))
+        destruction_fields = physics[(6, _definition_string(fields, 10))]
+        particle_descriptor = _definition_string(destruction_fields, 2)
+        if any(
+            _definition_string(destruction_fields, field_id) != particle_descriptor
+            for field_id in (5, 6, 7)
+        ):
+            raise RuntimeError(
+                f"Level 100 target destruction variants diverged: {definition}"
+            )
+        target_definitions.append(
+            {
+                "definition": definition,
+                "destructionParticleDescriptor": particle_descriptor,
+                "destructionPhysicsDefinition": _definition_string(fields, 10),
+                "destructionSoundDescriptor": _definition_string(
+                    destruction_fields, 10
+                ),
+                "maximumLifeBits": struct.unpack("<I", fields[3])[0],
+                "mesh": source_name,
+                "parts": _contact_part_records(parsed),
+            }
+        )
+        target_source_hashes[definition] = expected_hash
+
+    round_fields = physics[(4, "Mech Pulse Bolt Medium")]
+    hit_fields = physics[(6, _definition_string(round_fields, 9))]
+    hit_particle_descriptor = _definition_string(hit_fields, 2)
+    if (
+        round_fields[12] != struct.pack("<I", 0x3D8F5C29)
+        or any(
+            _definition_string(hit_fields, field_id) != hit_particle_descriptor
+            for field_id in (5, 6, 7)
+        )
+    ):
+        raise RuntimeError("Level 100 medium pulse contact contract changed")
+
+    document = {
+        "definitionCount": len(definitions),
+        "definitions": definitions,
+        "instanceCount": len(instances),
+        "instances": instances,
+        "partCount": (
+            sum(len(row["parts"]) for row in definitions)
+            + sum(len(row["parts"]) for row in target_definitions)
+        ),
+        "pulseRound": {
+            "impactParticleDescriptor": hit_particle_descriptor,
+            "impactPhysicsDefinition": _definition_string(round_fields, 9),
+            "impactSoundDescriptor": _definition_string(hit_fields, 10),
+            "radiusMillimeters": _round_scaled_away(
+                struct.unpack("<f", round_fields[12])[0], 1_000
+            ),
+        },
+        "schema": "onslaught.level100-contact-owners.v3",
+        "staticMeshCount": len(parsed_static),
+        "staticSourceAggregateSha256": (
+            LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256
+        ),
+        "targetDefinitionCount": len(target_definitions),
+        "targetDefinitions": target_definitions,
+        "targetSourceSha256": target_source_hashes,
+    }
+    return (
+        json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
 
 
 def _materialize_static_world(
@@ -2205,6 +2507,25 @@ def _materialize_static_world(
     manifest_target.parent.mkdir(parents=True, exist_ok=True)
     manifest_target.write_bytes(manifest_bytes)
     outputs.append((STATIC_WORLD_MANIFEST, manifest_hash))
+
+    contact_asset = _level100_contact_asset(
+        objects,
+        mesh_inputs,
+        mesh_records,
+        parse_cmsh_stream,
+        inflate_aya,
+        game_root,
+    )
+    contact_hash = _sha256(contact_asset)
+    if contact_hash != LEVEL100_CONTACT_ASSET_SHA256:
+        raise RuntimeError(
+            "Level 100 contact owners did not reproduce exactly "
+            f"(SHA-256 {contact_hash})"
+        )
+    contact_target = stage / LEVEL100_CONTACT_ASSET
+    contact_target.parent.mkdir(parents=True, exist_ok=True)
+    contact_target.write_bytes(contact_asset)
+    outputs.append((LEVEL100_CONTACT_ASSET, contact_hash))
     return tuple(outputs)
 
 

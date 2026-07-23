@@ -37,6 +37,7 @@ public sealed class Simulation
     private Level100Mission _level100Mission = null!;
     private Level100ActorRegistry _level100Actors = null!;
     private Level100ActorScriptRuntime _level100ActorScripts = null!;
+    private Level100DestructionRuntime _level100Destruction = null!;
     private Level100ActorId _level100PlayerActorId;
     private int _tick;
     private int _nextProjectileId;
@@ -88,6 +89,7 @@ public sealed class Simulation
         IReadOnlyList<Level100SimulationFact>? level100Facts = null)
     {
         input.Validate();
+        _level100Destruction.ValidateExternalFacts(level100Facts);
         _tick++;
 
         if (input.HasAction(SimActions.Reset))
@@ -98,6 +100,7 @@ public sealed class Simulation
 
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
+        _level100Destruction.BeginTick();
         AdvanceOpeningCamera();
         SyncLevel100PlayerState();
         _level100ActorScripts.AdvanceTick();
@@ -233,8 +236,8 @@ public sealed class Simulation
             return;
         }
 
-        _level100Actors.ReportStartedDying(_level100PlayerActorId);
-        _level100Actors.ReportDied(_level100PlayerActorId);
+        _level100Destruction.ReportExternalStartedDying(_level100PlayerActorId);
+        _level100Destruction.ReportExternalDied(_level100PlayerActorId);
         DrainAndDispatchLevel100ActorFacts();
     }
 
@@ -258,11 +261,12 @@ public sealed class Simulation
                     DrainAndDispatchLevel100ActorFacts();
                     break;
                 case Level100ActorStartedDyingFact startedDying:
-                    _level100Actors.ReportStartedDying(startedDying.ActorId);
+                    _level100Destruction.ReportExternalStartedDying(
+                        startedDying.ActorId);
                     DrainAndDispatchLevel100ActorFacts();
                     break;
                 case Level100ActorDiedFact died:
-                    _level100Actors.ReportDied(died.ActorId);
+                    _level100Destruction.ReportExternalDied(died.ActorId);
                     DrainAndDispatchLevel100ActorFacts();
                     break;
                 case Level100ActorPoseFact pose:
@@ -287,7 +291,9 @@ public sealed class Simulation
                     _level100Actors.SetObjective(objective.ActorId, objective.IsObjective);
                     break;
                 case Level100ActorHealthFact health:
-                    _level100Actors.SetHealth(health.ActorId, health.Health);
+                    _level100Destruction.SetExternalHealth(
+                        health.ActorId,
+                        health.Health);
                     break;
                 case Level100SpawnThingFact spawn:
                     IReadOnlyList<Level100ActorId> spawned = _level100Actors.SpawnThing(
@@ -298,6 +304,7 @@ public sealed class Simulation
                         spawn.ScriptName);
                     foreach (Level100ActorId actorId in spawned)
                     {
+                        _level100Destruction.RegisterActor(actorId);
                         _level100ActorScripts.AttachAndInitializeSpawnedActor(
                             actorId,
                             spawn.ScriptName);
@@ -315,7 +322,9 @@ public sealed class Simulation
                     }
 
                     int hull = Math.Max(0, PlayerHull - damage.Damage);
-                    _level100Actors.SetHealth(_level100PlayerActorId, hull);
+                    _level100Destruction.SetExternalHealth(
+                        _level100PlayerActorId,
+                        hull);
                     _level100Mission.ReportPlayerHitDuringEvasion();
                     if (hull == 0)
                     {
@@ -416,6 +425,7 @@ public sealed class Simulation
             spawn.ScriptName);
         foreach (Level100ActorId actorId in spawned)
         {
+            _level100Destruction.RegisterActor(actorId);
             _level100ActorScripts.AttachAndInitializeSpawnedActor(
                 actorId,
                 spawn.ScriptName);
@@ -1226,57 +1236,26 @@ public sealed class Simulation
         for (int projectileIndex = _projectiles.Count - 1; projectileIndex >= 0; projectileIndex--)
         {
             MutableProjectile projectile = _projectiles[projectileIndex];
-            projectile.Position = new SimVector2(
-                projectile.Position.X + projectile.Velocity.X,
-                projectile.Position.Z + projectile.Velocity.Z);
-            projectile.ElevationMillimeters += projectile.VerticalVelocityMillimetersPerTick;
+            var start = new SimVector3(
+                projectile.Position.X,
+                projectile.ElevationMillimeters,
+                projectile.Position.Z);
+            var end = new SimVector3(
+                checked(projectile.Position.X + projectile.Velocity.X),
+                checked(projectile.ElevationMillimeters +
+                    projectile.VerticalVelocityMillimetersPerTick),
+                checked(projectile.Position.Z + projectile.Velocity.Z));
+            projectile.Position = new SimVector2(end.X, end.Z);
+            projectile.ElevationMillimeters = end.Y;
             projectile.RemainingTicks--;
 
-            bool hit = false;
-            foreach (Level100ActorSnapshot target in _level100Actors.Snapshot.Actors
-                .Where(actor =>
-                    actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
-                    actor.Pose is not null)
-                .OrderBy(actor => actor.TargetOrdinal))
+            bool hit = _level100Destruction.TryApplyPulseSweep(
+                start,
+                end,
+                out _);
+            if (hit)
             {
-                if (!target.IsObjective ||
-                    !target.Active ||
-                    target.Lifecycle == Level100ActorLifecycle.Destroyed ||
-                    projectile.VerticalVelocityMillimetersPerTick != 0)
-                {
-                    continue;
-                }
-
-                long deltaX = (long)projectile.Position.X -
-                    target.Pose!.PositionMillimeters.X;
-                long deltaZ = (long)projectile.Position.Z -
-                    target.Pose.PositionMillimeters.Z;
-                int hitRadius = target.TargetOrdinal == 4
-                    ? SimulationConstants.Level100TargetWarehouseHorizontalBound
-                    : SimulationConstants.Level100TargetTankHitRadius;
-                long hitRadiusSquared = (long)hitRadius * hitRadius;
-                if ((deltaX * deltaX) + (deltaZ * deltaZ) > hitRadiusSquared)
-                {
-                    continue;
-                }
-
-                int health = Math.Max(
-                    0,
-                    target.Health - SimulationConstants.Level100PulseCannonFullHitDamage);
-                _level100Actors.ReportHit(
-                    target.ActorId,
-                    otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
-                _level100Actors.SetHealth(target.ActorId, health);
-                if (health == 0)
-                {
-                    _level100Actors.ReportStartedDying(target.ActorId);
-                    _level100Actors.ReportDied(target.ActorId);
-                }
-
                 DrainAndDispatchLevel100ActorFacts();
-
-                hit = true;
-                break;
             }
 
             if (hit || projectile.RemainingTicks <= 0)
@@ -1309,6 +1288,7 @@ public sealed class Simulation
         _level100HudEmphasisMask = 0;
         _projectiles.Clear();
         _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        _level100Destruction = new Level100DestructionRuntime(_level100Actors);
         _level100PlayerActorId = _level100Actors.GetThingRef("Player 1") ??
             throw new InvalidOperationException("Level 100 Player is missing.");
         _level100Actors.SetHealth(_level100PlayerActorId, SimulationConstants.MaximumHull);
@@ -1395,6 +1375,8 @@ public sealed class Simulation
             _level100Mission.Snapshot,
             Array.AsReadOnly(_level100MissionEvents.ToArray()),
             _level100Actors.Snapshot,
+            _level100Destruction.Snapshot,
+            _level100Destruction.Events,
             _level100ActorScripts.Snapshot,
             Array.AsReadOnly(_level100ActorScriptCommands.ToArray()),
             _nextProjectileId,

@@ -19,9 +19,17 @@ signatures, and their exact hashes. The materializer converts those 28 meshes
 and verifies a 62-file retail source set; those generated payloads are not
 mirrored in this document.
 
+`../../../OnslaughtRebuild.Core/Assets/Level100/level100-contact-owners.json`
+is a separate ignored Core input derived from the supported physics definitions,
+mesh archives and Level 100 placements. It retains hash-verified definitions
+and deterministic millimetre-quantized projected topology for contact. It is a
+locally materialized derivative, remains ignored, and is not a claim of
+bit-identical retail collision geometry.
+
 | Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
 | `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
+| `../../../OnslaughtRebuild.Core/Assets/Level100/level100-contact-owners.json` | Hash-verified deterministic contact projection for the 24 static definitions plus Target Tank and Warehouse | `FE5F109526E39231EA3D02898A035DBC7EB842B7B37776EC5EFDA7BA45F138B0` |
 | `Source/level100-root-terrain.rgb565.bin` | Exact initial 512x512 root landscape pixels reconstructed from the released Level 100 and base archives | `6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B` |
 | `Source/level100-terrain-hierarchy.bin` | Exact retained sources for the five released logical landscape caches | `541EACD0AA75FAE8BEFB8A3E1505EA52AE6B1F6C1367C15C65D7DD23B7CFE977` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
@@ -628,6 +636,28 @@ records 35, 106, and 102 respectively. Their `PSMP` names, declared decoded
 sizes, high-nibble-first IMA-ADPCM framing, and resulting WAV hashes were
 validated before retention; Godot validates the PCM envelope again at load.
 
+## Dependency-inverted contact and destruction payload
+
+`level100-contact-owners.json` schema v3 de-duplicates the 33 WRES instance
+rows into 24 reusable static definitions and separately retains the Target Tank
+and Warehouse definitions. Its 349 parts preserve names, hierarchy links,
+float segment-value bits, BBOX metadata, and a deterministic
+millimetre-quantized projection of transformed vertices and expanded triangle
+strips. BBOX is broadphase metadata only; Core reports actor hits from the
+swept-sphere projected-mesh path. The pinned
+medium-pulse radius is the released `0x3D8F5C29` float rounded to `70`
+millimetres. This is a hash-verified deterministic Core input, not a claim of
+bit-identical retail collision geometry.
+
+Contact does not instantiate the retained WRES metadata. Simulation supplies
+the canonical registry's stable actor ID, definition/mesh binding, active
+state, full pose/basis, velocity, health and lifecycle. The per-actor
+destruction component implements the Warehouse's extent-weighted segment
+health, `5.0` core multiplier, active-intact initial-subtree sum and strict
+`30%` terminal test. Steam's CRT-random child-cascade phase and debris bounce
+remain unresolved, so Core emits only typed impact and terminal presentation
+effects and supplies no synthetic cascade timing or trajectory.
+
 The presentation consumes the exact facility and target texture-pass signatures
 and preserves their mesh-group assignments. Higher-layer references follow the
 released mode dispatch rather than being guessed as generic metallic maps. The nine retained
@@ -636,11 +666,13 @@ have the bounded damage/deactivation path above plus the retained shot, impact,
 and medium-destruction sound and primary particle layers. Two fresh isolated
 copied-retail runs required exactly twelve first-bucket direct hits to remove
 the 28-segment Warehouse objective, then repeated the released Vulcan handoff.
-Core retains only that effective damage envelope and the exact mesh's
-outward-rounded horizontal bound; Godot presents exact Pulse impacts and removes
-the completed objective. Retail segment selection, rubble/debris, mesh-part
-damage multipliers, the three moving trucks, and Vulcan firing are not
-implemented. Actor/structure collision,
+That fixed-aim observation remains a bounded comparison; Core now contacts the
+retained hierarchy through the deterministic projection and applies the
+evidenced per-segment health and terminal rules. Godot presents Pulse impacts
+and terminal destruction from ordered typed Core events, including events from
+intermediate steps in a rendered frame. It does not yet hide detached segments
+or present rubble/debris. Unmeasured mesh-part damage multipliers, the three
+moving trucks, and Vulcan firing are not implemented. Actor/structure collision,
 steep-slope response, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Objective markers use the shipped HUD asset; no synthetic target or

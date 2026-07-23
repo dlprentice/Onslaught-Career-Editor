@@ -213,6 +213,8 @@ public sealed record WorldSnapshot(
     Level100MissionSnapshot Level100Mission,
     IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
     Level100ActorRegistrySnapshot Level100Actors,
+    Level100DestructionRuntimeSnapshot Level100Destruction,
+    IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents,
     Level100ActorScriptRuntimeSnapshot Level100ActorScripts,
     IReadOnlyList<Level100ActorScriptCommand> Level100ActorScriptCommands,
     int NextProjectileId,

@@ -24,7 +24,7 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(22);
+            writer.Write(23);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -59,6 +59,10 @@ public static class StateHasher
             WriteLevel100Mission(writer, state.Level100Mission);
             WriteLevel100Events(writer, state.Level100MissionEvents);
             WriteLevel100ActorRegistry(writer, state.Level100Actors);
+            WriteLevel100Destruction(
+                writer,
+                state.Level100Destruction,
+                state.Level100DestructionEvents);
             WriteLevel100ActorScripts(writer, state.Level100ActorScripts);
             WriteLevel100ActorScriptCommands(writer, state.Level100ActorScriptCommands);
             writer.Write(state.NextProjectileId);
@@ -236,6 +240,62 @@ public static class StateHasher
             WriteNullableActorId(writer, fact.OtherActorId);
             writer.Write(fact.OtherThingTypeMask);
         }
+    }
+
+    private static void WriteLevel100Destruction(
+        BinaryWriter writer,
+        Level100DestructionRuntimeSnapshot destruction,
+        IReadOnlyList<Level100DestructionEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(destruction);
+        ArgumentNullException.ThrowIfNull(destruction.Actors);
+        Level100DestructionSnapshot[] actors = destruction.Actors
+            .OrderBy(actor => actor.ActorId)
+            .ToArray();
+        writer.Write(actors.Length);
+        foreach (Level100DestructionSnapshot actor in actors)
+        {
+            writer.Write(actor.ActorId);
+            writer.Write(actor.DefinitionName);
+            writer.Write(actor.CurrentLifeBits);
+            writer.Write(actor.Terminal);
+            writer.Write(actor.BelowHalfReported);
+
+            ReadOnlySpan<uint> initial = actor.InitialHealthBits.Span;
+            ReadOnlySpan<uint> current = actor.CurrentHealthBits.Span;
+            ReadOnlySpan<byte> activity = actor.PartActivity.Span;
+            if (initial.Length != current.Length || initial.Length != activity.Length)
+            {
+                throw new InvalidDataException(
+                    "A Level 100 destruction snapshot changed part shape.");
+            }
+            writer.Write(initial.Length);
+            for (int index = 0; index < initial.Length; index++)
+            {
+                writer.Write(initial[index]);
+                writer.Write(current[index]);
+                writer.Write(activity[index]);
+            }
+        }
+
+        ArgumentNullException.ThrowIfNull(events);
+        writer.Write(events.Count);
+        foreach (Level100DestructionEvent item in events)
+        {
+            writer.Write((byte)item.Kind);
+            writer.Write((byte)item.EffectKind);
+            writer.Write(item.ActorId);
+            writer.Write(item.PartIndex);
+            writer.Write(item.RemainingHealthBits);
+            WriteContactVector(writer, item.Position);
+        }
+    }
+
+    private static void WriteContactVector(BinaryWriter writer, Level100Vector3 vector)
+    {
+        writer.Write(vector.X);
+        writer.Write(vector.Y);
+        writer.Write(vector.Z);
     }
 
     private static void WriteVector(BinaryWriter writer, SimVector3 vector)

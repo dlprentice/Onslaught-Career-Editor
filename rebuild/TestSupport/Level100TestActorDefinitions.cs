@@ -60,7 +60,7 @@ internal static class Level100TestActorDefinitions
 
         AddTarget(2, "Target Tank 2", "Target Tank", "StaticTarget", "m_f_pulsetank_training.msh.aya", SimulationConstants.Level100TargetTank2Position, -2_153_579, SimulationConstants.Level100TargetTankLife, true);
         AddTarget(3, "Target Tank 3", "Target Tank", "StaticTarget", "m_f_pulsetank_training.msh.aya", SimulationConstants.Level100TargetTank3Position, 2_404_331, SimulationConstants.Level100TargetTankLife, true);
-        AddTarget(4, "Target Warehouse", "Warehouse", "StaticTarget", "m_m_warehouse.msh.aya", SimulationConstants.Level100TargetWarehousePosition, -1_970_861, SimulationConstants.Level100TargetWarehouseCenterAimDamageEnvelope, true);
+        AddTarget(4, "Target Warehouse", "Warehouse", "StaticTarget", "m_m_warehouse.msh.aya", SimulationConstants.Level100TargetWarehousePosition, -1_970_861, SimulationConstants.Level100TargetWarehouseLife, true);
         Add("test:player", "Player 1", "Battle Engine", null, "m_f_be1.msh.aya", Pose(0, 0, 0), health: SimulationConstants.MaximumHull, isStatic: false, thingTypeMask: Level100ReleasedThingTypeMasks.BattleEngine);
         Add("test:transporter", "Transporter", "Transporter", null, "m_f_lifter.msh.aya", Pose(0, 0, 0), isStatic: false);
         Add("test:air-trainer", "Air Trainer", "Air Trainer", null, "m_FA_F24_training.msh.aya", Pose(0, 0, 0), isStatic: false);

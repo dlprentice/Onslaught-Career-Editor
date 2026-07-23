@@ -387,6 +387,48 @@ public sealed class SimulationTests
             actor => actor.ActorId == playerId).Lifecycle);
     }
 
+    [Fact]
+    public void SegmentedActorRejectsExternalHealthBeforeMutatingTheTick()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        WorldSnapshot before = simulation.Snapshot;
+        Level100ActorId targetId = before.Level100Actors.Actors.First(actor =>
+            actor.DefinitionName == "Target Tank").ActorId;
+
+        Assert.Throws<InvalidOperationException>(() => simulation.Step(
+            SimInput.Idle,
+            [new Level100ActorHealthFact(targetId, 1)]));
+
+        Assert.Equal(before.Tick, simulation.Snapshot.Tick);
+        Assert.Equal(
+            StateHasher.ComputeHex(before),
+            StateHasher.ComputeHex(simulation.Snapshot));
+    }
+
+    [Fact]
+    public void SegmentedActorRejectsExternalDyingFactsBeforeMutatingTheTick()
+    {
+        foreach (bool died in new[] { false, true })
+        {
+            Simulation simulation = CreatePlayingSimulation();
+            WorldSnapshot before = simulation.Snapshot;
+            Level100ActorId targetId = before.Level100Actors.Actors.First(actor =>
+                actor.DefinitionName == "Target Tank").ActorId;
+            Level100SimulationFact fact = died
+                ? new Level100ActorDiedFact(targetId)
+                : new Level100ActorStartedDyingFact(targetId);
+
+            Assert.Throws<InvalidOperationException>(() => simulation.Step(
+                SimInput.Idle,
+                [fact]));
+
+            Assert.Equal(before.Tick, simulation.Snapshot.Tick);
+            Assert.Equal(
+                StateHasher.ComputeHex(before),
+                StateHasher.ComputeHex(simulation.Snapshot));
+        }
+    }
+
     private static void AssertCanonicalPlayer(WorldSnapshot state)
     {
         Level100ActorSnapshot player = state.Level100Actors.Actors.Single(actor =>

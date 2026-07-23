@@ -103,6 +103,14 @@ class _Transform:
 
 
 @dataclass(frozen=True)
+class _BoundingBox:
+    center: tuple[float, float, float]
+    half_extents: tuple[float, float, float]
+    valid: int
+    radius: float
+
+
+@dataclass(frozen=True)
 class MeshTexture:
     name: str
     raw_cmst_entry: bytes
@@ -126,7 +134,10 @@ class MeshGroup:
 
 @dataclass(frozen=True)
 class _Part:
+    name: str
+    part_type: int
     transform: _Transform
+    bounding_box: _BoundingBox
     vertices: tuple[MeshVertex, ...]
     groups: tuple[MeshGroup, ...]
     children: tuple[int, ...] = ()
@@ -348,6 +359,14 @@ def _parse_part(
         raise CmshProfileError("unsupported bones/reference graph", cmsp.offset, "CMSP numBones")
     if child_count > 256 or aframes > 2 or not 1 <= vframes <= 512 or not 1 <= hframes <= 256:
         raise CmshProfileError("limit exceeded", cmsp.offset, "CMSP frame/hierarchy counts")
+    raw_name = bytes(payload[0xDC:0xFC])
+    name_bytes = raw_name.split(b"\0", 1)[0]
+    if b"\0" not in raw_name:
+        raise CmshProfileError("invalid declared length/count", cmsp.offset, "CMSP part name")
+    try:
+        part_name = name_bytes.decode("utf-8") or f"part-{part_index}"
+    except UnicodeDecodeError as error:
+        raise CmshProfileError("unexpected tag/order", cmsp.offset, "CMSP part name") from error
 
     tags: list[str] = []
     vertices: tuple[MeshVertex, ...] = ()
@@ -355,6 +374,7 @@ def _parse_part(
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
+    bounding_box: _BoundingBox | None = None
     hierarchy_orientation: tuple[float, ...] | None = None
     hierarchy_position: tuple[float, float, float] | None = None
     selected_frame = min(hierarchy_frame, hframes - 1) if hierarchy_frame is not None else None
@@ -389,10 +409,16 @@ def _parse_part(
                 raise CmshProfileError("index out of bounds", record.offset, "REFR")
         elif record.tag == b"BBOX":
             nested = _Reader(record.payload, origin=record.offset + 8, limit_role="outer BBOX")
-            nested.expected(b"BBOX", "inner BBOX", length=40)
+            inner = nested.expected(b"BBOX", "inner BBOX", length=40)
             nested.require_end()
             if len(record.payload) != 48:
                 raise CmshProfileError("invalid declared length/count", record.offset, "outer BBOX")
+            values = struct.unpack("<3fI3fIIf", inner.payload)
+            center = values[0:3]
+            half_extents = values[4:7]
+            valid = values[8]
+            radius = values[9]
+            bounding_box = _BoundingBox(center, half_extents, valid, radius)
         elif record.tag == b"VHFM":
             if len(record.payload) != vframes:
                 raise CmshProfileError("invalid declared length/count", record.offset, "VHFM")
@@ -443,7 +469,19 @@ def _parse_part(
         (selected_orientation[4], selected_orientation[5], selected_orientation[6]),
         (selected_orientation[8], selected_orientation[9], selected_orientation[10]),
     )
-    return _Part(_Transform(rows, selected_position), vertices, groups, children, parent, reference)
+    if bounding_box is None:
+        raise CmshProfileError("unexpected tag/order", chunk.offset, "missing BBOX")
+    return _Part(
+        part_name,
+        part_type,
+        _Transform(rows, selected_position),
+        bounding_box,
+        vertices,
+        groups,
+        children,
+        parent,
+        reference,
+    )
 
 
 def _checked_add(total: int, increment: int, limit: int, role: str) -> int:
@@ -495,7 +533,19 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
             raise CmshProfileError("unsupported bones/reference graph", 0, "REFR direct geometry target")
         if part.vertices or part.groups:
             raise CmshProfileError("unsupported bones/reference graph", 0, "REFR ambiguous geometry source")
-        resolved.append(_Part(part.transform, target.vertices, target.groups, part.children, part.parent, part.reference))
+        resolved.append(
+            _Part(
+                part.name,
+                part.part_type,
+                part.transform,
+                target.bounding_box,
+                target.vertices,
+                target.groups,
+                part.children,
+                part.parent,
+                part.reference,
+            )
+        )
 
     expanded_vertices = expanded_indices = expanded_groups = expanded_triangles = 0
     for part in resolved:
