@@ -3,8 +3,9 @@
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
 two Firing Range target meshes, nine Pulse Cannon/target-destruction
-effect textures, three weapon-effect sounds, and the first seventeen English
-tutorial voice clips consumed by the current Level 100 opening slice. Run
+effect textures, 25 exact mission effects, the tutorial music selection, and all
+51 English character messages in the accepted Level 100 mission table. The
+three shared front-end effects retain the startup lane's `Assets/Frontend` paths. Run
 `npm run prepare:rebuild-assets` to materialize the exact supported files from a
 user-provided retail installation. The payloads are not tracked in the current
 source tree or included in release packages and remain copyright of their
@@ -52,6 +53,7 @@ mirrored in this document.
 | `Sky/cube25-right.texture.aya` | Released 512×512 cube-25 right DXT1 texture | `830C9B965C76A4023C2415B7C8924CA32590562C850CC84E92C003E173263D11` |
 | `Sky/cube25-down.texture.aya` | Released 512×512 cube-25 down DXT1 texture | `4770829BA631E93FBC33DB2012754DA75A06BFCCC2FB2B36875E92032E22D19D` |
 | `Sky/cube25-left.texture.aya` | Released 512×512 cube-25 left DXT1 texture | `D7CBCE30E51473DDC89ED0C44326E598DAC4D2682F64EF20C19237AFD2CEBE14` |
+| `Music/tutorial-track-03.ogg` | Released `MUS_TUTORIAL` zero-based track 3, `data/Music/BEA_04(Master).ogg` | `32D3E338964D74F50D0094536C585375F1E14AA2BAE6087487803F3529EAF360` |
 | `TutorialAudio/hud_01.ogg` | Released English `data/sounds/english/MessageBox/hud_01.ogg` | `BAE30243A2B5FE3DAE718181AC5B05D766F93D5E25B042FE1B04C71FC9347909` |
 | `TutorialAudio/hud_02.ogg` | Released English `data/sounds/english/MessageBox/hud_02.ogg` | `43AE0C306B7935A21D415338348508EABF3A61F8799C0FD0873C89919FB84A35` |
 | `TutorialAudio/hud_06.ogg` | Released English `data/sounds/english/MessageBox/hud_06.ogg` | `4ED80A12FA7D2AD07A044F95F94D52455413962B75E7689101DF6907711F3235` |
@@ -69,9 +71,135 @@ mirrored in this document.
 | `TutorialAudio/tutorial_vulcan_cannon.ogg` | Released English Vulcan Cannon introduction | `7F483D8F3C876C8E9E8BD52B0369F1C54C39C83C174C0A43D5FB8674C069172C` |
 | `TutorialAudio/tutorial_open_fire_2.ogg` | Released English three-truck instruction | `122782139A31FBD777A734E0979F4F0AB8A7308D1154D7215CE2AF13D56E3237` |
 | `TutorialAudio/tutorial_vulcan_cannon_2.ogg` | Released English Vulcan ammunition warning | `6F872CA07FCC4F49FFB0CB2536A460411139FE1D77D263198C0F423FCEFA9D90` |
+| `TutorialAudio/hud_03.ogg` | Released English energy-gauge explanation | `3D58AB5ABF9715EE4B3C657BF3CA7C0B91C2985382A7D72C948513045669C31E` |
+| `TutorialAudio/hud_04.ogg` | Released English armour-gauge explanation | `3B96AA4CF15202D2977D32A04E73715DC1E940E00596D1614ACD47262C86E77D` |
+| `TutorialAudio/hud_07.ogg` | Released English battle-line explanation | `8D75F5981ABB9FC494EB77F0A721B38B8EB95083BE9282E67561E4BF18E9A8D4` |
+| `TutorialAudio/hud_08.ogg` | Released English `data/sounds/english/MessageBox/hud_08.ogg` | `06E0C641803B25FE157E8FD27420E11BE5972DF3B0DCD80681926577C9B0C361` |
+| `TutorialAudio/tutorial_04.ogg` | Released English flight-mode instruction | `78C04E99FF5AE90FB224FA2DFFAE6B3101123D32FE73E3C9EE6B37EC4D6482C6` |
+| `TutorialAudio/tutorial_05.ogg` | Released English moving-target instruction | `BD047BD04EEEFEECA91ED1AE3244EB65F8FE26DE33F81BA18BD9505BC4494C58` |
+| `TutorialAudio/tutorial_06.ogg` | Released English remote-drone instruction | `D61F834AC1EFE27FF6982D25A401CFC48DD7BFAF03EE38F3BDFADB0D819F11C1` |
+| `TutorialAudio/tutorial_07.ogg` | Released English armed-drone instruction | `1D01BB7C56BC582944161B415CFB18518ABBEB211067A0DB62F80D70C587AF7E` |
+| `TutorialAudio/tutorial_08.ogg` | Released English return-for-diagnostics instruction | `A7888025D9DB2094DF63145E7D58B53BE5054ABF28C678F727155F6ED282C205` |
+| `TutorialAudio/tutorial_09.ogg` | Released English repair-pad instruction | `D306048BB7D1680C4B5E3FD8B7A01F966725C1C4D7E4F9A09B9E9E25DCAE7557` |
+| `TutorialAudio/tutorial_10.ogg` | Released English training-abort instruction | `89A881C253C9CBC5227E84E942B0C8C3361B5B6BD2694B61522BD97AF320F5FB` |
+| `TutorialAudio/tutorial_11.ogg` | Released English successful-completion line | `C46293FF014967F62D90F870CFE8A8FC228FCC7A0B5ACB7CBE3D203341A39984` |
+| `TutorialAudio/tutorial_12.ogg` | Released English Target Zone 3 instruction | `E6CBF2CB4DABCFACEC0479DEE1EEB33ED62E1D3B46BF238B638D75AA55B7A425` |
+| `TutorialAudio/tutorial_aborted.ogg` | Released English aborted-completion line | `320B8A1E4619DDEECF94AFD8862E8B90C7EBABA3FFFD5B8976A3D6160497C1B5` |
+| `TutorialAudio/tutorial_broke_1.ogg` | Released English Tatiana failure line | `30E2E6652508C7B9BF13BEB2F19CD0ED66CE474D677E946CEEEBD30A905D6696` |
+| `TutorialAudio/tutorial_broke_2.ogg` | Released English Kramer failure line | `8E6AF2BD4038B89C72E45C8E86A5B5E32FBA12F50728B82A26223918F6D96315` |
+| `TutorialAudio/tutorial_broke_3.ogg` | Released English friendly-fire warning | `57C3C737699B02D96CD2B9CB2E6B5E8D2F513C92B51E3B13B7728F9127BC8D8F` |
+| `TutorialAudio/tutorial_dodge_2.ogg` | Released English incoming-missile exercise line | `D88EFF763474BCFF488EBF913B1D8B45900452F34331EF6DB334C589768D66B2` |
+| `TutorialAudio/tutorial_dodge_3.ogg` | Released English missile-threat-circle line | `7796DD70479A91C48D027594BBFC1BB6C0206336006657C13C2220185BE5C0A8` |
+| `TutorialAudio/tutorial_dodge_bad.ogg` | Released English failed-dodge assessment | `B551C989F66C3C30E048A73F230DBABCF19E588CD93A95B37B5A2654569BCDD5` |
+| `TutorialAudio/tutorial_dodge_good.ogg` | Released English successful-dodge assessment | `329D8269262C2F4C25B95A4373AD932F53A09B26003238C9D6AA3D613E98669D` |
+| `TutorialAudio/tutorial_dodge_mod.ogg` | Released English dodge-control instruction | `C74568F49114F77CC42426CF029BE35434BF8058F2D05B1D4B6ADB73B124C3A5` |
+| `TutorialAudio/tutorial_help_player.ogg` | Released English repair-help line | `287998779062D08030350BFCA83E625AC55D12BB75775D4CC59B1F9E3AFB7B5C` |
+| `TutorialAudio/tutorial_landing.ogg` | Released English landing instruction | `07428CE3BFC31603E472BA83AFFD1D355B0C3CABEC24D8AD87E3FE30CC646176` |
+| `TutorialAudio/tutorial_strafe.ogg` | Released English flight-strafe instruction | `F6DA37701FFD0DDC9CF2780C80674305459C552FEA3D1F383B65EBC76565DB70` |
+| `TutorialAudio/tutorial_throttle_mod.ogg` | Released English throttle instruction | `29D3791D61286318FDEDB4BDC88C267488F647D65996A581FB3DA91B2D2E2EF4` |
+| `TutorialAudio/tutorial_technician_02.ogg` | Released English technician line 2 | `196032DDDADBE1CBFE3315635991C02E62B05CAC083A90AD4DFAAEBBAB8EB955` |
+| `TutorialAudio/tutorial_technician_03.ogg` | Released English technician line 3 | `952D91A0A416A20487D790DEBCF82DDE357935946FD7E4B69678CBD350D8681C` |
+| `TutorialAudio/tutorial_movement.ogg` | Released English movement callout | `79F7DDA58130D4B8E506683F7CF65C9213DFFCA074885DF06AAAA857B0C28340` |
+| `TutorialAudio/tutorial_weapon.ogg` | Released English weapon callout | `E1AFE902725A81D9900A1D5BEE65D7FDF47B61AB59246DE7ECADE89F2A9E7B00` |
+| `TutorialAudio/tutorial_overheat.ogg` | Released English overheat callout | `34A084751BAFA8320FA0D8B34ED17B6F8FC3F38630B0CAF6528A3287A39B8683` |
+| `TutorialAudio/tutorial_ammo.ogg` | Released English ammunition callout | `1A7474FFD1AA2C88A56B60D4F27A77A3FEA348ABF24A17A9F6E3251308AF8769` |
+| `TutorialAudio/tutorial_water.ogg` | Released English water callout | `99DC92041FB49BD4B06D0E875B3DED4155E2F4A8BA4AED9B40596CE0012D1151` |
+| `TutorialAudio/tutorial_zoom.ogg` | Released English zoom instruction | `D0AADAC588017F5A410358494603F7E052890C93D6B52DDBC61CBE171CB6940B` |
+| `SoundEffects/terminal-ammunition-depleted.wav` | Exact HUD ammunition-depleted warning | `F1BD9E787FAA1D32C149340B16AF3D485CD6AD6B46ED09C30C889FC16B5A8DA1` |
+| `SoundEffects/terminal-armour-low.wav` | Exact HUD armour-low warning | `6DA6B88ABC77E7E281D338CF45EF35DD2D8AA99CCA578418F6B6F28115D60D61` |
+| `SoundEffects/terminal-energy-low.wav` | Exact HUD energy-low warning | `E7BF31D24623F3A37A6D578A52AFAE975A1B6D95DC9BB07A0DD1E1ED9C913F6D` |
+| `SoundEffects/terminal-hostile-environment.wav` | Exact HUD hostile-environment warning | `3F841B810AAC4A67221319A0D28F877C5BF1555130AEEC337234E3F304DDF32F` |
+| `SoundEffects/terminal-incoming-missile.wav` | Exact HUD incoming-missile warning | `5BF1FB9CFAEF17FC0D62A16D3B37E07C85A5F9FA9F78D7135DC4EE75759ECDF6` |
+| `SoundEffects/terminal-incoming-warhead.wav` | Exact HUD incoming-warhead warning | `711297354E61F9A94AD66172646CAEBC7683C9A67066B3FF7793996DD57E918E` |
+| `SoundEffects/terminal-micro-missiles-selected.wav` | Exact HUD Micro Missiles callout | `811D18C02399FBE05DF649ADB42732DF9C6C4C3E85F4D9ACAFA1ED3751DB04C1` |
+| `SoundEffects/terminal-pulse-cannon-selected.wav` | Exact HUD Pulse Cannon callout | `99A29B4BEAD7CD484547ADBC3954A6F805638E6FCDF95CF70E90B6D5183734DA` |
+| `SoundEffects/terminal-vulcan-cannon-selected.wav` | Exact HUD Vulcan Cannon callout | `A742431A169BBA0A92F0241556A79D704626D56E1DC14BB43F41079AA2CE4990` |
+| `SoundEffects/terminal-weapon-overheating.wav` | Exact HUD weapon-overheating warning | `F3F9E967708177F52667C872B152362284E0A8BA55B9E6A1137A5B981F44A34D` |
+| `SoundEffects/drone-vulcan-fire.wav` | Exact Target Drone `Blaster 2` launch effect | `5E9227999084BD4FB06558B498C86F968C79B8DF87B06D4621336BBC994B577B` |
+| `SoundEffects/explosion-small.wav` | Exact shared Pulse-hit and Target Drone `Explosion Small` effect | `28F89761970629118B989B41B5DDA3253FECB431EC479B64D056248BC3E5C1DC` |
+| `SoundEffects/facility-explosion-medium.wav` | Exact Level 100 facility medium-building explosion | `F86D23CFA18025BA9D1283E0B10D5BC1F939161465A924140044D3C0A6095D3A` |
+| `SoundEffects/aquila-explosion-huge.wav` | Exact Battle Engine destruction effect | `23A85AA8C5543F5BE15F7D8B2279859560F5D417E9475F015A69522DB3C8AED8` |
+| `SoundEffects/transport-explosion-large.wav` | Exact U-17 transport destruction effect | `4CE37C52A010E7903A5E7D4073E0647CA790FBFE839FACBBA97AD4D7FE2DE2FD` |
+| `SoundEffects/component-explosion.wav` | Exact released component-destruction effect | `C840A5EA48F975ECDB03E82646C369D164282E1AC10B03164923271DA1067DEC` |
+| `SoundEffects/explosion-large-debris.wav` | Exact released large-debris explosion | `E5DAEFB4F5DB5738B0CD8CD2619868D090CA4A604642BC05D302C1AFB54980FE` |
+| `SoundEffects/explosion-huge-ground-debris.wav` | Exact released huge ground/debris explosion | `5205F38B925EC77A04AAED0501387176D49F0A69B11479127168936E8EBFCDEC` |
+| `SoundEffects/trainer-flyby.wav` | Exact Air Trainer Forsetti flyby loop | `838EAC239FC8B53EF89471D433978D7E4AEE0B3F96CEA5D3281F60E2CFA6D2CE` |
+| `SoundEffects/transport-flyby.wav` | Exact U-17 bomber/flyby loop | `6317E8056A8B4F657AEFC1319FB8EF512927846DDE8A287498B2C2E852108A1C` |
+| `SoundEffects/repair-charging.wav` | Exact repair-pad prefire/charging effect | `9AC76F06602D5432188901DE75DAAA2BB87DD12F46F7DF88D6EDA73BF31632BA` |
+| `SoundEffects/repair-full.wav` | Exact repair-pad launch/heal effect | `2725B5298E6FA84C0D96DEEFDF3D1FE7FEFB854CE8512A70441D1F95C395BB1F` |
+| `SoundEffects/repair-idle.wav` | Exact repair-pad idle loop | `EC3F2AF86C5281D42923C3AE00FB66222E4E358A5F986FD26C7A43C34406F7D4` |
 | `SoundEffects/pulse-cannon-fire.wav` | Exact 44.1 kHz mono PCM decode of `Battle Engine\N_BE_pulse_cannon_fire` | `710FF06DB55BC694EFB8FF7D3A5AB658125E7CA0FE6B4733A805DA98B22B0277` |
-| `SoundEffects/pulse-impact-small.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_small` | `3296B13938928F54847A29E17307E7875E9933F8FD6381BF0DFCD260CD6FC131` |
 | `SoundEffects/target-tank-explosion-medium.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_medium` | `7228AE049CB0A9877E63671A65E51829443017B2C4981DF90A9C64D2F38B6D9C` |
+
+## Complete Level 100 audio contract
+
+The accepted Level 100 mission/HUD message table contains 51 unique numeric
+identifiers. The retained English Ogg files are exactly that set, including both
+dodge outcomes, success/aborted and failure branches, friendly-fire/help lines,
+`HUD_08`, technician 02/03, and the movement, weapon, overheat, ammunition, and
+water callouts; unused alternate tutorial takes are not materialized. The
+mission lane's typed `Level100MessageRequested` events own identity, ordering
+gates, expected playback ticks, branch selection, and objective progression.
+`InteractiveSession` delivers the initial batch and every fixed-step batch once,
+in order, through `FrameAdvanceResult`. The audio adapter queues every numeric
+event, including duplicates, with the released six-tick inter-message handoff;
+none of those mission fields are duplicated in audio state, and the queue never
+advances a mission continuation. `CharacterMessagePlayback` exposes only active
+message identity and presentation playback position/length for HUD lip and page
+synchronization.
+
+Level 100 selects `MUS_TUTORIAL`. Stuart's alphabetically sorted playlist and
+zero-based `GetSong` resolve its track index `3` to the fourth entry,
+`BEA_04(Master).ogg`. Selection playback repeats the same track at completion.
+It uses the separate released music-option curve, continues while sound samples
+are paused, and stops at the level-exit boundary.
+
+The shipped `sounds.sfx` version-103 descriptors provide each retained PCM's
+effect volume, positive pitch-variance range, loop flag, and language flag.
+Stuart's sound manager independently establishes the `0.70` ordinary-effect,
+`0.45` HUD, and PC `0.42` radio-message call volumes; random pitch is
+`1 + rand() % variance / 100`. `Level100Audio` applies that bounded contract
+plus the PC nonlinear master-option curve and externally supplied game-sound
+mix. The owner of a fade or duck supplies its current value; the adapter does
+not schedule it. Exact DirectSound attenuation remains outside the
+reconstruction. The three front-end effects use the startup/menu lane's
+canonical ignored paths and hashes rather than a second Level 100 copy.
+
+The released front end exposes only Back, Move, and Select effects. Select is
+also the confirm sound that survives the loading transition; there is no
+separate loading sample. Gameplay pause freezes all current sound-manager
+samples, including any current frontend sample. Frontend/pause-menu cues created
+after that pause remain live, and tutorial music continues. Level exit stops all
+samples and music, then the frontend owner emits Select when its navigation
+transition requires it. This preserves Stuart's `KillAllSamples` then
+return/restart cue ordering without making audio own a frontend state.
+
+The copied `default physics.dat` assignments narrow actor audio further:
+
+- Air Trainer owns `Forsetti Fighter Flyby 02`; the U-17 transporter owns
+  `Bomber Flyby 03`.
+- Target Drone has no engine-sound assignment. Its Vulcan uses `Blaster 2`, its
+  destruction uses `Explosion Small`, and both its and the trainer's missile
+  launch modes omit a launch sound.
+- Both `Forseti Missile` and the player's `Micro Missile` resolve through
+  `Micro Missile Hit` to `Explosion Medium`; `MissileImpact` shares that exact
+  retained PCM without duplicating an asset.
+- Target Tank and Target Truck use `Tank Explosion Medium`; Level 100
+  facilities use the medium-building explosion; the Battle Engine uses the
+  huge explosion.
+- The repair pad owns an idle loop, charging prefire effect, and full/heal
+  launch effect.
+
+The adapter exposes `PlayFrontendCue`, numeric `QueueCharacterMessage`,
+`PlayAquilaTransition`, `PlayOnAquila`, `PlayAt`, `PlayTerminalCue`, explicit
+trainer/transport/repair loop setters, sound/music option inputs,
+`SetGameplayMix`, `SetGameplayPaused`, and level-exit stop ownership. Mission,
+native flight/weapon, dynamic-actor, impact/destruction, frontend, pause, and
+result states remain owned by their source lanes. Only the ordered mission
+message envelope is connected on this branch; the other accepted owners still
+need to publish and route ordered cue events. The presentation does not infer
+any cue from snapshot deltas and does not own mission progress, waits,
+objectives, frontend pages, or pause actions.
 
 ## Heightfield consumed by the slice
 
@@ -493,10 +621,10 @@ presentation consumes the unambiguous bright sprite animation, scale, and
 lifetime values directly. Tank smoke's mode-1 blend cannot yet be reproduced
 without an opaque card and is omitted, along with descriptor color ranges,
 debris, wreck geometry, and the other subordinate emitters. The three PCM files
-above were
+currently presented by the Pulse exercise were
 decoded from exact `data/sounds/sounds_english_pc.xap` (SHA-256
 `658C15E3BAB844D65DD3C07C4AC880F16F741C0EA116F48C603449BBD4DDA8B7`)
-records 35, 105, and 102 respectively. Their `PSMP` names, declared decoded
+records 35, 106, and 102 respectively. Their `PSMP` names, declared decoded
 sizes, high-nibble-first IMA-ADPCM framing, and resulting WAV hashes were
 validated before retention; Godot validates the PCM envelope again at load.
 

@@ -69,6 +69,15 @@ direct-hit damage, and four-hit deactivation. Two isolated Warehouse runs also
 repeat one fixed center-aim twelve-hit path and the released Vulcan handoff.
 Godot consumes the exact released round, impact, tank-destruction, sound, text,
 and voice assets required by that path.
+The path-specific Godot audio owner also retains all 51 accepted English Level
+100 character messages, the released tutorial music selection, and the exact
+menu, Aquila, weapon, warning, actor, repair, hit, destruction, and debris PCM
+records required through mission return. It centralizes pause/resume/stop and
+loop ownership. The mission message path consumes the ordered client frame
+envelope; other lanes must pass their typed events and current actor/resource
+state once those contracts land. Audio does not own mission waits, objectives,
+frontend pages, or pause actions. This does not claim those later mechanics are
+implemented in the current Core slice.
 Core also reproduces only the observed circular walker
 contact and tangent slide for the Control Tower and Tank Factory. Secondary
 material passes, steep-slope and other actor/structure
@@ -173,7 +182,7 @@ emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
 terrain clipping, mouse inversion and sensitivity settings other than the
 copied Steam `1.5` baseline,
 jet movement,
-jet-to-walker presentation, exact transform sound mixing, resource semantics,
+jet-to-walker simulation, exact backend attenuation, resource semantics,
 the rest of the weapon
 model, target mesh-part damage,
 secondary hit/destruction effects and debris, terrain collision

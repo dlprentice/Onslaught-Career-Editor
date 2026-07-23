@@ -26,10 +26,9 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName ResetAction = "first_flight_reset";
 
     private InteractiveSession _session = null!;
+    private Level100Audio _audio = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
-    private AudioStreamPlayer _tutorialVoice = null!;
-    private int? _playingTutorialMessageId;
     private RetailFrontendFlow? _frontend;
     private bool _level100WorldCreated;
     private bool _gameplayActive;
@@ -57,6 +56,8 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeReturnedToMainMenu;
     private bool _smokeWorldReleasedAtMainMenu;
     private bool _smokeCursorVisibleAtMainMenu;
+    private int? _hudAudioSpeakerId;
+    private int? _hudAudioMessageId;
     private string? _smokeReportPath;
     private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Visible;
     private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
@@ -78,6 +79,9 @@ public sealed partial class FirstFlightGame : Node3D
 
             Window window = GetWindow();
             window.Title = "Onslaught Rebuild - Battle Engine Aquila";
+
+            _audio = new Level100Audio();
+            AddChild(_audio);
 
             _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
             _frontend.Initialize();
@@ -159,6 +163,7 @@ public sealed partial class FirstFlightGame : Node3D
             : Math.Max(0L, (long)Math.Round(delta * TimeSpan.TicksPerSecond, MidpointRounding.AwayFromZero));
         FrameAdvanceResult result = _session.AdvanceFrameTicks(elapsedTicks);
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
+        SynchronizeHudCharacterMessage();
         _world.Render(
             result.PreviousSnapshot,
             result.CurrentSnapshot,
@@ -423,7 +428,8 @@ public sealed partial class FirstFlightGame : Node3D
 
         _world = new FirstFlightWorldView();
         AddChild(_world);
-        _world.Initialize(_session.CurrentSnapshot);
+        _world.Initialize(_session.CurrentSnapshot, _audio);
+        _audio.StartTutorialMusic();
 
         _hud = new FirstFlightHud();
         AddChild(_hud);
@@ -431,10 +437,9 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
         _hud.Visible = _world.ShowHud;
 
-        _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
-        AddChild(_tutorialVoice);
-        _tutorialVoice.Finished += OnTutorialVoiceFinished;
-        ConsumeLevel100MissionEvents(_session.CurrentSnapshot.Level100MissionEvents);
+        ConsumeLevel100MissionEvents(
+            _session.AdvanceFrameTicks(0).Level100MissionEvents);
+        SynchronizeHudCharacterMessage();
         _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
         _level100WorldCreated = true;
     }
@@ -510,13 +515,13 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
-        _tutorialVoice.Stop();
         _world.Visible = false;
         _hud.Visible = false;
+        _audio.StopLevel100Audio();
         _world.QueueFree();
         _hud.QueueFree();
-        _tutorialVoice.QueueFree();
-        _playingTutorialMessageId = null;
+        _hudAudioSpeakerId = null;
+        _hudAudioMessageId = null;
         _level100WorldCreated = false;
     }
 
@@ -621,8 +626,11 @@ public sealed partial class FirstFlightGame : Node3D
         };
     }
 
-    private void ForwardFrontendAudioCue(RetailFrontendAudioCue cue) =>
+    private void ForwardFrontendAudioCue(RetailFrontendAudioCue cue)
+    {
+        _audio.PlayFrontendCue(cue.ToString());
         FrontendAudioCueRequested?.Invoke(cue);
+    }
 
     private static void ApplySyntheticInput(InteractiveInput input)
     {
@@ -674,76 +682,38 @@ public sealed partial class FirstFlightGame : Node3D
 
     private void ConsumeLevel100MissionEvents(IReadOnlyList<Level100MissionEvent> events)
     {
-        foreach (Level100MessageRequested message in events.OfType<Level100MessageRequested>())
+        foreach (Level100MissionEvent missionEvent in events)
         {
-            _hud.ShowTutorialMessage(message.SpeakerId, message.MessageId);
-            UpdateTutorialVoice(message.MessageId);
+            if (missionEvent is Level100MessageRequested message)
+            {
+                _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
+            }
         }
     }
 
-    private void UpdateTutorialVoice(int messageId)
+    private void SynchronizeHudCharacterMessage()
     {
-        _playingTutorialMessageId = messageId;
-        _tutorialVoice.Stop();
-        string? resourcePath = messageId switch
+        Level100MessagePlaybackState playback = _audio.CharacterMessagePlayback;
+        if (playback.ActiveSpeakerId.HasValue && playback.ActiveMessageId.HasValue)
         {
-            292562 =>
-                "res://Assets/Level100/TutorialAudio/hud_01.ogg",
-            293386 =>
-                "res://Assets/Level100/TutorialAudio/hud_02.ogg",
-            296682 =>
-                "res://Assets/Level100/TutorialAudio/hud_06.ogg",
-            -1575499396 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_message_log.ogg",
-            -257967449 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_technician_01.ogg",
-            82987417 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_13_mod.ogg",
-            4422830 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_01.ogg",
-            175347826 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_scanner.ogg",
-            4458134 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_02.ogg",
-            4493438 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_03.ogg",
-            295858 =>
-                "res://Assets/Level100/TutorialAudio/hud_05.ogg",
-            1339691000 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon.ogg",
-            669198996 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_open_fire.ogg",
-            -1715818922 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_pulse_cannon_2.ogg",
-            -1616775312 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon.ogg",
-            -1860407443 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_open_fire_2.ogg",
-            864965454 =>
-                "res://Assets/Level100/TutorialAudio/tutorial_vulcan_cannon_2.ogg",
-            _ => null,
-        };
-        if (resourcePath is null)
-        {
-            _tutorialVoice.Stream = null;
+            if (_hudAudioSpeakerId != playback.ActiveSpeakerId ||
+                _hudAudioMessageId != playback.ActiveMessageId)
+            {
+                _hud.ShowTutorialMessage(
+                    playback.ActiveSpeakerId.Value,
+                    playback.ActiveMessageId.Value);
+                _hudAudioSpeakerId = playback.ActiveSpeakerId;
+                _hudAudioMessageId = playback.ActiveMessageId;
+            }
             return;
         }
 
-        byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
-        _tutorialVoice.Stream = source.Length == 0
-            ? null
-            : AudioStreamOggVorbis.LoadFromBuffer(source);
-        if (_tutorialVoice.Stream is null)
+        if (_hudAudioMessageId.HasValue)
         {
-            throw new InvalidDataException($"Released tutorial voice is missing or invalid: {resourcePath}");
+            _hud.ClearTutorialMessage();
+            _hudAudioSpeakerId = null;
+            _hudAudioMessageId = null;
         }
-        _tutorialVoice.Play();
-    }
-
-    private void OnTutorialVoiceFinished()
-    {
-        _playingTutorialMessageId = null;
-        _hud.ClearTutorialMessage();
     }
 
     private void RunFocusLossHandlerSmokeProbe()
@@ -827,7 +797,8 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100Mission.Outcome.ToString(),
                 Level100TerminalState =
                     _session.CurrentSnapshot.Level100Mission.TerminalState.ToString(),
-                Level100PlayingMessageId = _playingTutorialMessageId,
+                Level100PlayingMessageId =
+                    _audio.CharacterMessagePlayback.ActiveMessageId,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100PulseCannonEnabled =
@@ -838,7 +809,7 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100FiringRangeTargetsActive,
                 Level100CurrentWeaponHighlighted =
                     _session.CurrentSnapshot.Level100CurrentWeaponHighlighted,
-                TutorialVoicePlaying = _tutorialVoice.Playing,
+                TutorialVoicePlaying = _audio.TutorialVoicePlaying,
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
                 ResetEdgesConsumed = metrics.ResetEdgesConsumed,

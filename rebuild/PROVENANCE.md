@@ -468,7 +468,7 @@ supplies the retained small-impact and medium tank-destruction primary
 sprite layers, atlas ranges, scales, and lifetimes. Exact
 `data/sounds/sounds_english_pc.xap` (SHA-256
 `658C15E3BAB844D65DD3C07C4AC880F16F741C0EA116F48C603449BBD4DDA8B7`)
-records 35, 105, and 102 supply the retained 44.1 kHz mono fire, small-impact,
+records 35, 106, and 102 supply the retained 44.1 kHz mono fire, small-impact,
 and medium-explosion PCM respectively. The record names, decoded lengths,
 high-nibble-first IMA-ADPCM output, and retained hashes were independently
 validated. A same-return CDB capture at released
@@ -478,6 +478,46 @@ validated. A same-return CDB capture at released
 rounded millimetre offset; the debugger stop supplied only that static return
 value, never timing. Descriptor color ranges, mode-1 tank-smoke blend,
 secondary emitters, debris, and wreck geometry remain absent.
+
+The complete-Level-100 audio retention extends that same decode contract
+without extending current mission simulation. The accepted canonical Level 100
+message table has 51 character-message identifiers; only those exact English
+Ogg files are retained. Version-103 `sounds.sfx` resolves the exact PCM records
+used by the bounded adapter and supplies their effect volume, pitch variance,
+loop, and language fields. Stuart's `CSoundManager::PlayEffect`, `PauseAllSamples`,
+`UnPauseAllSamples`, and `KillAllSamples` establish selection/randomization and
+lifecycle architecture. Canonical Steam bodies at `0x00404DD0`
+`CBattleEngine__Init`, `0x004081C0` `CBattleEngine__Move`, `0x00468770`
+`CFrontEnd__PlaySound`, `0x0046FAE0`/`0x0046FB00` game unpause/pause, and
+`0x004E1B20` `CSoundManager__UpdateStatus` independently retain the released
+effect identities and pause boundary. The adapter consumes ordered numeric
+`Level100MessageRequested` events from `FrameAdvanceResult`; it exposes event-
+driven entry points for frontend, flight, actor, impact, and pause owners rather
+than defining their state. Character-message clips queue by exact retained ID;
+script waits and playback-duration gates remain deterministic mission state.
+The PC `SetMasterVolume` tangent curve and externally supplied game-sound mix
+are presentation-only adapter inputs, so audio applies but never advances a
+failure fade or other ducking timeline.
+
+Stuart's Level 100 entry calls `PlaySelection(MUS_TUTORIAL)`. The playlist is
+alphabetically ordered and `GetSong` is zero-based, so selection index `3`
+resolves to exact `data/Music/BEA_04(Master).ogg` (SHA-256
+`32D3E338964D74F50D0094536C585375F1E14AA2BAE6087487803F3529EAF360`).
+Selection playback repeats that track at completion. Music has its own tangent-
+curved option volume, remains outside `PauseAllSamples`, and is stopped by the
+level-exit owner.
+
+A shallow read-only parse of the supported copied `default physics.dat`
+correlates the Level 100 unit, weapon-mode, and explosion assignments. It
+establishes the Air Trainer's Forsetti flyby loop, the transport's bomber loop,
+Target Drone's silent engine and silent missile-launch modes, Drone Vulcan's
+`Blaster 2`, shared Forseti/Micro Missile medium-impact audio, target/truck
+medium destruction, drone small-debris destruction,
+facility medium-building destruction, Battle Engine huge destruction, and the
+repair idle/charge/full triplet. No substitute sound is selected for a missing
+assignment. The materializer verifies the decoded WAV envelopes, all 51 voice
+Ogg hashes, and the tutorial-music Ogg hash; playback/mixing and stream lifetime
+remain exclusively in the Godot adapter.
 
 Static Steam and reference-source evidence establish that Warehouse damage is
 forwarded through a 28-entry destructible-segment controller rather than the
@@ -508,8 +548,8 @@ Walker acceleration and the bounded projectile path now use the released
 continuous yaw/pitch basis; the eight-way projection remains only in provisional jet
 movement. Terrain
 response beyond grounded height following, dash behavior, terrain-relative pitch and
-occlusion, jet-to-walker presentation, exact transform sound mixing, secondary Pulse Cannon
-effects/resources, the remaining weapons, and flight
+occlusion, jet-to-walker simulation, exact backend attenuation, secondary Pulse Cannon
+visuals, remaining weapon simulation, and flight
 dynamics remain provisional.
 
 A passing replay proves repeatability of the encoded state and input history.

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Buffers.Binary;
 using Godot;
 using OnslaughtRebuild.Core;
 
@@ -43,11 +42,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
-    private AudioStream _pulseCannonFireSound = null!;
-    private AudioStream _pulseImpactSmallSound = null!;
-    private AudioStream _targetTankExplosionMediumSound = null!;
-    private AudioStream _aquilaTakeoffSound = null!;
-    private AudioStreamPlayer3D _aquilaInFlightSound = null!;
     private int _lastTargetEffectTick = -1;
     private float _particlePresentationSeconds;
     private float _walkerToJetVisualElapsed = float.PositiveInfinity;
@@ -113,8 +107,9 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool OpeningPanActive => !ShowHud;
 
-    public void Initialize(WorldSnapshot snapshot)
+    public void Initialize(WorldSnapshot snapshot, Level100Audio audio)
     {
+        ArgumentNullException.ThrowIfNull(audio);
         Name = "WorldView";
         BuildLevel100Terrain();
         BuildEnvironment();
@@ -122,6 +117,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         LoadSharedRetailMaterialTextures();
         BuildLevel100Targets();
         BuildPlayer();
+        audio.BindAquila(_playerRoot);
         BuildPulseCannonPresentation();
         BuildCamera();
         Render(snapshot, snapshot, 0f, 0f);
@@ -377,27 +373,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             _level100Terrain);
         _playerBodyPivot.AddChild(_walkerAsset.Root);
         _playerBodyPivot.AddChild(_jetAsset.Root);
-
-        _aquilaTakeoffSound = LoadAudioStream(
-            "res://Assets/Aquila/SoundEffects/engine-takeoff.wav");
-        AudioStream inFlightStream = LoadAudioStream(
-            "res://Assets/Aquila/SoundEffects/engine-inflight.wav");
-        if (inFlightStream is not AudioStreamWav inFlightWave)
-        {
-            throw new InvalidDataException("The retained Aquila in-flight sound is not PCM WAV.");
-        }
-        inFlightWave.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
-        inFlightWave.LoopBegin = 0;
-        inFlightWave.LoopEnd = inFlightWave.Data.Length / sizeof(short);
-        _aquilaInFlightSound = new AudioStreamPlayer3D
-        {
-            Name = "RetailAquilaInFlightLoop",
-            Stream = inFlightWave,
-            Position = Vector3.Zero,
-            MaxDistance = 80f,
-            UnitSize = 8f,
-        };
-        _playerRoot.AddChild(_aquilaInFlightSound);
     }
 
     private Material CreateRetailMaterial(
@@ -489,16 +464,10 @@ public sealed partial class FirstFlightWorldView : Node3D
         if (transitionStarted)
         {
             _walkerToJetVisualElapsed = 0f;
-            PlayAttachedSound("RetailAquilaTakeoff", _aquilaTakeoffSound);
-            if (!_aquilaInFlightSound.Playing)
-            {
-                _aquilaInFlightSound.Play();
-            }
         }
         else if (returnedToWalker)
         {
             _walkerToJetVisualElapsed = float.PositiveInfinity;
-            _aquilaInFlightSound.Stop();
         }
 
         if (float.IsFinite(_walkerToJetVisualElapsed))
@@ -581,10 +550,6 @@ public sealed partial class FirstFlightWorldView : Node3D
                 visual = CreatePulseBoltVisual(projectile.Id);
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
-                PlayPositionalSound(
-                    $"PulseCannonFire{projectile.Id}",
-                    _pulseCannonFireSound,
-                    ToSpawnWorld(projectile));
             }
 
             visual.Position = ToWorld(projectile);
@@ -622,28 +587,16 @@ public sealed partial class FirstFlightWorldView : Node3D
                 (Vector3.Up * effectHeight);
             if (target.Id == 4)
             {
-                PlayPositionalSound(
-                    $"PulseImpact{target.Id}-{current.Tick}",
-                    _pulseImpactSmallSound,
-                    effectPosition);
                 SpawnPulseImpact(effectPosition, target.Id, current.Tick);
                 continue;
             }
 
             if (target.IsActive)
             {
-                PlayPositionalSound(
-                    $"PulseImpact{target.Id}-{current.Tick}",
-                    _pulseImpactSmallSound,
-                    effectPosition);
                 SpawnPulseImpact(effectPosition, target.Id, current.Tick);
             }
             else
             {
-                PlayPositionalSound(
-                    $"TargetTankExplosion{target.Id}",
-                    _targetTankExplosionMediumSound,
-                    effectPosition);
                 SpawnTargetTankDestruction(effectPosition, target.Id);
             }
         }
@@ -702,13 +655,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Level100/Textures/target-tank-explosion-fireball.texture.aya",
             256,
             256);
-
-        _pulseCannonFireSound = LoadAudioStream(
-            "res://Assets/Level100/SoundEffects/pulse-cannon-fire.wav");
-        _pulseImpactSmallSound = LoadAudioStream(
-            "res://Assets/Level100/SoundEffects/pulse-impact-small.wav");
-        _targetTankExplosionMediumSound = LoadAudioStream(
-            "res://Assets/Level100/SoundEffects/target-tank-explosion-medium.wav");
     }
 
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
@@ -902,69 +848,6 @@ public sealed partial class FirstFlightWorldView : Node3D
             new NodePath("scale"),
             Vector3.One * end,
             durationSeconds);
-    }
-
-    private void PlayPositionalSound(string name, AudioStream stream, Vector3 position)
-    {
-        var player = new AudioStreamPlayer3D
-        {
-            Name = name,
-            Stream = stream,
-            Position = position,
-            MaxDistance = 80f,
-            UnitSize = 8f,
-        };
-        player.Finished += player.QueueFree;
-        AddChild(player);
-        player.Play();
-    }
-
-    private void PlayAttachedSound(string name, AudioStream stream)
-    {
-        var player = new AudioStreamPlayer3D
-        {
-            Name = name,
-            Stream = stream,
-            Position = Vector3.Zero,
-            MaxDistance = 80f,
-            UnitSize = 8f,
-        };
-        player.Finished += player.QueueFree;
-        _playerRoot.AddChild(player);
-        player.Play();
-    }
-
-    private static AudioStream LoadAudioStream(string resourcePath)
-    {
-        byte[] wave = Godot.FileAccess.GetFileAsBytes(resourcePath);
-        if (wave.Length < 44 ||
-            !wave.AsSpan(0, 4).SequenceEqual("RIFF"u8) ||
-            !wave.AsSpan(8, 4).SequenceEqual("WAVE"u8) ||
-            !wave.AsSpan(12, 4).SequenceEqual("fmt "u8) ||
-            BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(16, 4)) != 16 ||
-            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(20, 2)) != 1 ||
-            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(22, 2)) != 1 ||
-            BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(24, 4)) != 44_100 ||
-            BinaryPrimitives.ReadUInt16LittleEndian(wave.AsSpan(34, 2)) != 16 ||
-            !wave.AsSpan(36, 4).SequenceEqual("data"u8))
-        {
-            throw new InvalidDataException(
-                $"Curated audio '{resourcePath}' is not 44.1 kHz mono 16-bit PCM WAV.");
-        }
-
-        uint dataLength = BinaryPrimitives.ReadUInt32LittleEndian(wave.AsSpan(40, 4));
-        if (dataLength != wave.Length - 44)
-        {
-            throw new InvalidDataException($"Curated audio '{resourcePath}' has invalid WAV framing.");
-        }
-
-        return new AudioStreamWav
-        {
-            Format = AudioStreamWav.FormatEnum.Format16Bits,
-            MixRate = 44_100,
-            Stereo = false,
-            Data = wave.AsSpan(44).ToArray(),
-        };
     }
 
     private Node3D CreatePulseBoltVisual(int id)

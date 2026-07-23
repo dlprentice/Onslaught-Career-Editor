@@ -27,6 +27,8 @@
   <ItemGroup>
     <Compile Include="..\TestSupport\Level100TestActorDefinitions.cs"
              Link="TestSupport\Level100TestActorDefinitions.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\Level100AudioCatalog.cs"
+             Link="godot-audio-source\Level100AudioCatalog.cs" />
   </ItemGroup>
 
   <ItemGroup>

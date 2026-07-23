@@ -425,6 +425,21 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void InitialMissionEvents_AreDeliveredOnceByFrameEnvelope()
+    {
+        var session = new InteractiveSession(Seed, ActorDefinitions);
+
+        FrameAdvanceResult initial = session.AdvanceFrameTicks(0);
+        FrameAdvanceResult next = session.AdvanceFrameTicks(0);
+
+        Assert.Equal(0, initial.StepsAdvanced);
+        Level100MessageRequested message = Assert.Single(
+            initial.Level100MissionEvents.OfType<Level100MessageRequested>());
+        Assert.Equal(292562, message.MessageId);
+        Assert.Empty(next.Level100MissionEvents);
+    }
+
+    [Fact]
     public void FrameMissionEvents_AggregateEverySimulationStepInOrder()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
@@ -616,7 +631,7 @@ public sealed class InteractiveSessionTests
             _session = new InteractiveSession(
                 0x100u,
                 actorDefinitions ?? Level100TestActorDefinitions.Create());
-            Capture(_session.CurrentSnapshot.Level100MissionEvents);
+            Capture(_session.AdvanceFrameTicks(0).Level100MissionEvents);
         }
 
         internal WorldSnapshot Snapshot => _session.CurrentSnapshot;

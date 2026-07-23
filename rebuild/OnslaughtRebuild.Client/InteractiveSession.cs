@@ -45,6 +45,7 @@ public sealed class InteractiveSession
     private const int MaximumPointerOffsetMilliPixels = 1_000_000;
 
     private readonly Simulation _simulation;
+    private readonly List<Level100MissionEvent> _undeliveredLevel100MissionEvents = [];
     private InteractiveInput _input;
     private bool _toggleLevelWasHeld;
     private bool _resetLevelWasHeld;
@@ -73,6 +74,8 @@ public sealed class InteractiveSession
         _simulation = new Simulation(seed, level100ActorDefinitions);
         PreviousSnapshot = _simulation.Snapshot;
         CurrentSnapshot = PreviousSnapshot;
+        _undeliveredLevel100MissionEvents.AddRange(
+            CurrentSnapshot.Level100MissionEvents);
     }
 
     public WorldSnapshot PreviousSnapshot { get; private set; }
@@ -304,6 +307,7 @@ public sealed class InteractiveSession
 
         int stepsAdvanced = 0;
         var level100MissionEvents = new List<Level100MissionEvent>();
+        level100MissionEvents.AddRange(_undeliveredLevel100MissionEvents);
         while (_interpolationPhase >= PhaseUnitsPerStep)
         {
             bool firstStep = stepsAdvanced == 0;
@@ -397,7 +401,7 @@ public sealed class InteractiveSession
             stepsAdvanced++;
         }
 
-        return new FrameAdvanceResult(
+        FrameAdvanceResult result = new(
             stepsAdvanced,
             frameTimeCapped,
             _interpolationPhase,
@@ -405,6 +409,8 @@ public sealed class InteractiveSession
             PreviousSnapshot,
             CurrentSnapshot,
             Array.AsReadOnly(level100MissionEvents.ToArray()));
+        _undeliveredLevel100MissionEvents.Clear();
+        return result;
     }
 
     private static int AddPointerOffset(int current, int delta)
