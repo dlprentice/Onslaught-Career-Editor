@@ -37,6 +37,7 @@ public sealed class Simulation
     private Level100Mission _level100Mission = null!;
     private Level100ActorRegistry _level100Actors = null!;
     private Level100ActorScriptRuntime _level100ActorScripts = null!;
+    private Level100ActorMechanics _level100ActorMechanics = null!;
     private Level100DestructionRuntime _level100Destruction = null!;
     private Level100ActorId _level100PlayerActorId;
     private int _tick;
@@ -130,6 +131,7 @@ public sealed class Simulation
         _level100Mission.AdvanceTick(PlayerHull);
         PumpLevel100EventBus();
         ApplyLevel100Facts(level100Facts);
+        AdvanceLevel100ActorMechanics();
 
         SimInput playerInput = _level100Mission.Outcome == Level100MissionOutcome.Running &&
             Level100PlayerActive &&
@@ -377,16 +379,6 @@ public sealed class Simulation
                 case Level100WaterLossFact:
                     _level100Mission.ReportWaterLoss();
                     break;
-                case Level100ActorScriptWaitCompletedFact completed:
-                    if (!_level100ActorScripts.CompleteMechanicsWait(
-                            completed.ActorId,
-                            completed.WaitKind,
-                            completed.Argument))
-                    {
-                        throw new InvalidOperationException(
-                            $"Actor {completed.ActorId} has no matching script mechanics wait.");
-                    }
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException(
                         nameof(facts),
@@ -495,6 +487,7 @@ public sealed class Simulation
             IReadOnlyList<Level100ActorScriptCommand> actorCommands =
                 _level100ActorScripts.DrainCommands();
             _level100ActorScriptCommands.AddRange(actorCommands);
+            _level100ActorMechanics.ConsumeCommands(actorCommands);
             foreach (Level100ActorScriptEventPosted actorEvent in actorEvents)
             {
                 if (actorEvent.ActorId is { } actorId)
@@ -518,6 +511,28 @@ public sealed class Simulation
         }
 
         throw new InvalidOperationException("Level 100 script event bus did not settle.");
+    }
+
+    private void AdvanceLevel100ActorMechanics()
+    {
+        IReadOnlyList<Level100ActorMechanicsWaitCompletion> completions =
+            _level100ActorMechanics.AdvanceTick();
+        foreach (Level100ActorMechanicsWaitCompletion completion in completions)
+        {
+            if (!_level100ActorScripts.CompleteMechanicsWait(
+                    completion.ActorId,
+                    completion.WaitKind,
+                    completion.Argument))
+            {
+                throw new InvalidOperationException(
+                    $"Actor {completion.ActorId} completed an unowned mechanics wait.");
+            }
+        }
+
+        if (completions.Count > 0)
+        {
+            PumpLevel100EventBus();
+        }
     }
 
     private void ApplyLevel100MissionEvent(Level100MissionEvent missionEvent)
@@ -2440,6 +2455,9 @@ public sealed class Simulation
         _jetMovedThisTick = false;
         _projectiles.Clear();
         _level100Actors = new Level100ActorRegistry(_level100ActorDefinitions);
+        _level100ActorMechanics = new Level100ActorMechanics(
+            _level100Actors,
+            _level100ActorDefinitions);
         _level100Destruction = new Level100DestructionRuntime(_level100Actors);
         _level100PlayerActorId = _level100Actors.GetThingRef("Player 1") ??
             throw new InvalidOperationException("Level 100 Player is missing.");
@@ -2552,6 +2570,7 @@ public sealed class Simulation
             _level100Destruction.Events,
             _level100ActorScripts.Snapshot,
             Array.AsReadOnly(_level100ActorScriptCommands.ToArray()),
+            _level100ActorMechanics.Snapshot,
             _nextProjectileId,
             Array.AsReadOnly(projectiles),
             Array.AsReadOnly(walkerFeet));

@@ -594,14 +594,20 @@ public sealed class InteractiveSessionTests
             session.AdvanceFrameTicks(OneCoreStepTicks);
         }
 
-        TargetSnapshot target = session.CurrentSnapshot.Targets.Single(item => item.Id == 1);
+        // Use the released static Target Tank 2 so a multi-step client frame
+        // exercises event aggregation without a waypoint mover changing the
+        // contact pose between pulse cooldowns.
+        TargetSnapshot target = session.CurrentSnapshot.Targets.Single(item => item.Id == 2);
         Level100ActorPoseSnapshot contactPose =
             PlaceTargetCenterAtPulseEmitter(session.CurrentSnapshot);
         session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
 
         FrameAdvanceResult frame = session.AdvanceFrameTicks(
             InteractiveSession.MaximumFrameElapsedTicks,
-            [new Level100ActorPoseFact(target.ActorId, contactPose)]);
+            [
+                new Level100ActorActivationFact(target.ActorId, true),
+                new Level100ActorPoseFact(target.ActorId, contactPose),
+            ]);
 
         Assert.Equal(7, frame.StepsAdvanced);
         Level100DestructionEvent[] targetEvents = frame.Level100DestructionEvents
@@ -684,6 +690,56 @@ public sealed class InteractiveSessionTests
         Assert.Contains(definitions.Actors, actor => actor.Name == "Transporter");
         Assert.Contains(definitions.Actors, actor => actor.Name == "Air Trainer");
         Assert.Equal(10, definitions.Spawns.Count);
+        Assert.Equal(5, definitions.MotionDefinitions.Count);
+        Assert.Equal(
+            [
+                ("Target Tank", Level100ActorMotionClass.GroundVehicle,
+                    3, 2, 0x005E297C, 2_000),
+                ("Target Truck", Level100ActorMotionClass.GroundVehicle,
+                    3, 2, 0x005E297C, 2_000),
+                ("Air Trainer", Level100ActorMotionClass.Plane,
+                    9, 8, 0x005E1930, 5_000),
+                ("Target Drone", Level100ActorMotionClass.Plane,
+                    9, 8, 0x005E1930, 5_000),
+                ("U-17 Highside Transporter",
+                    Level100ActorMotionClass.Dropship,
+                    12, 12, 0x005E1DD8, 8_000),
+            ],
+            definitions.MotionDefinitions.Select(definition =>
+                (
+                    definition.DefinitionName,
+                    definition.MotionClass,
+                    definition.BehaviorSerializedType,
+                    definition.BehaviorInternalId,
+                    definition.SteamClassVtableAddress,
+                    definition.ArrivalRadiusMillimeters)));
+        Assert.All(
+            definitions.MotionDefinitions.Where(definition =>
+                definition.MotionClass ==
+                Level100ActorMotionClass.GroundVehicle),
+            definition =>
+            {
+                Assert.Equal(0x40600000,
+                    definition.MaximumSpeedFloatBits);
+                Assert.Equal(0x3D567750,
+                    definition.MaximumTurnRadiansPerBaseTickFloatBits);
+                Assert.Equal(4, definition.FullGuideBaseTicks);
+                Assert.Equal(100,
+                    definition.CoreGroundOriginOffsetMillimeters);
+            });
+        Assert.All(
+            definitions.MotionDefinitions.Where(definition =>
+                definition.MotionClass !=
+                Level100ActorMotionClass.GroundVehicle),
+            definition =>
+            {
+                Assert.Null(definition.MaximumSpeedFloatBits);
+                Assert.Null(
+                    definition.MaximumTurnRadiansPerBaseTickFloatBits);
+                Assert.Null(definition.FullGuideBaseTicks);
+                Assert.Null(
+                    definition.CoreGroundOriginOffsetMillimeters);
+            });
         Assert.Equal(
             [
                 "Flyby Path",
@@ -700,11 +756,31 @@ public sealed class InteractiveSessionTests
             definitions.GetWaypointPath("Target Truck Path 1");
         Assert.Equal([25, 26, 27, 28], truckPath.Points.Select(point => point.NodeIndex));
         Assert.Equal(
-            new SimVector2(-66_688, 16_750),
-            truckPath.Points[0].HorizontalPositionMillimeters);
+            new SimVector3(-66_688, 10_000, 16_750),
+            truckPath.Points[0].PositionMillimeters);
         Assert.Equal(
-            BitConverter.SingleToInt32Bits(10.0f),
-            truckPath.Points[0].RetailComponentsFloatBits.Z);
+            new Level100FloatVector4Bits(
+                BitConverter.SingleToInt32Bits(222.0f),
+                BitConverter.SingleToInt32Bits(260.0f),
+                BitConverter.SingleToInt32Bits(10.0f),
+                BitConverter.SingleToInt32Bits(0.0f)),
+            truckPath.Points[0].RetailComponentsFloatBits);
+        Level100SpawnDefinition[] trainingTrucks = definitions.Spawns
+            .Where(spawn => spawn.ScriptName is
+                "TargetTruck1" or "TargetTruck2" or "TargetTruck3")
+            .ToArray();
+        Assert.Equal(3, trainingTrucks.Length);
+        Assert.All(trainingTrucks, spawn =>
+            Assert.Equal(SimulationConstants.Level100TrainingTruckLife, spawn.InitialHealth));
+        Level100WaypointPathDefinition transporterPath =
+            definitions.GetWaypointPath("Transporter Path");
+        Assert.Equal([44, 22, 23], transporterPath.Points.Select(point => point.NodeIndex));
+        Assert.Equal(
+            transporterPath.Points[0].PositionMillimeters,
+            transporterPath.Points[1].PositionMillimeters);
+        Assert.Equal(
+            transporterPath.Points[0].RetailComponentsFloatBits,
+            transporterPath.Points[1].RetailComponentsFloatBits);
         Assert.Equal(64, definitions.IdentitySha256.Length);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Airfield").ScriptName);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Hangar").ScriptName);
@@ -728,6 +804,314 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void MaterializedActorCommands_DriveCanonicalMechanicsOwner()
+    {
+        Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
+        var simulation = new Simulation(Seed, definitions);
+        WorldSnapshot snapshot = simulation.Snapshot;
+
+        Level100ActorSnapshot factory = snapshot.Level100Actors.Actors.Single(
+            actor => actor.Name == "Tank Factory");
+        Assert.False(factory.Active);
+        Level100ActorSnapshot target = snapshot.Level100Actors.Actors.Single(
+            actor => actor.ScriptName == "TargetTank1");
+        Assert.Equal(factory.ActorId, target.SpawnOwnerId);
+        Assert.Equal("SpawnerA", target.SpawnerName);
+        Assert.Equal(6_000, target.Health);
+
+        Level100ActorCommandIntentSnapshot intent = Assert.Single(
+            snapshot.Level100ActorMechanics.Actors,
+            item => item.ActorId == target.ActorId);
+        Assert.Equal(Level100ActorCommandIntent.FollowingWaypoint, intent.Intent);
+        Assert.Equal("Target Tank Path 1", intent.WaypointPath);
+        Assert.True(intent.WaitForWaypointCompletion);
+        Assert.Equal(0, intent.GroundFullGuideBaseTickPhase);
+        Assert.Equal(
+            0,
+            snapshot.Level100ActorMechanics
+                .RetailBaseTickAccumulatorThirtieths);
+        Assert.Contains(
+            snapshot.Level100ActorScriptCommands,
+            command =>
+                command.ActorId == target.ActorId &&
+                command.Kind ==
+                    Level100ActorScriptCommandKind.FollowWaypointWait &&
+                command.Argument == intent.WaypointPath);
+        Assert.Equal(
+            definitions.IdentitySha256,
+            snapshot.Level100Actors.DefinitionSetIdentitySha256);
+    }
+
+    [Fact]
+    public void MaterializedTargetTank1_FollowsReleasedRouteNaturally()
+    {
+        Level100ActorDefinitionSet definitions =
+            LoadMaterializedActorDefinitions();
+        var simulation = new Simulation(Seed, definitions);
+        WorldSnapshot snapshot = simulation.Snapshot;
+        Level100ActorId targetId =
+            snapshot.Level100Actors.Actors.Single(actor =>
+                actor.ScriptName == "TargetTank1").ActorId;
+        bool reachedSecondNode = false;
+        bool reachedThirdNode = false;
+        bool completed = false;
+
+        for (int tick = 0; tick < 3_000; tick++)
+        {
+            snapshot = simulation.Step(SimInput.Idle);
+            Level100ActorCommandIntentSnapshot intent =
+                snapshot.Level100ActorMechanics.Actors.Single(item =>
+                    item.ActorId == targetId);
+            reachedSecondNode |=
+                intent.WaypointPointIndex >= 1;
+            reachedThirdNode |=
+                intent.WaypointPointIndex >= 2;
+            if (intent.Intent ==
+                Level100ActorCommandIntent.Stopped)
+            {
+                completed = true;
+                break;
+            }
+        }
+
+        Assert.True(reachedSecondNode);
+        Assert.True(reachedThirdNode);
+        Assert.True(completed);
+        Level100ActorSnapshot target =
+            snapshot.Level100Actors.Actors.Single(actor =>
+                actor.ActorId == targetId);
+        Level100WaypointPointDefinition destination =
+            definitions.GetWaypointPath("Target Tank Path 1")
+                .Points[^1];
+        long deltaX =
+            (long)destination.PositionMillimeters.X -
+            target.Pose.PositionMillimeters.X;
+        long deltaZ =
+            (long)destination.PositionMillimeters.Z -
+            target.Pose.PositionMillimeters.Z;
+        Assert.True(
+            (deltaX * deltaX) + (deltaZ * deltaZ) <
+            2_000L * 2_000L);
+        Assert.Equal(
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                new SimVector2(
+                    target.Pose.PositionMillimeters.X,
+                    target.Pose.PositionMillimeters.Z)) +
+                100,
+            target.Pose.PositionMillimeters.Y);
+        Assert.Equal(
+            SimVector3.Zero,
+            target.Pose.LinearVelocityMillimetersPerTick);
+        Assert.Equal(
+            SimVector3.Zero,
+            target.Pose.AngularVelocityMicroRadiansPerTick);
+        Level100ActorScriptInstanceSnapshot targetScript =
+            snapshot.Level100ActorScripts.Instances.Single(item =>
+                item.ActorId == targetId);
+        Assert.DoesNotContain(
+            targetScript.Continuations,
+            continuation =>
+                continuation.WaitKind ==
+                Level100ActorScriptWaitKind.FollowWaypoint);
+    }
+
+    [Fact]
+    public void TargetPresentation_ProjectsWarehouseAndNewTruckCanonicalBindings()
+    {
+        var actorId = new Level100ActorId(47);
+        var identityBasis = new Level100FloatBasis3Bits(
+            0x3F800000, 0, 0,
+            0, 0x3F800000, 0,
+            0, 0, 0x3F800000);
+        var firstPose = new Level100ActorPoseSnapshot(
+            new SimVector3(1_000, 2_000, 3_000),
+            identityBasis,
+            SimVector3.Zero,
+            SimVector3.Zero);
+        var target = new TargetSnapshot(
+            actorId,
+            5,
+            "Target Truck",
+            "m_f_truck_training.msh.aya",
+            new SimVector2(1_000, 3_000),
+            3_000,
+            true,
+            firstPose);
+
+        Level100TargetVisualDescriptor first =
+            Level100TargetPresentation.Project(target);
+        var turnedPose = firstPose with
+        {
+            PositionMillimeters = new SimVector3(
+                -4_000,
+                5_000,
+                -6_000),
+            BasisFloatBits = new Level100FloatBasis3Bits(
+                0, 0, unchecked((int)0xBF800000),
+                0, 0x3F800000, 0,
+                0x3F800000, 0, 0),
+        };
+        Level100TargetVisualDescriptor changed =
+            Level100TargetPresentation.Project(
+                target with
+                {
+                    Position = new SimVector2(-4_000, -6_000),
+                    Pose = turnedPose,
+                });
+
+        Assert.Equal(actorId, first.ActorId);
+        Assert.Equal("Target Truck", first.DefinitionName);
+        Assert.Equal(
+            "m_f_truck_training.msh.aya",
+            first.MeshBinding);
+        Assert.Equal(
+            Level100TargetPresentation.TargetTruckBinding,
+            first.Binding);
+        Assert.True(first.Visible);
+        Assert.Equal(1f, first.Position.X, 5);
+        Assert.Equal(2f, first.Position.Y, 5);
+        Assert.Equal(-3f, first.Position.Z, 5);
+        Assert.Equal(
+            new Level100RenderBasis3(
+                new Level100RenderVector3(1f, 0f, 0f),
+                new Level100RenderVector3(0f, 1f, 0f),
+                new Level100RenderVector3(0f, 0f, 1f)),
+            first.Basis);
+        Assert.Equal(actorId, changed.ActorId);
+        Assert.Equal(-4f, changed.Position.X, 5);
+        Assert.Equal(5f, changed.Position.Y, 5);
+        Assert.Equal(6f, changed.Position.Z, 5);
+        Assert.Equal(
+            new Level100RenderBasis3(
+                new Level100RenderVector3(0f, 0f, -1f),
+                new Level100RenderVector3(0f, 1f, 0f),
+                new Level100RenderVector3(1f, 0f, 0f)),
+            changed.Basis);
+        Assert.NotEqual(first, changed);
+        Assert.False(
+            Level100TargetPresentation.Project(
+                target with { IsActive = false }).Visible);
+
+        var session = new InteractiveSession(
+            Seed,
+            LoadMaterializedActorDefinitions());
+        TargetSnapshot warehouse =
+            session.CurrentSnapshot.Targets.Single(item => item.Id == 4);
+        Level100TargetVisualDescriptor warehouseDescriptor =
+            Level100TargetPresentation.Project(warehouse);
+        Assert.Equal(
+            Level100TargetPresentation.WarehouseBinding,
+            warehouseDescriptor.Binding);
+        Assert.Equal("Warehouse", warehouseDescriptor.DefinitionName);
+        Assert.Equal(
+            "m_m_warehouse.msh.aya",
+            warehouseDescriptor.MeshBinding);
+    }
+
+    [Fact]
+    public void MaterializedTargetZone1_SpawnsThreeTrucksIntoCanonicalMover()
+    {
+        Level100ActorDefinitionSet definitions =
+            LoadMaterializedActorDefinitions();
+        var session =
+            new InteractiveSession(Seed, definitions);
+        Level100ActorSnapshot[] trucks = [];
+
+        while (session.CurrentSnapshot.Tick <
+            FirstFlightSmokeScenario.DurationTicks)
+        {
+            session.ObserveInput(
+                FirstFlightSmokeScenario.GetInputForTick(
+                    session.CurrentSnapshot.Tick));
+            session.AdvanceFrameTicks(OneCoreStepTicks);
+            trucks = session.CurrentSnapshot.Level100Actors.Actors
+                .Where(actor =>
+                    actor.TargetGroup ==
+                    Level100MissionTargetGroup.TargetTrucks)
+                .OrderBy(actor => actor.ScriptName)
+                .ToArray();
+            if (trucks.Length == 3 &&
+                trucks.All(actor =>
+                {
+                    Level100SpawnDefinition spawn =
+                        definitions.Spawns.Single(definition =>
+                            definition.ScriptName ==
+                            actor.ScriptName);
+                    return actor.Pose.PositionMillimeters !=
+                        spawn.InitialPose.PositionMillimeters;
+                }))
+            {
+                break;
+            }
+        }
+
+        Assert.Equal(3, trucks.Length);
+        Assert.Equal(
+            ["TargetTruck1", "TargetTruck2", "TargetTruck3"],
+            trucks.Select(actor => actor.ScriptName));
+        HashSet<Level100ActorId> truckActorIds =
+            trucks.Select(actor => actor.ActorId).ToHashSet();
+        TargetSnapshot[] truckTargets =
+            session.CurrentSnapshot.Targets
+                .Where(target => truckActorIds.Contains(target.ActorId))
+                .OrderBy(target => target.Id)
+                .ToArray();
+        Assert.Equal(3, truckTargets.Length);
+        Assert.Equal([5, 6, 7], truckTargets.Select(target => target.Id));
+        foreach (TargetSnapshot truckTarget in truckTargets)
+        {
+            Level100TargetVisualDescriptor descriptor =
+                Level100TargetPresentation.Project(truckTarget);
+            Assert.Equal(truckTarget.ActorId, descriptor.ActorId);
+            Assert.Equal("Target Truck", descriptor.DefinitionName);
+            Assert.Equal(
+                "m_f_truck_training.msh.aya",
+                descriptor.MeshBinding);
+            Assert.Equal(
+                Level100TargetPresentation.TargetTruckBinding,
+                descriptor.Binding);
+            Assert.True(descriptor.Visible);
+        }
+        foreach (Level100ActorSnapshot truck in trucks)
+        {
+            Level100SpawnDefinition spawn =
+                definitions.Spawns.Single(definition =>
+                    definition.ScriptName ==
+                    truck.ScriptName);
+            Assert.Equal(
+                spawn.OwnerDefinitionIdentity,
+                session.CurrentSnapshot.Level100Actors.Actors
+                    .Single(actor =>
+                        actor.ActorId == truck.SpawnOwnerId)
+                    .DefinitionIdentity);
+            Assert.Equal(
+                SimulationConstants.Level100TrainingTruckLife,
+                truck.Health);
+            Assert.NotEqual(
+                spawn.InitialPose.PositionMillimeters,
+                truck.Pose.PositionMillimeters);
+            Assert.Equal(
+                Level100Terrain.Instance
+                    .SampleGroundElevationMillimeters(
+                        new SimVector2(
+                            truck.Pose.PositionMillimeters.X,
+                            truck.Pose.PositionMillimeters.Z)) +
+                    100,
+                truck.Pose.PositionMillimeters.Y);
+            Level100ActorCommandIntentSnapshot intent =
+                session.CurrentSnapshot.Level100ActorMechanics.Actors
+                    .Single(item =>
+                        item.ActorId == truck.ActorId);
+            Assert.Equal(
+                Level100ActorCommandIntent.FollowingWaypoint,
+                intent.Intent);
+            Assert.Equal(
+                $"Target Truck Path {truck.ScriptName![^1]}",
+                intent.WaypointPath);
+        }
+    }
+
+    [Fact]
     public void MaterializedLevel100ActorDefinitions_RepeatFailureHashes()
     {
         Level100ActorDefinitionSet definitions = LoadMaterializedActorDefinitions();
@@ -740,7 +1124,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FirstFlightSmokeScenario_ReachesFiringRangeAndPreservesWaypointBoundary()
+    public void FirstFlightSmokeScenario_ReachesFiringRangeAndCompletesWaypoint()
     {
         InteractiveInput pan = FirstFlightSmokeScenario.GetInputForTick(0);
         InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
@@ -785,14 +1169,20 @@ public sealed class InteractiveSessionTests
         Level100ActorScriptInstanceSnapshot targetScript =
             session.CurrentSnapshot.Level100ActorScripts.Instances.Single(item =>
                 item.ActorId == firstTarget.ActorId);
-        Level100ActorScriptContinuationSnapshot waypoint = Assert.Single(
-            targetScript.Continuations);
-        Assert.Equal(Level100ActorScriptWaitKind.FollowWaypoint, waypoint.WaitKind);
-        Assert.Equal("Target Tank Path 1", waypoint.WaitArgument);
-        Assert.Null(waypoint.DueTick);
+        Assert.DoesNotContain(
+            targetScript.Continuations,
+            continuation =>
+                continuation.WaitKind ==
+                Level100ActorScriptWaitKind.FollowWaypoint);
+        Level100ActorCommandIntentSnapshot targetIntent =
+            session.CurrentSnapshot.Level100ActorMechanics.Actors.Single(item =>
+                item.ActorId == firstTarget.ActorId);
+        Assert.Equal(
+            Level100ActorCommandIntent.Stopped,
+            targetIntent.Intent);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
         Assert.Equal(
-            "8aa52c8c8089d5ec921588b57eac29ded0c1a3d90d9bdf5c0b419e867c10910e",
+            "c3ae5a39fbbc4a47f1309c2d7ec5a2c874f8f41f364d38263e60b6965f450b47",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

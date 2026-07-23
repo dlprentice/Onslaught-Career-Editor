@@ -93,12 +93,41 @@ public sealed record Level100SpawnDefinition(
 
 public sealed record Level100WaypointPointDefinition(
     int NodeIndex,
-    SimVector2 HorizontalPositionMillimeters,
-    Level100FloatVector4Bits RetailComponentsFloatBits);
+    SimVector3 PositionMillimeters,
+    Level100FloatVector4Bits RetailComponentsFloatBits)
+{
+    public SimVector2 HorizontalPositionMillimeters =>
+        new(PositionMillimeters.X, PositionMillimeters.Z);
+}
 
 public sealed record Level100WaypointPathDefinition(
     string Name,
     IReadOnlyList<Level100WaypointPointDefinition> Points);
+
+public enum Level100ActorMotionClass
+{
+    GroundVehicle = 1,
+    Plane = 2,
+    Dropship = 3,
+}
+
+/// <summary>
+/// Exact released class/radius data and the class-specific Unit fields consumed
+/// by the bounded Level 100 mechanics owner. Nullable fields are deliberately
+/// absent for classes whose motion is not implemented.
+/// </summary>
+public sealed record Level100ActorMotionDefinition(
+    int AuthoredOrder,
+    string DefinitionName,
+    Level100ActorMotionClass MotionClass,
+    int BehaviorSerializedType,
+    int BehaviorInternalId,
+    int SteamClassVtableAddress,
+    int ArrivalRadiusMillimeters,
+    int? MaximumSpeedFloatBits,
+    int? MaximumTurnRadiansPerBaseTickFloatBits,
+    int? FullGuideBaseTicks,
+    int? CoreGroundOriginOffsetMillimeters);
 
 /// <summary>
 /// Immutable, scenario-supplied Level 100 actor definitions. The product
@@ -113,15 +142,18 @@ public sealed class Level100ActorDefinitionSet
     private readonly IReadOnlyList<Level100ActorDefinition> _actors;
     private readonly IReadOnlyList<Level100SpawnDefinition> _spawns;
     private readonly IReadOnlyList<Level100WaypointPathDefinition> _waypointPaths;
+    private readonly IReadOnlyList<Level100ActorMotionDefinition> _motionDefinitions;
     private readonly Dictionary<string, Level100ActorDefinition> _actorsByIdentity;
     private readonly Dictionary<string, Level100SpawnDefinition> _spawnsByIdentity;
     private readonly Dictionary<SpawnKey, Level100SpawnDefinition> _spawnsByRequest;
     private readonly Dictionary<string, Level100WaypointPathDefinition> _waypointPathsByName;
+    private readonly Dictionary<string, Level100ActorMotionDefinition> _motionDefinitionsByName;
 
     public Level100ActorDefinitionSet(
         IEnumerable<Level100ActorDefinition> actors,
         IEnumerable<Level100SpawnDefinition> spawns,
-        IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null)
+        IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null,
+        IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
@@ -130,6 +162,8 @@ public sealed class Level100ActorDefinitionSet
         Level100SpawnDefinition[] spawnArray = spawns.ToArray();
         Level100WaypointPathDefinition[] waypointPathArray =
             waypointPaths?.ToArray() ?? [];
+        Level100ActorMotionDefinition[] motionDefinitionArray =
+            motionDefinitions?.ToArray() ?? [];
         if (actorArray.Length == 0)
         {
             throw new ArgumentException("Level 100 requires at least one actor definition.", nameof(actors));
@@ -197,7 +231,9 @@ public sealed class Level100ActorDefinitionSet
             }
 
             Level100WaypointPointDefinition[] points = path.Points.ToArray();
-            if (points.Any(point => point.NodeIndex < 0) ||
+            if (points.Any(point =>
+                    point.NodeIndex < 0 ||
+                    !HasFiniteWaypointComponents(point.RetailComponentsFloatBits)) ||
                 !_waypointPathsByName.TryAdd(
                     path.Name,
                     new Level100WaypointPathDefinition(path.Name, Array.AsReadOnly(points))))
@@ -212,7 +248,44 @@ public sealed class Level100ActorDefinitionSet
             waypointPathArray
                 .Select(path => _waypointPathsByName[path.Name])
                 .ToArray());
-        IdentitySha256 = ComputeIdentity(actorArray, spawnArray, _waypointPaths);
+        _motionDefinitionsByName =
+            new Dictionary<string, Level100ActorMotionDefinition>(StringComparer.Ordinal);
+        for (int index = 0; index < motionDefinitionArray.Length; index++)
+        {
+            Level100ActorMotionDefinition definition = motionDefinitionArray[index] ??
+                throw new ArgumentException(
+                    "Level 100 motion definitions cannot contain null.",
+                    nameof(motionDefinitions));
+            ValidateMotionDefinition(definition, index);
+            if (!actorArray.Any(actor =>
+                    StringComparer.Ordinal.Equals(
+                        actor.DefinitionName,
+                        definition.DefinitionName)) &&
+                !spawnArray.Any(spawn =>
+                    StringComparer.Ordinal.Equals(
+                        spawn.DefinitionName,
+                        definition.DefinitionName)))
+            {
+                throw new ArgumentException(
+                    $"Level 100 motion definition '{definition.DefinitionName}' has no actor.",
+                    nameof(motionDefinitions));
+            }
+            if (!_motionDefinitionsByName.TryAdd(
+                    definition.DefinitionName,
+                    definition))
+            {
+                throw new ArgumentException(
+                    $"Duplicate Level 100 motion definition '{definition.DefinitionName}'.",
+                    nameof(motionDefinitions));
+            }
+        }
+
+        _motionDefinitions = Array.AsReadOnly(motionDefinitionArray);
+        IdentitySha256 = ComputeIdentity(
+            actorArray,
+            spawnArray,
+            _waypointPaths,
+            _motionDefinitions);
     }
 
     public IReadOnlyList<Level100ActorDefinition> Actors => _actors;
@@ -221,12 +294,29 @@ public sealed class Level100ActorDefinitionSet
 
     public IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths => _waypointPaths;
 
+    public IReadOnlyList<Level100ActorMotionDefinition> MotionDefinitions =>
+        _motionDefinitions;
+
     public string IdentitySha256 { get; }
 
     public Level100WaypointPathDefinition GetWaypointPath(string name) =>
         _waypointPathsByName.TryGetValue(name, out Level100WaypointPathDefinition? path)
             ? path
             : throw new KeyNotFoundException($"Level 100 waypoint path '{name}' does not exist.");
+
+    public Level100ActorMotionDefinition GetMotionDefinition(string name) =>
+        _motionDefinitionsByName.TryGetValue(name, out Level100ActorMotionDefinition? definition)
+            ? definition
+            : throw new KeyNotFoundException(
+                $"Level 100 actor motion definition '{name}' does not exist.");
+
+    internal Level100ActorMotionDefinition? FindMotionDefinition(string? name) =>
+        name is not null &&
+        _motionDefinitionsByName.TryGetValue(
+            name,
+            out Level100ActorMotionDefinition? definition)
+            ? definition
+            : null;
 
     internal Level100ActorDefinition GetActorDefinition(string identity) =>
         _actorsByIdentity.TryGetValue(identity, out Level100ActorDefinition? definition)
@@ -346,16 +436,64 @@ public sealed class Level100ActorDefinitionSet
             basis.Row2X, basis.Row2Y, basis.Row2Z,
         }.All(component => float.IsFinite(BitConverter.Int32BitsToSingle(component)));
 
+    private static bool HasFiniteWaypointComponents(
+        Level100FloatVector4Bits components) =>
+        new[] { components.X, components.Y, components.Z, components.W }
+            .All(component =>
+                float.IsFinite(BitConverter.Int32BitsToSingle(component)));
+
+    private static void ValidateMotionDefinition(
+        Level100ActorMotionDefinition definition,
+        int expectedOrder)
+    {
+        bool groundVehicle =
+            definition.MotionClass == Level100ActorMotionClass.GroundVehicle;
+        bool hasValidGroundFields =
+            definition.MaximumSpeedFloatBits.HasValue &&
+            definition.MaximumTurnRadiansPerBaseTickFloatBits.HasValue &&
+            float.IsFinite(BitConverter.Int32BitsToSingle(
+                definition.MaximumSpeedFloatBits.Value)) &&
+            BitConverter.Int32BitsToSingle(
+                definition.MaximumSpeedFloatBits.Value) > 0.0f &&
+            float.IsFinite(BitConverter.Int32BitsToSingle(
+                definition.MaximumTurnRadiansPerBaseTickFloatBits.Value)) &&
+            BitConverter.Int32BitsToSingle(
+                definition.MaximumTurnRadiansPerBaseTickFloatBits.Value) > 0.0f &&
+            definition.FullGuideBaseTicks is > 0 &&
+            definition.CoreGroundOriginOffsetMillimeters is > 0;
+        bool hasNoGroundFields =
+            !definition.MaximumSpeedFloatBits.HasValue &&
+            !definition.MaximumTurnRadiansPerBaseTickFloatBits.HasValue &&
+            !definition.FullGuideBaseTicks.HasValue &&
+            !definition.CoreGroundOriginOffsetMillimeters.HasValue;
+
+        if (definition.AuthoredOrder != expectedOrder ||
+            string.IsNullOrWhiteSpace(definition.DefinitionName) ||
+            !Enum.IsDefined(definition.MotionClass) ||
+            definition.BehaviorSerializedType <= 0 ||
+            definition.BehaviorInternalId < 0 ||
+            definition.SteamClassVtableAddress <= 0 ||
+            definition.ArrivalRadiusMillimeters <= 0 ||
+            (groundVehicle
+                ? !hasValidGroundFields
+                : !hasNoGroundFields))
+        {
+            throw new ArgumentException(
+                $"Invalid Level 100 motion definition at authored order {expectedOrder}.");
+        }
+    }
+
     private static string ComputeIdentity(
         IReadOnlyList<Level100ActorDefinition> actors,
         IReadOnlyList<Level100SpawnDefinition> spawns,
-        IReadOnlyList<Level100WaypointPathDefinition> waypointPaths)
+        IReadOnlyList<Level100WaypointPathDefinition> waypointPaths,
+        IReadOnlyList<Level100ActorMotionDefinition> motionDefinitions)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_identityMagic);
-            writer.Write(3);
+            writer.Write(5);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -411,13 +549,34 @@ public sealed class Level100ActorDefinitionSet
                 foreach (Level100WaypointPointDefinition point in path.Points)
                 {
                     writer.Write(point.NodeIndex);
-                    writer.Write(point.HorizontalPositionMillimeters.X);
-                    writer.Write(point.HorizontalPositionMillimeters.Z);
+                    writer.Write(point.PositionMillimeters.X);
+                    writer.Write(point.PositionMillimeters.Y);
+                    writer.Write(point.PositionMillimeters.Z);
                     writer.Write(point.RetailComponentsFloatBits.X);
                     writer.Write(point.RetailComponentsFloatBits.Y);
                     writer.Write(point.RetailComponentsFloatBits.Z);
                     writer.Write(point.RetailComponentsFloatBits.W);
                 }
+            }
+
+            writer.Write(motionDefinitions.Count);
+            foreach (Level100ActorMotionDefinition definition in motionDefinitions)
+            {
+                writer.Write(definition.AuthoredOrder);
+                writer.Write(definition.DefinitionName);
+                writer.Write((int)definition.MotionClass);
+                writer.Write(definition.BehaviorSerializedType);
+                writer.Write(definition.BehaviorInternalId);
+                writer.Write(definition.SteamClassVtableAddress);
+                writer.Write(definition.ArrivalRadiusMillimeters);
+                WriteNullableInt(writer, definition.MaximumSpeedFloatBits);
+                WriteNullableInt(
+                    writer,
+                    definition.MaximumTurnRadiansPerBaseTickFloatBits);
+                WriteNullableInt(writer, definition.FullGuideBaseTicks);
+                WriteNullableInt(
+                    writer,
+                    definition.CoreGroundOriginOffsetMillimeters);
             }
         }
 
@@ -465,6 +624,15 @@ public sealed class Level100ActorDefinitionSet
         if (value is not null)
         {
             writer.Write(value);
+        }
+    }
+
+    private static void WriteNullableInt(BinaryWriter writer, int? value)
+    {
+        writer.Write(value.HasValue);
+        if (value.HasValue)
+        {
+            writer.Write(value.Value);
         }
     }
 

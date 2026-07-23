@@ -128,9 +128,12 @@ public readonly record struct SimInput(
 public sealed record TargetSnapshot(
     Level100ActorId ActorId,
     int Id,
+    string DefinitionName,
+    string MeshBinding,
     SimVector2 Position,
     int Hull,
-    bool IsActive);
+    bool IsActive,
+    Level100ActorPoseSnapshot Pose);
 
 public sealed record ProjectileSnapshot(
     int Id,
@@ -205,12 +208,6 @@ public sealed record Level100PlayerDeathFact : Level100SimulationFact;
 
 public sealed record Level100WaterLossFact : Level100SimulationFact;
 
-public sealed record Level100ActorScriptWaitCompletedFact(
-    Level100ActorId ActorId,
-    Level100ActorScriptWaitKind WaitKind,
-    string? Argument = null)
-    : Level100SimulationFact;
-
 public sealed record Level100TriggerActorSnapshot(
     Level100MissionTrigger Trigger,
     SimVector2 Position,
@@ -275,6 +272,7 @@ public sealed record WorldSnapshot(
     IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents,
     Level100ActorScriptRuntimeSnapshot Level100ActorScripts,
     IReadOnlyList<Level100ActorScriptCommand> Level100ActorScriptCommands,
+    Level100ActorMechanicsSnapshot Level100ActorMechanics,
     int NextProjectileId,
     IReadOnlyList<ProjectileSnapshot> Projectiles,
     IReadOnlyList<WalkerFootContactSnapshot> WalkerFeet)
@@ -308,18 +306,50 @@ public sealed record WorldSnapshot(
     public IReadOnlyList<TargetSnapshot> Targets =>
         Array.AsReadOnly(Level100Actors.Actors
             .Where(actor =>
-                actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
+                (actor.TargetGroup is
+                    Level100MissionTargetGroup.StaticTargets or
+                    Level100MissionTargetGroup.TargetTrucks) &&
                 actor.Pose is not null)
-            .OrderBy(actor => actor.TargetOrdinal)
-            .Select(actor => new TargetSnapshot(
-                actor.ActorId,
-                actor.TargetOrdinal,
-                new SimVector2(
-                    actor.Pose!.PositionMillimeters.X,
-                    actor.Pose.PositionMillimeters.Z),
-                actor.Health,
-                actor.Active && actor.Lifecycle != Level100ActorLifecycle.Destroyed))
+            .OrderBy(actor => actor.TargetGroup)
+            .ThenBy(actor => actor.TargetOrdinal)
+            .Select(CreateTargetSnapshot)
             .ToArray());
+
+    private static TargetSnapshot CreateTargetSnapshot(
+        Level100ActorSnapshot actor)
+    {
+        string definitionName = actor.DefinitionName ??
+            throw new InvalidDataException(
+                $"Level 100 target actor {actor.ActorId.Value} has no definition.");
+        string meshBinding = actor.MeshBinding ??
+            throw new InvalidDataException(
+                $"Level 100 target actor {actor.ActorId.Value} has no mesh binding.");
+        Level100ActorPoseSnapshot pose = actor.Pose ??
+            throw new InvalidDataException(
+                $"Level 100 target actor {actor.ActorId.Value} has no pose.");
+        int id = actor.TargetGroup switch
+        {
+            Level100MissionTargetGroup.StaticTargets =>
+                actor.TargetOrdinal,
+            Level100MissionTargetGroup.TargetTrucks =>
+                4 + actor.TargetOrdinal,
+            _ => throw new InvalidDataException(
+                $"Level 100 actor {actor.ActorId.Value} is not a rendered target."),
+        };
+        return new TargetSnapshot(
+            actor.ActorId,
+            id,
+            definitionName,
+            meshBinding,
+            new SimVector2(
+                pose.PositionMillimeters.X,
+                pose.PositionMillimeters.Z),
+            actor.Health,
+            actor.Active &&
+                actor.Lifecycle !=
+                Level100ActorLifecycle.Destroyed,
+            pose);
+    }
 
     public int PlayerAltitudeAboveGroundMillimeters =>
         PlayerElevationMillimeters - PlayerGroundElevationMillimeters;

@@ -91,7 +91,11 @@ without owning objectives or mission progression. The client consumes the
 ordered typed impact/terminal effects across every Core step in a rendered
 frame. Secondary material passes, steep-slope and broader actor/structure
 collision, unmeasured mesh-part damage variation, retail debris RNG/bounce,
-moving trucks, Vulcan firing, and most mission behavior remain provisional.
+occupancy/path-grid route adjustment, Target Truck contact/destruction,
+Vulcan firing, and most mission behavior remain provisional. The bounded
+ground-vehicle owner does retain the released Target Tank and Target Truck
+command intents and advances their canonical actor poses from the materialized
+waypoint and physics definitions.
 
 Retail asset payloads and converted copies are not repository source. The
 bounded materializer verifies a supported user-provided installation and writes
@@ -274,11 +278,12 @@ jet-to-walker presentation, general HUD contacts and later state logic, Steam's
 dynamic ring texture, full multi-stage mask state and Level 100 influence map,
 other radio portraits/video and exact portrait RNG phase, Warehouse
 segment-specific health and breakup,
-mesh-part damage variation, secondary particles/debris, the three moving trucks,
-Vulcan ballistics, and the remainder of the mission remain
+mesh-part damage variation, secondary particles/debris, Target Truck
+contact/destruction, Vulcan ballistics, and the remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;
-Core and Godot now share the four observed retail targets and shipped objective
-marker without adding world-space beacons.
+Core and Godot now share the observed retail targets by canonical actor ID and
+definition/mesh binding, including dynamically spawned training trucks, plus
+the shipped objective marker without adding world-space beacons.
 
 ## Verify
 

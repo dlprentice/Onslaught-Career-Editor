@@ -205,5 +205,8 @@ public static class SimulationConstants
     // carries the same values in milli-life while the contact owner applies
     // exact 1.8 medium-pulse damage to the contacted part.
     public const int Level100TargetTankLife = 6_000;
+    // Target Truck Unit field 3 is the released maximum-life owner. Its
+    // separate motion definition retains field 1 as ground maximum speed.
+    public const int Level100TrainingTruckLife = 3_000;
     public const int Level100TargetWarehouseLife = 50_000;
 }

@@ -62,21 +62,25 @@ internal static class Level100TestActorDefinitions
         AddTarget(3, "Target Tank 3", "Target Tank", "StaticTarget", "m_f_pulsetank_training.msh.aya", SimulationConstants.Level100TargetTank3Position, 2_404_331, SimulationConstants.Level100TargetTankLife, true);
         AddTarget(4, "Target Warehouse", "Warehouse", "StaticTarget", "m_m_warehouse.msh.aya", SimulationConstants.Level100TargetWarehousePosition, -1_970_861, SimulationConstants.Level100TargetWarehouseLife, true);
         Add("test:player", "Player 1", "Battle Engine", null, "m_f_be1.msh.aya", Pose(0, 0, 0), health: SimulationConstants.MaximumHull, isStatic: false, thingTypeMask: Level100ReleasedThingTypeMasks.BattleEngine);
-        Add("test:transporter", "Transporter", "Transporter", null, "m_f_lifter.msh.aya", Pose(0, 0, 0), isStatic: false);
+        Add("test:transporter", "Transporter", "U-17 Highside Transporter", null, "m_f_lifter.msh.aya", Pose(0, 0, 0), isStatic: false);
         Add("test:air-trainer", "Air Trainer", "Air Trainer", null, "m_FA_F24_training.msh.aya", Pose(0, 0, 0), isStatic: false);
 
         var spawns = new List<Level100SpawnDefinition>();
         AddSpawn("test:tank-factory", "Target Tank", "SpawnerA", "TargetTank1", "m_f_pulsetank_training.msh.aya", Level100MissionTargetGroup.StaticTargets, 1, 4);
-        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck1", null, Level100MissionTargetGroup.TargetTrucks, 1, 3);
-        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck2", null, Level100MissionTargetGroup.TargetTrucks, 2, 3);
-        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck3", null, Level100MissionTargetGroup.TargetTrucks, 3, 3);
+        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck1", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.TargetTrucks, 1, 3);
+        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck2", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.TargetTrucks, 2, 3);
+        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck3", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.TargetTrucks, 3, 3);
         AddSpawn("test:tank-factory", "Target Tank", "SpawnerA", "TargetTank2", "m_f_pulsetank_training.msh.aya", Level100MissionTargetGroup.MovingTargets, 0, 6);
-        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTank2", null, Level100MissionTargetGroup.MovingTargets, 0, 6);
+        AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTank2", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.MovingTargets, 0, 6);
         AddSpawn("test:airfield", "Air Trainer", "SpawnerB", "AirTrainer", null, Level100MissionTargetGroup.AirTrainer, 1, 1);
         AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone1", null, Level100MissionTargetGroup.AirborneTargets1, 0, 3);
         AddSpawn("test:airfield", "Target Drone", "SpawnerA", "AirborneDrone2", null, Level100MissionTargetGroup.AirborneTargets2, 0, 6);
         AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone2", null, Level100MissionTargetGroup.AirborneTargets2, 0, 6);
-        return new Level100ActorDefinitionSet(actors, spawns);
+        return new Level100ActorDefinitionSet(
+            actors,
+            spawns,
+            WaypointPaths(),
+            MotionDefinitions());
 
         void AddTrigger(Level100MissionTrigger trigger, string name, string script)
         {
@@ -131,7 +135,12 @@ internal static class Level100TestActorDefinitions
                 mesh,
                 0,
                 true,
-                definition == "Target Tank" ? SimulationConstants.Level100TargetTankLife : 0,
+                definition switch
+                {
+                    "Target Tank" => SimulationConstants.Level100TargetTankLife,
+                    "Target Truck" => SimulationConstants.Level100TrainingTruckLife,
+                    _ => 0,
+                },
                 ownerIdentity == "test:tank-factory"
                     ? TankFactorySpawnerPose()
                     : Pose(46_216, -6_133, 14_450),
@@ -179,4 +188,103 @@ internal static class Level100TestActorDefinitions
         0, 0, FloatBits(1f));
 
     private static int FloatBits(float value) => BitConverter.SingleToInt32Bits(value);
+
+    // Synthetic, deliberately distant points keep Core-only tests independent
+    // of retail route data. Client tests load the exact materialized manifest.
+    private static IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths() =>
+    [
+        Path("Flyby Path",
+            (0, 500_000, 500_000)),
+        Path("Target Truck Path 3",
+            (0, 530_000, 530_000)),
+        Path("Target Truck Path 2",
+            (0, 520_000, 520_000)),
+        Path("Target Truck Path 1",
+            (0, 510_000, 510_000)),
+        Path("Transporter Path",
+            (0, 540_000, 540_000),
+            (1, 540_000, 540_000),
+            (2, 541_000, 541_000)),
+        Path("Target Tank Path 2",
+            (0, 620_000, 620_000)),
+        Path("Target Tank Path 1",
+            (0, 610_000, 610_000),
+            (1, 611_000, 611_000),
+            (2, 612_000, 612_000)),
+        Path("Drone Path 1",
+            (0, 700_000, 700_000)),
+    ];
+
+    private static IReadOnlyList<Level100ActorMotionDefinition>
+        MotionDefinitions() =>
+    [
+        GroundMotion(0, "Target Tank"),
+        GroundMotion(1, "Target Truck"),
+        new Level100ActorMotionDefinition(
+            2,
+            "Air Trainer",
+            Level100ActorMotionClass.Plane,
+            9,
+            8,
+            0x005E1930,
+            5_000,
+            null,
+            null,
+            null,
+            null),
+        new Level100ActorMotionDefinition(
+            3,
+            "Target Drone",
+            Level100ActorMotionClass.Plane,
+            9,
+            8,
+            0x005E1930,
+            5_000,
+            null,
+            null,
+            null,
+            null),
+        new Level100ActorMotionDefinition(
+            4,
+            "U-17 Highside Transporter",
+            Level100ActorMotionClass.Dropship,
+            12,
+            12,
+            0x005E1DD8,
+            8_000,
+            null,
+            null,
+            null,
+            null),
+    ];
+
+    private static Level100ActorMotionDefinition GroundMotion(
+        int authoredOrder,
+        string definitionName) => new(
+            authoredOrder,
+            definitionName,
+            Level100ActorMotionClass.GroundVehicle,
+            3,
+            2,
+            0x005E297C,
+            2_000,
+            0x40600000,
+            0x3D567750,
+            4,
+            100);
+
+    private static Level100WaypointPathDefinition Path(
+        string name,
+        params (int Node, int X, int Z)[] points) => new(
+        name,
+        Array.AsReadOnly(points
+            .Select(point => new Level100WaypointPointDefinition(
+                point.Node,
+                new SimVector3(point.X, 10_000, point.Z),
+                new Level100FloatVector4Bits(
+                    FloatBits((point.X / 1_000f) + 288.6875f),
+                    FloatBits((point.Z / 1_000f) + 243.25f),
+                    FloatBits(10f),
+                    FloatBits(0f))))
+            .ToArray()));
 }

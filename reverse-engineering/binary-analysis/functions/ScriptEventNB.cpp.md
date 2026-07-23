@@ -271,10 +271,10 @@ void CScriptEventNB::UpdateWaypointFollowing() {
         } else {
             // Move to next waypoint
             (**(code**)(**(int**)(this + 8) + 0xf4))(
-                *(undefined4*)(currentWaypoint + 0x1c),  // x
-                *(undefined4*)(currentWaypoint + 0x20),  // y
-                *(undefined4*)(currentWaypoint + 0x24),  // z
-                *(undefined4*)(currentWaypoint + 0x28),  // heading?
+                *(undefined4*)(currentWaypoint + 0x1c),  // FVector lane 0
+                *(undefined4*)(currentWaypoint + 0x20),  // FVector lane 1
+                *(undefined4*)(currentWaypoint + 0x24),  // FVector lane 2
+                *(undefined4*)(currentWaypoint + 0x28),  // FVector lane 3
                 0);
         }
     }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using Godot;
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
@@ -22,7 +23,10 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailCockpitFlyToWalkSeconds = 24f / RetailAquilaAnimationHz;
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
-    private readonly Dictionary<int, Node3D> _level100Targets = [];
+    private readonly Dictionary<Level100TargetVisualBinding, Mesh>
+        _level100TargetAssets = [];
+    private readonly Dictionary<Level100ActorId, Level100TargetVisual>
+        _level100Targets = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -50,7 +54,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     private VehicleTransition _previousTransition;
     private VehicleMode _previousMode = VehicleMode.Walker;
 
-    public int TargetVisualCount => _level100Targets.Values.Count(target => target.Visible);
+    public int TargetVisualCount =>
+        _level100Targets.Values.Count(target => target.Root.Visible);
 
     public int ProjectileVisualCount => _projectiles.Count;
 
@@ -94,7 +99,8 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public int RetailLevel100TargetSurfaceCount =>
         _level100Targets.Values
-            .SelectMany(target => target.GetChildren().OfType<MeshInstance3D>())
+            .SelectMany(target =>
+                target.Root.GetChildren().OfType<MeshInstance3D>())
             .Sum(target => target.Mesh?.GetSurfaceCount() ?? 0);
 
     public int RetailLevel100TerrainVertexCount => _level100Terrain.VertexCount;
@@ -116,7 +122,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         BuildEnvironment();
         BuildLevel100StaticWorld();
         LoadSharedRetailMaterialTextures();
-        BuildLevel100Targets();
+        BuildLevel100Targets(snapshot);
         BuildPlayer();
         BuildPulseCannonPresentation();
         BuildCamera();
@@ -262,7 +268,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             128);
     }
 
-    private void BuildLevel100Targets()
+    private void BuildLevel100Targets(WorldSnapshot snapshot)
     {
         Texture2D tankTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/target-tank.texture.aya",
@@ -277,6 +283,21 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
                     tankMaterial,
+            });
+
+        Texture2D truckTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/target-truck.texture.aya",
+            512,
+            512);
+        Material truckMaterial = CreateRetailMaterial(
+            truckTexture,
+            reflection: RetailLayer(_retailChrome3Texture, 0.199999988f));
+        Mesh truckMesh = CuratedObjMeshLoader.Load(
+            "res://Assets/Level100/level100-target-truck.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    truckMaterial,
             });
 
         Texture2D warehouseM001Texture = CuratedAyaTextureLoader.Load(
@@ -310,49 +331,39 @@ public sealed partial class FirstFlightWorldView : Node3D
                     warehouseM002Overlay,
             });
 
-        AddLevel100Target(
-            1,
-            "RetailTargetTank1",
-            SimulationConstants.Level100TargetTank1Position,
-            -0.0523363f,
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.TargetTankBinding,
             tankMesh);
-        AddLevel100Target(
-            2,
-            "RetailTargetTank2",
-            SimulationConstants.Level100TargetTank2Position,
-            -2.1535792f,
-            tankMesh);
-        AddLevel100Target(
-            3,
-            "RetailTargetTank3",
-            SimulationConstants.Level100TargetTank3Position,
-            2.4043305f,
-            tankMesh);
-        AddLevel100Target(
-            4,
-            "RetailTargetWarehouse",
-            SimulationConstants.Level100TargetWarehousePosition,
-            -1.9708606f,
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.TargetTruckBinding,
+            truckMesh);
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.WarehouseBinding,
             warehouseMesh);
+
+        UpdateLevel100Targets(snapshot);
     }
 
-    private void AddLevel100Target(
-        int id,
-        string name,
-        SimVector2 position,
-        float retailYaw,
-        Mesh mesh)
+    private Level100TargetVisual AddLevel100Target(
+        Level100TargetVisualDescriptor descriptor)
     {
-        float relativeX = position.X * UnitsToMeters;
-        float relativeY = position.Z * UnitsToMeters;
+        if (!_level100TargetAssets.TryGetValue(
+                descriptor.Binding,
+                out Mesh? mesh))
+        {
+            throw new InvalidDataException(
+                $"Core exposed unsupported Level 100 target binding " +
+                $"'{descriptor.DefinitionName}'/" +
+                $"'{descriptor.MeshBinding}'.");
+        }
+
+        string name =
+            $"RetailLevel100TargetActor{descriptor.ActorId.Value}";
         var root = new Node3D
         {
             Name = name,
-            Position = new Vector3(
-                relativeX,
-                _level100Terrain.SampleRelativeHeight(relativeX, relativeY),
-                -relativeY),
-            Rotation = new Vector3(0f, retailYaw, 0f),
+            Transform = ToGodotTransform(descriptor),
+            Visible = descriptor.Visible,
         };
         root.AddChild(new MeshInstance3D
         {
@@ -361,20 +372,53 @@ public sealed partial class FirstFlightWorldView : Node3D
             RotationDegrees = new Vector3(-90f, 0f, 0f),
         });
         AddChild(root);
-        _level100Targets.Add(id, root);
+        var visual = new Level100TargetVisual(
+            descriptor.Binding,
+            root);
+        _level100Targets.Add(descriptor.ActorId, visual);
+        return visual;
     }
 
     private void UpdateLevel100Targets(WorldSnapshot snapshot)
     {
         foreach (TargetSnapshot target in snapshot.Targets)
         {
-            if (!_level100Targets.TryGetValue(target.Id, out Node3D? visual))
+            Level100TargetVisualDescriptor descriptor =
+                Level100TargetPresentation.Project(target);
+            if (!_level100Targets.TryGetValue(
+                    descriptor.ActorId,
+                    out Level100TargetVisual? visual))
             {
-                throw new InvalidDataException($"Core exposed unknown Level 100 target {target.Id}.");
+                visual = AddLevel100Target(descriptor);
             }
-            visual.Visible = target.IsActive;
+            else if (
+                visual.Binding != descriptor.Binding)
+            {
+                throw new InvalidDataException(
+                    $"Core changed the canonical binding for Level 100 actor " +
+                    $"{descriptor.ActorId.Value}.");
+            }
+
+            visual.Root.Transform = ToGodotTransform(descriptor);
+            visual.Root.Visible = descriptor.Visible;
         }
     }
+
+    private static Transform3D ToGodotTransform(
+        Level100TargetVisualDescriptor descriptor) =>
+        new(
+            new Basis(
+                ToGodotVector(descriptor.Basis.XAxis),
+                ToGodotVector(descriptor.Basis.YAxis),
+                ToGodotVector(descriptor.Basis.ZAxis)),
+            ToGodotVector(descriptor.Position));
+
+    private static Vector3 ToGodotVector(Level100RenderVector3 vector) =>
+        new(vector.X, vector.Y, vector.Z);
+
+    private sealed record Level100TargetVisual(
+        Level100TargetVisualBinding Binding,
+        Node3D Root);
 
     private void BuildPlayer()
     {

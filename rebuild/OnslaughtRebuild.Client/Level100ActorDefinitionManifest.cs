@@ -14,11 +14,13 @@ namespace OnslaughtRebuild.Client;
 public static class Level100ActorDefinitionManifest
 {
     public const string ExpectedManifestSha256 =
-        "BDA1C98E675513D5F5DACD1F013E61728525000BD6DA5219250AAFD39798903F";
+        "084954C97502001D5868348AC9DB4E79D86F3DD8F72E3435E87FA43FF0141117";
 
-    private const string ExpectedSchema = "onslaught.level100-static-world.v11";
+    private const string ExpectedSchema = "onslaught.level100-static-world.v13";
     private const string ExpectedSourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
+    private const string ExpectedPhysicsSourceSha256 =
+        "E1FB3DEDBEB29B4B4151DA2C8CBBDC940B716B1A2321E1D6A9BA1542C74ADA14";
     private const int MaximumManifestBytes = 512_000;
 
     public static Level100ActorDefinitionSet Decode(ReadOnlySpan<byte> manifestBytes)
@@ -40,11 +42,15 @@ public static class Level100ActorDefinitionManifest
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 ExpectedSourceArchiveSha256) ||
+            !StringComparer.OrdinalIgnoreCase.Equals(
+                manifest.PhysicsSourceSha256,
+                ExpectedPhysicsSourceSha256) ||
             manifest.UnitRecordCount != 35 ||
             manifest.VisibleObjectCount != 33 ||
             manifest.ActorDefinitions.Length != 44 ||
             manifest.SpawnDefinitions.Length != 10 ||
             manifest.WaypointPaths.Length != 8 ||
+            manifest.MotionDefinitions.Length != 5 ||
             manifest.ActorDefinitions.Count(definition =>
                 definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33)
         {
@@ -107,7 +113,7 @@ public static class Level100ActorDefinitionManifest
             for (int pointIndex = 0; pointIndex < points.Length; pointIndex++)
             {
                 WaypointPoint point = source.Points[pointIndex];
-                if (point.HorizontalPositionMillimeters.Length != 2 ||
+                if (point.PositionMillimeters.Length != 3 ||
                     point.RetailComponentsFloatBits.Length != 4)
                 {
                     throw new InvalidDataException(
@@ -115,9 +121,10 @@ public static class Level100ActorDefinitionManifest
                 }
                 points[pointIndex] = new Level100WaypointPointDefinition(
                     point.NodeIndex,
-                    new SimVector2(
-                        point.HorizontalPositionMillimeters[0],
-                        point.HorizontalPositionMillimeters[1]),
+                    new SimVector3(
+                        point.PositionMillimeters[0],
+                        point.PositionMillimeters[1],
+                        point.PositionMillimeters[2]),
                     new Level100FloatVector4Bits(
                         point.RetailComponentsFloatBits[0],
                         point.RetailComponentsFloatBits[1],
@@ -127,7 +134,32 @@ public static class Level100ActorDefinitionManifest
             waypointPaths[pathIndex] = new Level100WaypointPathDefinition(source.Name, points);
         }
 
-        return new Level100ActorDefinitionSet(actors, spawns, waypointPaths);
+        var motionDefinitions =
+            new Level100ActorMotionDefinition[manifest.MotionDefinitions.Length];
+        for (int index = 0; index < motionDefinitions.Length; index++)
+        {
+            MotionDefinition source = manifest.MotionDefinitions[index];
+            motionDefinitions[index] = new Level100ActorMotionDefinition(
+                source.AuthoredOrder,
+                source.DefinitionName,
+                ParseEnum<Level100ActorMotionClass>(
+                    source.MotionClass,
+                    "motion class"),
+                source.BehaviorSerializedType,
+                source.BehaviorInternalId,
+                source.SteamClassVtableAddress,
+                source.ArrivalRadiusMillimeters,
+                source.MaximumSpeedFloatBits,
+                source.MaximumTurnRadiansPerBaseTickFloatBits,
+                source.FullGuideBaseTicks,
+                source.CoreGroundOriginOffsetMillimeters);
+        }
+
+        return new Level100ActorDefinitionSet(
+            actors,
+            spawns,
+            waypointPaths,
+            motionDefinitions);
     }
 
     private static Level100ActorPoseSnapshot DecodePose(Pose source)
@@ -220,11 +252,28 @@ public static class Level100ActorDefinitionManifest
     {
         public string Schema { get; init; } = string.Empty;
         public string SourceArchiveSha256 { get; init; } = string.Empty;
+        public string PhysicsSourceSha256 { get; init; } = string.Empty;
         public int UnitRecordCount { get; init; }
         public int VisibleObjectCount { get; init; }
         public ActorDefinition[] ActorDefinitions { get; init; } = [];
+        public MotionDefinition[] MotionDefinitions { get; init; } = [];
         public SpawnDefinition[] SpawnDefinitions { get; init; } = [];
         public WaypointPath[] WaypointPaths { get; init; } = [];
+    }
+
+    private sealed record MotionDefinition
+    {
+        public int ArrivalRadiusMillimeters { get; init; }
+        public int AuthoredOrder { get; init; }
+        public int BehaviorInternalId { get; init; }
+        public int BehaviorSerializedType { get; init; }
+        public string DefinitionName { get; init; } = string.Empty;
+        public int? FullGuideBaseTicks { get; init; }
+        public int? CoreGroundOriginOffsetMillimeters { get; init; }
+        public int? MaximumSpeedFloatBits { get; init; }
+        public int? MaximumTurnRadiansPerBaseTickFloatBits { get; init; }
+        public string MotionClass { get; init; } = string.Empty;
+        public int SteamClassVtableAddress { get; init; }
     }
 
     private sealed record ActorDefinition
@@ -273,8 +322,8 @@ public static class Level100ActorDefinitionManifest
 
     private sealed record WaypointPoint
     {
-        public int[] HorizontalPositionMillimeters { get; init; } = [];
         public int NodeIndex { get; init; }
+        public int[] PositionMillimeters { get; init; } = [];
         public int[] RetailComponentsFloatBits { get; init; } = [];
     }
 

@@ -2,7 +2,7 @@
 
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
-two Firing Range target meshes, nine Pulse Cannon/target-destruction
+three training target meshes, nine Pulse Cannon/target-destruction
 effect textures, 25 exact mission effects, the tutorial music selection, and all
 51 English character messages in the accepted Level 100 mission table. The
 three shared front-end effects retain the startup lane's `Assets/Frontend` paths. Run
@@ -41,10 +41,13 @@ bit-identical retail collision geometry.
 | `StaticWorld/Textures/water-sun-blob.texture.aya` | Exact released 128×128 RGBA8 water-sun blob | `5D97F24F514383C928C58C7F333BF489888B6A402004213FFBAAAAD2EF30A53E` |
 | `StaticWorld/Textures/water-sun-reflection.texture.aya` | Exact released 64×64 RGBA8 sun-reflection stage | `A65940D6CDFE93F8B8820EFB883FD33166AEC63863ED894673466F3F58527AB4` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
-| `level100-target-tank.obj` | Static Target Tank geometry and base-material group consumed by Godot | `6D3827B58FE7A4728EFE1EFC6A7CED7A08A0B642891DCB1F18377A4B3D61D244` |
+| `level100-target-tank.obj` | Target Tank geometry and exact material group consumed by Godot | `3A67F2BF49C9505855F73259D8D5829A7E0D1A0AED0F5A8802E82C4CF2C5DF9F` |
+| `Source/m_f_truck_training.msh.aya` | Released moving Target Truck CMSH archive | `3BD92CE93D0619B7C4B0DD158680641FBAB6CD88580A68C6EF34E5F22F7596C5` |
+| `level100-target-truck.obj` | Target Truck geometry and exact material group consumed by Godot | `76EF7ED7E78D39BF9606CB47B630CA4E10D1773CAB38008BBEE35B935544581D` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
-| `level100-target-warehouse.obj` | Static intact Warehouse geometry and base-material groups consumed by Godot | `271ADEFEDCB0942A584014FF51FC7330769AB8FD95BC6EA5987BAC305C60F658` |
+| `level100-target-warehouse.obj` | Static intact Warehouse geometry and exact material groups consumed by Godot | `3883B651A9963813A4AB9982460425910BE5D7F8F7EDCE15ADE475CF6D8EB5CE` |
 | `Textures/target-tank.texture.aya` | Released 512×512 DXT2 Target Tank base texture | `97DDD1E18E45B19E249E91E881D773D80D36768A2CD48F6549A769C2559A7B7E` |
+| `Textures/target-truck.texture.aya` | Released 512×512 DXT2 Target Truck base texture | `AB4125242321DE4963C51C9B22F63C951A33C22E874D8F039FA2C61A109F5E81` |
 | `Textures/target-warehouse-m001.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material groups 0 and 1 | `689B184AB8A5D03F33B69E5C35EDCFDFDEC12AA9B4B31F7C74CE5209F6236A49` |
 | `Textures/target-warehouse-m002.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material group 3 | `8FABADBE1C5AF067A740CF05DEBD1C952C628FD5FA3EA92B8202094704B8A20D` |
 | `Textures/pulse-bolt-blue-spark.texture.aya` | Exact released 64×64 DXT2 `Particle%Blue Spark 2.tga(0)A4R4G4B4.aya` Pulse Bolt sprite | `B3730B1E9D7713910E0DE4BD0CB0DCFEFCB9CEB8F6402D50681A524ADC0DCB08` |
@@ -597,8 +600,11 @@ LevelScript count byte changed from `4` to `1`. Twelve normal direct hits remove
 its objective in both runs. Player power then dropped to zero; after the
 one-second script pause and exact `tutorial_vulcan_cannon.ogg` duration, Steam
 reactivated the player with Pulse disabled and Vulcan enabled while adding three
-already-moving Target Truck objectives. Core consumes the weapon/message gate,
-not the unmeasured truck paths or Vulcan behavior.
+already-moving Target Truck objectives. Core consumes the weapon/message gate
+and released `FollowWaypointWait` commands through the materialized paths and
+bounded unobstructed CGroundVehicle owner. Steam's occupancy/path-grid
+adjustment and the exact trajectory/arrival tick remain unproven. Target Truck
+contact/destruction and Vulcan behavior are not implemented.
 
 A no-fire control and fresh isolated copied-runtime runs followed each of the
 three Target Tank pointers and their player-owned normal rounds. Releasing at
@@ -674,7 +680,12 @@ evidenced per-segment health and terminal rules. Godot presents Pulse impacts
 and terminal destruction from ordered typed Core events, including events from
 intermediate steps in a rendered frame. It does not yet hide detached segments
 or present rubble/debris. Unmeasured mesh-part damage multipliers, the three
-moving trucks, and Vulcan firing are not implemented. Actor/structure collision,
+Target Truck contact/destruction volumes, and Vulcan firing are not
+implemented. Static targets and dynamically spawned Target Trucks are keyed by
+canonical actor ID, select the exact visual through the actor definition/mesh
+binding, and consume the canonical full pose on every rendered frame rather
+than retaining authored static positions.
+Actor/structure collision,
 steep-slope response, facility animation, complete
 world population, and complete Level 100 mission behavior are not established by
 this slice. Objective markers use the shipped HUD asset; no synthetic target or

@@ -120,7 +120,7 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "bda1c98e675513d5f5dacd1f013e61728525000bd6da5219250aafd39798903f"
+STATIC_WORLD_MANIFEST_SHA256 = "084954c97502001d5868348ac9db4e79d86f3dd8f72e3435e87fa43ff0141117"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -291,6 +291,7 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Sky/cube25-right.texture.aya", "data/resources/dxtntextures/cubes%cube25_right.tga(0)X8R8G8B8.aya", "830c9b965c76a4023c2415b7c8924ca32590562c850cc84e92c003e173263d11"),
     (GODOT_ASSETS / "Level100/Sky/cube25-up.texture.aya", "data/resources/dxtntextures/cubes%cube25_up.tga(0)X8R8G8B8.aya", "419e2424bcfd698058d72111ffa7d84fdc9022e03815db7c0da28403f4925f3c"),
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
+    (GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", "data/resources/meshes/m_f_truck_training.msh.aya", "3bd92ce93d0619b7c4b0dd158680641fbab6cd88580a68c6ef34e5f22f7596c5"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
@@ -302,6 +303,7 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Textures/target-tank-explosion-animated.texture.aya", "data/resources/dxtntextures/Particle%alparticle6.tga(0)R5G6B5.aya", "3c8fc30ad4923c56c3735caab5661a3f176eb661eaa678093870f51de4204c9e"),
     (GODOT_ASSETS / "Level100/Textures/target-tank-explosion-fireball.texture.aya", "data/resources/dxtntextures/Particle%fireball.tga(0)A4R4G4B4.aya", "e6c166669e351632a90b41c74782967923c78fc8be644a1e8948d356806b23ed"),
     (GODOT_ASSETS / "Level100/Textures/target-tank.texture.aya", "data/resources/dxtntextures/meshtex%f_pulsetank_training.tga(0)A1R5G5B5.aya", "97ddd1e18e45b19e249e91e881d773d80d36768a2cd48f6549a769c2559a7b7e"),
+    (GODOT_ASSETS / "Level100/Textures/target-truck.texture.aya", "data/resources/dxtntextures/meshtex%f_truck_training.tga(0)A1R5G5B5.aya", "ab4125242321de4963c51c9b22f63c951a33c22e874d8f039fa2c61a109f5e81"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m001.texture.aya", "data/resources/dxtntextures/meshtex%M_001.tga(0)A1R5G5B5.aya", "689b184ab8a5d03f33b69e5c35edcfdfdec12aa9b4b31f7c74ce5209f6236a49"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m002.texture.aya", "data/resources/dxtntextures/meshtex%M_002.tga(0)A1R5G5B5.aya", "8fabadbe1c5af067a740cf05debd1c952c628fd5fa3ea92b8202094704b8a20d"),
     (GODOT_ASSETS / "Level100/Textures/material-overlay-a8trust5.texture.aya", "data/resources/dxtntextures/meshtex%a8trust5.tga(0)A8R8G8B8.aya", "4ccde973f9741c110a82f350e102f1a12c566ff3d3b1b4f5426f2bbf536be843"),
@@ -410,6 +412,7 @@ CHUNKS = (
 # Destination, source AYA destination above, hierarchy frame, exact OBJ SHA-256.
 MESHES = (
     (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "3a67f2bf49c9505855f73259d8d5829a7e0d1a0aed0f5a8802e82c4cf2c5df9f"),
+    (GODOT_ASSETS / "Level100/level100-target-truck.obj", GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", None, "76ef7ed7e78d39bf9606cb47b630ca4e10d1773cab38008bbee35b935544581d"),
     (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "3883b651a9963813a4ab9982460425910be5d7f8f7edce15ade475cf6d8eb5ce"),
 )
 
@@ -530,6 +533,86 @@ def _definition_string(fields: dict[int, bytes], field_id: int) -> str:
     if not value or value[-1] != 0:
         raise RuntimeError(f"physics string field {field_id} is not terminated")
     return value[:-1].decode("ascii")
+
+
+def _level100_actor_motion_definitions(
+    physics: dict[tuple[int, str], dict[int, bytes]],
+) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    for definition_name, expected_life_bits in (
+        ("Target Tank", 0x40C00000),
+        ("Target Truck", 0x40400000),
+    ):
+        fields = physics[(1, definition_name)]
+        if (
+            fields.get(1) != struct.pack("<I", 0x40600000)
+            or fields.get(3) != struct.pack("<I", expected_life_bits)
+            or fields.get(5) != struct.pack("<I", 0x3D567750)
+            or fields.get(8) != struct.pack("<i", 3)
+        ):
+            raise RuntimeError(
+                f"Level 100 {definition_name} ground-motion fields changed"
+            )
+        rows.append(
+            {
+                "arrivalRadiusMillimeters": 2_000,
+                "authoredOrder": len(rows),
+                "behaviorInternalId": 2,
+                "behaviorSerializedType": 3,
+                "definitionName": definition_name,
+                "fullGuideBaseTicks": 4,
+                "coreGroundOriginOffsetMillimeters": 100,
+                "maximumSpeedFloatBits": struct.unpack("<i", fields[1])[0],
+                "maximumTurnRadiansPerBaseTickFloatBits": struct.unpack(
+                    "<i", fields[5]
+                )[0],
+                "motionClass": "GroundVehicle",
+                "steamClassVtableAddress": 0x005E297C,
+            }
+        )
+
+    for definition_name in ("Air Trainer", "Target Drone"):
+        fields = physics[(1, definition_name)]
+        if fields.get(8) != struct.pack("<i", 9):
+            raise RuntimeError(
+                f"Level 100 {definition_name} plane behavior changed"
+            )
+        rows.append(
+            {
+                "arrivalRadiusMillimeters": 5_000,
+                "authoredOrder": len(rows),
+                "behaviorInternalId": 8,
+                "behaviorSerializedType": 9,
+                "definitionName": definition_name,
+                "fullGuideBaseTicks": None,
+                "coreGroundOriginOffsetMillimeters": None,
+                "maximumSpeedFloatBits": None,
+                "maximumTurnRadiansPerBaseTickFloatBits": None,
+                "motionClass": "Plane",
+                "steamClassVtableAddress": 0x005E1930,
+            }
+        )
+
+    transporter_name = "U-17 Highside Transporter"
+    transporter_fields = physics[(1, transporter_name)]
+    if transporter_fields.get(8) != struct.pack("<i", 12):
+        raise RuntimeError("Level 100 transporter dropship behavior changed")
+    rows.append(
+        {
+            "arrivalRadiusMillimeters": 8_000,
+            "authoredOrder": len(rows),
+            "behaviorInternalId": 12,
+            "behaviorSerializedType": 12,
+            "definitionName": transporter_name,
+            "fullGuideBaseTicks": None,
+            "coreGroundOriginOffsetMillimeters": None,
+            "maximumSpeedFloatBits": None,
+            "maximumTurnRadiansPerBaseTickFloatBits": None,
+            "motionClass": "Dropship",
+            "steamClassVtableAddress": 0x005E1DD8,
+        }
+    )
+    return rows
 
 
 def _materialize_level100_hud_manifest(stage: Path) -> str:
@@ -800,8 +883,9 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v11"
+        manifest.get("schema") != "onslaught.level100-static-world.v13"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
+        or manifest.get("physicsSourceSha256") != PHYSICS_DEFINITIONS_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
         or manifest.get("visibleObjectCount") != 33
@@ -810,6 +894,23 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("actorDefinitions", ())) != 44
         or len(manifest.get("spawnDefinitions", ())) != 10
+        or [
+            (
+                row.get("definitionName"),
+                row.get("motionClass"),
+                row.get("behaviorInternalId"),
+                row.get("steamClassVtableAddress"),
+                row.get("arrivalRadiusMillimeters"),
+            )
+            for row in manifest.get("motionDefinitions", ())
+        ]
+        != [
+            ("Target Tank", "GroundVehicle", 2, 0x005E297C, 2_000),
+            ("Target Truck", "GroundVehicle", 2, 0x005E297C, 2_000),
+            ("Air Trainer", "Plane", 8, 0x005E1930, 5_000),
+            ("Target Drone", "Plane", 8, 0x005E1930, 5_000),
+            ("U-17 Highside Transporter", "Dropship", 12, 0x005E1DD8, 8_000),
+        ]
         or [
             path.get("name") for path in manifest.get("waypointPaths", ())
         ]
@@ -1328,10 +1429,11 @@ def _parse_level_world_actors_and_waypoints(
             components = waypoint_nodes[node_index]
             points.append(
                 {
-                    "horizontalPositionMillimeters": [
+                    "positionMillimeters": [
                         _round_away_from_zero(
                             (components[0] - LEVEL100_PLAYER_START_X) * 1_000.0
                         ),
+                        _round_away_from_zero(components[2] * 1_000.0),
                         _round_away_from_zero(
                             (components[1] - LEVEL100_PLAYER_START_Y) * 1_000.0
                         ),
@@ -1902,7 +2004,13 @@ def _build_actor_definition_set(
                 ),
                 "definitionName": definition_name,
                 "fixedTargetOrdinal": fixed_ordinal,
-                "initialHealth": 6_000 if definition_name == "Target Tank" else 0,
+                "initialHealth": (
+                    6_000
+                    if definition_name == "Target Tank"
+                    else 3_000
+                    if definition_name == "Target Truck"
+                    else 0
+                ),
                 "initialPose": _spawn_pose(owner, emitter),
                 "maximumGroupActors": maximum_group_actors,
                 "meshBinding": mesh_binding,
@@ -2280,6 +2388,13 @@ def _materialize_static_world(
         level_actors,
         emitters_by_mesh,
     )
+    physics = _physics_records(
+        _read_exact(
+            game_root / PHYSICS_DEFINITIONS,
+            PHYSICS_DEFINITIONS_SHA256,
+        )
+    )
+    motion_definitions = _level100_actor_motion_definitions(physics)
 
     pine_views = _pine_imposter_views(raw_level)
     pine_centers = [
@@ -2438,10 +2553,12 @@ def _materialize_static_world(
             "baseWorld": "100_res_PC.aya WRES/WRLD/BSWD v50 records 0..34",
             "compiledScripts": "100_res_PC.aya WRES/WRLD/RLWD ordered Level 100 object code",
             "levelWorld": "100_res_PC.aya WRES/WRLD/RLWD v50 initial actors 0..44",
+            "motionDefinitions": "exact default physics.dat Unit fields plus canonical Steam class/radius dispatch",
             "spawnerTransforms": "exact CEMT named emitter part transforms from the released Tank Factory and Airfield meshes",
             "startupSpawn": "TankFactory compiled initializer plus exact SpawnerA CEMT transform; no settled target pose is pre-seeded",
         },
         "actorDefinitions": actor_definitions,
+        "motionDefinitions": motion_definitions,
         "meshes": mesh_records,
         "objects": objects,
         "pineBillboards": {
@@ -2458,9 +2575,10 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v11",
+        "schema": "onslaught.level100-static-world.v13",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
+        "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,
         "suppressedFernCount": fern_count,
         "textures": texture_records,
         "unitRecordCount": 35,

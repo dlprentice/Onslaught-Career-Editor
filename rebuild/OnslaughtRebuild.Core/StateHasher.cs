@@ -24,7 +24,7 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(28);
+            writer.Write(30);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -94,6 +94,7 @@ public static class StateHasher
                 state.Level100DestructionEvents);
             WriteLevel100ActorScripts(writer, state.Level100ActorScripts);
             WriteLevel100ActorScriptCommands(writer, state.Level100ActorScriptCommands);
+            WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics);
             writer.Write(state.NextProjectileId);
 
             ProjectileSnapshot[] projectiles = state.Projectiles
@@ -201,6 +202,33 @@ public static class StateHasher
             WriteNullableActorId(writer, command.TargetActorId);
             WriteNullableString(writer, command.Argument);
             writer.Write(command.Scalar);
+        }
+    }
+
+    private static void WriteLevel100ActorMechanics(
+        BinaryWriter writer,
+        Level100ActorMechanicsSnapshot mechanics)
+    {
+        ArgumentNullException.ThrowIfNull(mechanics);
+        ArgumentNullException.ThrowIfNull(mechanics.Actors);
+        writer.Write(mechanics.LastConsumedCommandSequence);
+        writer.Write(mechanics.RetailBaseTickAccumulatorThirtieths);
+        Level100ActorCommandIntentSnapshot[] actors = mechanics.Actors
+            .OrderBy(actor => actor.ActorId.Value)
+            .ToArray();
+        writer.Write(actors.Length);
+        foreach (Level100ActorCommandIntentSnapshot actor in actors)
+        {
+            writer.Write(actor.ActorId.Value);
+            writer.Write(actor.AiState);
+            writer.Write(actor.Allegiance);
+            writer.Write((int)actor.Intent);
+            WriteNullableActorId(writer, actor.TargetActorId);
+            WriteNullableString(writer, actor.WaypointPath);
+            writer.Write(actor.WaypointPointIndex);
+            writer.Write(actor.WaypointCommandScalar);
+            writer.Write(actor.WaitForWaypointCompletion);
+            writer.Write(actor.GroundFullGuideBaseTickPhase);
         }
     }
 

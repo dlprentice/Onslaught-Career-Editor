@@ -129,7 +129,11 @@ public sealed class Level100ActorRegistryTests
         };
         Level100ActorDefinition[] changedActors = original.Actors.ToArray();
         changedActors[0] = first with { InitialPose = changedPose };
-        var changed = new Level100ActorDefinitionSet(changedActors, original.Spawns);
+        var changed = new Level100ActorDefinitionSet(
+            changedActors,
+            original.Spawns,
+            original.WaypointPaths,
+            original.MotionDefinitions);
         var withPath = new Level100ActorDefinitionSet(
             original.Actors,
             original.Spawns,
@@ -139,10 +143,11 @@ public sealed class Level100ActorRegistryTests
                     [
                         new Level100WaypointPointDefinition(
                             1,
-                            new SimVector2(10, 20),
+                            new SimVector3(10, 30, 20),
                             new Level100FloatVector4Bits(1, 2, 3, 4)),
                     ]),
-            ]);
+            ],
+            original.MotionDefinitions);
 
         Assert.NotEqual(original.IdentitySha256, changed.IdentitySha256);
         Assert.NotEqual(original.IdentitySha256, withPath.IdentitySha256);

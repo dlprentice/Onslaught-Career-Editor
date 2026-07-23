@@ -635,9 +635,27 @@ power changed to `0`, `TUTORIAL_VULCAN_CANNON` played after the script's
 one-second pause, and player power returned with Vulcan active and Pulse Cannon
 inactive while three moving Target Truck objectives were added. The exact
 voice granules and established 18-tick post-roll place the Core weapon handoff
-at tick `269` after completion. The trucks had already advanced along their
-`FollowWaypointWait` paths when sampled, so their changing positions are not
-retained and the Vulcan exercise itself remains unimplemented.
+at tick `269` after completion.
+
+The schema-13 Level 100 manifest retains the released class identities and
+arrival radii for the ground vehicle, plane, and dropship definitions, plus the
+exact Target Tank/Target Truck speed, turn, full-guide cadence, and converted
+Core ground-origin offset. Core consumes the released actor command stream,
+observes it at the exact 20 Hz base cadence inside the 30 Hz simulation, and
+mutates only the canonical registry pose and current-tick velocity. Focused
+product-path checks establish Target Tank 1 naturally following its released
+unobstructed route and all three script-spawned Target Trucks entering their
+authored paths. The client keys those visuals by canonical ActorId, resolves
+their actor definition/mesh binding to the exact materialized Target Truck
+mesh and texture, and projects the registry's full pose without owning a
+second transform. The waypoint command scalar is retained and hashed but remains
+uninterpreted. The released occupancy/path-grid adjustment and initial runtime
+scheduling phase are not yet reconstructed, so neither the exact trajectory
+nor retail arrival tick is claimed. Plane and dropship class identities/radii
+are retained evidence only; their movement is not implemented.
+The current exact contact materialization has no Target Truck volume or
+destruction definition; Target Truck hit behavior and the Vulcan exercise
+therefore remain unimplemented.
 
 These slices do not make the surrounding vehicle model retail-faithful.
 Walker acceleration and the bounded projectile path now use the released
