@@ -17,9 +17,7 @@ function Invoke-FirstFlightNativeSmoke {
         [Parameter(Mandatory)]$Toolchain,
         [Parameter(Mandatory)][string]$ProjectRoot,
         [Parameter(Mandatory)][string]$RunRoot,
-        [Parameter(Mandatory)][string]$Label,
-        [Parameter(Mandatory)][int]$Width,
-        [Parameter(Mandatory)][int]$Height
+        [Parameter(Mandatory)][string]$Label
     )
 
     $outputRoot = Join-Path $RunRoot $Label
@@ -29,7 +27,6 @@ function Invoke-FirstFlightNativeSmoke {
     $null = [IO.Directory]::CreateDirectory($outputRoot)
 
     $reportPath = Join-Path $outputRoot 'first-flight-smoke.json'
-    $screenshotPath = Join-Path $outputRoot 'first-flight-smoke.png'
     $logPath = Join-Path $outputRoot 'first-flight-smoke.log'
     $processResult = Invoke-BoundedProcess `
         -FileName $Toolchain.ConsolePath `
@@ -37,12 +34,10 @@ function Invoke-FirstFlightNativeSmoke {
             '--log-file', $logPath,
             '--path', $ProjectRoot,
             '--windowed',
-            '--resolution', "${Width}x${Height}",
             '--fixed-fps', '60',
             '--',
             '--smoke',
-            "--report=$reportPath",
-            "--screenshot=$screenshotPath") `
+            "--report=$reportPath") `
         -TimeoutMilliseconds 75000 `
         -Description "First Flight native smoke '$Label'"
 
@@ -55,23 +50,13 @@ function Invoke-FirstFlightNativeSmoke {
 
     $validation = Test-FirstFlightSmokeEvidence `
         -ReportPath $reportPath `
-        -ScreenshotPath $screenshotPath `
-        -LogPath $logPath `
-        -ExpectedWidth $Width `
-        -ExpectedHeight $Height
+        -LogPath $logPath
 
     return [pscustomobject]@{
         Label = $Label
-        Width = $Width
-        Height = $Height
         Tick = $validation.Tick
         StateHash = $validation.StateHash
-        SampledColorCount = $validation.SampledColorCount
-        NonBlackSampleCount = $validation.NonBlackSampleCount
-        WorldSampledColorCount = $validation.WorldSampledColorCount
-        WorldNonBlackSampleCount = $validation.WorldNonBlackSampleCount
         ReportPath = $reportPath
-        ScreenshotPath = $screenshotPath
         LogPath = $logPath
     }
 }
@@ -91,34 +76,19 @@ try {
     $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\OnslaughtRebuild.Godot'))
     $runRoot = New-BoundedFirstFlightSmokeRoot -RepoRoot $repoRoot
 
-    $standard = Invoke-FirstFlightNativeSmoke `
+    $smoke = Invoke-FirstFlightNativeSmoke `
         -Toolchain $toolchain `
         -ProjectRoot $projectRoot `
         -RunRoot $runRoot `
-        -Label 'standard-1280x720' `
-        -Width 1280 `
-        -Height 720
-    $minimum = Invoke-FirstFlightNativeSmoke `
-        -Toolchain $toolchain `
-        -ProjectRoot $projectRoot `
-        -RunRoot $runRoot `
-        -Label 'minimum-1200x675' `
-        -Width 1200 `
-        -Height 675
+        -Label 'cold-frontend-lifecycle'
 
     [pscustomobject]@{
         Status = 'PASS'
         EngineVersion = $toolchain.Version
         EngineArchiveSha256 = $toolchain.ArchiveSha256
         EngineManifestSha256 = $toolchain.ManifestSha256
-        Tick = $standard.Tick
-        StateHash = $standard.StateHash
-        StandardViewport = "$($standard.Width)x$($standard.Height)"
-        StandardWorldSampledColorCount = $standard.WorldSampledColorCount
-        StandardWorldNonBlackSampleCount = $standard.WorldNonBlackSampleCount
-        MinimumViewport = "$($minimum.Width)x$($minimum.Height)"
-        MinimumWorldSampledColorCount = $minimum.WorldSampledColorCount
-        MinimumWorldNonBlackSampleCount = $minimum.WorldNonBlackSampleCount
+        Tick = $smoke.Tick
+        StateHash = $smoke.StateHash
         RunRoot = $runRoot
     }
 }

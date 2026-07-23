@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Godot;
@@ -25,19 +24,47 @@ public sealed partial class FirstFlightGame : Node3D
     private static readonly StringName FireAction = "first_flight_fire";
     private static readonly StringName ToggleModeAction = "first_flight_toggle_mode";
     private static readonly StringName ResetAction = "first_flight_reset";
-    private static readonly StringName ExitAction = "first_flight_exit";
 
     private InteractiveSession _session = null!;
     private FirstFlightWorldView _world = null!;
     private FirstFlightHud _hud = null!;
     private AudioStreamPlayer _tutorialVoice = null!;
     private int? _playingTutorialMessageId;
+    private RetailFrontendFlow? _frontend;
+    private bool _level100WorldCreated;
+    private bool _gameplayActive;
     private bool _smokeMode;
     private bool _smokeCompleting;
     private bool _focusLossHandlerInputCleared;
     private bool _focusLossHandlerNeutralRearmed;
+    private bool _smokeSawClickToStart;
+    private bool _smokeSawMainMenu;
+    private bool _smokeSawLevelSelect;
+    private bool _smokeSawLoading;
+    private bool _smokeSawGameplay;
+    private bool _smokeCursorVisibleAtFrontend;
+    private bool _smokeCursorHiddenAtLoading;
+    private bool _smokeCursorCapturedAtGameplay;
+    private bool _smokeCursorReleasedOnFocusLoss;
+    private bool _smokeCursorRecapturedOnFocusGain;
+    private bool _smokeMissionTerminalHandoffEntered;
+    private string _smokeMissionFailureReason = string.Empty;
+    private bool _smokeCursorVisibleForTerminal;
+    private bool _smokeRetryRequested;
+    private bool _smokeRetryGameplayActivated;
+    private bool _smokeRetrySessionFresh;
+    private bool _smokeReturnRequested;
+    private bool _smokeReturnedToMainMenu;
+    private bool _smokeWorldReleasedAtMainMenu;
+    private bool _smokeCursorVisibleAtMainMenu;
     private string? _smokeReportPath;
-    private string? _smokeScreenshotPath;
+    private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Visible;
+    private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
+    private SmokeReport? _smokeReport;
+
+    public event Action? GameplayPauseRequested;
+
+    public event Action<RetailFrontendAudioCue>? FrontendAudioCueRequested;
 
     public override void _Ready()
     {
@@ -50,29 +77,18 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100StaticWorldAsset.LoadActorDefinitions());
 
             Window window = GetWindow();
-            window.Title = "Onslaught Rebuild - Level 100 Opening Slice";
-            window.MinSize = new Vector2I(1200, 675);
+            window.Title = "Onslaught Rebuild - Battle Engine Aquila";
 
-            _world = new FirstFlightWorldView();
-            AddChild(_world);
-            _world.Initialize(_session.CurrentSnapshot);
-
-            _hud = new FirstFlightHud();
-            AddChild(_hud);
-            _hud.Initialize();
-            _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
-            _hud.Visible = _world.ShowHud;
-
-            _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
-            AddChild(_tutorialVoice);
-            _tutorialVoice.Finished += OnTutorialVoiceFinished;
-            ConsumeLevel100MissionEvents(_session.CurrentSnapshot.Level100MissionEvents);
-            _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
-
-            if (!_smokeMode)
-            {
-                Input.MouseMode = Input.MouseModeEnum.Captured;
-            }
+            _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
+            _frontend.Initialize();
+            _frontend.Level100LoadRequested += LoadLevel100FromFrontend;
+            _frontend.GameplayActivated += ActivateFrontendGameplay;
+            _frontend.GameplaySuspended += SuspendFrontendGameplay;
+            _frontend.ReturnToMainMenuRequested += ReleaseLevel100ForMainMenu;
+            _frontend.CursorModeRequested += ApplyFrontendCursorMode;
+            _frontend.AudioCueRequested += ForwardFrontendAudioCue;
+            AddChild(_frontend);
+            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
         }
         catch (Exception exception)
         {
@@ -82,11 +98,41 @@ public sealed partial class FirstFlightGame : Node3D
         }
     }
 
+    /// <summary>
+    /// Pause/mission-terminal integration seam. The frontend enters Loading
+    /// and the existing host replaces its one Level 100 session/world when
+    /// requested.
+    /// </summary>
+    public void RestartLevel100()
+    {
+        RequireLevel100Frontend().RestartLevel100();
+    }
+
+    /// <summary>
+    /// Pause/mission-terminal integration seam for Exit Level. This returns
+    /// to the existing frontend shell; it never quits the application.
+    /// </summary>
+    public void LeaveLevel100ForMainMenu()
+    {
+        RequireLevel100Frontend().LeaveLevel100ForMainMenu();
+    }
+
     public override void _Process(double delta)
     {
-        if (!_smokeMode && Input.IsActionJustPressed(ExitAction))
+        if (_smokeMode && !_gameplayActive)
         {
-            GetTree().Quit(0);
+            DriveSmokeFrontend();
+            return;
+        }
+
+        if (!_gameplayActive)
+        {
+            return;
+        }
+
+        if (_smokeMode && _smokePhase == SmokePhase.RetryGameplay)
+        {
+            FinishSmokeRetryAndReturn();
             return;
         }
 
@@ -121,17 +167,56 @@ public sealed partial class FirstFlightGame : Node3D
         _hud.UpdateFromSnapshot(result.CurrentSnapshot);
         _hud.Visible = _world.ShowHud;
 
+        if (_frontend!.TryAcceptMissionTerminal(result.CurrentSnapshot.Level100Mission))
+        {
+            return;
+        }
+
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
             _smokeCompleting = true;
             RunFocusLossHandlerSmokeProbe();
-            Callable.From(CompleteSmoke).CallDeferred();
+            FrameAdvanceResult terminalFrame = _session.AdvanceFrameTicks(
+                SmokeFrameElapsedTicks,
+                [new Level100PlayerDeathFact()]);
+            ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
+            for (int tick = 0;
+                 tick < Level100MissionTiming.FailureMenuDelayTicks &&
+                 _session.CurrentSnapshot.Level100Mission.TerminalState !=
+                    Level100MissionTerminalState.FailureMenuReady;
+                 tick++)
+            {
+                terminalFrame = _session.AdvanceFrameTicks(SmokeFrameElapsedTicks);
+                ConsumeLevel100MissionEvents(terminalFrame.Level100MissionEvents);
+            }
+            Level100MissionSnapshot terminal = _session.CurrentSnapshot.Level100Mission;
+            if (!_frontend.TryAcceptMissionTerminal(terminal))
+            {
+                throw new InvalidOperationException(
+                    "Frontend did not accept the mission-owned terminal handoff.");
+            }
+            _smokeMissionTerminalHandoffEntered =
+                _frontend.CurrentScreen == RetailFrontendScreen.TerminalHandoff;
+            _smokeMissionFailureReason = terminal.FailureReason.ToString();
+            _smokeCursorVisibleForTerminal =
+                _requestedCursorMode == RetailFrontendCursorMode.Visible;
+            _smokeReport = CaptureSmokeReport();
+            RestartLevel100();
+            _smokeRetryRequested = _frontend.CurrentScreen == RetailFrontendScreen.Loading;
+            _smokeCursorHiddenAtLoading &=
+                _requestedCursorMode == RetailFrontendCursorMode.Hidden;
+            _smokePhase = SmokePhase.AwaitingRetryGameplay;
         }
     }
 
     public override void _Input(InputEvent inputEvent)
     {
         if (_smokeMode)
+        {
+            return;
+        }
+
+        if (!_gameplayActive)
         {
             return;
         }
@@ -166,13 +251,17 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        if (IsKey(keyEvent, Key.Escape))
+        {
+            GameplayPauseRequested?.Invoke();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         bool togglePressed = inputEvent.IsActionPressed(ToggleModeAction) ||
             IsKey(keyEvent, Key.Q);
         bool resetPressed = inputEvent.IsActionPressed(ResetAction) ||
             IsKey(keyEvent, Key.R);
-        bool exitPressed = inputEvent.IsActionPressed(ExitAction) ||
-            IsKey(keyEvent, Key.Escape);
-
         if (IsKey(keyEvent, Key.W) || IsKey(keyEvent, Key.Up))
         {
             _session.QueueMovementPulse(0, 1);
@@ -204,25 +293,27 @@ public sealed partial class FirstFlightGame : Node3D
             _session.QueueReset();
         }
 
-        if (exitPressed)
-        {
-            GetTree().Quit(0);
-        }
     }
 
     public override void _Notification(int what)
     {
+        if (!_gameplayActive)
+        {
+            return;
+        }
+
         if (what == NotificationWMWindowFocusOut && (!_smokeMode || _smokeCompleting))
         {
             _session.SuspendInputUntilReleased();
-            if (!_smokeMode)
-            {
-                Input.MouseMode = Input.MouseModeEnum.Visible;
-            }
+            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
+            _smokeCursorReleasedOnFocusLoss =
+                _requestedCursorMode == RetailFrontendCursorMode.Visible;
         }
-        else if (what == NotificationWMWindowFocusIn && !_smokeMode)
+        else if (what == NotificationWMWindowFocusIn)
         {
-            Input.MouseMode = Input.MouseModeEnum.Captured;
+            ApplyFrontendCursorMode(RetailFrontendCursorMode.Captured);
+            _smokeCursorRecapturedOnFocusGain =
+                _requestedCursorMode == RetailFrontendCursorMode.Captured;
         }
     }
 
@@ -230,7 +321,7 @@ public sealed partial class FirstFlightGame : Node3D
     {
         if (!_smokeMode)
         {
-            Input.MouseMode = Input.MouseModeEnum.Visible;
+            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
         }
         ReleaseSyntheticInput();
     }
@@ -252,7 +343,6 @@ public sealed partial class FirstFlightGame : Node3D
         EnsureKeyAction(FireAction, Key.Space);
         EnsureKeyAction(ToggleModeAction, Key.Q);
         EnsureKeyAction(ResetAction, Key.R);
-        EnsureKeyAction(ExitAction, Key.Escape);
     }
 
     private static void EnsureKeyAction(StringName action, Key key)
@@ -323,6 +413,216 @@ public sealed partial class FirstFlightGame : Node3D
             Math.Round(value * 1_000f, MidpointRounding.AwayFromZero),
             -1_000_000d,
             1_000_000d);
+
+    private void CreateLevel100World()
+    {
+        if (_level100WorldCreated)
+        {
+            throw new InvalidOperationException("The Level 100 world is already created.");
+        }
+
+        _world = new FirstFlightWorldView();
+        AddChild(_world);
+        _world.Initialize(_session.CurrentSnapshot);
+
+        _hud = new FirstFlightHud();
+        AddChild(_hud);
+        _hud.Initialize();
+        _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+        _hud.Visible = _world.ShowHud;
+
+        _tutorialVoice = new AudioStreamPlayer { Name = "RetailLevel100TutorialVoice" };
+        AddChild(_tutorialVoice);
+        _tutorialVoice.Finished += OnTutorialVoiceFinished;
+        ConsumeLevel100MissionEvents(_session.CurrentSnapshot.Level100MissionEvents);
+        _hud.UpdateFromSnapshot(_session.CurrentSnapshot);
+        _level100WorldCreated = true;
+    }
+
+    private void LoadLevel100FromFrontend()
+    {
+        try
+        {
+            if (_level100WorldCreated)
+            {
+                DestroyLevel100World();
+                _session = CreateSession();
+            }
+            CreateLevel100World();
+            _frontend!.MarkLevel100Ready();
+        }
+        catch (Exception exception)
+        {
+            SetProcess(false);
+            GD.PushError($"Level 100 failed to load from the frontend: {exception.Message}");
+            GetTree().Quit(4);
+        }
+    }
+
+    private void ActivateFrontendGameplay()
+    {
+        if (!_level100WorldCreated)
+        {
+            GD.PushError("The frontend tried to activate gameplay before Level 100 was ready.");
+            GetTree().Quit(4);
+            return;
+        }
+
+        _gameplayActive = true;
+        if (_smokeMode)
+        {
+            if (_smokePhase == SmokePhase.ColdFrontend)
+            {
+                _smokeSawGameplay = true;
+                _smokeCursorCapturedAtGameplay =
+                    _requestedCursorMode == RetailFrontendCursorMode.Captured;
+                _smokePhase = SmokePhase.InitialGameplay;
+            }
+            else if (_smokePhase == SmokePhase.AwaitingRetryGameplay)
+            {
+                _smokeRetryGameplayActivated = true;
+                _smokeRetrySessionFresh =
+                    _session.CurrentSnapshot.Tick == 0 &&
+                    _session.Metrics.TotalSteps == 0 &&
+                    _level100WorldCreated;
+                _smokePhase = SmokePhase.RetryGameplay;
+            }
+        }
+    }
+
+    private void SuspendFrontendGameplay()
+    {
+        _gameplayActive = false;
+        _session.ReleaseAllInput();
+    }
+
+    private void ReleaseLevel100ForMainMenu()
+    {
+        SuspendFrontendGameplay();
+        DestroyLevel100World();
+        _session = CreateSession();
+    }
+
+    private void DestroyLevel100World()
+    {
+        if (!_level100WorldCreated)
+        {
+            return;
+        }
+
+        _tutorialVoice.Stop();
+        _world.Visible = false;
+        _hud.Visible = false;
+        _world.QueueFree();
+        _hud.QueueFree();
+        _tutorialVoice.QueueFree();
+        _playingTutorialMessageId = null;
+        _level100WorldCreated = false;
+    }
+
+    private static InteractiveSession CreateSession() =>
+        new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+
+    private RetailFrontendFlow RequireLevel100Frontend()
+    {
+        if (_frontend is null ||
+            _frontend.CurrentScreen is not RetailFrontendScreen.Gameplay and
+                not RetailFrontendScreen.TerminalHandoff)
+        {
+            throw new InvalidOperationException(
+                "A Level 100 restart or Main Menu return requires gameplay or its mission terminal handoff.");
+        }
+
+        return _frontend;
+    }
+
+    private void DriveSmokeFrontend()
+    {
+        RetailFrontendFlow frontend = _frontend ??
+            throw new InvalidOperationException("Smoke requires the normal retail frontend.");
+
+        if (_smokePhase == SmokePhase.ColdFrontend)
+        {
+            switch (frontend.CurrentScreen)
+            {
+                case RetailFrontendScreen.ClickToStart:
+                    _smokeSawClickToStart = true;
+                    _smokeCursorVisibleAtFrontend =
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
+                case RetailFrontendScreen.MainMenu:
+                    _smokeSawMainMenu = true;
+                    _smokeCursorVisibleAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
+                case RetailFrontendScreen.LevelSelect:
+                    _smokeSawLevelSelect = true;
+                    _smokeCursorVisibleAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
+                case RetailFrontendScreen.Loading:
+                    _smokeSawLoading = true;
+                    _smokeCursorHiddenAtLoading =
+                        _requestedCursorMode == RetailFrontendCursorMode.Hidden;
+                    return;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Cold frontend smoke reached unexpected state {frontend.CurrentScreen}.");
+            }
+        }
+
+        if (_smokePhase == SmokePhase.AwaitingRetryGameplay)
+        {
+            if (frontend.CurrentScreen != RetailFrontendScreen.Loading)
+            {
+                throw new InvalidOperationException(
+                    $"Retry smoke reached unexpected state {frontend.CurrentScreen}.");
+            }
+
+            _smokeCursorHiddenAtLoading &=
+                _requestedCursorMode == RetailFrontendCursorMode.Hidden;
+        }
+    }
+
+    private void FinishSmokeRetryAndReturn()
+    {
+        _smokeReturnRequested = true;
+        LeaveLevel100ForMainMenu();
+        _smokeReturnedToMainMenu =
+            _frontend!.CurrentScreen == RetailFrontendScreen.MainMenu;
+        _smokeWorldReleasedAtMainMenu = !_level100WorldCreated;
+        _smokeCursorVisibleAtMainMenu =
+            _requestedCursorMode == RetailFrontendCursorMode.Visible;
+        _smokePhase = SmokePhase.ReturnedToMainMenu;
+        Callable.From(CompleteSmoke).CallDeferred();
+    }
+
+    private void ApplyFrontendCursorMode(RetailFrontendCursorMode mode)
+    {
+        _requestedCursorMode = mode;
+        if (_smokeMode)
+        {
+            return;
+        }
+
+        Input.MouseMode = mode switch
+        {
+            RetailFrontendCursorMode.Visible => Input.MouseModeEnum.Visible,
+            RetailFrontendCursorMode.Hidden => Input.MouseModeEnum.Hidden,
+            RetailFrontendCursorMode.Captured => Input.MouseModeEnum.Captured,
+            _ => throw new ArgumentOutOfRangeException(nameof(mode)),
+        };
+    }
+
+    private void ForwardFrontendAudioCue(RetailFrontendAudioCue cue) =>
+        FrontendAudioCueRequested?.Invoke(cue);
 
     private static void ApplySyntheticInput(InteractiveInput input)
     {
@@ -474,6 +774,7 @@ public sealed partial class FirstFlightGame : Node3D
             !_session.InputSuspendedUntilReleased &&
             _session.HasHeldOrPendingInput;
         _session.ReleaseAllInput();
+        _Notification((int)NotificationWMWindowFocusIn);
     }
 
     private void ParseUserArguments()
@@ -488,10 +789,6 @@ public sealed partial class FirstFlightGame : Node3D
             {
                 _smokeReportPath = argument["--report=".Length..];
             }
-            else if (argument.StartsWith("--screenshot=", StringComparison.Ordinal))
-            {
-                _smokeScreenshotPath = argument["--screenshot=".Length..];
-            }
             else
             {
                 throw new ArgumentException($"Unknown First Flight argument '{argument}'.");
@@ -504,35 +801,20 @@ public sealed partial class FirstFlightGame : Node3D
         }
 
         if (string.IsNullOrWhiteSpace(_smokeReportPath) ||
-            string.IsNullOrWhiteSpace(_smokeScreenshotPath) ||
-            !Path.IsPathFullyQualified(_smokeReportPath) ||
-            !Path.IsPathFullyQualified(_smokeScreenshotPath))
+            !Path.IsPathFullyQualified(_smokeReportPath))
         {
-            throw new ArgumentException("Smoke mode requires absolute --report and --screenshot paths.");
+            throw new ArgumentException("Smoke mode requires an absolute --report path.");
         }
     }
 
-    private async void CompleteSmoke()
+    private SmokeReport CaptureSmokeReport()
     {
-        try
+        InteractiveSessionMetrics metrics = _session.Metrics;
+        Godot.Collections.Dictionary versionInfo = Engine.GetVersionInfo();
+        string engineVersion = versionInfo["string"].AsString();
+        return new SmokeReport
         {
-            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-
-            Image image = GetViewport().GetTexture().GetImage();
-            byte[] screenshotBytes = image.SavePngToBuffer();
-            if (screenshotBytes.Length == 0)
-            {
-                throw new IOException("Godot returned an empty smoke screenshot.");
-            }
-            WriteNewFileDurably(_smokeScreenshotPath!, screenshotBytes);
-
-            string screenshotHash = Convert.ToHexString(SHA256.HashData(screenshotBytes)).ToLowerInvariant();
-            InteractiveSessionMetrics metrics = _session.Metrics;
-            Godot.Collections.Dictionary versionInfo = Engine.GetVersionInfo();
-            string engineVersion = versionInfo["string"].AsString();
-            var report = new SmokeReport
-            {
-                SchemaVersion = "onslaught-first-flight-smoke.v10",
+            SchemaVersion = "onslaught-first-flight-smoke.v11",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -595,11 +877,37 @@ public sealed partial class FirstFlightGame : Node3D
                 HudReady = _hud.IsReadyForSmoke,
                 FocusLossHandlerInputCleared = _focusLossHandlerInputCleared,
                 FocusLossHandlerNeutralRearmed = _focusLossHandlerNeutralRearmed,
-                ScreenshotFileName = Path.GetFileName(_smokeScreenshotPath) ?? string.Empty,
-                ScreenshotWidth = image.GetWidth(),
-                ScreenshotHeight = image.GetHeight(),
-                ScreenshotSha256 = screenshotHash,
             };
+    }
+
+    private void CompleteSmoke()
+    {
+        try
+        {
+            SmokeReport report = _smokeReport ??
+                throw new InvalidOperationException("Smoke gameplay evidence was not captured.");
+            report.ColdClickToStart = _smokeSawClickToStart;
+            report.ColdMainMenu = _smokeSawMainMenu;
+            report.ColdLevelSelect = _smokeSawLevelSelect;
+            report.ColdLoading = _smokeSawLoading;
+            report.ColdGameplay = _smokeSawGameplay;
+            report.CursorPolicyVisibleAtFrontend = _smokeCursorVisibleAtFrontend;
+            report.CursorPolicyHiddenAtLoading = _smokeCursorHiddenAtLoading;
+            report.CursorPolicyCapturedAtGameplay = _smokeCursorCapturedAtGameplay;
+            report.FocusLossCursorPolicyVisible = _smokeCursorReleasedOnFocusLoss;
+            report.FocusGainCursorPolicyCaptured = _smokeCursorRecapturedOnFocusGain;
+            report.MissionTerminalHandoffEntered = _smokeMissionTerminalHandoffEntered;
+            report.MissionFailureReason = _smokeMissionFailureReason;
+            report.TerminalCursorPolicyVisible = _smokeCursorVisibleForTerminal;
+            report.RetryRequested = _smokeRetryRequested;
+            report.RetryGameplayActivated = _smokeRetryGameplayActivated;
+            report.RetrySessionFresh = _smokeRetrySessionFresh;
+            report.ReturnToMainMenuRequested = _smokeReturnRequested;
+            report.ReturnedToMainMenu = _smokeReturnedToMainMenu;
+            report.WorldReleasedAtMainMenu = _smokeWorldReleasedAtMainMenu;
+            report.MainMenuCursorPolicyVisible = _smokeCursorVisibleAtMainMenu;
+            report.FinalFrontendScreen = _frontend?.CurrentScreen.ToString() ?? string.Empty;
+
             string json = JsonSerializer.Serialize(report, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -684,9 +992,35 @@ public sealed partial class FirstFlightGame : Node3D
         public required bool HudReady { get; init; }
         public required bool FocusLossHandlerInputCleared { get; init; }
         public required bool FocusLossHandlerNeutralRearmed { get; init; }
-        public required string ScreenshotFileName { get; init; }
-        public required int ScreenshotWidth { get; init; }
-        public required int ScreenshotHeight { get; init; }
-        public required string ScreenshotSha256 { get; init; }
+        public bool ColdClickToStart { get; set; }
+        public bool ColdMainMenu { get; set; }
+        public bool ColdLevelSelect { get; set; }
+        public bool ColdLoading { get; set; }
+        public bool ColdGameplay { get; set; }
+        public bool CursorPolicyVisibleAtFrontend { get; set; }
+        public bool CursorPolicyHiddenAtLoading { get; set; }
+        public bool CursorPolicyCapturedAtGameplay { get; set; }
+        public bool FocusLossCursorPolicyVisible { get; set; }
+        public bool FocusGainCursorPolicyCaptured { get; set; }
+        public bool MissionTerminalHandoffEntered { get; set; }
+        public string MissionFailureReason { get; set; } = string.Empty;
+        public bool TerminalCursorPolicyVisible { get; set; }
+        public bool RetryRequested { get; set; }
+        public bool RetryGameplayActivated { get; set; }
+        public bool RetrySessionFresh { get; set; }
+        public bool ReturnToMainMenuRequested { get; set; }
+        public bool ReturnedToMainMenu { get; set; }
+        public bool WorldReleasedAtMainMenu { get; set; }
+        public bool MainMenuCursorPolicyVisible { get; set; }
+        public string FinalFrontendScreen { get; set; } = string.Empty;
+    }
+
+    private enum SmokePhase
+    {
+        ColdFrontend,
+        InitialGameplay,
+        AwaitingRetryGameplay,
+        RetryGameplay,
+        ReturnedToMainMenu,
     }
 }

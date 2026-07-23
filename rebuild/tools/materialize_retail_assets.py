@@ -4,8 +4,8 @@
 
 The current source tree and release packages do not include these files. This
 bounded recipe reads a user-provided Battle Engine Aquila installation,
-verifies the supported Steam data, and writes only the known Level 100/Aquila
-assets to ignored paths.
+verifies the supported Steam data, and writes only the known frontend,
+Level 100, and Aquila assets to ignored paths.
 """
 
 from __future__ import annotations
@@ -61,6 +61,14 @@ BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
 SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4dda8b7"
+ENGLISH_LANGUAGE_TABLE = "data/language/english.dat"
+ENGLISH_LANGUAGE_TABLE_SHA256 = (
+    "789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a"
+)
+FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
+FRONTEND_LOCALIZATION_SHA256 = (
+    "417621f3ccc82f6b738d5d4f1c2c2a5d95984d88d82db3846e8f073aed367c12"
+)
 ROOT_TERRAIN_TEXTURE = (
     GODOT_ASSETS / "Level100/Source/level100-root-terrain.rgb565.bin"
 )
@@ -252,6 +260,59 @@ DIRECT_ASSETS = (
 )
 
 
+# Small exact released frontend surface used by the startup -> Level 100 path.
+FRONTEND_ASSETS = (
+    (GODOT_ASSETS / "Frontend/Backgrounds/click-to-start.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%fe_splash1.tga(0)A8R8G8B8.aya", "46ab45168875b5b686e3534b3f66ab65b5a5b5512f697e5a98b03dd12708731a"),
+    (GODOT_ASSETS / "Frontend/Backgrounds/rock.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Rock_Background.tga(0)A8R8G8B8.aya", "89213b441332f060acdb3e55aa28c290fa0e530983c16a57b8ce1a7413e9e86d"),
+    (GODOT_ASSETS / "Frontend/title-logo.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_Title2.tga(0)A8R8G8B8.aya", "5ae9b300836d27bd13462a53e3455b649bb46bf8f48c8c326fd8f4f0c18c7ec7"),
+    (GODOT_ASSETS / "Frontend/title-bracket-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket01.tga(0)A8R8G8B8.aya", "679b5fa6220b3eb54aeef1d970890c35be5df264530226f5d08b22a63ad75064"),
+    (GODOT_ASSETS / "Frontend/title-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket02.tga(0)A8R8G8B8.aya", "79f05e8c64b6e25f038c5b7c37ddadfd31ee9376e92fc5da505b6c427ed9c74f"),
+    (GODOT_ASSETS / "Frontend/title-text-box.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_text_box.tga(0)A8R8G8B8.aya", "c007742e1fe9b93e988d198f8a2a4e741e546843fd36218d9015ab2ee6627b9c"),
+    (GODOT_ASSETS / "Frontend/symbol-bracket-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_symbol_bracket01.tga(0)A8R8G8B8.aya", "3243e641e9ad45cd8b80c4abebaa1e6f73b5ed774e0b4dba1afbcbbaf81a49a8"),
+    (GODOT_ASSETS / "Frontend/symbol-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_symbol_bracket02.tga(0)A8R8G8B8.aya", "92739af94bec154d898afb5e59432694a789bb3f2c37242eb65272684daeb687"),
+    (GODOT_ASSETS / "Frontend/Icons/new-game.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_newgame01.tga(0)A8R8G8B8.aya", "d3ff62fbc8193e15bf250c82088f5088b17c667277dbb5fff92f2980cc3deb70"),
+    (GODOT_ASSETS / "Frontend/Icons/continue-game.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_continuegame01.tga(0)A8R8.aya", "83c9fa4d7e786ae4353d1f639c75b007bc0c65f1412b447d68967d9e5b4cca0e"),
+    (GODOT_ASSETS / "Frontend/Icons/load-game.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_loadgame01.tga(0)A8R8G8B8.aya", "9d1bb0d9efc450fc2bce244e01a2975468f07cf785bf6854a5bc9495fffdc001"),
+    (GODOT_ASSETS / "Frontend/Icons/multiplayer.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_multiplayer01.tga(0)A8R8G.aya", "8a7d7dba563b153b314e04daaad4ffa2d0969b65a0603de043027eaf5b4df031"),
+    (GODOT_ASSETS / "Frontend/Icons/goodies.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_goodies01.tga(0)A8R8G8B8.aya", "efa9ec1d2317e3cdf2ed9a90cc8b6cb391e6ed1099740ddaeb2c808b49f33358"),
+    (GODOT_ASSETS / "Frontend/Icons/options.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_options01.tga(0)A8R8G8B8.aya", "0824d66acec9dad5037be8bfc2b863201f94404d21795eac4fad82d8c4da2aba"),
+    (GODOT_ASSETS / "Frontend/Icons/quit.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_nav_symbol_quitgame01.tga(0)A8R8G8B8.aya", "7096f573ff30302b5d5dad8f56ebd633e51f2bd70613d5349b974dada17b7a93"),
+    (GODOT_ASSETS / "Frontend/level-bracket-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_bracket01.tga(0)A8R8G8B8.aya", "560db1621169c1b5787fc9c4691f4bede1af292674f84d4d43be11ca05166aa5"),
+    (GODOT_ASSETS / "Frontend/level-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_bracket02.tga(0)A8R8G8B8.aya", "7ad21e2a6e64f61998f7a43e92fe92d69ac013b169fd8107b648b1fa69877b27"),
+    (GODOT_ASSETS / "Frontend/level-ring-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_ring_bracket01.tga(0)A8R8G8B8.aya", "687eaf0945b701b622bdebde805e88cac394734a4b4420155379993ef9f74e1c"),
+    (GODOT_ASSETS / "Frontend/level-ring-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_ring_bracket02.tga(0)A8R8G8B8.aya", "620900d34c153e722b6d78a9fbecab2d69b8e81abcdbda084b0f90eb96142dff"),
+    (GODOT_ASSETS / "Frontend/title-font.texture.aya", "data/resources/textures/mustbe_TitleFont.tga(0)A8R8G8B8.aya", "1941e28a5665665fb7f8f733e7a4854c60def33e1d4f1cb9caa979bc204d0707"),
+    (GODOT_ASSETS / "Frontend/loading-screen.texture.aya", "data/resources/dxtntextures/LoadingScreen.tga(0)X8R8G8B8.aya", "e4ad32fee41a31477e97d4f6f0b280f33c360756e3aba27bf23746038443fc2c"),
+)
+
+
+FRONTEND_TEXT_IDS = {
+    "newGame": 0x00E39AD3,
+    "continueGame": 0x1B749178,
+    "loadGame": 0x01BE0271,
+    "multiplayer": 0x0794B06E,
+    "goodies": 0x007C113D,
+    "options": 0x008251DC,
+    "quit": 0x00141D4A,
+    "selectLevel": 0x0E89F10A,
+    "level100": 0x28672C3F,
+    "loading": 0x003848A7,
+    "victory": 0x0088B6AB,
+    "defeat": 0x003F3384,
+    "primaryObjectives": 0xCD8BC48F,
+    "complete": 0x00E848AC,
+    "incomplete": 0x03905856,
+    "retry": 0x000CADA9,
+    "level100Objective1": 0x06936EBA,
+    "level100Objective2": 0x069FF355,
+    "level100Objective3": 0x06AC77F0,
+    "level100Objective4": 0x06B8FC8B,
+    "lossTutorialBroken": 0x422E890F,
+    "lossPlayerDeath": 0x033E2E5E,
+    "lossWater": 0x036A7C43,
+}
+
+
 CHUNKS = (
     (CORE_ASSETS / "Level100/level100-heightfield.hfld.bin", b"HFLD", 668660, "7a4c7c5b9400e2c8d2325cecb5c44701cd8a6e6f8609cbc8bc31d449c0620f5d"),
 )
@@ -271,6 +332,9 @@ SOUNDS = (
     (GODOT_ASSETS / "Level100/SoundEffects/pulse-cannon-fire.wav", 35, "Battle Engine\\N_BE_pulse_cannon_fire", "710ff06db55bc694efb8ff7d3a5ab658125e7ca0fe6b4733a805da98b22b0277"),
     (GODOT_ASSETS / "Level100/SoundEffects/target-tank-explosion-medium.wav", 102, "Impact\\N_I_explosion_medium", "7228ae049cb0a9877e63671a65e51829443017b2c4981df90a9c64d2f38b6d9c"),
     (GODOT_ASSETS / "Level100/SoundEffects/pulse-impact-small.wav", 105, "Impact\\N_I_explosion_small", "3296b13938928f54847a29e17307e7875e9933f8fd6381bf0dfcd260cd6fc131"),
+    (GODOT_ASSETS / "Frontend/SoundEffects/back.wav", 41, "Front End\\N_FE_back", "133b78e813c6b393be4dba1d263f69513958b0ab827d6603f952d6e0a82ba02b"),
+    (GODOT_ASSETS / "Frontend/SoundEffects/move.wav", 42, "Front End\\N_FE_move", "76b2458e9c5854daf7237ea81b4f288ae09963bc10e7651e81e858fdb68ce83b"),
+    (GODOT_ASSETS / "Frontend/SoundEffects/select.wav", 43, "Front End\\N_FE_select", "f84144c80405fe9f745b8cf4bd352d7fa4f8c0a8ba481c770c2c7c0a9053ade1"),
 )
 
 
@@ -303,7 +367,9 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
 
 
 def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
-    direct = tuple((path, expected) for path, _, expected in DIRECT_ASSETS)
+    direct = tuple(
+        (path, expected) for path, _, expected in DIRECT_ASSETS + FRONTEND_ASSETS
+    )
     chunks = tuple((path, expected) for path, _, _, expected in CHUNKS)
     derived = (
         (ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),
@@ -312,6 +378,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             (LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin", expected)
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
+        (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
     )
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
     sounds = tuple((path, expected) for path, _, _, expected in SOUNDS)
@@ -1750,6 +1817,74 @@ def _pcm_wav(pcm: bytes) -> bytes:
     )
 
 
+def _frontend_localization_bytes(data: bytes) -> bytes:
+    if (
+        len(data) < 16
+        or struct.unpack_from("<I", data, 0)[0] != 0xFFFFFFBB
+        or struct.unpack_from("<I", data, 4)[0] != 3
+    ):
+        raise RuntimeError("unsupported English language-table framing")
+
+    count = struct.unpack_from("<I", data, 8)[0]
+    if count != 2571:
+        raise RuntimeError(f"unsupported English language-table count: {count}")
+
+    entries_offset = 12
+    text_pool_offset = entries_offset + count * 12 + 4
+    if text_pool_offset > len(data):
+        raise RuntimeError("truncated English language-table entries")
+
+    offsets: dict[int, int] = {}
+    wanted_ids = set(FRONTEND_TEXT_IDS.values())
+    for index in range(count):
+        entry_offset = entries_offset + index * 12
+        text_id, text_offset_words = struct.unpack_from("<II", data, entry_offset)
+        if text_id in wanted_ids:
+            if text_id in offsets:
+                raise RuntimeError(f"duplicate frontend text ID 0x{text_id:08X}")
+            offsets[text_id] = text_offset_words
+
+    if set(offsets) != wanted_ids:
+        missing = wanted_ids - set(offsets)
+        raise RuntimeError(
+            "English language table is missing frontend text IDs: "
+            + ", ".join(f"0x{text_id:08X}" for text_id in sorted(missing))
+        )
+
+    strings: dict[str, str] = {}
+    for key, text_id in FRONTEND_TEXT_IDS.items():
+        position = text_pool_offset + offsets[text_id] * 2
+        code_units: list[int] = []
+        for _ in range(8192):
+            if position + 2 > len(data):
+                raise RuntimeError(f"truncated frontend text ID 0x{text_id:08X}")
+            code_unit = struct.unpack_from("<H", data, position)[0]
+            position += 2
+            if code_unit == 0:
+                break
+            code_units.append(code_unit)
+        else:
+            raise RuntimeError(f"unterminated frontend text ID 0x{text_id:08X}")
+        strings[key] = struct.pack(f"<{len(code_units)}H", *code_units).decode("utf-16le")
+
+    document = {
+        "culture": "en",
+        "schema": "onslaught.frontend-strings.v1",
+        "sourceSha256": ENGLISH_LANGUAGE_TABLE_SHA256,
+        "strings": strings,
+    }
+    output = (
+        json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    actual = _sha256(output)
+    if actual != FRONTEND_LOCALIZATION_SHA256:
+        raise RuntimeError(
+            "frontend localization did not reproduce exactly "
+            f"(SHA-256 {actual})"
+        )
+    return output
+
+
 def _require_chunk(source: bytes, offset: int, tag: bytes, payload_size: int) -> int:
     if (
         offset < 0
@@ -2191,12 +2326,21 @@ def _render_terrain_hierarchy_source(raw_level: bytes, raw_base: bytes) -> bytes
 
 def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     source_data: dict[Path, bytes] = {}
-    for destination, source, expected in DIRECT_ASSETS:
+    for destination, source, expected in DIRECT_ASSETS + FRONTEND_ASSETS:
         data = _read_exact(game_root / source, expected)
         source_data[destination] = data
         target = stage / destination
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+
+    english_table = _read_exact(
+        game_root / ENGLISH_LANGUAGE_TABLE,
+        ENGLISH_LANGUAGE_TABLE_SHA256,
+    )
+    frontend_localization = _frontend_localization_bytes(english_table)
+    frontend_localization_target = stage / FRONTEND_LOCALIZATION
+    frontend_localization_target.parent.mkdir(parents=True, exist_ok=True)
+    frontend_localization_target.write_bytes(frontend_localization)
 
     level_archive = _read_exact(game_root / LEVEL_ARCHIVE, LEVEL_ARCHIVE_SHA256)
     tools_root = ROOT / "tools"

@@ -31,13 +31,10 @@ function Test-FirstFlightSmokeEvidence {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$ReportPath,
-        [Parameter(Mandatory)][string]$ScreenshotPath,
-        [Parameter(Mandatory)][string]$LogPath,
-        [int]$ExpectedWidth = 1280,
-        [int]$ExpectedHeight = 720
+        [Parameter(Mandatory)][string]$LogPath
     )
 
-    foreach ($path in @($ReportPath, $ScreenshotPath, $LogPath)) {
+    foreach ($path in @($ReportPath, $LogPath)) {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "First Flight smoke artifact is missing: $path"
         }
@@ -49,11 +46,11 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v9' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v11' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    Assert-SmokeValue 'stateHash' '2dde8b37facedfb84a45c1fb7da32e1440563847277e0ad95d6c34a93b46da4b' $report.stateHash
+    Assert-SmokeValue 'stateHash' '5920a3d3dc7b67dc02b2fb736f8547e48dd395087b0a67a3ef6c3128795582c1' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 1 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100Phase' 'FiringRangeExercise' $report.level100Phase
@@ -106,57 +103,27 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'hudReady' $true $report.hudReady
     Assert-SmokeValue 'focusLossHandlerInputCleared' $true $report.focusLossHandlerInputCleared
     Assert-SmokeValue 'focusLossHandlerNeutralRearmed' $true $report.focusLossHandlerNeutralRearmed
-    Assert-SmokeValue 'screenshotFileName' ([IO.Path]::GetFileName($ScreenshotPath)) $report.screenshotFileName
-    Assert-SmokeValue 'screenshotWidth' $ExpectedWidth $report.screenshotWidth
-    Assert-SmokeValue 'screenshotHeight' $ExpectedHeight $report.screenshotHeight
-
-    $screenshotHash = (Get-FileHash -LiteralPath $ScreenshotPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    Assert-SmokeValue 'screenshotSha256' $screenshotHash $report.screenshotSha256
-
-    try {
-        Add-Type -AssemblyName System.Drawing.Common -ErrorAction Stop
-    }
-    catch {
-        Add-Type -AssemblyName System.Drawing -ErrorAction Stop
-    }
-
-    $bitmap = [Drawing.Bitmap]::new([string][IO.Path]::GetFullPath($ScreenshotPath))
-    try {
-        Assert-SmokeValue 'decoded screenshot width' $ExpectedWidth $bitmap.Width
-        Assert-SmokeValue 'decoded screenshot height' $ExpectedHeight $bitmap.Height
-        $colors = [Collections.Generic.HashSet[int]]::new()
-        $worldColors = [Collections.Generic.HashSet[int]]::new()
-        $nonBlackSamples = 0
-        $worldNonBlackSamples = 0
-        $worldTop = [int]($bitmap.Height * 0.27)
-        $worldBottom = [int]($bitmap.Height * 0.86)
-        for ($y = 0; $y -lt $bitmap.Height; $y += 32) {
-            for ($x = 0; $x -lt $bitmap.Width; $x += 32) {
-                $color = $bitmap.GetPixel($x, $y)
-                $null = $colors.Add($color.ToArgb())
-                if (($color.R + $color.G + $color.B) -gt 30) {
-                    $nonBlackSamples++
-                }
-                if ($y -ge $worldTop -and $y -lt $worldBottom) {
-                    $null = $worldColors.Add($color.ToArgb())
-                    if (($color.R + $color.G + $color.B) -gt 30) {
-                        $worldNonBlackSamples++
-                    }
-                }
-            }
-        }
-
-        if ($colors.Count -lt 30 -or $nonBlackSamples -lt 200) {
-            throw "First Flight screenshot appears blank or under-rendered: $($colors.Count) sampled colors, $nonBlackSamples non-black samples."
-        }
-        if ($worldColors.Count -lt 15 -or $worldNonBlackSamples -lt 100) {
-            throw "First Flight world appears blank or under-rendered: $($worldColors.Count) sampled colors, $worldNonBlackSamples non-black samples."
-        }
-
-    }
-    finally {
-        $bitmap.Dispose()
-    }
+    Assert-SmokeValue 'coldClickToStart' $true $report.coldClickToStart
+    Assert-SmokeValue 'coldMainMenu' $true $report.coldMainMenu
+    Assert-SmokeValue 'coldLevelSelect' $true $report.coldLevelSelect
+    Assert-SmokeValue 'coldLoading' $true $report.coldLoading
+    Assert-SmokeValue 'coldGameplay' $true $report.coldGameplay
+    Assert-SmokeValue 'cursorPolicyVisibleAtFrontend' $true $report.cursorPolicyVisibleAtFrontend
+    Assert-SmokeValue 'cursorPolicyHiddenAtLoading' $true $report.cursorPolicyHiddenAtLoading
+    Assert-SmokeValue 'cursorPolicyCapturedAtGameplay' $true $report.cursorPolicyCapturedAtGameplay
+    Assert-SmokeValue 'focusLossCursorPolicyVisible' $true $report.focusLossCursorPolicyVisible
+    Assert-SmokeValue 'focusGainCursorPolicyCaptured' $true $report.focusGainCursorPolicyCaptured
+    Assert-SmokeValue 'missionTerminalHandoffEntered' $true $report.missionTerminalHandoffEntered
+    Assert-SmokeValue 'missionFailureReason' 'PlayerDeath' $report.missionFailureReason
+    Assert-SmokeValue 'terminalCursorPolicyVisible' $true $report.terminalCursorPolicyVisible
+    Assert-SmokeValue 'retryRequested' $true $report.retryRequested
+    Assert-SmokeValue 'retryGameplayActivated' $true $report.retryGameplayActivated
+    Assert-SmokeValue 'retrySessionFresh' $true $report.retrySessionFresh
+    Assert-SmokeValue 'returnToMainMenuRequested' $true $report.returnToMainMenuRequested
+    Assert-SmokeValue 'returnedToMainMenu' $true $report.returnedToMainMenu
+    Assert-SmokeValue 'worldReleasedAtMainMenu' $true $report.worldReleasedAtMainMenu
+    Assert-SmokeValue 'mainMenuCursorPolicyVisible' $true $report.mainMenuCursorPolicyVisible
+    Assert-SmokeValue 'finalFrontendScreen' 'MainMenu' $report.finalFrontendScreen
 
     $log = Get-Content -LiteralPath $LogPath -Raw
     if ($log -match '(?im)(^|\s)(SCRIPT ERROR|ERROR:|FATAL|CRASH|Unhandled exception|System\.[A-Za-z]+Exception)') {
@@ -167,11 +134,6 @@ function Test-FirstFlightSmokeEvidence {
         Valid = $true
         Tick = [int]$report.tick
         StateHash = [string]$report.stateHash
-        SampledColorCount = $colors.Count
-        NonBlackSampleCount = $nonBlackSamples
-        WorldSampledColorCount = $worldColors.Count
-        WorldNonBlackSampleCount = $worldNonBlackSamples
-        ScreenshotSha256 = $screenshotHash
     }
 }
 

@@ -3,26 +3,33 @@
 Status: early GPL reconstruction lane
 
 This subtree is the replacement-engine effort for *Battle Engine Aquila*. It is
-source- and RE-informed, not clean-room. The immediate target is a recognizable
-Aquila handling slice followed by the opening portion of Level 100—not a larger
-synthetic arena or another layer of readiness tooling.
+source- and RE-informed, not clean-room. The immediate target is a bounded
+released-style startup/menu path into a recognizable Aquila handling slice and
+the opening portion of Level 100—not a larger synthetic arena or another layer
+of readiness tooling.
 
 ## Ownership
 
 - `OnslaughtRebuild.Core` owns deterministic simulation state and fixed 30 Hz
   stepping. It has no presentation, filesystem, clock, process, network, or GPU
   dependency.
-- `OnslaughtRebuild.Client` adapts real-time input to exact Core steps.
+- `OnslaughtRebuild.Client` adapts real-time input to exact Core steps and owns
+  the presentation-only frontend lifecycle state.
 - `OnslaughtRebuild.Headless` replays command tapes and verifies versioned final
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The current Godot app is the **Level 100 Opening Slice**. It renders the
-locally materialized released Federation Aquila; all 33 visible static objects
+The current Godot app is the **Level 100 Opening Slice**. Normal startup follows
+the released click-to-start page, v3 main-menu language, a Level 100-only level
+selector, and the released loading-screen language before constructing the
+existing gameplay world. The startup movie is deliberately omitted, matching
+the retail `-skipfmv` path's arrival at click-to-start. It renders the locally
+materialized released Federation Aquila; all 33 visible static objects
 serialized by Level 100; exact close meshes for the 1,481 pine placements
 instantiated by the Steam world loader; the released active-path water grid and
 authored shoreline; three training tanks; and the target Warehouse at their
-authored positions over the exact Level 100 heightfield lattice. Core owns the released player start heading, exact
+authored positions over the exact Level 100 heightfield lattice. Core owns the
+released player start heading, exact
 Level 100 player-ground sampling, and the machine-observed objective and player
 gates through the first Firing Range exercise. The walker is loaded directly
 from its exact released AYA as a 63-part
@@ -72,7 +79,8 @@ truck exercise, Vulcan firing, and most mission behavior remain provisional.
 Retail asset payloads and converted copies are not repository source. The
 bounded materializer verifies a supported user-provided installation and writes
 the exact current slice to ignored paths. Expected source hashes and limitations
-live with the [`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md) and
+live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
+[`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md), and
 [`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) recipes.
 
 ## Run
@@ -84,7 +92,7 @@ npm run run:rebuild-godot
 ```
 
 The command first detects a lawfully obtained retail installation and
-materializes 149 exact source/runtime files to ignored paths. For a custom
+materializes the exact current source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
 run also downloads the pinned official Godot 4.7 .NET Windows archive to a
@@ -100,13 +108,31 @@ Controls:
 
 | Input | Action |
 | --- | --- |
+| Mouse, `Up`, `Down` | Navigate the frontend |
+| Click, `Space`, `Enter` | Leave click-to-start or select the highlighted frontend item |
+| `Esc` | Return from frontend level selection; gameplay `Esc` is reserved for the pause owner |
 | `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
 | Mouse or trackpad | Turn the body and aim the attached first-person view |
 | `Space` | Fire the Pulse Cannon after the Firing Range enables it |
 | `R` | Reset the slice |
-| `Esc` | Exit |
 
 ## Current truth
+
+The frontend consumes the authoritative `WorldSnapshot.Level100Mission`
+terminal state directly. It accepts mission-owned success only at
+`FrontEndHandoffReady` and mission-owned failures at `FailureMenuReady` or
+`FailureCountdownElapsed`; it defines no parallel result or failure-reason
+vocabulary. It does not render the in-game terminal overlay or claim the later
+debrief layout—the mission/HUD presentation owner supplies that overlay and
+its exact `Level100MissionFailureReason`. `RestartLevel100` replaces the one
+deterministic Level 100 session through the existing Loading edge;
+`LeaveLevel100ForMainMenu` disposes it and returns to the same frontend shell.
+A pause owner calls those methods while the frontend lifecycle remains in
+Gameplay, and gameplay `Esc` raises `GameplayPauseRequested` for that owner; it
+does not quit or create a second world/session owner. The current opening slice
+does not synthesize terminal events, rank, kill summary, unlock, save, or
+campaign progression. `FrontendAudioCueRequested` exposes Move, Select, and
+Back cue identities without loading or playing the materialized WAVs.
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.
@@ -249,10 +275,13 @@ fails if identical inputs diverge. It reports versioned state and trace hashes;
 callers may supply `--expect <trace-hash>` when they own an external expected
 result. Files are limited to 8 MiB and one invocation to 100,000 total steps.
 
-The native smoke builds with the pinned engine, starts the real Godot window,
-runs a bounded scripted input sequence, checks the final deterministic state,
-captures a disposable frame for gross render inspection, and exits its owned
-process. It is startup/render evidence, not retail comparison.
+The native smoke builds with the pinned engine, enters through cold
+click-to-start → Main Menu → level select → Loading → gameplay, runs the bounded
+scripted input sequence, and checks the final deterministic state. It then
+checks focus/cursor policy, the mission terminal handoff, a fresh retry, and
+return to the same Main Menu with the Level 100 world released. It writes
+structured report and log evidence only; it has no screenshot or visual-parity
+machinery.
 
 Read [PROVENANCE.md](PROVENANCE.md) before implementation work. Retail behavior
 claims must point to the smallest relevant binary/source/runtime evidence; Core

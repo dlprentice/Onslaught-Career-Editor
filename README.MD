@@ -14,7 +14,10 @@ game, its assets, names, or trademarks.
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
-currently renders the released Aquila walker/jet, first-person walker cockpit,
+now enters through a bounded released-style click-to-start, main menu, Level 100
+selector, and loading shell with a later terminal handoff. HUD owns the terminal
+overlay, while the deterministic mission owns its outcome and failure reason.
+It currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by
 Level 100, 1,481 released pine placements, water, the complete height lattice,
 the released macro/detail terrain blend, and sky at their bounded reconstruction state; it

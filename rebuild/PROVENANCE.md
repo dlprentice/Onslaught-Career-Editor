@@ -41,6 +41,45 @@ not provenance.
 
 ## Current slice
 
+The normal Godot entry path now belongs to a presentation-only frontend state
+machine outside Core. It begins at click-to-start, then exposes the released
+main-menu entries, a world-100-only level selector, the released loading image,
+and one lifecycle seam that constructs, replaces, or disposes the existing
+Level 100 session/world. The
+startup FMV is absent: Steam's `-skipfmv` flag at
+`CLIParams__ParseCommandLine` (`0x00423BC0`) skips that movie but still reaches
+the click page. That page's Steam handlers at `0x0051B660`/`0x0051B6B0` accept
+action `0x2C` and full-window mouse input; its render entry at `0x0051B840`
+requests localized string index `0x77` (`Click to start`). Main-menu evidence is
+the vtable at `0x005DBAE4`, input/action/render entries
+`0x00462250`/`0x004623E0`/`0x00462D40`, and Stuart's `FrontEnd.cpp` and
+`PCFrontend.cpp`. Level select uses Steam input/render entries
+`0x004606B0`/`0x00460B40`; only released world 100 is exposed. The loading page
+uses the exact image and `Loading...` text established by
+`CConsole__RenderLoadingScreen` (`0x0042C810`). Twenty-one exact AYA textures,
+three exact XAP PCM decodes, and twenty-three English strings decoded from the
+supported shipped table are materialized to ignored frontend paths. This lane
+emits move/select/back cue identities; it does not load or play those WAVs, so
+the integrating audio owner remains singular.
+
+Result ownership is deliberately split at the evidence boundary. Stuart's
+`CGame::DeclareLevelWon`, `CGame::DeclareLevelLost`, and end-level render path
+establish an in-game terminal overlay; Steam's later CFEPDebriefing vtable at
+`0x005DB9C0` resolves to initializer `0x00456780`, input `0x004568A0`, process
+`0x00456930`, and render `0x00456DD0`. This frontend implements neither visual
+surface. The mission/HUD lane owns the terminal overlay, including its
+FONT_NORMAL/FONT_SMALL text. The frontend consumes the mission-owned
+`Level100MissionSnapshot` only when its exact `Level100MissionTerminalState` is
+ready, then retains only a terminal lifecycle handoff plus explicit retry and
+Main Menu transitions. Shipped Level 100 script provides
+`LevelLostString(LOSE_TUTORIAL_BROKE)`; Stuart's game system also identifies
+generic player-death and water failures. Their three exact English strings are
+materialized. The deterministic mission owns `Level100MissionOutcome` and
+`Level100MissionFailureReason`; the frontend copies neither into a second
+vocabulary and owns no localized terminal state. No result buttons, selected
+default, summary compositor, rank/kill data, progression, save, or later
+campaign selection is claimed here.
+
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
 Federation walker, jet, and cockpit as exact 63-, 54-, and 21-part AYA
@@ -481,12 +520,16 @@ triangles; decodes the exact locally materialized mesh, nine
 Pulse/target-effect, twenty-nine HUD, five sky, and five water textures;
 validates five PCM sound envelopes; and consumes the
 retained heightfield, macro/detail/cloud-shadow terrain inputs, and Core-owned
-ground elevation. Its deterministic
-route reaches the first Firing Range exercise, renders the exact target models
+ground elevation. Its deterministic route enters through the cold click page,
+Main Menu, world-100 selection, and Loading before it reaches the first Firing
+Range exercise, renders the exact target models
 and shipped objective markers, plays the fourteenth voice, removes Target Tank
 1 after four bounded full hits with retained shot/impact/destruction
-presentation, preserves the expected Core hash, and exits at
-both supported viewports. It does not prove disabled or unreferenced material modes,
+presentation, preserves the expected Core hash, exercises focus/cursor release,
+the mission terminal handoff, fresh retry, and return to the same Main Menu,
+then exits.
+The smoke produces no screenshot and proves no viewport or pixel parity. It
+does not prove disabled or unreferenced material modes,
 procedural leg solving, collision beyond the two observed facilities,
 the separately proven Warehouse completion/Vulcan handoff, mesh-part damage,
 secondary effects, complete environment
