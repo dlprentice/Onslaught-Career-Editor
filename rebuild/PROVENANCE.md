@@ -439,7 +439,9 @@ Bink portrait asset.
 The canonical mission snapshot supplies enabled weapon gates and HUD emphasis;
 its ordered events supply message and help delivery. The canonical actor
 registry supplies active objective identities and full three-dimensional poses.
-The Godot projection retains those values for rendering and leaves selected
+The Godot projection preserves emitted collection order and retains typed
+actor IDs plus full three-dimensional objective positions until the renderer's
+final horizontal projection. It leaves selected
 weapon, selection-panel state, weapon resources, classified contacts, threats,
 damage flashes, target prediction, active-help lifetime, and influence values
 absent until their mechanics owners exist. The HUD does not draw a parallel

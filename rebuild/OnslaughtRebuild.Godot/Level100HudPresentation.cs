@@ -35,13 +35,6 @@ public enum Level100HudWeaponSelectionSlot
     Top = 3,
 }
 
-public enum Level100HudObjectiveState
-{
-    Active = 0,
-    Completed = 1,
-    Failed = 2,
-}
-
 public enum Level100HudHelpPrompt
 {
     // Exact signed text IDs from the released text.stf/native CText table.
@@ -119,10 +112,9 @@ public sealed record Level100HudTargetSnapshot(
     int LockPermille);
 
 public sealed record Level100HudObjectiveSnapshot(
+    Level100ActorId ActorId,
     string ThingName,
-    int? ContactId,
-    SimVector2? Position,
-    Level100HudObjectiveState State);
+    SimVector3 PositionMillimeters);
 
 public sealed record Level100HudMessageDeliverySnapshot(
     int Tick,
@@ -130,10 +122,6 @@ public sealed record Level100HudMessageDeliverySnapshot(
     int MessageId,
     bool ScriptWaitsForDuration,
     int ExpectedPlaybackTicks);
-
-public sealed record Level100HudActiveMessageSnapshot(
-    Level100HudMessageDeliverySnapshot Delivery,
-    int TicksRemaining);
 
 public sealed record Level100HudBattleLineSnapshot(
     bool HasInfluenceValues,
@@ -151,7 +139,7 @@ public sealed record Level100HudSnapshot(
     IReadOnlyList<Level100HudThreatSnapshot> Threats,
     IReadOnlyList<Level100HudDamageFlashSnapshot> DamageFlashes,
     Level100HudTargetSnapshot? Target,
-    Level100HudActiveMessageSnapshot? ActiveMessage,
+    Level100HudMessageDeliverySnapshot? ActiveMessage,
     IReadOnlyList<Level100HudPart> EmphasizedParts,
     IReadOnlyList<Level100HudMessageDeliverySnapshot> DeliveredMessages,
     IReadOnlyList<Level100HudHelpPrompt> ActiveHelp,
@@ -252,10 +240,7 @@ public sealed class Level100HudPresentationState
                         throw new InvalidDataException(
                             $"Released Level 100 help ID {help.HelpMessageId} is unsupported.");
                     }
-                    if (!_deliveredHelp.Contains(prompt))
-                    {
-                        _deliveredHelp.Add(prompt);
-                    }
+                    _deliveredHelp.Add(prompt);
                     break;
                 }
             }
@@ -273,32 +258,22 @@ public sealed class Level100HudPresentationState
                 actor.Active &&
                 actor.IsObjective &&
                 actor.Lifecycle != Level100ActorLifecycle.Destroyed)
-            .OrderBy(actor => actor.ActorId.Value)
             .ToArray();
         Level100HudObjectiveSnapshot[] objectives = objectiveActors
             .Select(actor => new Level100HudObjectiveSnapshot(
+                actor.ActorId,
                 actor.Name,
-                actor.ActorId.Value,
-                new SimVector2(
-                    actor.Pose.PositionMillimeters.X,
-                    actor.Pose.PositionMillimeters.Z),
-                Level100HudObjectiveState.Active))
+                actor.Pose.PositionMillimeters))
             .ToArray();
 
         Level100HudMessageDeliverySnapshot? activeDelivery =
+            playback.ActiveSpeakerId is int activeSpeakerId &&
             playback.ActiveMessageId is int activeMessageId
                 ? _deliveredMessages.LastOrDefault(
-                    delivery => delivery.MessageId == activeMessageId)
+                    delivery =>
+                        (int)delivery.Speaker == activeSpeakerId &&
+                        delivery.MessageId == activeMessageId)
                 : null;
-        Level100HudActiveMessageSnapshot? activeMessage = activeDelivery is null
-            ? null
-            : new Level100HudActiveMessageSnapshot(
-                activeDelivery,
-                Math.Max(
-                    0,
-                    (int)Math.Ceiling(
-                        (playback.LengthSeconds - playback.PositionSeconds) * 30d)));
-
         Level100MissionSnapshot mission = snapshot.Level100Mission;
         bool pulseEnabled =
             mission.PulseCannonAvailability == Level100MissionWeaponAvailability.Enabled;
@@ -327,7 +302,7 @@ public sealed class Level100HudPresentationState
             Array.AsReadOnly(Array.Empty<Level100HudThreatSnapshot>()),
             Array.AsReadOnly(Array.Empty<Level100HudDamageFlashSnapshot>()),
             Target: null,
-            activeMessage,
+            activeDelivery,
             Array.AsReadOnly(emphasizedParts),
             Array.AsReadOnly(_deliveredMessages.ToArray()),
             Array.AsReadOnly(Array.Empty<Level100HudHelpPrompt>()),

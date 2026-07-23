@@ -131,7 +131,10 @@ owner; the HUD does not draw its own result screen.
 
 The current projection consumes mission-owned enabled weapon gates, HUD
 emphasis, ordered message/help events, and active objective actors from the
-canonical registry. It deliberately leaves selected weapon, selection UI,
+canonical registry. It retains each objective's typed `ActorId` and full
+three-dimensional registry position until the renderer performs its final
+horizontal HUD projection, and repeated help deliveries remain in emitted
+order. It deliberately leaves selected weapon, selection UI,
 weapon resources, non-objective contacts, threats, damage flashes,
 target/prediction, active-help lifetime, and battleline influence unavailable
 until their mechanics owners exist. Energy, shield, and hull continue to come

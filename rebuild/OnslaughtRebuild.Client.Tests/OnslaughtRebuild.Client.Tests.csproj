@@ -29,6 +29,10 @@
              Link="TestSupport\Level100TestActorDefinitions.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100AudioCatalog.cs"
              Link="godot-audio-source\Level100AudioCatalog.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\Level100HudPresentation.cs"
+             Link="godot-hud-source\Level100HudPresentation.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\Level100MessagePlaybackState.cs"
+             Link="godot-hud-source\Level100MessagePlaybackState.cs" />
   </ItemGroup>
 
   <ItemGroup>

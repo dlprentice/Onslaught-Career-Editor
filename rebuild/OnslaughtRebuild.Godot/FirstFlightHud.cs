@@ -66,7 +66,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
     {
         Level100HudSnapshot hud = _presentation.Project(snapshot, playback);
         Level100HudMessageDeliverySnapshot? activeDelivery =
-            hud.ActiveMessage?.Delivery;
+            hud.ActiveMessage;
         Level100HudMessageDefinition? message =
             activeDelivery is null ? null : _catalog.GetRequired(activeDelivery.MessageId);
         Level100MessagePlaybackSnapshot activePlayback =
@@ -375,6 +375,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return NormalizeAngle((snapshot.FacingYawMicroRad / 1_000_000f) - desiredYaw);
     }
 
+    private static SimVector2 HorizontalPosition(SimVector3 position) =>
+        new(position.X, position.Z);
+
     private static float NormalizeAngle(float angle)
     {
         while (angle > Mathf.Pi)
@@ -459,10 +462,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             assets.Portraits.Length == 3 &&
             assets.Portraits.All(PortraitSetIsReady);
 
-        public int ObjectiveMarkerCount =>
-            _hud?.Objectives.Count(
-                objective => objective.State == Level100HudObjectiveState.Active &&
-                    objective.Position.HasValue) ?? 0;
+        public int ObjectiveMarkerCount => _hud?.Objectives.Count ?? 0;
 
         public bool BattleLineInfluenceAvailable =>
             _hud?.BattleLine is Level100HudBattleLineSnapshot battleLine &&
@@ -696,13 +696,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives
-                         .Where(objective => objective.State == Level100HudObjectiveState.Active &&
-                             objective.Position.HasValue))
+            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
             {
                 DrawWorldMarker(
                     snapshot,
-                    objective.Position!.Value,
+                    HorizontalPosition(objective.PositionMillimeters),
                     new Color(1f, 0.92f, 0.08f, 1f));
             }
         }
@@ -1006,11 +1004,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawGaugeNeedle(center, Mathf.DegToRad(225f + (energy * 135f)));
             DrawGaugeNeedle(center, Mathf.DegToRad(225f));
 
-            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives
-                         .Where(objective => objective.State == Level100HudObjectiveState.Active &&
-                             objective.Position.HasValue))
+            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
             {
-                float relativeYaw = RelativeYaw(snapshot, objective.Position!.Value);
+                float relativeYaw = RelativeYaw(
+                    snapshot,
+                    HorizontalPosition(objective.PositionMillimeters));
                 Vector2 position = center + new Vector2(
                     Mathf.Sin(relativeYaw) * CompassObjectiveRadius,
                     -Mathf.Cos(relativeYaw) * CompassObjectiveRadius);

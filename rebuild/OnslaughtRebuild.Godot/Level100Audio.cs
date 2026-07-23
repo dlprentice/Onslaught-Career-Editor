@@ -6,14 +6,6 @@ using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
-public readonly record struct Level100MessagePlaybackState(
-    int? ActiveSpeakerId,
-    int? ActiveMessageId,
-    double PositionSeconds,
-    double LengthSeconds,
-    bool Playing,
-    bool Paused);
-
 // This is deliberately the Level 100 path adapter, not a reusable audio engine.
 // Mission, frontend, flight, actor, destruction, HUD, and pause lanes decide
 // their events and state. This node owns only exact stream selection, released
