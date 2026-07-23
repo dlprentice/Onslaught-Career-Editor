@@ -14,9 +14,9 @@ namespace OnslaughtRebuild.Client;
 public static class Level100ActorDefinitionManifest
 {
     public const string ExpectedManifestSha256 =
-        "54218263E799E9AF77247AC570FBD27178331EA1C0C266017DA35EE8D16A5498";
+        "40ABD1E6DE57B3AB2BF7E61172BE1059BB43845DEDF1E586999687D20AD4B9C1";
 
-    private const string ExpectedSchema = "onslaught.level100-static-world.v10";
+    private const string ExpectedSchema = "onslaught.level100-static-world.v11";
     private const string ExpectedSourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const int MaximumManifestBytes = 512_000;
@@ -44,6 +44,7 @@ public static class Level100ActorDefinitionManifest
             manifest.VisibleObjectCount != 33 ||
             manifest.ActorDefinitions.Length != 44 ||
             manifest.SpawnDefinitions.Length != 10 ||
+            manifest.WaypointPaths.Length != 8 ||
             manifest.ActorDefinitions.Count(definition =>
                 definition.DefinitionIdentity.StartsWith("wres:bswd:", StringComparison.Ordinal)) != 33)
         {
@@ -97,7 +98,36 @@ public static class Level100ActorDefinitionManifest
                 source.MaximumGroupActors);
         }
 
-        return new Level100ActorDefinitionSet(actors, spawns);
+        var waypointPaths =
+            new Level100WaypointPathDefinition[manifest.WaypointPaths.Length];
+        for (int pathIndex = 0; pathIndex < waypointPaths.Length; pathIndex++)
+        {
+            WaypointPath source = manifest.WaypointPaths[pathIndex];
+            var points = new Level100WaypointPointDefinition[source.Points.Length];
+            for (int pointIndex = 0; pointIndex < points.Length; pointIndex++)
+            {
+                WaypointPoint point = source.Points[pointIndex];
+                if (point.HorizontalPositionMillimeters.Length != 2 ||
+                    point.RetailComponentsFloatBits.Length != 4)
+                {
+                    throw new InvalidDataException(
+                        "A Level 100 waypoint point changed shape.");
+                }
+                points[pointIndex] = new Level100WaypointPointDefinition(
+                    point.NodeIndex,
+                    new SimVector2(
+                        point.HorizontalPositionMillimeters[0],
+                        point.HorizontalPositionMillimeters[1]),
+                    new Level100FloatVector4Bits(
+                        point.RetailComponentsFloatBits[0],
+                        point.RetailComponentsFloatBits[1],
+                        point.RetailComponentsFloatBits[2],
+                        point.RetailComponentsFloatBits[3]));
+            }
+            waypointPaths[pathIndex] = new Level100WaypointPathDefinition(source.Name, points);
+        }
+
+        return new Level100ActorDefinitionSet(actors, spawns, waypointPaths);
     }
 
     private static Level100ActorPoseSnapshot DecodePose(Pose source)
@@ -194,6 +224,7 @@ public static class Level100ActorDefinitionManifest
         public int VisibleObjectCount { get; init; }
         public ActorDefinition[] ActorDefinitions { get; init; } = [];
         public SpawnDefinition[] SpawnDefinitions { get; init; } = [];
+        public WaypointPath[] WaypointPaths { get; init; } = [];
     }
 
     private sealed record ActorDefinition
@@ -232,6 +263,19 @@ public static class Level100ActorDefinitionManifest
         public string SpawnerName { get; init; } = string.Empty;
         public string TargetGroup { get; init; } = string.Empty;
         public uint ThingTypeMask { get; init; }
+    }
+
+    private sealed record WaypointPath
+    {
+        public string Name { get; init; } = string.Empty;
+        public WaypointPoint[] Points { get; init; } = [];
+    }
+
+    private sealed record WaypointPoint
+    {
+        public int[] HorizontalPositionMillimeters { get; init; } = [];
+        public int NodeIndex { get; init; }
+        public int[] RetailComponentsFloatBits { get; init; } = [];
     }
 
     private sealed record Pose

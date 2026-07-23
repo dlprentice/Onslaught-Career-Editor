@@ -29,6 +29,8 @@ public readonly record struct SimVector3(int X, int Y, int Z)
 /// </summary>
 public readonly record struct Level100FloatVector3Bits(int X, int Y, int Z);
 
+public readonly record struct Level100FloatVector4Bits(int X, int Y, int Z, int W);
+
 public readonly record struct Level100FloatBasis3Bits(
     int Row0X,
     int Row0Y,
@@ -89,6 +91,15 @@ public sealed record Level100SpawnDefinition(
     int FixedTargetOrdinal,
     int MaximumGroupActors);
 
+public sealed record Level100WaypointPointDefinition(
+    int NodeIndex,
+    SimVector2 HorizontalPositionMillimeters,
+    Level100FloatVector4Bits RetailComponentsFloatBits);
+
+public sealed record Level100WaypointPathDefinition(
+    string Name,
+    IReadOnlyList<Level100WaypointPointDefinition> Points);
+
 /// <summary>
 /// Immutable, scenario-supplied Level 100 actor definitions. The product
 /// adapter decodes these from the locally materialized released WRES/static
@@ -101,19 +112,24 @@ public sealed class Level100ActorDefinitionSet
 
     private readonly IReadOnlyList<Level100ActorDefinition> _actors;
     private readonly IReadOnlyList<Level100SpawnDefinition> _spawns;
+    private readonly IReadOnlyList<Level100WaypointPathDefinition> _waypointPaths;
     private readonly Dictionary<string, Level100ActorDefinition> _actorsByIdentity;
     private readonly Dictionary<string, Level100SpawnDefinition> _spawnsByIdentity;
     private readonly Dictionary<SpawnKey, Level100SpawnDefinition> _spawnsByRequest;
+    private readonly Dictionary<string, Level100WaypointPathDefinition> _waypointPathsByName;
 
     public Level100ActorDefinitionSet(
         IEnumerable<Level100ActorDefinition> actors,
-        IEnumerable<Level100SpawnDefinition> spawns)
+        IEnumerable<Level100SpawnDefinition> spawns,
+        IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
 
         Level100ActorDefinition[] actorArray = actors.ToArray();
         Level100SpawnDefinition[] spawnArray = spawns.ToArray();
+        Level100WaypointPathDefinition[] waypointPathArray =
+            waypointPaths?.ToArray() ?? [];
         if (actorArray.Length == 0)
         {
             throw new ArgumentException("Level 100 requires at least one actor definition.", nameof(actors));
@@ -163,14 +179,54 @@ public sealed class Level100ActorDefinitionSet
 
         _actors = Array.AsReadOnly(actorArray);
         _spawns = Array.AsReadOnly(spawnArray);
-        IdentitySha256 = ComputeIdentity(actorArray, spawnArray);
+        _waypointPathsByName = new Dictionary<string, Level100WaypointPathDefinition>(
+            StringComparer.Ordinal);
+        for (int pathIndex = 0; pathIndex < waypointPathArray.Length; pathIndex++)
+        {
+            Level100WaypointPathDefinition path = waypointPathArray[pathIndex] ??
+                throw new ArgumentException(
+                    "Level 100 waypoint paths cannot contain null.",
+                    nameof(waypointPaths));
+            if (string.IsNullOrWhiteSpace(path.Name) ||
+                path.Points is null ||
+                path.Points.Count == 0)
+            {
+                throw new ArgumentException(
+                    $"Invalid Level 100 waypoint path at authored order {pathIndex}.",
+                    nameof(waypointPaths));
+            }
+
+            Level100WaypointPointDefinition[] points = path.Points.ToArray();
+            if (points.Any(point => point.NodeIndex < 0) ||
+                !_waypointPathsByName.TryAdd(
+                    path.Name,
+                    new Level100WaypointPathDefinition(path.Name, Array.AsReadOnly(points))))
+            {
+                throw new ArgumentException(
+                    $"Invalid or duplicate Level 100 waypoint path '{path.Name}'.",
+                    nameof(waypointPaths));
+            }
+        }
+
+        _waypointPaths = Array.AsReadOnly(
+            waypointPathArray
+                .Select(path => _waypointPathsByName[path.Name])
+                .ToArray());
+        IdentitySha256 = ComputeIdentity(actorArray, spawnArray, _waypointPaths);
     }
 
     public IReadOnlyList<Level100ActorDefinition> Actors => _actors;
 
     public IReadOnlyList<Level100SpawnDefinition> Spawns => _spawns;
 
+    public IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths => _waypointPaths;
+
     public string IdentitySha256 { get; }
+
+    public Level100WaypointPathDefinition GetWaypointPath(string name) =>
+        _waypointPathsByName.TryGetValue(name, out Level100WaypointPathDefinition? path)
+            ? path
+            : throw new KeyNotFoundException($"Level 100 waypoint path '{name}' does not exist.");
 
     internal Level100ActorDefinition GetActorDefinition(string identity) =>
         _actorsByIdentity.TryGetValue(identity, out Level100ActorDefinition? definition)
@@ -292,13 +348,14 @@ public sealed class Level100ActorDefinitionSet
 
     private static string ComputeIdentity(
         IReadOnlyList<Level100ActorDefinition> actors,
-        IReadOnlyList<Level100SpawnDefinition> spawns)
+        IReadOnlyList<Level100SpawnDefinition> spawns,
+        IReadOnlyList<Level100WaypointPathDefinition> waypointPaths)
     {
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_identityMagic);
-            writer.Write(2);
+            writer.Write(3);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -344,6 +401,23 @@ public sealed class Level100ActorDefinitionSet
                 writer.Write((int)spawn.TargetGroup);
                 writer.Write(spawn.FixedTargetOrdinal);
                 writer.Write(spawn.MaximumGroupActors);
+            }
+
+            writer.Write(waypointPaths.Count);
+            foreach (Level100WaypointPathDefinition path in waypointPaths)
+            {
+                writer.Write(path.Name);
+                writer.Write(path.Points.Count);
+                foreach (Level100WaypointPointDefinition point in path.Points)
+                {
+                    writer.Write(point.NodeIndex);
+                    writer.Write(point.HorizontalPositionMillimeters.X);
+                    writer.Write(point.HorizontalPositionMillimeters.Z);
+                    writer.Write(point.RetailComponentsFloatBits.X);
+                    writer.Write(point.RetailComponentsFloatBits.Y);
+                    writer.Write(point.RetailComponentsFloatBits.Z);
+                    writer.Write(point.RetailComponentsFloatBits.W);
+                }
             }
         }
 

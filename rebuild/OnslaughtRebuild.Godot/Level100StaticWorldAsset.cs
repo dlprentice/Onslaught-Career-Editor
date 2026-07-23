@@ -752,7 +752,7 @@ internal sealed partial class Level100StaticWorldAsset
 
     private static void ValidateManifest(Manifest manifest, Level100HeightFieldAsset terrain)
     {
-        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v10") ||
+        if (!StringComparer.Ordinal.Equals(manifest.Schema, "onslaught.level100-static-world.v11") ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 manifest.SourceArchiveSha256,
                 SourceArchiveSha256) ||

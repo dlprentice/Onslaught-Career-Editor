@@ -116,7 +116,7 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
-STATIC_WORLD_MANIFEST_SHA256 = "54218263e799e9af77247ac570fbd27178331ea1c0c266017da35ee8d16a5498"
+STATIC_WORLD_MANIFEST_SHA256 = "40abd1e6de57b3ab2bf7e61172be1059bb43845dedf1e586999687d20ad4b9c1"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -754,7 +754,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v10"
+        manifest.get("schema") != "onslaught.level100-static-world.v11"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
         or manifest.get("unitRecordCount") != 35
@@ -764,6 +764,19 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         or len(manifest.get("objects", ())) != 33
         or len(manifest.get("actorDefinitions", ())) != 44
         or len(manifest.get("spawnDefinitions", ())) != 10
+        or [
+            path.get("name") for path in manifest.get("waypointPaths", ())
+        ]
+        != [
+            "Flyby Path",
+            "Target Truck Path 3",
+            "Target Truck Path 2",
+            "Target Truck Path 1",
+            "Transporter Path",
+            "Target Tank Path 2",
+            "Target Tank Path 1",
+            "Drone Path 1",
+        ]
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
         or len(manifest.get("textures", {})) != 34
@@ -1166,7 +1179,9 @@ def _parse_level_world_scripts(
     return reader, scripts
 
 
-def _parse_level_world_actors(raw_level: bytes) -> list[dict[str, object]]:
+def _parse_level_world_actors_and_waypoints(
+    raw_level: bytes,
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     reader, _ = _parse_level_world_scripts(raw_level)
     if reader.int32() != 1 or reader.int32() != 0 or reader.uint16() != 45:
         raise RuntimeError("Level 100 initial-actor header changed")
@@ -1217,7 +1232,90 @@ def _parse_level_world_actors(raw_level: bytes) -> list[dict[str, object]]:
         )
     if reader.uint16() != 0 or reader.int32() != 2:
         raise RuntimeError("Level 100 initial-actor records did not end at the tree groups")
-    return actors
+
+    for expected_name, expected_count in (("fernsnow", 753), ("pinesnow", 1_481)):
+        name = reader.string8()
+        count = reader.int32()
+        if name != expected_name or count != expected_count:
+            raise RuntimeError("Level 100 level-world tree groups changed")
+        for _ in range(count):
+            reader.single()
+            reader.single()
+            reader.int32()
+
+    if reader.uint16() != 1 or reader.int32() != 121:
+        raise RuntimeError("Level 100 waypoint node table changed")
+    waypoint_nodes = [
+        tuple(reader.single() for _ in range(4))
+        for _ in range(121)
+    ]
+
+    edge_count = reader.int32()
+    if edge_count != 198:
+        raise RuntimeError("Level 100 waypoint edge table changed")
+    for _ in range(edge_count):
+        start = reader.int32()
+        end = reader.int32()
+        enabled = reader.int32()
+        if start not in range(len(waypoint_nodes)) or end not in range(len(waypoint_nodes)):
+            raise RuntimeError("Level 100 waypoint edge refers to an invalid node")
+        if enabled != 1:
+            raise RuntimeError("Level 100 waypoint edge state changed")
+
+    path_count = reader.uint16()
+    if path_count != 8:
+        raise RuntimeError("Level 100 named waypoint path count changed")
+    waypoint_paths: list[dict[str, object]] = []
+    for _ in range(path_count):
+        name = reader.string8()
+        node_count = reader.int32()
+        if node_count <= 0 or node_count > len(waypoint_nodes):
+            raise RuntimeError(f"Level 100 waypoint path {name!r} has an invalid node count")
+        points: list[dict[str, object]] = []
+        for _ in range(node_count):
+            node_index = reader.uint16()
+            if node_index >= len(waypoint_nodes):
+                raise RuntimeError(
+                    f"Level 100 waypoint path {name!r} refers to an invalid node"
+                )
+            components = waypoint_nodes[node_index]
+            points.append(
+                {
+                    "horizontalPositionMillimeters": [
+                        _round_away_from_zero(
+                            (components[0] - LEVEL100_PLAYER_START_X) * 1_000.0
+                        ),
+                        _round_away_from_zero(
+                            (components[1] - LEVEL100_PLAYER_START_Y) * 1_000.0
+                        ),
+                    ],
+                    "nodeIndex": node_index,
+                    "retailComponentsFloatBits": [
+                        _float_bits(component) for component in components
+                    ],
+                }
+            )
+        waypoint_paths.append({"name": name, "points": points})
+
+    expected_paths = {
+        "Flyby Path": (43, 42, 41),
+        "Target Truck Path 3": (36, 35, 34, 33),
+        "Target Truck Path 2": (32, 31, 30, 29),
+        "Target Truck Path 1": (25, 26, 27, 28),
+        "Transporter Path": (44, 22, 23),
+        "Target Tank Path 2": (38, 37, 8, 10, 24),
+        "Target Tank Path 1": (18, 6, 7),
+        "Drone Path 1": (1, 2, 3, 4),
+    }
+    actual_paths = {
+        str(path["name"]): tuple(
+            int(point["nodeIndex"]) for point in path["points"]
+        )
+        for path in waypoint_paths
+    }
+    if actual_paths != expected_paths:
+        raise RuntimeError("Level 100 named waypoint paths changed")
+    return actors, waypoint_paths
 
 
 def _slug(value: str) -> str:
@@ -1784,7 +1882,7 @@ def _materialize_static_world(
     from cmsh_static_preview import convert_aya_bytes, inflate_aya, parse_cmsh_stream
 
     objects, pines, fern_count = _parse_static_world(raw_level)
-    level_actors = _parse_level_world_actors(raw_level)
+    level_actors, waypoint_paths = _parse_level_world_actors_and_waypoints(raw_level)
     texture_blend_flags = _texture_blend_alpha_flags(raw_level)
     resolver = build_asset_resolver(game_root / "data/resources")
     source_data: dict[Path, bytes] = {}
@@ -2068,7 +2166,7 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v10",
+        "schema": "onslaught.level100-static-world.v11",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "suppressedFernCount": fern_count,
@@ -2076,6 +2174,7 @@ def _materialize_static_world(
         "unitRecordCount": 35,
         "visibleObjectCount": len(objects),
         "spawnDefinitions": spawn_definitions,
+        "waypointPaths": waypoint_paths,
         "water": {
             "causticTexture": "water-caustic-00",
             "level": struct.unpack("<f", struct.pack("<I", water_level_bits))[0],

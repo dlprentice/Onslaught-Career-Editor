@@ -502,6 +502,27 @@ public sealed class InteractiveSessionTests
         Assert.Contains(definitions.Actors, actor => actor.Name == "Transporter");
         Assert.Contains(definitions.Actors, actor => actor.Name == "Air Trainer");
         Assert.Equal(10, definitions.Spawns.Count);
+        Assert.Equal(
+            [
+                "Flyby Path",
+                "Target Truck Path 3",
+                "Target Truck Path 2",
+                "Target Truck Path 1",
+                "Transporter Path",
+                "Target Tank Path 2",
+                "Target Tank Path 1",
+                "Drone Path 1",
+            ],
+            definitions.WaypointPaths.Select(path => path.Name));
+        Level100WaypointPathDefinition truckPath =
+            definitions.GetWaypointPath("Target Truck Path 1");
+        Assert.Equal([25, 26, 27, 28], truckPath.Points.Select(point => point.NodeIndex));
+        Assert.Equal(
+            new SimVector2(-66_688, 16_750),
+            truckPath.Points[0].HorizontalPositionMillimeters);
+        Assert.Equal(
+            BitConverter.SingleToInt32Bits(10.0f),
+            truckPath.Points[0].RetailComponentsFloatBits.Z);
         Assert.Equal(64, definitions.IdentitySha256.Length);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Airfield").ScriptName);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Hangar").ScriptName);

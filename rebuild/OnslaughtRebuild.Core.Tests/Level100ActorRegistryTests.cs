@@ -130,8 +130,22 @@ public sealed class Level100ActorRegistryTests
         Level100ActorDefinition[] changedActors = original.Actors.ToArray();
         changedActors[0] = first with { InitialPose = changedPose };
         var changed = new Level100ActorDefinitionSet(changedActors, original.Spawns);
+        var withPath = new Level100ActorDefinitionSet(
+            original.Actors,
+            original.Spawns,
+            [
+                new Level100WaypointPathDefinition(
+                    "Path",
+                    [
+                        new Level100WaypointPointDefinition(
+                            1,
+                            new SimVector2(10, 20),
+                            new Level100FloatVector4Bits(1, 2, 3, 4)),
+                    ]),
+            ]);
 
         Assert.NotEqual(original.IdentitySha256, changed.IdentitySha256);
+        Assert.NotEqual(original.IdentitySha256, withPath.IdentitySha256);
         Level100ActorRegistrySnapshot snapshot = new Level100ActorRegistry(original).Snapshot;
         Assert.Throws<ArgumentException>(() => new Level100ActorRegistry(changed, snapshot));
 
