@@ -391,6 +391,16 @@ FRONTEND_ASSETS = (
     (GODOT_ASSETS / "Frontend/forseti-writing-large.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Forseti_Writing_large.tga(0)A8R8G8B8.aya", "6bc5671a482817e4b5702e348433c66d1e87178d068c6da36500273885b004c9"),
     # DAT_0089d7fc — additive logo glow bars (FE_Reflection_map).
     (GODOT_ASSETS / "Frontend/reflection-map.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Reflection_map.tga(0)A8R8G8B8.aya", "e480261fbba5cfafb646d52f217bc11983bae1285de16d6f80a9de6c017f0121"),
+    # Language selector. data/language holds exactly five .dat sets
+    # (english/french/german/italian/spanish), matching Career.h NUM_LANGUAGES 5,
+    # and the released texture set carries exactly five matching flags.
+    (GODOT_ASSETS / "Frontend/Flags/flag-uk.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%Flag_UK.tga(0)A8R8G8B8.aya", "efbdba2a567b771f48b5314a941a2196bd83c75363fbcf5db91050ab9765d7e9"),
+    (GODOT_ASSETS / "Frontend/Flags/flag-fr.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%Flag_FR.tga(0)A8R8G8B8.aya", "1fa4179014b9b0c20f1bbd2336b8680a9f58452b46bdaced042fe685668d7452"),
+    (GODOT_ASSETS / "Frontend/Flags/flag-gr.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%Flag_GR.tga(0)A8R8G8B8.aya", "55ed2bb99b8572b5bda2ec3a89e9a4897462533ff46c7c6e0b66aa2fd20a23af"),
+    (GODOT_ASSETS / "Frontend/Flags/flag-it.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%Flag_IT.tga(0)A8R8G8B8.aya", "b397a80418458a253ea83dd54a03bd4fa035843bd629511c846cd28cdcf01432"),
+    (GODOT_ASSETS / "Frontend/Flags/flag-sp.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%Flag_SP.tga(0)A8R8G8B8.aya", "75a99eca5236dc940032d874f5f039a6c42307cc20534572cea80e2b8631bf1b"),
+    # Left/right chevrons flanking the flag.
+    (GODOT_ASSETS / "Frontend/fe-arrow.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Arrow.tga(0)A8R8G8B8.aya", "ecf729f9402512b5fce21cd53d2a239a4b0991230dddc089c4af59325105ab82"),
     (GODOT_ASSETS / "Frontend/title-logo.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_Title2.tga(0)A8R8G8B8.aya", "5ae9b300836d27bd13462a53e3455b649bb46bf8f48c8c326fd8f4f0c18c7ec7"),
     (GODOT_ASSETS / "Frontend/title-bracket-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket01.tga(0)A8R8G8B8.aya", "679b5fa6220b3eb54aeef1d970890c35be5df264530226f5d08b22a63ad75064"),
     (GODOT_ASSETS / "Frontend/title-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket02.tga(0)A8R8G8B8.aya", "79f05e8c64b6e25f038c5b7c37ddadfd31ee9376e92fc5da505b6c427ed9c74f"),

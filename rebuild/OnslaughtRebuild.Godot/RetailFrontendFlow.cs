@@ -47,6 +47,8 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color HighlightTint = RetailColor(0x7e000000);
     private static readonly Color BracketTint = RetailColor(0xfeffffff);
     private static readonly Color ChromeTint = RetailColor(0x3ecfffff);
+    // Language-selector flag tint; see DrawLanguageSelector for the measurement.
+    private static readonly Color FlagTint = RetailColor(0xff3f3f3f);
     private static readonly Color ClickSlideShadow = RetailColor(0x3f000000);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
@@ -91,6 +93,8 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _levelRing02 = null!;
     private Texture2D _loadingScreen = null!;
     private Texture2D _titleFont = null!;
+    private Texture2D[] _languageFlags = [];
+    private Texture2D _feArrow = null!;
     private Texture2D[] _menuIcons = [];
     private int[] _glyphWidths = [];
     private CanvasItemMaterial? _additiveMaterial;
@@ -366,6 +370,8 @@ public sealed partial class RetailFrontendFlow : Control
         DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, ChromeTint);
         DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 700f, 1f, 1f, ChromeTint);
 
+        DrawLanguageSelector();
+
         for (int index = 0; index < _session.Items.Count; index++)
         {
             RetailFrontendMenuItem item = _session.Items[index];
@@ -420,6 +426,52 @@ public sealed partial class RetailFrontendFlow : Control
 
         DrawSurfaceCentered(_titleLogo, 325f, 140f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
         DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
+    }
+
+    /// <summary>
+    /// The language selector sitting directly above the menu column.
+    ///
+    /// Geometry MEASURED from the pristine 640x480 retail main-menu capture
+    /// (local-lab/retail-reference-pristine/main-menu-640x480.png) by finding the
+    /// pixels in the band above the first menu row that differ from the flat
+    /// (23,23,48) background:
+    ///   left chevron  x 144..165 (w 22), y 254..283 (h 30)
+    ///   flag          x 177..261 (w 85), y 252..284 (h 33)
+    ///   right chevron x 273..294 (w 22), y 253..282 (h 30)
+    /// The content is symmetric about x = 219.0, which independently confirms
+    /// MenuColumnX as a centre anchor rather than a left edge.
+    /// </summary>
+    private void DrawLanguageSelector()
+    {
+        if (_languageFlags.Length == 0)
+        {
+            return;
+        }
+
+        int language = (int)_session.Language;
+        if (language < 0 || language >= _languageFlags.Length)
+        {
+            language = 0;
+        }
+
+        // Retail draws the flag dimmed, not at full brightness. Its brightest
+        // rendered texel is (125,125,125) where the source texture is white, and
+        // 0x3f is exactly 125 under the 2x modulate ((0x3f*255)>>7). Measured mean
+        // ratio across the flag rect is 0.473/0.476/0.486 - uniform, i.e. a grey
+        // tint rather than a per-channel correction.
+        DrawTextureRect(
+            _languageFlags[language],
+            new Rect2(177f, 252f, 85f, 33f),
+            false,
+            FlagTint);
+
+        // FE_Arrow points RIGHT, and its artwork occupies only (16,12)-(46,52) of
+        // the 64x64 texture (measured from the decoded DDS alpha bbox). Drawing the
+        // whole texture would shrink the visible chevron by the margins, so source
+        // the content region explicitly. Retail's LEFT chevron is the mirrored one.
+        var arrowSource = new Rect2(16f, 12f, 30f, 40f);
+        DrawTextureRectRegion(_feArrow, new Rect2(166f, 254f, -22f, 30f), arrowSource, ChromeTint);
+        DrawTextureRectRegion(_feArrow, new Rect2(273f, 253f, 22f, 30f), arrowSource, ChromeTint);
     }
 
     private void DrawMainUnderlay()
@@ -801,6 +853,18 @@ public sealed partial class RetailFrontendFlow : Control
             512,
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        // data/language holds exactly five sets and the released texture set carries
+        // exactly five matching flags (Career.h: NUM_LANGUAGES 5). Order matches
+        // RetailFrontendLanguage.
+        _languageFlags =
+        [
+            LoadTexture("Flags/flag-uk", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadTexture("Flags/flag-fr", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadTexture("Flags/flag-gr", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadTexture("Flags/flag-it", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
+            LoadTexture("Flags/flag-sp", 128, 128, CuratedAyaTextureLoader.Compression.Dxt1),
+        ];
+        _feArrow = LoadTexture("fe-arrow", 64, 64);
         // Retail shares one bitmap font resource between HUD and frontend, so this
         // legitimately reaches into the Hud asset folder rather than duplicating it.
         _titleFont = LoadTexture(

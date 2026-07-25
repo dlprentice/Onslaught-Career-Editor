@@ -36,6 +36,13 @@ public sealed class RetailFrontendSession
 
     public int SelectedMainIndex { get; private set; }
 
+    /// <summary>
+    /// Active frontend language. data/language ships exactly five sets and
+    /// Career.h defines NUM_LANGUAGES 5; CFrontEnd::Init caches all five and
+    /// CFrontEnd::SetLanguage swaps the active one.
+    /// </summary>
+    public RetailFrontendLanguage Language { get; private set; } = RetailFrontendLanguage.English;
+
     /// <summary>Quit-confirm choice: 0 = No (safe default), 1 = Yes.</summary>
     public int SelectedQuitConfirmIndex { get; private set; }
 
@@ -279,6 +286,19 @@ public enum RetailFrontendAudioCue
     Move,
     Select,
     Back,
+}
+
+/// <summary>
+/// The five released frontend languages, ordered to match data/language and the
+/// released Flag_UK / Flag_FR / Flag_GR / Flag_IT / Flag_SP texture set.
+/// </summary>
+public enum RetailFrontendLanguage
+{
+    English,
+    French,
+    German,
+    Italian,
+    Spanish,
 }
 
 public enum RetailFrontendCursorMode
