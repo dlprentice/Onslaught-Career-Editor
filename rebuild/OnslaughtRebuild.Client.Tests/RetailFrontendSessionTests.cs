@@ -107,10 +107,6 @@ public sealed class RetailFrontendSessionTests
         Assert.Equal(
             [
                 RetailFrontendMenuItemKind.ContinueGame,
-                RetailFrontendMenuItemKind.LoadGame,
-                RetailFrontendMenuItemKind.Multiplayer,
-                RetailFrontendMenuItemKind.Goodies,
-                RetailFrontendMenuItemKind.Options,
             ],
             frontend.Items.Where(item => !item.IsAvailable).Select(item => item.Kind));
     }

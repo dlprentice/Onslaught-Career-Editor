@@ -21,11 +21,23 @@ public sealed partial class RetailFrontendFlow : Control
     private const float MenuStartY = 304f;
     private const float MenuPitch = 20f;
     private const float MenuHitHalfWidth = 120f;
-    // mustbe_TitleFont.tga — 256² atlas, 32px cells, 8 columns (A–Z / digits in lower rows).
-    private const int GlyphColumns = 8;
-    private const int GlyphCellSize = 32;
+    // mustbe_Font13PS.tga — 256² atlas, 16px cells, 16 columns, ASCII-32 origin.
+    //
+    // This is NOT mustbe_TitleFont.tga. TitleFont is a 256² / 32px / 8-column atlas
+    // containing uppercase A–Z ONLY — no lowercase, no digits, no punctuation
+    // (verified by decoding the DDS and rendering it). It cannot draw "New Game",
+    // and it cannot draw "V1.00". Retail draws both, so TitleFont is not the menu
+    // font. The previous ToUpperInvariant() call and the lowercase-folding in
+    // GlyphIndex existed only to make that wrong atlas appear to work.
+    //
+    // The binary names three fonts: TitleFont.tga, Font13PS.tga ("small font") and
+    // font22.512.tga, at 0x23e0d4 / 0x23e10c / 0x23e178. Font13PS carries the full
+    // set including lowercase and the accented glyphs the five languages need
+    // (Career.h: NUM_LANGUAGES 5), at the ~13px cap height retail's menu uses.
+    private const int GlyphColumns = 16;
+    private const int GlyphCellSize = 16;
     private const int FirstGlyph = 32;
-    private const int GlyphSlotCount = 64;
+    private const int GlyphSlotCount = 256;
 
     private static readonly Color ReleasedNormal = RetailColor(0xff4f4f4f);
     private static readonly Color ReleasedUnavailable = RetailColor(0x7f1f1f1f);
@@ -299,8 +311,10 @@ public sealed partial class RetailFrontendFlow : Control
         // Prompt after timer > 4. Blink duty cycle is stubbed (retail FPU thunk WAIT).
         if (_clickPulseTimer > 4d && (Mathf.PosMod((float)_clickPulseTimer, 2f) < 1.6f))
         {
-            const string prompt = "CLICK TO START"; // Localization 0x77; TitleFont is uppercase atlas
-            const float textScale = 1f;
+            // Mixed case, per the pristine 640x480 capture of the click-to-start
+            // screen (local-lab/retail-reference-pristine/click-to-start-640x480.png).
+            const string prompt = "Click to start"; // Localization 0x77
+            const float textScale = 2f;
             float width = MeasureText(prompt, textScale);
             var origin = new Vector2(320f - (width * 0.5f), 400f);
             // Retail: four ±1 black outline passes + white body (no extra drop-shadow).
@@ -357,10 +371,11 @@ public sealed partial class RetailFrontendFlow : Control
             RetailFrontendMenuItem item = _session.Items[index];
             float rowY = MenuStartY + (index * MenuPitch);
             bool selected = index == _session.SelectedMainIndex;
-            // TitleFont atlas is A–Z / digit rows; english.dat mixed case → uppercase for draw.
-            // 32px cells need ~0.5 scale to fit the retail 20px menu pitch.
-            string label = _menuText[item.Kind].ToUpperInvariant();
-            const float textScale = 0.5f;
+            // Draw the string as authored. english.json holds "Continue Game" /
+            // "Load Game" in mixed case and retail renders them that way.
+            // Font13PS cells are 16px, so scale 1.0 gives the retail 20px pitch.
+            string label = _menuText[item.Kind];
+            const float textScale = 1f;
             float textWidth = MeasureText(label, textScale);
             var textPos = new Vector2(MenuColumnX - (textWidth * 0.5f), rowY - 8f);
 
@@ -394,7 +409,7 @@ public sealed partial class RetailFrontendFlow : Control
         DrawSurfaceCentered(icon, 462f, 365f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
         DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, iconTint);
 
-        DrawTextFlat(VersionText, new Vector2(0f, DesignHeight - 16f), 0.5f, VersionTint);
+        DrawTextFlat(VersionText, new Vector2(0f, DesignHeight - 16f), 1f, VersionTint);
 
         // DAT_0089d7fc reflection streaks — retail additive over the stage.
         // Draw before the logo so a failed additive fallback cannot bury Title2.
@@ -437,7 +452,7 @@ public sealed partial class RetailFrontendFlow : Control
     {
         // Reconstruction messbox chrome (Steam FEMessBox layout not fully ported).
         DrawRect(new Rect2(70f, 160f, 500f, 140f), new Color(0f, 0f, 0f, 0.82f));
-        DrawTextCentered(QuitConfirmPrompt, new Vector2(320f, 190f), 0.85f, Colors.White);
+        DrawTextCentered(QuitConfirmPrompt, new Vector2(320f, 190f), 1.7f, Colors.White);
 
         DrawQuitConfirmChoice("No", 220f, _session.SelectedQuitConfirmIndex == 0);
         DrawQuitConfirmChoice("Yes", 420f, _session.SelectedQuitConfirmIndex == 1);
@@ -456,7 +471,7 @@ public sealed partial class RetailFrontendFlow : Control
                 HighlightTint);
         }
 
-        DrawTextCentered(label, new Vector2(centerX, 250f), 1f, color);
+        DrawTextCentered(label, new Vector2(centerX, 250f), 2f, color);
     }
 
     private void DrawLevelSelect()
@@ -467,7 +482,7 @@ public sealed partial class RetailFrontendFlow : Control
             new Rect2(0f, 0f, DesignWidth, DesignHeight),
             false);
         DrawSurfaceCentered(_titleLogo, 160f, 70f, 0.55f, 0.55f, TitleLogoTint);
-        DrawTextCentered(_selectLevelText, new Vector2(320f, 48f), 1.2f, ReleasedSelected);
+        DrawTextCentered(_selectLevelText, new Vector2(320f, 48f), 2.4f, ReleasedSelected);
 
         Vector2 center = new(320f, 240f);
         float rotation = (float)_animationSeconds * 0.16f;
@@ -500,7 +515,7 @@ public sealed partial class RetailFrontendFlow : Control
             new Rect2(140f, 390f, 360f, 60f),
             new Color(0.015f, 0.035f, 0.09f, 0.82f));
         DrawLine(new Vector2(140f, 390f), new Vector2(500f, 390f), ReleasedSelected, 2f);
-        DrawTextCentered(_level100Text, new Vector2(320f, 408f), 1.1f, Colors.White);
+        DrawTextCentered(_level100Text, new Vector2(320f, 408f), 2.2f, Colors.White);
     }
 
     private void DrawLoading()
@@ -511,7 +526,7 @@ public sealed partial class RetailFrontendFlow : Control
             new Rect2(0f, 0f, DesignWidth, DesignHeight),
             false);
         DrawRect(new Rect2(0f, 420f, DesignWidth, 60f), new Color(0f, 0f, 0f, 0.58f));
-        DrawText(_loadingText, new Vector2(24f, 436f), 1f, Colors.White);
+        DrawText(_loadingText, new Vector2(24f, 436f), 2f, Colors.White);
     }
 
     private bool HandlePointerMotion(Vector2 position)
@@ -786,11 +801,14 @@ public sealed partial class RetailFrontendFlow : Control
             512,
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        // Retail shares one bitmap font resource between HUD and frontend, so this
+        // legitimately reaches into the Hud asset folder rather than duplicating it.
         _titleFont = LoadTexture(
-            "title-font",
+            "font-13ps",
             256,
             256,
-            CuratedAyaTextureLoader.Compression.Rgba8);
+            CuratedAyaTextureLoader.Compression.Rgba8,
+            folder: "Hud");
         // Must match RetailFrontendSession Steam-drawn row order (Update/icons).
         _menuIcons =
         [
@@ -843,9 +861,10 @@ public sealed partial class RetailFrontendFlow : Control
         string name,
         int width,
         int height,
-        CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2) =>
+        CuratedAyaTextureLoader.Compression compression = CuratedAyaTextureLoader.Compression.Dxt2,
+        string folder = "Frontend") =>
         CuratedAyaTextureLoader.Load(
-            $"res://Assets/Frontend/{name}.texture.aya",
+            $"res://Assets/{folder}/{name}.texture.aya",
             width,
             height,
             compression);
@@ -954,11 +973,6 @@ public sealed partial class RetailFrontendFlow : Control
     private static int GlyphIndex(char character)
     {
         int code = character;
-        if (code is >= 'a' and <= 'z')
-        {
-            code -= 32;
-        }
-
         if (code is < FirstGlyph or >= FirstGlyph + GlyphSlotCount)
         {
             code = '?';

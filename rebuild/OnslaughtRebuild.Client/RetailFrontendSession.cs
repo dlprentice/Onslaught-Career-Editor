@@ -14,12 +14,19 @@ public sealed class RetailFrontendSession
     // Index 6: Quit label; DoAction opens FEMessBox with Localization 0xe4.
     private static readonly RetailFrontendMenuItem[] MainMenuItems =
     [
+        // IsAvailable models RETAIL's availability, which drives the draw colour -
+        // it is not a statement about which pages this reconstruction implements.
+        // Measured from the pristine 640x480 main-menu capture: only Continue Game
+        // is drawn dim (no career in progress); Load Game, Multiplayer, Goodies and
+        // Options are drawn in the normal bright colour exactly like Quit.
+        // Confirming a page this reconstruction has not built yet falls through to
+        // RetailFrontendSignal.None below, so nothing navigates and nothing throws.
         new(RetailFrontendMenuItemKind.NewGame, IsAvailable: true),
         new(RetailFrontendMenuItemKind.ContinueGame, IsAvailable: false),
-        new(RetailFrontendMenuItemKind.LoadGame, IsAvailable: false),
-        new(RetailFrontendMenuItemKind.Multiplayer, IsAvailable: false),
-        new(RetailFrontendMenuItemKind.Goodies, IsAvailable: false),
-        new(RetailFrontendMenuItemKind.Options, IsAvailable: false),
+        new(RetailFrontendMenuItemKind.LoadGame, IsAvailable: true),
+        new(RetailFrontendMenuItemKind.Multiplayer, IsAvailable: true),
+        new(RetailFrontendMenuItemKind.Goodies, IsAvailable: true),
+        new(RetailFrontendMenuItemKind.Options, IsAvailable: true),
         new(RetailFrontendMenuItemKind.Quit, IsAvailable: true),
     ];
 
