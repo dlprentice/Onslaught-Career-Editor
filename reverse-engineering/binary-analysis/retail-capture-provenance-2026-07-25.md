@@ -104,6 +104,47 @@ Released retail renders **`V1.00`**.
    math against a widescreen mode — a state neither pristine nor fully-patched
    retail produces.
 
+## Empirical confirmation (2026-07-25, later the same day)
+
+The conclusions above were derived statically. They have since been **confirmed by
+running both builds and comparing frames**, which removes the remaining inference.
+
+A **capture build** was made: a copy of pristine `BEA.exe` with **only**
+`force_windowed` applied (5 bytes at `0x12A644`), sha256
+`e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`. The version
+overlay and the 4:3 gate were deliberately left pristine. It presented at
+**640x480**, independently confirming the composition size from a build that has
+never carried a cosmetic patch.
+
+Main menu, pristine capture build vs the existing patched reference frame
+(`tools/compare_capture.py`, per-region):
+
+| region | changed% | material% | mean delta |
+| --- | ---: | ---: | ---: |
+| `bg-empty-left` | **0.00** | **0.00** | **0.0** |
+| `menu-column` | **0.00** | **0.00** | **0.0** |
+| `lang-selector` | **0.00** | **0.00** | **0.0** |
+| `decor-right-arc` | 8.84 | 0.00 | 0.5 |
+| `version-overlay` | 18.23 | 5.78 | 1.7 |
+| `title-logo` | 50.11 | 30.05 | 10.3 |
+| `bg-emblem-topright` | 43.08 | 23.60 | 7.5 |
+
+**Menu column, background, and language selector are pixel-identical.** Layout,
+spacing, and colour are unaffected by the patches, exactly as the static analysis
+predicted.
+
+The residual differences are of two kinds, neither of them layout:
+1. **Animation phase.** `title-logo`, `bg-emblem-topright`, and `decor-right-glyph`
+   are animated; two captures taken at different moments differ regardless of build.
+2. **The version string**, which is the one real contamination. Cropping the overlay
+   from both frames shows `V1.00 - PATCHED` on the patched build and **`V1.00`** on
+   the pristine build.
+
+A pristine reference set now exists (lab-only) at
+`local-lab/retail-reference-pristine/`, captured by `rebuild/tools/Capture-Retail.ps1`
+with the target hash recorded in its manifest. **New parity work should baseline
+against that, not against the patched frames.**
+
 ## Verification status
 
 Primary and adversarial passes both completed. The adversarial pass independently

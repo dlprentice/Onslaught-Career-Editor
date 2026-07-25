@@ -24,6 +24,12 @@ param(
     [string]$TargetRoot = "$PSScriptRoot\..\..\local-lab\safe-copy-bea-pristine",
     [string]$OutputDirectory,
     [int[]]$CaptureSecondsAfterWindow = @(2, 6, 10),
+    # Seconds after the window appears at which to click the client centre.
+    # The released frontend advances click-to-start on a real mouse click; the game
+    # polls input rather than reading the message queue, so a posted message is not
+    # enough and synthetic SendInput-level events are required.
+    [int[]]$ClickAtSeconds = @(),
+    [int]$ClickOffsetY = 0,
     [int]$TimeoutSeconds = 90,
     [switch]$SkipFmv = $true
 )
@@ -68,6 +74,10 @@ public static class Win32CaptureNative {
     [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
+    [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+    public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+    public const uint MOUSEEVENTF_LEFTUP   = 0x0004;
 }
 '@
 }
@@ -91,9 +101,35 @@ try {
     [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
     $windowAppeared = Get-Date
 
-    foreach ($offset in ($CaptureSecondsAfterWindow | Sort-Object)) {
+    # Clicks and shots share one ordered timeline so a click always lands before
+    # the shot that is meant to observe its effect.
+    $events = @()
+    foreach ($t in $ClickAtSeconds) { $events += [pscustomobject]@{ At = $t; Kind = 'click' } }
+    foreach ($t in $CaptureSecondsAfterWindow) { $events += [pscustomobject]@{ At = $t; Kind = 'shot' } }
+    $events = @($events | Sort-Object At, @{ Expression = { $_.Kind }; Descending = $false })
+
+    foreach ($event in $events) {
+        $offset = $event.At
         $wait = $offset - ((Get-Date) - $windowAppeared).TotalSeconds
         if ($wait -gt 0) { Start-Sleep -Milliseconds ([int]($wait * 1000)) }
+
+        if ($event.Kind -eq 'click') {
+            $cr = New-Object 'Win32CaptureNative+RECT'
+            [void][Win32CaptureNative]::GetClientRect($hwnd, [ref]$cr)
+            $pt = New-Object 'Win32CaptureNative+POINT'
+            [void][Win32CaptureNative]::ClientToScreen($hwnd, [ref]$pt)
+            $cx = $pt.X + [int](($cr.Right - $cr.Left) / 2)
+            $cy = $pt.Y + [int](($cr.Bottom - $cr.Top) / 2) + $ClickOffsetY
+            [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
+            Start-Sleep -Milliseconds 150
+            [void][Win32CaptureNative]::SetCursorPos($cx, $cy)
+            Start-Sleep -Milliseconds 120
+            [Win32CaptureNative]::mouse_event([Win32CaptureNative]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+            Start-Sleep -Milliseconds 60
+            [Win32CaptureNative]::mouse_event([Win32CaptureNative]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+            Write-Verbose "clicked client centre at ${offset}s ($cx,$cy)"
+            continue
+        }
 
         # PrintWindow renders the WHOLE window, chrome included. Capture at full
         # window size and then crop to the client area, otherwise the title bar
