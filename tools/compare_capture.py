@@ -62,6 +62,13 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--reference", required=True, type=Path)
     ap.add_argument("--candidate", required=True, type=Path)
     ap.add_argument("--regions", type=Path, help="JSON: {name: [x0,y0,x1,y1], ...}")
+    ap.add_argument(
+        "--noise-floor",
+        type=Path,
+        help="A SECOND reference frame of the same screen captured at a different "
+             "moment. Animated elements differ between any two retail frames, so "
+             "raw percentages overstate the real defect. Supplying this reports the "
+             "gap ABOVE that floor, which is the part actually attributable to us.")
     ap.add_argument("--diff-image", type=Path, help="write an amplified difference image")
     ap.add_argument("--json-out", type=Path)
     args = ap.parse_args(argv)
@@ -80,6 +87,11 @@ def main(argv: list[str]) -> int:
         )
         return 2
 
+    floor = load_rgb(args.noise_floor) if args.noise_floor else None
+    if floor is not None and floor.size != ref.size:
+        print("REFUSED: --noise-floor frame is a different size to the reference.", file=sys.stderr)
+        return 2
+
     regions = {"FULL FRAME": [0, 0, ref.size[0], ref.size[1]]}
     if args.regions:
         regions.update(json.loads(args.regions.read_text(encoding="utf-8")))
@@ -92,18 +104,33 @@ def main(argv: list[str]) -> int:
     }
 
     width = max(len(k) for k in regions)
-    print(f"{'region'.ljust(width)}  changed%  material%  meanD  maxD  refRGB -> cmpRGB")
-    print("-" * (width + 56))
+    if floor is None:
+        print(f"{'region'.ljust(width)}  changed%  material%  meanD  maxD  refRGB -> cmpRGB")
+        print("-" * (width + 56))
+    else:
+        print(f"{'region'.ljust(width)}  material%    floor%      GAP  meanD")
+        print("-" * (width + 40))
+
     for name, box in regions.items():
         stats = region_stats(ref, cmp_, tuple(box))
+        if floor is not None:
+            fstats = region_stats(ref, floor, tuple(box))
+            stats["floorPct"] = fstats["materialPct"]
+            stats["gapPct"] = round(max(0.0, stats["materialPct"] - fstats["materialPct"]), 2)
         report["regions"][name] = stats
         if not stats["pixels"]:
             continue
-        print(
-            f"{name.ljust(width)}  {stats['changedPct']:7.2f}  {stats['materialPct']:8.2f}"
-            f"  {stats['meanAbsDelta']:5.1f}  {stats['maxAbsDelta']:4d}"
-            f"  {stats['refMeanRGB']} -> {stats['cmpMeanRGB']}"
-        )
+        if floor is None:
+            print(
+                f"{name.ljust(width)}  {stats['changedPct']:7.2f}  {stats['materialPct']:8.2f}"
+                f"  {stats['meanAbsDelta']:5.1f}  {stats['maxAbsDelta']:4d}"
+                f"  {stats['refMeanRGB']} -> {stats['cmpMeanRGB']}"
+            )
+        else:
+            print(
+                f"{name.ljust(width)}  {stats['materialPct']:8.2f}  {stats['floorPct']:8.2f}"
+                f"  {stats['gapPct']:8.2f}  {stats['meanAbsDelta']:5.1f}"
+            )
 
     if args.diff_image:
         # 4x amplification: real layout error saturates, dither noise stays dim.
