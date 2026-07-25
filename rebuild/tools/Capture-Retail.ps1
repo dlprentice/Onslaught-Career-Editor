@@ -30,6 +30,10 @@ param(
     # enough and synthetic SendInput-level events are required.
     [int[]]$ClickAtSeconds = @(),
     [int]$ClickOffsetY = 0,
+    # Explicit clicks as "seconds:x:y" in CLIENT coordinates, e.g. "16:219:304".
+    # Centre clicks are fine for click-to-start, but menu rows are not at the centre
+    # of the frame, so reaching level select needs a real position.
+    [string[]]$ClickAt = @(),
     [int]$TimeoutSeconds = 90,
     [switch]$SkipFmv = $true
 )
@@ -104,8 +108,13 @@ try {
     # Clicks and shots share one ordered timeline so a click always lands before
     # the shot that is meant to observe its effect.
     $events = @()
-    foreach ($t in $ClickAtSeconds) { $events += [pscustomobject]@{ At = $t; Kind = 'click' } }
-    foreach ($t in $CaptureSecondsAfterWindow) { $events += [pscustomobject]@{ At = $t; Kind = 'shot' } }
+    foreach ($t in $ClickAtSeconds) { $events += [pscustomobject]@{ At = $t; Kind = 'click'; X = $null; Y = $null } }
+    foreach ($spec in $ClickAt) {
+        $parts = $spec -split ':'
+        if ($parts.Count -ne 3) { throw "Malformed -ClickAt '$spec'. Expected seconds:x:y." }
+        $events += [pscustomobject]@{ At = [int]$parts[0]; Kind = 'click'; X = [int]$parts[1]; Y = [int]$parts[2] }
+    }
+    foreach ($t in $CaptureSecondsAfterWindow) { $events += [pscustomobject]@{ At = $t; Kind = 'shot'; X = $null; Y = $null } }
     $events = @($events | Sort-Object At, @{ Expression = { $_.Kind }; Descending = $false })
 
     foreach ($event in $events) {
@@ -118,8 +127,14 @@ try {
             [void][Win32CaptureNative]::GetClientRect($hwnd, [ref]$cr)
             $pt = New-Object 'Win32CaptureNative+POINT'
             [void][Win32CaptureNative]::ClientToScreen($hwnd, [ref]$pt)
-            $cx = $pt.X + [int](($cr.Right - $cr.Left) / 2)
-            $cy = $pt.Y + [int](($cr.Bottom - $cr.Top) / 2) + $ClickOffsetY
+            if ($null -ne $event.X) {
+                $cx = $pt.X + $event.X
+                $cy = $pt.Y + $event.Y
+            }
+            else {
+                $cx = $pt.X + [int](($cr.Right - $cr.Left) / 2)
+                $cy = $pt.Y + [int](($cr.Bottom - $cr.Top) / 2) + $ClickOffsetY
+            }
             [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
             Start-Sleep -Milliseconds 150
             [void][Win32CaptureNative]::SetCursorPos($cx, $cy)
