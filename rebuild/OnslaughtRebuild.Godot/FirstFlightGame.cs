@@ -91,6 +91,11 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
             AddChild(_frontend);
             ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
+
+            if (FrontendCaptureRig.TryCreate(OS.GetCmdlineUserArgs(), _frontend, out FrontendCaptureRig? rig))
+            {
+                AddChild(rig);
+            }
         }
         catch (Exception exception)
         {
@@ -977,6 +982,11 @@ public sealed partial class FirstFlightGame : Node3D
             else if (argument.StartsWith("--report=", StringComparison.Ordinal))
             {
                 _smokeReportPath = argument["--report=".Length..];
+            }
+            else if (argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-plan=", StringComparison.Ordinal))
+            {
+                // Consumed by FrontendCaptureRig.TryCreate during _Ready.
             }
             else
             {

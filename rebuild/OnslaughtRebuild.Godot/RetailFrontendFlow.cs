@@ -40,7 +40,13 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color VersionTint = RetailColor(0xff102025);
     // Settled additive gray: (((255*0x7f)>>8)*0x10101) → RGB 0x7e; keep α modest for Add blend.
     private static readonly Color GlowTint = new(0x7e / 255f, 0x7e / 255f, 0x7e / 255f, 0.5f);
-    private const string VersionText = "V1.00 - PATCHED";
+    // Released overlay format string is "V%1d.%02d" at VA 0x00629454 in pristine
+    // BEA.exe (sha256 74154bfa…), rendering "V1.00". The prior value here was
+    // "V1.00 - PATCHED", transcribed from a reference capture taken on a safe copy
+    // whose version_overlay_* patches repoint the format pointer at 0x0046416f to a
+    // code cave at VA 0x005AA444 holding "V%1d.%02d - PATCHED". That suffix is an
+    // artifact of the patched capture, not released behavior.
+    private const string VersionText = "V1.00";
     private const float ShadowScaleBoost = 1.05f;
     // Materialized decode of data/video/FEBack128.vid (128² BIKi → rgb24 @15fps).
     private const string FeBackStripPath =
@@ -1014,9 +1020,29 @@ public sealed partial class RetailFrontendFlow : Control
     private void RequestAudioCue(RetailFrontendAudioCue cue) =>
         AudioCueRequested?.Invoke(cue);
 
+    /// <summary>
+    /// Converts a packed released ARGB constant to a Godot colour.
+    ///
+    /// The released frontend composes its text and chrome through a 2x colour
+    /// modulate, so a packed RGB channel reaches the framebuffer at
+    /// <c>min(255, (c * 255) &gt;&gt; 7)</c> — very nearly double. Reproducing the packed
+    /// value literally renders every frontend colour at roughly half intensity,
+    /// which is why the reconstruction's menu read as dark grey-on-blue while
+    /// retail reads as light grey and bright amber.
+    ///
+    /// Measured against <c>captures/08-main-retail.png</c> (640x480 retail frame),
+    /// brightest glyph texel per row:
+    ///   0x4f (normal)   -> predicted 157, measured 157
+    ///   0x6f (selected) -> predicted 221, measured 220
+    ///   0x3f (selected) -> predicted 125, measured 125
+    /// Alpha is NOT modulated: 0x7f disabled text blends at ~0.5 as packed.
+    /// </summary>
     private static Color RetailColor(uint argb) => new(
-        ((argb >> 16) & 0xff) / 255f,
-        ((argb >> 8) & 0xff) / 255f,
-        (argb & 0xff) / 255f,
+        Modulate2X((argb >> 16) & 0xff),
+        Modulate2X((argb >> 8) & 0xff),
+        Modulate2X(argb & 0xff),
         ((argb >> 24) & 0xff) / 255f);
+
+    private static float Modulate2X(uint channel) =>
+        Math.Min(255u, (channel * 255u) >> 7) / 255f;
 }
