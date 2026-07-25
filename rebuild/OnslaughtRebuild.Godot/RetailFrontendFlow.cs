@@ -387,8 +387,11 @@ public sealed partial class RetailFrontendFlow : Control
 
             if (selected)
             {
-                // Highlight sx/Y still WEAKEN vs retail; geometry is reconstruction stub.
-                float boxWidth = Mathf.Max(160f, textWidth + 24f);
+                // Highlight box width MEASURED from the pristine 640x480 capture:
+                // the selected row's box spans x 166..272, w = 107. The previous
+                // Mathf.Max(160f, ...) floor forced 160 and made the box 39px too
+                // wide. Retail sizes it to the label plus a fixed padding.
+                float boxWidth = textWidth + 22f;
                 DrawTextureRect(
                     _titleTextBox,
                     new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 10f, boxWidth, 20f),
