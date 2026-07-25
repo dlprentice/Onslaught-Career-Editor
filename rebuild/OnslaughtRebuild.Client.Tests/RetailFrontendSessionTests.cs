@@ -75,9 +75,9 @@ public sealed class RetailFrontendSessionTests
     {
         var frontend = AtMainMenu();
 
-        Assert.True(frontend.SelectMainIndex(5));
-        Assert.Equal(RetailFrontendMenuItemKind.Options, frontend.SelectedMainItem.Kind);
-        Assert.False(frontend.SelectMainIndex(5));
+        Assert.True(frontend.SelectMainIndex(3));
+        Assert.Equal(RetailFrontendMenuItemKind.Multiplayer, frontend.SelectedMainItem.Kind);
+        Assert.False(frontend.SelectMainIndex(3));
         Assert.False(frontend.SelectMainIndex(-1));
         Assert.False(frontend.SelectMainIndex(frontend.Items.Count));
     }
@@ -92,8 +92,17 @@ public sealed class RetailFrontendSessionTests
 
         Assert.Equal(RetailFrontendMenuItemKind.Quit, frontend.SelectedMainItem.Kind);
         Assert.True(frontend.SelectedMainItem.IsAvailable);
-        Assert.Equal(RetailFrontendSignal.ExitRequested, frontend.Confirm());
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.QuitConfirm, frontend.Screen);
+        Assert.Equal(0, frontend.SelectedQuitConfirmIndex);
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.MainMenu, frontend.Screen);
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.True(frontend.MoveNext());
+        Assert.Equal(1, frontend.SelectedQuitConfirmIndex);
+        Assert.Equal(RetailFrontendSignal.ExitRequested, frontend.Confirm());
 
         Assert.Equal(
             [
@@ -104,6 +113,20 @@ public sealed class RetailFrontendSessionTests
                 RetailFrontendMenuItemKind.Options,
             ],
             frontend.Items.Where(item => !item.IsAvailable).Select(item => item.Kind));
+    }
+
+    [Fact]
+    public void QuitConfirmBackReturnsToMainMenuWithoutExiting()
+    {
+        var frontend = AtMainMenu();
+        while (frontend.MoveNext())
+        {
+        }
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
+        Assert.Equal(RetailFrontendScreen.MainMenu, frontend.Screen);
+        Assert.Equal(RetailFrontendMenuItemKind.Quit, frontend.SelectedMainItem.Kind);
     }
 
     [Fact]

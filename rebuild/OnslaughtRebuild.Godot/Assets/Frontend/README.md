@@ -26,6 +26,10 @@ lane.
 | --- | --- | --- |
 | `Backgrounds/click-to-start.texture.aya` | `FrontEnd%v2%fe_splash1.tga(0)A8R8G8B8.aya` | `46AB45168875B5B686E3534B3F66AB65B5A5B5512F697E5A98B03DD12708731A` |
 | `Backgrounds/rock.texture.aya` | `FrontEnd%v2%FE_Rock_Background.tga(0)A8R8G8B8.aya` | `89213B441332F060ACDB3E55AA28C290FA0E530983C16A57B8CE1A7413E9E86D` |
+| `Backgrounds/fe-back-128x128x15.rgb` | Exact rgb24 decode of `data/video/FEBack128.vid` (SHA-256 `C251F4BE…0E79BA`, BIKi 128×128) at 15 fps × 286 frames; CFEPMain underlay via `CDXFrontEndVideo__Render`. Requires local `ffmpeg`. Godot stretches each frame to the 640×480 stage. | `B9795BAF2CC5C68618799CE4128B0788C6ACA4A424FEA41D7881E0541C035C7B` |
+| `click-slide.texture.aya` | `FrontEnd%LostToys.tga(0)A8R8G8B8.aya` (`DAT_0089d7bc`) | `AB1B3654842335983E7170F233137731FEA5A25E8632A1F94CFCADCCF758040B` |
+| `forseti-writing-large.texture.aya` | `FrontEnd%v2%FE_Forseti_Writing_large.tga(0)A8R8G8B8.aya` (`DAT_0089d7f0`) | `6BC5671A482817E4B5702E348433C66D1E87178D068C6DA36500273885B004C9` |
+| `reflection-map.texture.aya` | `FrontEnd%v2%FE_Reflection_map.tga(0)A8R8G8B8.aya` (`DAT_0089d7fc`) | `E480261FBBA5CFAFB646D52F217BC11983BAE1285DE16D6F80A9DE6C017F0121` |
 | `title-logo.texture.aya` | `FrontEnd%v3%FE_BEA_Title2.tga(0)A8R8G8B8.aya` | `5AE9B300836D27BD13462A53E3455B649BB46BF8F48C8C326FD8F4F0C18C7EC7` |
 | `title-bracket-01.texture.aya` | `FrontEnd%v3%FE_BEA_title_bracket01.tga(0)A8R8G8B8.aya` | `679B5FA6220B3EB54AEEF1D970890C35BE5DF264530226F5D08B22A63AD75064` |
 | `title-bracket-02.texture.aya` | `FrontEnd%v3%FE_BEA_title_bracket02.tga(0)A8R8G8B8.aya` | `79F05E8C64B6E25F038C5B7C37DDADFD31EE9376E92FC5DA505B6C427ED9C74F` |
@@ -64,6 +68,9 @@ lane.
 - Shipped Level 100 `LevelScript.msl` defines four primary objectives,
   `LevelWon()`, and its only `LevelLostString(LOSE_TUTORIAL_BROKE)` reason.
 - Startup/main/level placement, widescreen composition, and unavailable-item
-  dimming are reconstruction-owned adaptations. The exact loading image and
-  text are retained, but no exact layout, timing, control-hint, pixel-parity,
-  terminal-overlay, or complete-debriefing claim is made.
+  dimming are reconstruction-owned adaptations. The main underlay identity is
+  the released FEBack128 Bink path (not Rock); the rebuild draws a verified
+  ffmpeg rgb strip rather than linking Bink. The exact loading image and text
+  are retained, but no exact layout, timing, control-hint, full pixel-parity,
+  terminal-overlay, or complete-debriefing claim is made until dual-capture
+  evidence says otherwise.

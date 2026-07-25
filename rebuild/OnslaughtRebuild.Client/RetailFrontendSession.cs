@@ -8,6 +8,10 @@ namespace OnslaughtRebuild.Client;
 /// </summary>
 public sealed class RetailFrontendSession
 {
+    // Steam-drawn order (CFEPMain__Update / icons): New, Continue, Load,
+    // Multiplayer, Goodies, Options, Quit. DoAction pages for sel 3/4/5 are
+    // crossed (Options/MP/Goodies) — route by index when those pages land.
+    // Index 6: Quit label; DoAction opens FEMessBox with Localization 0xe4.
     private static readonly RetailFrontendMenuItem[] MainMenuItems =
     [
         new(RetailFrontendMenuItemKind.NewGame, IsAvailable: true),
@@ -25,6 +29,9 @@ public sealed class RetailFrontendSession
 
     public int SelectedMainIndex { get; private set; }
 
+    /// <summary>Quit-confirm choice: 0 = No (safe default), 1 = Yes.</summary>
+    public int SelectedQuitConfirmIndex { get; private set; }
+
     public RetailFrontendMenuItem SelectedMainItem => MainMenuItems[SelectedMainIndex];
 
     public IReadOnlyList<RetailFrontendMenuItem> Items => MainMenuItems;
@@ -33,6 +40,17 @@ public sealed class RetailFrontendSession
 
     public bool MovePrevious()
     {
+        if (Screen == RetailFrontendScreen.QuitConfirm)
+        {
+            if (SelectedQuitConfirmIndex == 0)
+            {
+                return false;
+            }
+
+            SelectedQuitConfirmIndex = 0;
+            return true;
+        }
+
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == 0)
         {
             return false;
@@ -45,6 +63,17 @@ public sealed class RetailFrontendSession
 
     public bool MoveNext()
     {
+        if (Screen == RetailFrontendScreen.QuitConfirm)
+        {
+            if (SelectedQuitConfirmIndex == 1)
+            {
+                return false;
+            }
+
+            SelectedQuitConfirmIndex = 1;
+            return true;
+        }
+
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == MainMenuItems.Length - 1)
         {
             return false;
@@ -67,6 +96,19 @@ public sealed class RetailFrontendSession
 
         SelectedMainIndex = index;
         UnavailableSelection = null;
+        return true;
+    }
+
+    public bool SelectQuitConfirmIndex(int index)
+    {
+        if (Screen != RetailFrontendScreen.QuitConfirm ||
+            index is < 0 or > 1 ||
+            index == SelectedQuitConfirmIndex)
+        {
+            return false;
+        }
+
+        SelectedQuitConfirmIndex = index;
         return true;
     }
 
@@ -94,9 +136,23 @@ public sealed class RetailFrontendSession
                     return RetailFrontendSignal.PageChanged;
                 }
 
-                return SelectedMainItem.Kind == RetailFrontendMenuItemKind.Quit
-                    ? RetailFrontendSignal.ExitRequested
-                    : RetailFrontendSignal.None;
+                if (SelectedMainItem.Kind == RetailFrontendMenuItemKind.Quit)
+                {
+                    Screen = RetailFrontendScreen.QuitConfirm;
+                    SelectedQuitConfirmIndex = 0;
+                    return RetailFrontendSignal.PageChanged;
+                }
+
+                return RetailFrontendSignal.None;
+
+            case RetailFrontendScreen.QuitConfirm:
+                if (SelectedQuitConfirmIndex == 0)
+                {
+                    Screen = RetailFrontendScreen.MainMenu;
+                    return RetailFrontendSignal.PageChanged;
+                }
+
+                return RetailFrontendSignal.ExitRequested;
 
             case RetailFrontendScreen.LevelSelect:
                 Screen = RetailFrontendScreen.Loading;
@@ -111,6 +167,12 @@ public sealed class RetailFrontendSession
     public RetailFrontendSignal Back()
     {
         UnavailableSelection = null;
+
+        if (Screen == RetailFrontendScreen.QuitConfirm)
+        {
+            Screen = RetailFrontendScreen.MainMenu;
+            return RetailFrontendSignal.PageChanged;
+        }
 
         if (Screen != RetailFrontendScreen.LevelSelect)
         {
@@ -178,6 +240,7 @@ public sealed class RetailFrontendSession
     private void ReturnToMainMenu()
     {
         SelectedMainIndex = 0;
+        SelectedQuitConfirmIndex = 0;
         UnavailableSelection = null;
         _level100LaunchPending = false;
         Screen = RetailFrontendScreen.MainMenu;
@@ -188,6 +251,7 @@ public enum RetailFrontendScreen
 {
     ClickToStart,
     MainMenu,
+    QuitConfirm,
     LevelSelect,
     Loading,
     Gameplay,

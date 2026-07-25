@@ -18,6 +18,7 @@ import os
 import re
 import shutil
 import struct
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -92,6 +93,22 @@ FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
     "b27d7b1b3f8cd8aa22b664cacf7c87a8b0907c7dea4c4f07dff8da763dbb70f3"
 )
+# CFEPMain underlay: data/video/FEBack128.vid (BIKi 128² @30fps) decoded to a
+# lean rgb24 strip at 15fps for Godot Control draw (stretch to 640×480 stage).
+FEBACK_SOURCE = "data/video/FEBack128.vid"
+FEBACK_SOURCE_SHA256 = (
+    "c251f4be8ab7f2ac5d4f6b952ca44d0cf5aadd7552ad61725420009a6f0e79ba"
+)
+FEBACK_STRIP = GODOT_ASSETS / "Frontend/Backgrounds/fe-back-128x128x15.rgb"
+FEBACK_STRIP_SHA256 = (
+    "b9795baf2cc5c68618799ce4128b0788c6aca4a424fea41d7881e0541c035c7b"
+)
+FEBACK_STRIP_WIDTH = 128
+FEBACK_STRIP_HEIGHT = 128
+FEBACK_STRIP_FPS = 15
+FEBACK_STRIP_FRAME_COUNT = 286
+FEBACK_STRIP_FRAME_BYTES = FEBACK_STRIP_WIDTH * FEBACK_STRIP_HEIGHT * 3
+FEBACK_STRIP_BYTES = FEBACK_STRIP_FRAME_BYTES * FEBACK_STRIP_FRAME_COUNT
 ROOT_TERRAIN_TEXTURE = (
     GODOT_ASSETS / "Level100/Source/level100-root-terrain.rgb565.bin"
 )
@@ -368,6 +385,12 @@ DIRECT_ASSETS = (
 FRONTEND_ASSETS = (
     (GODOT_ASSETS / "Frontend/Backgrounds/click-to-start.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%fe_splash1.tga(0)A8R8G8B8.aya", "46ab45168875b5b686e3534b3f66ab65b5a5b5512f697e5a98b03dd12708731a"),
     (GODOT_ASSETS / "Frontend/Backgrounds/rock.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Rock_Background.tga(0)A8R8G8B8.aya", "89213b441332f060acdb3e55aa28c290fa0e530983c16a57b8ce1a7413e9e86d"),
+    # DAT_0089d7bc — click-to-start sliding pair (LostToys, not BarL/C/R).
+    (GODOT_ASSETS / "Frontend/click-slide.texture.aya", "data/resources/dxtntextures/FrontEnd%LostToys.tga(0)A8R8G8B8.aya", "ab1b3654842335983e7170f233137731fea5a25e8632a1f94cfcadccf758040b"),
+    # DAT_0089d7f0 — main-menu right chrome (Forseti writing large).
+    (GODOT_ASSETS / "Frontend/forseti-writing-large.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Forseti_Writing_large.tga(0)A8R8G8B8.aya", "6bc5671a482817e4b5702e348433c66d1e87178d068c6da36500273885b004c9"),
+    # DAT_0089d7fc — additive logo glow bars (FE_Reflection_map).
+    (GODOT_ASSETS / "Frontend/reflection-map.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Reflection_map.tga(0)A8R8G8B8.aya", "e480261fbba5cfafb646d52f217bc11983bae1285de16d6f80a9de6c017f0121"),
     (GODOT_ASSETS / "Frontend/title-logo.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_Title2.tga(0)A8R8G8B8.aya", "5ae9b300836d27bd13462a53e3455b649bb46bf8f48c8c326fd8f4f0c18c7ec7"),
     (GODOT_ASSETS / "Frontend/title-bracket-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket01.tga(0)A8R8G8B8.aya", "679b5fa6220b3eb54aeef1d970890c35be5df264530226f5d08b22a63ad75064"),
     (GODOT_ASSETS / "Frontend/title-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_BEA_title_bracket02.tga(0)A8R8G8B8.aya", "79f05e8c64b6e25f038c5b7c37ddadfd31ee9376e92fc5da505b6c427ed9c74f"),
@@ -855,6 +878,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
+        (FEBACK_STRIP, FEBACK_STRIP_SHA256),
         (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
     )
     meshes = tuple((path, expected) for path, _, _, expected in MESHES)
@@ -2693,6 +2717,68 @@ def _pcm_wav(pcm: bytes) -> bytes:
     )
 
 
+def _find_ffmpeg() -> Path:
+    which = shutil.which("ffmpeg")
+    if which:
+        return Path(which)
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        packages = Path(local_app_data) / "Microsoft" / "WinGet" / "Packages"
+        if packages.is_dir():
+            matches = sorted(packages.glob("**/ffmpeg.exe"))
+            if matches:
+                return matches[0]
+    raise RuntimeError(
+        "ffmpeg is required to decode FEBack128.vid into the frontend underlay strip"
+    )
+
+
+def _materialize_feback_strip(game_root: Path, stage: Path) -> None:
+    """Decode CFEPMain's FEBack128.vid into the exact rgb24 underlay strip."""
+    _read_exact(game_root / FEBACK_SOURCE, FEBACK_SOURCE_SHA256)
+    ffmpeg = _find_ffmpeg()
+    target = stage / FEBACK_STRIP
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="feback-") as temporary:
+        temporary_strip = Path(temporary) / "fe-back-128x128x15.rgb"
+        completed = subprocess.run(
+            [
+                str(ffmpeg),
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-i",
+                str(game_root / FEBACK_SOURCE),
+                "-vf",
+                f"fps={FEBACK_STRIP_FPS},format=rgb24",
+                "-f",
+                "rawvideo",
+                str(temporary_strip),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError(
+                "ffmpeg failed to decode FEBack128.vid: "
+                + (completed.stderr or completed.stdout or "no output")
+            )
+        data = temporary_strip.read_bytes()
+    if len(data) != FEBACK_STRIP_BYTES:
+        raise RuntimeError(
+            f"FEBack strip length {len(data)} != expected {FEBACK_STRIP_BYTES}"
+        )
+    actual = _sha256(data)
+    if actual != FEBACK_STRIP_SHA256:
+        raise RuntimeError(
+            "FEBack strip did not reproduce exactly "
+            f"(SHA-256 {actual})"
+        )
+    target.write_bytes(data)
+
+
 def _frontend_localization_bytes(data: bytes) -> bytes:
     if (
         len(data) < 16
@@ -3217,6 +3303,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     frontend_localization_target = stage / FRONTEND_LOCALIZATION
     frontend_localization_target.parent.mkdir(parents=True, exist_ok=True)
     frontend_localization_target.write_bytes(frontend_localization)
+    _materialize_feback_strip(game_root, stage)
     hud_manifest_hash = _materialize_level100_hud_manifest(stage)
     if hud_manifest_hash != LEVEL100_HUD_MANIFEST_SHA256:
         raise RuntimeError(
