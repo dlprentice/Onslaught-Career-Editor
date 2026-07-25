@@ -162,11 +162,16 @@ def main(argv: list[str]) -> int:
     bin_strings = set()
     for m in re.finditer(rb"[ -~]{3,64}", data):
         bin_strings.add(m.group().decode("ascii"))
-    src_text = ""
+    # Declaration-aware, not substring. A bare "prefix in source_text" match counts
+    # any incidental occurrence - a comment, a longer identifier that contains the
+    # prefix, a string literal - and inflates this grade. Only accept a prefix that
+    # the reference source actually DECLARES as a class or struct.
+    src_types = set()
     if args.reference_source and args.reference_source.is_dir():
+        decl = re.compile(r"(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)")
         for p in list(args.reference_source.glob("*.cpp")) + list(args.reference_source.glob("*.h")):
             try:
-                src_text += p.read_text(encoding="utf-8", errors="ignore")
+                src_types.update(decl.findall(p.read_text(encoding="utf-8", errors="ignore")))
             except OSError:
                 pass
 
@@ -196,8 +201,8 @@ def main(argv: list[str]) -> int:
                 grade, ev = "RTTI_AMBIGUOUS", "in %d vtables, no single ancestor" % len(fn_classes[va])
             elif prefix and prefix in bin_strings:
                 grade, ev = "BINARY_STRING", "prefix appears as a string in the binary"
-            elif prefix and src_text and prefix in src_text:
-                grade, ev = "SOURCE_BACKED", "prefix appears in the reference source"
+            elif prefix and prefix in src_types:
+                grade, ev = "SOURCE_BACKED", "reference source declares this class/struct"
             else:
                 grade, ev = "UNBACKED", "no supporting evidence found"
             counts[grade] += 1
