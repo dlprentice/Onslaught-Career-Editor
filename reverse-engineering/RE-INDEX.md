@@ -34,15 +34,35 @@ waves, superseded plans, and generated accounting.
 
 ## Current static authority
 
+- [2026-07 fullpass expedition handoff (branch status)](binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md)
+
+
 - [2026-07-13 full Ghidra re-audit closeout](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
 - [Per-address reviewed correction plan](binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json)
+- [2026-07 fullpass discovery findings](binary-analysis/ghidra-fullpass-findings/) (waves W001–W018)
 - [Battle Engine movement crosswalk](binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md)
 - [Battle Engine morph observer design](binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md)
 - [Pinned reference-submodule audit](source-code/reference-submodule-audit-2026-07-12.md)
 
 The `6,411/6,411` closeout is a metadata/export accounting result, not a claim
-that every function is semantically correct. Current per-function notes live
-under [`binary-analysis/functions/`](binary-analysis/functions/_index.md).
+that every function is semantically correct. Fullpass wave notes are discovery
+evidence only; they do not claim complete semantic correctness of the database.
+Current per-function notes live under
+[`binary-analysis/functions/`](binary-analysis/functions/_index.md).
+
+### 2026-07 fullpass correction expedition (authority map)
+
+| Layer | Location | Role |
+| --- | --- | --- |
+| Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
+| Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
+| Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-07-18) | Distributable reviewed snapshot; may lag the live maintainer DB |
+
+Host install paths, headless entry, and local project layout:
+[`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
+`local-lab/`; do not treat discovery notes as proof that the tracked snapshot
+or live DB was mutated.
 
 ## Product-facing summaries
 

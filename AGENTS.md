@@ -41,6 +41,9 @@
 ## Evidence
 
 - `reverse-engineering/RE-INDEX.md` is the RE front door.
+- Local Ghidra install / maintainer project paths and headless posture:
+  `reverse-engineering/ghidra/README.md` (machine-local; keep expedition
+  overlays in ignored `local-lab/`).
 - Static evidence supports only the identities and structures it demonstrates.
 - Controlled copied-runtime evidence establishes observed causality, behavior, and measured values.
 - Stuart's source is architecture and implementation evidence; the Steam binary
