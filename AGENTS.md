@@ -15,7 +15,10 @@
 
 ## Hard Boundaries
 
-- Read `README.MD` and only the files directly related to the change.
+- Read `README.MD`, then read widely enough to be right. Prefer the smallest
+  *change*, not the smallest amount of reading: this project's recurring failure
+  has been locally-correct code that was wrong against the game, and narrow reading
+  is how that happens.
 - Do not add game binaries, copied executables, arbitrary save payloads, raw
   debugger logs, Ghidra backups or alternate projects, credentials, `.env*`,
   or bulky runtime captures. The canonical distributable Ghidra project lives
@@ -40,6 +43,14 @@
 
 ## Evidence
 
+- **A behavior or parity claim must cite a capture, a byte comparison, or a test —
+  never a code path.** "The code does X" is not evidence that the product does X.
+  Reviewing code has repeatedly certified defects here: a half-intensity colour
+  transform, a video drawn where retail draws flat colour, and a patched-build
+  version string copied into the product all passed code review and green gates.
+  Each was found in minutes once output was compared to the game.
+- Findings state evidence and a verdict. Hedge boilerplate, restated verdicts, and
+  confirmation prose are not deliverables; a measured number and its method are.
 - `reverse-engineering/RE-INDEX.md` is the RE front door.
 - Local Ghidra install / maintainer project paths and headless posture:
   `reverse-engineering/ghidra/README.md` (machine-local; keep expedition
