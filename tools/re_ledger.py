@@ -182,7 +182,14 @@ def main(argv: list[str]) -> int:
             va, name = int(p[0], 16), p[1]
             m = re.match(r"^([A-Za-z0-9_]+?)__", name)
             prefix = m.group(1) if m else ""
-            if va in owner:
+            # Ghidra's default FUN_/SUB_ names are the ABSENCE of a name, not a
+            # competing claim. Scoring them as conflicts would inflate the conflict
+            # count with functions nobody has named yet.
+            unnamed = re.match(r"^(FUN|SUB|LAB|thunk_FUN)_[0-9a-fA-F]{6,}$", name) is not None
+            if unnamed:
+                grade = "UNNAMED_RTTI_OWNER" if va in owner else "UNNAMED"
+                ev = f"default Ghidra name; owner={owner[va]}" if va in owner else "default Ghidra name"
+            elif va in owner:
                 grade = "RTTI_CONFIRMED" if prefix == owner[va] else "RTTI_CONFLICT"
                 ev = f"vtable owner={owner[va]}"
             elif va in fn_classes:
@@ -200,7 +207,8 @@ def main(argv: list[str]) -> int:
     print(f"classes with a hierarchy : {len(ancestors)}")
     print(f"functions reached by RTTI: {len(fn_classes)}   owner resolved: {len(owner)}   ambiguous: {ambiguous}")
     print(f"\nfunctions graded         : {total}")
-    for g in ("RTTI_CONFIRMED", "RTTI_CONFLICT", "RTTI_AMBIGUOUS", "BINARY_STRING", "SOURCE_BACKED", "UNBACKED"):
+    for g in ("RTTI_CONFIRMED", "RTTI_CONFLICT", "RTTI_AMBIGUOUS", "BINARY_STRING",
+              "SOURCE_BACKED", "UNNAMED_RTTI_OWNER", "UNNAMED", "UNBACKED"):
         if counts[g]:
             print(f"  {g:<16} {counts[g]:>5}  ({100.0 * counts[g] / total:5.1f}%)")
 
