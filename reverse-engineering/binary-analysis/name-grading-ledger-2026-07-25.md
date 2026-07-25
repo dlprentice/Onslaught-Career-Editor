@@ -87,12 +87,85 @@ cause was known (4,897 = 3,888 + 1,009). An adversarial reviewer, given only the
 symptom and the list of previously "ruled out" causes, independently reproduced the
 same root cause and the same corrected counts.
 
+## Update — 332 conflicts adjudicated and applied, then re-graded from a fresh export
+
+The 367 `RTTI_CONFLICT` rows were adjudicated per function, grouped by
+(current prefix → RTTI owner) pair: **332 SAFE_REPREFIX**, 30 NEEDS_REVIEW,
+4 UNCERTAIN, 1 KEEP_CURRENT. Only the 332 were applied, swapping the class prefix
+and preserving the descriptive suffix.
+
+Most of the 367 were not class-vs-class disputes at all. 86 current prefixes were
+`Shared*` placeholder buckets, 57 were `<Class>VFunc` (the same class with a token
+welded on), 34 were offset-named inventions, 18 were not class tokens. **251 of the
+current prefixes are not RTTI classes in the binary**, and 69 more are RTTI classes
+unrelated by inheritance to the resolved owner.
+
+34 invented offset names recovered real developer names one-for-one —
+`CComponentScalarD8 → CComponentMaxYaw`, `CComponentFlag12C → CComponentTentacle`,
+`CExplosionScalar34 → CExplosionRadius`. The offsets survive in the metadata
+comments, so nothing is lost. Verified by presence: those RTTI descriptors are in
+the binary; `CComponentScalarD8` is not.
+
+Ten `CAsmInstruction → CInstructionOP_*` rows are a genuine non-circular check: the
+RTTI opcode name and the prior campaign's independently-derived behavioural suffix
+agree **9 of 10** (`OP_OR`/`ExecuteOr`, `OP_GREAT_EQ_THAN`/`ExecuteGreaterOrEqual`).
+The tenth (`OP_RETURN`/`ExecutePop`) is consistent but unverified.
+
+Applied live under backup → canary-20 on `project-rw` → dual readback → promote →
+remainder: **renamed 332 / failed 0 / mismatched 0 / missing 0**. Backups verified
+by file count, byte total and per-file SHA-256 (0 diffs).
+
+**Readback is not proof, so the database was re-exported and re-graded from
+scratch.** The prediction was stated in advance and met exactly:
+
+| grade | before | after | delta |
+| --- | ---: | ---: | ---: |
+| RTTI_CONFIRMED | 1,068 | **1,400** | **+332** |
+| RTTI_CONFLICT | 367 | **35** | **−332** |
+| RTTI_AMBIGUOUS | 104 | 104 | 0 |
+| BINARY_STRING | 217 | 217 | 0 |
+| SOURCE_BACKED | 1,009 | 1,009 | 0 |
+| UNNAMED | 316 | 316 | 0 |
+| UNBACKED | 3,888 | 3,888 | 0 |
+| total | 6,969 | 6,969 | 0 |
+
+Every changed row moved `RTTI_CONFLICT → RTTI_CONFIRMED`; no non-map address moved.
+The 35 residual conflicts are an **exact set match** with the 35 deliberately
+excluded rows — symmetric difference zero.
+
+The metadata export was driven from a freshly enumerated address list rather than
+the previous one, so a created or deleted function could not hide behind a stale
+list. The two address sets proved identical.
+
+### A resolver limitation this pass exposed
+
+**Abstract base classes are invisible to the ownership resolver by construction.**
+They have no vtable and no complete object locator, so the only emitted copy of
+their virtual methods is attributed to a derived class. Demonstrated on
+`CMusic__Play`, which RTTI attributes to `CPCMusic` — but `Music.h` shows `CMusic`'s
+device methods are `=0` and the concrete singleton is `extern class CPCMusic MUSIC`.
+The existing name is right and the RTTI owner is misleading. That is the single
+`KEEP_CURRENT`. **How many undetected instances exist cannot be bounded**, so "RTTI
+is the stronger evidence" is a qualified claim, not an absolute one.
+
+Multiple inheritance is also present and visible in the binary
+(`DECLARE_MULTI_INTERFACE_CLASS(CThing, IAudibleThing, IRenderableThing)`,
+`thing.h:65`; function `0x004040a0` occupies slots {0,9,10}). Ownership survives it,
+but **any name encoding a slot number is unsound** — which independently
+corroborates rejecting the 15 `VFuncSlot_NN_addr` suffixes as NEEDS_REVIEW.
+
+Thunks display the name of the function they thunk. `0x00447b50` is a confirmed
+case: its body is `E9 BB A4 FB FF JMP 0x00402010`, and it changed name without any
+rename being issued against it. It contributed 1 cosmetic name change and **0** grade
+movement, so the ±332 is neither inflated nor masked.
+
 ## What is not claimed here
 
 - No claim that any specific name is correct. This grades evidence, not accuracy.
-- The 367 `RTTI_CONFLICT` rows are **not** yet adjudicated. RTTI is the stronger
-  evidence for the class prefix, but a conflicting name may still describe the
-  function's behaviour correctly under the wrong class, so each needs a decision
-  rather than a bulk overwrite.
-- No naming change was applied to the live database on the strength of this
-  document.
+- `RTTI_CONFIRMED` means the class **prefix** agrees with the binary's own type
+  descriptor for the owning vtable. The descriptive **suffix** on those 332 names
+  remains ungraded.
+- The 35 residual conflicts are unadjudicated by design and still need per-function
+  decisions.
+- The per-function rationale comments were dropped to satisfy the rename parser's
+  two-field requirement and have not yet been applied.
