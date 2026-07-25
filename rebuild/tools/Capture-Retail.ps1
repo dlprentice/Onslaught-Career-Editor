@@ -34,6 +34,19 @@ param(
     # Centre clicks are fine for click-to-start, but menu rows are not at the centre
     # of the frame, so reaching level select needs a real position.
     [string[]]$ClickAt = @(),
+    # Key presses as "seconds:VK" using virtual-key codes, e.g. "26:13" for Enter.
+    # Needed to get past pages that confirm with the keyboard rather than a click.
+    [string[]]$KeyAt = @(),
+    # State-driven script. Retail startup timing is NOT deterministic - disk caching
+    # alone shifts click-to-start by several seconds between runs, and fixed delays
+    # land on the wrong screen and silently capture it. Each step waits for the frame
+    # to MATCH A SCREEN SIGNATURE before acting, so the sequence self-synchronises.
+    #   "wait R,G,B TOL SECONDS"  block until the client mean is within TOL
+    #   "click X,Y"               click at client coordinates
+    #   "key VK"                  press a virtual key
+    #   "shot LABEL"              save a frame as LABEL.png
+    #   "sleep SECONDS"
+    [string[]]$Steps = @(),
     [int]$TimeoutSeconds = 90,
     [switch]$SkipFmv = $true
 )
@@ -65,11 +78,11 @@ $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 $null = [IO.Directory]::CreateDirectory($OutputDirectory)
 
 Add-Type -AssemblyName System.Drawing
-if (-not ('Win32CaptureNative' -as [type])) {
+if (-not ('BeaCaptureNativeV2' -as [type])) {
     Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
-public static class Win32CaptureNative {
+public static class BeaCaptureNativeV2 {
     [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X, Y; }
     [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);
@@ -80,6 +93,8 @@ public static class Win32CaptureNative {
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
     [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+    [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+    public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
     public const uint MOUSEEVENTF_LEFTUP   = 0x0004;
 }
@@ -102,8 +117,83 @@ try {
     }
     $hwnd = $process.MainWindowHandle
     if ($hwnd -eq [IntPtr]::Zero) { throw "No window appeared within $TimeoutSeconds s." }
-    [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
+    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
     $windowAppeared = Get-Date
+
+    function Get-ClientFrame {
+        $cr = New-Object 'BeaCaptureNativeV2+RECT'
+        [void][BeaCaptureNativeV2]::GetClientRect($hwnd, [ref]$cr)
+        $pt = New-Object 'BeaCaptureNativeV2+POINT'
+        [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
+        $w = $cr.Right - $cr.Left; $h = $cr.Bottom - $cr.Top
+        [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+        Start-Sleep -Milliseconds 120
+        $bmp = New-Object System.Drawing.Bitmap $w, $h
+        $gfx = [System.Drawing.Graphics]::FromImage($bmp)
+        $gfx.CopyFromScreen($pt.X, $pt.Y, 0, 0, (New-Object System.Drawing.Size $w, $h))
+        $gfx.Dispose()
+        return $bmp
+    }
+
+    function Get-FrameMean([System.Drawing.Bitmap]$bmp) {
+        $r = 0.0; $g = 0.0; $b = 0.0; $n = 0
+        for ($y = 0; $y -lt $bmp.Height; $y += 8) {
+            for ($x = 0; $x -lt $bmp.Width; $x += 8) {
+                $px = $bmp.GetPixel($x, $y); $r += $px.R; $g += $px.G; $b += $px.B; $n++
+            }
+        }
+        return [pscustomobject]@{ R = $r / $n; G = $g / $n; B = $b / $n }
+    }
+
+    if ($Steps.Count -gt 0) {
+        foreach ($step in $Steps) {
+            $tok = $step -split '\s+'
+            switch ($tok[0]) {
+                'wait' {
+                    $want = $tok[1] -split ','
+                    $tol = [double]$tok[2]
+                    $limit = [double]$tok[3]
+                    $deadline2 = (Get-Date).AddSeconds($limit)
+                    $matched = $false
+                    while ((Get-Date) -lt $deadline2) {
+                        $bmp = Get-ClientFrame
+                        $m = Get-FrameMean $bmp
+                        $bmp.Dispose()
+                        $d = [Math]::Abs($m.R - [double]$want[0]) + [Math]::Abs($m.G - [double]$want[1]) + [Math]::Abs($m.B - [double]$want[2])
+                        if ($d -le $tol) { $matched = $true; break }
+                        Start-Sleep -Milliseconds 400
+                    }
+                    if (-not $matched) { throw "Timed out after ${limit}s waiting for screen signature $($tok[1]); last mean was $([int]$m.R),$([int]$m.G),$([int]$m.B)." }
+                }
+                'sleep' { Start-Sleep -Milliseconds ([int]([double]$tok[1] * 1000)) }
+                'key' {
+                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [byte]$vk = [int]$tok[1]; [byte]$sc = 0; [uint32]$dn = 0; [uint32]$up = [BeaCaptureNativeV2]::KEYEVENTF_KEYUP
+                    [BeaCaptureNativeV2]::keybd_event($vk, $sc, $dn, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
+                    [BeaCaptureNativeV2]::keybd_event($vk, $sc, $up, [UIntPtr]::Zero)
+                }
+                'click' {
+                    $xy = $tok[1] -split ','
+                    $pt = New-Object 'BeaCaptureNativeV2+POINT'
+                    [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
+                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [void][BeaCaptureNativeV2]::SetCursorPos($pt.X + [int]$xy[0], $pt.Y + [int]$xy[1]); Start-Sleep -Milliseconds 120
+                    [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
+                    [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+                }
+                'shot' {
+                    $bmp = Get-ClientFrame
+                    $path = Join-Path $OutputDirectory ("{0}.png" -f $tok[1])
+                    $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+                    $fg = [BeaCaptureNativeV2]::GetForegroundWindow()
+                    $shots += [pscustomobject]@{ label = $tok[1]; secondsAfterWindow = [int]((Get-Date) - $windowAppeared).TotalSeconds; width = $bmp.Width; height = $bmp.Height; printWindowOk = ($fg -eq $hwnd) }
+                    $bmp.Dispose()
+                }
+                default { throw "Unknown step verb '$($tok[0])' in '$step'." }
+            }
+        }
+    }
+    else {
 
     # Clicks and shots share one ordered timeline so a click always lands before
     # the shot that is meant to observe its effect.
@@ -114,6 +204,11 @@ try {
         if ($parts.Count -ne 3) { throw "Malformed -ClickAt '$spec'. Expected seconds:x:y." }
         $events += [pscustomobject]@{ At = [int]$parts[0]; Kind = 'click'; X = [int]$parts[1]; Y = [int]$parts[2] }
     }
+    foreach ($spec in $KeyAt) {
+        $parts = $spec -split ':'
+        if ($parts.Count -ne 2) { throw "Malformed -KeyAt '$spec'. Expected seconds:virtualKeyCode." }
+        $events += [pscustomobject]@{ At = [int]$parts[0]; Kind = 'key'; X = [int]$parts[1]; Y = $null }
+    }
     foreach ($t in $CaptureSecondsAfterWindow) { $events += [pscustomobject]@{ At = $t; Kind = 'shot'; X = $null; Y = $null } }
     $events = @($events | Sort-Object At, @{ Expression = { $_.Kind }; Descending = $false })
 
@@ -122,11 +217,25 @@ try {
         $wait = $offset - ((Get-Date) - $windowAppeared).TotalSeconds
         if ($wait -gt 0) { Start-Sleep -Milliseconds ([int]($wait * 1000)) }
 
+        if ($event.Kind -eq 'key') {
+            [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+            Start-Sleep -Milliseconds 150
+            [byte]$vk = $event.X
+            [byte]$scan = 0
+            [uint32]$down = 0
+            [uint32]$up = [BeaCaptureNativeV2]::KEYEVENTF_KEYUP
+            [BeaCaptureNativeV2]::keybd_event($vk, $scan, $down, [UIntPtr]::Zero)
+            Start-Sleep -Milliseconds 60
+            [BeaCaptureNativeV2]::keybd_event($vk, $scan, $up, [UIntPtr]::Zero)
+            Write-Verbose "pressed VK $($event.X) at ${offset}s"
+            continue
+        }
+
         if ($event.Kind -eq 'click') {
-            $cr = New-Object 'Win32CaptureNative+RECT'
-            [void][Win32CaptureNative]::GetClientRect($hwnd, [ref]$cr)
-            $pt = New-Object 'Win32CaptureNative+POINT'
-            [void][Win32CaptureNative]::ClientToScreen($hwnd, [ref]$pt)
+            $cr = New-Object 'BeaCaptureNativeV2+RECT'
+            [void][BeaCaptureNativeV2]::GetClientRect($hwnd, [ref]$cr)
+            $pt = New-Object 'BeaCaptureNativeV2+POINT'
+            [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
             if ($null -ne $event.X) {
                 $cx = $pt.X + $event.X
                 $cy = $pt.Y + $event.Y
@@ -135,13 +244,13 @@ try {
                 $cx = $pt.X + [int](($cr.Right - $cr.Left) / 2)
                 $cy = $pt.Y + [int](($cr.Bottom - $cr.Top) / 2) + $ClickOffsetY
             }
-            [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
+            [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
             Start-Sleep -Milliseconds 150
-            [void][Win32CaptureNative]::SetCursorPos($cx, $cy)
+            [void][BeaCaptureNativeV2]::SetCursorPos($cx, $cy)
             Start-Sleep -Milliseconds 120
-            [Win32CaptureNative]::mouse_event([Win32CaptureNative]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
+            [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
             Start-Sleep -Milliseconds 60
-            [Win32CaptureNative]::mouse_event([Win32CaptureNative]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+            [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
             Write-Verbose "clicked client centre at ${offset}s ($cx,$cy)"
             continue
         }
@@ -150,22 +259,22 @@ try {
         # window size and then crop to the client area, otherwise the title bar
         # shifts the frame and every subsequent coordinate comparison is off by the
         # border height - which would look exactly like a layout bug.
-        $clientRect = New-Object 'Win32CaptureNative+RECT'
-        $windowRect = New-Object 'Win32CaptureNative+RECT'
-        [void][Win32CaptureNative]::GetClientRect($hwnd, [ref]$clientRect)
-        [void][Win32CaptureNative]::GetWindowRect($hwnd, [ref]$windowRect)
+        $clientRect = New-Object 'BeaCaptureNativeV2+RECT'
+        $windowRect = New-Object 'BeaCaptureNativeV2+RECT'
+        [void][BeaCaptureNativeV2]::GetClientRect($hwnd, [ref]$clientRect)
+        [void][BeaCaptureNativeV2]::GetWindowRect($hwnd, [ref]$windowRect)
         $w = $clientRect.Right - $clientRect.Left; $h = $clientRect.Bottom - $clientRect.Top
         if ($w -le 0 -or $h -le 0) { throw "Client rect is empty; window not ready." }
 
-        $origin = New-Object 'Win32CaptureNative+POINT'
-        [void][Win32CaptureNative]::ClientToScreen($hwnd, [ref]$origin)
+        $origin = New-Object 'BeaCaptureNativeV2+POINT'
+        [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$origin)
         $offsetX = $origin.X - $windowRect.Left
         $offsetY = $origin.Y - $windowRect.Top
         # PrintWindow returns a blank (white) client area for this D3D surface, so
         # read the composited pixels off the desktop at the client rect's screen
         # position instead. This requires the window to be foreground and
         # unobstructed, which is why SetForegroundWindow is re-asserted per shot.
-        [void][Win32CaptureNative]::SetForegroundWindow($hwnd)
+        [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
         Start-Sleep -Milliseconds 200
 
         $bitmap = New-Object System.Drawing.Bitmap $w, $h
@@ -184,7 +293,7 @@ try {
         # or the intruding window - not the game - and it will look like a perfectly
         # valid, non-flat frame. This has already happened once and produced
         # Windows lock-screen PNGs sitting in a retail reference directory.
-        $foreground = [Win32CaptureNative]::GetForegroundWindow()
+        $foreground = [BeaCaptureNativeV2]::GetForegroundWindow()
         $isTarget = $foreground -eq $hwnd
         if (-not $isTarget) {
             Write-Warning ("Shot at ${offset}s: target window is NOT foreground " +
@@ -199,6 +308,7 @@ try {
         $bitmap.Dispose()
 
         $shots += [pscustomobject]@{ label = $name; secondsAfterWindow = $offset; width = $w; height = $h; printWindowOk = $ok }
+    }
     }
 }
 finally {
