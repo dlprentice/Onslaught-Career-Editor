@@ -92,3 +92,59 @@ depends on.
 - It does **not** assess whether any function's **name** is correct. `re_verify.py`
   proves bytes, boundaries, and structure only. A function can pass every check
   here and still carry an entirely invented name. Naming is graded separately.
+
+---
+
+## Update — gap recovery applied (same day)
+
+`tools/re_gap_classify.py` classified the uncovered space, and the recovered
+functions have been created on the live database.
+
+Classification of all uncovered runs >= 8 bytes (2,924 runs, 383,688 bytes):
+
+| class | runs | bytes | share |
+| --- | ---: | ---: | ---: |
+| **CODE** | 643 | **300,307** | **78.3%** |
+| UNKNOWN | 621 | 51,189 | 13.3% |
+| PAD | 1,536 | 17,736 | 4.6% |
+| PTR_TABLE | 37 | 9,403 | 2.5% |
+| DATA | 87 | 5,053 | 1.3% |
+
+So the uncovered fifth of `.text` is **overwhelmingly real code**, not embedded
+data. The earlier caution that "a substantial share is probably data" was correct
+in kind but wrong in proportion — data and padding together account for only 8.4%.
+
+Of 643 CODE runs, **568** start on a 16-byte boundary and were taken as creation
+candidates. Unaligned starts were excluded: a branch target inside an existing body
+is far more likely than a function entry, and creating a function there splits a
+real function in half.
+
+**Independent agreement.** Ghidra's own listing state for those 568:
+
+| status | count |
+| --- | ---: |
+| `INSTRUCTION_NO_FUNCTION` | **536** |
+| `OK` (already created by R4) | 20 |
+| `UNDEFINED` | 9 |
+| `DEFINED_DATA` | 3 |
+
+The static classifier and Ghidra agree on **536/568 = 94.4%**, derived from
+completely different evidence — capstone decoding plus reference scanning on one
+side, Ghidra's listing model on the other.
+
+**Applied.** The 536 `INSTRUCTION_NO_FUNCTION` candidates were created live under
+the established discipline: verified pre-backup, canary of 20 on `project-rw` with
+dual readback (20/20 `OK`), canary promoted live and read back (20/20 `OK`), then
+the remaining 516. Final readback over all 536: **536/536 `OK`**,
+`created=536 failed=0`. All carry default `FUN_` names; no class name was invented.
+
+Backups: `F:\GhidraBackups\BEA_20260725-224946Z_pre_promote_gap536` and
+`..._225146Z_post_promote_gap536`, both verified by file count and byte total.
+
+Function inventory: **6,411 -> 6,969** (6,411 baseline + 22 from R4 + 536 here).
+
+**Still outstanding:** the 621 UNKNOWN runs (51,189 bytes) decode acceptably but
+nothing references them, so they were deliberately not created — absence of entry
+evidence is not evidence of an entry. Re-exporting the database and re-running
+`re_verify.py` is the correct way to confirm the new coverage percentage; that has
+not been done yet, so no new coverage figure is claimed here.
