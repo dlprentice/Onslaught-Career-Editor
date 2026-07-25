@@ -409,19 +409,28 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawMainUnderlay()
     {
-        // CFEPMain → CDXFrontEndVideo__Render on FEBack128.vid; stretch 128² → stage.
-        if (_feBackFrames.Length == 0)
-        {
-            DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
-            return;
-        }
-
-        int index = (int)(_animationSeconds * FeBackFps) % _feBackFrames.Length;
-        DrawTextureRect(
-            _feBackFrames[index],
-            new Rect2(0f, 0f, DesignWidth, DesignHeight),
-            false,
-            Colors.White);
+        // MEASURED, not inferred: the released main menu draws a FLAT background.
+        //
+        // In captures/08-main-retail.png (640x480 retail), 67 of 192 40x40 tiles are
+        // perfectly flat (population sd < 0.5), including large areas mid-left and
+        // mid-right where no UI is drawn. Two disjoint 120x120 background regions
+        // measure exactly (23,23,48) with ONE distinct colour and sd 0.0, and two
+        // independently captured retail main-menu frames are bit-identical there.
+        //
+        // A 128² video stretched across the stage cannot produce that. Upscaling
+        // yields gradients in every tile, and any non-zero modulate of a textured
+        // source leaves variance behind. Zero variance across 14,400 pixels means no
+        // video contribution is visible on this screen.
+        //
+        // Contrast the click-to-start frame, which IS textured (sd ~27-40, 60,821
+        // distinct colours) with flat pillarbox bars left and right — consistent
+        // with the centred 480² splash that extents.json records.
+        //
+        // So FEBack128 is not the visible main-menu underlay. Its actual role is
+        // unresolved and the decoded strip is retained (it materializes to exactly
+        // 128*128*3*286 bytes, so the decode itself is sound). See
+        // local-lab/PARITY-FINDINGS-2026-07-25.md finding 5.
+        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
     }
 
     private void DrawQuitConfirm()

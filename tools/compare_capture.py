@@ -1,0 +1,131 @@
+"""Pixel comparison between a retail reference frame and a reconstruction frame.
+
+Parity claims in this project have historically cited code paths. This tool exists
+so they can cite pixels instead.
+
+Design notes:
+
+* It REFUSES to compare frames of different sizes rather than resampling. Rescaling
+  is precisely what hides sub-pixel and layout error, which is the class of defect
+  this is meant to surface.
+* It reports per-region deltas, not a single global number. A global mean is
+  dominated by whatever occupies the most area (usually the background) and will
+  happily read "97% similar" while the menu is in the wrong place.
+* It separates *structural* disagreement (a pixel differs at all) from *magnitude*
+  (by how much), because a small uniform tint error and a misplaced element produce
+  very different profiles and need different fixes.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+
+def load_rgb(path: Path) -> Image.Image:
+    if not path.is_file():
+        raise SystemExit(f"missing image: {path}")
+    return Image.open(path).convert("RGB")
+
+
+def region_stats(ref: Image.Image, cmp_: Image.Image, box: tuple[int, int, int, int]) -> dict:
+    a = list(ref.crop(box).get_flattened_data())
+    b = list(cmp_.crop(box).get_flattened_data())
+    n = len(a)
+    if n == 0:
+        return {"pixels": 0}
+
+    diffs = [abs(p[0] - q[0]) + abs(p[1] - q[1]) + abs(p[2] - q[2]) for p, q in zip(a, b)]
+    changed = sum(1 for d in diffs if d > 0)
+    # 24 = ~3% of full-scale on each channel; below this is dither/AA noise.
+    material = sum(1 for d in diffs if d > 24)
+
+    def mean(xs):
+        return sum(xs) / len(xs)
+
+    return {
+        "pixels": n,
+        "changedPct": round(100.0 * changed / n, 2),
+        "materialPct": round(100.0 * material / n, 2),
+        "meanAbsDelta": round(mean(diffs) / 3.0, 2),
+        "maxAbsDelta": max(diffs) // 3,
+        "refMeanRGB": [round(mean([p[i] for p in a]), 1) for i in range(3)],
+        "cmpMeanRGB": [round(mean([p[i] for p in b]), 1) for i in range(3)],
+    }
+
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--reference", required=True, type=Path)
+    ap.add_argument("--candidate", required=True, type=Path)
+    ap.add_argument("--regions", type=Path, help="JSON: {name: [x0,y0,x1,y1], ...}")
+    ap.add_argument("--diff-image", type=Path, help="write an amplified difference image")
+    ap.add_argument("--json-out", type=Path)
+    args = ap.parse_args(argv)
+
+    ref = load_rgb(args.reference)
+    cmp_ = load_rgb(args.candidate)
+
+    if ref.size != cmp_.size:
+        print(
+            f"REFUSED: size mismatch reference={ref.size} candidate={cmp_.size}.\n"
+            "These frames are not comparable. Rescaling would conceal exactly the\n"
+            "layout error this tool exists to find. Re-capture the reconstruction at\n"
+            f"{ref.size[0]}x{ref.size[1]} (Capture-Frontend.ps1 -Resolution "
+            f"{ref.size[0]}x{ref.size[1]}).",
+            file=sys.stderr,
+        )
+        return 2
+
+    regions = {"FULL FRAME": [0, 0, ref.size[0], ref.size[1]]}
+    if args.regions:
+        regions.update(json.loads(args.regions.read_text(encoding="utf-8")))
+
+    report = {
+        "reference": str(args.reference),
+        "candidate": str(args.candidate),
+        "size": list(ref.size),
+        "regions": {},
+    }
+
+    width = max(len(k) for k in regions)
+    print(f"{'region'.ljust(width)}  changed%  material%  meanD  maxD  refRGB -> cmpRGB")
+    print("-" * (width + 56))
+    for name, box in regions.items():
+        stats = region_stats(ref, cmp_, tuple(box))
+        report["regions"][name] = stats
+        if not stats["pixels"]:
+            continue
+        print(
+            f"{name.ljust(width)}  {stats['changedPct']:7.2f}  {stats['materialPct']:8.2f}"
+            f"  {stats['meanAbsDelta']:5.1f}  {stats['maxAbsDelta']:4d}"
+            f"  {stats['refMeanRGB']} -> {stats['cmpMeanRGB']}"
+        )
+
+    if args.diff_image:
+        # 4x amplification: real layout error saturates, dither noise stays dim.
+        diff = Image.new("RGB", ref.size)
+        rp = list(ref.get_flattened_data())
+        cp = list(cmp_.get_flattened_data())
+        diff.putdata([
+            (min(255, abs(a[0] - b[0]) * 4),
+             min(255, abs(a[1] - b[1]) * 4),
+             min(255, abs(a[2] - b[2]) * 4))
+            for a, b in zip(rp, cp)
+        ])
+        args.diff_image.parent.mkdir(parents=True, exist_ok=True)
+        diff.save(args.diff_image)
+        print(f"\ndiff image: {args.diff_image}")
+
+    if args.json_out:
+        args.json_out.parent.mkdir(parents=True, exist_ok=True)
+        args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

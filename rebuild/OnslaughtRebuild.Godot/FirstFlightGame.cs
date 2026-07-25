@@ -984,7 +984,8 @@ public sealed partial class FirstFlightGame : Node3D
                 _smokeReportPath = argument["--report=".Length..];
             }
             else if (argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
-                     argument.StartsWith("--capture-plan=", StringComparison.Ordinal))
+                     argument.StartsWith("--capture-plan=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-size=", StringComparison.Ordinal))
             {
                 // Consumed by FrontendCaptureRig.TryCreate during _Ready.
             }

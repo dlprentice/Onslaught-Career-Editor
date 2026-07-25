@@ -36,9 +36,19 @@ public sealed partial class FrontendCaptureRig : Node
     private readonly List<Step> _steps = [];
     private readonly List<Dictionary<string, object?>> _written = [];
 
+    /// <summary>
+    /// Released composition size. `CD3DApplication__Init` seeds
+    /// `m_dwCreationWidth = 0x280` (640) and `m_dwCreationHeight = 0x1e0` (480),
+    /// and every retail reference capture is 640x480.
+    /// </summary>
+    private const int NativeWidth = 640;
+    private const int NativeHeight = 480;
+
     private RetailFrontendFlow _frontend = null!;
     private string _outputDirectory = string.Empty;
     private string _planName = string.Empty;
+    private int _captureWidth = NativeWidth;
+    private int _captureHeight = NativeHeight;
     private int _frame = -1;
     private int _shotCursor;
     private int _stepCursor;
@@ -58,7 +68,9 @@ public sealed partial class FrontendCaptureRig : Node
         (240, "04-main-menu-settled", RetailFrontendScreen.MainMenu),
         (252, "05-level-select", RetailFrontendScreen.LevelSelect),
         (300, "06-level-select-settled", RetailFrontendScreen.LevelSelect),
-        (312, "07-loading-handoff", RetailFrontendScreen.Loading),
+        // The loading screen is short-lived: at +4 frames the flow has already
+        // reached Gameplay. Sample the frame immediately after the confirm.
+        (309, "07-loading-handoff", RetailFrontendScreen.Loading),
     ];
 
     private static readonly (int Frame, string Action)[] StartupSteps =
@@ -76,6 +88,8 @@ public sealed partial class FrontendCaptureRig : Node
         rig = null;
         string? directory = null;
         string plan = "startup";
+        int width = NativeWidth;
+        int height = NativeHeight;
 
         foreach (string argument in arguments)
         {
@@ -86,6 +100,18 @@ public sealed partial class FrontendCaptureRig : Node
             else if (argument.StartsWith("--capture-plan=", System.StringComparison.Ordinal))
             {
                 plan = argument["--capture-plan=".Length..];
+            }
+            else if (argument.StartsWith("--capture-size=", System.StringComparison.Ordinal))
+            {
+                string[] parts = argument["--capture-size=".Length..].Split('x');
+                if (parts.Length != 2 ||
+                    !int.TryParse(parts[0], out width) ||
+                    !int.TryParse(parts[1], out height) ||
+                    width <= 0 || height <= 0)
+                {
+                    throw new ArgumentException(
+                        $"Malformed --capture-size in '{argument}'. Expected WIDTHxHEIGHT, e.g. 640x480.");
+                }
             }
         }
 
@@ -110,6 +136,8 @@ public sealed partial class FrontendCaptureRig : Node
             _frontend = frontend,
             _outputDirectory = directory,
             _planName = plan,
+            _captureWidth = width,
+            _captureHeight = height,
         };
         return true;
     }
@@ -117,6 +145,7 @@ public sealed partial class FrontendCaptureRig : Node
     public override void _Ready()
     {
         _ = Directory.CreateDirectory(_outputDirectory);
+        ApplyNativeCaptureViewport();
 
         foreach ((int frame, string label, RetailFrontendScreen? screen) in StartupPlan)
         {
@@ -136,6 +165,29 @@ public sealed partial class FrontendCaptureRig : Node
         RenderingServer.Singleton.Connect(
             RenderingServer.SignalName.FramePostDraw,
             Callable.From(OnFramePostDraw));
+    }
+
+    /// <summary>
+    /// Forces a 1:1 native composition for the duration of the capture run.
+    ///
+    /// This is CAPTURE-ONLY and deliberately does not change the shipped window
+    /// contract in `project.godot` (1280x720) — that is a product decision, not a
+    /// parity concern. `RetailFrontendFlow` letterboxes its 640x480 design stage
+    /// with `scale = min(Size.X / 640, Size.Y / 480)`, so at exactly 640x480 the
+    /// scale is 1.0 and the offset is zero: every drawn pixel maps to one output
+    /// pixel, which is what makes a direct diff against the retail reference
+    /// meaningful. At any other size the frame is resampled and sub-pixel layout
+    /// error — the kind we are hunting — gets smeared away before it can be seen.
+    ///
+    /// Content scaling is disabled rather than resized so Godot does not
+    /// reintroduce its own stretch transform on top of the flow's.
+    /// </summary>
+    private void ApplyNativeCaptureViewport()
+    {
+        Window window = GetWindow();
+        window.ContentScaleMode = Window.ContentScaleModeEnum.Disabled;
+        window.ContentScaleAspect = Window.ContentScaleAspectEnum.Ignore;
+        window.Size = new Vector2I(_captureWidth, _captureHeight);
     }
 
     public override void _Process(double delta)

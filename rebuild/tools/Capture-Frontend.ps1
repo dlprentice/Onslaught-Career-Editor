@@ -45,6 +45,9 @@ try {
     $null = [IO.Directory]::CreateDirectory($OutputDirectory)
     $logPath = Join-Path $OutputDirectory 'capture.log'
 
+    # The rig sets the viewport to $Resolution itself and disables content scaling,
+    # so the frame is composed 1:1. --resolution alone is not enough: project.godot
+    # pins viewport_width/height plus window_*_override, which win over the flag.
     $engineArgs = @(
         '--log-file', $logPath,
         '--path', $projectRoot,
@@ -53,7 +56,8 @@ try {
         '--fixed-fps', '60',
         '--',
         "--capture-dir=$OutputDirectory",
-        "--capture-plan=$Plan")
+        "--capture-plan=$Plan",
+        "--capture-size=$Resolution")
 
     $process = Start-Process -FilePath $toolchain.EnginePath -ArgumentList $engineArgs -PassThru -NoNewWindow
     if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
@@ -73,8 +77,15 @@ try {
     $mismatched = @($manifest.shots | Where-Object { -not $_.screenMatched })
     $failedSaves = @($manifest.shots | Where-Object { $null -ne $_.saveError })
 
+    # A frame that is not the requested size was resampled somewhere, and comparing
+    # it against the retail reference would silently launder away layout error.
+    $wanted = $Resolution -split 'x'
+    $wrongSize = @($manifest.shots | Where-Object {
+        $_.width -ne [int]$wanted[0] -or $_.height -ne [int]$wanted[1] })
+
     [pscustomobject]@{
-        Status = if ($mismatched.Count -eq 0 -and $failedSaves.Count -eq 0) { 'PASS' } else { 'SUSPECT' }
+        Status = if ($mismatched.Count -eq 0 -and $failedSaves.Count -eq 0 -and $wrongSize.Count -eq 0) { 'PASS' } else { 'SUSPECT' }
+        WrongSizeShots = $wrongSize.Count
         Plan = $manifest.plan
         EngineVersion = $manifest.engineVersion
         Viewport = "$($manifest.viewportWidth)x$($manifest.viewportHeight)"
