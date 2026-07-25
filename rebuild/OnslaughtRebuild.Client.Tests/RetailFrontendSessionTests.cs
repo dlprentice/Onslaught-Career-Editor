@@ -7,7 +7,7 @@ namespace OnslaughtRebuild.Client.Tests;
 public sealed class RetailFrontendSessionTests
 {
     [Fact]
-    public void ReleasedEntryPathRequiresClickMainMenuAndLevelSelection()
+    public void ReleasedEntryPathRequiresClickMainMenuNameChoiceAndLevelSelection()
     {
         var frontend = new RetailFrontendSession();
 
@@ -15,6 +15,13 @@ public sealed class RetailFrontendSessionTests
         Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.MainMenu, frontend.Screen);
         Assert.Equal(RetailFrontendMenuItemKind.NewGame, frontend.SelectedMainItem.Kind);
+
+        // New Game enters retail's FEP_DEVSELECT ("CHOOSE GAME NAME") page
+        // before level select; CFrontEnd::Init drives the new-career entry with
+        // SetPage(FEP_DEVSELECT, 0) at references/Onslaught/FrontEnd.cpp:182.
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.DevSelect, frontend.Screen);
+        Assert.Equal(RetailFrontendSession.DefaultGameName, frontend.GameName);
 
         Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
@@ -49,8 +56,80 @@ public sealed class RetailFrontendSessionTests
 
         Assert.Equal(RetailFrontendMenuItemKind.NewGame, frontend.SelectedMainItem.Kind);
         frontend.Confirm();
+        Assert.Equal(RetailFrontendScreen.DevSelect, frontend.Screen);
         Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
         Assert.Equal(RetailFrontendScreen.MainMenu, frontend.Screen);
+    }
+
+    [Fact]
+    public void DevSelectCarriesNoCareerPersistenceAndOffersTheReleasedDefaultName()
+    {
+        RetailFrontendSession frontend = AtDevSelect();
+
+        // This lane deliberately implements FEP_DEVSELECT visually and
+        // sequentially only, so no careers are ever enumerated.
+        Assert.Empty(frontend.CareerNames);
+        Assert.Equal(-1, frontend.SelectedCareerIndex);
+        Assert.False(frontend.SelectCareerIndex(0));
+        Assert.False(frontend.MoveNext());
+        Assert.False(frontend.MovePrevious());
+
+        // "BEA 1" is what the pristine 640x480 retail capture shows pre-filled
+        // and highlighted in the name field.
+        Assert.Equal("BEA 1", RetailFrontendSession.DefaultGameName);
+        Assert.Equal("BEA 1", frontend.GameName);
+    }
+
+    [Fact]
+    public void DevSelectNameFieldIsEditableAndBounded()
+    {
+        RetailFrontendSession frontend = AtDevSelect();
+
+        Assert.True(frontend.RemoveGameNameCharacter());
+        Assert.Equal("BEA ", frontend.GameName);
+        Assert.True(frontend.AppendGameNameCharacter('2'));
+        Assert.Equal("BEA 2", frontend.GameName);
+        Assert.False(frontend.AppendGameNameCharacter('\n'));
+
+        while (frontend.GameName.Length < RetailFrontendSession.MaxGameNameLength)
+        {
+            Assert.True(frontend.AppendGameNameCharacter('x'));
+        }
+
+        Assert.False(frontend.AppendGameNameCharacter('x'));
+        Assert.Equal(RetailFrontendSession.MaxGameNameLength, frontend.GameName.Length);
+
+        while (frontend.RemoveGameNameCharacter())
+        {
+        }
+
+        Assert.Equal(string.Empty, frontend.GameName);
+    }
+
+    [Fact]
+    public void DevSelectNameEditsDoNotEscapeThePage()
+    {
+        var frontend = new RetailFrontendSession();
+        Assert.False(frontend.AppendGameNameCharacter('x'));
+        Assert.False(frontend.RemoveGameNameCharacter());
+        Assert.False(frontend.SelectCareerIndex(0));
+
+        RetailFrontendSession devSelect = AtDevSelect();
+        Assert.True(devSelect.AppendGameNameCharacter('x'));
+        Assert.Equal(RetailFrontendSignal.PageChanged, devSelect.Back());
+        Assert.Equal(RetailFrontendScreen.MainMenu, devSelect.Screen);
+        Assert.Equal(RetailFrontendSession.DefaultGameName, devSelect.GameName);
+    }
+
+    [Fact]
+    public void BackFromLevelSelectReturnsToTheNameChoicePage()
+    {
+        RetailFrontendSession frontend = AtDevSelect();
+        frontend.Confirm();
+
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
+        Assert.Equal(RetailFrontendScreen.DevSelect, frontend.Screen);
     }
 
     [Fact]
@@ -128,7 +207,7 @@ public sealed class RetailFrontendSessionTests
     [Fact]
     public void LoadingCannotCompleteBeforeTheLaunchIsClaimed()
     {
-        var frontend = AtMainMenu();
+        RetailFrontendSession frontend = AtDevSelect();
         frontend.Confirm();
         frontend.Confirm();
 
@@ -174,9 +253,16 @@ public sealed class RetailFrontendSessionTests
         return frontend;
     }
 
-    private static RetailFrontendSession AtGameplay()
+    private static RetailFrontendSession AtDevSelect()
     {
         RetailFrontendSession frontend = AtMainMenu();
+        frontend.Confirm();
+        return frontend;
+    }
+
+    private static RetailFrontendSession AtGameplay()
+    {
+        RetailFrontendSession frontend = AtDevSelect();
         frontend.Confirm();
         frontend.Confirm();
         frontend.ConsumeLevel100LaunchRequest();

@@ -66,18 +66,21 @@ public sealed partial class FrontendCaptureRig : Node
         (120, "02-click-settled", RetailFrontendScreen.ClickToStart),
         (132, "03-main-menu-entry", RetailFrontendScreen.MainMenu),
         (240, "04-main-menu-settled", RetailFrontendScreen.MainMenu),
-        (252, "05-level-select", RetailFrontendScreen.LevelSelect),
-        (300, "06-level-select-settled", RetailFrontendScreen.LevelSelect),
+        (252, "05-dev-select-entry", RetailFrontendScreen.DevSelect),
+        (300, "06-dev-select-settled", RetailFrontendScreen.DevSelect),
+        (312, "07-level-select", RetailFrontendScreen.LevelSelect),
+        (360, "08-level-select-settled", RetailFrontendScreen.LevelSelect),
         // The loading screen is short-lived: at +4 frames the flow has already
         // reached Gameplay. Sample the frame immediately after the confirm.
-        (309, "07-loading-handoff", RetailFrontendScreen.Loading),
+        (369, "09-loading-handoff", RetailFrontendScreen.Loading),
     ];
 
     private static readonly (int Frame, string Action)[] StartupSteps =
     [
         (128, "confirm"), // click-to-start -> main menu
-        (248, "confirm"), // main menu New Game -> level select
-        (308, "confirm"), // level select Level 100 -> loading
+        (248, "confirm"), // main menu New Game -> FEP_DEVSELECT
+        (308, "confirm"), // CHOOSE GAME NAME -> level select
+        (368, "confirm"), // level select Level 100 -> loading
     ];
 
     public static bool TryCreate(

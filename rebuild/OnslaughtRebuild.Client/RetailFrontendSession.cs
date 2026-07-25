@@ -30,7 +30,30 @@ public sealed class RetailFrontendSession
         new(RetailFrontendMenuItemKind.Quit, IsAvailable: true),
     ];
 
+    /// <summary>
+    /// Careers this bounded lane knows about on the FEP_DEVSELECT page.
+    ///
+    /// Retail lists the saved careers found on the selected device. This lane
+    /// deliberately carries NO save/career persistence (see
+    /// local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md, "Decision taken"), so the
+    /// list is structurally present and always empty. That is a bounded absence,
+    /// not a claim that retail shows an empty list.
+    /// </summary>
+    private static readonly string[] NoCareers = [];
+
+    /// <summary>
+    /// Default game name offered by the page. Retail's pristine 640x480
+    /// FEP_DEVSELECT capture shows "BEA 1" pre-filled and highlighted in the
+    /// name field with no career selected
+    /// (local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png).
+    /// </summary>
+    public const string DefaultGameName = "BEA 1";
+
+    /// <summary>Retail's name field is bounded; 20 is this lane's bound.</summary>
+    public const int MaxGameNameLength = 20;
+
     private bool _level100LaunchPending;
+    private string _gameName = DefaultGameName;
 
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
@@ -52,6 +75,61 @@ public sealed class RetailFrontendSession
 
     public RetailFrontendMenuItemKind? UnavailableSelection { get; private set; }
 
+    /// <summary>Career rows drawn in the FEP_DEVSELECT list panel.</summary>
+    public IReadOnlyList<string> CareerNames => NoCareers;
+
+    /// <summary>Highlighted career row, or -1 when no row is highlighted.</summary>
+    public int SelectedCareerIndex { get; private set; } = -1;
+
+    /// <summary>Editable contents of the FEP_DEVSELECT name field.</summary>
+    public string GameName => _gameName;
+
+    /// <summary>
+    /// Moves the FEP_DEVSELECT highlight onto a career row, tracking the
+    /// selection into the name field. Observed in the user's live retail frame:
+    /// selecting a list entry replaces the field text with that entry.
+    /// </summary>
+    public bool SelectCareerIndex(int index)
+    {
+        if (Screen != RetailFrontendScreen.DevSelect ||
+            index < 0 ||
+            index >= CareerNames.Count ||
+            index == SelectedCareerIndex)
+        {
+            return false;
+        }
+
+        SelectedCareerIndex = index;
+        _gameName = CareerNames[index];
+        return true;
+    }
+
+    /// <summary>Types one character into the name field.</summary>
+    public bool AppendGameNameCharacter(char character)
+    {
+        if (Screen != RetailFrontendScreen.DevSelect ||
+            _gameName.Length >= MaxGameNameLength ||
+            character is < ' ' or > '~')
+        {
+            return false;
+        }
+
+        _gameName += character;
+        return true;
+    }
+
+    /// <summary>Backspaces one character out of the name field.</summary>
+    public bool RemoveGameNameCharacter()
+    {
+        if (Screen != RetailFrontendScreen.DevSelect || _gameName.Length == 0)
+        {
+            return false;
+        }
+
+        _gameName = _gameName[..^1];
+        return true;
+    }
+
     public bool MovePrevious()
     {
         if (Screen == RetailFrontendScreen.QuitConfirm)
@@ -63,6 +141,11 @@ public sealed class RetailFrontendSession
 
             SelectedQuitConfirmIndex = 0;
             return true;
+        }
+
+        if (Screen == RetailFrontendScreen.DevSelect)
+        {
+            return SelectCareerIndex(SelectedCareerIndex - 1);
         }
 
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == 0)
@@ -86,6 +169,11 @@ public sealed class RetailFrontendSession
 
             SelectedQuitConfirmIndex = 1;
             return true;
+        }
+
+        if (Screen == RetailFrontendScreen.DevSelect)
+        {
+            return SelectCareerIndex(SelectedCareerIndex + 1);
         }
 
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == MainMenuItems.Length - 1)
@@ -146,7 +234,14 @@ public sealed class RetailFrontendSession
 
                 if (SelectedMainItem.Kind == RetailFrontendMenuItemKind.NewGame)
                 {
-                    Screen = RetailFrontendScreen.LevelSelect;
+                    // Retail's New Game entry goes to FEP_DEVSELECT, not level
+                    // select: CFrontEnd::Init drives the "new career" entry with
+                    // SetPage(FEP_DEVSELECT, 0) (references/Onslaught/FrontEnd.cpp:182),
+                    // and the pristine 640x480 capture of the page that follows
+                    // New Game is the "CHOOSE GAME NAME" screen.
+                    Screen = RetailFrontendScreen.DevSelect;
+                    SelectedCareerIndex = -1;
+                    _gameName = DefaultGameName;
                     return RetailFrontendSignal.PageChanged;
                 }
 
@@ -168,6 +263,10 @@ public sealed class RetailFrontendSession
 
                 return RetailFrontendSignal.ExitRequested;
 
+            case RetailFrontendScreen.DevSelect:
+                Screen = RetailFrontendScreen.LevelSelect;
+                return RetailFrontendSignal.PageChanged;
+
             case RetailFrontendScreen.LevelSelect:
                 Screen = RetailFrontendScreen.Loading;
                 _level100LaunchPending = true;
@@ -188,12 +287,20 @@ public sealed class RetailFrontendSession
             return RetailFrontendSignal.PageChanged;
         }
 
+        if (Screen == RetailFrontendScreen.DevSelect)
+        {
+            Screen = RetailFrontendScreen.MainMenu;
+            SelectedCareerIndex = -1;
+            _gameName = DefaultGameName;
+            return RetailFrontendSignal.PageChanged;
+        }
+
         if (Screen != RetailFrontendScreen.LevelSelect)
         {
             return RetailFrontendSignal.None;
         }
 
-        Screen = RetailFrontendScreen.MainMenu;
+        Screen = RetailFrontendScreen.DevSelect;
         return RetailFrontendSignal.PageChanged;
     }
 
@@ -256,6 +363,8 @@ public sealed class RetailFrontendSession
         SelectedMainIndex = 0;
         SelectedQuitConfirmIndex = 0;
         UnavailableSelection = null;
+        SelectedCareerIndex = -1;
+        _gameName = DefaultGameName;
         _level100LaunchPending = false;
         Screen = RetailFrontendScreen.MainMenu;
     }
@@ -266,6 +375,13 @@ public enum RetailFrontendScreen
     ClickToStart,
     MainMenu,
     QuitConfirm,
+
+    /// <summary>
+    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page New Game enters
+    /// (references/Onslaught/FrontEnd.cpp:120/182/782). Implemented here
+    /// visually and sequentially only: no save or career persistence.
+    /// </summary>
+    DevSelect,
     LevelSelect,
     Loading,
     Gameplay,

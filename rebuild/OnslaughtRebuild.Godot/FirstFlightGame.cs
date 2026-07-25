@@ -44,6 +44,7 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _focusLossHandlerNeutralRearmed;
     private bool _smokeSawClickToStart;
     private bool _smokeSawMainMenu;
+    private bool _smokeSawDevSelect;
     private bool _smokeSawLevelSelect;
     private bool _smokeSawLoading;
     private bool _smokeSawGameplay;
@@ -784,6 +785,13 @@ public sealed partial class FirstFlightGame : Node3D
                     frontend.ConfirmForSmoke();
                     return;
 
+                case RetailFrontendScreen.DevSelect:
+                    _smokeSawDevSelect = true;
+                    _smokeCursorVisibleAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
                 case RetailFrontendScreen.LevelSelect:
                     _smokeSawLevelSelect = true;
                     _smokeCursorVisibleAtFrontend &=
@@ -1093,6 +1101,7 @@ public sealed partial class FirstFlightGame : Node3D
                 throw new InvalidOperationException("Smoke gameplay evidence was not captured.");
             report.ColdClickToStart = _smokeSawClickToStart;
             report.ColdMainMenu = _smokeSawMainMenu;
+            report.ColdDevSelect = _smokeSawDevSelect;
             report.ColdLevelSelect = _smokeSawLevelSelect;
             report.ColdLoading = _smokeSawLoading;
             report.ColdGameplay = _smokeSawGameplay;
@@ -1200,6 +1209,8 @@ public sealed partial class FirstFlightGame : Node3D
         public required bool FocusLossHandlerNeutralRearmed { get; init; }
         public bool ColdClickToStart { get; set; }
         public bool ColdMainMenu { get; set; }
+        public bool ColdDevSelect { get; set; }
+
         public bool ColdLevelSelect { get; set; }
         public bool ColdLoading { get; set; }
         public bool ColdGameplay { get; set; }

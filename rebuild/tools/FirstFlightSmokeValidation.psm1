@@ -106,6 +106,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'focusLossHandlerNeutralRearmed' $true $report.focusLossHandlerNeutralRearmed
     Assert-SmokeValue 'coldClickToStart' $true $report.coldClickToStart
     Assert-SmokeValue 'coldMainMenu' $true $report.coldMainMenu
+    Assert-SmokeValue 'coldDevSelect' $true $report.coldDevSelect
     Assert-SmokeValue 'coldLevelSelect' $true $report.coldLevelSelect
     Assert-SmokeValue 'coldLoading' $true $report.coldLoading
     Assert-SmokeValue 'coldGameplay' $true $report.coldGameplay
