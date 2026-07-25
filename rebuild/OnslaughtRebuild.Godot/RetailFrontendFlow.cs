@@ -62,7 +62,16 @@ public sealed partial class RetailFrontendFlow : Control
     // artifact of the patched capture, not released behavior.
     private const string VersionText = "V1.00";
     private const float ShadowScaleBoost = 1.05f;
-    // Materialized decode of data/video/FEBack128.vid (128² BIKi → rgb24 @15fps).
+    // Materialized decode of data/video/FEBack128.vid (128² BIKi → rgb24).
+    //
+    // KNOWN DEFECT: the released file is 572 frames at 30 fps (Bink header, frames
+    // at +8, fps dividend/divider at +28/+32). The materialized strip is 286 frames
+    // and this declares 15 fps - exactly half of each, so every second frame is
+    // dropped. Duration is preserved (19.1s) but the animation is half as smooth as
+    // released. It does not currently show, because the main-menu underlay was
+    // measured to be a flat fill and this is not drawn there; it will matter
+    // wherever FEBack128 is actually used, which is still unresolved.
+    // See local-lab/INTRO-FMV-FINDINGS-2026-07-25.md.
     private const string FeBackStripPath =
         "res://Assets/Frontend/Backgrounds/fe-back-128x128x15.rgb";
     private const int FeBackWidth = 128;
