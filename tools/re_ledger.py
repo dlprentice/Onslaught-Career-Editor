@@ -24,9 +24,17 @@ Grades, strongest first:
   RTTI_CONFLICT    RTTI resolves an owner and the current prefix disagrees
   RTTI_AMBIGUOUS   in several vtables and the hierarchy could not pick one owner
   BINARY_STRING    prefix appears verbatim as a string in the binary
-  SOURCE_BACKED    prefix appears verbatim in the pinned reference source
+  SOURCE_BACKED    the pinned reference source declares this class or struct
   UNBACKED         no supporting evidence found (not disproven - a non-polymorphic
                    class emits no RTTI at all)
+
+KNOWN BUG (2026-07-25, unfixed): the SOURCE_BACKED branch is not firing. A direct
+check finds 1,009 functions graded UNBACKED whose prefix IS declared in
+references/Onslaught, so the UNBACKED figure this currently reports is too high by
+at least that much and SOURCE_BACKED reports 0 when it should not. The declaration
+set itself is built correctly (188 classes/structs found by the same regex when run
+standalone), so the fault is in the grading branch or in how the set is reached from
+it. DO NOT quote the UNBACKED percentage from this tool until that is resolved.
 """
 from __future__ import annotations
 
