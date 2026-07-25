@@ -28,13 +28,12 @@ Grades, strongest first:
   UNBACKED         no supporting evidence found (not disproven - a non-polymorphic
                    class emits no RTTI at all)
 
-KNOWN BUG (2026-07-25, unfixed): the SOURCE_BACKED branch is not firing. A direct
-check finds 1,009 functions graded UNBACKED whose prefix IS declared in
-references/Onslaught, so the UNBACKED figure this currently reports is too high by
-at least that much and SOURCE_BACKED reports 0 when it should not. The declaration
-set itself is built correctly (188 classes/structs found by the same regex when run
-standalone), so the fault is in the grading branch or in how the set is reached from
-it. DO NOT quote the UNBACKED percentage from this tool until that is resolved.
+FIXED 2026-07-25: SOURCE_BACKED previously reported 0. An editing pass had written
+the word-boundary escape through a non-raw string, so a literal backspace byte
+(0x08) sat at the head of the declaration pattern on disk and it matched nothing.
+The byte is invisible when the file is read, which is why several passes of reading
+the regex "confirmed" it was correct. `repr(decl.pattern)` showed it immediately.
+Lesson worth keeping: to check what a pattern IS, print it - do not read it.
 """
 from __future__ import annotations
 
@@ -176,7 +175,7 @@ def main(argv: list[str]) -> int:
     # the reference source actually DECLARES as a class or struct.
     src_types = set()
     if args.reference_source and args.reference_source.is_dir():
-        decl = re.compile(r"(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)")
+        decl = re.compile(r"\b(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)")
         for p in list(args.reference_source.glob("*.cpp")) + list(args.reference_source.glob("*.h")):
             try:
                 src_types.update(decl.findall(p.read_text(encoding="utf-8", errors="ignore")))
