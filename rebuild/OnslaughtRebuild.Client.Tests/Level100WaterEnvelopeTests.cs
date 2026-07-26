@@ -3,6 +3,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -19,72 +20,114 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <c>waves * diffuse + current</c>. Reviewing the shader could not catch
 /// either. Only pixels could.</para>
 ///
-/// <para><b>The retail envelope.</b> Measured over
-/// <c>local-lab/retail-reference-pristine/level100-gameplay/opening-pan-run1</c>
-/// at the four matched level offsets t0+2 / 256 / 499 / 749 ms, in three
-/// rectangles that are open water for the whole of the opening pan:</para>
+/// <para><b>Why it was re-derived on 2026-07-26.</b> The first version of this
+/// gate scored three FIXED screen rectangles at four offsets. That was wrong in
+/// a way the camera-FOV correction (a382a8e4) exposed: the opening pan is in
+/// motion, so a fixed rectangle does not stay on water. Measured over
+/// <c>opening-pan-run1</c>, retail's OWN <c>open-sea-right</c> rectangle drops
+/// to 65.65% B &gt; G &gt; R by t0+749 ms and to 0.17% by t0+2507 ms, because
+/// the pan has swept an island and then the shore through it; retail's own
+/// <c>caustic-band</c> rectangle holds 1,241 pixels at 250+ on all three
+/// channels at t0+1255 ms, from snow, not water. The gate would have failed the
+/// reference it was built from. It was measuring pan geometry, not water.</para>
+///
+/// <para><b>How the samples below were chosen.</b> A rectangle now belongs to
+/// one offset, and it was selected from RETAIL alone, by exhaustive search over
+/// x,y in steps of 10 and widths/heights in {20..320}, for the largest
+/// rectangle in that retail frame with: zero pixels at 235+ on any channel (no
+/// snow, sky glare or specular), and at least 99% of pixels satisfying
+/// B &gt; G &gt; R (unambiguous open sea, not the horizon haze band where the
+/// fog blend puts G at or under R in retail too). The reconstruction was not
+/// consulted in the search. All six were then confirmed by eye to be open sea
+/// in retail and in the reconstruction.</para>
+///
+/// <para>The same search says open water is only ON SCREEN in Level 100 for the
+/// first ~1.5 s. At t0+1756 ms and beyond the largest qualifying rectangle is
+/// sky or the blue hull of a structure, and from t0+6006 ms the settled cockpit
+/// view contains no sea at all - the best "B &gt; G &gt; R" rectangle there,
+/// (480,170)-(640,260), stable for ten seconds, is dark blue canopy strut. So
+/// the widest honest offset range for a water gate is 2..1255 ms, and the
+/// t0+1506 ms rectangle is dropped for being a 2,400 px sliver, under 1% of the
+/// frame.</para>
+///
+/// <para><b>The retail envelope</b>, over
+/// <c>local-lab/retail-reference-pristine/level100-gameplay/opening-pan-run1</c>,
+/// 73,200 px:</para>
 /// <code>
-///   box              n       median          p99             max         white  B&gt;G&gt;R
-///   open-sea-right   37,400  (98,105,125)   (216,208,220)   (240,240,253)   0    88.1%
-///   caustic-band     90,000  (91,109,130)   (223,206,217)   (252,246,243)   0    94.5%
-///   mid-sea          25,600  (89, 92,109)   (153,155,178)   (181,191,203)   0    86.3%
+///   offset  rect                  n       median         p99            white  B&gt;G&gt;R
+///   2 ms    (  0,200)-(240,260)  14,400  (101,128,150)  (164,188,212)     0    99.69%
+///   256 ms  ( 60,160)-(220,250)  14,400  ( 91,108,128)  (152,176,204)     0    99.68%
+///   499 ms  (  0,160)-(160,280)  19,200  ( 91,111,130)  (160,179,204)     0    99.07%
+///   749 ms  (  0,170)-(120,290)  14,400  ( 82, 96,114)  (159,176,197)     0    99.28%
+///   1006 ms ( 30,210)-(150,270)   7,200  ( 76, 86,103)  (134,166,188)     0    99.42%
+///   1255 ms (  0,240)-( 60,300)   3,600  ( 79, 94,114)  (151,184,209)     0    99.06%
 /// </code>
-/// <para>"white" is pixels at or above 250 on all three channels. Retail has
-/// none, in any box, at any offset - consistent with the wider evidence pass
-/// that found 0 of 180,000 sampled retail water pixels at 250+ on all
-/// channels.</para>
+/// <para>Cross-run: <c>opening-pan-run2</c> at t0+2 ms reads median
+/// (100,127,149), p99 (165,188,212), 0 white, 99.67% - retail's own run-to-run
+/// spread is 1 unit of median. "white" is pixels at or above 250 on all three
+/// channels; retail has none, in any rectangle, at any of these offsets.</para>
 ///
 /// <para><b>Scope.</b> This gate needs a locally produced gameplay capture,
 /// which lives on an ignored path:</para>
 /// <code>
-///   pwsh -File rebuild/tools/Capture-Frontend.ps1 -Plan gameplay `
+///   pwsh -File rebuild/tools/Capture-Frontend.ps1 -Plan gameplay -Purpose production `
 ///       -RetailOffsetManifest local-lab/retail-reference-pristine/level100-gameplay/manifest.json
 /// </code>
-/// <para>Set <c>ONSLAUGHT_WATER_CAPTURE_DIR</c> to point at a specific one.
-/// Otherwise the newest capture under <c>local-lab/godot-captures/</c> that is
-/// at least as new as <c>Level100WaterAsset.cs</c> is scored; older captures
-/// describe a build that no longer exists and are ignored, not judged.
-/// If a directory is named but unusable the gate fails; if no capture exists at
-/// all the pixel assertions cannot run, and
+/// <para>If no capture is scored the pixel assertions cannot run, and
 /// <see cref="ShorelineCompositionKeepsTheOperandOrderTheEnvelopeDependsOn"/>
-/// is the always-on backstop for the two specific regressions above.</para>
+/// is the always-on backstop for the specific regressions above.</para>
 /// </summary>
 public sealed class Level100WaterEnvelopeTests
 {
-    private readonly record struct Box(string Name, int X0, int Y0, int X1, int Y1);
+    /// <summary>
+    /// One retail-verified open-sea rectangle, valid at exactly one level
+    /// offset, with retail's median there. See the class remarks for how the
+    /// rectangle was derived and why it is not shared across offsets.
+    /// </summary>
+    private readonly record struct WaterSample(
+        int OffsetMs, int X0, int Y0, int X1, int Y1, int[] RetailMedian);
 
-    /// <summary>Rectangles that are open water throughout the opening pan.</summary>
-    private static readonly Box[] WaterBoxes =
+    private static readonly WaterSample[] WaterSamples =
     [
-        new("open-sea-right", 430, 150, 600, 205),
-        new("caustic-band", 0, 175, 250, 265),
-        new("mid-sea", 260, 150, 420, 190),
+        new(2, 0, 200, 240, 260, [101, 128, 150]),
+        new(256, 60, 160, 220, 250, [91, 108, 128]),
+        new(499, 0, 160, 160, 280, [91, 111, 130]),
+        new(749, 0, 170, 120, 290, [82, 96, 114]),
+        new(1006, 30, 210, 150, 270, [76, 86, 103]),
+        new(1255, 0, 240, 60, 300, [79, 94, 114]),
     ];
 
-    /// <summary>Retail-matched capture offsets, in level milliseconds.</summary>
-    private static readonly int[] OffsetsMs = [2, 256, 499, 749];
-
     /// <summary>
-    /// Retail has zero pixels at or above 250 on all three channels in any
-    /// water box. No allowance: a single one means a stage saturated.
+    /// Retail has zero pixels at or above 250 on all three channels in any of
+    /// these rectangles, at any of these offsets, across both opening-pan runs
+    /// (87,600 px). No allowance: a single one means a stage saturated. The
+    /// 2026-07-25 defect produced 3,394.
     /// </summary>
     private const int MaxWhitePixels = 0;
 
     /// <summary>
-    /// Per-channel 99th-percentile ceiling. Retail's worst box reads
-    /// (223,206,217); the evidence pass's stated ceiling over its wider sample
-    /// was (231,213,228), which is what is used here so a slightly brighter but
-    /// still retail-plausible water does not fail.
+    /// Per-channel 99th-percentile ceiling, per offset. Retail's worst reading
+    /// over both runs is (165,188,212); the margin is a flat +25 on each
+    /// channel, about 13%, which is 25x retail's own 1-unit run-to-run spread.
+    /// The defective build read (255,255,255) at five of the six offsets.
     /// </summary>
-    private static readonly int[] P99Ceiling = [231, 213, 228];
+    private static readonly int[] P99Ceiling = [190, 213, 237];
 
     /// <summary>
-    /// Retail's water hue rule. The measured retail fractions are 86.3 / 88.1 /
-    /// 94.5 percent, so 85 sits just below the weakest retail box: a
-    /// reconstruction that inverts the rule (the additive-waves defect scored
-    /// 46-65 percent) fails, and retail itself passes.
+    /// Retail's water hue rule, per offset. Retail's weakest reading over these
+    /// samples is 99.06%, so 0.90 leaves 9.06 points of margin below retail.
+    /// The 2026-07-25 defect scored 51.26-67.86% - it fails at every offset,
+    /// its best still 22.1 points under the floor.
     /// </summary>
-    private const double MinBlueOverGreenOverRedFraction = 0.85;
+    private const double MinBlueOverGreenOverRedFraction = 0.90;
+
+    /// <summary>
+    /// Per-channel median tolerance against retail. This is the tooth that
+    /// catches a water that is merely the WRONG COLOUR rather than saturating:
+    /// the ceiling, white count and hue rule are all one-sided. Retail's own
+    /// run-to-run median spread is 1 unit; 24 is 24x that.
+    /// </summary>
+    private const int MedianTolerance = 24;
 
     [Fact]
     public void CapturedWaterStaysInsideTheRetailEnvelope()
@@ -103,27 +146,26 @@ public sealed class Level100WaterEnvelopeTests
         }
 
         var failures = new List<string>();
-        foreach (Box box in WaterBoxes)
+        foreach (WaterSample sample in WaterSamples)
         {
-            List<(int R, int G, int B)> pixels = [];
-            foreach (int offsetMs in OffsetsMs)
-            {
-                string file = Path.Combine(
-                    captureDirectory,
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "level100-t{0:D6}ms.png",
-                        offsetMs));
-                Assert.True(File.Exists(file), $"Capture is missing {file}.");
-                pixels.AddRange(ReadBox(file, box));
-            }
+            string file = Path.Combine(
+                captureDirectory,
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "level100-t{0:D6}ms.png",
+                    sample.OffsetMs));
+            Assert.True(File.Exists(file), $"Capture is missing {file}.");
 
+            List<(int R, int G, int B)> pixels = ReadBox(file, sample);
             Assert.NotEmpty(pixels);
+            string where = $"t0+{sample.OffsetMs}ms " +
+                $"({sample.X0},{sample.Y0})-({sample.X1},{sample.Y1})";
+
             int white = pixels.Count(p => p.R >= 250 && p.G >= 250 && p.B >= 250);
             if (white > MaxWhitePixels)
             {
                 failures.Add(
-                    $"{box.Name}: {white} of {pixels.Count} px are >= 250 on all " +
+                    $"{where}: {white} of {pixels.Count} px are >= 250 on all " +
                     $"channels; retail has 0. A water stage is saturating.");
             }
 
@@ -138,8 +180,26 @@ public sealed class Level100WaterEnvelopeTests
                 if (p99[channel] > P99Ceiling[channel])
                 {
                     failures.Add(
-                        $"{box.Name}: p99 channel {channel} is {p99[channel]}, over " +
+                        $"{where}: p99 channel {channel} is {p99[channel]}, over " +
                         $"the retail ceiling {P99Ceiling[channel]}.");
+                }
+            }
+
+            int[] median =
+            [
+                Percentile(pixels.Select(p => p.R), 50),
+                Percentile(pixels.Select(p => p.G), 50),
+                Percentile(pixels.Select(p => p.B), 50),
+            ];
+            for (int channel = 0; channel < 3; channel++)
+            {
+                int delta = Math.Abs(median[channel] - sample.RetailMedian[channel]);
+                if (delta > MedianTolerance)
+                {
+                    failures.Add(
+                        $"{where}: median channel {channel} is {median[channel]}, " +
+                        $"{delta} off retail's {sample.RetailMedian[channel]} " +
+                        $"(tolerance {MedianTolerance}).");
                 }
             }
 
@@ -148,8 +208,9 @@ public sealed class Level100WaterEnvelopeTests
             if (blueRule < MinBlueOverGreenOverRedFraction)
             {
                 failures.Add(
-                    $"{box.Name}: only {blueRule:P1} of px satisfy B > G > R; retail " +
-                    $"is 86-95%. A hue-bearing stage is over-contributing.");
+                    $"{where}: only {blueRule:P2} of px satisfy B > G > R; retail " +
+                    $"reads 99.06-99.69% here. A hue-bearing stage is " +
+                    $"over-contributing, or the sample is no longer on water.");
             }
         }
 
@@ -200,6 +261,32 @@ public sealed class Level100WaterEnvelopeTests
         Assert.DoesNotContain("sun_reflection_color", source, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Picks the capture to score.
+    ///
+    /// <para><c>ONSLAUGHT_WATER_CAPTURE_DIR</c> always wins: naming a directory
+    /// is the operator taking responsibility for what is in it, and it is how
+    /// this gate is validated against a known-bad capture.</para>
+    ///
+    /// <para>Otherwise the newest capture under
+    /// <c>local-lab/godot-captures/</c> is taken, subject to two filters. It
+    /// must be at least as new as <c>Level100WaterAsset.cs</c> - a capture that
+    /// predates the current water source describes a build that no longer
+    /// exists, so it is ignored rather than judged. And its manifest must
+    /// declare <c>"capturePurpose": "production"</c>.</para>
+    ///
+    /// <para>The purpose filter exists because the unfiltered version of this
+    /// method was wrong twice on 2026-07-26. It scored
+    /// <c>probe-macro-only</c>, taken with the terrain shader cut to
+    /// <c>ALBEDO = macro_color</c>, and it scored captures from a camera FOV
+    /// sweep - deliberately modified builds, judged as if they were the
+    /// product, purely because they were the newest directory on disk.
+    /// <c>Capture-Frontend.ps1 -Purpose production</c> writes the marker, and
+    /// refuses to write it when <c>rebuild/OnslaughtRebuild.Godot</c> has
+    /// uncommitted changes. An unmarked capture is never auto-scored: the
+    /// failure mode was an unlabelled experiment being mistaken for evidence,
+    /// so unlabelled has to mean ignored.</para>
+    /// </summary>
     private static string? ResolveCaptureDirectory()
     {
         string? configured = Environment.GetEnvironmentVariable("ONSLAUGHT_WATER_CAPTURE_DIR");
@@ -219,10 +306,6 @@ public sealed class Level100WaterEnvelopeTests
             return null;
         }
 
-        // A capture taken before the current water source is not evidence about
-        // the current build, so it is ignored rather than judged. Without this,
-        // any stale capture left in local-lab would fail an unrelated test run,
-        // and a capture that predates a change would "prove" nothing either way.
         string waterSource = Path.Combine(
             repoRoot, "rebuild", "OnslaughtRebuild.Godot", "Level100WaterAsset.cs");
         DateTime floor = File.Exists(waterSource)
@@ -231,10 +314,36 @@ public sealed class Level100WaterEnvelopeTests
 
         return Directory.EnumerateDirectories(captureRoot)
             .Where(HasGameplayFrames)
+            .Where(IsProductionCapture)
             .Where(directory => File.GetLastWriteTimeUtc(
                 Path.Combine(directory, "level100-t000002ms.png")) >= floor)
             .OrderByDescending(Directory.GetLastWriteTimeUtc)
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// True only when the capture manifest declares itself a production
+    /// capture. Missing manifest, missing marker and unreadable manifest all
+    /// mean "not production" - this fails closed on purpose.
+    /// </summary>
+    private static bool IsProductionCapture(string directory)
+    {
+        string manifest = Path.Combine(directory, "capture-manifest.json");
+        if (!File.Exists(manifest))
+        {
+            return false;
+        }
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(manifest));
+            return document.RootElement.TryGetProperty("capturePurpose", out JsonElement purpose) &&
+                purpose.ValueKind == JsonValueKind.String &&
+                string.Equals(purpose.GetString(), "production", StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static bool HasGameplayFrames(string directory) =>
@@ -264,12 +373,12 @@ public sealed class Level100WaterEnvelopeTests
         return sorted[Math.Clamp(index, 0, sorted.Length - 1)];
     }
 
-    private static List<(int R, int G, int B)> ReadBox(string pngPath, Box box)
+    private static List<(int R, int G, int B)> ReadBox(string pngPath, WaterSample box)
     {
         (int width, int height, byte[] rgba) = DecodePng(File.ReadAllBytes(pngPath));
         Assert.True(
             box.X1 <= width && box.Y1 <= height,
-            $"{pngPath} is {width}x{height}, too small for box {box.Name}.");
+            $"{pngPath} is {width}x{height}, too small for the t0+{box.OffsetMs}ms sample.");
         var pixels = new List<(int R, int G, int B)>((box.X1 - box.X0) * (box.Y1 - box.Y0));
         for (int y = box.Y0; y < box.Y1; y++)
         {

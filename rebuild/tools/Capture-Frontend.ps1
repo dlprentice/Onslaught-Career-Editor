@@ -27,6 +27,23 @@ param(
     # +-25 ms matched-offset validity; this removes that error entirely.
     [string]$RetailOffsetManifest,
     [string]$RetailOffsetRuns = 'opening-pan-run1,hud-timeline-run1',
+    # What this capture is FOR. It is stamped into capture-manifest.json as
+    # capturePurpose, and automated gates that score "the newest capture" must
+    # only ever pick up 'production'.
+    #
+    # This exists because it already went wrong. On 2026-07-26 two experimental
+    # captures - one taken with the terrain shader cut down to
+    # ALBEDO = macro_color, others from a camera FOV sweep - were the newest
+    # gameplay captures in local-lab/godot-captures/ and were scored by
+    # Level100WaterEnvelopeTests as if they described the shipping build. A
+    # deliberately modified build had its output judged as product truth.
+    #
+    # The default is 'probe', not 'production', deliberately: the failure mode
+    # was an unlabelled experiment being treated as evidence, so an unlabelled
+    # capture must be the one that is IGNORED. Claiming production costs one
+    # explicit flag; forgetting it costs nothing but a skipped gate.
+    [ValidateSet('production', 'probe')]
+    [string]$Purpose = 'probe',
     [int]$TimeoutSeconds = 0
 )
 
@@ -112,6 +129,35 @@ try {
 
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 
+    # Provenance stamp. -Purpose is an operator declaration and an operator can
+    # be wrong, so it is backed by one mechanical fact: whether the Godot
+    # project the frames came out of was the committed source or a working-tree
+    # edit. A capture taken over uncommitted renderer changes cannot describe
+    # the shipping build no matter what the operator meant, so it is forced to
+    # 'probe'. That is exactly the case that fooled the water gate: the
+    # macro-colour terrain probe was an uncommitted one-line shader edit.
+    $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+    $godotSource = Join-Path $repoRoot 'rebuild\OnslaughtRebuild.Godot'
+    $sourceCommit = (& git -C $repoRoot rev-parse HEAD 2>$null)
+    $dirtyEntries = @(& git -C $repoRoot status --porcelain -- $godotSource 2>$null |
+        Where-Object { $_ })
+    $sourceDirty = $dirtyEntries.Count -gt 0
+
+    $effectivePurpose = $Purpose
+    $downgradeReason = $null
+    if ($Purpose -eq 'production' -and $sourceDirty) {
+        $effectivePurpose = 'probe'
+        $downgradeReason = "rebuild/OnslaughtRebuild.Godot has $($dirtyEntries.Count) uncommitted change(s); a capture of modified renderer source is not the shipping build."
+        Write-Warning "Purpose downgraded to 'probe': $downgradeReason"
+    }
+
+    $manifest | Add-Member -NotePropertyName 'capturePurpose' -NotePropertyValue $effectivePurpose -Force
+    $manifest | Add-Member -NotePropertyName 'requestedPurpose' -NotePropertyValue $Purpose -Force
+    $manifest | Add-Member -NotePropertyName 'purposeDowngradeReason' -NotePropertyValue $downgradeReason -Force
+    $manifest | Add-Member -NotePropertyName 'sourceCommit' -NotePropertyValue $sourceCommit -Force
+    $manifest | Add-Member -NotePropertyName 'godotSourceDirty' -NotePropertyValue $sourceDirty -Force
+    $manifest | ConvertTo-Json -Depth 64 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+
     # A shot taken on the wrong screen is not evidence, so surface it loudly
     # rather than letting a mislabeled PNG into a parity comparison.
     $mismatched = @($manifest.shots | Where-Object { -not $_.screenMatched })
@@ -133,6 +179,8 @@ try {
 
     [pscustomobject]@{
         Status = if ($mismatched.Count -eq 0 -and $failedSaves.Count -eq 0 -and $wrongSize.Count -eq 0 -and $missing -eq 0) { 'PASS' } else { 'SUSPECT' }
+        Purpose = $effectivePurpose
+        GodotSourceDirty = $sourceDirty
         WrongSizeShots = $wrongSize.Count
         MissingShots = $missing
         Boundary = $boundary
