@@ -64,10 +64,38 @@ public static class SimulationConstants
     public const int WalkerFootPhaseEnd = 180;
     public const int WalkerFootPhaseUnitsPerSecond = 400;
     public const int WalkerFootMaximumEarlySwings = 2;
-    // Level 100 names "Paladin Prototype", which is absent from the shipped
-    // table. UBattleEngineDataManager::Load prepends each record, so the
-    // GetConfiguration(0) fallback is the final shipped record, Blaster.
-    // Its 0.3/0.9 retail-unit 20 Hz target velocities map to 30 Hz here.
+    // DISPUTED 2026-07-25 - these values are derived from the Blaster record and
+    // the premise behind that choice does not survive checking. The comment here
+    // used to read: Level 100 names "Paladin Prototype", which is absent from the
+    // shipped table, so the GetConfiguration(0) fallback is the final shipped
+    // record, Blaster.
+    //
+    // Measured against the shipped data instead:
+    //   - "Paladin Prototype" does not occur anywhere in
+    //     data/battle engine configurations.dat (sha256 58722b12..., 1514 bytes,
+    //     6 records). The level never declares that name.
+    //   - The Level 100 LEVEL world (RLWD, id 100 - the one carrying the actors
+    //     and compiled scripts) declares "Aquila Prototype". This repo's own
+    //     materializer already asserts it and raises if absent
+    //     (rebuild/tools/materialize_retail_assets.py:1339). The BASE world
+    //     (BSWD, id 42) declares "Paladin Prototype" separately.
+    //   - "Aquila Prototype" IS present in the shipped table, so there is no
+    //     fallback to Blaster to make.
+    //
+    // If that holds, JetMaximumEnergyDrainThirdsPerTick below is wrong: it comes
+    // from Blaster's 0.01, where Aquila Prototype's 0.012 would give 24, not 20.
+    // Aquila Prototype's walker weapon set is also exactly
+    // {Pulse Cannon Pod (primary), Mech Twin Vulcan Cannon}, which is what the
+    // Level 100 script enables at beat 3 and matches the only two weapon icons
+    // the level materializes. Under Blaster the walker has no Twin Vulcan at all.
+    //
+    // NOT changed here. The load-order step (UBattleEngineConfigurations::Load
+    // calling ShutDown first, so the later level table wins) is inferred from the
+    // reference source, not measured, and correcting these constants moves the
+    // pinned smoke stateHash. That needs one runtime confirmation first - see
+    // local-lab/LEVEL100-TUTORIAL-ASSESSMENT-2026-07-25.md.
+    //
+    // Blaster's 0.3/0.9 retail-unit 20 Hz target velocities map to 30 Hz here.
     public const int JetMinimumSpeedPerTick = 200;
     public const int JetMaximumSpeedPerTick = 600;
     public const int JetTargetCorrectionNumerator = 27_031;
