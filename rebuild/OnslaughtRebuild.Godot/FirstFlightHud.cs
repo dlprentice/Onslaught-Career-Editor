@@ -507,7 +507,71 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
             DrawSetTransform(offset, 0f, new Vector2(scale, scale));
         }
+
+        protected void DrawSegmentedRing(
+            Vector2 center,
+            float radius,
+            int segmentCount,
+            float width,
+            float startTurn,
+            float turnLength,
+            Color color)
+        {
+            int segmentStart = Math.Clamp((int)Math.Floor(startTurn * segmentCount), 0, segmentCount);
+            int segmentEnd = Math.Clamp(
+                (int)Math.Ceiling((startTurn + turnLength) * segmentCount),
+                segmentStart,
+                segmentCount);
+            for (int segment = segmentStart; segment < segmentEnd; segment++)
+            {
+                float first = (segment / (float)segmentCount) * Mathf.Tau;
+                float second = ((segment + 1) / (float)segmentCount) * Mathf.Tau;
+                Vector2 firstPoint = center + new Vector2(Mathf.Sin(first), -Mathf.Cos(first)) * radius;
+                Vector2 secondPoint = center + new Vector2(Mathf.Sin(second), -Mathf.Cos(second)) * radius;
+                DrawLine(firstPoint, secondPoint, color, width, true);
+            }
+        }
+
+        protected static float HighlightAlpha(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud,
+            Level100HudPart part)
+        {
+            if (!hud.EmphasizedParts.Contains(part))
+            {
+                return 0f;
+            }
+            return 0.22f + (0.18f * (Mathf.Sin(snapshot.Tick * 0.45f) + 1f));
+        }
     }
+
+    // MEASURED, not assumed. The centre compass's full-circle base ring is the
+    // one compass element retail demonstrably alpha-blends.
+    //
+    // Method (hudA_compass): retail's own r 93-94 and r 102-104 are feature-free
+    // (established when the ring radii were measured), so at a fixed bearing they
+    // give a background reference 4 px from the ring. Regressing the ring's
+    // frame-to-frame delta on the reference's delta over the 27
+    // hud-timeline-run1 frames gives the background-retention factor s directly,
+    // with no background model and no paint colour in the fit:
+    //
+    //   base ring   r 96-100, gauge-free bearings   n=10,607   s=0.733
+    //   CONTROL     empty annulus r 70-72           n=30,665   s=1.035
+    //   CONTROL     empty annulus r 106-108         n=14,305   s=0.996
+    //
+    // The two controls pin the method's error at about +-0.035 around the
+    // additive answer s=1. The ring's 0.733 is eight times that away, i.e. retail
+    // retains only 73% of the background under the ring: alpha 0.267. The colour
+    // this file already carried for it was alpha 0.25, so only the BLEND changed
+    // - the constant did not.
+    private const float CompassBaseRingInnerRadius = 95f;
+    private const float CompassBaseRingOuterRadius = 101f;
+
+    private static Color CompassBaseColor(
+        WorldSnapshot snapshot,
+        Level100HudSnapshot hud,
+        float compassHighlight) =>
+        new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
 
     private sealed class HudAssets
     {
@@ -567,6 +631,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             assets.RadioView.GetSize() == new Vector2I(128, 128) &&
             assets.WeaponFill.GetSize() == new Vector2I(128, 128) &&
             assets.RadioNorth.GetSize() == new Vector2I(32, 32) &&
+            assets.CompassObjectiveMarker.GetSize() == new Vector2I(16, 16) &&
             assets.ScannerBlobs.Length == 4 &&
             assets.ScannerBlobs.All(texture => texture.GetSize() == new Vector2I(16, 16)) &&
             assets.Portraits.Length == 3 &&
@@ -603,6 +668,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             BeginDesignSpace();
+            DrawCompassBaseRing(snapshot, hud);
             DrawLowerLeftInstrument(snapshot, hud);
             DrawWeaponSelection(hud);
             DrawBattleLine();
@@ -613,6 +679,68 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawWorldMarkers(snapshot, hud);
             DrawCrosshair(snapshot, hud);
             EndDesignSpace();
+        }
+
+        /// <summary>
+        /// The compass base ring and its north dial, on the alpha-blended layer
+        /// because retail alpha-blends them: see CompassBaseColor for the s=0.733
+        /// measurement and its two s=1.0 controls. They are drawn here, before
+        /// the additive layer, because retail's compass order is alpha-blended
+        /// body, then ONE/ONE sprites, then the alpha-blended marker pass
+        /// (CDXCompass__Render at 0x00427210 calls ApplyOverlaySpriteState,
+        /// then the ONE/ONE state, then the SRCALPHA/INVSRCALPHA state).
+        /// </summary>
+        private void DrawCompassBaseRing(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud)
+        {
+            float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
+            Color baseColor = CompassBaseColor(snapshot, hud, compassHighlight);
+            const float radius =
+                (CompassBaseRingInnerRadius + CompassBaseRingOuterRadius) * 0.5f;
+            const float width =
+                CompassBaseRingOuterRadius - CompassBaseRingInnerRadius;
+            DrawSegmentedRing(DesignCenter, radius, 50, width, 0f, 1f, baseColor);
+            DrawCompassObjectiveMarkers(snapshot, hud);
+        }
+
+        /// <summary>
+        /// compass-objective-marker was the ONE page on the additive layer that
+        /// is not DXT1: it is DXT2 and carries a real alpha channel - 222 of its
+        /// 256 texels are alpha 0, across 13 distinct alpha levels - so it has
+        /// the coverage an alpha-blended draw needs, and drawing it additively
+        /// threw that coverage away and added its black field's RGB instead.
+        ///
+        /// Retail agrees by name: CDXCompass__Render (0x00427210) runs
+        /// HudRenderState__ApplyOverlaySpriteState, then the ONE/ONE state for
+        /// the compass body sprites, then restores SRCALPHA/INVSRCALPHA for its
+        /// final marker pass.
+        ///
+        /// Retail's marker pass is last, after the additive body; this draws it
+        /// with the rest of the alpha-blended compass instead, so an additive
+        /// threat or damage sprite that happens to overlap a marker will land on
+        /// top of it rather than under it. The blend is the measured part; the
+        /// intra-compass ordering is not, and no retail frame in
+        /// hud-timeline-run1 has an overlap that would show the difference.
+        /// </summary>
+        private void DrawCompassObjectiveMarkers(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud)
+        {
+            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
+            {
+                float relativeYaw = RelativeYaw(
+                    snapshot,
+                    HorizontalPosition(objective.PositionMillimeters));
+                Vector2 position = DesignCenter + new Vector2(
+                    Mathf.Sin(relativeYaw) * CompassObjectiveRadius,
+                    -Mathf.Cos(relativeYaw) * CompassObjectiveRadius);
+                DrawTextureRect(
+                    assets.CompassObjectiveMarker,
+                    new Rect2(position - new Vector2(8f, 8f), new Vector2(16f, 16f)),
+                    false,
+                    new Color(1f, 0.91f, 0.08f, 1f));
+            }
         }
 
         private void DrawLowerLeftInstrument(
@@ -956,6 +1084,39 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private static Rect2 GunsRect() =>
         new(DesignWidth - 137f, DesignHeight - 240f, 128f, 128f);
 
+    /// <summary>
+    /// Retail's ONE/ONE passes. Everything drawn here is one of the twelve DXT1
+    /// HUD pages, and that is decided by the DDS bytes, not by convention.
+    ///
+    /// Every one of those twelve pages carries alpha 255 at EVERY texel. DXT1's
+    /// 3-colour (punch-through) block mode is present in all of them -
+    /// radar-outline 562/1024 blocks, screen-marker 189/256, guns-front 963/1024,
+    /// battleline-outline 920/1024, weapon-outline 863/1024, guns-outline 901,
+    /// guns-side 904, guns-top 981, bar-line 32/64, damage-flash 148/256,
+    /// message-noise 6/1024, threat-flash 1/64 - but the transparent index-3
+    /// texel is used ZERO times in ZERO of those blocks, 12 pages out of 12. So
+    /// none of them carries anything that could serve as coverage.
+    ///
+    /// Retail has nowhere to derive coverage from either. Every
+    /// D3DXCreateTextureFromFileEx call site passes ColorKey=0, so the binary's
+    /// only colour-key routine (0x00581E1C) is inert; and its luminance code is
+    /// all L8/A8L8/A4L4/L16 surface-format packing, none of which writes
+    /// luminance into alpha. There is no luminance-keying and no colour-keying in
+    /// the released engine.
+    ///
+    /// And retail only ever uses three blends: across 6,429 exported
+    /// decompilations, SRCBLEND/DESTBLEND take SRCALPHA/INVSRCALPHA (58/54
+    /// sites), ONE/ONE (20/24) and ZERO/ONE (8/2) - no SRCCOLOR, INVSRCCOLOR,
+    /// DESTALPHA or DESTCOLOR appears anywhere. A DXT1 page drawn
+    /// SRCALPHA/INVSRCALPHA is therefore an opaque rectangle, which retail
+    /// plainly does not show; the twelve DXT1 pages are its ONE/ONE passes, and
+    /// they stay additive. CDXCompass__Render and CHud__RenderBattleline both
+    /// contain an explicit ONE/ONE section, which is where they belong.
+    ///
+    /// The pages that DO carry coverage - the DXT2 pages, with real per-texel
+    /// alpha - are on the alpha-blended base layer, including
+    /// compass-objective-marker, which used to be the one DXT2 page drawn here.
+    /// </summary>
     private sealed partial class RetailHudGlowLayer(HudAssets assets) : RetailHudLayer
     {
         private WorldSnapshot? _snapshot;
@@ -969,7 +1130,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
             assets.MessageNoise.GetSize() == new Vector2I(128, 128) &&
             assets.Dial.Length == 8_192 &&
             assets.BarLine.GetSize() == new Vector2I(16, 64) &&
-            assets.CompassObjectiveMarker.GetSize() == new Vector2I(16, 16) &&
             assets.ThreatFlash.GetSize() == new Vector2I(32, 32) &&
             assets.DamageFlash.GetSize() == new Vector2I(128, 32);
 
@@ -1118,20 +1278,50 @@ public sealed partial class FirstFlightHud : CanvasLayer
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
             Color baseColor = new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
 
-            const float ringInnerRadius = 95f;
-            const float ringOuterRadius = 101f;
             const float gaugeInnerRadius = 80f;
             const float gaugeOuterRadius = 92f;
-            const float outerRadius = (ringInnerRadius + ringOuterRadius) * 0.5f;
-            const float outerWidth = ringOuterRadius - ringInnerRadius;
             const float innerRadius = (gaugeInnerRadius + gaugeOuterRadius) * 0.5f;
             const float innerWidth = gaugeOuterRadius - gaugeInnerRadius;
+            const float outerRadius =
+                (CompassBaseRingInnerRadius + CompassBaseRingOuterRadius) * 0.5f;
+            const float outerWidth =
+                CompassBaseRingOuterRadius - CompassBaseRingInnerRadius;
 
-            // Retail's base ring is the only full-circle band. The gauge band
-            // carries no track of its own outside the two gauge arcs, so none
-            // is drawn here either.
             DrawSegmentedRing(center, outerRadius, 50, outerWidth, 0f, 1f, baseColor);
 
+            // Retail's base ring is the only full-circle band, and retail draws
+            // it TWICE - once alpha-blended, once additive. That is forced by the
+            // measurement, not chosen: regressing the retail ring on its own
+            // background gives retention s=0.733 AND intercept c=93.1 together
+            // (n=10,607, gauge-free bearings, r 96-100 against retail's
+            // feature-free r 93-94 / r 102-104, with empty-annulus controls at
+            // s=1.035 and s=0.996). A single SRCALPHA/INVSRCALPHA pass with
+            // s=0.733 has alpha 0.267 and can emit at most 0.267*255 = 68, so it
+            // cannot reach 93.1; a single ONE/ONE pass has s=1 and cannot reach
+            // 0.733. Only alpha-blend-then-add satisfies both, which is exactly
+            // the shape of CDXCompass__Render (0x00427210): overlay sprite state,
+            // then the ONE/ONE state, then SRCALPHA/INVSRCALPHA.
+            //
+            // The attenuating half is RetailHudBaseLayer.DrawCompassBaseRing.
+            // This is the additive half, unchanged, and the dial north overlay
+            // rides the same additive pass it always did. Neither constant was
+            // retuned: the base layer reuses this layer's own ring colour, whose
+            // alpha was already 0.25 against retail's measured 0.267.
+            //
+            // The gauge band carries no track of its own outside the two gauge
+            // arcs, so none is drawn here.
+            //
+            // The gauge ARCS stay additive. Measured the same way as the base
+            // ring, over the bearings where each arc is actually drawn:
+            //   green  gauge arc r 88-91   n= 8,117   s=0.922
+            //   violet gauge arc r 88-91   n=14,898   s=0.697
+            // against controls of s=1.035 and s=0.996 for empty annuli. Green is
+            // within a few percent of additive. Violet is not (alpha 0.30), but
+            // this file draws both arcs from one code path at alpha 0.88, and
+            // alpha-blending them at 0.88 would retain only 12% of the background
+            // where retail retains 70-92%. Additive is the closer of the two
+            // available answers for both, so both are left additive rather than
+            // converted; see the deliverable note.
             float health = Math.Clamp(
                 Health / (float)SimulationConstants.MaximumHull,
                 0f,
@@ -1160,11 +1350,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 health * (90f / 360f),
                 healthColor);
             DrawSegmentedRing(center, innerRadius, 40, innerWidth, 225f / 360f, energy * (135f / 360f), energyColor);
-            DrawDialNorthOverlay(snapshot, center, ringInnerRadius, ringOuterRadius, baseColor);
+            DrawDialNorthOverlay(
+                snapshot,
+                center,
+                CompassBaseRingInnerRadius,
+                CompassBaseRingOuterRadius,
+                baseColor);
 
             DrawThreats(hud, center);
             DrawDamageFlashes(hud, center);
-            DrawGaugeNeedlesAndObjectives(snapshot, hud, center, health, energy);
+            DrawGaugeNeedles(center, health, energy);
         }
 
         private void DrawThreats(Level100HudSnapshot hud, Vector2 center)
@@ -1201,32 +1396,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
-        private void DrawGaugeNeedlesAndObjectives(
-            WorldSnapshot snapshot,
-            Level100HudSnapshot hud,
-            Vector2 center,
-            float health,
-            float energy)
+        // bar-line is DXT1 - alpha 255 at every texel - so it stays additive
+        // with the rest of the compass body sprites.
+        private void DrawGaugeNeedles(Vector2 center, float health, float energy)
         {
             DrawGaugeNeedle(center, Mathf.DegToRad(150f - (health * 90f)));
             DrawGaugeNeedle(center, Mathf.DegToRad(150f));
             DrawGaugeNeedle(center, Mathf.DegToRad(225f + (energy * 135f)));
             DrawGaugeNeedle(center, Mathf.DegToRad(225f));
-
-            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
-            {
-                float relativeYaw = RelativeYaw(
-                    snapshot,
-                    HorizontalPosition(objective.PositionMillimeters));
-                Vector2 position = center + new Vector2(
-                    Mathf.Sin(relativeYaw) * CompassObjectiveRadius,
-                    -Mathf.Cos(relativeYaw) * CompassObjectiveRadius);
-                DrawTextureRect(
-                    assets.CompassObjectiveMarker,
-                    new Rect2(position - new Vector2(8f, 8f), new Vector2(16f, 16f)),
-                    false,
-                    new Color(1f, 0.91f, 0.08f, 1f));
-            }
         }
 
         private void DrawGaugeNeedle(Vector2 center, float angle)
@@ -1302,41 +1479,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 new Color(0.44f + highlight, 0.56f + (highlight * 0.35f), 0.69f, 1f));
         }
 
-        private static float HighlightAlpha(
-            WorldSnapshot snapshot,
-            Level100HudSnapshot hud,
-            Level100HudPart part)
-        {
-            if (!hud.EmphasizedParts.Contains(part))
-            {
-                return 0f;
-            }
-            return 0.22f + (0.18f * (Mathf.Sin(snapshot.Tick * 0.45f) + 1f));
-        }
-
-        private void DrawSegmentedRing(
-            Vector2 center,
-            float radius,
-            int segmentCount,
-            float width,
-            float startTurn,
-            float turnLength,
-            Color color)
-        {
-            int segmentStart = Math.Clamp((int)Math.Floor(startTurn * segmentCount), 0, segmentCount);
-            int segmentEnd = Math.Clamp(
-                (int)Math.Ceiling((startTurn + turnLength) * segmentCount),
-                segmentStart,
-                segmentCount);
-            for (int segment = segmentStart; segment < segmentEnd; segment++)
-            {
-                float first = (segment / (float)segmentCount) * Mathf.Tau;
-                float second = ((segment + 1) / (float)segmentCount) * Mathf.Tau;
-                Vector2 firstPoint = center + new Vector2(Mathf.Sin(first), -Mathf.Cos(first)) * radius;
-                Vector2 secondPoint = center + new Vector2(Mathf.Sin(second), -Mathf.Cos(second)) * radius;
-                DrawLine(firstPoint, secondPoint, color, width, true);
-            }
-        }
     }
 
     private sealed partial class RetailHudTextLayer : RetailHudLayer
