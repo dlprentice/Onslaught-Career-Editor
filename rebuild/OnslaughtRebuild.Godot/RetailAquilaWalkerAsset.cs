@@ -585,6 +585,7 @@ internal sealed class RetailAquilaWalkerAsset
         Vector3[]? vertices = null;
         Vector3[]? normals = null;
         Vector2[]? textureCoordinates = null;
+        Color[]? colors = null;
         var groups = new GeometryGroup[groupCount];
         int declaredVertexBytes = -1;
         int declaredVertexCount = -1;
@@ -618,7 +619,7 @@ internal sealed class RetailAquilaWalkerAsset
             Chunk texr = ReadChunk(data, ref cursor, pmvb.EndOffset, "TEXR", 24);
             if (groupIndex == 0)
             {
-                (vertices, normals, textureCoordinates) = ReadVertices(data, vbuf, vertexCount);
+                (vertices, normals, textureCoordinates, colors) = ReadVertices(data, vbuf, vertexCount);
             }
 
             int[] strip = ReadIndices(data, ibuf, indexCount, vertexCount);
@@ -633,10 +634,11 @@ internal sealed class RetailAquilaWalkerAsset
             vertices ?? throw new InvalidDataException("The retained Aquila walker has no vertices."),
             normals ?? throw new InvalidDataException("The retained Aquila walker has no normals."),
             textureCoordinates ?? throw new InvalidDataException("The retained Aquila walker has no UVs."),
+            colors ?? throw new InvalidDataException("The retained Aquila walker has no vertex colours."),
             groups);
     }
 
-    private static (Vector3[] Vertices, Vector3[] Normals, Vector2[] TextureCoordinates) ReadVertices(
+    private static (Vector3[] Vertices, Vector3[] Normals, Vector2[] TextureCoordinates, Color[] Colors) ReadVertices(
         byte[] data,
         Chunk vbuf,
         int count)
@@ -644,6 +646,7 @@ internal sealed class RetailAquilaWalkerAsset
         var vertices = new Vector3[count];
         var normals = new Vector3[count];
         var textureCoordinates = new Vector2[count];
+        var colors = new Color[count];
         for (int index = 0; index < count; index++)
         {
             int offset = vbuf.PayloadOffset + (index * 36);
@@ -657,8 +660,48 @@ internal sealed class RetailAquilaWalkerAsset
             vertices[index] = MapVector(position);
             normals[index] = MapVector(normal).Normalized();
             textureCoordinates[index] = uv;
+            colors[index] = ReadDiffuse(data, offset + 24);
         }
-        return (vertices, normals, textureCoordinates);
+        return (vertices, normals, textureCoordinates, colors);
+    }
+
+    /// <summary>
+    /// Reads the D3DCOLOR DIFFUSE dword that stride-36 FVF 0x152
+    /// (XYZ|NORMAL|DIFFUSE|TEX1 = 12+12+4+8) carries at vertex offset 24.
+    /// </summary>
+    /// <remarks>
+    /// Retail consumes this. <c>D3DStateCache__UseDefaultRenderState</c> at
+    /// 0x004EB1E0 sets <c>D3DRS_LIGHTING</c> TRUE with both
+    /// <c>D3DRS_DIFFUSEMATERIALSOURCE</c> and
+    /// <c>D3DRS_AMBIENTMATERIALSOURCE</c> at <c>D3DMCS_COLOR1</c>, and stage
+    /// zero to <c>COLORARG1 = D3DTA_TEXTURE</c> / <c>COLORARG2 =
+    /// D3DTA_DIFFUSE</c>. <c>D3DRS_COLORVERTEX</c> is written at none of the
+    /// 547 render-state call sites, so it keeps its TRUE D3D8 default.
+    /// <c>CMeshRenderer__RenderMeshCore</c> clears lighting only around modes
+    /// 2 and 6 and restores it immediately, so the base mesh pass runs lit.
+    /// The shared <c>RetailFixedFunctionMaterial</c> shader already multiplies
+    /// its lit vertex colour by <c>COLOR.rgb</c>.
+    /// </remarks>
+    private static Color ReadDiffuse(byte[] data, int offset)
+    {
+        if (offset < 0 || offset + sizeof(uint) > data.Length)
+        {
+            throw new InvalidDataException("The retained Aquila walker ended before a vertex diffuse dword.");
+        }
+        uint diffuse = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(offset, sizeof(uint)));
+        if ((diffuse >> 24) != 0xFF)
+        {
+            // Stage zero also runs ALPHAOP MODULATE against D3DTA_DIFFUSE, so a
+            // non-opaque dword would be a real alpha term rather than padding.
+            // Every vertex of all three retained specimens is alpha 255; refuse
+            // rather than silently drop an alpha this path does not implement.
+            throw new InvalidDataException("The retained Aquila walker has a non-opaque vertex diffuse alpha.");
+        }
+        return new Color(
+            ((diffuse >> 16) & 0xFF) / 255f,
+            ((diffuse >> 8) & 0xFF) / 255f,
+            (diffuse & 0xFF) / 255f,
+            1f);
     }
 
     private static int[] ReadIndices(byte[] data, Chunk ibuf, int count, int vertexCount)
@@ -1096,6 +1139,9 @@ internal sealed class RetailAquilaWalkerAsset
             arrays[(int)Mesh.ArrayType.Vertex] = geometry.Vertices;
             arrays[(int)Mesh.ArrayType.Normal] = geometry.Normals;
             arrays[(int)Mesh.ArrayType.TexUV] = geometry.TextureCoordinates;
+            // The FVF 0x152 DIFFUSE dword, which retail's own render state
+            // consumes as stage-zero COLORARG2. See ReadDiffuse.
+            arrays[(int)Mesh.ArrayType.Color] = geometry.Colors;
             arrays[(int)Mesh.ArrayType.Index] = group.Triangles;
             int surface = mesh.GetSurfaceCount();
             mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
@@ -1409,6 +1455,7 @@ internal sealed class RetailAquilaWalkerAsset
         Vector3[] Vertices,
         Vector3[] Normals,
         Vector2[] TextureCoordinates,
+        Color[] Colors,
         GeometryGroup[] Groups);
 
     private sealed record GeometryGroup(int[] Triangles, int[] TextureIndices);
