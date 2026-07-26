@@ -359,6 +359,13 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return source;
     }
 
+    // Measured off the 27 retail hud-timeline-run1 frames; see DrawCrosshair.
+    // 208.5/255, 209.0/255, 231.0/255 at alpha 1 (background-independent).
+    private static Color RetailCrosshairInner => new(0.818f, 0.820f, 0.906f, 1f);
+
+    // 225.2/255, 227.1/255, 226.8/255 at the regressed alpha 0.53.
+    private static Color RetailCrosshairOuter => new(0.883f, 0.891f, 0.889f, 0.53f);
+
     private static Color RetailColor(uint argb) => new(
         ((argb >> 16) & 0xff) / 255f,
         ((argb >> 8) & 0xff) / 255f,
@@ -404,6 +411,20 @@ public sealed partial class FirstFlightHud : CanvasLayer
         float dz = position.Z - snapshot.PlayerPosition.Z;
         float desiredYaw = Mathf.Atan2(-dx, dz);
         return NormalizeAngle((snapshot.FacingYawMicroRad / 1_000_000f) - desiredYaw);
+    }
+
+    /// <summary>
+    /// Design-space x of an objective's on-screen reticle, or null when the
+    /// objective is outside the released horizontal limit and the off-screen
+    /// arrow is drawn instead.
+    /// </summary>
+    private static float? WorldMarkerScreenX(WorldSnapshot snapshot, SimVector2 position)
+    {
+        const float horizontalLimit = 1.05f;
+        float relativeYaw = RelativeYaw(snapshot, position);
+        return Math.Abs(relativeYaw) <= horizontalLimit
+            ? (DesignWidth * 0.5f) + ((relativeYaw / horizontalLimit) * (DesignWidth * 0.42f))
+            : null;
     }
 
     private static SimVector2 HorizontalPosition(SimVector3 position) =>
@@ -794,45 +815,37 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
+        // Only the OFF-screen arrow is drawn here. The on-screen reticle moved
+        // to the additive glow layer: see WorldMarkerScreenX for the measured
+        // reason, and RetailHudGlowLayer.DrawWorldMarkerReticles for the draw.
+        //
+        // offscreen-arrow is a DXT2 page with a real straight-alpha channel -
+        // 71.9% of its texels are alpha 0 - so it composites correctly here and
+        // would render as a solid white square on an additive layer, because
+        // those transparent texels carry RGB 255.
         private void DrawWorldMarkers(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
             foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
             {
-                DrawWorldMarker(
-                    snapshot,
-                    HorizontalPosition(objective.PositionMillimeters),
+                SimVector2 position = HorizontalPosition(objective.PositionMillimeters);
+                if (WorldMarkerScreenX(snapshot, position) is not null)
+                {
+                    continue;
+                }
+
+                float side = Math.Sign(RelativeYaw(snapshot, position));
+                Vector2 arrowCenter = new(
+                    side < 0f ? 28f : DesignWidth - 28f,
+                    DesignCenter.Y);
+                DrawCenteredRotated(
+                    assets.OffscreenArrow,
+                    arrowCenter,
+                    new Vector2(32f, 32f),
+                    side < 0f ? -Mathf.Pi * 0.5f : Mathf.Pi * 0.5f,
                     new Color(1f, 0.92f, 0.08f, 1f));
             }
-        }
-
-        private void DrawWorldMarker(WorldSnapshot snapshot, SimVector2 position, Color tint)
-        {
-            float relativeYaw = RelativeYaw(snapshot, position);
-            const float horizontalLimit = 1.05f;
-            Vector2 center = DesignCenter;
-            if (Math.Abs(relativeYaw) <= horizontalLimit)
-            {
-                float x = center.X + ((relativeYaw / horizontalLimit) * (DesignWidth * 0.42f));
-                DrawTextureRect(
-                    assets.ScreenMarker,
-                    new Rect2(new Vector2(x, center.Y) - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                    false,
-                    tint);
-                return;
-            }
-
-            float side = Math.Sign(relativeYaw);
-            Vector2 arrowCenter = new(
-                side < 0f ? 28f : DesignWidth - 28f,
-                center.Y);
-            DrawCenteredRotated(
-                assets.OffscreenArrow,
-                arrowCenter,
-                new Vector2(32f, 32f),
-                side < 0f ? -Mathf.Pi * 0.5f : Mathf.Pi * 0.5f,
-                tint);
         }
 
         private void DrawCrosshair(
@@ -841,15 +854,32 @@ public sealed partial class FirstFlightHud : CanvasLayer
         {
             // The retail frame's crosshair rings are centred on (320, 240) at
             // 640x480, i.e. exactly the design-stage centre.
+            //
+            // The RADII were already right and are confirmed by the 27
+            // hud-timeline-run1 frames: retail's inner reticle occupies r 25..29
+            // (peak r 26..28) and its outer ring r 33..37, and so does this
+            // code. The MODULATE was not: both sprites carry RGB 255 at alpha
+            // 255, and drawing them unmodulated saturated both rings to
+            // (255, 255, 255) where retail measures (208.5, 209.0, 231.0) and
+            // (182.0, 180.5, 214.0).
+            //
+            // Regressing observed against per-bearing background (3,240 samples,
+            // background taken at r 44..48) separates alpha from colour:
+            //   inner ring  slope -0.24/-0.18/-0.11 -> background-independent,
+            //               i.e. alpha 1; its measured core colour IS the paint.
+            //   outer ring  slope 0.47/0.47/0.33 -> alpha 0.53 toward a colour
+            //               of (225.2, 227.1, 226.8).
             Vector2 center = DesignCenter;
             DrawTextureRect(
                 assets.CrosshairSecondary,
                 new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
-                false);
+                false,
+                RetailCrosshairOuter);
             DrawTextureRect(
                 assets.CrosshairPrimary,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false);
+                false,
+                RetailCrosshairInner);
             DrawTextureRect(
                 assets.CrosshairDot,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
@@ -857,10 +887,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
             if (hud.Target is not Level100HudTargetSnapshot target)
             {
+                // crosshair-outline draws into the same r 25..29 band as
+                // crosshair-primary, so it takes the same measured paint;
+                // leaving it white re-saturated the band on its own.
                 DrawTextureRect(
                     assets.CrosshairOutline,
                     new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                    false);
+                    false,
+                    RetailCrosshairInner);
                 return;
             }
 
@@ -977,7 +1011,47 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawInstrumentOutlines(snapshot, hud);
             DrawDynamicCompass(snapshot, hud);
             DrawBattleLineOutline(snapshot, hud);
+            DrawWorldMarkerReticles(snapshot, hud);
             EndDesignSpace();
+        }
+
+        /// <summary>
+        /// screen-marker is a DXT1 page: it carries NO alpha channel at all -
+        /// all 4096 texels decode to alpha 255 - and stores a white segmented
+        /// reticle on a black field, exactly like the eleven other DXT1 HUD
+        /// pages (radar-outline, battleline-outline, weapon-outline, guns-*,
+        /// message-noise, threat-flash, damage-flash, bar-line), every one of
+        /// which this layer already draws additively so that the black field is
+        /// a no-op.
+        ///
+        /// It was the only one drawn on the alpha-blended base layer, which
+        /// composited that opaque black field as a solid 64x64 black box around
+        /// the reticle. Reproduced in a 640x480 gameplay capture at level offset
+        /// t+38063 ms: 1959 pixels of RGB &lt; 12 in a 64 px square centred on the
+        /// marker, where the matched retail frame
+        /// hud-timeline-run1/level100-t038063ms.png has none.
+        /// </summary>
+        private void DrawWorldMarkerReticles(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud)
+        {
+            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
+            {
+                if (WorldMarkerScreenX(
+                        snapshot,
+                        HorizontalPosition(objective.PositionMillimeters)) is not float x)
+                {
+                    continue;
+                }
+
+                DrawTextureRect(
+                    assets.ScreenMarker,
+                    new Rect2(
+                        new Vector2(x, DesignCenter.Y) - new Vector2(32f, 32f),
+                        new Vector2(64f, 64f)),
+                    false,
+                    new Color(1f, 0.92f, 0.08f, 1f));
+            }
         }
 
         private void DrawInstrumentOutlines(
@@ -1016,42 +1090,47 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            // NOT verified against the retail frame. A radial profile of the
-            // 640x480 capture through clean sky (centre 320,240, bearings -95deg
-            // to -20deg) shows a blue band at r 80..92 and a bright ring at
-            // r 96..101. The band ratios generated below (65.6..79.9 and
-            // 67.2..100) cannot reproduce that structure at ANY normalisation
-            // constant, so generatedToHud is not merely mis-scaled - the
-            // generator model is wrong. Left alone rather than guessed at; the
-            // design transform at least makes it resolution-stable.
+            // Radii MEASURED off the 27 retail frames in
+            // local-lab/retail-reference-pristine/level100-gameplay/hud-timeline-run1/,
+            // as a per-radius median of the annulus at 1 px steps about
+            // (320, 240), taken separately in gauge-free bearings (155-215 deg
+            // and 350-50 deg) and in the two gauge bearings:
+            //
+            //   base ring   present at EVERY bearing, rises at r 95, plateaus
+            //               r 96..100, falls at r 101, back to background by
+            //               r 102 -> inner 95, outer 101.
+            //   gauge band  present ONLY where a gauge is drawn: green over
+            //               bearings 57-148 deg, blue/violet over 220-345 deg;
+            //               both rise from r 80..82, peak at r 91, and are gone
+            //               by r 93 -> inner 80, outer 92.
+            //   between them retail has NOTHING: in the gauge-free bearings
+            //               r 70..94 is a smooth background gradient with no
+            //               feature at all.
+            //
+            // The previous CDXCompass-derived generator produced bands at
+            // 67.2..100 and 65.6..79.9 - a 32.8 px stroke where retail draws 6,
+            // plus a second full-circle band retail does not draw. That is the
+            // measured cause of the heavy centre glow. The generator model is
+            // replaced by the measurement rather than renormalised, because no
+            // normalisation constant can turn two overlapping bands into one
+            // ring plus a gauge-only band.
             Vector2 center = DesignCenter;
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
             Color baseColor = new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
 
-            // CDXCompass builds the outer band from a 512x32 texture at 31%
-            // thickness and the inner band from a 256x8 texture at 27%.
-            // Normalize its largest generated radius to 100 HUD units. The
-            // shipped Dial.raw north frame rotates with heading on that band;
-            // threat, damage, gauge-needle, and objective sprites have their
-            // separate released 111.5/96/110/98-unit radii.
-            const float outerTextureAspect = (32f * Mathf.Pi) / 512f;
-            const float outerGeneratedInner = (1f - outerTextureAspect) * 0.31f;
-            const float outerGeneratedOuter = (1f + outerTextureAspect) * 0.31f;
-            const float innerTextureAspect = (8f * Mathf.Pi) / 256f;
-            const float innerGeneratedInner = (1f - innerTextureAspect) * 0.27f;
-            const float innerGeneratedOuter = (1f + innerTextureAspect) * 0.27f;
-            const float generatedToHud = 100f / outerGeneratedOuter;
-            const float outerInnerRadius = outerGeneratedInner * generatedToHud;
-            const float outerOuterRadius = outerGeneratedOuter * generatedToHud;
-            const float innerInnerRadius = innerGeneratedInner * generatedToHud;
-            const float innerOuterRadius = innerGeneratedOuter * generatedToHud;
-            float outerRadius = (outerInnerRadius + outerOuterRadius) * 0.5f;
-            float outerWidth = outerOuterRadius - outerInnerRadius;
-            float innerRadius = (innerInnerRadius + innerOuterRadius) * 0.5f;
-            float innerWidth = innerOuterRadius - innerInnerRadius;
+            const float ringInnerRadius = 95f;
+            const float ringOuterRadius = 101f;
+            const float gaugeInnerRadius = 80f;
+            const float gaugeOuterRadius = 92f;
+            const float outerRadius = (ringInnerRadius + ringOuterRadius) * 0.5f;
+            const float outerWidth = ringOuterRadius - ringInnerRadius;
+            const float innerRadius = (gaugeInnerRadius + gaugeOuterRadius) * 0.5f;
+            const float innerWidth = gaugeOuterRadius - gaugeInnerRadius;
 
+            // Retail's base ring is the only full-circle band. The gauge band
+            // carries no track of its own outside the two gauge arcs, so none
+            // is drawn here either.
             DrawSegmentedRing(center, outerRadius, 50, outerWidth, 0f, 1f, baseColor);
-            DrawSegmentedRing(center, innerRadius, 40, innerWidth, 0f, 1f, new Color(0.32f, 0.54f, 0.96f, 0.20f));
 
             float health = Math.Clamp(
                 Health / (float)SimulationConstants.MaximumHull,
@@ -1067,16 +1146,21 @@ public sealed partial class FirstFlightHud : CanvasLayer
             float energyHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Energy);
             healthColor.A = Math.Clamp(healthColor.A + healthHighlight, 0f, 1f);
             energyColor.A = Math.Clamp(energyColor.A + energyHighlight, 0f, 1f);
+            // Both gauges share retail's single r 80..92 band. Their bearings
+            // already agree with the measurement: the health sweep runs
+            // 60-150 deg against a green arc measured over 57-148 deg, and the
+            // energy sweep runs 225-360 deg against a violet arc measured over
+            // 220-345 deg. Only the radii were wrong.
             DrawSegmentedRing(
                 center,
-                outerRadius,
+                innerRadius,
                 50,
-                outerWidth,
+                innerWidth,
                 (150f - (health * 90f)) / 360f,
                 health * (90f / 360f),
                 healthColor);
             DrawSegmentedRing(center, innerRadius, 40, innerWidth, 225f / 360f, energy * (135f / 360f), energyColor);
-            DrawDialNorthOverlay(snapshot, center, outerInnerRadius, outerOuterRadius, baseColor);
+            DrawDialNorthOverlay(snapshot, center, ringInnerRadius, ringOuterRadius, baseColor);
 
             DrawThreats(hud, center);
             DrawDamageFlashes(hud, center);
