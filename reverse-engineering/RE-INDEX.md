@@ -36,6 +36,7 @@ waves, superseded plans, and generated accounting.
 
 - [2026-07 fullpass expedition handoff (branch status)](binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md)
 - [Name-grading ledger — every name graded by its evidence](binary-analysis/name-grading-ledger-2026-07-25.md)
+- [PhysicsScript round and weapon-mode value ids — resolved](binary-analysis/physics-round-value-ids-2026-07-25.md)
 
 
 - [2026-07-13 full Ghidra re-audit closeout](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md)
