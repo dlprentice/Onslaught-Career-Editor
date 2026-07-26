@@ -7,6 +7,24 @@ namespace OnslaughtRebuild.GodotClient;
 
 public sealed partial class FirstFlightHud : CanvasLayer
 {
+    // The released in-level HUD composes on a 640x480 stage, the same stage
+    // RetailFrontendFlow already declares (RetailFrontendFlow.cs:18-19).
+    //
+    // Measured, not assumed. Against the retail 640x480 capture
+    // local-lab/retail-reference-pristine/level-100-entry/09-level-100-entry-640x480.png:
+    //   * font-13ps cell 'T' occupies 9x10 ink pixels on screen and 9x10 ink
+    //     pixels in the 16px atlas cell -> glyphs are blitted 1:1, no scaling.
+    //   * radar-outline's ring (texture centre 49,49) fits the frame's lower-left
+    //     ring at centre (66.01, 417.25) r=46.56 (55-point circle fit, rms 0.20);
+    //     the constants below place it at (66, 417) r=48.
+    //   * the message panel body (objective-inner-centre rows 28..90 of 128)
+    //     spans y 405.5..464.5 in the frame; the constants below predict
+    //     405.25..464.3.
+    // A 640x480 viewport therefore makes DesignTransform the identity, and the
+    // frame is a direct test of every constant in this file.
+    private const float DesignWidth = 640f;
+    private const float DesignHeight = 480f;
+
     private const float RadarRadius = 46f;
     private const float ScannerNorthRadius = 45f;
     private const float CompassThreatRadius = 111.5f;
@@ -409,7 +427,65 @@ public sealed partial class FirstFlightHud : CanvasLayer
         control.AnchorRight = 1f;
         control.AnchorBottom = 1f;
         control.MouseFilter = Control.MouseFilterEnum.Ignore;
+        // The 640x480 retail frame shows single-texel glyph stems and hard
+        // instrument edges (font-13ps 'h' renders a one-pixel-wide stem), i.e.
+        // the released HUD blitted texels 1:1 with no interpolation. At the
+        // 640x480 design resolution DesignTransform is the identity and Nearest
+        // reproduces that blit exactly. Above 640x480 retail has no measured
+        // behaviour to match; Nearest is chosen because it keeps the hard edges
+        // the frame demonstrates rather than softening every element.
+        control.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         AddChild(control);
+    }
+
+    /// <summary>
+    /// The shared 640x480 released stage. Every layer draws in design pixels and
+    /// lets this map them onto the window, so a constant measured off the retail
+    /// 640x480 capture stays at the same relative position and scale at any
+    /// window size. This mirrors RetailFrontendFlow.DesignTransform.
+    /// </summary>
+    private abstract partial class RetailHudLayer : Control
+    {
+        protected static Vector2 DesignCenter => new(DesignWidth * 0.5f, DesignHeight * 0.5f);
+
+        protected (float Scale, Vector2 Offset) DesignTransform()
+        {
+            float scale = Mathf.Min(Size.X / DesignWidth, Size.Y / DesignHeight);
+            return (
+                scale,
+                new Vector2(
+                    (Size.X - (DesignWidth * scale)) * 0.5f,
+                    (Size.Y - (DesignHeight * scale)) * 0.5f));
+        }
+
+        protected void BeginDesignSpace()
+        {
+            (float scale, Vector2 offset) = DesignTransform();
+            DrawSetTransform(offset, 0f, new Vector2(scale, scale));
+        }
+
+        protected void EndDesignSpace() => DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+
+        /// <summary>
+        /// DrawSetTransform replaces rather than nests, so a rotated blit has to
+        /// re-compose the letterbox around its design-space pivot and then
+        /// restore design space. Same shape as RetailFrontendFlow's helper.
+        /// </summary>
+        protected void DrawCenteredRotated(
+            Texture2D texture,
+            Vector2 center,
+            Vector2 size,
+            float rotation,
+            Color modulate)
+        {
+            (float scale, Vector2 offset) = DesignTransform();
+            DrawSetTransform(
+                offset + (center * scale),
+                rotation,
+                new Vector2(scale, scale));
+            DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
+            DrawSetTransform(offset, 0f, new Vector2(scale, scale));
+        }
     }
 
     private sealed class HudAssets
@@ -456,7 +532,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         public required Texture2D[][] Portraits { get; init; }
     }
 
-    private sealed partial class RetailHudBaseLayer(HudAssets assets) : Control
+    private sealed partial class RetailHudBaseLayer(HudAssets assets) : RetailHudLayer
     {
         private WorldSnapshot? _snapshot;
         private Level100HudSnapshot? _hud;
@@ -505,6 +581,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
 
+            BeginDesignSpace();
             DrawLowerLeftInstrument(snapshot, hud);
             DrawWeaponSelection(hud);
             DrawBattleLine();
@@ -514,21 +591,22 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
             DrawWorldMarkers(snapshot, hud);
             DrawCrosshair(snapshot, hud);
+            EndDesignSpace();
         }
 
         private void DrawLowerLeftInstrument(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            Rect2 radarRect = new(17f, Size.Y - 112f, 128f, 128f);
-            Rect2 weaponRect = new(9f, Size.Y - 141f, 128f, 128f);
+            Rect2 radarRect = new(17f, DesignHeight - 112f, 128f, 128f);
+            Rect2 weaponRect = new(9f, DesignHeight - 141f, 128f, 128f);
             DrawTextureRect(assets.RadioView, radarRect, false, RetailColor(0x6fffffff));
             DrawTextureRect(assets.WeaponFill, weaponRect, false, RetailColor(0x3f000000));
 
             DrawWeaponResource(snapshot, hud, weaponRect);
             DrawWeaponIcon(hud.Weapon, weaponRect);
 
-            Vector2 radarCenter = new(69f, Size.Y - 64f);
+            Vector2 radarCenter = new(69f, DesignHeight - 64f);
             foreach (Level100HudContactSnapshot contact in hud.Contacts
                          .Where(contact => contact.OnScanner))
             {
@@ -542,7 +620,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-            Vector2 northCenter = new(65f, Size.Y - 64f);
+            Vector2 northCenter = new(65f, DesignHeight - 64f);
             Vector2 northPosition = northCenter + new Vector2(
                 Mathf.Sin(yaw) * ScannerNorthRadius,
                 -Mathf.Cos(yaw) * ScannerNorthRadius);
@@ -616,7 +694,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
 
-            Rect2 rect = new(Size.X - 137f, Size.Y - 240f, 128f, 128f);
+            Rect2 rect = GunsRect();
             DrawTextureRect(assets.GunsDarken, rect, false, RetailColor(0x78000000));
             Texture2D? selectedSlotTexture = selectionSlot switch
             {
@@ -637,8 +715,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         private void DrawBattleLine()
         {
-            Rect2 rect = BattleLineRect();
-            DrawTextureRect(assets.CircleDarkener, rect, false, new Color(1f, 1f, 1f, 0.76f));
+            DrawTextureRect(
+                assets.CircleDarkener,
+                BattleLineInstrumentRect(),
+                false,
+                new Color(1f, 1f, 1f, 0.76f));
 
             if (_message is not null &&
                 _speaker is Level100HudSpeaker speaker &&
@@ -653,7 +734,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 };
                 if (speakerIndex >= 0)
                 {
-                    DrawTextureRect(assets.Portraits[speakerIndex][pose], rect, false, Colors.White);
+                    DrawTextureRect(
+                        assets.Portraits[speakerIndex][pose],
+                        BattleLinePortraitRect(),
+                        false,
+                        Colors.White);
                 }
                 return;
             }
@@ -665,8 +750,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             const float pieceHeight = 120f;
             const float innerWidth = 60f;
             Color innerTint = RetailColor(0x90000000);
-            float centerX = (Size.X * 0.5f) + 22f;
-            float centerY = Size.Y - 41f;
+            // Measured against the retail 640x480 frame: the panel body's
+            // horizontal midpoint is x 341.5 (the two rim edges sit at 186.5 and
+            // 496.5) and its hard top/bottom edges are y 405.5 and 464.5. These
+            // constants predict 342, 405.25 and 464.3.
+            float centerX = (DesignWidth * 0.5f) + 22f;
+            float centerY = DesignHeight - 41f;
             float leftCenter = centerX - (frameWidth * 0.5f);
             float rightCenter = centerX + (frameWidth * 0.5f);
             float top = centerY - (pieceHeight * 0.5f);
@@ -722,10 +811,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
         {
             float relativeYaw = RelativeYaw(snapshot, position);
             const float horizontalLimit = 1.05f;
-            Vector2 center = Size * 0.5f;
+            Vector2 center = DesignCenter;
             if (Math.Abs(relativeYaw) <= horizontalLimit)
             {
-                float x = center.X + ((relativeYaw / horizontalLimit) * (Size.X * 0.42f));
+                float x = center.X + ((relativeYaw / horizontalLimit) * (DesignWidth * 0.42f));
                 DrawTextureRect(
                     assets.ScreenMarker,
                     new Rect2(new Vector2(x, center.Y) - new Vector2(32f, 32f), new Vector2(64f, 64f)),
@@ -736,7 +825,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
             float side = Math.Sign(relativeYaw);
             Vector2 arrowCenter = new(
-                side < 0f ? 28f : Size.X - 28f,
+                side < 0f ? 28f : DesignWidth - 28f,
                 center.Y);
             DrawCenteredRotated(
                 assets.OffscreenArrow,
@@ -750,7 +839,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            Vector2 center = Size * 0.5f;
+            // The retail frame's crosshair rings are centred on (320, 240) at
+            // 640x480, i.e. exactly the design-stage centre.
+            Vector2 center = DesignCenter;
             DrawTextureRect(
                 assets.CrosshairSecondary,
                 new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
@@ -791,8 +882,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 new Color(1f, 1f, 1f, Math.Clamp(target.LockPermille / 1_000f, 0f, 1f)));
 
             float predictedYaw = RelativeYaw(snapshot, target.PredictedPosition);
-            float predictorX = center.X + ((predictedYaw / 1.05f) * (Size.X * 0.42f));
-            predictorX = Math.Clamp(predictorX, 32f, Size.X - 32f);
+            float predictorX = center.X + ((predictedYaw / 1.05f) * (DesignWidth * 0.42f));
+            predictorX = Math.Clamp(predictorX, 32f, DesignWidth - 32f);
             DrawTextureRect(
                 assets.CrosshairPredictor,
                 new Rect2(new Vector2(predictorX, center.Y) - new Vector2(32f, 32f), new Vector2(64f, 64f)),
@@ -801,26 +892,37 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         }
 
-        private Rect2 BattleLineRect() => new(Size.X - 137f, Size.Y - 128f, 128f, 128f);
-
         private static bool PortraitSetIsReady(Texture2D[] portraits) =>
             portraits.Length == 4 &&
             portraits.All(portrait => portrait.GetSize() == new Vector2I(128, 128));
-
-        private void DrawCenteredRotated(
-            Texture2D texture,
-            Vector2 center,
-            Vector2 size,
-            float rotation,
-            Color modulate)
-        {
-            DrawSetTransform(center, rotation, Vector2.One);
-            DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
-            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-        }
     }
 
-    private sealed partial class RetailHudGlowLayer(HudAssets assets) : Control
+    // battleline-outline and circle-darkener carry their ring in the top-left
+    // 98x98 of a 128x128 page (content bbox x[1..97] y[1..97], centre 49,49),
+    // while circle-mask - and therefore the masked portrait - carries its disc
+    // centred on the page at (64.5, 64.5) r=46.5. The two are 15.5px apart, so
+    // one rect cannot place both.
+    //
+    // Measured on the retail 640x480 frame, the lower-right ring is a circle at
+    // centre (568.08, 416.46) r=46.76 (50-point fit, rms 0.34), matching the
+    // lower-left ring's r=46.56 to within 0.2px. That puts:
+    //   ring/darkener page origin at (568.08-49, 416.46-49) = (519.1, 367.5)
+    //   portrait page origin at (568.08-64.5, 416.46-64.5) = (503.6, 352.0)
+    // The old single rect (DesignWidth-137, DesignHeight-128) = (503, 352) was
+    // right for the portrait and 15.5px up-and-left for the ring.
+    private static Rect2 BattleLineInstrumentRect() =>
+        new(DesignWidth - 121f, DesignHeight - 112f, 128f, 128f);
+
+    private static Rect2 BattleLinePortraitRect() =>
+        new(DesignWidth - 137f, DesignHeight - 128f, 128f, 128f);
+
+    // The weapon-selection page is not on screen in the retail reference frame,
+    // so its offsets are unverified and deliberately left as they were - note
+    // that its 137 is no longer tied to the battleline's corrected 121.
+    private static Rect2 GunsRect() =>
+        new(DesignWidth - 137f, DesignHeight - 240f, 128f, 128f);
+
+    private sealed partial class RetailHudGlowLayer(HudAssets assets) : RetailHudLayer
     {
         private WorldSnapshot? _snapshot;
         private Level100HudSnapshot? _hud;
@@ -871,9 +973,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
 
+            BeginDesignSpace();
             DrawInstrumentOutlines(snapshot, hud);
             DrawDynamicCompass(snapshot, hud);
             DrawBattleLineOutline(snapshot, hud);
+            EndDesignSpace();
         }
 
         private void DrawInstrumentOutlines(
@@ -887,18 +991,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 Level100HudPart.CurrentWeapon);
             DrawTextureRect(
                 assets.RadarOutline,
-                new Rect2(17f, Size.Y - 112f, 128f, 128f),
+                new Rect2(17f, DesignHeight - 112f, 128f, 128f),
                 false,
                 new Color(0.44f + radarHighlight, 0.56f + (radarHighlight * 0.35f), 0.69f, 1f));
             DrawTextureRect(
                 assets.WeaponOutline,
-                new Rect2(9f, Size.Y - 141f, 128f, 128f),
+                new Rect2(9f, DesignHeight - 141f, 128f, 128f),
                 false,
                 weaponHighlight > 0f
                     ? new Color(0.50f, 1f, 0.25f, 1f)
                     : RetailColor(0xff7f7f7f));
 
-            Rect2 gunsRect = new(Size.X - 137f, Size.Y - 240f, 128f, 128f);
+            Rect2 gunsRect = GunsRect();
             Level100HudWeaponSnapshot weapon = hud.Weapon;
             if (weapon.SelectionPanelVisible == true &&
                 weapon.SelectionSlot is Level100HudWeaponSelectionSlot selectionSlot &&
@@ -912,7 +1016,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            Vector2 center = Size * 0.5f;
+            // NOT verified against the retail frame. A radial profile of the
+            // 640x480 capture through clean sky (centre 320,240, bearings -95deg
+            // to -20deg) shows a blue band at r 80..92 and a bright ring at
+            // r 96..101. The band ratios generated below (65.6..79.9 and
+            // 67.2..100) cannot reproduce that structure at ANY normalisation
+            // constant, so generatedToHud is not merely mis-scaled - the
+            // generator model is wrong. Left alone rather than guessed at; the
+            // design transform at least makes it resolution-stable.
+            Vector2 center = DesignCenter;
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
             Color baseColor = new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
 
@@ -1089,7 +1201,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
-            Rect2 rect = new(Size.X - 137f, Size.Y - 128f, 128f, 128f);
+            Rect2 rect = BattleLineInstrumentRect();
             if (_messageActive)
             {
                 DrawTextureRect(
@@ -1141,21 +1253,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 DrawLine(firstPoint, secondPoint, color, width, true);
             }
         }
-
-        private void DrawCenteredRotated(
-            Texture2D texture,
-            Vector2 center,
-            Vector2 size,
-            float rotation,
-            Color modulate)
-        {
-            DrawSetTransform(center, rotation, Vector2.One);
-            DrawTextureRect(texture, new Rect2(-size * 0.5f, size), false, modulate);
-            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
-        }
     }
 
-    private sealed partial class RetailHudTextLayer : Control
+    private sealed partial class RetailHudTextLayer : RetailHudLayer
     {
         private const int FirstGlyph = 32;
         private const int GlyphColumns = 16;
@@ -1231,9 +1331,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         public override void _Draw()
         {
+            // The retail 640x480 frame renders font-13ps glyphs at exactly their
+            // 16px atlas cell size ('T' measures 9x10 ink pixels on screen and
+            // 9x10 in the atlas), so the released text path is a 1:1 blit on the
+            // 640x480 stage. Drawing it in design space preserves that.
+            BeginDesignSpace();
             DrawMessagePage();
             DrawHelpPrompts();
             DrawWeaponAmmo();
+            EndDesignSpace();
         }
 
         private void DrawMessagePage()
@@ -1244,9 +1350,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             string[] lines = _messagePages[_messagePageIndex];
+            // UNVERIFIED against the retail frame and deliberately unchanged.
+            // The reference capture's subtitle is mid-render ("This i"), so its
+            // line count is unknown. That single line's glyph cell sits at
+            // (205, 412) in the capture, while these constants place line 0 at
+            // (226, 387); (226, 387) is consistent with retail only if retail
+            // vertically centres a 3-line block, which one frame cannot decide.
+            // Moving it would be a guess, so it stays put.
             var textRect = new Rect2(
-                (Size.X * 0.5f) - 94f,
-                Size.Y - 93f,
+                (DesignWidth * 0.5f) - 94f,
+                DesignHeight - 93f,
                 MessageTextWidth,
                 MessageTextHeight);
             for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
@@ -1268,7 +1381,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 foreach (string line in lines)
                 {
                     float width = MeasureText(line);
-                    DrawTextLine(line, (Size.X - width) * 0.5f, y);
+                    DrawTextLine(line, (DesignWidth - width) * 0.5f, y);
                     y += MessageLineHeight;
                 }
                 y += 4f;
@@ -1285,7 +1398,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
 
             string text = ammo.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var bounds = new Rect2(9f, Size.Y - 141f, 128f, LargeGlyphCellSize);
+            var bounds = new Rect2(9f, DesignHeight - 141f, 128f, LargeGlyphCellSize);
             float left = bounds.End.X - MeasureText(text, _largeGlyphWidths) - 8f;
             DrawTextLine(
                 text,
