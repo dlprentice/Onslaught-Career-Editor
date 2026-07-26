@@ -12,7 +12,19 @@ namespace OnslaughtRebuild.GodotClient;
 // queue/mix/pause behavior, presentation pitch/volume, and stream lifetime.
 public sealed partial class Level100Audio : Node3D
 {
-    private const double RetailCharacterMessageHandoffSeconds = 6d / 30d;
+    // Retail CMessageBox__AdvanceRevealAndScheduleNextTick (0x004b8020) schedules
+    // the message-completion event 0xbba with the immediate float constant
+    // 0x3e99999a = 0.30f. That is six ticks of the released 0.05 s event-manager
+    // clock (thing.h CLOCK_TICK 0.05f; CEventManager::AdvanceTime sets
+    // mTime = mFrameCount * CLOCK_TICK). The previous 6d/30d here applied that
+    // six-tick count to this reconstruction's 30 Hz Core rate instead of retail's
+    // 20 Hz clock and was therefore 0.2 s, a third short.
+    //
+    // NOT YET AT PARITY: retail starts this delay when the TEXT REVEAL completes,
+    // whereas this adapter starts it from the voice stream's Finished signal.
+    // Those coincide only when the voice outlasts the reveal. Correcting the
+    // trigger needs the reveal clock, which lives in the HUD lane.
+    private const double RetailCharacterMessageHandoffSeconds = 0.3d;
 
     private readonly Dictionary<string, AudioStream> _pcmStreams =
         new(StringComparer.Ordinal);

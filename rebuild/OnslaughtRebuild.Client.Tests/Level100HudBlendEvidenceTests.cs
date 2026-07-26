@@ -181,4 +181,75 @@ public sealed class Level100HudBlendEvidenceTests
         Assert.Single(
             Regex.Matches(HudSource, @"BlendMode\s*=\s*CanvasItemMaterial\.BlendModeEnum\.Add"));
     }
+
+    /// <summary>
+    /// Pins the lower-right battleline instrument's composition to the bytes a
+    /// device-level read of the safe copy produced, so a later "the portrait
+    /// looks a bit dark, nudge it" pass has to argue with the debugger log
+    /// rather than with a taste judgement. Sources:
+    /// local-lab/PORTRAIT-BATTLELINE-FIELD-2026-07-26.md and
+    /// local-lab/portrait-battleline-2026-07-26/.
+    ///
+    /// The three diffuse DWORDs (0x7fffffff darkener, 0x40ffffff portrait,
+    /// 0xff6f8faf outline) and the six-fold portrait draw were read at the
+    /// CVBufTexture__DrawSpriteEx call sites inside 0x00487d10
+    /// CHud__RenderBattleline; the blend factors were read at the D3D device's
+    /// own SetRenderState entry, not from the 0x00855540 shadow.
+    /// </summary>
+    [Fact]
+    public void TheBattleLineCompositionMatchesTheDeviceLevelRead()
+    {
+        // 0x7fffffff -> alpha 127/255.
+        Assert.Contains("CircleDarkenerAlpha = 127f / 255f", HudSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("1f, 1f, 1f, 0.76f", HudSource, StringComparison.Ordinal);
+
+        // 0x40ffffff, issued six times under SRCALPHA/INVSRCALPHA with
+        // ZWRITEENABLE=0, so every draw passes: 1 - (1 - 64/255)^6.
+        Assert.Contains("PortraitDrawCount = 6", HudSource, StringComparison.Ordinal);
+        Assert.Contains("PortraitDrawAlpha = 64f / 255f", HudSource, StringComparison.Ordinal);
+        double composite = 1.0 - Math.Pow(1.0 - (64.0 / 255.0), 6);
+        Match declared = Regex.Match(
+            HudSource, @"PortraitCompositeAlpha\s*=\s*([0-9.]+)f");
+        Assert.True(declared.Success, "PortraitCompositeAlpha is missing from the HUD.");
+        Assert.Equal(
+            composite,
+            double.Parse(declared.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
+            3);
+
+        // The message-noise diffuse alpha byte over 66 steady-state frames of one
+        // message ranged 0x3c..0x4a, mean 66.2.
+        Assert.Contains("MessageNoiseAlpha = 66f / 255f", HudSource, StringComparison.Ordinal);
+        Assert.InRange(66f / 255f, 0x3c / 255f, 0x4a / 255f);
+    }
+
+    /// <summary>
+    /// message-noise is a DXT1 page with no coverage, so the sibling test above
+    /// would normally put it on the ONE/ONE layer. Retail draws it
+    /// SRCALPHA/INVSRCALPHA instead - device-confirmed - and gets away with it
+    /// for two reasons this client has to reproduce exactly: the DIFFUSE alpha
+    /// is ~0.26, not 1, and the quad is clipped to the instrument disc by the
+    /// CircleMask depth stamp. This client has no depth stamp, so the clip is
+    /// baked as CircleMask alpha in BuildMessageNoiseDiscPhases. Drop either and
+    /// the page becomes the opaque rectangle the sibling test warns about.
+    /// </summary>
+    [Fact]
+    public void MessageNoiseIsAlphaBlendedOnlyBecauseItIsDiscClippedAndFaint()
+    {
+        int glowLayer = HudSource.IndexOf(
+            "private sealed partial class RetailHudGlowLayer", StringComparison.Ordinal);
+        int glowLayerEnd = HudSource.IndexOf(
+            "private sealed partial class RetailHudTextLayer", glowLayer, StringComparison.Ordinal);
+        Assert.True(glowLayerEnd > glowLayer);
+
+        // It must no longer be drawn on the additive layer, and the blue tint
+        // that pass carried must be gone from the file entirely.
+        Assert.DoesNotContain(
+            "assets.MessageNoise,", HudSource[glowLayer..glowLayerEnd], StringComparison.Ordinal);
+        Assert.DoesNotContain("0.48f, 0.66f, 1f", HudSource, StringComparison.Ordinal);
+
+        // The disc clip is what makes the alpha-blended draw legal.
+        Assert.Contains(
+            "sourcePixel.A = 1f - maskImage.GetPixel(x, y).A", HudSource, StringComparison.Ordinal);
+        Assert.Contains("MessageNoiseDiscPhases", HudSource, StringComparison.Ordinal);
+    }
 }

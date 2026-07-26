@@ -105,55 +105,55 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.GetEffect(Level100EffectCue.PulseImpact);
         Level100AudioCueRecipe droneDestroyed =
             Level100AudioCatalog.GetEffect(Level100EffectCue.DroneDestroyed);
-        Assert.Equal(106, pulseImpact.RetailSoundRecord);
+        Assert.Equal(108, pulseImpact.RetailSoundRecord);
         Assert.Equal(pulseImpact, droneDestroyed);
 
         Level100AudioCueRecipe vulcan =
             Level100AudioCatalog.GetEffect(Level100EffectCue.VulcanCannonFire);
-        Assert.Equal(40, vulcan.RetailSoundRecord);
+        Assert.Equal(42, vulcan.RetailSoundRecord);
         Assert.Equal(
             "res://Assets/Aquila/SoundEffects/vulcan-cannon-fire.wav",
             vulcan.ResourcePath);
 
         Level100AudioCueRecipe warehouse =
             Level100AudioCatalog.GetEffect(Level100EffectCue.FacilityDestroyed);
-        Assert.Equal(103, warehouse.RetailSoundRecord);
+        Assert.Equal(105, warehouse.RetailSoundRecord);
 
         Level100AudioCueRecipe landing =
             Level100AudioCatalog.GetAquilaTransition(AquilaTransitionCue.Landing);
-        Assert.Equal(24, landing.RetailSoundRecord);
+        Assert.Equal(25, landing.RetailSoundRecord);
         Assert.Equal(
             "res://Assets/Aquila/SoundEffects/engine-land.wav",
             landing.ResourcePath);
 
-        Assert.Equal(41, Level100AudioCatalog.GetFrontend("Back").RetailSoundRecord);
-        Assert.Equal(42, Level100AudioCatalog.GetFrontend("Move").RetailSoundRecord);
-        Assert.Equal(43, Level100AudioCatalog.GetFrontend("Select").RetailSoundRecord);
+        Assert.Equal(43, Level100AudioCatalog.GetFrontend("Back").RetailSoundRecord);
+        Assert.Equal(44, Level100AudioCatalog.GetFrontend("Move").RetailSoundRecord);
+        Assert.Equal(45, Level100AudioCatalog.GetFrontend("Select").RetailSoundRecord);
     }
 
     [Fact]
     public void CueCatalog_CoversTheExactBoundedLevel100Categories()
     {
         Assert.Equal(
-            [20, 31, 32, 29, 30, 35, 40, 33, 150, 106, 102, 102, 106,
-                103, 107, 94, 93, 95, 108, 7, 8],
+            [21, 32, 33, 30, 31, 37, 42, 34, 155, 108, 104, 104, 108,
+                105, 109, 96, 95, 97, 110, 7, 8],
             Enum.GetValues<Level100EffectCue>()
                 .Select(cue => Level100AudioCatalog.GetEffect(cue).RetailSoundRecord)
                 .ToArray());
         Assert.Equal(
-            [44, 46, 51, 55, 56, 57, 58, 60, 70, 73],
+            [46, 48, 53, 57, 58, 59, 60, 62, 72, 75],
             Enum.GetValues<Level100TerminalCue>()
                 .Select(cue => Level100AudioCatalog.GetTerminal(cue).RetailSoundRecord)
                 .ToArray());
         Assert.Equal(
-            [25, 23, 24],
+            [26, 24, 25],
             Enum.GetValues<AquilaTransitionCue>()
                 .Select(cue => Level100AudioCatalog
                     .GetAquilaTransition(cue)
                     .RetailSoundRecord)
                 .ToArray());
         Assert.Equal(
-            [22, 21],
+            [23, 22],
             new[]
             {
                 AquilaWarningAudioState.EnergyLow,
@@ -163,7 +163,7 @@ public sealed class Level100AudioCatalogTests
                 .RetailSoundRecord)
                 .ToArray());
         Assert.Equal(
-            [119, 126, 9],
+            [121, 129, 9],
             Enum.GetValues<Level100ActorLoopCue>()
                 .Select(cue => Level100AudioCatalog.GetActorLoop(cue).RetailSoundRecord)
                 .ToArray());
@@ -199,4 +199,122 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.ToRetailOptionMix(1.01f));
     }
 
+    // Every Level 100 mix level is reproduced from two released facts rather
+    // than chosen: the integer volume/pitch fields of the matching
+    // data/sounds/sounds.sfx record (version 103, 170 records), and
+    // CSoundManager::PlayEffect's `volume = (volume * effect->mVolume) / 100`
+    // with the call site's caller volume. Caller volumes are the released
+    // constants DEFAULT_SOUND_VOLUME 0.7f, mHUDMessageVolume 0.45f, and
+    // ENGINE_VOLUME 1.0f as passed by the Battle Engine call sites.
+    //
+    // This is the regression fence for the standing rule that no mix level may
+    // be guessed. Any recipe volume that stops being caller x record/100, or
+    // any pitch variance that stops being the record's own field, fails here.
+    private const float CallerDefault = 0.70f;
+    private const float CallerHudMessage = 0.45f;
+    private const float CallerEngine = 1.00f;
+
+    public static TheoryData<Level100AudioCueRecipe, int, int, int, float>
+        RetailSfxRecords => new()
+    {
+        { Level100AudioCatalog.GetFrontend("Back"), 43, 52, 0, CallerDefault },
+        { Level100AudioCatalog.GetFrontend("Move"), 44, 49, 0, CallerDefault },
+        { Level100AudioCatalog.GetFrontend("Select"), 45, 52, 0, CallerDefault },
+        { Effect(Level100EffectCue.AquilaStrafe), 21, 80, 10, CallerEngine },
+        { Effect(Level100EffectCue.AquilaHydraulics), 32, 40, 0, CallerHudMessage },
+        { Effect(Level100EffectCue.AquilaIncomingMissile), 33, 80, 5, CallerHudMessage },
+        { Effect(Level100EffectCue.AquilaTargetLocked), 30, 80, 0, CallerHudMessage },
+        { Effect(Level100EffectCue.AquilaTargetAcquired), 31, 80, 0, CallerHudMessage },
+        { Effect(Level100EffectCue.PulseCannonFire), 37, 65, 5, CallerDefault },
+        { Effect(Level100EffectCue.VulcanCannonFire), 42, 75, 7, CallerDefault },
+        { Effect(Level100EffectCue.MicroMissileFire), 34, 80, 15, CallerDefault },
+        { Effect(Level100EffectCue.DroneVulcanFire), 155, 60, 10, CallerDefault },
+        { Effect(Level100EffectCue.PulseImpact), 108, 70, 20, CallerDefault },
+        { Effect(Level100EffectCue.MissileImpact), 104, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.FacilityDestroyed), 105, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.AquilaDestroyed), 109, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.TransportDestroyed), 96, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.ComponentDebrisDestroyed), 95, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.LargeDebrisDestroyed), 97, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.HugeGroundDebrisDestroyed), 110, 70, 30, CallerDefault },
+        { Effect(Level100EffectCue.RepairCharging), 7, 80, 0, CallerDefault },
+        { Effect(Level100EffectCue.RepairFull), 8, 80, 0, CallerDefault },
+        { Loop(Level100ActorLoopCue.RepairPadIdle), 9, 50, 0, CallerDefault },
+        { Loop(Level100ActorLoopCue.AirTrainer), 121, 45, 15, CallerDefault },
+        { Loop(Level100ActorLoopCue.Transport), 129, 40, 15, CallerDefault },
+        { Transition(AquilaTransitionCue.Takeoff), 26, 40, 0, CallerEngine },
+        { Transition(AquilaTransitionCue.InFlight), 24, 50, 0, CallerEngine },
+        { Transition(AquilaTransitionCue.Landing), 25, 40, 0, CallerEngine },
+        { Warning(AquilaWarningAudioState.EnergyLow), 23, 70, 0, CallerEngine },
+        { Warning(AquilaWarningAudioState.HullCritical), 22, 70, 0, CallerEngine },
+        { Terminal(Level100TerminalCue.AmmunitionDepleted), 46, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.ArmourLow), 48, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.EnergyLow), 53, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.HostileEnvironment), 57, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.IncomingMissile), 58, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.IncomingWarhead), 59, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.MicroMissilesSelected), 60, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.PulseCannonSelected), 62, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.VulcanCannonSelected), 72, 100, 0, CallerHudMessage },
+        { Terminal(Level100TerminalCue.WeaponOverheating), 75, 100, 0, CallerHudMessage },
+    };
+
+    [Theory]
+    [MemberData(nameof(RetailSfxRecords))]
+    public void EveryMixLevelIsTheReleasedPlayEffectProductOfItsSfxRecord(
+        Level100AudioCueRecipe recipe,
+        int expectedRecord,
+        int recordVolume,
+        int recordPitchVariance,
+        float callerVolume)
+    {
+        Assert.Equal(expectedRecord, recipe.RetailSoundRecord);
+        Assert.Equal(recordPitchVariance, recipe.PitchVariancePercent);
+        Assert.Equal(
+            callerVolume * recordVolume / 100f,
+            recipe.LinearVolume,
+            5);
+    }
+
+    // mRadioMessageVolume is 0.42f on the PC branch of CSoundManager::Init and
+    // 0.70f only on PS2; mHUDMessageVolume is 0.45f on both.
+    [Fact]
+    public void MessageVolumeConstantsAreTheReleasedPcBranchValues()
+    {
+        Assert.Equal(0.42f, Level100AudioCatalog.RetailRadioMessageVolume);
+        Assert.Equal(0.45f, Level100AudioCatalog.RetailHudMessageVolume);
+        Assert.Equal(0.70f, Level100AudioCatalog.RetailDefaultEffectVolume);
+    }
+
+    // CSoundManager::SetMasterVolume's non-PS2 branch is
+    // mMasterVolume = 1 - tan((1 - val) * 1.38f) / tan(1.38f).
+    [Theory]
+    [InlineData(0.25f)]
+    [InlineData(0.5f)]
+    [InlineData(0.75f)]
+    public void AudioOptionCurveMatchesTheReleasedTangentLaw(float optionValue)
+    {
+        float expected = 1f -
+            (MathF.Tan((1f - optionValue) * 1.38f) / MathF.Tan(1.38f));
+
+        Assert.Equal(
+            expected,
+            Level100AudioCatalog.ToRetailOptionMix(optionValue),
+            5);
+    }
+
+    private static Level100AudioCueRecipe Effect(Level100EffectCue cue) =>
+        Level100AudioCatalog.GetEffect(cue);
+
+    private static Level100AudioCueRecipe Loop(Level100ActorLoopCue cue) =>
+        Level100AudioCatalog.GetActorLoop(cue);
+
+    private static Level100AudioCueRecipe Terminal(Level100TerminalCue cue) =>
+        Level100AudioCatalog.GetTerminal(cue);
+
+    private static Level100AudioCueRecipe Transition(AquilaTransitionCue cue) =>
+        Level100AudioCatalog.GetAquilaTransition(cue);
+
+    private static Level100AudioCueRecipe Warning(AquilaWarningAudioState state) =>
+        Level100AudioCatalog.GetAquilaWarning(state);
 }

@@ -84,6 +84,24 @@ public readonly record struct Level100MusicRecipe(
     int RetailTrackIndex,
     string RetailSourceName);
 
+// Mix provenance, verified 2026-07-26 against the shipped retail table and the
+// GPL-released Onslaught engine sources (see
+// local-lab/LEVEL100-AUDIO-PARITY-2026-07-26.md):
+//
+// * RetailSoundRecord is the record index in data/sounds/sounds.sfx (a plaintext
+//   "# SFX <n>" list, version 103, 170 records). RetailEffectName is that
+//   record's SAMPLE-PATH field. Retail's own runtime lookup key is the record's
+//   DISPLAY-NAME field instead, via CSoundManager::GetEffectByName, so these two
+//   fields are provenance only and are not the retail selector.
+// * CSoundManager::PlayEffect computes `volume = (volume * effect->mVolume) / 100`
+//   where mVolume is the record's integer volume field and the caller's `volume`
+//   defaults to DEFAULT_SOUND_VOLUME. Every LinearVolume below is that product.
+// * DEFAULT_SOUND_VOLUME 0.7f, mHUDMessageVolume 0.45f and (PC branch)
+//   mRadioMessageVolume 0.42f are the released constants. Battle Engine call
+//   sites pass ENGINE_VOLUME 1.0f, which is why the engine, strafe and energy
+//   cues carry the record volume unscaled.
+// * PitchVariancePercent is the record's pitch-variance field; retail applies
+//   `pitch += (rand() % variance) / 100`.
 public static class Level100AudioCatalog
 {
     public const float RetailRadioMessageVolume = 0.42f;
@@ -175,17 +193,17 @@ public static class Level100AudioCatalog
     {
         "Back" => Cue(
             "res://Assets/Frontend/SoundEffects/back.wav",
-            41,
+            43,
             "Front End\\N_FE_back",
             RetailDefaultEffectVolume * 0.52f),
         "Move" => Cue(
             "res://Assets/Frontend/SoundEffects/move.wav",
-            42,
+            44,
             "Front End\\N_FE_move",
             RetailDefaultEffectVolume * 0.49f),
         "Select" => Cue(
             "res://Assets/Frontend/SoundEffects/select.wav",
-            43,
+            45,
             "Front End\\N_FE_select",
             RetailDefaultEffectVolume * 0.52f),
         _ => throw new ArgumentOutOfRangeException(nameof(cueName), cueName, null),
@@ -195,101 +213,105 @@ public static class Level100AudioCatalog
     {
         Level100EffectCue.AquilaStrafe => Cue(
             "res://Assets/Aquila/SoundEffects/strafe.wav",
-            20,
+            21,
             "Battle Engine\\N_BE_dash",
             0.80f,
             pitch: 10),
         Level100EffectCue.AquilaHydraulics => Cue(
             "res://Assets/Aquila/SoundEffects/hydraulics.wav",
-            31,
+            32,
             "Battle Engine\\N_BE_hydraulics_02",
             RetailHudMessageVolume * 0.40f),
         Level100EffectCue.AquilaIncomingMissile => Cue(
             "res://Assets/Aquila/SoundEffects/incoming-missile.wav",
-            32,
+            33,
             "Battle Engine\\N_BE_incoming_missile",
             RetailHudMessageVolume * 0.80f,
             pitch: 5),
         Level100EffectCue.AquilaTargetLocked => Cue(
             "res://Assets/Aquila/SoundEffects/target-locked.wav",
-            29,
+            30,
             "Battle Engine\\N_BE_homing_missile_lock",
             RetailHudMessageVolume * 0.80f),
         Level100EffectCue.AquilaTargetAcquired => Cue(
             "res://Assets/Aquila/SoundEffects/target-acquired.wav",
-            30,
+            31,
             "Battle Engine\\N_BE_homing_missile_target",
             RetailHudMessageVolume * 0.80f),
         Level100EffectCue.PulseCannonFire => Cue(
             "res://Assets/Level100/SoundEffects/pulse-cannon-fire.wav",
-            35,
+            37,
             "Battle Engine\\N_BE_pulse_cannon_fire",
             RetailDefaultEffectVolume * 0.65f,
             pitch: 5),
         Level100EffectCue.VulcanCannonFire => Cue(
             "res://Assets/Aquila/SoundEffects/vulcan-cannon-fire.wav",
-            40,
+            42,
             "Battle Engine\\N_BE_vulcan_cannon_fire",
             RetailDefaultEffectVolume * 0.75f,
             pitch: 7),
         Level100EffectCue.MicroMissileFire => Cue(
             "res://Assets/Aquila/SoundEffects/micro-missile-fire.wav",
-            33,
+            34,
             "Battle Engine\\N_BE_micro_missiles_fire",
             RetailDefaultEffectVolume * 0.80f,
             pitch: 15),
+        // sounds.sfx holds three "Blaster" records; 155 ("Blaster 2") is the one
+        // whose volume 60 and pitch variance 10 this recipe carries. Record 156
+        // ("Blaster 1") names the same sample at volume 80 / variance 0. Which of
+        // the two the Level 100 Target Drone selects is NOT yet established.
         Level100EffectCue.DroneVulcanFire => Cue(
             "res://Assets/Level100/SoundEffects/drone-vulcan-fire.wav",
-            150,
+            155,
             "Weapons\\N_WP_blaster_02",
             RetailDefaultEffectVolume * 0.60f,
             pitch: 10),
         Level100EffectCue.PulseImpact or Level100EffectCue.DroneDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/explosion-small.wav",
-            106,
+            108,
             "Impact\\N_I_explosion_small_debris",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 20),
         Level100EffectCue.MissileImpact or
         Level100EffectCue.TargetOrTrainerDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/target-tank-explosion-medium.wav",
-            102,
+            104,
             "Impact\\N_I_explosion_medium",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.FacilityDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/facility-explosion-medium.wav",
-            103,
+            105,
             "Impact\\N_I_explosion_medium_ricochet",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.AquilaDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/aquila-explosion-huge.wav",
-            107,
+            109,
             "Impact\\N_I_explosion_vbig",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.TransportDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/transport-explosion-large.wav",
-            94,
+            96,
             "Impact\\N_I_explosion_big",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.ComponentDebrisDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/component-explosion.wav",
-            93,
+            95,
             "Impact\\N_I_explosion2",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.LargeDebrisDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/explosion-large-debris.wav",
-            95,
+            97,
             "Impact\\N_I_explosion_big_debris",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
         Level100EffectCue.HugeGroundDebrisDestroyed => Cue(
             "res://Assets/Level100/SoundEffects/explosion-huge-ground-debris.wav",
-            108,
+            110,
             "Impact\\N_I_explosion_vbig_debris",
             RetailDefaultEffectVolume * 0.70f,
             pitch: 30),
@@ -309,25 +331,25 @@ public static class Level100AudioCatalog
     public static Level100AudioCueRecipe GetTerminal(Level100TerminalCue cue) => cue switch
     {
         Level100TerminalCue.AmmunitionDepleted => Terminal(
-            "ammunition-depleted", 44, "HUD\\N_HUD_Ammunition_Depleted"),
+            "ammunition-depleted", 46, "HUD\\N_HUD_Ammunition_Depleted"),
         Level100TerminalCue.ArmourLow => Terminal(
-            "armour-low", 46, "HUD\\N_HUD_Armour_Low"),
+            "armour-low", 48, "HUD\\N_HUD_Armour_Low"),
         Level100TerminalCue.EnergyLow => Terminal(
-            "energy-low", 51, "HUD\\N_HUD_Energy_Low"),
+            "energy-low", 53, "HUD\\N_HUD_Energy_Low"),
         Level100TerminalCue.HostileEnvironment => Terminal(
-            "hostile-environment", 55, "HUD\\N_HUD_Hostile_Environment"),
+            "hostile-environment", 57, "HUD\\N_HUD_Hostile_Environment"),
         Level100TerminalCue.IncomingMissile => Terminal(
-            "incoming-missile", 56, "HUD\\N_HUD_Incoming_Missile"),
+            "incoming-missile", 58, "HUD\\N_HUD_Incoming_Missile"),
         Level100TerminalCue.IncomingWarhead => Terminal(
-            "incoming-warhead", 57, "HUD\\N_HUD_Incoming_Warhead"),
+            "incoming-warhead", 59, "HUD\\N_HUD_Incoming_Warhead"),
         Level100TerminalCue.MicroMissilesSelected => Terminal(
-            "micro-missiles-selected", 58, "HUD\\N_HUD_Micro_Missiles"),
+            "micro-missiles-selected", 60, "HUD\\N_HUD_Micro_Missiles"),
         Level100TerminalCue.PulseCannonSelected => Terminal(
-            "pulse-cannon-selected", 60, "HUD\\N_HUD_Pulse_Cannon"),
+            "pulse-cannon-selected", 62, "HUD\\N_HUD_Pulse_Cannon"),
         Level100TerminalCue.VulcanCannonSelected => Terminal(
-            "vulcan-cannon-selected", 70, "HUD\\N_HUD_Vulcan_Cannon"),
+            "vulcan-cannon-selected", 72, "HUD\\N_HUD_Vulcan_Cannon"),
         Level100TerminalCue.WeaponOverheating => Terminal(
-            "weapon-overheating", 73, "HUD\\N_HUD_Weapon_Overheating"),
+            "weapon-overheating", 75, "HUD\\N_HUD_Weapon_Overheating"),
         _ => throw new ArgumentOutOfRangeException(nameof(cue)),
     };
 
@@ -336,18 +358,18 @@ public static class Level100AudioCatalog
         {
             AquilaTransitionCue.Takeoff => Cue(
                 "res://Assets/Aquila/SoundEffects/engine-takeoff.wav",
-                25,
+                26,
                 "Battle Engine\\N_BE_engine_takeoff",
                 0.40f),
             AquilaTransitionCue.InFlight => Cue(
                 "res://Assets/Aquila/SoundEffects/engine-inflight.wav",
-                23,
+                24,
                 "Battle Engine\\N_BE_engine_inflight",
                 0.50f,
                 looping: true),
             AquilaTransitionCue.Landing => Cue(
                 "res://Assets/Aquila/SoundEffects/engine-land.wav",
-                24,
+                25,
                 "Battle Engine\\N_BE_engine_land",
                 0.40f),
             _ => throw new ArgumentOutOfRangeException(nameof(cue)),
@@ -358,13 +380,13 @@ public static class Level100AudioCatalog
         {
             AquilaWarningAudioState.EnergyLow => Cue(
                 "res://Assets/Aquila/SoundEffects/energy-low.wav",
-                22,
+                23,
                 "Battle Engine\\N_BE_energy_low",
                 0.70f,
                 looping: true),
             AquilaWarningAudioState.HullCritical => Cue(
                 "res://Assets/Aquila/SoundEffects/energy-critical.wav",
-                21,
+                22,
                 "Battle Engine\\N_BE_energy_critical",
                 0.70f,
                 looping: true),
@@ -375,14 +397,14 @@ public static class Level100AudioCatalog
     {
         Level100ActorLoopCue.AirTrainer => Cue(
             "res://Assets/Level100/SoundEffects/trainer-flyby.wav",
-            119,
+            121,
             "Vehicles\\N_V_F_fighter_flyby",
             RetailDefaultEffectVolume * 0.45f,
             pitch: 15,
             looping: true),
         Level100ActorLoopCue.Transport => Cue(
             "res://Assets/Level100/SoundEffects/transport-flyby.wav",
-            126,
+            129,
             "Vehicles\\N_V_bomber_flyby",
             RetailDefaultEffectVolume * 0.40f,
             pitch: 15,

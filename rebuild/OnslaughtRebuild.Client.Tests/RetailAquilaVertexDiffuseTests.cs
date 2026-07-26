@@ -701,6 +701,211 @@ public sealed class RetailAquilaVertexDiffuseTests
         return output.ToArray();
     }
 
+    /// <summary>
+    /// The cockpit is not drawn in the camera's own basis. Retail's cockpit
+    /// render thing takes its orientation from the virtual at
+    /// <c>0x004254f0</c>, which composes the 3x4 matrix at
+    /// <c>CCockpit+0x2c</c> onto <c>battleEngine+0x3c</c> - the same
+    /// orientation <c>CThingCamera::GetOrientation</c> hands the camera. A
+    /// controlled read of a copied target at the Level 100 cockpit draw
+    /// (window armed at <c>0x0053bb50</c>, disarmed at <c>0x0053ec6f</c>,
+    /// dumped at <c>0x0053bb56</c>) found <c>CCockpit+0x2c</c> holding a
+    /// 2.877224-degree rotation while <c>battleEngine+0x3c</c> was an exact
+    /// pure yaw. These tests pin the arithmetic that carries that matrix into
+    /// the renderer, so the shipped constant cannot drift away from the read
+    /// that produced it. Evidence:
+    /// <c>local-lab/COMPOSITION-RESIDUAL-2026-07-26.md</c>.
+    /// </summary>
+    private static readonly double[,] RuntimeCockpitShakeMatrix =
+    {
+        { +0.99880058, +0.02999347, +0.03870098 },
+        { -0.03041990, +0.99948227, +0.01047720 },
+        { -0.03836670, -0.01164191, +0.99919593 },
+    };
+
+    /// <summary>
+    /// The composed cockpit-local to D3D-camera basis captured independently
+    /// through <c>SetTransform(D3DTS_WORLDMATRIX(0))</c> and
+    /// <c>D3DTS_VIEW</c>, i.e. <c>W_0 . R_view</c>.
+    /// </summary>
+    private static readonly double[,] CapturedCockpitToCameraBasis =
+    {
+        { +0.99880052, +0.03836669, -0.03041992 },
+        { +0.02999346, +0.01164222, +0.99948223 },
+        { +0.03870098, -0.99919581, +0.01047750 },
+    };
+
+    [Fact]
+    public void TheRuntimeCockpitShakeMatrixIsAProperRotationOfTheMeasuredAngle()
+    {
+        double[,] shake = RuntimeCockpitShakeMatrix;
+        Assert.Equal(1.0, Determinant(shake), 6);
+        Assert.Equal(0.0, OrthonormalityError(shake), 6);
+        double trace = shake[0, 0] + shake[1, 1] + shake[2, 2];
+        double degrees = Math.Acos(Math.Clamp((trace - 1.0) / 2.0, -1.0, 1.0)) * 180.0 / Math.PI;
+        Assert.Equal(2.877224, degrees, 4);
+    }
+
+    [Fact]
+    public void TheRuntimeShakeMatrixExplainsTheWholeCapturedCompositionResidual()
+    {
+        // C = S^T . P, where P is the exact axis map x->x, y->z, z->-y that the
+        // renderer realises. This identity is what makes the 2.8774-degree
+        // residual the cockpit's own matrix rather than a reconstruction error.
+        double[,] axisMap = { { 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 } };
+        double[,] predicted = Multiply(Transpose(RuntimeCockpitShakeMatrix), axisMap);
+        double worst = 0.0;
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                worst = Math.Max(
+                    worst,
+                    Math.Abs(predicted[row, column] - CapturedCockpitToCameraBasis[row, column]));
+            }
+        }
+        Assert.True(worst < 1e-6, $"S^T . P differs from the captured basis by {worst}.");
+    }
+
+    [Fact]
+    public void TheGodotCockpitBasisIsTheRuntimeShakeMatrixAndNothingElse()
+    {
+        // Godot camera space negates D3D's forward axis, and the mesh importer
+        // already realises P through MapVector(x, -z, -y). The Basis the
+        // renderer must carry is the shake matrix expressed in that frame;
+        // derive it here rather than restating the literals, so the shipped
+        // constant and the runtime read can only agree if the algebra holds.
+        double[,] forwardFlip = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, -1 } };
+        double[,] importMap = { { 1, 0, 0 }, { 0, 0, -1 }, { 0, -1, 0 } };
+        double[,] axisMap = { { 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 } };
+        double[,] expected = Multiply(
+            Multiply(
+                forwardFlip,
+                Transpose(Multiply(Transpose(RuntimeCockpitShakeMatrix), axisMap))),
+            importMap);
+
+        double[,] shipped = ParseGodotBasis(
+            ReadGodotSource("FirstFlightWorldView.cs"),
+            "RetailLevel100CockpitOrientationOffset");
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                Assert.Equal(expected[row, column], shipped[row, column], 6);
+            }
+        }
+    }
+
+    [Fact]
+    public void TheCockpitOrientationOffsetDefaultsToIdentityAndKeepsItsProvenance()
+    {
+        string view = ReadGodotSource("FirstFlightWorldView.cs");
+
+        // The "not modelled" default must stay identity. The measured value is
+        // identified, not derived - the shake updater's own recompute produces
+        // identity from the observed inputs - so it must not become a global
+        // cockpit mount by drifting into the default.
+        Assert.Contains(
+            "RetailNoCockpitOrientationOffset = Basis.Identity",
+            view,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_cockpitAsset.Root.Basis = CockpitOrientationOffset;",
+            view,
+            StringComparison.Ordinal);
+
+        // The provenance has to name the address, the observation window and
+        // the note, so the constant can never be read as a fitted angle.
+        string[] required =
+        [
+            "CCockpit+0x2c",
+            "0x004254f0",
+            "battleEngine+0x3c",
+            "0x0053bb50",
+            "0x0053ec6f",
+            "MEASURED AND IDENTIFIED, not DERIVED",
+            "COMPOSITION-RESIDUAL-2026-07-26.md",
+        ];
+        foreach (string token in required)
+        {
+            Assert.Contains(token, view, StringComparison.Ordinal);
+        }
+    }
+
+    private static double[,] ParseGodotBasis(string source, string name)
+    {
+        int at = source.IndexOf(name + " = new(", StringComparison.Ordinal);
+        Assert.True(at >= 0, $"{name} is not declared as a three-Vector3 Basis.");
+        var values = new double[3, 3];
+        int cursor = at;
+        for (int column = 0; column < 3; column++)
+        {
+            int open = source.IndexOf("new Vector3(", cursor, StringComparison.Ordinal);
+            Assert.True(open >= 0, $"{name} is missing axis {column}.");
+            int close = source.IndexOf(')', open);
+            string[] parts = source[(open + "new Vector3(".Length)..close].Split(',');
+            Assert.Equal(3, parts.Length);
+            for (int row = 0; row < 3; row++)
+            {
+                values[row, column] = double.Parse(
+                    parts[row].Trim().TrimEnd('f'),
+                    System.Globalization.CultureInfo.InvariantCulture);
+            }
+            cursor = close;
+        }
+        return values;
+    }
+
+    private static double[,] Multiply(double[,] left, double[,] right)
+    {
+        var result = new double[3, 3];
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < 3; k++)
+                {
+                    sum += left[row, k] * right[k, column];
+                }
+                result[row, column] = sum;
+            }
+        }
+        return result;
+    }
+
+    private static double[,] Transpose(double[,] source)
+    {
+        var result = new double[3, 3];
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                result[row, column] = source[column, row];
+            }
+        }
+        return result;
+    }
+
+    private static double Determinant(double[,] m) =>
+        (m[0, 0] * ((m[1, 1] * m[2, 2]) - (m[1, 2] * m[2, 1]))) -
+        (m[0, 1] * ((m[1, 0] * m[2, 2]) - (m[1, 2] * m[2, 0]))) +
+        (m[0, 2] * ((m[1, 0] * m[2, 1]) - (m[1, 1] * m[2, 0])));
+
+    private static double OrthonormalityError(double[,] m)
+    {
+        double[,] product = Multiply(m, Transpose(m));
+        double worst = 0.0;
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                worst = Math.Max(worst, Math.Abs(product[row, column] - (row == column ? 1.0 : 0.0)));
+            }
+        }
+        return worst;
+    }
+
     private static string ReadGodotSource(string fileName) =>
         File.ReadAllText(Path.Combine(LocateGodotDirectory(), fileName));
 

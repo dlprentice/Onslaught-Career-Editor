@@ -32,6 +32,30 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private const float CompassGaugeNeedleRadius = 110f;
     private const float CompassObjectiveRadius = 98f;
 
+    // Lower-right battleline instrument. Every constant here is a decoded byte
+    // from a device-level read of the safe copy, or a closed form over decoded
+    // bytes; see local-lab/PORTRAIT-BATTLELINE-FIELD-2026-07-26.md and the
+    // block comment on RetailHudBaseLayer.DrawBattleLine.
+    //
+    // CircleDarkener quad diffuse is 0x7fffffff.
+    internal const float CircleDarkenerAlpha = 127f / 255f;
+
+    // The portrait quad diffuse is 0x40ffffff and the quad is issued SIX times
+    // per frame at identical position, scale, UV and z, under
+    // SRCALPHA/INVSRCALPHA with ZWRITEENABLE=0 (so every one of the six passes
+    // the ZFUNC=LESSEQUAL test the CircleMask depth stamp set up). Six such
+    // draws leave 1 - (1 - 64/255)^6 of the page.
+    internal const int PortraitDrawCount = 6;
+    internal const float PortraitDrawAlpha = 64f / 255f;
+    internal const float PortraitCompositeAlpha = 0.8234043f;
+
+    // The message-noise quad diffuse alpha over 66 steady-state frames of one
+    // message: 0x3c..0x4a, mean 66.2. 66/255 is used rather than the 71/255 the
+    // framebuffer slope alone would imply, because 66 is the decoded byte and 71
+    // is a fit; the two differ by less than the observed per-frame spread.
+    internal const float MessageNoiseAlpha = 66f / 255f;
+    internal const int MessageNoisePhaseCount = 16;
+
     private HudAssets _assets = null!;
     private Level100HudAssetCatalog _catalog = null!;
     private readonly Level100HudPresentationState _presentation = new();
@@ -131,7 +155,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             hud,
             message,
             activeDelivery?.Speaker,
-            activePlayback.PortraitPoseIndex);
+            activePlayback.PortraitPoseIndex,
+            MessageNoisePhaseIndex(playback));
         _glowLayer.SetState(snapshot, hud, message is not null);
         _textLayer.SetState(hud, message, activePlayback);
     }
@@ -168,6 +193,33 @@ public sealed partial class FirstFlightHud : CanvasLayer
         };
     }
 
+    /// <summary>
+    /// The wrap phase of the message-noise pass. Retail's UV origin is
+    /// (timer % 100) * k in both axes and changes every frame - 66 consecutive
+    /// device-observed frames of one message carried 66 different origins, all
+    /// with a sub-pixel component, which is exactly why an integer-offset
+    /// correlation sweep of the retail frames had previously found the page
+    /// "absent" on 21 of 26 frames. Re-running that sweep with quarter-pixel
+    /// variants finds it on 16 of 22 frames at gain 0.17-0.30, which is the
+    /// device-measured alpha band. The page's presence and its alpha are
+    /// therefore measured; this phase index is a deterministic stand-in for a
+    /// process-global timer phase that is not recoverable.
+    /// </summary>
+    private static int MessageNoisePhaseIndex(Level100MessagePlaybackState playback)
+    {
+        if (!playback.Playing || !playback.ActiveMessageId.HasValue)
+        {
+            return 0;
+        }
+
+        int frame = Math.Max(0, (int)Math.Floor(playback.PositionSeconds / 0.05d));
+        uint value = unchecked(
+            ((uint)playback.ActiveMessageId.Value * 0xC2B2AE35u) ^
+            ((uint)frame * 0x27D4EB2Fu));
+        value ^= value >> 15;
+        return (int)(value % MessageNoisePhaseCount);
+    }
+
     public void MarkInputActivity()
     {
         // The released HUD has no persistent controls legend to reveal or fade.
@@ -176,6 +228,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private static HudAssets LoadAssets()
     {
         Texture2D circleMask = LoadHudTexture("circle-mask", 128, 128);
+        Texture2D messageNoise = LoadHudTexture(
+            "message-noise",
+            128,
+            128,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         Texture2D[][] sourcePortraits =
         [
             LoadPortraitSet("tatiana"),
@@ -243,11 +300,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 128,
                 128,
                 CuratedAyaTextureLoader.Compression.Dxt1),
-            MessageNoise = LoadHudTexture(
-                "message-noise",
-                128,
-                128,
-                CuratedAyaTextureLoader.Compression.Dxt1),
+            MessageNoise = messageNoise,
             ObjectiveInnerCentre = LoadHudTexture("objective-inner-centre", 64, 128),
             ObjectiveInnerLeft = LoadHudTexture("objective-inner-left", 64, 128),
             ObjectiveInnerRight = LoadHudTexture("objective-inner-right", 64, 128),
@@ -293,7 +346,55 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Portraits = sourcePortraits
                 .Select(set => ApplyReleasedPortraitMask(set, circleMask))
                 .ToArray(),
+            MessageNoiseDiscPhases = BuildMessageNoiseDiscPhases(messageNoise, circleMask),
         };
+    }
+
+    /// <summary>
+    /// The released message-noise pass is drawn with sampler ADDRESSU/ADDRESSV
+    /// = WRAP and a per-frame UV origin, and is clipped to the instrument disc
+    /// by the CircleMask z-stamp rather than by its own alpha (the page is
+    /// DXT1 and opaque everywhere). Device-level reads of
+    /// IDirect3DDevice::SetSamplerState inside 0x00487d10 CHud__RenderBattleline
+    /// show sampler 0 switched from CLAMP (3) to WRAP (1) immediately before the
+    /// portrait/noise draws and back afterwards
+    /// (local-lab/PORTRAIT-BATTLELINE-FIELD-2026-07-26.md section 2).
+    ///
+    /// This client has no depth stamp, so the disc clip is baked as alpha from
+    /// the same CircleMask the portrait already uses, and the wrap is baked as a
+    /// fixed set of rolled phases. The alpha and the blend below are measured;
+    /// the phase LATTICE is a bounded reconstruction, because retail's UV origin
+    /// is (timer % 100) * k in both axes and the process-global timer phase is
+    /// not recoverable.
+    /// </summary>
+    private static Texture2D[] BuildMessageNoiseDiscPhases(
+        Texture2D messageNoise,
+        Texture2D circleMask)
+    {
+        const int size = 128;
+        Image noiseImage = messageNoise.GetImage();
+        MakeCpuReadable(noiseImage);
+        Image maskImage = circleMask.GetImage();
+        MakeCpuReadable(maskImage);
+
+        var phases = new Texture2D[MessageNoisePhaseCount];
+        for (int phase = 0; phase < MessageNoisePhaseCount; phase++)
+        {
+            int shiftX = phase * (size / MessageNoisePhaseCount);
+            int shiftY = ((phase * 5) % MessageNoisePhaseCount) * (size / MessageNoisePhaseCount);
+            Image rolled = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    Color sourcePixel = noiseImage.GetPixel((x + shiftX) % size, (y + shiftY) % size);
+                    sourcePixel.A = 1f - maskImage.GetPixel(x, y).A;
+                    rolled.SetPixel(x, y, sourcePixel);
+                }
+            }
+            phases[phase] = ImageTexture.CreateFromImage(rolled);
+        }
+        return phases;
     }
 
     private static Texture2D[] LoadPortraitSet(string speaker) =>
@@ -628,6 +729,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
         public required Texture2D[] WeaponIcons { get; init; }
         public required Texture2D WeaponOutline { get; init; }
         public required Texture2D[][] Portraits { get; init; }
+
+        /// <summary>
+        /// message-noise, rolled to <see cref="MessageNoisePhaseCount"/> wrap
+        /// phases and clipped to the instrument disc by CircleMask alpha.
+        /// </summary>
+        public required Texture2D[] MessageNoiseDiscPhases { get; init; }
     }
 
     private sealed partial class RetailHudBaseLayer(HudAssets assets) : RetailHudLayer
@@ -637,6 +744,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private Level100HudMessageDefinition? _message;
         private Level100HudSpeaker? _speaker;
         private int? _portraitPoseIndex;
+        private int _messageNoisePhase;
 
         public bool IsReady =>
             assets.CircleDarkener.GetSize() == new Vector2I(128, 128) &&
@@ -662,13 +770,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Level100HudSnapshot hud,
             Level100HudMessageDefinition? message,
             Level100HudSpeaker? speaker,
-            int? portraitPoseIndex)
+            int? portraitPoseIndex,
+            int messageNoisePhase)
         {
             _snapshot = snapshot;
             _hud = hud;
             _message = message;
             _speaker = speaker;
             _portraitPoseIndex = portraitPoseIndex;
+            _messageNoisePhase = messageNoisePhase;
             QueueRedraw();
         }
 
@@ -875,39 +985,58 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
-        // MEASURED 2026-07-26 on a pose-invariant clean mask - 3,397 texels per
-        // frame on which all four shipped Tatiana poses agree to <= 4 levels and
-        // are fully covered, times 22 clean paired frames = 74,734 samples. See
-        // local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md.
+        // The lower-right instrument, MEASURED end to end 2026-07-26. Two
+        // independent sources agree and are recorded in
+        // local-lab/PORTRAIT-BATTLELINE-FIELD-2026-07-26.md:
         //
-        //   retail = 0.5937 * texel + 25.09, channel-flat to 0.3%
-        //            (s = [0.5935, 0.5929, 0.5948], c = [24.94, 24.76, 25.55])
-        //   build  = 1.033 * texel, i.e. opaque
+        // (a) FRAMEBUFFER. On a pose-invariant clean mask - texels where all four
+        //     shipped Tatiana poses are fully covered and agree to <= 4 levels,
+        //     intersected with r < 40 about the fitted ring centre - across 22
+        //     clean paired frames, retail draws the shipped texels through a
+        //     channel-flat affine law retail = 0.5937*texel + 25.09, against our
+        //     opaque 1.033*texel.
         //
-        // So retail's portrait is TRANSLUCENT (alpha ~0.594, consistent with a
-        // 0x98/255 = 0.596 diffuse modulate) over a field of 25.09/0.406 = 61.8
-        // that is NEUTRAL (B/R = 1.024) and terrain-independent:
-        //   - retail's terrain outside the instrument is [95.4, 107.0, 126.0],
-        //     B/R = 1.32, so it cannot produce a neutral pedestal; and
-        //   - the pedestal RISES top-to-bottom (21.2 -> 27.0) while the terrain
-        //     behind the disc DARKENS top-to-bottom. Wrong sign.
-        // circle-darkener is in fact a hard alpha-255 black disc of r ~47 about
-        // its page (49, 49); the 0.76 below is unmeasured.
+        // (b) DEVICE. A controlled copied-runtime read of the safe copy
+        //     (sha256 E1436EF7...) breaking on the sprite call sites inside
+        //     0x00487d10 CHud__RenderBattleline and on the D3D device's own
+        //     SetRenderState / SetSamplerState entries gives the whole pass:
         //
-        // The alpha is NOT applied here, and the 0.76 is NOT raised to 1, because
-        // the neutral 61.8 field is unidentified. Applying either half alone
-        // replaces one wrong number with another (it would predict [94, 95, 98]
-        // against retail's [108, 102, 97], over a blue-tilted terrain backdrop
-        // standing in for a neutral one). What would settle it: the render-state
-        // sequence of 0x00487d10 CHud__RenderBattleline, or a >= 10 Hz retail
-        // capture of a message frame.
+        //       CircleDarkener   diffuse 0x7fffffff  SRCALPHA/INVSRCALPHA
+        //       CircleMask       diffuse 0xffffffff  SRCBLEND=ZERO DESTBLEND=ONE,
+        //                        ZFUNC=ALWAYS, ZWRITE=1 - a colour-less depth
+        //                        stamp that clips everything after it to the disc
+        //       portrait         diffuse 0x40ffffff  SRCALPHA/INVSRCALPHA,
+        //                        scale 0.75, UV 0..1, drawn SIX TIMES per frame
+        //                        (408 of 444 observed draws carried 0x40 exactly;
+        //                        the other 36 are the six opening interference
+        //                        frames)
+        //       message-noise    diffuse 0x3c..0x4a ffffff, SRCALPHA/INVSRCALPHA,
+        //                        sampler WRAP, sub-pixel scrolled UV, drawn OVER
+        //                        the portrait on EVERY frame of a message
+        //       BattleLineOutline diffuse 0xff6f8faf, SRCBLEND=ONE DESTBLEND=ONE
+        //
+        // The two reconcile exactly. Six stacked draws at alpha 64/255 pass
+        // 1 - (1 - 64/255)^6 = 0.8234 of the page; the noise drawn over them at
+        // alpha ~= 66/255 = 0.259 attenuates that to 0.8234 * 0.741 = 0.610,
+        // against the framebuffer's 0.5937. The apparent "alpha 0.594 over a
+        // neutral field of 61.8" was those two stages collapsed into one.
+        //
+        // THE NEUTRAL FIELD IS THE NOISE PAGE. message-noise has page mean
+        // [52.23, 52.39, 52.23] - neutral to B/R = 1.000 - so at alpha 0.26 it
+        // contributes ~14 neutral levels of the 25.09 intercept and swamps the
+        // remaining 0.1766 * 0.502 = 8.9% of the scene that still shows through
+        // the half-opaque darkener. That is why the pedestal reads neutral and
+        // terrain-independent without any render target being involved: the
+        // earlier ruling-out of the terrain was right about the symptom and wrong
+        // about the cause.
         private void DrawBattleLine()
         {
+            // 0x7fffffff: alpha 127/255. The old 0.76 was unmeasured.
             DrawTextureRect(
                 assets.CircleDarkener,
                 BattleLineInstrumentRect(),
                 false,
-                new Color(1f, 1f, 1f, 0.76f));
+                new Color(1f, 1f, 1f, CircleDarkenerAlpha));
 
             if (_message is not null &&
                 _speaker is Level100HudSpeaker speaker &&
@@ -922,12 +1051,24 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 };
                 if (speakerIndex >= 0)
                 {
+                    // One draw at the closed-form composite of retail's six.
                     DrawTextureRect(
                         assets.Portraits[speakerIndex][pose],
                         BattleLinePortraitRect(),
                         false,
-                        Colors.White);
+                        new Color(1f, 1f, 1f, PortraitCompositeAlpha));
                 }
+
+                // OVER the portrait, neutral, every frame of a message. The
+                // previous pass had all four of those wrong: it was additive,
+                // blue-tinted (0.48, 0.66, 1), on the glow layer above the
+                // instrument, and unscrolled.
+                DrawTextureRect(
+                    assets.MessageNoiseDiscPhases[
+                        _messageNoisePhase % assets.MessageNoiseDiscPhases.Length],
+                    BattleLinePortraitRect(),
+                    false,
+                    new Color(1f, 1f, 1f, MessageNoiseAlpha));
                 return;
             }
         }
@@ -1497,36 +1638,22 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
-        // The message-noise pass below is contradicted on four counts, measured
-        // 2026-07-26 by correlating each frame's portrait-disc residual against
-        // the message-noise page over a per-frame dx +/-6, dy +/-64 sweep
-        // (local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md section 5). Retail's is:
-        //   INTERMITTENT - present on 5 of 26 frames (r = +0.53..+0.66) and at
-        //                  the |r| <= 0.074 floor on the other 21, not every
-        //                  frame a message is active;
-        //   SCROLLED     - a different vertical offset each time it appears
-        //                  (dy = -48, -44, -40, +7, +34);
-        //   UNDER the portrait - the portrait's slope is unchanged (0.600-0.604)
-        //                  on those frames while the pedestal drops by exactly
-        //                  the noise's mean contribution (25.1 -> 16.5..18.9,
-        //                  against 0.13 * 52.3 = 6.8);
-        //   NEUTRAL      - not the (0.48, 0.66, 1) blue below.
-        // Not corrected here: the cadence rule cannot be recovered from 1 Hz
-        // samples, and the layer it belongs under is the unresolved backdrop of
-        // DrawBattleLine.
+        // The message-noise pass that used to live here - additive, blue-tinted
+        // (0.48, 0.66, 1, 0.16), unscrolled, on the ONE/ONE layer ABOVE the
+        // instrument, on the instrument rect rather than the portrait rect - was
+        // wrong on all of those counts and has moved to
+        // RetailHudBaseLayer.DrawBattleLine. The device-level read of
+        // 0x00487d10 CHud__RenderBattleline puts it between the six portrait
+        // draws and the outline, under SRCALPHA/INVSRCALPHA with a neutral
+        // 0x..ffffff diffuse; the outline is the only ONE/ONE draw in that pass.
+        //
+        // The outline's tint below is the outline quad's own diffuse DWORD,
+        // 0xff6f8faf = (0.4353, 0.5608, 0.6863), confirmed at the device.
         private void DrawBattleLineOutline(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)
         {
             Rect2 rect = BattleLineInstrumentRect();
-            if (_messageActive)
-            {
-                DrawTextureRect(
-                    assets.MessageNoise,
-                    rect,
-                    false,
-                    new Color(0.48f, 0.66f, 1f, 0.16f));
-            }
             float highlight = HighlightAlpha(snapshot, hud, Level100HudPart.BattleLine);
             DrawTextureRect(
                 assets.BattleLineOutline,
