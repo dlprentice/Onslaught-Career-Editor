@@ -17,6 +17,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private HudAssets _assets = null!;
     private Level100HudAssetCatalog _catalog = null!;
     private readonly Level100HudPresentationState _presentation = new();
+    private int[] _level100DeliveredMessageIds = [];
     private RetailHudBaseLayer _baseLayer = null!;
     private RetailHudGlowLayer _glowLayer = null!;
     private RetailHudTextLayer _textLayer = null!;
@@ -31,6 +32,15 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     public int Level100ObjectiveMarkerCount => _baseLayer.ObjectiveMarkerCount;
     public int Level100DeliveredMessageCount => _textLayer.DeliveredMessageCount;
+
+    // Ordered, Core-event-derived and therefore deterministic for a given tick:
+    // Level100HudPresentationState.Consume appends one entry per
+    // Level100MessageRequested and never consults playback. This is the
+    // evidence a caller can pin exactly; the mixer's audible message cannot be
+    // (see Level100Audio.CharacterMessagePlayback).
+    public IReadOnlyList<int> Level100DeliveredMessageIds =>
+        _level100DeliveredMessageIds;
+
     public int Level100DeliveredHelpCount => _textLayer.DeliveredHelpCount;
     public int Level100Energy => _glowLayer.Energy;
     public int Level100Shield => _glowLayer.Shield;
@@ -65,6 +75,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Level100MessagePlaybackState playback)
     {
         Level100HudSnapshot hud = _presentation.Project(snapshot, playback);
+        _level100DeliveredMessageIds = hud.DeliveredMessages
+            .Select(delivery => delivery.MessageId)
+            .ToArray();
         Level100HudMessageDeliverySnapshot? activeDelivery =
             hud.ActiveMessage;
         Level100HudMessageDefinition? message =

@@ -1022,7 +1022,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v13",
+            SchemaVersion = "onslaught-first-flight-smoke.v14",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -1035,8 +1035,17 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100Mission.Outcome.ToString(),
                 Level100TerminalState =
                     _session.CurrentSnapshot.Level100Mission.TerminalState.ToString(),
+                // Wall-clock, NOT tick-derived. AudioStreamPlayer.Playing and
+                // its Finished signal advance on the audio mixer in real time
+                // while --fixed-fps drives the simulation as fast as the host
+                // allows, so which queued message is audible at a fixed tick is
+                // a race. Measured on one host at tick 3228 over six runs with
+                // an identical stateHash: -257967449 three times, 82987417
+                // three times. Callers must bound this against
+                // Level100DeliveredMessageIds, never pin it.
                 Level100PlayingMessageId =
                     _audio.CharacterMessagePlayback.ActiveMessageId,
+                Level100DeliveredMessageIds = _hud.Level100DeliveredMessageIds,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100PulseCannonEnabled =
@@ -1161,6 +1170,7 @@ public sealed partial class FirstFlightGame : Node3D
         public required string Level100MissionOutcome { get; init; }
         public required string Level100TerminalState { get; init; }
         public int? Level100PlayingMessageId { get; init; }
+        public required IReadOnlyList<int> Level100DeliveredMessageIds { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
         public required bool Level100PulseCannonEnabled { get; init; }

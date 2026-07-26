@@ -27,6 +27,41 @@ function Assert-SmokeNear {
     }
 }
 
+function Assert-SmokeSequence {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Expected,
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Actual
+    )
+
+    if ($Expected.Count -ne $Actual.Count -or
+        @(Compare-Object -ReferenceObject $Expected -DifferenceObject $Actual -SyncWindow 0).Count -ne 0) {
+        throw ("First Flight smoke '$Name' mismatch: expected '" +
+            ($Expected -join ',') + "', observed '" + ($Actual -join ',') + "'.")
+    }
+}
+
+# For values whose exact identity is genuinely not determined by the tick the
+# report is captured at. Pinning one of these produces a test that fails on
+# host speed rather than on a behaviour change.
+function Assert-SmokeMemberOf {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$SetName,
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Set,
+        [Parameter(Mandatory)]$Actual
+    )
+
+    if ($null -eq $Actual) {
+        throw "First Flight smoke '$Name' is absent; expected a member of $SetName."
+    }
+
+    if ($Set -notcontains [int]$Actual) {
+        throw ("First Flight smoke '$Name' mismatch: expected a member of " +
+            "$SetName '" + ($Set -join ',') + "', observed '$Actual'.")
+    }
+}
+
 function Test-FirstFlightSmokeEvidence {
     [CmdletBinding()]
     param(
@@ -46,7 +81,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v13' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v14' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
@@ -57,8 +92,23 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100MissionTick' 3228 $report.level100MissionTick
     Assert-SmokeValue 'level100MissionOutcome' 'Running' $report.level100MissionOutcome
     Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
-    Assert-SmokeValue 'level100PlayingMessageId' 82987417 $report.level100PlayingMessageId
+    # The message sequence the released script has requested by this tick is a
+    # Core fact and is pinned exactly, in order.
+    Assert-SmokeSequence 'level100DeliveredMessageIds' @(
+        292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830,
+        175347826, 4458134, 4493438, 295858, 1339691000, 669198996,
+        -1715818922) $report.level100DeliveredMessageIds
     Assert-SmokeValue 'level100DeliveredMessageCount' 14 $report.level100DeliveredMessageCount
+    # Which of those the Godot mixer is audibly playing at the same tick is NOT
+    # a Core fact. AudioStreamPlayer playback advances on the audio thread in
+    # wall-clock seconds while --fixed-fps advances the simulation as fast as
+    # the host allows, so the voice queue trails the script by a host-dependent
+    # amount. Six runs on one host with a byte-identical stateHash produced
+    # -257967449 three times and 82987417 three times; this assertion was
+    # previously pinned to 82987417 and failed whenever the host was loaded.
+    # Bound it to the delivered sequence instead of pinning a run.
+    Assert-SmokeMemberOf 'level100PlayingMessageId' 'level100DeliveredMessageIds' `
+        $report.level100DeliveredMessageIds $report.level100PlayingMessageId
     Assert-SmokeValue 'level100DeliveredHelpCount' 1 $report.level100DeliveredHelpCount
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
     Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
@@ -136,4 +186,8 @@ function Test-FirstFlightSmokeEvidence {
     }
 }
 
-Export-ModuleMember -Function 'Test-FirstFlightSmokeEvidence'
+Export-ModuleMember -Function @(
+    'Test-FirstFlightSmokeEvidence'
+    'Assert-SmokeSequence'
+    'Assert-SmokeMemberOf'
+)

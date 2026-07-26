@@ -145,4 +145,76 @@ public sealed class Level100HudPresentationTests
             hud.DeliveredHelp);
         Assert.Null(hud.ActiveMessage);
     }
+
+    // The First Flight smoke used to pin level100PlayingMessageId, a value read
+    // straight off the Godot audio mixer, and it failed on a loaded host while
+    // the Core stateHash stayed byte-identical. The smoke now pins
+    // DeliveredMessages instead, so the property that makes that legitimate --
+    // that the delivered sequence is a function of the Core event stream alone
+    // and never of playback -- is pinned here rather than assumed.
+    [Fact]
+    public void DeliveredMessagesAreIndependentOfPlaybackState()
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        var presentation = new Level100HudPresentationState();
+        var requestedMessages = new List<Level100MessageRequested>();
+
+        FrameAdvanceResult frame = session.AdvanceFrameTicks(0);
+        presentation.Consume(frame.Level100MissionEvents);
+        requestedMessages.AddRange(
+            frame.Level100MissionEvents.OfType<Level100MessageRequested>());
+        for (int step = 0; step < 400; step++)
+        {
+            frame = session.AdvanceFrameTicks(OneCoreStepTicks);
+            presentation.Consume(frame.Level100MissionEvents);
+            requestedMessages.AddRange(
+                frame.Level100MissionEvents.OfType<Level100MessageRequested>());
+        }
+
+        Assert.True(requestedMessages.Count > 1);
+        int[] expected = requestedMessages
+            .Select(message => message.MessageId)
+            .ToArray();
+
+        // Every playback state a mixer can be in at this one tick: silent, on
+        // the first message, on the last, and paused mid-stream. None of them
+        // may change the delivered sequence.
+        Level100MessagePlaybackState[] playbackStates =
+        [
+            default,
+            new(
+                requestedMessages[0].SpeakerId,
+                requestedMessages[0].MessageId,
+                PositionSeconds: 0d,
+                LengthSeconds: 2d,
+                Playing: true,
+                Paused: false),
+            new(
+                requestedMessages[^1].SpeakerId,
+                requestedMessages[^1].MessageId,
+                PositionSeconds: 1.75d,
+                LengthSeconds: 2d,
+                Playing: true,
+                Paused: false),
+            new(
+                requestedMessages[^1].SpeakerId,
+                requestedMessages[^1].MessageId,
+                PositionSeconds: 0.5d,
+                LengthSeconds: 2d,
+                Playing: true,
+                Paused: true),
+        ];
+
+        foreach (Level100MessagePlaybackState playback in playbackStates)
+        {
+            Level100HudSnapshot hud = presentation.Project(
+                session.CurrentSnapshot,
+                playback);
+            Assert.Equal(
+                expected,
+                hud.DeliveredMessages.Select(delivery => delivery.MessageId));
+        }
+    }
 }
