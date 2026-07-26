@@ -615,18 +615,42 @@ public class WinUiAccessibilityAuditTests
         string codeBehind = ReadRepoFile(
             "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
 
-        MatchCollection bindings = Regex.Matches(
+        string launchPresetHelper = ReadRepoFile(
+            "OnslaughtCareerEditor.WinUI", "Helpers", "PatchBenchLaunchPresetText.cs");
+
+        // Two registration shapes exist: literal names inline, and names produced by the shared
+        // PatchBenchLaunchPresetText builders. Both are resolved so neither can drift from XAML.
+        MatchCollection literalBindings = Regex.Matches(
             codeBehind,
             @"PatchBenchChoiceVisualState\.Bind\(\s*(?<button>\w+)\s*,\s*""(?<normal>[^""]*)""\s*,\s*""(?<selected>[^""]*)""");
+        MatchCollection helperBindings = Regex.Matches(
+            codeBehind,
+            @"PatchBenchChoiceVisualState\.Bind\(\s*(?<button>\w+)\s*,\s*PatchBenchLaunchPresetText\.(?<builder>\w+)\(");
 
-        Assert.That(bindings, Is.Not.Empty, "Expected literal PatchBenchChoiceVisualState.Bind registrations.");
+        Assert.That(literalBindings, Is.Not.Empty, "Expected literal PatchBenchChoiceVisualState.Bind registrations.");
+        Assert.That(helperBindings, Is.Not.Empty, "Expected PatchBenchLaunchPresetText-backed PatchBenchChoiceVisualState.Bind registrations.");
+
+        List<(string Button, string RuntimeName)> registrations = literalBindings
+            .Select(binding => (binding.Groups["button"].Value, binding.Groups["normal"].Value))
+            .ToList();
+
+        foreach (Match binding in helperBindings)
+        {
+            string builder = binding.Groups["builder"].Value;
+            Match builderBody = Regex.Match(
+                launchPresetHelper,
+                Regex.Escape(builder) + @"\(bool isSelected\)\s*\{\s*return BuildChoiceState\(\s*""(?<normal>[^""]*)""");
+            Assert.That(
+                builderBody.Success,
+                Is.True,
+                $"Could not resolve the normal accessible name produced by PatchBenchLaunchPresetText.{builder}.");
+            registrations.Add((binding.Groups["button"].Value, builderBody.Groups["normal"].Value));
+        }
 
         Assert.Multiple(() =>
         {
-            foreach (Match binding in bindings)
+            foreach ((string button, string runtimeName) in registrations)
             {
-                string button = binding.Groups["button"].Value;
-                string runtimeName = binding.Groups["normal"].Value;
                 XElement element = ExtractControlElementByAutomationId(page, button);
 
                 Assert.That(
@@ -637,19 +661,130 @@ public class WinUiAccessibilityAuditTests
                 string? visibleLabel = ExtractVisibleLabel(element);
                 if (visibleLabel is not null)
                 {
-                    // WCAG 2.5.3 Label in Name.
+                    // WCAG 2.5.3 Label in Name. Case is not significant for speech input.
                     Assert.That(
                         runtimeName,
-                        Does.Contain(visibleLabel),
+                        Does.Contain(visibleLabel).IgnoreCase,
                         $"{button}: accessible name '{runtimeName}' must contain visible label '{visibleLabel}'.");
                 }
             }
         });
     }
 
+    [Test]
+    public void WinUiLabelledButtons_KeepTheirVisibleLabelInsideTheAccessibleName()
+    {
+        // WCAG 2.5.3 Label in Name (Level A): a speech-input user must be able to activate a
+        // control by saying the words they can see on it. Every button that carries both a
+        // visible label and an explicit AutomationProperties.Name is covered, not just the
+        // PatchBenchChoiceVisualState set.
+        string winUiRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI");
+        List<string> violations = [];
+
+        foreach (string filePath in EnumerateSourceXaml(winUiRoot))
+        {
+            string relativePath = Path.GetRelativePath(TestFixturePaths.RepoRoot, filePath);
+            violations.AddRange(FindLabelInNameViolations(relativePath, File.ReadAllText(filePath)));
+        }
+
+        Assert.That(
+            violations,
+            Is.Empty,
+            $"Button accessible names should contain their visible label so speech input can activate them. {violations.Count} violation(s):{System.Environment.NewLine}{string.Join(System.Environment.NewLine, violations)}");
+    }
+
+    [Test]
+    public void LabelInNameAudit_ReportsAButtonWhoseAccessibleNameOmitsItsVisibleLabel()
+    {
+        // Vacuity guard: the widened audit above is only worth having if it can fail.
+        const string compliantXaml = """
+            <Root>
+              <Button AutomationProperties.AutomationId="GoodButton"
+                      AutomationProperties.Name="Create safe copy of the game"
+                      Content="Create safe copy" />
+            </Root>
+            """;
+        const string violatingXaml = """
+            <Root>
+              <Button AutomationProperties.AutomationId="BadButton"
+                      AutomationProperties.Name="Duplicate the installation"
+                      Content="Create safe copy" />
+            </Root>
+            """;
+        const string violatingNestedLabelXaml = """
+            <Root>
+              <Button AutomationProperties.AutomationId="BadNestedButton"
+                      AutomationProperties.Name="Duplicate the installation">
+                <TextBlock Text="Create safe copy" />
+              </Button>
+            </Root>
+            """;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                FindLabelInNameViolations("synthetic.xaml", compliantXaml),
+                Is.Empty,
+                "A name that contains its visible label must not be reported.");
+            Assert.That(
+                FindLabelInNameViolations("synthetic.xaml", violatingXaml),
+                Is.EqualTo(new[]
+                {
+                    "synthetic.xaml: BadButton: accessible name 'Duplicate the installation' omits visible label 'Create safe copy'."
+                }));
+            Assert.That(
+                FindLabelInNameViolations("synthetic.xaml", violatingNestedLabelXaml),
+                Is.EqualTo(new[]
+                {
+                    "synthetic.xaml: BadNestedButton: accessible name 'Duplicate the installation' omits visible label 'Create safe copy'."
+                }));
+        });
+    }
+
+    private static IEnumerable<string> EnumerateSourceXaml(string root)
+    {
+        return Directory.GetFiles(root, "*.xaml", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                           !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .OrderBy(path => path, System.StringComparer.Ordinal);
+    }
+
+    private static List<string> FindLabelInNameViolations(string relativePath, string xaml)
+    {
+        List<string> violations = [];
+        foreach (XElement button in XDocument.Parse(xaml)
+                     .Descendants()
+                     .Where(element => element.Name.LocalName is "Button" or "AppBarButton" or "HyperlinkButton" or "ToggleButton" or "DropDownButton"))
+        {
+            string? accessibleName = (string?)button.Attribute("AutomationProperties.Name");
+            if (accessibleName is null || accessibleName.Contains('{'))
+            {
+                continue;
+            }
+
+            string? visibleLabel = ExtractVisibleLabel(button);
+            if (visibleLabel is null || string.IsNullOrWhiteSpace(visibleLabel))
+            {
+                continue;
+            }
+
+            if (accessibleName.Contains(visibleLabel, System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string identifier = (string?)button.Attribute("AutomationProperties.AutomationId")
+                ?? button.Attributes().FirstOrDefault(attribute => attribute.Name.LocalName == "Name")?.Value
+                ?? visibleLabel;
+            violations.Add($"{relativePath}: {identifier}: accessible name '{accessibleName}' omits visible label '{visibleLabel}'.");
+        }
+
+        return violations;
+    }
+
     private static string? ExtractVisibleLabel(XElement button)
     {
-        string? content = (string?)button.Attribute("Content");
+        string? content = (string?)button.Attribute("Content") ?? (string?)button.Attribute("Label");
         if (content is not null)
         {
             return content.Contains('{') ? null : content;

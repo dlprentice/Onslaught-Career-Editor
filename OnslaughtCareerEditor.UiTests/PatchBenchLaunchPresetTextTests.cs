@@ -30,15 +30,15 @@ public class PatchBenchLaunchPresetTextTests
                 "Selected: control diagnostics sensitivity test config 1");
             AssertChoiceState(
                 "BuildControlConfig2ChoiceState",
-                "Set control diagnostics swapped sticks config 2",
+                "Swapped config 2 control diagnostics preset with swapped sticks",
                 "Selected: control diagnostics swapped config 2");
             AssertChoiceState(
                 "BuildControlConfig3ChoiceState",
-                "Set control diagnostics alternate morph jets config 3",
+                "Alt morph/jets config 3 control diagnostics preset with alternate morph and jets",
                 "Selected: control diagnostics alternate morph jets config 3");
             AssertChoiceState(
                 "BuildControlConfig4ChoiceState",
-                "Set control diagnostics swapped alternate config 4",
+                "Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph",
                 "Selected: control diagnostics swapped alternate config 4");
         });
     }

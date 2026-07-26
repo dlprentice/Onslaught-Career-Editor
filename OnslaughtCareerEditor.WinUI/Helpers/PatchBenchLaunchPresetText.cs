@@ -31,7 +31,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static PatchBenchSelectedChoiceState BuildControlConfig2ChoiceState(bool isSelected)
         {
             return BuildChoiceState(
-                "Set control diagnostics swapped sticks config 2",
+                "Swapped config 2 control diagnostics preset with swapped sticks",
                 "Selected: control diagnostics swapped config 2",
                 isSelected);
         }
@@ -39,7 +39,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static PatchBenchSelectedChoiceState BuildControlConfig3ChoiceState(bool isSelected)
         {
             return BuildChoiceState(
-                "Set control diagnostics alternate morph jets config 3",
+                "Alt morph/jets config 3 control diagnostics preset with alternate morph and jets",
                 "Selected: control diagnostics alternate morph jets config 3",
                 isSelected);
         }
@@ -47,7 +47,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static PatchBenchSelectedChoiceState BuildControlConfig4ChoiceState(bool isSelected)
         {
             return BuildChoiceState(
-                "Set control diagnostics swapped alternate config 4",
+                "Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph",
                 "Selected: control diagnostics swapped alternate config 4",
                 isSelected);
         }

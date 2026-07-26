@@ -104,7 +104,7 @@
                     <Button x:Name="BrowseCatalogButton"
                             Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"
-                            AutomationProperties.Name="Browse generated export folder"
+                            AutomationProperties.Name="Browse export folder for a generated catalog"
                             Content="Browse export folder"
                             Click="BrowseCatalogButton_Click" />
                     <Button Grid.Column="2"

@@ -133,7 +133,7 @@
                                        TextWrapping="WrapWholeWords" />
                             <Button Content="Open Windowed &amp; Mods"
                                     AutomationProperties.AutomationId="HomeOpenPatchBenchButton"
-                                    AutomationProperties.Name="Open Windowed and Mods"
+                                    AutomationProperties.Name="Open Windowed &amp; Mods page"
                                     Tag="binary"
                                     HorizontalAlignment="Left"
                                     Style="{StaticResource PrimaryActionButtonStyle}"

@@ -77,14 +77,14 @@
                         </Grid.ColumnDefinitions>
                         <Button x:Name="PatchBenchTopUseGameFolderButton"
                                 AutomationProperties.AutomationId="PatchBenchTopUseGameFolderButton"
-                                AutomationProperties.Name="Use configured game folder for safe copy"
+                                AutomationProperties.Name="Use configured folder as the safe copy source"
                                 Content="Use configured folder"
                                 Grid.Column="0"
                                 HorizontalAlignment="Stretch"
                                 Click="UseGameDirButton_Click" />
                         <Button x:Name="PatchBenchTopCreateSafeCopyButton"
                                 AutomationProperties.AutomationId="PatchBenchTopCreateSafeCopyButton"
-                                AutomationProperties.Name="Create safe game copy from main workflow"
+                                AutomationProperties.Name="Create safe copy from the main workflow"
                                 Content="Create safe copy"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
@@ -125,7 +125,7 @@
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <Button x:Name="PatchBenchOnlinePrepLocalProbeButton"
                             AutomationProperties.AutomationId="PatchBenchOnlinePrepLocalProbeButton"
-                            AutomationProperties.Name="Set up local split-screen test for safe copy"
+                            AutomationProperties.Name="Use local split-screen launch preset for the safe copy"
                             Content="Use local split-screen launch preset"
                             HorizontalAlignment="Left"
                             Click="LocalMultiplayerProbeButton_Click" />
@@ -244,7 +244,7 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <Button AutomationProperties.AutomationId="PatchBenchAddVersionMarkerButton"
-                                                AutomationProperties.Name="Add PATCHED title marker row"
+                                                AutomationProperties.Name="Add PATCHED marker title row"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
@@ -256,7 +256,7 @@
                                                        HorizontalAlignment="Center" />
                                         </Button>
                                         <Button AutomationProperties.AutomationId="PatchBenchClearVersionMarkerButton"
-                                                AutomationProperties.Name="Clear PATCHED title marker row"
+                                                AutomationProperties.Name="Clear PATCHED marker title row"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
@@ -268,7 +268,7 @@
                                                        HorizontalAlignment="Center" />
                                         </Button>
                                         <Button AutomationProperties.AutomationId="PatchBenchAddGoodiesPreviewButton"
-                                                AutomationProperties.Name="Add bounded Goodies wall display preview; does not edit saves, award Goodies, prove every entry, or prove model and FMV playback"
+                                                AutomationProperties.Name="Add Goodies wall preview row; bounded display preview that does not edit saves, award Goodies, prove every entry, or prove model and FMV playback"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
                                                 HorizontalAlignment="Stretch"
@@ -280,7 +280,7 @@
                                                        HorizontalAlignment="Center" />
                                         </Button>
                                         <Button AutomationProperties.AutomationId="PatchBenchClearGoodiesPreviewButton"
-                                                AutomationProperties.Name="Clear Goodies wall display preview row"
+                                                AutomationProperties.Name="Clear Goodies wall preview row"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
                                                 HorizontalAlignment="Stretch"
@@ -378,7 +378,7 @@
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <Button x:Name="PatchBenchPrepareCopiedProfileButton"
                                     AutomationProperties.AutomationId="PatchBenchPrepareCopiedProfileButton"
-                                    AutomationProperties.Name="Create safe game copy"
+                                    AutomationProperties.Name="Create safe copy of the game"
                                     Content="Create safe copy"
                                     Style="{StaticResource AccentButtonStyle}"
                                     Click="PrepareCopiedProfileButton_Click" />
@@ -1000,7 +1000,7 @@
                                                 Click="ControlSharpenedPresetButton_Click" />
                                         <Button x:Name="PatchBenchControlConfig2PresetButton"
                                                 AutomationProperties.AutomationId="PatchBenchControlConfig2PresetButton"
-                                                AutomationProperties.Name="Set control diagnostics swapped sticks config 2"
+                                                AutomationProperties.Name="Swapped config 2 control diagnostics preset with swapped sticks"
                                                 Content="Swapped config 2"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
@@ -1009,7 +1009,7 @@
                                                 Click="ControlConfig2PresetButton_Click" />
                                         <Button x:Name="PatchBenchControlConfig3PresetButton"
                                                 AutomationProperties.AutomationId="PatchBenchControlConfig3PresetButton"
-                                                AutomationProperties.Name="Set control diagnostics alternate morph jets config 3"
+                                                AutomationProperties.Name="Alt morph/jets config 3 control diagnostics preset with alternate morph and jets"
                                                 Content="Alt morph/jets config 3"
                                                 Grid.Row="1"
                                                 Grid.Column="1"
@@ -1018,7 +1018,7 @@
                                                 Click="ControlConfig3PresetButton_Click" />
                                         <Button x:Name="PatchBenchControlConfig4PresetButton"
                                                 AutomationProperties.AutomationId="PatchBenchControlConfig4PresetButton"
-                                                AutomationProperties.Name="Set control diagnostics swapped alternate config 4"
+                                                AutomationProperties.Name="Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph"
                                                 Content="Swapped alt config 4"
                                                 Grid.Row="2"
                                                 Grid.Column="0"
@@ -1129,7 +1129,7 @@
                                               SelectionChanged="MusicTrackComboBox_SelectionChanged" />
                                     <Button x:Name="PatchBenchStageCopiedTrackSwapButton"
                                             AutomationProperties.AutomationId="PatchBenchStageCopiedTrackSwapButton"
-                                            AutomationProperties.Name="Swap safe-copy music tracks"
+                                            AutomationProperties.Name="Swap safe-copy tracks in the copied Music folder"
                                             Content="Swap safe-copy tracks"
                                             Style="{StaticResource AccentButtonStyle}"
                                             Click="StageCopiedTrackSwapButton_Click" />
@@ -1152,13 +1152,13 @@
                                     <StackPanel Spacing="10">
                                         <Button x:Name="PatchBenchStageMusicReplacementButton"
                                                 AutomationProperties.AutomationId="PatchBenchStageMusicReplacementButton"
-                                                AutomationProperties.Name="Stage music replacement in safe copy"
+                                                AutomationProperties.Name="Stage track in safe copy as a music replacement"
                                                 Content="Stage track in safe copy"
                                                 Style="{StaticResource AccentButtonStyle}"
                                                 Click="StageMusicReplacementButton_Click" />
                                         <Button x:Name="PatchBenchRestoreMusicReplacementButton"
                                                 AutomationProperties.AutomationId="PatchBenchRestoreMusicReplacementButton"
-                                                AutomationProperties.Name="Restore safe-copy music backup"
+                                                AutomationProperties.Name="Restore safe-copy track backup, undoing the music replacement"
                                                 Content="Restore safe-copy track backup"
                                                 Click="RestoreMusicReplacementButton_Click" />
                                     </StackPanel>

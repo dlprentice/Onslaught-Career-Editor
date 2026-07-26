@@ -224,19 +224,19 @@ public class WinUiPatchBenchInteractionSmokeTests
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-launch-preset-selected-normal.png", "PatchBenchControlConfig4PresetButton", 1000, 720);
 
             ToggleCheckBoxByAutomationId(window, "PatchBenchNoSoundLaunchOption");
-            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 
             ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
             SelectComboBoxItem(window, "PatchBenchCopiedControllerConfigComboBox", "Config 3: Alternate morph/jets");
-            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
 
             ClickByAutomationId(window, "PatchBenchControlConfig4PresetButton");
             AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Selected: control diagnostics swapped alternate config 4");
             SetTextBoxText(window, "PatchBenchLevelLaunchOption", "100");
-            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Set control diagnostics swapped alternate config 4");
+            AssertAutomationNameContains(window, "PatchBenchControlConfig4PresetButton", "Swapped alt config 4 control diagnostics preset with swapped sticks and alternate morph");
             AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Campaign training world 100");
             ClickByAutomationId(window, "PatchBenchLocalMultiplayerProbeButton");
             AssertTextBoxText(window, "PatchBenchLevelLaunchOption", "850");
