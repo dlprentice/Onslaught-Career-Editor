@@ -450,6 +450,54 @@ camera-space reflection, and alpha-overlay passes with each texture's serialized
 `TEXB` parameters. Released material modes disabled by the live Level 100
 renderer remain disabled.
 
+The slot-to-mode mapping is not encoded in the serialized material record; the
+slot ordinal *is* the mode. `CDXMeshVB__Load` (`0x0054E160`) reads the six
+`TEXR` words into the group record at `+0x20`..`+0x34`, storing `0` only for
+the literal `0xFFFFFFFF` and otherwise `texture_table + index * 0x24`. The
+`0x24` stride is the serialized `CMST` per-texture entry, whose observed layout
+on every Level 100 mesh is two pointers, a frame count of `1` at `+0x08`, five
+frame-track pointers at `+0x0C`..`+0x1C`, and a static strength float at
+`+0x20`. Those five tracks are the five `TEXB` floats in order: strength,
+offset U, offset V, scale U, scale V; the `+0x20` float equals `TEXB[0]` for
+all 154 texture records in the corpus. `CMeshRenderer__RenderMeshWithLayerPasses`
+(`0x0054D530`) then writes the layer ordinal to `CTexture +0x88` and the
+frame-sampled offset/scale to `+0x8C`..`+0x98` before calling
+`CVBufTexture__RenderModePass` (`0x005588F0`), which switches on `+0x88`. Each
+layer is its own `DrawIndexedPrimitives` over the same geometry, not an extra
+sampler inside one draw.
+
+Mode `1` sets stage-0 `COLOROP=D3DTOP_DOTPRODUCT3` (`0x18`) with
+`ARG1=TEXTURE`, `ARG2=TFACTOR`, clears `D3DRS_ZWRITEENABLE`, and publishes the
+model-space light vector through `D3DRS_TEXTUREFACTOR`. It does not set
+`D3DRS_ALPHABLENDENABLE`, `SRCBLEND`, or `DESTBLEND`, so its framebuffer
+combination is inherited state and is not established by static evidence.
+
+Mode disablement is serialized in the binary, not merely observed: the head of
+`CDXMeshVB__Load` stores `0x02000000` at `0x009C63A4` and `0x00000200` at
+`0x009C63A8`, so the six-byte per-layer flag array `DAT_009C63A4[0..5]`
+initializes to `0,0,0,2,0,0`/`...,2` — layer `3` and layer `5` carry the
+`2` ("disabled") value that the layer loop's `!= 2` guard rejects. Mode `5`
+additionally returns false from `RenderModePass`, which gates the draw. Layers
+`1`, `2`, and `4` start at `0` and are device-validated on first use. Each layer
+is further skipped unless `round(global_alpha * strength)` — halved through
+`(secondary_percentage * alpha) / 100` for layers other than `0` — exceeds
+`10`; the four distinct Level 100 strengths `0.2`, `0.3`, `0.5`, and `1.0`
+produce `51`, `76`, `128`, and `255`, so no Level 100 pass is gated out by
+strength.
+
+Measured slot occupancy over all 423 material groups of the 28 converted Level
+100 meshes: slot `0` is occupied 423 times, slot `2` 397 times, slots `1` and
+`3` three times each, and slots `4` and `5` never. The three slot-1/slot-3
+groups are `f-city1` part 0 group 2, `fb_aircraft_factory` part 6 group 2, and
+`FB_Solar_Pod` part 1 group 0; each carries the signature `(0,0,0,0,-,-)`, so
+the base texture is repeated across the base, DOT3, reflection, and disabled
+projected slots. They account for 8 of 268, 1 of 2,162, and 22 of 698 triangles
+respectively — 2.99%, 0.05%, and 3.15% of their meshes, not whole buildings.
+Every other group in the corpus is `(base,-,reflection,-,-,-)`. All 154 `TEXB`
+records carry offset `(0,0)`; all carry scale `(1,1)` except `FB_Docks` texture
+1, whose `(0,0)` scale reaches only slot 2, where mode 2 replaces the texture
+transform with its own fixed reflection matrix.
+
 The nearby compared facility is base-world ordinal 1, `Tank Factory`, backed by
 `m_fb_tank_factory.msh.aya`. Its four material assignments are exactly
 `(0,-,1,-,-,-)`, `(2,-,1,-,-,-)`, `(4,-,3,-,-,-)`, and
