@@ -57,6 +57,43 @@ def region_stats(ref: Image.Image, cmp_: Image.Image, box: tuple[int, int, int, 
     }
 
 
+def gap_pct(
+    ref: Image.Image,
+    cmp_: Image.Image,
+    floor: Image.Image,
+    box: tuple[int, int, int, int],
+) -> float:
+    """Percentage of pixels where the candidate differs materially from the
+    reference AND retail's own second run does not.
+
+    `floor` is a second retail capture of the same frame. A pixel that moves
+    between two retail runs is one this frame cannot pin down -- an animated
+    background, a rotating model, a talking portrait -- so a difference there
+    is not evidence against the reconstruction. A pixel that is stable across
+    retail runs but differs in ours is.
+
+    This is deliberately asymmetric: it never credits the reconstruction for a
+    layer it failed to draw, because an omitted layer produces a difference at
+    pixels that may well be floor-stable, and those still count.
+    """
+    a = list(ref.crop(box).get_flattened_data())
+    b = list(cmp_.crop(box).get_flattened_data())
+    f = list(floor.crop(box).get_flattened_data())
+    n = len(a)
+    if n == 0:
+        return 0.0
+
+    def material(p, q) -> bool:
+        return abs(p[0] - q[0]) + abs(p[1] - q[1]) + abs(p[2] - q[2]) > 24
+
+    gap = sum(
+        1
+        for pa, pb, pf in zip(a, b, f)
+        if material(pa, pb) and not material(pa, pf)
+    )
+    return round(100.0 * gap / n, 2)
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reference", required=True, type=Path)
@@ -125,7 +162,21 @@ def main(argv: list[str]) -> int:
         if floor is not None:
             fstats = region_stats(ref, floor, tuple(box))
             stats["floorPct"] = fstats["materialPct"]
-            stats["gapPct"] = round(max(0.0, stats["materialPct"] - fstats["materialPct"]), 2)
+            # gapPct is PER-PIXEL, and it must stay that way.
+            #
+            # It used to be a scalar subtraction of two independently computed
+            # region percentages, which is unsound: the candidate can differ
+            # from the reference on entirely different pixels than the floor
+            # does and still score a zero gap. Worse, it actively REWARDED
+            # omitting an animated layer -- a region where retail's own two runs
+            # disagree (video background, rotating model, talking portrait)
+            # carries a high floor, so a reconstruction that simply does not
+            # draw that layer subtracts its way to zero and reads as perfect.
+            #
+            # The correct question is "where does the candidate differ from the
+            # reference BEYOND what retail's own run-to-run variation explains",
+            # which is a property of each pixel, not of two summary statistics.
+            stats["gapPct"] = gap_pct(ref, cmp_, floor, tuple(box))
         report["regions"][name] = stats
         if not stats["pixels"]:
             continue
