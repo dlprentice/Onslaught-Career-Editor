@@ -17,8 +17,8 @@ public sealed class PatchBenchNarrowActionLabelsTests
 
         Assert.Multiple(() =>
         {
-            AssertButton(resetButton, "Reset to Enhanced Copy", "Select Enhanced Copy profile", "WindowedPresetButton_Click");
-            AssertButton(clearButton, "Clear optional mods", "Clear optional mod rows; safe copies still include Enhanced Copy", "ClearSelectionButton_Click");
+            AssertButton(resetButton, "Reset to Enhanced Copy", "Reset to Enhanced Copy profile", "WindowedPresetButton_Click");
+            AssertButton(clearButton, "Clear optional mods", "Clear optional mods; safe copies still include Enhanced Copy", "ClearSelectionButton_Click");
             Assert.That((string?)resetButton.Attribute("MinHeight"), Is.EqualTo("56"));
             Assert.That((string?)clearButton.Attribute("MinHeight"), Is.EqualTo("56"));
         });
@@ -32,6 +32,13 @@ public sealed class PatchBenchNarrowActionLabelsTests
             Assert.That((string?)button.Attribute("AutomationProperties.Name"), Is.EqualTo(accessibleName));
             Assert.That((string?)button.Attribute("Click"), Is.EqualTo(handler));
             Assert.That((string?)content.Attribute("Text"), Is.EqualTo(label));
+
+            // WCAG 2.5.3 Label in Name: speech-input users activate a control by speaking its
+            // visible label, so the accessible name must contain that label verbatim.
+            Assert.That(
+                accessibleName,
+                Does.Contain(label),
+                $"Accessible name '{accessibleName}' must contain the visible label '{label}'.");
             Assert.That((string?)content.Attribute("TextWrapping"), Is.EqualTo("WrapWholeWords"));
             Assert.That((string?)content.Attribute("TextAlignment"), Is.EqualTo("Center"));
             Assert.That((string?)content.Attribute("HorizontalAlignment"), Is.EqualTo("Center"));

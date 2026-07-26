@@ -603,6 +603,67 @@ public class WinUiAccessibilityAuditTests
         Assert.That(expectedAccessKeys.Values, Is.Unique, "Shell access keys should stay unique.");
     }
 
+    [Test]
+    public void PatchBenchChoiceButtons_KeepXamlAndRuntimeAccessibleNamesIdentical()
+    {
+        // Windowed & Mods choice buttons declare an accessible name in XAML and then have it
+        // re-applied at runtime by PatchBenchChoiceVisualState.Bind. When the two drift, the
+        // XAML value is silently replaced on the first refresh and screen-reader users hear a
+        // different name than the static surface (and the audits pinning it) describe.
+        XDocument page = XDocument.Parse(ReadRepoFile(
+            "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml"));
+        string codeBehind = ReadRepoFile(
+            "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs");
+
+        MatchCollection bindings = Regex.Matches(
+            codeBehind,
+            @"PatchBenchChoiceVisualState\.Bind\(\s*(?<button>\w+)\s*,\s*""(?<normal>[^""]*)""\s*,\s*""(?<selected>[^""]*)""");
+
+        Assert.That(bindings, Is.Not.Empty, "Expected literal PatchBenchChoiceVisualState.Bind registrations.");
+
+        Assert.Multiple(() =>
+        {
+            foreach (Match binding in bindings)
+            {
+                string button = binding.Groups["button"].Value;
+                string runtimeName = binding.Groups["normal"].Value;
+                XElement element = ExtractControlElementByAutomationId(page, button);
+
+                Assert.That(
+                    (string?)element.Attribute("AutomationProperties.Name"),
+                    Is.EqualTo(runtimeName),
+                    $"{button}: XAML AutomationProperties.Name must match the runtime Bind name.");
+
+                string? visibleLabel = ExtractVisibleLabel(element);
+                if (visibleLabel is not null)
+                {
+                    // WCAG 2.5.3 Label in Name.
+                    Assert.That(
+                        runtimeName,
+                        Does.Contain(visibleLabel),
+                        $"{button}: accessible name '{runtimeName}' must contain visible label '{visibleLabel}'.");
+                }
+            }
+        });
+    }
+
+    private static string? ExtractVisibleLabel(XElement button)
+    {
+        string? content = (string?)button.Attribute("Content");
+        if (content is not null)
+        {
+            return content.Contains('{') ? null : content;
+        }
+
+        string[] texts = button.Descendants()
+            .Where(candidate => candidate.Name.LocalName == "TextBlock")
+            .Select(candidate => (string?)candidate.Attribute("Text"))
+            .Where(text => !string.IsNullOrWhiteSpace(text) && !text!.Contains('{'))
+            .Select(text => text!)
+            .ToArray();
+        return texts.Length == 1 ? texts[0] : null;
+    }
+
     private static XElement ExtractControlElementByAutomationId(XDocument document, string automationId)
     {
         XElement? element = document.Descendants()

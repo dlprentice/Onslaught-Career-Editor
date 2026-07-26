@@ -160,14 +160,14 @@ public class WinUiPatchBenchInteractionSmokeTests
 
             InvokeByAutomationId(window, "PatchBenchMenuColorGreenButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Selected: green frontend margins");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Select red frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorRedButton", "Red margins for the frontend");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: green.");
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-normal.png", "PatchBenchMenuColorRedButton", 1000, 640);
             CaptureChoiceStateScreenshot(window, app.MainWindowHandle, evidenceDir, "patch-choice-menu-color-selected-narrow.png", "PatchBenchMenuColorRedButton", 760, 640);
 
             InvokeByAutomationId(window, "PatchBenchMenuColorBlackButton");
             AssertAutomationNameContains(window, "PatchBenchMenuColorBlackButton", "Selected: black frontend margins");
-            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Select green frontend margins");
+            AssertAutomationNameContains(window, "PatchBenchMenuColorGreenButton", "Green margins for the frontend");
             AssertAutomationNameContains(window, "PatchBenchMenuColorSelectionStatus", "Selected frontend margins: black.");
 
             InvokeByAutomationId(window, "PatchBenchMenuColorClearButton");
