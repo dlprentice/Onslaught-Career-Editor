@@ -23,6 +23,7 @@ internal static class CuratedObjMeshLoader
         var vertices = new List<Vector3>();
         var normals = new List<Vector3>();
         var textureCoordinates = new List<Vector2>();
+        var colors = new List<Color>();
         var surfaces = new List<MaterialSurface>();
         var surfaceByName = new Dictionary<string, MaterialSurface>(StringComparer.Ordinal);
         MaterialSurface? activeSurface = null;
@@ -39,8 +40,22 @@ internal static class CuratedObjMeshLoader
             switch (fields[0])
             {
                 case "v":
-                    RequireFieldCount(fields, 4, "vertex");
+                    // Retained meshes carry the retail FVF 0x152 DIFFUSE dword as the
+                    // OBJ vertex-colour extension: "v x y z r g b". Meshes converted
+                    // without it keep the bare three-component record.
+                    if (fields.Length != 4 && fields.Length != 7)
+                    {
+                        throw new InvalidDataException("Curated mesh has an invalid vertex record.");
+                    }
                     vertices.Add(new Vector3(ParseFloat(fields[1]), ParseFloat(fields[2]), ParseFloat(fields[3])));
+                    if (fields.Length == 7)
+                    {
+                        colors.Add(new Color(
+                            ParseUnitFloat(fields[4]),
+                            ParseUnitFloat(fields[5]),
+                            ParseUnitFloat(fields[6]),
+                            1f));
+                    }
                     if (vertices.Count > MaximumVertices)
                     {
                         throw new InvalidDataException("Curated mesh exceeds the vertex limit.");
@@ -95,6 +110,7 @@ internal static class CuratedObjMeshLoader
 
         if (vertices.Count == 0 || surfaces.Count == 0 || surfaces.Any(surface => surface.Indices.Count == 0) ||
             normals.Count != vertices.Count || textureCoordinates.Count != vertices.Count ||
+            (colors.Count != 0 && colors.Count != vertices.Count) ||
             surfaces.SelectMany(surface => surface.Indices).Any(index => index < 0 || index >= vertices.Count))
         {
             throw new InvalidDataException("Curated mesh has inconsistent geometry arrays.");
@@ -108,6 +124,10 @@ internal static class CuratedObjMeshLoader
             arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
             arrays[(int)Mesh.ArrayType.Normal] = normals.ToArray();
             arrays[(int)Mesh.ArrayType.TexUV] = textureCoordinates.ToArray();
+            if (colors.Count != 0)
+            {
+                arrays[(int)Mesh.ArrayType.Color] = colors.ToArray();
+            }
             arrays[(int)Mesh.ArrayType.Index] = surface.Indices.ToArray();
 
             int surfaceIndex = mesh.GetSurfaceCount();
@@ -139,6 +159,17 @@ internal static class CuratedObjMeshLoader
             !float.IsFinite(result))
         {
             throw new InvalidDataException("Curated mesh contains a non-finite numeric value.");
+        }
+
+        return result;
+    }
+
+    private static float ParseUnitFloat(string value)
+    {
+        float result = ParseFloat(value);
+        if (result is < 0f or > 1f)
+        {
+            throw new InvalidDataException("Curated mesh contains an out-of-range vertex colour channel.");
         }
 
         return result;

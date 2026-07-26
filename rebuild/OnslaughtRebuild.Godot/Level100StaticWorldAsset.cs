@@ -897,6 +897,14 @@ internal static class RetailFixedFunctionMaterial
             float anti_sun = max(dot(world_normal, sunlight_direction), 0.0);
             vertex_light_color = ambient_color + (sun_color * sun) +
                 (anti_sun_color * anti_sun);
+            // Retail leaves D3DRS_LIGHTING on for the FVF 0x152 mesh draw and
+            // sets D3DRS_DIFFUSEMATERIALSOURCE and D3DRS_AMBIENTMATERIALSOURCE
+            // to D3DMCS_COLOR1 (D3DStateCache__UseDefaultRenderState,
+            // 0x004EB1E0), leaving D3DRS_COLORVERTEX at its TRUE default. The
+            // per-vertex DIFFUSE dword is therefore the diffuse and ambient
+            // material reflectance for every term of the lighting equation, and
+            // the lit result is stage-zero COLORARG2 = D3DTA_DIFFUSE.
+            vertex_light_color *= COLOR.rgb;
             model_light_direction = normalize(
                 transpose(mat3(MODEL_MATRIX)) * sunlight_direction);
 

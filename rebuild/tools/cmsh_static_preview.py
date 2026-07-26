@@ -748,6 +748,7 @@ def emit_obj(
     *,
     include_vertex_attributes: bool = False,
     include_material_layer_groups: bool = False,
+    include_vertex_colors: bool = False,
 ) -> bytes:
     lines: list[str] = []
     encoded_bytes = 0
@@ -776,7 +777,27 @@ def emit_obj(
                 raise CmshProfileError("non-finite numeric value", 0, "transformed position")
             if any(abs(value) > MAX_COORDINATE for value in values):
                 raise CmshProfileError("limit exceeded", 0, "transformed position")
-            append_line("v " + " ".join(_number(value) for value in values))
+            record = "v " + " ".join(_number(value) for value in values)
+            if include_vertex_colors:
+                # FVF 0x152 carries a D3DCOLOR DIFFUSE dword at vertex offset 24.
+                # Retail keeps D3DRS_LIGHTING on with D3DRS_DIFFUSEMATERIALSOURCE
+                # and D3DRS_AMBIENTMATERIALSOURCE both D3DMCS_COLOR1, so this dword
+                # is the per-vertex diffuse and ambient material reflectance.
+                color = vertex.raw_color_u32
+                alpha = (color >> 24) & 0xFF
+                if alpha != 0xFF:
+                    # Stage zero also runs ALPHAOP MODULATE against D3DTA_DIFFUSE.
+                    # No mesh in the retail corpus carries a non-opaque vertex
+                    # alpha, and the OBJ colour extension cannot express one, so
+                    # refuse rather than silently drop it.
+                    raise CmshProfileError(
+                        "unsupported profile", 0, "non-opaque vertex diffuse alpha"
+                    )
+                record += " " + " ".join(
+                    _number(((color >> shift) & 0xFF) / 255.0)
+                    for shift in (16, 8, 0)
+                )
+            append_line(record)
             emitted_vertices = _checked_add(emitted_vertices, 1, MAX_VERTICES, "OBJ vertices")
 
     uv_indices: list[tuple[int | None, ...] | None] = [None] * len(mesh.parts)
@@ -1147,12 +1168,14 @@ def convert_aya_bytes(
     *,
     include_vertex_attributes: bool = False,
     include_material_layer_groups: bool = False,
+    include_vertex_colors: bool = False,
     hierarchy_frame: int | None = None,
 ) -> bytes:
     return emit_obj(
         parse_cmsh_stream(inflate_aya(source), hierarchy_frame=hierarchy_frame),
         include_vertex_attributes=include_vertex_attributes,
         include_material_layer_groups=include_material_layer_groups,
+        include_vertex_colors=include_vertex_colors,
     )
 
 

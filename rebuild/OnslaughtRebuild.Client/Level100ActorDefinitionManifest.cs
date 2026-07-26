@@ -14,7 +14,7 @@ namespace OnslaughtRebuild.Client;
 public static class Level100ActorDefinitionManifest
 {
     public const string ExpectedManifestSha256 =
-        "084954C97502001D5868348AC9DB4E79D86F3DD8F72E3435E87FA43FF0141117";
+        "F136110D2CCA008EE7527459DBDB359FB80027A3178E080CF5EBEFCF314F9224";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v13";
     private const string ExpectedSourceArchiveSha256 =

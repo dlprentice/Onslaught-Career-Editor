@@ -143,7 +143,7 @@ STATIC_WORLD_ANIMATION = STATIC_WORLD_ROOT / "level100-static-world-animation.js
 # and FirstFlightWorldView.RetailAquilaAnimationHz.
 STATIC_WORLD_ANIMATION_HZ = 20
 STATIC_WORLD_ANIMATION_SHA256 = (
-    "6dcc69f68056aafb06f6f6515098f3153590cecc0a92a27a60d3f0c18ce2413b"
+    "b826dc2d1f62069e3285f4f8cddeafb84511519b32065cf6c028615498afa9c3"
 )
 # Exact released virtual-frame counts (CMSP+0xBC) of every Level 100 static mesh
 # that carries more than one authored hierarchy pose. These are the playback
@@ -156,7 +156,7 @@ STATIC_WORLD_ANIMATED_MESHES = {
     "ft_pulse": 101,
     "ft_sam": 21,
 }
-STATIC_WORLD_MANIFEST_SHA256 = "084954c97502001d5868348ac9db4e79d86f3dd8f72e3435e87fa43ff0141117"
+STATIC_WORLD_MANIFEST_SHA256 = "f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314f9224"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -463,9 +463,9 @@ CHUNKS = (
 
 # Destination, source AYA destination above, hierarchy frame, exact OBJ SHA-256.
 MESHES = (
-    (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "3a67f2bf49c9505855f73259d8d5829a7e0d1a0aed0f5a8802e82c4cf2c5df9f"),
-    (GODOT_ASSETS / "Level100/level100-target-truck.obj", GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", None, "76ef7ed7e78d39bf9606cb47b630ca4e10d1773cab38008bbee35b935544581d"),
-    (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "3883b651a9963813a4ab9982460425910be5d7f8f7edce15ade475cf6d8eb5ce"),
+    (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "88bae82b7d5080e307cbe49aa39c06c21efbcc7de806e236b5cb663aa7d5ba63"),
+    (GODOT_ASSETS / "Level100/level100-target-truck.obj", GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", None, "39eb4f7723725422ee348ca6052c437be2e59aac38ddac0ca4559213fc4e0113"),
+    (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "dd605f3778d465a5e25a99b43c7721dec37d509732e65db3e6c71534f6b4a9ac"),
 )
 
 
@@ -2547,6 +2547,7 @@ def _materialize_static_world(
             data,
             include_vertex_attributes=True,
             include_material_layer_groups=True,
+            include_vertex_colors=True,
         )
         vertex_z = [
             float(line.split()[3])
@@ -3475,6 +3476,7 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
             source_data[source_destination],
             include_vertex_attributes=True,
             include_material_layer_groups=True,
+            include_vertex_colors=True,
             hierarchy_frame=frame,
         )
         if _sha256(data) != expected:
