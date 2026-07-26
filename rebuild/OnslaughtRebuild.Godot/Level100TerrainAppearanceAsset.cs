@@ -44,6 +44,12 @@ internal sealed class Level100TerrainAppearanceAsset
         uniform sampler2D cloud_shadow_map : filter_linear_mipmap, repeat_enable;
         uniform vec3 fog_color;
         uniform float fog_density;
+        // The constant lit vertex colour of retail's terrain draw:
+        // 0.8 x (CHFD+0x107C + CHFD+0x1080) / 256, computed at load from the
+        // shipped HFLD by Level100TerrainCompositor.TerrainVertexDiffuse. The
+        // terrain vertex carries no normal, so this is one colour for the whole
+        // surface with no positional term.
+        uniform vec3 terrain_vertex_diffuse;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -96,7 +102,19 @@ internal sealed class Level100TerrainAppearanceAsset
             vec3 cloud_shadow = texture(
                 cloud_shadow_map,
                 (retail_world_uv / 256.0) + cloud_scroll).rgb;
-            vec3 stage_color = macro_color;
+            // Stage 0 is COLORARG1 = D3DTA_TEXTURE, COLORARG2 = D3DTA_DIFFUSE
+            // (0x00545699, 0x005456a8) with COLOROP = D3DTOP_MODULATE2X
+            // (0x005454ae; the MODULATE alternative at 0x0054568a is taken only
+            // when LANDSCAPE_LIGHTING is zero, and its default is 1). So the
+            // macro texel is multiplied by the lit vertex colour and doubled.
+            // The 2.0 is the stage op and terrain_vertex_diffuse is the lighting
+            // term; neither is meaningful without the other, and applying the
+            // doubling alone overshoots.
+            // Fixed-function stages saturate, hence the min() - the same clamp
+            // the two later 2x stages below already carry.
+            vec3 stage_color = min(
+                macro_color * terrain_vertex_diffuse * 2.0,
+                vec3(1.0));
             stage_color *= detail_primary;
             stage_color = min(stage_color * cloud_shadow * 2.0, vec3(1.0));
             vec3 retail_color = min(stage_color * detail_secondary * 2.0, vec3(1.0));
@@ -191,6 +209,16 @@ internal sealed class Level100TerrainAppearanceAsset
             heightField.FogColor.G,
             heightField.FogColor.B));
         _material.SetShaderParameter("fog_density", heightField.FogDensity);
+        // CEngine::SetupLights enables cached lights 0 and 1 only, filling them
+        // from CHFD+0x107C and CHFD+0x1080 - which the Core height field parses
+        // as SunColorRgb24 and AntiSunColorRgb24. Read from the shipped HFLD, not
+        // written down: another level's lights are other bytes.
+        (float red, float green, float blue) = Level100TerrainCompositor.TerrainVertexDiffuse(
+            heightField.SunColorRgb24,
+            heightField.AntiSunColorRgb24);
+        _material.SetShaderParameter(
+            "terrain_vertex_diffuse",
+            new Vector3(red, green, blue));
     }
 
     public Material Material => _material;

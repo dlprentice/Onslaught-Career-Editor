@@ -18,6 +18,22 @@ internal sealed class Level100TerrainCompositor
     public const int TileWidth = 8;
     public const int RootTextureLength = MapSize * MapSize * sizeof(ushort);
 
+    /// <summary>
+    /// `_DAT_005db060` = `0x3b800000` = 1/256, the scale `CEngine::SetupLights`
+    /// @ `0x0044a2d0` applies to each HFLD light-colour byte before the triple is
+    /// copied into the cached light record (`0x0044a431`, `0x0044a457`,
+    /// `0x0044a470` and the matching sequence at `0x0044a4f8`-`0x0044a545`).
+    /// </summary>
+    public const float LightColorByteScale = 1f / 256f;
+
+    /// <summary>
+    /// `0x3f4ccccd` = 0.8, the ambient reflectance of the terrain-only
+    /// `D3DMATERIAL9` at `0x0083d28c + 0x10`, written by the single initialiser
+    /// at `0x004eb9a0`. That record's Diffuse is (0,0,0,1) and its Emissive is
+    /// zero, so ambient is the whole of its response.
+    /// </summary>
+    public const float TerrainMaterialAmbient = 0.8f;
+
     private const int MaterialCount = 6;
     private const int PaletteEntriesPerMaterial = 256;
     private const int WeightCountPerLayer = 9 * 9;
@@ -43,6 +59,61 @@ internal sealed class Level100TerrainCompositor
         new(
             TerrainHierarchy.Load(hierarchySource),
             BuildLightingGradient(sunColorRgb24, ambientColorRgb24));
+
+    /// <summary>
+    /// The constant vertex colour Direct3D's fixed-function lighting produces
+    /// for retail's terrain draw, from the two HFLD light-colour fields.
+    ///
+    /// `CDXLandscape::Render` (`0x00545410`) brackets the terrain draw and no
+    /// other draw in the image: it sets `D3DRS_AMBIENT` to zero
+    /// (`0x005454db`), calls `SetMaterial` with the terrain-only record
+    /// `0x0083d28c` (`0x005454f4`, device vtable +0xc4 = IDirect3DDevice9 index
+    /// 49), and re-uploads every enabled cached light through
+    /// `CDXEngine::ApplyCachedLight` with its second argument set to 1, which is
+    /// the flag that copies the light's colour into `D3DLIGHT9.Ambient`
+    /// (`0x005512be`). Afterwards it restores the register and re-uploads every
+    /// light with `Ambient` zero. `D3DRS_LIGHTING` stays enabled, because
+    /// `RenderTerrain` only clears it when the `LANDSCAPE_LIGHTING` CVar at
+    /// `0x008aa94c` is zero and its registered default is 1 (`0x00544690`).
+    ///
+    /// The terrain vertex is stride `0x14` - position plus one UV pair, with no
+    /// normal - so `N.L` is zero and the diffuse term vanishes. The material's
+    /// own Diffuse is black and its Emissive is zero, so the whole surviving
+    /// fixed-function term is
+    ///
+    ///     vertex_diffuse = Ambient_material * (D3DRS_AMBIENT + sum light.Ambient)
+    ///                    = 0.8 * sum(light colour) / 256
+    ///
+    /// which is one colour for the entire terrain, with no positional or
+    /// per-vertex dependence. Stage 0 then doubles it under `D3DTOP_MODULATE2X`;
+    /// that factor of two lives in the shader, where the stage op does.
+    ///
+    /// `CEngine::SetupLights` @ `0x0044a2d0` enables exactly lights 0 and 1
+    /// (`0x009c68a0`/`0x009c68a1` := 1, `0x009c68a2..a7` := 0) and fills them
+    /// from `CHFD+0x107C` and `CHFD+0x1080`. Those two fields are the arguments
+    /// here; nothing about this function is specific to Level 100.
+    ///
+    /// Derivation and its measured residual:
+    /// reverse-engineering/binary-analysis/terrain-ambient-light-material-2026-07-26.md.
+    /// </summary>
+    public static (float Red, float Green, float Blue) TerrainVertexDiffuse(
+        uint light0ColorRgb24,
+        uint light1ColorRgb24)
+    {
+        static float Channel(uint light0, uint light1, int shift)
+        {
+            uint sum = ((light0 >> shift) & 0xFF) + ((light1 >> shift) & 0xFF);
+            // Direct3D clamps the lit vertex colour to [0,1]. For Level 100 the
+            // sum is (224, 212, 177)/256 and 0.8 x that is (0.700, 0.663, 0.553),
+            // so this clamp does not fire; it is the pipeline's, not a fit.
+            return Math.Min(TerrainMaterialAmbient * (sum * LightColorByteScale), 1f);
+        }
+
+        return (
+            Channel(light0ColorRgb24, light1ColorRgb24, 16),
+            Channel(light0ColorRgb24, light1ColorRgb24, 8),
+            Channel(light0ColorRgb24, light1ColorRgb24, 0));
+    }
 
     /// <summary>
     /// Composites one landscape tile into <paramref name="destination"/>, an
