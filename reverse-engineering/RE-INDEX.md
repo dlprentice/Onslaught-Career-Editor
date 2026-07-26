@@ -52,6 +52,8 @@ waves, superseded plans, and generated accounting.
 - [No missing high-frequency terrain term — the spectra match, and the frame is half a pixel out](binary-analysis/terrain-spatial-dispersion-negative-2026-07-26.md)
 - [The cockpit lighting law — decoded, and already what the reconstruction computes](binary-analysis/cockpit-lighting-law-2026-07-26.md)
 - [The cockpit world matrix — the third upload site, traced by hand and confirmed at runtime](binary-analysis/cockpit-world-matrix-static-2026-07-26.md)
+- [Controlled copied-runtime observations — four questions static reading could not settle](binary-analysis/controlled-runtime-observations-2026-07-26.md)
+- [The terrain chain's temporal drift — the cloud scroll, and an origin that is not retail's](binary-analysis/terrain-chain-temporal-drift-2026-07-26.md)
 - [The half-pixel pixel-centre offset, corrected in the projection and measured](binary-analysis/pixel-centre-projection-offset-applied-2026-07-26.md)
 - [View distance, cull, and LOD constants](binary-analysis/view-distance-and-lod-constants-2026-07-25.md)
 
