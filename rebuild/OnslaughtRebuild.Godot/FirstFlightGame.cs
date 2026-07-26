@@ -46,6 +46,8 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeSawMainMenu;
     private bool _smokeSawDevSelect;
     private bool _smokeSawLevelSelect;
+    private bool _smokeSawMissionBriefing;
+    private bool _smokeSawSelectConfiguration;
     private bool _smokeSawLoading;
     private bool _smokeSawGameplay;
     private bool _smokeCursorVisibleAtFrontend;
@@ -886,6 +888,25 @@ public sealed partial class FirstFlightGame : Node3D
                     frontend.ConfirmForSmoke();
                     return;
 
+                // MISSION BRIEFING and SELECT CONFIGURATION sit between level
+                // select and loading in the released flow. Smoke traverses them
+                // rather than asserting on them: their parity is measured by
+                // pixel capture, and duplicating that here would assert a
+                // presentation value the simulation does not determine.
+                case RetailFrontendScreen.MissionBriefing:
+                    _smokeSawMissionBriefing = true;
+                    _smokeCursorVisibleAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
+                case RetailFrontendScreen.SelectConfiguration:
+                    _smokeSawSelectConfiguration = true;
+                    _smokeCursorVisibleAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    frontend.ConfirmForSmoke();
+                    return;
+
                 case RetailFrontendScreen.Loading:
                     _smokeSawLoading = true;
                     _smokeCursorHiddenAtLoading =
@@ -1117,7 +1138,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v15",
+            SchemaVersion = "onslaught-first-flight-smoke.v16",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -1221,6 +1242,8 @@ public sealed partial class FirstFlightGame : Node3D
             report.ColdMainMenu = _smokeSawMainMenu;
             report.ColdDevSelect = _smokeSawDevSelect;
             report.ColdLevelSelect = _smokeSawLevelSelect;
+            report.ColdMissionBriefing = _smokeSawMissionBriefing;
+            report.ColdSelectConfiguration = _smokeSawSelectConfiguration;
             report.ColdLoading = _smokeSawLoading;
             report.ColdGameplay = _smokeSawGameplay;
             report.CursorPolicyVisibleAtFrontend = _smokeCursorVisibleAtFrontend;
@@ -1337,6 +1360,8 @@ public sealed partial class FirstFlightGame : Node3D
         public bool ColdDevSelect { get; set; }
 
         public bool ColdLevelSelect { get; set; }
+        public bool ColdMissionBriefing { get; set; }
+        public bool ColdSelectConfiguration { get; set; }
         public bool ColdLoading { get; set; }
         public bool ColdGameplay { get; set; }
         public bool CursorPolicyVisibleAtFrontend { get; set; }

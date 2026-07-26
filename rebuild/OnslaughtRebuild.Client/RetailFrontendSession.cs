@@ -268,6 +268,19 @@ public sealed class RetailFrontendSession
                 return RetailFrontendSignal.PageChanged;
 
             case RetailFrontendScreen.LevelSelect:
+                // Retail does NOT go from level select to loading. The pristine
+                // 640x480 capture chain taken 2026-07-25 records
+                // SELECT LEVEL -> MISSION BRIEFING -> SELECT CONFIGURATION ->
+                // LOADING (local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md), with a
+                // reference frame for each of the three intermediate pages.
+                Screen = RetailFrontendScreen.MissionBriefing;
+                return RetailFrontendSignal.PageChanged;
+
+            case RetailFrontendScreen.MissionBriefing:
+                Screen = RetailFrontendScreen.SelectConfiguration;
+                return RetailFrontendSignal.PageChanged;
+
+            case RetailFrontendScreen.SelectConfiguration:
                 Screen = RetailFrontendScreen.Loading;
                 _level100LaunchPending = true;
                 return RetailFrontendSignal.Level100LaunchRequested;
@@ -292,6 +305,18 @@ public sealed class RetailFrontendSession
             Screen = RetailFrontendScreen.MainMenu;
             SelectedCareerIndex = -1;
             _gameName = DefaultGameName;
+            return RetailFrontendSignal.PageChanged;
+        }
+
+        if (Screen == RetailFrontendScreen.SelectConfiguration)
+        {
+            Screen = RetailFrontendScreen.MissionBriefing;
+            return RetailFrontendSignal.PageChanged;
+        }
+
+        if (Screen == RetailFrontendScreen.MissionBriefing)
+        {
+            Screen = RetailFrontendScreen.LevelSelect;
             return RetailFrontendSignal.PageChanged;
         }
 
@@ -383,6 +408,21 @@ public enum RetailFrontendScreen
     /// </summary>
     DevSelect,
     LevelSelect,
+
+    /// <summary>
+    /// Retail's MISSION BRIEFING page, reached from SELECT LEVEL. Reference
+    /// frame: local-lab/retail-reference-pristine/mission-briefing/
+    /// 05-mission-briefing-640x480.png.
+    /// </summary>
+    MissionBriefing,
+
+    /// <summary>
+    /// Retail's SELECT CONFIGURATION page, between briefing and loading. It was
+    /// first observed on 2026-07-25 and the reconstruction had never modelled
+    /// it. Reference frame: local-lab/retail-reference-pristine/
+    /// select-configuration/06-select-configuration-640x480.png.
+    /// </summary>
+    SelectConfiguration,
     Loading,
     Gameplay,
 }

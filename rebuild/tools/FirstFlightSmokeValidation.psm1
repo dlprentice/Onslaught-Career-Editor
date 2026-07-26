@@ -153,7 +153,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v15' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v16' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
@@ -266,6 +266,10 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'coldMainMenu' $true $report.coldMainMenu
     Assert-SmokeValue 'coldDevSelect' $true $report.coldDevSelect
     Assert-SmokeValue 'coldLevelSelect' $true $report.coldLevelSelect
+    # MISSION BRIEFING and SELECT CONFIGURATION are traversal evidence only. Their
+    # visual parity is measured by pixel capture, not asserted here.
+    Assert-SmokeValue 'coldMissionBriefing' $true $report.coldMissionBriefing
+    Assert-SmokeValue 'coldSelectConfiguration' $true $report.coldSelectConfiguration
     Assert-SmokeValue 'coldLoading' $true $report.coldLoading
     Assert-SmokeValue 'coldGameplay' $true $report.coldGameplay
     Assert-SmokeValue 'cursorPolicyVisibleAtFrontend' $true $report.cursorPolicyVisibleAtFrontend

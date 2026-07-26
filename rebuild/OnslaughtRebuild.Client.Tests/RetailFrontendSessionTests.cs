@@ -27,6 +27,17 @@ public sealed class RetailFrontendSessionTests
         Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
         Assert.False(frontend.ConsumeLevel100LaunchRequest());
 
+        // SELECT LEVEL -> MISSION BRIEFING -> SELECT CONFIGURATION -> LOADING is
+        // the released order captured on 2026-07-25; one pristine 640x480
+        // reference frame exists for each of the two intermediate pages.
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.MissionBriefing, frontend.Screen);
+        Assert.False(frontend.ConsumeLevel100LaunchRequest());
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.SelectConfiguration, frontend.Screen);
+        Assert.False(frontend.ConsumeLevel100LaunchRequest());
+
         Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
         Assert.True(frontend.ConsumeLevel100LaunchRequest());
@@ -133,6 +144,38 @@ public sealed class RetailFrontendSessionTests
     }
 
     [Fact]
+    public void BriefingAndConfigurationSitBetweenLevelSelectAndLoading()
+    {
+        RetailFrontendSession frontend = AtDevSelect();
+        frontend.Confirm();
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.MissionBriefing, frontend.Screen);
+
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.SelectConfiguration, frontend.Screen);
+
+        // Back retraces the same chain one page at a time.
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
+        Assert.Equal(RetailFrontendScreen.MissionBriefing, frontend.Screen);
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());
+        Assert.Equal(RetailFrontendScreen.DevSelect, frontend.Screen);
+    }
+
+    [Fact]
+    public void OnlySelectConfigurationRaisesTheLevel100Launch()
+    {
+        RetailFrontendSession frontend = AtLoading();
+
+        Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
+        Assert.True(frontend.ConsumeLevel100LaunchRequest());
+        Assert.False(frontend.ConsumeLevel100LaunchRequest());
+    }
+
+    [Fact]
     public void UnavailableItemsStayOnMainMenuAndIdentifyTheSelection()
     {
         var frontend = AtMainMenu();
@@ -207,9 +250,7 @@ public sealed class RetailFrontendSessionTests
     [Fact]
     public void LoadingCannotCompleteBeforeTheLaunchIsClaimed()
     {
-        RetailFrontendSession frontend = AtDevSelect();
-        frontend.Confirm();
-        frontend.Confirm();
+        RetailFrontendSession frontend = AtLoading();
 
         Assert.Throws<InvalidOperationException>(frontend.CompleteLevel100Load);
     }
@@ -260,11 +301,20 @@ public sealed class RetailFrontendSessionTests
         return frontend;
     }
 
-    private static RetailFrontendSession AtGameplay()
+    /// <summary>DevSelect -> LevelSelect -> MissionBriefing -> SelectConfiguration -> Loading.</summary>
+    private static RetailFrontendSession AtLoading()
     {
         RetailFrontendSession frontend = AtDevSelect();
         frontend.Confirm();
         frontend.Confirm();
+        frontend.Confirm();
+        frontend.Confirm();
+        return frontend;
+    }
+
+    private static RetailFrontendSession AtGameplay()
+    {
+        RetailFrontendSession frontend = AtLoading();
         frontend.ConsumeLevel100LaunchRequest();
         frontend.CompleteLevel100Load();
         return frontend;

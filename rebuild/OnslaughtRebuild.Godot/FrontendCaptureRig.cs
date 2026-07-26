@@ -70,9 +70,16 @@ public sealed partial class FrontendCaptureRig : Node
         (300, "06-dev-select-settled", RetailFrontendScreen.DevSelect),
         (312, "07-level-select", RetailFrontendScreen.LevelSelect),
         (360, "08-level-select-settled", RetailFrontendScreen.LevelSelect),
+        // Retail's SELECT LEVEL leads to MISSION BRIEFING and then to SELECT
+        // CONFIGURATION before loading; each has a pristine 640x480 reference
+        // frame captured 2026-07-25.
+        (372, "09-mission-briefing-entry", RetailFrontendScreen.MissionBriefing),
+        (420, "10-mission-briefing-settled", RetailFrontendScreen.MissionBriefing),
+        (432, "11-select-configuration-entry", RetailFrontendScreen.SelectConfiguration),
+        (480, "12-select-configuration-settled", RetailFrontendScreen.SelectConfiguration),
         // The loading screen is short-lived: at +4 frames the flow has already
         // reached Gameplay. Sample the frame immediately after the confirm.
-        (369, "09-loading-handoff", RetailFrontendScreen.Loading),
+        (489, "13-loading-handoff", RetailFrontendScreen.Loading),
     ];
 
     private static readonly (int Frame, string Action)[] StartupSteps =
@@ -80,7 +87,9 @@ public sealed partial class FrontendCaptureRig : Node
         (128, "confirm"), // click-to-start -> main menu
         (248, "confirm"), // main menu New Game -> FEP_DEVSELECT
         (308, "confirm"), // CHOOSE GAME NAME -> level select
-        (368, "confirm"), // level select Level 100 -> loading
+        (368, "confirm"), // level select Level 100 -> mission briefing
+        (428, "confirm"), // mission briefing -> select configuration
+        (488, "confirm"), // select configuration -> loading
     ];
 
     public static bool TryCreate(

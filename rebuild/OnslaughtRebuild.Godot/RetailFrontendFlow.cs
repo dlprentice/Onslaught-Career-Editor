@@ -39,6 +39,26 @@ public sealed partial class RetailFrontendFlow : Control
     private const int FirstGlyph = 32;
     private const int GlyphSlotCount = 256;
 
+    // mustbe_font22.512.tga — the third font the binary names (0x23e178), a
+    // 512² atlas with 32px cells on the same 16-column / ASCII-32 grid.
+    //
+    // MEASURED, and it overturns an assumption this file has carried since the
+    // main menu was built: the frontend HEADER TITLES are font22, not Font13PS.
+    // Fitting both atlases against the pristine MISSION BRIEFING title band
+    // (x280..500, y66..94) by normalised cross-correlation over a free
+    // scale/offset sweep scores font22 0.951 at scale 1.00, origin (287,65),
+    // against Font13PS 0.569 at its best fit (sx 1.43, sy 1.66). The font22 fit
+    // also reproduces HEADER_BAR_X exactly: its advance width for
+    // "MISSION BRIEFING" is 205, so origin 287 centres it on x = 389.5.
+    //
+    // The FEP_DEVSELECT and FEP_LEVEL_SELECT titles above are still drawn with
+    // Font13PS at 1.5. They are NOT corrected here: both pages' captures are
+    // pinned no-regression baselines for this change, so re-fonting them is a
+    // separate, separately-verified edit. The same fit run against those two
+    // pages is the way to settle it.
+    private const int Font22Columns = 16;
+    private const int Font22CellSize = 32;
+
     private static readonly Color ReleasedNormal = RetailColor(0xff4f4f4f);
     private static readonly Color ReleasedUnavailable = RetailColor(0x7f1f1f1f);
     private static readonly Color ReleasedSelected = RetailColor(0xffff6f3f);
@@ -157,7 +177,123 @@ public sealed partial class RetailFrontendFlow : Control
         SweepArcCenterX, SweepArcCenterX + 120f, SweepArcCenterX + 360f,
     ];
 
+    // MISSION BRIEFING / SELECT CONFIGURATION. Every literal in this block is
+    // measured from the two pristine 640x480 captures taken 2026-07-25:
+    //   local-lab/retail-reference-pristine/mission-briefing/05-mission-briefing-640x480.png
+    //   local-lab/retail-reference-pristine/select-configuration/06-select-configuration-640x480.png
+    // See DrawMissionBriefing / DrawSelectConfiguration for the method per element.
+    private const string MissionBriefingTitle = "MISSION BRIEFING";
+    private const string SelectConfigurationTitle = "SELECT CONFIGURATION";
+    private const string ConfigurationUnitName = "BE:A Unit-00 'Prototype'";
+    private const float HeaderBarCenterX = 390f;
+    private const float HeaderTitleTop = 65f;
+    private const float BriefingLevelNameLeft = 178.5f;
+    private const float BriefingLevelNameTop = 118f;
+    // The level name is the only text on either page drawn non-uniformly: the
+    // free sx/sy fit peaks at sx 0.70 / sy 1.00 (score 0.808), and both a
+    // uniform font22 and every Font13PS variant score below 0.48.
+    private const float BriefingLevelNameScaleX = 0.70f;
+    private const float BriefingLevelNameScaleY = 1.00f;
+    private const float BriefingBodyLeft = 80f;
+    private const float BriefingBodyTop = 163.5f;
+    private const float BriefingBodyPitch = 16f;
+    // Retail's blank line does NOT advance a full 16: measured ink tops run
+    // 167,183,199,215,231,247 then 273,289, so the paragraph break adds 10 on
+    // top of the line the last paragraph line already advanced (247+16+10=273).
+    private const float BriefingParagraphGap = 10f;
+    private const float ConfigurationUnitLeft = 260.5f;
+    private const float ConfigurationUnitTop = 99.5f;
+    private const float ConfigurationRowLeft = 280f;
+    private const float ConfigurationRowPitch = 16f;
+    private const float ConfigurationWalkerTop = 210f;
+    private const float ConfigurationJetTop = 274f;
+    // The rock background quad and the big ring, both fitted — see DrawBriefingStage.
+    private const float BriefingBackgroundScale = 1.25f;
+    private const float BriefingBackgroundLeft = -70f;
+    private const float BriefingBackgroundTop = -80f;
+    private const float BriefingRingSize = 990f;
+    private const float BriefingRingCenterX = 267f;
+    private const float BriefingRingCenterY = 221f;
+    // Loading page. Bar extents and text origin measured from
+    // local-lab/retail-reference-pristine/loading/07-loading-640x480.png.
+    private const float LoadingTextLeft = 270f;
+    private const float LoadingTextTop = 393.5f;
+    private const float LoadingBarLeft = 78f;
+    private const float LoadingBarTop = 423f;
+    private const float LoadingBarWidth = 485f;
+    private const float LoadingBarHeight = 25f;
+
+    /// <summary>
+    /// The briefing body, transcribed from the pristine capture. There is no
+    /// resolved string id for it in the materialized table, so this is the one
+    /// literal block on the page that is not localization-backed — the same
+    /// position "Episode 1" is in on FEP_LEVEL_SELECT.
+    ///
+    /// The transcription is corroborated, not assumed: summing this renderer's
+    /// per-glyph advances for each line against the measured retail ink widths
+    /// gives 286/283, 265/262, 285/283, 251/249, 281/279, 111/107, 271/268 and
+    /// 237/231 — every line within the known +2..+6 advance overshoot and none
+    /// outside it, which a mis-transcribed line would not be.
+    /// </summary>
+    private static readonly string[] BriefingBody =
+    [
+        "Tatiana will take you through the",
+        "basics of piloting Battle Engine",
+        "Aquila. This will cover everything",
+        "from basic movement in both",
+        "Walker and Jet modes as well as",
+        "Weapons use.",
+        "",
+        "Listen to her advice and try to",
+        "keep Colonel Kramer happy.",
+    ];
+
+    /// <summary>Per-mode weapon rows: label and whether it heads a mode block.</summary>
+    private static readonly (string Text, bool IsModeHeader)[] ConfigurationWalkerRows =
+    [
+        ("Walker Mode", true), ("Pulse Cannon", false), ("Vulcan Cannon", false),
+    ];
+
+    private static readonly (string Text, bool IsModeHeader)[] ConfigurationJetRows =
+    [
+        ("Jet Mode", true), ("Vulcan Cannon", false), ("Micro Missiles", false),
+    ];
+
     private static readonly Color ReleasedTitleText = RetailColor(0xff7f7f7f);
+    // Briefing body ink measures (251,220,95) at its brightest; this modulate
+    // renders (252,222,95).
+    private static readonly Color BriefingBodyText = RetailColor(0xff7e6f30);
+    // SELECT CONFIGURATION mode headers measure (249,217,62); this renders
+    // (247,215,61). It is a different amber from the briefing body.
+    private static readonly Color ConfigurationModeText = RetailColor(0xff7c6c1f);
+    // The header box is the same FET3_HEADER_TEXT_BOX 0x7f000000 overlay the
+    // menu pages use, but these two pages sit over a textured background rather
+    // than the flat (23,23,48) fill, so the measured composite constant
+    // HeaderBoxTint cannot be reused. Measured inside/outside luminance ratio
+    // across the box band is 0.577 (briefing) and 0.478 (configuration) —
+    // straddling the 0.5 that alpha 0x7f black predicts.
+    private static readonly Color HeaderBoxOverlay = new(0f, 0f, 0f, 0.5f);
+    // FE_Rock_Background is drawn through a colour modulate, not at full
+    // brightness: a per-channel least-squares fit of retail against the drawn
+    // texture over a clean scene band (x150..360, y350..430) gives gains
+    // 0.706 / 0.710 / 0.957 with offsets under 3.3, i.e. a pure multiply. This
+    // packed value renders 0.702 / 0.702 / 0.953.
+    private static readonly Color BriefingBackgroundTint = RetailColor(0xff5a5a7a);
+    // The big ring's modulate, fitted where its alpha is fully opaque (22,665
+    // pixels): the decoded texel mean is (81,105,136) and retail's mean over
+    // exactly those pixels is (101,100,105) on the briefing frame and
+    // (103,102,107) on the configuration frame, i.e. per-channel gains of
+    // 1.26 / 0.96 / 0.78. The mean of the two frames is used.
+    //
+    // The RED GAIN IS ABOVE 1, and that is itself a finding rather than a fudge:
+    // no value of RetailColor can produce it, because Modulate2X saturates at
+    // 1.0. Retail is evidently applying its 2x modulate to the TEXTURE stage as
+    // well as to the diffuse colour, which this renderer does not model. The
+    // measured gains are therefore stated directly as a Godot modulate (Godot
+    // permits components above 1 and clamps at output). Every other bracket
+    // draw in this file is a candidate for the same correction; none is changed
+    // here because their captures are pinned baselines for this change.
+    private static readonly Color BriefingRingTint = new(1.257f, 0.960f, 0.777f, 1f);
     private static readonly Color DevSelectRowText = RetailColor(0xff404040);
     private static readonly Color DevSelectNameHighlight = RetailColor(0xff004050);
     // Panel fills and hairlines are measured framebuffer colours, not modulated
@@ -238,6 +374,8 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _levelRing02 = null!;
     private Texture2D _loadingScreen = null!;
     private Texture2D _titleFont = null!;
+    private Texture2D _font22 = null!;
+    private int[] _font22Widths = [];
     private Texture2D[] _languageFlags = [];
     private Texture2D _feArrow = null!;
     private Texture2D[] _menuIcons = [];
@@ -282,7 +420,8 @@ public sealed partial class RetailFrontendFlow : Control
         LoadLocalization();
         LoadTextures();
         _feBackFrames = LoadFeBackFrames();
-        _glyphWidths = MeasureGlyphWidths(_titleFont.GetImage());
+        _glyphWidths = MeasureGlyphWidths(_titleFont.GetImage(), GlyphCellSize, GlyphColumns);
+        _font22Widths = MeasureGlyphWidths(_font22.GetImage(), Font22CellSize, Font22Columns);
 
         _initialized = true;
     }
@@ -435,6 +574,12 @@ public sealed partial class RetailFrontendFlow : Control
                 break;
             case RetailFrontendScreen.LevelSelect:
                 DrawLevelSelect();
+                break;
+            case RetailFrontendScreen.MissionBriefing:
+                DrawMissionBriefing();
+                break;
+            case RetailFrontendScreen.SelectConfiguration:
+                DrawSelectConfiguration();
                 break;
             case RetailFrontendScreen.Loading:
                 DrawLoading();
@@ -1016,6 +1161,223 @@ public sealed partial class RetailFrontendFlow : Control
             BracketTint);
     }
 
+    /// <summary>
+    /// The stage both MISSION BRIEFING and SELECT CONFIGURATION compose over:
+    /// FE_Rock_Background under FE_select_level_bracket02. Neither page uses the
+    /// flat (23,23,48) fill the menu pages do.
+    ///
+    /// BACKGROUND, measured. The underlay is FE_Rock_Background — the same
+    /// texture already materialized for the click-to-start lane — drawn at 1.25
+    /// (1280x640) from (-70,-80). Method: a high-pass normalised
+    /// cross-correlation of a 140x100 soldier-cluster template from the briefing
+    /// frame against the texture over a 1.0-4.5 scale sweep peaks at 0.82 in a
+    /// 1.24-1.26 plateau, and an independent per-channel least-squares
+    /// background fit over four disjoint scene bands lands on scale 1.25,
+    /// origin (-70,-80) as its residual minimum. Sub-pixel origin is not
+    /// resolvable from one frame: the fit's offset grid is integral.
+    ///
+    /// RING, measured. FE_select_level_bracket02 — decoded, it is a full metal
+    /// annulus, not an arc — fitted by maximising the fraction of retail's
+    /// near-neutral bright pixels (max>85, max-min<22, header/text/chevron bands
+    /// excluded) that agree with the texture's alpha>96 mask, scored as
+    /// INTERSECTION OVER UNION rather than coverage. Coverage alone has no
+    /// penalty for a ring that is too large and it first returned 996x996 @
+    /// (270,208), which put the drawn ring's inner edge 11px right of retail's
+    /// at y=240. Under IoU the peak is 0.760 at 990x990 centred (267,221) on
+    /// the briefing frame and 0.773 at the SAME size and centre on the
+    /// configuration frame — two independent frames agreeing to the sweep step
+    /// is what makes this a measurement rather than a fit artifact.
+    ///
+    /// The arc-scale dispute recorded in STARTUP-FLOW-FINDINGS does NOT extend
+    /// to these pages: they do not draw FE_select_level_bracket01 at all, so
+    /// neither 1.25 nor 1.4 is in play here.
+    ///
+    /// KNOWN GAPS, left undrawn rather than approximated:
+    ///   * the background is ANIMATED. The two reference frames disagree by
+    ///     9.4% material pixels in a clean sky band and the configuration
+    ///     frame's own background best-fit lands at scale 1.275, origin
+    ///     (-110,-86) rather than the briefing's 1.25/(-70,-80). This draw is
+    ///     static and pinned to the briefing frame, so the configuration page
+    ///     carries the full pan error as measured cost.
+    ///   * the blue Forseti emblem at top-left, unidentified here as it is on
+    ///     every other page.
+    /// </summary>
+    private void DrawBriefingStage()
+    {
+        DrawTextureRect(
+            _rockBackground,
+            new Rect2(
+                BriefingBackgroundLeft,
+                BriefingBackgroundTop,
+                _rockBackground.GetWidth() * BriefingBackgroundScale,
+                _rockBackground.GetHeight() * BriefingBackgroundScale),
+            false,
+            BriefingBackgroundTint);
+
+        DrawSurfaceCentered(
+            _levelBracket02,
+            BriefingRingCenterX,
+            BriefingRingCenterY,
+            BriefingRingSize / _levelBracket02.GetWidth(),
+            BriefingRingSize / _levelBracket02.GetHeight(),
+            BriefingRingTint);
+    }
+
+    /// <summary>
+    /// Bottom page chevrons. Measured extents on both pages are the ones
+    /// FEP_LEVEL_SELECT already carries: left x9..36 y438..473, right
+    /// x604..631 y437..472, and the configuration frame's right-chevron pixels
+    /// are identical to the level-select frame's.
+    /// </summary>
+    private void DrawPageChevrons()
+    {
+        var arrowSource = new Rect2(16f, 12f, 30f, 40f);
+        DrawTextureRectRegion(_feArrow, new Rect2(9f, 438f, -28f, 36f), arrowSource, BracketTint);
+        DrawTextureRectRegion(_feArrow, new Rect2(604f, 437f, 28f, 36f), arrowSource, BracketTint);
+    }
+
+    /// <summary>
+    /// Retail MISSION BRIEFING, reached from SELECT LEVEL.
+    ///
+    /// The released source ships neither FEPBriefing.cpp nor its header (only
+    /// the include in Frontend.h:14 and the CFEPBriefing member at
+    /// Frontend.h:231), and there is no FEP_ page constant for it in any shipped
+    /// header, so this page carries NO source geometry at all. Everything is
+    /// measured from local-lab/retail-reference-pristine/mission-briefing/
+    /// 05-mission-briefing-640x480.png.
+    ///
+    ///   header box       0x7f black over the scene, x191..584 y69..89 — the
+    ///                    identical extent FEP_DEVSELECT and FEP_LEVEL_SELECT use
+    ///   title            font22 scale 1, ink x288..490 y73..87, centred x=390
+    ///   "1.00 - ..."     font22 sx 0.70 sy 1.00, ink x180..351 y126..145
+    ///   body             Font13PS scale 1, ink left x=80/81, tops
+    ///                    167,183,199,215,231,247 then 273,289
+    ///   body colour      brightest ink (251,220,95)
+    ///   chevrons         left x9..36 y438..473, right x604..631 y437..472
+    ///
+    /// KNOWN GAPS with their honest cause:
+    ///   * The inset panel at x378..582 / y176..328 is NOT drawn and MUST NOT be
+    ///     compared. Its interior is pure black in the reference only because
+    ///     the capture ran with -skipfmv; that is the absence of retail's video,
+    ///     not retail's drawn output. The frontend-regions file marks the region
+    ///     EXCLUDED for the same reason.
+    ///   * The metal header end-cap brackets and the top-left Forseti emblem are
+    ///     the same unidentified art every other page lacks.
+    /// </summary>
+    private void DrawMissionBriefing()
+    {
+        DrawBriefingStage();
+        DrawHeaderBarTitle(MissionBriefingTitle);
+
+        DrawFont22Text(
+            _level100Text,
+            new Vector2(BriefingLevelNameLeft, BriefingLevelNameTop),
+            BriefingLevelNameScaleX,
+            BriefingLevelNameScaleY,
+            ReleasedTitleText);
+
+        float y = BriefingBodyTop;
+        foreach (string line in BriefingBody)
+        {
+            if (line.Length == 0)
+            {
+                y += BriefingParagraphGap;
+                continue;
+            }
+
+            DrawText(line, new Vector2(BriefingBodyLeft, y), 1f, BriefingBodyText);
+            y += BriefingBodyPitch;
+        }
+
+        DrawPageChevrons();
+    }
+
+    /// <summary>
+    /// Retail SELECT CONFIGURATION — the page between briefing and loading that
+    /// this reconstruction did not model at all until this change. Reference:
+    /// local-lab/retail-reference-pristine/select-configuration/
+    /// 06-select-configuration-640x480.png.
+    ///
+    ///   title            font22 scale 1, ink x249..526 y73..87; its advance
+    ///                    width 280 from origin 249 centres on x=389
+    ///   unit name        font22 scale 1, fitted origin (260.5, 99.5),
+    ///                    ink x259..536 y107..127, white
+    ///   mode headers     Font13PS scale 1 at x=280, ink tops 213 and 277,
+    ///                    brightest ink (249,217,62)
+    ///   weapon rows      Font13PS scale 1 at x=280, ink tops 229,245,293,309,
+    ///                    white; row pitch 16, block gap 32
+    ///
+    /// KNOWN GAPS, left undrawn because no materialized asset matches them, with
+    /// their measured extents so the cost is attributable:
+    ///   * the circular unit render at roughly x64..256, y152..344 — it is a
+    ///     live 3D view of the battle engine, not a sprite;
+    ///   * the three circular mode icons at x449..541, y183..209;
+    ///   * the green/red star rating glyphs at x448..545 on the four weapon
+    ///     rows. They are 5-pointed star sprites, not the Font13PS asterisk:
+    ///     the drawn stars are 5 rows tall with a solid body, and no atlas in
+    ///     the materialized set contains them.
+    /// </summary>
+    private void DrawSelectConfiguration()
+    {
+        DrawBriefingStage();
+        DrawHeaderBarTitle(SelectConfigurationTitle);
+
+        DrawFont22Text(
+            ConfigurationUnitName,
+            new Vector2(ConfigurationUnitLeft, ConfigurationUnitTop),
+            1f,
+            1f,
+            ReleasedTitleText);
+
+        DrawConfigurationRows(ConfigurationWalkerRows, ConfigurationWalkerTop);
+        DrawConfigurationRows(ConfigurationJetRows, ConfigurationJetTop);
+
+        DrawPageChevrons();
+    }
+
+    private void DrawConfigurationRows((string Text, bool IsModeHeader)[] rows, float top)
+    {
+        for (int index = 0; index < rows.Length; index++)
+        {
+            (string text, bool isModeHeader) = rows[index];
+            DrawText(
+                text,
+                new Vector2(ConfigurationRowLeft, top + (index * ConfigurationRowPitch)),
+                1f,
+                isModeHeader ? ConfigurationModeText : ReleasedTitleText);
+        }
+    }
+
+    /// <summary>
+    /// Retail LOADING.
+    ///
+    /// Measured from local-lab/retail-reference-pristine/loading/
+    /// 07-loading-640x480.png. The background is LoadingScreen.tga stretched to
+    /// the full 640x480 stage: comparing the decoded texture resampled to
+    /// 640x480 against the retail frame gives a mean absolute delta of 5.5 per
+    /// channel over the whole frame BEFORE any overlay is drawn, and the only
+    /// regions that disagree materially are the two overlay elements below.
+    ///
+    /// The previous implementation of this method drew neither of them
+    /// correctly: it painted a 640x60 black band at y420 that retail does not
+    /// draw at all, and put "Loading..." left-aligned at (24,436) scale 2 in
+    /// Font13PS where retail centres it in font22 at scale 1 with its ink at
+    /// x270..365, y401..419.
+    ///
+    ///   text  font22 scale 1, fitted origin (270, 393.5); its advance width 98
+    ///         from x=270 centres on x=319
+    ///   bar   x78..562, y423..447
+    ///
+    /// KNOWN GAP: the bar is drawn here as a measured opaque black rectangle,
+    /// which its two ends are, but retail's is a TEXTURED bar whose alpha ramps
+    /// off toward the middle — sampling row y=435 gives ref/background ratios of
+    /// 0.07 at x=100 rising to ~0.77 near x=300 and back to 0.03 by x=540. That
+    /// ramp is the BarL/BarC/BarR art the binary names, which is not in the
+    /// materialized set, so it is not reproduced and the mid-bar residual is
+    /// reported rather than tuned away. Note also that the reference frame is
+    /// the earliest matching frame, so its bar is at zero fill: nothing here is
+    /// evidence about how a filled bar draws.
+    /// </summary>
     private void DrawLoading()
     {
         DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), Colors.Black);
@@ -1023,8 +1385,23 @@ public sealed partial class RetailFrontendFlow : Control
             _loadingScreen,
             new Rect2(0f, 0f, DesignWidth, DesignHeight),
             false);
-        DrawRect(new Rect2(0f, 420f, DesignWidth, 60f), new Color(0f, 0f, 0f, 0.58f));
-        DrawText(_loadingText, new Vector2(24f, 436f), 2f, Colors.White);
+
+        // Retail outlines this string rather than drop-shadowing it: the glyphs
+        // carry a 1px black edge on all four sides, the same treatment the
+        // click-to-start prompt uses. Drawing it with the standard +2/+2 shadow
+        // instead left 50.6% of the text region materially different at an
+        // otherwise pixel-exact ink bbox (ref x270..365 y401..420 against
+        // x271..366 y401..420).
+        var origin = new Vector2(LoadingTextLeft, LoadingTextTop);
+        DrawFont22Outlined(_loadingText, origin + new Vector2(-1f, 1f), Colors.Black);
+        DrawFont22Outlined(_loadingText, origin + new Vector2(1f, 1f), Colors.Black);
+        DrawFont22Outlined(_loadingText, origin + new Vector2(-1f, -1f), Colors.Black);
+        DrawFont22Outlined(_loadingText, origin + new Vector2(1f, -1f), Colors.Black);
+        DrawFont22Outlined(_loadingText, origin, Colors.White);
+
+        DrawRect(
+            new Rect2(LoadingBarLeft, LoadingBarTop, LoadingBarWidth, LoadingBarHeight),
+            Colors.Black);
     }
 
     private bool HandlePointerMotion(Vector2 position)
@@ -1135,6 +1512,29 @@ public sealed partial class RetailFrontendFlow : Control
                 }
                 if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design) ||
                     new Rect2(120f, 265f, 60f, 60f).HasPoint(design))
+                {
+                    Confirm();
+                    return true;
+                }
+                return false;
+
+            case RetailFrontendScreen.MissionBriefing:
+            case RetailFrontendScreen.SelectConfiguration:
+                // Both pages carry the same two chevrons and nothing else
+                // clickable this lane models.
+                if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
+                {
+                    RetailFrontendSignal pageBack = _session.Back();
+                    if (pageBack == RetailFrontendSignal.None)
+                    {
+                        return false;
+                    }
+                    RequestAudioCue(RetailFrontendAudioCue.Back);
+                    HandleNavigationSignal(pageBack);
+                    QueueRedraw();
+                    return true;
+                }
+                if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design))
                 {
                     Confirm();
                     return true;
@@ -1376,6 +1776,13 @@ public sealed partial class RetailFrontendFlow : Control
             256,
             CuratedAyaTextureLoader.Compression.Rgba8,
             folder: "Hud");
+        // mustbe_font22.512.tga, shared with the HUD for the same reason.
+        _font22 = LoadTexture(
+            "font-22",
+            512,
+            512,
+            CuratedAyaTextureLoader.Compression.Rgba8,
+            folder: "Hud");
         // Must match RetailFrontendSession Steam-drawn row order (Update/icons).
         _menuIcons =
         [
@@ -1500,31 +1907,109 @@ public sealed partial class RetailFrontendFlow : Control
     private void DrawTextFlat(string text, Vector2 position, float scale, Color color) =>
         DrawTextCore(text, position, scale, color, dropShadow: false);
 
-    private void DrawTextCore(string text, Vector2 position, float scale, Color color, bool dropShadow)
+    private void DrawTextCore(string text, Vector2 position, float scale, Color color, bool dropShadow) =>
+        DrawAtlasText(
+            _titleFont,
+            _glyphWidths,
+            GlyphCellSize,
+            GlyphColumns,
+            text,
+            position,
+            scale,
+            scale,
+            color,
+            dropShadow);
+
+    /// <summary>
+    /// Atlas-agnostic glyph run. Font13PS and font22 share the ASCII-32 origin
+    /// and the 16-column grid and differ only in cell size, so one routine draws
+    /// both. Separate X and Y scales exist because the briefing level name is
+    /// measurably non-uniform (see <see cref="BriefingLevelNameScaleX"/>).
+    /// </summary>
+    private void DrawAtlasText(
+        Texture2D atlas,
+        int[] widths,
+        int cellSize,
+        int columns,
+        string text,
+        Vector2 position,
+        float scaleX,
+        float scaleY,
+        Color color,
+        bool dropShadow)
     {
         float x = position.X;
         foreach (char character in text)
         {
             int glyph = GlyphIndex(character);
-            float glyphWidth = _glyphWidths[glyph] * scale;
+            float glyphWidth = widths[glyph] * scaleX;
             var source = new Rect2(
-                (glyph % GlyphColumns) * GlyphCellSize,
-                (glyph / GlyphColumns) * GlyphCellSize,
-                _glyphWidths[glyph],
-                GlyphCellSize);
-            var destination = new Rect2(x, position.Y, glyphWidth, GlyphCellSize * scale);
+                (glyph % columns) * cellSize,
+                (glyph / columns) * cellSize,
+                widths[glyph],
+                cellSize);
+            var destination = new Rect2(x, position.Y, glyphWidth, cellSize * scaleY);
             if (dropShadow)
             {
                 DrawTextureRectRegion(
-                    _titleFont,
+                    atlas,
                     new Rect2(destination.Position + new Vector2(2f, 2f), destination.Size),
                     source,
                     new Color(0f, 0f, 0f, color.A * 0.82f));
             }
 
-            DrawTextureRectRegion(_titleFont, destination, source, color);
-            x += glyphWidth + scale;
+            DrawTextureRectRegion(atlas, destination, source, color);
+            x += glyphWidth + scaleX;
         }
+    }
+
+    private void DrawFont22Text(string text, Vector2 position, float scaleX, float scaleY, Color color) =>
+        DrawAtlasText(
+            _font22,
+            _font22Widths,
+            Font22CellSize,
+            Font22Columns,
+            text,
+            position,
+            scaleX,
+            scaleY,
+            color,
+            dropShadow: true);
+
+    private void DrawFont22Outlined(string text, Vector2 position, Color color) =>
+        DrawAtlasText(
+            _font22,
+            _font22Widths,
+            Font22CellSize,
+            Font22Columns,
+            text,
+            position,
+            1f,
+            1f,
+            color,
+            dropShadow: false);
+
+    private float MeasureFont22Text(string text, float scaleX)
+    {
+        float width = 0f;
+        foreach (char character in text)
+        {
+            width += (_font22Widths[GlyphIndex(character)] + 1) * scaleX;
+        }
+        return Mathf.Max(0f, width - scaleX);
+    }
+
+    /// <summary>Header title: font22 at scale 1, centred on HEADER_BAR_X.</summary>
+    private void DrawHeaderBarTitle(string title)
+    {
+        DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxOverlay);
+        float width = MeasureFont22Text(title, 1f);
+        DrawFont22Text(
+            title,
+            new Vector2(HeaderBarCenterX - (width * 0.5f), HeaderTitleTop),
+            1f,
+            1f,
+            ReleasedTitleText);
     }
 
     /// <summary>
@@ -1572,20 +2057,24 @@ public sealed partial class RetailFrontendFlow : Control
         return code - FirstGlyph;
     }
 
-    private static int[] MeasureGlyphWidths(Image image)
+    private static int[] MeasureGlyphWidths(Image image, int cellSize, int columns)
     {
         var widths = new int[GlyphSlotCount];
-        widths[0] = 8;
-        int scanMax = GlyphCellSize - 2;
+        widths[0] = cellSize / 2;
+        int scanMax = cellSize - 2;
         for (int glyph = 1; glyph < widths.Length; glyph++)
         {
-            int cellX = (glyph % GlyphColumns) * GlyphCellSize;
-            int cellY = (glyph / GlyphColumns) * GlyphCellSize;
+            int cellX = (glyph % columns) * cellSize;
+            int cellY = (glyph / columns) * cellSize;
+            if (cellY + cellSize > image.GetHeight())
+            {
+                break;
+            }
             int rightmost = cellX;
             for (int x = cellX + scanMax; x >= cellX; x--)
             {
                 bool occupied = false;
-                for (int y = cellY; y < cellY + GlyphCellSize - 1; y++)
+                for (int y = cellY; y < cellY + cellSize - 1; y++)
                 {
                     if (image.GetPixel(x, y).A > (16f / 255f))
                     {
