@@ -47,7 +47,14 @@ internal sealed class RetailAquilaWalkerAsset
             new AnimationMode("walk", 1, 1, 1, 1f),
             new AnimationMode("transform", 1, 1, 0, 0f),
             new AnimationMode("LegMotion", 1, 100, 99, 1f / 99f),
-        ]);
+        ],
+        // Unmeasured, and therefore unchanged. The 4,393-draw stage-zero
+        // COLOROP census was taken from a first-person Level 100 frame, in
+        // which the exterior walker is not drawn at all, so no observation
+        // covers this asset. It keeps the MODULATE2X the whole shader used
+        // before the cockpit reading split them apart; changing it would be a
+        // guess.
+        RetailStageZeroColorOperation.Modulate2X);
     private static readonly AssetProfile s_jetProfile = new(
         "Aquila jet",
         "RetailAquilaJet",
@@ -69,7 +76,10 @@ internal sealed class RetailAquilaWalkerAsset
             new AnimationMode("walktofly", 25, 50, 25, 0.04f),
             new AnimationMode("flytowalk", 0, 25, 25, 0.04f),
             new AnimationMode("fly", 0, 0, 1, 1f),
-        ]);
+        ],
+        // Unmeasured, and therefore unchanged, for the same reason as the
+        // walker profile above.
+        RetailStageZeroColorOperation.Modulate2X);
     private static readonly AssetProfile s_cockpitProfile = new(
         "Aquila cockpit",
         "RetailAquilaCockpit",
@@ -102,7 +112,40 @@ internal sealed class RetailAquilaWalkerAsset
             new AnimationMode("walk", 25, 25, 1, 1f),
             new AnimationMode("flytowalk", 1, 25, 24, 1f / 24f),
             new AnimationMode("fly", 0, 0, 1, 1f),
-        ]);
+        ],
+        // D3DTOP_MODULATE, on two independent measurements.
+        //
+        // Bytes: stage-zero D3DTSS_COLOROP, read from the texture-stage-state
+        // shadow at 0x008557f4 inside the cockpit render wrapper
+        // (0x0053bb50 .. its one return at 0x0053ec6f), is 4 = D3DTOP_MODULATE
+        // on all SEVEN draw batches. It is read 16 times inside that window --
+        // the block dump at entry, the seven SetTransform batch markers at
+        // 0x00551043, the seven CMeshRenderer::RenderMeshCore entries and the
+        // block dump at exit -- and it is 4 every time, with zero stage-zero
+        // COLOROP transitions while inside. The last change before entry is
+        // 5 -> 4 written from 0x0055ae02. The batches are, in order,
+        // 0=hood, 1=Rsidebit01, 2=Rsidebit02, 3=Lsidebit02, 4=Lsidebit01,
+        // 5=Object03, 6=Object01, so there is no per-batch variation to carry.
+        //
+        // Pixels: over the 31,546-pixel geometric intersection mask on which
+        // the same cockpit surface point is visible in both the retail frame
+        // and the build, multiplying the build by 0.5 takes clean-mask meanD
+        // from 42.51 to 11.42 and compare_capture's material fraction from
+        // 98.93% to 25.35%, with 69.9% of pixels then within 8/255 on every
+        // channel. Exact 0.5 beats the least-squares scale 0.5249 and beats
+        // free per-channel scales (0.478, 0.500, 0.557), the ratio is flat at
+        // ~0.52 across nine of ten build-brightness deciles so it is a scale
+        // and not a gamma, and it is cockpit-specific rather than exposure:
+        // the sky control band's retail/build ratio is 1.006/1.005/1.001 over
+        // 13,644 pixels.
+        //
+        // OPEN RESIDUAL, deliberately not fitted: batch 3, Lsidebit02, 366 px
+        // (1.2% of the mask), is already correct at scale 1.0 and is a factor
+        // of ~1.9 too dark at 0.5. Stage-zero COLOROP does not explain it --
+        // the runtime read above is a precise negative on that, since all
+        // seven batches read 4. Whatever that part wants is somewhere else and
+        // no special case for it is made here.
+        RetailStageZeroColorOperation.Modulate);
     private static readonly LegDefinition[] s_legs =
     [
         new(0, 18, 25, [18, 21, 22, 23, 24]),
@@ -677,8 +720,15 @@ internal sealed class RetailAquilaWalkerAsset
     /// zero to <c>COLORARG1 = D3DTA_TEXTURE</c> / <c>COLORARG2 =
     /// D3DTA_DIFFUSE</c>. <c>D3DRS_COLORVERTEX</c> is written at none of the
     /// 547 render-state call sites, so it keeps its TRUE D3D8 default.
-    /// <c>CMeshRenderer__RenderMeshCore</c> clears lighting only around modes
-    /// 2 and 6 and restores it immediately, so the base mesh pass runs lit.
+    /// The base mesh pass runs lit, now measured rather than inferred:
+    /// <c>D3DRS_LIGHTING</c>, read from the render-state shadow at
+    /// <c>0x00855764</c> (the array at <c>0x00855540</c> indexed
+    /// <c>state*4</c>, per the caching setter at <c>0x00513bc8</c>), is
+    /// <c>1</c> at all 576 world and tree mesh draws of a Level 100 frame.
+    /// <c>CMeshRenderer__RenderMeshCore</c> does clear lighting around its
+    /// mode-2 and mode-6 branches, but those branches are dead in Level 100:
+    /// breakpoints on their draw calls at <c>0x0054a423</c> and
+    /// <c>0x0054a466</c> never fired across 4,393 observed mesh renders.
     /// The shared <c>RetailFixedFunctionMaterial</c> shader already multiplies
     /// its lit vertex colour by <c>COLOR.rgb</c>.
     /// </remarks>
@@ -1071,7 +1121,8 @@ internal sealed class RetailAquilaWalkerAsset
                         textures,
                         terrain,
                         materialBySignature,
-                        materialOverrides);
+                        materialOverrides,
+                        profile.StageZeroColorOperation);
                     meshByGeometry.Add(part.Geometry, mesh);
                 }
                 node.AddChild(new MeshInstance3D
@@ -1093,7 +1144,8 @@ internal sealed class RetailAquilaWalkerAsset
         IReadOnlyDictionary<int, Texture2D> textures,
         Level100HeightFieldAsset terrain,
         IDictionary<string, Material> materialBySignature,
-        IReadOnlyDictionary<string, Material>? materialOverrides)
+        IReadOnlyDictionary<string, Material>? materialOverrides,
+        RetailStageZeroColorOperation stageZeroColorOperation)
     {
         var mesh = new ArrayMesh();
         foreach (GeometryGroup group in geometry.Groups)
@@ -1129,7 +1181,10 @@ internal sealed class RetailAquilaWalkerAsset
                             textureMetadata.Offset,
                             textureMetadata.Scale);
                     }
-                    material = RetailFixedFunctionMaterial.Create(layers, terrain);
+                    material = RetailFixedFunctionMaterial.Create(
+                        layers,
+                        terrain,
+                        stageZeroColorOperation: stageZeroColorOperation);
                 }
                 materialBySignature.Add(signature, material);
             }
@@ -1398,7 +1453,8 @@ internal sealed class RetailAquilaWalkerAsset
         float InitialFrame,
         Vector3 RootOffset,
         bool CastShadow,
-        AnimationMode[] AnimationModes);
+        AnimationMode[] AnimationModes,
+        RetailStageZeroColorOperation StageZeroColorOperation);
 
     private sealed record AnimationMode(
         string Name,

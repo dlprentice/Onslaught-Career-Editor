@@ -389,6 +389,18 @@ The prediction is uniformly **3.6–4.6% low**. Bounds on that gap:
   enables **three** lights (`0x009c68a0`, `0x009c68a1`, `0x009c68a2` written at
   `0x00450a1d`, `0x00450a8b`, `0x00450b2a`); which of the two paths is live for
   Level 100 gameplay is not decided here.
+
+  **SUPERSEDED 2026-07-26 — the third-light attribution above is FALSIFIED.** See
+  [`terrain-third-light-2026-07-26.md`](terrain-third-light-2026-07-26.md).
+  `CDXLandscape::Render` and `CEngine::SetupLights` have exactly one caller each,
+  both inside `0x0053e2e0` and 208 bytes apart, and no branch target in that
+  function lands between them — so `SetupLights`, which unconditionally writes
+  `enable[0]=enable[1]=1` and `enable[2..7]=0`, dominates **every** terrain draw.
+  The three-light path `0x004505b0` is slot 5 of `.?AVCFEPBEConfig@@`, a front-end
+  page, with a hard-coded three-point model-viewer rig; its third light alone
+  would add `+0.384` per channel where the residual needs `+0.016/+0.030/+0.027`.
+  The residual is now known to be **degenerate** — it reads equally well as
+  stages 1–3 being 0.9/2.1/2.3 % dark — and it remains open and unattributed.
 - The measured distribution's own spread (sd 0.48 / 0.38 / 0.28) is far larger
   than the residual.
 

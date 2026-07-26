@@ -2,6 +2,7 @@
 
 using System.Globalization;
 using System.Text.RegularExpressions;
+using OnslaughtRebuild.GodotClient;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -163,6 +164,55 @@ public sealed class Level100HudDesignSpaceTests
         Assert.Equal(341.5f, centreX, 1.0f);
         Assert.Equal(405.5f, bodyTop, 1.0f);
         Assert.Equal(464.5f, bodyBottom, 1.0f);
+    }
+
+    [Fact]
+    public void MessageTextIsLaidOutFromTheMeasuredPanelMetricsAndNotFromLocalConstants()
+    {
+        // The defect this guards: the message text used to be laid out from
+        // constants local to the text layer - a 232px wrap, five lines per
+        // page, and a rect at (226, 387) - which put the first two of five
+        // lines above the panel body's measured top edge at y 405.5. The
+        // metrics now live in Level100MessagePanel, where they are unit tested
+        // against the level100-gameplay captures, and the layer must use them.
+        Assert.DoesNotMatch(@"MessageTextWidth", Source);
+        Assert.DoesNotMatch(@"MaximumMessageLines", Source);
+        Assert.DoesNotMatch(@"\bPaginate\(", Source);
+        Assert.DoesNotMatch(@"DesignHeight - 93f", Source);
+
+        Assert.Matches(@"Level100MessagePanel\.Wrap\(", Source);
+        Assert.Matches(@"Level100MessagePanel\.Window\(", Source);
+        Assert.Matches(@"Level100MessagePanel\.TextPenLeft", Source);
+        Assert.Matches(@"Level100MessagePanel\.FirstLinePenTop", Source);
+        Assert.Matches(@"Level100MessagePanel\.LineHeightPixels", Source);
+    }
+
+    [Fact]
+    public void MessageTextBlockSitsInsideTheMeasuredPanelBody()
+    {
+        // Re-derive the panel body from the art constants in the HUD source and
+        // check the text block from Level100MessagePanel fits it, so the two can
+        // never drift apart again.
+        float centreYInset = Constant(@"centerY = DesignHeight - (\d+(?:\.\d+)?)f");
+        float pieceHeight = Constant(@"pieceHeight = (\d+(?:\.\d+)?)f");
+        float top = (DesignHeight - centreYInset) - (pieceHeight * 0.5f);
+        float bodyTop = top + (28f * pieceHeight / 128f);
+        float bodyBottom = top + (91f * pieceHeight / 128f);
+
+        const float glyphCell = 16f;
+        float whiteTop = Level100MessagePanel.FirstLinePenTop - 1f;
+        float whiteBottom = whiteTop +
+            ((Level100MessagePanel.VisibleLines - 1) *
+                Level100MessagePanel.LineHeightPixels) +
+            glyphCell;
+
+        Assert.True(
+            whiteTop >= bodyTop - 0.5f,
+            $"first message line starts at y {whiteTop}, above the panel body top {bodyTop}.");
+        Assert.True(
+            whiteBottom <= bodyBottom + 0.5f,
+            $"last message line ends at y {whiteBottom}, below the panel body bottom {bodyBottom}.");
+        Assert.Equal((bodyTop + bodyBottom) * 0.5f, (whiteTop + whiteBottom) * 0.5f, 1.0f);
     }
 
     [Theory]

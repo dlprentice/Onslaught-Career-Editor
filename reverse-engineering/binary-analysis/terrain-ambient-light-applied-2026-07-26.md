@@ -156,6 +156,28 @@ is attributed there to a probable **third light**: a second light-setup path at
 `0x009c68a2`, and which path is live for Level 100 gameplay is not decided by
 static reading. It needs the runtime light state at the terrain draw.
 
+**SUPERSEDED 2026-07-26 — that third-light attribution is FALSIFIED.** See
+[`terrain-third-light-2026-07-26.md`](terrain-third-light-2026-07-26.md).
+`SetupLights` provably dominates every terrain draw (single caller each, same
+function, no intervening branch target), and it enables exactly two lights
+unconditionally. The three-light path belongs to `.?AVCFEPBEConfig@@` slot 5, a
+front-end page. It is falsified twice over independently of liveness: its rig
+gives R = B against a measured `(1.457, 1.389, 1.147)`, and its third light is
+12–24x too large and achromatic.
+
+Two further findings from that work bear directly on this document. First, the
+residual is **degenerate**: retail-total / predicted-stage-0 is
+`(1.0000, 0.9774, 0.9720)` against our stage-1..3 chain `(0.9910, 0.9570,
+0.9500)`, so the identical residual reads equally well as "stages 1–3 are
+0.9/2.1/2.3 % dark, stage-0 exact in R". A flat gain measurement cannot separate
+the two readings. Second, and larger: over ten paired frames spanning
+t0+23.1 s to t0+34.1 s, **retail's terrain chain gain is flat to sd
+0.0018/0.0032/0.0028 while the reconstruction's falls monotonically at
+−0.12/−0.22/−0.22 %/s**, with our own macro-probe input unchanged. The residual
+quoted above is therefore a single-frame slice of a moving quantity. The
+constant part stays open and unattributed; the drift is tracked separately in
+[`terrain-chain-temporal-drift-2026-07-26.md`](terrain-chain-temporal-drift-2026-07-26.md).
+
 **No gain, offset or tint was added to close it.** Every coefficient in the
 implementation is a shipped byte or a Direct3D operation, and the shader contains
 no numeric literal that came from a measurement.

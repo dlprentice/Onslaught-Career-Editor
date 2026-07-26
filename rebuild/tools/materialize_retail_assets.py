@@ -321,6 +321,10 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "PauseMenu/blank.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Blank.tga(0)A8R8G8B8.aya", "01d55e16e994dec02191e6f62adcb5a82a1f0ca3b5629e489c9e5c82884fe7e9"),
     (GODOT_ASSETS / "PauseMenu/circle-01.texture.aya", "data/resources/dxtntextures/pausemenu%pause_circle01.tga(0)A8R8G8B8.aya", "01622d0e442aef1ccd5d5971cad5b4c06d2b15d1980dd07a1ddf95a7bc7472c7"),
     (GODOT_ASSETS / "PauseMenu/circle-02.texture.aya", "data/resources/dxtntextures/pausemenu%pause_circle02.tga(0)A8R8G8B8.aya", "4cd5e553a8a093d3a895f3639136fb6548267371c28914b00d3ccbb3c153516f"),
+    # CMessageLog__RenderPanelFrame (0x004B9010) corner cell: one 32x32 DXT2
+    # quarter curve, opaque toward the lower-left, drawn at the measured 32.0
+    # corner size (_DAT_005DB2B8) and flipped per corner.
+    (GODOT_ASSETS / "PauseMenu/endcurve.texture.aya", "data/resources/dxtntextures/MessageLog%endcurve.tga(0)A8R8G8B8.aya", "843defb41f22782e01c037d36a1b03b3ab8ba6c81624b9ad6e0b6e61e2568635"),
     (GODOT_ASSETS / "Level100/Sky/cube25-cent.texture.aya", "data/resources/dxtntextures/cubes%cube25_cent.tga(0)X8R8G8B8.aya", "1aad6cc8f85b6bb7ccbb8d2c7b0e6aa31722a9adbde5a3f19b248430ca83469e"),
     (GODOT_ASSETS / "Level100/Sky/cube25-down.texture.aya", "data/resources/dxtntextures/cubes%cube25_down.tga(0)X8R8G8B8.aya", "4770829ba631e93fbc33db2012754da75a06bfccc2fb2b36875e92032e22d19d"),
     (GODOT_ASSETS / "Level100/Sky/cube25-left.texture.aya", "data/resources/dxtntextures/cubes%cube25_left.tga(0)X8R8G8B8.aya", "d7cbce30e51473ddc89ed0c44326e598dac4d2682f64ef20c19237afd2cebe14"),

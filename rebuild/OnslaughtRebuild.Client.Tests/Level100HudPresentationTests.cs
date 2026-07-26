@@ -217,4 +217,316 @@ public sealed class Level100HudPresentationTests
                 hud.DeliveredMessages.Select(delivery => delivery.MessageId));
         }
     }
+
+    // ---------------------------------------------------------------------
+    // Message panel: retail behaviour measured off the 640x480 gameplay
+    // captures in local-lab/retail-reference-pristine/level100-gameplay/.
+    // Every expectation below is a transcription of a specific frame, not a
+    // restatement of the code under test. The working is written up in
+    // local-lab/HUD-MESSAGE-PANEL-2026-07-26.md.
+    // ---------------------------------------------------------------------
+
+    private const string Hud02 =
+        "This is the threat circle. That notch indicates North. As for its " +
+        "other functions, I'll demonstrate them later.";
+
+    private const string Hud06 =
+        "The circle to the left is your scanner. Enemy units show up in red, " +
+        "friendly units in blue.";
+
+    private const string MessageLog =
+        "If you ever need to review these messages, check out Aquila's " +
+        "message log in the Pause Menu.";
+
+    private const string Tutorial13 =
+        "You have two primary controls.  One determines the direction of " +
+        "travel, and the other changes which way Aquila faces.";
+
+    private const string Tutorial01 =
+        "Okay, Hawk? I want you to manoeuvre the Battle Engine to the area " +
+        "marked on your HUD.";
+
+    [Theory]
+    // opening-pan-run1/level100-t013269ms.png + .../t016011ms.png
+    [InlineData(
+        Hud02,
+        new[]
+        {
+            "This is the threat",
+            "circle. That notch",
+            "indicates North. As for",
+            "its other functions, I'll",
+            "demonstrate them later.",
+        })]
+    // hud-timeline-run1/level100-t020080ms.png + .../t022080ms.png - the
+    // message the reported defect overflowed the panel with.
+    [InlineData(
+        Hud06,
+        new[]
+        {
+            "The circle to the left is",
+            "your scanner. Enemy units",
+            "show up in red, friendly",
+            "units in blue.",
+        })]
+    // hud-timeline-run1/level100-t026073ms.png + .../t028057ms.png
+    [InlineData(
+        MessageLog,
+        new[]
+        {
+            "If you ever need to",
+            "review these messages,",
+            "check out Aquila's",
+            "message log in the Pause",
+            "Menu.",
+        })]
+    // hud-timeline-run1/level100-t035064ms.png + .../t037063ms.png. Note the
+    // double space the released text carries inside "controls.  One": retail
+    // keeps it, so the wrap must not collapse whitespace.
+    [InlineData(
+        Tutorial13,
+        new[]
+        {
+            "You have two primary",
+            "controls.  One determines",
+            "the direction of travel,",
+            "and the other changes",
+            "which way Aquila faces.",
+        })]
+    // hud-timeline-run1/level100-t042062ms.png
+    [InlineData(
+        Tutorial01,
+        new[]
+        {
+            "Okay, Hawk? I want you to",
+            "manoeuvre the Battle",
+            "Engine to the area marked",
+            "on your HUD.",
+        })]
+    // hud-timeline-run1/level100-t032071ms.png
+    [InlineData("All systems nominal.", new[] { "All systems nominal." })]
+    public void MessageWrapReproducesEveryCapturedRetailLineBreak(
+        string text,
+        string[] expected)
+    {
+        Assert.Equal(
+            expected,
+            Level100MessagePanel.Wrap(text).Select(line => line.Text));
+    }
+
+    [Fact]
+    public void MessageWrapWalksTheSourceStringExactly()
+    {
+        foreach (string text in new[] { Hud02, Hud06, MessageLog, Tutorial13, Tutorial01 })
+        {
+            IReadOnlyList<Level100MessageLine> lines = Level100MessagePanel.Wrap(text);
+            Assert.Equal(text.Length, Level100MessagePanel.SourceLength(lines));
+        }
+    }
+
+    [Fact]
+    public void RetailWrapsMessagesByColumnAndNotByPixelWidth()
+    {
+        // This is the measurement that decides the whole layout. Retail renders
+        // "your scanner. Enemy units" (25 columns) unbroken in
+        // hud-timeline-run1/level100-t022080ms.png at an ink span of 220px, and
+        // breaks "This is the threat circle." (26 columns, 214px advance) in
+        // opening-pan-run1/level100-t013011ms.png. A pixel-width wrap would have
+        // to satisfy W >= 224 and W < 214 at once, so no pixel width explains
+        // the captures and the wrap is by column.
+        Assert.Equal(25, Level100MessagePanel.WrapColumns);
+        Assert.All(
+            new[] { Hud02, Hud06, MessageLog, Tutorial13, Tutorial01 },
+            text => Assert.All(
+                Level100MessagePanel.Wrap(text),
+                line => Assert.True(
+                    line.Text.Length <= Level100MessagePanel.WrapColumns,
+                    $"'{line.Text}' is {line.Text.Length} columns.")));
+
+        // ... and the limit is exactly 25, not merely at least 25: four
+        // captured lines are 25 columns wide.
+        Assert.Contains(
+            Level100MessagePanel.Wrap(Hud06),
+            line => line.Text.Length == Level100MessagePanel.WrapColumns);
+    }
+
+    [Theory]
+    // Frame -> (characters of the source visible in that frame, the three lines
+    // the frame shows). Both columns are transcribed from the capture; the
+    // character count is just the length of the visible prefix.
+    //
+    // opening-pan-run1, HUD_02:
+    [InlineData(Hud02, 42, new[] { "This is the threat", "circle. That notch", "indi" })]
+    [InlineData(Hud02, 54, new[] { "This is the threat", "circle. That notch", "indicates North." })]
+    // t013761: the window has scrolled up exactly one line - line 1 is gone and
+    // line 3 is now the TOP line. That is what rules out paging: a pager would
+    // have dropped line 3 along with lines 1 and 2.
+    [InlineData(Hud02, 71, new[] { "circle. That notch", "indicates North. As for", "its other" })]
+    // t014260: scrolled one more line, again by exactly one.
+    [InlineData(Hud02, 92, new[] { "indicates North. As for", "its other functions, I'll", "demo" })]
+    // t014762 through t018060: fully typed, and it rests on these three lines.
+    [InlineData(
+        Hud02,
+        111,
+        new[] { "indicates North. As for", "its other functions, I'll", "demonstrate them later." })]
+    // hud-timeline-run1, HUD_06 - the message from the defect report. The panel
+    // is empty at t019074, mid-word at t020080 and t021073, settled at t022080.
+    [InlineData(Hud06, 38, new[] { "The circle to the left is", "your scanner" })]
+    [InlineData(
+        Hud06,
+        78,
+        new[] { "your scanner. Enemy units", "show up in red, friendly", "u" })]
+    [InlineData(
+        Hud06,
+        91,
+        new[] { "your scanner. Enemy units", "show up in red, friendly", "units in blue." })]
+    public void MessageWindowMatchesEveryCapturedTypeOnFrame(
+        string text,
+        int revealedCharacters,
+        string[] expected)
+    {
+        Assert.Equal(
+            expected,
+            Level100MessagePanel.Window(
+                Level100MessagePanel.Wrap(text),
+                revealedCharacters));
+    }
+
+    [Theory]
+    // The same frames again, this time pinning the CLOCK rather than the
+    // window. The reveal t0 of each message is the least squares intercept of
+    // its own samples (HUD_02 11.947s, HUD_06 19.137s on the capture's level
+    // clock), and the frames are sampled ~250ms apart, so a 40 char/s reveal
+    // has to land within a few characters of the transcribed count - not on it.
+    [InlineData(13.011d - 11.947d, 42)]
+    [InlineData(13.269d - 11.947d, 54)]
+    [InlineData(13.761d - 11.947d, 71)]
+    [InlineData(14.260d - 11.947d, 92)]
+    [InlineData(20.080d - 19.137d, 38)]
+    [InlineData(21.073d - 19.137d, 78)]
+    public void TypeOnClockReproducesEveryCapturedRevealWithinSamplingError(
+        double elapsedSeconds,
+        int capturedCharacters)
+    {
+        int revealed = Level100MessagePanel.RevealedCharacters(elapsedSeconds);
+        Assert.InRange(revealed, capturedCharacters - 3, capturedCharacters + 3);
+    }
+
+    [Theory]
+    // Both messages are fully typed by their last mid-reveal frame's successor.
+    [InlineData(Hud02, 14.762d - 11.947d)]
+    [InlineData(Hud02, 18.060d - 11.947d)]
+    [InlineData(Hud06, 22.080d - 19.137d)]
+    public void MessagesAreFullyRevealedByTheirSettledFrame(
+        string text,
+        double elapsedSeconds)
+    {
+        IReadOnlyList<Level100MessageLine> lines = Level100MessagePanel.Wrap(text);
+        Assert.True(
+            Level100MessagePanel.RevealedCharacters(elapsedSeconds) >=
+                Level100MessagePanel.SourceLength(lines));
+    }
+
+    [Fact]
+    public void MessageWindowNeverExceedsTheThreeCapturedLines()
+    {
+        // No captured frame ever shows a fourth line. The reported defect was a
+        // four-line render spilling out of the panel art, so this is the
+        // regression guard: sweep the whole reveal of every message in the
+        // released text table.
+        foreach (string text in new[] { Hud02, Hud06, MessageLog, Tutorial13, Tutorial01 })
+        {
+            IReadOnlyList<Level100MessageLine> lines = Level100MessagePanel.Wrap(text);
+            for (int revealed = 0;
+                 revealed <= Level100MessagePanel.SourceLength(lines) + 40;
+                 revealed++)
+            {
+                IReadOnlyList<string> window = Level100MessagePanel.Window(lines, revealed);
+                Assert.InRange(window.Count, 1, Level100MessagePanel.VisibleLines);
+                Assert.All(
+                    window,
+                    line => Assert.True(
+                        line.Length <= Level100MessagePanel.WrapColumns,
+                        $"'{line}' is {line.Length} columns."));
+            }
+        }
+    }
+
+    [Fact]
+    public void MessageWindowScrollsOneLineAtATimeAndNeverPages()
+    {
+        // Paging would make the top line jump by VisibleLines; retail's does
+        // not. Walk the whole reveal and assert the top line only ever advances
+        // to the next wrapped line.
+        IReadOnlyList<Level100MessageLine> lines = Level100MessagePanel.Wrap(MessageLog);
+        int total = Level100MessagePanel.SourceLength(lines);
+        int expectedTop = 0;
+        for (int revealed = 0; revealed <= total; revealed++)
+        {
+            IReadOnlyList<string> window = Level100MessagePanel.Window(lines, revealed);
+            int top = window.Count < Level100MessagePanel.VisibleLines
+                ? 0
+                : IndexOfWindowTop(lines, window);
+            Assert.InRange(top, expectedTop, expectedTop + 1);
+            expectedTop = top;
+        }
+        Assert.Equal(lines.Count - Level100MessagePanel.VisibleLines, expectedTop);
+
+        static int IndexOfWindowTop(
+            IReadOnlyList<Level100MessageLine> lines,
+            IReadOnlyList<string> window)
+        {
+            for (int index = 0; index + window.Count <= lines.Count; index++)
+            {
+                if (string.Equals(lines[index].Text, window[0], StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+            return -1;
+        }
+    }
+
+    [Fact]
+    public void TypeOnRunsAtTheMeasuredFortyCharactersPerSecond()
+    {
+        // Least squares over the seven HUD_02 samples gives 39.67 char/s and
+        // the two HUD_06 samples give 40.28; both round to 40.
+        Assert.Equal(40d, Level100MessagePanel.CharactersPerSecond);
+        Assert.Equal(0, Level100MessagePanel.RevealedCharacters(0d));
+        Assert.Equal(0, Level100MessagePanel.RevealedCharacters(-5d));
+        Assert.Equal(40, Level100MessagePanel.RevealedCharacters(1d));
+        Assert.Equal(100, Level100MessagePanel.RevealedCharacters(2.5d));
+    }
+
+    [Fact]
+    public void ThreeMessageLinesAreCentredInTheMeasuredRetailPanelBody()
+    {
+        // Measured off opening-pan-run1/level100-t016011ms.png: the three white
+        // glyph cells start on rows 412, 427 and 442, and the shadow sits one
+        // pixel down-right of the white glyph, so the pen tops are 413/428/443.
+        Assert.Equal(413f, Level100MessagePanel.FirstLinePenTop);
+        Assert.Equal(15f, Level100MessagePanel.LineHeightPixels);
+        Assert.Equal(206f, Level100MessagePanel.TextPenLeft);
+
+        const float glyphCell = 16f;
+        float whiteTop = Level100MessagePanel.FirstLinePenTop - 1f;
+        float whiteBottom = whiteTop +
+            ((Level100MessagePanel.VisibleLines - 1) *
+                Level100MessagePanel.LineHeightPixels) +
+            glyphCell;
+        Assert.Equal(412f, whiteTop);
+        Assert.Equal(458f, whiteBottom);
+
+        // The block is centred in the panel body this HUD already pins.
+        Assert.Equal(
+            (Level100MessagePanel.PanelBodyTop + Level100MessagePanel.PanelBodyBottom) * 0.5f,
+            (whiteTop + whiteBottom) * 0.5f,
+            0.5f);
+
+        // ... and it fits inside it, which the reported defect did not: the old
+        // constants started the first line at y 387, 18px above the panel top.
+        Assert.True(whiteTop >= Level100MessagePanel.PanelBodyTop);
+        Assert.True(whiteBottom <= Level100MessagePanel.PanelBodyBottom);
+    }
 }

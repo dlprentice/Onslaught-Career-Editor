@@ -50,6 +50,7 @@ internal sealed class Level100TerrainAppearanceAsset
         // terrain vertex carries no normal, so this is one colour for the whole
         // surface with no positional term.
         uniform vec3 terrain_vertex_diffuse;
+        uniform vec2 terrain_cloud_scroll;
 
         vec3 retail_output(vec3 color) {
             if (OUTPUT_IS_SRGB) {
@@ -94,14 +95,60 @@ internal sealed class Level100TerrainAppearanceAsset
             // matrix is a pure uniform quarter-scale aligned with stage 1.
             vec2 detail_secondary_uv = (retail_world_uv * 0.25) + vec2(0.3);
             vec3 detail_secondary = texture(detail_map, detail_secondary_uv).rgb;
-            // Retail accumulates the stage-2 translation as
-            // u += dt * *(float *)0x005d8580 (0.001) and
-            // v += dt * *(float *)0x005e50e4 (0.0005), wrapping at
-            // *(float *)0x005d8568 (1.0).
-            vec2 cloud_scroll = fract(vec2(TIME * 0.001, TIME * 0.0005));
+            // Stage 2's texture matrix is written at 0x0054591a-0x00545967:
+            // _11 (0x628258) = _22 (0x62826c) = 0x3b800000 = 1/256, _12/_21
+            // zero, and the translation row _31 (0x628278) = *(float
+            // *)0x008c0294, _32 (0x62827c) = *(float *)0x008c0298. Those two
+            // globals are the cloud scroll accumulators, advanced at the head
+            // of CDXLandscape__RenderTerrain (0x005455d2-0x0054563a) by
+            //   u += dt * *(float *)0x005d8580 (0x3a83126f = 0.001)
+            //   v += dt * *(float *)0x005e50e4 (0x3a03126f = 0.0005)
+            // each followed by a single `if (x >= 1.0) x -= 1.0` against
+            // *(float *)0x005d8568 (0x3f800000 = 1.0), which for a monotonic
+            // accumulator is fract().
+            //
+            // KNOWN DIVERGENCE - the rate is retail's, the origin is not.
+            // A whole-file operand scan finds exactly five references to each
+            // of 0x008c0294 and 0x008c0298, all five inside RenderTerrain, and
+            // both addresses lie in the uninitialised tail of .data. Retail's
+            // scroll offset is therefore 0.001 x (total frame time accumulated
+            // across terrain draws since process start), with no per-level
+            // reset and no advance while the front end is up. Godot's TIME is
+            // engine time since launch, which in the capture rig already
+            // includes 490 frames (8.167 s at --fixed-fps 60) of front end, and
+            // in ordinary play includes however long the player spent in menus.
+            // The scroll is what produces 96 percent of the reconstruction's
+            // measured -0.17/-0.25/-0.25 percent-per-second terrain drift:
+            // reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md.
+            // CORRECTED 2026-07-26. The origin is now retail's: Update() takes
+            // the frame delta and advances a per-terrain-draw accumulator with
+            // the same two rates and the same fract() wrap, so the phase counts
+            // time spent drawing terrain rather than time since engine launch.
+            // TIME is deliberately no longer referenced here -- it carried the
+            // front end's 8.167 s (490 frames at --fixed-fps 60) plus, in
+            // ordinary play, however long the player spent in menus.
+            //
+            // CONFIRMED 2026-07-26 by reading the live accumulators: their zero
+            // is the level's first frame, not process start. Back-extrapolating
+            // u from three samples puts u = 0 at process uptime 26.15 s against
+            // a level start of about 26.3 s. So resetting the phase at level
+            // entry, as this asset does, is retail's behaviour.
+            //
+            // The rate, however, was NOT what the .rdata constants suggested —
+            // see the remarks on CloudScrollRateU.
+            //
+            // This is necessary but is NOT known to be sufficient. Solving for
+            // the single phase that both matches retail's measured stage-1..3
+            // ratio 1.0091/1.0213/1.0232 and stays inside retail's measured
+            // temporal flatness admits only phi in [5.0, 13.5] s (plus a
+            // one-second sliver near 361.5 s) -- 1.1 percent of the 1000 s
+            // cycle. The bare level clock, 25.065 s, is excluded too: it
+            // predicts a -0.11/-0.16/-0.15 percent-per-second drift retail does
+            // not show. Retail's true phase needs one runtime read of
+            // 0x008c0294/0x008c0298 and is not settled here.
             vec3 cloud_shadow = texture(
                 cloud_shadow_map,
-                (retail_world_uv / 256.0) + cloud_scroll).rgb;
+                (retail_world_uv / 256.0) + terrain_cloud_scroll).rgb;
             // Stage 0 is COLORARG1 = D3DTA_TEXTURE, COLORARG2 = D3DTA_DIFFUSE
             // (0x00545699, 0x005456a8) with COLOROP = D3DTOP_MODULATE2X
             // (0x005454ae; the MODULATE alternative at 0x0054568a is taken only
@@ -165,6 +212,46 @@ internal sealed class Level100TerrainAppearanceAsset
     private readonly int[][] _slotOwners = new int[5][];
     private readonly int[][] _occupiedSlots = new int[5][];
     private readonly ShaderMaterial _material;
+
+    /// <summary>
+    /// Cloud-shadow scroll rate in texture units PER SECOND, measured at
+    /// runtime. The <c>.rdata</c> constants <c>0x005d8580</c>
+    /// (<c>0x3a83126f</c> = 0.001) and <c>0x005e50e4</c>
+    /// (<c>0x3a03126f</c> = 0.0005) are the per-advance rates, but they are
+    /// multiplied by <c>[0x008a9e20]</c>, whose 26 references are all reads
+    /// with no absolute writer — so its units cannot be settled from the file
+    /// at all, and the per-second rate cannot be derived statically.
+    /// </summary>
+    /// <remarks>
+    /// Settled by reading the live accumulators <c>0x008c0294</c>/
+    /// <c>0x008c0298</c> at three level times on the safe copy: u =
+    /// 0.058181878 / 0.20878051 / 0.35480464, giving du/dt = 0.0199944 and
+    /// 0.0200088 per second over the two intervals — 0.07 % apart. v is
+    /// exactly u/2 at all three samples. Note the accumulator advances once
+    /// per terrain DRAW and terrain draws many tiles per frame, which is why
+    /// the per-second rate is 20x the bare 0.001 constant; the per-draw rate
+    /// varies by 3.1 % between intervals while the per-second rate varies by
+    /// 0.07 %, so wall time is the stable parameterisation and is what is used
+    /// here.
+    ///
+    /// This supersedes an earlier change that took these from 0.02/0.01 down to
+    /// 0.001/0.0005 as "20x too fast". The original values were right and that
+    /// correction was wrong; only a runtime read could distinguish them,
+    /// because the static constants alone are unitless.
+    /// </remarks>
+    private const double CloudScrollRateU = 0.02d;
+    private const double CloudScrollRateV = 0.01d;
+
+    /// <summary>
+    /// Phase of the cloud-shadow scroll, in texture units, accumulated across
+    /// terrain draws only. Zero at level entry, which is a deliberate and
+    /// documented approximation of retail's process-lifetime accumulator -- see
+    /// the divergence note on <see cref="Update"/>.
+    /// </summary>
+    private double _cloudScrollU;
+    private double _cloudScrollV;
+
+    private static double Fract(double value) => value - Math.Floor(value);
 
     private Level100TerrainAppearanceAsset(
         Level100TerrainCompositor compositor,
@@ -283,8 +370,28 @@ internal sealed class Level100TerrainAppearanceAsset
             heightField);
     }
 
-    public void Update(IReadOnlyList<Level100TerrainTileSelection> selections)
+    /// <summary>
+    /// Advances the cloud-shadow scroll and refreshes the macro cache.
+    /// <paramref name="frameDelta"/> is the seconds elapsed since the previous
+    /// terrain draw. Retail advances its two accumulators at the head of
+    /// <c>CDXLandscape__RenderTerrain</c> (<c>0x005455d2</c>) and never resets
+    /// them, so the phase is time spent drawing terrain -- not wall time, and
+    /// not time since launch. Passing engine time here is the defect recorded
+    /// in <c>terrain-chain-temporal-drift-2026-07-26.md</c>.
+    /// </summary>
+    public void Update(IReadOnlyList<Level100TerrainTileSelection> selections, double frameDelta)
     {
+        // u += dt * 0.001 (0x005d8580), v += dt * 0.0005 (0x005e50e4), each
+        // followed by a single `if (x >= 1.0) x -= 1.0` against 0x005d8568.
+        // For a monotonic accumulator that single conditional subtract is
+        // fract(), and it is reproduced as fract() rather than as a subtract so
+        // that an unusually long frame cannot leave the phase above 1.
+        _cloudScrollU = Fract(_cloudScrollU + (frameDelta * CloudScrollRateU));
+        _cloudScrollV = Fract(_cloudScrollV + (frameDelta * CloudScrollRateV));
+        _material.SetShaderParameter(
+            "terrain_cloud_scroll",
+            new Vector2((float)_cloudScrollU, (float)_cloudScrollV));
+
         for (int level = 1; level <= 4; level++)
         {
             Array.Fill(_occupiedSlots[level], -1);

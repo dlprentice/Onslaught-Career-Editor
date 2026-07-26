@@ -42,8 +42,7 @@ public readonly record struct Level100MessagePlaybackSnapshot(
     bool Playing,
     double PositionSeconds,
     double LengthSeconds,
-    int? PortraitPoseIndex,
-    int? MessagePageIndex)
+    int? PortraitPoseIndex)
 {
     public static Level100MessagePlaybackSnapshot Unavailable { get; } = new(
         IsAvailable: false,
@@ -51,8 +50,7 @@ public readonly record struct Level100MessagePlaybackSnapshot(
         Playing: false,
         PositionSeconds: 0d,
         LengthSeconds: 0d,
-        PortraitPoseIndex: null,
-        MessagePageIndex: null);
+        PortraitPoseIndex: null);
 }
 
 public sealed class Level100HudAssetCatalog

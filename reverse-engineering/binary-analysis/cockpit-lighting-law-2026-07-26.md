@@ -259,6 +259,57 @@ world matrix carries the camera's rotation is the one remaining term that can
 change the cockpit's hue **without** changing the law in §4, and it is the next
 thing to establish.
 
+### ANSWERED 2026-07-26 by controlled copied-runtime observation — it does
+
+`IDirect3DDevice9::SetTransform(D3DTS_WORLDMATRIX(0), M)` was captured live at
+the Level 100 cockpit draw under CDB on the verified safe copy (sha256
+`e1436ef7…`), using a breakpoint *window*: entry to `0x0053bb50` arms the
+`SetTransform` breakpoint at `0x00551043` and the return address `0x0053ec6f`
+disarms it, so everything outside runs untrapped at ~77 fps. Full record and raw
+logs: `local-lab/COCKPIT-WORLD-MATRIX-RUNTIME-2026-07-26.md` and
+`local-lab/cockpit-worldmatrix-2026-07-26/`. Reusable probe:
+`tools/cdb_worldmatrix_probe.ps1`.
+
+**Seven** world uploads occur per cockpit render — seven draw batches. Batch 0,
+D3D row-major, `det = +1.000000`, `|RRᵀ−I| = 1.9e-07`:
+
+```
+   0.88662648   0.46089223  -0.03836670   0
+  -0.46159714   0.88701338  -0.01164191   0
+   0.02866611   0.02803198   0.99919587   0
+ 288.67752    243.25581    -12.27214      1
+```
+
+The translation is the camera world position, and `R_world · R_view` is the axis
+map `x→x, y→z, z→−y` to within **2.8774°**. So the cockpit is camera-attached in
+world space and retail **does** rotate cockpit normals by the camera
+orientation — which is what the reconstruction already does.
+
+**This closes §7 as a precise negative: the normal *space* is not the defect.**
+All seven matrices, `D3DTS_VIEW` and `D3DTS_PROJECTION` were bit-identical
+across four independent launches and across cockpit frames 0, 2048 and 2400.
+The projection shadow `diag(1, 1.3333333, 1.0001428)`, `_34=1`,
+`_43=-0.10001428` independently reconfirms the 90° hfov / 4:3 / near-0.1 camera
+fix at runtime.
+
+Two findings redirect the work rather than closing it. First, **two of the seven
+batches carry a negative-determinant (mirrored) world matrix**, and whether the
+reconstruction accounts for the winding/normal flip is unestablished. Second,
+with the texel cancelled in a ratio, retail's implied cockpit term has B/R
+**0.631** (the sun's own is 0.640) against ours at **1.550** (the anti-sun's is
+1.600); solving `L = ambient + a·light` needs `a = (2.605, 1.701, 0.404)` against
+the anti-sun, i.e. `a > 1`, which is impossible for `max(0, N·L)`. That
+impossibility is robust and is not a region-mean artefact: **retail's cockpit
+normals face the sun and ours face away.** The remaining suspects are the
+imported normals' sign/handedness and the two mirrored batches.
+
+One measured constraint, stated honestly: the camera does not move in Level 100
+under any scripted input (relative mouse-look, held `A`, held right-arrow all
+produced bit-identical matrices), so this observes exactly **one** pose. It is
+the pose of the t0+25065 ms parity frame, but it cannot demonstrate the matrix
+*tracking* the camera; that rests on the structural facts above, not on observed
+variation.
+
 ## Reproduction
 
 ```

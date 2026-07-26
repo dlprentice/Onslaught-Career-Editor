@@ -119,6 +119,11 @@ internal sealed class Level100HeightFieldAsset
 
     public float WaterLevel { get; }
 
+    /// <summary>
+    /// The water support of the same clamp: `FLD [0x006FBDFC]` at 0x004F3549
+    /// compared against `[ESI + 0x24]` and stored by `FSTP [ESI + 0x24]` at
+    /// 0x004F3559, again with no second term. `CHFD + 0x1034` holds -8.84.
+    /// </summary>
     public float WaterRelativeHeight => PlayerStartElevation - WaterLevel;
 
     public byte WaterTexture { get; }
@@ -143,6 +148,14 @@ internal sealed class Level100HeightFieldAsset
 
     public static Level100HeightFieldAsset Load() => new(Level100Terrain.Instance);
 
+    /// <summary>
+    /// The ground support used by the released static placement clamp. This is
+    /// the up-positive form of the height `CThing__Init` @ 0x004F34A0 obtains
+    /// from `CALL 0x0047EB80` at 0x004F34FB and compares against the authored
+    /// Z-down position at `[ESI + 0x24]`. The clamp stores that height into the
+    /// pivot unchanged (`FSTP [ESP + 0x14]` at 0x004F3529), so callers add no
+    /// mesh-derived term to the value returned here.
+    /// </summary>
     public float SampleRelativeHeight(float relativeX, float relativeZ) =>
         PlayerStartElevation - SampleRetailHeight(relativeX + PlayerStartX, relativeZ + PlayerStartZ);
 

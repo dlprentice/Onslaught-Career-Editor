@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Linq;
 using System.Security.Cryptography;
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.GodotClient;
@@ -87,13 +88,52 @@ public sealed class Level100TerrainCompositorTests
         Assert.DoesNotContain("0.1350755765", shaderSource);
         Assert.DoesNotContain("0.2103677462", shaderSource);
 
-        // .rdata 0x005d8580 = 0.001 and 0x005e50e4 = 0.0005, wrapped at
-        // 0x005d8568 = 1.0.
-        Assert.Contains(
-            "vec2 cloud_scroll = fract(vec2(TIME * 0.001, TIME * 0.0005));",
-            shaderSource);
-        Assert.DoesNotContain("TIME * 0.02", shaderSource);
-        Assert.DoesNotContain("TIME * 0.01)", shaderSource);
+        // The scroll rate is MEASURED, not read from .rdata. 0x005d8580 = 0.001
+        // and 0x005e50e4 = 0.0005 are per-advance rates multiplied by
+        // [0x008a9e20], whose 26 references are all reads with no absolute
+        // writer -- its units are not derivable from the file, so neither is
+        // the per-second rate. Reading the live accumulators 0x008c0294/98 at
+        // three level times gives du/dt = 0.0199944 and 0.0200088 per second
+        // (0.07% apart), with v exactly u/2. Wall time is the stable
+        // parameterisation: the per-DRAW rate varies 3.1% over the same
+        // intervals because terrain draws many tiles per frame.
+        Assert.Contains("CloudScrollRateU = 0.02d;", shaderSource);
+        Assert.Contains("CloudScrollRateV = 0.01d;", shaderSource);
+        Assert.DoesNotContain("CloudScrollRateU = 0.001d", shaderSource);
+
+        // ORIGIN GUARD. Retail advances 0x008c0294/0x008c0298 at the head of
+        // CDXLandscape__RenderTerrain and never resets them, so the phase is
+        // time spent DRAWING TERRAIN. Godot's TIME is engine time since launch,
+        // which carries the front end's 8.167 s plus any menu time, and that
+        // origin error reproduces 96 percent of the measured terrain drift.
+        // The shader must therefore take the phase as a uniform and must not
+        // reference TIME at all -- this is the assertion that would have caught
+        // the original defect, so it is written as an absolute prohibition
+        // rather than as a match on one expression.
+        // Comment lines are stripped first: the prohibition is on the shader
+        // CODE referencing TIME, not on the prose explaining why it must not.
+        string shaderBody = string.Join(
+            '\n',
+            shaderSource[
+                shaderSource.IndexOf("TerrainShaderCode", StringComparison.Ordinal)..
+                shaderSource.IndexOf("\"\"\";", StringComparison.Ordinal)]
+                .Split('\n')
+                .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+        Assert.DoesNotContain("TIME", shaderBody);
+        Assert.Contains("uniform vec2 terrain_cloud_scroll;", shaderSource);
+        Assert.Contains("_cloudScrollU = Fract(_cloudScrollU + (frameDelta * CloudScrollRateU));", shaderSource);
+        Assert.Contains("_cloudScrollV = Fract(_cloudScrollV + (frameDelta * CloudScrollRateV));", shaderSource);
+
+        // Stage 2's texture matrix at 0x00545943 sets _11 = _22 = 0x3b800000 =
+        // 1/256 and its translation row from the two scroll accumulators, so
+        // the cloud coordinate is world_uv/256 + scroll and nothing else. The
+        // scroll is the proven source of 96 percent of the reconstruction's
+        // terrain temporal drift, so this line must not acquire a
+        // time-compensation term: see
+        // terrain-chain-temporal-drift-2026-07-26.md.
+        Assert.Contains("(retail_world_uv / 256.0) + terrain_cloud_scroll).rgb;", shaderSource);
+        Assert.Contains("0x008c0294", shaderSource);
+        Assert.Contains("0x008c0298", shaderSource);
     }
 
     private static byte[] ReadAsset(string relativePath) =>

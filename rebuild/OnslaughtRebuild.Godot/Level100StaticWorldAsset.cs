@@ -136,29 +136,48 @@ internal sealed partial class Level100StaticWorldAsset
         var objects = new List<MeshInstance3D>(manifest.Objects.Length);
         foreach (WorldObject worldObject in manifest.Objects.OrderBy(item => item.Ordinal))
         {
-            MeshDefinition meshDefinition = manifest.Meshes[worldObject.Mesh];
             float retailX = checked((float)worldObject.RetailPosition[0]);
             float retailY = checked((float)worldObject.RetailPosition[1]);
             float retailZ = checked((float)worldObject.RetailPosition[2]);
             float relativeX = retailX - Level100HeightFieldAsset.PlayerStartX;
             float relativeZ = retailY - Level100HeightFieldAsset.PlayerStartZ;
+            // `CThing__Init` @ 0x004F34A0 is the whole vertical placement the
+            // released game applies to an authored static. It copies the
+            // authored position into `this+0x1c..+0x28` (Z-down at `+0x24`),
+            // then runs two clamps and nothing else:
+            //
+            //   0x004F34F6  b9 c8 ad 6f 00  MOV ECX, 0x006FADC8   height field
+            //   0x004F34FB  e8 80 b6 f8 ff  CALL 0x0047EB80       bilinear sample
+            //   0x004F3500  d8 56 24        FCOM  [ESI + 0x24]    sample vs authored
+            //   0x004F3529  d9 5c 24 14     FSTP  [ESP + 0x14]    sample becomes Z
+            //   0x004F3534  ff 50 50        CALL  [EAX + 0x50]    SetPosition
+            //   0x004F3549  d9 05 fc bd 6f 00 FLD [0x006FBDFC]    water level
+            //   0x004F354F  d8 56 24        FCOM  [ESI + 0x24]
+            //   0x004F3559  d9 5e 24        FSTP  [ESI + 0x24]    water becomes Z
+            //
+            // Both `FSTP`s write the support height straight into the pivot.
+            // Z is down-positive, so the pair is `min(authored, support)` there
+            // and the `Math.Max` below in up-positive units. No mesh extent is
+            // read anywhere on that path: retail seats the *pivot*, never the
+            // bounding box. A `-min(vertexZ)` clearance term therefore has no
+            // retail counterpart and is not applied. It measured +3.2318 on
+            // `FB_Docks` — exactly that mesh's own 173-vertex piling span below
+            // its origin, which is why the docks hung in the air with their
+            // legs ending above the water — and +0.2226/+0.2257/+0.2282 on the
+            // three turret meshes, each exactly the buried base collar those
+            // meshes carry below z = 0.
             float relativeHeight = Math.Max(
                 Level100HeightFieldAsset.PlayerStartElevation - retailZ,
                 Math.Max(
                     terrain.SampleRelativeHeight(relativeX, relativeZ),
                     terrain.WaterRelativeHeight));
-            float verticalClearance = StringComparer.Ordinal.Equals(
-                worldObject.Definition,
-                SatTurretDefinition)
-                    ? 0f
-                    : checked((float)meshDefinition.BaseClearance);
 
             var objectRoot = new Node3D
             {
                 Name = $"RetailWorldObject{worldObject.Ordinal:D2}",
                 Position = new Vector3(
                     relativeX,
-                    relativeHeight + verticalClearance,
+                    relativeHeight,
                     -relativeZ),
                 Rotation = new Vector3(0f, checked((float)worldObject.Yaw), 0f),
             };
@@ -515,11 +534,26 @@ internal sealed partial class Level100StaticWorldAsset
                         checked((float)layer.Scale[1])),
                     textureDefinitions[layer.Texture].BlendTextureAlpha))
             .ToArray();
+        // MODULATE2X, stated rather than inherited. Stage-zero
+        // D3DTSS_COLOROP was read at the entry to every mesh render of one
+        // whole Level 100 frame and is 5 = D3DTOP_MODULATE2X on all 134 mode-0
+        // static-world draws and all 442 CRTTree mesh draws.
+        //
+        // OPEN, and deliberately not applied here: 19 further draws inside
+        // CRTMesh::BuildRenderOutputs in that same frame run at mode 4 with
+        // stage-zero COLOROP 4 = D3DTOP_MODULATE. They are a separate pass
+        // issued after the cockpit, from four CRTMesh objects whose count
+        // varies frame to frame (two in one observed frame, four in three
+        // others), so they are not the 28 authored static-world meshes this
+        // manifest builds and nothing here has been mapped to them. Giving any
+        // mesh built from this manifest MODULATE would therefore be a guess,
+        // not a measurement.
         return RetailFixedFunctionMaterial.Create(
             layers,
             terrain,
             maximumHorizontalDistance,
-            maximumHorizontalDistance > 0f ? 8f / 255f : 0.5f);
+            maximumHorizontalDistance > 0f ? 8f / 255f : 0.5f,
+            RetailStageZeroColorOperation.Modulate2X);
     }
 
     private static Manifest LoadManifest()
@@ -835,6 +869,46 @@ internal sealed record RetailTextureLayer(
     Vector2 Scale,
     bool BlendTextureAlpha = false);
 
+/// <summary>
+/// The stage-zero <c>D3DTSS_COLOROP</c> a draw through
+/// <see cref="RetailFixedFunctionMaterial"/> runs under. The members carry the
+/// Direct3D <c>D3DTOP</c> enumerant values so the source reads the same way the
+/// runtime dump does.
+/// </summary>
+/// <remarks>
+/// This is a per-draw property in the released game, not a constant. Every
+/// stage-zero <c>D3DTSS_COLOROP</c> value below was read out of the running
+/// safe copy's texture-stage-state shadow at <c>0x008557f4</c> — the caching
+/// setter at <c>0x00513820</c> computes its index as
+/// <c>(type + stage*0n30)*4 + 0x008557f0</c> at <c>0x0051382a</c>–<c>0x00513833</c>,
+/// and the invalidator at <c>0x00513600</c> clears 0n240 = 8 stages x 0n30
+/// dwords there — sampled at the entry to <c>CMeshRenderer::RenderMeshCore</c>
+/// (<c>0x00549570</c>, the image's only mesh-render call site) for one whole
+/// Level 100 frame:
+/// <list type="bullet">
+/// <item><description>134 mode-0 static-world draws: <c>5</c>
+/// = <c>D3DTOP_MODULATE2X</c>.</description></item>
+/// <item><description>442 <c>CRTTree</c> close-mesh draws: <c>5</c>
+/// = <c>D3DTOP_MODULATE2X</c>.</description></item>
+/// <item><description>All seven cockpit batches: <c>4</c>
+/// = <c>D3DTOP_MODULATE</c>, read 16 times inside the cockpit window with zero
+/// stage-zero <c>COLOROP</c> transitions while inside it.</description></item>
+/// <item><description>19 mode-4 static-world draws in that same frame: <c>4</c>
+/// = <c>D3DTOP_MODULATE</c>.</description></item>
+/// </list>
+/// <c>COLORARG1</c> is <c>2</c> = <c>D3DTA_TEXTURE</c>, <c>COLORARG2</c> is
+/// <c>0</c> = <c>D3DTA_DIFFUSE</c> and stage-one <c>COLOROP</c> is <c>1</c> =
+/// <c>D3DTOP_DISABLE</c> at every one of those draws.
+/// </remarks>
+internal enum RetailStageZeroColorOperation
+{
+    /// <summary>D3DTOP_MODULATE. Texture x diffuse, no doubling.</summary>
+    Modulate = 4,
+
+    /// <summary>D3DTOP_MODULATE2X. Texture x diffuse x 2.</summary>
+    Modulate2X = 5,
+}
+
 internal static class RetailFixedFunctionMaterial
 {
     private static Shader? _objectShader;
@@ -852,6 +926,10 @@ internal static class RetailFixedFunctionMaterial
         uniform float has_overlay;
         uniform float base_blend_texture_alpha;
         uniform float alpha_reference;
+        // Stage-zero D3DTSS_COLOROP as a multiplier: 1.0 for D3DTOP_MODULATE
+        // (4), 2.0 for D3DTOP_MODULATE2X (5). Per draw, never a constant --
+        // see RetailStageZeroColorOperation for the runtime reads that fix it.
+        uniform float stage_zero_gain;
         uniform vec2 dot3_offset;
         uniform vec2 dot3_scale;
         uniform float reflection_factor_alpha;
@@ -932,8 +1010,18 @@ internal static class RetailFixedFunctionMaterial
             if (base_blend_texture_alpha < 0.5 && texture_color.a < alpha_reference) {
                 discard;
             }
+            // Stage zero is COLORARG1 = D3DTA_TEXTURE, COLORARG2 =
+            // D3DTA_DIFFUSE, and COLOROP is whichever of MODULATE /
+            // MODULATE2X the draw is under. Read out of the running safe copy
+            // from the texture-stage-state shadow at 0x008557f4 (the setter at
+            // 0x00513820 indexes it as (type + stage*0n30)*4 + 0x008557f0):
+            // 5 = MODULATE2X on the 134 mode-0 static-world draws and the 442
+            // CRTTree mesh draws of one frame, 4 = MODULATE on all seven
+            // cockpit batches (16 reads inside the cockpit window, zero
+            // transitions while inside it) and on the 19 mode-4 static-world
+            // draws of that same frame. So the gain is per draw.
             vec3 retail_color = min(
-                texture_color.rgb * vertex_light_color * 2.0,
+                texture_color.rgb * vertex_light_color * stage_zero_gain,
                 vec3(1.0));
             if (base_blend_texture_alpha > 0.5) {
                 retail_color = mix(retail_color, texture_color.rgb, texture_color.a);
@@ -955,15 +1043,23 @@ internal static class RetailFixedFunctionMaterial
             }
 
             if (has_reflection > 0.5) {
-                // Mode 2 is another stage-zero world draw. It inherits the
-                // lit MODULATE2X color operation and stage-zero sampler state;
+                // The reflection layer is another stage-zero world draw, and
+                // it is a MODE-0 one: [0x00704e48], the RenderMeshCore mode
+                // global, was read at every one of 4,393 mesh renders across
+                // three launches and is 0 on 4,314 and 4 on 79 -- never 2,
+                // never 6, never 8, and the mode-2/mode-6 draw calls at
+                // 0x0054a423 / 0x0054a466 never fired at all. D3DRS_LIGHTING
+                // ([0x00855764], the render-state shadow at 0x00855540 indexed
+                // state*4) is 1 across all 576 world and tree draws, so the
+                // layer is lit, which is what this branch already assumed. It
+                // inherits stage zero's colour operation and sampler state;
                 // stage one only scales its alpha with texture factor.
                 vec4 reflection_color = texture(
                     reflection_texture,
                     reflection_uv,
                     -1.0);
                 vec3 reflection_stage_color = min(
-                    reflection_color.rgb * vertex_light_color * 2.0,
+                    reflection_color.rgb * vertex_light_color * stage_zero_gain,
                     vec3(1.0));
                 float reflection_alpha = clamp(
                     reflection_color.a * reflection_factor_alpha,
@@ -991,7 +1087,10 @@ internal static class RetailFixedFunctionMaterial
         }
         """;
 
-    public static ShaderMaterial Create(Texture2D texture, Level100HeightFieldAsset terrain)
+    public static ShaderMaterial Create(
+        Texture2D texture,
+        Level100HeightFieldAsset terrain,
+        RetailStageZeroColorOperation stageZeroColorOperation)
     {
         return Create(
             [
@@ -1002,14 +1101,24 @@ internal static class RetailFixedFunctionMaterial
                 null,
                 null,
             ],
-            terrain);
+            terrain,
+            stageZeroColorOperation: stageZeroColorOperation);
     }
 
+    /// <param name="stageZeroColorOperation">
+    /// The stage-zero <c>D3DTSS_COLOROP</c> this draw runs under. Retail's
+    /// value varies by draw, so every call site states the one it measured;
+    /// the default is the <c>MODULATE2X</c> read at the 134 mode-0
+    /// static-world and 442 tree draws, which are the majority of the draws
+    /// through this shader. See <see cref="RetailStageZeroColorOperation"/>.
+    /// </param>
     public static ShaderMaterial Create(
         IReadOnlyList<RetailTextureLayer?> layers,
         Level100HeightFieldAsset terrain,
         float maximumHorizontalDistance = 0f,
-        float alphaReference = 0.5f)
+        float alphaReference = 0.5f,
+        RetailStageZeroColorOperation stageZeroColorOperation =
+            RetailStageZeroColorOperation.Modulate2X)
     {
         if (layers.Count != 6 || layers[0] is not RetailTextureLayer baseLayer)
         {
@@ -1023,6 +1132,7 @@ internal static class RetailFixedFunctionMaterial
         {
             throw new ArgumentOutOfRangeException(nameof(alphaReference));
         }
+        float stageZeroGain = StageZeroGain(stageZeroColorOperation);
         RetailTextureLayer? dot3Layer = layers[1];
         RetailTextureLayer? reflectionLayer = layers[2];
         RetailTextureLayer? overlayLayer = layers[4];
@@ -1041,6 +1151,7 @@ internal static class RetailFixedFunctionMaterial
             "base_blend_texture_alpha",
             baseLayer.BlendTextureAlpha ? 1f : 0f);
         material.SetShaderParameter("alpha_reference", alphaReference);
+        material.SetShaderParameter("stage_zero_gain", stageZeroGain);
         material.SetShaderParameter("dot3_offset", dot3Layer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("dot3_scale", dot3Layer?.Scale ?? Vector2.One);
         material.SetShaderParameter(
@@ -1065,6 +1176,21 @@ internal static class RetailFixedFunctionMaterial
                 : -1f);
         return material;
     }
+
+    /// <summary>
+    /// The stage-zero colour operation as the multiplier the shader applies.
+    /// <c>D3DTOP_MODULATE</c> is texture x diffuse and <c>D3DTOP_MODULATE2X</c>
+    /// is that doubled, so these are exactly 1 and 2. Any other enumerant is
+    /// refused rather than silently collapsed onto one of them: nothing has
+    /// observed retail using one at these draws.
+    /// </summary>
+    private static float StageZeroGain(RetailStageZeroColorOperation operation) =>
+        operation switch
+        {
+            RetailStageZeroColorOperation.Modulate => 1f,
+            RetailStageZeroColorOperation.Modulate2X => 2f,
+            _ => throw new ArgumentOutOfRangeException(nameof(operation)),
+        };
 
     private static Vector3 ToVector(uint rgb, float divisor) => new(
         ((rgb >> 16) & 0xFF) / divisor,

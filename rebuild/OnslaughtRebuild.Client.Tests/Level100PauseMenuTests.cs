@@ -191,6 +191,100 @@ public sealed class Level100PauseMenuTests
             StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ConfirmationDrawsTheRetailPanelFrameOverTheStillDrawnRootList()
+    {
+        string view = ReadPauseView();
+        string draw = ExtractMethod(view, "public override void _Draw()");
+
+        // CPauseMenu__Render renders the active range (index this+0x24, still 0
+        // while a Retry/Quit prompt is up) and then the prompt hanging off
+        // this+0x08. The root list must therefore stay drawn, and the prompt
+        // must be the range that carries the panel flag.
+        AssertOccursInOrder(
+            draw,
+            "\"PAUSED\"",
+            "Model.RootEntries",
+            "Level100PausePage.Root,",
+            "panelFrame: false);",
+            "\"Are you sure?\"",
+            "Model.Entries",
+            "panelFrame: true);");
+
+        // The root and options ranges are built with panel_flag = 0 in
+        // PauseMenu__Init, so exactly one range in the whole surface is framed.
+        Assert.Equal(1, CountOccurrences(view, "panelFrame: true"));
+        Assert.Equal(2, CountOccurrences(view, "panelFrame: false"));
+    }
+
+    [Fact]
+    public void PanelFrameUsesTheMeasuredRetailGeometryAndTint()
+    {
+        string view = ReadPauseView();
+        string panel = ExtractMethod(view, "private void DrawPanelFrame(");
+
+        // Sizing pass in CMenuItemRange__Render: (max(title, widest item) +
+        // 0x10) * 1.1 wide, (0x20 + summed item heights) * 1.1 tall, centred on
+        // the range origin using the pre-round size, clamped to 0x40 after.
+        Assert.Contains(
+            "(widest + PanelWidthPadding) * PanelSizeFactor",
+            panel,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "(PanelTitleBand + itemHeights) * PanelSizeFactor",
+            panel,
+            StringComparison.Ordinal);
+        AssertOccursInOrder(
+            panel,
+            "float left = MathF.Round(320f - (rawWidth * 0.5f));",
+            "float top = MathF.Round(GetRangeCenterY(page) - (rawHeight * 0.5f));",
+            "Math.Max(PanelMinimumSize, MathF.Round(rawWidth))",
+            "Math.Max(PanelMinimumSize, MathF.Round(rawHeight))");
+
+        Assert.Contains("private const float PanelSizeFactor = 1.1f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelTitleBand = 32f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelWidthPadding = 16f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelMinimumSize = 64f;", view, StringComparison.Ordinal);
+        Assert.Contains("private const float PanelCornerSize = 32f;", view, StringComparison.Ordinal);
+
+        // ROUND(1.2 * _DAT_005dc568) with _DAT_005dc568 = 160.0 read from the
+        // pristine .rdata at file offset 0x1dc568, applied over RGB 0.
+        Assert.Contains(
+            "PanelTint = new(0f, 0f, 0f, 192f / 255f)",
+            view,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4",
+            view,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SurfaceAddsNoUnevidencedLegibilityTreatment()
+    {
+        string view = ReadPauseView();
+
+        // The frame is the only occluder retail draws for the prompt. Nothing
+        // here may reach for a scrim, blur, outline or dim of the root list,
+        // and the root list must not be hidden either -- retail keeps drawing
+        // it because CPauseMenu__Render never changes the active range index
+        // when the prompt opens.
+        foreach (string banned in new[] { "Scrim", "Dim", "Blur", "Outline", "Vignette" })
+        {
+            Assert.DoesNotContain(banned, view, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // PAUSED stays at the retail title colour 0xff505050 with no shadow:
+        // CMenuItemRange__Render packs exactly that ARGB for its single title
+        // CDXFont__DrawText call. Faintness is retail, not a defect.
+        Assert.Contains("TitleColor = RetailColor(0xff505050)", view, StringComparison.Ordinal);
+        string range = ExtractMethod(view, "private void DrawMenuRange(");
+        AssertOccursInOrder(range, "TitleColor,", "shadow: false);");
+    }
+
+    private static string ReadPauseView() => File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "FirstFlightPauseMenu.cs"));
+
     private static string ExtractMethod(string source, string signature)
     {
         int signatureIndex = source.IndexOf(signature, StringComparison.Ordinal);

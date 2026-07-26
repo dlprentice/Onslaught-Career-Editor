@@ -3,6 +3,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -249,6 +250,162 @@ public sealed class Level100PineRepresentationTests
         Assert.Contains("texel.a < (8.0 / 255.0)", StaticWorldSource);
     }
 
+    /// <summary>
+    /// The authored statics are not pines and are seated by a different
+    /// released owner. `CThing__Init` @ 0x004F34A0 stores the authored position
+    /// at `this+0x1c..+0x28` (Z-down at `+0x24`) and then clamps it twice:
+    /// `MOV ECX,0x006FADC8` / `CALL 0x0047EB80` (0x004F34F6, 0x004F34FB) samples
+    /// the height field, `FCOM [ESI+0x24]` (0x004F3500) compares, and
+    /// `FSTP [ESP+0x14]` (0x004F3529) writes the sampled height into the copy
+    /// handed to `CALL [EAX+0x50]`; then `FLD [0x006FBDFC]` (0x004F3549),
+    /// `FCOM [ESI+0x24]` and `FSTP [ESI+0x24]` (0x004F3559) do the same with the
+    /// water level. Both stores are bare: the mesh bounding box is never read,
+    /// so the pivot — not the lowest vertex — lands on the support. These tests
+    /// pin that, because a `-min(vertexZ)` lift had been added on top of it and
+    /// floated the docks by the exact length of their own pilings.
+    /// </summary>
+    [Fact]
+    public void NoMeshDerivedTermIsAddedToTheReleasedStaticClamp()
+    {
+        string placement = Between(
+            StaticWorldSource,
+            "foreach (WorldObject worldObject in manifest.Objects",
+            "int pineCount = AddPines(");
+
+        Assert.Contains("relativeHeight,\n                    -relativeZ),", placement.ReplaceLineEndings("\n"));
+        Assert.DoesNotContain("verticalClearance", placement);
+        Assert.DoesNotContain("BaseClearance", placement);
+        // The per-definition suppression only existed to cancel that lift for
+        // one object; with the lift gone the general rule covers all 33.
+        Assert.DoesNotContain("SatTurretDefinition", placement);
+    }
+
+    /// <summary>
+    /// The docks are the object that proves the authored Z is an absolute
+    /// elevation in the same space as the water plane, not an offset from the
+    /// ground: BSWD ordinal 24 is authored at Z-down -8.870770454406738 and
+    /// `CHFD + 0x1034` holds -8.84000015258789, so the pivot is authored
+    /// 0.0308 above the water surface, while the terrain under it is the flat
+    /// sea-floor plateau 10 units below. The authored term therefore wins both
+    /// clamps and the pivot must land at the water line.
+    /// </summary>
+    [Fact]
+    public void TheDocksPivotIsTheAuthoredWaterLineAndTheOldLiftWasItsOwnPilings()
+    {
+        JsonElement manifest = LoadManifest();
+        JsonElement docks = manifest
+            .GetProperty("objects")
+            .EnumerateArray()
+            .Single(item => item.GetProperty("ordinal").GetInt32() == 24);
+        Assert.Equal("Forseti Docks", docks.GetProperty("definition").GetString());
+
+        double authoredZ = docks.GetProperty("retailPosition")[2].GetDouble();
+        double waterZ = Level100Terrain.Instance.WaterLevel;
+        Assert.Equal(-8.870770454406738, authoredZ, 9);
+        Assert.Equal(0.030770301818847656, waterZ - authoredZ, 9);
+
+        (double authored, double ground, double water) = Supports(docks);
+        Assert.Equal(authored, Math.Max(authored, Math.Max(ground, water)), 6);
+        // The sea floor here is the flat plateau: raw 1267 * the HFLD scale.
+        Assert.Equal(-1.1600439436733723 - 10.0, ground, 6);
+        Assert.Equal(0.030770301818847656, authored - water, 9);
+
+        // The lift that used to be added is exactly the piling span this mesh
+        // carries below its own origin, which is why the deck hung 3.2 m up and
+        // the columns ended above the water.
+        double[] vertexZ = MeshVertexZ("fb-docks.obj");
+        Assert.Equal(2809, vertexZ.Length);
+        Assert.Equal(173, vertexZ.Count(value => value < -0.001));
+        Assert.Equal(
+            manifest.GetProperty("meshes").GetProperty("FB_Docks")
+                .GetProperty("baseClearance").GetDouble(),
+            -vertexZ.Min(),
+            9);
+        Assert.Equal(3.231837272644043, -vertexZ.Min(), 9);
+    }
+
+    /// <summary>
+    /// The four turrets are the contrast case: they stand on land, so the
+    /// ground clamp wins and the pivot must equal the sampled height exactly.
+    /// Each turret mesh carries a base collar below its own origin — 56 to 69
+    /// vertices reaching 0.222 to 0.228 down — that retail buries. Lifting by
+    /// that span is what raised them out of the ground.
+    /// </summary>
+    [Theory]
+    [InlineData(3, "SAT Turret", "ft_sam", "ft-sam.obj", 56, 0.22822660952806473)]
+    [InlineData(10, "Blaster Turret", "ft_blaster", "ft-blaster.obj", 69, 0.22263068734901026)]
+    [InlineData(11, "Blaster Turret", "ft_blaster", "ft-blaster.obj", 69, 0.22263068734901026)]
+    [InlineData(12, "Pulse Turret", "ft_pulse", "ft-pulse.obj", 64, 0.22567694188910536)]
+    public void EveryTurretSeatsItsPivotOnTheSampledGroundAndBuriesItsCollar(
+        int ordinal,
+        string definition,
+        string meshKey,
+        string meshFile,
+        int collarVertexCount,
+        double collarDepth)
+    {
+        JsonElement manifest = LoadManifest();
+        JsonElement turret = manifest
+            .GetProperty("objects")
+            .EnumerateArray()
+            .Single(item => item.GetProperty("ordinal").GetInt32() == ordinal);
+        Assert.Equal(definition, turret.GetProperty("definition").GetString());
+        Assert.Equal(meshKey, turret.GetProperty("mesh").GetString());
+
+        (double authored, double ground, double water) = Supports(turret);
+        Assert.Equal(ground, Math.Max(authored, Math.Max(ground, water)), 6);
+
+        double[] vertexZ = MeshVertexZ(meshFile);
+        Assert.Equal(collarVertexCount, vertexZ.Count(value => value < -0.001));
+        Assert.Equal(collarDepth, -vertexZ.Min(), 9);
+        Assert.Equal(
+            collarDepth,
+            manifest.GetProperty("meshes").GetProperty(meshKey)
+                .GetProperty("baseClearance").GetDouble(),
+            9);
+    }
+
+    /// <summary>
+    /// Returns the three clamp supports for one authored object in up-positive
+    /// units relative to the player-start reference elevation, exactly as
+    /// <c>Level100StaticWorldAsset.Load</c> forms them.
+    /// </summary>
+    private static (double Authored, double Ground, double Water) Supports(
+        JsonElement worldObject)
+    {
+        const double referenceElevation =
+            Level100Terrain.PlayerStartReferenceElevationMillimeters / 1_000.0;
+        JsonElement position = worldObject.GetProperty("retailPosition");
+        double retailX = position[0].GetDouble();
+        double retailY = position[1].GetDouble();
+        Level100Terrain terrain = Level100Terrain.Instance;
+        int groundUnits = terrain.SampleHeightUnitsAtFixed(
+            (int)Math.Floor(retailX * Level100Terrain.FixedPointUnitsPerRetailUnit),
+            (int)Math.Floor(retailY * Level100Terrain.FixedPointUnitsPerRetailUnit));
+        return (
+            referenceElevation - position[2].GetDouble(),
+            referenceElevation - (groundUnits * (double)terrain.HeightScale),
+            referenceElevation - terrain.WaterLevel);
+    }
+
+    private static double[] MeshVertexZ(string meshFile)
+    {
+        string path = Path.Combine(
+            LocateGodotDirectory(),
+            "Assets",
+            "Level100",
+            "StaticWorld",
+            "Meshes",
+            meshFile);
+        Assert.True(File.Exists(path), $"The static-world mesh is missing: {path}");
+        return File.ReadLines(path)
+            .Where(line => line.StartsWith("v ", StringComparison.Ordinal))
+            .Select(line => double.Parse(
+                line.Split(' ')[3],
+                CultureInfo.InvariantCulture))
+            .ToArray();
+    }
+
     private static JsonElement LoadManifest()
     {
         string path = Path.Combine(
@@ -262,23 +419,23 @@ public sealed class Level100PineRepresentationTests
         return document.RootElement.Clone();
     }
 
-    private static string ReadGodotSource(string fileName)
+    private static string ReadGodotSource(string fileName) =>
+        File.ReadAllText(Path.Combine(LocateGodotDirectory(), fileName));
+
+    private static string LocateGodotDirectory()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            string candidate = Path.Combine(
-                directory.FullName,
-                "OnslaughtRebuild.Godot",
-                fileName);
-            if (File.Exists(candidate))
+            string candidate = Path.Combine(directory.FullName, "OnslaughtRebuild.Godot");
+            if (File.Exists(Path.Combine(candidate, "Level100StaticWorldAsset.cs")))
             {
-                return File.ReadAllText(candidate);
+                return candidate;
             }
             directory = directory.Parent;
         }
-        throw new FileNotFoundException(
-            $"Could not locate OnslaughtRebuild.Godot/{fileName} above {AppContext.BaseDirectory}.");
+        throw new DirectoryNotFoundException(
+            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
     }
 
     private static string Between(string source, string start, string end)

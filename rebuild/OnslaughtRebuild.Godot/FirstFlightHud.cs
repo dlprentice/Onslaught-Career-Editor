@@ -110,11 +110,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
                     playback.Playing,
                     playback.PositionSeconds,
                     playback.LengthSeconds,
-                    PortraitPoseIndex(playback),
-                    MessagePageIndex: null)
+                    PortraitPoseIndex(playback))
                 : Level100MessagePlaybackSnapshot.Unavailable;
-        if (activePlayback.PortraitPoseIndex is < 0 or > 3 ||
-            activePlayback.MessagePageIndex is < 0)
+        // MessagePageIndex was removed 2026-07-26: retail does not page. The
+        // message types on at 40 char/s into a three-line window that scrolls
+        // up by exactly ONE line, proven from the captured frames (line 3 is
+        // the bottom of one window and the top of the next, which a pager
+        // would have discarded).
+        if (activePlayback.PortraitPoseIndex is < 0 or > 3)
         {
             throw new InvalidDataException("Level 100 audio presentation state is out of range.");
         }
@@ -1487,20 +1490,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private const int GlyphColumns = 16;
         private const int SmallGlyphCellSize = 16;
         private const int LargeGlyphCellSize = 32;
-        private const int MaximumMessageLines = 5;
-        private const float MessageLineHeight = 15f;
-        private const float MessageTextWidth = 232f;
-        private const float MessageTextHeight = 76f;
+        // Message panel metrics live in Level100MessagePanel, which is pure and
+        // unit tested; the constant below only names the pitch this layer also
+        // uses for the (unmeasured) help-prompt stack.
+        private const float MessageLineHeight = Level100MessagePanel.LineHeightPixels;
 
         private readonly Texture2D _fontAtlas;
         private readonly int[] _glyphWidths;
         private readonly Texture2D _largeFontAtlas;
         private readonly int[] _largeGlyphWidths;
         private readonly Level100HudAssetCatalog _catalog;
-        private string[][] _messagePages = [];
+        private string[] _messageWindow = [];
         private Level100HudHelpDefinition[] _activeHelp = [];
         private Level100HudWeaponSnapshot _weapon = Level100HudWeaponSnapshot.Unavailable;
-        private int _messagePageIndex;
 
         public RetailHudTextLayer(
             Texture2D fontAtlas,
@@ -1509,6 +1511,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
         {
             _fontAtlas = fontAtlas;
             _glyphWidths = MeasureGlyphWidths(fontAtlas.GetImage(), SmallGlyphCellSize);
+            // font-13ps' space cell carries no ink, so its advance cannot be
+            // measured off the atlas; it is measured off the screen instead.
+            // Predicting the ink span of the twelve message lines rendered in
+            // level100-gameplay t016011/t022080/t028057/t037063 with a space
+            // advance of 8 lands within 2px on every line (total absolute error
+            // 10px); 9 costs 28px and 7 costs 40px. The advance a glyph width
+            // produces is width+1, so the space width is 7.
+            _glyphWidths[0] = (SmallGlyphCellSize / 2) - 1;
             _largeFontAtlas = largeFontAtlas;
             _largeGlyphWidths = MeasureGlyphWidths(largeFontAtlas.GetImage(), LargeGlyphCellSize);
             _catalog = catalog;
@@ -1528,23 +1538,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Level100HudMessageDefinition? message,
             Level100MessagePlaybackSnapshot playback)
         {
-            _messagePages = message is null
-                ? []
-                : Paginate(message.Text, MessageTextWidth, MaximumMessageLines);
-            _messagePageIndex =
-                playback.IsAvailable &&
-                playback.LengthSeconds > 0d &&
-                _messagePages.Length > 1
-                    ? Math.Min(
-                        _messagePages.Length - 1,
-                        (int)Math.Floor(
-                            (playback.PositionSeconds / playback.LengthSeconds) *
-                            _messagePages.Length))
-                    : 0;
-            if (_messagePages.Length > 0 && _messagePageIndex >= _messagePages.Length)
+            if (message is null)
             {
-                throw new InvalidDataException(
-                    "Level 100 native message page is outside the released text pagination.");
+                _messageWindow = [];
+            }
+            else
+            {
+                IReadOnlyList<Level100MessageLine> lines =
+                    Level100MessagePanel.Wrap(message.Text);
+                // Retail types the message on at 40 characters per second into a
+                // three-line window that scrolls up one line at a time; see
+                // Level100MessagePanel for the captures that measure both.
+                // PositionSeconds is the only per-message clock this layer has,
+                // and a message's type-on and its audio start together in every
+                // captured pair, so it is the reveal clock. Without playback
+                // there is no clock, so the settled (fully typed) window shows.
+                int revealed = playback.IsAvailable
+                    ? Level100MessagePanel.RevealedCharacters(playback.PositionSeconds)
+                    : Level100MessagePanel.SourceLength(lines);
+                _messageWindow = Level100MessagePanel.Window(lines, revealed).ToArray();
             }
             _activeHelp = hud.ActiveHelp
                 .Select(_catalog.GetRequired)
@@ -1562,39 +1574,45 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // 9x10 in the atlas), so the released text path is a 1:1 blit on the
             // 640x480 stage. Drawing it in design space preserves that.
             BeginDesignSpace();
-            DrawMessagePage();
+            DrawMessageWindow();
             DrawHelpPrompts();
             DrawWeaponAmmo();
             EndDesignSpace();
         }
 
-        private void DrawMessagePage()
+        private void DrawMessageWindow()
         {
-            if (_messagePages.Length == 0)
+            if (_messageWindow.Length == 0)
             {
                 return;
             }
 
-            string[] lines = _messagePages[_messagePageIndex];
-            // UNVERIFIED against the retail frame and deliberately unchanged.
-            // The reference capture's subtitle is mid-render ("This i"), so its
-            // line count is unknown. That single line's glyph cell sits at
-            // (205, 412) in the capture, while these constants place line 0 at
-            // (226, 387); (226, 387) is consistent with retail only if retail
-            // vertically centres a 3-line block, which one frame cannot decide.
-            // Moving it would be a guess, so it stays put.
-            var textRect = new Rect2(
-                (DesignWidth * 0.5f) - 94f,
-                DesignHeight - 93f,
-                MessageTextWidth,
-                MessageTextHeight);
-            for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+            // Measured against the 640x480 gameplay captures, not fitted: the
+            // three glyph-cell rows of
+            // level100-gameplay/opening-pan-run1/level100-t016011ms.png start on
+            // screen rows 412, 427 and 442 with their leading white ink at x 205,
+            // and the drop shadow is offset (+1,+1) from the white glyph, so the
+            // pen origin is (206, 413) with a 15px pitch. That block, cell rows
+            // 412..458, is centred to the half pixel in the panel body this file
+            // already pins at y 405.5..464.5.
+            //
+            // The clip is the panel body itself. No captured retail message
+            // reaches it - the widest 25-column line in the released text table
+            // ("Now make your way to the") ends at x 441 against a body that
+            // ends at 496.5 - so it is a guard, not a measured behaviour.
+            var clip = new Rect2(
+                Level100MessagePanel.PanelBodyLeft,
+                Level100MessagePanel.PanelBodyTop,
+                Level100MessagePanel.PanelBodyRight - Level100MessagePanel.PanelBodyLeft,
+                Level100MessagePanel.PanelBodyBottom - Level100MessagePanel.PanelBodyTop);
+            for (int lineIndex = 0; lineIndex < _messageWindow.Length; lineIndex++)
             {
                 DrawTextLine(
-                    lines[lineIndex],
-                    textRect.Position.X,
-                    textRect.Position.Y + (lineIndex * MessageLineHeight),
-                    textRect);
+                    _messageWindow[lineIndex],
+                    Level100MessagePanel.TextPenLeft,
+                    Level100MessagePanel.FirstLinePenTop +
+                        (lineIndex * Level100MessagePanel.LineHeightPixels),
+                    clip);
             }
         }
 
@@ -1795,16 +1813,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             return widths;
         }
 
-        private string[][] Paginate(string text, float width, int linesPerPage)
-        {
-            string[] lines = WrapIntoLines(text, width);
-            return lines
-                .Select((line, index) => (line, index))
-                .GroupBy(item => item.index / linesPerPage)
-                .Select(group => group.Select(item => item.line).ToArray())
-                .ToArray();
-        }
-
+        // Pixel-width wrap, used only by the help-prompt stack. The message
+        // panel does NOT use it: retail wraps messages by character column, not
+        // by pixel width (Level100MessagePanel.WrapColumns). Whether the help
+        // prompts wrap the same way is unmeasured - no capture in
+        // local-lab/retail-reference-pristine/ shows a help prompt long enough
+        // to break - so this path is left exactly as it was.
         private string[] WrapIntoLines(string text, float maximumWidth)
         {
             var lines = new List<string>();

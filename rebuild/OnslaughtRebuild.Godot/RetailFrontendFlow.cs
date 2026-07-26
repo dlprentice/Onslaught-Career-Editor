@@ -870,18 +870,27 @@ public sealed partial class RetailFrontendFlow : Control
         // got_standard_SlidingTextBordersAndMask() returns TRUE for
         // (FrontEnd.cpp:780), which pins transition to 1 and therefore this
         // settled scale. The outside bracket only draws while dest == FEP_MAIN.
-        // MEASURED override of SELECT_BRACKET_SCALE: fitting the retail arc mask
-        // against a capture drawn at the source's 1.25/(328,343) gives a best
-        // uniform-scale overlap of 83.3% at scale 1.39 and centre
-        // (327..328, 334..338), over 2000 sampled retail arc pixels with the
-        // emblem region excluded. Source scale 1.25 leaves the arc ~30px short of
-        // retail's outer edge. 1.4 is SELECT_BRACKET_SCALE2 in the same source
-        // block and sits inside the fit's 1px quantisation, so the released build
-        // evidently uses the larger of the two bracket scales on this page.
+        // MEASURED (re-fit 2026-07-26, tools/frontend_arc_bracket_fit.py): this
+        // page really does use SELECT_BRACKET_SCALE2 1.4, but the centre it was
+        // previously paired with was wrong. Fitting the bracket alpha mask over
+        // 4,000 sampled retail arc pixels peaks at 100.0% coverage at scale 1.40,
+        // centre (329,344) — i.e. SELECT_BRACKET_X/Y (328,343) within 1px, the
+        // same centre DrawLevelSelect uses. Scale 1.25 reaches only 13.8% there.
+        // The response surface is single-peaked: 1.38 -> 97.3, 1.39 -> 99.2,
+        // 1.40 -> 100.0, 1.41 -> 95.0. Robust across alpha threshold 16..200,
+        // three sample seeds, and thin-run filter 3..20.
+        //
+        // The earlier 83.3%/1.39/(328,336) fit was contaminated by the level-map
+        // episode curves and the FET3_HEADER_BRACKET1 end-caps; a geometric
+        // thin-run filter removes both (the arc band is >=25px wide on every
+        // scanline it occupies). The same method, run first as a mandatory
+        // control on SELECT LEVEL, reaches 99.7% at 1.25/(329,344) — reproducing
+        // that page's source constants and beating its previously recorded 96.1%.
+        // So both pages are one texture at one centre with two source scales.
         const float bracketScale = 1.4f;
         const float bracketShadowScale = bracketScale * ShadowScaleBoost;
-        DrawSurfaceCentered(_levelBracket01, 333f, 346f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_levelBracket01, 328f, 336f, bracketScale, bracketScale, BracketTint);
+        DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
+        DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
 
         // Header text box then the centred title.
         DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxTint);
