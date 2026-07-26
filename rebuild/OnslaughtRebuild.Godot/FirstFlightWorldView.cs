@@ -11,7 +11,19 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float UnitsToMeters = 0.001f;
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
-    private const float RetailVerticalFovDegrees = 58.7155f;
+    // 2*atan(0.75), from the released binary rather than from fitting.
+    // CDXEngine__SetProjectionMatrix (0x00550b10) builds proj[0][0] =
+    // near/viewport_w and proj[1][1] = near/viewport_h, and the world call in
+    // CDXEngine__Render (0x0053e670) passes viewport_w = near*zoom and
+    // viewport_h = near*zoom*aspect. CCamera__GetAspectRatio (0x0041b070)
+    // returns the constant 0.75 outside multiplayer (0x005d8bc4), and
+    // CThingCamera's zoom is CBattleEngine::mZoom (thing+0x2c8), initialised to
+    // 1.0 and bounded by MAX_ZOOM_OUT 1.0 / MAX_ZOOM_IN 0.4. Unzoomed play is
+    // therefore tan(hfov/2)=1 and tan(vfov/2)=0.75, i.e. 90 degrees horizontal
+    // and 73.739795 vertical. The 0.75 is a fixed constant, not a viewport
+    // ratio. See reverse-engineering/binary-analysis/
+    // player-camera-attach-and-mesh-hfov-2026-07-26.md.
+    private const float RetailVerticalFovDegrees = 73.739795f;
     // A planted or swinging Aquila foot advances a fraction of a stride per
     // tick, so a player-relative jump beyond one stride is a stance reset
     // rather than motion and must not be smeared.

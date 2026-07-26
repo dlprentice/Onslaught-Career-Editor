@@ -84,7 +84,18 @@ internal sealed class RetailAquilaWalkerAsset
         false,
         null,
         25f,
-        new Vector3(0f, -0.01f, -0.06f),
+        // Zero, from the released binary rather than from fitting. The player
+        // camera is CThingCamera on the Battle Engine: 0x00418cd0 returns
+        // thing->mPos verbatim when THING_TYPE_BATTLE_ENGINE (bit 3 of
+        // thing+0x34) is set, adding the bounding-box lift only for other
+        // things. The cockpit's own render-thing position provider,
+        // 0x00425430, returns battleEngine->mPos + the cockpit shake offset,
+        // interpolated against the previous frame. With no shake the cockpit
+        // mesh origin therefore coincides exactly with the camera, and the
+        // orientation provider 0x004254f0 composes the shake matrix onto the
+        // Battle Engine orientation the camera also uses. There is no authored
+        // camera-node offset in the attach path at all.
+        Vector3.Zero,
         false,
         [
             new AnimationMode("walktofly", 26, 50, 24, 1f / 24f),
