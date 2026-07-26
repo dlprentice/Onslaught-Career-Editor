@@ -102,8 +102,44 @@ internal sealed class Level100TerrainAppearanceAsset
             vec3 retail_color = min(stage_color * detail_secondary * 2.0, vec3(1.0));
             retail_color = apply_retail_fog(retail_color, max(-VERTEX.z, 0.0));
             ALBEDO = retail_output(retail_color);
+            // PROBE_HOOK
         }
         """;
+
+    // Analysis-only fragment tails. Each replaces ALBEDO with one measured term
+    // of the terrain chain so an offline probe can invert
+    //   retail_pixel = macro x detail x cloud x detail x fog
+    // against retail's own frame. Selected by the ONSLAUGHT_TERRAIN_PROBE
+    // environment variable; unset (the shipping path) leaves the shader byte
+    // for byte as above. Captures taken with it set are stamped 'probe' by
+    // Capture-Frontend.ps1 because the working tree is dirty, which is the
+    // intended and correct outcome - none of these frames describe the build.
+    private static readonly Dictionary<string, string> s_probeTails = new(StringComparer.Ordinal)
+    {
+        // Our macro cache as sampled on screen.
+        ["macro"] = "ALBEDO = retail_output(macro_color);",
+        // Terrain coverage mask (R==255, B==0) carrying fog visibility in G.
+        ["mask"] =
+            "ALBEDO = retail_output(vec3(1.0, " +
+            "clamp(exp(-fog_density * max(-VERTEX.z, 0.0)), 0.0, 1.0), 0.0));",
+        // The whole post-macro chain with the macro term forced to one and the
+        // two saturating min() stages removed. Scaled by 0.25 so the unclamped
+        // product (max 0.859 * 2 * 1.0 * 0.859 * 2 = 2.95) stays inside [0,1];
+        // the offline probe multiplies by 4 to recover it.
+        ["chain"] =
+            "ALBEDO = retail_output(0.25 * detail_primary * cloud_shadow * 2.0 " +
+            "* detail_secondary * 2.0);",
+        // World identity of the shaded texel. UV is retail's absolute landscape
+        // X/Y and the island spans 512 units, so this is the root-map texel
+        // coordinate at 2-unit resolution, plus the selected macro level.
+        ["uv"] =
+            "ALBEDO = retail_output(vec3(fract(retail_world_uv / 512.0), " +
+            "float(macro_level) / 8.0));",
+        // Sub-unit refinement of the same identity: a 2-unit period at 1/128
+        // unit resolution, which combines with 'uv' to an exact world position.
+        ["uvfine"] =
+            "ALBEDO = retail_output(vec3(fract(retail_world_uv / 2.0), 0.0));",
+    };
 
     private readonly Level100TerrainCompositor _compositor;
     private readonly ImageTexture[] _macroTextures = new ImageTexture[5];
@@ -138,7 +174,7 @@ internal sealed class Level100TerrainAppearanceAsset
 
         var shader = new Shader
         {
-            Code = TerrainShaderCode,
+            Code = ProbeShaderCode(),
         };
         _material = new ShaderMaterial
         {
@@ -158,6 +194,22 @@ internal sealed class Level100TerrainAppearanceAsset
     }
 
     public Material Material => _material;
+
+    private static string ProbeShaderCode()
+    {
+        string probe = OS.GetEnvironment("ONSLAUGHT_TERRAIN_PROBE");
+        if (string.IsNullOrWhiteSpace(probe))
+        {
+            return TerrainShaderCode;
+        }
+        if (!s_probeTails.TryGetValue(probe.Trim(), out string? tail))
+        {
+            throw new InvalidDataException(
+                $"ONSLAUGHT_TERRAIN_PROBE='{probe}' is not a known terrain probe mode.");
+        }
+        GD.Print($"[terrain-probe] fragment tail overridden: {probe.Trim()}");
+        return TerrainShaderCode.Replace("// PROBE_HOOK", tail, StringComparison.Ordinal);
+    }
 
     public static Level100TerrainAppearanceAsset Load(
         string rootTextureResourcePath,

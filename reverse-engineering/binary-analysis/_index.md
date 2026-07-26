@@ -40,6 +40,7 @@ evidence lives under the ignored lab’s apply logs when present.
 - [Terrain shade bilinear interpolation decode](terrain-shade-bilinear-decode-2026-07-26.md)
 - [Terrain draw texture-stage flags](terrain-draw-stage-flags-2026-07-26.md)
 - [Terrain per-node colour light absent from the PC path](terrain-per-node-colour-absent-2026-07-26.md)
+- [Retail's implied macro cache inverted from rendered pixels](terrain-implied-macro-inversion-2026-07-26.md)
 - [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
 
