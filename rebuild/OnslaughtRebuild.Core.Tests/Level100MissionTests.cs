@@ -160,6 +160,158 @@ public sealed class Level100MissionTests
         Assert.Null(continuation.DueTick);
     }
 
+    /// <summary>
+    /// The complete released Level 100 tutorial, driven by exactly the eleven
+    /// named events its own side scripts post (LevelScript.msl SHA-256
+    /// d51f8864564b5bde872092ec822df5af49daac16563f500719135f1a8c6c04a4:
+    /// TargetZone1..4 post the "Reached ..." events, StaticTarget/StaticTarget2/
+    /// TargetTank2 post the destruction events). This pins the whole first-play
+    /// script path -- every character message in order, all four primary
+    /// objectives, the four saved tutorial slots and the terminal handoff -- so
+    /// that the mission-program layer cannot silently regress to a prefix while
+    /// mechanics, AI and presentation catch up.
+    /// </summary>
+    [Fact]
+    public void ReleasedLevelScript_RunsTheCompleteFirstPlayTutorialToLevelWon()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        // Default progress == every SLOT_TUTORIAL_n FALSE, i.e. a first play,
+        // which is the longest released path through the script.
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false),
+            initialPlayerHealth: 735);
+
+        var messageIds = new List<int>();
+        var postedEvents = new List<string>();
+        var completedObjectives = new List<int>();
+        var savedSlots = new List<int>();
+
+        void Drain()
+        {
+            foreach (Level100MissionEvent item in mission.DrainEvents())
+            {
+                switch (item)
+                {
+                    case Level100MessageRequested message:
+                        messageIds.Add(message.MessageId);
+                        break;
+                    case Level100MissionEventPosted posted:
+                        postedEvents.Add(posted.EventName);
+                        break;
+                    case Level100TutorialSlotSaved slot:
+                        savedSlots.Add(slot.Slot);
+                        break;
+                    case Level100PrimaryObjectiveChanged objective
+                        when objective.Status == Level100PrimaryObjectiveStatus.Complete:
+                        completedObjectives.Add(objective.Objective);
+                        break;
+                }
+            }
+        }
+
+        // The longest released wait in one step is Pause(30) plus its adjacent
+        // message waits, so 3000 ticks (100 s at 30 Hz) settles every step.
+        const int SettleTicks = 3_000;
+        void Settle()
+        {
+            for (int index = 0; index < SettleTicks; index++)
+            {
+                mission.AdvanceTick(735);
+                Drain();
+            }
+        }
+
+        Drain();
+        Settle();
+
+        string[] releasedEventSequence =
+        [
+            "Reached Target Zone 1",
+            "Reached Firing Range",
+            "Static Target Destroyed", "Static Target Destroyed",
+            "Static Target Destroyed", "Static Target Destroyed",
+            "Static Target 2 Destroyed", "Static Target 2 Destroyed",
+            "Static Target 2 Destroyed",
+            "Moving Target Destroyed", "Moving Target Destroyed",
+            "Moving Target Destroyed", "Moving Target Destroyed",
+            "Moving Target Destroyed", "Moving Target Destroyed",
+            "Reached Target Zone 2",
+            "Airborne Target 1 Destroyed", "Airborne Target 1 Destroyed",
+            "Airborne Target 1 Destroyed",
+            "Reached Target Zone 3",
+            "Airborne Target 2 Destroyed", "Airborne Target 2 Destroyed",
+            "Airborne Target 2 Destroyed", "Airborne Target 2 Destroyed",
+            "Airborne Target 2 Destroyed", "Airborne Target 2 Destroyed",
+            "Reached Target Zone 4",
+        ];
+
+        foreach (string eventName in releasedEventSequence)
+        {
+            Assert.True(
+                mission.QueueExternalEvent(eventName),
+                $"The released LevelScript refused the event '{eventName}'.");
+            Drain();
+            Settle();
+        }
+
+        // Every PlayCharMessage/PlayCharMessageWait the released first-play
+        // path requests, in order. HUD_01, HUD_02, HUD_06, TUTORIAL_MESSAGE_LOG,
+        // TUTORIAL_TECHNICIAN_01, TUTORIAL_13_MOD, TUTORIAL_01,
+        // TUTORIAL_SCANNER (init), TUTORIAL_02 (zone 1), TUTORIAL_03, HUD_05,
+        // TUTORIAL_PULSE_CANNON, TUTORIAL_OPEN_FIRE, TUTORIAL_PULSE_CANNON_2
+        // (firing range), then the Vulcan, zoom, dodge, transform, throttle,
+        // strafe and landing beats through TUTORIAL_11.
+        Assert.Equal(
+            [
+                292562, 293386, 296682, -1575499396, -257967449, 82987417,
+                4422830, 175347826, 4458134, 4493438, 295858, 1339691000,
+                669198996, -1715818922, -1616775312, -1860407443, 864965454,
+                4564046, 22775962, 294210, 295034, 667656903, 150647733,
+                151778876, 1326027769, 4528742, 165861931, 4599350, 1062059777,
+                4475837, 4705262, 4634654, 80260569, 4669958, 4440532,
+            ],
+            messageIds);
+
+        // The events LevelScript posts back to its own side scripts. It has no
+        // listener for any of them, so each is an outbound fact only.
+        Assert.Equal(
+            [
+                "Activate Static Targets",
+                "Activate Static Targets 2",
+                "Activate Moving Targets",
+                "Trainer Attack",
+                "Cease Trainer Attack",
+                "Activate Airborne Targets 1",
+                "Activate Airborne Targets 2",
+            ],
+            postedEvents);
+
+        // Objective 2 is completed on each of the three "Static Target 2
+        // Destroyed" events, exactly as the released script does.
+        Assert.Equal([1, 2, 2, 2, 3, 4], completedObjectives);
+        Assert.Equal([63, 64, 65, 66], savedSlots);
+
+        Level100MissionSnapshot final = mission.Snapshot;
+        Assert.Equal(Level100MissionOutcome.Won, final.Outcome);
+        Assert.Equal(Level100MissionTerminalState.FrontEndHandoffReady, final.TerminalState);
+        Assert.Equal(
+            new Level100TutorialProgress(true, true, true, true),
+            final.TutorialProgress);
+        Assert.All(
+            final.PrimaryObjectives,
+            objective => Assert.Equal(
+                Level100PrimaryObjectiveStatus.Complete,
+                objective.Status));
+        // The clean dodge exercise never posts "Evade Failed", so the released
+        // TUTORIAL_DODGE_GOOD branch awards its +50 and nothing deducts.
+        Assert.Equal(50, final.ScoreDelta);
+        Assert.True(final.FlightModeEnabled);
+    }
+
     [Fact]
     public void ExternalTerminalFacts_StopTheReleasedLevelScriptOnce()
     {

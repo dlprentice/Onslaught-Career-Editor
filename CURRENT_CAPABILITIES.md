@@ -220,8 +220,8 @@ does not claim general mesh collision.
 Twenty-nine exact released HUD textures, including Font13PS and the three v3
 crosshair layers, replace the prototype overlay for the bounded threat circle,
 lower-left scanner/weapon instrument, lower-right battleline/portrait,
-active-objective markers, and conditional message panel. The first seventeen
-English tutorial messages through the first exercise's Vulcan handoff now use
+active-objective markers, and conditional message panel. All fifty-one
+English tutorial messages now use
 exact released strings, shipped Ogg/Vorbis voices, proportional font metrics,
 the native 120-pixel message composition, and four released
 Tatiana/technician portrait poses. Repeated retail runs matched every retained opening boundary
