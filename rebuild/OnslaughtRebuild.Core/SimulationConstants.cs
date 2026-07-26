@@ -5,6 +5,16 @@ namespace OnslaughtRebuild.Core;
 public static class SimulationConstants
 {
     public const int TicksPerSecond = 30;
+    // Retail's simulation tick is CLOCK_TICK 0.05 s
+    // (references/Onslaught/thing.h:29; eventmanager.cpp:296 advances
+    // mTime = mFrameCount * CLOCK_TICK). Constants recovered from shipped bytes
+    // are naturally expressed per RETAIL tick; this pair is the single place
+    // that converts one to a Core tick. When Core moves to 20 Hz the ratio
+    // becomes 1/1 and every "PerRetailTick" constant transfers unchanged, with
+    // no other edit. Do not reintroduce bare 30s anywhere.
+    public const int RetailTicksPerSecond = 20;
+    public const int RetailTicksPerCoreTickNumerator = RetailTicksPerSecond;
+    public const int RetailTicksPerCoreTickDenominator = TicksPerSecond;
     // 100_res_PC.aya WRES/WRLD placement data, translated so the released
     // player-one start (288.6875, 243.25) is Core origin. Half-milli values
     // use midpoint-away-from-zero rounding in the integer simulation.
@@ -64,6 +74,18 @@ public static class SimulationConstants
     public const int WalkerFootPhaseEnd = 180;
     public const int WalkerFootPhaseUnitsPerSecond = 400;
     public const int WalkerFootMaximumEarlySwings = 2;
+    // RESOLVED 2026-07-26 in favour of "Aquila Prototype" -- see the byte
+    // decode and the Twin Vulcan walker-list argument recorded on
+    // JetMinimumEnergyDrainMicroPerRetailTick below. The jet speed envelope
+    // itself is unaffected by the resolution: mMinAirVelocity 0.3 and
+    // mMaxAirVelocity 0.9 are byte-identical in the Aquila Prototype and
+    // Blaster records (and in Standard, Sniper and Laser), so the two
+    // constants immediately below are correct either way. Only
+    // mMaxAirEnergyCost (0.012 vs 0.010), mLife (20.0 vs 25.0) and
+    // mGroundVelocity (5.0 vs 4.5) actually differ.
+    //
+    // Retained for the record, the original dispute note:
+    //
     // DISPUTED 2026-07-25 - these values are derived from the Blaster record and
     // the premise behind that choice does not survive checking. The comment here
     // used to read: Level 100 names "Paladin Prototype", which is absent from the
@@ -82,8 +104,9 @@ public static class SimulationConstants
     //   - "Aquila Prototype" IS present in the shipped table, so there is no
     //     fallback to Blaster to make.
     //
-    // If that holds, JetMaximumEnergyDrainThirdsPerTick below is wrong: it comes
-    // from Blaster's 0.01, where Aquila Prototype's 0.012 would give 24, not 20.
+    // If that holds, the maximum jet energy drain below is wrong: it comes
+    // from Blaster's 0.01, where Aquila Prototype's 0.012 is the right value.
+    // (That prediction was correct and has now been applied.)
     // Aquila Prototype's walker weapon set is also exactly
     // {Pulse Cannon Pod (primary), Mech Twin Vulcan Cannon}, which is what the
     // Level 100 script enables at beat 3 and matches the only two weapon icons
@@ -95,7 +118,13 @@ public static class SimulationConstants
     // pinned smoke stateHash. That needs one runtime confirmation first - see
     // local-lab/LEVEL100-TUTORIAL-ASSESSMENT-2026-07-25.md.
     //
-    // Blaster's 0.3/0.9 retail-unit 20 Hz target velocities map to 30 Hz here.
+    // -- end of the retained 2026-07-25 note. The energy cost WAS corrected on
+    // 2026-07-26 and, measured, it does not move the smoke stateHash at all:
+    // that scenario never enters jet mode, so no air energy is ever spent.
+    //
+    // 0.3/0.9 retail-unit target velocities per retail tick, mapped to Core.
+    // These are the mMinAirVelocity / mMaxAirVelocity bytes and are identical
+    // in five of the six shipped records, Aquila Prototype included.
     public const int JetMinimumSpeedPerTick = 200;
     public const int JetMaximumSpeedPerTick = 600;
     public const int JetTargetCorrectionNumerator = 27_031;
@@ -108,9 +137,13 @@ public static class SimulationConstants
     public const int JetYawInputMicroRadPerTick = 9_805;
     public const int JetPitchInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
     public const int JetRollInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
-    public const int JetInputRampTicks = 45;
-    public const int JetTransformAlignmentTicks = 75;
-    public const int JetStrafeAlignmentTicks = 120;
+    // Written as seconds so the values are unchanged by a Core tick-rate move.
+    // CBattleEngineJetPart::Turn/Pitch ramp yaw, pitch and roll input over
+    // mTransformStartTime + 1.5 s; Move blends velocity onto the nose over
+    // mTransformStartTime + 2.5 s and over mStrafingStartTime + 4.0 s.
+    public const int JetInputRampTicks = 3 * TicksPerSecond / 2;
+    public const int JetTransformAlignmentTicks = 5 * TicksPerSecond / 2;
+    public const int JetStrafeAlignmentTicks = 4 * TicksPerSecond;
     public const int JetPitchSoftLimitMicroRad = 1_170_000;
     public const int JetRollAutoLevelNumerator = 979_899;
     public const int JetRollAutoLevelDenominator = 1_000_000;
@@ -135,10 +168,16 @@ public static class SimulationConstants
     public const int RetailVelocityUnitPerUpdateAsCoreSpeed = 667;
     public const int JetGroundedSlowSpeedPerTick = 67;
     public const int JetAutoLandSpeedPerTick = 17;
-    public const int JetAutoLandDelayTicks = 75;
-    public const int JetAutoLandEligibilityTicks = 30;
+    // CBattleEngineJetPart::Move arms the ground morph at
+    // mOnGround = time + 2.5 s, only considers it once
+    // mTransformStartTime + BATTLE_ENGINE_TRANSFORM_TIME * 2 has elapsed
+    // (BATTLE_ENGINE_TRANSFORM_TIME is 0.5 f, BattleEngine.h:43, so 1.0 s), and
+    // morphs a stalled jet 2.5 s after the stall begins. Seconds-derived so a
+    // Core tick-rate move leaves them meaning the same thing.
+    public const int JetAutoLandDelayTicks = 5 * TicksPerSecond / 2;
+    public const int JetAutoLandEligibilityTicks = 1 * TicksPerSecond;
     public const int JetStallSpeedPerTick = 100;
-    public const int JetStallDelayTicks = 75;
+    public const int JetStallDelayTicks = 5 * TicksPerSecond / 2;
     public const int JetGravityPerTick = 2;
     public const int WalkerGravityPerTick = 4;
     public const int MorphIntoWalkerGravityPerTick = 1;
@@ -206,14 +245,41 @@ public static class SimulationConstants
     public const int JetToWalkerTransitionTicks = 15;
     // Walker regen still provisional (no dual-accept yet).
     public const int WalkerEnergyRegenerationPerTick = 4;
-    // Level 100 falls back to Blaster, whose shipped minimum/maximum air costs
-    // are .005/.01 retail energy per 20 Hz update. Under the accepted
-    // milli-retail energy scale, their exact 30 Hz equivalents are 10/3 and
-    // 20/3 Core units per tick. The accumulator interpolates between them by
-    // throttle without discarding the fractional thirds.
-    public const int JetMinimumEnergyDrainThirdsPerTick = 10;
-    public const int JetMaximumEnergyDrainThirdsPerTick = 20;
-    public const int JetEnergyDrainFractionDenominator = 3;
+    // CBattleEngineJetPart::Move spends
+    //   cost = (mMaxAirEnergyCost - mMinAirEnergyCost) * mThrusterValue
+    //          + mMinAirEnergyCost
+    // once per retail tick while airborne with energy.
+    //
+    // The two costs are shipped bytes. data/battle engine configurations.dat
+    // (sha256 58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a,
+    // 1,514 bytes) decodes with CBattleEngineData::Load's exact field order
+    // (references/Onslaught/BattleEngineDataManager.cpp:148-430) consuming
+    // 1,514 of 1,514 bytes, 6 records, every record version 12 ==
+    // kCurrentBattleEngineDataFormat. Record 3, "Aquila Prototype" @0x2d2:
+    //   mMinAirEnergyCost 0.005  (0x3BA3D70A)   mMaxAirEnergyCost 0.012 (0x3C449BA6)
+    //   mMinAirVelocity   0.3    (0x3E99999A)   mMaxAirVelocity   0.9   (0x3F666666)
+    //   mEnergy           8.0                   mMinTransformEnergy 1.0
+    //
+    // These were previously taken from record 5, "Blaster", whose max air cost
+    // is 0.010 rather than 0.012. That reading is now settled against the
+    // bytes: the released Level 100 LevelScript does
+    // EnableWeapon("Mech Twin Vulcan Cannon") on the *walker*, and of the six
+    // shipped records only Aquila Prototype carries walker weapons
+    // ["Mech Twin Vulcan Cannon"] together with mPrimaryWeapon
+    // "Pulse Cannon Pod" -- exactly the two weapons the tutorial enables and
+    // the only two the level materializes. Blaster's walker list is
+    // ["Blaster Pod","Mech Grenade Launcher"] and contains no Twin Vulcan at
+    // all, so under Blaster beat 4 could not exist. The level's own RLWD
+    // declaration of "Aquila Prototype" is already asserted by
+    // rebuild/tools/materialize_retail_assets.py:1339.
+    //
+    // Stored in micro-retail-energy per RETAIL tick so the interpolation is
+    // exact at half throttle and the value survives the Core tick change.
+    public const int JetMinimumEnergyDrainMicroPerRetailTick = 5_000;
+    public const int JetMaximumEnergyDrainMicroPerRetailTick = 12_000;
+    // Energy uses the accepted milli-retail policy (1000 Core units == one
+    // retail energy unit), so one Core energy unit is 1000 micro-retail.
+    public const int MicroRetailEnergyPerCoreEnergyUnit = 1_000;
     public const int FireEnergyCost = 30;
     public const int FireCooldownTicks = 6;
     // Fresh copied-Steam Level 100 runs independently repeated four
@@ -245,7 +311,7 @@ public static class SimulationConstants
     // update is exactly 20), so 60.0 u/s is 2.0 units per 30 Hz Core tick and
     // the 1.0 s lifespan is 30 Core ticks.
     public const int MechBulletSpeedPerTick = 2_000;
-    public const int MechBulletLifetimeTicks = 30;
+    public const int MechBulletLifetimeTicks = 1 * TicksPerSecond;
     public const int TwinVulcanVolleySize = 4;
     // 0.05 s reload expressed exactly. One 30 Hz Core tick is 100/3 ms, so
     // counting in thirds of a millisecond makes both the tick and the reload

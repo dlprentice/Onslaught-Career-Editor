@@ -252,7 +252,7 @@ public sealed record WorldSnapshot(
     int JetTicksSinceTransform,
     int JetStrafeTicksRemaining,
     int JetStrafeAccelerationRemainder,
-    int JetEnergyDrainRemainderThirds,
+    int JetEnergyDrainRemainderMicroRetail,
     int JetThrusterPermille,
     int JetGroundedSlowTicks,
     int JetStallTicks,

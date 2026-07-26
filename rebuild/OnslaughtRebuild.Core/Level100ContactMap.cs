@@ -152,6 +152,15 @@ public readonly struct Level100ContactActor
     public ReadOnlyMemory<byte> PartActivity { get; }
 }
 
+/// <summary>
+/// The released destruction class a contact definition belongs to, not its
+/// identity. <see cref="TargetTank"/> is the whole-body-life class shared by
+/// every <c>Unit</c> record that carries the field set
+/// <c>{1,3,5,8,9,10,11,23,46,48}</c> with behaviour class 3; both
+/// <c>Target Tank</c> and <c>Target Truck</c> are in it (see
+/// <see cref="Level100ContactCatalog"/>). <see cref="Warehouse"/> is the
+/// per-segment building class.
+/// </summary>
 public enum Level100DefinitionKind : byte
 {
     Static = 0,
@@ -285,11 +294,13 @@ public sealed class Level100ContactCatalog
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json";
     private const string SourceSha256 =
-        "FE5F109526E39231EA3D02898A035DBC7EB842B7B37776EC5EFDA7BA45F138B0";
+        "B3A949AAB12849D0A132F4596044706ACF7E9B34A5AF7BE6174FE42E77040F42";
     private const string StaticSourceAggregateSha256 =
         "8D85C9BFBE366C815E00D3900D8D29B71A33BEF7A60CDDFCE9ED6AC558E06B4C";
     private const string TargetTankSourceSha256 =
         "9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B";
+    private const string TargetTruckSourceSha256 =
+        "3BD92CE93D0619B7C4B0DD158680641FBAB6CD88580A68C6EF34E5F22F7596C5";
     private const string WarehouseSourceSha256 =
         "61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15";
 
@@ -354,22 +365,28 @@ public sealed class Level100ContactCatalog
                 "onslaught.level100-contact-owners.v3") ||
             document.DefinitionCount != 24 ||
             document.InstanceCount != 33 ||
-            document.PartCount != 349 ||
+            document.PartCount != 350 ||
             document.StaticMeshCount != 24 ||
-            document.TargetDefinitionCount != 2 ||
+            document.TargetDefinitionCount != 3 ||
             document.Definitions.Length != 24 ||
             document.Instances.Length != 33 ||
-            document.TargetDefinitions.Length != 2 ||
+            document.TargetDefinitions.Length != 3 ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 document.StaticSourceAggregateSha256,
                 StaticSourceAggregateSha256) ||
-            document.TargetSourceSha256.Count != 2 ||
+            document.TargetSourceSha256.Count != 3 ||
             !document.TargetSourceSha256.TryGetValue(
                 "Target Tank",
                 out string? targetTankSourceSha256) ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 targetTankSourceSha256,
                 TargetTankSourceSha256) ||
+            !document.TargetSourceSha256.TryGetValue(
+                "Target Truck",
+                out string? targetTruckSourceSha256) ||
+            !StringComparer.OrdinalIgnoreCase.Equals(
+                targetTruckSourceSha256,
+                TargetTruckSourceSha256) ||
             !document.TargetSourceSha256.TryGetValue(
                 "Warehouse",
                 out string? warehouseSourceSha256) ||
@@ -414,7 +431,17 @@ public sealed class Level100ContactCatalog
             TargetDefinitionRow row = document.TargetDefinitions[index];
             Level100DefinitionKind kind = row.Definition switch
             {
-                "Target Tank" => Level100DefinitionKind.TargetTank,
+                // `Target Truck` is byte-identical to `Target Tank` in
+                // destruction class: `default physics.dat` (sha256
+                // e1fb3ded...ada14) `Unit / Target Truck` at 0x24d9e carries
+                // the tank's exact field set {1,3,5,8,9,10,11,23,46,48},
+                // behaviour class 3 in field 8, and the same field 10
+                // destruction record `Tank Explosion Medium`. Only field 3
+                // (life 3.0 = 0x40400000 against 6.0 = 0x40C00000) and field 9
+                // (mesh) differ, and both are carried per definition rather
+                // than per kind. So it maps to the whole-body-life kind.
+                "Target Tank" or "Target Truck" =>
+                    Level100DefinitionKind.TargetTank,
                 "Warehouse" => Level100DefinitionKind.Warehouse,
                 _ => throw new InvalidDataException(
                     "Level 100 has an unexpected target definition."),
@@ -474,7 +501,32 @@ public sealed class Level100ContactCatalog
         Dictionary<string, Level100ContactDefinition> definitions)
     {
         Level100ContactDefinition tank = definitions["Target Tank"];
+        Level100ContactDefinition truck = definitions["Target Truck"];
         Level100ContactDefinition warehouse = definitions["Warehouse"];
+        // `Target Truck` carries one collidable CMSH part, `Mesh01`, with
+        // 306 vertices, 432 triangles and half-extents (525, 1510, 287) mm
+        // about centre (-4, -50, -475). That volume is decoded from the
+        // shipped mesh; none of it is authored here.
+        if (truck.MaximumLifeBits != 0x40400000 || truck.PartCount != 1 ||
+            truck.Kind != Level100DefinitionKind.TargetTank ||
+            !StringComparer.Ordinal.Equals(
+                truck.Mesh,
+                "m_f_truck_training.msh.aya") ||
+            !StringComparer.Ordinal.Equals(
+                truck.DestructionPhysicsDefinition,
+                "Tank Explosion Medium") ||
+            !StringComparer.Ordinal.Equals(
+                truck.DestructionParticleDescriptor,
+                "Tank Explosion Medium") ||
+            !StringComparer.Ordinal.Equals(
+                truck.DestructionSoundDescriptor,
+                "Explosion Medium") ||
+            !truck.Parts[0].Collidable ||
+            truck.Parts[0].HalfExtents != new Level100Vector3(525, 1510, 287))
+        {
+            throw new InvalidDataException(
+                "Level 100 Target Truck damage/effect definitions changed.");
+        }
         if (tank.MaximumLifeBits != 0x40C00000 || tank.PartCount != 7 ||
             !StringComparer.Ordinal.Equals(
                 tank.Mesh,

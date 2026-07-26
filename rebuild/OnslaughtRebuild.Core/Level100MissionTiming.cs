@@ -37,18 +37,59 @@ public static class Level100MissionTiming
         Level100MissionTrigger.TargetZone3 or
         Level100MissionTrigger.TargetZone4;
 
+    /// <summary>
+    /// The released <c>InJetMode()</c> script builtin, read out of the pristine
+    /// executable rather than inferred.
+    /// </summary>
+    /// <remarks>
+    /// The registered handler at <c>0x005380f0</c> is nine instructions:
+    /// <code>
+    ///   8B 49 10          MOV  ECX, [ECX+0x10]
+    ///   56 33 F6          PUSH ESI ; XOR ESI, ESI          ; result = FALSE
+    ///   F6 41 34 08       TEST byte [ECX+0x34], 8          ; THING_TYPE_BATTLE_ENGINE
+    ///   74 0E             JZ   done                        ; anything else is never in jet mode
+    ///   E8 1F 00 ED FF    CALL 0x00408120
+    ///   85 C0  75 05      TEST EAX, EAX ; JNZ done
+    ///   BE 01 00 00 00    MOV  ESI, 1                      ; result = TRUE
+    /// </code>
+    /// and <c>0x00408120</c> returns true when
+    /// <c>*(int*)(this+0x260) == 2 &amp;&amp; DAT_00672fd0 - *(float*)(this+0xcc) &lt; _DAT_005d85ec</c>.
+    /// <para>
+    /// So <c>InJetMode()</c> is the <em>negation</em> of "is a walker that
+    /// touched the ground recently". <c>+0x260 == 2</c> is the walker state —
+    /// <c>CPlayer::ReceiveButtonAction</c> (<c>0x004D3110</c>) routes
+    /// button <c>0x15</c> to <c>ActivateLandingJets</c> only inside that same
+    /// <c>== 2</c> branch, which is <c>BATTLE_ENGINE_STATE_WALKER</c> in
+    /// <c>references/Onslaught/Player.cpp</c>. The threshold at
+    /// <c>0x005D85EC</c> reads <c>00 00 00 3F</c> in the pristine binary
+    /// (sha256 74154bfa…7750), i.e. <b>0.5 s</b> — note that the GPL source's
+    /// only other use of this predicate,
+    /// <c>CBattleEngineWalkerPart::Move</c>'s
+    /// <c>GetTime() - mLastTimeOnGround &lt; 0.3f</c>, says 0.3. The shipped
+    /// bytes win; the reference does not describe this executable here.
+    /// </para>
+    /// <para>
+    /// This matters because <c>TargetZone2/3/4.msl</c> gate on
+    /// <c>InJetMode() == FALSE</c>. Reading that as "not in jet mode" accepted
+    /// an airborne walker, so beats 6, 8 and 10 could be completed by morphing
+    /// mid-air over the volume and never landing at all.
+    /// </para>
+    /// </remarks>
     public static Level100MissionJetModeState JetModeState(
         VehicleMode mode,
-        VehicleTransition transition)
-    {
-        // The released side scripts test InJetMode()==FALSE, not Walker mode.
-        // Core changes mode to Jet only when WalkerToJet completes, so all
-        // transitional/non-jet states remain eligible, matching that predicate.
-        _ = transition;
-        return mode == VehicleMode.Jet
-            ? Level100MissionJetModeState.InJetMode
-            : Level100MissionJetModeState.NotInJetMode;
-    }
+        VehicleTransition transition,
+        int ticksSinceGroundContact) =>
+        mode == VehicleMode.Walker &&
+        transition == VehicleTransition.None &&
+        ticksSinceGroundContact < GroundContactRecencyTicks
+            ? Level100MissionJetModeState.NotInJetMode
+            : Level100MissionJetModeState.InJetMode;
+
+    /// <summary>
+    /// 0.5 s, the shipped <c>_DAT_005d85ec</c> threshold. Written in seconds so
+    /// a Core tick-rate change leaves it meaning the same thing.
+    /// </summary>
+    public const int GroundContactRecencyTicks = SimulationConstants.TicksPerSecond / 2;
 
     internal static int PauseTicks(float seconds)
     {

@@ -90,6 +90,130 @@ public sealed class Level100TutorialProgressionTests
         Assert.Equal(expectedHits, HitsToDestroyATargetTank(damageBits));
     }
 
+    /// <summary>
+    /// Beat 4 ("Static Target 2 Destroyed" x3) needs a Target Truck that can
+    /// actually be hit. This drives the released mechanism end to end at the
+    /// runtime level: the truck is created by the same
+    /// <see cref="Level100ActorRegistry.SpawnThing"/> call
+    /// <c>TargetTruck1.msl</c> <c>init()</c> makes, and is then destroyed by
+    /// Mech Bullet sweeps issued through the same
+    /// <see cref="Level100DestructionRuntime.TryApplyRoundSweep"/> entry point
+    /// <c>Simulation.LaunchWalkerRound</c> uses for the Twin Vulcan. No
+    /// mission event is posted and no destruction state is constructed
+    /// directly; the registry lifecycle facts are the observed result.
+    ///
+    /// Before the contact asset carried a `Target Truck` definition this test
+    /// could not report a single hit: the runtime skipped the actor entirely.
+    /// </summary>
+    [Fact]
+    public void TwinVulcanRounds_DestroyASpawnedTargetTruck()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        Level100ActorId factoryId = Assert.IsType<Level100ActorId>(
+            registry.GetThingRef("Tank Factory"));
+
+        Level100ActorId truckId = registry.SpawnThing(
+            factoryId,
+            "Target Truck",
+            "SpawnerA",
+            1,
+            "TargetTruck1").Single();
+        Level100ActorSnapshot spawned = registry.GetActor(truckId);
+        Assert.Equal("Target Truck", spawned.DefinitionName);
+        Assert.Equal("m_f_truck_training.msh.aya", spawned.MeshBinding);
+        // 3.0 life from `Unit / Target Truck` field 3 (0x40400000).
+        Assert.Equal(3_000, spawned.Health);
+
+        // Park the truck clear of the terrain so the measurement is of the
+        // actor narrowphase and nothing else, then fire straight down through
+        // it. Core's vertical axis is up.
+        var pose = new Level100ActorPoseSnapshot(
+            new SimVector3(4_000, 6_000, -3_000),
+            IdentityFloatBasis(),
+            SimVector3.Zero,
+            SimVector3.Zero);
+        registry.SetPose(truckId, pose);
+
+        var start = new SimVector3(4_000, 9_000, -3_000);
+        var end = new SimVector3(4_000, 6_100, -3_000);
+        int hits = 0;
+        while (registry.GetActor(truckId).Lifecycle != Level100ActorLifecycle.Destroyed &&
+               hits < 1_000)
+        {
+            Assert.True(runtime.TryApplyRoundSweep(
+                start,
+                end,
+                Level100ContactMechanics.PulseRadiusMillimeters,
+                Level100DestructionState.MechBulletDamageBits,
+                out Level100ContactHit hit));
+            Assert.Equal(truckId.Value, hit.ActorId);
+            Assert.Equal(Level100ContactSurfaceKind.Mesh, hit.SurfaceKind);
+            Assert.Equal(0, hit.PartIndex);
+            hits++;
+        }
+
+        // 3.0 life against the 0.081 Mech Bullet round is 37.03 rounds, so the
+        // thirty-eighth carries it terminal - the count the note in
+        // Level100DestructionState already predicts.
+        Assert.Equal(38, hits);
+        Level100ActorSnapshot destroyed = registry.GetActor(truckId);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, destroyed.Lifecycle);
+        Assert.Equal(0, destroyed.Health);
+        Assert.False(destroyed.Active);
+        Assert.Contains(
+            registry.Snapshot.PendingFacts,
+            fact => fact.Kind == Level100ActorFactKind.Died &&
+                fact.ActorId == truckId);
+        Assert.Contains(
+            runtime.Events,
+            item => item.ActorId == truckId.Value &&
+                item.Kind == Level100DestructionEventKind.Terminal &&
+                item.EffectKind == Level100DestructionEffectKind.TargetDestroyed);
+    }
+
+    /// <summary>
+    /// The same truck is destroyed in the same number of rounds under both
+    /// surviving Mech Bullet damage models, so beat 4 does not depend on the
+    /// unsettled sum-versus-round-only question.
+    /// </summary>
+    [Theory]
+    [InlineData(Level100DestructionState.MechBulletDamageBits, 38)]
+    [InlineData(0x3DA3D70Au, 38)]
+    public void TargetTruck_NeedsTheSameRoundsUnderBothSurvivingDamageModels(
+        uint damageBits,
+        int expectedHits)
+    {
+        var state = new Level100DestructionState(
+            1,
+            Level100ContactCatalog.Instance.GetDefinition("Target Truck"));
+        Span<Level100DestructionEvent> events =
+            stackalloc Level100DestructionEvent[Level100DestructionState.MaximumEventsPerHit];
+        var hit = new Level100ContactHit(
+            1,
+            0,
+            Level100ContactSurfaceKind.Mesh,
+            0,
+            default,
+            default,
+            default);
+
+        int hits = 0;
+        while (!state.Terminal && hits < 10_000)
+        {
+            state.ApplyRoundHit(hit, damageBits, events);
+            hits++;
+        }
+
+        Assert.Equal(expectedHits, hits);
+    }
+
+    private static Level100FloatBasis3Bits IdentityFloatBasis() => new(
+        BitConverter.SingleToInt32Bits(1f), 0, 0,
+        0, BitConverter.SingleToInt32Bits(1f), 0,
+        0, 0, BitConverter.SingleToInt32Bits(1f));
+
     [Fact]
     public void PulseCannonRound_StillTakesFourHitsToDestroyATargetTank()
     {

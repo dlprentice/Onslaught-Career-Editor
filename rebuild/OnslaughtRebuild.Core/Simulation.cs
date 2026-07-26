@@ -85,7 +85,7 @@ public sealed class Simulation
     private int _jetTicksSinceTransform;
     private int _jetStrafeTicksRemaining;
     private int _jetStrafeAccelerationRemainder;
-    private int _jetEnergyDrainRemainderThirds;
+    private int _jetEnergyDrainRemainderMicro;
     private int _jetThrusterPermille;
     private int _jetGroundedSlowTicks;
     private int _jetStallTicks;
@@ -110,6 +110,32 @@ public sealed class Simulation
     }
 
     public WorldSnapshot Snapshot => CreateSnapshot();
+
+    /// <summary>
+    /// Measurement seam. Applies exactly the two <em>capability grants</em> the
+    /// released LevelScript performs at the head of beat 6 —
+    /// <c>player.EnableFlightMode()</c> and, for one Target Zone,
+    /// <c>target.SetObjective(); target.Activate();</c> — so that the three
+    /// "fly there and land" legs can be measured while beats 3–5 are still
+    /// mechanically blocked by causes outside this lane (Target Truck and
+    /// Target Drone have no contact geometry yet).
+    /// </summary>
+    /// <remarks>
+    /// This posts <b>no</b> named mission event and advances no beat. The
+    /// "Reached Target Zone N" event still has to be produced by the world:
+    /// the player must actually fly into the volume and be out of jet mode
+    /// there, exactly as <c>TargetZoneN.msl</c> <c>hit()</c> requires. Nothing
+    /// in the shipped game path calls this; it exists only so a test can pay
+    /// for the parts of the tutorial that are blocked elsewhere.
+    /// </remarks>
+    internal void GrantFlightLegForMeasurement(Level100MissionTrigger trigger)
+    {
+        _level100FlightEnabled = true;
+        Level100ActorSnapshot zone = _level100Actors.Snapshot.Actors.Single(
+            actor => actor.Trigger == trigger);
+        _level100Actors.SetObjective(zone.ActorId, true);
+        _level100Actors.Activate(zone.ActorId);
+    }
 
     public WorldSnapshot Step(
         SimInput input,
@@ -965,17 +991,26 @@ public sealed class Simulation
         }
     }
 
+    // CBattleEngineJetPart::Move's
+    //   cost = (maxCost - minCost) * mThrusterValue + minCost
+    // per retail tick, converted to Core ticks through the one shared ratio and
+    // carried in micro-retail energy so no fraction is discarded.
+    private const int JetEnergyDrainDenominator =
+        SimulationConstants.MicroRetailEnergyPerCoreEnergyUnit *
+        SimulationConstants.RetailTicksPerCoreTickDenominator;
+
     private int TakeJetEnergyDrain(int throttlePermille)
     {
-        int costThirds = SimulationConstants.JetMinimumEnergyDrainThirdsPerTick +
-            ((SimulationConstants.JetMaximumEnergyDrainThirdsPerTick -
-              SimulationConstants.JetMinimumEnergyDrainThirdsPerTick) *
+        int costMicroPerRetailTick =
+            SimulationConstants.JetMinimumEnergyDrainMicroPerRetailTick +
+            ((SimulationConstants.JetMaximumEnergyDrainMicroPerRetailTick -
+              SimulationConstants.JetMinimumEnergyDrainMicroPerRetailTick) *
              throttlePermille / 1_000);
-        int accumulatedThirds = _jetEnergyDrainRemainderThirds + costThirds;
-        int drain = accumulatedThirds /
-            SimulationConstants.JetEnergyDrainFractionDenominator;
-        _jetEnergyDrainRemainderThirds = accumulatedThirds %
-            SimulationConstants.JetEnergyDrainFractionDenominator;
+        int accumulated = _jetEnergyDrainRemainderMicro +
+            (costMicroPerRetailTick *
+             SimulationConstants.RetailTicksPerCoreTickNumerator);
+        int drain = accumulated / JetEnergyDrainDenominator;
+        _jetEnergyDrainRemainderMicro = accumulated % JetEnergyDrainDenominator;
         return drain;
     }
 
@@ -2170,15 +2205,18 @@ public sealed class Simulation
             }
 
             Level100MissionJetModeState jetModeState =
-                Level100MissionTiming.JetModeState(_mode, _transition);
-            SimVector2 triggerPosition = new(
-                trigger.Pose!.PositionMillimeters.X,
-                trigger.Pose.PositionMillimeters.Z);
+                Level100MissionTiming.JetModeState(
+                    _mode,
+                    _transition,
+                    _ticksSinceGroundContact);
             if (trigger.Active &&
                 (!Level100MissionTiming.RequiresNotInJetMode(trigger.Trigger!.Value) ||
                  jetModeState ==
                     Level100MissionJetModeState.NotInJetMode) &&
-                IsWithinLevel100Trigger(PlayerPosition, triggerPosition))
+                IsWithinLevel100Trigger(
+                    PlayerPosition,
+                    PlayerElevationMillimeters,
+                    trigger.Pose!.PositionMillimeters))
             {
                 // The side actor owns its factual overlap and released pause;
                 // LevelScript sees only the resulting named event.
@@ -2190,12 +2228,41 @@ public sealed class Simulation
         }
     }
 
-    private static bool IsWithinLevel100Trigger(SimVector2 position, SimVector2 trigger)
+    // Level100ObjectiveTriggerRadius is a centre-to-centre *sphere* overlap
+    // threshold (authored 5.0 plus the single-player CBattleEngine 0.4 that
+    // CBattleEngine::GetRadius returns), and the released engine carries one
+    // isotropic radius per thing -- CThing builds its own extent as
+    // FVector(r, r, r) (references/Onslaught/thing.cpp:231-236, 519-520).
+    // Testing it in the horizontal plane alone let a jet satisfy
+    // "Reached Target Zone N" by passing 12 m overhead, which would make the
+    // released landing lesson (HELP_RETRO) decorative: measured, all three of
+    // beats 6, 8 and 10 completed at 11-13 m up in level flight, never landing.
+    //
+    // The authored elevation of all five Level 100 trigger volumes is 0, and
+    // released CThing::Init (0x004F34A0) raises an authored thing to the height
+    // field sample -- see local-lab/STATIC-OBJECT-SEATING-2026-07-26.md, and
+    // Level100ActorRegistry.SeatOnGround which already applies exactly this to
+    // the ground-vehicle class. Core does not yet own the general seating pass
+    // for volumes (their poses feed the rendering layer), so the clamp is
+    // applied here, at the point of use. Without it the test would be stricter
+    // than retail by the terrain height under each volume: 898 mm at Target
+    // Zone 2, which costs 434 mm of horizontal tolerance.
+    private bool IsWithinLevel100Trigger(
+        SimVector2 position,
+        int elevationMillimeters,
+        SimVector3 trigger)
     {
+        var triggerHorizontal = new SimVector2(trigger.X, trigger.Z);
+        int seatedTriggerY = Math.Max(
+            trigger.Y,
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                triggerHorizontal));
         long deltaX = (long)position.X - trigger.X;
+        long deltaY = (long)elevationMillimeters - seatedTriggerY;
         long deltaZ = (long)position.Z - trigger.Z;
         long radius = SimulationConstants.Level100ObjectiveTriggerRadius;
-        return (deltaX * deltaX) + (deltaZ * deltaZ) <= radius * radius;
+        return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ) <=
+            radius * radius;
     }
 
     private static SimVector2 ClampMagnitude(SimVector2 value, int maximum)
@@ -2288,7 +2355,7 @@ public sealed class Simulation
                 _energy + SimulationConstants.WalkerEnergyRegenerationPerTick);
             if (_energy == SimulationConstants.MaximumEnergy)
             {
-                _jetEnergyDrainRemainderThirds = 0;
+                _jetEnergyDrainRemainderMicro = 0;
             }
             _shield = _energy;
             return;
@@ -2298,7 +2365,7 @@ public sealed class Simulation
         _energy = Math.Max(0, _energy - _jetEnergyDrainThisTick);
         if (previousEnergy > 0 && _energy == 0)
         {
-            _jetEnergyDrainRemainderThirds = 0;
+            _jetEnergyDrainRemainderMicro = 0;
         }
         _shield = 0;
     }
@@ -2514,7 +2581,7 @@ public sealed class Simulation
         _jetTicksSinceTransform = 0;
         _jetStrafeTicksRemaining = 0;
         _jetStrafeAccelerationRemainder = 0;
-        _jetEnergyDrainRemainderThirds = 0;
+        _jetEnergyDrainRemainderMicro = 0;
         _jetThrusterPermille = 500;
         _jetGroundedSlowTicks = 0;
         _jetStallTicks = 0;
@@ -2617,7 +2684,7 @@ public sealed class Simulation
             _jetTicksSinceTransform,
             _jetStrafeTicksRemaining,
             _jetStrafeAccelerationRemainder,
-            _jetEnergyDrainRemainderThirds,
+            _jetEnergyDrainRemainderMicro,
             _jetThrusterPermille,
             _jetGroundedSlowTicks,
             _jetStallTicks,

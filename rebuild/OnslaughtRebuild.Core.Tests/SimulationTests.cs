@@ -514,17 +514,25 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void JetEnergyDrain_UsesTheLevel100BlasterThrottleCurve()
+    public void JetEnergyDrain_UsesTheAquilaPrototypeThrottleCurve()
     {
-        // Level 100 resolves to Blaster. Its shipped .005/.01 energy costs per
-        // 20 Hz update map exactly to 10/3 and 20/3 milli-energy per Core tick.
+        // Level 100's RLWD declares "Aquila Prototype". Its record in
+        // data/battle engine configurations.dat carries mEnergy 8.0,
+        // mMinAirEnergyCost 0.005 and mMaxAirEnergyCost 0.012, spent once per
+        // RETAIL tick. Stored in micro-retail energy so half throttle
+        // interpolates exactly (0.0085) and so the values are unchanged by a
+        // Core tick-rate move.
         Assert.Equal(8_000, SimulationConstants.MaximumEnergy);
         Assert.Equal(
             SimulationConstants.MaximumEnergy,
             SimulationConstants.MaximumShield);
-        Assert.Equal(10, SimulationConstants.JetMinimumEnergyDrainThirdsPerTick);
-        Assert.Equal(20, SimulationConstants.JetMaximumEnergyDrainThirdsPerTick);
-        Assert.Equal(3, SimulationConstants.JetEnergyDrainFractionDenominator);
+        Assert.Equal(
+            5_000,
+            SimulationConstants.JetMinimumEnergyDrainMicroPerRetailTick);
+        Assert.Equal(
+            12_000,
+            SimulationConstants.JetMaximumEnergyDrainMicroPerRetailTick);
+        Assert.Equal(20, SimulationConstants.RetailTicksPerSecond);
         Assert.Equal(40, SimulationConstants.JetStrafeAccelerationNumerator);
         Assert.Equal(27, SimulationConstants.JetStrafeAccelerationDenominator);
     }

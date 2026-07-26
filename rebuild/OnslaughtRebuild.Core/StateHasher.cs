@@ -72,7 +72,7 @@ public static class StateHasher
             writer.Write(state.JetTicksSinceTransform);
             writer.Write(state.JetStrafeTicksRemaining);
             writer.Write(state.JetStrafeAccelerationRemainder);
-            writer.Write(state.JetEnergyDrainRemainderThirds);
+            writer.Write(state.JetEnergyDrainRemainderMicroRetail);
             writer.Write(state.JetThrusterPermille);
             writer.Write(state.JetGroundedSlowTicks);
             writer.Write(state.JetStallTicks);

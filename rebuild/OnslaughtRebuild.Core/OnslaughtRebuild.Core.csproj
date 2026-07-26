@@ -12,6 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>OnslaughtRebuild.Core.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Assets\Level100\level100-heightfield.hfld.bin"
                       LogicalName="OnslaughtRebuild.Core.Assets.Level100.level100-heightfield.hfld.bin" />
     <EmbeddedResource Include="Assets\Level100\Scripts\*.mso.bin" />

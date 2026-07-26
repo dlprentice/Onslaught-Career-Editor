@@ -12,7 +12,7 @@ public sealed class Level100DestructionContactTests
     {
         Level100ContactCatalog catalog = Level100ContactCatalog.Instance;
 
-        Assert.Equal(26, catalog.Definitions.Count);
+        Assert.Equal(27, catalog.Definitions.Count);
         Assert.Equal(70, catalog.PulseRound.RadiusMillimeters);
         Assert.Equal("Mech Pulse Hit Medium", catalog.PulseRound.ImpactPhysicsDefinition);
         Assert.Equal(
@@ -27,6 +27,29 @@ public sealed class Level100DestructionContactTests
         Assert.Equal("Tank Explosion Medium", tank.DestructionPhysicsDefinition);
         Assert.Equal("Tank Explosion Medium", tank.DestructionParticleDescriptor);
         Assert.Equal("Explosion Medium", tank.DestructionSoundDescriptor);
+
+        // Target Truck decodes from the shipped `m_f_truck_training.msh.aya`
+        // (sha256 3bd92ce9...96c5): one collidable CMSH part `Mesh01` with
+        // 306 vertices and 432 triangles, half-extents (525, 1510, 287) mm
+        // about centre (-4, -50, -475). Life 3.0 (0x40400000) and the
+        // destruction record are read from `Unit / Target Truck` at 0x24d9e in
+        // `default physics.dat`. No part of this volume is authored here.
+        Level100ContactDefinition truck = catalog.GetDefinition("Target Truck");
+        Assert.Equal(Level100DefinitionKind.TargetTank, truck.Kind);
+        Assert.Equal(0x40400000u, truck.MaximumLifeBits);
+        Assert.Equal("m_f_truck_training.msh.aya", truck.Mesh);
+        Assert.Equal(1, truck.PartCount);
+        Assert.Equal("Mesh01", truck.Parts[0].Name);
+        Assert.True(truck.Parts[0].Collidable);
+        Assert.Equal(306 * 3, truck.Parts[0].VerticesMillimeters.Length);
+        Assert.Equal(432 * 3, truck.Parts[0].Triangles.Length);
+        Assert.Equal(
+            new Level100Vector3(525, 1_510, 287),
+            truck.Parts[0].HalfExtents);
+        Assert.Equal(new Level100Vector3(-4, -50, -475), truck.Parts[0].Center);
+        Assert.Equal("Tank Explosion Medium", truck.DestructionPhysicsDefinition);
+        Assert.Equal("Tank Explosion Medium", truck.DestructionParticleDescriptor);
+        Assert.Equal("Explosion Medium", truck.DestructionSoundDescriptor);
 
         Level100ContactDefinition warehouse = catalog.GetDefinition("Warehouse");
         Assert.Equal(Level100DefinitionKind.Warehouse, warehouse.Kind);

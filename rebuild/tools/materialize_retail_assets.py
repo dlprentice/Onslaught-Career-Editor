@@ -164,7 +164,7 @@ LEVEL100_CONTACT_ASSET = (
     CORE_ASSETS / "Level100/level100-contact-owners.json"
 )
 LEVEL100_CONTACT_ASSET_SHA256 = (
-    "fe5f109526e39231ea3d02898a035dbc7eb842b7b37776ec5efda7ba45f138b0"
+    "b3a949aab12849d0a132f4596044706acf7e9b34a5af7be6174fe42e77040f42"
 )
 # Aggregate of the 24 collision-bearing facility meshes only. The accepted
 # static-world aggregate above additionally owns the four tree meshes.
@@ -1710,6 +1710,17 @@ def _pine_global_center(source: bytes, inflate_aya, variant: int) -> list[float]
 
 LEVEL100_PLAYER_START_X = 288.6875
 LEVEL100_PLAYER_START_Y = 243.25
+# Retail Z is DOWN-positive and its zero is not Core's zero. Core's vertical
+# axis is up and its datum is the authored player-start plane at retail
+# Z = -10.0, pinned as
+# `Level100Terrain.PlayerStartReferenceElevationMillimeters = -10_000` and used
+# by `SampleGroundElevationMillimetersAtFixed`, which returns exactly
+# `-10_000 - retailHeightMillimetres`. The Godot world-object path
+# (`Level100StaticWorldAsset.Load`) and this file's own
+# `authoredElevationMillimeters` both spell the same conversion
+# `-10.0 - retailZ`. Anything writing a Core vertical must go through
+# `_core_elevation_millimeters`.
+LEVEL100_PLAYER_START_ELEVATION = -10.0
 
 LEVEL100_SETUP_SCRIPT_BINDINGS = {
     "Tank Factory": "TankFactory",
@@ -1743,6 +1754,13 @@ def _normalize_angle(value: float) -> float:
     return value
 
 
+def _core_elevation_millimeters(retail_z: float) -> int:
+    """Authored retail Z (down-positive) to Core Y (up-positive, player-plane)."""
+    return _round_away_from_zero(
+        (LEVEL100_PLAYER_START_ELEVATION - retail_z) * 1_000.0
+    )
+
+
 def _actor_pose(
     retail_position: list[float] | tuple[float, float, float],
     retail_orientation: list[float] | tuple[float, float, float],
@@ -1758,6 +1776,30 @@ def _actor_pose(
         "linearVelocityMillimetersPerTick": [0, 0, 0],
         "positionMillimeters": [
             _round_away_from_zero((retail_position[0] - LEVEL100_PLAYER_START_X) * 1_000.0),
+            # KNOWN DEFECT, deliberately NOT repaired here. This writes the raw
+            # authored Z-down value into a Core Y that every consumer reads as
+            # up, so it is wrong for every actor whose authored Z is non-zero
+            # (14 of 44 today: Forseti Docks -8871, Forseti City Building 2
+            # -8904, Control Tower -760, Player 1 -10000, Transporter and Air
+            # Trainer -15000, and eight more).
+            #
+            # It is NOT repaired by negation and NOT repaired by
+            # `_core_elevation_millimeters` alone. `_core_elevation_millimeters`
+            # gives the correct *authored* Core Y - Forseti Docks -1129, Player
+            # 1 exactly 0 - but retail's `CThing::Init` (0x004F34A0) then clamps
+            # a static to `max(authored, terrainSupport, waterSupport)`, water
+            # at -1160 mm. `Level100ActorRegistry.SeatOnGround` applies that
+            # clamp only to the `GroundVehicle` motion class, so correcting the
+            # producer alone moves every retail-Z-0 static from an accidentally
+            # near-ground Core Y of 0 to a genuinely-authored but unclamped
+            # -10000, i.e. 10 m under the terrain, and leaves 32 of the 33
+            # static instances still disagreeing with the elevation the
+            # renderer draws them at.
+            #
+            # The two halves therefore have to land together, and the second
+            # half is the general `CThing::Init` support clamp in
+            # `Level100ActorRegistry`. See
+            # local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md section 4.
             _round_away_from_zero(retail_position[2] * 1_000.0),
             _round_away_from_zero((retail_position[1] - LEVEL100_PLAYER_START_Y) * 1_000.0),
         ],
@@ -2177,7 +2219,6 @@ def _contact_part_records(parsed) -> list[dict[str, object]]:
 def _level100_contact_asset(
     objects: list[dict[str, object]],
     mesh_inputs: dict[str, tuple[Path, bytes, dict]],
-    mesh_records: dict[str, dict[str, object]],
     parse_cmsh_stream,
     inflate_aya,
     game_root: Path,
@@ -2190,23 +2231,31 @@ def _level100_contact_asset(
     }
     instances: list[dict[str, object]] = []
     for world_object in sorted(objects, key=lambda item: int(item["ordinal"])):
-        mesh_key = str(world_object["mesh"])
         position = world_object["retailPosition"]
         yaw_pitch_roll = world_object["retailOrientation"]
         instances.append(
             {
-                "authoredElevationMillimeters": _round_scaled_away(
-                    -10.0 - float(position[2]),
-                    1_000,
+                # Kept, unlike the removed clearance below, because it is a
+                # true record of the released authored elevation in Core's own
+                # up-positive player-plane datum. It is the same conversion
+                # `_actor_pose` uses, so the two cannot drift apart.
+                "authoredElevationMillimeters": _core_elevation_millimeters(
+                    float(position[2])
                 ),
-                "baseClearanceMillimeters": (
-                    0
-                    if world_object["definition"] == "SAT Turret"
-                    else _round_scaled_away(
-                        float(mesh_records[mesh_key]["baseClearance"]),
-                        1_000,
-                    )
-                ),
+                # `baseClearanceMillimeters` (a `-min(vertexZ)` lift, plus a
+                # hand-written `SAT Turret` exception) used to live here. It is
+                # removed rather than zeroed because it has no retail
+                # counterpart at all: `CThing::Init` @0x004F34A0 writes the
+                # height-field sample straight into the pivot
+                # (`FSTP [ESP+0x14]` @0x004F3529, then `CALL [EAX+0x50]`) and
+                # then clamps the pivot to the water level
+                # (`FSTP [ESI+0x24]` @0x004F3559). No mesh extent is read on
+                # that path. The renderer stopped applying the lift for world
+                # objects (`Level100StaticWorldAsset.Load` seats them at
+                # `max(PlayerStartElevation - retailZ, terrain, water)`), so
+                # keeping the field here made collision and render elevation
+                # disagree by each mesh's own clearance - 3.2318 on FB_Docks.
+                # No consumer reads it.
                 "definition": world_object["definition"],
                 "id": world_object["ordinal"],
                 "name": world_object["name"],
@@ -2244,7 +2293,22 @@ def _level100_contact_asset(
     }
     target_definitions: list[dict[str, object]] = []
     target_source_hashes: dict[str, str] = {}
-    for definition in ("Target Tank", "Warehouse"):
+    # Every Level 100 definition a released script can destroy needs contact
+    # geometry here, or its actors are unhittable by any weapon at any range.
+    #
+    # `Target Truck` is the same released destruction class as `Target Tank`:
+    # `default physics.dat` (sha256 e1fb3ded...ada14) carries
+    # `Unit / Target Truck` at record offset 0x24d9e (name string 0x24da6) with
+    # exactly the tank's field set {1,3,5,8,9,10,11,23,46,48} and exactly its
+    # values apart from two - field 3 `maximumLife` 3.0 (0x40400000) against the
+    # tank's 6.0 (0x40C00000), and field 9 mesh `f_truck_training.msh` against
+    # `f_pulsetank_training.msh`. Field 8 (behaviour class 3, GroundVehicle) and
+    # field 10 (`Tank Explosion Medium`) are identical, so the truck reuses the
+    # tank's whole-body life model and its destruction record verbatim.
+    #
+    # `Target Drone` is deliberately NOT here: it is a different case, not the
+    # same one. See local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md.
+    for definition in ("Target Tank", "Target Truck", "Warehouse"):
         fields = physics[(1, definition)]
         mesh_name = _definition_string(fields, 9)
         if not mesh_name.casefold().endswith(".msh"):
@@ -2756,7 +2820,6 @@ def _materialize_static_world(
     contact_asset = _level100_contact_asset(
         objects,
         mesh_inputs,
-        mesh_records,
         parse_cmsh_stream,
         inflate_aya,
         game_root,
