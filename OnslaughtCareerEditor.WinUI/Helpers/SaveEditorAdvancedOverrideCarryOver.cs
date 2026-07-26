@@ -19,10 +19,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
     /// </summary>
     internal static class SaveEditorAdvancedOverrideCarryOver
     {
-        internal const string KeepMissionRankChoice = "Keep";
-
         /// <summary>
-        /// Re-apply every non-"Keep" mission rank selection from <paramref name="previousRows"/> onto the
+        /// Re-apply every mission rank selection that is an actual override (i.e. not the
+        /// "use baseline" sentinel) from <paramref name="previousRows"/> onto the
         /// matching node index in <paramref name="reloadedRows"/>. Returns the number carried over.
         /// </summary>
         internal static int ApplyMissionRankOverrides(
@@ -43,9 +42,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             int carried = 0;
             foreach (SaveMissionRankRow previous in previousRows)
             {
-                string selected = (previous.SelectedRank ?? KeepMissionRankChoice).Trim();
-                if (selected.Length == 0 ||
-                    selected.Equals(KeepMissionRankChoice, StringComparison.OrdinalIgnoreCase))
+                string selected = (previous.SelectedRank ?? SaveMissionRankRow.UseBaselineChoice).Trim();
+                if (SaveMissionRankRow.IsUseBaselineChoice(selected))
                 {
                     continue;
                 }

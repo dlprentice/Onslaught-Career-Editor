@@ -273,9 +273,30 @@ namespace Onslaught___Career_Editor
         // NOTE (Steam build): global options are primarily sourced from defaultoptions.bea at boot.
         // CCareer::Load(flag=1) preserves Sound/Music volumes from pre-load state and skips applying
         // options entries + tail snapshot (keybinds/mouse sensitivity/screen shape/etc).
-        public bool UseNewGoodiesInstead { get; set; } = false;
-        public int GlobalKillCount { get; set; } = 100;
-        public string Rank { get; set; } = "S";
+        //
+        // The three career-section scalars below are nullable, and null means "the caller configured
+        // nothing" rather than "the caller wants the old default". Before 2026-07-26 they were
+        // non-nullable with defaults, which made three separate data-loss defects undetectable:
+        //  - a caller who set one per-category kill had the other four categories overwritten with the
+        //    GlobalKillCount default of 100 (measured: [3221,9738,3002,3953,1024] -> [100,100,100,100,2000]);
+        //  - a caller who set one mission rank had the other 42 forced to the Rank default of "S";
+        //  - a caller who set a scalar with its section disabled had it dropped with exit 0.
+        // See SavePatchIntentContract for the class-level guard.
+
+        /// <summary>Goodie style. Null means "not configured"; the goodie pass then writes OLD, its documented default.</summary>
+        public bool? UseNewGoodiesInstead { get; set; } = null;
+
+        /// <summary>
+        /// Baseline kill count written to every category. Null means "keep": categories with no entry in
+        /// <see cref="PerCategoryKills"/> are left byte-for-byte as read, metadata byte included.
+        /// </summary>
+        public int? GlobalKillCount { get; set; } = null;
+
+        /// <summary>
+        /// Baseline mission grade written to every active node. Null means "keep": nodes with no entry in
+        /// <see cref="LevelRanks"/> keep their existing mRanking (+0x3C) and mNumAttempts (+0x38) bytes.
+        /// </summary>
+        public string? Rank { get; set; } = null;
 
         // Per-level rank overrides (node index -> rank string)
         public Dictionary<int, string>? LevelRanks { get; set; } = null;
@@ -374,29 +395,48 @@ namespace Onslaught___Career_Editor
         /// kill pass, so requesting either while its owning section is disabled would report success
         /// while dropping part of the caller's stated intent.
         /// </summary>
+        internal SavePatchIntentSnapshot ToIntentSnapshot() => new()
+        {
+            Rank = Rank,
+            UseNewGoodiesInstead = UseNewGoodiesInstead,
+            GlobalKillCount = GlobalKillCount,
+            LevelRanks = LevelRanks,
+            PerCategoryKills = PerCategoryKills,
+            PatchNodes = PatchNodes,
+            PatchLinks = PatchLinks,
+            PatchGoodies = PatchGoodies,
+            PatchKills = PatchKills
+        };
+
         internal string? DescribeDiscardedOverrideRequest()
         {
-            if (LevelRanks is { Count: > 0 } && !PatchNodes)
+            // One table owns "which section consumes which payload". Adding a payload without
+            // registering it there fails SavePatchIntentCoverageTests.
+            SavePatchIntentSnapshot snapshot = ToIntentSnapshot();
+            string? discardedIntent = SavePatchIntentContract.DescribeDiscardedIntents(snapshot);
+            if (discardedIntent is not null)
             {
-                return "Mission rank overrides were requested while mission (node) patching is disabled. " +
-                       "The patcher applies per-mission ranks through the node pass, so those overrides would be discarded. " +
-                       "Enable node patching or remove the mission rank overrides.";
+                return discardedIntent;
             }
 
-            if (PerCategoryKills is { Count: > 0 } && !PatchKills)
+            // The mirror case: a section switched on with no payload to write.
+            string? emptySectionPass = SavePatchIntentContract.DescribeEmptySectionPass(snapshot);
+            if (emptySectionPass is not null)
             {
-                return "Per-category kill overrides were requested while kill patching is disabled. " +
-                       "The patcher applies per-category kill values through the kill pass, so those overrides would be discarded. " +
-                       "Enable kill patching or remove the per-category kill overrides.";
+                return emptySectionPass;
             }
 
             // A rank string the node pass cannot decode used to fall back to "S" and write the highest
             // grade over every used mission while still reporting success. Refuse instead of guessing.
-            string baselineRankKey = (Rank ?? string.Empty).Trim().ToUpperInvariant();
-            if (PatchNodes && !RANK_FLOAT_BITS.ContainsKey(baselineRankKey))
+            // Rank == null is "keep", not a rank, so it is not validated against the encodable set.
+            if (PatchNodes && Rank is not null)
             {
-                return $"Mission rank baseline '{Rank}' is not a rank this save format encodes. " +
-                       $"Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.";
+                string baselineRankKey = Rank.Trim().ToUpperInvariant();
+                if (!RANK_FLOAT_BITS.ContainsKey(baselineRankKey))
+                {
+                    return $"Mission rank baseline '{Rank}' is not a rank this save format encodes. " +
+                           $"Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.";
+                }
             }
 
             if (LevelRanks is { Count: > 0 })
@@ -528,8 +568,11 @@ namespace Onslaught___Career_Editor
                             continue;
                         }
 
-                        // Use per-level rank if specified, otherwise default rank
-                        string nodeRank = Rank;
+                        // Use the per-mission override if this node has one, otherwise the baseline.
+                        // A null baseline means "keep": PatchNode then marks the mission complete and
+                        // leaves the existing grade record alone instead of overwriting 42 other
+                        // missions with the baseline the caller never asked for.
+                        string? nodeRank = Rank;
                         if (LevelRanks != null && LevelRanks.TryGetValue(n, out var overrideRank))
                         {
                             nodeRank = overrideRank;
@@ -558,7 +601,10 @@ namespace Onslaught___Career_Editor
                 // --- goodies (true view: raw ints 0/1/2/3) (selective patching) ---
                 if (PatchGoodies)
                 {
-                    uint goodieState = UseNewGoodiesInstead ? GOODIE_NEW : GOODIE_OLD;
+                    // Never reached with a null style: the preflight refuses PatchGoodies without one,
+                    // because this pass has no per-slot value it could keep and must not rewrite all
+                    // 233 displayable dwords on an unstated choice.
+                    uint goodieState = UseNewGoodiesInstead == true ? GOODIE_NEW : GOODIE_OLD;
                     for (int g = 0; g < GOODIE_COUNT; g++)
                     {
                         if (g >= GOODIE_DISPLAYABLE_COUNT)
@@ -1150,15 +1196,32 @@ namespace Onslaught___Career_Editor
         /// See: reverse-engineering/executable-analysis.md
         /// Code: "if ((int)in_ECX[0x8fd] &lt; 0) in_ECX[0x8fd] = 0"
         /// </summary>
-        public void SetKillCounts(byte[] buf, int defaultKills, Dictionary<int, int>? perCategoryKills)
+        /// <param name="defaultKills">
+        /// Baseline written to every category. Null means "keep": a category with no per-category
+        /// override is not written at all, so its 4 bytes (count and opaque metadata byte) survive
+        /// byte-for-byte. Before 2026-07-26 this parameter was a non-nullable int, and setting one
+        /// category silently rewrote the other four with the caller's default.
+        /// </param>
+        public void SetKillCounts(byte[] buf, int? defaultKills, Dictionary<int, int>? perCategoryKills)
         {
             for (int k = 0; k < 5; k++)
             {
-                int kills = defaultKills;
+                int kills;
                 if (perCategoryKills != null && perCategoryKills.TryGetValue(k, out var overrideKills))
                 {
                     kills = overrideKills;
                 }
+                else if (defaultKills.HasValue)
+                {
+                    kills = defaultKills.Value;
+                }
+                else
+                {
+                    // Keep. Do not read-modify-write: leaving the dword untouched preserves the
+                    // metadata byte and the count without depending on the encoding being right.
+                    continue;
+                }
+
                 // True view encoding: stored_value = (meta << 24) | (kills & 0x00FFFFFF)
                 if (kills < 0) kills = 0;
                 if (kills > 0x00FFFFFF) kills = 0x00FFFFFF;
@@ -1196,9 +1259,27 @@ namespace Onslaught___Career_Editor
         ///
         /// mBaseThingsExists (+0x14 to +0x37): Level-specific data - DO NOT MODIFY.
         /// </summary>
-        private void PatchNode(byte[] buf, int off, int nodeIndex, string rank)
+        private void PatchNode(byte[] buf, int off, int nodeIndex, string? rank)
         {
-            var rankKey = (rank ?? string.Empty).Trim().ToUpperInvariant();
+            if (rank is null)
+            {
+                // "Keep": this node is not part of the caller's stated intent, so none of its 64 bytes
+                // are written. Not even mComplete.
+                //
+                // An earlier draft of this fix wrote mComplete=1 here and only preserved mRanking.
+                // grok-4.5 (reasoning-effort high) attacked that: it produces mComplete==1 together
+                // with mRanking==0xBF800000 (-1.0, "never completed"), a combination it reported as
+                // absent from the local specimen corpus and unreachable through the game's own win
+                // path, which only ever raises mRanking. Writing nothing is both the literal meaning
+                // of "keep" and the only variant that provably invents no new career state — the
+                // regression test asserts the untargeted nodes are byte-identical to the input.
+                return;
+            }
+
+            // Do NOT modify +0x00 or +0x14..+0x37 (flags + persistence bits).
+            WriteUInt32(buf, off + 0x04, 1);       // complete
+
+            var rankKey = rank.Trim().ToUpperInvariant();
             if (!RANK_FLOAT_BITS.TryGetValue(rankKey, out uint rankBits))
             {
                 // Never guess a grade. Silently defaulting to "S" wrote the highest rank over a mission the
@@ -1209,8 +1290,6 @@ namespace Onslaught___Career_Editor
                     $"Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.");
             }
 
-            // Do NOT modify +0x00 or +0x14..+0x37 (flags + persistence bits).
-            WriteUInt32(buf, off + 0x04, 1);       // complete
             WriteUInt32(buf, off + 0x38, 0);       // attempts
             WriteUInt32(buf, off + 0x3C, rankBits); // float bits
 

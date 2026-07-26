@@ -90,7 +90,7 @@ namespace Onslaught___Career_Editor
 
             var rankOption = new Option<string?>(
                 "--rank",
-                "Rank for all missions: S, A, B, C, D, E, or NONE (default: S)");
+                "Rank written to every completed mission: S, A, B, C, D, E, or NONE. Omit it alongside --level-rank to change only the listed missions. Defaults to S when mission patching is on and no --level-rank was given.");
 
             var killsOnlyOption = new Option<bool>(
                 "--kills-only",
@@ -119,29 +119,29 @@ namespace Onslaught___Career_Editor
             // Per-level rank (repeatable): --level-rank N:GRADE
             var levelRankOption = new Option<string[]>(
                 "--level-rank",
-                "Per-level rank override (format: NODE_INDEX:GRADE, repeatable; node index 1-43)")
+                "Per-level rank override (format: NODE_INDEX:GRADE, repeatable; node index 1-43). Sets only the listed missions; every other mission keeps its current grade unless --rank is also supplied.")
             { AllowMultipleArgumentsPerToken = true };
 
             // Per-category kill count options
             var aircraftKillsOption = new Option<int?>(
                 "--aircraft-kills",
-                "Override aircraft kill count (thresholds: 25/50/75/100)");
+                "Override aircraft kill count (thresholds: 25/50/75/100). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
 
             var vehicleKillsOption = new Option<int?>(
                 "--vehicle-kills",
-                "Override vehicle kill count (thresholds: 100/200/300/400)");
+                "Override vehicle kill count (thresholds: 100/200/300/400). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
 
             var emplacementKillsOption = new Option<int?>(
                 "--emplacement-kills",
-                "Override emplacement kill count (thresholds: 25/50; 75 appears only in combined unlocks)");
+                "Override emplacement kill count (thresholds: 25/50; 75 appears only in combined unlocks). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
 
             var infantryKillsOption = new Option<int?>(
                 "--infantry-kills",
-                "Override infantry kill count (thresholds: 40/80/160)");
+                "Override infantry kill count (thresholds: 40/80/160). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
 
             var mechKillsOption = new Option<int?>(
                 "--mech-kills",
-                "Override mech kill count (thresholds: 20/40/80; 40 unlocks two goodies)");
+                "Override mech kill count (thresholds: 20/40/80; 40 unlocks two goodies). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
 
             // Optional CCareer settings overrides (true dword view; omit to preserve existing save values)
             var soundVolumeOption = new Option<double?>(
@@ -354,7 +354,13 @@ namespace Onslaught___Career_Editor
                 var listGoodies = context.ParseResult.GetValueForOption(listGoodiesOption);
                 var showReservedGoodies = context.ParseResult.GetValueForOption(showReservedGoodiesOption);
                 var setGoodieStates = context.ParseResult.GetValueForOption(setGoodieStateOption);
-                var useNew = context.ParseResult.GetValueForOption(newOption);
+                // `--new` is a boolean flag, so its value alone cannot distinguish "the user asked for
+                // OLD" from "the user said nothing about goodies". FindResultFor is non-null only when
+                // the token actually appeared, which is what lets `--new --no-goodies` be refused
+                // instead of silently dropped.
+                var useNew = context.ParseResult.FindResultFor(newOption) is null
+                    ? (bool?)null
+                    : context.ParseResult.GetValueForOption(newOption);
                 var kills = context.ParseResult.GetValueForOption(killsOption);
                 var rank = context.ParseResult.GetValueForOption(rankOption);
                 var killsOnly = context.ParseResult.GetValueForOption(killsOnlyOption);
@@ -462,7 +468,7 @@ namespace Onslaught___Career_Editor
 	            bool listGoodies,
 	            bool showReservedGoodies,
                 string[]? setGoodieStates,
-	            bool useNew,
+	            bool? useNew,
 	            int? kills,
 	            string? rank,
                     bool killsOnly,
@@ -660,10 +666,13 @@ namespace Onslaught___Career_Editor
                 return result.Success ? 0 : 1;
             }
 
-            // Validate rank if specified
-            string effectiveRank = rank?.ToUpper() ?? "S";
+            // Validate rank if specified. `null` now means "the user did not pass --rank" and is carried
+            // through as such; the CLI re-applies its own documented unlock default further down, where
+            // it is also printed. Coercing null to "S" here is what made `--rank A --no-nodes` and the
+            // per-mission overwrite (D1/D2/D3) undetectable.
+            string? effectiveRank = rank?.ToUpperInvariant();
             var validRanks = new HashSet<string> { "S", "A", "B", "C", "D", "E", "NONE" };
-            if (!validRanks.Contains(effectiveRank))
+            if (effectiveRank is not null && !validRanks.Contains(effectiveRank))
             {
                 Console.Error.WriteLine($"Error: Invalid rank '{rank}'. Valid values: S, A, B, C, D, E, NONE");
                 return 1;
@@ -723,8 +732,10 @@ namespace Onslaught___Career_Editor
             // Configure patcher
             var patcher = new BesFilePatcher
             {
+                // Carry exactly what the user configured, and nothing else. `--new` is a flag, so its
+                // "false" is indistinguishable from silence unless we look at whether the token appeared.
                 UseNewGoodiesInstead = useNew,
-                GlobalKillCount = kills ?? 100,
+                GlobalKillCount = kills,
                 Rank = effectiveRank,
                 LevelRanks = parsedLevelRanks,
                 PerCategoryKills = perCategoryKills,
@@ -787,6 +798,30 @@ namespace Onslaught___Career_Editor
                 patcher.PatchKills = !noKills;
             }
 
+            // The CLI's documented "unlock everything" defaults live here, in the presentation layer that
+            // also prints them, rather than in AppCore where a default is indistinguishable from silence.
+            //
+            // Each default applies only when its section is ENABLED and the user configured neither a
+            // baseline nor any targeted override for it. That keeps a bare `Cli in.bes out.bes` writing
+            // exactly what it always wrote (S / 100 / OLD), while `--mech-kills 2000` on its own no longer
+            // drags the other four categories to 100 and `--level-rank 1:A` on its own no longer drags the
+            // other 42 missions to S. It cannot mask a discarded value either: these only fire when the
+            // owning section is on, and the discard check only fires when it is off.
+            if (patcher.PatchNodes && patcher.Rank is null && parsedLevelRanks is null or { Count: 0 })
+            {
+                patcher.Rank = "S";
+            }
+
+            if (patcher.PatchKills && patcher.GlobalKillCount is null && perCategoryKills is null or { Count: 0 })
+            {
+                patcher.GlobalKillCount = 100;
+            }
+
+            if (patcher.PatchGoodies && patcher.UseNewGoodiesInstead is null)
+            {
+                patcher.UseNewGoodiesInstead = false;
+            }
+
             // Reject override requests that the section passes would silently discard.
             if (parsedLevelRanks is { Count: > 0 } && !patcher.PatchNodes)
             {
@@ -838,9 +873,9 @@ namespace Onslaught___Career_Editor
             Console.WriteLine($"Output: {output.FullName}");
             Console.WriteLine();
             Console.WriteLine("Configuration:");
-            Console.WriteLine($"  Rank:           {patcher.Rank}");
-            Console.WriteLine($"  Kill count:     {patcher.GlobalKillCount}");
-            Console.WriteLine($"  Goodies style:  {(patcher.UseNewGoodiesInstead ? "NEW (gold)" : "OLD (blue)")}");
+            Console.WriteLine($"  Rank:           {(!patcher.PatchNodes ? "(missions not patched)" : patcher.Rank ?? "Keep (only the missions listed below are written)")}");
+            Console.WriteLine($"  Kill count:     {(!patcher.PatchKills ? "(kills not patched)" : patcher.GlobalKillCount?.ToString() ?? "Keep (only the categories listed below are written)")}");
+            Console.WriteLine($"  Goodies style:  {(!patcher.PatchGoodies ? "(goodies not patched)" : patcher.UseNewGoodiesInstead == true ? "NEW (gold)" : "OLD (blue)")}");
             Console.WriteLine($"  Patch nodes:    {(patcher.PatchNodes ? "Yes" : "No")}");
             Console.WriteLine($"  Patch links:    {(patcher.PatchLinks ? "Yes" : "No")}");
             Console.WriteLine($"  Patch goodies:  {(patcher.PatchGoodies ? "Yes" : "No")}");
@@ -1143,7 +1178,7 @@ namespace Onslaught___Career_Editor
         }
 
         private static bool HasBroadPatchOptions(
-            bool useNew,
+            bool? useNew,
             int? kills,
             string? rank,
             bool killsOnly,
@@ -1174,7 +1209,7 @@ namespace Onslaught___Career_Editor
             bool noCopyOptionsTail,
             Dictionary<int, BesFilePatcher.OptionsEntryOverride>? keybindOverrides)
         {
-            return useNew ||
+            return useNew is not null ||
                    kills.HasValue ||
                    !string.IsNullOrWhiteSpace(rank) ||
                    killsOnly ||
@@ -1538,16 +1573,20 @@ namespace Onslaught___Career_Editor
             if (patcher.PatchNodes)
             {
                 if (levelRanks != null && levelRanks.Count > 0)
-                    patched.Add($"Nodes ({patcher.Rank} + {levelRanks.Count} overrides)");
+                    patched.Add(patcher.Rank is null
+                        ? $"Nodes ({levelRanks.Count} overrides only; every other mission untouched)"
+                        : $"Nodes ({patcher.Rank} + {levelRanks.Count} overrides)");
                 else
                     patched.Add($"Nodes ({patcher.Rank}-rank)");
             }
             if (patcher.PatchLinks) patched.Add("Links");
-            if (patcher.PatchGoodies) patched.Add($"Goodies ({(patcher.UseNewGoodiesInstead ? "NEW" : "OLD")})");
+            if (patcher.PatchGoodies) patched.Add($"Goodies ({(patcher.UseNewGoodiesInstead == true ? "NEW" : "OLD")})");
             if (patcher.PatchKills)
             {
                 if (perCategoryKills != null && perCategoryKills.Count > 0)
-                    patched.Add("Kills (custom per-category)");
+                    patched.Add(patcher.GlobalKillCount is null
+                        ? $"Kills ({perCategoryKills.Count} categories only; every other category untouched)"
+                        : "Kills (custom per-category)");
                 else
                     patched.Add($"Kills ({patcher.GlobalKillCount} each)");
             }
@@ -1601,11 +1640,13 @@ namespace Onslaught___Career_Editor
 
             if (patcher.PatchKills && perCategoryKills != null && perCategoryKills.Count > 0)
             {
-                Console.WriteLine($"  Kill counts (default: {patcher.GlobalKillCount}):");
+                Console.WriteLine($"  Kill counts (default: {patcher.GlobalKillCount?.ToString() ?? "keep current"}):");
                 string[] categories = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
                 for (int i = 0; i < categories.Length; i++)
                 {
-                    int value = perCategoryKills.TryGetValue(i, out int overrideKills) ? overrideKills : patcher.GlobalKillCount;
+                    string value = perCategoryKills.TryGetValue(i, out int overrideKills)
+                        ? overrideKills.ToString()
+                        : patcher.GlobalKillCount?.ToString() ?? "kept unchanged";
                     string marker = perCategoryKills.ContainsKey(i) ? " *" : "";
                     Console.WriteLine($"    {categories[i]}: {value}{marker}");
                 }

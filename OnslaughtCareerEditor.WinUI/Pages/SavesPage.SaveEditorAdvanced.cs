@@ -9,10 +9,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 {
     public sealed partial class SavesPage
     {
+        internal const string EditorKeepRankBaselineTag = "KEEP";
+
         private readonly ObservableCollection<SaveMissionRankRow> _editorMissionRankRows = new();
         private readonly ObservableCollection<SaveCategoryKillRow> _editorCategoryKillRows = new();
         private bool _editorGlobalKillWasAutoSeeded = true;
         private bool _suppressEditorGlobalKillProvenance;
+
+        // Same provenance rule the global kill value and the output path already use: the app may keep
+        // re-deciding this while it is still the app's decision, and must stop the moment it is the
+        // user's.
+        private bool _editorKeepKillsWasAutoSet = true;
+        private bool _suppressEditorKeepKillsProvenance;
 
         private void InitializeEditorAdvancedSurface()
         {
@@ -31,9 +39,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SaveCategoryKillRow[] previousCategoryKills = _editorCategoryKillRows.ToArray();
 
             SaveMissionRankRow[] reloadedMissionRanks =
-                SaveEditorAdvancedService.LoadMissionRankRows(inputPath).ToArray();
+                SaveEditorAdvancedService.LoadMissionRankRows(
+                    inputPath,
+                    out SaveEditorAdvancedService.SaveEditorAdvancedReadStatus missionRankReadStatus).ToArray();
             SaveCategoryKillRow[] reloadedCategoryKills =
-                SaveEditorAdvancedService.LoadCategoryKillRows(inputPath).ToArray();
+                SaveEditorAdvancedService.LoadCategoryKillRows(
+                    inputPath,
+                    out SaveEditorAdvancedService.SaveEditorAdvancedReadStatus categoryKillReadStatus).ToArray();
 
             int carriedMissionRanks = SaveEditorAdvancedOverrideCarryOver.ApplyMissionRankOverrides(
                 previousMissionRanks,
@@ -59,9 +71,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? carryOverNotice = SaveEditorAdvancedOverrideCarryOver.DescribeCarryOver(
                 carriedMissionRanks,
                 carriedCategoryKills);
-            EditorKillBaselineSummaryTextBlock.Text = carryOverNotice is null
-                ? killSeedSummary
-                : $"{carryOverNotice} {killSeedSummary}";
+
+            // A read that did not happen is now said out loud rather than silently rendered as blank
+            // grades and hard-coded kill seeds.
+            string[] noticeParts = new[]
+            {
+                carryOverNotice,
+                missionRankReadStatus.FileWasRead ? null : missionRankReadStatus.Reason,
+                categoryKillReadStatus.FileWasRead ? null : categoryKillReadStatus.Reason,
+                killSeedSummary
+            }.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part!).ToArray();
+            EditorKillBaselineSummaryTextBlock.Text = string.Join(" ", noticeParts);
 
             if (SaveEditorAdvancedOverrideCarryOver.ShouldReseedGlobalKillValue(
                     _editorInputValid,
@@ -76,6 +96,23 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 finally
                 {
                     _suppressEditorGlobalKillProvenance = false;
+                }
+            }
+
+            // A save with mixed per-category counts is precisely the case where writing one baseline
+            // over all five destroys real data, so "keep" is the default there until the user says
+            // otherwise. Every non-zero specimen examined has mixed counts.
+            if (_editorKeepKillsWasAutoSet)
+            {
+                _suppressEditorKeepKillsProvenance = true;
+                try
+                {
+                    EditorKeepUnoverriddenKillsCheckBox.IsChecked =
+                        SaveEditorAdvancedService.HasMixedKnownCategoryCounts(_editorCategoryKillRows);
+                }
+                finally
+                {
+                    _suppressEditorKeepKillsProvenance = false;
                 }
             }
 
@@ -95,11 +132,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateEditorActionState();
         }
 
+        private void EditorKeepUnoverriddenKillsCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_suppressEditorKeepKillsProvenance)
+            {
+                _editorKeepKillsWasAutoSet = false;
+            }
+
+            EditorGlobalKillNumberBox.IsEnabled = EditorKeepUnoverriddenKillsCheckBox.IsChecked != true;
+            UpdateEditorActionState();
+        }
+
         private void EditorClearMissionRanksButton_Click(object sender, RoutedEventArgs e)
         {
             foreach (SaveMissionRankRow row in _editorMissionRankRows)
             {
-                row.SelectedRank = "Keep";
+                row.SelectedRank = SaveMissionRankRow.UseBaselineChoice;
             }
 
             EditorMissionRanksListView.ItemsSource = null;

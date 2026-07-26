@@ -23,6 +23,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private IReadOnlyList<SaveAnalyzerFileItem> _editorDetectedFiles = Array.Empty<SaveAnalyzerFileItem>();
         private SaveAnalyzerDocument? _currentDocument;
         private bool _editorInputValid;
+
+        // Which write action last produced a file, and where. Used to warn that the other write action
+        // would replace that file rather than compose with it.
+        private SaveEditorService.SaveEditorWriteKind? _lastEditorWriteKind;
+        private string? _lastEditorWriteOutputPath;
         private bool _editorOutputWasAutoSuggested;
         private bool _suppressEditorOutputProvenance;
         private bool _suppressEditorPresetSync;
@@ -158,6 +163,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             _editorGlobalKillWasAutoSeeded = true;
+
+            // Starts cleared with no save loaded; LoadEditorAdvancedSnapshot turns it on for a save with
+            // mixed per-category counts, and stops deciding as soon as the user touches it.
+            _suppressEditorKeepKillsProvenance = true;
+            try
+            {
+                EditorKeepUnoverriddenKillsCheckBox.IsChecked = false;
+            }
+            finally
+            {
+                _suppressEditorKeepKillsProvenance = false;
+            }
+
+            _editorKeepKillsWasAutoSet = true;
+            EditorGlobalKillNumberBox.IsEnabled = true;
             EditorGoodiesAsNewToggle.IsOn = false;
             ApplyEditorPreset("SAFE");
             EditorOutputTextBox.Text = "Select a career save to begin. Use this page for the normal .bes patch workflow.";
@@ -685,6 +705,21 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             string outputPath = request.OutputPath.Trim();
+
+            // The two write buttons share one output path and both re-read the input save, so they
+            // replace each other rather than composing. Say so before the earlier edit disappears.
+            string? focusedCompositionLoss = SaveEditorService.DescribeWriteCompositionLoss(
+                _lastEditorWriteKind,
+                _lastEditorWriteOutputPath,
+                SaveEditorService.SaveEditorWriteKind.FocusedGoodieState,
+                outputPath);
+            if (focusedCompositionLoss is not null &&
+                !await ConfirmAsync("This will discard your previous edit", focusedCompositionLoss))
+            {
+                AppStatusService.SetStatus("Save Editor: focused Goodie write canceled");
+                return;
+            }
+
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
@@ -700,6 +735,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             PatchResult result = SaveEditorService.PatchFocusedGoodieState(request);
             ClearLastWrittenSave();
+            if (result.Success)
+            {
+                _lastEditorWriteKind = SaveEditorService.SaveEditorWriteKind.FocusedGoodieState;
+                _lastEditorWriteOutputPath = outputPath;
+            }
             string stateLabel = MissionScriptGoodieStateSaveCodec.GetStateLabel(request.State);
             string displayMessage = result.Success
                 ? $"Goodie ID {request.GoodieId:000} was written as {stateLabel} to {BuildFileNameSummary(request.OutputPath, "the selected output file")}.\nThe source save was not modified. If this destination is a Safe Game Copy, the output is staged only in that verified copy's savegames folder."
@@ -735,6 +775,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             string outputPath = request.OutputPath.Trim();
 
+            string? patchCompositionLoss = SaveEditorService.DescribeWriteCompositionLoss(
+                _lastEditorWriteKind,
+                _lastEditorWriteOutputPath,
+                SaveEditorService.SaveEditorWriteKind.FullPatch,
+                outputPath);
+            if (patchCompositionLoss is not null &&
+                !await ConfirmAsync("This will discard your previous edit", patchCompositionLoss))
+            {
+                AppStatusService.SetStatus("Save Editor: patch canceled");
+                return;
+            }
+
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
@@ -752,6 +804,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (result.Success && File.Exists(outputPath))
             {
                 _lastWrittenCompletion = SaveEditorJourneyStateMachine.RecordSuccessfulWrite(request, outputPath);
+                _lastEditorWriteKind = SaveEditorService.SaveEditorWriteKind.FullPatch;
+                _lastEditorWriteOutputPath = outputPath;
             }
             else
             {
@@ -931,20 +985,44 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private SavePatchRequest BuildEditorRequest(out string? advancedError)
         {
             TryBuildEditorAdvancedOverrides(out Dictionary<int, string>? levelRanks, out Dictionary<int, int>? perCategoryKills, out advancedError);
+            bool patchNodes = EditorPatchNodesCheckBox.IsChecked == true;
+            bool patchGoodies = EditorPatchGoodiesCheckBox.IsChecked == true;
+            bool patchKills = EditorPatchKillsCheckBox.IsChecked == true;
             return new SavePatchRequest
             {
                 InputPath = (EditorInputFileTextBox.Text ?? string.Empty).Trim(),
                 OutputPath = (EditorOutputFileTextBox.Text ?? string.Empty).Trim(),
-                Rank = (EditorRankComboBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "S",
-                UseNewGoodiesInstead = EditorGoodiesAsNewToggle.IsOn,
-                GlobalKillCount = ClampNumberBoxToInt(EditorGlobalKillNumberBox, fallback: 100),
-                PatchNodes = EditorPatchNodesCheckBox.IsChecked == true,
+                // A payload is supplied only when the section that consumes it is enabled. Sending a
+                // value for a disabled section is exactly what SavePatchIntentContract now refuses,
+                // and it would be the UI, not the user, that had configured it.
+                Rank = patchNodes ? GetEditorRankBaseline() : null,
+                UseNewGoodiesInstead = patchGoodies ? EditorGoodiesAsNewToggle.IsOn : null,
+                GlobalKillCount = patchKills && EditorKeepUnoverriddenKillsCheckBox.IsChecked != true
+                    ? ClampNumberBoxToInt(EditorGlobalKillNumberBox, fallback: 100)
+                    : null,
+                PatchNodes = patchNodes,
                 PatchLinks = EditorPatchLinksCheckBox.IsChecked == true,
-                PatchGoodies = EditorPatchGoodiesCheckBox.IsChecked == true,
-                PatchKills = EditorPatchKillsCheckBox.IsChecked == true,
+                PatchGoodies = patchGoodies,
+                PatchKills = patchKills,
                 LevelRanks = levelRanks,
                 PerCategoryKills = perCategoryKills
             };
+        }
+
+        /// <summary>
+        /// The mission rank baseline, or null when the user chose "Keep every grade this save already
+        /// has". Null is not a grade: it means the node pass writes only the missions carrying an
+        /// explicit per-mission override, leaving every other mission's 64 bytes alone.
+        /// </summary>
+        private string? GetEditorRankBaseline()
+        {
+            string? tag = (EditorRankComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
+            if (string.Equals(tag, EditorKeepRankBaselineTag, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return tag ?? "S";
         }
 
         private FocusedGoodieStatePatchRequest? BuildFocusedGoodieStateRequest(out string? error)
@@ -1059,7 +1137,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!_editorInputValid && hasInput)
             {
-                EditorSafetyHintTextBlock.Text = "Input must be a valid .bes career save before patching is enabled.";
+                // Say which check failed, not just that one did.
+                EditorSafetyHintTextBlock.Text = SaveEditorService.DescribeCareerSaveInputRejection(request.InputPath)
+                    ?? "Input must be a valid .bes career save before patching is enabled.";
             }
             else if (!string.IsNullOrWhiteSpace(advancedError))
             {
@@ -1068,6 +1148,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else if (!hasSections)
             {
                 EditorSafetyHintTextBlock.Text = "Choose at least one save section to patch.";
+            }
+            else if (SavePatchIntentContract.DescribeEmptySectionPass(request.ToIntentSnapshot()) is { } emptyPass)
+            {
+                // Say this before the user clicks, not after. It is reachable from the honest defaults:
+                // a mixed-count save switches "Keep the kill counts this save already has" on, so
+                // checking Patch kill counts without checking a category leaves nothing to write.
+                EditorSafetyHintTextBlock.Text = emptyPass;
             }
             else if (missionOverrideCount > 0 && request.PatchNodes != true)
             {
@@ -1083,7 +1170,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (!outputIsSaveLike)
             {
-                EditorSafetyHintTextBlock.Text = "Output path must end in .bes and stay outside every game folder.";
+                // This used to read "...stay outside every game folder", which claimed more than
+                // FileMutationSafety.RejectOutputInGameTree delivers: that guard rejects a destination
+                // only when an ancestor directory holds BOTH BEA.exe and data/, so it matches the
+                // installed game tree and nothing else. Neither Documents\Battle Engine Aquila nor
+                // %LocalAppData%\Battle Engine Aquila matches, and the app itself offers files from
+                // both. Whether those roots should be protected is an open owner decision; until it is
+                // taken, the sentence must not imply they already are.
+                EditorSafetyHintTextBlock.Text =
+                    "Output path must end in .bes and must not land inside the installed game folder " +
+                    "(the one holding BEA.exe and data). That is the only location blocked: your " +
+                    "Documents and AppData save folders are not, so an output file there can replace a " +
+                    "real career and no backup is taken.";
             }
             else
             {

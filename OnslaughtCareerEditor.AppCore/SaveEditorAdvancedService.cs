@@ -11,13 +11,39 @@ namespace Onslaught___Career_Editor
 {
     public sealed class SaveMissionRankRow : INotifyPropertyChanged
     {
+        /// <summary>
+        /// The choice that means "this mission carries no override of its own".
+        ///
+        /// It used to read "Keep", which was a lie: a row on Keep is simply omitted from
+        /// <see cref="SaveEditorAdvancedService.TryBuildLevelRanks"/>, and the patcher then wrote the
+        /// mission rank baseline over it. On a real mixed-grade specimen that turned 42 missions'
+        /// grades into a wall of S while the control the user had left alone said "Keep".
+        /// The row defers to the baseline, so it now says so. The baseline itself is what can keep.
+        /// </summary>
+        public const string UseBaselineChoice = "Use baseline";
+
+        /// <summary>
+        /// The pre-2026-07-26 spelling of <see cref="UseBaselineChoice"/>. Still accepted so that a
+        /// caller holding the old string gets "no override" rather than having "Keep" parsed as a
+        /// grade name and rejected. It is deliberately not offered in <see cref="RankChoices"/>.
+        /// </summary>
+        public const string LegacyUseBaselineChoice = "Keep";
+
         private string _currentRank = "-";
-        private string _selectedRank = "Keep";
+        private string _selectedRank = UseBaselineChoice;
 
         public int NodeIndexZeroBased { get; init; }
         public string NodeLabel { get; init; } = string.Empty;
         public string MissionLabel { get; init; } = string.Empty;
-        public IReadOnlyList<string> RankChoices => new[] { "Keep", "S", "A", "B", "C", "D", "E", "NONE" };
+        public IReadOnlyList<string> RankChoices => new[] { UseBaselineChoice, "S", "A", "B", "C", "D", "E", "NONE" };
+
+        public static bool IsUseBaselineChoice(string? selection)
+        {
+            string trimmed = (selection ?? string.Empty).Trim();
+            return trimmed.Length == 0
+                || trimmed.Equals(UseBaselineChoice, StringComparison.OrdinalIgnoreCase)
+                || trimmed.Equals(LegacyUseBaselineChoice, StringComparison.OrdinalIgnoreCase);
+        }
 
         public string CurrentRank
         {
@@ -54,6 +80,18 @@ namespace Onslaught___Career_Editor
         public string CategoryName { get; init; } = string.Empty;
         public string ThresholdLabel { get; init; } = string.Empty;
         public int CurrentValue { get; init; }
+
+        /// <summary>
+        /// False when <see cref="CurrentValue"/> is a hard-coded seed rather than a number read from a
+        /// save. Two bare <c>catch {}</c> blocks used to leave the seeds 100/100/25/40/20 in this
+        /// property, and the UI rendered them in its "Current" column as though the file had said so.
+        /// </summary>
+        public bool CurrentValueKnown { get; init; }
+
+        /// <summary>What the "Current" column should render. Never presents a seed as a reading.</summary>
+        public string CurrentValueLabel => CurrentValueKnown
+            ? CurrentValue.ToString("N0", CultureInfo.InvariantCulture)
+            : "-";
 
         public bool OverrideEnabled
         {
@@ -120,7 +158,31 @@ namespace Onslaught___Career_Editor
             { 0xBF800000u, "NONE" }
         };
 
+        /// <summary>
+        /// Why a read of the advanced rows produced the values it did. Before this existed, both
+        /// readers swallowed every exception into <c>catch {}</c>, so "no file selected", "file
+        /// unreadable" and "file read fine" were indistinguishable at the call site and the UI stated
+        /// hard-coded seeds as if they had come from the save.
+        /// </summary>
+        public sealed class SaveEditorAdvancedReadStatus
+        {
+            public bool FileWasRead { get; init; }
+            public string? Reason { get; init; }
+
+            public static SaveEditorAdvancedReadStatus Read() => new() { FileWasRead = true };
+
+            public static SaveEditorAdvancedReadStatus NotRead(string reason) =>
+                new() { FileWasRead = false, Reason = reason };
+        }
+
         public static IReadOnlyList<SaveMissionRankRow> LoadMissionRankRows(string? filePath)
+        {
+            return LoadMissionRankRows(filePath, out _);
+        }
+
+        public static IReadOnlyList<SaveMissionRankRow> LoadMissionRankRows(
+            string? filePath,
+            out SaveEditorAdvancedReadStatus status)
         {
             List<SaveMissionRankRow> rows = new();
             for (int i = 0; i < MissionWorldNumbers.Length; i++)
@@ -143,8 +205,15 @@ namespace Onslaught___Career_Editor
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
+                status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
+                return rows;
+            }
+
+            if (!File.Exists(filePath))
+            {
+                status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
                 return rows;
             }
 
@@ -153,6 +222,13 @@ namespace Onslaught___Career_Editor
                 byte[] buf = File.ReadAllBytes(filePath);
                 if (buf.Length != BesFilePatcher.EXPECTED_FILE_SIZE)
                 {
+                    // The analyzer understands the 0x2514 + 0x20*N size law, but every write path and
+                    // this reader require exactly 10004 bytes. All 41 real specimens are 10004, so no
+                    // observed file lands here; failing closed stays correct, but it must say so
+                    // instead of returning blank rows that look like "no file selected".
+                    status = SaveEditorAdvancedReadStatus.NotRead(
+                        $"Mission grades were not read: this file is {buf.Length:N0} bytes and a career save is " +
+                        $"{BesFilePatcher.EXPECTED_FILE_SIZE:N0}.");
                     return rows;
                 }
 
@@ -168,40 +244,79 @@ namespace Onslaught___Career_Editor
                     rows[i].CurrentRank = DecodeRankBits(rankBits);
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
+                                        or NotSupportedException or InvalidDataException)
             {
+                // Was `catch {}`. The rows returned here still read "-" in every Current column, which
+                // is honest only because the caller is now told why.
+                status = SaveEditorAdvancedReadStatus.NotRead($"Mission grades could not be read: {ex.Message}");
+                return rows;
             }
 
+            status = SaveEditorAdvancedReadStatus.Read();
             return rows;
         }
 
         public static IReadOnlyList<SaveCategoryKillRow> LoadCategoryKillRows(string? filePath)
         {
+            return LoadCategoryKillRows(filePath, out _);
+        }
+
+        public static IReadOnlyList<SaveCategoryKillRow> LoadCategoryKillRows(
+            string? filePath,
+            out SaveEditorAdvancedReadStatus status)
+        {
+            // These seeds are a starting point for the override boxes, never a claim about the file.
             int[] counts = CategoryDefinitions.Select(definition => definition.DefaultSeed).ToArray();
-            if (!string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+            status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
+
+            if (!string.IsNullOrWhiteSpace(filePath))
             {
-                try
+                if (!File.Exists(filePath))
                 {
-                    SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
-                    if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
+                    status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
+                }
+                else
+                {
+                    try
                     {
-                        for (int i = 0; i < CategoryDefinitions.Length; i++)
+                        SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
+                        if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
                         {
-                            counts[i] = analysis.KillCounts[i];
+                            for (int i = 0; i < CategoryDefinitions.Length; i++)
+                            {
+                                counts[i] = analysis.KillCounts[i];
+                            }
+
+                            status = SaveEditorAdvancedReadStatus.Read();
+                        }
+                        else
+                        {
+                            status = SaveEditorAdvancedReadStatus.NotRead(
+                                "Kill counts were not read: " +
+                                (analysis.ErrorMessage ?? "this file is not a readable career save."));
                         }
                     }
-                }
-                catch
-                {
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
+                                                or NotSupportedException or InvalidDataException)
+                    {
+                        // Was `catch {}`. Falling through here left 100/100/25/40/20 in CurrentValue and
+                        // the UI printed them in its Current column as if the save had said so; worse,
+                        // GetSuggestedGlobalKillSeed then turned that fiction into the number an
+                        // unchecked-category patch wrote.
+                        status = SaveEditorAdvancedReadStatus.NotRead($"Kill counts could not be read: {ex.Message}");
+                    }
                 }
             }
 
+            bool known = status.FileWasRead;
             return CategoryDefinitions.Select((definition, index) => new SaveCategoryKillRow
             {
                 CategoryIndex = definition.CategoryIndex,
                 CategoryName = definition.CategoryName,
                 ThresholdLabel = definition.ThresholdLabel,
                 CurrentValue = counts[index],
+                CurrentValueKnown = known,
                 OverrideEnabled = false,
                 OverrideValue = counts[index]
             }).ToArray();
@@ -218,6 +333,22 @@ namespace Onslaught___Career_Editor
             return counts.Distinct().Count() > 1 ? counts.Max() : counts[0];
         }
 
+        /// <summary>
+        /// True when the save really was read and its five categories do not all hold the same count.
+        /// This is the condition under which writing one baseline over all five destroys real data, so
+        /// it is what the WinUI surface uses to default "keep the counts this save already has" on.
+        /// Rows whose values were never read return false: an unread seed must not drive a write.
+        /// </summary>
+        public static bool HasMixedKnownCategoryCounts(IReadOnlyList<SaveCategoryKillRow> rows)
+        {
+            if (rows.Count == 0 || rows.Any(row => !row.CurrentValueKnown))
+            {
+                return false;
+            }
+
+            return rows.Select(row => row.CurrentValue).Distinct().Count() > 1;
+        }
+
         public static string BuildKillSeedSummary(IReadOnlyList<SaveCategoryKillRow> rows)
         {
             if (rows.Count == 0)
@@ -225,16 +356,21 @@ namespace Onslaught___Career_Editor
                 return "No save is loaded yet. This field is only the write value used for unchecked categories; it is not a cumulative score.";
             }
 
+            if (rows.Any(row => !row.CurrentValueKnown))
+            {
+                return "The current kill counts were not read from a save, so the Current column shows \"-\". The value below is only the write value that would be used for unchecked categories.";
+            }
+
             int[] counts = rows.Select(row => row.CurrentValue).ToArray();
             int baselineSeed = GetSuggestedGlobalKillSeed(rows);
             return counts.Distinct().Count() > 1
-                ? $"Loaded save uses mixed category counts. The default write value was seeded to the highest current count ({baselineSeed:N0}) so an unchecked-row patch does not silently lower a category."
+                ? $"Loaded save uses mixed category counts. \"Keep the kill counts this save already has\" was switched on so that only the categories you check below are written; clearing it writes the value below to all five, which would replace the other counts (highest current count is {baselineSeed:N0})."
                 : $"Loaded save uses a shared kill value of {baselineSeed:N0} across all five categories.";
         }
 
         public static int CountMissionRankOverrides(IReadOnlyList<SaveMissionRankRow> rows)
         {
-            return rows.Count(row => !string.Equals(row.SelectedRank, "Keep", StringComparison.OrdinalIgnoreCase));
+            return rows.Count(row => !SaveMissionRankRow.IsUseBaselineChoice(row.SelectedRank));
         }
 
         public static int CountCategoryKillOverrides(IReadOnlyList<SaveCategoryKillRow> rows)
@@ -253,8 +389,8 @@ namespace Onslaught___Career_Editor
             HashSet<string> valid = new(StringComparer.OrdinalIgnoreCase) { "S", "A", "B", "C", "D", "E", "NONE" };
             foreach (SaveMissionRankRow row in rows)
             {
-                string selected = (row.SelectedRank ?? "Keep").Trim();
-                if (selected.Equals("Keep", StringComparison.OrdinalIgnoreCase))
+                string selected = (row.SelectedRank ?? SaveMissionRankRow.UseBaselineChoice).Trim();
+                if (SaveMissionRankRow.IsUseBaselineChoice(selected))
                 {
                     continue;
                 }

@@ -36,7 +36,17 @@ public class SaveEditorAdvancedOverrideCarryOverTests
         Assert.That(carried, Is.EqualTo(2));
         Assert.That(reloaded[0].SelectedRank, Is.EqualTo("E"));
         Assert.That(reloaded[2].SelectedRank, Is.EqualTo("NONE"));
-        Assert.That(reloaded[1].SelectedRank, Is.EqualTo("Keep"), "Untouched rows must stay on Keep.");
+        // The sentinel is deliberately no longer spelled "Keep": a row left on it is omitted from
+        // LevelRanks and therefore takes the mission rank baseline, which is not "keeping" anything
+        // unless the baseline itself is set to keep. The row now says what it does.
+        Assert.That(
+            reloaded[1].SelectedRank,
+            Is.EqualTo(SaveMissionRankRow.UseBaselineChoice),
+            "Untouched rows must stay on the use-baseline sentinel.");
+        Assert.That(
+            reloaded[1].RankChoices,
+            Does.Not.Contain("Keep"),
+            "The word Keep must not be offered on a per-mission row: only the baseline can keep.");
         Assert.That(
             SaveEditorAdvancedService.CountMissionRankOverrides(reloaded),
             Is.EqualTo(2),

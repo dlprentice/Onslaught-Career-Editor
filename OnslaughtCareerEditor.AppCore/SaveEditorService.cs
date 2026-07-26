@@ -9,15 +9,38 @@ namespace Onslaught___Career_Editor
     {
         public string InputPath { get; init; } = string.Empty;
         public string OutputPath { get; init; } = string.Empty;
-        public string Rank { get; init; } = "S";
-        public bool UseNewGoodiesInstead { get; init; }
-        public int GlobalKillCount { get; init; } = 100;
+        /// <summary>Baseline mission grade. Null means "keep": untargeted missions are not written at all.</summary>
+        public string? Rank { get; init; }
+
+        /// <summary>Goodie style. Null means "not configured".</summary>
+        public bool? UseNewGoodiesInstead { get; init; }
+
+        /// <summary>Baseline kill count. Null means "keep": untargeted categories are not written at all.</summary>
+        public int? GlobalKillCount { get; init; }
+
         public bool PatchNodes { get; init; } = true;
         public bool PatchLinks { get; init; } = true;
         public bool PatchGoodies { get; init; } = true;
         public bool PatchKills { get; init; } = true;
         public Dictionary<int, string>? LevelRanks { get; init; }
         public Dictionary<int, int>? PerCategoryKills { get; init; }
+
+        /// <summary>
+        /// Project onto the shape <see cref="SavePatchIntentContract"/> reads. Every payload property
+        /// above must appear here; <c>SavePatchIntentCoverageTests</c> fails otherwise.
+        /// </summary>
+        public SavePatchIntentSnapshot ToIntentSnapshot() => new()
+        {
+            Rank = Rank,
+            UseNewGoodiesInstead = UseNewGoodiesInstead,
+            GlobalKillCount = GlobalKillCount,
+            LevelRanks = LevelRanks,
+            PerCategoryKills = PerCategoryKills,
+            PatchNodes = PatchNodes,
+            PatchLinks = PatchLinks,
+            PatchGoodies = PatchGoodies,
+            PatchKills = PatchKills
+        };
     }
 
     public sealed class FocusedGoodieStatePatchRequest
@@ -50,6 +73,81 @@ namespace Onslaught___Career_Editor
                 || fileNameOnly.StartsWith("defaultoptions.bea", StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Say why a chosen input is not usable, or null when it is.
+        ///
+        /// The UI used to collapse "file missing", "that is a .bea options file", "wrong length" and
+        /// "wrong version word" into one sentence, and <see cref="BesFilePatcher.IsValidBesFile"/>
+        /// swallowed its exception into <c>Debug.WriteLine</c>, which is invisible in a release build.
+        /// The user was told the input was invalid and never told why.
+        /// </summary>
+        public static string? DescribeCareerSaveInputRejection(string? filePath)
+        {
+            string trimmed = (filePath ?? string.Empty).Trim();
+            if (trimmed.Length == 0)
+            {
+                return "Choose a .bes career save.";
+            }
+
+            if (IsOptionsLikeFilePath(trimmed))
+            {
+                return "That file is a game options file (.bea / defaultoptions), not a career save. " +
+                       "Game Options edits those; the Save Editor needs a .bes career save.";
+            }
+
+            if (!IsCareerSaveFilePath(trimmed))
+            {
+                return $"A career save must have the .bes extension. This one ends in " +
+                       $"'{Path.GetExtension(trimmed)}'.";
+            }
+
+            FileInfo info;
+            try
+            {
+                info = new FileInfo(trimmed);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException
+                                        or UnauthorizedAccessException or System.Security.SecurityException)
+            {
+                return $"That path could not be read: {ex.Message}";
+            }
+
+            if (!info.Exists)
+            {
+                return "No file exists at that path.";
+            }
+
+            if (info.Length != BesFilePatcher.EXPECTED_FILE_SIZE)
+            {
+                return $"A Battle Engine Aquila career save is exactly {BesFilePatcher.EXPECTED_FILE_SIZE:N0} bytes. " +
+                       $"This file is {info.Length:N0}.";
+            }
+
+            try
+            {
+                using FileStream stream = File.OpenRead(trimmed);
+                Span<byte> header = stackalloc byte[2];
+                if (stream.Read(header) != 2)
+                {
+                    return "That file is the right size but its first two bytes could not be read.";
+                }
+
+                ushort versionWord = System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(header);
+                if (versionWord != BesFilePatcher.VERSION_WORD)
+                {
+                    return $"That file is the right size but its version word is 0x{versionWord:X4}; a career save " +
+                           $"starts with 0x{BesFilePatcher.VERSION_WORD:X4}.";
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
+                                        or System.Security.SecurityException)
+            {
+                return $"That file could not be opened: {ex.Message}";
+            }
+
+            return null;
+        }
+
         public static bool IsCareerSaveFilePath(string? filePath)
         {
             return !string.IsNullOrWhiteSpace(filePath) &&
@@ -74,6 +172,73 @@ namespace Onslaught___Career_Editor
             return Path.Combine(directory, $"{fileName}_patched{extension}");
         }
 
+        /// <summary>
+        /// Which of the Save Editor's two write actions produced a file.
+        /// </summary>
+        public enum SaveEditorWriteKind
+        {
+            FullPatch,
+            FocusedGoodieState
+        }
+
+        /// <summary>
+        /// Warn when the write about to run would erase the other write action's result.
+        ///
+        /// Both Save Editor write buttons read the same output path box and both re-read the *input*
+        /// save, so they do not compose: running one after the other replaces the first result instead
+        /// of building on it, and both report success with a green InfoBar. A user who writes a focused
+        /// Goodie and then clicks Patch loses the Goodie edit with nothing said.
+        ///
+        /// Returns null when there is nothing to lose: no previous write, a different destination, or
+        /// the same action re-running (which genuinely does just redo itself from the same input).
+        /// </summary>
+        public static string? DescribeWriteCompositionLoss(
+            SaveEditorWriteKind? previousWriteKind,
+            string? previousOutputPath,
+            SaveEditorWriteKind nextWriteKind,
+            string? nextOutputPath)
+        {
+            if (previousWriteKind is not { } previous || previous == nextWriteKind)
+            {
+                return null;
+            }
+
+            string previousPath = (previousOutputPath ?? string.Empty).Trim();
+            string nextPath = (nextOutputPath ?? string.Empty).Trim();
+            if (previousPath.Length == 0 || nextPath.Length == 0)
+            {
+                return null;
+            }
+
+            bool samePath;
+            try
+            {
+                samePath = FileMutationSafety.AreLexicallySamePath(previousPath, nextPath);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException
+                                        or NotSupportedException)
+            {
+                samePath = string.Equals(previousPath, nextPath, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (!samePath)
+            {
+                return null;
+            }
+
+            string previousLabel = previous == SaveEditorWriteKind.FocusedGoodieState
+                ? "the focused Goodie state"
+                : "the section patch";
+            string nextLabel = nextWriteKind == SaveEditorWriteKind.FocusedGoodieState
+                ? "Writing the focused Goodie state"
+                : "Patching the selected sections";
+
+            return $"{nextLabel} re-reads the input save from scratch, so it does not build on {previousLabel} " +
+                   "you already wrote to this same output file - that earlier edit will be gone. " +
+                   "To combine both, point this write at the file you produced last time instead of at the " +
+                   "original input.";
+        }
+
         public static bool HasAnySelectedSection(SavePatchRequest request)
         {
             return request.PatchNodes || request.PatchLinks || request.PatchGoodies || request.PatchKills;
@@ -84,7 +249,11 @@ namespace Onslaught___Career_Editor
             List<string> parts = new();
             if (request.PatchNodes)
             {
-                parts.Add("missions");
+                // Do not claim "missions" when the baseline is Keep: under keep semantics only the
+                // missions carrying an explicit override are written at all.
+                parts.Add(request.Rank is null
+                    ? "only the missions overridden below (all other missions untouched)"
+                    : "missions");
             }
 
             if (request.PatchLinks)
@@ -94,12 +263,14 @@ namespace Onslaught___Career_Editor
 
             if (request.PatchGoodies)
             {
-                parts.Add(request.UseNewGoodiesInstead ? "goodies as NEW" : "goodies as OLD");
+                parts.Add(request.UseNewGoodiesInstead == true ? "goodies as NEW" : "goodies as OLD");
             }
 
             if (request.PatchKills)
             {
-                parts.Add($"kills -> {ClampGlobalKillValue(request.GlobalKillCount):N0}");
+                parts.Add(request.GlobalKillCount is { } globalKills
+                    ? $"kills -> {ClampGlobalKillValue(globalKills):N0}"
+                    : "kills kept except the categories overridden below");
             }
 
             if (request.LevelRanks is { Count: > 0 })
@@ -156,11 +327,14 @@ namespace Onslaught___Career_Editor
                 return PatchResult.Fail("Choose at least one save section to patch.");
             }
 
+            // This adapter must never manufacture a value the caller did not supply. It used to coerce a
+            // null/blank Rank back to "S" and a defaulted GlobalKillCount straight through, which would
+            // have re-opened the exact hole the nullable request shape exists to close.
             BesFilePatcher patcher = new()
             {
-                Rank = string.IsNullOrWhiteSpace(request.Rank) ? "S" : request.Rank.Trim().ToUpperInvariant(),
+                Rank = string.IsNullOrWhiteSpace(request.Rank) ? null : request.Rank.Trim().ToUpperInvariant(),
                 UseNewGoodiesInstead = request.UseNewGoodiesInstead,
-                GlobalKillCount = ClampGlobalKillValue(request.GlobalKillCount),
+                GlobalKillCount = request.GlobalKillCount is { } killCount ? ClampGlobalKillValue(killCount) : null,
                 PatchNodes = request.PatchNodes,
                 PatchLinks = request.PatchLinks,
                 PatchGoodies = request.PatchGoodies,
