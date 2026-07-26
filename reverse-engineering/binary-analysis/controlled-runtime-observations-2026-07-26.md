@@ -149,7 +149,23 @@ upload, `D3DRS_AMBIENT`, or the material. A transient light shorter than the gap
 between dumps could go unseen; a static or slowly-varying extra light is
 excluded, and that is the only kind the residual could have had.
 
-### SCOPE CORRECTION 2026-07-26, added the same day — read this before reusing §2
+### SCOPE CORRECTION 2026-07-26 — ITSELF WITHDRAWN, same day. See §5.
+
+> **The correction printed below was wrong and is retained only so the reasoning
+> is visible.** Its premise — that `D3DRS_LIGHTING = 0` at the terrain draw — was
+> an instrumentation artefact. The gate at `0x0053e688` is the `call` instruction
+> *before* `CDXLandscape::Render`; lighting goes `0 → 1` **inside** `Render`,
+> before any primitive, and reads 1 on leaving. Breaking on the device calls
+> instead of the state shadows shows `D3DRS_LIGHTING = 1` at the terrain draw and
+> at the lit mesh draws alike.
+>
+> **The terrain ambient-light derivation therefore SURVIVES, mechanism confirmed
+> at the device** — right number *and* right reason. See §5.
+>
+> The one durable point below is the scoping instruction: §2's values genuinely
+> are terrain-draw values and genuinely must not be carried to the mesh draws,
+> because the mesh draws run a *different rig*. That turned out to matter far more
+> than expected, and it is what §5 is about.
 
 **These light values were read at `0x0053e688`, the TERRAIN draw, and §3's own
 `SetRenderState` transition trace shows `D3DRS_LIGHTING = 0` at that draw.** The
@@ -269,3 +285,77 @@ have shipped as well-argued static readings and been wrong. On this codebase, a
 static reading of a constant establishes what the bytes *are*; it does not
 establish what they *mean* when the units are supplied at runtime by something
 the image never writes.
+
+## 5. The lit mesh draws — read at the DEVICE, and the trees run their own rig
+
+Full record: `local-lab/LIT-MESH-LIGHT-STATE-2026-07-26.md`. Probe:
+`local-lab/mesh-lighting-mode-2026-07-26/Run-LitMeshLightProbe.ps1`. Two launches,
+gate frames 2400 and 800, same specimen and same read-only envelope.
+
+This one broke on the **device calls rather than the state shadows**, which is
+what made it decisive. `SetLight` has exactly three call sites in the image
+(`0x005512e1` is the in-level one, inside `0x00551200`, which builds a 0x68-byte
+`D3DLIGHT9` on the stack); `SetMaterial` has seven, all instrumented;
+`LightEnable` is at `0x00551101`.
+
+**`D3DRS_LIGHTING` is 1 at the lit mesh draws AND at the terrain draw.** The
+earlier "terrain is unlit" reading was an artefact of gating on the `call`
+instruction before `CDXLandscape::Render`. The same one-flush staleness makes
+4–6 `RenderMeshCore`-entry reads per frame report a wrong ambient, which is worth
+remembering for any future shadow-array read.
+
+**The terrain ambient-light derivation is confirmed at the device.** `Render`
+uploads both lights with `D3DLIGHT9.Ambient` = the light colour, sets
+`D3DRS_AMBIENT := 0` and `DIFFUSEMATERIALSOURCE := MATERIAL`, installs the
+material at `0x0083d28c` (`Diffuse = (0,0,0,1)`, `Ambient = (0.8,0.8,0.8,1)`),
+draws, then re-uploads both lights with `Ambient = 0` and restores. So
+`2 × 0.8 × sum(light.Ambient) = (1.400000, 1.325000, 1.106250)` is right for the
+right reason, and **the terrain is the only consumer of a light ambient term in
+the frame.**
+
+**At the mesh draws the Ambient term is ZERO on both lights**; `Diffuse` carries
+sun and anti-sun as recorded. The `D3DMATERIAL9` at every non-terrain draw
+(`0x0083d248`, read at five sites in both runs) is `Diffuse = (1,1,1,1)`,
+`Ambient = (0,0,0,1)`, **`Specular = (0,0,0,0)`, `Emissive = (0,0,0,0)`**,
+`Power = 0.1`, with `SPECULARENABLE = 0`. That is a precise negative: the two
+channels flagged as "live and unmeasured" are both zero.
+
+### `D3DRS_AMBIENT` is not constant, and that is the answer
+
+| draws | `D3DRS_AMBIENT` | light 0 | light 1 |
+| ---: | --- | --- | --- |
+| 130 `CRTMesh` static world | `0x000d0f2b` | HFLD sun, as recorded | anti-sun |
+| **442 `CRTTree` close pines** | **`0x0039293e` = (57,41,62)/255** | **sun × 0.1, pointing straight DOWN `(0,0,+1)`** | **full anti-sun, pointing straight UP `(0,0,-1)`** |
+
+The `0.1` is a shipped constant at `0x005d85c0`, applied in
+`CRTTree::BuildRenderOutputs` at `0x004ddcb8`–`0x004ddd2f` alongside `1/256`; the
+anti-sun block at `0x004ddd59` gets `1/256` only.
+
+**So the buildings' law in the reconstruction already matches retail exactly,
+3.32x step included — and the trees do not.** Under the tree rig,
+`2 × (ambient + light)` gives up-face `(0.59472, 0.45985, 0.58081)` and down-face
+`(0.72050, 0.59501, 0.92377)`: a step of `(1.21, 1.29, 1.59)`, luminance
+**1.304**, against the reconstruction's 2.714 and retail's measured median
+**1.144**. Predicted gains match gains measured off retail's own pixels to within
+5 % on five of six channels.
+
+**Retail's foliage undersides are BRIGHTER and BLUER than its tops. The
+reconstruction has the sign backwards.** That is the black-slab cause, and it is
+a per-draw rig difference rather than anything wrong with the geometry — the
+world-path normal space was independently proven correct to float64 epsilon.
+
+### The mode-4 draws are resolved, and must not be treated as visible geometry
+
+Every mode-4 object pointer is also in the same frame's mode-0 `CRTMesh` set
+(15/15 in run 4, 10/10 in run 5). Their state: `LIGHTING = 1`, **enable array all
+zero**, `D3DRS_AMBIENT = 0`, `Emissive = 0` — so the lit vertex colour is
+**exactly black** — with stage-0 `MODULATE`. It is a black second pass, shadow or
+decal shaped. **Do not simply apply `MODULATE` to them**: their contribution
+lives in the blend state, which was not read.
+
+### Open caveat, stated rather than assumed away
+
+`AMBIENT` and `DIFFUSEMATERIALSOURCE` are both `D3DMCS_COLOR1`, and the vertex
+`COLOR1` values and the blend state were not read. If the tree cards carry
+non-white vertex colour, the predicted gains move. Read those before scoring any
+fix on pixels.
