@@ -3333,6 +3333,16 @@ def _render_root_terrain(raw_level: bytes, raw_base: bytes, height_field: bytes)
             red = color & 0xFF
             green = (color >> 8) & 0xFF
             blue = (color >> 16) & 0xFF
+            # The released blit at 0x0047eff0 bilinearly interpolates the 2x2
+            # shade corners in 8.8 fixed point and pre-increments both
+            # accumulators, so its last sub-texel lands exactly on the far
+            # corner. The root map is lod_shift 0 (one destination texel per
+            # shade unit, dst_stride 0x200), where that reduces algebraically
+            # to the far corner itself. Measured: zero mismatches over 33,600
+            # island texels - see
+            # reverse-engineering/binary-analysis/terrain-shade-bilinear-decode-2026-07-26.md
+            # This is the exact level-0 case of Level100TerrainCompositor's
+            # general interpolation, not a simplification of it.
             shade_x = min(x + 1, 511)
             shade_y = min(y + 1, 511)
             shade_index = shade[(shade_y * 512) + shade_x]

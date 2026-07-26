@@ -123,6 +123,11 @@ internal sealed class Level100TerrainCompositor
                             color = BlendMaterial(color, candidate);
                         }
 
+                        // 0x0047f54a is a bare `sar edx,8` with no clamp; this
+                        // bound is defensive only. Measured over every island
+                        // tile at levels 0-4, the raw index never leaves 0..63,
+                        // so the clamp does not fire and is not a divergence.
+                        // See terrain-shade-bilinear-decode-2026-07-26.md.
                         int shadeValue = Math.Clamp(
                             (shadeRow + ((subX + 1) * shadeStep)) >> 8,
                             0,
