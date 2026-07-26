@@ -901,7 +901,7 @@ public sealed class Level100ActorRegistry
             IsStatic = false,
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
-            Health = definition.InitialHealth,
+            Health = ReleasedInitialHealth(definitionName, definition.InitialHealth),
             Pose = SeatOnGround(definitionName, definition.InitialPose),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = ordinal,
@@ -1157,6 +1157,38 @@ public sealed class Level100ActorRegistry
                     seated,
                     pose.PositionMillimeters.Z),
             };
+    }
+
+    /// <summary>
+    /// Released <c>CUnit::Init</c> takes a unit's life from its <c>Unit</c>
+    /// record's <c>CUnitLife</c> field (physics value id 3, record +0xc0), not
+    /// from the level file. The materialized spawn manifest carries the same
+    /// number for the two ground targets and carries <c>0</c> for the air
+    /// units, which nothing ever filled in. Rather than change a manifest whose
+    /// SHA-256 is pinned in a tree this work does not own
+    /// (rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:16),
+    /// Core takes the released value from the contact catalog - the same
+    /// physics record, decoded once - whenever the definition has one. For
+    /// Target Tank (6.0), Target Truck (3.0) and Warehouse (50.0) this is
+    /// exactly the value already in the manifest, so nothing moves; for
+    /// Target Drone (1.0) it replaces a 0 that would otherwise make the actor
+    /// spawn with no life to lose.
+    /// </summary>
+    private static int ReleasedInitialHealth(
+        string definitionName,
+        int manifestInitialHealth)
+    {
+        if (!Level100ContactCatalog.Instance.TryGetDefinition(
+                definitionName,
+                out Level100ContactDefinition? definition) ||
+            definition is null ||
+            definition.Kind == Level100DefinitionKind.Static)
+        {
+            return manifestInitialHealth;
+        }
+        return checked((int)MathF.Round(
+            definition.MaximumLife * 1_000f,
+            MidpointRounding.AwayFromZero));
     }
 
     private static Actor CreateActor(

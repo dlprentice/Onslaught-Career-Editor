@@ -164,12 +164,22 @@ LEVEL100_CONTACT_ASSET = (
     CORE_ASSETS / "Level100/level100-contact-owners.json"
 )
 LEVEL100_CONTACT_ASSET_SHA256 = (
-    "b3a949aab12849d0a132f4596044706acf7e9b34a5af7be6174fe42e77040f42"
+    "c45e89d14ad7abd9bed37d388453018c4f5c5e37e10f3b8307bec16c81d524f2"
 )
 # Aggregate of the 24 collision-bearing facility meshes only. The accepted
 # static-world aggregate above additionally owns the four tree meshes.
 LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256 = (
     "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
+)
+# `Target Drone` and `Air Trainer` both carry CUnitMesh `fa_f24_training.msh`.
+# The mesh is read and hash-verified in place rather than retained through
+# `DIRECT_ASSETS`, because Core needs only its contact parts and retaining it
+# would move the exact-file count off 320 without a renderer that draws it. The
+# renderer will need the retention when drones become visible; that is a
+# separate change in a tree this tool's owner does not own.
+LEVEL100_DRONE_MESH_SOURCE = "m_FA_F24_training.msh.aya"
+LEVEL100_DRONE_MESH_SHA256 = (
+    "48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5"
 )
 PINE_IMPOSTER_TEXTURE = (
     "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
@@ -627,11 +637,34 @@ def _level100_actor_motion_definitions(
             }
         )
 
-    for definition_name in ("Air Trainer", "Target Drone"):
+    # Air-unit motion scalars. These are NOT emitted into the manifest, because
+    # `Level100ActorMotionDefinition` reaches the Core loader through
+    # `rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:142`,
+    # which constructs the record positionally with eleven arguments and is
+    # owned by another tree; `InteractiveSessionTests.cs:730-741` additionally
+    # pins every non-GroundVehicle motion scalar to null. So the values live in
+    # `SimulationConstants.Level100Plane*` in Core with these offsets cited, and
+    # this guard is what keeps the two from drifting: if the shipped bytes ever
+    # change, materialization fails here rather than Core silently carrying a
+    # stale number.
+    #
+    # id 2 = CUnitAirVelocity (unit record +0xb4), id 6 = CUnitAirTurnRate
+    # (+0xb8), id 23 = CUnitMaxTargetRange (+0x158); see
+    # reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
+    # for the RTTI-resolved value-id map.
+    for definition_name, air_velocity_bits, max_target_range_bits in (
+        ("Air Trainer", 0x41133333, 0x43960000),   # 9.2 u/s, 300.0
+        ("Target Drone", 0x40B00000, 0x43FA0000),  # 5.5 u/s, 500.0
+    ):
         fields = physics[(1, definition_name)]
-        if fields.get(8) != struct.pack("<i", 9):
+        if (
+            fields.get(8) != struct.pack("<i", 9)
+            or fields.get(2) != struct.pack("<I", air_velocity_bits)
+            or fields.get(6) != struct.pack("<I", 0x3D32B8C2)
+            or fields.get(23) != struct.pack("<I", max_target_range_bits)
+        ):
             raise RuntimeError(
-                f"Level 100 {definition_name} plane behavior changed"
+                f"Level 100 {definition_name} plane motion fields changed"
             )
         rows.append(
             {
@@ -2306,15 +2339,27 @@ def _level100_contact_asset(
     # field 10 (`Tank Explosion Medium`) are identical, so the truck reuses the
     # tank's whole-body life model and its destruction record verbatim.
     #
-    # `Target Drone` is deliberately NOT here: it is a different case, not the
-    # same one. See local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md.
-    for definition in ("Target Tank", "Target Truck", "Warehouse"):
+    # `Target Drone` is here as of 2026-07-26. It is NOT the truck's case: its
+    # `Unit` record @0x24e76 carries behaviour class 9 (`CFighterBehaviourType`
+    # by RTTI, the class whose vtable is 0x005e1930), field 3 `CUnitLife` 1.0
+    # (0x3F800000), and field 10 destruction record `Drone Explosion` @0x5df9
+    # whose field 6 `CExplosionWaterEffect` is `Water Explosion Small` while
+    # fields 2/5/7 are all `Drone Explosion Effect`. That divergence used to
+    # trip the single-descriptor guard below; the schema now carries the water
+    # variant separately instead of collapsing it, so the guard can stay strict
+    # on the three variants that genuinely agree.
+    for definition in ("Target Tank", "Target Truck", "Warehouse", "Target Drone"):
         fields = physics[(1, definition)]
         mesh_name = _definition_string(fields, 9)
         if not mesh_name.casefold().endswith(".msh"):
             mesh_name += ".msh"
         source_name = f"m_{mesh_name}.aya"
         expected_hash = direct_hashes.get(source_name.casefold())
+        if expected_hash is None and (
+            source_name.casefold() == LEVEL100_DRONE_MESH_SOURCE.casefold()
+        ):
+            source_name = LEVEL100_DRONE_MESH_SOURCE
+            expected_hash = LEVEL100_DRONE_MESH_SHA256
         if expected_hash is None:
             raise RuntimeError(
                 f"Level 100 target definition has no retained mesh: {definition}"
@@ -2328,7 +2373,7 @@ def _level100_contact_asset(
         particle_descriptor = _definition_string(destruction_fields, 2)
         if any(
             _definition_string(destruction_fields, field_id) != particle_descriptor
-            for field_id in (5, 6, 7)
+            for field_id in (5, 7)
         ):
             raise RuntimeError(
                 f"Level 100 target destruction variants diverged: {definition}"
@@ -2337,6 +2382,9 @@ def _level100_contact_asset(
             {
                 "definition": definition,
                 "destructionParticleDescriptor": particle_descriptor,
+                "destructionWaterParticleDescriptor": _definition_string(
+                    destruction_fields, 6
+                ),
                 "destructionPhysicsDefinition": _definition_string(fields, 10),
                 "destructionSoundDescriptor": _definition_string(
                     destruction_fields, 10
@@ -2377,7 +2425,7 @@ def _level100_contact_asset(
                 struct.unpack("<f", round_fields[12])[0], 1_000
             ),
         },
-        "schema": "onslaught.level100-contact-owners.v3",
+        "schema": "onslaught.level100-contact-owners.v4",
         "staticMeshCount": len(parsed_static),
         "staticSourceAggregateSha256": (
             LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256

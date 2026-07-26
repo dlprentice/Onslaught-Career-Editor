@@ -209,6 +209,230 @@ public sealed class Level100TutorialProgressionTests
         Assert.Equal(expectedHits, hits);
     }
 
+    /// <summary>
+    /// Beat 7's mechanism, end to end at runtime level and with no mission
+    /// event posted. The drone is created by exactly the
+    /// <see cref="Level100ActorRegistry.SpawnThing"/> call
+    /// <c>Hangar.msl</c>'s <c>"Activate Airborne Targets 1"</c> makes, then
+    /// commanded with exactly the <c>FollowWaypoint("Drone Path 1", 0)</c> that
+    /// <c>AirborneDrone1.msl</c>'s <c>ready()</c> issues, and then destroyed
+    /// through the same <c>TryApplyRoundSweep</c> entry point
+    /// <c>Simulation.LaunchWalkerRound</c> uses.
+    ///
+    /// Before this change the drone had no contact geometry, no life and no
+    /// motion class: it spawned at the airfield emitter and sat there, and no
+    /// weapon at any range could touch it.
+    /// </summary>
+    [Fact]
+    public void TargetDrone_FliesDronePath1AndIsDestroyedByRounds()
+    {
+        Level100ActorDefinitionSet definitions =
+            Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var runtime = new Level100DestructionRuntime(registry);
+        var mechanics = new Level100ActorMechanics(registry, definitions);
+        Level100ActorId airfieldId = Assert.IsType<Level100ActorId>(
+            registry.GetThingRef("Airfield"));
+
+        Level100ActorId droneId = registry.SpawnThing(
+            airfieldId,
+            "Target Drone",
+            "SpawnerB",
+            1,
+            "AirborneDrone1").Single();
+        Level100ActorSnapshot spawned = registry.GetActor(droneId);
+        Assert.Equal("Target Drone", spawned.DefinitionName);
+        Assert.Equal("m_FA_F24_training.msh.aya", spawned.MeshBinding);
+        // 1.0 life from `Unit / Target Drone` field 3 (0x3F800000). The
+        // materialized spawn row carries 0; Core takes the released record.
+        Assert.Equal(
+            SimulationConstants.Level100TargetDroneLife,
+            spawned.Health);
+
+        mechanics.ApplyCommand(new Level100ActorScriptCommand(
+            1,
+            0,
+            droneId,
+            Level100ActorScriptCommandKind.FollowWaypoint,
+            null,
+            "Drone Path 1",
+            0));
+
+        SimVector3 origin = registry.GetPose(droneId).PositionMillimeters;
+        var track = new List<(int Tick, SimVector3 Position, int Clearance)>();
+        int baseTicks = 0;
+        for (int tick = 0; tick < 30 * 40; tick++)
+        {
+            mechanics.AdvanceTick();
+            Level100ActorPoseSnapshot pose = registry.GetPose(droneId);
+            if (pose.LinearVelocityMillimetersPerTick != SimVector3.Zero)
+            {
+                baseTicks++;
+            }
+            if (tick % 150 == 0)
+            {
+                int ground = Level100Terrain.Instance
+                    .SampleGroundElevationMillimeters(new SimVector2(
+                        pose.PositionMillimeters.X,
+                        pose.PositionMillimeters.Z));
+                track.Add((
+                    tick,
+                    pose.PositionMillimeters,
+                    pose.PositionMillimeters.Y - ground));
+            }
+        }
+        foreach ((int Tick, SimVector3 Position, int Clearance) row in track)
+        {
+            _output.WriteLine(
+                $"t{row.Tick} pos={row.Position} clearance={row.Clearance}");
+        }
+
+        SimVector3 flown = registry.GetPose(droneId).PositionMillimeters;
+        Assert.NotEqual(origin, flown);
+
+        // Ground track per released base tick is CUnitAirVelocity / 20 -
+        // 5.5 u/s is 275 mm. The measurement is taken over a straight stretch
+        // so the turn does not shorten it.
+        int[] speeds = new int[20];
+        for (int index = 0; index < speeds.Length; index++)
+        {
+            SimVector3 before = registry.GetPose(droneId).PositionMillimeters;
+            do
+            {
+                mechanics.AdvanceTick();
+            }
+            while (registry.GetPose(droneId)
+                .LinearVelocityMillimetersPerTick == SimVector3.Zero);
+            SimVector3 after = registry.GetPose(droneId).PositionMillimeters;
+            long deltaX = (long)after.X - before.X;
+            long deltaY = (long)after.Y - before.Y;
+            long deltaZ = (long)after.Z - before.Z;
+            speeds[index] = (int)Math.Round(Math.Sqrt(
+                (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ)));
+        }
+        _output.WriteLine(
+            "per-base-tick speeds: " + string.Join(", ", speeds));
+        Assert.All(speeds, speed => Assert.InRange(speed, 273, 277));
+
+        // The released clearance band (climb below 5 units, dive above 50)
+        // holds the drone off the terrain. Nothing else in this reconstruction
+        // owns its altitude.
+        Level100ActorPoseSnapshot cruise = registry.GetPose(droneId);
+        int cruiseGround = Level100Terrain.Instance
+            .SampleGroundElevationMillimeters(new SimVector2(
+                cruise.PositionMillimeters.X,
+                cruise.PositionMillimeters.Z));
+        Assert.InRange(
+            cruise.PositionMillimeters.Y - cruiseGround,
+            SimulationConstants.Level100PlaneClimbClearanceMillimeters,
+            SimulationConstants.Level100PlaneDiveClearanceMillimeters);
+
+        // Now shoot it down where it flies.
+        SimVector3 target = registry.GetPose(droneId).PositionMillimeters;
+        var start = new SimVector3(target.X, target.Y + 4_000, target.Z);
+        var end = new SimVector3(target.X, target.Y + 100, target.Z);
+        int hits = 0;
+        while (registry.GetActor(droneId).Lifecycle !=
+                   Level100ActorLifecycle.Destroyed &&
+               hits < 1_000)
+        {
+            Assert.True(runtime.TryApplyRoundSweep(
+                start,
+                end,
+                Level100ContactMechanics.PulseRadiusMillimeters,
+                Level100DestructionState.MechBulletDamageBits,
+                out Level100ContactHit hit));
+            Assert.Equal(droneId.Value, hit.ActorId);
+            Assert.Equal(Level100ContactSurfaceKind.Mesh, hit.SurfaceKind);
+            Assert.Equal(0, hit.PartIndex);
+            hits++;
+        }
+
+        // 1.0 life against the 0.081 Mech Bullet round is 12.35 rounds, so the
+        // thirteenth carries it terminal.
+        _output.WriteLine($"mech bullet hits to destroy the drone: {hits}");
+        Assert.Equal(13, hits);
+        Level100ActorSnapshot destroyed = registry.GetActor(droneId);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, destroyed.Lifecycle);
+        Assert.Equal(0, destroyed.Health);
+        Assert.Contains(
+            registry.Snapshot.PendingFacts,
+            fact => fact.Kind == Level100ActorFactKind.Died &&
+                fact.ActorId == droneId);
+        Assert.Contains(
+            runtime.Events,
+            item => item.ActorId == droneId.Value &&
+                item.Kind == Level100DestructionEventKind.Terminal);
+    }
+
+    /// <summary>
+    /// Beat 9's mechanism: <c>AirborneDrone2.msl</c>'s <c>init()</c> does
+    /// <c>Attack(player)</c>, and the released air guide steers at whatever the
+    /// guide target holds. The drone must close on the player, not sit still -
+    /// which is what it did before this change, because
+    /// <c>Level100ActorMechanics</c> implemented no plane motion at all and
+    /// <c>BeginAttack</c> only set an intent and zeroed the velocity.
+    /// </summary>
+    [Fact]
+    public void AttackingTargetDrone_ClosesOnThePlayer()
+    {
+        Level100ActorDefinitionSet definitions =
+            Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(registry, definitions);
+        Level100ActorId airfieldId = Assert.IsType<Level100ActorId>(
+            registry.GetThingRef("Airfield"));
+        Level100ActorId playerId = Assert.IsType<Level100ActorId>(
+            registry.GetThingRef("Player 1"));
+
+        Level100ActorId droneId = registry.SpawnThing(
+            airfieldId,
+            "Target Drone",
+            "SpawnerA",
+            1,
+            "AirborneDrone2").Single();
+        mechanics.ApplyCommand(new Level100ActorScriptCommand(
+            1,
+            0,
+            droneId,
+            Level100ActorScriptCommandKind.Attack,
+            playerId,
+            null,
+            0));
+
+        SimVector2 player = new(
+            registry.GetPose(playerId).PositionMillimeters.X,
+            registry.GetPose(playerId).PositionMillimeters.Z);
+        double before = HorizontalDistance(
+            registry.GetPose(droneId).PositionMillimeters,
+            player);
+        double closest = before;
+        for (int tick = 0; tick < 30 * 60; tick++)
+        {
+            mechanics.AdvanceTick();
+            closest = Math.Min(
+                closest,
+                HorizontalDistance(
+                    registry.GetPose(droneId).PositionMillimeters,
+                    player));
+        }
+        _output.WriteLine(
+            $"attacking drone: {before:F0} mm out at spawn, closed to " +
+            $"{closest:F0} mm");
+        Assert.True(before > 40_000);
+        // Inside the released `Drone Vulcan Cannon` CWeaponMaxRange of 40.0
+        // units (0x42200000). Nothing here fires it; this only shows the
+        // pursuit reaches weapon range.
+        Assert.True(closest < 40_000);
+    }
+
+    private static double HorizontalDistance(SimVector3 position, SimVector2 target)
+    {
+        double deltaX = (double)position.X - target.X;
+        double deltaZ = (double)position.Z - target.Z;
+        return Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ));
+    }
+
     private static Level100FloatBasis3Bits IdentityFloatBasis() => new(
         BitConverter.SingleToInt32Bits(1f), 0, 0,
         0, BitConverter.SingleToInt32Bits(1f), 0,

@@ -1192,7 +1192,7 @@ public sealed class InteractiveSessionTests
         // the whole move and the Twin Vulcan Cannon added in the same change
         // contributes nothing to this scenario.
         Assert.Equal(
-            "666962c2212ac133873427ae96b78810cb1251f8ba85288306770be9bc34bc9b",
+            "ede22b8dc7ea1511684bccbc52d7ccd4164785397956d93d0f0f04a05ff6c6e7",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

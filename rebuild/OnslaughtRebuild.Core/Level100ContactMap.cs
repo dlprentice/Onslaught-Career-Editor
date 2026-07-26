@@ -166,6 +166,23 @@ public enum Level100DefinitionKind : byte
     Static = 0,
     TargetTank = 1,
     Warehouse = 2,
+
+    /// <summary>
+    /// The released air-unit whole-body-life class. <c>Target Drone</c>'s
+    /// <c>Unit</c> record (<c>default physics.dat</c> sha256
+    /// <c>e1fb3ded...ada14</c>, record @0x24e76, name string @0x24e7e) carries
+    /// behaviour class 9 in field 8 - <c>CFighterBehaviourType</c> by RTTI,
+    /// the class whose vtable is 0x005e1930 - and field 3 <c>CUnitLife</c> 1.0
+    /// (0x3F800000). It takes damage exactly as <see cref="TargetTank"/> does
+    /// (one whole-body life, no per-segment health), but it is a different
+    /// released class: its field set
+    /// {2,3,6,7,8,9,10,11,12,14,21,22,23,36,39,55} does not match the ground
+    /// set {1,3,5,8,9,10,11,23,46,48}, so it is not folded into
+    /// <see cref="TargetTank"/>. Its destruction record <c>Drone Explosion</c>
+    /// @0x5df9 also diverges: field 6 is <c>Water Explosion Small</c> where
+    /// fields 2/5/7 are <c>Drone Explosion Effect</c>.
+    /// </summary>
+    TargetDrone = 3,
 }
 
 public sealed class Level100ContactPart
@@ -237,6 +254,7 @@ public sealed class Level100ContactDefinition
         uint maximumLifeBits,
         string? destructionPhysicsDefinition,
         string? destructionParticleDescriptor,
+        string? destructionWaterParticleDescriptor,
         string? destructionSoundDescriptor,
         Level100ContactPart[] parts)
     {
@@ -246,6 +264,7 @@ public sealed class Level100ContactDefinition
         MaximumLifeBits = maximumLifeBits;
         DestructionPhysicsDefinition = destructionPhysicsDefinition;
         DestructionParticleDescriptor = destructionParticleDescriptor;
+        DestructionWaterParticleDescriptor = destructionWaterParticleDescriptor;
         DestructionSoundDescriptor = destructionSoundDescriptor;
         _parts = parts;
         Parts = Array.AsReadOnly(parts);
@@ -265,6 +284,15 @@ public sealed class Level100ContactDefinition
     public string? DestructionPhysicsDefinition { get; }
 
     public string? DestructionParticleDescriptor { get; }
+
+    /// <summary>
+    /// The released <c>CExplosionWaterEffect</c> (explosion value id 6) of this
+    /// definition's destruction record, carried separately because it is not
+    /// always the same descriptor as the air/ground/unit variants. It is for
+    /// <c>Target Tank</c>, <c>Target Truck</c> and <c>Warehouse</c>; it is not
+    /// for <c>Target Drone</c>.
+    /// </summary>
+    public string? DestructionWaterParticleDescriptor { get; }
 
     public string? DestructionSoundDescriptor { get; }
 
@@ -294,7 +322,7 @@ public sealed class Level100ContactCatalog
     private const string ResourceName =
         "OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json";
     private const string SourceSha256 =
-        "B3A949AAB12849D0A132F4596044706ACF7E9B34A5AF7BE6174FE42E77040F42";
+        "C45E89D14AD7ABD9BED37D388453018C4F5C5E37E10F3B8307BEC16C81D524F2";
     private const string StaticSourceAggregateSha256 =
         "8D85C9BFBE366C815E00D3900D8D29B71A33BEF7A60CDDFCE9ED6AC558E06B4C";
     private const string TargetTankSourceSha256 =
@@ -303,6 +331,8 @@ public sealed class Level100ContactCatalog
         "3BD92CE93D0619B7C4B0DD158680641FBAB6CD88580A68C6EF34E5F22F7596C5";
     private const string WarehouseSourceSha256 =
         "61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15";
+    private const string TargetDroneSourceSha256 =
+        "48876552AE836750221241719F333FB9B5221F78F1AB8BC03D5950CDBF4E6EC5";
 
     private readonly Dictionary<string, Level100ContactDefinition> _definitions;
 
@@ -362,19 +392,25 @@ public sealed class Level100ContactCatalog
             throw new InvalidDataException("The Level 100 contact asset is empty.");
         if (!StringComparer.Ordinal.Equals(
                 document.Schema,
-                "onslaught.level100-contact-owners.v3") ||
+                "onslaught.level100-contact-owners.v4") ||
             document.DefinitionCount != 24 ||
             document.InstanceCount != 33 ||
-            document.PartCount != 350 ||
+            document.PartCount != 362 ||
             document.StaticMeshCount != 24 ||
-            document.TargetDefinitionCount != 3 ||
+            document.TargetDefinitionCount != 4 ||
             document.Definitions.Length != 24 ||
             document.Instances.Length != 33 ||
-            document.TargetDefinitions.Length != 3 ||
+            document.TargetDefinitions.Length != 4 ||
             !StringComparer.OrdinalIgnoreCase.Equals(
                 document.StaticSourceAggregateSha256,
                 StaticSourceAggregateSha256) ||
-            document.TargetSourceSha256.Count != 3 ||
+            document.TargetSourceSha256.Count != 4 ||
+            !document.TargetSourceSha256.TryGetValue(
+                "Target Drone",
+                out string? targetDroneSourceSha256) ||
+            !StringComparer.OrdinalIgnoreCase.Equals(
+                targetDroneSourceSha256,
+                TargetDroneSourceSha256) ||
             !document.TargetSourceSha256.TryGetValue(
                 "Target Tank",
                 out string? targetTankSourceSha256) ||
@@ -419,6 +455,7 @@ public sealed class Level100ContactCatalog
                     null,
                     null,
                     null,
+                    null,
                     parts)))
             {
                 throw new InvalidDataException(
@@ -443,6 +480,9 @@ public sealed class Level100ContactCatalog
                 "Target Tank" or "Target Truck" =>
                     Level100DefinitionKind.TargetTank,
                 "Warehouse" => Level100DefinitionKind.Warehouse,
+                // Whole-body life like the tank, but a different released
+                // class; see Level100DefinitionKind.TargetDrone.
+                "Target Drone" => Level100DefinitionKind.TargetDrone,
                 _ => throw new InvalidDataException(
                     "Level 100 has an unexpected target definition."),
             };
@@ -457,6 +497,7 @@ public sealed class Level100ContactCatalog
                     row.MaximumLifeBits,
                     row.DestructionPhysicsDefinition,
                     row.DestructionParticleDescriptor,
+                    row.DestructionWaterParticleDescriptor,
                     row.DestructionSoundDescriptor,
                     parts)))
             {
@@ -503,6 +544,40 @@ public sealed class Level100ContactCatalog
         Level100ContactDefinition tank = definitions["Target Tank"];
         Level100ContactDefinition truck = definitions["Target Truck"];
         Level100ContactDefinition warehouse = definitions["Warehouse"];
+        Level100ContactDefinition drone = definitions["Target Drone"];
+        // `Target Drone` decodes from `m_FA_F24_training.msh.aya` (sha256
+        // 48876552...6ec5) to 12 CMSH parts of which exactly one, `Object03`,
+        // is collidable, with half-extents (519, 1416, 185) mm about centre
+        // (-5, 323, -26). Three of the non-collidable parts are named `GUNA`,
+        // `GUNA` and `GUNB`, which is the mesh's own corroboration of the two
+        // `CUnitUse` weapon slots the Unit record binds - `Drone Vulcan
+        // Cannon` to `GunA` and `Forseti Drone Missile Launcher` to `GunB`.
+        // None of this volume is authored here.
+        if (drone.MaximumLifeBits != 0x3F800000 || drone.PartCount != 12 ||
+            drone.Kind != Level100DefinitionKind.TargetDrone ||
+            !StringComparer.Ordinal.Equals(
+                drone.Mesh,
+                "m_FA_F24_training.msh.aya") ||
+            !StringComparer.Ordinal.Equals(
+                drone.DestructionPhysicsDefinition,
+                "Drone Explosion") ||
+            !StringComparer.Ordinal.Equals(
+                drone.DestructionParticleDescriptor,
+                "Drone Explosion Effect") ||
+            !StringComparer.Ordinal.Equals(
+                drone.DestructionWaterParticleDescriptor,
+                "Water Explosion Small") ||
+            !StringComparer.Ordinal.Equals(
+                drone.DestructionSoundDescriptor,
+                "Explosion Small") ||
+            !drone.Parts[0].Collidable ||
+            !StringComparer.Ordinal.Equals(drone.Parts[0].Name, "Object03") ||
+            drone.Parts[0].HalfExtents != new Level100Vector3(519, 1416, 185) ||
+            drone.Parts.Count(part => part.Collidable) != 1)
+        {
+            throw new InvalidDataException(
+                "Level 100 Target Drone damage/effect definitions changed.");
+        }
         // `Target Truck` carries one collidable CMSH part, `Mesh01`, with
         // 306 vertices, 432 triangles and half-extents (525, 1510, 287) mm
         // about centre (-4, -50, -475). That volume is decoded from the
@@ -517,6 +592,9 @@ public sealed class Level100ContactCatalog
                 "Tank Explosion Medium") ||
             !StringComparer.Ordinal.Equals(
                 truck.DestructionParticleDescriptor,
+                "Tank Explosion Medium") ||
+            !StringComparer.Ordinal.Equals(
+                truck.DestructionWaterParticleDescriptor,
                 "Tank Explosion Medium") ||
             !StringComparer.Ordinal.Equals(
                 truck.DestructionSoundDescriptor,
@@ -681,6 +759,7 @@ public sealed class Level100ContactCatalog
         public string Mesh { get; set; } = string.Empty;
         public string DestructionPhysicsDefinition { get; set; } = string.Empty;
         public string DestructionParticleDescriptor { get; set; } = string.Empty;
+        public string DestructionWaterParticleDescriptor { get; set; } = string.Empty;
         public string DestructionSoundDescriptor { get; set; } = string.Empty;
         public uint MaximumLifeBits { get; set; }
         public PartRow[] Parts { get; set; } = [];

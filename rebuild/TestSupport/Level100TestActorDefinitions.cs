@@ -72,10 +72,10 @@ internal static class Level100TestActorDefinitions
         AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTruck3", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.TargetTrucks, 3, 3);
         AddSpawn("test:tank-factory", "Target Tank", "SpawnerA", "TargetTank2", "m_f_pulsetank_training.msh.aya", Level100MissionTargetGroup.MovingTargets, 0, 6);
         AddSpawn("test:tank-factory", "Target Truck", "SpawnerA", "TargetTank2", "m_f_truck_training.msh.aya", Level100MissionTargetGroup.MovingTargets, 0, 6);
-        AddSpawn("test:airfield", "Air Trainer", "SpawnerB", "AirTrainer", null, Level100MissionTargetGroup.AirTrainer, 1, 1);
-        AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone1", null, Level100MissionTargetGroup.AirborneTargets1, 0, 3);
-        AddSpawn("test:airfield", "Target Drone", "SpawnerA", "AirborneDrone2", null, Level100MissionTargetGroup.AirborneTargets2, 0, 6);
-        AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone2", null, Level100MissionTargetGroup.AirborneTargets2, 0, 6);
+        AddSpawn("test:airfield", "Air Trainer", "SpawnerB", "AirTrainer", "m_FA_F24_training.msh.aya", Level100MissionTargetGroup.AirTrainer, 1, 1);
+        AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone1", "m_FA_F24_training.msh.aya", Level100MissionTargetGroup.AirborneTargets1, 0, 3);
+        AddSpawn("test:airfield", "Target Drone", "SpawnerA", "AirborneDrone2", "m_FA_F24_training.msh.aya", Level100MissionTargetGroup.AirborneTargets2, 0, 6);
+        AddSpawn("test:airfield", "Target Drone", "SpawnerB", "AirborneDrone2", "m_FA_F24_training.msh.aya", Level100MissionTargetGroup.AirborneTargets2, 0, 6);
         return new Level100ActorDefinitionSet(
             actors,
             spawns,
@@ -211,8 +211,15 @@ internal static class Level100TestActorDefinitions
             (0, 610_000, 610_000),
             (1, 611_000, 611_000),
             (2, 612_000, 612_000)),
+        // The released `Drone Path 1`, transcribed from the materialized
+        // manifest (`level100-static-world.json`), because a synthetic point
+        // would make the beat-7 flight measurement meaningless. Node indices
+        // and positions are the retail ones.
         Path("Drone Path 1",
-            (0, 700_000, 700_000)),
+            (1, -99_688, -3_250),
+            (2, -108_688, 37_750),
+            (3, -66_688, 16_750),
+            (4, -77_688, 84_750)),
     ];
 
     private static IReadOnlyList<Level100ActorMotionDefinition>

@@ -218,6 +218,20 @@ public sealed class Level100ActorMechanics
             Level100ActorSnapshot actor = _actors.GetActor(state.ActorId);
             Level100ActorMotionDefinition? motion =
                 _definitions.FindMotionDefinition(actor.DefinitionName);
+            if (motion?.MotionClass == Level100ActorMotionClass.Plane)
+            {
+                if (actor.Active &&
+                    actor.Lifecycle == Level100ActorLifecycle.Alive)
+                {
+                    AdvancePlane(state, motion);
+                }
+                else
+                {
+                    ZeroActorVelocity(state.ActorId);
+                }
+                actor = _actors.GetActor(state.ActorId);
+            }
+
             if (motion?.MotionClass ==
                 Level100ActorMotionClass.GroundVehicle)
             {
@@ -274,12 +288,380 @@ public sealed class Level100ActorMechanics
             Level100ActorMotionDefinition? motion =
                 _definitions.FindMotionDefinition(
                     actor.DefinitionName);
-            if (motion?.MotionClass ==
-                Level100ActorMotionClass.GroundVehicle)
+            if (motion?.MotionClass is
+                Level100ActorMotionClass.GroundVehicle or
+                Level100ActorMotionClass.Plane)
             {
                 ZeroActorVelocity(state.ActorId);
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Plane (released behaviour class 9, CFighterBehaviourType -> CPlane,
+    // vtable 0x005e1930).
+    //
+    // Decoded read-only from the pristine BEA.exe, sha256
+    // 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750, and
+    // written up in local-lab/PLANE-MOTION-AND-ACTOR-WEAPONS-2026-07-26.md.
+    // Three released functions own this between them:
+    //
+    //   CAirGuide::VFunc03            0x00402280  (CAirGuide vtable 0x005d8594
+    //                                              slot 3) - produces the
+    //                                              desired euler triple at
+    //                                              unit+0x120 and writes
+    //                                              mVelocity at unit+0x14c.
+    //   CUnit__SmoothEulerTowardTargetAndBuildMatrix
+    //                                 0x004fa4b0  - turns the current euler
+    //                                              (unit+0x114) toward the
+    //                                              desired by
+    //                                              min(|error| * MM * 0.1,
+    //                                                  MM * maxStep), where
+    //                                              MM is vtable slot 24 and
+    //                                              DAT_005d85c0 = 0.1.
+    //   CUnit__UpdateMotionAndTrailEffects
+    //                                 0x00402fa0  - sets the three max euler
+    //                                              steps to
+    //                                              record[+0xb8] * 0.333333
+    //                                              (DAT_005d8608), accumulates
+    //                                              mVelocity into the move
+    //                                              buffer at unit+0x7c, and
+    //                                              CLAMPS that buffer's
+    //                                              magnitude to
+    //                                              GetMaxVelocity() * 0.05
+    //                                              (vtable slot 111 @0x1bc,
+    //                                              which returns
+    //                                              record[+0xb4]).
+    //
+    // Two consequences decide this reconstruction, and both were reached by
+    // refuting an earlier reading of mine:
+    //
+    // 1. The guide's own `* 4.0` (DAT_005d85bc) is NOT the plane's move
+    //    multiplier. CPlane's slot 24 (0x004de700) returns 1.0
+    //    (DAT_005d8568); CGroundVehicle's (0x0050e940) returns 4.0. The 4.0 in
+    //    the guide is a hardcoded constant that happens to match the ground
+    //    class. The plane's actual speed comes from the slot-111 clamp, and
+    //    because that clamp is `record[+0xb4] * (1/GAME_FR)` per base tick,
+    //    the steady-state ground track is exactly CUnitAirVelocity units per
+    //    second. `Level100ActorMechanics` therefore steps a plane at
+    //    speed/RetailBaseTicksPerSecond and does not model the buffer.
+    //
+    // 2. MM = 1.0 means a plane takes a full move on EVERY released base tick,
+    //    where a ground vehicle takes one every fourth. That is why a plane
+    //    has no FullGuideBaseTicks phase here.
+    //
+    // Deliberately NOT modelled, because the bytes do not settle them:
+    //  - the roll term the guide writes to unit+0x128;
+    //  - the +/-60 degree (0x3F860A92) pitch bias the guide takes at
+    //    0x004023ea from `guide+0x2c`, because `guide+0x2c` is a
+    //    CGenericActiveReader wrapper and its +0x24 is not shown to be the
+    //    target's world Z. Read as a world Z its sign contradicts the
+    //    clearance branch three instructions later, so one of the two readings
+    //    is wrong and nothing here picks between them;
+    //  - the near-ground friction (DAT_005d8600 = 0.95) and gravity paths,
+    //    which the clamp dominates in level flight.
+    private void AdvancePlane(
+        ActorState state,
+        Level100ActorMotionDefinition motion)
+    {
+        Level100ActorPoseSnapshot pose = _actors.GetPose(state.ActorId);
+        if (!TryGetPlaneGuideTarget(state, out SimVector2 guideTarget))
+        {
+            _actors.SetPose(
+                state.ActorId,
+                pose with
+                {
+                    LinearVelocityMillimetersPerTick = SimVector3.Zero,
+                    AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
+                });
+            return;
+        }
+
+        int forwardX = FloatBitsToQ30(pose.BasisFloatBits.Row0Z);
+        int forwardY = FloatBitsToQ30(pose.BasisFloatBits.Row1Z);
+        int forwardZ = FloatBitsToQ30(pose.BasisFloatBits.Row2Z);
+        int horizontal = Q30Hypotenuse(forwardX, forwardZ);
+        int currentYaw = FixedAtan2(-forwardX, forwardZ);
+        int currentPitch = FixedAtan2(forwardY, horizontal);
+
+        int desiredYaw = PlaneDesiredYaw(pose, guideTarget, currentYaw);
+        int desiredPitch = PlaneDesiredPitch(pose);
+
+        int maximumStep = DivideRoundNearest(
+            (long)ScalePositiveFloatBits(
+                SimulationConstants.Level100PlaneAirTurnRateFloatBits,
+                1_000_000),
+            3);
+        int nextYaw = NormalizeMicroRad(
+            currentYaw + PlaneEulerStep(currentYaw, desiredYaw, maximumStep));
+        int nextPitch = NormalizeMicroRad(
+            currentPitch +
+            PlaneEulerStep(currentPitch, desiredPitch, maximumStep));
+
+        int speedPerBaseTick = DivideRoundNearest(
+            PlaneAirSpeedMillimetersPerSecond(motion.DefinitionName),
+            RetailBaseTicksPerSecond);
+        (int yawSin, int yawCos) = FixedSinCos(nextYaw);
+        (int pitchSin, int pitchCos) = FixedSinCos(nextPitch);
+        var velocity = new SimVector3(
+            DivideRoundNearest(
+                (long)-MultiplyFixed(yawSin, pitchCos) * speedPerBaseTick,
+                FixedTrigScale),
+            DivideRoundNearest(
+                (long)pitchSin * speedPerBaseTick,
+                FixedTrigScale),
+            DivideRoundNearest(
+                (long)MultiplyFixed(yawCos, pitchCos) * speedPerBaseTick,
+                FixedTrigScale));
+        var nextPosition = new SimVector3(
+            checked(pose.PositionMillimeters.X + velocity.X),
+            checked(pose.PositionMillimeters.Y + velocity.Y),
+            checked(pose.PositionMillimeters.Z + velocity.Z));
+        _actors.SetPose(
+            state.ActorId,
+            pose with
+            {
+                PositionMillimeters = nextPosition,
+                BasisFloatBits = BuildPlaneBasis(nextYaw, nextPitch),
+                LinearVelocityMillimetersPerTick = velocity,
+                AngularVelocityMicroRadiansPerTick = new SimVector3(
+                    NormalizeMicroRad(nextPitch - currentPitch),
+                    NormalizeMicroRad(nextYaw - currentYaw),
+                    0),
+            });
+    }
+
+    /// <summary>
+    /// The released air guide steers at whatever <c>guide+0x8..0x10</c> holds:
+    /// the current waypoint point while following a path, and the attacked
+    /// thing's position while attacking. Only those two are produced by the
+    /// Level 100 scripts (<c>AirborneDrone1.msl</c> follows
+    /// <c>Drone Path 1</c>; <c>AirborneDrone2.msl</c> and
+    /// <c>AirTrainer.msl</c> call <c>Attack(player)</c>).
+    /// </summary>
+    private bool TryGetPlaneGuideTarget(
+        ActorState state,
+        out SimVector2 target)
+    {
+        switch (state.Intent)
+        {
+            case Level100ActorCommandIntent.FollowingWaypoint
+                when state.WaypointPath is not null:
+            {
+                Level100WaypointPathDefinition path =
+                    _definitions.GetWaypointPath(state.WaypointPath);
+                Level100WaypointPointDefinition point =
+                    path.Points[state.WaypointPointIndex];
+                target = new SimVector2(
+                    point.PositionMillimeters.X,
+                    point.PositionMillimeters.Z);
+                return true;
+            }
+
+            case Level100ActorCommandIntent.Attacking
+                when state.TargetActorId.HasValue:
+            {
+                Level100ActorPoseSnapshot targetPose =
+                    _actors.GetPose(state.TargetActorId.Value);
+                target = new SimVector2(
+                    targetPose.PositionMillimeters.X,
+                    targetPose.PositionMillimeters.Z);
+                return true;
+            }
+
+            default:
+                target = default;
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Desired yaw toward the guide target, with the released map-edge
+    /// turn-back at <c>0x0040246a</c>: a 10.0-unit margin against the
+    /// 512.0-unit map (<c>DAT_005d85cc</c> = 10.0, <c>DAT_005d85c4</c> =
+    /// 502.0) overrides the target heading outright. The four commanded
+    /// headings there are <c>-pi/2</c>, <c>+pi/2</c>, <c>0</c> and <c>pi</c>
+    /// in the released retail X/Y frame; they are expressed here as "steer
+    /// back toward the interior along the violated axis", which is the same
+    /// four headings in Core's X/Z frame without importing the retail axis
+    /// convention.
+    /// </summary>
+    private static int PlaneDesiredYaw(
+        Level100ActorPoseSnapshot pose,
+        SimVector2 target,
+        int currentYaw)
+    {
+        int margin = SimulationConstants.Level100PlaneMapEdgeMarginMillimeters;
+        if (pose.PositionMillimeters.X <
+            Level100Terrain.MinimumRelativeXMillimeters + margin)
+        {
+            return FixedAtan2(-1 << 30, 0);
+        }
+        if (pose.PositionMillimeters.X >
+            Level100Terrain.MaximumRelativeXMillimeters - margin)
+        {
+            return FixedAtan2(1 << 30, 0);
+        }
+        if (pose.PositionMillimeters.Z <
+            Level100Terrain.MinimumRelativeZMillimeters + margin)
+        {
+            return 0;
+        }
+        if (pose.PositionMillimeters.Z >
+            Level100Terrain.MaximumRelativeZMillimeters - margin)
+        {
+            return PiMicroRad;
+        }
+
+        long deltaX = (long)target.X - pose.PositionMillimeters.X;
+        long deltaZ = (long)target.Z - pose.PositionMillimeters.Z;
+        return deltaX == 0 && deltaZ == 0
+            ? currentYaw
+            : FixedAtan2(-deltaX, deltaZ);
+    }
+
+    /// <summary>
+    /// The released clearance band at <c>0x0040240d</c>. Retail Z is down and
+    /// its commands are <c>-pi/4</c> to climb and <c>+pi/4</c> to dive; Core Y
+    /// is up, so the signs are inverted here and only here.
+    /// </summary>
+    private static int PlaneDesiredPitch(Level100ActorPoseSnapshot pose)
+    {
+        int clearance = PlaneMinimumGroundClearanceMillimeters(pose);
+        int pitch = SimulationConstants.Level100PlaneClearancePitchMicroRadians;
+        if (clearance <
+            SimulationConstants.Level100PlaneClimbClearanceMillimeters)
+        {
+            return pitch;
+        }
+        if (clearance >
+            SimulationConstants.Level100PlaneDiveClearanceMillimeters)
+        {
+            return -pitch;
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// <c>CAirGuide__UpdateGroundClearanceCache</c> (<c>0x004028e0</c>) keeps
+    /// the minimum height above terrain over the owner's rounded position
+    /// +/-20 released units sampled in steps of 5 - a 41x41 unit box, 81
+    /// samples. One released unit is 1000 Core millimetres.
+    /// </summary>
+    private static int PlaneMinimumGroundClearanceMillimeters(
+        Level100ActorPoseSnapshot pose)
+    {
+        int radius =
+            SimulationConstants.Level100PlaneClearanceSampleRadiusMillimeters;
+        int step =
+            SimulationConstants.Level100PlaneClearanceSampleStepMillimeters;
+        int minimum = int.MaxValue;
+        for (int offsetZ = -radius; offsetZ <= radius; offsetZ += step)
+        {
+            for (int offsetX = -radius; offsetX <= radius; offsetX += step)
+            {
+                int ground =
+                    Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                        new SimVector2(
+                            pose.PositionMillimeters.X + offsetX,
+                            pose.PositionMillimeters.Z + offsetZ));
+                int clearance = pose.PositionMillimeters.Y - ground;
+                if (clearance < minimum)
+                {
+                    minimum = clearance;
+                }
+            }
+        }
+        return minimum;
+    }
+
+    /// <summary>
+    /// One axis of <c>CUnit__SmoothEulerTowardTargetAndBuildMatrix</c>
+    /// (<c>0x004fa4b0</c>): the step is
+    /// <c>min(|error| * MM * 0.1, MM * maxStep)</c> where <c>MM</c> is vtable
+    /// slot 24 - <b>1.0</b> for CPlane (<c>0x004de700</c>, <c>DAT_005d8568</c>)
+    /// against 4.0 for CGroundVehicle - <c>0.1</c> is <c>DAT_005d85c0</c>, and
+    /// <c>maxStep</c> is <c>record[+0xb8] * 0.3333333</c>
+    /// (<c>DAT_005d8608</c>), written every tick by
+    /// <c>CUnit__UpdateMotionAndTrailEffects</c> at <c>0x00402fbf</c>. With
+    /// MM = 1 both factors are the identity, so this is exactly
+    /// <c>min(|error| / 10, AirTurnRate / 3)</c>.
+    /// </summary>
+    private static int PlaneEulerStep(int current, int desired, int maximumStep)
+    {
+        int error = NormalizeMicroRad(desired - current);
+        if (error == 0)
+        {
+            return 0;
+        }
+        int eased = DivideRoundNearest(Math.Abs((long)error), 10);
+        return Math.Sign(error) * Math.Min(eased, maximumStep);
+    }
+
+    private static int PlaneAirSpeedMillimetersPerSecond(string definitionName) =>
+        definitionName switch
+        {
+            "Target Drone" =>
+                SimulationConstants
+                    .Level100TargetDroneAirSpeedMillimetersPerSecond,
+            "Air Trainer" =>
+                SimulationConstants
+                    .Level100AirTrainerAirSpeedMillimetersPerSecond,
+            _ => throw new InvalidDataException(
+                $"Level 100 plane '{definitionName}' has no released " +
+                "CUnitAirVelocity in SimulationConstants."),
+        };
+
+    /// <summary>
+    /// The rotation whose third column is the released facing axis the guide
+    /// multiplies by speed. It matches the ground convention exactly at pitch
+    /// zero, so <see cref="FixedAtan2"/> on
+    /// <c>(-Row0Z, Row2Z)</c> still reads yaw.
+    /// </summary>
+    private static Level100FloatBasis3Bits BuildPlaneBasis(int yaw, int pitch)
+    {
+        (int sinYaw, int cosYaw) = FixedSinCos(yaw);
+        (int sinPitch, int cosPitch) = FixedSinCos(pitch);
+        return new Level100FloatBasis3Bits(
+            Q30ToFloatBits(cosYaw),
+            Q30ToFloatBits(MultiplyFixed(sinYaw, sinPitch)),
+            Q30ToFloatBits(-MultiplyFixed(sinYaw, cosPitch)),
+            0,
+            Q30ToFloatBits(cosPitch),
+            Q30ToFloatBits(sinPitch),
+            Q30ToFloatBits(sinYaw),
+            Q30ToFloatBits(-MultiplyFixed(cosYaw, sinPitch)),
+            Q30ToFloatBits(MultiplyFixed(cosYaw, cosPitch)));
+    }
+
+    private static int Q30Hypotenuse(int left, int right)
+    {
+        ulong square =
+            (ulong)((long)left * left) + (ulong)((long)right * right);
+        if (square == 0)
+        {
+            return 0;
+        }
+        ulong root = 0;
+        ulong bit = 1UL << 62;
+        while (bit > square)
+        {
+            bit >>= 2;
+        }
+        while (bit != 0)
+        {
+            if (square >= root + bit)
+            {
+                square -= root + bit;
+                root = (root >> 1) + bit;
+            }
+            else
+            {
+                root >>= 1;
+            }
+            bit >>= 2;
+        }
+        return checked((int)root);
     }
 
     private void AdvanceGroundVehicle(

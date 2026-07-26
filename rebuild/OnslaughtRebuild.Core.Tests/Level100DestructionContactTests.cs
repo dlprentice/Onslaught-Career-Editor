@@ -12,7 +12,7 @@ public sealed class Level100DestructionContactTests
     {
         Level100ContactCatalog catalog = Level100ContactCatalog.Instance;
 
-        Assert.Equal(27, catalog.Definitions.Count);
+        Assert.Equal(28, catalog.Definitions.Count);
         Assert.Equal(70, catalog.PulseRound.RadiusMillimeters);
         Assert.Equal("Mech Pulse Hit Medium", catalog.PulseRound.ImpactPhysicsDefinition);
         Assert.Equal(
@@ -50,6 +50,42 @@ public sealed class Level100DestructionContactTests
         Assert.Equal("Tank Explosion Medium", truck.DestructionPhysicsDefinition);
         Assert.Equal("Tank Explosion Medium", truck.DestructionParticleDescriptor);
         Assert.Equal("Explosion Medium", truck.DestructionSoundDescriptor);
+
+        // Target Drone decodes from the shipped `m_FA_F24_training.msh.aya`
+        // (sha256 48876552...6ec5): 12 CMSH parts of which exactly one,
+        // `Object03`, is collidable, with half-extents (519, 1416, 185) mm
+        // about centre (-5, 323, -26). Life 1.0 (0x3F800000) and the
+        // destruction record `Drone Explosion` (@0x5df9) come from
+        // `Unit / Target Drone` at record 0x24e76 in `default physics.dat`.
+        // The mesh names three of its non-collidable parts `GUNA`, `GUNA` and
+        // `GUNB`, which is the mesh's own corroboration of the record's two
+        // `CUnitUse` weapon slots. Nothing here is authored.
+        Level100ContactDefinition drone = catalog.GetDefinition("Target Drone");
+        Assert.Equal(Level100DefinitionKind.TargetDrone, drone.Kind);
+        Assert.Equal(0x3F800000u, drone.MaximumLifeBits);
+        Assert.Equal("m_FA_F24_training.msh.aya", drone.Mesh);
+        Assert.Equal(12, drone.PartCount);
+        Assert.Equal("Object03", drone.Parts[0].Name);
+        Assert.True(drone.Parts[0].Collidable);
+        Assert.Single(drone.Parts, part => part.Collidable);
+        Assert.Equal(
+            new Level100Vector3(519, 1_416, 185),
+            drone.Parts[0].HalfExtents);
+        Assert.Equal(new Level100Vector3(-5, 323, -26), drone.Parts[0].Center);
+        Assert.Equal("Drone Explosion", drone.DestructionPhysicsDefinition);
+        Assert.Equal(
+            "Drone Explosion Effect",
+            drone.DestructionParticleDescriptor);
+        // The divergence that used to make this definition unrepresentable:
+        // `Drone Explosion` field 6 (CExplosionWaterEffect) is a different
+        // descriptor from fields 2/5/7. The schema now carries it.
+        Assert.Equal(
+            "Water Explosion Small",
+            drone.DestructionWaterParticleDescriptor);
+        Assert.Equal("Explosion Small", drone.DestructionSoundDescriptor);
+        Assert.Equal(
+            "Tank Explosion Medium",
+            truck.DestructionWaterParticleDescriptor);
 
         Level100ContactDefinition warehouse = catalog.GetDefinition("Warehouse");
         Assert.Equal(Level100DefinitionKind.Warehouse, warehouse.Kind);

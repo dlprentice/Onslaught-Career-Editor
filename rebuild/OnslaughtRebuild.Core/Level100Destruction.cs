@@ -353,6 +353,7 @@ public sealed class Level100DestructionRuntime
             definition is null ||
             definition.Kind is not (
                 Level100DefinitionKind.TargetTank or
+                Level100DefinitionKind.TargetDrone or
                 Level100DefinitionKind.Warehouse))
         {
             return null;
@@ -511,6 +512,7 @@ public sealed class Level100DestructionState
         }
         if (definition.Kind is not (
             Level100DefinitionKind.TargetTank or
+            Level100DefinitionKind.TargetDrone or
             Level100DefinitionKind.Warehouse))
         {
             throw new ArgumentException(
@@ -553,7 +555,7 @@ public sealed class Level100DestructionState
             int maximum = checked((int)MathF.Round(
                 _definition.MaximumLife * 1_000f,
                 MidpointRounding.AwayFromZero));
-            if (_definition.Kind == Level100DefinitionKind.TargetTank)
+            if (IsWholeBodyLife(_definition.Kind))
             {
                 return Math.Clamp(
                     checked((int)MathF.Round(
@@ -656,7 +658,7 @@ public sealed class Level100DestructionState
             return writer.Count;
         }
 
-        if (_definition.Kind == Level100DefinitionKind.TargetTank)
+        if (IsWholeBodyLife(_definition.Kind))
         {
             ApplyTargetTankDamage(hit, damageBits, ref writer);
         }
@@ -738,6 +740,23 @@ public sealed class Level100DestructionState
         _terminal = snapshot.Terminal;
         _belowHalfReported = snapshot.BelowHalfReported;
     }
+
+    /// <summary>
+    /// True for the released classes that carry one whole-body
+    /// <c>CUnitLife</c> rather than per-segment health:
+    /// <c>Target Tank</c>/<c>Target Truck</c> (behaviour class 3) and
+    /// <c>Target Drone</c> (behaviour class 9). The damage arithmetic is
+    /// identical for all three - only the life bits, mesh and destruction
+    /// record differ, and all three of those are carried per definition. The
+    /// terminal effect stays <c>TargetDestroyed</c> for the drone; its distinct
+    /// audio is already expressible through
+    /// <see cref="Level100ContactDefinition.DestructionSoundDescriptor"/>,
+    /// which reads `Explosion Small` for the drone against `Explosion Medium`
+    /// for the tank, so no new effect kind is invented here.
+    /// </summary>
+    private static bool IsWholeBodyLife(Level100DefinitionKind kind) =>
+        kind is Level100DefinitionKind.TargetTank or
+            Level100DefinitionKind.TargetDrone;
 
     private void ApplyTargetTankDamage(
         in Level100ContactHit hit,
@@ -831,7 +850,7 @@ public sealed class Level100DestructionState
         _terminal = true;
         writer.Add(new Level100DestructionEvent(
             Level100DestructionEventKind.Terminal,
-            _definition.Kind == Level100DefinitionKind.TargetTank
+            IsWholeBodyLife(_definition.Kind)
                 ? Level100DestructionEffectKind.TargetDestroyed
                 : Level100DestructionEffectKind.FacilityDestroyed,
             ActorId,

@@ -338,4 +338,80 @@ public static class SimulationConstants
     // separate motion definition retains field 1 as ground maximum speed.
     public const int Level100TrainingTruckLife = 3_000;
     public const int Level100TargetWarehouseLife = 50_000;
+    // Target Drone Unit field 3 CUnitLife 1.0 (0x3F800000).
+    public const int Level100TargetDroneLife = 1_000;
+    // Air Trainer Unit field 3 CUnitLife 3.0 (0x40400000).
+    public const int Level100AirTrainerLife = 3_000;
+
+    // ---------------------------------------------------------------------
+    // Plane (behaviour class 9) motion.
+    //
+    // Every value below is a shipped byte. `data/default physics.dat`
+    // (sha256 e1fb3ded...ada14, 175,603 bytes, 777 statements):
+    //
+    //   Unit  Target Drone @0x24e76 (name string @0x24e7e)
+    //           [39] CUnitBasedOn        "Base Air Unit"
+    //           [ 8] CUnitBehaviour      9
+    //           [ 2] CUnitAirVelocity    5.5   (0x40B00000)
+    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
+    //           [ 3] CUnitLife           1.0   (0x3F800000)
+    //           [22] CUnitStrafeChange   0.01  (0x3C23D70A)
+    //           [23] CUnitMaxTargetRange 500.0 (0x43FA0000)
+    //   Unit  Air Trainer  @0x1e198 (name string @0x1e1a0)
+    //           [ 2] CUnitAirVelocity    9.2   (0x41133333)
+    //           [ 6] CUnitAirTurnRate    0.04363323 rad (0x3D32B8C2)
+    //           [ 3] CUnitLife           3.0   (0x40400000)
+    //           [23] CUnitMaxTargetRange 300.0 (0x43960000)
+    //
+    // The value-id -> class map is
+    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md;
+    // ids 2/6 write unit-record +0xb4/+0xb8, exactly the slots the ground ids
+    // 1/5 write, which is why the air unit reuses the ground guide's turn law
+    // with its own field.
+    //
+    // These are NOT carried on `Level100ActorMotionDefinition` because that
+    // record reaches Core through
+    // rebuild/OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:142,
+    // an eleven-argument positional construction in a tree this work does not
+    // own, and InteractiveSessionTests.cs:730-741 pins every non-GroundVehicle
+    // motion scalar to null. `materialize_retail_assets.py`
+    // `_level100_actor_motion_definitions` asserts these exact bits on every
+    // run, so the two cannot drift apart silently.
+    //
+    // Speed unit: the air guide (CAirGuide vtable 0x005d8594 slot 3 =
+    // 0x00402280) sets mVelocity (unit +0x14c) to
+    // `GetMaxVelocity() * 0.05 * 4.0` along the facing axis, where 0.05 is
+    // 1/GAME_FR at the measured 20 Hz released tick (DAT_005d8584) and 4.0 is
+    // DAT_005d85bc. The already-tested ground reconstruction moves at
+    // CUnitGroundVelocity units per second, and the ground guide
+    // (CGroundVehicleGuide__VFunc03 @0x0047d750) is the same virtual with the
+    // same two factors, so the net rate is the record value in units per
+    // second and the 4.0 is the full-move cadence, not a speed multiplier.
+    public const int Level100TargetDroneAirSpeedMillimetersPerSecond = 5_500;
+    public const int Level100AirTrainerAirSpeedMillimetersPerSecond = 9_200;
+    public const int Level100PlaneAirTurnRateFloatBits = 0x3D32B8C2;
+
+    // Air-guide altitude band, read out of the pristine BEA.exe
+    // (sha256 74154bfa...7750). CAirGuide__UpdateGroundClearanceCache
+    // (0x004028e0) caches the MINIMUM height above terrain over the owner's
+    // rounded x/y +/-20 units sampled in steps of 5 - a 41x41 unit box, 81
+    // samples - and 0x00402280 then commands pitch from it:
+    //   0x0040240d  clearance <  5.0  (DAT_005d85d8) -> pitch = -pi/4  (climb)
+    //   0x00402427  clearance < 15.0  (DAT_005d85d4) -> level out a descent
+    //   0x00402452  clearance > 50.0  (DAT_005d85d0) -> pitch = +pi/4  (dive)
+    // Retail Z is down, so the negative command is the climb; Core Y is up, so
+    // the sign is inverted at the point of use and the comment there says so.
+    public const int Level100PlaneClearanceSampleRadiusMillimeters = 20_000;
+    public const int Level100PlaneClearanceSampleStepMillimeters = 5_000;
+    public const int Level100PlaneClimbClearanceMillimeters = 5_000;
+    public const int Level100PlaneLevelClearanceMillimeters = 15_000;
+    public const int Level100PlaneDiveClearanceMillimeters = 50_000;
+    // DAT_005d85dc/e4 = +/-pi/4 (0x3F490FDB), the clearance-band pitch command.
+    public const int Level100PlaneClearancePitchMicroRadians = 785_398;
+    // 0x3F860A92 = 1.0471976 rad, the +/-60 degree pitch command taken toward
+    // an active attack target's altitude at 0x004023ea.
+    public const int Level100PlaneTargetPitchMicroRadians = 1_047_198;
+    // The map-edge turn-back at 0x0040246a: DAT_005d85cc = 10.0 and
+    // DAT_005d85c4 = 502.0 against the 512-unit map extent.
+    public const int Level100PlaneMapEdgeMarginMillimeters = 10_000;
 }
