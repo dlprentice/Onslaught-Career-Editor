@@ -390,6 +390,48 @@ namespace Onslaught___Career_Editor
                        "Enable kill patching or remove the per-category kill overrides.";
             }
 
+            // A rank string the node pass cannot decode used to fall back to "S" and write the highest
+            // grade over every used mission while still reporting success. Refuse instead of guessing.
+            string baselineRankKey = (Rank ?? string.Empty).Trim().ToUpperInvariant();
+            if (PatchNodes && !RANK_FLOAT_BITS.ContainsKey(baselineRankKey))
+            {
+                return $"Mission rank baseline '{Rank}' is not a rank this save format encodes. " +
+                       $"Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.";
+            }
+
+            if (LevelRanks is { Count: > 0 })
+            {
+                foreach ((int nodeIndex, string? nodeRank) in LevelRanks)
+                {
+                    if (nodeIndex < 0 || nodeIndex >= NODE_COUNT)
+                    {
+                        return $"Mission rank override targets node index {nodeIndex}, which is outside the " +
+                               $"0..{NODE_COUNT - 1} career node array. That override would be discarded. " +
+                               "Remove it or target a real node index.";
+                    }
+
+                    string overrideKey = (nodeRank ?? string.Empty).Trim().ToUpperInvariant();
+                    if (!RANK_FLOAT_BITS.ContainsKey(overrideKey))
+                    {
+                        return $"Mission rank override '{nodeRank}' for node index {nodeIndex} is not a rank this " +
+                               $"save format encodes. Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.";
+                    }
+                }
+            }
+
+            if (PerCategoryKills is { Count: > 0 })
+            {
+                foreach (int categoryIndex in PerCategoryKills.Keys)
+                {
+                    if (categoryIndex is < KILL_AIRCRAFT or > KILL_MECHS)
+                    {
+                        return $"Per-category kill override targets category {categoryIndex}, which is outside the " +
+                               $"{KILL_AIRCRAFT}..{KILL_MECHS} kill category range. That override would be discarded. " +
+                               "Remove it or target a real category.";
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -446,6 +488,34 @@ namespace Onslaught___Career_Editor
                 // --- nodes (selective patching) ---
                 if (PatchNodes)
                 {
+                    // The node pass skips unused slots to avoid touching unknown padding. A rank override
+                    // aimed at such a slot can therefore never reach the file, so refuse before committing
+                    // rather than reporting success with the override dropped.
+                    if (LevelRanks is { Count: > 0 })
+                    {
+                        List<int> unreachable = new();
+                        foreach (int nodeIndex in LevelRanks.Keys)
+                        {
+                            int probeOff = NODE_BASE + nodeIndex * NODE_SIZE;
+                            if (probeOff + NODE_SIZE > buf.Length ||
+                                ReadUInt32(buf, probeOff + 0x10) == 0)
+                            {
+                                unreachable.Add(nodeIndex);
+                            }
+                        }
+
+                        if (unreachable.Count > 0)
+                        {
+                            unreachable.Sort();
+                            return PatchResult.Fail(
+                                "Mission rank overrides target career node slot(s) " +
+                                string.Join(", ", unreachable) +
+                                ", which this save leaves unused (world id 0). The node pass never writes unused " +
+                                "slots, so those overrides would be discarded. Remove them or choose a save whose " +
+                                "career map includes those missions.");
+                        }
+                    }
+
                     for (int n = 0; n < NODE_COUNT; n++)
                     {
                         int off = NODE_BASE + n * NODE_SIZE;
@@ -1128,9 +1198,16 @@ namespace Onslaught___Career_Editor
         /// </summary>
         private void PatchNode(byte[] buf, int off, int nodeIndex, string rank)
         {
-            var rankKey = (rank ?? "S").ToUpperInvariant();
+            var rankKey = (rank ?? string.Empty).Trim().ToUpperInvariant();
             if (!RANK_FLOAT_BITS.TryGetValue(rankKey, out uint rankBits))
-                rankBits = RANK_FLOAT_BITS["S"];
+            {
+                // Never guess a grade. Silently defaulting to "S" wrote the highest rank over a mission the
+                // caller had asked to set to something else. DescribeDiscardedOverrideRequest rejects this
+                // before any write; this throw keeps the guarantee if a future caller bypasses that gate.
+                throw new InvalidOperationException(
+                    $"Mission rank '{rank}' for node index {nodeIndex} is not a rank this save format encodes. " +
+                    $"Use one of: {string.Join(", ", RANK_FLOAT_BITS.Keys)}.");
+            }
 
             // Do NOT modify +0x00 or +0x14..+0x37 (flags + persistence bits).
             WriteUInt32(buf, off + 0x04, 1);       // complete

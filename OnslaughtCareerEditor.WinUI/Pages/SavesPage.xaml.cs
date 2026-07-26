@@ -147,7 +147,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             EditorPatchPresetComboBox.SelectedIndex = 0;
             EditorFocusedGoodieIdNumberBox.Value = 2;
             EditorFocusedGoodieStateComboBox.SelectedIndex = 2;
-            EditorGlobalKillNumberBox.Value = 100;
+            _suppressEditorGlobalKillProvenance = true;
+            try
+            {
+                EditorGlobalKillNumberBox.Value = 100;
+            }
+            finally
+            {
+                _suppressEditorGlobalKillProvenance = false;
+            }
+
+            _editorGlobalKillWasAutoSeeded = true;
             EditorGoodiesAsNewToggle.IsOn = false;
             ApplyEditorPreset("SAFE");
             EditorOutputTextBox.Text = "Select a career save to begin. Use this page for the normal .bes patch workflow.";
@@ -639,6 +649,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void EditorGlobalKillNumberBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
         {
+            // Once the user has typed their own write value, reloading the input save must not silently
+            // replace it with a value re-seeded from the file.
+            if (!_suppressEditorGlobalKillProvenance)
+            {
+                _editorGlobalKillWasAutoSeeded = false;
+            }
+
             UpdateEditorActionState();
         }
 

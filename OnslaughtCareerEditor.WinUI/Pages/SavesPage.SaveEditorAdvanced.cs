@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using OnslaughtCareerEditor.WinUI.Helpers;
 using Onslaught___Career_Editor;
 
 namespace OnslaughtCareerEditor.WinUI.Pages
@@ -10,6 +11,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
     {
         private readonly ObservableCollection<SaveMissionRankRow> _editorMissionRankRows = new();
         private readonly ObservableCollection<SaveCategoryKillRow> _editorCategoryKillRows = new();
+        private bool _editorGlobalKillWasAutoSeeded = true;
+        private bool _suppressEditorGlobalKillProvenance;
 
         private void InitializeEditorAdvancedSurface()
         {
@@ -22,23 +25,58 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string inputPath = _editorInputValid ? (EditorInputFileTextBox.Text ?? string.Empty).Trim() : string.Empty;
 
+            // Snapshot the user's own choices before the rows are rebuilt from the file. Rebuilding used to
+            // discard every configured override silently, including on a single keystroke in the input path.
+            SaveMissionRankRow[] previousMissionRanks = _editorMissionRankRows.ToArray();
+            SaveCategoryKillRow[] previousCategoryKills = _editorCategoryKillRows.ToArray();
+
+            SaveMissionRankRow[] reloadedMissionRanks =
+                SaveEditorAdvancedService.LoadMissionRankRows(inputPath).ToArray();
+            SaveCategoryKillRow[] reloadedCategoryKills =
+                SaveEditorAdvancedService.LoadCategoryKillRows(inputPath).ToArray();
+
+            int carriedMissionRanks = SaveEditorAdvancedOverrideCarryOver.ApplyMissionRankOverrides(
+                previousMissionRanks,
+                reloadedMissionRanks);
+            int carriedCategoryKills = SaveEditorAdvancedOverrideCarryOver.ApplyCategoryKillOverrides(
+                previousCategoryKills,
+                reloadedCategoryKills);
+
             _editorMissionRankRows.Clear();
-            foreach (SaveMissionRankRow row in SaveEditorAdvancedService.LoadMissionRankRows(inputPath))
+            foreach (SaveMissionRankRow row in reloadedMissionRanks)
             {
                 _editorMissionRankRows.Add(row);
             }
 
             _editorCategoryKillRows.Clear();
-            foreach (SaveCategoryKillRow row in SaveEditorAdvancedService.LoadCategoryKillRows(inputPath))
+            foreach (SaveCategoryKillRow row in reloadedCategoryKills)
             {
                 _editorCategoryKillRows.Add(row);
             }
 
-            EditorKillBaselineSummaryTextBlock.Text = SaveEditorAdvancedService.BuildKillSeedSummary(
+            string killSeedSummary = SaveEditorAdvancedService.BuildKillSeedSummary(
                 _editorInputValid ? _editorCategoryKillRows : Array.Empty<SaveCategoryKillRow>());
-            if (_editorInputValid)
+            string? carryOverNotice = SaveEditorAdvancedOverrideCarryOver.DescribeCarryOver(
+                carriedMissionRanks,
+                carriedCategoryKills);
+            EditorKillBaselineSummaryTextBlock.Text = carryOverNotice is null
+                ? killSeedSummary
+                : $"{carryOverNotice} {killSeedSummary}";
+
+            if (SaveEditorAdvancedOverrideCarryOver.ShouldReseedGlobalKillValue(
+                    _editorInputValid,
+                    _editorGlobalKillWasAutoSeeded))
             {
-                EditorGlobalKillNumberBox.Value = SaveEditorAdvancedService.GetSuggestedGlobalKillSeed(_editorCategoryKillRows);
+                _suppressEditorGlobalKillProvenance = true;
+                try
+                {
+                    EditorGlobalKillNumberBox.Value =
+                        SaveEditorAdvancedService.GetSuggestedGlobalKillSeed(_editorCategoryKillRows);
+                }
+                finally
+                {
+                    _suppressEditorGlobalKillProvenance = false;
+                }
             }
 
             UpdateEditorActionState();
