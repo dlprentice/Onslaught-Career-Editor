@@ -230,6 +230,48 @@ public static class StateHasher
             writer.Write(actor.WaitForWaypointCompletion);
             writer.Write(actor.GroundFullGuideBaseTickPhase);
         }
+
+        // Actor armament. The released gameplay random stream is part of the
+        // canonical state because it is part of the released simulation: it is
+        // seeded to a constant at level start and stepped by every projectile
+        // spawn and every wiggle sample.
+        ArgumentNullException.ThrowIfNull(mechanics.ActorWeapons);
+        ArgumentNullException.ThrowIfNull(mechanics.ActorRounds);
+        writer.Write(mechanics.ReleasedRandomSeed);
+        writer.Write(mechanics.NextActorRoundId);
+        Level100ActorWeaponSnapshot[] weapons = mechanics.ActorWeapons
+            .OrderBy(weapon => weapon.ActorId.Value)
+            .ThenBy(weapon => (int)weapon.Weapon)
+            .ToArray();
+        writer.Write(weapons.Length);
+        foreach (Level100ActorWeaponSnapshot weapon in weapons)
+        {
+            writer.Write(weapon.ActorId.Value);
+            writer.Write((int)weapon.Weapon);
+            writer.Write(weapon.ReloadBaseTicksRemaining);
+            writer.Write(weapon.BurstShotsRemaining);
+            writer.Write(weapon.BurstDelayBaseTicksRemaining);
+        }
+
+        Level100ActorRoundSnapshot[] rounds = mechanics.ActorRounds
+            .OrderBy(round => round.Id)
+            .ToArray();
+        writer.Write(rounds.Length);
+        foreach (Level100ActorRoundSnapshot round in rounds)
+        {
+            writer.Write(round.Id);
+            writer.Write(round.OwnerActorId.Value);
+            writer.Write(round.TargetActorId.Value);
+            writer.Write((int)round.Kind);
+            writer.Write(round.PositionMillimeters.X);
+            writer.Write(round.PositionMillimeters.Y);
+            writer.Write(round.PositionMillimeters.Z);
+            writer.Write(round.YawMicroRadians);
+            writer.Write(round.PitchMicroRadians);
+            writer.Write(round.RemainingBaseTicks);
+            writer.Write(round.ElapsedBaseTicks);
+            writer.Write(round.Locked);
+        }
     }
 
     private static void WriteLevel100ActorRegistry(

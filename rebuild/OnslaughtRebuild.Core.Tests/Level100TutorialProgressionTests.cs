@@ -579,8 +579,21 @@ internal sealed class Level100PlayerDriver
             return SimInput.Idle;
         }
 
-        long deltaX = (long)target.Pose.PositionMillimeters.X - state.PlayerPosition.X;
-        long deltaZ = (long)target.Pose.PositionMillimeters.Z - state.PlayerPosition.Z;
+        // A player leads a moving target. The released Pulse Cannon round
+        // travels ProjectileSpeedPerTick, so the driver aims where the target
+        // will be when the round arrives; without this it lands behind every
+        // moving Target Tank and Target Truck and beats 3, 4 and 5 stall on
+        // pure aim error rather than on any missing mechanism. The target's
+        // reported velocity is public snapshot state a player can see.
+        double rawX = (double)target.Pose.PositionMillimeters.X - state.PlayerPosition.X;
+        double rawZ = (double)target.Pose.PositionMillimeters.Z - state.PlayerPosition.Z;
+        double flightTicks =
+            Math.Sqrt((rawX * rawX) + (rawZ * rawZ)) /
+            SimulationConstants.ProjectileSpeedPerTick;
+        long deltaX = (long)(rawX +
+            (target.Pose.LinearVelocityMillimetersPerTick.X * flightTicks));
+        long deltaZ = (long)(rawZ +
+            (target.Pose.LinearVelocityMillimetersPerTick.Z * flightTicks));
         double yawError = NormalizeRadians(
             Math.Atan2(-deltaX, deltaZ) - (state.FacingYawMicroRad / 1_000_000d));
         short lookX = (short)Math.Clamp((int)(yawError * 2_000), -1_000, 1_000);

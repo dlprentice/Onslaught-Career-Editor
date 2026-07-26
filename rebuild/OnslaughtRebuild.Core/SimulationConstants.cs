@@ -414,4 +414,188 @@ public static class SimulationConstants
     // The map-edge turn-back at 0x0040246a: DAT_005d85cc = 10.0 and
     // DAT_005d85c4 = 502.0 against the 512-unit map extent.
     public const int Level100PlaneMapEdgeMarginMillimeters = 10_000;
+
+    // ------------------------------------------------------------------
+    // Actor weapons. Every value below is a dword read out of
+    // `data/default physics.dat` (sha256 e1fb3ded...ada14, 175,603 bytes,
+    // 777 records) through the record walker in
+    // `rebuild/tools/materialize_retail_assets.py:563`, or a `.rdata` dword
+    // read out of the pristine BEA.exe (sha256 74154bfa...7750,
+    // .rdata VA 0x5d8000 -> file 0x1d8000), or a default written by the
+    // shipped record constructors. Field offsets come from
+    // `reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md`
+    // (weapon-mode lane `M`, round lane `R`, explosion lane `E`).
+    // ------------------------------------------------------------------
+
+    // The released gameplay pseudo-random stream.
+    //
+    // Random__NextLCGAbs @0x004de8d0 is a Schrage-decomposed Lehmer step over
+    //   a = DAT_006321f0 = 48271
+    //   m = DAT_006321f4 = 214783647
+    // Both dwords are read from the shipped file. `m` is NOT the textbook
+    // MINSTD modulus 2147483647 - the shipped constant is a digit short, and
+    // because m % a (25968) exceeds m / a (4449) the Schrage decomposition is
+    // not valid for it. The reconstruction reproduces the shipped constants
+    // rather than the textbook ones, because the shipped stream is the
+    // behaviour.
+    //
+    // CGame::InitRestartLoop @0x0046c430 allocates the 8-byte seed pair and
+    // seeds it with `push 0x1e240` at 0x0046c7e4 (RandomSeedPair__Set
+    // @0x004de8c0), then stores the pointer at `mov [ebp+0x304], eax`
+    // (0x0046c80d). The global read site everywhere else is
+    // `MOV ECX,[0x008a9d9c]`, and 0x008a9d9c - 0x304 = 0x008a9a98, which is
+    // the global CGame (149 `MOV ECX, 0x8a9a98` thiscall sites in .text).
+    // So the whole gameplay stream restarts from a fixed constant at every
+    // level start: it is deterministic by construction, not by our choice.
+    public const int Level100ReleasedRandomInitialSeed = 123_456;
+    public const int Level100ReleasedRandomMultiplier = 48_271;
+    public const int Level100ReleasedRandomModulus = 214_783_647;
+    // The scatter sample. ProjectileBurst__SpawnFromCurrentPreset @0x005069f0
+    // and the round update @0x004d8e40 both compute
+    //   ((float)(NextLCGAbs() % 65536) * DAT_005d8de4 - DAT_005d8568) * scale
+    // with DAT_005d8de4 = 3.0517578125e-05 = 1/32768 and DAT_005d8568 = 1.0,
+    // i.e. a uniform sample on [-1, +1) in steps of 1/32768.
+    public const int Level100ReleasedRandomUnitDivisor = 32_768;
+    public const int Level100ReleasedRandomUnitModulus = 65_536;
+
+    // Blaster (round record @ physics `Round / Blaster`).
+    //   CRoundVelocity  45.0  0x42340000     CRoundDamage   0.2  0x3e4ccccd
+    //   CRoundLifeSpan   3.0  0x40400000     CRoundExplosion 'Small Energy Hit'
+    // `Small Energy Hit` carries CExplosionRadius 0.0 and no CExplosionDamage,
+    // so the Blaster carries round damage only.
+    public const int Level100BlasterSpeedMillimetersPerSecond = 45_000;
+    public const int Level100BlasterLifeSpanMilliseconds = 3_000;
+    public const int Level100BlasterDamageFloatBits = 0x3E4CCCCD;
+
+    // Forseti Missile (round record @ physics `Round / Forseti Missile`).
+    //   CRoundVelocity 15.0 0x41700000      CRoundDamage    2.0 0x40000000
+    //   CRoundLifeSpan 10.0 0x41200000      CRoundTurnRate  0.04886922 0x3d482b17
+    //   CRoundSeek        3                 CRoundSeekDelay 0.1 0x3dcccccd
+    //   CRoundSeekAngle 0.7853982 0x3f490fdb CRoundWiggle 0.02094395 0x3cab92a6
+    //   CRoundExplode     1                 CRoundExplosion 'Micro Missile Hit'
+    // `Micro Missile Hit` has CExplosionBasedOn 'Small Explosion Base', which
+    // carries CExplosionRadius 1.0 and CExplosionDamage 0.5. The round+
+    // explosion sum is the same decomposition already used for the player's
+    // Mech Bullet (SimulationConstants / Level100DestructionState), and is
+    // recorded there as not independently proven.
+    //
+    // The round carries no CRoundSeekTerminationTime, so the shipped default
+    // from CRoundData__CreateAndRegisterByName @0x0042ffa0 applies:
+    // item[0x11] = 0x447a0000 = 1000.0 s, i.e. it never expires inside the
+    // 10 s lifespan. It also carries no CRoundRadius (default item[0x23] = 0).
+    public const int Level100ForsetiMissileSpeedMillimetersPerSecond = 15_000;
+    public const int Level100ForsetiMissileLifeSpanMilliseconds = 10_000;
+    public const int Level100ForsetiMissileDamageFloatBits = 0x40000000;
+    public const int Level100ForsetiMissileExplosionDamageFloatBits = 0x3F000000;
+    public const int Level100ForsetiMissileTurnRateMicroRadians = 48_869;
+    public const int Level100ForsetiMissileSeekDelayMilliseconds = 100;
+    public const int Level100ForsetiMissileSeekAngleMicroRadians = 785_398;
+    public const int Level100ForsetiMissileWiggleMicroRadians = 20_944;
+
+    // Drone Vulcan Cannon, weapon-mode record. Mesh slot `GunA` on
+    // `Target Drone` (`CUnitUse`), corroborated by the three drone mesh parts
+    // named GUNA/GUNA/GUNB.
+    //   CWeaponRound 'Blaster'            CWeaponReloadTime  1.0  0x3f800000
+    //   CWeaponBurstSize 8.0 0x41000000   CWeaponBurstDelay  0.15 0x3e19999a
+    //   CWeaponMaxRange 40.0 0x42200000   CWeaponInaccuracy  0.01745329 0x3c8efa35
+    //   CWeaponYawTolerance 0.17453292 0x3e32b8c2
+    //   CWeaponMinDeflection +0.7853982   CWeaponMaxDeflection -0.7853982
+    // No CWeaponMinRange (shipped default 0.0, item[0x1d]) and no
+    // CWeaponVolleySize (shipped default 1, item[0x12]).
+    public const int Level100DroneVulcanReloadMilliseconds = 1_000;
+    public const int Level100DroneVulcanBurstSize = 8;
+    public const int Level100DroneVulcanBurstDelayMilliseconds = 150;
+    public const int Level100DroneVulcanMinimumRangeMillimeters = 0;
+    public const int Level100DroneVulcanMaximumRangeMillimeters = 40_000;
+    public const int Level100DroneVulcanInaccuracyMicroRadians = 17_453;
+    public const int Level100DroneVulcanYawToleranceMicroRadians = 174_533;
+
+    // Forseti Drone Missile Launcher (slot `GunB` on `Target Drone`) and
+    // Forseti Missile Trainer Launcher (`Air Trainer`). Both fire the Forseti
+    // Missile with CWeaponInaccuracy 0.0 and CWeaponYawTolerance 0.34906584
+    // (0x3eb2b8c2); they differ only in reload time and maximum range.
+    public const int Level100ForsetiDroneLauncherReloadMilliseconds = 10_000;
+    public const int Level100ForsetiTrainerLauncherReloadMilliseconds = 2_000;
+    public const int Level100ForsetiLauncherMinimumRangeMillimeters = 20_000;
+    public const int Level100ForsetiDroneLauncherMaximumRangeMillimeters = 80_000;
+    public const int Level100ForsetiTrainerLauncherMaximumRangeMillimeters = 60_000;
+    public const int Level100ForsetiLauncherYawToleranceMicroRadians = 349_066;
+    public const int Level100ForsetiLauncherInaccuracyMicroRadians = 0;
+
+    // Both drone weapon modes carry CWeaponMinDeflection +0.7853982 and
+    // CWeaponMaxDeflection -0.7853982 - the two names are shipped the wrong way
+    // round, which is exactly why the gate at OID__CanFireAtTarget_BallisticArcA
+    // @0x00507ab0 reads as inverted:
+    //   if (mode[+0x7c] <= pitchDelta) return 0;   // delta must be < +0.785
+    //   if (pitchDelta <= mode[+0x80]) return 0;   // delta must be > -0.785
+    // Under the shipped values that is a symmetric +/- pi/4 pitch window, and
+    // the Ghidra rendering is correct as written.
+    public const int Level100ActorWeaponPitchWindowMicroRadians = 785_398;
+
+    // The released fire cadence, from ProjectileBurst__SpawnFromPercentBucketFallback
+    // @0x00506010 and CWeapon__HandleFireBurstEvent @0x00506930:
+    //   if (NOW <= weapon[+0x64]) return;            // reload gate
+    //   weapon[+0x64] = NOW + mode[+0x38];           // reload runs from burst START
+    //   weapon[+0x6c] = 0; spawn();                  // shot 0, immediately
+    //   if (mode[+0x44] > 0) { weapon[+0x6c] = 1;
+    //       schedule 0x1389 at NOW + mode[+0x3c]; }
+    //   ... handler: if (weapon[+0x6c] < mode[+0x44]) { spawn(); weapon[+0x6c]++;
+    //                    reschedule at NOW + mode[+0x3c]; }
+    // so CWeaponBurstSize N produces exactly N shots spaced CWeaponBurstDelay
+    // apart, and the reload interval is measured from the first shot.
+
+    // The target-height gate at CUnit__CanFireAtTarget_BallisticArcA
+    // @0x004fb500 compares terrain-relative target height against
+    // CWeaponMinTargetHeight / CWeaponMaxTargetHeight. Neither drone weapon
+    // mode carries either node, so the shipped defaults apply
+    // (item[0x1b] = -10.0, item[0x1c] = 10000.0) and the gate is
+    // unconditional for every Level 100 engagement. It is therefore not
+    // modelled, rather than modelled with invented numbers.
+
+    // The jet-mode Mech Vulcan Cannon. Aquila Prototype's jet weapon list is
+    // ["Mech Vulcan Cannon", "Missile Pod"] (battle engine configurations.dat
+    // @0x2d2), and the LevelScript enables the first of those for beats 7 and
+    // 9 while disabling both walker weapons - so this is the only weapon the
+    // player has for the two airborne-target beats.
+    //
+    //   weaponmode `Mech Vulcan Cannon`
+    //     CWeaponRound      'Mech Air Bullet'
+    //     CWeaponReloadTime 0.05  0x3d4ccccd     CWeaponVolleySize 2.0 0x40000000
+    //     CWeaponInaccuracy 0.006981317 0x3be4c388   CWeaponPredictive 1
+    //     CWeaponLaunchSequence with two muzzle entries
+    //   round `Mech Air Bullet`
+    //     CRoundVelocity 60.0 0x42700000  CRoundDamage 0.15 0x3e19999a
+    //     CRoundLifeSpan  1.0 0x3f800000  CRoundExplosion 'Mech Bullet Hit'
+    //   explosion `Mech Bullet Hit` CExplosionRadius 0.2, CExplosionDamage 0.001
+    //
+    // 60.0 units per second at the measured 20 Hz released tick is 3,000 mm
+    // per released tick, i.e. 2,000 mm per 30 Hz Core tick - the same figure
+    // MechBulletSpeedPerTick already carries, because both rounds ship
+    // CRoundVelocity 60.0. Damage is the same round+explosion sum the Mech
+    // Bullet uses and which is recorded there as not independently proven:
+    // 0.15 + 0.001 = 0.151, float bits 0x3E1A9FBE.
+    //
+    // Not modelled, and deliberately: the two CWeaponLaunchSequence muzzle
+    // offsets (same reason as the Twin Vulcan's four), and CWeaponPredictive,
+    // whose lead-computation law is unread.
+    public const int MechAirBulletSpeedPerTick = MechBulletSpeedPerTick;
+    public const int MechAirBulletLifetimeTicks = 1 * TicksPerSecond;
+    public const int MechVulcanVolleySize = 2;
+    public const uint MechAirBulletDamageBits = 0x3E1A9FBE;
+    // CWeaponReloadTime 0.05 s, the same value and the same weapon-mode field
+    // as the walker Twin Vulcan, counted in the same thirds of a millisecond.
+    public const int MechVulcanReloadThirdMilliseconds =
+        TwinVulcanReloadThirdMilliseconds;
+
+    // Player hull per released life point. `mLife` for Aquila Prototype is
+    // 20.0 (data/battle engine configurations.dat @0x2d2), and Core defines a
+    // full hull as MaximumHull. One released damage unit is therefore
+    // MaximumHull / 20 = 50 Core hull units. Both operands are shipped or
+    // definitional; the ratio is not an independent measurement.
+    public const int Level100PlayerReleasedLife = 20;
+
+    // The player's collision radius. CBattleEngine::GetRadius (vtable slot 16,
+    // 0x0040DF80) returns 0.4 in single player - the same 0.4 already carried
+    // by Level100ObjectiveTriggerRadius above.
+    public const int Level100PlayerContactRadiusMillimeters = 400;
 }

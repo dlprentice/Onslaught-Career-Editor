@@ -285,6 +285,26 @@ public sealed class Level100DestructionRuntime
                 out Level100DestructionState? destruction))
         {
             _events.Add(Level100DestructionState.CreatePulseImpactEvent(hit));
+            if (hit.ActorId != 0 &&
+                _registry.GetActor(new Level100ActorId(hit.ActorId))
+                    .ScriptName is not null)
+            {
+                // A struck actor that carries no destruction state is a
+                // script-bearing static: the Tank Factory, the Hangar, the
+                // Facilities and the four turrets. Released `CThing::Hit`
+                // dispatches to the attached script regardless of whether the
+                // thing is destructible, and TankFactory.msl / Facilities.msl /
+                // Turret.msl all define `hit(otherThing)` with a
+                // THING_TYPE_AMMUNITION test. Without this report
+                // `Hit Friendly Building` and `Broke Tutorial` can never be
+                // posted. No health is touched, because no destruction state
+                // exists to touch. Statics with no attached script produce
+                // nothing observable, so they are not reported.
+                _registry.ReportHit(
+                    new Level100ActorId(hit.ActorId),
+                    otherThingTypeMask:
+                        Level100ReleasedThingTypeMasks.Ammunition);
+            }
             return true;
         }
 

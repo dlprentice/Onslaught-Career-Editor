@@ -207,10 +207,18 @@ internal static class Level100TestActorDefinitions
             (2, 541_000, 541_000)),
         Path("Target Tank Path 2",
             (0, 620_000, 620_000)),
+        // The released `Target Tank Path 1`, transcribed from the materialized
+        // manifest (`level100-static-world.json`). It was previously the
+        // synthetic triple (610000, 610000)..(612000, 612000) - 610 m away at
+        // exactly 45 degrees - so `Target Tank #23`, the fourth beat-3 static
+        // target, drove away from the firing range forever and beat 3 could
+        // never complete. That is the G2 gap recorded in
+        // LEVEL100-TUTORIAL-BEATS-2026-07-26.md, and it is a fixture artefact
+        // rather than a guidance defect. Nothing pinned the synthetic value.
         Path("Target Tank Path 1",
-            (0, 610_000, 610_000),
-            (1, 611_000, 611_000),
-            (2, 612_000, 612_000)),
+            (0, 33_313, 69_750),
+            (1, -11_688, 91_750),
+            (2, 33_313, 69_750)),
         // The released `Drone Path 1`, transcribed from the materialized
         // manifest (`level100-static-world.json`), because a synthetic point
         // would make the beat-7 flight measurement meaningless. Node indices

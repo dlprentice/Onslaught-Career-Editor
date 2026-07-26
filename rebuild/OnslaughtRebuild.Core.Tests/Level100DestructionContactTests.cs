@@ -445,7 +445,20 @@ public sealed class Level100DestructionContactTests
         Assert.Equal(Level100ContactSurfaceKind.Mesh, hit.SurfaceKind);
         Assert.Equal(facilityBefore, registry.GetActor(facilityId));
         Assert.Equal(targetBefore, registry.GetActor(targetId));
-        Assert.Empty(registry.Snapshot.PendingFacts);
+        // The occluding static takes no damage, but it does now observe the
+        // released THING_TYPE_AMMUNITION contact: `CThing::Hit` dispatches to
+        // the attached script whether or not the thing is destructible, and
+        // Facilities.msl / TankFactory.msl / Turret.msl all define
+        // `hit(otherThing)`. Without this fact `Hit Friendly Building` and
+        // `Broke Tutorial` can never be posted. This assertion was
+        // `Assert.Empty` while that route was missing.
+        Level100ActorFactSnapshot hitFact =
+            Assert.Single(registry.Snapshot.PendingFacts);
+        Assert.Equal(Level100ActorFactKind.Hit, hitFact.Kind);
+        Assert.Equal(facilityId, hitFact.ActorId);
+        Assert.Equal(
+            Level100ReleasedThingTypeMasks.Ammunition,
+            hitFact.OtherThingTypeMask);
         Level100DestructionEvent impact = Assert.Single(runtime.Events);
         Assert.Equal(Level100DestructionEventKind.PulseImpact, impact.Kind);
         Assert.Equal(Level100DestructionEffectKind.PulseImpact, impact.EffectKind);

@@ -25,7 +25,11 @@ public sealed record Level100ActorCommandIntentSnapshot(
 public sealed record Level100ActorMechanicsSnapshot(
     long LastConsumedCommandSequence,
     int RetailBaseTickAccumulatorThirtieths,
-    IReadOnlyList<Level100ActorCommandIntentSnapshot> Actors);
+    IReadOnlyList<Level100ActorCommandIntentSnapshot> Actors,
+    int ReleasedRandomSeed,
+    int NextActorRoundId,
+    IReadOnlyList<Level100ActorWeaponSnapshot> ActorWeapons,
+    IReadOnlyList<Level100ActorRoundSnapshot> ActorRounds);
 
 public sealed record Level100ActorMechanicsWaitCompletion(
     Level100ActorId ActorId,
@@ -39,7 +43,7 @@ public sealed record Level100ActorMechanicsWaitCompletion(
 /// heading bound, and terrain grounding. Actor identity and the full physical
 /// pose remain exclusively in <see cref="Level100ActorRegistry"/>.
 /// </summary>
-public sealed class Level100ActorMechanics
+public sealed partial class Level100ActorMechanics
 {
     public const int RetailBaseTicksPerSecond = 20;
 
@@ -92,6 +96,8 @@ public sealed class Level100ActorMechanics
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(snapshot.Actors);
+        ArgumentNullException.ThrowIfNull(snapshot.ActorWeapons);
+        ArgumentNullException.ThrowIfNull(snapshot.ActorRounds);
         if (snapshot.LastConsumedCommandSequence < 0 ||
             snapshot.RetailBaseTickAccumulatorThirtieths is < 0 or
                 >= SimulationConstants.TicksPerSecond ||
@@ -115,12 +121,18 @@ public sealed class Level100ActorMechanics
                     nameof(snapshot));
             }
         }
+
+        RestoreArmament(snapshot);
     }
 
     public Level100ActorMechanicsSnapshot Snapshot => new(
         _lastConsumedCommandSequence,
         _retailBaseTickAccumulatorThirtieths,
-        Array.AsReadOnly(_states.Values.Select(SnapshotState).ToArray()));
+        Array.AsReadOnly(_states.Values.Select(SnapshotState).ToArray()),
+        _releasedRandom.Seed,
+        _nextActorRoundId,
+        SnapshotActorWeapons(),
+        SnapshotActorRounds());
 
     private static bool OwnsCommand(Level100ActorScriptCommandKind kind) =>
         kind is
@@ -275,6 +287,14 @@ public sealed class Level100ActorMechanics
 
             ObserveWaypointArrival(state, actor, motion, completions);
         }
+
+        // Released ordering inside one base tick is: things move, then rounds
+        // move (CRound vtable slot 66), then weapons that are due spawn new
+        // rounds. Advancing live rounds before this tick's launches is what
+        // stops a round from travelling on the tick it is created, which is
+        // what retail's event-scheduled creation also produces.
+        AdvanceActorRounds();
+        AdvanceActorWeapons();
 
         return Array.AsReadOnly(completions.ToArray());
     }
@@ -872,6 +892,7 @@ public sealed class Level100ActorMechanics
         state.Intent = Level100ActorCommandIntent.Attacking;
         state.TargetActorId = target;
         ZeroActorVelocity(state.ActorId);
+        ArmActorWeapons(state);
     }
 
     private void SetSimpleIntent(

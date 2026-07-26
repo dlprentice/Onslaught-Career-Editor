@@ -571,6 +571,55 @@ public sealed class Simulation
         {
             PumpLevel100EventBus();
         }
+
+        ApplyLevel100ActorRoundImpacts();
+    }
+
+    /// <summary>
+    /// Routes released actor-owned rounds that reached their designated target.
+    /// The Level 100 scripts only ever issue <c>Attack(player)</c>, so the
+    /// player is the only supported target today; a round aimed at anything
+    /// else is spent without effect rather than routed through an unevidenced
+    /// path.
+    /// </summary>
+    private void ApplyLevel100ActorRoundImpacts()
+    {
+        IReadOnlyList<Level100ActorRoundImpact> impacts =
+            _level100ActorMechanics.DrainActorRoundImpacts();
+        foreach (Level100ActorRoundImpact impact in impacts)
+        {
+            if (impact.TargetActorId != _level100PlayerActorId ||
+                impact.HullDamage <= 0)
+            {
+                continue;
+            }
+
+            if (_level100Actors.GetLifecycle(_level100PlayerActorId) ==
+                Level100ActorLifecycle.Destroyed)
+            {
+                continue;
+            }
+
+            // Released THING_TYPE_AMMUNITION contact on the player. This is the
+            // hit BattleEngine.msl's `hit()` observes during the beat-5 dodge,
+            // which is why the mission is told about it before the hull is
+            // reduced.
+            _level100Actors.ReportHit(
+                _level100PlayerActorId,
+                otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
+            DrainAndDispatchLevel100ActorFacts();
+
+            int hull = Math.Max(0, PlayerHull - impact.HullDamage);
+            _level100Destruction.SetExternalHealth(_level100PlayerActorId, hull);
+            _level100Mission.ReportPlayerHitDuringEvasion();
+            if (hull == 0)
+            {
+                DestroyLevel100PlayerActor();
+                _level100Mission.ReportPlayerDeath();
+            }
+
+            PumpLevel100EventBus();
+        }
     }
 
     private void ApplyLevel100MissionEvent(Level100MissionEvent missionEvent)
@@ -2393,6 +2442,28 @@ public sealed class Simulation
                 AquilaFlightEvents.JetWeaponFireRequested,
                 AquilaJetWeapon.MechVulcanCannon);
             _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+
+            // The jet weapon now actually launches. Until this change the jet
+            // branch emitted a presentation event and nothing else, so the
+            // player had no working weapon at all during beats 7 and 9 - the
+            // LevelScript disables both walker weapons there, which is what
+            // TUTORIAL_THROTTLE_MOD is teaching. `Mech Vulcan Cannon` fires
+            // CWeaponVolleySize 2 `Mech Air Bullet` rounds; see
+            // SimulationConstants for the shipped record and for the two
+            // CWeaponLaunchSequence muzzle offsets that are read but not
+            // modelled. Energy is not spent here because the jet weapon's
+            // consumption field has no decoded value-id, and inventing one
+            // would be an unproven behaviour claim.
+            for (int round = 0;
+                 round < SimulationConstants.MechVulcanVolleySize;
+                 round++)
+            {
+                LaunchWalkerRound(
+                    SimulationConstants.MechAirBulletSpeedPerTick,
+                    SimulationConstants.MechAirBulletLifetimeTicks,
+                    Level100ContactMechanics.PulseRadiusMillimeters,
+                    SimulationConstants.MechAirBulletDamageBits);
+            }
             return;
         }
 
