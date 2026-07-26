@@ -67,6 +67,46 @@ construction and no change to the mode list can reach geometry. The aspect consu
 at `0x0052b14b` computes `factor = K * H / W` from the live backbuffer; at 4:3 with
 the default `K = 1.3333334` that is exactly `1.0`, identical to pristine.
 
+> ### CAVEAT REFUTED 2026-07-26 — `0x00662df0` IS written, and the extents ARE pristine's
+>
+> The caveat below is wrong, and the error is instructive: **an absolute-address
+> scan cannot see an object-relative store.** `0x00662df0` is written via
+> `[ebx+0x38]` at `0x0042416b`, reached when the `-forcewindowed` compare at
+> `0x00424159` matches — itself gated by `-testeur`, which sets `[ebx+0x186]` at
+> `0x00423c7d`. The same byte is read absolutely as `0x00662f3e`, so
+> `ebx = 0x00662DB8` and `[ebx+0x38]` is `0x00662DF0` exactly; corroborated by
+> `mov ecx, 0x662db8` at `0x004239c0` and `mov eax, [0x662db8]` at `0x0052b05e`.
+>
+> **Verified by running it:** the pristine binary with `-testeur -forcewindowed`
+> presents windowed at client 640x480 with the desktop untouched. So retail is
+> **not** fullscreen-only, the flag is **not** dead, and 640x480 is pristine's own
+> choice reached through the shipped command line. **Absolute pixel extents are
+> therefore pristine's, and `extents.json`'s settle math in absolute pixels
+> stands.**
+>
+> Pristine also runs unpatched: exclusive fullscreen, desktop forced to 640x480,
+> rendering correctly.
+>
+> The patched four bytes at `0x0052A644` are consequently **behaviourally
+> equivalent to a command line the shipped game itself parses**, not an
+> enablement of dead code. Confirmed on pixels rather than argued: driving
+> *pristine* through the full chain into Level 100 gives, at `t025065ms`,
+> material **0.60 %** and meanD **0.037** against these references — inside the
+> band the patched build produces against *itself* (0.59–2.12 % / 0.060–0.224),
+> with a mean delta *below* the patched build's own best cross-run agreement.
+> The two re-taken runtime measurements are identical too: the terrain light
+> state compares **0 differing dwords** across the full 46-dword record, and
+> stage-0 `COLOROP` / `D3DRS_AMBIENT` reproduce every documented value over 605
+> draws.
+>
+> See `local-lab/PRISTINE-BINARY-VERIFICATION-2026-07-26.md`.
+>
+> One naming hazard this exposed and did not fix: in
+> `local-lab/safe-copy-bea-pristine/`, the file named **`BEA.exe` is the PATCHED
+> one** and `BEA.exe.original.backup` is pristine. The names are inverted.
+> Renaming needs every consumer updated together — `Capture-Retail.ps1`, the
+> `cdb_*_probe.ps1` probes and `re_ledger.py` all resolve `BEA.exe` by name.
+
 **Caveat.** `0x00662df0`, the pristine source of `m_bWindowed`, lies above `.data`'s
 raw size — BSS, with no absolute writer and exactly one `.text` reference (the read
 the patch overwrites). Pristine retail is therefore effectively **fullscreen-only**
