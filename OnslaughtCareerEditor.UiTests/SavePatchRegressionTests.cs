@@ -625,6 +625,191 @@ public class SavePatchRegressionTests
         }
     }
 
+    [Test]
+    public void PatchSave_UnknownRankBaseline_FailsInsteadOfSilentlyWritingTopGrade()
+    {
+        string tempDir = NewTempDir("unknown-rank");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            string output = Path.Combine(tempDir, "blocked.bes");
+
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                Rank = "Z",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false
+            });
+
+            Assert.That(result.Success, Is.False,
+                "An unrecognised rank baseline used to fall back to S and write the highest grade over every mission.");
+            Assert.That(result.Message, Does.Contain("Z"));
+            Assert.That(File.Exists(output), Is.False, "No output may be written for an unencodable rank.");
+
+            // Positive control: every rank the format encodes still writes.
+            foreach (string rank in new[] { "S", "A", "B", "C", "D", "E", "NONE" })
+            {
+                string accepted = Path.Combine(tempDir, $"ok_{rank}.bes");
+                PatchResult ok = SaveEditorService.PatchSave(new SavePatchRequest
+                {
+                    InputPath = input,
+                    OutputPath = accepted,
+                    Rank = rank,
+                    PatchNodes = true,
+                    PatchLinks = false,
+                    PatchGoodies = false,
+                    PatchKills = false
+                });
+                Assert.That(ok.Success, Is.True, $"Rank {rank} must remain writable. {ok.Message}");
+            }
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_UnknownMissionRankOverride_FailsInsteadOfSilentlyWritingTopGrade()
+    {
+        string tempDir = NewTempDir("unknown-override-rank");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            string output = Path.Combine(tempDir, "blocked.bes");
+
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                Rank = "E",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false,
+                LevelRanks = new Dictionary<int, string> { [0] = "PLATINUM" }
+            });
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.Message, Does.Contain("PLATINUM"));
+            Assert.That(File.Exists(output), Is.False);
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_OverrideKeysOutsideTheirArrays_FailInsteadOfBeingDiscarded()
+    {
+        string tempDir = NewTempDir("oob-override-keys");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+
+            string rankOut = Path.Combine(tempDir, "rank.bes");
+            PatchResult rankResult = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = rankOut,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false,
+                LevelRanks = new Dictionary<int, string> { [NodeCount] = "A" }
+            });
+            Assert.That(rankResult.Success, Is.False,
+                "A mission rank override outside the node array can never reach the file.");
+            Assert.That(File.Exists(rankOut), Is.False);
+
+            string killOut = Path.Combine(tempDir, "kill.bes");
+            PatchResult killResult = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = killOut,
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = true,
+                GlobalKillCount = 100,
+                PerCategoryKills = new Dictionary<int, int> { [KillCategoryCount] = 5 }
+            });
+            Assert.That(killResult.Success, Is.False,
+                "A kill override outside the five categories can never reach the file.");
+            Assert.That(File.Exists(killOut), Is.False);
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_MissionRankOverrideOnAnUnusedNodeSlot_FailsInsteadOfBeingDiscarded()
+    {
+        string tempDir = NewTempDir("unused-node-override");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+
+            // Node slots beyond the retail career map carry world id 0; the node pass skips them.
+            byte[] buf = File.ReadAllBytes(input);
+            const int unusedNode = 90;
+            Assert.That(
+                ReadUInt32(buf, NodeBase + (unusedNode * NodeSize) + 0x10),
+                Is.Zero,
+                "The fixture must actually leave this node slot unused for this test to mean anything.");
+
+            string output = Path.Combine(tempDir, "blocked.bes");
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false,
+                LevelRanks = new Dictionary<int, string> { [unusedNode] = "A" }
+            });
+
+            Assert.That(result.Success, Is.False,
+                "A rank override aimed at an unused node slot used to be dropped while reporting success.");
+            Assert.That(result.Message, Does.Contain(unusedNode.ToString()));
+            Assert.That(File.Exists(output), Is.False);
+
+            // Positive control: the same override on a used slot still succeeds and reaches the file.
+            string allowed = Path.Combine(tempDir, "allowed.bes");
+            PatchResult ok = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = allowed,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false,
+                LevelRanks = new Dictionary<int, string> { [0] = "A" }
+            });
+            Assert.That(ok.Success, Is.True, ok.Message);
+            AssertUInt(File.ReadAllBytes(allowed), NodeBase + 0x3C, 0x3F4CCCCDu, "Node 0 must receive the requested A rank");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
     private static bool[] BuildOwnedByteMap()
     {
         bool[] owned = new bool[BesFilePatcher.EXPECTED_FILE_SIZE];
