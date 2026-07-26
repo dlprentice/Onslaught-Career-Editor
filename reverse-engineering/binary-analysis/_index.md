@@ -41,6 +41,7 @@ evidence lives under the ignored lab’s apply logs when present.
 - [Terrain draw texture-stage flags](terrain-draw-stage-flags-2026-07-26.md)
 - [Terrain per-node colour light absent from the PC path](terrain-per-node-colour-absent-2026-07-26.md)
 - [Retail's implied macro cache inverted from rendered pixels](terrain-implied-macro-inversion-2026-07-26.md)
+- [Sun colour route to the terrain draw — all ten references, negative](terrain-sun-colour-route-2026-07-26.md)
 - [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
 
