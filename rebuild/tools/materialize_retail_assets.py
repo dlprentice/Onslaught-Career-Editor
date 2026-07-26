@@ -137,6 +137,25 @@ LANDSCAPE_MAP_TEXTURES = (
 )
 STATIC_WORLD_ROOT = GODOT_ASSETS / "Level100/StaticWorld"
 STATIC_WORLD_MANIFEST = STATIC_WORLD_ROOT / "level100-static-world.json"
+STATIC_WORLD_ANIMATION = STATIC_WORLD_ROOT / "level100-static-world-animation.json"
+# The released engine drives hierarchy playback from its 20 Hz base update; the
+# mesh format itself stores no rate. See OnslaughtRebuild.Core/SimulationConstants.cs
+# and FirstFlightWorldView.RetailAquilaAnimationHz.
+STATIC_WORLD_ANIMATION_HZ = 20
+STATIC_WORLD_ANIMATION_SHA256 = (
+    "6dcc69f68056aafb06f6f6515098f3153590cecc0a92a27a60d3f0c18ce2413b"
+)
+# Exact released virtual-frame counts (CMSP+0xBC) of every Level 100 static mesh
+# that carries more than one authored hierarchy pose. These are the playback
+# lengths; nothing here is resampled.
+STATIC_WORLD_ANIMATED_MESHES = {
+    "FB_Docks": 26,
+    "FB_Solar_Pod": 11,
+    "FB_radar_station": 26,
+    "ft_blaster": 41,
+    "ft_pulse": 101,
+    "ft_sam": 21,
+}
 STATIC_WORLD_MANIFEST_SHA256 = "084954c97502001d5868348ac9db4e79d86f3dd8f72e3435e87fa43ff0141117"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
@@ -999,7 +1018,8 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     )
     outputs.append((LEVEL100_CONTACT_ASSET, LEVEL100_CONTACT_ASSET_SHA256))
-    if len(outputs) != 65 or len({path for path, _ in outputs}) != len(outputs):
+    outputs.append((STATIC_WORLD_ANIMATION, STATIC_WORLD_ANIMATION_SHA256))
+    if len(outputs) != 66 or len({path for path, _ in outputs}) != len(outputs):
         raise RuntimeError("static-world manifest has duplicate or missing outputs")
     return tuple(outputs)
 
@@ -2313,7 +2333,12 @@ def _materialize_static_world(
     sys.path.insert(0, str(tools_root))
     sys.path.insert(0, str(rebuild_tools))
     from aya_archive_inventory import build_asset_resolver, inflate_aya_bytes
-    from cmsh_static_preview import convert_aya_bytes, inflate_aya, parse_cmsh_stream
+    from cmsh_static_preview import (
+        build_rigid_transform_tracks,
+        convert_aya_bytes,
+        inflate_aya,
+        parse_cmsh_stream,
+    )
 
     objects, pines, fern_count = _parse_static_world(raw_level)
     level_actors, waypoint_paths = _parse_level_world_actors_and_waypoints(raw_level)
@@ -2515,6 +2540,7 @@ def _materialize_static_world(
     }
 
     mesh_records: dict[str, dict[str, object]] = {}
+    animation_records: dict[str, dict[str, object]] = {}
     for mesh_key in STATIC_MESH_KEYS:
         source, data, materials = mesh_inputs[mesh_key]
         obj = convert_aya_bytes(
@@ -2537,6 +2563,31 @@ def _materialize_static_world(
         target.write_bytes(obj)
         output_hash = _sha256(obj)
         outputs.append((destination, output_hash))
+
+        # Released per-part rigid transform tracks (HORI/HPOS selected through
+        # VHFM). The flattened OBJ above is the rest pose; these are the exact
+        # per-virtual-frame deltas that carry it, with no resampling.
+        tracks = build_rigid_transform_tracks(parse_cmsh_stream(inflate_aya(data)))
+        emitted_vertices = sum(
+            1 for line in obj.decode("utf-8").splitlines() if line.startswith("v ")
+        )
+        covered = sum(int(part["objVertexCount"]) for part in tracks["parts"])
+        if covered != emitted_vertices:
+            raise RuntimeError(
+                f"static-world mesh {mesh_key} track vertex ranges do not cover the emitted OBJ"
+            )
+        if any("frames" in part for part in tracks["parts"]):
+            animation_records[mesh_key] = {
+                "cachedOrientationDelta": tracks["cachedOrientationDelta"],
+                "cachedPositionDelta": tracks["cachedPositionDelta"],
+                "frameMaps": tracks["frameMaps"],
+                "hierarchyFrameCount": tracks["hierarchyFrameCount"],
+                "objVertexCount": emitted_vertices,
+                "parts": tracks["parts"],
+                "resourcePath": resource_path,
+                "sha256": output_hash,
+                "virtualFrameCount": tracks["virtualFrameCount"],
+            }
         mesh_records[mesh_key] = {
             "baseClearance": -min(vertex_z),
             "materials": {
@@ -2646,6 +2697,56 @@ def _materialize_static_world(
     manifest_target.parent.mkdir(parents=True, exist_ok=True)
     manifest_target.write_bytes(manifest_bytes)
     outputs.append((STATIC_WORLD_MANIFEST, manifest_hash))
+
+    if sorted(animation_records) != sorted(STATIC_WORLD_ANIMATED_MESHES):
+        raise RuntimeError(
+            "static-world animated mesh set changed: "
+            f"{sorted(animation_records)}"
+        )
+    for mesh_key, expected_frames in STATIC_WORLD_ANIMATED_MESHES.items():
+        if animation_records[mesh_key]["virtualFrameCount"] != expected_frames:
+            raise RuntimeError(
+                f"static-world mesh {mesh_key} virtual frame count changed: "
+                f"{animation_records[mesh_key]['virtualFrameCount']}"
+            )
+    animation = {
+        "framesPerSecond": STATIC_WORLD_ANIMATION_HZ,
+        "meshes": animation_records,
+        "provenance": {
+            "cache": (
+                "CPOS/CORI are the released model-space composition cache, one record "
+                "per virtual frame; every composed frame here was checked against them "
+                "and they carry no independent data"
+            ),
+            "rate": (
+                "the released 20 Hz base update drives hierarchy playback; the mesh "
+                "format stores no rate"
+            ),
+            "space": (
+                "delta transforms apply directly to the emitted OBJ rest vertices, in "
+                "OBJ space (released model space with Z negated)"
+            ),
+            "tracks": (
+                "CMSH MESP HORI (hFrames x 48) and HPOS (hFrames x 16) selected per "
+                "virtual frame by VHFM, composed along PRNT root-to-leaf"
+            ),
+        },
+        "schema": "onslaught.level100-static-world-animation.v1",
+        "sourceAggregateSha256": aggregate,
+    }
+    animation_bytes = (
+        json.dumps(animation, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    animation_hash = _sha256(animation_bytes)
+    if animation_hash != STATIC_WORLD_ANIMATION_SHA256:
+        raise RuntimeError(
+            "static-world animation manifest did not reproduce exactly "
+            f"(SHA-256 {animation_hash})"
+        )
+    animation_target = stage / STATIC_WORLD_ANIMATION
+    animation_target.parent.mkdir(parents=True, exist_ok=True)
+    animation_target.write_bytes(animation_bytes)
+    outputs.append((STATIC_WORLD_ANIMATION, animation_hash))
 
     contact_asset = _level100_contact_asset(
         objects,

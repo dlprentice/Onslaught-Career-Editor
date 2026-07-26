@@ -133,6 +133,24 @@ class MeshGroup:
 
 
 @dataclass(frozen=True)
+class _RigidTrack:
+    """The released non-skeletal per-part rigid transform track.
+
+    `hierarchy` holds the `hFrames` distinct authored poses decoded from
+    `HORI`/`HPOS`. `frame_map` is the `VHFM` byte per virtual frame, selecting
+    which hierarchy pose plays on that frame. `cached_orientations` and
+    `cached_positions` are the `CORI`/`CPOS` records, retained only as a
+    cross-check: they are a derived model-space composition of `hierarchy`
+    along the `PRNT` chain and carry no independent information.
+    """
+
+    frame_map: tuple[int, ...]
+    hierarchy: tuple[_Transform, ...]
+    cached_orientation_bytes: bytes
+    cached_position_bytes: bytes
+
+
+@dataclass(frozen=True)
 class _Part:
     name: str
     part_type: int
@@ -143,6 +161,7 @@ class _Part:
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
+    track: _RigidTrack | None = None
 
 
 @dataclass(frozen=True)
@@ -206,6 +225,17 @@ def _orientation(data: bytes | memoryview, offset: int, role: str, origin: int) 
     if not all(math.isfinite(values[index]) for index in (0, 1, 2, 4, 5, 6, 8, 9, 10)):
         raise CmshProfileError("non-finite numeric value", origin + offset, role)
     return values
+
+
+def _rows(
+    orientation: tuple[float, ...],
+) -> tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]:
+    """A released 48-byte orientation record is three rows of three floats plus one pad float."""
+    return (
+        (orientation[0], orientation[1], orientation[2]),
+        (orientation[4], orientation[5], orientation[6]),
+        (orientation[8], orientation[9], orientation[10]),
+    )
 
 
 def _position(data: bytes | memoryview, offset: int, role: str, origin: int) -> tuple[float, float, float]:
@@ -377,6 +407,11 @@ def _parse_part(
     bounding_box: _BoundingBox | None = None
     hierarchy_orientation: tuple[float, ...] | None = None
     hierarchy_position: tuple[float, float, float] | None = None
+    frame_map: tuple[int, ...] | None = None
+    track_orientations: list[tuple[float, ...]] = []
+    track_positions: list[tuple[float, float, float]] = []
+    cached_orientation_bytes = b""
+    cached_position_bytes = b""
     selected_frame = min(hierarchy_frame, hframes - 1) if hierarchy_frame is not None else None
     while reader.pos < len(reader.data):
         record = reader.chunk("MESP record")
@@ -422,9 +457,14 @@ def _parse_part(
         elif record.tag == b"VHFM":
             if len(record.payload) != vframes:
                 raise CmshProfileError("invalid declared length/count", record.offset, "VHFM")
+            frame_map = tuple(bytes(record.payload))
         elif record.tag == b"HORI":
             if len(record.payload) != hframes * 48:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HORI")
+            track_orientations = [
+                _orientation(record.payload, frame * 48, "hierarchy orientation", record.offset + 8)
+                for frame in range(hframes)
+            ]
             if selected_frame is not None:
                 hierarchy_orientation = _orientation(
                     record.payload,
@@ -435,6 +475,10 @@ def _parse_part(
         elif record.tag == b"HPOS":
             if len(record.payload) != hframes * 16:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HPOS")
+            track_positions = [
+                _position(record.payload, frame * 16, "hierarchy position", record.offset + 8)
+                for frame in range(hframes)
+            ]
             if selected_frame is not None:
                 hierarchy_position = _position(
                     record.payload,
@@ -448,6 +492,14 @@ def _parse_part(
         elif record.tag in {b"PBKT", b"CPOS", b"CORI"}:
             if len(record.payload) > MAX_OPAQUE:
                 raise CmshProfileError("limit exceeded", record.offset, tag)
+            # CPOS/CORI are the derived model-space composition cache, one
+            # record per *virtual* frame (not per hierarchy frame). Released
+            # meshes collapse them to a single record when the part and its
+            # whole PRNT chain are static.
+            if record.tag == b"CPOS":
+                cached_position_bytes = bytes(record.payload)
+            elif record.tag == b"CORI":
+                cached_orientation_bytes = bytes(record.payload)
         elif record.tag == b"PMVB":
             if reference is None:
                 vertices, groups = _parse_pm_vb(record.payload, record.offset + 8, budget)
@@ -464,13 +516,24 @@ def _parse_part(
         raise CmshProfileError("invalid declared length/count", chunk.offset, "CHLD presence")
     selected_orientation = hierarchy_orientation if hierarchy_orientation is not None else base
     selected_position = hierarchy_position if hierarchy_position is not None else position
-    rows = (
-        (selected_orientation[0], selected_orientation[1], selected_orientation[2]),
-        (selected_orientation[4], selected_orientation[5], selected_orientation[6]),
-        (selected_orientation[8], selected_orientation[9], selected_orientation[10]),
-    )
+    rows = _rows(selected_orientation)
     if bounding_box is None:
         raise CmshProfileError("unexpected tag/order", chunk.offset, "missing BBOX")
+    if (
+        frame_map is None
+        or len(track_orientations) != hframes
+        or len(track_positions) != hframes
+    ):
+        raise CmshProfileError("unexpected tag/order", chunk.offset, "incomplete rigid transform track")
+    track = _RigidTrack(
+        frame_map,
+        tuple(
+            _Transform(_rows(track_orientations[frame]), track_positions[frame])
+            for frame in range(hframes)
+        ),
+        cached_orientation_bytes,
+        cached_position_bytes,
+    )
     return _Part(
         part_name,
         part_type,
@@ -481,6 +544,7 @@ def _parse_part(
         children,
         parent,
         reference,
+        track,
     )
 
 
@@ -544,6 +608,7 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
                 part.children,
                 part.parent,
                 part.reference,
+                part.track,
             )
         )
 
@@ -804,6 +869,216 @@ def emit_obj(
     if len(result) != encoded_bytes:
         raise CmshProfileError("OBJ rejection", 0, "OBJ byte accounting")
     return result
+
+
+MAX_CACHED_ORIENTATION_DELTA = 1e-5
+MAX_CACHED_POSITION_DELTA = 1e-4
+
+_IDENTITY_ROWS = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
+
+
+def _matrix_multiply(left, right):
+    """(left * right)[i][j] = sum_k left[i][k]*right[k][j] — row-major storage, column vectors."""
+    return tuple(
+        tuple(sum(left[i][k] * right[k][j] for k in range(3)) for j in range(3))
+        for i in range(3)
+    )
+
+
+def _apply(matrix, vector) -> tuple[float, float, float]:
+    return tuple(sum(matrix[i][k] * vector[k] for k in range(3)) for i in range(3))
+
+
+def obj_part_vertex_ranges(mesh: ParsedMesh) -> tuple[tuple[int, int] | None, ...]:
+    """The 1-based OBJ `v` index range each part occupies in `emit_obj` output."""
+    ranges: list[tuple[int, int] | None] = []
+    emitted = 0
+    for part in mesh.parts:
+        if not part.vertices:
+            ranges.append(None)
+            continue
+        ranges.append((emitted + 1, len(part.vertices)))
+        emitted += len(part.vertices)
+    return tuple(ranges)
+
+
+def _compose_model_space(mesh: ParsedMesh, virtual_frame: int):
+    """Model-space (rows, position) per part on one virtual frame, composed root->leaf."""
+    resolved: list[tuple[tuple, tuple[float, float, float]] | None] = [None] * len(mesh.parts)
+
+    def resolve(index: int):
+        cached = resolved[index]
+        if cached is not None:
+            return cached
+        part = mesh.parts[index]
+        track = part.track
+        if track is None:
+            raise CmshProfileError("unexpected tag/order", 0, "missing rigid transform track")
+        local = track.hierarchy[track.frame_map[virtual_frame]]
+        if part.parent is None:
+            value = (local.rows, local.position)
+        else:
+            parent_rows, parent_position = resolve(part.parent)
+            value = (
+                _matrix_multiply(parent_rows, local.rows),
+                tuple(
+                    a + b
+                    for a, b in zip(_apply(parent_rows, local.position), parent_position)
+                ),
+            )
+        resolved[index] = value
+        return value
+
+    for index in range(len(mesh.parts)):
+        resolve(index)
+    return resolved
+
+
+def build_rigid_transform_tracks(mesh: ParsedMesh) -> dict[str, object]:
+    """Decode the released per-part rigid transform tracks into OBJ-space deltas.
+
+    Returns one entry per part that carries geometry, giving the part's OBJ
+    vertex range and — when the part or any `PRNT` ancestor has more than one
+    authored hierarchy pose — one delta transform per virtual frame that maps
+    the emitted rest vertices onto that frame. No resampling, interpolation, or
+    smoothing occurs: the virtual frame count is exactly the released `vFrames`.
+
+    Every composed frame is checked against the released `CPOS`/`CORI` cache and
+    a disagreement is a hard rejection.
+    """
+    if not mesh.parts or any(part.track is None for part in mesh.parts):
+        raise CmshProfileError("unexpected tag/order", 0, "missing rigid transform track")
+    virtual_frames = len(mesh.parts[0].track.frame_map)
+    if virtual_frames < 1 or any(len(part.track.frame_map) != virtual_frames for part in mesh.parts):
+        raise CmshProfileError("invalid declared length/count", 0, "inconsistent virtual frame counts")
+    for part in mesh.parts:
+        if any(frame >= len(part.track.hierarchy) for frame in part.track.frame_map):
+            raise CmshProfileError("index out of bounds", 0, "VHFM maps beyond a stored pose")
+
+    composed = [_compose_model_space(mesh, frame) for frame in range(virtual_frames)]
+
+    # Cross-check the composition against the released CPOS/CORI cache. A
+    # released mesh stores either one record (the whole PRNT chain is static)
+    # or exactly `vFrames` records; anything else is a rejection.
+    cached_positions: list[tuple[tuple[float, float, float], ...]] = []
+    cached_orientations: list[tuple[tuple, ...]] = []
+    for part in mesh.parts:
+        raw_position = part.track.cached_position_bytes
+        raw_orientation = part.track.cached_orientation_bytes
+        if len(raw_position) not in (0, 16, virtual_frames * 16):
+            raise CmshProfileError("invalid declared length/count", 0, "CPOS record count")
+        if len(raw_orientation) not in (0, 48, virtual_frames * 48):
+            raise CmshProfileError("invalid declared length/count", 0, "CORI record count")
+        cached_positions.append(
+            tuple(
+                _position(raw_position, frame * 16, "cached position", 0)
+                for frame in range(len(raw_position) // 16)
+            )
+        )
+        cached_orientations.append(
+            tuple(
+                _rows(_orientation(raw_orientation, frame * 48, "cached orientation", 0))
+                for frame in range(len(raw_orientation) // 48)
+            )
+        )
+
+    worst_orientation = 0.0
+    worst_position = 0.0
+    for frame in range(virtual_frames):
+        for index in range(len(mesh.parts)):
+            rows, position = composed[frame][index]
+            stored_positions = cached_positions[index]
+            stored_orientations = cached_orientations[index]
+            if stored_positions:
+                stored = stored_positions[min(frame, len(stored_positions) - 1)]
+                worst_position = max(
+                    worst_position, max(abs(a - b) for a, b in zip(position, stored))
+                )
+            if stored_orientations:
+                stored_rows = stored_orientations[min(frame, len(stored_orientations) - 1)]
+                worst_orientation = max(
+                    worst_orientation,
+                    max(abs(rows[i][j] - stored_rows[i][j]) for i in range(3) for j in range(3)),
+                )
+    if worst_orientation > MAX_CACHED_ORIENTATION_DELTA or worst_position > MAX_CACHED_POSITION_DELTA:
+        raise CmshProfileError("OBJ rejection", 0, "CPOS/CORI cache disagrees with the composed track")
+
+    # The emitted OBJ places every part by its CMSP base transform, so the rest
+    # pose the deltas below are relative to must be virtual frame 0. Released
+    # meshes satisfy this exactly; a mesh parsed with an explicit hierarchy
+    # frame does not, and must not reach here.
+    for index, part in enumerate(mesh.parts):
+        rows, position = composed[0][index]
+        if (
+            max(abs(rows[i][j] - part.transform.rows[i][j]) for i in range(3) for j in range(3))
+            > MAX_CACHED_ORIENTATION_DELTA
+            or max(abs(a - b) for a, b in zip(position, part.transform.position))
+            > MAX_CACHED_POSITION_DELTA
+        ):
+            raise CmshProfileError("OBJ rejection", 0, "rest pose is not virtual frame 0")
+
+    ranges = obj_part_vertex_ranges(mesh)
+    animated_chain = [False] * len(mesh.parts)
+    for index, part in enumerate(mesh.parts):
+        moving = len(part.track.hierarchy) > 1
+        if part.parent is not None:
+            moving = moving or animated_chain[part.parent]
+        animated_chain[index] = moving
+
+    parts: list[dict[str, object]] = []
+    for index, part in enumerate(mesh.parts):
+        vertex_range = ranges[index]
+        if vertex_range is None:
+            continue
+        rest_rows, rest_position = composed[0][index]
+        record: dict[str, object] = {
+            "hierarchyFrameCount": len(part.track.hierarchy),
+            "name": part.name,
+            "objVertexCount": vertex_range[1],
+            "objVertexStart": vertex_range[0],
+            "parent": part.parent,
+            "part": index,
+        }
+        if animated_chain[index]:
+            # rest orientation is orthonormal, so its inverse is its transpose.
+            inverse_rest = tuple(
+                tuple(rest_rows[j][i] for j in range(3)) for i in range(3)
+            )
+            frames: list[dict[str, object]] = []
+            for frame in range(virtual_frames):
+                rows, position = composed[frame][index]
+                delta_rows = _matrix_multiply(rows, inverse_rest)
+                delta_position = tuple(
+                    a - b for a, b in zip(position, _apply(delta_rows, rest_position))
+                )
+                # emit_obj writes (x, y, -z); conjugate the delta by diag(1,1,-1)
+                # so it applies directly to the emitted OBJ vertices.
+                signs = (1.0, 1.0, -1.0)
+                obj_rows = tuple(
+                    tuple(delta_rows[i][j] * signs[i] * signs[j] for j in range(3))
+                    for i in range(3)
+                )
+                frames.append(
+                    {
+                        "basis": [value for row in obj_rows for value in row],
+                        "origin": [delta_position[i] * signs[i] for i in range(3)],
+                    }
+                )
+            record["frames"] = frames
+        parts.append(record)
+
+    return {
+        "cachedOrientationDelta": worst_orientation,
+        "cachedPositionDelta": worst_position,
+        "frameMaps": {
+            str(index): list(part.track.frame_map)
+            for index, part in enumerate(mesh.parts)
+            if len(part.track.hierarchy) > 1
+        },
+        "hierarchyFrameCount": max(len(part.track.hierarchy) for part in mesh.parts),
+        "parts": parts,
+        "virtualFrameCount": virtual_frames,
+    }
 
 
 def emit_material_report(mesh: ParsedMesh) -> bytes:

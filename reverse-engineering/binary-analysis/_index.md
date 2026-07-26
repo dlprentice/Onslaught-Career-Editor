@@ -36,6 +36,7 @@ evidence lives under the ignored lab’s apply logs when present.
 - [Mission script contract](missionscript-iscript-static-contract.md)
 - [Physics script contract](physics-script-static-contract.md)
 - [Texture resource decoding](texture-resource-decode-static-contract.md)
+- [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
 
 Focused patch notes remain beside the binary evidence they depend on. Applied
