@@ -1,0 +1,11 @@
+{
+  "sky": [60, 20, 580, 130],
+  "horizon ridge": [400, 140, 640, 220],
+  "terrain mid-band": [120, 230, 520, 340],
+  "cockpit frame (left)": [0, 190, 60, 340],
+  "cockpit frame (right)": [580, 190, 640, 340],
+  "threat circle": [230, 130, 420, 320],
+  "scanner (lower left)": [20, 350, 150, 470],
+  "portrait/compass (lower right)": [500, 350, 630, 470],
+  "message panel": [175, 395, 470, 455]
+}

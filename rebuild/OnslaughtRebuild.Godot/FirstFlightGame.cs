@@ -38,6 +38,7 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _gameplayActive;
     private bool _pauseExitAudioCompleted;
     private bool _smokeMode;
+    private bool _captureMode;
     private bool _smokeCompleting;
     private bool _windowHasFocus;
     private bool _focusLossHandlerInputCleared;
@@ -104,6 +105,14 @@ public sealed partial class FirstFlightGame : Node3D
 
             if (FrontendCaptureRig.TryCreate(OS.GetCmdlineUserArgs(), _frontend, out FrontendCaptureRig? rig))
             {
+                // The gameplay capture plan holds the level for 42 s of engine
+                // time. Without this the released policy would put the host mouse
+                // into Input.MouseModeEnum.Captured for the whole run and steal
+                // the operator's pointer. Cursor mode is not in the viewport
+                // texture, so suppressing the OS call cannot alter a single
+                // captured pixel; _requestedCursorMode still tracks the released
+                // policy exactly as it does in product mode.
+                _captureMode = true;
                 AddChild(rig);
             }
         }
@@ -948,7 +957,7 @@ public sealed partial class FirstFlightGame : Node3D
     private void ApplyFrontendCursorMode(RetailFrontendCursorMode mode)
     {
         _requestedCursorMode = mode;
-        if (_smokeMode)
+        if (_smokeMode || _captureMode)
         {
             return;
         }
@@ -1109,7 +1118,8 @@ public sealed partial class FirstFlightGame : Node3D
             }
             else if (argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
                      argument.StartsWith("--capture-plan=", StringComparison.Ordinal) ||
-                     argument.StartsWith("--capture-size=", StringComparison.Ordinal))
+                     argument.StartsWith("--capture-size=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-offsets-ms=", StringComparison.Ordinal))
             {
                 // Consumed by FrontendCaptureRig.TryCreate during _Ready.
             }
