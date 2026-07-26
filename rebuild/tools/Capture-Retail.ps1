@@ -45,11 +45,32 @@ param(
     #   "click X,Y"               click at client coordinates
     #   "hover X,Y"               move the cursor without clicking
     #   "key VK"                  press a virtual key
+    #   "keydown VK" / "keyup VK" hold a key across other steps. Sustained movement
+    #                             input cannot be expressed as a tap, and the level
+    #                             only accepts movement once its own script enables
+    #                             the player, so the hold has to span a burst.
     #   "shot LABEL"              save a frame as LABEL.png
     #   "probe SECONDS PREFIX"    sample the client mean for SECONDS, logging every
     #                             sample and saving PREFIX-<t>.png whenever the mean
     #                             moves. This is how a NEW screen's signature is
     #                             discovered: an unknown screen cannot be waited on.
+    #   "leave R,G,B TOL SECONDS" block until the client mean is NO LONGER within
+    #                             TOL. An in-level frame is live 3D and has no
+    #                             stable mean to wait ON, so the only crisp,
+    #                             reproducible trigger available is the moment the
+    #                             PRECEDING static screen stops being on screen.
+    #   "mark"                    set t=0 for subsequent burst filenames. Placed
+    #                             immediately after "leave", this makes the time
+    #                             base of every burst frame explicit rather than
+    #                             implied by wall-clock luck.
+    #   "burst SECONDS INTERVAL_MS PREFIX"
+    #                             save EVERY sampled frame for SECONDS as
+    #                             PREFIX-t<ms>ms.png, offset from the last "mark".
+    #                             Unlike "probe" it does not compute a mean and does
+    #                             not skip unchanged frames: a scripted camera pan
+    #                             must be sampled on a schedule, and per-frame mean
+    #                             computation costs more than the sample interval.
+    #                             Means are recovered offline from the saved PNGs.
     #   "sleep SECONDS"
     [string[]]$Steps = @(),
     [int]$TimeoutSeconds = 90,
@@ -150,6 +171,24 @@ try {
         return [pscustomobject]@{ R = $r / $n; G = $g / $n; B = $b / $n }
     }
 
+    # A burst must sample on a schedule, so it cannot afford the settle sleep and
+    # the foreground re-assert that Get-ClientFrame pays on every call. Foreground
+    # is still read per frame and recorded, so a stolen-focus frame is still
+    # detectable and discardable - it is just not corrected mid-burst.
+    function Get-ClientFrameFast {
+        $cr = New-Object 'BeaCaptureNativeV2+RECT'
+        [void][BeaCaptureNativeV2]::GetClientRect($hwnd, [ref]$cr)
+        $pt = New-Object 'BeaCaptureNativeV2+POINT'
+        [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
+        $w = $cr.Right - $cr.Left; $h = $cr.Bottom - $cr.Top
+        $bmp = New-Object System.Drawing.Bitmap $w, $h
+        $gfx = [System.Drawing.Graphics]::FromImage($bmp)
+        $gfx.CopyFromScreen($pt.X, $pt.Y, 0, 0, (New-Object System.Drawing.Size $w, $h))
+        $gfx.Dispose()
+        return $bmp
+    }
+
+    $markTime = $windowAppeared
     if ($Steps.Count -gt 0) {
         foreach ($step in $Steps) {
             $tok = $step -split '\s+'
@@ -221,6 +260,54 @@ try {
                         }
                         $bmp.Dispose()
                         Start-Sleep -Milliseconds 700
+                    }
+                }
+                'keydown' {
+                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [byte]$vk = [int]$tok[1]
+                    [BeaCaptureNativeV2]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)
+                }
+                'keyup' {
+                    [byte]$vk = [int]$tok[1]
+                    [BeaCaptureNativeV2]::keybd_event($vk, 0, [BeaCaptureNativeV2]::KEYEVENTF_KEYUP, [UIntPtr]::Zero)
+                }
+                'leave' {
+                    $want = $tok[1] -split ','
+                    $tol = [double]$tok[2]
+                    $limit = [double]$tok[3]
+                    $deadline3 = (Get-Date).AddSeconds($limit)
+                    $left = $false
+                    while ((Get-Date) -lt $deadline3) {
+                        $bmp = Get-ClientFrameFast
+                        $m = Get-FrameMean $bmp
+                        $bmp.Dispose()
+                        $d = [Math]::Abs($m.R - [double]$want[0]) + [Math]::Abs($m.G - [double]$want[1]) + [Math]::Abs($m.B - [double]$want[2])
+                        if ($d -gt $tol) { $left = $true; break }
+                    }
+                    if (-not $left) { throw "Timed out after ${limit}s waiting for the client mean to LEAVE $($tok[1]); last mean was $([int]$m.R),$([int]$m.G),$([int]$m.B)." }
+                    Write-Host ("LEAVE {0} at t={1:F2}s after window; mean now {2},{3},{4}" -f $tok[1], ((Get-Date) - $windowAppeared).TotalSeconds, [int]$m.R, [int]$m.G, [int]$m.B)
+                }
+                'mark' {
+                    $markTime = Get-Date
+                    Write-Host ("MARK t0 set at {0:F2}s after window" -f ($markTime - $windowAppeared).TotalSeconds)
+                }
+                'burst' {
+                    $limit = [double]$tok[1]
+                    $interval = [double]$tok[2]
+                    $prefix = $tok[3]
+                    $end = (Get-Date).AddSeconds($limit)
+                    $next = Get-Date
+                    while ((Get-Date) -lt $end) {
+                        $now = Get-Date
+                        if ($now -lt $next) { Start-Sleep -Milliseconds ([Math]::Max(1, [int](($next - $now).TotalMilliseconds))) }
+                        $ms = [int]((Get-Date) - $markTime).TotalMilliseconds
+                        $bmp = Get-ClientFrameFast
+                        $fg = [BeaCaptureNativeV2]::GetForegroundWindow()
+                        $path = Join-Path $OutputDirectory ("{0}-t{1:d6}ms.png" -f $prefix, $ms)
+                        $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+                        $shots += [pscustomobject]@{ label = ("{0}-t{1:d6}ms" -f $prefix, $ms); secondsAfterWindow = [int]((Get-Date) - $windowAppeared).TotalSeconds; offsetMsFromMark = $ms; width = $bmp.Width; height = $bmp.Height; printWindowOk = ($fg -eq $hwnd); mean = '' }
+                        $bmp.Dispose()
+                        $next = $next.AddMilliseconds($interval)
                     }
                 }
                 'shot' {
