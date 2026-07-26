@@ -107,19 +107,32 @@ internal sealed class Level100TerrainAppearanceAsset
             // *(float *)0x005d8568 (0x3f800000 = 1.0), which for a monotonic
             // accumulator is fract().
             //
-            // KNOWN DIVERGENCE - the rate is retail's, the origin is not.
-            // A whole-file operand scan finds exactly five references to each
-            // of 0x008c0294 and 0x008c0298, all five inside RenderTerrain, and
-            // both addresses lie in the uninitialised tail of .data. Retail's
-            // scroll offset is therefore 0.001 x (total frame time accumulated
-            // across terrain draws since process start), with no per-level
-            // reset and no advance while the front end is up. Godot's TIME is
-            // engine time since launch, which in the capture rig already
-            // includes 490 frames (8.167 s at --fixed-fps 60) of front end, and
-            // in ordinary play includes however long the player spent in menus.
+            // BOTH HALVES OF THE PARAGRAPH BELOW WERE WRONG, and it is retained
+            // only because it is the reasoning that led here. The rate was NOT
+            // retail's -- see the remarks on CloudScrollRateU -- and the origin
+            // is now correct and confirmed at runtime. Read the CORRECTED and
+            // CONFIRMED notes that follow as the current statement.
+            //
+            // Superseded: "KNOWN DIVERGENCE - the rate is retail's, the origin
+            // is not. A whole-file operand scan finds exactly five references to
+            // each of 0x008c0294 and 0x008c0298, all five inside RenderTerrain,
+            // and both addresses lie in the uninitialised tail of .data.
+            // Retail's scroll offset is therefore 0.001 x (total frame time
+            // accumulated across terrain draws since process start), with no
+            // per-level reset and no advance while the front end is up."
+            //
+            // The operand-scan half of that is sound and still holds; the
+            // inference from it is what failed. Five references with no
+            // initialiser establishes that nothing RESETS the accumulator in the
+            // image -- it does not establish the zero, because the zero is set
+            // by whatever runs before the first terrain draw, which the file
+            // cannot show. The measured zero is the level's first frame.
+            //
             // The scroll is what produces 96 percent of the reconstruction's
-            // measured -0.17/-0.25/-0.25 percent-per-second terrain drift:
-            // reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md.
+            // measured terrain drift:
+            // reverse-engineering/binary-analysis/terrain-chain-temporal-drift-2026-07-26.md
+            // (itself partially superseded on the rate; its origin finding
+            // stands).
             // CORRECTED 2026-07-26. The origin is now retail's: Update() takes
             // the frame delta and advances a per-terrain-draw accumulator with
             // the same two rates and the same fract() wrap, so the phase counts
@@ -244,9 +257,10 @@ internal sealed class Level100TerrainAppearanceAsset
 
     /// <summary>
     /// Phase of the cloud-shadow scroll, in texture units, accumulated across
-    /// terrain draws only. Zero at level entry, which is a deliberate and
-    /// documented approximation of retail's process-lifetime accumulator -- see
-    /// the divergence note on <see cref="Update"/>.
+    /// terrain draws only. Zero at level entry, which is RETAIL'S MEASURED
+    /// BEHAVIOUR and not an approximation: back-extrapolating the live
+    /// accumulator from three samples puts zero at process uptime 26.15 s
+    /// against a level start of about 26.3 s. See <see cref="Update"/>.
     /// </summary>
     private double _cloudScrollU;
     private double _cloudScrollV;

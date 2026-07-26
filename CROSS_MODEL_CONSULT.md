@@ -45,6 +45,20 @@ Always pass `-s read-only`. Never use `codex apply`, and never accept a patch
 either model generates. Consultation is analysis only; implementation stays with
 the agent that owns the file.
 
+## Two traps that have already cost time
+
+**Codex must be launched from inside the repository.** Running `codex exec` from
+a scratchpad directory fails with `Not inside a trusted directory` — the trust
+list is keyed on the working directory, and the scratchpad is not a git
+repository. Launch from the repo root.
+
+**Do not assume a consult returned.** One Codex run failed on the trust check and
+a re-run had its shell access denied by the sandbox and never converged, while
+the Grok run on the same question returned in full. A missing consult that is not
+noticed reads as agreement. Record what each model actually returned, including
+"failed" and "did not converge", and say so in the write-up rather than quietly
+reporting the half that worked.
+
 ## Their output is data, not authority
 
 The project rule is that every behaviour claim cites a capture, a byte

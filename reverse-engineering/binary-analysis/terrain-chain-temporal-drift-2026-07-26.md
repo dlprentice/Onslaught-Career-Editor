@@ -1,5 +1,40 @@
 # The reconstruction's terrain drift is the cloud-shadow scroll, and the origin of that scroll is wrong
 
+> ## PARTIALLY SUPERSEDED 2026-07-26 — read this before using any number below
+>
+> **The scroll RATE used throughout this note is wrong, and so is every quantity
+> derived from it.** This note takes the `.rdata` constants `0.001` (u) and
+> `0.0005` (v) as per-second rates. They are **per-advance** rates, scaled by
+> `[0x008a9e20]`, whose 26 references are all reads with no absolute writer — so
+> the per-second rate has **no static derivation at all** and could not have been
+> obtained the way this note obtained it.
+>
+> Measured live from the accumulators `0x008c0294`/`0x008c0298` at three level
+> times: **du/dt = 0.0199944 and 0.0200088 per second** over two intervals
+> (0.07 % apart), with v exactly u/2. The correct rates are **0.02 / 0.01 per
+> second — 20x** what this note assumes. The accumulator advances once per
+> terrain *draw* and terrain draws many tiles per frame, which is where the
+> factor comes from; the per-*draw* rate varies 3.1 % over the same intervals
+> while the per-second rate varies 0.07 %, so wall time is the stable
+> parameterisation.
+>
+> **Consequently §5's admissible phase interval is void.** "phi in [5.0, 13.5] s,
+> 1.1 % of the 1000 s cycle" is computed on a cycle length that is 20x wrong; the
+> real cycle is 50 s. Do not quote that interval.
+>
+> **What SURVIVES, and it is the substance:** the identification of the
+> cloud-shadow scroll as the drift mechanism, the elimination of camera motion to
+> 0.2 %, the chromatic signature, and — most importantly — the finding that the
+> **origin** was engine-time-since-launch rather than a per-terrain-draw
+> accumulator. The origin diagnosis was later CONFIRMED at runtime:
+> back-extrapolating u puts zero at process uptime 26.15 s against a level start
+> of about 26.3 s, so the accumulator's zero is the level's first frame, which is
+> what the reconstruction now implements.
+>
+> Full measurement:
+> [`controlled-runtime-observations-2026-07-26.md`](controlled-runtime-observations-2026-07-26.md)
+> §4.
+
 > Verdict: **the prime suspect is confirmed, quantitatively, and the residual is
 > a different and much smaller defect.**
 > (a) Over 16.06–42.06 s the reconstruction's post-macro terrain chain falls

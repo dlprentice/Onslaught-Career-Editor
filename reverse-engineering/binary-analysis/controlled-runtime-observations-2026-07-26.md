@@ -240,9 +240,31 @@ they are a varying-count post-cockpit pass from `CRTMesh` objects that do not
 correspond to the manifest's 28 authored meshes, and assigning them would have
 been a fit rather than a measurement.
 
-**Open, and not fitted:** `Lsidebit02` (batch 3, 366 px) wants the doubling kept
-on pixels, but reads `MODULATE` like the other six batches with no per-batch
-variation. Stage-0 `COLOROP` does not explain it.
+**CLOSED 2026-07-26, later the same day — `Lsidebit02` was never a cockpit
+pixel.** It was recorded here as an open residual: batch 3, 366 px, wanting the
+doubling kept on pixels while reading `MODULATE` like the other six batches.
+
+The decisive instrument was a differential rather than a mask. Halving the
+stage-zero gain moved every positive-determinant batch by **1.79–2.24** and moved
+`Lsidebit02` by **1.000 / 1.002 / 1.001**, with **71.4 % of its pixels
+byte-identical** in a frame where 34 % of all pixels changed. `Rsidebit01`
+behaved the same way (0.998 / 0.993 / 0.981). That is exactly the two
+negative-determinant batches — 2 of 2 against 0 of 5.
+
+**A pixel invariant under a change to a material is not written by that
+material.** 91.3 % of those samples fall inside the lower-left instrument's blit
+rect and read 3.3–7.2x brighter than every other retail cockpit part, and
+`run3/cdb.log` records 11 stage-0 `COLOROP` writes *after* `LEAVE cockpit`. It is
+HUD overlay contamination: the intersection mask rasters cockpit geometry only
+and carries no occlusion test against later passes.
+
+This **reinforces** the `MODULATE` finding above, whose only counter-example
+turns out never to have been cockpit shading. Working note:
+`local-lab/COCKPIT-SIDEBIT-RESIDUAL-2026-07-26.md`.
+
+The generalisable lesson is the instrument: **perturb one constant, capture
+twice, and admit only the pixels that responded.** That is strictly stronger than
+a geometric mask, because it needs no model of what is drawn where.
 
 ## 4. The cloud-shadow scroll — a rate with no static derivation
 

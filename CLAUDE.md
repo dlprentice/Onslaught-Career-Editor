@@ -53,11 +53,13 @@ first.** It indexes the current working notes, what each one settles, and what i
 still open. Without it, findings that cost hours to establish are invisible and
 get re-derived.
 
-Conclusions that survive scrutiny are promoted out of `local-lab/` into tracked
-evidence under `reverse-engineering/binary-analysis/` and indexed from
+Conclusions that survive scrutiny may be promoted out of `local-lab/` into
+tracked evidence under
 [`RE-INDEX.md`](reverse-engineering/RE-INDEX.md); the raw logs and captures stay
-local. If a claim matters and exists only in `local-lab/`, promoting it is
-overdue.
+local. Promotion is a judgement about whether a claim has been tested enough to
+be relied on, not a backlog to clear — on this project findings are routinely
+overturned within hours, and promoting early is how a wrong one acquires
+authority.
 
 ## Editing this file
 
