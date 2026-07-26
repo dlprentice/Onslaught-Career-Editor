@@ -50,7 +50,14 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeSawGameplay;
     private bool _smokeCursorVisibleAtFrontend;
     private bool _smokeCursorHiddenAtLoading;
-    private bool _smokeCursorCapturedAtGameplay;
+    private bool _smokeCursorPolicyAppliedAtGameplay;
+    private bool _smokeWindowFocusedAtGameplay;
+    private string[] _smokeGameplayCursorPolicy = [];
+    private readonly List<int> _smokeAudioQueuedSpeakerIds = [];
+    private readonly List<int> _smokeAudioQueuedMessageIds = [];
+    private readonly List<int> _smokeVoiceStartedMessageIds = [];
+    private int? _smokeVoiceLastObservedMessageId;
+    private bool _smokeVoicePlaybackConsistent = true;
     private bool _smokeCursorReleasedOnFocusLoss;
     private bool _smokeCursorRecapturedOnFocusGain;
     private bool _smokeRetryRequested;
@@ -185,6 +192,11 @@ public sealed partial class FirstFlightGame : Node3D
             result.CurrentSnapshot,
             _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
+
+        if (_smokeMode)
+        {
+            SampleSmokeVoiceProgress();
+        }
 
         if (_smokeMode && result.CurrentSnapshot.Tick >= FirstFlightSmokeScenario.DurationTicks)
         {
@@ -666,8 +678,7 @@ public sealed partial class FirstFlightGame : Node3D
             if (_smokePhase == SmokePhase.ColdFrontend)
             {
                 _smokeSawGameplay = true;
-                _smokeCursorCapturedAtGameplay =
-                    _requestedCursorMode == RetailFrontendCursorMode.Captured;
+                CaptureSmokeGameplayCursorPolicy();
                 _smokePhase = SmokePhase.InitialGameplay;
             }
             else if (_smokePhase == SmokePhase.AwaitingRetryGameplay)
@@ -680,6 +691,82 @@ public sealed partial class FirstFlightGame : Node3D
                 _smokePhase = SmokePhase.RetryGameplay;
             }
         }
+    }
+
+    // The single boolean this replaces asserted "the cursor is Captured right
+    // now", which pins HOST WINDOW FOCUS, not the rebuild: Godot cannot capture
+    // an unfocused window, and one run in six observed exactly that and failed.
+    // Whether the user clicked away is not evidence about this project.
+    //
+    // What is decidable is (a) the released policy over every (focus, pause)
+    // input pair, evaluated through the same UpdateGameplayCursorMode the
+    // product uses, and (b) that gameplay activation applied that policy to
+    // whatever the focus actually was. Both are independent of host focus.
+    // The observed focus itself is reported for honesty and never asserted.
+    private void CaptureSmokeGameplayCursorPolicy()
+    {
+        bool actualFocus = _windowHasFocus;
+        _smokeWindowFocusedAtGameplay = actualFocus;
+        _smokeCursorPolicyAppliedAtGameplay =
+            _requestedCursorMode ==
+                (actualFocus && !_session.IsPaused
+                    ? RetailFrontendCursorMode.Captured
+                    : RetailFrontendCursorMode.Visible);
+
+        var policy = new List<string>(4);
+        foreach ((bool focused, bool paused) in new[]
+                 {
+                     (true, false),
+                     (true, true),
+                     (false, false),
+                     (false, true),
+                 })
+        {
+            _windowHasFocus = focused;
+            _session.SetAuthenticMenuPaused(paused);
+            UpdateGameplayCursorMode();
+            policy.Add(_requestedCursorMode.ToString());
+        }
+
+        _session.SetAuthenticMenuPaused(false);
+        _windowHasFocus = actualFocus;
+        UpdateGameplayCursorMode();
+        _smokeGameplayCursorPolicy = [.. policy];
+    }
+
+    // AudioStreamPlayer.Playing is wall-clock state, so "a message is audible
+    // at tick N" is not decidable by the simulation. What IS decidable, and
+    // holds at every instant regardless of how far the mixer trails the script,
+    // is that the voice adapter starts the Core-requested messages in Core
+    // order without inventing or reordering any. Sampling every smoke frame
+    // accumulates that ordered prefix, and the per-sample consistency predicate
+    // below must hold on every one of the ~3200 samples, not just the last.
+    private void SampleSmokeVoiceProgress()
+    {
+        Level100MessagePlaybackState playback = _audio.CharacterMessagePlayback;
+        int? audibleMessageId = playback.Playing ? playback.ActiveMessageId : null;
+        if (audibleMessageId.HasValue &&
+            audibleMessageId != _smokeVoiceLastObservedMessageId)
+        {
+            _smokeVoiceStartedMessageIds.Add(audibleMessageId.Value);
+        }
+        _smokeVoiceLastObservedMessageId = audibleMessageId;
+
+        bool audibleImpliesIdentified =
+            !playback.Playing ||
+            (playback.ActiveMessageId.HasValue &&
+                playback.ActiveSpeakerId.HasValue &&
+                playback.LengthSeconds > 0d &&
+                playback.PositionSeconds >= 0d &&
+                playback.PositionSeconds <= playback.LengthSeconds);
+        bool activeMessageWasRequested =
+            !playback.ActiveMessageId.HasValue ||
+            _hud.Level100DeliveredMessageIds.Contains(
+                playback.ActiveMessageId.Value);
+        _smokeVoicePlaybackConsistent &=
+            audibleImpliesIdentified &&
+            activeMessageWasRequested &&
+            !playback.Paused;
     }
 
     private void SuspendFrontendGameplay()
@@ -929,6 +1016,14 @@ public sealed partial class FirstFlightGame : Node3D
         {
             if (missionEvent is Level100MessageRequested message)
             {
+                if (_smokeMode && _smokeReport is null)
+                {
+                    // Recorded on the audio-forwarding path specifically, so it
+                    // cross-checks the HUD delivery path rather than restating
+                    // it. Both are Core-event ordered and tick-deterministic.
+                    _smokeAudioQueuedSpeakerIds.Add(message.SpeakerId);
+                    _smokeAudioQueuedMessageIds.Add(message.MessageId);
+                }
                 _audio.QueueCharacterMessage(message.SpeakerId, message.MessageId);
             }
         }
@@ -1022,7 +1117,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v14",
+            SchemaVersion = "onslaught-first-flight-smoke.v15",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -1046,6 +1141,13 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100PlayingMessageId =
                     _audio.CharacterMessagePlayback.ActiveMessageId,
                 Level100DeliveredMessageIds = _hud.Level100DeliveredMessageIds,
+                Level100AudioQueuedMessageIds = _smokeAudioQueuedMessageIds,
+                Level100AudioQueuedSpeakerIds = _smokeAudioQueuedSpeakerIds,
+                // Accumulated over every smoke frame, not sampled at this tick:
+                // an ordered prefix of Level100DeliveredMessageIds whose LENGTH
+                // is host-dependent but whose CONTENT is not.
+                Level100VoiceStartedMessageIds = _smokeVoiceStartedMessageIds,
+                Level100VoicePlaybackConsistent = _smokeVoicePlaybackConsistent,
                 Level100PlayerControlEnabled = _session.CurrentSnapshot.Level100PlayerControlEnabled,
                 Level100FlightEnabled = _session.CurrentSnapshot.Level100FlightEnabled,
                 Level100PulseCannonEnabled =
@@ -1056,6 +1158,9 @@ public sealed partial class FirstFlightGame : Node3D
                     _session.CurrentSnapshot.Level100FiringRangeTargetsActive,
                 Level100CurrentWeaponHighlighted =
                     _session.CurrentSnapshot.Level100CurrentWeaponHighlighted,
+                // Mixer state at this tick. Reported, never pinned: false is a
+                // legal observation whenever the report lands in the 6/30s
+                // RetailCharacterMessageHandoffSeconds gap between messages.
                 TutorialVoicePlaying = _audio.TutorialVoicePlaying,
                 TotalSteps = metrics.TotalSteps,
                 ToggleEdgesConsumed = metrics.ToggleEdgesConsumed,
@@ -1088,6 +1193,10 @@ public sealed partial class FirstFlightGame : Node3D
                 Level100ObjectiveMarkerCount = _hud.Level100ObjectiveMarkerCount,
                 Level100DeliveredMessageCount = _hud.Level100DeliveredMessageCount,
                 Level100DeliveredHelpCount = _hud.Level100DeliveredHelpCount,
+                // Both mixer-derived like TutorialVoicePlaying, and additionally
+                // false whenever the mixer trails the script far enough that the
+                // audible message is no longer the HUD's active delivery.
+                // Reported, never pinned; bounded by implication in the gate.
                 Level100MessagePlaybackAvailable = _hud.Level100MessagePlaybackAvailable,
                 Level100MessagePlaying = _hud.Level100MessagePlaying,
                 RetailLevel100TerrainVertexCount = _world.RetailLevel100TerrainVertexCount,
@@ -1116,7 +1225,9 @@ public sealed partial class FirstFlightGame : Node3D
             report.ColdGameplay = _smokeSawGameplay;
             report.CursorPolicyVisibleAtFrontend = _smokeCursorVisibleAtFrontend;
             report.CursorPolicyHiddenAtLoading = _smokeCursorHiddenAtLoading;
-            report.CursorPolicyCapturedAtGameplay = _smokeCursorCapturedAtGameplay;
+            report.GameplayCursorPolicy = _smokeGameplayCursorPolicy;
+            report.CursorPolicyAppliedAtGameplay = _smokeCursorPolicyAppliedAtGameplay;
+            report.WindowFocusedAtGameplay = _smokeWindowFocusedAtGameplay;
             report.FocusLossCursorPolicyVisible = _smokeCursorReleasedOnFocusLoss;
             report.FocusGainCursorPolicyCaptured = _smokeCursorRecapturedOnFocusGain;
             report.RetryRequested = _smokeRetryRequested;
@@ -1171,6 +1282,10 @@ public sealed partial class FirstFlightGame : Node3D
         public required string Level100TerminalState { get; init; }
         public int? Level100PlayingMessageId { get; init; }
         public required IReadOnlyList<int> Level100DeliveredMessageIds { get; init; }
+        public required IReadOnlyList<int> Level100AudioQueuedMessageIds { get; init; }
+        public required IReadOnlyList<int> Level100AudioQueuedSpeakerIds { get; init; }
+        public required IReadOnlyList<int> Level100VoiceStartedMessageIds { get; init; }
+        public required bool Level100VoicePlaybackConsistent { get; init; }
         public required bool Level100PlayerControlEnabled { get; init; }
         public required bool Level100FlightEnabled { get; init; }
         public required bool Level100PulseCannonEnabled { get; init; }
@@ -1226,7 +1341,10 @@ public sealed partial class FirstFlightGame : Node3D
         public bool ColdGameplay { get; set; }
         public bool CursorPolicyVisibleAtFrontend { get; set; }
         public bool CursorPolicyHiddenAtLoading { get; set; }
-        public bool CursorPolicyCapturedAtGameplay { get; set; }
+        public string[] GameplayCursorPolicy { get; set; } = [];
+        public bool CursorPolicyAppliedAtGameplay { get; set; }
+        // Host desktop state. Reported so a reader can see it; never asserted.
+        public bool WindowFocusedAtGameplay { get; set; }
         public bool FocusLossCursorPolicyVisible { get; set; }
         public bool FocusGainCursorPolicyCaptured { get; set; }
         public bool RetryRequested { get; set; }

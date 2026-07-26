@@ -41,6 +41,71 @@ function Assert-SmokeSequence {
     }
 }
 
+function Assert-SmokeStringSequence {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$Expected,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$Actual
+    )
+
+    if ($Expected.Count -ne $Actual.Count -or
+        @(Compare-Object -ReferenceObject $Expected -DifferenceObject $Actual -SyncWindow 0).Count -ne 0) {
+        throw ("First Flight smoke '$Name' mismatch: expected '" +
+            ($Expected -join ',') + "', observed '" + ($Actual -join ',') + "'.")
+    }
+}
+
+# For an ordered observation whose CONTENT is determined by the simulation but
+# whose LENGTH is decided by how far the audio mixer has advanced in real
+# seconds. The strongest honest claim is that what was observed is an exact
+# ordered prefix of the deterministic sequence - no skipped, reordered or
+# invented entries - together with a floor on how far it got.
+function Assert-SmokePrefixOf {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$SequenceName,
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Sequence,
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Actual,
+        [Parameter(Mandatory)][int]$MinimumLength
+    )
+
+    if ($Actual.Count -lt $MinimumLength) {
+        throw ("First Flight smoke '$Name' is too short: expected at least " +
+            "$MinimumLength entries of $SequenceName, observed " +
+            "$($Actual.Count) '" + ($Actual -join ',') + "'.")
+    }
+
+    if ($Actual.Count -gt $Sequence.Count) {
+        throw ("First Flight smoke '$Name' is longer than " +
+            "${SequenceName}: observed $($Actual.Count) entries against " +
+            "$($Sequence.Count).")
+    }
+
+    $prefix = @($Sequence | Select-Object -First $Actual.Count)
+    if (@(Compare-Object -ReferenceObject $prefix -DifferenceObject $Actual -SyncWindow 0).Count -ne 0) {
+        throw ("First Flight smoke '$Name' mismatch: expected the ordered " +
+            "prefix of $SequenceName '" + ($prefix -join ',') +
+            "', observed '" + ($Actual -join ',') + "'.")
+    }
+}
+
+# For a one-directional bound between two reported observations. Both sides may
+# legitimately be false at the sampled tick, so neither can be pinned, but the
+# implication holds at every instant and fails on a real defect.
+function Assert-SmokeImplies {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][AllowNull()]$Antecedent,
+        [Parameter(Mandatory)][string]$ConsequentName,
+        [Parameter(Mandatory)][AllowNull()]$Consequent
+    )
+
+    if ($Antecedent -and -not $Consequent) {
+        throw ("First Flight smoke '$Name' implies '$ConsequentName': " +
+            "observed '$Name' true with '$ConsequentName' '$Consequent'.")
+    }
+}
+
 # For values whose exact identity is genuinely not determined by the tick the
 # report is captured at. Pinning one of these produces a test that fails on
 # host speed rather than on a behaviour change.
@@ -49,10 +114,17 @@ function Assert-SmokeMemberOf {
         [Parameter(Mandatory)][string]$Name,
         [Parameter(Mandatory)][string]$SetName,
         [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$Set,
-        [Parameter(Mandatory)]$Actual
+        [Parameter(Mandatory)][AllowNull()]$Actual,
+        # Absent is a legal observation for a mixer-derived identity sampled in
+        # the inter-message handoff gap. Off by default so a field that must
+        # always be present still fails when it disappears.
+        [switch]$AllowAbsent
     )
 
     if ($null -eq $Actual) {
+        if ($AllowAbsent) {
+            return
+        }
         throw "First Flight smoke '$Name' is absent; expected a member of $SetName."
     }
 
@@ -81,7 +153,7 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v14' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v15' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
@@ -94,11 +166,22 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
     # The message sequence the released script has requested by this tick is a
     # Core fact and is pinned exactly, in order.
-    Assert-SmokeSequence 'level100DeliveredMessageIds' @(
+    $expectedMessageIds = @(
         292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830,
         175347826, 4458134, 4493438, 295858, 1339691000, 669198996,
-        -1715818922) $report.level100DeliveredMessageIds
+        -1715818922)
+    Assert-SmokeSequence 'level100DeliveredMessageIds' $expectedMessageIds `
+        $report.level100DeliveredMessageIds
     Assert-SmokeValue 'level100DeliveredMessageCount' 14 $report.level100DeliveredMessageCount
+    # Recorded where the host forwards Core message events to the audio adapter,
+    # so it cross-checks the audio path against the HUD path above rather than
+    # restating it. Speaker identity is Core-ordered and was previously unpinned.
+    Assert-SmokeSequence 'level100AudioQueuedMessageIds' $expectedMessageIds `
+        $report.level100AudioQueuedMessageIds
+    Assert-SmokeSequence 'level100AudioQueuedSpeakerIds' @(
+        1508464, 1508464, 1508464, 1508464, 10565784, 1508464, 1508464,
+        1508464, 1508464, 1508464, 1508464, 1508464, 1508464,
+        1508464) $report.level100AudioQueuedSpeakerIds
     # Which of those the Godot mixer is audibly playing at the same tick is NOT
     # a Core fact. AudioStreamPlayer playback advances on the audio thread in
     # wall-clock seconds while --fixed-fps advances the simulation as fast as
@@ -107,8 +190,23 @@ function Test-FirstFlightSmokeEvidence {
     # -257967449 three times and 82987417 three times; this assertion was
     # previously pinned to 82987417 and failed whenever the host was loaded.
     # Bound it to the delivered sequence instead of pinning a run.
+    # Absent is also legal: RetailCharacterMessageHandoffSeconds is a 6/30s gap
+    # in which no message is active at all. A report captured in that gap made
+    # this field null and failed parameter binding before the previous fix's own
+    # null branch could run, so the v14 gate still flaked on host speed.
     Assert-SmokeMemberOf 'level100PlayingMessageId' 'level100DeliveredMessageIds' `
-        $report.level100DeliveredMessageIds $report.level100PlayingMessageId
+        $report.level100DeliveredMessageIds $report.level100PlayingMessageId -AllowAbsent
+    # The claim the three pinned mixer booleans below were standing in for -
+    # "the voice pipeline really consumed the Core message stream" - stated over
+    # something the simulation decides. Accumulated across every smoke frame, so
+    # host speed changes only how far the prefix got, never its content.
+    Assert-SmokePrefixOf 'level100VoiceStartedMessageIds' 'level100DeliveredMessageIds' `
+        $report.level100DeliveredMessageIds $report.level100VoiceStartedMessageIds `
+        -MinimumLength 1
+    # Held on every sampled frame, not just the reported tick: anything audible
+    # was an identified, Core-requested message, and gameplay was never paused.
+    Assert-SmokeValue 'level100VoicePlaybackConsistent' $true `
+        $report.level100VoicePlaybackConsistent
     Assert-SmokeValue 'level100DeliveredHelpCount' 1 $report.level100DeliveredHelpCount
     Assert-SmokeValue 'level100PlayerControlEnabled' $true $report.level100PlayerControlEnabled
     Assert-SmokeValue 'level100FlightEnabled' $false $report.level100FlightEnabled
@@ -116,9 +214,19 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100VulcanCannonEnabled' $false $report.level100VulcanCannonEnabled
     Assert-SmokeValue 'level100FiringRangeTargetsActive' $true $report.level100FiringRangeTargetsActive
     Assert-SmokeValue 'level100CurrentWeaponHighlighted' $false $report.level100CurrentWeaponHighlighted
-    Assert-SmokeValue 'level100MessagePlaybackAvailable' $true $report.level100MessagePlaybackAvailable
-    Assert-SmokeValue 'level100MessagePlaying' $true $report.level100MessagePlaying
-    Assert-SmokeValue 'tutorialVoicePlaying' $true $report.tutorialVoicePlaying
+    # level100MessagePlaybackAvailable, level100MessagePlaying and
+    # tutorialVoicePlaying are all AudioStreamPlayer.Playing derived. All three
+    # were observed FALSE together in a passing-Core run whose stateHash was
+    # byte-identical to runs that reported true - the report simply landed in
+    # the handoff gap. They are reported for the reader and bounded by the
+    # implications that do hold at every instant, never pinned.
+    Assert-SmokeImplies 'level100MessagePlaying' $report.level100MessagePlaying `
+        'level100MessagePlaybackAvailable' $report.level100MessagePlaybackAvailable
+    Assert-SmokeImplies 'tutorialVoicePlaying' $report.tutorialVoicePlaying `
+        'level100PlayingMessageId' ($null -ne $report.level100PlayingMessageId)
+    Assert-SmokeImplies 'level100MessagePlaybackAvailable' `
+        $report.level100MessagePlaybackAvailable `
+        'level100PlayingMessageId' ($null -ne $report.level100PlayingMessageId)
     Assert-SmokeValue 'totalSteps' 3228 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
@@ -162,7 +270,16 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'coldGameplay' $true $report.coldGameplay
     Assert-SmokeValue 'cursorPolicyVisibleAtFrontend' $true $report.cursorPolicyVisibleAtFrontend
     Assert-SmokeValue 'cursorPolicyHiddenAtLoading' $true $report.cursorPolicyHiddenAtLoading
-    Assert-SmokeValue 'cursorPolicyCapturedAtGameplay' $true $report.cursorPolicyCapturedAtGameplay
+    # Replaces cursorPolicyCapturedAtGameplay, which observed False in 1 of 6
+    # runs because Godot cannot capture an unfocused window - it pinned whether
+    # the user had clicked away. The policy itself is pinned over all four
+    # (focused, paused) inputs, evaluated through the product's own
+    # UpdateGameplayCursorMode, and activation is required to have applied that
+    # policy to whatever focus actually was. windowFocusedAtGameplay is reported
+    # and deliberately NOT asserted: it is host desktop state, not evidence.
+    Assert-SmokeStringSequence 'gameplayCursorPolicy' @(
+        'Captured', 'Visible', 'Visible', 'Visible') $report.gameplayCursorPolicy
+    Assert-SmokeValue 'cursorPolicyAppliedAtGameplay' $true $report.cursorPolicyAppliedAtGameplay
     Assert-SmokeValue 'focusLossCursorPolicyVisible' $true $report.focusLossCursorPolicyVisible
     Assert-SmokeValue 'focusGainCursorPolicyCaptured' $true $report.focusGainCursorPolicyCaptured
     Assert-SmokeValue 'retryRequested' $true $report.retryRequested
@@ -189,5 +306,8 @@ function Test-FirstFlightSmokeEvidence {
 Export-ModuleMember -Function @(
     'Test-FirstFlightSmokeEvidence'
     'Assert-SmokeSequence'
+    'Assert-SmokeStringSequence'
     'Assert-SmokeMemberOf'
+    'Assert-SmokePrefixOf'
+    'Assert-SmokeImplies'
 )
