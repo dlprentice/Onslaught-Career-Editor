@@ -24,6 +24,27 @@ public sealed partial class FirstFlightWorldView : Node3D
     // ratio. See reverse-engineering/binary-analysis/
     // player-camera-attach-and-mesh-hfov-2026-07-26.md.
     private const float RetailVerticalFovDegrees = 73.739795f;
+    // The same 0.75, as the tangent the projection is actually built from.
+    // Godot's frustum projection takes a near-plane extent rather than an
+    // angle, and the offset below has to be expressed in those units, so the
+    // tangent is the primitive and the degree figure above is its label.
+    private const float RetailTanVerticalHalfFov = 0.75f;
+    // Retail rasterises through Direct3D 9, whose pixel-centre convention puts
+    // the same geometry half a pixel down and right of where a modern
+    // rasteriser puts it. Measured, not assumed: high-pass registration of the
+    // reconstruction's Level 100 frame against retail's peaks at
+    // dy = +0.50, dx = +0.50 (correlation 0.604 against 0.295 unshifted), and
+    // 14 of 15 independent 64x128 blocks return exactly (+0.50, +0.50), so it
+    // is a constant frame-global translation rather than a projection or
+    // field-of-view error. Control: applying the same shift to the RETAIL
+    // frame instead drives the correlation to -0.036. See
+    // reverse-engineering/binary-analysis/
+    // terrain-spatial-dispersion-negative-2026-07-26.md section 3.
+    //
+    // It is corrected in the projection, not by resampling the frame and not
+    // in any shader: resampling blurs exactly what it corrects, and the offset
+    // moves the sky as well as the terrain.
+    private const float RetailPixelCentreOffsetPixels = 0.5f;
     // A planted or swinging Aquila foot advances a fraction of a stride per
     // tick, so a player-relative jump beyond one stride is a stance reset
     // rather than motion and must not be smeared.
@@ -538,7 +559,16 @@ public sealed partial class FirstFlightWorldView : Node3D
             Far = 700f,
             Current = true,
         };
+        // Frustum rather than Perspective only so the half-pixel translation
+        // has somewhere to live. Godot's frustum projection with the default
+        // KEEP_HEIGHT aspect takes Size as the FULL vertical extent at the
+        // near plane and derives the horizontal extent as Size * aspect, so
+        // Size = 2 * Near * tan(vfov/2) reproduces the perspective projection
+        // this replaces exactly when FrustumOffset is zero.
+        _camera.Projection = Camera3D.ProjectionType.Frustum;
+        _camera.Size = 2f * _camera.Near * RetailTanVerticalHalfFov;
         AddChild(_camera);
+        UpdateRetailPixelCentreOffset();
 
         Texture2D cockpitTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Aquila/Textures/cockpit.texture.aya",
@@ -1196,6 +1226,33 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
 
         _level100Sky.Position = _camera.Position;
+        UpdateRetailPixelCentreOffset();
+    }
+
+    /// <summary>
+    /// Translates the projection by half a rendered pixel down and right, which
+    /// is where retail's Direct3D 9 rasteriser puts the same geometry.
+    /// </summary>
+    private void UpdateRetailPixelCentreOffset()
+    {
+        float viewportHeight = GetViewport()?.GetVisibleRect().Size.Y ?? 0f;
+        if (viewportHeight <= 0f)
+        {
+            return;
+        }
+
+        // Size is the full vertical near-plane extent, so one pixel of vertical
+        // extent is Size / height. The rendered pixels are square (retail's
+        // tan(hfov/2) = 1 against tan(vfov/2) = 0.75 is exactly the 4:3 frame's
+        // aspect), so the same figure is one pixel of horizontal extent.
+        float unitsPerPixel = _camera.Size / viewportHeight;
+        float offset = unitsPerPixel * RetailPixelCentreOffsetPixels;
+        // FrustumOffset moves the near-plane WINDOW, so the image moves the
+        // other way: -x slides the window left and the image right, and +y
+        // slides the window up and the image down. Godot's near-plane y is up
+        // while a captured PNG's y is down, hence the opposing signs for one
+        // shift that is +0.5 in both screen axes.
+        _camera.FrustumOffset = new Vector2(-offset, offset);
     }
 
     private static float GetOpeningElapsedTicks(
