@@ -72,60 +72,8 @@ internal sealed partial class Level100StaticWorldAsset
             ALBEDO = retail_output(mix(fog_color, tree_color, visibility));
         }
         """;
-    private const string PineFastImposterShaderCode = """
-        shader_type spatial;
-        render_mode unshaded, cull_disabled;
-
-        uniform sampler2D atlas : filter_nearest, repeat_enable;
-        uniform float camera_facing;
-        uniform vec3 fog_color;
-        uniform float fog_density;
-        varying float view_depth;
-
-        vec3 retail_output(vec3 color) {
-            if (OUTPUT_IS_SRGB) {
-                return color;
-            }
-            vec3 low = color / 12.92;
-            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
-            return mix(low, high, step(vec3(0.04045), color));
-        }
-
-        void vertex() {
-            vec3 world_position;
-            if (camera_facing > 0.5) {
-                vec3 center = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-                vec3 camera_right = normalize(vec3(
-                    INV_VIEW_MATRIX[0].x,
-                    0.0,
-                    INV_VIEW_MATRIX[0].z));
-                world_position = center +
-                    (camera_right * VERTEX.x) +
-                    vec3(0.0, VERTEX.y, 0.0);
-            } else {
-                world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-            }
-            vec3 camera_position = (VIEW_MATRIX * vec4(world_position, 1.0)).xyz;
-            POSITION = PROJECTION_MATRIX * vec4(camera_position, 1.0);
-            view_depth = max(-camera_position.z, 0.0);
-        }
-
-        void fragment() {
-            vec4 texel = texture(atlas, UV);
-            if (texel.a < (8.0 / 255.0)) {
-                discard;
-            }
-            float visibility = clamp(
-                exp(-fog_density * view_depth),
-                0.0,
-                1.0);
-            vec3 tree_color = min(texel.rgb * 2.0, vec3(1.0));
-            ALBEDO = retail_output(mix(fog_color, tree_color, visibility));
-        }
-        """;
 
     private static Shader? _pineFarImposterShader;
-    private static Shader? _pineFastImposterShader;
 
     private Level100StaticWorldAsset(
         Node3D root,
@@ -238,24 +186,27 @@ internal sealed partial class Level100StaticWorldAsset
         IReadOnlyDictionary<string, ArrayMesh> meshes,
         IReadOnlyDictionary<string, Texture2D> textures)
     {
-        PinePlacement[] placements = BuildPinePlacements(
-            manifest.Pines,
-            manifest.PineBillboards.FastStandingViewPhase,
-            terrain);
+        // A retail Level 1.00 pine has exactly two representations: the
+        // pinesnow mesh at or inside the authored 70.0 mesh-quality distance,
+        // and the six-face box imposter outside it. `defaultoptions.bea`
+        // offset 0x26CA is `00 00 8C 42` = 70.0f, and the archive's
+        // IMPS/IMPT/VIEW chunk carries exactly six views per variant whose
+        // (width, height) pairs are that variant's own mesh bounding-box
+        // half-extents inflated by 1.05 on all three axes. The two shader
+        // gates below are complementary about the same 70.0 value, so every
+        // pine is covered at every distance and neither pass is ungated.
+        PinePlacement[] placements = BuildPinePlacements(manifest.Pines, terrain);
         AddClosePineMeshes(root, manifest, meshes, placements);
 
         Texture2D atlas = textures[manifest.PineBillboards.Texture];
         AddFarPineImposters(root, manifest, terrain, atlas, placements);
-        AddFastPineImposters(root, manifest, terrain, atlas, placements);
         return placements.Length;
     }
 
     private static PinePlacement[] BuildPinePlacements(
         IReadOnlyList<double[]> pines,
-        int fastStandingViewPhase,
         Level100HeightFieldAsset terrain)
     {
-        int[] fastViews = SelectFastPineViews(pines.Count, fastStandingViewPhase);
         var placements = new PinePlacement[pines.Count];
         for (int ordinal = 0; ordinal < pines.Count; ordinal++)
         {
@@ -269,57 +220,9 @@ internal sealed partial class Level100StaticWorldAsset
                 terrain.WaterRelativeHeight);
             placements[ordinal] = new PinePlacement(
                 checked((int)pine[2]),
-                new Vector3(relativeX, height, -relativeZ),
-                fastViews[ordinal]);
+                new Vector3(relativeX, height, -relativeZ));
         }
         return placements;
-    }
-
-    private static int[] SelectFastPineViews(int count, int reconstructionPhase)
-    {
-        // Steam selects from the CTree address, but its exact allocation order
-        // and two-bit phase are not established. Manifest v7 therefore pins an
-        // authored reconstruction phase so the four views remain deterministic.
-        if (reconstructionPhase is < 0 or > 3)
-        {
-            throw new InvalidDataException("Level 100 has an invalid fast-pine reconstruction phase.");
-        }
-
-        var views = new int[count];
-        for (int ordinal = 0; ordinal < count; ordinal++)
-        {
-            views[ordinal] = (ordinal + reconstructionPhase) & 3;
-        }
-        if (!HasExpectedFastPineViewCoverage(views, reconstructionPhase))
-        {
-            throw new InvalidDataException("Level 100 fast-pine reconstruction coverage changed.");
-        }
-        return views;
-    }
-
-    private static bool HasExpectedFastPineViewCoverage(
-        IReadOnlyList<int> views,
-        int reconstructionPhase)
-    {
-        if (views.Count != 1481)
-        {
-            return false;
-        }
-
-        int[] counts = new int[4];
-        for (int ordinal = 0; ordinal < views.Count; ordinal++)
-        {
-            int view = views[ordinal];
-            if (view != ((ordinal + reconstructionPhase) & 3))
-            {
-                return false;
-            }
-            counts[view]++;
-        }
-
-        int[] expectedCounts = [370, 370, 370, 370];
-        expectedCounts[reconstructionPhase]++;
-        return counts.SequenceEqual(expectedCounts);
     }
 
     private static void AddClosePineMeshes(
@@ -368,7 +271,6 @@ internal sealed partial class Level100StaticWorldAsset
         ShaderMaterial material = CreatePineImposterMaterial(
             atlas,
             terrain,
-            cameraFacing: false,
             meshQualityDistance: manifest.PineBillboards.MeshQualityDistance);
         for (int variant = 0; variant < 4; variant++)
         {
@@ -378,6 +280,16 @@ internal sealed partial class Level100StaticWorldAsset
             ArrayMesh mesh = CreateFarPineImposterMesh(
                 manifest.PineBillboards.Variants[variant],
                 material);
+            // The stored VIEW half-extents are this variant's own mesh
+            // bounding box scaled by 1.05, and `centerOffset` is that mesh
+            // bounding box centre. The box therefore only describes the tree
+            // when it sits on the same transform the mesh does, which
+            // AddClosePineMeshes places at GroundOrigin + Up * baseClearance.
+            // Omitting the clearance here put the box bottom 0.0804 below
+            // ground for pinesnow0 and stepped the tree vertically at the
+            // 70.0 swap.
+            float baseClearance = checked(
+                (float)manifest.Meshes[$"pinesnow{variant}"].BaseClearance);
             var multiMesh = new MultiMesh
             {
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
@@ -388,7 +300,9 @@ internal sealed partial class Level100StaticWorldAsset
             {
                 multiMesh.SetInstanceTransform(
                     index,
-                    new Transform3D(Basis.Identity, instances[index].GroundOrigin));
+                    new Transform3D(
+                        Basis.Identity,
+                        instances[index].GroundOrigin + (Vector3.Up * baseClearance)));
             }
             root.AddChild(new MultiMeshInstance3D
             {
@@ -397,96 +311,6 @@ internal sealed partial class Level100StaticWorldAsset
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             });
         }
-    }
-
-    private static void AddFastPineImposters(
-        Node3D root,
-        Manifest manifest,
-        Level100HeightFieldAsset terrain,
-        Texture2D atlas,
-        IReadOnlyList<PinePlacement> placements)
-    {
-        var fastRoot = new PineFastImposterRoot
-        {
-            Name = "RetailPineFastImposters",
-        };
-        fastRoot.Initialize(terrain);
-        root.AddChild(fastRoot);
-
-        ShaderMaterial standingMaterial = CreatePineImposterMaterial(
-            atlas,
-            terrain,
-            cameraFacing: true,
-            meshQualityDistance: null);
-        ShaderMaterial elevatedMaterial = CreatePineImposterMaterial(
-            atlas,
-            terrain,
-            cameraFacing: false,
-            meshQualityDistance: null);
-        for (int variant = 0; variant < 4; variant++)
-        {
-            PineBillboardVariant definition = manifest.PineBillboards.Variants[variant];
-            Vector3 centerOffset = ToGodotVector(definition.CenterOffset);
-            for (int viewIndex = 0; viewIndex < 4; viewIndex++)
-            {
-                PinePlacement[] instances = placements
-                    .Where(item => item.Variant == variant && item.FastView == viewIndex)
-                    .ToArray();
-                double[] standingView = definition.Views[viewIndex];
-                ArrayMesh standingMesh = CreateQuadMesh(
-                    Vector3.Zero,
-                    Vector3.Right * checked((float)standingView[4]),
-                    Vector3.Up * checked((float)standingView[5]),
-                    standingView,
-                    standingMaterial);
-                fastRoot.AddChild(CreatePineMultiMeshNode(
-                    $"RetailPineSnow{variant}FastStandingView{viewIndex}Instances",
-                    standingMesh,
-                    instances,
-                    centerOffset));
-
-                float elevatedHalfSize = checked((float)(standingView[4] * 0.7));
-                ArrayMesh elevatedMesh = CreateQuadMesh(
-                    Vector3.Zero,
-                    Vector3.Right * elevatedHalfSize,
-                    Vector3.Forward * elevatedHalfSize,
-                    definition.Views[4],
-                    elevatedMaterial);
-                fastRoot.AddElevated(CreatePineMultiMeshNode(
-                    $"RetailPineSnow{variant}FastElevatedView{viewIndex}Instances",
-                    elevatedMesh,
-                    instances,
-                    centerOffset));
-            }
-        }
-    }
-
-    private static MultiMeshInstance3D CreatePineMultiMeshNode(
-        string name,
-        ArrayMesh mesh,
-        IReadOnlyList<PinePlacement> instances,
-        Vector3 centerOffset)
-    {
-        var multiMesh = new MultiMesh
-        {
-            TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
-            Mesh = mesh,
-            InstanceCount = instances.Count,
-        };
-        for (int index = 0; index < instances.Count; index++)
-        {
-            multiMesh.SetInstanceTransform(
-                index,
-                new Transform3D(
-                    Basis.Identity,
-                    instances[index].GroundOrigin + centerOffset));
-        }
-        return new MultiMeshInstance3D
-        {
-            Name = name,
-            Multimesh = multiMesh,
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        };
     }
 
     private static ArrayMesh CreateFarPineImposterMesh(
@@ -536,31 +360,6 @@ internal sealed partial class Level100StaticWorldAsset
                 normal,
                 view);
         }
-        return CreateArrayMesh(vertices, normals, textureCoordinates, indices, material);
-    }
-
-    private static ArrayMesh CreateQuadMesh(
-        Vector3 center,
-        Vector3 right,
-        Vector3 up,
-        double[] view,
-        Material material)
-    {
-        var vertices = new Vector3[4];
-        var normals = new Vector3[4];
-        var textureCoordinates = new Vector2[4];
-        var indices = new int[6];
-        AddQuad(
-            vertices,
-            normals,
-            textureCoordinates,
-            indices,
-            0,
-            center,
-            right,
-            up,
-            up.Cross(right).Normalized(),
-            view);
         return CreateArrayMesh(vertices, normals, textureCoordinates, indices, material);
     }
 
@@ -624,16 +423,20 @@ internal sealed partial class Level100StaticWorldAsset
     private static ShaderMaterial CreatePineImposterMaterial(
         Texture2D atlas,
         Level100HeightFieldAsset terrain,
-        bool cameraFacing,
-        double? meshQualityDistance)
+        double meshQualityDistance)
     {
-        bool far = meshQualityDistance.HasValue;
+        // Every imposter material is distance-gated. There is no ungated
+        // overload: the box may only appear where the mesh has been discarded.
+        float distance = checked((float)meshQualityDistance);
+        if (!float.IsFinite(distance) || distance <= 0f)
+        {
+            throw new InvalidDataException(
+                "Level 100 pine imposters require a positive mesh-quality distance.");
+        }
         var material = new ShaderMaterial
         {
-            Shader = far
-                ? _pineFarImposterShader ??= new Shader { Code = PineFarImposterShaderCode }
-                : _pineFastImposterShader ??= new Shader { Code = PineFastImposterShaderCode },
-            RenderPriority = far ? 0 : 1,
+            Shader = _pineFarImposterShader ??= new Shader { Code = PineFarImposterShaderCode },
+            RenderPriority = 0,
         };
         material.SetShaderParameter("atlas", atlas);
         material.SetShaderParameter("fog_color", new Vector3(
@@ -641,15 +444,7 @@ internal sealed partial class Level100StaticWorldAsset
             terrain.FogColor.G,
             terrain.FogColor.B));
         material.SetShaderParameter("fog_density", terrain.FogDensity);
-        if (far)
-        {
-            float distance = checked((float)meshQualityDistance!.Value);
-            material.SetShaderParameter("mesh_distance_squared", distance * distance);
-        }
-        else
-        {
-            material.SetShaderParameter("camera_facing", cameraFacing ? 1f : 0f);
-        }
+        material.SetShaderParameter("mesh_distance_squared", distance * distance);
         return material;
     }
 
@@ -864,6 +659,10 @@ internal sealed partial class Level100StaticWorldAsset
             !StringComparer.Ordinal.Equals(texture.Compression, "Dxt2") ||
             BitConverter.SingleToInt32Bits(checked((float)definition.MeshQualityDistance)) !=
                 BitConverter.SingleToInt32Bits(70f) ||
+            // Manifest identity only. Retail's fast tree batch has no
+            // established enable condition and is not drawn here, so nothing
+            // consumes this phase; it stays pinned so a manifest change is
+            // still caught.
             definition.FastStandingViewPhase != 0 ||
             definition.Variants.Length != 4)
         {
@@ -981,41 +780,7 @@ internal sealed partial class Level100StaticWorldAsset
 
     private readonly record struct PinePlacement(
         int Variant,
-        Vector3 GroundOrigin,
-        int FastView);
-
-    private sealed partial class PineFastImposterRoot : Node3D
-    {
-        private readonly Node3D _elevated = new()
-        {
-            Name = "HeightGatedElevatedCards",
-            Visible = false,
-        };
-        private Level100HeightFieldAsset? _terrain;
-
-        public void Initialize(Level100HeightFieldAsset terrain)
-        {
-            _terrain = terrain;
-            AddChild(_elevated);
-        }
-
-        public void AddElevated(MultiMeshInstance3D node) => _elevated.AddChild(node);
-
-        public override void _Process(double delta)
-        {
-            Camera3D? camera = GetViewport().GetCamera3D();
-            if (camera is null || _terrain is null)
-            {
-                _elevated.Visible = false;
-                return;
-            }
-            Vector3 cameraPosition = camera.GlobalPosition;
-            float sampledGroundHeight = _terrain.SampleRelativeHeight(
-                cameraPosition.X,
-                -cameraPosition.Z);
-            _elevated.Visible = MathF.Abs(cameraPosition.Y - sampledGroundHeight) > 20f;
-        }
-    }
+        Vector3 GroundOrigin);
 
     private sealed record MaterialDefinition
     {
