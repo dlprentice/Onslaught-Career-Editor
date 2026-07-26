@@ -149,6 +149,39 @@ upload, `D3DRS_AMBIENT`, or the material. A transient light shorter than the gap
 between dumps could go unseen; a static or slowly-varying extra light is
 excluded, and that is the only kind the residual could have had.
 
+### SCOPE CORRECTION 2026-07-26, added the same day — read this before reusing §2
+
+**These light values were read at `0x0053e688`, the TERRAIN draw, and §3's own
+`SetRenderState` transition trace shows `D3DRS_LIGHTING = 0` at that draw.** The
+light state was therefore validated at one of the few draws in the frame that is
+explicitly *unlit*.
+
+Two consequences, both live:
+
+1. **Do not carry these values to the lit mesh draws.** The world and tree draws
+   run with `D3DRS_LIGHTING = 1` and their light state was never read. The
+   correct site is `0x00549570`, not `0x0053e688`. Any argument that reasons from
+   §2's colours to the appearance of buildings, trees or the walker is currently
+   unsupported.
+
+2. **It sits in tension with the terrain ambient-light derivation** in
+   [`terrain-ambient-light-applied-2026-07-26.md`](terrain-ambient-light-applied-2026-07-26.md),
+   which concluded that retail draws terrain with lighting **active** through a
+   terrain-only `D3DMATERIAL9` with ambient response 0.8. Both readings cannot be
+   right as stated. That derivation produced a large measured parity gain
+   (63.81 % → 52.20 % material), which is *not* evidence that its mechanism is
+   correct — a wrong mechanism that lands on the right number is precisely the
+   failure mode this project has hit before. **Unresolved and flagged rather than
+   reconciled by argument.**
+
+Three further quantities are unread at the lit mesh draws and any one of them
+changes the answer: the enable array and records at `0x00549570`; the
+`D3DLIGHT9` **Diffuse-versus-Ambient split** actually uploaded (the 0x5c-byte
+engine records are not `D3DLIGHT9`, and that mapping is static-only); and the
+`D3DMATERIAL9`, whose `EMISSIVE` and `SPECULARMATERIALSOURCE` are both
+`D3DMCS_MATERIAL`, leaving `Emissive`, `Specular` and `Power` live and entirely
+unmeasured.
+
 ## 3. Mesh lighting mode and stage-0 `COLOROP` — one fix falsified, one confirmed
 
 Three launches, two level times, **4,393 mesh draws observed**.

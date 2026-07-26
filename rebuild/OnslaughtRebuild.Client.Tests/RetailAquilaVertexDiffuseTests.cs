@@ -182,20 +182,24 @@ public sealed class RetailAquilaVertexDiffuseTests
     }
 
     /// <summary>
-    /// <c>Lsidebit02</c> stays an open, unexplained residual and must not be
-    /// special-cased.
+    /// <c>Lsidebit02</c> must not be special-cased. The name appears in the
+    /// loader only as recorded prose and never as a code path.
     ///
     /// The clean-mask fit found that part — batch 3, 366 px, 1.2% of the mask
     /// and the brightest surface in it — already correct at scale 1.0
-    /// (0.920/0.969/1.049) and a factor of ~1.9 too dark at 0.5, i.e. it wants
-    /// the doubling kept while the three parts carrying 97.2% of the mask
-    /// (<c>hood</c>, <c>Object03</c>, <c>Object01</c>) land within 2-12% of
-    /// retail once halved. Stage-zero <c>COLOROP</c> does not explain it: the
-    /// runtime read is <c>4</c> on all seven batches with no per-batch
-    /// variation at all, which is a precise negative on that sub-question.
-    /// Whatever that part wants is somewhere else, so this asserts that
-    /// <c>Lsidebit02</c> appears in the loader only as recorded prose and never
-    /// as a code path.
+    /// (0.920/0.969/1.049) and a factor of ~1.9 too dark at 0.5, i.e. it read
+    /// as wanting the doubling kept while the three parts carrying 97.2% of
+    /// the mask (<c>hood</c>, <c>Object03</c>, <c>Object01</c>) land within
+    /// 2-12% of retail once halved. Stage-zero <c>COLOROP</c> does not explain
+    /// it: the runtime read is <c>4</c> on all seven batches with no per-batch
+    /// variation at all.
+    ///
+    /// That residual is now CLOSED, and the answer is that the 366 samples are
+    /// not cockpit pixels in either image — see
+    /// <c>local-lab/COCKPIT-SIDEBIT-RESIDUAL-2026-07-26.md</c> and
+    /// <see cref="TheTwoMirroredBatchSamplesAreRecordedAsOverlayContaminationNotShading"/>.
+    /// So the not-fitted property this test pins is not merely prudent, it is
+    /// correct: there is nothing to fit.
     /// </summary>
     [Fact]
     public void TheLsidebit02ResidualIsRecordedAsOpenAndNotFitted()
@@ -212,6 +216,56 @@ public sealed class RetailAquilaVertexDiffuseTests
 
         // The batch-to-part mapping the cockpit reading rests on, captured
         // through SetTransform(D3DTS_WORLDMATRIX(0)) at 0x00551043.
+        Assert.Contains(
+            lines,
+            line => line.Contains(
+                "0=hood, 1=Rsidebit01, 2=Rsidebit02, 3=Lsidebit02, 4=Lsidebit01,",
+                StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Both negative-determinant batches — <c>Rsidebit01</c> (batch 1) and
+    /// <c>Lsidebit02</c> (batch 3) — are recorded as measurement
+    /// contamination, not as parts needing their own shading, and neither
+    /// name is ever a code path.
+    ///
+    /// The measurement is a differential one and needs no assumption about
+    /// what is on top: halving this material's stage-zero gain moved all five
+    /// positive-determinant batches' own footprints by 1.79-2.24, and moved
+    /// these two by 1.000/1.002/1.001 and 0.998/0.993/0.981 respectively. A
+    /// pixel whose level is invariant under a change to a material is not
+    /// written by that material, so those samples cannot report its shading in
+    /// either direction. This pins the closure so that a later session cannot
+    /// quietly reintroduce a per-part factor by citing the retired residual.
+    /// </summary>
+    [Fact]
+    public void TheTwoMirroredBatchSamplesAreRecordedAsOverlayContaminationNotShading()
+    {
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
+        string[] lines = loader.Replace("\r\n", "\n").Split('\n');
+
+        foreach (string part in new[] { "Rsidebit01", "Lsidebit02" })
+        {
+            string[] mentions = lines
+                .Where(line => line.Contains(part, StringComparison.Ordinal))
+                .ToArray();
+            Assert.NotEmpty(mentions);
+            Assert.All(
+                mentions,
+                line => Assert.StartsWith("//", line.TrimStart(), StringComparison.Ordinal));
+        }
+
+        // The differential measurement that closes the residual, and the note
+        // that carries it. Both must survive for the closure to be citable.
+        Assert.Contains("1.000/1.002/1.001", loader, StringComparison.Ordinal);
+        Assert.Contains("0.998/0.993/0.981", loader, StringComparison.Ordinal);
+        Assert.Contains(
+            "local-lab/COCKPIT-SIDEBIT-RESIDUAL-2026-07-26.md",
+            loader,
+            StringComparison.Ordinal);
+
+        // And the batch-to-part mapping the whole reading rests on, so the two
+        // names above cannot drift onto different batches.
         Assert.Contains(
             lines,
             line => line.Contains(

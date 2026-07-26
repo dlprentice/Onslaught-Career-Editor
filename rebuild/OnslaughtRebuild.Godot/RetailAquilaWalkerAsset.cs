@@ -139,12 +139,35 @@ internal sealed class RetailAquilaWalkerAsset
         // the sky control band's retail/build ratio is 1.006/1.005/1.001 over
         // 13,644 pixels.
         //
-        // OPEN RESIDUAL, deliberately not fitted: batch 3, Lsidebit02, 366 px
-        // (1.2% of the mask), is already correct at scale 1.0 and is a factor
-        // of ~1.9 too dark at 0.5. Stage-zero COLOROP does not explain it --
-        // the runtime read above is a precise negative on that, since all
-        // seven batches read 4. Whatever that part wants is somewhere else and
-        // no special case for it is made here.
+        // The batch-3 Lsidebit02 "residual" (366 px, 1.2% of that mask) that
+        // read as wanting the doubling kept is CLOSED, and it never wanted it:
+        // those 366 samples are not cockpit pixels in either image, so no
+        // per-part treatment is warranted and none is made here.
+        //
+        // Measured, in local-lab/COCKPIT-SIDEBIT-RESIDUAL-2026-07-26.md:
+        //   * Build side. Halving this material's stage-zero gain moved every
+        //     positive-determinant batch's own footprint by a factor of
+        //     1.79-2.24 (hood 1.91, Rsidebit02 2.04, Lsidebit01 2.24,
+        //     Object03 2.17, Object01 2.12). Over Lsidebit02's 248-px
+        //     footprint the mean moved by 1.000/1.002/1.001 and 71.4% of the
+        //     pixels are byte-identical, in a frame where 34% of all pixels
+        //     changed. A pixel invariant under a change to this material is
+        //     not written by this material.
+        //   * Retail side. 91.3% of the 366 samples fall inside the
+        //     lower-left instrument's 128x128 blit rect, whose ring
+        //     FirstFlightHud.cs:18-19 already fits at centre (66.01, 417.25)
+        //     r=46.56 from the retail frame itself. They read
+        //     (119.9, 123.5, 132.7): 3.3-7.2x brighter than every other
+        //     retail cockpit part (16.7-36.2) and near-neutral at B/R 1.11
+        //     where the other six run 1.50-2.54. Retail composites that pass
+        //     over the cockpit -- run3/cdb.log logs 11 further stage-0
+        //     COLOROP writes after LEAVE cockpit, from return addresses
+        //     0x00482150 (x9), 0x0048570c, 0x0053acc6 and 0x0053b21b.
+        //
+        // Batch 1, Rsidebit01, behaves the same way (footprint mean moved
+        // 0.998/0.993/0.981) and is likewise excluded rather than fitted.
+        // The intersection mask rasters cockpit geometry only and has no
+        // occlusion test against the HUD pass, which is what admitted them.
         RetailStageZeroColorOperation.Modulate);
     private static readonly LegDefinition[] s_legs =
     [

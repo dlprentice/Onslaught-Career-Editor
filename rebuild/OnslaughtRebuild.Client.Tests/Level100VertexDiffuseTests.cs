@@ -253,6 +253,205 @@ public sealed class Level100VertexDiffuseTests
         Assert.Contains("it is a MODE-0 one", staticWorld);
     }
 
+    /// <summary>
+    /// The world path's normal space is the same map the cockpit's was proved
+    /// to be, and it is proved here the same way: by carrying the shipped bytes
+    /// through both chains numerically rather than by arguing about them.
+    ///
+    /// The reconstruction reaches Godot world space for a static-world mesh in
+    /// two steps, not one. <c>emit_obj</c>
+    /// (<c>rebuild/tools/cmsh_static_preview.py</c>, positions at line 775 and
+    /// normals at line 738) negates the third component of the BEA model-space
+    /// triple, i.e. applies <c>F = diag(1, 1, -1)</c>; then
+    /// <see cref="Level100StaticWorldAsset"/> hangs the mesh under a
+    /// <c>MeshInstance3D</c> with <c>RotationDegrees = (-90, 0, 0)</c>. The
+    /// composite <c>Rx(-90) * F</c> is asserted below to be exactly
+    /// <c>RetailAquilaWalkerAsset.MapVector</c>, <c>(x, y, z) -> (x, -z, -y)</c>
+    /// — the same orthogonal, symmetric, self-inverse map with determinant -1
+    /// the cockpit uses — so the world path is not a different normal space at
+    /// all, only a different factorisation of the same one.
+    ///
+    /// The object yaw is the only part the cockpit chain does not have.
+    /// Retail yaws a static about the BEA Z (down) axis; the reconstruction
+    /// yaws its object root about Godot's Y. Those agree because
+    /// <c>M * Rz(phi) * M = Ry(phi)</c> for every angle, asserted below, so the
+    /// yaw conjugates through <c>M</c> exactly like the cockpit's part bases do.
+    /// Since <c>Level100HeightFieldAsset</c> maps the sunlight direction by that
+    /// same <c>M</c> and <c>M</c> is orthogonal, <c>N.L</c> is preserved.
+    /// </summary>
+    [Fact]
+    public void TheWorldPathNormalSpaceIsMapVectorAndPreservesTheSunDotProduct()
+    {
+        double[,] rotateXMinus90 = RotationX(-Math.PI / 2.0);
+        double[,] emitObjMap = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, -1 } };
+        double[,] composite = Multiply(rotateXMinus90, emitObjMap);
+
+        // MapVector: (x, y, z) -> (x, -z, -y).
+        double[,] mapVector = { { 1, 0, 0 }, { 0, 0, -1 }, { 0, -1, 0 } };
+        Assert.True(MaximumDifference(composite, mapVector) < 1e-15);
+        Assert.Equal(-1.0, Determinant(mapVector));
+
+        // The yaw conjugation identity the cockpit proof relied on, on the
+        // world path's own axes: BEA yaw about Z (down) is Godot yaw about Y.
+        for (int degrees = 0; degrees < 360; degrees++)
+        {
+            double phi = degrees * Math.PI / 180.0;
+            double[,] conjugated = Multiply(mapVector, Multiply(RotationZ(phi), mapVector));
+            Assert.True(MaximumDifference(conjugated, RotationY(phi)) < 1e-14);
+        }
+
+        // Now the shipped bytes. Every normal of every static-world OBJ, carried
+        // through the retail chain (BEA model normal, yawed about Z, dotted with
+        // the runtime-observed toward-sun vector) and through the reconstruction
+        // chain (OBJ normal, Rx(-90), yawed about Y, dotted with the mapped
+        // sunlight direction the shader uses).
+        //
+        // The sun vector is light 0's direction of travel, read live out of the
+        // running safe copy at 0x009c65c0 + 0x14 and byte-identical across five
+        // observations in two launches.
+        double[] sunTravel = { -0.03407396, -0.90863329, +0.41620260 };
+        double[] towardSunBea = { -sunTravel[0], -sunTravel[1], -sunTravel[2] };
+        double[] godotSunlightDirection = Apply(mapVector, sunTravel);
+        double[] towardSunGodot =
+        {
+            -godotSunlightDirection[0],
+            -godotSunlightDirection[1],
+            -godotSunlightDirection[2],
+        };
+
+        int normals = 0;
+        double worst = 0.0;
+        foreach (string path in MeshPaths())
+        {
+            foreach (double[] objNormal in NormalRecords(path))
+            {
+                // A yaw is authored per object, not per mesh, so sweep a dense
+                // set rather than pick one: the identity must hold at all of
+                // them, and the manifest's 33 authored yaws are a subset.
+                for (int degrees = 0; degrees < 360; degrees += 60)
+                {
+                    double phi = degrees * Math.PI / 180.0;
+                    double[] beaNormal = Normalize(Apply(emitObjMap, objNormal));
+                    double retail = Dot(Apply(RotationZ(phi), beaNormal), towardSunBea);
+
+                    double[] godotNormal = Normalize(
+                        Apply(Multiply(RotationY(phi), rotateXMinus90), objNormal));
+                    double reconstruction = Dot(godotNormal, towardSunGodot);
+
+                    worst = Math.Max(worst, Math.Abs(retail - reconstruction));
+                }
+                normals++;
+            }
+        }
+
+        Assert.Equal(StaticWorldVertexCount, normals);
+        Assert.True(
+            worst < 1e-12,
+            $"world-path N.L deviates from retail by {worst:E3} over {normals} normals");
+    }
+
+    private static List<double[]> NormalRecords(string path) => File
+        .ReadAllLines(path)
+        .Where(line => line.StartsWith("vn ", StringComparison.Ordinal))
+        .Select(line => line
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Skip(1)
+            .Select(value => double.Parse(value, CultureInfo.InvariantCulture))
+            .ToArray())
+        .ToList();
+
+    private static double[,] RotationX(double theta) => new[,]
+    {
+        { 1.0, 0.0, 0.0 },
+        { 0.0, Math.Cos(theta), -Math.Sin(theta) },
+        { 0.0, Math.Sin(theta), Math.Cos(theta) },
+    };
+
+    private static double[,] RotationY(double theta) => new[,]
+    {
+        { Math.Cos(theta), 0.0, Math.Sin(theta) },
+        { 0.0, 1.0, 0.0 },
+        { -Math.Sin(theta), 0.0, Math.Cos(theta) },
+    };
+
+    private static double[,] RotationZ(double theta) => new[,]
+    {
+        { Math.Cos(theta), -Math.Sin(theta), 0.0 },
+        { Math.Sin(theta), Math.Cos(theta), 0.0 },
+        { 0.0, 0.0, 1.0 },
+    };
+
+    private static double[,] Multiply(double[,] left, double[,] right)
+    {
+        var result = new double[3, 3];
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < 3; k++)
+                {
+                    sum += left[row, k] * right[k, column];
+                }
+                result[row, column] = sum;
+            }
+        }
+        return result;
+    }
+
+    private static double[] Apply(double[,] matrix, double[] vector) =>
+    [
+        (matrix[0, 0] * vector[0]) + (matrix[0, 1] * vector[1]) + (matrix[0, 2] * vector[2]),
+        (matrix[1, 0] * vector[0]) + (matrix[1, 1] * vector[1]) + (matrix[1, 2] * vector[2]),
+        (matrix[2, 0] * vector[0]) + (matrix[2, 1] * vector[1]) + (matrix[2, 2] * vector[2]),
+    ];
+
+    private static double[] Normalize(double[] vector)
+    {
+        double length = Math.Sqrt(Dot(vector, vector));
+        return length == 0.0
+            ? vector
+            : [vector[0] / length, vector[1] / length, vector[2] / length];
+    }
+
+    private static double Dot(double[] left, double[] right) =>
+        (left[0] * right[0]) + (left[1] * right[1]) + (left[2] * right[2]);
+
+    private static double Determinant(double[,] m) =>
+        (m[0, 0] * ((m[1, 1] * m[2, 2]) - (m[1, 2] * m[2, 1])))
+        - (m[0, 1] * ((m[1, 0] * m[2, 2]) - (m[1, 2] * m[2, 0])))
+        + (m[0, 2] * ((m[1, 0] * m[2, 1]) - (m[1, 1] * m[2, 0])));
+
+    private static double MaximumDifference(double[,] left, double[,] right)
+    {
+        double worst = 0.0;
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                worst = Math.Max(worst, Math.Abs(left[row, column] - right[row, column]));
+            }
+        }
+        return worst;
+    }
+
+    /// <summary>
+    /// The proof above is only about the chain the asset actually builds, so
+    /// pin that chain's two load-bearing lines. If either changes, the numeric
+    /// result above stops describing the shipped code and must be re-derived.
+    /// </summary>
+    [Fact]
+    public void TheWorldMeshChainStillUsesTheProvenRotationAndNormalTransform()
+    {
+        string staticWorld = Normalize(ReadGodotSource("Level100StaticWorldAsset.cs"));
+
+        Assert.Contains("RotationDegrees = new Vector3(-90f, 0f, 0f),", staticWorld);
+        Assert.Contains("new Basis(Vector3.Right, -Mathf.Pi / 2f)", staticWorld);
+        Assert.Contains(
+            "vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);",
+            staticWorld);
+    }
+
     private static int Occurrences(string text, string value)
     {
         int count = 0;
