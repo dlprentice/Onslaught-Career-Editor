@@ -738,7 +738,11 @@ public sealed class Level100ActorRegistry
         foreach (Level100ActorDefinition definition in definitions.Actors)
         {
             Level100ActorId actorId = AllocateId();
-            _actors.Add(actorId.Value, CreateActor(actorId, definition));
+            _actors.Add(
+                actorId.Value,
+                CreateActor(actorId, definition, SeatOnGround(
+                    definition.DefinitionName,
+                    definition.InitialPose)));
         }
     }
 
@@ -898,7 +902,7 @@ public sealed class Level100ActorRegistry
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = definition.InitialHealth,
-            Pose = definition.InitialPose,
+            Pose = SeatOnGround(definitionName, definition.InitialPose),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = ordinal,
         });
@@ -1111,7 +1115,54 @@ public sealed class Level100ActorRegistry
             new Level100ActorFactSnapshot(
                 _nextFactSequence++, kind, actorId, otherActorId, otherThingTypeMask));
 
-    private static Actor CreateActor(Level100ActorId actorId, Level100ActorDefinition definition) =>
+    /// <summary>
+    /// Released <c>CThing::Init</c> (<c>0x004F34A0</c>) does not use the
+    /// authored elevation directly: it samples the one global height field
+    /// (<c>MOV ECX, 0x006FADC8</c> / <c>CALL 0x0047EB80</c>), compares the
+    /// sample against the authored Z-down position (<c>FCOM [ESI+0x24]</c>)
+    /// and writes the sample into the position when the authored value is
+    /// below the ground (<c>FSTP [ESP+0x14]</c> at <c>0x004F3529</c>, then
+    /// <c>CALL [EAX+0x50]</c>). Level 100 authors every Target Tank and
+    /// Target Truck at Y = 0 while the firing-range ground is at Y = 600, so
+    /// without this clamp those actors are buried and their contact meshes
+    /// are unreachable. The seat height reuses the same
+    /// ground + <c>CoreGroundOriginOffsetMillimeters</c> expression that
+    /// <see cref="Level100ActorMechanics"/> already applies on every base tick
+    /// once the same actor starts following a waypoint, so an actor does not
+    /// jump the moment it is first commanded to move.
+    /// </summary>
+    private Level100ActorPoseSnapshot SeatOnGround(
+        string? definitionName,
+        Level100ActorPoseSnapshot pose)
+    {
+        Level100ActorMotionDefinition? motion =
+            _definitions.FindMotionDefinition(definitionName);
+        if (motion?.MotionClass != Level100ActorMotionClass.GroundVehicle)
+        {
+            return pose;
+        }
+
+        int seated = checked(
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                new SimVector2(
+                    pose.PositionMillimeters.X,
+                    pose.PositionMillimeters.Z)) +
+            motion.CoreGroundOriginOffsetMillimeters!.Value);
+        return pose.PositionMillimeters.Y >= seated
+            ? pose
+            : pose with
+            {
+                PositionMillimeters = new SimVector3(
+                    pose.PositionMillimeters.X,
+                    seated,
+                    pose.PositionMillimeters.Z),
+            };
+    }
+
+    private static Actor CreateActor(
+        Level100ActorId actorId,
+        Level100ActorDefinition definition,
+        Level100ActorPoseSnapshot pose) =>
         new()
         {
             ActorId = actorId,
@@ -1125,7 +1176,7 @@ public sealed class Level100ActorRegistry
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = definition.InitialHealth,
-            Pose = definition.InitialPose,
+            Pose = pose,
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = definition.TargetOrdinal,
             Trigger = definition.Trigger,

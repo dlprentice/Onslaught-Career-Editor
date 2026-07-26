@@ -15,6 +15,11 @@ public sealed class Simulation
         public int ElevationMillimeters { get; set; }
         public required int VerticalVelocityMillimetersPerTick { get; init; }
         public int RemainingTicks { get; set; }
+        // Per-round contact and damage. The pulse and the Twin Vulcan's Mech
+        // Bullet are different released rounds, so a projectile carries its
+        // own narrowphase radius and damage rather than assuming the pulse.
+        public required int ContactRadiusMillimeters { get; init; }
+        public required uint DamageBits { get; init; }
     }
 
     private sealed class MutableWalkerFoot
@@ -66,6 +71,7 @@ public sealed class Simulation
     private int _shield;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
+    private int _twinVulcanReloadThirdMillisecondsRemaining;
     private int _level100OpeningTicksRemaining;
     private bool _level100FlightEnabled;
     private bool _level100PulseCannonEnabled;
@@ -144,6 +150,12 @@ public sealed class Simulation
         if (_fireCooldownTicksRemaining > 0)
         {
             _fireCooldownTicksRemaining--;
+        }
+
+        if (_twinVulcanReloadThirdMillisecondsRemaining > 0)
+        {
+            _twinVulcanReloadThirdMillisecondsRemaining -=
+                SimulationConstants.FireCooldownThirdMillisecondsPerTick;
         }
 
         TryToggleMode(playerInput);
@@ -2317,17 +2329,69 @@ public sealed class Simulation
             return;
         }
 
-        if (!_level100PulseCannonEnabled ||
-            _fireCooldownTicksRemaining != 0 ||
-            _energy < SimulationConstants.FireEnergyCost)
+        if (_level100PulseCannonEnabled)
+        {
+            if (_fireCooldownTicksRemaining != 0 ||
+                _energy < SimulationConstants.FireEnergyCost)
+            {
+                return;
+            }
+
+            _energy -= SimulationConstants.FireEnergyCost;
+            _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+            LaunchWalkerRound(
+                SimulationConstants.ProjectileSpeedPerTick,
+                SimulationConstants.ProjectileLifetimeTicks,
+                Level100ContactMechanics.PulseRadiusMillimeters,
+                Level100DestructionState.PulseDamageBits);
+            return;
+        }
+
+        // The released script disables the Pulse Cannon Pod and enables the
+        // Mech Twin Vulcan Cannon at the end of the first firing-range
+        // exercise, so from that point the walker's only weapon is the Twin
+        // Vulcan. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet rounds
+        // per CWeaponReloadTime 0.05 s. CWeaponInaccuracy 0.006981317 rad and
+        // the four CWeaponLaunchSequence muzzle entries are read but not
+        // modelled: neither a released scatter sequence nor released muzzle
+        // offsets are established, and inventing either would be an unproven
+        // behaviour claim. The volley therefore leaves the one evidenced
+        // BattleEngine emitter along the aim ray.
+        if (!_level100VulcanCannonEnabled ||
+            _twinVulcanReloadThirdMillisecondsRemaining > 0 ||
+            _energy < SimulationConstants.TwinVulcanFireEnergyCost)
         {
             return;
         }
 
+        _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
+        _twinVulcanReloadThirdMillisecondsRemaining +=
+            SimulationConstants.TwinVulcanReloadThirdMilliseconds;
+        for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
+        {
+            LaunchWalkerRound(
+                SimulationConstants.MechBulletSpeedPerTick,
+                SimulationConstants.MechBulletLifetimeTicks,
+                Level100ContactMechanics.PulseRadiusMillimeters,
+                Level100DestructionState.MechBulletDamageBits);
+        }
+    }
+
+    /// <summary>
+    /// Emits one round from the evidenced cockpit emitter along the current
+    /// aim. Speed, lifetime, contact radius and damage are the round's, not
+    /// the pulse's.
+    /// </summary>
+    private void LaunchWalkerRound(
+        int speedPerTick,
+        int lifetimeTicks,
+        int contactRadiusMillimeters,
+        uint damageBits)
+    {
         (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
         (int pitchSin, int pitchCos) = FixedSinCos(_facingPitchMicroRad);
         int horizontalSpeed = DivideRoundNearest(
-            (long)pitchCos * SimulationConstants.ProjectileSpeedPerTick,
+            (long)pitchCos * speedPerTick,
             FixedTrigScale);
         int velocityX = DivideRoundNearest(
             -(long)sin * horizontalSpeed,
@@ -2336,7 +2400,7 @@ public sealed class Simulation
             (long)cos * horizontalSpeed,
             FixedTrigScale);
         int verticalVelocity = DivideRoundNearest(
-            -(long)pitchSin * SimulationConstants.ProjectileSpeedPerTick,
+            -(long)pitchSin * speedPerTick,
             FixedTrigScale);
         int emitterForwardPlane = DivideRoundNearest(
             ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters * pitchCos) +
@@ -2355,8 +2419,6 @@ public sealed class Simulation
             ((long)emitterForwardPlane * cos),
             FixedTrigScale);
 
-        _energy -= SimulationConstants.FireEnergyCost;
-        _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
         SimVector2 playerPosition = PlayerPosition;
         _projectiles.Add(new MutableProjectile
         {
@@ -2368,7 +2430,9 @@ public sealed class Simulation
             ElevationMillimeters =
                 PlayerElevationMillimeters + emitterVerticalOffset,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
-            RemainingTicks = SimulationConstants.ProjectileLifetimeTicks,
+            RemainingTicks = lifetimeTicks,
+            ContactRadiusMillimeters = contactRadiusMillimeters,
+            DamageBits = damageBits,
         });
     }
 
@@ -2390,9 +2454,11 @@ public sealed class Simulation
             projectile.ElevationMillimeters = end.Y;
             projectile.RemainingTicks--;
 
-            bool hit = _level100Destruction.TryApplyPulseSweep(
+            bool hit = _level100Destruction.TryApplyRoundSweep(
                 start,
                 end,
+                projectile.ContactRadiusMillimeters,
+                projectile.DamageBits,
                 out _);
             if (hit)
             {
@@ -2434,6 +2500,7 @@ public sealed class Simulation
         _shield = SimulationConstants.MaximumShield;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
+        _twinVulcanReloadThirdMillisecondsRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
         _level100FlightEnabled = false;
         _level100PulseCannonEnabled = false;

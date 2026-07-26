@@ -702,10 +702,17 @@ public static class Level100ContactMechanics
     public static bool TrySweepPulseAgainstTerrain(
         Level100Vector3 start,
         Level100Vector3 end,
+        out Level100ContactHit hit) =>
+        TrySweepRoundAgainstTerrain(start, end, PulseRadiusMillimeters, out hit);
+
+    public static bool TrySweepRoundAgainstTerrain(
+        Level100Vector3 start,
+        Level100Vector3 end,
+        int contactRadiusMillimeters,
         out Level100ContactHit hit)
     {
         int high;
-        if (TouchesTerrain(start, PulseRadiusMillimeters))
+        if (TouchesTerrain(start, contactRadiusMillimeters))
         {
             high = 0;
         }
@@ -714,6 +721,7 @@ public static class Level100ContactMechanics
             end,
             0,
             Level100Basis3.Scale,
+            contactRadiusMillimeters,
             out high))
         {
             hit = default;
@@ -738,12 +746,31 @@ public static class Level100ContactMechanics
         Level100Vector3 start,
         Level100Vector3 end,
         ReadOnlySpan<Level100ContactActor> actors,
-        out Level100ContactHit hit)
-    {
-        bool hasActor = TrySweepPulse(start, end, actors, out Level100ContactHit actorHit);
-        bool hasTerrain = TrySweepPulseAgainstTerrain(
+        out Level100ContactHit hit) =>
+        TrySweepRoundWithTerrain(
             start,
             end,
+            PulseRadiusMillimeters,
+            actors,
+            out hit);
+
+    public static bool TrySweepRoundWithTerrain(
+        Level100Vector3 start,
+        Level100Vector3 end,
+        int contactRadiusMillimeters,
+        ReadOnlySpan<Level100ContactActor> actors,
+        out Level100ContactHit hit)
+    {
+        bool hasActor = TrySweepActors(
+            start,
+            end,
+            contactRadiusMillimeters,
+            actors,
+            out Level100ContactHit actorHit);
+        bool hasTerrain = TrySweepRoundAgainstTerrain(
+            start,
+            end,
+            contactRadiusMillimeters,
             out Level100ContactHit terrainHit);
         if (!hasActor && !hasTerrain)
         {
@@ -1307,17 +1334,18 @@ public static class Level100ContactMechanics
         Level100Vector3 end,
         int lowTime,
         int highTime,
+        int contactRadiusMillimeters,
         out int contactTime)
     {
         Level100Vector3 low = Interpolate(start, end, lowTime);
-        if (TouchesTerrain(low, PulseRadiusMillimeters))
+        if (TouchesTerrain(low, contactRadiusMillimeters))
         {
             contactTime = lowTime;
             return true;
         }
 
         Level100Vector3 high = Interpolate(start, end, highTime);
-        bool highTouches = TouchesTerrain(high, PulseRadiusMillimeters);
+        bool highTouches = TouchesTerrain(high, contactRadiusMillimeters);
         (int lowX, int lowY) = GetTerrainSampleCoordinates(low);
         (int highX, int highY) = GetTerrainSampleCoordinates(high);
         bool sameSample = lowX == highX && lowY == highY;
@@ -1336,7 +1364,8 @@ public static class Level100ContactMechanics
                     lowX,
                     lowY,
                     highX,
-                    highY))
+                    highY,
+                    contactRadiusMillimeters))
             {
                 contactTime = highTime;
                 return true;
@@ -1352,6 +1381,7 @@ public static class Level100ContactMechanics
             end,
             lowTime,
             middleTime,
+            contactRadiusMillimeters,
             out contactTime))
         {
             return true;
@@ -1361,6 +1391,7 @@ public static class Level100ContactMechanics
             end,
             middleTime,
             highTime,
+            contactRadiusMillimeters,
             out contactTime);
     }
 
@@ -1370,7 +1401,8 @@ public static class Level100ContactMechanics
         int lowX,
         int lowY,
         int highX,
-        int highY)
+        int highY,
+        int contactRadiusMillimeters)
     {
         Level100Terrain terrain = Level100Terrain.Instance;
         int minimumSurfaceDown = int.MaxValue;
@@ -1387,7 +1419,7 @@ public static class Level100ContactMechanics
         }
 
         int maximumSphereDown = checked(
-            Math.Max(low.Z, high.Z) + PulseRadiusMillimeters);
+            Math.Max(low.Z, high.Z) + contactRadiusMillimeters);
         return maximumSphereDown >= minimumSurfaceDown;
     }
 

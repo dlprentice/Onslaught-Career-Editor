@@ -1181,8 +1181,18 @@ public sealed class InteractiveSessionTests
             Level100ActorCommandIntent.Stopped,
             targetIntent.Intent);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
+        // Re-pinned 2026-07-26 from c3ae5a39... after Level100ActorRegistry
+        // began ground-seating authored actors, which retail's CThing::Init
+        // (0x004F34A0) does and this reconstruction did not: Target Tank 2,
+        // Target Tank 3 and Target Warehouse sat 600/600/426 mm underground.
+        //
+        // The delta was NOT assumed to be the seating - it was measured
+        // causally. Disabling ONLY SeatOnGround and re-running the smoke
+        // returns this hash to c3ae5a39... exactly, so the seating accounts for
+        // the whole move and the Twin Vulcan Cannon added in the same change
+        // contributes nothing to this scenario.
         Assert.Equal(
-            "c3ae5a39fbbc4a47f1309c2d7ec5a2c874f8f41f364d38263e60b6965f450b47",
+            "99e358b2bc4846752c111114be23c2e1804dd01677e3cea0d3eba7a0c84c15a3",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

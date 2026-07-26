@@ -137,7 +137,11 @@ public sealed class Level100MissionTests
         Assert.Equal("TargetTank1", target.ScriptName);
         Assert.Equal("SpawnerA", target.SpawnerName);
         Assert.Equal(actors.GetThingRef("Tank Factory"), target.SpawnOwnerId);
-        Assert.Equal(new SimVector3(3_439, -126, 21_051), target.Pose!.PositionMillimeters);
+        // Authored spawn elevation is -126. Released CThing::Init ground-clamps
+        // it, and the registry now seats Target Tank/Target Truck actors at
+        // ground + CoreGroundOriginOffsetMillimeters (200 + 100 here), the same
+        // expression Level100ActorMechanics applies once the actor moves.
+        Assert.Equal(new SimVector3(3_439, 300, 21_051), target.Pose!.PositionMillimeters);
         Assert.Equal(
             new Level100FloatBasis3Bits(
                 -1_101_128_975, 0, -1_082_529_832,

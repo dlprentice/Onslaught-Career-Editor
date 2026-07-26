@@ -207,6 +207,22 @@ public sealed class Level100DestructionRuntime
     public bool TryApplyPulseSweep(
         SimVector3 start,
         SimVector3 end,
+        out Level100ContactHit hit) =>
+        TryApplyRoundSweep(
+            start,
+            end,
+            Level100ContactMechanics.PulseRadiusMillimeters,
+            Level100DestructionState.PulseDamageBits,
+            out hit);
+
+    /// <summary>
+    /// Sweeps one round of the given contact radius and applies its damage.
+    /// </summary>
+    public bool TryApplyRoundSweep(
+        SimVector3 start,
+        SimVector3 end,
+        int contactRadiusMillimeters,
+        uint damageBits,
         out Level100ContactHit hit)
     {
         SynchronizeActors(requireInitialState: false);
@@ -254,9 +270,10 @@ public sealed class Level100DestructionRuntime
                 partActivity: partActivity);
         }
 
-        if (!Level100ContactMechanics.TrySweepPulseWithTerrain(
+        if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
                 ToContactVector(start),
                 ToContactVector(end),
+                contactRadiusMillimeters,
                 _contactActors.AsSpan(0, contactActorCount),
                 out hit))
         {
@@ -271,8 +288,9 @@ public sealed class Level100DestructionRuntime
             return true;
         }
 
-        int eventCount = destruction.ApplyPulseHit(
+        int eventCount = destruction.ApplyRoundHit(
             hit,
+            damageBits,
             _hitEvents);
         for (int index = 0; index < eventCount; index++)
         {
@@ -452,6 +470,22 @@ public sealed class Level100DestructionRuntime
 public sealed class Level100DestructionState
 {
     public const uint PulseDamageBits = 0x3FE66666;
+    /// <summary>
+    /// Mech Bullet applies the same round-damage + explosion-damage sum that
+    /// the measured 1.8 medium-pulse value decomposes into: byte-read
+    /// <c>CRoundDamage 0.08</c> on <c>Mech Bullet</c> plus
+    /// <c>CExplosionDamage 0.001</c> on <c>Mech Bullet Hit</c>. The addition
+    /// rule itself is the only survivor of the three candidate models against
+    /// the two recorded pulse measurements (direct 1.8, glancing 1.0) and is
+    /// not independently proven; see
+    /// reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
+    /// section 6.2. Level 100 progression is insensitive to the ambiguity: a
+    /// 6.0-life Target Tank takes 75 bullets under both the sum (0.081) and
+    /// round-only (0.08) models, and a 3.0-life Target Truck takes 38 under
+    /// both. Only the explosion-only model (0.001) differs, and it is already
+    /// killed by the pulse measurements.
+    /// </summary>
+    public const uint MechBulletDamageBits = 0x3DA5E354;
     public const int MaximumEventsPerHit = 8;
 
     private const uint WarehouseTerminalFractionBits = 0x3E99999A;
@@ -583,6 +617,16 @@ public sealed class Level100DestructionState
     /// </summary>
     public int ApplyPulseHit(
         in Level100ContactHit hit,
+        Span<Level100DestructionEvent> events) =>
+        ApplyRoundHit(hit, PulseDamageBits, events);
+
+    /// <summary>
+    /// Applies a named round's damage to a factual narrowphase hit. The caller
+    /// retains actor activation and mission consequence ownership.
+    /// </summary>
+    public int ApplyRoundHit(
+        in Level100ContactHit hit,
+        uint damageBits,
         Span<Level100DestructionEvent> events)
     {
         if (hit.ActorId != ActorId)
@@ -614,11 +658,11 @@ public sealed class Level100DestructionState
 
         if (_definition.Kind == Level100DefinitionKind.TargetTank)
         {
-            ApplyTargetTankDamage(hit, ref writer);
+            ApplyTargetTankDamage(hit, damageBits, ref writer);
         }
         else
         {
-            ApplyWarehouseDamage(hit, ref writer);
+            ApplyWarehouseDamage(hit, damageBits, ref writer);
         }
         return writer.Count;
     }
@@ -697,11 +741,12 @@ public sealed class Level100DestructionState
 
     private void ApplyTargetTankDamage(
         in Level100ContactHit hit,
+        uint damageBits,
         ref EventWriter writer)
     {
         // CUnit retains the demonstrated overkill value through its terminal
         // transition (6 -> 4.2 -> 2.4 -> 0.6 -> -1.2).
-        float remaining = FromBits(_currentLifeBits) - FromBits(PulseDamageBits);
+        float remaining = FromBits(_currentLifeBits) - FromBits(damageBits);
         _currentLifeBits = ToBits(remaining);
         writer.Add(new Level100DestructionEvent(
             Level100DestructionEventKind.SegmentDamaged,
@@ -718,6 +763,7 @@ public sealed class Level100DestructionState
 
     private void ApplyWarehouseDamage(
         in Level100ContactHit hit,
+        uint damageBits,
         ref EventWriter writer)
     {
         if ((uint)hit.PartIndex >= (uint)_definition.PartCount ||
@@ -730,7 +776,7 @@ public sealed class Level100DestructionState
         float remaining = MathF.Max(
             0,
             FromBits(_currentHealthBits[hit.PartIndex]) -
-                FromBits(PulseDamageBits));
+                FromBits(damageBits));
         _currentHealthBits[hit.PartIndex] = ToBits(remaining);
         writer.Add(new Level100DestructionEvent(
             Level100DestructionEventKind.SegmentDamaged,

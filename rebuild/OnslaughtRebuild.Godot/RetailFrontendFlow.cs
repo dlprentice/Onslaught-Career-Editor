@@ -90,9 +90,11 @@ public sealed partial class RetailFrontendFlow : Control
     // 16 glyphs. Font13PS at scale 1 rendered 256px wide but only 10px tall in
     // the first capture of this page, so the page is NOT tracked-out small text:
     // it is the same atlas at ~1.5x, which lands 249px wide and 15px tall.
-    private const float DevSelectTitleScale = 1.5f;
-    private const float DevSelectTitleTracking = 0f;
-    private const float DevSelectTitleTop = 68.5f;
+    // The header title is drawn in font22 at scale 1 on this page as on every
+    // other header page; see DrawDevSelect for the glyph-run measurement that
+    // replaced the previous Font13PS-at-1.5 reading. HeaderBarCenterX /
+    // HeaderTitleTop now carry the placement, so no page-local title constants
+    // remain.
     // Rows and the name field are drawn larger than the 20px-pitch main menu:
     // retail's row pitch here is 24 and its glyph bodies are ~14px tall. The
     // first capture measured our "BEA 1" at 53x12 against retail's 69x17, i.e.
@@ -793,6 +795,37 @@ public sealed partial class RetailFrontendFlow : Control
         // unresolved and the decoded strip is retained (it materializes to exactly
         // 128*128*3*286 bytes, so the decode itself is sound). See
         // local-lab/PARITY-FINDINGS-2026-07-25.md finding 5.
+        //
+        // ================= 2026-07-26: THE ARGUMENT ABOVE DOES NOT HOLD =========
+        //
+        // Every capture that argument rests on was taken with -skipfmv, and the
+        // same argument applied to a page now PROVEN to carry a video underlay
+        // reproduces it exactly. On FEP_LEVEL_SELECT, the -skipfmv reference's
+        // underlay is flat (23,23,48) with standard deviation 0.06/0.08/0.06 over
+        // 229,803 pixels — the same "zero variance, so no video" signature — while
+        // the no-skipfmv control of that same page carries a swirling field at
+        // mean (32.2,34.3,65.8), sd 3.18/4.36/7.45.
+        //
+        // And that field IS FEBack128. Admitting only the pixels the -skipfmv
+        // capture proves are pure underlay (exactly (23,23,48) within 1; a
+        // geometric mask, not a rectangle) and scoring every decoded strip frame
+        // upscaled 128² -> 640x480 by normalised cross-correlation peaks at
+        // frame 115, ncc +0.8190, with a coherent shoulder (113..117 all >= 0.747)
+        // against a distribution of mean +0.4163 / sd 0.2204 running down to
+        // -0.0885. A per-channel fit against that frame gives gain 0.2198/0.2209/
+        // 0.2225 over offsets 24.53/24.78/49.35 — i.e. the flat fill plus ~0.22x
+        // the video frame — with residual mad 1.07/1.33/2.23.
+        //
+        // What that does NOT establish: whether the MAIN MENU carries it. There is
+        // no no-skipfmv main-menu capture in the reference set, so this page's
+        // underlay is neither confirmed nor refuted, only left unproven by a
+        // method that cannot decide it. One main-menu frame captured without
+        // -skipfmv, run through the same mask, settles it.
+        //
+        // The flat fill therefore stays: it is faithful to the only reference that
+        // exists, and drawing FEBack128 here on the strength of another page would
+        // be speculation. _feBackFrames is loaded and deliberately not drawn.
+        // See local-lab/CROSS-MODEL-STARTUP-PARITY-2026-07-26.md.
         DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
     }
 
@@ -893,13 +926,40 @@ public sealed partial class RetailFrontendFlow : Control
         DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
 
         // Header text box then the centred title.
+        //
+        // MEASURED 2026-07-26 — the title is font22 at scale 1, NOT Font13PS at
+        // 1.5. Atlas-free proof, from the pristine captures alone: cut the header
+        // title band (y70..92, x200..580, ink threshold >120) on all four header
+        // pages, segment it into per-glyph column runs, and compare glyphs of the
+        // SAME LETTER between pages at 1:1 with no rescaling.
+        //
+        //   page                  ink rows   ink x        per-glyph run widths
+        //   MISSION BRIEFING      72..88     288..490     17,2,13,13,2,15,12,...
+        //   SELECT CONFIGURATION  72..88     249..526     13,11,10,11,13,14,...
+        //   SELECT LEVEL          72..88     304..471     13,11,10,11,13,14,...
+        //   CHOOSE GAME NAME      72..88     263..513     13,12,15,15,13,11,...
+        //
+        // All four have identical 17-row ink height, and SELECT LEVEL's first six
+        // glyph widths are byte-identical to SELECT CONFIGURATION's ("SELECT" on
+        // both). Per-letter mask IoU at 1:1 against SELECT CONFIGURATION:
+        // MISSION BRIEFING 0.992 (8 letters), SELECT LEVEL 0.990 (5 letters),
+        // CHOOSE GAME NAME 0.979 (7 letters). Font13PS at 1.5 would have to be a
+        // rescale of a 16px cell and could not land on the same integer glyph
+        // widths as a 32px cell at 1:1; it does not.
+        //
+        // MISSION BRIEFING and SELECT CONFIGURATION are already drawn in font22
+        // at scale 1 here (NCC 0.951 fit, DrawHeaderBarTitle), so this page and
+        // SELECT LEVEL are corrected to the same call.
+        //
+        // BASELINE MOVED: this page's pinned no-regression capture changes in the
+        // header band. That is intended and is the point of the change.
         DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxTint);
-        float titleWidth = MeasureTrackedText(DevSelectTitle, DevSelectTitleScale, DevSelectTitleTracking);
-        DrawTrackedText(
+        float titleWidth = MeasureFont22Text(DevSelectTitle, 1f);
+        DrawFont22Text(
             DevSelectTitle,
-            new Vector2(390f - (titleWidth * 0.5f), DevSelectTitleTop),
-            DevSelectTitleScale,
-            DevSelectTitleTracking,
+            new Vector2(HeaderBarCenterX - (titleWidth * 0.5f), HeaderTitleTop),
+            1f,
+            1f,
             ReleasedTitleText);
 
         // List panel: border, interior, scrollbar divider and thumb.
@@ -1049,13 +1109,19 @@ public sealed partial class RetailFrontendFlow : Control
         DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
         DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
 
+        // font22 at scale 1, for the glyph-run and per-letter-IoU evidence
+        // written out in DrawDevSelect. Retail's ink here is x304..471, y72..88,
+        // and its "SELECT" glyph widths are byte-identical to the SELECT
+        // CONFIGURATION title that is already drawn in font22.
+        //
+        // BASELINE MOVED: this page's pinned capture changes in the header band.
         DrawRect(new Rect2(191f, 69f, 394f, 21f), HeaderBoxTint);
-        float titleWidth = MeasureTrackedText(_selectLevelText, DevSelectTitleScale, DevSelectTitleTracking);
-        DrawTrackedText(
+        float titleWidth = MeasureFont22Text(_selectLevelText, 1f);
+        DrawFont22Text(
             _selectLevelText,
-            new Vector2(390f - (titleWidth * 0.5f), DevSelectTitleTop),
-            DevSelectTitleScale,
-            DevSelectTitleTracking,
+            new Vector2(HeaderBarCenterX - (titleWidth * 0.5f), HeaderTitleTop),
+            1f,
+            1f,
             ReleasedTitleText);
 
         DrawText(
@@ -1270,6 +1336,23 @@ public sealed partial class RetailFrontendFlow : Control
     ///     the capture ran with -skipfmv; that is the absence of retail's video,
     ///     not retail's drawn output. The frontend-regions file marks the region
     ///     EXCLUDED for the same reason.
+    ///
+    ///     MEASURED 2026-07-26, and the missing content is now identified.
+    ///     Differencing the -skipfmv reference against the no-skipfmv control
+    ///     (no-skipfmv-frontend/05n-mission-briefing-nofmv-b.png) shows 87.60%
+    ///     of this page is pixel-identical between them; the ONLY substantial
+    ///     difference is one rectangle, x380..580 y178..326, dark (mean
+    ///     12,15,21) with the flag and a rendered scene (mean 119,126,145)
+    ///     without it. That rectangle is 201 x 149. Every one of the 28 Bink
+    ///     streams under data/video/briefings/ is 201x149, and the one named
+    ///     PC_100_exact.vid — 396 frames at 25 fps — is Level 100's. So the
+    ///     inset is a briefing video drawn at NATIVE 1:1 with no resampling, at
+    ///     origin (380,177).
+    ///
+    ///     It stays undrawn: playing it needs a decode path and a clock policy
+    ///     that do not exist yet, and drawing black "to match the reference"
+    ///     would encode a -skipfmv artefact as product behaviour. Nothing on
+    ///     this page is tinted to close the gap either.
     ///   * The metal header end-cap brackets and the top-left Forseti emblem are
     ///     the same unidentified art every other page lacks.
     /// </summary>
@@ -1319,7 +1402,21 @@ public sealed partial class RetailFrontendFlow : Control
     /// KNOWN GAPS, left undrawn because no materialized asset matches them, with
     /// their measured extents so the cost is attributable:
     ///   * the circular unit render at roughly x64..256, y152..344 — it is a
-    ///     live 3D view of the battle engine, not a sprite;
+    ///     live 3D view of the battle engine, not a sprite.
+    ///
+    ///     CORROBORATED 2026-07-26, and it corrects a recorded misreading.
+    ///     Differencing the -skipfmv reference against the no-skipfmv control
+    ///     (no-skipfmv-frontend/06n-select-configuration-nofmv.png) leaves this
+    ///     page 90.28% pixel-identical: the painted landscape backdrop is the
+    ///     SAME in both, so this page has no video background. All the
+    ///     difference above threshold 64 falls in x68..270 y218..367, which is
+    ///     this window, and the two frames show the unit in JET form and in
+    ///     WALKER form. The earlier reading of "the two reference frames
+    ///     disagree by 9.4% in a clean sky band, so the background is animated"
+    ///     came from a sample band that was not clean — it contained this
+    ///     render. That is the project's region-mean failure mode again, and
+    ///     the countermeasure is the one used here: localise the difference by
+    ///     row/column density before interpreting it.
     ///   * the three circular mode icons at x449..541, y183..209;
     ///   * the green/red star rating glyphs at x448..545 on the four weapon
     ///     rows. They are 5-pointed star sprites, not the Font13PS asterisk:
@@ -2019,30 +2116,6 @@ public sealed partial class RetailFrontendFlow : Control
             1f,
             1f,
             ReleasedTitleText);
-    }
-
-    /// <summary>
-    /// Draws text with extra per-glyph advance. The FEP_DEVSELECT title is
-    /// letter-spaced well beyond the atlas advance the menu uses.
-    /// </summary>
-    private void DrawTrackedText(string text, Vector2 position, float scale, float tracking, Color color)
-    {
-        float x = position.X;
-        foreach (char character in text)
-        {
-            DrawTextCore(character.ToString(), new Vector2(x, position.Y), scale, color, dropShadow: true);
-            x += (_glyphWidths[GlyphIndex(character)] * scale) + scale + tracking;
-        }
-    }
-
-    private float MeasureTrackedText(string text, float scale, float tracking)
-    {
-        float width = 0f;
-        foreach (char character in text)
-        {
-            width += (_glyphWidths[GlyphIndex(character)] * scale) + scale + tracking;
-        }
-        return Mathf.Max(0f, width - scale - tracking);
     }
 
     private float MeasureText(string text, float scale)

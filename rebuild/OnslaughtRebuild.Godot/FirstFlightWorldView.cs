@@ -59,6 +59,70 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailCockpitWalkToFlySeconds = 23f / RetailAquilaAnimationHz;
     private const float RetailCockpitFlyToWalkSeconds = 24f / RetailAquilaAnimationHz;
 
+    // The cockpit is NOT drawn in the camera's own basis. Retail's cockpit
+    // render thing gets its orientation from the virtual at 0x004254f0, which
+    // composes a 3x4 matrix held at CCockpit+0x2c - the cockpit's own
+    // orientation-offset ("shake") matrix, seeded to identity by the
+    // constructor - onto the battle engine's orientation at battleEngine+0x3c,
+    // which is the same orientation CThingCamera::GetOrientation hands the
+    // camera. So the drawn cockpit basis is the camera basis PRE-MULTIPLIED by
+    // whatever CCockpit+0x2c holds, and until this constant existed the
+    // reconstruction was implicitly asserting that it holds identity.
+    //
+    // It does not. Read out of a running COPY of the game
+    // (local-lab/safe-copy-bea-pristine/BEA.exe, sha256 E1436EF7E0AD9CCBDDD43
+    // AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4) at the Level 100 cockpit
+    // draw, breakpoint window armed at 0x0053bb50 and disarmed at 0x0053ec6f,
+    // dumped at 0x0053bb56 where ESI is the CCockpit, three draw windows, all
+    // three identical, memory reads only:
+    //
+    //     CCockpit+0x2c  =  +0.99880058  +0.02999347  +0.03870098
+    //                       -0.03041990  +0.99948227  +0.01047720
+    //                       -0.03836670  -0.01164191  +0.99919593
+    //
+    // a proper rotation of 2.877224 degrees (det +0.99999998). In the same
+    // read battleEngine+0x3c is an EXACT pure yaw of 29.211108 degrees with
+    // zero tilt, matching the captured view matrix's forward yaw of
+    // 119.211107 degrees, and battleEngine mPos is exactly the level's
+    // player-start constant. So the whole cockpit-vs-camera discrepancy is
+    // this one matrix and none of it is the camera's.
+    //
+    // Two identities close it against the independently captured
+    // SetTransform(D3DTS_WORLDMATRIX(0)) values, at float32 precision:
+    //     W_0 = S^T . B^T                              (max abs err 1.209e-07)
+    //     C   = W_0 . R_view = S^T . P                 (max abs err 3.080e-07)
+    // where P is the exact axis map x->x, y->z, z->-y that this renderer
+    // realises. The basis below is that S carried into Godot camera space; it
+    // reproduces retail's measured cockpit-local-to-camera basis exactly, and
+    // the value derived from the composed capture instead of from S agrees
+    // with it to 3.080e-07.
+    //
+    // HONESTY BOUND, and it is the reason this is scoped rather than global.
+    // This value is MEASURED AND IDENTIFIED, not DERIVED: the shake updater at
+    // 0x00424ca0 reads CCockpit+0xb0, which the same read shows holding EXACT
+    // identity with every shake input zero (CCockpit+0x9c, +0xa0, the shake
+    // position CCockpit+0x0c..0x14, battleEngine+0x278/+0x27c/+0x280), so
+    // nothing here reproduces the value - a snapshot shows current state, not
+    // write history, and whether CCockpit+0x2c is a latched previous state, a
+    // write from a second updater such as 0x004250f0, or a residue from the
+    // level-entry sequence is NOT established. Two things it is NOT, both
+    // tested: it is not the mesh's Camera01 node (composing that
+    // 0.499873-degree node out in all four orders leaves 2.61-3.20 degrees),
+    // and it is not the instantaneous terrain normal (CDXLandscape's own
+    // routine at 0x0047ec60, reproduced exactly from the HFLD, returns
+    // 8.545 degrees at down-azimuth 87.9 at the walker's position against the
+    // measured 2.298 at 44.36; no lattice cell within +/-24 units matches).
+    // It is therefore correct for Level 100's single frozen pose - the only
+    // pose that level presents - and must not be promoted to a general
+    // cockpit mount until the generator is closed.
+    //
+    // See local-lab/COMPOSITION-RESIDUAL-2026-07-26.md.
+    private static readonly Basis RetailNoCockpitOrientationOffset = Basis.Identity;
+    private static readonly Basis RetailLevel100CockpitOrientationOffset = new(
+        new Vector3(0.99880058f, 0.03836670f, 0.03041990f),
+        new Vector3(-0.03870098f, 0.99919593f, 0.01047720f),
+        new Vector3(-0.02999347f, -0.01164191f, 0.99948227f));
+
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<Level100TargetVisualBinding, Mesh>
         _level100TargetAssets = [];
@@ -605,7 +669,31 @@ public sealed partial class FirstFlightWorldView : Node3D
             },
             _level100Terrain);
         _camera.AddChild(_cockpitAsset.Root);
+        // Retail composes CCockpit+0x2c onto the camera's own orientation
+        // before the cockpit is drawn (see the constant's provenance above).
+        // The default is identity - "this build does not model the cockpit
+        // orientation offset" - and only the measured Level 100 value is
+        // supplied, because only Level 100's pose has been observed.
+        _cockpitAsset.Root.Basis = CockpitOrientationOffset;
     }
+
+    /// <summary>
+    /// The cockpit's orientation offset relative to the camera, as retail's
+    /// cockpit render thing applies it from <c>CCockpit+0x2c</c>. Identity
+    /// means "not modelled". This client only ever presents Level 100, whose
+    /// value was read out of the running retail copy; a client that reached
+    /// another level would need its own observation rather than this one.
+    /// </summary>
+    internal static Basis CockpitOrientationOffset =>
+        RetailLevel100CockpitOrientationOffset;
+
+    /// <summary>
+    /// Exposed so the offset cannot be silently promoted to a default: a test
+    /// pins that "no offset" remains identity and is distinct from the
+    /// measured Level 100 value.
+    /// </summary>
+    internal static Basis CockpitOrientationOffsetDefault =>
+        RetailNoCockpitOrientationOffset;
 
     private void UpdatePlayerShape(WorldSnapshot snapshot, bool attachedView)
     {

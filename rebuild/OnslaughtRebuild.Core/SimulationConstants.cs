@@ -223,6 +223,41 @@ public static class SimulationConstants
     // translation is 1.167 units per tick.
     public const int ProjectileSpeedPerTick = 1_167;
     public const int ProjectileLifetimeTicks = 40;
+    // Mech Twin Vulcan Cannon, read out of data/default physics.dat
+    // (sha256 e1fb3ded...b1a2321e1d6a9ba1542c74ada14, 175,603 bytes, 777
+    // statements) with the value-id map established in
+    // reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
+    // and independently re-parsed for this change:
+    //   weapon     Mech Twin Vulcan Cannon @0x171b4
+    //                CWeaponChargeLevel 0 -> mode "Mech Twin Vulcan Cannon"
+    //                CWeaponConsumption 2.0   (Pulse Cannon Pod is 4.0)
+    //   weaponmode Mech Twin Vulcan Cannon @0x13360
+    //                CWeaponInaccuracy 0.006981317 rad, CWeaponReloadTime 0.05 s,
+    //                CWeaponVolleySize 4, CWeaponRound "Mech Bullet",
+    //                CWeaponPredictive 1, four CWeaponLaunchSequence entries
+    //   round      Mech Bullet @0xa3f2
+    //                CRoundVelocity 60.0, CRoundDamage 0.08, CRoundLifeSpan 1.0,
+    //                CRoundExplosion "Mech Bullet Hit"; no CRoundRadius node
+    //   explosion  Mech Bullet Hit @0x4373
+    //                CExplosionRadius 0.2, CExplosionDamage 0.001
+    // CRoundVelocity is units per second on the measured 20 Hz released tick
+    // (the pulse's byte-read 35.0 divided by the measured 1.75 units per
+    // update is exactly 20), so 60.0 u/s is 2.0 units per 30 Hz Core tick and
+    // the 1.0 s lifespan is 30 Core ticks.
+    public const int MechBulletSpeedPerTick = 2_000;
+    public const int MechBulletLifetimeTicks = 30;
+    public const int TwinVulcanVolleySize = 4;
+    // 0.05 s reload expressed exactly. One 30 Hz Core tick is 100/3 ms, so
+    // counting in thirds of a millisecond makes both the tick and the reload
+    // integral and keeps the released 20 volleys per second exact rather than
+    // rounding it to 15 or 30.
+    public const int FireCooldownThirdMillisecondsPerTick = 100;
+    public const int TwinVulcanReloadThirdMilliseconds = 150;
+    // CWeaponConsumption is 2.0 for the Twin Vulcan against 4.0 for the Pulse
+    // Cannon Pod. The absolute Core cost of a pulse shot (FireEnergyCost) is
+    // not dual-accepted retail truth, so only the byte-read 2.0/4.0 ratio is
+    // carried across.
+    public const int TwinVulcanFireEnergyCost = FireEnergyCost / 2;
     // A same-return capture of Steam CBattleEngine::GetLaunchPosition resolved
     // cockpit emitter "Gun" index 1 relative to the live BattleEngine basis.
     // Values are rounded to deterministic integer millimetres.
