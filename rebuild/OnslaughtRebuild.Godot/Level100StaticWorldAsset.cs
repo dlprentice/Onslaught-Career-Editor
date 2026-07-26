@@ -118,6 +118,12 @@ internal sealed partial class Level100StaticWorldAsset
         var meshes = new Dictionary<string, ArrayMesh>(StringComparer.Ordinal);
         foreach ((string key, MeshDefinition definition) in manifest.Meshes)
         {
+            // The four `pinesnow` meshes are the only meshes in the manifest no
+            // authored world object references (the 33 objects use 24 of the 28
+            // mesh keys), and `AddClosePineMeshes` is their only consumer. So
+            // this key test selects exactly retail's `CRTTree` close-pine draws
+            // and nothing else, which is what the measured rig split needs.
+            bool isClosePine = key.StartsWith("pinesnow", StringComparison.Ordinal);
             var surfaceMaterials = definition.Materials.ToDictionary(
                 pair => pair.Key,
                 pair => (Material)CreateMaterial(
@@ -125,9 +131,10 @@ internal sealed partial class Level100StaticWorldAsset
                     textures,
                     manifest.Textures,
                     terrain,
-                    key.StartsWith("pinesnow", StringComparison.Ordinal)
-                        ? pineMeshDistance
-                        : 0f),
+                    isClosePine ? pineMeshDistance : 0f,
+                    isClosePine
+                        ? RetailMeshLightRig.ClosePine(terrain)
+                        : RetailMeshLightRig.StaticWorld(terrain)),
                 StringComparer.Ordinal);
             ArrayMesh mesh = CuratedObjMeshLoader.Load(definition.ResourcePath, surfaceMaterials);
             meshes.Add(key, mesh);
@@ -518,7 +525,8 @@ internal sealed partial class Level100StaticWorldAsset
         IReadOnlyDictionary<string, Texture2D> textures,
         IReadOnlyDictionary<string, TextureDefinition> textureDefinitions,
         Level100HeightFieldAsset terrain,
-        float maximumHorizontalDistance)
+        float maximumHorizontalDistance,
+        RetailMeshLightRig lightRig)
     {
         RetailTextureLayer?[] layers = definition.Layers
             .Select(layer => layer is null
@@ -553,7 +561,8 @@ internal sealed partial class Level100StaticWorldAsset
             terrain,
             maximumHorizontalDistance,
             maximumHorizontalDistance > 0f ? 8f / 255f : 0.5f,
-            RetailStageZeroColorOperation.Modulate2X);
+            RetailStageZeroColorOperation.Modulate2X,
+            lightRig);
     }
 
     private static Manifest LoadManifest()
@@ -870,6 +879,115 @@ internal sealed record RetailTextureLayer(
     bool BlendTextureAlpha = false);
 
 /// <summary>
+/// The two-directional-light fixed-function rig a draw through
+/// <see cref="RetailFixedFunctionMaterial"/> runs under: <c>D3DRS_AMBIENT</c>
+/// plus light 0 and light 1, whose directions retail keeps exactly
+/// anti-parallel on both measured rigs.
+/// </summary>
+/// <remarks>
+/// This is a per-draw property in the released game, not a level constant. The
+/// values below were read at the <c>IDirect3DDevice9</c> calls themselves — the
+/// <c>SetLight</c> site at <c>0x005512e1</c> (the tail of <c>0x00551200</c>,
+/// which builds the 0x68-byte <c>D3DLIGHT9</c> on the stack from the 0x5c-byte
+/// engine record at <c>0x009c65c0 + index*0x5c</c>), the <c>LightEnable</c> site
+/// at <c>0x00551101</c>, and the seven <c>SetMaterial</c> sites — over two
+/// independent launches of the safe copy (sha256 <c>E1436EF7…FADF4</c>) at two
+/// different level times, with every payload byte-identical between them:
+/// <list type="bullet">
+/// <item><description>130 mode-0 <c>CRTMesh</c> static-world draws:
+/// <c>D3DRS_AMBIENT = 0x000d0f2b</c>, light 0 = the height field's sun colour
+/// travelling along the height field's sun vector, light 1 = the full anti-sun
+/// travelling the other way.</description></item>
+/// <item><description>442 <c>CRTTree</c> close-pine draws:
+/// <c>D3DRS_AMBIENT = 0x0039293e</c>, light 0 = the sun colour scaled by
+/// <c>0.1</c> travelling straight down BEA <c>+Z</c>, light 1 = the full
+/// anti-sun travelling straight up BEA <c>-Z</c>.</description></item>
+/// </list>
+/// <c>D3DLIGHT9.Ambient</c> is <c>(0,0,0,0)</c> on both lights at every mesh
+/// draw — only <c>CDXLandscape::Render</c>'s own re-upload carries a light
+/// ambient term — so the whole normal-independent part of the vertex colour is
+/// <c>D3DRS_AMBIENT</c>, and <c>D3DLIGHT9.Diffuse</c> carries the rest.
+/// </remarks>
+internal readonly record struct RetailMeshLightRig(
+    Vector3 AmbientColor,
+    Vector3 KeyLightColor,
+    Vector3 FillLightColor,
+    Vector3 KeyLightDirection)
+{
+    /// <summary>
+    /// <c>D3DRS_AMBIENT</c> at all 442 <c>CRTTree</c> draws of a frame,
+    /// <c>0x0039293e</c> = (57, 41, 62)/255, constant across 438 and 436 draws
+    /// in two launches.
+    ///
+    /// FLAGGED: unlike the static world's <c>0x000d0f2b</c>, which is the
+    /// height field's own <c>CHFD + 0x108C</c>, this value has no established
+    /// shipped source. A whole-image operand scan of the safe copy finds zero
+    /// occurrences of <c>0x0039293e</c>, so retail composes it at runtime and
+    /// the composition is not yet read. It is a measurement, not a derivation.
+    /// </summary>
+    public const uint ClosePineAmbientRgb24 = 0x0039293Eu;
+
+    /// <summary>
+    /// The scale retail applies to the sun colour for the close-pine key light.
+    /// <c>CRTTree::BuildRenderOutputs</c> unpacks the packed RGB24 sun colour at
+    /// <c>0x004ddcb8</c>–<c>0x004ddd2f</c> and multiplies each channel by
+    /// <c>[0x005db060]</c> = <c>1/256</c> and by <c>[0x005d85c0]</c> =
+    /// <c>0.10000000149011612</c>. The parallel anti-sun block at
+    /// <c>0x004ddd59</c> applies <c>1/256</c> only, which is why the fill light
+    /// arrives unscaled. Confirmed at the device: the uploaded light-0
+    /// <c>Diffuse</c> <c>(0.07382812, 0.06914063, 0.04726563)</c> divided by the
+    /// sun colour <c>(189, 177, 121)/256</c> is <c>0.1</c> to float32 on all
+    /// three channels.
+    /// </summary>
+    public const float ClosePineKeyLightScale = 0.1f;
+
+    /// <summary>
+    /// The rig measured at the 130 mode-0 <c>CRTMesh</c> static-world draws.
+    /// This is the law the reconstruction already implemented, reproduced here
+    /// unchanged: the device-side reading confirms it channel for channel,
+    /// including the 3.32x up/under step, so nothing about the buildings moves.
+    /// </summary>
+    public static RetailMeshLightRig StaticWorld(Level100HeightFieldAsset terrain) => new(
+        ToColorVector(terrain.AmbientColorRgb24, 255f),
+        ToColorVector(terrain.SunColorRgb24, 256f),
+        ToColorVector(terrain.AntiSunColorRgb24, 256f),
+        terrain.SunlightDirection);
+
+    /// <summary>
+    /// The rig measured at the 442 <c>CRTTree</c> close-pine draws.
+    ///
+    /// Both light colours still come from the shipped height field and the only
+    /// scale is the shipped <c>0.1</c>; the one value with no shipped source is
+    /// <see cref="ClosePineAmbientRgb24"/>. With stage-zero
+    /// <c>MODULATE2X</c> and white vertex colour this yields
+    /// <c>2 x (ambient + light)</c> = <c>(0.59472, 0.45985, 0.58081)</c> on an
+    /// up-facing normal and <c>(0.72050, 0.59501, 0.92377)</c> on a down-facing
+    /// one — a step of <c>(1.21, 1.29, 1.59)</c>, luminance <c>1.304</c>,
+    /// against the retail median of <c>1.144</c> measured at 353 matched pixel
+    /// pairs. Note the sign: retail's foliage undersides are brighter and bluer
+    /// than its tops.
+    /// </summary>
+    public static RetailMeshLightRig ClosePine(Level100HeightFieldAsset terrain) => new(
+        ToColorVector(ClosePineAmbientRgb24, 255f),
+        ToColorVector(terrain.SunColorRgb24, 256f) * ClosePineKeyLightScale,
+        ToColorVector(terrain.AntiSunColorRgb24, 256f),
+        // The uploaded light-0 Direction is BEA (0, 0, +1) exactly, and BEA's Z
+        // is down. Carried into Godot by the same map the rest of the world path
+        // uses -- MapVector, (x, y, z) -> (x, -z, -y), which
+        // Level100HeightFieldAsset applies to the height field's own sun vector
+        // and which Level100VertexDiffuseTests proves is the composite of
+        // emit_obj's diag(1,1,-1) and this asset's RotationDegrees(-90, 0, 0) --
+        // that is (0, -1, 0). Light 1's Direction is BEA (0, 0, -1), the exact
+        // negation, which is the anti-parallel form the shader assumes.
+        new Vector3(0f, -1f, 0f));
+
+    private static Vector3 ToColorVector(uint rgb, float divisor) => new(
+        ((rgb >> 16) & 0xFF) / divisor,
+        ((rgb >> 8) & 0xFF) / divisor,
+        (rgb & 0xFF) / divisor);
+}
+
+/// <summary>
 /// The stage-zero <c>D3DTSS_COLOROP</c> a draw through
 /// <see cref="RetailFixedFunctionMaterial"/> runs under. The members carry the
 /// Direct3D <c>D3DTOP</c> enumerant values so the source reads the same way the
@@ -936,6 +1054,15 @@ internal static class RetailFixedFunctionMaterial
         uniform vec2 overlay_offset;
         uniform vec2 overlay_scale;
         uniform float overlay_opacity;
+        // D3DRS_AMBIENT and the two anti-parallel D3DLIGHT9 records, per draw
+        // and never a level constant -- see RetailMeshLightRig for the device
+        // reads at SetLight (0x005512e1) that fix them. sun_color is light 0's
+        // Diffuse, anti_sun_color is light 1's, and sunlight_direction is light
+        // 0's Direction mapped into Godot; light 1's Direction is its exact
+        // negation on both measured rigs, which is why one vector serves both.
+        // On the 442 CRTTree draws light 0 is the sun scaled by the shipped 0.1
+        // at 0x005d85c0 and the axis is vertical, so the names describe the
+        // static-world rig and the slots, not the tree rig's physical roles.
         uniform vec3 ambient_color;
         uniform vec3 sun_color;
         uniform vec3 anti_sun_color;
@@ -1112,13 +1239,23 @@ internal static class RetailFixedFunctionMaterial
     /// static-world and 442 tree draws, which are the majority of the draws
     /// through this shader. See <see cref="RetailStageZeroColorOperation"/>.
     /// </param>
+    /// <param name="lightRig">
+    /// The <c>D3DRS_AMBIENT</c> and two-<c>D3DLIGHT9</c> rig this draw runs
+    /// under. Retail's rig also varies by draw — the close pines run a
+    /// different ambient, a 0.1x key light and a vertical light axis — so a
+    /// call site that draws trees must say so. Omitting it keeps the
+    /// static-world rig measured at the 130 mode-0 <c>CRTMesh</c> draws, which
+    /// is the majority case and what every other call site through this shader
+    /// was measured at. See <see cref="RetailMeshLightRig"/>.
+    /// </param>
     public static ShaderMaterial Create(
         IReadOnlyList<RetailTextureLayer?> layers,
         Level100HeightFieldAsset terrain,
         float maximumHorizontalDistance = 0f,
         float alphaReference = 0.5f,
         RetailStageZeroColorOperation stageZeroColorOperation =
-            RetailStageZeroColorOperation.Modulate2X)
+            RetailStageZeroColorOperation.Modulate2X,
+        RetailMeshLightRig? lightRig = null)
     {
         if (layers.Count != 6 || layers[0] is not RetailTextureLayer baseLayer)
         {
@@ -1160,10 +1297,11 @@ internal static class RetailFixedFunctionMaterial
         material.SetShaderParameter("overlay_offset", overlayLayer?.Offset ?? Vector2.Zero);
         material.SetShaderParameter("overlay_scale", overlayLayer?.Scale ?? Vector2.One);
         material.SetShaderParameter("overlay_opacity", overlayLayer?.Opacity ?? 0f);
-        material.SetShaderParameter("ambient_color", ToVector(terrain.AmbientColorRgb24, 255f));
-        material.SetShaderParameter("sun_color", ToVector(terrain.SunColorRgb24, 256f));
-        material.SetShaderParameter("anti_sun_color", ToVector(terrain.AntiSunColorRgb24, 256f));
-        material.SetShaderParameter("sunlight_direction", terrain.SunlightDirection);
+        RetailMeshLightRig rig = lightRig ?? RetailMeshLightRig.StaticWorld(terrain);
+        material.SetShaderParameter("ambient_color", rig.AmbientColor);
+        material.SetShaderParameter("sun_color", rig.KeyLightColor);
+        material.SetShaderParameter("anti_sun_color", rig.FillLightColor);
+        material.SetShaderParameter("sunlight_direction", rig.KeyLightDirection);
         material.SetShaderParameter("fog_color", new Vector3(
             terrain.FogColor.R,
             terrain.FogColor.G,
@@ -1191,11 +1329,6 @@ internal static class RetailFixedFunctionMaterial
             RetailStageZeroColorOperation.Modulate2X => 2f,
             _ => throw new ArgumentOutOfRangeException(nameof(operation)),
         };
-
-    private static Vector3 ToVector(uint rgb, float divisor) => new(
-        ((rgb >> 16) & 0xFF) / divisor,
-        ((rgb >> 8) & 0xFF) / divisor,
-        (rgb & 0xFF) / divisor);
 
     private static float ToTextureFactorAlpha(float strength)
     {

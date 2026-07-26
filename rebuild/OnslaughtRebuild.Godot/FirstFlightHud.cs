@@ -136,6 +136,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
         _textLayer.SetState(hud, message, activePlayback);
     }
 
+    // A deterministic stand-in, not a measurement. Classifying retail's pose on
+    // the 199 pose-discriminating Tatiana texels across the 27 hud-timeline-run1
+    // frames gives aa 11 / ee 8 / mm 6 / oo 2 against these 40/12/40/8 weights -
+    // oo and aa land, the ee/mm split does not (chi2 ~ 9.2 on 3 df, p ~ 0.03,
+    // n = 27: suggestive, not enough to re-weight). The pose changes on 21 of 26
+    // consecutive ~1 s samples, which refutes "retail holds a pose for over a
+    // second" but cannot distinguish this 50 ms cadence from any other
+    // sub-second one. Settling the owner's "faces move too fast" report needs a
+    // retail capture at >= 10 Hz over one message; do not tune it against 27
+    // samples. local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md section 6.
     private static int PortraitPoseIndex(Level100MessagePlaybackState playback)
     {
         if (!playback.Playing || !playback.ActiveMessageId.HasValue)
@@ -865,6 +875,32 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
+        // MEASURED 2026-07-26 on a pose-invariant clean mask - 3,397 texels per
+        // frame on which all four shipped Tatiana poses agree to <= 4 levels and
+        // are fully covered, times 22 clean paired frames = 74,734 samples. See
+        // local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md.
+        //
+        //   retail = 0.5937 * texel + 25.09, channel-flat to 0.3%
+        //            (s = [0.5935, 0.5929, 0.5948], c = [24.94, 24.76, 25.55])
+        //   build  = 1.033 * texel, i.e. opaque
+        //
+        // So retail's portrait is TRANSLUCENT (alpha ~0.594, consistent with a
+        // 0x98/255 = 0.596 diffuse modulate) over a field of 25.09/0.406 = 61.8
+        // that is NEUTRAL (B/R = 1.024) and terrain-independent:
+        //   - retail's terrain outside the instrument is [95.4, 107.0, 126.0],
+        //     B/R = 1.32, so it cannot produce a neutral pedestal; and
+        //   - the pedestal RISES top-to-bottom (21.2 -> 27.0) while the terrain
+        //     behind the disc DARKENS top-to-bottom. Wrong sign.
+        // circle-darkener is in fact a hard alpha-255 black disc of r ~47 about
+        // its page (49, 49); the 0.76 below is unmeasured.
+        //
+        // The alpha is NOT applied here, and the 0.76 is NOT raised to 1, because
+        // the neutral 61.8 field is unidentified. Applying either half alone
+        // replaces one wrong number with another (it would predict [94, 95, 98]
+        // against retail's [108, 102, 97], over a blue-tilted terrain backdrop
+        // standing in for a neutral one). What would settle it: the render-state
+        // sequence of 0x00487d10 CHud__RenderBattleline, or a >= 10 Hz retail
+        // capture of a message frame.
         private void DrawBattleLine()
         {
             DrawTextureRect(
@@ -1461,6 +1497,23 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
+        // The message-noise pass below is contradicted on four counts, measured
+        // 2026-07-26 by correlating each frame's portrait-disc residual against
+        // the message-noise page over a per-frame dx +/-6, dy +/-64 sweep
+        // (local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md section 5). Retail's is:
+        //   INTERMITTENT - present on 5 of 26 frames (r = +0.53..+0.66) and at
+        //                  the |r| <= 0.074 floor on the other 21, not every
+        //                  frame a message is active;
+        //   SCROLLED     - a different vertical offset each time it appears
+        //                  (dy = -48, -44, -40, +7, +34);
+        //   UNDER the portrait - the portrait's slope is unchanged (0.600-0.604)
+        //                  on those frames while the pedestal drops by exactly
+        //                  the noise's mean contribution (25.1 -> 16.5..18.9,
+        //                  against 0.13 * 52.3 = 6.8);
+        //   NEUTRAL      - not the (0.48, 0.66, 1) blue below.
+        // Not corrected here: the cadence rule cannot be recovered from 1 Hz
+        // samples, and the layer it belongs under is the unresolved backdrop of
+        // DrawBattleLine.
         private void DrawBattleLineOutline(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud)

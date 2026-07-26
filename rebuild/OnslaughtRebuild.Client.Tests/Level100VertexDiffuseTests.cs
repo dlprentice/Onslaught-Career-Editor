@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Globalization;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -212,14 +213,16 @@ public sealed class Level100VertexDiffuseTests
             "            terrain,\n" +
             "            maximumHorizontalDistance,\n" +
             "            maximumHorizontalDistance > 0f ? 8f / 255f : 0.5f,\n" +
-            "            RetailStageZeroColorOperation.Modulate2X);",
+            "            RetailStageZeroColorOperation.Modulate2X,\n" +
+            "            lightRig);",
             staticWorld);
 
         // The shared default is MODULATE2X too, so a call site that says
         // nothing keeps the majority-measured behaviour rather than losing it.
         Assert.Contains(
             "        RetailStageZeroColorOperation stageZeroColorOperation =\n" +
-            "            RetailStageZeroColorOperation.Modulate2X)",
+            "            RetailStageZeroColorOperation.Modulate2X,\n" +
+            "        RetailMeshLightRig? lightRig = null)",
             staticWorld);
     }
 
@@ -450,6 +453,274 @@ public sealed class Level100VertexDiffuseTests
         Assert.Contains(
             "vec3 world_normal = normalize(mat3(MODEL_MATRIX) * NORMAL);",
             staticWorld);
+    }
+
+    /// <summary>
+    /// The close pines carry no vertex tint, so the device-measured light rig
+    /// predicts their shading directly.
+    ///
+    /// This is the caveat <c>LIT-MESH-LIGHT-STATE-2026-07-26.md</c> section 7
+    /// left open: <c>D3DRS_AMBIENTMATERIALSOURCE</c> and
+    /// <c>D3DRS_DIFFUSEMATERIALSOURCE</c> are both <c>D3DMCS_COLOR1</c> at the
+    /// 442 <c>CRTTree</c> draws, so a per-vertex colour other than white would
+    /// scale the whole predicted result and the session that measured the rig
+    /// did not read <c>COLOR1</c>. Read here off the shipped bytes instead:
+    /// all 2,269 vertices of the four <c>pinesnow</c> meshes carry exactly
+    /// <c>1.0 1.0 1.0</c> in the OBJ colour extension, i.e. D3DCOLOR
+    /// <c>0xFFFFFFFF</c>. The two non-white meshes in the level
+    /// (<c>fb-health-pad</c>, <c>fb-tank-factory</c>) are buildings and neither
+    /// is a pine. So <c>vertex_light_color *= COLOR.rgb</c> is the identity on
+    /// every tree card and the predicted gains stand unmodified.
+    /// </summary>
+    [Fact]
+    public void EveryClosePineVertexIsOpaqueWhiteSoTheMeasuredRigPredictsDirectly()
+    {
+        var byMesh = new SortedDictionary<string, (int Total, int NonWhite)>(
+            StringComparer.Ordinal);
+        foreach (string path in MeshPaths())
+        {
+            string name = Path.GetFileNameWithoutExtension(path);
+            if (!name.StartsWith("pinesnow", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            List<string[]> records = VertexRecords(path);
+            byMesh.Add(
+                name,
+                (records.Count, records.Count(fields => ToRgb8(fields) != (255, 255, 255))));
+        }
+
+        Assert.Equal(
+            new SortedDictionary<string, (int Total, int NonWhite)>(StringComparer.Ordinal)
+            {
+                ["pinesnow0"] = (674, 0),
+                ["pinesnow1"] = (411, 0),
+                ["pinesnow2"] = (586, 0),
+                ["pinesnow3"] = (598, 0),
+            },
+            byMesh);
+        Assert.Equal(2_269, byMesh.Values.Sum(item => item.Total));
+    }
+
+    /// <summary>
+    /// The close pines run their own measured rig, and it is built from shipped
+    /// values plus exactly one measured register.
+    ///
+    /// Read at the <c>IDirect3DDevice9</c> calls — <c>SetLight</c> at
+    /// <c>0x005512e1</c>, <c>LightEnable</c> at <c>0x00551101</c> — over two
+    /// independent launches, all 442 <c>CRTTree</c> payloads per frame
+    /// byte-identical: <c>D3DRS_AMBIENT = 0x0039293e</c>, light 0
+    /// <c>Diffuse = (0.07382812, 0.06914063, 0.04726563)</c> with
+    /// <c>Direction = (0, 0, +1)</c>, light 1 <c>Diffuse = (0.13671875,
+    /// 0.13671875, 0.21875)</c> with <c>Direction = (0, 0, -1)</c>. Light 0 is
+    /// the height field's sun colour times the shipped
+    /// <c>[0x005d85c0] = 0.10000000149011612</c> that
+    /// <c>CRTTree::BuildRenderOutputs</c> applies at
+    /// <c>0x004ddcb8</c>–<c>0x004ddd2f</c>; the anti-sun block at
+    /// <c>0x004ddd59</c> has no such factor.
+    /// </summary>
+    [Fact]
+    public void TheClosePineDrawsCarryTheMeasuredTreeRigAndNotTheStaticWorldOne()
+    {
+        string staticWorld = Normalize(ReadGodotSource("Level100StaticWorldAsset.cs"));
+
+        // The one register with no established shipped source, and the shipped
+        // scale that is not a fitted constant.
+        Assert.Contains("public const uint ClosePineAmbientRgb24 = 0x0039293Eu;", staticWorld);
+        Assert.Contains("public const float ClosePineKeyLightScale = 0.1f;", staticWorld);
+
+        // The rig itself: ambient from the measured register, key light from the
+        // shipped sun colour scaled by the shipped 0.1, fill light from the
+        // shipped anti-sun unscaled, and the vertical axis.
+        Assert.Contains(
+            "    public static RetailMeshLightRig ClosePine(Level100HeightFieldAsset terrain) => new(\n" +
+            "        ToColorVector(ClosePineAmbientRgb24, 255f),\n" +
+            "        ToColorVector(terrain.SunColorRgb24, 256f) * ClosePineKeyLightScale,\n" +
+            "        ToColorVector(terrain.AntiSunColorRgb24, 256f),",
+            staticWorld);
+        Assert.Contains("        new Vector3(0f, -1f, 0f));", staticWorld);
+
+        // And that the pines, and only the pines, are given it.
+        Assert.Contains(
+            "            bool isClosePine = key.StartsWith(\"pinesnow\", StringComparison.Ordinal);",
+            staticWorld);
+        Assert.Contains(
+            "                    isClosePine\n" +
+            "                        ? RetailMeshLightRig.ClosePine(terrain)\n" +
+            "                        : RetailMeshLightRig.StaticWorld(terrain)),",
+            staticWorld);
+        Assert.Equal(1, Occurrences(staticWorld, "RetailMeshLightRig.ClosePine(terrain)"));
+    }
+
+    /// <summary>
+    /// The static-world rig must NOT acquire the tree's.
+    ///
+    /// The same device-level session measured the 130 mode-0 <c>CRTMesh</c>
+    /// draws at <c>D3DRS_AMBIENT = 0x000d0f2b</c> with the unscaled sun and
+    /// anti-sun on the height field's own sun axis, and confirmed the
+    /// reconstruction already reproduces that channel for channel including the
+    /// 3.32x up/under step. Buildings are correct; nothing about them changes.
+    /// The default on every call site that says nothing is the static-world rig.
+    /// </summary>
+    [Fact]
+    public void TheStaticWorldRigKeepsTheHeightFieldAmbientAndTheUnscaledSun()
+    {
+        string staticWorld = Normalize(ReadGodotSource("Level100StaticWorldAsset.cs"));
+
+        Assert.Contains(
+            "    public static RetailMeshLightRig StaticWorld(Level100HeightFieldAsset terrain) => new(\n" +
+            "        ToColorVector(terrain.AmbientColorRgb24, 255f),\n" +
+            "        ToColorVector(terrain.SunColorRgb24, 256f),\n" +
+            "        ToColorVector(terrain.AntiSunColorRgb24, 256f),\n" +
+            "        terrain.SunlightDirection);",
+            staticWorld);
+
+        // The tree scale and the tree ambient appear nowhere in the world rig.
+        Assert.DoesNotContain(
+            "ToColorVector(terrain.AmbientColorRgb24, 255f) * ClosePineKeyLightScale",
+            staticWorld);
+        Assert.Equal(1, Occurrences(staticWorld, "ClosePineKeyLightScale,"));
+        Assert.Equal(1, Occurrences(staticWorld, "ToColorVector(ClosePineAmbientRgb24, 255f)"));
+
+        // A call site that states no rig gets the world one.
+        Assert.Contains("        RetailMeshLightRig? lightRig = null)", staticWorld);
+        Assert.Contains(
+            "        RetailMeshLightRig rig = lightRig ?? RetailMeshLightRig.StaticWorld(terrain);",
+            staticWorld);
+        Assert.Contains("material.SetShaderParameter(\"ambient_color\", rig.AmbientColor);", staticWorld);
+        Assert.Contains("material.SetShaderParameter(\"sun_color\", rig.KeyLightColor);", staticWorld);
+        Assert.Contains("material.SetShaderParameter(\"anti_sun_color\", rig.FillLightColor);", staticWorld);
+        Assert.Contains(
+            "material.SetShaderParameter(\"sunlight_direction\", rig.KeyLightDirection);",
+            staticWorld);
+    }
+
+    /// <summary>
+    /// The arithmetic the two rigs produce, from the shipped height field bytes
+    /// and the measured register, against the numbers measured off retail's own
+    /// pixels. Nothing here is fitted: every operand is either a byte
+    /// <c>Level100Terrain</c> parses out of the shipped height field or a value
+    /// read at the device.
+    ///
+    /// Tree rig, both lights axis-aligned so <c>N.L</c> is exactly 1 on a
+    /// horizontal card: <c>2 x (ambient + light)</c> is
+    /// <c>(0.59472, 0.45985, 0.58081)</c> up and
+    /// <c>(0.72050, 0.59501, 0.92377)</c> down. Retail's measured median step at
+    /// 353 matched pixel pairs is <c>1.144</c>; this rig predicts <c>1.304</c>
+    /// and the static-world rig applied to the same cards predicts
+    /// <c>2.714</c>. The sign matters as much as the size: retail's foliage
+    /// undersides are brighter and bluer than its tops, and the static-world rig
+    /// has that backwards.
+    /// </summary>
+    [Fact]
+    public void TheTreeRigPredictsRetailsNearFlatFoliageStepAndTheWorldRigDoesNot()
+    {
+        Level100Terrain terrain = Level100Terrain.Instance;
+        Assert.Equal(0xBDB179u, terrain.SunColorRgb24);
+        Assert.Equal(0x232338u, terrain.AntiSunColorRgb24);
+        Assert.Equal(0x0D0F2Bu, terrain.AmbientColorRgb24);
+
+        double[] sun = Channels(terrain.SunColorRgb24, 256.0);
+        double[] antiSun = Channels(terrain.AntiSunColorRgb24, 256.0);
+
+        // The device-side light-0 Diffuse at the tree draws, divided by the
+        // shipped sun colour, is the shipped 0.1 at 0x005d85c0 on all three
+        // channels. Assert the shipped bytes reproduce the uploaded payload.
+        double[] treeKey = [sun[0] * 0.1, sun[1] * 0.1, sun[2] * 0.1];
+        Assert.Equal(0.07382812, treeKey[0], 7);
+        Assert.Equal(0.06914063, treeKey[1], 7);
+        Assert.Equal(0.04726563, treeKey[2], 7);
+
+        // D3DRS_AMBIENT at the 442 CRTTree draws. Measured, not shipped: a
+        // whole-image operand scan finds zero occurrences of 0x0039293e.
+        double[] treeAmbient = Channels(0x0039293Eu, 255.0);
+        double[] treeUp = Doubled(treeAmbient, treeKey);
+        double[] treeDown = Doubled(treeAmbient, antiSun);
+
+        AssertChannels([0.59472, 0.45985, 0.58081], treeUp, 5);
+        AssertChannels([0.72050, 0.59501, 0.92377], treeDown, 5);
+        AssertChannels(
+            [1.2115, 1.2939, 1.5905],
+            [treeDown[0] / treeUp[0], treeDown[1] / treeUp[1], treeDown[2] / treeUp[2]],
+            4);
+
+        // The static-world rig on the same horizontal card, for contrast. Its
+        // N.L is the shipped sun elevation, not 1: the sun vector is
+        // CHFD + 0x10A4 and the reconstruction reads it at load.
+        double[] worldAmbient = Channels(terrain.AmbientColorRgb24, 255.0);
+        double sunDot =
+            Math.Abs((double)terrain.SunPositionZ) / SunPositionLength(terrain);
+        Assert.Equal(0.41620260, sunDot, 7);
+
+        double[] worldUp = Doubled(worldAmbient, Scale(sun, sunDot));
+        double[] worldDown = Doubled(worldAmbient, Scale(antiSun, sunDot));
+        AssertChannels([0.71651, 0.69318, 0.73070], worldUp, 5);
+        AssertChannels([0.21577, 0.23145, 0.51934], worldDown, 5);
+
+        // Rec. 601 luminance, the same weighting the 353-pair pixel measurement
+        // used, and the same brighter-over-darker orientation that measurement
+        // reported, so 1.0 means a flat card either way up. Retail's median
+        // there is 1.144.
+        const double RetailMedianStep = 1.144;
+        double treeStep = Step(treeUp, treeDown);
+        double worldStep = Step(worldUp, worldDown);
+        Assert.Equal(1.304, treeStep, 3);
+        Assert.Equal(2.714, worldStep, 3);
+
+        // The load-bearing comparison, stated as an inequality so it cannot be
+        // satisfied by tuning: the measured tree rig lands nearer retail's
+        // measured step than the static-world rig does, and on the same side.
+        Assert.True(
+            Math.Abs(treeStep - RetailMedianStep) < Math.Abs(worldStep - RetailMedianStep),
+            $"tree step {treeStep:F3} is no closer to retail's {RetailMedianStep} " +
+            $"than the world rig's {worldStep:F3}");
+        Assert.True(treeDown[2] > treeUp[2], "retail's foliage undersides are brighter in blue");
+        Assert.True(worldDown[2] < worldUp[2], "the static-world rig darkens undersides");
+    }
+
+    private static double SunPositionLength(Level100Terrain terrain) => Math.Sqrt(
+        ((double)terrain.SunPositionX * terrain.SunPositionX) +
+        ((double)terrain.SunPositionY * terrain.SunPositionY) +
+        ((double)terrain.SunPositionZ * terrain.SunPositionZ));
+
+    private static double[] Channels(uint rgb, double divisor) =>
+    [
+        ((rgb >> 16) & 0xFF) / divisor,
+        ((rgb >> 8) & 0xFF) / divisor,
+        (rgb & 0xFF) / divisor,
+    ];
+
+    private static double[] Scale(double[] color, double factor) =>
+        [color[0] * factor, color[1] * factor, color[2] * factor];
+
+    /// <summary>Stage-zero <c>D3DTOP_MODULATE2X</c> over ambient plus light.</summary>
+    private static double[] Doubled(double[] ambient, double[] light) =>
+    [
+        2.0 * (ambient[0] + light[0]),
+        2.0 * (ambient[1] + light[1]),
+        2.0 * (ambient[2] + light[2]),
+    ];
+
+    /// <summary>
+    /// The luminance step across one card's crease, brighter over darker, which
+    /// is how the 353 matched retail pixel pairs were scored.
+    /// </summary>
+    private static double Step(double[] up, double[] down)
+    {
+        double first = Luminance(up);
+        double second = Luminance(down);
+        return Math.Max(first, second) / Math.Min(first, second);
+    }
+
+    private static double Luminance(double[] color) =>
+        (0.299 * color[0]) + (0.587 * color[1]) + (0.114 * color[2]);
+
+    private static void AssertChannels(double[] expected, double[] actual, int precision)
+    {
+        for (int channel = 0; channel < 3; channel++)
+        {
+            Assert.Equal(expected[channel], actual[channel], precision);
+        }
     }
 
     private static int Occurrences(string text, string value)
