@@ -12,6 +12,10 @@ public sealed partial class FirstFlightWorldView : Node3D
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     private const float RetailVerticalFovDegrees = 58.7155f;
+    // A planted or swinging Aquila foot advances a fraction of a stride per
+    // tick, so a player-relative jump beyond one stride is a stance reset
+    // rather than motion and must not be smeared.
+    private const float RetailWalkerFootTeleportMeters = 3f;
     private const float RetailOpeningPanSeconds = 6f;
     private const float RetailOpeningCameraHandoffSeconds = 5.95f;
     private const float RetailAquilaAnimationHz = 20f;
@@ -27,6 +31,12 @@ public sealed partial class FirstFlightWorldView : Node3D
         _level100TargetAssets = [];
     private readonly Dictionary<Level100ActorId, Level100TargetVisual>
         _level100Targets = [];
+    // Per-frame scratch used to match rendered entities to their previous-tick
+    // state by stable Core identity rather than by list ordinal.
+    private readonly Dictionary<Level100ActorId, Level100TargetVisualDescriptor>
+        _previousTargetDescriptors = [];
+    private readonly Dictionary<int, Level100ProjectileVisualState>
+        _previousProjectileStates = [];
     private Node3D _playerRoot = null!;
     private Node3D _playerBodyPivot = null!;
     private RetailAquilaWalkerAsset _walkerAsset = null!;
@@ -163,14 +173,14 @@ public sealed partial class FirstFlightWorldView : Node3D
             ? new Vector3(-playerPitch, 0f, -playerRoll)
             : Vector3.Zero;
 
-        UpdateWalkerPose(current);
+        UpdateWalkerPose(previous, current, interpolationAlpha, playerYaw, resetJump);
         UpdateAquilaTransitionPresentation(current, frameDelta);
         float openingElapsedTicks = GetOpeningElapsedTicks(previous, current, interpolationAlpha);
         float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
         ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
         UpdatePlayerShape(current, ShowHud);
-        UpdateLevel100Targets(current);
-        UpdateProjectiles(current);
+        UpdateLevel100Targets(previous, current, interpolationAlpha);
+        UpdateProjectiles(previous, current, interpolationAlpha);
         UpdateCamera(
             playerPosition,
             playerYaw,
@@ -341,7 +351,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             Level100TargetPresentation.WarehouseBinding,
             warehouseMesh);
 
-        UpdateLevel100Targets(snapshot);
+        UpdateLevel100Targets(snapshot, snapshot, 0f);
     }
 
     private Level100TargetVisual AddLevel100Target(
@@ -379,9 +389,25 @@ public sealed partial class FirstFlightWorldView : Node3D
         return visual;
     }
 
-    private void UpdateLevel100Targets(WorldSnapshot snapshot)
+    private void UpdateLevel100Targets(
+        WorldSnapshot previous,
+        WorldSnapshot current,
+        float interpolationAlpha)
     {
-        foreach (TargetSnapshot target in snapshot.Targets)
+        // Target actors are matched across the snapshot pair by their stable
+        // Core actor id, so an actor leaving the list cannot hand its previous
+        // pose to whichever actor takes its ordinal.
+        _previousTargetDescriptors.Clear();
+        if (!ReferenceEquals(previous, current))
+        {
+            foreach (TargetSnapshot target in previous.Targets)
+            {
+                _previousTargetDescriptors[target.ActorId] =
+                    Level100TargetPresentation.Project(target);
+            }
+        }
+
+        foreach (TargetSnapshot target in current.Targets)
         {
             Level100TargetVisualDescriptor descriptor =
                 Level100TargetPresentation.Project(target);
@@ -399,7 +425,17 @@ public sealed partial class FirstFlightWorldView : Node3D
                     $"{descriptor.ActorId.Value}.");
             }
 
-            visual.Root.Transform = ToGodotTransform(descriptor);
+            Level100TargetVisualDescriptor? prior =
+                _previousTargetDescriptors.TryGetValue(
+                    descriptor.ActorId,
+                    out Level100TargetVisualDescriptor found)
+                    ? found
+                    : null;
+            visual.Root.Transform = ToGodotTransform(
+                Level100RenderInterpolation.Interpolate(
+                    prior,
+                    descriptor,
+                    interpolationAlpha));
             visual.Root.Visible = descriptor.Visible;
         }
     }
@@ -642,15 +678,53 @@ public sealed partial class FirstFlightWorldView : Node3D
         _previousMode = snapshot.Mode;
     }
 
-    private void UpdateWalkerPose(WorldSnapshot snapshot)
+    private void UpdateWalkerPose(
+        WorldSnapshot previous,
+        WorldSnapshot current,
+        float interpolationAlpha,
+        float renderedYaw,
+        bool resetJump)
+    {
+        Vector3[] contacts = ToFootOffsets(current);
+        // The offsets are player-relative, so they are interpolated against the
+        // same pair and alpha as the player root they hang from. A reset or
+        // teleport reuses the current pose rather than smearing the legs across
+        // the world.
+        if (!resetJump &&
+            !ReferenceEquals(previous, current) &&
+            previous.WalkerFeet.Count == current.WalkerFeet.Count)
+        {
+            Vector3[] priorContacts = ToFootOffsets(previous);
+            for (int foot = 0; foot < contacts.Length; foot++)
+            {
+                contacts[foot] = ToGodotVector(
+                    Level100RenderInterpolation.InterpolatePosition(
+                        ToRenderVector(priorContacts[foot]),
+                        ToRenderVector(contacts[foot]),
+                        interpolationAlpha,
+                        RetailWalkerFootTeleportMeters));
+            }
+        }
+
+        // The legs are drawn in the player root's rendered frame, so the
+        // world-to-player rotation must use the interpolated yaw the root is
+        // actually carrying this frame.
+        Basis worldToPlayer = new Basis(Vector3.Up, renderedYaw).Inverse();
+        for (int foot = 0; foot < contacts.Length; foot++)
+        {
+            contacts[foot] = worldToPlayer * contacts[foot];
+        }
+
+        _walkerAsset.SetGroundContactPose(contacts);
+    }
+
+    private static Vector3[] ToFootOffsets(WorldSnapshot snapshot)
     {
         if (snapshot.WalkerFeet.Count != 4)
         {
             throw new InvalidDataException("Core did not expose four Aquila foot contacts.");
         }
 
-        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-        Basis worldToPlayer = new Basis(Vector3.Up, yaw).Inverse();
         var contacts = new Vector3[4];
         foreach (WalkerFootContactSnapshot foot in snapshot.WalkerFeet)
         {
@@ -658,18 +732,35 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 throw new InvalidDataException($"Core exposed unknown Aquila foot {foot.Id}.");
             }
-            var worldOffset = new Vector3(
+            contacts[foot.Id] = new Vector3(
                 (foot.Position.X - snapshot.PlayerPosition.X) * UnitsToMeters,
                 (foot.GroundElevationMillimeters + foot.LiftMillimeters -
                     snapshot.PlayerGroundElevationMillimeters) * UnitsToMeters,
                 -(foot.Position.Z - snapshot.PlayerPosition.Z) * UnitsToMeters);
-            contacts[foot.Id] = worldToPlayer * worldOffset;
         }
-        _walkerAsset.SetGroundContactPose(contacts);
+
+        return contacts;
     }
 
-    private void UpdateProjectiles(WorldSnapshot current)
+    private void UpdateProjectiles(
+        WorldSnapshot previous,
+        WorldSnapshot current,
+        float interpolationAlpha)
     {
+        // Bolts are matched by their monotonic Core projectile id. A bolt with
+        // no previous-tick entry was created during the tick that produced
+        // `current`, so it is drawn from its derived muzzle state instead of
+        // popping in a full tick of travel ahead of the barrel.
+        _previousProjectileStates.Clear();
+        if (!ReferenceEquals(previous, current))
+        {
+            foreach (ProjectileSnapshot projectile in previous.Projectiles)
+            {
+                _previousProjectileStates[projectile.Id] =
+                    ToVisualState(projectile, ToWorld(projectile));
+            }
+        }
+
         var activeIds = new HashSet<int>();
         foreach (ProjectileSnapshot projectile in current.Projectiles)
         {
@@ -681,11 +772,21 @@ public sealed partial class FirstFlightWorldView : Node3D
                 _projectiles.Add(projectile.Id, visual);
             }
 
-            visual.Position = ToWorld(projectile);
-            var direction = new Vector3(
-                projectile.Velocity.X,
-                projectile.VerticalVelocityMillimetersPerTick,
-                -projectile.Velocity.Z);
+            Level100ProjectileVisualState? prior =
+                _previousProjectileStates.TryGetValue(
+                    projectile.Id,
+                    out Level100ProjectileVisualState found)
+                    ? found
+                    : null;
+            Level100ProjectileVisualState rendered =
+                Level100RenderInterpolation.Interpolate(
+                    prior,
+                    ToVisualState(projectile, ToSpawnWorld(projectile)),
+                    ToVisualState(projectile, ToWorld(projectile)),
+                    interpolationAlpha);
+
+            visual.Position = ToGodotVector(rendered.Position);
+            Vector3 direction = ToGodotVector(rendered.Direction);
             if (!direction.IsZeroApprox())
             {
                 visual.LookAt(visual.Position + direction.Normalized(), Vector3.Up);
@@ -1022,6 +1123,19 @@ public sealed partial class FirstFlightWorldView : Node3D
             projectile.ElevationMillimeters * UnitsToMeters,
             -projectile.Position.Z * UnitsToMeters);
     }
+
+    private static Level100RenderVector3 ToRenderVector(Vector3 vector) =>
+        new(vector.X, vector.Y, vector.Z);
+
+    private static Level100ProjectileVisualState ToVisualState(
+        ProjectileSnapshot projectile,
+        Vector3 position) =>
+        new(
+            ToRenderVector(position),
+            new Level100RenderVector3(
+                projectile.Velocity.X,
+                projectile.VerticalVelocityMillimetersPerTick,
+                -projectile.Velocity.Z));
 
     private static Vector3 ToSpawnWorld(ProjectileSnapshot projectile)
     {
