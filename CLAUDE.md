@@ -20,6 +20,11 @@ highest-stakes rules early and does not restate or override it.
   from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation
   is local.
+- Check every substantive decision against two independent model families before
+  treating it as settled — see
+  [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md) for the invocations, the
+  mandatory `-s read-only` sandbox, and why their output is data rather than
+  authority. This is a standing requirement, not an optional extra.
 
 ## Orientation
 
@@ -33,6 +38,26 @@ highest-stakes rules early and does not restate or override it.
 - [`rebuild/README.md`](rebuild/README.md) and
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) — the GPL reconstruction lane
   boundary.
+- [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) — what belongs in the ignored
+  local directories and what may be promoted out of them.
+
+## In-flight work is not in this repository
+
+Working notes, measurement write-ups, handoffs, and raw runtime evidence live
+under `local-lab/`, which is **gitignored by design** — it holds retail-derived
+material that must never be tracked. A fresh clone therefore contains none of
+it, and a new session will not discover it by reading source.
+
+**If a `local-lab/` directory exists on this machine, read `local-lab/INDEX.md`
+first.** It indexes the current working notes, what each one settles, and what is
+still open. Without it, findings that cost hours to establish are invisible and
+get re-derived.
+
+Conclusions that survive scrutiny are promoted out of `local-lab/` into tracked
+evidence under `reverse-engineering/binary-analysis/` and indexed from
+[`RE-INDEX.md`](reverse-engineering/RE-INDEX.md); the raw logs and captures stay
+local. If a claim matters and exists only in `local-lab/`, promoting it is
+overdue.
 
 Commit, push, publication, release, live launch, and mutation remain separately
 authorized actions.
