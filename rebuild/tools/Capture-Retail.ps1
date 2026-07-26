@@ -43,8 +43,13 @@ param(
     # to MATCH A SCREEN SIGNATURE before acting, so the sequence self-synchronises.
     #   "wait R,G,B TOL SECONDS"  block until the client mean is within TOL
     #   "click X,Y"               click at client coordinates
+    #   "hover X,Y"               move the cursor without clicking
     #   "key VK"                  press a virtual key
     #   "shot LABEL"              save a frame as LABEL.png
+    #   "probe SECONDS PREFIX"    sample the client mean for SECONDS, logging every
+    #                             sample and saving PREFIX-<t>.png whenever the mean
+    #                             moves. This is how a NEW screen's signature is
+    #                             discovered: an unknown screen cannot be waited on.
     #   "sleep SECONDS"
     [string[]]$Steps = @(),
     [int]$TimeoutSeconds = 90,
@@ -181,12 +186,50 @@ try {
                     [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
                     [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
                 }
+                'hover' {
+                    $xy = $tok[1] -split ','
+                    $pt = New-Object 'BeaCaptureNativeV2+POINT'
+                    [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
+                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [void][BeaCaptureNativeV2]::SetCursorPos($pt.X + [int]$xy[0], $pt.Y + [int]$xy[1])
+                    Start-Sleep -Milliseconds 400
+                }
+                'probe' {
+                    $limit = [double]$tok[1]
+                    $prefix = $tok[2]
+                    $end = (Get-Date).AddSeconds($limit)
+                    $last = $null
+                    while ((Get-Date) -lt $end) {
+                        $bmp = Get-ClientFrame
+                        $m = Get-FrameMean $bmp
+                        $t = [int]((Get-Date) - $windowAppeared).TotalSeconds
+                        $fg = [BeaCaptureNativeV2]::GetForegroundWindow()
+                        $sig = "{0},{1},{2}" -f [int]$m.R, [int]$m.G, [int]$m.B
+                        Write-Host ("PROBE {0} t={1}s mean={2} fg={3}" -f $prefix, $t, $sig, ($fg -eq $hwnd))
+                        $moved = $true
+                        if ($null -ne $last) {
+                            $d = [Math]::Abs($m.R - $last.R) + [Math]::Abs($m.G - $last.G) + [Math]::Abs($m.B - $last.B)
+                            # Frontend pages differ from each other by only a few
+                            # units of mean, so a coarse threshold hides transitions.
+                            $moved = $d -gt 2
+                        }
+                        if ($moved) {
+                            $path = Join-Path $OutputDirectory ("{0}-t{1:d3}s.png" -f $prefix, $t)
+                            $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+                            $shots += [pscustomobject]@{ label = "$prefix-t${t}s"; secondsAfterWindow = $t; width = $bmp.Width; height = $bmp.Height; printWindowOk = ($fg -eq $hwnd); mean = $sig }
+                            $last = $m
+                        }
+                        $bmp.Dispose()
+                        Start-Sleep -Milliseconds 700
+                    }
+                }
                 'shot' {
                     $bmp = Get-ClientFrame
                     $path = Join-Path $OutputDirectory ("{0}.png" -f $tok[1])
                     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
                     $fg = [BeaCaptureNativeV2]::GetForegroundWindow()
-                    $shots += [pscustomobject]@{ label = $tok[1]; secondsAfterWindow = [int]((Get-Date) - $windowAppeared).TotalSeconds; width = $bmp.Width; height = $bmp.Height; printWindowOk = ($fg -eq $hwnd) }
+                    $sm = Get-FrameMean $bmp
+                    $shots += [pscustomobject]@{ label = $tok[1]; secondsAfterWindow = [int]((Get-Date) - $windowAppeared).TotalSeconds; width = $bmp.Width; height = $bmp.Height; printWindowOk = ($fg -eq $hwnd); mean = ("{0},{1},{2}" -f [int]$sm.R, [int]$sm.G, [int]$sm.B) }
                     $bmp.Dispose()
                 }
                 default { throw "Unknown step verb '$($tok[0])' in '$step'." }
