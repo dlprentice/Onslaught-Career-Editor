@@ -94,7 +94,16 @@ def main(argv: list[str]) -> int:
 
     regions = {"FULL FRAME": [0, 0, ref.size[0], ref.size[1]]}
     if args.regions:
-        regions.update(json.loads(args.regions.read_text(encoding="utf-8")))
+        # Keys beginning with "_" are metadata, not boxes. Region files carry
+        # per-box caveats there -- several boxes are measurably contaminated by
+        # a second object and must not be read as shading metrics -- and those
+        # notes belong next to the numbers rather than in a document nobody
+        # opens while measuring.
+        regions.update({
+            name: box
+            for name, box in json.loads(args.regions.read_text(encoding="utf-8")).items()
+            if not name.startswith("_")
+        })
 
     report = {
         "reference": str(args.reference),

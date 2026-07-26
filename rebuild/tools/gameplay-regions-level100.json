@@ -1,4 +1,10 @@
 {
+  "_comment": "Level 100 parity measurement boxes, 640x480. THESE ARE DETECTORS, NOT DIAGNOSES. A box mean cannot distinguish 'the same object rendered wrong' from 'a different object occupying those pixels', and on this project that confusion has produced four false diagnoses. Before attributing any box's error to shading, split it by what each image is actually drawing there. See _caveats below for boxes with measured contamination, and tools/cockpit_intersection_mask_probe.py for the geometric-mask technique that replaces a box mean.",
+  "_caveats": {
+    "cockpit frame (left)": "19-27% NON-COCKPIT. Measured 2026-07-26 by counting the winning part at every pixel of a retail-pose z-buffered raster: this box is Object03 (6,739 px) plus Lsidebit01 (400 px). On the same-surface mask the shading is close; the box mean is dominated by silhouette disagreement, not by shading. Do not read this box as a cockpit shading metric.",
+    "cockpit frame (right)": "19% NON-COCKPIT. The box is Object01 (6,125 px) and nothing else, and Object01's shading is correct to 1.5% (retail/build 0.992/0.985/0.985 over 5,566 same-surface px). 1,713 of the box's 9,000 px are bright scene in retail and cockpit in the build, because our Object01 covers 8,856 px against retail's 6,306. R-channel decomposition is exact: +15.89 (build-only) +7.06 (both) +0.99 (neither) -1.86 (retail-only) = +22.08 against a measured 22.1 gap. That deficit is the 2.8774 degree composition residual, and it is the floor on this box. Do not read this box as a cockpit shading metric.",
+    "_note": "Neither cockpit box contains Lsidebit02, which sits at y=371..420 below both."
+  },
   "sky": [60, 20, 580, 130],
   "horizon ridge": [400, 140, 640, 220],
   "terrain mid-band": [120, 230, 520, 340],
