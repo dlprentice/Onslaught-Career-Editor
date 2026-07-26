@@ -59,5 +59,23 @@ evidence under `reverse-engineering/binary-analysis/` and indexed from
 local. If a claim matters and exists only in `local-lab/`, promoting it is
 overdue.
 
+## Editing this file
+
+This file is loaded into every session, so whatever it says is treated as
+settled — agents rarely re-litigate it, which is exactly what makes it dangerous.
+
+Keep it to **rules and pointers**. Do not put findings here. A finding belongs in
+a dated evidence document that can be superseded in place; a finding pasted here
+becomes an unfalsifiable premise that later work will quietly build on. This has
+already bitten the project: a correction published on 2026-07-26 was itself wrong
+within the hour, and was only caught because it lived in a document that could be
+withdrawn rather than in a file everything trusts by default.
+
+Before adding a line, ask whether it is still true if the measurement behind it
+turns out to be wrong. If the answer is no, it is a finding — link to it instead.
+
+Keep this file short. It competes with the actual task for context, and length
+here is paid on every single session.
+
 Commit, push, publication, release, live launch, and mutation remain separately
 authorized actions.
