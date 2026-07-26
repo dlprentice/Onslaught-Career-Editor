@@ -104,12 +104,14 @@ namespace Onslaught___Career_Editor
 
             if (request.LevelRanks is { Count: > 0 })
             {
-                parts.Add(request.LevelRanks.Count == 1 ? "1 mission rank override" : $"{request.LevelRanks.Count} mission rank overrides");
+                string label = request.LevelRanks.Count == 1 ? "1 mission rank override" : $"{request.LevelRanks.Count} mission rank overrides";
+                parts.Add(request.PatchNodes ? label : $"{label} (blocked: needs missions)");
             }
 
             if (request.PerCategoryKills is { Count: > 0 })
             {
-                parts.Add(request.PerCategoryKills.Count == 1 ? "1 category kill override" : $"{request.PerCategoryKills.Count} category kill overrides");
+                string label = request.PerCategoryKills.Count == 1 ? "1 category kill override" : $"{request.PerCategoryKills.Count} category kill overrides";
+                parts.Add(request.PatchKills ? label : $"{label} (blocked: needs kill counts)");
             }
 
             if (parts.Count == 0)

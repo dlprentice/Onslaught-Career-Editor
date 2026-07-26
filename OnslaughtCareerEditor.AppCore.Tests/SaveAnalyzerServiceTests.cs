@@ -140,6 +140,28 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             Assert.Contains("2 mission rank overrides", summary);
             Assert.Contains("1 category kill override", summary);
+            Assert.DoesNotContain("blocked", summary);
+        }
+
+        [Fact]
+        public void SavePendingSummary_MarksOverridesThatTheirOwningSectionWouldDiscard()
+        {
+            SavePatchRequest request = new()
+            {
+                InputPath = @"C:\temp\career.bes",
+                OutputPath = @"C:\temp\career_patched.bes",
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = true,
+                PatchKills = false,
+                LevelRanks = new Dictionary<int, string> { [1] = "A" },
+                PerCategoryKills = new Dictionary<int, int> { [BesFilePatcher.KILL_INFANTRY] = 120 }
+            };
+
+            string summary = SaveEditorService.BuildPendingChangesSummary(request);
+
+            Assert.Contains("1 mission rank override (blocked: needs missions)", summary);
+            Assert.Contains("1 category kill override (blocked: needs kill counts)", summary);
         }
 
         [Fact]

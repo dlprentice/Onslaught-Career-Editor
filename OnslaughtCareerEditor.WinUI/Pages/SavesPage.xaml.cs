@@ -1033,9 +1033,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool hasOutput = !string.IsNullOrWhiteSpace(request.OutputPath);
             int missionOverrideCount = SaveEditorAdvancedService.CountMissionRankOverrides(_editorMissionRankRows);
             int categoryKillOverrideCount = SaveEditorAdvancedService.CountCategoryKillOverrides(_editorCategoryKillRows);
-            bool overrideDependenciesSatisfied =
-                (missionOverrideCount == 0 || request.PatchNodes)
-                && (categoryKillOverrideCount == 0 || request.PatchKills);
+            bool overrideDependenciesSatisfied = SaveEditorJourneyStateMachine.AreOverrideDependenciesSatisfied(
+                request,
+                missionOverrideCount,
+                categoryKillOverrideCount);
 
             EditorPendingChangesTextBlock.Text = SaveEditorService.BuildPendingChangesSummary(request);
 

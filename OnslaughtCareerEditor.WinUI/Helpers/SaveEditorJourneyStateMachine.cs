@@ -55,6 +55,21 @@ internal static class SaveEditorJourneyStateMachine
         return "CUSTOM";
     }
 
+    /// <summary>
+    /// Advanced overrides are only consumed by their owning section pass, so a plan that carries
+    /// mission-rank overrides without node patching (or category-kill overrides without kill
+    /// patching) would drop part of the user's stated intent. AppCore rejects such a plan; the
+    /// Save Editor keeps Write disabled so the user is told before they attempt the write.
+    /// </summary>
+    public static bool AreOverrideDependenciesSatisfied(
+        SavePatchRequest request,
+        int missionRankOverrideCount,
+        int categoryKillOverrideCount)
+    {
+        return (missionRankOverrideCount == 0 || request.PatchNodes)
+            && (categoryKillOverrideCount == 0 || request.PatchKills);
+    }
+
     public static SaveEditorCompletionState RecordSuccessfulWrite(SavePatchRequest request, string outputPath)
     {
         return new SaveEditorCompletionState(NormalizePath(outputPath), SaveEditorPlanFingerprint.Build(request));

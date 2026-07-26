@@ -119,6 +119,38 @@ public class SaveEditorFirstSaveJourneyTests
         });
     }
 
+    // AppCore now refuses these plans outright; this keeps the Save Editor from ever offering
+    // a Write that would be rejected, and pins the exact dependency direction of each override.
+    [TestCase(true, true, 0, 0, true, TestName = "NoOverrides_AreAlwaysSatisfied")]
+    [TestCase(false, false, 0, 0, true, TestName = "NoOverrides_AreSatisfiedEvenWithSectionsOff")]
+    [TestCase(true, true, 2, 3, true, TestName = "BothSectionsOn_SatisfiesBothOverrides")]
+    [TestCase(false, true, 1, 0, false, TestName = "MissionOverrideWithoutNodePatching_IsBlocked")]
+    [TestCase(true, false, 0, 1, false, TestName = "CategoryKillOverrideWithoutKillPatching_IsBlocked")]
+    [TestCase(false, true, 0, 1, true, TestName = "CategoryKillOverride_DoesNotDependOnNodePatching")]
+    [TestCase(true, false, 1, 0, true, TestName = "MissionOverride_DoesNotDependOnKillPatching")]
+    [TestCase(false, false, 1, 1, false, TestName = "BothOverridesWithBothSectionsOff_IsBlocked")]
+    public void OverrideDependencies_GateWriteOnTheOwningSectionPass(
+        bool patchNodes,
+        bool patchKills,
+        int missionOverrides,
+        int categoryKillOverrides,
+        bool expected)
+    {
+        SavePatchRequest request = new()
+        {
+            InputPath = @"C:\temp\career.bes",
+            OutputPath = @"C:\temp\career_patched.bes",
+            PatchNodes = patchNodes,
+            PatchLinks = true,
+            PatchGoodies = true,
+            PatchKills = patchKills
+        };
+
+        Assert.That(
+            SaveEditorJourneyStateMachine.AreOverrideDependenciesSatisfied(request, missionOverrides, categoryKillOverrides),
+            Is.EqualTo(expected));
+    }
+
     [Test]
     public void CompletionEvaluation_InvalidatesEveryRequestFieldAndGatesRevealByAppOwnedRoot()
     {

@@ -323,6 +323,395 @@ public class SavePatchRegressionTests
         }
     }
 
+    // ---- True-view layout owned by the four Save Editor section passes ----
+    private const int NodeBase = 0x0006;
+    private const int NodeSize = 64;
+    private const int NodeCount = 100;
+    private const int LinkBase = 0x1906;
+    private const int LinkSize = 8;
+    private const int LinkCount = 200;
+    private const int GoodieBase = 0x1F46;
+    private const int GoodieDisplayableCount = 233;
+    private const int KillBase = 0x23F6;
+    private const int KillCategoryCount = 5;
+
+    [Test]
+    public void PatchSave_UnmodifiedRoundTripThroughAppService_IsByteIdentical()
+    {
+        string tempDir = NewTempDir("roundtrip");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            byte[] before = File.ReadAllBytes(input);
+
+            SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(input);
+            Assert.That(analysis.IsValid, Is.True, "Baseline fixture must analyze as a valid career save.");
+            Dictionary<int, int> currentKills = new()
+            {
+                [BesFilePatcher.KILL_AIRCRAFT] = analysis.KillCounts[0],
+                [BesFilePatcher.KILL_VEHICLES] = analysis.KillCounts[1],
+                [BesFilePatcher.KILL_EMPLACEMENTS] = analysis.KillCounts[2],
+                [BesFilePatcher.KILL_INFANTRY] = analysis.KillCounts[3],
+                [BesFilePatcher.KILL_MECHS] = analysis.KillCounts[4],
+            };
+
+            string output = Path.Combine(tempDir, "roundtrip.bes");
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = true,
+                PatchGoodies = false,
+                PatchKills = true,
+                PerCategoryKills = currentKills
+            });
+
+            Assert.That(result.Success, Is.True, result.Message);
+            byte[] after = File.ReadAllBytes(output);
+            Assert.That(after.Length, Is.EqualTo(BesFilePatcher.EXPECTED_FILE_SIZE));
+            Assert.That(
+                DescribeDifferences(before, after),
+                Is.EqualTo("IDENTICAL"),
+                "Re-writing the fixture's own node/link/kill values through the app service must reproduce the input byte-for-byte.");
+            Assert.That(File.ReadAllBytes(input), Is.EqualTo(before), "The source save must never be modified.");
+
+            // Non-vacuity control: the same request with one changed kill value must differ.
+            currentKills[BesFilePatcher.KILL_MECHS] = analysis.KillCounts[4] + 1;
+            string changedOutput = Path.Combine(tempDir, "changed.bes");
+            PatchResult changedResult = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = changedOutput,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = true,
+                PatchGoodies = false,
+                PatchKills = true,
+                PerCategoryKills = currentKills
+            });
+            Assert.That(changedResult.Success, Is.True, changedResult.Message);
+            Assert.That(
+                DescribeDifferences(before, File.ReadAllBytes(changedOutput)),
+                Is.Not.EqualTo("IDENTICAL"),
+                "The identity assertion must be able to detect a one-value change.");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_AllSections_ChangesOnlyBytesOwnedBySelectedSections()
+    {
+        string tempDir = NewTempDir("owned-regions");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            byte[] before = File.ReadAllBytes(input);
+
+            string output = Path.Combine(tempDir, "all-sections.bes");
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                Rank = "C",
+                UseNewGoodiesInstead = true,
+                GlobalKillCount = 4242,
+                PatchNodes = true,
+                PatchLinks = true,
+                PatchGoodies = true,
+                PatchKills = true
+            });
+            Assert.That(result.Success, Is.True, result.Message);
+
+            byte[] after = File.ReadAllBytes(output);
+            Assert.That(after.Length, Is.EqualTo(before.Length), "File length must be preserved.");
+
+            bool[] owned = BuildOwnedByteMap();
+            List<int> strays = new();
+            for (int offset = 0; offset < before.Length; offset++)
+            {
+                if (before[offset] != after[offset] && !owned[offset])
+                {
+                    strays.Add(offset);
+                }
+            }
+
+            Assert.That(
+                strays,
+                Is.Empty,
+                "Bytes changed outside the node/link/goodie/kill regions: " +
+                string.Join(", ", strays.Take(24).Select(o => $"0x{o:X4}")));
+
+            // Non-vacuity control: the map must not simply cover the whole file.
+            int ownedCount = owned.Count(flag => flag);
+            Assert.That(ownedCount, Is.LessThan(before.Length / 2),
+                $"Owned-region map must be a strict minority of the file; covered {ownedCount} of {before.Length} bytes.");
+            Assert.That(
+                DescribeDifferences(before, after),
+                Is.Not.EqualTo("IDENTICAL"),
+                "This patch must actually change bytes for the containment check to mean anything.");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_MissionRankOverrideWithoutNodePatching_FailsAndWritesNothing()
+    {
+        string tempDir = NewTempDir("rank-drop");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            byte[] before = File.ReadAllBytes(input);
+            var overrides = new Dictionary<int, string> { [0] = "E" };
+
+            string blockedOutput = Path.Combine(tempDir, "blocked.bes");
+            PatchResult blocked = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = blockedOutput,
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = true,
+                GlobalKillCount = 100,
+                LevelRanks = overrides
+            });
+
+            Assert.That(blocked.Success, Is.False,
+                "A mission rank override with node patching disabled must not report success.");
+            Assert.That(blocked.Message, Does.Contain("Mission rank overrides"));
+            Assert.That(File.Exists(blockedOutput), Is.False,
+                "No output may be written when the requested overrides would be discarded.");
+
+            // Positive control: with node patching enabled the same override reaches the file.
+            string allowedOutput = Path.Combine(tempDir, "allowed.bes");
+            PatchResult allowed = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = allowedOutput,
+                Rank = "S",
+                PatchNodes = true,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = false,
+                LevelRanks = overrides
+            });
+            Assert.That(allowed.Success, Is.True, allowed.Message);
+            byte[] after = File.ReadAllBytes(allowedOutput);
+            AssertUInt(after, NodeBase + 0x3C, 0x00000000u, "Node 0 must receive the requested E rank");
+            Assert.That(File.ReadAllBytes(input), Is.EqualTo(before), "The source save must never be modified.");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void PatchSave_CategoryKillOverrideWithoutKillPatching_FailsAndWritesNothing()
+    {
+        string tempDir = NewTempDir("kill-drop");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            var overrides = new Dictionary<int, int> { [BesFilePatcher.KILL_AIRCRAFT] = 777 };
+
+            string blockedOutput = Path.Combine(tempDir, "blocked.bes");
+            PatchResult blocked = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = blockedOutput,
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = true,
+                PatchKills = false,
+                PerCategoryKills = overrides
+            });
+
+            Assert.That(blocked.Success, Is.False,
+                "A per-category kill override with kill patching disabled must not report success.");
+            Assert.That(blocked.Message, Does.Contain("Per-category kill overrides"));
+            Assert.That(File.Exists(blockedOutput), Is.False,
+                "No output may be written when the requested overrides would be discarded.");
+
+            // Positive control: with kill patching enabled the same override reaches the file.
+            string allowedOutput = Path.Combine(tempDir, "allowed.bes");
+            PatchResult allowed = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = allowedOutput,
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = true,
+                GlobalKillCount = 100,
+                PerCategoryKills = overrides
+            });
+            Assert.That(allowed.Success, Is.True, allowed.Message);
+            byte[] after = File.ReadAllBytes(allowedOutput);
+            uint aircraftRaw = ReadUInt32(after, KillBase + (BesFilePatcher.KILL_AIRCRAFT * 4));
+            Assert.That(aircraftRaw & 0x00FFFFFFu, Is.EqualTo(777u), "Aircraft kill override must reach the file.");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void Cli_LevelRankWithNoNodes_FailsAndDoesNotWriteOutput()
+    {
+        Assert.That(File.Exists(GoldSavePath), Is.True, $"Missing baseline save: {GoldSavePath}");
+
+        string tempDir = NewTempDir("cli-rank-drop");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            string output = Path.Combine(tempDir, "output.bes");
+
+            var result = RunCliRaw(input, output, "--rank", "E", "--level-rank", "1:S", "--no-nodes");
+            Assert.That(result.ExitCode, Is.Not.EqualTo(0),
+                $"CLI must reject --level-rank with --no-nodes.\nSTDOUT:\n{result.Stdout}\nSTDERR:\n{result.Stderr}");
+            Assert.That(result.Stderr, Does.Contain("--level-rank").IgnoreCase);
+            Assert.That(File.Exists(output), Is.False,
+                "The CLI must not write an output file when the rank override would be discarded.");
+
+            // Positive control: the same override without --no-nodes still succeeds.
+            string allowed = Path.Combine(tempDir, "allowed.bes");
+            var okResult = RunCliRaw(input, allowed, "--rank", "E", "--level-rank", "1:S", "--no-links", "--no-goodies", "--no-kills");
+            Assert.That(okResult.ExitCode, Is.EqualTo(0), okResult.Stderr);
+            AssertUInt(File.ReadAllBytes(allowed), NodeBase + 0x3C, 0x3F800000u, "Node 0 must receive the requested S rank");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    [Test]
+    public void Cli_PerCategoryKillsWithNoKills_FailsAndDoesNotWriteOutput()
+    {
+        Assert.That(File.Exists(GoldSavePath), Is.True, $"Missing baseline save: {GoldSavePath}");
+
+        string tempDir = NewTempDir("cli-kill-drop");
+        try
+        {
+            string input = Path.Combine(tempDir, "input.bes");
+            File.Copy(GoldSavePath, input, true);
+            string output = Path.Combine(tempDir, "output.bes");
+
+            var result = RunCliRaw(input, output, "--aircraft-kills", "777", "--no-kills");
+            Assert.That(result.ExitCode, Is.Not.EqualTo(0),
+                $"CLI must reject per-category kills with --no-kills.\nSTDOUT:\n{result.Stdout}\nSTDERR:\n{result.Stderr}");
+            Assert.That(result.Stderr, Does.Contain("per-category kill").IgnoreCase);
+            Assert.That(File.Exists(output), Is.False,
+                "The CLI must not write an output file when per-category kills would be discarded.");
+        }
+        finally
+        {
+            DeleteTempDir(tempDir);
+        }
+    }
+
+    private static bool[] BuildOwnedByteMap()
+    {
+        bool[] owned = new bool[BesFilePatcher.EXPECTED_FILE_SIZE];
+
+        void Mark(int offset, int length)
+        {
+            for (int i = offset; i < offset + length && i < owned.Length; i++)
+            {
+                owned[i] = true;
+            }
+        }
+
+        for (int n = 0; n < NodeCount; n++)
+        {
+            int off = NodeBase + (n * NodeSize);
+            Mark(off + 0x04, 4);  // complete
+            Mark(off + 0x38, 4);  // attempts
+            Mark(off + 0x3C, 4);  // rank float bits
+        }
+
+        for (int l = 0; l < LinkCount; l++)
+        {
+            Mark(LinkBase + (l * LinkSize), 4);  // link state
+        }
+
+        Mark(GoodieBase, GoodieDisplayableCount * 4);
+        Mark(KillBase, KillCategoryCount * 4);
+        return owned;
+    }
+
+    private static string DescribeDifferences(byte[] left, byte[] right)
+    {
+        if (left.Length != right.Length)
+        {
+            return $"LENGTH {left.Length} vs {right.Length}";
+        }
+
+        List<string> runs = new();
+        int total = 0;
+        int i = 0;
+        while (i < left.Length)
+        {
+            if (left[i] != right[i])
+            {
+                int start = i;
+                while (i < left.Length && left[i] != right[i])
+                {
+                    i++;
+                    total++;
+                }
+
+                if (runs.Count < 16)
+                {
+                    runs.Add($"0x{start:X4}..0x{i - 1:X4}");
+                }
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        return total == 0 ? "IDENTICAL" : $"{total} bytes differ at {string.Join(", ", runs)}";
+    }
+
+    private static string NewTempDir(string label)
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-{label}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        return tempDir;
+    }
+
+    private static void DeleteTempDir(string tempDir)
+    {
+        try
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+        catch (IOException)
+        {
+            // Leaving an OS-temp scratch directory behind must not fail the regression assertion.
+        }
+    }
+
     private static void AssertUInt(byte[] buf, int offset, uint expected, string message)
     {
         uint actual = ReadUInt32(buf, offset);

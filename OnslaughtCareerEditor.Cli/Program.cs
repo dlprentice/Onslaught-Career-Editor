@@ -787,6 +787,25 @@ namespace Onslaught___Career_Editor
                 patcher.PatchKills = !noKills;
             }
 
+            // Reject override requests that the section passes would silently discard.
+            if (parsedLevelRanks is { Count: > 0 } && !patcher.PatchNodes)
+            {
+                Console.Error.WriteLine(
+                    "Error: --level-rank was provided, but node patching is disabled (--no-nodes / --kills-only).");
+                Console.Error.WriteLine(
+                    "Per-mission ranks are applied through the node pass and would be discarded. Remove --no-nodes/--kills-only or drop --level-rank.");
+                return 1;
+            }
+
+            if (perCategoryKills is { Count: > 0 } && !patcher.PatchKills)
+            {
+                Console.Error.WriteLine(
+                    "Error: per-category kill options were provided, but kill patching is disabled (--no-kills).");
+                Console.Error.WriteLine(
+                    "Per-category kill values are applied through the kill pass and would be discarded. Remove --no-kills or drop the per-category kill options.");
+                return 1;
+            }
+
             bool inputOptionsLike = IsOptionsLikePath(input.FullName);
             bool outputOptionsLike = IsOptionsLikePath(output.FullName);
             bool careerSectionsEnabled = patcher.KillsOnly ||

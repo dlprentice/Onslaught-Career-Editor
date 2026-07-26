@@ -368,10 +368,41 @@ namespace Onslaught___Career_Editor
             }
         }
 
+        /// <summary>
+        /// Refuse configurations whose overrides would be silently discarded by the section passes.
+        /// LevelRanks are only consumed inside the node pass and PerCategoryKills only inside the
+        /// kill pass, so requesting either while its owning section is disabled would report success
+        /// while dropping part of the caller's stated intent.
+        /// </summary>
+        internal string? DescribeDiscardedOverrideRequest()
+        {
+            if (LevelRanks is { Count: > 0 } && !PatchNodes)
+            {
+                return "Mission rank overrides were requested while mission (node) patching is disabled. " +
+                       "The patcher applies per-mission ranks through the node pass, so those overrides would be discarded. " +
+                       "Enable node patching or remove the mission rank overrides.";
+            }
+
+            if (PerCategoryKills is { Count: > 0 } && !PatchKills)
+            {
+                return "Per-category kill overrides were requested while kill patching is disabled. " +
+                       "The patcher applies per-category kill values through the kill pass, so those overrides would be discarded. " +
+                       "Enable kill patching or remove the per-category kill overrides.";
+            }
+
+            return null;
+        }
+
         public PatchResult PatchFile(string inputPath, string outputPath)
         {
             try
             {
+                string? discardedOverrideRequest = DescribeDiscardedOverrideRequest();
+                if (discardedOverrideRequest is not null)
+                {
+                    return PatchResult.Fail(discardedOverrideRequest);
+                }
+
                 inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
                 outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
                 ValidatePatchExtensions(inputPath, outputPath);
