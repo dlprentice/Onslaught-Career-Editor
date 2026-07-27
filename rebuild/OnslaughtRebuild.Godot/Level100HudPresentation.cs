@@ -5,11 +5,38 @@ using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
+/// <summary>
+/// Exact numbering from the released <c>data\MissionScripts\onsldef.msl</c>
+/// lines 66-68, which the developers' own source <c>#include</c>s as a header
+/// (<c>Career.cpp:11</c>, <c>game.cpp:46</c>):
+/// <code>
+/// #define FRIENDLY_ALLIGENCE   0
+/// #define ENEMY_ALLIGENCE      1
+/// #define NEUTRAL_ALLEGIANCE   2
+/// </code>
+/// (the released spelling of "allegiance" is inconsistent between the three;
+/// that is theirs, not a transcription slip.)
+///
+/// <para>This enum was previously <c>Neutral = 0, Friendly = 1, Enemy = 2</c> -
+/// a PERMUTATION, with every released value occupied by the wrong name and no
+/// comment saying so, while the sibling enums in this same file all cite the
+/// release. It read as released and was not.</para>
+///
+/// <para>It was latent rather than broken: the contact list is currently always
+/// empty, and every use site names the member rather than its value, so the
+/// renumbering changes no behaviour today. It was a TRAP, not a bug. Core
+/// already stores allegiance in released numbering - <c>SetAllegiance</c> keeps
+/// <c>command.Scalar</c> verbatim at
+/// <c>Level100ActorMechanics.cs:207</c> - so the first commit to join those two
+/// same-named <c>int</c>s would have painted every enemy friendly-blue at
+/// <c>FirstFlightHud.cs:592</c> and picked the friendly classification texture
+/// at <c>:1365</c>. The compiler cannot catch a permutation of ints.</para>
+/// </summary>
 public enum Level100HudAllegiance
 {
-    Neutral = 0,
-    Friendly = 1,
-    Enemy = 2,
+    Friendly = 0,
+    Enemy = 1,
+    Neutral = 2,
 }
 
 public enum Level100HudContactSize
