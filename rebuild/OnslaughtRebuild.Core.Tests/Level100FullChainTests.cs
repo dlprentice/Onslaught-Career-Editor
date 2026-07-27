@@ -17,7 +17,7 @@ namespace OnslaughtRebuild.Core.Tests;
 ///
 /// <para><b>What `Won` here does and does not mean.</b> Ten of the eleven named
 /// progression events are produced in full by the world. The eleventh,
-/// <c>Airborne Target 2 Destroyed</c> x6, is produced <b>four</b> times before
+/// <c>Airborne Target 2 Destroyed</c> x6, is produced <b>twice</b> before
 /// the LevelScript's own sub-40 % hull poll posts <c>Abort Airborne Drones</c>,
 /// which sets Target Zone 4 and leads to the same shipped <c>LevelWon()</c>.
 /// That is a released path with its own dialogue and its own
@@ -155,22 +155,61 @@ public sealed class Level100FullChainTests
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
     /// <para>What this test does <b>not</b> claim: that beat 9 is completed by
-    /// kills. <b>Four of the six wave-2 drones are destroyed</b> - up from two,
-    /// and the whole of that improvement is flying, not Core - but the last two
-    /// are still alive when the LevelScript's own health poll posts
+    /// kills. <b>Two of the six wave-2 drones are destroyed</b>, and the other
+    /// four are still alive when the LevelScript's own health poll posts
     /// <c>Abort Airborne Drones</c> below 40 % hull, which sets Target Zone 4
     /// as the objective and leads to the same <c>LevelWon()</c>. That is a
     /// shipped path with its own dialogue (<c>TUTORIAL_ABORTED</c>) and its own
     /// <c>AddScore(-50)</c>, not a shortcut, but it is a worse run than a good
     /// player's and <c>PrimaryObjectiveComplete(4, ...)</c> never fires.</para>
     ///
-    /// <para><b>The measured beat-9 trace</b>, for anyone who changes the
-    /// driver: wave armed t9442 at 17,500 hull; kills at t10202, t10421,
-    /// t10492 and t10557, with hull still 14,400 after the fourth; then a
-    /// 823-tick tail in which the sortie's store ran out, the jet put down to
-    /// recharge, and two Forseti Missiles took it from 11,800 to the abort at
-    /// t11380. The named blocker is the ground recharge, not the dogfight.
-    /// See <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c>.</para>
+    /// <para><b>This count went down, and the cause is a correction rather than
+    /// a regression.</b> The previous run destroyed four, but it was flown
+    /// against <c>WalkerEnergyRegenerationPerTick = 4</c> - a placeholder that
+    /// is eight times slower than the shipped
+    /// <c>mGroundEnergyIncrease</c> 0.05. With the byte-faithful 33 the store
+    /// refills in about eight released seconds instead of about fifty-eight, so
+    /// the driver no longer has to charge on the ground before it launches: it
+    /// takes off the moment the wave arms and transits 107 m into the spawn
+    /// cluster, merging with all six drones at once instead of meeting them as
+    /// they trickle in. The old ground recharge, named as the blocker in
+    /// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c> §3, is gone - the jet
+    /// never runs its store dry in this run at all - and a different blocker is
+    /// in its place.</para>
+    ///
+    /// <para><b>The measured beat-9 trace.</b> Wave armed t9418 at 17,500 hull;
+    /// kills at t10416 and later, hull 7,400 at the abort at t11896, and
+    /// <c>Won</c> at t12394. The losses are two <c>Forseti Missile</c> hits and
+    /// three <c>Blaster</c> streams, and every stream happens at a nearest-drone
+    /// slant of 4-8 m.</para>
+    ///
+    /// <para><b>The blocker, stated precisely: the driver cannot both track and
+    /// dodge, and that is a property of the released airframe.</b> A clean
+    /// Blaster miss needs a perpendicular speed of <c>18 / slant</c> m/s - 0.45
+    /// m/s at 40 m, 3.6 m/s at 5 m. With <c>JetAlignmentPermille</c> 0 the only
+    /// thing feeding the crab is the released speed correction, which drives
+    /// the magnitude towards <c>JetMinimumSpeedPerTick</c> at <c>MoveZ</c> -1:
+    /// measured over t9925-t10005, the airframe held 75 mm per tick, i.e. 2.2
+    /// m/s, at exactly the 4-8 m range where 2.2-4.5 m/s was required. But
+    /// <c>MoveZ</c> -1 is also what collapses the turn radius enough to hold a
+    /// drone on the reticle. The two throttles were measured against each
+    /// other: <c>MoveZ</c> +1 throughout kept the hull above the abort
+    /// threshold for 2,850 ticks longer (abort t14746 rather than t11896) and
+    /// scored <b>zero</b> kills; <c>MoveZ</c> -1 scores kills and is shredded.
+    /// Nine intermediate throttle policies, including a firing-solution-gated
+    /// blend, were measured and none beat two.</para>
+    ///
+    /// <para><b>And the result is chaotic, so do not treat two as a tuning
+    /// target.</b> Roughly thirty single- and two-parameter variations of this
+    /// driver were measured against the corrected constant - yaw gain, crab
+    /// segment, missile-break range, fire tolerance, altitude band, launch
+    /// energy, stand-off ramps, loiter, and nearest-target hysteresis - and the
+    /// kill count swings between 0 and 3 with no gradient, with two variations
+    /// losing the level outright. One 3-kill point exists but its immediate
+    /// neighbours in the same parameter score 0 and 2, so it is a spike and is
+    /// deliberately not shipped. The honest reading is unchanged from
+    /// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c> §3.1: this driver sits on
+    /// a cliff, and the previous four was a point on the same cliff.</para>
     /// </summary>
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
@@ -236,7 +275,7 @@ public sealed class Level100FullChainTests
         // `Aborted` is the released LevelScript's own `aborted` local, set by
         // `event("Abort Airborne Drones")`, which its beat-9 health poll posts
         // below 40 % hull. This run still wins through that branch: it destroys
-        // FOUR of the six wave-2 drones and objective 4 is never completed,
+        // TWO of the six wave-2 drones and objective 4 is never completed,
         // because `PrimaryObjectiveComplete(4, ...)` lives only on the full
         // clear.
         Assert.True(
@@ -245,14 +284,17 @@ public sealed class Level100FullChainTests
             "If it now wins by clearing wave 2, that is better - update this " +
             "assertion and local-lab/AUTOPILOT-TO-WON-2026-07-26.md together.");
 
-        // The floor is the point of this assertion, not the ceiling. Two was
-        // the measured count before the beat-9 driver existed; anything below
-        // four is a regression in the crab, the missile break or the fire
-        // discipline and should be investigated rather than re-baselined.
+        // Both ends are meant here, and neither is a target. The floor catches
+        // a driver that has stopped fighting; the ceiling catches a driver that
+        // has quietly started clearing the wave, at which point the abort
+        // qualification above and this whole doc comment are wrong and have to
+        // be rewritten rather than re-baselined. The count is chaotic in this
+        // driver's parameters - see the class remarks - so a change either side
+        // is evidence about the run, not a number to chase.
         Assert.InRange(
             CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2),
-            4,
-            5);
+            2,
+            3);
         Assert.Equal(
             Level100PrimaryObjectiveStatus.Failed,
             final.Level100Mission.PrimaryObjectives

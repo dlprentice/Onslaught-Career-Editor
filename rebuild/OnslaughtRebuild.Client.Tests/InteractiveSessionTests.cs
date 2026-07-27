@@ -1203,6 +1203,15 @@ public sealed class InteractiveSessionTests
         // behaviour. No damage number, threshold or trajectory moved - the
         // conversion in Level100ActorWeapons.HullDamageFromFloatBits divides by
         // MaximumHull, so hits-to-kill are identical on both sides.
+        // DID NOT MOVE 2026-07-27 for the WalkerEnergyRegenerationPerTick
+        // correction, 4 -> 33, and that is a measurement rather than an
+        // assumption. This scenario is walker-only, so energy is never spent by
+        // flight; it dips to a measured minimum of 7,970 of 8,000 and the regen
+        // clamps it back to the maximum well before the final snapshot, which
+        // is the only state this hashes. Walker dynamics do not read energy
+        // above zero - it only feeds `_shield` - so neither trajectory nor
+        // final value differs. Checked both ways: the constant at 4 and at 33
+        // both produce fb2219b6... exactly.
         Assert.Equal(
             "fb2219b6f39e768ad68facf648c1697d8de955b46316b991e54726277c6c4927",
             StateHasher.ComputeHex(session.CurrentSnapshot));

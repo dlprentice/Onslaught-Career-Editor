@@ -984,25 +984,42 @@ internal sealed class Level100ChainAutopilot
         // fell out of the sky with all six drones untouched.
         //
         // So the crab is flown with an explicit altitude band and a rate term
-        // instead. Inside the band, and only then, the nose belongs to the
-        // target.
-        bool altitudeHeld =
-            altitude < WaveTwoFloorMillimeters ||
-            altitude > WaveTwoCeilingMillimeters;
-        double altitudePitchError = 0;
-        if (altitudeHeld)
+        // instead.
+        //
+        // The correction is a BIAS ON THE AIM PITCH, not an alternative to it,
+        // and the rate term is on whether or not the band is broken. The
+        // earlier revision only corrected while outside the band and handed the
+        // pitch axis back to the target inside it. That does not hold a band:
+        // with the alignment at 0 the vertical velocity is a free integrator,
+        // so the band was left at whatever rate the last tracking excursion had
+        // built and the correction only ever fought the overshoot. Measured
+        // with the constant applied and that controller: the jet climbed to
+        // 31.1 m against a 26 m ceiling and spent the rest of the beat looking
+        // down at drones from above, firing on 363 of 2,503 ticks.
+        //
+        // A rate term added to the aim pitch vanishes at steady state, so it
+        // costs nothing once the vertical rate is dead - unlike an alternative
+        // pitch command, which is off-target for as long as it is in charge.
+        double aimPitch = -Math.Atan2(
+            aim.Y - state.PlayerElevationMillimeters,
+            Math.Max(1.0, horizontal));
+        double bandBias = 0;
+        if (altitude < WaveTwoFloorMillimeters)
         {
-            double wanted = altitude < WaveTwoFloorMillimeters
-                ? WaveTwoFloorMillimeters
-                : WaveTwoCeilingMillimeters;
-            double commanded = Math.Clamp(
-                ((altitude - wanted) / 40_000d) +
-                    (state.PlayerVerticalVelocityMillimetersPerTick / 400d),
-                -0.35,
-                0.35);
-            altitudePitchError =
-                commanded - (state.FacingPitchMicroRad / 1_000_000d);
+            bandBias = (altitude - WaveTwoFloorMillimeters) / 40_000d;
         }
+        else if (altitude > WaveTwoCeilingMillimeters)
+        {
+            bandBias = (altitude - WaveTwoCeilingMillimeters) / 40_000d;
+        }
+
+        double verticalCorrection = Math.Clamp(
+            bandBias + (state.PlayerVerticalVelocityMillimetersPerTick / 400d),
+            -0.35,
+            0.35);
+        double commandedPitch = aimPitch + verticalCorrection;
+        double altitudePitchError =
+            commandedPitch - (state.FacingPitchMicroRad / 1_000_000d);
 
         short lookYAltitude = LookAxis(altitudePitchError, 4_000);
 
@@ -1055,9 +1072,7 @@ internal sealed class Level100ChainAutopilot
             return new SimInput(0, -1, SimActions.ToggleMode, 0, 0, lookX, 0);
         }
 
-        double pitchError = altitudeHeld
-            ? altitudePitchError
-            : PitchErrorTo(state, aim, horizontal);
+        double pitchError = altitudePitchError;
         short lookY = LookAxis(pitchError, 4_000);
 
         // Throttle. Backing off is what makes this airframe turn: the released

@@ -315,8 +315,34 @@ public static class SimulationConstants
     // are 533.333 ms and preserve those exact state-transition endpoints.
     public const int WalkerToJetTransitionTicks = 16;
     public const int JetToWalkerTransitionTicks = 15;
-    // Walker regen still provisional (no dual-accept yet).
-    public const int WalkerEnergyRegenerationPerTick = 4;
+    // CBattleEngineWalkerPart::Move recharges the store on the ground
+    // (references/Onslaught/BattleEngineWalkerPart.cpp:374-388):
+    //
+    //   if (EVENT_MANAGER.GetTime() - mMainPart->mLastTimeOnGround < 0.3f)
+    //     if ((!mInfinateEnergy) && (!mCloaked))
+    //       float recharge = mMainPart->mConfiguration->mGroundEnergyIncrease;
+    //       if (!mShieldsRecharging) recharge /= 2;
+    //       mMainPart->mEnergy += recharge;   // clamped to mConfiguration->mEnergy
+    //
+    // `mGroundEnergyIncrease` is a shipped byte. Record 3 "Aquila Prototype"
+    // @0x2d2 of data/battle engine configurations.dat (sha256
+    // 58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a,
+    // 1,514 bytes, decoded whole with CBattleEngineData::Load's field order,
+    // zero slack) carries mGroundEnergyIncrease 0.05 and mEnergy 8.0.
+    //
+    // MaximumEnergy is 8_000 Core against that released 8.0, so the store is
+    // milli-units: 0.05 released = 50 Core per RETAIL tick, and the 20 -> 30 Hz
+    // conversion is 50 * 20/30 = 33 per Core tick. The previous value of 4 was
+    // a placeholder and was eight times too slow, which cost the beat-9 sortie
+    // about 58 released seconds of standing still to recharge.
+    //
+    // The `/2` arm is DELIBERATELY NOT MODELLED. `Move` sets
+    // mShieldsRecharging = TRUE at the end of every update
+    // (BattleEngineWalkerPart.cpp:389), so the full rate is the steady state and
+    // the halved rate only occurs on an update following a shield drain. Core
+    // has no shield-drain path to clear that flag, so modelling the halved arm
+    // would mean inventing the condition that selects it.
+    public const int WalkerEnergyRegenerationPerTick = 33;
     // CBattleEngineJetPart::Move spends
     //   cost = (mMaxAirEnergyCost - mMinAirEnergyCost) * mThrusterValue
     //          + mMinAirEnergyCost
