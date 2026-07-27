@@ -23,17 +23,41 @@ several of those catches came from exactly that kind of disagreement.
 ## Invocations
 
 ```bash
-codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" "<prompt>"
+codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="xhigh" "<prompt>"
 grok -p "<prompt>" -m grok-4.5 --reasoning-effort high
 ```
 
-**`high` is the default on both, deliberately.** Codex will accept `xhigh` and
-`max`, but they are too slow to be the standing choice: measured 2026-07-26, a
-`max` consult ran ~30 minutes on one question and over an hour on another
-*without converging*, while `high` answers the same class of question and is what
-produced several of the day's sharpest catches. Reach for `xhigh` or `max` only
-when a `high` pass has genuinely failed to decide, and say in the write-up that
-you escalated.
+**Owner's choice is `xhigh` for Codex; `high` is the proven floor.** Both are
+measured to finish and to investigate properly. Drop to `high` if `xhigh` proves
+slow in practice — the two were close in the one head-to-head we have, and `high`
+is the tier with the most evidence behind it.
+
+**Do not use `max`, `ultra`, `minimal`, `low`, or `none`.**
+
+- `max` did not return at all on a real question: 35+ minutes producing nothing
+  past the stdin preamble, from the main loop, on a prompt `high` finished in ten.
+  It answers a trivial prompt in 12 s, so it is reachable — it just does not
+  converge on work. OpenAI's model guidance describes a **pro reasoning mode**
+  for GPT-5.6 that "can tolerate higher latency"; if `max` routes there, this is
+  structural slowness rather than a defect, and no amount of waiting fixes the
+  economics.
+- `ultra` is **undocumented for this model** and unverified. It is accepted on a
+  trivial prompt (7 s), but an unrecognised value can be silently ignored or
+  coerced, and its full-prompt run stalled exactly like `max`. An earlier
+  revision of this file called it "reachable" on the strength of the trivial
+  probe; that was over-claiming from a weak test.
+- `minimal` is rejected outright with `invalid_request_error` in 11 s.
+- `low` is the dangerous one. It **returns fast and answers wrongly**: on a test
+  question with a known answer it concluded from *call order* that one function
+  "draws over" another, without opening the callee where every draw is guarded.
+  That is reasoning from a code path, which this project's evidence rule forbids.
+  A cheap consult that ratifies a false claim is worse than no consult, because
+  it launders it.
+
+Note we authenticate through the **ChatGPT subscription** (`codex doctor` reports
+`auth mode: chatgpt`), not the API, so OpenAI's published API enum is indicative
+for this route rather than authoritative. Where the docs and a probe disagree,
+the probe wins — that is how `minimal` and `ultra` were settled.
 
 For long prompts, write the prompt to a file and use `grok --prompt-file <path>`.
 
@@ -52,10 +76,16 @@ Notes that are easy to get wrong:
 reading the enum it rejected with — not by reading the desktop UI, which differs
 from what the command line can reach.**
 
-- Codex accepts exactly: `none`, `minimal`, `low`, `medium`, `high`, `xhigh`,
-  `max`. The desktop app additionally offers **`Ultra`**, and it is **not
-  reachable through `codex exec`** — `max` is the CLI ceiling. The app's `Light`
-  is `low` and `Extra High` is `xhigh`.
+- Codex accepts `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` **and
+  `ultra`**. The app's `Light` is `low` and `Extra High` is `xhigh`.
+
+  **Do not trust the CLI's own error message here.** Feeding it a bogus value
+  makes it reject with "Supported values are: 'none', 'minimal', 'low', 'medium',
+  'high', 'xhigh', and 'max'" — that list is **incomplete**. `ultra` is accepted
+  and answers a trivial prompt in 7 s (`xhigh`: 13 s). An earlier revision of
+  this file asserted `ultra` was unreachable on the strength of that error
+  message; that was wrong, and it is a good reminder that a tool's own
+  documentation of itself is evidence, not proof.
 - Grok accepts exactly: `low`, `medium`, `high`. `high` is the CLI ceiling.
 
 **Neither speed axis is exposed to the CLI.** The desktop apps offer a
@@ -102,6 +132,50 @@ identically — `high` (the default) to `xhigh` to `max`, one step, and record i
 the write-up that you escalated and why. Do not start at `max`: it is the slowest
 path to the same answer on almost every question, and a consult nobody waits for
 is a consult that did not happen.
+
+## Measured tier behaviour, 2026-07-26
+
+One prompt (a real HUD audit whose correct answers were already known), run at every
+reachable tier. The discriminator was whether the model opened
+`CDXBattleLine__Render` rather than reasoning from call order in its caller.
+
+| tier | main loop | verdict quality |
+| --- | --- | --- |
+| `low` | 221 s | **WRONG.** Concluded from call order that the battleline "draws over" the portrait. It never opened the callee, where every draw is guarded. |
+| `medium` | 676 s | correct |
+| `high` | ~600 s | correct, and went furthest — decoded the shipped asset and traced composed constants |
+| `xhigh` | untested at time of writing | — |
+| `max` | **no output after 35 min** | — |
+| `ultra` | hung on a trivial prompt | — |
+
+Three conclusions, all of which cost real time to establish:
+
+- **`low` is unsafe here.** It answered fast and confidently and was wrong, by
+  reasoning from a code path — the exact thing this project's evidence rule
+  forbids. A cheap consult that ratifies a false claim is worse than none,
+  because it launders it.
+- **`medium` costs the same as `high` and returns less.** There is no saving.
+- **`max` does not return on real questions.** It answers a trivial prompt in 12 s
+  but produced nothing in 35 minutes on a substantive one, from the main loop.
+  It is not slow; it is non-returning. Do not reach for it.
+
+`high` is therefore not a cost compromise. It is the only tier measured to both
+finish and dig.
+
+## From a subagent, background-and-poll is mandatory
+
+**The Windows sandbox refuses codex's shell in subagent shells unconditionally,
+at every effort level.** Measured: at `high` from a subagent, both `pwsh` spawn
+attempts failed with `CreateProcessAsUserW failed: 5` within ten seconds — the
+same error seen at `max`. The difference is not the tier, it is **recovery**:
+codex announced a switch to the read-only JS runtime and completed the whole
+audit through 73 `node_repl/js` calls, one file operation at a time, reaching the
+same correct verdict as the main loop.
+
+The cost of that fallback is time: **1008 s versus ~600 s for the identical
+prompt from the main loop.** That exceeds the tool's 600 s ceiling, so **a
+foreground call from a subagent cannot complete a real consult regardless of the
+timeout requested.** Background and poll, or hand the consult to the main loop.
 
 **There is a second, independent failure mode, and it is not the timeout.**
 `CreateProcessAsUserW failed: 5` also occurs in **subagent shells** on runs that
