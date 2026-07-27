@@ -25,7 +25,19 @@
     "this at all. See local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md."
   ],
   "_measurementProvenance": {
-    "measuredAtCommit": "85ba30e9 + the uncommitted TitleLogoReflectionLayer/TitleLogoTint change",
+    "measuredAtCommit": "0c96fb1d",
+    "_measuredAtCommitNote": [
+      "These values were first derived from a capture the rig stamped",
+      "purpose=probe, because the TitleLogoReflectionLayer change was still",
+      "uncommitted - the rig working exactly as designed. After it landed as",
+      "0c96fb1d they were RE-DERIVED from mainmenu-clean-0c96fb1d, taken from a",
+      "clean tree with Purpose=production and GodotSourceDirty=False.",
+      "They reproduce exactly: FULL FRAME 15.14, title-logo 29.48,",
+      "bg-emblem-topright 19.92. So the probe stamp was a provenance caveat and",
+      "not a wrong number - but that was CONFIRMED rather than assumed, because",
+      "a ceiling derived from an unlabelled experiment is precisely the failure",
+      "the purpose stamp exists to prevent."
+    ],
     "measuredOn": "2026-07-27",
     "captureDeterminism": [
       "Re-derived with tools/score_frontend_capture.py --measure from",
