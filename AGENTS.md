@@ -41,6 +41,28 @@
   developer-provided material only under its own file-level provenance and terms.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation, filesystem, clock, process, network, and GPU APIs; clients and renderers adapt Core state rather than own simulation truth.
 
+## Delegation
+
+**Default to subagents. The main loop's context is the scarce resource on this
+project, and it is the only lane that can hold the whole argument.** Spend it on
+judgement — deciding what is true, what to do next, what to reject — not on
+reading files a subagent could have read for you.
+
+- Offload **reading, searching, measuring, porting, and drafting**. Keep
+  **deciding, adjudicating, and committing**. Agents do not commit.
+- Pair substantial work with an **adversary**: a second, read-only agent briefed
+  to refute the first. Brief the adversary to attack the *refutations* too — a
+  wrong refutation makes you discard good work, and that has happened here.
+- Run agents **concurrently** when their work is independent. One message, many
+  tool calls.
+- A subagent's report is **data, not authority**. Hand-verify anything
+  load-bearing before it becomes a claim or a commit. Findings have been reported
+  here that did not survive checking.
+- **Cross-model consults run from the main loop ONLY.** Subagents must never
+  invoke `codex` or `grok`; they do not get the option. Sixteen concurrent agents
+  once produced consults that answered *other agents'* questions. See
+  `CROSS_MODEL_CONSULT.md`.
+
 ## Evidence
 
 - **A behavior or parity claim must cite a capture, a byte comparison, or a test —
