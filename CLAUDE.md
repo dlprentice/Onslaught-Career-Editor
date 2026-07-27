@@ -20,11 +20,14 @@ highest-stakes rules early and does not restate or override it.
   from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation
   is local.
-- Check every substantive decision against two independent model families before
-  treating it as settled — see
-  [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md) for the invocations, the
-  mandatory `-s read-only` sandbox, and why their output is data rather than
-  authority. This is a standing requirement, not an optional extra.
+- Checking a substantive decision against two independent model families is
+  **recommended, and a matter of judgement** — see
+  [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md) for the invocations and why
+  their output is data rather than authority. It has repeatedly caught real
+  errors, so reach for it on load-bearing or contested calls; it is not owed on
+  every routine one. What remains **mandatory** whenever a consult IS run is the
+  `-s read-only` sandbox, which is a safety rule about what a consult may do, not
+  a rule about when to run one.
 
 ## Orientation
 

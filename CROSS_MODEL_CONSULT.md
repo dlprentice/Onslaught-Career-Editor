@@ -1,9 +1,17 @@
 # Cross-model consultation protocol
 
-Every substantive decision on this project is checked against two independent
-model families before it is treated as settled. This is a standing requirement,
-not an optional extra, and it applies to reverse engineering, startup parity,
-render parity, simulation behaviour, and product decisions alike.
+Checking a substantive decision against two independent model families is
+**recommended on this project, and left to judgement** — it applies to reverse
+engineering, startup parity, render parity, simulation behaviour, and product
+decisions alike.
+
+It was a hard requirement until 2026-07-26 and was relaxed deliberately. Consults
+are slow (see the timeout section below — a real one runs for an hour or more),
+and spending that on a routine call buys little. Reach for one when a decision is
+**load-bearing** (later work will build on it), **contested**, or **about to be
+written down as settled**. Skip it for the mechanical and the obvious. What is
+not negotiable is the honesty rule: if a consult was skipped or failed, say so —
+never present single-family coverage as if it were two.
 
 The reason is specific rather than general. This project has recorded, with
 numbers, **five false diagnoses** caused by a measurement that looked sound, and
