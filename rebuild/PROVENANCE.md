@@ -68,12 +68,40 @@ Work the partition:
   the core math types `FVector` / `FMatrix`.
 
 That last bullet is why the Ghidra lane is not optional: the subsystems carrying
-most of the open render and tutorial defects have no source at all. It is also
-why any conclusion resting on the sign convention of `FVector::operator^` is
-*consistent* rather than *proven* — that operator's definition is not in the
-drop. Derivations that apply the operator an even number of times (such as the
-double cross in the ground-pitch law) are immune and may be relied on; ones that
-apply it once (such as roll) may not.
+most of the open render and tutorial defects have no source at all.
+
+> **`FVector::operator^` is now PROVEN, 2026-07-27. This paragraph previously
+> barred a class of derivations and no longer does.**
+>
+> It read: "any conclusion resting on the sign convention of `FVector::operator^`
+> is *consistent* rather than *proven* — that operator's definition is not in the
+> drop. Derivations that apply the operator an even number of times (such as the
+> double cross in the ground-pitch law) are immune and may be relied on; ones that
+> apply it once (such as roll) may not."
+>
+> The operator is at `0x00411a60`, read from the pristine specimen
+> (`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
+> `74154bfa…` — **not** the installed executable, which is patched). Its whole
+> body is nine x87 pairs and three stores:
+>
+> ```
+> fld [ecx]    fmul [eax+4]   fld [ecx+4]  fmul [eax]    fsubp   ; a.x*b.y - a.y*b.x
+> fld [ecx+8]  fmul [eax]     fld [eax+8]  fmul [ecx]    fsubp   ; a.z*b.x - a.x*b.z
+> fld [ecx+4]  fmul [eax+8]   fld [ecx+8]  fmul [eax+4]  fsubp   ; a.y*b.z - a.z*b.y
+> fstp [eax]   fstp [eax+4]   fstp [eax+8]                       ; x, y, z
+> ```
+>
+> Popped in stack order that stores `a.y*b.z − a.z*b.y` to x, `a.z*b.x − a.x*b.z`
+> to y, `a.x*b.y − a.y*b.x` to z — **the conventional right-handed cross product,
+> a × b, with no sign inversion.** Odd-application derivations, roll included, are
+> no longer barred.
+>
+> **This does not by itself settle the jet ground-effect roll sign.** That was
+> blocked by at least four independent things; this removes one. Retail's
+> ground-normal horizontal sign, retail's body-right convention in a Z-down frame,
+> and Core's own roll convention all remain open and can cancel each other. Task
+> #111 is the precedent: only a test caught an inverted pitch law, and no argument
+> would have.
 
 1. controlled retail runtime observation;
 2. retail binary/static evidence;
