@@ -295,6 +295,70 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void TerrainPitch_IsNegatedAgainstForwardRise_AndRollIsNot()
+    {
+        // Guards the sign defect directly, rather than inferring it from an
+        // endpoint. Both released producers compute
+        //     p = (yv x map_normal) x map_normal;  pitch = -p.Z
+        // (BattleEngine.cpp:1143, BattleEngineJetPart.cpp:597). Because
+        // (a x n) x n = n(a.n) - a, p is anti-parallel to facing, so retail's
+        // pitch is NEGATIVE when the ground rises ahead. Roll uses the SINGLE
+        // cross r = yv x map_normal and is NOT negated.
+        //
+        // Ground rising ahead must produce nose-up (negative) pitch; falling
+        // away must produce nose-down (positive); flat must produce zero.
+        (SimVector2 position, int yaw, int forwardSlopePermille) = FindSlopedSample();
+        Assert.NotEqual(0, forwardSlopePermille);
+
+        int pitch = Simulation.SampleTerrainPitchMicroRad(position, yaw);
+        Assert.NotEqual(0, pitch);
+        Assert.Equal(-Math.Sign(forwardSlopePermille), Math.Sign(pitch));
+
+        // Reversing the facing reverses the forward slope, so the pitch sign
+        // must flip too. This catches a constant offset masquerading as a sign.
+        int reversedYaw = yaw + 3_141_593;
+        int reversedPitch = Simulation.SampleTerrainPitchMicroRad(position, reversedYaw);
+        Assert.Equal(-Math.Sign(pitch), Math.Sign(reversedPitch));
+
+        // Roll must keep the SAME sign as the rightward slope - negating it
+        // alongside pitch would be a half-applied fix and worse than none.
+        // At yaw 0 the rightward slope reduces to gradient.X exactly, so no
+        // trig helper is needed and the assertion stays exact.
+        SimVector2 gradient =
+            Level100Terrain.Instance.SampleGroundGradientPermille(position);
+        int rightSlopePermille = gradient.X;
+        if (rightSlopePermille != 0)
+        {
+            int roll = Simulation.SampleTerrainRollMicroRad(position, yaw);
+            Assert.Equal(Math.Sign(rightSlopePermille), Math.Sign(roll));
+        }
+    }
+
+    private static (SimVector2 Position, int Yaw, int ForwardSlopePermille)
+        FindSlopedSample()
+    {
+        // Walk the authored Level 100 heightfield for a sample with a clearly
+        // non-zero forward slope at yaw 0, so the assertion is not riding on
+        // rounding noise.
+        for (int z = -40_000; z <= 40_000; z += 1_000)
+        {
+            for (int x = -40_000; x <= 40_000; x += 1_000)
+            {
+                var position = new SimVector2(x, z);
+                SimVector2 gradient =
+                    Level100Terrain.Instance.SampleGroundGradientPermille(position);
+                if (Math.Abs(gradient.Z) >= 200)
+                {
+                    return (position, 0, gradient.Z);
+                }
+            }
+        }
+
+        throw new InvalidOperationException(
+            "no sufficiently sloped Level 100 sample found");
+    }
+
+    [Fact]
     public void WalkerVerticalLook_UsesMeasuredInertiaAndReleasedTerrainRelativeLimits()
     {
         Assert.Equal(
@@ -329,14 +393,50 @@ public sealed class SimulationTests
         {
             simulation.Step(new SimInput(0, 0, LookY: -1));
         }
-        Assert.InRange(simulation.Snapshot.FacingPitchMicroRad, -1_000_000, -800_000);
+        // TERRAIN-RELATIVE, derived from released constants - not a window
+        // fitted around our own output. BattleEngine.cpp:1145-1176 damps with a
+        // 6.0 coefficient from a -0.8 threshold, so the soft limiter's
+        // equilibrium is delta = -800_000 - 1_000_000/6 = -966_667. Held input
+        // converges toward that bound without passing it. Asserting the DELTA
+        // rather than the absolute pitch makes this immune to the separate
+        // terrain-gradient shortfall below, and it fails loudly if the limiter
+        // itself regresses.
+        int upDelta = simulation.Snapshot.FacingPitchMicroRad -
+            Simulation.SampleTerrainPitchMicroRad(
+                simulation.Snapshot.PlayerPosition,
+                simulation.Snapshot.FacingYawMicroRad);
+        Assert.InRange(upDelta, -966_667, -900_000);
         Assert.True(simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick <= 0);
 
         for (int tick = 0; tick < 200; tick++)
         {
             simulation.Step(new SimInput(0, 0, LookY: 1));
         }
-        Assert.InRange(simulation.Snapshot.FacingPitchMicroRad, 600_000, 850_000);
+        // Same treatment, opposite bound: 500_000 + 1_000_000/6 = 666_667.
+        int downDelta = simulation.Snapshot.FacingPitchMicroRad -
+            Simulation.SampleTerrainPitchMicroRad(
+                simulation.Snapshot.PlayerPosition,
+                simulation.Snapshot.FacingYawMicroRad);
+        Assert.InRange(downDelta, 600_000, 666_667);
+
+        // PARITY, with a NAMED tolerance rather than a silent one. The two
+        // Observed* constants above were previously only ever asserted against
+        // their own literals - a tautology that let the file look like it
+        // checked retail parity while checking nothing. 60_000 uRad is not a
+        // target, it is the CURRENT known shortfall: inverting the limiter
+        // equilibrium through both released endpoints brackets retail's ground
+        // pitch at the Level 100 start to [-134_544, -124_583], while ours
+        // brackets to [-83_663, -69_722]. Disjoint, both negative - the sign is
+        // right and the magnitude is not. Our sampled forward slope is roughly
+        // 59% of retail's, most likely because SampleGroundGradientPermille
+        // central-differences over +/-1000 mm and smooths the slope relative to
+        // whatever MAP.Normal does. Tightening that sampler MUST tighten this
+        // tolerance; do not widen it to accommodate a regression.
+        Assert.InRange(
+            Math.Abs(simulation.Snapshot.FacingPitchMicroRad -
+                SimulationConstants.ObservedWalkerPitchDownLimitAtLevel100StartMicroRad),
+            0,
+            60_000);
         Assert.True(simulation.Snapshot.WalkerPitchVelocityMicroRadPerTick >= 0);
     }
 

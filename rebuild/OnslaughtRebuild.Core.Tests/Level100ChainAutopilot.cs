@@ -34,14 +34,18 @@ namespace OnslaughtRebuild.Core.Tests;
 ///   <item><description><b>Repositioning when the stance does not work.</b> The
 ///   trigger is not a model of why - it is the fact a player uses, that the
 ///   target's health is not going down.</description></item>
+///   <item><description><b>Fire discipline when a miss would hit something the
+///   script has not armed yet.</b> See
+///   <see cref="CollateralRiskBehind"/>.</description></item>
 /// </list>
 ///
-/// <para><b>What this driver is NOT evidence of.</b> It works around a Core
-/// defect rather than exposing it: <c>Simulation.SampleTerrainPitchMicroRad</c>
-/// has the opposite sign to the two released producers of that quantity, so a
-/// walker on a bank cannot aim downhill, and this driver walks down the bank
-/// instead. See <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c> section 6; that
-/// correction is deliberately not part of this change.</para>
+/// <para><b>This driver no longer works around the terrain-pitch sign
+/// defect.</b> <c>Simulation.SampleTerrainPitchMicroRad</c> used to have the
+/// opposite sign to the two released producers of that quantity, so a walker on
+/// a bank could not aim downhill and an earlier revision of this driver walked
+/// down the bank instead. With the sign corrected the walker aims downhill from
+/// where it stands, and the bank-walking workaround has been removed: it now
+/// stops closing and holds still for a precision shot instead.</para>
 /// </summary>
 internal sealed class Level100ChainAutopilot
 {
@@ -167,7 +171,11 @@ internal sealed class Level100ChainAutopilot
             actor => actor.Lifecycle == Level100ActorLifecycle.Destroyed);
         if (destroyed != _lastDestroyed)
         {
-            _log.Add($"t{state.Tick} destroyed actors = {destroyed} hull={state.Hull}");
+            _log.Add(
+                $"t{state.Tick} destroyed actors = {destroyed} hull={state.Hull} [" +
+                string.Join(", ", state.Level100Actors.Actors
+                    .Where(a => a.Lifecycle == Level100ActorLifecycle.Destroyed)
+                    .Select(a => a.Name)) + "]");
             _lastDestroyed = destroyed;
         }
 
@@ -236,7 +244,8 @@ internal sealed class Level100ChainAutopilot
             $"yawErr={YawErrorTo(state, aim.X, aim.Z):F4} " +
             $"pitchErr={PitchErrorTo(state, aim, horizontal):F4} " +
             $"los={HasLineOfSight(state, aim)} " +
-            $"friendlyOnRay={FriendlyStructureOnTheRay(state, target, aim)}";
+            $"friendlyOnRay={FriendlyStructureOnTheRay(state, target, aim)} " +
+            $"precise={CollateralRiskBehind(state, target)}";
     }
 
     private void LogLiveObjectives(WorldSnapshot state)
@@ -507,7 +516,13 @@ internal sealed class Level100ChainAutopilot
         WorldSnapshot state,
         Level100ActorSnapshot target)
     {
-        SimVector3 aim = AimPoint(state, target);
+        // Is there something the script has not armed yet in the volume a miss
+        // would land in? If so this is a precision shot, not a brawl: the hull
+        // sweep comes off, the feet stop, and the trigger tolerance tightens.
+        // Measured cost of getting this wrong: two rounds.
+        bool precise = CollateralRiskBehind(state, target);
+
+        SimVector3 aim = AimPoint(state, target, sweep: !precise);
         double horizontal = Horizontal(state, aim);
         double yawError = YawErrorTo(state, aim.X, aim.Z);
         short lookX = LookAxis(yawError, 2_000);
@@ -563,6 +578,16 @@ internal sealed class Level100ChainAutopilot
             }
         }
 
+        // A precision shot is taken standing still. Every metre walked while
+        // aiming moves the terrain pitch the released limiter is holding the
+        // nose against, and the misses that killed Target Truck #25 were 0.06
+        // rad high while the walker was closing at speed.
+        if (precise && clear && horizontal <= GroundStandOffMillimeters)
+        {
+            _repositionTicksRemaining = 0;
+            _strafeTicksRemaining = 0;
+        }
+
         sbyte forward = 0;
         sbyte strafe = 0;
         if (_repositionTicksRemaining > 0)
@@ -572,9 +597,7 @@ internal sealed class Level100ChainAutopilot
             if (horizontal > MinimumGroundStandOffMillimeters && _strafeTicksRemaining == 0)
             {
                 // Close in. Most crests stop occluding once the muzzle is past
-                // them, closing shortens the ray, and walking down a bank
-                // trades a depression angle this walker cannot hold for one it
-                // can.
+                // them, and closing shortens the ray.
                 forward = 1;
             }
             else
@@ -615,7 +638,9 @@ internal sealed class Level100ChainAutopilot
             _strafeTicksRemaining = StrafeSegmentTicks * 2;
         }
 
-        double tolerance = FireTolerance(horizontal);
+        double tolerance = precise
+            ? PrecisionTolerance(horizontal)
+            : FireTolerance(horizontal);
         SimActions actions =
             clear && Math.Abs(yawError) < tolerance && Math.Abs(pitchError) < tolerance
                 ? SimActions.Fire
@@ -718,7 +743,10 @@ internal sealed class Level100ChainAutopilot
     /// than shooting at the pivot; the sweep also covers the unmodelled
     /// difference between an actor's origin and its hull centre.
     /// </summary>
-    private static SimVector3 AimPoint(WorldSnapshot state, Level100ActorSnapshot target)
+    private static SimVector3 AimPoint(
+        WorldSnapshot state,
+        Level100ActorSnapshot target,
+        bool sweep = true)
     {
         SimVector3 position = target.Pose.PositionMillimeters;
         double rawX = (double)position.X - state.PlayerPosition.X;
@@ -731,11 +759,20 @@ internal sealed class Level100ChainAutopilot
         // controller instead of searching the hull with it. A flying target
         // gets no sweep at all: it is already moving through the ladder faster
         // than the ladder moves, and the shot has to be taken now.
+        //
+        // The sweep also comes off entirely when a miss would land on an
+        // unarmed tutorial target: searching the hull with a ladder means
+        // deliberately putting rounds above and below it, and above it is where
+        // Target Truck #25 is.
         int aimHeight = 0;
         if (!IsAirborneTarget(target))
         {
-            int sweep = (int)Math.Clamp(range * 0.012, 100, 700);
-            aimHeight = 600 + ((((state.Tick / 11) % 5) - 2) * sweep / 2);
+            aimHeight = 600;
+            if (sweep)
+            {
+                int ladder = (int)Math.Clamp(range * 0.012, 100, 700);
+                aimHeight += (((state.Tick / 11) % 5) - 2) * ladder / 2;
+            }
         }
 
         return new SimVector3(
@@ -844,6 +881,115 @@ internal sealed class Level100ChainAutopilot
 
         return false;
     }
+
+    /// <summary>
+    /// Would a miss land on a tutorial target the script has <b>not armed
+    /// yet</b>?
+    ///
+    /// <para>Killing one is the losing move that
+    /// <see cref="Level100FullChainTests.NaiveWalkerAutopilot_BreaksTheTutorialAndLoses"/>
+    /// exists to demonstrate, and it is a hazard for a competent driver too.
+    /// Every <c>TargetTruckN.msl</c> answers <c>died()</c> with
+    /// <c>switch (activated)</c>, and the <c>case FALSE</c> arm is
+    /// <c>PostEvent("Broke Tutorial")</c> -&gt;
+    /// <c>LevelLostString(LOSE_TUTORIAL_BROKE)</c>.</para>
+    ///
+    /// <para><c>IsObjective</c> is the observable that tracks those scripts'
+    /// <c>activated</c> local: <c>event("Activate Static Targets 2")</c> is the
+    /// one handler that both sets <c>activated = TRUE</c> and calls
+    /// <c>SetObjective()</c>. A player reads the same thing off the HUD - the
+    /// target is not marked yet, so it is not a target yet.</para>
+    ///
+    /// <para><b>Measured, and the numbers are why this switches the driver's
+    /// behaviour instead of vetoing the shot.</b> <c>Target Truck #25</c> is
+    /// parked at (31663, 68922) and beat 3's <c>Target Tank #23</c> at
+    /// (31409, 70361) - <b>1.46 m apart</b>. The perpendicular distance from
+    /// the shot line to the truck therefore never exceeds 1.46 m from any
+    /// stance in the level, while the corridor a miss can wander into is 3.0 m
+    /// of truck body plus the aim slop <see cref="FireTolerance"/> allows. No
+    /// stance clears it, and a revision that treated this predicate as a veto
+    /// was measured holding the trigger shut for 900 released seconds at 3.2 m
+    /// with a clear ray and a converged reticle.</para>
+    ///
+    /// <para>What actually killed the truck was two rounds, not a spray: a
+    /// pulse round takes 1,800 off a 3,000-hull truck, and the two that reached
+    /// it were 0.06 rad high - inside the 0.15 rad
+    /// <see cref="FireTolerance"/> ceiling - fired while closing at speed from
+    /// 4.9 m above the tank, so they cleared the tank's hull and carried on
+    /// down-range into the truck 1.46 m behind it. The answer is therefore the
+    /// player's: stop, drop the hull-search ladder, and do not pull the trigger
+    /// until the reticle is inside the hull rather than merely on the target.
+    /// See <see cref="PrecisionTolerance"/>.</para>
+    /// </summary>
+    private static bool CollateralRiskBehind(
+        WorldSnapshot state,
+        Level100ActorSnapshot target)
+    {
+        // How far past the target a miss still matters. The round is not
+        // stopped by the aim point - it flies for
+        // ProjectileLifetimeTicks * ProjectileSpeedPerTick = 46.7 m - but a
+        // miss that stays near the line of the shot is the one that reaches an
+        // unarmed actor, and beyond this the terrain has taken it.
+        const int OverShootMillimeters = 20_000;
+
+        // Body half-width to allow around an unarmed actor's origin. The
+        // released Target Truck is a vehicle, not a point.
+        const int CollateralBodyMillimeters = 3_000;
+
+        SimVector3 position = target.Pose.PositionMillimeters;
+        double startX = state.PlayerPosition.X;
+        double startZ = state.PlayerPosition.Z;
+        double deltaX = position.X - startX;
+        double deltaZ = position.Z - startZ;
+        double lengthSquared = (deltaX * deltaX) + (deltaZ * deltaZ);
+        if (lengthSquared < 1.0)
+        {
+            return false;
+        }
+
+        double length = Math.Sqrt(lengthSquared);
+        double maximumProjection = 1.0 + (OverShootMillimeters / length);
+        double corridor =
+            CollateralBodyMillimeters + (length * FireTolerance(length));
+
+        foreach (Level100ActorSnapshot actor in state.Level100Actors.Actors)
+        {
+            if (actor.ActorId == target.ActorId ||
+                actor.TargetGroup == Level100MissionTargetGroup.None ||
+                actor.Lifecycle != Level100ActorLifecycle.Alive ||
+                actor.IsObjective)
+            {
+                continue;
+            }
+
+            double toX = actor.Pose.PositionMillimeters.X - startX;
+            double toZ = actor.Pose.PositionMillimeters.Z - startZ;
+            double projection = ((toX * deltaX) + (toZ * deltaZ)) / lengthSquared;
+            if (projection <= 0 || projection > maximumProjection)
+            {
+                continue;
+            }
+
+            double offsetX = toX - (projection * deltaX);
+            double offsetZ = toZ - (projection * deltaZ);
+            if ((offsetX * offsetX) + (offsetZ * offsetZ) < corridor * corridor)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The trigger tolerance when a miss would land on something the script has
+    /// not armed. This is the angle subtended by half a metre at the target -
+    /// well inside the hull - rather than the angle subtended by a metre, which
+    /// is what <see cref="FireTolerance"/> allows and which is what put two
+    /// rounds through <c>Target Truck #25</c>.
+    /// </summary>
+    private static double PrecisionTolerance(double range) =>
+        Math.Clamp(500.0 / Math.Max(range, 1.0), 0.004, 0.030);
 
     private static double Horizontal(WorldSnapshot state, SimVector3 position)
     {

@@ -1626,7 +1626,7 @@ public sealed class Simulation
             ((long)y * y) +
             ((long)z * z));
 
-    private static int SampleTerrainPitchMicroRad(
+    internal static int SampleTerrainPitchMicroRad(
         SimVector2 position,
         int yawMicroRad)
     {
@@ -1638,12 +1638,12 @@ public sealed class Simulation
             FixedTrigScale);
         int tangentLengthPermille = IntegerSquareRoot(
             1_000_000L + ((long)forwardSlopePermille * forwardSlopePermille));
-        return DivideRoundNearest(
+        return -DivideRoundNearest(
             (long)forwardSlopePermille * 1_000_000,
             tangentLengthPermille);
     }
 
-    private static int SampleTerrainRollMicroRad(
+    internal static int SampleTerrainRollMicroRad(
         SimVector2 position,
         int yawMicroRad)
     {
