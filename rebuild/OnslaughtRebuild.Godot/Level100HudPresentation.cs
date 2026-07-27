@@ -551,6 +551,10 @@ public sealed class Level100HudPresentationState
     private readonly List<Level100HudHelpPrompt> _deliveredHelp = [];
     private readonly IReadOnlyDictionary<string, int> _authoredAllegiance;
 
+    // The mission tick at the last projection, used ONLY to notice a restart.
+    // int.MinValue so the very first projection is never mistaken for one.
+    private int _lastProjectedMissionTick = int.MinValue;
+
     public Level100HudPresentationState()
         : this(null)
     {
@@ -624,6 +628,25 @@ public sealed class Level100HudPresentationState
             .ToArray();
 
         Level100MissionSnapshot mission = snapshot.Level100Mission;
+
+        // A RESTART CLEARS THE DELIVERY LOG. `SimActions.Reset` restarts the
+        // released mission and its tick returns to the opening, but this state
+        // is presentation-side and kept accumulating across it: every message
+        // and help prompt from the previous run stayed in the log, so after a
+        // reset `ActiveAt` resolved against deliveries that had not happened
+        // yet in the run now on screen.
+        //
+        // The tick going BACKWARDS is the signal, and it is derived from
+        // simulation state rather than from a new event, so Core needs no change
+        // and no reset notification can be missed. A mission tick never
+        // decreases within a run.
+        if (mission.Tick < _lastProjectedMissionTick)
+        {
+            _deliveredMessages.Clear();
+            _deliveredHelp.Clear();
+        }
+
+        _lastProjectedMissionTick = mission.Tick;
         // The active message is resolved from Core's OWN tick, not from the
         // audio mixer. `playback` is retained on the signature because the
         // audio adapter is still the sole playback owner and callers pass it,

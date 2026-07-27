@@ -12,6 +12,59 @@ public sealed class Level100HudPresentationTests
     private const long OneCoreStepTicks = 333_334;
     private const uint Seed = 0x4F4E534Cu;
 
+    /// <summary>
+    /// A mission restart CLEARS the presentation-side delivery log.
+    ///
+    /// <para><c>Reset</c> restarts the released mission and its tick returns to
+    /// the opening, but this state kept accumulating across it. Every message
+    /// and help prompt from the previous run stayed in the log, so after a reset
+    /// <c>ActiveAt</c> resolved against deliveries that had not happened yet in
+    /// the run now on screen - the player saw a message from their last
+    /// attempt.</para>
+    ///
+    /// <para>The signal is the mission tick going BACKWARDS, derived from
+    /// simulation state rather than a reset notification, so it cannot be missed
+    /// and Core needs no change. The assertion that the tick actually went
+    /// backwards is load-bearing: without it this test would pass even if the
+    /// reset never happened.</para>
+    /// </summary>
+    [Fact]
+    public void MissionRestart_ClearsTheDeliveryLog()
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        var presentation = new Level100HudPresentationState();
+        var playback = new Level100MessagePlaybackState(
+            null, null, 0d, 0d, false, false);
+
+        for (int tick = 0; tick < 400; tick++)
+        {
+            presentation.Consume(
+                session.AdvanceFrameTicks(OneCoreStepTicks).Level100MissionEvents);
+        }
+
+        Level100HudSnapshot before = presentation.Project(
+            session.CurrentSnapshot, playback);
+        Assert.NotEmpty(before.DeliveredMessages);
+        int tickBeforeReset = session.CurrentSnapshot.Level100Mission.Tick;
+        Assert.True(tickBeforeReset > 0);
+
+        session.ObserveInput(new InteractiveInput(0, 0, false, false, true));
+        presentation.Consume(
+            session.AdvanceFrameTicks(OneCoreStepTicks).Level100MissionEvents);
+        session.ObserveInput(InteractiveInput.Idle);
+
+        Assert.True(
+            session.CurrentSnapshot.Level100Mission.Tick < tickBeforeReset,
+            "the reset did not restart the mission, so this test proves nothing");
+
+        Level100HudSnapshot after = presentation.Project(
+            session.CurrentSnapshot, playback);
+        Assert.Empty(after.DeliveredMessages);
+        Assert.Empty(after.DeliveredHelp);
+    }
+
     [Fact]
     public void ProductMissionPathProjectsOrderedMessagesAndCanonicalObjectives()
     {
