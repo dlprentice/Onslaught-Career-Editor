@@ -185,6 +185,10 @@ public static class SimulationConstants
     public const int JetGroundEffectLookaheadTicks = TicksPerSecond / 2;
     public const int JetSkimHeightMillimeters = 500;
     public const int JetSkimMinimumHorizontalSpeedPerTick = 200;
+    // BattleEngineJetPart.cpp:536 `float damage=(0.5f-altitude)*20.0f`. The
+    // 20.0 is released life per released unit of depth below the 0.5 skim
+    // ceiling, applied once per released 20 Hz update.
+    public const int JetWaterSkimDamagePerReleasedUnit = 20;
     // One retail world-unit per released 20 Hz update expressed as a 30 Hz
     // Core speed. This conversion scale is independent of Blaster's 0.9 target.
     public const int RetailVelocityUnitPerUpdateAsCoreSpeed = 667;

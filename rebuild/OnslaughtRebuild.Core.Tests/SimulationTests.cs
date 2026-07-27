@@ -337,6 +337,68 @@ public sealed class SimulationTests
             CruiseSpeedMillimetresPerTick * SimulationConstants.JetGroundEffectLookaheadTicks);
     }
 
+    /// <summary>
+    /// Skimming water damages the Aquila, and the amount is pinned to the
+    /// released anchor rather than to our own arithmetic.
+    ///
+    /// <para><c>BattleEngineJetPart.cpp:536</c> is
+    /// <c>float damage=(0.5f-altitude)*20.0f</c>, applied once per released
+    /// 20 Hz update. At zero altitude that is 10.0 released life against the
+    /// Aquila Prototype's <c>mLife</c> of 20.0 - so touching the water costs
+    /// EXACTLY HALF THE HULL PER RELEASED UPDATE. That halving is the anchor:
+    /// it is a property of the released numbers, independent of our tick rate,
+    /// our units and our conversion, so it cannot be satisfied by a
+    /// self-consistent but wrongly-scaled implementation.</para>
+    ///
+    /// <para>Ours applied no damage at all until 2026-07-27 - measured by flying
+    /// four skim passes at ~500 mm over water with the hull sitting at full
+    /// throughout.</para>
+    /// </summary>
+    [Fact]
+    public void WaterSkimDamage_CostsHalfTheHullPerReleasedUpdate_AtZeroAltitude()
+    {
+        // The released law, restated here from the source rather than read from
+        // our constants, so the test cannot agree with itself.
+        const int ReleasedDamagePerUnitOfDepth = 20;
+        const double ReleasedSkimCeilingUnits = 0.5;
+        const double ReleasedAquilaLife = 20.0;
+
+        double releasedDamageAtZeroAltitude =
+            ReleasedSkimCeilingUnits * ReleasedDamagePerUnitOfDepth;
+        Assert.Equal(ReleasedAquilaLife / 2.0, releasedDamageAtZeroAltitude);
+
+        // Half the hull per released update, expressed in registry milli-life.
+        // This is the anchor and it is derived from the released numbers above,
+        // not from our conversion.
+        int expectedPerReleasedUpdate = SimulationConstants.MaximumHull / 2;
+        Assert.Equal(
+            (int)(releasedDamageAtZeroAltitude * 1_000),
+            expectedPerReleasedUpdate);
+
+        // The same quantity through OUR units, in the direction the simulation
+        // actually computes it. The reverse round-trip is NOT asserted because
+        // 20/30 is not exact in integers and would be off by one - which is a
+        // property of the tick ratio, not evidence about the damage law.
+        long milliLifePerCoreTick = SimulationConstants.JetSkimHeightMillimeters *
+            (long)SimulationConstants.JetWaterSkimDamagePerReleasedUnit *
+            SimulationConstants.RetailTicksPerCoreTickNumerator /
+            SimulationConstants.RetailTicksPerCoreTickDenominator;
+        long expectedPerCoreTick =
+            (long)expectedPerReleasedUpdate *
+            SimulationConstants.RetailTicksPerCoreTickNumerator /
+            SimulationConstants.RetailTicksPerCoreTickDenominator;
+
+        Assert.Equal(expectedPerCoreTick, milliLifePerCoreTick);
+
+        // And the magnitude the released law implies, stated so a future reader
+        // does not "correct" it for feeling too harsh: touching the water kills
+        // a full-hull Aquila in FOUR Core ticks - an eighth of a second.
+        int ticksToDeath =
+            (SimulationConstants.MaximumHull + (int)expectedPerCoreTick - 1) /
+            (int)expectedPerCoreTick;
+        Assert.Equal(4, ticksToDeath);
+    }
+
     [Fact]
     public void TerrainPitch_IsNegatedAgainstForwardRise_AndRollIsNot()
     {

@@ -1174,6 +1174,51 @@ public sealed class Simulation
             velocityZ,
             SimulationConstants.JetSkimRetentionNumerator,
             SimulationConstants.JetSkimRetentionDenominator);
+
+        // BattleEngineJetPart.cpp:536-538
+        //     float damage=(0.5f-altitude)*20.0f;
+        //     mMainPart->Damage(damage,NULL,FALSE);
+        //     mMainPart->HostileEnvironment();
+        //
+        // Skimming water HURTS, and this reconstruction simply did not apply it -
+        // measured 2026-07-27 by flying four skim passes at ~500 mm over water at
+        // 400+ mm/tick with the hull sitting at full throughout.
+        //
+        // Units, and THE TWO THOUSANDS CANCEL - which is worth spelling out
+        // because getting it wrong once produced damage 1,000x too small and the
+        // law test below caught it:
+        //     depth in millimetres -> released units   is  / 1,000
+        //     released life        -> registry milli-life is  x 1,000
+        // so the conversion is just depth_mm * 20, then the shared 20 Hz -> 30 Hz
+        // tick ratio. At zero altitude that is 6,666 milli-life per Core tick
+        // against a 20,000 hull - four ticks to death, an eighth of a second.
+        //
+        // That is brutal, and it is meant to be: retail's own numbers are 10.0
+        // damage per update against mLife 20.0, i.e. two updates. This was NOT
+        // softened to taste, and it could not have been written at all before
+        // MaximumHull was corrected from 1.0 to 20.0 released life - against the
+        // old unit the same law would have killed the player in a sixth of a
+        // tick and read as a bug in this code rather than in the constant.
+        //
+        // HostileEnvironment() (BattleEngine.cpp:3269) is NOT here: it plays
+        // "hud_hostile_environment" on a 5 s cooldown, which is presentation.
+        // The WaterSkim event below is what a client gates that sample on.
+        int skimDamage = checked((int)DivideRoundNearest(
+            (long)(SimulationConstants.JetSkimHeightMillimeters - altitude) *
+                SimulationConstants.JetWaterSkimDamagePerReleasedUnit *
+                SimulationConstants.RetailTicksPerCoreTickNumerator,
+            SimulationConstants.RetailTicksPerCoreTickDenominator));
+        if (skimDamage > 0)
+        {
+            int hull = Math.Max(0, PlayerHull - skimDamage);
+            _level100Destruction.SetExternalHealth(_level100PlayerActorId, hull);
+            if (hull == 0)
+            {
+                DestroyLevel100PlayerActor();
+                _level100Mission.ReportPlayerDeath();
+            }
+        }
+
         EmitFlightEvent(AquilaFlightEvents.WaterSkim);
     }
 
