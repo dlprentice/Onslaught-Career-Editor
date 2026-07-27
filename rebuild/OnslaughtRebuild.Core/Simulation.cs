@@ -58,6 +58,7 @@ public sealed class Simulation
     private bool _landingJetsActive;
     private int _groundImpactSpeedMillimetersPerTick;
     private readonly List<AquilaFlightEvent> _flightEvents = [];
+    private readonly List<Level100WeaponFireEvent> _weaponFireEvents = [];
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -146,6 +147,7 @@ public sealed class Simulation
 
         _tick++;
         _flightEvents.Clear();
+        _weaponFireEvents.Clear();
 
         if (input.HasAction(SimActions.Reset))
         {
@@ -681,6 +683,35 @@ public sealed class Simulation
             _mode,
             _transition,
             weapon));
+    }
+
+    /// <summary>
+    /// Records one player weapon RELEASE. Called once per launch instant,
+    /// outside the volley loop, because that is where the released
+    /// <c>ProjectileBurst__SpawnFromCurrentPreset</c> (0x005069f0) issues its
+    /// single <c>CSoundManager::PlayEffect</c> - see
+    /// <see cref="Level100WeaponFireEvent"/> for the disassembly.
+    /// </summary>
+    private void EmitWeaponFireEvent(Level100PlayerWeapon weapon, int roundCount)
+    {
+        if (weapon == Level100PlayerWeapon.None)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(weapon),
+                "A weapon fire event must name the released weapon that fired.");
+        }
+
+        if (roundCount < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(roundCount),
+                "A weapon release launches at least one round.");
+        }
+
+        _weaponFireEvents.Add(new Level100WeaponFireEvent(
+            _tick,
+            weapon,
+            roundCount));
     }
 
     private void TryToggleMode(SimInput input)
@@ -2493,6 +2524,9 @@ public sealed class Simulation
             EmitFlightEvent(
                 AquilaFlightEvents.JetWeaponFireRequested,
                 AquilaJetWeapon.MechVulcanCannon);
+            EmitWeaponFireEvent(
+                Level100PlayerWeapon.MechVulcanCannon,
+                SimulationConstants.MechVulcanVolleySize);
             _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
 
             // The jet weapon now actually launches. Until this change the jet
@@ -2529,6 +2563,9 @@ public sealed class Simulation
 
             _energy -= SimulationConstants.FireEnergyCost;
             _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+            // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
+            // it takes the shipped default of 1 and one release is one round.
+            EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
             LaunchWalkerRound(
                 SimulationConstants.ProjectileSpeedPerTick,
                 SimulationConstants.ProjectileLifetimeTicks,
@@ -2557,6 +2594,9 @@ public sealed class Simulation
         _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
         _twinVulcanReloadThirdMillisecondsRemaining +=
             SimulationConstants.TwinVulcanReloadThirdMilliseconds;
+        EmitWeaponFireEvent(
+            Level100PlayerWeapon.MechTwinVulcanCannon,
+            SimulationConstants.TwinVulcanVolleySize);
         for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
         {
             LaunchWalkerRound(
@@ -2679,6 +2719,7 @@ public sealed class Simulation
         _landingJetsActive = false;
         _groundImpactSpeedMillimetersPerTick = 0;
         _flightEvents.Clear();
+        _weaponFireEvents.Clear();
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -2875,6 +2916,7 @@ public sealed class Simulation
             _level100Actors.Snapshot,
             _level100Destruction.Snapshot,
             _level100Destruction.Events,
+            Array.AsReadOnly(_weaponFireEvents.ToArray()),
             _level100ActorScripts.Snapshot,
             Array.AsReadOnly(_level100ActorScriptCommands.ToArray()),
             _level100ActorMechanics.Snapshot,

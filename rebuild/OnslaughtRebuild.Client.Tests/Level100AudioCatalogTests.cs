@@ -281,6 +281,13 @@ public sealed class Level100AudioCatalogTests
     private const float CallerDefault = 0.70f;
     private const float CallerHudMessage = 0.45f;
     private const float CallerEngine = 1.00f;
+    // NOT a released named constant: the literal 0x3f000000 pushed into
+    // PlayEffect's volume slot by the weapon-launch body
+    // ProjectileBurst__SpawnFromCurrentPreset (0x005069f0) in the pristine
+    // specimen. See Level100AudioCatalog.RetailWeaponLaunchVolume for the
+    // disassembly. The two player weapon-fire cues below carried CallerDefault
+    // until 2026-07-27; that was an assumption, and the bytes refute it.
+    private const float CallerWeaponLaunch = 0.50f;
 
     public static TheoryData<Level100AudioCueRecipe, int, int, int, float>
         RetailSfxRecords => new()
@@ -293,8 +300,14 @@ public sealed class Level100AudioCatalogTests
         { Effect(Level100EffectCue.AquilaIncomingMissile), 33, 80, 5, CallerHudMessage },
         { Effect(Level100EffectCue.AquilaTargetLocked), 30, 80, 0, CallerHudMessage },
         { Effect(Level100EffectCue.AquilaTargetAcquired), 31, 80, 0, CallerHudMessage },
-        { Effect(Level100EffectCue.PulseCannonFire), 37, 65, 5, CallerDefault },
-        { Effect(Level100EffectCue.VulcanCannonFire), 42, 75, 7, CallerDefault },
+        { Effect(Level100EffectCue.PulseCannonFire), 37, 65, 5, CallerWeaponLaunch },
+        { Effect(Level100EffectCue.VulcanCannonFire), 42, 75, 7, CallerWeaponLaunch },
+        // NOT corrected to CallerWeaponLaunch, and that is a deliberate stop
+        // rather than an oversight. Both are silent - neither has a producer -
+        // and neither has been shown to reach 0x005069f0. Micro Missiles are a
+        // separate player weapon whose launcher path was not traced, and the
+        // Drone Vulcan is an actor weapon with its own evidence item. If either
+        // is later shown to launch through that body, its caller is 0.5f too.
         { Effect(Level100EffectCue.MicroMissileFire), 34, 80, 15, CallerDefault },
         { Effect(Level100EffectCue.DroneVulcanFire), 155, 60, 10, CallerDefault },
         { Effect(Level100EffectCue.PulseImpact), 108, 70, 20, CallerDefault },

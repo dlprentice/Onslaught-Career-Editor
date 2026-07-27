@@ -108,6 +108,29 @@ public static class Level100AudioCatalog
     public const float RetailHudMessageVolume = 0.45f;
     public const float RetailDefaultEffectVolume = 0.70f;
 
+    // The weapon-launch call site does NOT pass DEFAULT_SOUND_VOLUME. Read from
+    // the pristine specimen (local-lab/safe-copy-bea-pristine/
+    // BEA.exe.original.backup, sha256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab
+    // 334ed7a753040eda1e1e7750 - NOT the installed executable, which is
+    // patched): ProjectileBurst__SpawnFromCurrentPreset (0x005069f0) pushes the
+    // literal 0x3f000000 = 0.5f into PlayEffect's `volume` slot in BOTH of its
+    // branches, at 0x00506a6b and 0x00506a8a.
+    //
+    //   0x00506a6a  57                 PUSH EDI            ; track = ST_NOTRACKING
+    //   0x00506a6b  68 00 00 00 3f     PUSH 0x3f000000     ; volume = 0.5f
+    //   0x00506a70  57                 PUSH EDI            ; thing = NULL
+    //   ...
+    //   0x00506a88  6a 03              PUSH 3              ; track = ST_FOLLOWDONTDIE
+    //   0x00506a8a  68 00 00 00 3f     PUSH 0x3f000000     ; volume = 0.5f
+    //   0x00506a8f  50                 PUSH EAX            ; thing = the unit
+    //
+    // EDI is zeroed at the function head (0x00506a12 `33 ff`) and is
+    // callee-saved across the intervening call, so the first branch really does
+    // pass 0 and NULL. Which branch runs is selected by
+    // `TEST byte [thing+0x34],8` at 0x00506a50: set for the player's own Battle
+    // Engine, clear for an AI unit.
+    public const float RetailWeaponLaunchVolume = 0.50f;
+
     private static readonly ReadOnlyCollection<Level100MessageAudioSpec>
         s_characterMessages = Array.AsReadOnly(new[]
         {
@@ -266,17 +289,25 @@ public static class Level100AudioCatalog
             31,
             "Battle Engine\\N_BE_homing_missile_target",
             RetailHudMessageVolume * 0.80f),
+        // `Pulse Cannon Pod` charge level 0 -> weapon mode
+        // `Mech Pulse Cannon Charged` (default physics.dat @0x134eb) ->
+        // CWeaponLaunchSound `BE Pulse Cannon Fire` (payload @0x13576) ->
+        // sounds.sfx record 37, volume 65, pitch variance 5.
         Level100EffectCue.PulseCannonFire => Cue(
             "res://Assets/Level100/SoundEffects/pulse-cannon-fire.wav",
             37,
             "Battle Engine\\N_BE_pulse_cannon_fire",
-            RetailDefaultEffectVolume * 0.65f,
+            RetailWeaponLaunchVolume * 0.65f,
             pitch: 5),
+        // Both `Mech Twin Vulcan Cannon` (@0x13368, launch sound payload
+        // @0x133fe) and the jet `Mech Vulcan Cannon` (@0x1327d, payload
+        // @0x13303) name `BE Vulcan Cannon` = sounds.sfx record 42, volume 75,
+        // pitch variance 7.
         Level100EffectCue.VulcanCannonFire => Cue(
             "res://Assets/Aquila/SoundEffects/vulcan-cannon-fire.wav",
             42,
             "Battle Engine\\N_BE_vulcan_cannon_fire",
-            RetailDefaultEffectVolume * 0.75f,
+            RetailWeaponLaunchVolume * 0.75f,
             pitch: 7),
         Level100EffectCue.MicroMissileFire => Cue(
             "res://Assets/Aquila/SoundEffects/micro-missile-fire.wav",

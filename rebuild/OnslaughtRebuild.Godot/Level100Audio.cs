@@ -303,11 +303,40 @@ public sealed partial class Level100Audio : Node3D
                     when flightEvent.Mode == VehicleMode.Walker:
                     StopAquilaFlightLoop();
                     break;
-                case AquilaFlightEvents.JetWeaponFireRequested
-                    when flightEvent.Weapon == AquilaJetWeapon.MechVulcanCannon:
-                    PlayOnAquila(Level100EffectCue.VulcanCannonFire);
-                    break;
             }
+        }
+    }
+
+    // The jet's Mech Vulcan Cannon cue used to be derived here from
+    // AquilaFlightEvents.JetWeaponFireRequested. It is not any more: Core now
+    // emits one ordered Level100WeaponFireEvent per weapon RELEASE for all
+    // three player weapons, so there is a single producer of weapon-fire cues
+    // instead of a walker owner and a separate jet owner. The flight event
+    // itself is unchanged and still hashed - only the audio derivation moved,
+    // and the jet cue, tick and emitter are identical either way.
+    public void ConsumeLevel100WeaponFireEvents(
+        IReadOnlyList<Level100WeaponFireEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (Level100WeaponFireEvent fireEvent in events)
+        {
+            // Exactly one cue per event, never one per RoundCount. The released
+            // launch body issues its single PlayEffect before the volley loop -
+            // see Level100WeaponFireEvent for the disassembly - so a four-round
+            // Twin Vulcan volley is one report, not four overlapping ones.
+            PlayOnAquila(fireEvent.Weapon switch
+            {
+                Level100PlayerWeapon.PulseCannonPod =>
+                    Level100EffectCue.PulseCannonFire,
+                // Both Vulcan weapon modes name the same released
+                // CWeaponLaunchSound, `BE Vulcan Cannon` = sounds.sfx record 42.
+                Level100PlayerWeapon.MechTwinVulcanCannon or
+                Level100PlayerWeapon.MechVulcanCannon =>
+                    Level100EffectCue.VulcanCannonFire,
+                _ => throw new InvalidDataException(
+                    $"Core released an unknown Level 100 player weapon " +
+                    $"{fireEvent.Weapon}."),
+            });
         }
     }
 

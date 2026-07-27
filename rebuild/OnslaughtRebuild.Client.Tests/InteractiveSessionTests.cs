@@ -1274,8 +1274,22 @@ public sealed class InteractiveSessionTests
         // causally, not argued: stashing this change alone and re-running this
         // test returns fb2219b6f39e768ad68facf648c1697d8de955b46316b991e547262
         // 77c6c4927 exactly, and restoring it returns this value again.
+        // MOVED AGAIN 2026-07-27 for the weapon-fire event stream. This one is
+        // STRUCTURAL, not behavioural: StateHasher gained a version bump 30->31
+        // and now appends Level100WeaponFireEvents, so every hashed tick carries
+        // a new four-byte count whether or not a weapon fires. No simulation
+        // state is read differently - the hasher diff adds fields and changes
+        // nothing else.
+        // Isolated causally on a three-point ladder rather than argued:
+        //   v30, stream NOT written  -> 84d6fcae... , the previous golden,
+        //                               reproduced EXACTLY
+        //   v30, stream written      -> 7e67640e...
+        //   v31, stream written      -> this value
+        // The first row is the proof: revert only the hasher edit and the old
+        // golden returns bit for bit, so the four fire events at ticks 3157,
+        // 3165, 3173 and 3185 changed no state - they are only now recorded.
         Assert.Equal(
-            "84d6fcaef69eac44faae485a2f90e76867dee2563c1dd5d4c570aade31df8ea1",
+            "7153d97f2edfe98ab79facd529ca092300628a1cff5e7062de6e079ff49ef053",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

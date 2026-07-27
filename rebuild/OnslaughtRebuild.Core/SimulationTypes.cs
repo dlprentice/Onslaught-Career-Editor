@@ -46,6 +46,78 @@ public sealed record AquilaFlightEvent(
     VehicleTransition Transition,
     AquilaJetWeapon Weapon = AquilaJetWeapon.None);
 
+/// <summary>
+/// The player weapon whose release produced a
+/// <see cref="Level100WeaponFireEvent"/>. These are the released `weapon`
+/// records of the Level 100 configuration, `Aquila Prototype`
+/// (data/battle engine configurations.dat record 3 @0x2d2): walker list
+/// ["Mech Twin Vulcan Cannon"], mPrimaryWeapon "Pulse Cannon Pod", jet list
+/// ["Mech Vulcan Cannon", "Missile Pod"]. The Level 100 LevelScript enables
+/// and disables exactly these by name.
+/// </summary>
+public enum Level100PlayerWeapon : byte
+{
+    None = 0,
+
+    /// <summary>
+    /// `Pulse Cannon Pod` (data/default physics.dat @0x1746b). Charge level 0
+    /// selects weapon mode `Mech Pulse Cannon Charged` (@0x134eb), whose
+    /// CWeaponRound is `Mech Pulse Bolt Medium` and whose CWeaponLaunchSound is
+    /// `BE Pulse Cannon Fire` (payload @0x13576) = sounds.sfx record 37.
+    /// This is the weapon the released firing-range exercise enables
+    /// (LevelScript.msl line 112).
+    /// </summary>
+    PulseCannonPod = 1,
+
+    /// <summary>
+    /// `Mech Twin Vulcan Cannon`. Its weapon mode (@0x13368) carries
+    /// CWeaponVolleySize 4 and CWeaponLaunchSound `BE Vulcan Cannon`
+    /// (payload @0x133fe) = sounds.sfx record 42.
+    /// </summary>
+    MechTwinVulcanCannon = 2,
+
+    /// <summary>
+    /// The jet-mode `Mech Vulcan Cannon`. Its weapon mode (@0x1327d) carries
+    /// CWeaponVolleySize 2 and names the same `BE Vulcan Cannon` launch sound
+    /// (payload @0x13303) as the walker Twin Vulcan.
+    /// </summary>
+    MechVulcanCannon = 3,
+}
+
+/// <summary>
+/// One released weapon RELEASE by the player - a single launch instant, not a
+/// single round.
+///
+/// <para><b>The cadence is byte-proven, not chosen.</b> In the pristine
+/// specimen (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+/// 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750 - NOT the
+/// installed executable, which is patched) the launch body
+/// `ProjectileBurst__SpawnFromCurrentPreset` at 0x005069f0 issues exactly one
+/// `CSoundManager::PlayEffect` before it enters the spawn loop:</para>
+/// <code>
+/// 0x00506a91  b9 88 69 89 00           MOV  ECX, 0x00896988   ; CSoundManager
+/// 0x00506a96  e8 a5 ae fd ff           CALL 0x004e1940        ; PlayEffect
+/// 0x00506a9b  8b 43 48                 MOV  EAX,[EBX+0x48]    ; CWeaponVolleySize
+/// 0x00506aa2  3b c7                    CMP  EAX,EDI
+/// 0x00506aa4  0f 8e e7 0d 00 00        JLE  0x00507891        ; skip empty volley
+/// 0x00506aaa  ...                                             ; LOOP HEAD
+/// 0x0050788b  0f 8c 19 f2 ff ff        JL   0x00506aaa        ; back edge
+/// </code>
+/// <para>The volley-size load is at a HIGHER address than the call and the back
+/// edge targets 0x00506aaa, so the sound is issued once per release and the
+/// loop then creates <c>[weaponMode+0x48]</c> rounds. `+0x48` is
+/// CWeaponVolleySize: `CWeaponVolleySize__ApplyToWeaponModeByName` (0x00436130)
+/// is its only writer. A four-round Twin Vulcan volley therefore makes ONE
+/// sound call, not four.</para>
+///
+/// <para><see cref="RoundCount"/> is what that release actually launched, so a
+/// consumer can see the volley without inferring it from projectile ids.</para>
+/// </summary>
+public sealed record Level100WeaponFireEvent(
+    int Tick,
+    Level100PlayerWeapon Weapon,
+    int RoundCount);
+
 [Flags]
 public enum SimActions : byte
 {
@@ -270,6 +342,7 @@ public sealed record WorldSnapshot(
     Level100ActorRegistrySnapshot Level100Actors,
     Level100DestructionRuntimeSnapshot Level100Destruction,
     IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents,
+    IReadOnlyList<Level100WeaponFireEvent> Level100WeaponFireEvents,
     Level100ActorScriptRuntimeSnapshot Level100ActorScripts,
     IReadOnlyList<Level100ActorScriptCommand> Level100ActorScriptCommands,
     Level100ActorMechanicsSnapshot Level100ActorMechanics,

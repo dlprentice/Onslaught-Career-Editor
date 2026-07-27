@@ -24,7 +24,10 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
-            writer.Write(30);
+            // 31: added the ordered Level100WeaponFireEvents stream. Every
+            // hashed tick gains its four-byte count, so this bump moves every
+            // pinned hash regardless of whether a weapon fires.
+            writer.Write(31);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -92,6 +95,13 @@ public static class StateHasher
                 writer,
                 state.Level100Destruction,
                 state.Level100DestructionEvents);
+            writer.Write(state.Level100WeaponFireEvents.Count);
+            foreach (Level100WeaponFireEvent fireEvent in state.Level100WeaponFireEvents)
+            {
+                writer.Write(fireEvent.Tick);
+                writer.Write((byte)fireEvent.Weapon);
+                writer.Write(fireEvent.RoundCount);
+            }
             WriteLevel100ActorScripts(writer, state.Level100ActorScripts);
             WriteLevel100ActorScriptCommands(writer, state.Level100ActorScriptCommands);
             WriteLevel100ActorMechanics(writer, state.Level100ActorMechanics);

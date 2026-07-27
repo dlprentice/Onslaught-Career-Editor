@@ -24,7 +24,8 @@ public readonly record struct FrameAdvanceResult(
     WorldSnapshot CurrentSnapshot,
     IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
     IReadOnlyList<AquilaFlightEvent> AquilaFlightEvents,
-    IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents)
+    IReadOnlyList<Level100DestructionEvent> Level100DestructionEvents,
+    IReadOnlyList<Level100WeaponFireEvent> Level100WeaponFireEvents)
 {
     public double InterpolationAlpha =>
         (double)InterpolationPhase / InterpolationPhaseScale;
@@ -77,6 +78,8 @@ public sealed class InteractiveSession
     private readonly List<AquilaFlightEvent> _undeliveredAquilaFlightEvents = [];
     private readonly List<Level100DestructionEvent>
         _undeliveredLevel100DestructionEvents = [];
+    private readonly List<Level100WeaponFireEvent>
+        _undeliveredLevel100WeaponFireEvents = [];
     private InteractiveInput _input;
     private bool _toggleLevelWasHeld;
     private bool _resetLevelWasHeld;
@@ -112,6 +115,8 @@ public sealed class InteractiveSession
             CurrentSnapshot.AquilaFlightEventLog);
         _undeliveredLevel100DestructionEvents.AddRange(
             CurrentSnapshot.Level100DestructionEvents);
+        _undeliveredLevel100WeaponFireEvents.AddRange(
+            CurrentSnapshot.Level100WeaponFireEvents);
     }
 
     public WorldSnapshot PreviousSnapshot { get; private set; }
@@ -361,7 +366,8 @@ public sealed class InteractiveSession
                 CurrentSnapshot,
                 Array.Empty<Level100MissionEvent>(),
                 Array.Empty<AquilaFlightEvent>(),
-                Array.Empty<Level100DestructionEvent>());
+                Array.Empty<Level100DestructionEvent>(),
+                Array.Empty<Level100WeaponFireEvent>());
         }
 
         long boundedElapsedTicks = Math.Min(elapsedTicks, MaximumFrameElapsedTicks);
@@ -394,6 +400,9 @@ public sealed class InteractiveSession
         var level100DestructionEvents = new List<Level100DestructionEvent>();
         level100DestructionEvents.AddRange(
             _undeliveredLevel100DestructionEvents);
+        var level100WeaponFireEvents = new List<Level100WeaponFireEvent>();
+        level100WeaponFireEvents.AddRange(
+            _undeliveredLevel100WeaponFireEvents);
         while (_interpolationPhase >= PhaseUnitsPerStep)
         {
             bool firstStep = stepsAdvanced == 0;
@@ -489,6 +498,8 @@ public sealed class InteractiveSession
             aquilaFlightEvents.AddRange(CurrentSnapshot.AquilaFlightEventLog);
             level100DestructionEvents.AddRange(
                 CurrentSnapshot.Level100DestructionEvents);
+            level100WeaponFireEvents.AddRange(
+                CurrentSnapshot.Level100WeaponFireEvents);
             _interpolationPhase -= PhaseUnitsPerStep;
             _totalSteps++;
             stepsAdvanced++;
@@ -503,10 +514,12 @@ public sealed class InteractiveSession
             CurrentSnapshot,
             Array.AsReadOnly(level100MissionEvents.ToArray()),
             Array.AsReadOnly(aquilaFlightEvents.ToArray()),
-            Array.AsReadOnly(level100DestructionEvents.ToArray()));
+            Array.AsReadOnly(level100DestructionEvents.ToArray()),
+            Array.AsReadOnly(level100WeaponFireEvents.ToArray()));
         _undeliveredLevel100MissionEvents.Clear();
         _undeliveredAquilaFlightEvents.Clear();
         _undeliveredLevel100DestructionEvents.Clear();
+        _undeliveredLevel100WeaponFireEvents.Clear();
         return result;
     }
 
