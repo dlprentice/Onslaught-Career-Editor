@@ -29,7 +29,12 @@ min( 0.8 x (light0 + light1) / 256 , 1 )    per channel
 ```
 
 - `0.8` is `0x3f4ccccd` at `0x0083d28c + 0x10`, the ambient reflectance of the
-  terrain-only `D3DMATERIAL9` whose Diffuse is black and Emissive zero.
+  terrain-only `D3DMATERIAL9` whose Diffuse is black and Emissive zero. *(Note
+  added 2026-07-27: the **material's** ambient is the operative one even though
+  `D3DRS_AMBIENTMATERIALSOURCE` is `D3DMCS_COLOR1`, because the terrain stream
+  carries no vertex colour and D3D9 falls back to the material. An implicit-white
+  fallback would predict `(1.750, 1.656, 1.383)` against the measured
+  `(1.457, 1.389, 1.147)`. See the material note's §5 correction block.)*
 - `1/256` is `_DAT_005db060` = `0x3b800000`.
 - the `min` is Direct3D's own clamp on a lit vertex colour. For Level 100 the
   result is (0.700, 0.663, 0.553) and it does not fire.

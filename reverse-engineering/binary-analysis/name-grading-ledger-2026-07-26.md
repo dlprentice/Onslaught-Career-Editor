@@ -282,5 +282,10 @@ which is direct evidence that the cohort over-collects as this paragraph says.
   where direct vtable membership contradicts the prefix.
 
 - The suffix of every name remains ungraded, under every grade in the table.
-- The abstract-base misattribution recorded on 07-25 is unchanged and still
-  unbounded.
+- The misattribution recorded on 07-25 is unchanged in effect, but *(superseded
+  2026-07-27)* it is not an abstract-base rule and it is no longer unbounded: the
+  cause is the absence of an emitted standalone vftable, and exactly **11** of the
+  667 type descriptors lack one, putting **282** of 2,127 RTTI-reached functions
+  inside the upper bound. See
+  [`name-grading-ledger-2026-07-25.md`](name-grading-ledger-2026-07-25.md),
+  "A resolver limitation this pass exposed".

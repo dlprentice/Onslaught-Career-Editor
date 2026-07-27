@@ -139,14 +139,61 @@ list. The two address sets proved identical.
 
 ### A resolver limitation this pass exposed
 
-**Abstract base classes are invisible to the ownership resolver by construction.**
-They have no vtable and no complete object locator, so the only emitted copy of
-their virtual methods is attributed to a derived class. Demonstrated on
-`CMusic__Play`, which RTTI attributes to `CPCMusic` — but `Music.h` shows `CMusic`'s
-device methods are `=0` and the concrete singleton is `extern class CPCMusic MUSIC`.
-The existing name is right and the RTTI owner is misleading. That is the single
-`KEEP_CURRENT`. **How many undetected instances exist cannot be bounded**, so "RTTI
-is the stronger evidence" is a qualified claim, not an absolute one.
+**A class with no emitted standalone vftable never enters the candidate set.**
+`tools/re_ledger.py` builds candidates only from vftables it finds by scanning for
+a dword equal to a complete-object-locator address (lines 437–462); the ancestor
+map harvested from `pBaseClassArray` (lines 420–435) is used solely to break ties
+*among* candidates. So a base that declares a virtual method but emits no vftable
+of its own cannot win ownership, and the single emitted copy of that method is
+attributed to whichever derived class's vftable carries it.
+
+Demonstrated on `0x004bb450`, which RTTI attributes to `CPCMusic`. `CMusic` **is**
+present in RTTI — type descriptor `.?AVCMusic@@` at `0x0063dfc0`, and it appears in
+`CPCMusic`'s class-hierarchy descriptor (`numBaseClasses = 2`, bases `CPCMusic`,
+`CMusic`) — but it has **zero** complete object locators and **zero** vftables, so
+it is never a candidate. `Music.h:92-102` corroborates the shape: `CMusic` declares
+nine virtuals, seven of them `=0`, and the concrete singleton is
+`extern class CPCMusic MUSIC` (`Music.h:111`). `CPCMusic`'s vftable at `0x005e4934`
+has exactly nine slots, of which 0–6 are a tight `CPCMusic`-local cluster
+(`0x00515320`–`0x005153a0`) and 7–8 lie elsewhere — the two `CMusic`-defined
+virtuals. The class prefix is right and the RTTI owner is misleading. That is the
+single `KEEP_CURRENT`.
+
+**And the exposure is bounded.** Of the 667 RTTI type descriptors in the image,
+**656 own at least one standalone vftable and 11 do not**: `CAsmInstruction`,
+`CBitmapFont`, `CDetailItem`, `CFrontEndVideo`, `CLandscape`, `CMeshVB`, `CMusic`,
+`CSmallAirUnit`, `CTexture`, `CThreeWay`, `CWater`. Those eleven are the entire
+population of classes that can be lost this way. The functions at risk are those in
+their descendants' vftables: **282** of the 2,127 functions the RTTI walk reaches,
+a **13.3%** upper bound — most of those slots are genuinely the derived class's own.
+"RTTI is the stronger evidence" remains a qualified claim, but the qualification is
+now sized rather than open-ended.
+
+> **Superseded 2026-07-27.** This section previously read: "**Abstract base classes
+> are invisible to the ownership resolver by construction.** They have no vtable and
+> no complete object locator… **How many undetected instances exist cannot be
+> bounded**." Both halves are wrong.
+>
+> *Abstractness is not the mechanism.* Re-measured on the pristine specimen
+> (sha256 `74154bfa…`, read-only): **39** classes have an emitted vftable carrying at
+> least one `_purecall` slot — `0x0055df1f`, whose body is
+> `6a 19 e8 63 23 00 00 59 c3` = `PUSH 0x19; CALL __amsg_exit; POP ECX; RET`, the
+> MSVC R6025 stub — which makes those classes abstract, and every one of them also
+> has a complete object locator. Four are pure interfaces: `IRenderableThing`
+> (vftable `0x005d9540`, **29/29** slots `_purecall`, COL `0x0060cff0`, type
+> descriptor `0x00622ba0` `.?AVIRenderableThing@@`, declared at `thing.h:65`),
+> `CTweak`, `CWaitingThread`, `IListener`; `CController` is 15/18 and `CDataType`
+> 2/20. The tracked [`functions/DataType.cpp.md`](functions/DataType.cpp.md) already
+> recorded `CDataType (base)` as an "(abstract base)" with vftable `0x005e4b4c`,
+> contradicting the rule from inside this repository. What actually excludes a class
+> is the absence of an *emitted standalone vftable* — a link-time fact about whether
+> the class was ever instantiated, not a language-level fact about pure virtuals.
+>
+> *And it is bounded*, by the set difference above. Method: read the specimen's type
+> descriptors, complete object locators, vftables and base-class arrays directly and
+> subtract. The same scan reproduces this file's own published **656** classes and
+> **2,127** RTTI-reached functions exactly, which is why it is trusted to contradict
+> the paragraph it replaces.
 
 Multiple inheritance is also present and visible in the binary
 (`DECLARE_MULTI_INTERFACE_CLASS(CThing, IAudibleThing, IRenderableThing)`,

@@ -294,12 +294,18 @@ byte at `0x009c73e8` — past the end of the 8 x `0x5c` light array at
 
 ## 5. What the fixed-function pipeline produces
 
-Terrain vertices are stride `0x14` = position + one UV pair, with no normal
+Terrain vertices are stride `0x14` = position + one UV pair, with **no normal and
+no diffuse channel**
 (established in [the stage-flag note](terrain-draw-stage-flags-2026-07-26.md)),
 so the `N.L` diffuse term is zero. `CDXLandscape::Render` sets
-`D3DRS_DIFFUSEMATERIALSOURCE` (`0x91`) to `D3DMCS_MATERIAL` and leaves
-`D3DRS_AMBIENTMATERIALSOURCE` at its `D3DMCS_MATERIAL` default. With the
-material of §1 record `[1]`:
+`D3DRS_DIFFUSEMATERIALSOURCE` (`0x91`) to `D3DMCS_MATERIAL` at `0x00545483`, and
+`RenderTerrain` restores it to `D3DMCS_COLOR1` at `0x005461cb`.
+`D3DRS_AMBIENTMATERIALSOURCE` (`0x93`) is **`D3DMCS_COLOR1` at this draw, not the
+`D3DMCS_MATERIAL` default** — but that does not change the outcome, because the
+terrain stream carries no vertex colour for `COLOR1` to select and D3D9 falls back
+to the material when the selected colour is absent from the vertex. The material's
+ambient is consumed whichever source is selected. With the material of §1 record
+`[1]`:
 
 ```
 vertex_diffuse = Emissive          (= 0)
@@ -320,6 +326,38 @@ terrain_pixel = 2 x 0.8 x SUM(light colour) x texture
 That is a **flat, coloured, terrain-specific multiplicative factor applied
 outside the macro cache and outside the shipped texture stages** — the exact
 shape of the measured fact.
+
+> **Corrected 2026-07-27 — the number survives; one stated reason did not.**
+> This section previously read: "`CDXLandscape::Render` sets
+> `D3DRS_DIFFUSEMATERIALSOURCE` (`0x91`) to `D3DMCS_MATERIAL` and leaves
+> `D3DRS_AMBIENTMATERIALSOURCE` at its `D3DMCS_MATERIAL` default." The second half
+> is false.
+>
+> `D3DRS_AMBIENTMATERIALSOURCE` is written **exactly once in the whole image** —
+> `6a 01` `68 93 00 00 00` `b9 b0 5b 85 00` `e8 be 88 02 00` at `0x004eb353`, i.e.
+> `SetRenderState(0x93, D3DMCS_COLOR1)` through the forced setter `0x00513c20`
+> inside the default block `0x004eb1e0` — and no site anywhere writes it back to
+> `0`. It is `D3DMCS_COLOR1` at every draw, including this one. Confirmed at
+> runtime: the shadow dump taken at the `TERRAINDRAW` marker reads
+> `[0x0085578c] = 0x00000001` in two independent launches, and the probe's watch on
+> state `0x93` never fired in either. See
+> [`d3d-default-render-state-block-2026-07-27.md`](d3d-default-render-state-block-2026-07-27.md)
+> §5 and §8. Because there is only one write in the entire image, no
+> ordering-relative-to-the-draw question arises.
+>
+> **`0.8` is still consumed, and the measurement says so.** The terrain stream has
+> no `COLOR1`, so the material is the fallback. Had the missing vertex colour
+> instead defaulted to opaque white, the predicted factor would be
+> `2 x 1.0 x (0.8750, 0.8281, 0.6914)` = `(1.750, 1.656, 1.383)` against the
+> measured `(1.457, 1.389, 1.147)` — **+20.1% / +19.2% / +20.6%**, five times the
+> residual the material fallback leaves (§7). §6, §7 and §8 are unaffected, as is
+> the shipped `Level100TerrainCompositor.TerrainVertexDiffuse`.
+>
+> The first half of the sentence stands and is now byte-located, and matches the
+> probe log to the return address: `PUSH 0; PUSH 0x91` at `0x00545483` → `ra =
+> 0x00545492`, logged as `RS DIFFUSEMATSRC 1 -> 0 land=1 ra=00545492`; restored by
+> `PUSH 1; PUSH 0x91` at `0x005461cb` → `ra = 0x005461da`, logged as
+> `RS DIFFUSEMATSRC 0 -> 1 land=1 ra=005461da`.
 
 ## 6. The number
 
