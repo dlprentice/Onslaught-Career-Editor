@@ -23,9 +23,17 @@ several of those catches came from exactly that kind of disagreement.
 ## Invocations
 
 ```bash
-codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="max" "<prompt>"
+codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" "<prompt>"
 grok -p "<prompt>" -m grok-4.5 --reasoning-effort high
 ```
+
+**`high` is the default on both, deliberately.** Codex will accept `xhigh` and
+`max`, but they are too slow to be the standing choice: measured 2026-07-26, a
+`max` consult ran ~30 minutes on one question and over an hour on another
+*without converging*, while `high` answers the same class of question and is what
+produced several of the day's sharpest catches. Reach for `xhigh` or `max` only
+when a `high` pass has genuinely failed to decide, and say in the write-up that
+you escalated.
 
 For long prompts, write the prompt to a file and use `grok --prompt-file <path>`.
 
@@ -39,6 +47,23 @@ Notes that are easy to get wrong:
 - `~/.codex/config.toml` already sets `model = "gpt-5.6-sol"` and
   `model_reasoning_effort = "max"`. Pass them explicitly anyway, so the
   transcript records which tier produced which opinion.
+
+**The effort ladders, measured 2026-07-26 by feeding each CLI a bogus value and
+reading the enum it rejected with — not by reading the desktop UI, which differs
+from what the command line can reach.**
+
+- Codex accepts exactly: `none`, `minimal`, `low`, `medium`, `high`, `xhigh`,
+  `max`. The desktop app additionally offers **`Ultra`**, and it is **not
+  reachable through `codex exec`** — `max` is the CLI ceiling. The app's `Light`
+  is `low` and `Extra High` is `xhigh`.
+- Grok accepts exactly: `low`, `medium`, `high`. `high` is the CLI ceiling.
+
+**Neither speed axis is exposed to the CLI.** The desktop apps offer a
+fast/standard toggle; `grok --help` has no such flag and `~/.grok/config.toml`
+has no speed key (only `[cli]`, `[ui]`, `[models]`, `[marketplace]`). So a
+consult cannot opt *into* grok-fast, and cannot accidentally opt into the
+expensive fast tier on Codex either. The invocations above are already the
+correct tier on both; there is nothing to tune here.
 
 ## `-s read-only` is mandatory
 
@@ -72,9 +97,11 @@ hour**, and be willing to wait up to about three — a consult that is still
 running is not a consult that has failed, and killing it at the ten-minute
 ceiling is exactly the mistake that caused this entry.
 
-If failures persist on a given question, **stair-step the effort** rather than
-retrying identically: `high` converges faster than `max` and is usually enough;
-reserve `max` for questions where the first pass genuinely could not decide.
+If a question does not resolve, **escalate deliberately** rather than retrying it
+identically — `high` (the default) to `xhigh` to `max`, one step, and record in
+the write-up that you escalated and why. Do not start at `max`: it is the slowest
+path to the same answer on almost every question, and a consult nobody waits for
+is a consult that did not happen.
 
 **There is a second, independent failure mode, and it is not the timeout.**
 `CreateProcessAsUserW failed: 5` also occurs in **subagent shells** on runs that
