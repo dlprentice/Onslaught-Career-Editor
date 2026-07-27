@@ -50,7 +50,7 @@ Each gated region carries a `measured` value - what the build scored when it was
 last measured - and the ceiling is DERIVED from it here as
 `min(measured + marginPp, 100)`. The ceiling says "do not get worse than this".
 It does not say the page is correct: FEP_MAIN's title logo and top-right emblem
-are both ~35-41 % wrong and their ceilings encode exactly that. Reading a ceiling
+are both ~20-29 % wrong and their ceilings encode exactly that. Reading a ceiling
 as a parity statement is the mistake this docstring exists to prevent, and this
 docstring is the canonical statement of it - other files should point here rather
 than restate it.

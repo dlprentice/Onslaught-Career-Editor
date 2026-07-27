@@ -63,17 +63,36 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color ReleasedUnavailable = RetailColor(0x7f1f1f1f);
     private static readonly Color ReleasedSelected = RetailColor(0xffff6f3f);
     private static readonly Color ReleasedBlue = RetailColor(0xff1f4f7f);
-    // NOTE, so it is not re-proposed: RetailColor() applies MODULATE2X, and
-    // 0xafcfff doubles past white on every channel (0xaf*2 = 350, 0xcf*2 = 414,
-    // 0xff*2 = 510), so all three clamp to 1.0 and this tint's hue is discarded
-    // entirely — the logo is drawn with an effectively white modulate. That looks
-    // like a defect and it was tested as one on 2026-07-26: drawing it as a plain
-    // MODULATE (0xaf,0xcf,0xff)/255 instead was REFUTED by capture. Against the
-    // no-skipfmv reference at matched phase, full-frame material rose 18.54 ->
-    // 18.73 % and meanD rose 6.19 -> 7.07 on every one of 13 paired frames. The
-    // clamp is therefore not the cause of the title-logo residual. See
-    // local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md.
-    private static readonly Color TitleLogoTint = RetailColor(0xfeafcfff);
+    // 0xfeafcfff is an immediate in the image: `and edx,0xffafcfff` /
+    // `or edx,0xafcfff` at 0x004642e4 / 0x004642f1 inside CFEPMain__Render.
+    //
+    // Whether it goes through RetailColor()'s MODULATE2X was tested on 2026-07-26
+    // and plain MODULATE was REFUTED — full-frame material rose 18.54 -> 18.73 %
+    // and meanD 6.19 -> 7.07 on all 13 paired frames.
+    //
+    // THAT TEST IS WITHDRAWN, because it was run against a build that was missing
+    // the additive sheen (TitleLogoReflectionLayer). Two errors were cancelling:
+    // the sheen adds a mean +42/+39/+26 inside the logo footprint, and a
+    // 2x-clamped white tint was covering for it. With the sheen restored and
+    // subtracted, retail's logo body against ours regresses to
+    //   slope 0.589 / 0.704 / 0.850, intercept +9.5 / +10.7 / +14.9
+    // over 420k unsaturated footprint pixels on the 12 settled frames. The SLOPE
+    // RATIOS 0.692 / 0.828 / 1.000 are the packed tint's own ratios
+    // 0xaf/0xff = 0.686, 0xcf/0xff = 0.812, 1.000 — so the hue is real and the 2x
+    // that erased it is wrong here. The default render-state block sets stage 0
+    // COLOROP = D3DTOP_MODULATE, not MODULATE2X
+    // (reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md
+    // section 7), which is the mechanism, not a fit.
+    //
+    // STILL UNEXPLAINED, and deliberately NOT tuned away: a uniform residual gain
+    // of ~0.86 and an intercept of ~+12 remain after the tint ratios are taken
+    // out. Candidates are the 0x3e000000 logo shadow showing through partial
+    // alpha, and the DXT2 premultiplied-alpha path. Neither is measured.
+    private static readonly Color TitleLogoTint = new(
+        0xafu / 255f,
+        0xcfu / 255f,
+        0xffu / 255f,
+        0xfeu / 255f);
     private static readonly Color HighlightTint = RetailColor(0x7e000000);
     private static readonly Color BracketTint = RetailColor(0xfeffffff);
     private static readonly Color ChromeTint = RetailColor(0x3ecfffff);
@@ -398,6 +417,8 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D[] _feBackFrames = [];
     private Texture2D _forsetiWritingLarge = null!;
     private Texture2D _titleLogo = null!;
+    private Texture2D _reflectionMap = null!;
+    private TitleLogoReflectionLayer? _titleLogoReflection;
     private Texture2D _titleBracket01 = null!;
     private Texture2D _titleBracket02 = null!;
     private Texture2D _titleTextBox = null!;
@@ -544,6 +565,18 @@ public sealed partial class RetailFrontendFlow : Control
         AnchorBottom = 1f;
         MouseFilter = MouseFilterEnum.Ignore;
         ZIndex = 100;
+
+        // A SEPARATE CanvasItem, because Godot exposes blend mode per item and the
+        // previous attempt at this layer set Material around a span of _Draw calls
+        // and was therefore never additive at all. See TitleLogoReflectionLayer.
+        _titleLogoReflection = new TitleLogoReflectionLayer
+        {
+            Name = "TitleLogoReflection",
+            Visible = false,
+        };
+        AddChild(_titleLogoReflection);
+        _titleLogoReflection.Configure(_titleLogo, _reflectionMap);
+
         QueueRedraw();
     }
 
@@ -575,6 +608,7 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         _lastDrawnScreen = _session.Screen;
+        UpdateTitleLogoReflection();
 
         if (_session.Screen == RetailFrontendScreen.Loading)
         {
@@ -608,6 +642,34 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         QueueRedraw();
+    }
+
+    /// <summary>
+    /// Keeps the additive sheen child on FEP_MAIN's design transform and phase.
+    ///
+    /// It is hidden on QuitConfirm: this lane draws its messbox INSIDE the parent
+    /// _Draw, so a child layer would land on top of the dialog. Retail draws the
+    /// messbox as a later page over a finished FEP_MAIN and has no such problem.
+    /// That is a Godot ordering concession, recorded rather than papered over.
+    /// </summary>
+    private void UpdateTitleLogoReflection()
+    {
+        if (_titleLogoReflection is not TitleLogoReflectionLayer layer)
+        {
+            return;
+        }
+
+        bool visible = _session.Screen == RetailFrontendScreen.MainMenu;
+        layer.Visible = visible;
+        if (!visible)
+        {
+            return;
+        }
+
+        (float scale, Vector2 offset) = DesignTransform();
+        layer.Position = offset;
+        layer.Scale = new Vector2(scale, scale);
+        layer.SetScroll(_feBackSeconds);
     }
 
     public override void _Input(InputEvent inputEvent)
@@ -814,8 +876,14 @@ public sealed partial class RetailFrontendFlow : Control
 
         DrawTextFlat(VersionText, new Vector2(0f, DesignHeight - 16f), 1f, VersionTint);
 
-        // DAT_0089d7fc reflection streaks — REMOVED 2026-07-26, and this is a
-        // deletion on evidence rather than a simplification.
+        // DAT_0089d7fc reflection sheen — RESTORED 2026-07-27 from the shipped
+        // bytes, as a separate additive CanvasItem clipped to the logo's own
+        // alpha-tested footprint. It is NOT drawn here; see
+        // TitleLogoReflectionLayer for the disassembly, the ONE/ONE blend, the
+        // 0xff7e7e7e tint, the depth-stamp mask and the two measured constants.
+        //
+        // The 2026-07-26 deletion rationale is kept below because reason (1) was
+        // right and is the defect this fixes.
         //
         // Two 512x128 quads were drawn at scale (1,2) centred on (321,120) and
         // (833,120), covering x65..640, y-8..248 of the stage. Two independent
@@ -847,9 +915,11 @@ public sealed partial class RetailFrontendFlow : Control
         //    The deletion does not rest on (2). It rests on (1): what was drawn
         //    here was provably not the blend it claimed to be.
         //
-        // The FEBack128 underlay explains this band on its own. The texture stays
-        // materialized; if a reflection layer is ever found, it is a low-gain
-        // additive that must be measured before it is drawn.
+        // WITHDRAWN 2026-07-27: (2)'s footprint was the whole 512x256 rectangle,
+        // but the bytes put the layer inside the logo's alpha>=8 texels only. Run
+        // the same regression on that footprint and the gain is 0.488/0.489/0.487
+        // against 0.025/0.030/0.038 outside it. A rectangle-wide mean could not
+        // have seen that, which is exactly the bound the comment already conceded.
         DrawSurfaceCentered(_titleLogo, 325f, 140f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
         DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
     }
@@ -2018,6 +2088,13 @@ public sealed partial class RetailFrontendFlow : Control
         _clickSlide = LoadTexture("click-slide", 128, 128);
         _forsetiWritingLarge = LoadTexture("forseti-writing-large", 128, 512);
         _titleLogo = LoadTexture("title-logo", 512, 256);
+        // FrontEnd\v2\FE_Reflection_map.tga — DAT_0089d7fc, the CFEPMain__Render
+        // additive sheen. See TitleLogoReflectionLayer.
+        _reflectionMap = LoadTexture(
+            "reflection-map",
+            512,
+            128,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         _titleBracket01 = LoadTexture("title-bracket-01", 256, 256);
         _titleBracket02 = LoadTexture("title-bracket-02", 256, 256);
         _titleTextBox = LoadTexture("title-text-box", 256, 32);
@@ -2399,4 +2476,215 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static float Modulate2X(uint channel) =>
         Math.Min(255u, (channel * 255u) >> 7) / 255f;
+
+    /// <summary>
+    /// The scrolling additive sheen CFEPMain__Render lays over the title logo —
+    /// RECOVERED FROM THE SHIPPED BYTES, not fitted.
+    ///
+    /// <para><b>Why this exists.</b></para>
+    /// The settled main menu's two worst regions, <c>title-logo</c> (41.21 % gap)
+    /// and <c>bg-emblem-topright</c> (35.57 %), are largely the same 512x256 quad,
+    /// and our renderer was already exonerated for it: fitted against the decoded
+    /// texel our pixels give slope 1.002, intercept -0.30, rms 0.39. Retail simply
+    /// puts something else there — an animated layer whose temporal std inside the
+    /// opaque logo interior is ~15 while its mean is constant to +-0.6.
+    ///
+    /// A version of this layer was drawn until 2026-07-26 and was deleted for two
+    /// stated reasons. The first was correct and is fixed here: it set
+    /// <c>CanvasItem.Material</c> around a bracketed span of <c>_Draw</c> commands,
+    /// but a CanvasItem's blend mode applies to the whole item, so the "additive"
+    /// draw was never additive. That is why this is a SEPARATE CanvasItem. The
+    /// second reason — a DC residual bound — was already withdrawn in that comment
+    /// as bounding only the mean, and it does not survive: the layer is confined to
+    /// the logo's own alpha footprint, where a footprint-wide mean is the wrong
+    /// instrument.
+    ///
+    /// <para><b>What the bytes say.</b></para>
+    /// Specimen <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>,
+    /// sha256 <c>74154bfa…</c> (the PATCHED sibling <c>BEA.exe</c> was not read).
+    /// <c>CFEPMain__Render</c> is <c>[0x00462d40, 0x0046449e)</c>; every address
+    /// below is inside it. Its tail, in order:
+    /// <code>
+    /// 0x00464251  logo shadow: DAT_0089d88c at (325 + sin, 140 + cos), z 0.1,
+    ///             scale 1.05, tint 0x3e000000
+    /// 0x004642b5  SetRenderState(0x17 D3DRS_ZFUNC, 8 D3DCMP_ALWAYS)   [0x00513bc0]
+    /// 0x004642ce  logo body:   DAT_0089d88c at (320, 130), z 0.99899 (0x3f7fbe77),
+    ///             scale 1, tint 0xfeafcfff  (and 0xafcfff is literally
+    ///             `and edx,0xffafcfff` / `or edx,0xafcfff` at 0x004642e4/f1)
+    /// 0x0046431a  SetRenderState(0x17 D3DRS_ZFUNC, 4 D3DCMP_LESSEQUAL)
+    /// 0x0046435d  CFrontEnd__EnableAdditiveAlpha (0x004681c0) — and this is the
+    ///             whole of it: SetRenderState(0x13 SRCBLEND, 2 D3DBLEND_ONE) and
+    ///             SetRenderState(0x14 DESTBLEND, 2 D3DBLEND_ONE). ONE/ONE.
+    /// 0x004643aa  DAT_0089d7fc at (321 - m, 120), z 0.99799, scale (1, 2)
+    /// 0x004643e7  DAT_0089d7fc at (321 - m + 512, 120), same
+    /// 0x004643f4  CFrontEnd__EnableModulateAlpha (0x004681e0) — SRCBLEND 5
+    ///             SRCALPHA / DESTBLEND 6 INVSRCALPHA
+    /// </code>
+    ///
+    /// <b>The texture.</b> <c>DAT_0089d7fc</c> is loaded at <c>0x00468aa9</c> from
+    /// <c>"FrontEnd\v2\FE_Reflection_map.tga"</c> (string at <c>0x0062a83c</c>) and
+    /// stored to <c>[ebp+0x9c]</c> at <c>0x00468ac0</c>; the same routine stores
+    /// <c>FE_BEA_Title2.tga</c> to <c>[ebp+0x12c]</c> at <c>0x00468e60</c>, and
+    /// <c>0x0089d88c - 0x12c = 0x0089d760 = ebp</c>, so <c>ebp + 0x9c</c> is exactly
+    /// <c>0x0089d7fc</c>. That arithmetic is the identification; the map note that
+    /// carried this global as "path unknown / low confidence" is superseded.
+    ///
+    /// <b>The tint.</b> <c>0x00464362</c>-<c>0x00464387</c> computes
+    /// <c>((a*127)&gt;&gt;8) * 0x010101 - 0x01000000</c>, i.e. <c>0xff7e7e7e</c> at
+    /// alpha 255. Under ONE/ONE with stage 0 <c>MODULATE(TEXTURE, DIFFUSE)</c> the
+    /// framebuffer gains <c>tex.rgb * 126/255</c>. NOTE: <see cref="RetailColor"/>'s
+    /// 2x modulate does NOT apply on this path — measurement below says 0.488, not
+    /// 0.988 — so the raw ratio is used.
+    ///
+    /// <b>The scroll.</b> <c>0x00464331</c>-<c>0x00464359</c>:
+    /// <c>m = fmod(FRONTEND.mCounter * 0.6, 512)</c> and <c>x = 256 - m + 65</c>,
+    /// with the second copy at <c>+512</c> under <c>D3DTADDRESS_WRAP</c>. The
+    /// counter is <c>0x008a9570</c>, the float form of <c>CFrontEnd::mCounter</c>
+    /// (<c>FrontEnd.cpp:597</c>): <c>GetShadowOffsetX</c> at <c>0x00468730</c> is
+    /// <c>sin(counter * 0.01) * 6</c>, exactly <c>FrontEnd.cpp:1561</c>'s
+    /// <c>sinf(counter / SHADOW_PERIOD) * SHADOW_RADIUS_X</c> with
+    /// <c>SHADOW_PERIOD 100</c>, <c>SHADOW_RADIUS_X 6</c>.
+    ///
+    /// <b>The mask, which is the whole trick.</b> The logo body is drawn under
+    /// <c>D3DCMP_ALWAYS</c> at z 0.99899 with <c>ZWRITEENABLE</c> and the default
+    /// block's <c>ALPHATESTENABLE</c> / <c>ALPHAFUNC GREATEREQUAL</c> /
+    /// <c>ALPHAREF 8</c> (d3d-default-render-state-block-2026-07-27.md §5). So it
+    /// stamps depth 0.99899 over exactly its alpha&gt;=8 texels and nowhere else.
+    /// ZFUNC then goes back to <c>LESSEQUAL</c> and the sheen is submitted at
+    /// 0.99799 — which passes inside that stamp and fails against the page behind
+    /// it. The sheen is a logo-shaped clip, not a rectangle. That is why the
+    /// pedestal has equal core and 1-2 px ring intercepts, and why a spatial
+    /// control outside the ink found nothing.
+    ///
+    /// <para><b>What is measured rather than recovered, stated plainly.</b></para>
+    /// A static disassembly cannot say how fast <c>mCounter</c> advances, and
+    /// nothing pins its phase at main-menu entry. Both were measured from retail
+    /// pixels, on the 12 settled <c>run1</c> frames of
+    /// <c>local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26</c>, by
+    /// regressing frame-to-frame differences onto the decoded reflection texel
+    /// under the recovered model (differences, so the static page cancels and no
+    /// baseline is assumed):
+    /// <code>
+    ///   rate  29.95 design px/s   (= 0.6 px/tick x 49.9 ticks/s)
+    ///   phase 133 px at t = 1530 ms after main-menu entry
+    /// </code>
+    /// The gain was NOT fitted — it is <c>126/255 = 0.4941</c> from the bytes — but
+    /// it was checked: least squares inside the alpha&gt;=8 footprint, on
+    /// unsaturated pixels, gives R 0.4883, G 0.4887, B 0.4870. Residual rms inside
+    /// the footprint drops 28.4 -> 4.3 (R), 26.6 -> 4.6 (G), 20.0 -> 7.8 (B).
+    /// OUTSIDE the footprint the same regression gives gain 0.025/0.030/0.038 and
+    /// moves rms by nothing (7.35 -> 7.26), which is the depth clip showing up in
+    /// the pixels.
+    ///
+    /// The phase constant is the same class of measured anchor as
+    /// <see cref="FeBackPhaseFrames"/> and carries the same caveat: retail's
+    /// counter is never reset on a page change, so its value at main-menu entry
+    /// depends on how long click-to-start was held.
+    /// </summary>
+    private sealed partial class TitleLogoReflectionLayer : Node2D
+    {
+        // Recovered: 126/255 from the 0xff7e7e7e vertex tint under ONE/ONE.
+        internal const float Gain = 126f / 255f;
+
+        // Recovered: fmod(counter * 0.6, 512), two copies 512 apart.
+        internal const float ScrollPeriodPx = 512f;
+
+        // MEASURED (see the class remarks) — 0.6 px/tick against a counter that
+        // advanced 49.9 times a second in the reference capture.
+        internal const float ScrollPxPerSecond = 29.95f;
+
+        // MEASURED — chosen so scroll(1.530 s after main-menu entry) = 133 px.
+        // 133 - 29.95 * (1.530 + 1/60) = 86.68.
+        internal const float ScrollPhasePx = 86.68f;
+
+        // The logo quad: DAT_0089d88c is 512x256 drawn centred on (320, 130).
+        internal const float LogoLeft = 64f;
+        internal const float LogoTop = 2f;
+        internal const float LogoWidth = 512f;
+        internal const float LogoHeight = 256f;
+
+        // The sheen quad: 512x128 at scale (1, 2) centred on (321 - m, 120), so it
+        // spans y -8..248 and, with its +512 twin under WRAP, always covers
+        // x 65..577. Screen pixel x samples texel (x - 65 + m) mod 512; screen y
+        // samples texel (y + 8) / 2.
+        internal const float SheenLeftAtZeroScroll = 65f;
+        internal const float SheenTop = -8f;
+        internal const float SheenHeight = 256f;
+
+        private static Shader? _shader;
+        private readonly ShaderMaterial _material = new();
+        private Texture2D _logo = null!;
+
+        public override void _Ready() => Material = _material;
+
+        public void Configure(Texture2D logo, Texture2D reflection)
+        {
+            _logo = logo;
+            _material.Shader = _shader ??= new Shader { Code = ShaderCode };
+            _material.SetShaderParameter("reflection", reflection);
+            _material.SetShaderParameter("gain", Gain);
+        }
+
+        /// <summary>
+        /// <paramref name="frontendSeconds"/> is the same clock
+        /// <see cref="FeBackFrameIndex"/> consumes: seconds since the frontend left
+        /// click-to-start.
+        /// </summary>
+        public void SetScroll(double frontendSeconds)
+        {
+            float scroll = Mathf.PosMod(
+                ((float)frontendSeconds * ScrollPxPerSecond) + ScrollPhasePx,
+                ScrollPeriodPx);
+            _material.SetShaderParameter("scroll", scroll);
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            if (_logo is null)
+            {
+                return;
+            }
+
+            // One quad over the logo footprint. The shader clips it to the logo's
+            // own alpha>=8 texels, which is what retail's depth stamp does.
+            DrawTextureRect(
+                _logo,
+                new Rect2(LogoLeft, LogoTop, LogoWidth, LogoHeight),
+                false,
+                Colors.White);
+        }
+
+        // The literals here are the const fields above; the shader cannot consume
+        // C# consts directly, so they are repeated once and only once:
+        //   64/2/512/256  logo quad          (LogoLeft/Top/Width/Height)
+        //   65/-8/256     sheen quad         (SheenLeftAtZeroScroll/Top/Height)
+        //   512           wrap period        (ScrollPeriodPx)
+        private const string ShaderCode = """
+            shader_type canvas_item;
+            render_mode blend_add, unshaded;
+
+            uniform sampler2D reflection : filter_linear, repeat_enable;
+            uniform float scroll;
+            uniform float gain;
+
+            void fragment() {
+                // Fragment centres, so x is the pixel's integer column + 0.5.
+                float x = 64.0 + (UV.x * 512.0);
+                float y = 2.0 + (UV.y * 256.0);
+
+                // D3DCMP_ALWAYS z-stamp of the alpha-tested logo body (ALPHAREF 8).
+                float mask = step(8.0 / 255.0, texture(TEXTURE, UV).a);
+                // The sheen quad's own edges: its left edge is 65 - scroll and its
+                // bottom is y = 248. Everything between is covered by it or by its
+                // +512 twin, which is what the mod() below expresses.
+                mask *= step(65.0 - scroll, x);
+                mask *= step(y, 248.0);
+
+                float u = mod(x - 65.0 + scroll, 512.0) / 512.0;
+                float v = (y + 8.0) / 256.0;
+                COLOR = vec4(texture(reflection, vec2(u, v)).rgb * gain, mask);
+            }
+            """;
+    }
 }

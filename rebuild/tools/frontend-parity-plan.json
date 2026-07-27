@@ -11,7 +11,7 @@
     "if some region ever needs a bound other than the blanket margin, with a",
     "comment saying why. None does today.",
     "",
-    "A ceiling is NOT a parity claim - title-logo is 41.21% wrong. The canonical",
+    "A ceiling is NOT a parity claim - title-logo is 29.48% wrong. The canonical",
     "explanation of that distinction is the module docstring of",
     "tools/score_frontend_capture.py; do not restate it, point at it.",
     "",
@@ -25,9 +25,15 @@
     "this at all. See local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md."
   ],
   "_measurementProvenance": {
-    "measuredAtCommit": "684c7c52",
+    "measuredAtCommit": "85ba30e9 + the uncommitted TitleLogoReflectionLayer/TitleLogoTint change",
     "measuredOn": "2026-07-27",
     "captureDeterminism": [
+      "Re-derived with tools/score_frontend_capture.py --measure from",
+      "local-lab/godot-captures/20260727-143002-mainmenu. The capture stamped",
+      "purpose=probe because the working tree is dirty - the change these numbers",
+      "measure is exactly that dirt, so 'production' was not obtainable and the",
+      "numbers must be re-derived from a clean tree when it lands.",
+      "",
       "Two full mainmenu captures of 684c7c52 taken back to back were",
       "byte-identical on all 161 frames. Our own contribution to run-to-run",
       "variance is 0.00%, so the 2.00pp margin below is entirely headroom",
@@ -73,10 +79,10 @@
         14
       ],
       "measured": {
-        "FULL FRAME": 76.18,
+        "FULL FRAME": 71.47,
         "bg-empty-left": 97.94,
-        "bg-emblem-topright": 68.87,
-        "title-logo": 72.9,
+        "bg-emblem-topright": 52.38,
+        "title-logo": 60.86,
         "lang-selector": 99.72,
         "menu-column": 90.38,
         "decor-left-arc": 93.56,
@@ -103,10 +109,10 @@
         1020
       ],
       "measured": {
-        "FULL FRAME": 27.0,
+        "FULL FRAME": 22.35,
         "bg-empty-left": 6.99,
-        "bg-emblem-topright": 38.7,
-        "title-logo": 43.39,
+        "bg-emblem-topright": 22.97,
+        "title-logo": 31.83,
         "lang-selector": 74.23,
         "menu-column": 49.64,
         "decor-left-arc": 30.58,
@@ -149,10 +155,10 @@
         7027
       ],
       "measured": {
-        "FULL FRAME": 19.53,
+        "FULL FRAME": 15.14,
         "bg-empty-left": 5.61,
-        "bg-emblem-topright": 35.57,
-        "title-logo": 41.21,
+        "bg-emblem-topright": 19.92,
+        "title-logo": 29.48,
         "lang-selector": 17.19,
         "menu-column": 23.35,
         "decor-left-arc": 12.15,
