@@ -66,7 +66,31 @@ the probe wins — that is how `minimal` and `ultra` were settled.
 
 For long prompts, write the prompt to a file and use `grok --prompt-file <path>`.
 
-## Hygiene, and why a returned consult can still be worthless
+## Consults run from the MAIN LOOP ONLY. Subagents must not run them.
+
+This is a hard rule as of 2026-07-26, and it exists because the alternative was
+measured and it failed badly.
+
+A subagent that needs a consult **stops and asks for it**. It reports what it
+wants checked and why, and the main loop runs it and hands the answer back. A
+subagent must never run `codex` or `grok` itself, and must never proceed on one
+family while reporting the other as merely "unavailable".
+
+Why: sixteen agents each driving two CLIs concurrently on one machine produced
+**consults that answered other agents' questions** — fluent, on-format, and
+completely wrong. At least 7 of 16 runs hit it. Four mechanisms, all of them
+plumbing designed for one tenant being used by sixteen: codex inherits stdin and
+picks up whatever prompt is on it; concurrent agents clobber a shared output
+filename; grok multiplexes sessions through a single `~/.grok/leader.sock`; and
+context compaction silently substitutes the question while the model keeps
+reasoning on whatever it happens to be reading.
+
+Serialising through the main loop removes all four at once. It also costs almost
+nothing — the main loop was measured at ~600 s per consult against 1008 s from a
+subagent, because a subagent's shell is refused by the Windows sandbox and codex
+falls back to a much slower JS runtime.
+
+## Hygiene, for the main-loop runs themselves
 
 A 16-agent consult round on 2026-07-26 found a failure mode **worse than any
 timeout**: *a consult that returns fluent, on-format, correct-looking output
