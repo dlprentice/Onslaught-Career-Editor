@@ -76,6 +76,21 @@ If failures persist on a given question, **stair-step the effort** rather than
 retrying identically: `high` converges faster than `max` and is usually enough;
 reserve `max` for questions where the first pass genuinely could not decide.
 
+**There is a second, independent failure mode, and it is not the timeout.**
+`CreateProcessAsUserW failed: 5` also occurs in **subagent shells** on runs that
+are nowhere near any timeout — one ran for over an hour, had its shell refused,
+fell back to an MCP JS runtime for hundreds of steps, and never converged. It was
+briefly recorded here as merely a symptom of the timeout; that reading is
+**withdrawn**. `codex doctor` reports the installation healthy (16 ok, 0 fail),
+so this is specific to the environment a subagent's shell runs in, not to the
+install.
+
+Practical consequence: **a subagent's Codex consult can fail for reasons it
+cannot fix.** When it does, the subagent should say so plainly and the *main
+loop* should run that consult instead — from the main loop it works reliably,
+and that route has produced full `max`-effort results repeatedly. Do not let a
+subagent quietly proceed on Grok alone.
+
 Do not "fix" this by disabling the
 sandbox — `--dangerously-bypass-approvals-and-sandbox` (`--yolo`) removes the one
 guard that stops Codex writing to the repository while other agents are editing
