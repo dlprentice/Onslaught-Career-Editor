@@ -110,6 +110,25 @@ def gap_pct(
     return round(100.0 * gap / n, 2)
 
 
+def capture_source_commit(path: Path):
+    """The build a captured frame came from, if it can be established.
+
+    Both capture rigs write a `capture-manifest.json` beside their frames
+    carrying `sourceCommit`. This tool takes bare image paths, so that stamp is
+    the only way it can tell whether two frames describe the same build.
+    Returns (commit, manifest_path); (None, None) when there is no manifest -
+    a retail reference has none, and that is correct rather than a problem.
+    """
+    manifest = path.parent / "capture-manifest.json"
+    if not manifest.is_file():
+        return None, None
+    try:
+        body = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, None
+    return body.get("sourceCommit"), manifest
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reference", required=True, type=Path)
@@ -143,6 +162,37 @@ def main(argv: list[str]) -> int:
     floor = load_rgb(args.noise_floor) if args.noise_floor else None
     if floor is not None and floor.size != ref.size:
         print("REFUSED: --noise-floor frame is a different size to the reference.", file=sys.stderr)
+        return 2
+
+    # A NOISE FLOOR FROM A DIFFERENT BUILD IS NOT A NOISE FLOOR.
+    #
+    # The floor measures OUR OWN run-to-run variance, so that differences
+    # retail cannot reproduce are not charged to us. A floor captured from a
+    # DIFFERENT build measures the gap between two builds instead, and gapPct
+    # then silently CREDITS the candidate for every change made in between.
+    #
+    # This already happened: the walker-diffuse floor pair sat 44 commits and
+    # ~18 hours behind the captures it was applied to, and nothing noticed,
+    # because this tool takes bare image paths and had no way to tell.
+    #
+    # Both rigs stamp sourceCommit into a sibling capture-manifest.json, so the
+    # check is mechanical. Enforced only when BOTH sides carry one: a retail
+    # reference has no manifest and must not be refused for lacking one.
+    candidate_commit, candidate_manifest = capture_source_commit(args.candidate)
+    floor_commit, floor_manifest = (
+        capture_source_commit(args.noise_floor) if floor is not None
+        else (None, None))
+    if candidate_commit and floor_commit and candidate_commit != floor_commit:
+        print(
+            "REFUSED: the noise floor came from a different build." + chr(10) +
+            f"  candidate  {candidate_commit}  ({candidate_manifest})" + chr(10) +
+            f"  noiseFloor {floor_commit}  ({floor_manifest})" + chr(10) +
+            "A floor from another build measures the difference between two "
+            "builds, not this build's run-to-run variance, and subtracting it "
+            "credits the candidate for every change made in between. "
+            "Re-capture the floor against the build being measured.",
+            file=sys.stderr,
+        )
         return 2
 
     regions = {"FULL FRAME": [0, 0, ref.size[0], ref.size[1]]}
