@@ -309,15 +309,25 @@ body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
 **None of the above is a parity claim, and the measured gap is large.** As of
-2026-07-27 the best Level 100 gameplay frame scores **23.75% of pixels
-materially different from retail, mean channel distance 8.9**, against a
-retail reference at t0+25065 ms. The startup and frontend path is further off:
-its regression ceilings are recorded in `rebuild/tools/frontend-parity-plan.json`
+2026-07-27 the best Level 100 gameplay frame scores **23.06% of pixels
+materially different from retail, mean channel distance 7.85**, against a
+retail reference at t0+25065 ms.
+
+The startup and frontend path is further off. FEP_MAIN's settled window measures
+**15.14%** full-frame, its reveal window 22.35%, and its **entry frame 71.47%** —
+retail staggers the page's build-up and we draw it all on frame 0 (tracked). Its
+regression ceilings are recorded in `rebuild/tools/frontend-parity-plan.json`
 beside the measured value each was derived from, and several are tens of percent
-wrong — `title-logo` alone measures 41.21%. Those ceilings say "do not get
+wrong — `title-logo` alone measures 29.48%. Those ceilings say "do not get
 worse"; they are not parity numbers, and quoting one as a parity number is a
 misreading. Three frontend pages are deliberately ungated because retail's own
 two runs disagree, and are reported `UNSCORED`.
+
+These numbers move, and they moved several times on 2026-07-27 alone. Treat any
+figure here as the value at the commit that wrote it, and re-measure before
+relying on one — `tools/score_frontend_capture.py` and
+`tools/pair_gameplay_capture.py` are the instruments, and the frontend gate will
+now FAIL on a regression rather than reporting a healthy capture as a pass.
 
 `Won` is likewise not a full clear. The observed route to the level's `Won`
 state runs through the **released ABORT branch**: the LevelScript's sub-40%
