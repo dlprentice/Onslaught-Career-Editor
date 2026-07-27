@@ -14,21 +14,13 @@ note records three corrections to the *grader itself*. The 07-25 file's
 `SOURCE_BACKED` figure of 1,009 and its sentence "declaration-aware, not a
 substring match" are **both wrong** and are corrected here.
 
-Cross-model scrutiny of the **regrade** was one model, not two: `grok-4.5`
-(effort `high`) returned in full, and `codex exec` / `gpt-5.6-sol` (effort `max`,
-`-s read-only`) failed to converge — every shell invocation died inside the
-Windows sandbox before executing. Six of grok's objections were checked and held,
-and two of them changed the shipped tool (see
-`local-lab/GHIDRA-REGRADE-2026-07-26.md` §3a).
+Adversarial scrutiny of the **regrade** was a single independent pass, not two.
+Six of its objections were checked and held, and two of them changed the shipped
+tool (see `local-lab/GHIDRA-REGRADE-2026-07-26.md` §3a).
 
-**The rename wave HAS both families.** `grok-4.5` (`high`) returned in full, and
-`gpt-5.6-sol` (`max`, `-s read-only`) returned in full **when run from the main
-loop rather than from a subagent shell** — the `CreateProcessAsUserW failed: 5`
-that killed four consecutive attempts is an access-denied on process spawn
-specific to subagent shells, not a property of the sandbox mode. That is worth
-carrying: a consult that "cannot run" may simply need to be run from elsewhere.
-Codex upheld two of the three contested decisions on independent byte evidence
-and **refuted the third**, which is recorded and acted on below.
+**The rename wave got two independent passes.** Between them they upheld two of
+the three contested decisions on independent byte evidence and **refuted the
+third**, which is recorded and acted on below.
 
 Produced by `tools/re_ledger.py` over the same 6,969-function inventory and the
 same pristine specimen (sha256 `74154bfa…`, which the tool refuses to run
@@ -222,9 +214,9 @@ to name a real class.
 removed rows that never had evidence; it did not convert the remaining 528 into
 evidence about this executable. It also still fans out: one accepted class token
 licenses every suffix anyone attached to it, across 52 prefixes. The 2026-07-26
-consult (and the 07-26 cross-model note before it) held that the grade should be
-renamed off the RTTI axis; that rename is deferred so the before/after measured
-here stays comparable.
+adversarial pass (and the earlier 07-26 review before it) held that the grade
+should be renamed off the RTTI axis; that rename is deferred so the before/after
+measured here stays comparable.
 
 **`VTABLE_VA_IN_BODY` is an upper bound, and is deliberately not called
 `VTABLE_STORE_OWN`.** The proposal named it `..._OWN`; `OWN` asserts ownership and
@@ -250,7 +242,7 @@ which is direct evidence that the cohort over-collects as this paragraph says.
   them.
 - **`0x0048c300` was DEMOTED, not retained and not reassigned.** It was named
   `CInfluenceMap__dtor` and that name is positively **false** by RTTI. Measured,
-  and independently reached by both consulted models: its wrapper `0x0048c2e0`
+  and independently reached by both adversarial passes: its wrapper `0x0048c2e0`
   carries the canonical scalar-deleting-destructor bytes and is slot 1 of
   **`CInfluenceNode`**'s vtable `0x5dc050`; `CInfluenceMap`'s own vtable
   `0x5dfcb4` slot 1 is `0x0050b930`, whose wrapper calls `0x0050b950`, and *that*

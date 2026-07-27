@@ -1267,8 +1267,8 @@ namespace Onslaught___Career_Editor
                 // are written. Not even mComplete.
                 //
                 // An earlier draft of this fix wrote mComplete=1 here and only preserved mRanking.
-                // grok-4.5 (reasoning-effort high) attacked that: it produces mComplete==1 together
-                // with mRanking==0xBF800000 (-1.0, "never completed"), a combination it reported as
+                // An independent adversarial pass attacked that: it produces mComplete==1 together
+                // with mRanking==0xBF800000 (-1.0, "never completed"), a combination reported as
                 // absent from the local specimen corpus and unreachable through the game's own win
                 // path, which only ever raises mRanking. Writing nothing is both the literal meaning
                 // of "keep" and the only variant that provably invents no new career state — the

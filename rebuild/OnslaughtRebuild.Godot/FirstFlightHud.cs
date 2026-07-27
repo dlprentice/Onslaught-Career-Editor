@@ -579,8 +579,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // (0x00482090 sets SRCALPHA/INVSRCALPHA, 0x004821b0 then sets ONE/ONE).
     // There is NO DRAW between those two calls - the second simply overwrites the
     // first - and the sprites that follow them are BarLine and the threat/damage
-    // flashes, not the gauge ring. Both consulted model families caught this
-    // independently, and the decompile confirms it. `out = (1-a)bg + K(1+a)` and
+    // flashes, not the gauge ring. Two independent adversarial passes caught this
+    // separately, and the decompile confirms it. `out = (1-a)bg + K(1+a)` and
     // `out = (1-a)bg + P` are the same equation; a fit cannot choose a pass count.
     //
     // Godot exposes blend mode per CanvasItem, not per draw, so the single

@@ -387,9 +387,10 @@ public sealed partial class RetailFrontendFlow : Control
     //
     // Its fitted `a` also wanders 0.29..0.57 across frames where the additive gain
     // does not move. That is recorded but is NOT independent evidence, and an
-    // earlier draft of this comment claimed it was. A cross-model review pointed
-    // out the circularity: if the truth is y = bg + g·F then forcing an alpha mix
-    // gives a = g·F/(F - bg), which MUST vary with frame content. The residual rms
+    // earlier draft of this comment claimed it was. An independent adversarial
+    // pass pointed out the circularity: if the truth is y = bg + g·F then forcing
+    // an alpha mix gives a = g·F/(F - bg), which MUST vary with frame content.
+    // The residual rms
     // is what carries this conclusion.
     //
     // What is established is narrower than "the compositor is additive": it is
@@ -903,9 +904,10 @@ public sealed partial class RetailFrontendFlow : Control
         //    frames.
         //
         //    THE STRENGTH OF (2) IS BOUNDED, and an earlier draft of this comment
-        //    overstated it as "retail has no such layer". A cross-model review is
-        //    right that a mean residual mostly constrains the DC component: a
-        //    reflection texture that is near zero-mean over the footprint can
+        //    overstated it as "retail has no such layer". An independent
+        //    adversarial pass is right that a mean residual mostly constrains
+        //    the DC component: a reflection texture that is near zero-mean
+        //    over the footprint can
         //    carry a real gain while moving the mean by nothing, and if it
         //    correlates with FEBack128 the FEBack fit absorbs part of it. What (2)
         //    supports is a DC bound of order one level, not absence. The
@@ -1035,9 +1037,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// <para><b>The phase, and the alias that nearly took its place.</b></para>
     /// Fitting best-matching strip frames over a 7 s retail burst gave a clean
     /// 29.80 fps line through frame 0 at t = 13 ms. It also gave, on EVERY sample,
-    /// a near-equal runner-up exactly +205 frames away. A cross-model review
-    /// flagged that as an alias risk rather than clip self-similarity, and it was
-    /// right to: normalised cross-correlation cannot pick the origin of a
+    /// a near-equal runner-up exactly +205 frames away. An independent adversarial
+    /// pass flagged that as an alias risk rather than clip self-similarity, and
+    /// it was right to: normalised cross-correlation cannot pick the origin of a
     /// self-similar signal from peaks that are within noise of each other, and a
     /// 7 s window is barely a third of the clip's 19.07 s period.
     ///

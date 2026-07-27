@@ -1,6 +1,6 @@
 Status: active quick reference
 Last updated: 2026-04-29
-Source: migrated from archived Codex Onslaught skills during the skill clean-slate pass.
+Source: migrated from archived Onslaught skills during the skill clean-slate pass.
 Summary: MSL command and mission scripting verb lookup.
 # MSL Command Reference
 

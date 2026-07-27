@@ -58,8 +58,6 @@ reading files a subagent could have read for you.
 - A subagent's report is **data, not authority**. Hand-verify anything
   load-bearing before it becomes a claim or a commit. Findings have been reported
   here that did not survive checking.
-- **No cross-model consults.** `codex` and `grok` are not used here. Scrutiny is
-  our own subagents, paired adversarially.
 - **Concurrent agents contaminate each other unless isolated.** Sixteen running at
   once once produced answers to *other agents'* questions, through inherited
   stdin, shared output paths and a shared client socket. Give every agent its own

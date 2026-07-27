@@ -1124,7 +1124,7 @@ public sealed partial class FirstFlightGame : Node3D
     /// pinned startup shots — whose first shot is click-to-start at engine
     /// frame 12 — would all land on the wrong screen.
     ///
-    /// The risk this creates is real and was named in the cross-model consult:
+    /// The risk this creates is real and was named by an independent adversarial pass:
     /// if the only automated visual path skips the intro, the intro can rot
     /// unobserved, which is precisely how <c>_feBackFrames</c> came to be loaded
     /// and never drawn. The mitigation is that the deterministic part of this

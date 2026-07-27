@@ -2,7 +2,7 @@
 
 Status: active
 Last updated: 2026-05-26
-Source: migrated from archived Codex Onslaught skills during the skill clean-slate pass.
+Source: migrated from archived Onslaught skills during the skill clean-slate pass.
 
 This folder holds dense lookup tables that are useful during deep reverse-engineering work but too large/noisy for `AGENTS.md` or active global skills. Treat these files as repo-local quick references. When a table is corrected, update the relevant detailed doc as well.
 

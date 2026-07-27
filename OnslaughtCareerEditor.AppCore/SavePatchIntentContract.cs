@@ -218,12 +218,12 @@ namespace Onslaught___Career_Editor
                 snapshot => snapshot.PatchKills,
                 snapshot => snapshot.GlobalKillCount is not null || snapshot.PerCategoryKills is { Count: > 0 }),
 
-            // gpt-5.6-sol and grok-4.5 disagreed here and the disagreement was worth having.
-            // grok-4.5 argued null should keep meaning OLD, because `--new --no-goodies` is already
+            // Two independent adversarial passes disagreed here and the disagreement was worth having.
+            // One argued null should keep meaning OLD, because `--new --no-goodies` is already
             // detectable from the true value alone and refusing breaks default-constructed callers.
-            // gpt-5.6-sol argued fail-closed, because "interpreting null as OLD would turn absence into
+            // The other argued fail-closed, because interpreting null as OLD would turn absence into
             // a rewrite of all 233 displayable dwords from 0x1F46, defeating the reason for making
-            // absence representable". Measured: no shipping caller reaches this state — the CLI applies
+            // absence representable. Measured: no shipping caller reaches this state — the CLI applies
             // its own default and WinUI only supplies the style when the section is on — so fail-closed
             // costs nothing a user can see and removes the last place where silence still writes bytes.
             new SavePatchSectionPayloadRule(

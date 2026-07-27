@@ -42,9 +42,8 @@ namespace OnslaughtRebuild.Client.Tests;
 /// height only. It says nothing about glyph SHAPE (a wrong atlas with the same
 /// advances would pass), nothing about colour, nothing about the header box
 /// fill, and nothing about any pixel outside the title band. It also does not
-/// cover the pages' backgrounds, which are a separate and currently open
-/// question — see
-/// <c>local-lab/CROSS-MODEL-STARTUP-PARITY-2026-07-26.md</c>.</para>
+/// cover the pages' backgrounds, which are measured separately — see
+/// <c>local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md</c> §5.1.</para>
 ///
 /// <para><b>Known residual, deliberately not closed here.</b> The reconstruction
 /// reproduces every run width exactly but sits <b>one pixel right</b> of retail
