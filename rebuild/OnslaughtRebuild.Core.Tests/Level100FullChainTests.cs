@@ -17,13 +17,15 @@ namespace OnslaughtRebuild.Core.Tests;
 ///
 /// <para><b>What `Won` here does and does not mean.</b> Ten of the eleven named
 /// progression events are produced in full by the world. The eleventh,
-/// <c>Airborne Target 2 Destroyed</c> x6, is produced twice before the
-/// LevelScript's own sub-40 % hull poll posts <c>Abort Airborne Drones</c>,
+/// <c>Airborne Target 2 Destroyed</c> x6, is produced <b>four</b> times before
+/// the LevelScript's own sub-40 % hull poll posts <c>Abort Airborne Drones</c>,
 /// which sets Target Zone 4 and leads to the same shipped <c>LevelWon()</c>.
 /// That is a released path with its own dialogue and its own
-/// <c>AddScore(-50)</c>, and it is not the same thing as clearing the
-/// tutorial's combat curriculum. See
-/// <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c>.</para>
+/// <c>AddScore(-50)</c>, and it is <b>still</b> not the same thing as clearing
+/// the tutorial's combat curriculum: <c>PrimaryObjectiveComplete(4, ...)</c>
+/// lives only on the full clear and does not fire. See
+/// <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c> and
+/// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c>.</para>
 /// </summary>
 /// <summary>
 /// One chain run, shared by every test that reads it. The run is deterministic
@@ -153,12 +155,22 @@ public sealed class Level100FullChainTests
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
     /// <para>What this test does <b>not</b> claim: that beat 9 is completed by
-    /// kills. It is completed through the released abort branch - the
-    /// LevelScript's own health poll posts <c>Abort Airborne Drones</c> below
-    /// 40 % hull, which sets Target Zone 4 as the objective and leads to the
-    /// same <c>LevelWon()</c>. That is a shipped path with its own dialogue
-    /// (<c>TUTORIAL_ABORTED</c>), not a shortcut, but it is a worse run than a
-    /// good player's and the report says so.</para>
+    /// kills. <b>Four of the six wave-2 drones are destroyed</b> - up from two,
+    /// and the whole of that improvement is flying, not Core - but the last two
+    /// are still alive when the LevelScript's own health poll posts
+    /// <c>Abort Airborne Drones</c> below 40 % hull, which sets Target Zone 4
+    /// as the objective and leads to the same <c>LevelWon()</c>. That is a
+    /// shipped path with its own dialogue (<c>TUTORIAL_ABORTED</c>) and its own
+    /// <c>AddScore(-50)</c>, not a shortcut, but it is a worse run than a good
+    /// player's and <c>PrimaryObjectiveComplete(4, ...)</c> never fires.</para>
+    ///
+    /// <para><b>The measured beat-9 trace</b>, for anyone who changes the
+    /// driver: wave armed t9442 at 17,500 hull; kills at t10202, t10421,
+    /// t10492 and t10557, with hull still 14,400 after the fourth; then a
+    /// 823-tick tail in which the sortie's store ran out, the jet put down to
+    /// recharge, and two Forseti Missiles took it from 11,800 to the abort at
+    /// t11380. The named blocker is the ground recharge, not the dogfight.
+    /// See <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c>.</para>
     /// </summary>
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
@@ -223,17 +235,23 @@ public sealed class Level100FullChainTests
         //
         // `Aborted` is the released LevelScript's own `aborted` local, set by
         // `event("Abort Airborne Drones")`, which its beat-9 health poll posts
-        // below 40 % hull. This run wins through that branch: it destroys two
-        // of the six wave-2 drones and objective 4 is never completed, because
-        // `PrimaryObjectiveComplete(4, ...)` lives only on the full clear.
+        // below 40 % hull. This run still wins through that branch: it destroys
+        // FOUR of the six wave-2 drones and objective 4 is never completed,
+        // because `PrimaryObjectiveComplete(4, ...)` lives only on the full
+        // clear.
         Assert.True(
             final.Level100Mission.Aborted,
             "This run is expected to win through the released abort branch. " +
             "If it now wins by clearing wave 2, that is better - update this " +
             "assertion and local-lab/AUTOPILOT-TO-WON-2026-07-26.md together.");
+
+        // The floor is the point of this assertion, not the ceiling. Two was
+        // the measured count before the beat-9 driver existed; anything below
+        // four is a regression in the crab, the missile break or the fire
+        // discipline and should be investigated rather than re-baselined.
         Assert.InRange(
             CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2),
-            0,
+            4,
             5);
         Assert.Equal(
             Level100PrimaryObjectiveStatus.Failed,

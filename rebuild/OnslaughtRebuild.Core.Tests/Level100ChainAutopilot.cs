@@ -222,9 +222,23 @@ internal sealed class Level100ChainAutopilot
         return final.Level100Mission.Outcome;
     }
 
+    /// <summary>
+    /// The last place the player stood on dry land. A sortie that chases a
+    /// drone out over the sea and then puts down - or simply runs its store
+    /// dry - is <c>Level100MissionFailureReason.WaterLoss</c>, which is a lost
+    /// level at full hull. Measured: an earlier revision of this driver
+    /// followed the third wave-1 drone west and drowned at (-107362, 52796)
+    /// with 17,500 of 20,000 hull intact.
+    /// </summary>
+    private SimVector2 _lastDryGround;
+
     private void Observe(WorldSnapshot state)
     {
         RecordArmamentEvidence(state);
+        if (state.PlayerOnGround && !state.PlayerInWater)
+        {
+            _lastDryGround = state.PlayerPosition;
+        }
         string? navigation = state.Level100Mission.NavigationObjective;
         if (!string.Equals(navigation, _lastNavigation, StringComparison.Ordinal))
         {
@@ -257,7 +271,12 @@ internal sealed class Level100ChainAutopilot
 
         if (state.Level100Mission.Outcome != _lastOutcome)
         {
-            _log.Add($"t{state.Tick} OUTCOME {state.Level100Mission.Outcome}");
+            _log.Add(
+                $"t{state.Tick} OUTCOME {state.Level100Mission.Outcome} " +
+                $"reason={state.Level100Mission.FailureReason} " +
+                $"hull={state.Hull} mode={state.Mode} " +
+                $"pos=({state.PlayerPosition.X},{state.PlayerPosition.Z}) " +
+                $"y={state.PlayerElevationMillimeters} water={state.PlayerInWater}");
             _lastOutcome = state.Level100Mission.Outcome;
         }
 
@@ -555,6 +574,11 @@ internal sealed class Level100ChainAutopilot
         // at the range they open fire, and closing on foot at
         // WalkerMaximumSpeedPerTick costs eleven seconds inside their envelope.
         // Measured with a walker: 750 -> 0 hull, no wave-2 drone destroyed.
+        if (target.TargetGroup == Level100MissionTargetGroup.AirborneTargets2)
+        {
+            return EngageWaveTwo(state, target);
+        }
+
         if (airborneTarget)
         {
             return EngageFromJet(state, target);
@@ -801,6 +825,395 @@ internal sealed class Level100ChainAutopilot
         return new SimInput(0, throttle, actions, 0, 0, lookX, lookY);
     }
 
+    /// <summary>How long one crab is held before it is reversed.</summary>
+    private const int JetStrafeSegmentTicks = 150;
+
+    /// <summary>
+    /// The altitude band the crabbed jet is flown in. The floor keeps the nose
+    /// out of the released ground effect; the ceiling exists because a crabbing
+    /// jet sheds a vertical rate only through thrust.
+    /// </summary>
+    private const int WaveTwoFloorMillimeters = 9_000;
+
+    private const int WaveTwoCeilingMillimeters = 26_000;
+
+    /// <summary>
+    /// Slant range beyond which reversing the crab is free. This is the shipped
+    /// <c>Drone Vulcan Cannon</c> <c>CWeaponMaxRange</c> of 40.0 plus a margin
+    /// for the closure that happens while the new crab builds.
+    /// </summary>
+    private const int WaveTwoSafeReversalMillimeters = 55_000;
+
+    /// <summary>
+    /// Clearance a landing site needs above the released water plane.
+    /// <c>Simulation.UpdateWalkerGroundContact</c> declares the player in water
+    /// when the sampled ground is at or below
+    /// <c>Level100Terrain.WaterElevationMillimeters</c>, so this is a small
+    /// margin on that test and not an invented shoreline. Measured: a 2 m
+    /// margin classified the beat-9 charging position itself - sampled ground
+    /// -598 mm against a -1160 mm water plane - as sea, and the driver spent
+    /// the whole beat climbing "home" to where it already was.
+    /// </summary>
+    private const int DryGroundClearanceMillimeters = 300;
+
+    /// <summary>Is the terrain under this point below the water plane?</summary>
+    private bool OverWater(SimVector2 position) =>
+        _terrain.SampleGroundElevationMillimeters(position) <
+            Level100Terrain.WaterElevationMillimeters + DryGroundClearanceMillimeters;
+
+    /// <summary>
+    /// The released 3D centre distance, which is what every shipped range gate
+    /// on this fight actually tests.
+    /// </summary>
+    private static double SlantRange(WorldSnapshot state, SimVector3 position)
+    {
+        double deltaX = (double)position.X - state.PlayerPosition.X;
+        double deltaY = (double)position.Y - state.PlayerElevationMillimeters;
+        double deltaZ = (double)position.Z - state.PlayerPosition.Z;
+        return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+    }
+
+    /// <summary>
+    /// Beat 9's wave, which is a different fight from beat 7's and is driven
+    /// separately for that reason.
+    ///
+    /// <para><b>Wave 1 does not shoot back.</b> <c>AirborneDrone1.msl</c> flies
+    /// a route; <c>AirborneDrone2.msl</c>'s <c>init()</c> issues
+    /// <c>Attack(player)</c> at line 26 and the six spawns carry a
+    /// <c>Drone Vulcan Cannon</c> and a <c>Forseti Drone Missile Launcher</c>
+    /// each. So beat 7 is a gunnery exercise and beat 9 is a dogfight, and the
+    /// beat-7 driver above is deliberately left exactly as measured rather than
+    /// generalised over both.</para>
+    ///
+    /// <para><b>What the shipped weapon records say the fight is.</b></para>
+    /// <list type="bullet">
+    ///   <item><description><c>Drone Vulcan Cannon</c>: <c>CWeaponMaxRange</c>
+    ///   40.0, burst 8 at 0.15 s, reload 1.0 s, round <c>Blaster</c> at
+    ///   <c>CRoundVelocity</c> 45.0 for <b>200 hull</b> a hit. Six drones is
+    ///   48 rounds a second, or 9,600 hull a second if they all
+    ///   land.</description></item>
+    ///   <item><description><c>Forseti Drone Missile Launcher</c>:
+    ///   <c>CWeaponMinRange</c> 20.0, <c>CWeaponMaxRange</c> 80.0, reload
+    ///   <b>10.0 s</b>, round <c>Forseti Missile</c> at 15.0 for <b>2,500
+    ///   hull</b>. Slow and rare, and it cannot fire inside 20 m at
+    ///   all.</description></item>
+    /// </list>
+    ///
+    /// <para><b>The Vulcan is the whole threat, and it is beaten by moving.</b>
+    /// Neither drone weapon mode carries <c>CWeaponTrack</c> and neither
+    /// carries a lead law, so <c>LaunchActorRound</c> aims every Blaster at the
+    /// player's position on the tick it is fired. The impact envelope is the
+    /// battle engine's own 0.4 m radius (<c>CBattleEngine::GetRadius</c>). A
+    /// Blaster fired from 30 m is in flight for 0.67 s, so it needs the player
+    /// to cross less than 0.4 m in that time: <b>a perpendicular speed above
+    /// about 0.6 m/s makes it a clean miss</b>. Flying straight at a drone is
+    /// the one manoeuvre that supplies less than that, and it is what the
+    /// previous revision did - measured, it lost 8,800 hull in 2.4 released
+    /// seconds between t9958 and t10030 and reached the sub-40 % abort with
+    /// two of six drones down.</para>
+    ///
+    /// <para>So this driver holds <see cref="SimInput.MoveX"/> throughout.
+    /// That is <c>TUTORIAL_STRAFE</c>, which the LevelScript plays at the head
+    /// of <c>event("Reached Target Zone 3")</c> immediately before this wave,
+    /// and it is worth more than the lateral acceleration alone:
+    /// <c>Simulation.UpdateJetMovement</c> refreshes
+    /// <c>_jetStrafeTicksRemaining</c> on every strafing tick and
+    /// <c>Simulation.JetAlignmentPermille</c> returns <b>0</b> for as long as
+    /// that window is open, so the released velocity-to-forward alignment stops
+    /// pulling the flight path back onto the nose and the airframe holds a
+    /// standing crab. The reticle does not move; the aeroplane does.</para>
+    /// </summary>
+    private SimInput EngageWaveTwo(WorldSnapshot state, Level100ActorSnapshot target)
+    {
+        if (state.Transition != VehicleTransition.None)
+        {
+            return SimInput.Idle;
+        }
+
+        // The round that will actually be fired here is the jet's
+        // `Mech Air Bullet` at CRoundVelocity 60.0, not the walker Pulse
+        // round's 35.0. Leading a 5.5 m/s drone with the wrong flight time
+        // puts the aim point 70 % too far ahead of it.
+        SimVector3 aim = AimPoint(
+            state,
+            target,
+            sweep: false,
+            roundSpeedPerTick: SimulationConstants.MechAirBulletSpeedPerTick);
+        double horizontal = Horizontal(state, aim);
+        double slant = SlantRange(state, aim);
+        double yawError = YawErrorTo(state, aim.X, aim.Z);
+        short lookX = LookAxis(yawError, 2_000);
+        int altitude = state.PlayerAltitudeAboveGroundMillimeters;
+
+        if (state.Mode != VehicleMode.Jet)
+        {
+            if (state.Energy < SortieLaunchEnergy)
+            {
+                double groundPitchError = -(state.FacingPitchMicroRad / 1_000_000d);
+                return new SimInput(
+                    0,
+                    0,
+                    state.PlayerOnGround ? SimActions.None : SimActions.LandingJets,
+                    0,
+                    0,
+                    lookX,
+                    LookAxis(groundPitchError, 4_000));
+            }
+
+            return new SimInput(0, 0, SimActions.ToggleMode);
+        }
+
+        // Never fight, and above all never come down, over the sea. The
+        // released water path loses the level at full hull, and a drone that
+        // has drifted out over the water is not worth following. The recovery
+        // heading is the last place the player actually stood.
+        bool overWater = OverWater(state.PlayerPosition);
+        if (overWater)
+        {
+            yawError = YawErrorTo(state, _lastDryGround.X, _lastDryGround.Z);
+            lookX = LookAxis(yawError, 2_000);
+        }
+
+        // Altitude, and this is the price of the crab. While MoveX is held
+        // `JetAlignmentPermille` is 0, so the released alignment never pulls
+        // the velocity back onto the nose - which is the point - but it also
+        // means a vertical rate, once acquired, is not shed by anything except
+        // thrust pointed the other way. Measured with the beat-7 driver's
+        // "climb whenever below 9 m" rule and a held strafe: the jet wound
+        // itself up to 57 m, ran the store dry there, dropped to walker and
+        // fell out of the sky with all six drones untouched.
+        //
+        // So the crab is flown with an explicit altitude band and a rate term
+        // instead. Inside the band, and only then, the nose belongs to the
+        // target.
+        bool altitudeHeld =
+            altitude < WaveTwoFloorMillimeters ||
+            altitude > WaveTwoCeilingMillimeters;
+        double altitudePitchError = 0;
+        if (altitudeHeld)
+        {
+            double wanted = altitude < WaveTwoFloorMillimeters
+                ? WaveTwoFloorMillimeters
+                : WaveTwoCeilingMillimeters;
+            double commanded = Math.Clamp(
+                ((altitude - wanted) / 40_000d) +
+                    (state.PlayerVerticalVelocityMillimetersPerTick / 400d),
+                -0.35,
+                0.35);
+            altitudePitchError =
+                commanded - (state.FacingPitchMicroRad / 1_000_000d);
+        }
+
+        short lookYAltitude = LookAxis(altitudePitchError, 4_000);
+
+        // Missile defence, and it is the larger half of this fight. Recorded
+        // hull losses across the previous revision's beat 9 came in steps of
+        // 2,500 and 2,900 - that is `Forseti Missile` (2.0 round + 0.5
+        // explosion = 2,500 hull) with the odd 200-hull Blaster on top, not a
+        // Blaster stream. Six launchers on a 10 s reload put roughly eighteen
+        // of those in the air across the beat, and three landing is the whole
+        // budget between 17,500 and the sub-40 % abort at 8,000.
+        //
+        // The released seeker is beatable and the shipped record says exactly
+        // how. Round vtable slot 66 takes the direction to the target into the
+        // round's own frame and, with `CRoundWeirdoSeek` 0, **clears the target
+        // reader outright** when the forward component falls below
+        // cos(`CRoundSeekAngle`) - 45 degrees. `CRoundSeek 3` never
+        // re-acquires (`== 1` at
+        // `CRound__SelectBestTargetReaderAndSyncAimState` is the only
+        // self-acquire path in the image), so a dropped lock is dropped for
+        // good. `CRoundTurnRate` is 0.04886922 rad per released tick, i.e.
+        // 0.977 rad/s, while the jet's own yaw velocity accumulates to
+        // `JetYawInputMicroRadPerTick / (1 - JetYawRetention)` = about
+        // 1.47 rad/s. **The airframe out-turns the seeker**, so putting the
+        // missile on the beam and holding full throttle opens the cone.
+        Level100ActorRoundSnapshot? missile = InboundMissile(state);
+        if (!overWater && missile is not null)
+        {
+            double bearing = BearingTo(state, missile.PositionMillimeters);
+            double beam = bearing + (_crabDirection * Math.PI / 2);
+            double beamError =
+                NormalizeRadians(beam - (state.FacingYawMicroRad / 1_000_000d));
+
+            // The break does not stop the guns. The nose sweeps across the
+            // wave while it turns, and a volley taken on the way past costs
+            // nothing: SimActions.Fire is gated by FireCooldownTicks and no
+            // energy, so a shot that is on the target is free whatever the
+            // aeroplane is doing.
+            return new SimInput(
+                (sbyte)WaveTwoCrab(state),
+                1,
+                WaveTwoFireGate(state, aim, slant, altitude, yawError),
+                0,
+                0,
+                LookAxis(beamError, 2_000),
+                lookYAltitude);
+        }
+
+        if (!overWater && state.Energy < SortieRecoverEnergy)
+        {
+            return new SimInput(0, -1, SimActions.ToggleMode, 0, 0, lookX, 0);
+        }
+
+        double pitchError = altitudeHeld
+            ? altitudePitchError
+            : PitchErrorTo(state, aim, horizontal);
+        short lookY = LookAxis(pitchError, 4_000);
+
+        // Throttle. Backing off is what makes this airframe turn: the released
+        // speed correction drives it to JetMinimumSpeedPerTick (6 m/s) at
+        // MoveZ -1 while the yaw rate stays a fixed
+        // JetYawInputMicroRadPerTick, so the turn radius collapses from about
+        // 61 m to about 20 m. Measured: a revision that never backed off could
+        // not stay on any drone and flew the fight 180 m off station with no
+        // kills at all.
+        sbyte throttle = horizontal > 60_000 || overWater ? (sbyte)1 : (sbyte)0;
+        if (!overWater && (horizontal < 20_000 || Math.Abs(yawError) > 0.7))
+        {
+            throttle = -1;
+        }
+
+        SimActions actions = overWater
+            ? SimActions.None
+            : WaveTwoFireGate(state, aim, slant, altitude, yawError);
+        return new SimInput(
+            (sbyte)WaveTwoCrab(state),
+            throttle,
+            actions,
+            0,
+            0,
+            lookX,
+            lookY);
+    }
+
+    /// <summary>
+    /// The held strafe.
+    ///
+    /// <para><b>It is never reversed while a drone is inside its Vulcan's
+    /// 40 m envelope.</b> The crab takes about five released seconds to build
+    /// through the released friction, so a reversal is a window in which the
+    /// perpendicular speed passes through zero - and that window is exactly
+    /// what the Blaster needs. Measured on a run that reversed every 150 ticks
+    /// regardless: hull held flat at 14,200 for a hundred ticks while the crab
+    /// was developed, then fell 14,200 to 7,500 across the reversal.</para>
+    /// </summary>
+    private int WaveTwoCrab(WorldSnapshot state)
+    {
+        if (state.Tick - _crabSinceTick >= JetStrafeSegmentTicks &&
+            NearestWaveTwoSlant(state) > WaveTwoSafeReversalMillimeters)
+        {
+            _crabSinceTick = state.Tick;
+            _crabDirection = -_crabDirection;
+        }
+
+        return _crabDirection;
+    }
+
+    private int _crabDirection = 1;
+    private int _crabSinceTick;
+
+    /// <summary>
+    /// Pull the trigger whenever the reticle is genuinely on a drone, whatever
+    /// the aeroplane is doing. The `Mech Air Bullet` costs no energy and the
+    /// cadence is gated by <c>FireCooldownTicks</c>, so a shot taken while the
+    /// nose sweeps past during a missile break is free.
+    /// </summary>
+    private static SimActions WaveTwoFireGate(
+        WorldSnapshot state,
+        SimVector3 aim,
+        double slant,
+        int altitude,
+        double targetYawError)
+    {
+        double tolerance = FireTolerance(slant);
+        double pitchError =
+            PitchErrorTo(state, aim, Horizontal(state, aim));
+        return altitude >= 6_000 &&
+            slant is > 800 and < 55_000 &&
+            Math.Abs(targetYawError) < tolerance &&
+            Math.Abs(pitchError) < tolerance
+                ? SimActions.Fire
+                : SimActions.None;
+    }
+
+    /// <summary>
+    /// Slant range at which a still-locked <c>Forseti Missile</c> is answered.
+    /// It is inside <c>CWeaponMaxRange</c> 80.0 on purpose: breaking at the
+    /// launch range would leave the driver evading permanently against six
+    /// launchers, and the cone only opens when the bearing rate beats
+    /// <c>CRoundTurnRate</c>, which needs the missile close.
+    /// </summary>
+    private const int MissileBreakRangeMillimeters = 22_000;
+
+    /// <summary>
+    /// The nearest still-locked released seeker heading for the player, or
+    /// null.
+    ///
+    /// <para>Reading the round list is the same class of observation this
+    /// driver already makes of <c>actor.Health</c>: a player sees the missile
+    /// and its smoke trail, not this record. It is input-equivalent, not
+    /// perception-equivalent, and the class remarks say so.</para>
+    /// </summary>
+    private static Level100ActorRoundSnapshot? InboundMissile(WorldSnapshot state)
+    {
+        Level100ActorSnapshot? player = state.Level100Actors.Actors
+            .FirstOrDefault(actor => actor.Name == "Player 1");
+        if (player is null)
+        {
+            return null;
+        }
+
+        Level100ActorRoundSnapshot? nearest = null;
+        double nearestRange = MissileBreakRangeMillimeters;
+        foreach (Level100ActorRoundSnapshot round in
+                 state.Level100ActorMechanics.ActorRounds)
+        {
+            if (round.Kind != Level100ActorRoundKind.ForsetiMissile ||
+                !round.Locked ||
+                round.TargetActorId != player.ActorId)
+            {
+                continue;
+            }
+
+            double range = SlantRange(state, round.PositionMillimeters);
+            if (range < nearestRange)
+            {
+                nearestRange = range;
+                nearest = round;
+            }
+        }
+
+        return nearest;
+    }
+
+    private static double BearingTo(WorldSnapshot state, SimVector3 position) =>
+        Math.Atan2(
+            -((double)position.X - state.PlayerPosition.X),
+            (double)position.Z - state.PlayerPosition.Z);
+
+    /// <summary>
+    /// Slant range to the nearest live wave-2 drone, which is the quantity
+    /// <c>CUnit__ClassifyTargetRangeBand</c> tests against
+    /// <c>CWeaponMaxRange</c> 40.0.
+    /// </summary>
+    private static double NearestWaveTwoSlant(WorldSnapshot state)
+    {
+        double nearest = double.MaxValue;
+        foreach (Level100ActorSnapshot actor in state.Level100Actors.Actors)
+        {
+            if (actor.TargetGroup != Level100MissionTargetGroup.AirborneTargets2 ||
+                !actor.Active ||
+                actor.Lifecycle != Level100ActorLifecycle.Alive)
+            {
+                continue;
+            }
+
+            nearest = Math.Min(nearest, SlantRange(state, actor.Pose.PositionMillimeters));
+        }
+
+        return nearest;
+    }
+
     // ------------------------------------------------------------------
     // Geometry a player can see
     // ------------------------------------------------------------------
@@ -813,13 +1226,14 @@ internal sealed class Level100ChainAutopilot
     private static SimVector3 AimPoint(
         WorldSnapshot state,
         Level100ActorSnapshot target,
-        bool sweep = true)
+        bool sweep = true,
+        int roundSpeedPerTick = SimulationConstants.ProjectileSpeedPerTick)
     {
         SimVector3 position = target.Pose.PositionMillimeters;
         double rawX = (double)position.X - state.PlayerPosition.X;
         double rawZ = (double)position.Z - state.PlayerPosition.Z;
         double range = Math.Sqrt((rawX * rawX) + (rawZ * rawZ));
-        double flightTicks = range / SimulationConstants.ProjectileSpeedPerTick;
+        double flightTicks = range / roundSpeedPerTick;
 
         // The sweep is bounded in *angle*, not in millimetres. A fixed 200 mm
         // ladder is a fifth of a radian at four metres, which fights the pitch
