@@ -33,6 +33,8 @@
              Link="godot-hud-source\Level100HudPresentation.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100MessagePlaybackState.cs"
              Link="godot-hud-source\Level100MessagePlaybackState.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\Level100MessageSchedule.cs"
+             Link="godot-hud-source\Level100MessageSchedule.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100TerrainCompositor.cs"
              Link="godot-terrain-source\Level100TerrainCompositor.cs" />
     <!-- The deterministic half of the cold-start media lane. Both files are

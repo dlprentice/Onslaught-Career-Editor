@@ -124,17 +124,29 @@ public sealed partial class FirstFlightHud : CanvasLayer
             hud.ActiveMessage;
         Level100HudMessageDefinition? message =
             activeDelivery is null ? null : _catalog.GetRequired(activeDelivery.MessageId);
+        // The reveal clock, the portrait pose and the noise phase all come from
+        // Core's mission tick, NOT from playback.PositionSeconds. That property
+        // is AudioStreamPlayer.GetPlaybackPosition() - the audio mixer's wall
+        // clock - and under --fixed-fps it does not reproduce between two runs
+        // of the same commit even though every engine frame and every Core tick
+        // does. Measured cost of the old wiring: 21.28 % material cross-run on
+        // the message panel and 25.15 % on portrait/compass, against 0.00 % on
+        // five other regions. See Level100MessageSchedule.
+        int missionTick = snapshot.Level100Mission.Tick;
+        Level100MessageScheduleEntry? scheduled = Level100MessageSchedule.ActiveAt(
+            hud.DeliveredMessages,
+            missionTick);
         Level100MessagePlaybackSnapshot activePlayback =
-            playback.ActiveMessageId.HasValue &&
+            scheduled is Level100MessageScheduleEntry entry &&
             message is not null &&
-            playback.ActiveMessageId.Value == message.MessageId
+            entry.Delivery.MessageId == message.MessageId
                 ? new Level100MessagePlaybackSnapshot(
                     IsAvailable: true,
-                    playback.ActiveMessageId,
-                    playback.Playing,
-                    playback.PositionSeconds,
-                    playback.LengthSeconds,
-                    PortraitPoseIndex(playback))
+                    entry.Delivery.MessageId,
+                    Playing: true,
+                    entry.ElapsedSecondsAt(missionTick),
+                    entry.DurationSeconds,
+                    PortraitPoseIndex(entry, missionTick))
                 : Level100MessagePlaybackSnapshot.Unavailable;
         // MessagePageIndex was removed 2026-07-26: retail does not page. The
         // message types on at 40 char/s into a three-line window that scrolls
@@ -156,7 +168,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             message,
             activeDelivery?.Speaker,
             activePlayback.PortraitPoseIndex,
-            MessageNoisePhaseIndex(playback));
+            MessageNoisePhaseIndex(scheduled, missionTick));
         _glowLayer.SetState(snapshot, hud, message is not null);
         _textLayer.SetState(hud, message, activePlayback);
     }
@@ -171,16 +183,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // sub-second one. Settling the owner's "faces move too fast" report needs a
     // retail capture at >= 10 Hz over one message; do not tune it against 27
     // samples. local-lab/PORTRAIT-COMPASS-FIT-2026-07-26.md section 6.
-    private static int PortraitPoseIndex(Level100MessagePlaybackState playback)
+    private static int PortraitPoseIndex(
+        Level100MessageScheduleEntry entry,
+        int missionTick)
     {
-        if (!playback.Playing || !playback.ActiveMessageId.HasValue)
-        {
-            return 3;
-        }
-
-        int frame = Math.Max(0, (int)Math.Floor(playback.PositionSeconds / 0.05d));
+        // The 20 Hz frame index WITHIN the message. Unchanged in law from the
+        // version that read it off the audio stream position - the zero point
+        // is the same (a message's audio starts at position 0) - but now driven
+        // by the Core tick, so two runs of the same commit agree.
+        int frame = Math.Max(
+            0,
+            (int)Math.Floor(entry.ElapsedSecondsAt(missionTick) / 0.05d));
         uint value = unchecked(
-            ((uint)playback.ActiveMessageId.Value * 0x9E3779B9u) ^
+            ((uint)entry.Delivery.MessageId * 0x9E3779B9u) ^
             ((uint)frame * 0x85EBCA6Bu));
         value ^= value >> 16;
         int weighted = (int)(value % 100u);
@@ -205,16 +220,20 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// therefore measured; this phase index is a deterministic stand-in for a
     /// process-global timer phase that is not recoverable.
     /// </summary>
-    private static int MessageNoisePhaseIndex(Level100MessagePlaybackState playback)
+    private static int MessageNoisePhaseIndex(
+        Level100MessageScheduleEntry? scheduled,
+        int missionTick)
     {
-        if (!playback.Playing || !playback.ActiveMessageId.HasValue)
+        if (scheduled is not Level100MessageScheduleEntry entry)
         {
             return 0;
         }
 
-        int frame = Math.Max(0, (int)Math.Floor(playback.PositionSeconds / 0.05d));
+        int frame = Math.Max(
+            0,
+            (int)Math.Floor(entry.ElapsedSecondsAt(missionTick) / 0.05d));
         uint value = unchecked(
-            ((uint)playback.ActiveMessageId.Value * 0xC2B2AE35u) ^
+            ((uint)entry.Delivery.MessageId * 0xC2B2AE35u) ^
             ((uint)frame * 0x27D4EB2Fu));
         value ^= value >> 15;
         return (int)(value % MessageNoisePhaseCount);

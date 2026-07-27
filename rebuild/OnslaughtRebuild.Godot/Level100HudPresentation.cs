@@ -266,15 +266,18 @@ public sealed class Level100HudPresentationState
                 actor.Pose.PositionMillimeters))
             .ToArray();
 
-        Level100HudMessageDeliverySnapshot? activeDelivery =
-            playback.ActiveSpeakerId is int activeSpeakerId &&
-            playback.ActiveMessageId is int activeMessageId
-                ? _deliveredMessages.LastOrDefault(
-                    delivery =>
-                        (int)delivery.Speaker == activeSpeakerId &&
-                        delivery.MessageId == activeMessageId)
-                : null;
         Level100MissionSnapshot mission = snapshot.Level100Mission;
+        // The active message is resolved from Core's OWN tick, not from the
+        // audio mixer. `playback` is retained on the signature because the
+        // audio adapter is still the sole playback owner and callers pass it,
+        // but it is deliberately NOT consulted here: see the header of
+        // Level100MessageSchedule for the 21-25 % cross-run self-noise this
+        // caused and the measurement that identified it.
+        _ = playback;
+        Level100HudMessageDeliverySnapshot? activeDelivery =
+            Level100MessageSchedule
+                .ActiveAt(_deliveredMessages, mission.Tick)
+                ?.Delivery;
         bool pulseEnabled =
             mission.PulseCannonAvailability == Level100MissionWeaponAvailability.Enabled;
         bool vulcanEnabled =

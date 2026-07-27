@@ -52,8 +52,25 @@ public sealed class Level100HudPresentationTests
                 (message.Tick, message.SpeakerId, message.MessageId)),
             hud.DeliveredMessages.Select(message =>
                 (message.Tick, (int)message.Speaker, message.MessageId)));
-        Assert.Equal(playing.MessageId, hud.ActiveMessage?.MessageId);
-        Assert.Equal(playing.SpeakerId, (int?)hud.ActiveMessage?.Speaker);
+
+        // The active message is the one the CORE TICK schedule puts on screen,
+        // not the one the mixer happens to be playing and not simply the most
+        // recently requested. Retail queues: a message requested while another
+        // is still speaking waits its turn, so at this tick the on-screen
+        // message is an EARLIER member of the delivered list than
+        // requestedMessages[^1]. Pinning it to the last request would have
+        // pinned a behaviour the released game does not have.
+        int missionTick = session.CurrentSnapshot.Level100Mission.Tick;
+        Level100MessageScheduleEntry? scheduled =
+            Level100MessageSchedule.ActiveAt(hud.DeliveredMessages, missionTick);
+        Assert.NotNull(scheduled);
+        Level100MessageScheduleEntry expected = scheduled!.Value;
+        Assert.Equal(expected.Delivery.MessageId, hud.ActiveMessage?.MessageId);
+        Assert.Contains(
+            hud.DeliveredMessages,
+            delivery => delivery.MessageId == hud.ActiveMessage?.MessageId);
+        Assert.True(expected.StartTick <= missionTick);
+        Assert.True(missionTick < expected.StartTick + expected.DurationTicks);
 
         Level100ActorSnapshot[] canonicalObjectives =
             session.CurrentSnapshot.Level100Actors.Actors
@@ -103,7 +120,7 @@ public sealed class Level100HudPresentationTests
     }
 
     [Fact]
-    public void ProjectionPreservesRepeatedHelpAndRequiresPlaybackSpeakerIdentity()
+    public void ProjectionPreservesRepeatedHelpAndIgnoresPlaybackIdentity()
     {
         var session = new InteractiveSession(
             Seed,
@@ -126,24 +143,53 @@ public sealed class Level100HudPresentationTests
                 (int)Level100HudHelpPrompt.Fire),
         ]);
 
-        Level100HudSnapshot hud = presentation.Project(
-            initial.CurrentSnapshot,
-            new Level100MessagePlaybackState(
+        // Every one of these is a state the audio mixer could be in at this
+        // tick, including one naming the WRONG speaker for this message and one
+        // naming no message at all. None of them may change what the HUD shows:
+        // the active message is a function of the Core tick alone. The previous
+        // contract - "the active message is whatever playback names, matched by
+        // speaker identity" - is what made the message panel and the
+        // portrait/compass region disagree by 21-25 % material between two
+        // captures of the SAME commit, because playback.PositionSeconds is the
+        // audio mixer's wall clock and a capture's frames are keyed on Core
+        // ticks. See Level100MessageSchedule.
+        Level100MessagePlaybackState[] mixerStates =
+        [
+            default,
+            new(
                 ActiveSpeakerId: (int)Level100HudSpeaker.Kramer,
                 ActiveMessageId: message.MessageId,
                 PositionSeconds: 0d,
                 LengthSeconds: 1d,
                 Playing: true,
-                Paused: false));
+                Paused: false),
+            new(
+                ActiveSpeakerId: message.SpeakerId,
+                ActiveMessageId: message.MessageId,
+                PositionSeconds: 0.75d,
+                LengthSeconds: 1d,
+                Playing: true,
+                Paused: true),
+        ];
 
-        Assert.Equal(
-            [
-                Level100HudHelpPrompt.Fire,
-                Level100HudHelpPrompt.Transform,
-                Level100HudHelpPrompt.Fire,
-            ],
-            hud.DeliveredHelp);
-        Assert.Null(hud.ActiveMessage);
+        foreach (Level100MessagePlaybackState mixer in mixerStates)
+        {
+            Level100HudSnapshot hud = presentation.Project(
+                initial.CurrentSnapshot,
+                mixer);
+
+            Assert.Equal(
+                [
+                    Level100HudHelpPrompt.Fire,
+                    Level100HudHelpPrompt.Transform,
+                    Level100HudHelpPrompt.Fire,
+                ],
+                hud.DeliveredHelp);
+            // Tick 0 is inside this message's own playback window, so it is on
+            // screen regardless of what the mixer says.
+            Assert.Equal(message.MessageId, hud.ActiveMessage?.MessageId);
+            Assert.Equal(message.SpeakerId, (int?)hud.ActiveMessage?.Speaker);
+        }
     }
 
     // The First Flight smoke used to pin level100PlayingMessageId, a value read
