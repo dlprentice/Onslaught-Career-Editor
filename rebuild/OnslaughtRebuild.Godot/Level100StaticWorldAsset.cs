@@ -102,6 +102,13 @@ internal sealed partial class Level100StaticWorldAsset
     public static Level100ActorDefinitionSet LoadActorDefinitions() =>
         Level100ActorDefinitionManifest.Decode(LoadManifestBytes());
 
+    /// <summary>
+    /// The authored WRES allegiance of each base-world object, for the released
+    /// scanner's colour partition. Presentation input; it never reaches Core.
+    /// </summary>
+    public static IReadOnlyDictionary<string, int> LoadAuthoredAllegiance() =>
+        Level100ActorDefinitionManifest.DecodeAuthoredAllegiance(LoadManifestBytes());
+
     public static Level100StaticWorldAsset Load(Level100HeightFieldAsset terrain)
     {
         Manifest manifest = LoadManifest();

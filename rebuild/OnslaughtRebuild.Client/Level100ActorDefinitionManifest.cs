@@ -23,7 +23,45 @@ public static class Level100ActorDefinitionManifest
         "E1FB3DEDBEB29B4B4151DA2C8CBBDC940B716B1A2321E1D6A9BA1542C74ADA14";
     private const int MaximumManifestBytes = 512_000;
 
+    /// <summary>
+    /// The authored WRES <c>allegiance</c> int32 of each of the 33 base-world
+    /// objects, keyed by the same <c>wres:bswd:NNNN</c> identity the actor
+    /// definitions carry. This is presentation input for the released scanner's
+    /// colour partition; it is deliberately NOT folded into
+    /// <see cref="Level100ActorDefinitionSet"/>, so no Core state and no state
+    /// hash moves. The manifest is the same hash-pinned file
+    /// <see cref="Decode"/> validates.
+    ///
+    /// <para>The 11 level-world actors (Player 1, the Firing Range group, the
+    /// Transporter and the Air Trainer) have no allegiance in schema v13, so
+    /// they are absent from this map and the caller falls back.</para>
+    /// </summary>
+    public static IReadOnlyDictionary<string, int> DecodeAuthoredAllegiance(
+        ReadOnlySpan<byte> manifestBytes)
+    {
+        Manifest manifest = ReadValidatedManifest(manifestBytes);
+        var allegiance = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (WorldObject worldObject in manifest.Objects)
+        {
+            allegiance[$"wres:bswd:{worldObject.Ordinal:D4}"] = worldObject.Allegiance;
+        }
+
+        if (allegiance.Count != manifest.VisibleObjectCount)
+        {
+            throw new InvalidDataException(
+                "The Level 100 base-world object ordinals are not unique.");
+        }
+
+        return allegiance;
+    }
+
     public static Level100ActorDefinitionSet Decode(ReadOnlySpan<byte> manifestBytes)
+    {
+        Manifest manifest = ReadValidatedManifest(manifestBytes);
+        return Decode(manifest);
+    }
+
+    private static Manifest ReadValidatedManifest(ReadOnlySpan<byte> manifestBytes)
     {
         if (manifestBytes.Length is < 1 or > MaximumManifestBytes ||
             !StringComparer.Ordinal.Equals(
@@ -58,6 +96,11 @@ public static class Level100ActorDefinitionManifest
                 "The Level 100 actor-definition identity or authored counts changed.");
         }
 
+        return manifest;
+    }
+
+    private static Level100ActorDefinitionSet Decode(Manifest manifest)
+    {
         var actors = new Level100ActorDefinition[manifest.ActorDefinitions.Length];
         for (int index = 0; index < actors.Length; index++)
         {
@@ -259,6 +302,13 @@ public static class Level100ActorDefinitionManifest
         public MotionDefinition[] MotionDefinitions { get; init; } = [];
         public SpawnDefinition[] SpawnDefinitions { get; init; } = [];
         public WaypointPath[] WaypointPaths { get; init; } = [];
+        public WorldObject[] Objects { get; init; } = [];
+    }
+
+    private sealed record WorldObject
+    {
+        public int Ordinal { get; init; }
+        public int Allegiance { get; init; }
     }
 
     private sealed record MotionDefinition

@@ -90,7 +90,26 @@ public sealed class Level100HudPresentationTests
             canonicalObjectives.Select(actor => actor.Name),
             hud.Objectives.Select(objective => objective.ThingName));
 
-        Assert.Empty(hud.Contacts);
+        // Contacts are now projected from the live registry. The player's own
+        // Battle Engine and the trigger volumes are excluded because neither is
+        // a member of retail's unit list at DAT_008550d0; every remaining
+        // active, undestroyed actor is a contact.
+        Assert.NotEmpty(hud.Contacts);
+        Assert.DoesNotContain(
+            hud.Contacts,
+            contact => contact.Id == session.CurrentSnapshot.Level100Actors.Actors
+                .Single(actor => StringComparer.Ordinal.Equals(actor.Name, "Player 1"))
+                .ActorId.Value);
+        Assert.Equal(
+            session.CurrentSnapshot.Level100Actors.Actors
+                .Where(actor =>
+                    actor.Active &&
+                    actor.Lifecycle != Level100ActorLifecycle.Destroyed &&
+                    !actor.Trigger.HasValue &&
+                    !StringComparer.Ordinal.Equals(actor.Name, "Player 1"))
+                .Select(actor => actor.ActorId.Value),
+            hud.Contacts.Select(contact => contact.Id));
+
         Assert.Empty(hud.Threats);
         Assert.Empty(hud.DamageFlashes);
         Assert.Null(hud.Target);

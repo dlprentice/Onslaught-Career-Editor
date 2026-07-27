@@ -25,7 +25,6 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private const float DesignWidth = 640f;
     private const float DesignHeight = 480f;
 
-    private const float RadarRadius = 46f;
     private const float ScannerNorthRadius = 45f;
     private const float CompassThreatRadius = 111.5f;
     private const float CompassDamageRadius = 96f;
@@ -58,7 +57,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     private HudAssets _assets = null!;
     private Level100HudAssetCatalog _catalog = null!;
-    private readonly Level100HudPresentationState _presentation = new();
+    // Replaced in Initialize with the authored-allegiance variant. Initialize
+    // runs immediately after construction and before the first
+    // ConsumeMissionEvents / UpdateFromSnapshot (FirstFlightGame.cs:643-646),
+    // so no delivered state is lost by the swap.
+    private Level100HudPresentationState _presentation = new();
     private int[] _level100DeliveredMessageIds = [];
     private RetailHudBaseLayer _baseLayer = null!;
     private RetailHudGlowLayer _glowLayer = null!;
@@ -98,6 +101,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
     {
         ArgumentNullException.ThrowIfNull(catalog);
         _catalog = catalog;
+        _presentation = new Level100HudPresentationState(
+            Level100StaticWorldAsset.LoadAuthoredAllegiance());
         _assets = LoadAssets();
         _baseLayer = new RetailHudBaseLayer(_assets);
         AddFullScreenControl(_baseLayer);
@@ -580,38 +585,22 @@ public sealed partial class FirstFlightHud : CanvasLayer
         (argb & 0xff) / 255f,
         ((argb >> 24) & 0xff) / 255f);
 
-    private static Color ContactColor(Level100HudContactSnapshot contact)
-    {
-        if (contact.IsObjective)
-        {
-            return new Color(1f, 0.92f, 0.08f, 1f);
-        }
-
-        return contact.Allegiance switch
-        {
-            Level100HudAllegiance.Friendly => new Color(0.25f, 0.48f, 1f, 1f),
-            Level100HudAllegiance.Enemy => new Color(1f, 0.10f, 0.10f, 1f),
-            _ => new Color(0.75f, 0.75f, 0.75f, 1f),
-        };
-    }
-
-    private static Vector2 ProjectRadarOffset(WorldSnapshot snapshot, SimVector2 position)
-    {
-        float deltaX = (position.X - snapshot.PlayerPosition.X) / 1_000f;
-        float deltaZ = (position.Z - snapshot.PlayerPosition.Z) / 1_000f;
-        float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
-        float sin = Mathf.Sin(yaw);
-        float cos = Mathf.Cos(yaw);
-        var offset = new Vector2(
-            (deltaX * cos) + (deltaZ * sin),
-            (deltaX * sin) - (deltaZ * cos));
-        float distance = offset.Length();
-        if (distance > RadarRadius)
-        {
-            offset *= RadarRadius / distance;
-        }
-        return offset;
-    }
+    /// <summary>
+    /// The released scanner tint. These are the decoded packed constants from
+    /// the three draw loops of <c>CHud__RenderTacticalRadarContacts</c>
+    /// (0x00484c50) - 0x5050AF friendly, 0xAF0808 enemy, 0x606060 otherwise -
+    /// with the projection's fade alpha in the top byte.
+    ///
+    /// <para>The previous hand-picked colours and the yellow objective override
+    /// were both wrong: retail's objective bucket (the <c>unit+0x1f4</c> set)
+    /// selects from the SAME three allegiance tints, and retail's friendly blob
+    /// pixels on <c>hud-timeline-run1/level100-t025065ms.png</c> are literally
+    /// (80, 80, 174) = 0x5050AE, not (64, 122, 255).</para>
+    /// </summary>
+    private static Color ContactColor(Level100HudContactSnapshot contact, int alpha) =>
+        RetailColor(
+            ((uint)Math.Clamp(alpha, 0, 255) << 24) |
+            (uint)Level100ScannerProjection.TintRgb(contact.Allegiance));
 
     private static float RelativeYaw(WorldSnapshot snapshot, SimVector2 position)
     {
@@ -1032,17 +1021,33 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawWeaponResource(snapshot, hud, weaponRect);
             DrawWeaponIcon(hud.Weapon, weaponRect);
 
-            Vector2 radarCenter = new(69f, DesignHeight - 64f);
+            // Recovered scanner centre: 0x005dbb70 (69) - 1 in x, and
+            // (480 - 44 [0x005dbe74]) - 20 [0x005d857c] + 1 in y. Retail's
+            // sprite helper anchors mode 4, i.e. the CENTRE of the quad, so
+            // this is the centre of a 16x16 blob.
+            var radarCenter = new Vector2(
+                Level100ScannerProjection.CentreX,
+                Level100ScannerProjection.CentreY);
+            float yawRadians = snapshot.FacingYawMicroRad / 1_000_000f;
             foreach (Level100HudContactSnapshot contact in hud.Contacts
                          .Where(contact => contact.OnScanner))
             {
-                Vector2 offset = ProjectRadarOffset(snapshot, contact.Position);
+                Level100ScannerPlacement placement = Level100ScannerProjection.Place(
+                    (contact.Position.X - snapshot.PlayerPosition.X) / 1_000f,
+                    (contact.Position.Z - snapshot.PlayerPosition.Z) / 1_000f,
+                    yawRadians);
+                if (!placement.Drawn)
+                {
+                    continue;
+                }
+
+                var offset = new Vector2(placement.OffsetX, placement.OffsetY);
                 int textureIndex = Math.Clamp((int)contact.Size, 0, assets.ScannerBlobs.Length - 1);
                 DrawTextureRect(
                     assets.ScannerBlobs[textureIndex],
                     new Rect2(radarCenter + offset - new Vector2(8f, 8f), new Vector2(16f, 16f)),
                     false,
-                    ContactColor(contact));
+                    ContactColor(contact, placement.Alpha));
             }
 
             float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
@@ -1365,7 +1370,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Texture2D classification = contact?.Allegiance == Level100HudAllegiance.Friendly
                 ? assets.CrosshairFriend
                 : assets.CrosshairEnemy;
-            Color classificationTint = contact is null ? Colors.White : ContactColor(contact);
+            Color classificationTint =
+                contact is null ? Colors.White : ContactColor(contact, 255);
             DrawTextureRect(
                 classification,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
