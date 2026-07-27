@@ -20,16 +20,11 @@ highest-stakes rules early and does not restate or override it.
   from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation
   is local.
-- Checking a substantive decision against two independent model families is
-  **recommended, and a matter of judgement** — see
-  [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md) for the invocations and why
-  their output is data rather than authority. It has repeatedly caught real
-  errors, so reach for it on load-bearing or contested calls; it is not owed on
-  every routine one. The tiers are settled: **`gpt-5.6-sol` and `grok-4.5`, both
-  at `high`** — higher tiers were measured and do not return in a usable window,
-  lower ones answer wrongly. Do not raise them. What remains **mandatory**
-  whenever a consult IS run is the `-s read-only` sandbox, which is a safety rule
-  about what a consult may do, not a rule about when to run one.
+- Cross-model consults are **recommended on load-bearing or contested calls, not
+  owed on routine ones**, and run **from the main loop only** — never from a
+  subagent. Settings are settled and must not be raised: `gpt-5.6-sol` and
+  `grok-4.5`, both at `high`, always with `-s read-only`. Their output is data,
+  not authority. See [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md).
 
 ## Orientation
 

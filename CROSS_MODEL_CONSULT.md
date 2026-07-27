@@ -39,18 +39,17 @@ exceeds the tool's 600 s ceiling, so it cannot be run in the foreground at all.
 
 **Do not use `xhigh`, `max`, `ultra`, `minimal`, `low`, or `none`.**
 
-- `max` did not return at all on a real question: 35+ minutes producing nothing
-  past the stdin preamble, from the main loop, on a prompt `high` finished in ten.
-  It answers a trivial prompt in 12 s, so it is reachable — it just does not
-  converge on work. OpenAI's model guidance describes a **pro reasoning mode**
-  for GPT-5.6 that "can tolerate higher latency"; if `max` routes there, this is
-  structural slowness rather than a defect, and no amount of waiting fixes the
-  economics.
+- `max` **works, and is simply very slow**: a 16-agent round ran it and 14 of 16
+  completed, taking **33 to 95 minutes**. An earlier revision of this file called
+  it "non-returning" on the strength of a 35-minute wait — that was wrong, it
+  simply had not finished. OpenAI's model guidance describes a **pro reasoning
+  mode** for GPT-5.6 that "can tolerate higher latency". Rejected on cost against
+  `high`'s ~600 s for the same verdict, not on capability.
 - `ultra` is **undocumented for this model** and unverified. It is accepted on a
   trivial prompt (7 s), but an unrecognised value can be silently ignored or
-  coerced, and its full-prompt run stalled exactly like `max`. An earlier
-  revision of this file called it "reachable" on the strength of the trivial
-  probe; that was over-claiming from a weak test.
+  coerced, and its full-prompt run had produced nothing after 11 minutes. An
+  earlier revision called it "reachable" on the strength of the trivial probe;
+  that was over-claiming from a weak test.
 - `minimal` is rejected outright with `invalid_request_error` in 11 s.
 - `low` is the dangerous one. It **returns fast and answers wrongly**: on a test
   question with a known answer it concluded from *call order* that one function
@@ -92,24 +91,13 @@ falls back to a much slower JS runtime.
 
 ## Hygiene, for the main-loop runs themselves
 
-A 16-agent consult round on 2026-07-26 found a failure mode **worse than any
-timeout**: *a consult that returns fluent, on-format, correct-looking output
-answering **somebody else's question**.* At least 7 of 16 hit it. It reads as
-agreement, so it is strictly worse than silent failure. Four causes, all
-reproduced:
+Serialising removes three of the four causes above, but **context compaction can
+still substitute the question** even in a single-tenant run: the model keeps
+reasoning, on whatever it happens to be reading, and produces a completely wrong
+consult with no visible symptom. Also append `< /dev/null` to every `codex exec`
+regardless, so it cannot inherit a prompt from stdin.
 
-- **Codex inherits stdin and answers whatever prompt is on it.** Always append
-  `< /dev/null` to every `codex exec`.
-- **Filename collisions.** Concurrent agents wrote the same `codex_out.txt` /
-  `grok_out.txt` and clobbered each other. Give every consult a unique output
-  path in its own subdirectory.
-- **Grok multiplexes concurrent sessions** through `~/.grok/leader.sock`. Use
-  `--prompt-file`, a fresh `--session-id`, and a private `--leader-socket`.
-- **Context compaction silently substitutes the question.** The model keeps
-  reasoning — on whatever it was *reading*. This is the one that produces a
-  completely wrong consult with no visible symptom.
-
-Two defences follow, and neither is optional for a load-bearing consult:
+Two defences, neither optional for a load-bearing consult:
 
 1. **Require an identity sentinel.** Put a unique token in the prompt and require
    it echoed in the answer. If it is missing, discard the result — do not read it.
@@ -220,41 +208,19 @@ measurement showing it both finishes and investigates properly** — `medium` al
 finishes and is correct but shallower, and `xhigh` never returned inside a usable
 window. That is the whole reason `high` is the default.
 
-## From a subagent, background-and-poll is mandatory
+## Why main-loop-only, in one paragraph
 
-**The Windows sandbox refuses codex's shell in subagent shells unconditionally,
-at every effort level.** Measured: at `high` from a subagent, both `pwsh` spawn
-attempts failed with `CreateProcessAsUserW failed: 5` within ten seconds — the
-same error seen at `max`. The difference is not the tier, it is **recovery**:
-codex announced a switch to the read-only JS runtime and completed the whole
-audit through 73 `node_repl/js` calls, one file operation at a time, reaching the
-same correct verdict as the main loop.
-
-The cost of that fallback is time: **1008 s versus ~600 s for the identical
-prompt from the main loop.** That exceeds the tool's 600 s ceiling, so **a
-foreground call from a subagent cannot complete a real consult regardless of the
-timeout requested.** Background and poll, or hand the consult to the main loop.
-
-**There is a second, independent failure mode, and it is not the timeout.**
-`CreateProcessAsUserW failed: 5` also occurs in **subagent shells** on runs that
-are nowhere near any timeout — one ran for over an hour, had its shell refused,
-fell back to an MCP JS runtime for hundreds of steps, and never converged. It was
-briefly recorded here as merely a symptom of the timeout; that reading is
-**withdrawn**. `codex doctor` reports the installation healthy (16 ok, 0 fail),
-so this is specific to the environment a subagent's shell runs in, not to the
-install.
-
-Practical consequence: **a subagent's Codex consult can fail for reasons it
-cannot fix.** When it does, the subagent should say so plainly and the *main
-loop* should run that consult instead — from the main loop it works reliably,
-and that route has produced full `max`-effort results repeatedly. Do not let a
-subagent quietly proceed on Grok alone.
-
-Do not "fix" this by disabling the
-sandbox — `--dangerously-bypass-approvals-and-sandbox` (`--yolo`) removes the one
-guard that stops Codex writing to the repository while other agents are editing
-it, and does not address the cause. Grok appears more reliable here only because
-it answers in seconds; that is a latency difference, not a quality one.
+The Windows sandbox refuses codex's shell inside a subagent **unconditionally, at
+every effort level** — `CreateProcessAsUserW failed: 5` within ten seconds. Codex
+recovers by falling back to a read-only JS runtime and does reach the same
+correct verdict, but it costs **1008 s against ~600 s from the main loop**, which
+exceeds the tool's 600 s ceiling and so cannot complete in the foreground at all.
+That is a known, still-open Codex bug on Windows (openai/codex #26803, #22880,
+#25436, #26896), not our configuration; `codex doctor` reports the install
+healthy. Never work around it with
+`--dangerously-bypass-approvals-and-sandbox` / `--yolo`: that removes the guard
+stopping Codex writing to the repository while other agents hold uncommitted
+work, and does not address the cause.
 
 **Codex must be launched from inside the repository.** Running `codex exec` from
 a scratchpad directory fails with `Not inside a trusted directory` — the trust
