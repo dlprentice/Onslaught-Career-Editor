@@ -1191,8 +1191,20 @@ public sealed class InteractiveSessionTests
         // returns this hash to c3ae5a39... exactly, so the seating accounts for
         // the whole move and the Twin Vulcan Cannon added in the same change
         // contributes nothing to this scenario.
+        //
+        // MOVED AGAIN 2026-07-27 by the MaximumHull unit correction, 1_000 ->
+        // 20_000. StateHasher hashes raw Hull, so a units change to the player's
+        // health necessarily moves this hash and its move here is expected
+        // rather than suspicious.
+        //
+        // Measured causally the same way: reverting ONLY MaximumHull to 1_000
+        // and rebuilding returns this assertion to ab1e5844... exactly, so the
+        // hull unit accounts for the whole move and nothing else changed
+        // behaviour. No damage number, threshold or trajectory moved - the
+        // conversion in Level100ActorWeapons.HullDamageFromFloatBits divides by
+        // MaximumHull, so hits-to-kill are identical on both sides.
         Assert.Equal(
-            "ab1e584478222d1d9fc5ece89496db5e3edb4ed03913ea4847aff2e3bcb7ada8",
+            "fb2219b6f39e768ad68facf648c1697d8de955b46316b991e54726277c6c4927",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

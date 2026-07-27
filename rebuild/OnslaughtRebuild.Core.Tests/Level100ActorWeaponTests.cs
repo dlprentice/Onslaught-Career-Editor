@@ -175,16 +175,32 @@ public sealed class Level100ActorWeaponTests
     /// (<c>Small Energy Hit</c>) that carries no <c>CExplosionDamage</c>;
     /// released Forseti Missile damage is <c>CRoundDamage</c> 2.0 plus the 0.5
     /// <c>CExplosionDamage</c> its <c>Micro Missile Hit</c> inherits from
-    /// <c>Small Explosion Base</c>. Both convert at
-    /// <c>MaximumHull / mLife</c> = 1000/20 = 50 hull per released point.
+    /// <c>Small Explosion Base</c>.
+    ///
+    /// <para>The expectation is stated in RELEASED POINTS (permille of a life
+    /// unit) and converted here, rather than as a hull literal. It used to be
+    /// the literals 10 and 125, which silently encoded <c>MaximumHull</c> = 1,000
+    /// - a value that declared the Aquila to be 1.0 released life against a
+    /// shipped <c>mLife</c> of 20.0. When that unit defect was corrected these
+    /// were the only two assertions that moved, precisely because they were the
+    /// only ones that had baked the constant in. Deriving them means the next
+    /// scale correction cannot be absorbed by editing a number until it passes.</para>
     /// </summary>
     [Theory]
-    [InlineData(Level100ActorRoundKind.Blaster, 10)]
-    [InlineData(Level100ActorRoundKind.ForsetiMissile, 125)]
+    // Blaster: CRoundDamage 0.2, no CExplosionDamage -> 0.2 released points.
+    [InlineData(Level100ActorRoundKind.Blaster, 200)]
+    // Forseti: CRoundDamage 2.0 + inherited CExplosionDamage 0.5 -> 2.5 points.
+    [InlineData(Level100ActorRoundKind.ForsetiMissile, 2_500)]
     public void ActorRoundDamage_MatchesTheShippedRecords(
         Level100ActorRoundKind kind,
-        int expectedHullDamage)
+        int releasedDamageMilliPoints)
     {
+        // milli-points of released life -> registry milli-life. The registry's
+        // unit IS milli-life (see Level100TargetTankLife), so a released point
+        // is exactly 1,000 of them and this conversion is the identity on units.
+        int expectedHullDamage = releasedDamageMilliPoints *
+            SimulationConstants.MaximumHull /
+            (SimulationConstants.Level100PlayerReleasedLife * 1_000);
         Level100ActorDefinitionSet definitions =
             Level100TestActorDefinitions.Create();
         var registry = new Level100ActorRegistry(definitions);

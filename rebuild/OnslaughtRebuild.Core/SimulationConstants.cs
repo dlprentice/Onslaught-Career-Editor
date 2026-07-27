@@ -257,7 +257,42 @@ public static class SimulationConstants
     // every non-jet update. This alias preserves the public snapshot field
     // without inventing a second capacity or regeneration curve.
     public const int MaximumShield = MaximumEnergy;
-    public const int MaximumHull = 1_000;
+    // The Aquila Prototype's released mLife is 20.0, and the actor registry's
+    // Health field carries MILLI-LIFE - stated at Level100TargetTankLife above
+    // and obeyed by every actor there (Target Drone CUnitLife 1.0 -> 1_000,
+    // Air Trainer 3.0 -> 3_000, Target Tank 6.0 -> 6_000).
+    //
+    // The player is stored in THAT SAME FIELD: Simulation.cs writes
+    // `_level100Actors.SetHealth(_level100PlayerActorId, MaximumHull)`. So a
+    // MaximumHull of 1_000 declared the Aquila to be 1.0 released life while the
+    // shipped configuration says 20.0 - the registry contradicted itself, two
+    // hundred lines apart in this file.
+    //
+    // Released chain: BattleEngine.cpp:102 `mLife = mConfiguration->mLife`, and
+    // BattleEngine.cpp:2166 `mLife -= inAmount` subtracts damage in those same
+    // units. There is no separate player health unit in the released code; the
+    // player is on the identical scale as CUnitLife. Byte-confirmed in
+    // `battle engine configurations.dat`: record "Aquila Prototype", mLife at
+    // file offset 0x2D6, bits 0x41A00000 = 20.0f.
+    //
+    // NOT A LETHALITY BUG, and that is why it survived. Damage is converted
+    // through `MaximumHull / Level100PlayerReleasedLife`
+    // (Level100ActorWeapons.HullDamageFromFloatBits), so the constant cancels
+    // out of hits-to-kill: Blaster stayed 100 hits and Forseti 8 at either
+    // value. The error was pure unit, invisible to every ratio - including the
+    // LevelScript's sub-40% hull poll, which is why the Level 100 chain reached
+    // its abort branch at the correct moment throughout.
+    //
+    // It also unblocks two things that could not be written correctly before:
+    // retail absorbs into shields first at mShieldEfficiency 98.0, and its
+    // low-hull warning gate is the ABSOLUTE `mLife < 7.0f`
+    // (BattleEngine.cpp:1769) - neither is expressible against a hull whose unit
+    // is wrong by 20x.
+    //
+    // Archaeology: introduced at 3cc382e8 where MaximumEnergy, MaximumShield and
+    // MaximumHull were all placeholder 1_000. The first two were later corrected
+    // with byte provenance. This one was never revisited.
+    public const int MaximumHull = 20_000;
     // Morph itself does not spend energy, and jet-to-walker has no energy gate.
     public const int TransformEnergyThreshold = 1_000;
     // Two fresh copied-retail Level 100 runs held raw BattleEngine state 1
