@@ -2688,7 +2688,27 @@ public sealed class Simulation
         _fireCooldownTicksRemaining = 0;
         _twinVulcanReloadThirdMillisecondsRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
-        // A configured weapon starts ACTIVE. `CBattleEngineJetPart::
+        // A configured weapon starts ACTIVE.
+        //
+        // CORRECTION, recorded here because a commit message cannot be edited:
+        // 424483da argued this from the BINARY and said +0x9c "is exactly what
+        // the Enable (0x004fe2b0) and Disable (0x004fe310) list-walkers write".
+        // That call path is WRONG and was refuted on 2026-07-26. Those two are
+        // shared Unit-family virtuals over this+0x17C and are not the player's
+        // path at all; Battle Engine script calls route through 0x0040DC30 /
+        // 0x0040DC60 to the part-specific writers at 0x004127A0 / 0x00412830
+        // (jet) and 0x00414970 / 0x00414A40 (walker). So there are at least SIX
+        // direct writers, not two, plus configuration reset as a further
+        // semantic path. Do not cite that commit's addresses.
+        //
+        // The CONCLUSION survives untouched, because it rests on the source and
+        // the shipped scripts below rather than on that call path. But it is
+        // supported STATICALLY, not behaviourally: no copied-retail watchpoint
+        // on +0x9c from construction through beat 7 exists, and no capture shows
+        // a Mech Vulcan round fired with no prior script enable. Until one does,
+        // do not restate this as observed retail behaviour.
+        //
+        // `CBattleEngineJetPart::
         // ResetConfiguration` and `CBattleEngineWalkerPart::ResetConfiguration`
         // spawn one CWeapon per name in the configuration's weapon list, call
         // `weapon->Init(init)` and append it; neither ever calls
