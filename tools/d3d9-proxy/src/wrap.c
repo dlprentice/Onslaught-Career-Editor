@@ -1438,6 +1438,13 @@ static HRESULT STDMETHODCALLTYPE WD_Present(IDirect3DDevice9 *This,
         bea_logf("P %u draws=%u\n", d->frame, d->draws);
         bea_log_flush();
     }
+    /* Grab BEFORE the real Present. With D3DSWAPEFFECT_DISCARD -- which is what
+     * this title creates its device with -- the back buffer's contents are
+     * undefined the moment Present returns, so a grab taken afterwards would be
+     * reading whatever the driver left behind rather than the frame the game
+     * composed. */
+    if (bea_shot_enabled)
+        bea_shot_present(d->real, d->frame);
     hr = d->real->lpVtbl->Present(d->real, src_rect, dst_rect,
                                   dst_window_override, dirty_region);
     d->frame++;
@@ -1457,8 +1464,17 @@ static HRESULT STDMETHODCALLTYPE WD_Reset(IDirect3DDevice9 *This,
                                           D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
     BeaDev *d = (BeaDev *)This;
-    HRESULT hr = d->real->lpVtbl->Reset(d->real, pPresentationParameters);
+    HRESULT hr;
+    /* Before, not after: the grab's resolve target is D3DPOOL_DEFAULT and the
+     * application must have released every such resource by now, or Reset fails
+     * with D3DERR_INVALIDCALL. An instrument must never be the reason a mode
+     * change breaks. */
+    if (bea_shot_enabled)
+        bea_shot_pre_reset();
+    hr = d->real->lpVtbl->Reset(d->real, pPresentationParameters);
     if (SUCCEEDED(hr)) {
+        if (bea_shot_enabled)
+            bea_shot_reset();
         bea_dev_invalidate_shadow(d, "device-reset");
         bea_dev_seed_defaults(d, pPresentationParameters);
         if (pPresentationParameters)

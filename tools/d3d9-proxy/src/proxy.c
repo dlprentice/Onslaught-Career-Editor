@@ -292,6 +292,16 @@ static BOOL CALLBACK bea_init_once(PINIT_ONCE once, PVOID param, PVOID *ctx)
         (int)bea_env_uint(L"BEA_D3D9_FAULT_NOCLEARBIND", 0);
 
     bea_open_log();
+
+    /* A back-buffer grab needs the device wrapped but needs no draw log, so it
+     * enables the proxy on its own. bea_logf is a no-op with no log file open,
+     * which is exactly what a shots-only run wants. */
+    bea_shot_init();
+    if (bea_shot_enabled) {
+        bea_enabled = 1;
+        bea_logf("# back-buffer grab armed\n");
+        bea_log_flush();
+    }
     return TRUE;
 }
 
@@ -354,6 +364,8 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
          * window or thread creation under the loader lock. */
         break;
     case DLL_PROCESS_DETACH:
+        if (bea_shot_enabled)
+            bea_shot_close();
         if (bea_fp) {
             bea_log_summary();
             bea_logf("# detach\n");

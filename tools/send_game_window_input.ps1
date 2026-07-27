@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$ProcessName = "BEA.exe",
     [int]$ProcessId = 0,
     [string]$HwndHex = "",
@@ -13,7 +13,25 @@ param(
     [string]$BackgroundWindowMessagesArm = "",
     [string]$TestOnlyInputResults = "",
     [string]$TestOnlyInputArm = "",
-    [switch]$PrintOnly
+    [switch]$PrintOnly,
+    # auto     - try to take the foreground, fall back to window messages (legacy)
+    # messages - NEVER touch the foreground. Post to the HWND only. Correct for
+    #            the cold frontend, which is message-driven, and the only mode
+    #            that cannot disturb whoever is at the machine.
+    # global   - require the foreground and use SendInput/keybd_event.
+    [ValidateSet("auto", "messages", "global")]
+    [string]$Transport = "auto",
+    # The frontend hit-tests against these process globals, NOT against the
+    # button message's lParam (0x0051B391-0x0051B3FB reads them). A posted
+    # WM_MOUSEMOVE is only useful if it reaches them, so the driver reads them
+    # back out of the target's memory and reports what it saw.
+    [long]$CursorGlobalA = 0x0089BDA8,
+    [long]$CursorGlobalB = 0x0089BDA4,
+    [switch]$VerifyCursorGlobals,
+    # Frontend mouse-message gate: set by InitMouse (0x0042D397), cleared by
+    # ReleaseMouse. Reported alongside the cursor globals so a run can say
+    # whether the message route was even live.
+    [long]$MouseGateAddress = 0x0089BDF0
 )
 
 $ErrorActionPreference = "Stop"
@@ -176,7 +194,7 @@ function Parse-InputSequence {
         $trimmed = $token.Trim()
         $parts = $trimmed -split ':', 2
         if ($parts.Count -ne 2) {
-            Write-Error ("Invalid action '{0}'. Use tap:KEY, down:KEY, up:KEY, wait:MS, or click:XxY." -f $trimmed)
+            Write-Error ("Invalid action '{0}'. Use tap:KEY, down:KEY, up:KEY, wait:MS, move:XxY, or click:XxY." -f $trimmed)
             exit 1
         }
 
@@ -197,10 +215,10 @@ function Parse-InputSequence {
             continue
         }
 
-        if ($kind -eq "click") {
+        if ($kind -eq "click" -or $kind -eq "move") {
             $clickMatch = [regex]::Match($value, '^(\d{1,4})[X,](\d{1,4})$')
             if (-not $clickMatch.Success) {
-                Write-Error "click action must be formatted as click:XxY with non-negative client coordinates."
+                Write-Error "$kind action must be formatted as ${kind}:XxY with non-negative client coordinates."
                 exit 1
             }
             $clientX = [int]$clickMatch.Groups[1].Value
@@ -210,7 +228,7 @@ function Parse-InputSequence {
                 exit 1
             }
             $actions.Add([PSCustomObject]@{
-                kind = "click"
+                kind = $kind
                 key = $null
                 virtualKey = $null
                 scanCode = $null
@@ -481,6 +499,76 @@ public static class GameWindowInputNative {
     [DllImport("user32.dll")]
     public static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr WindowFromPoint(POINT point);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetAncestor(IntPtr hWnd, uint gaFlags);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindow(IntPtr hWnd);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenProcess(uint access, bool inherit, int processId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool CloseHandle(IntPtr h);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool ReadProcessMemory(IntPtr h, IntPtr baseAddress,
+        byte[] buffer, int size, out IntPtr read);
+
+    // OCCLUSION PROBE -- the replacement for the foreground gate.
+    //
+    // Posted window messages do not need focus, so "is the target foreground"
+    // is the wrong question: it reports SUSPECT on every correct frame taken
+    // while the maintainer is using another window. What actually invalidates a
+    // capture is something DRAWN OVER the target. Five points (four corners
+    // inset by one pixel, plus the centre) are mapped to screen coordinates and
+    // WindowFromPoint is walked up to its root; a point that resolves to any
+    // root other than the target is covered.
+    //
+    // Returns a bitmask of the COVERED points, so 0 means fully visible. -1
+    // means the probe itself could not run.
+    public static int ProbeOcclusion(IntPtr hWnd) {
+        RECT rc;
+        if (!IsWindow(hWnd) || !GetClientRect(hWnd, out rc)) { return -1; }
+        int w = rc.Right - rc.Left, h = rc.Bottom - rc.Top;
+        if (w < 2 || h < 2) { return -1; }
+        int[,] pts = new int[5, 2] {
+            { 1, 1 }, { w - 2, 1 }, { 1, h - 2 }, { w - 2, h - 2 }, { w / 2, h / 2 }
+        };
+        int mask = 0;
+        for (int i = 0; i < 5; i++) {
+            POINT p = new POINT { X = pts[i, 0], Y = pts[i, 1] };
+            if (!ClientToScreen(hWnd, ref p)) { return -1; }
+            IntPtr hit = WindowFromPoint(p);
+            if (hit == IntPtr.Zero) { mask |= (1 << i); continue; }
+            IntPtr root = GetAncestor(hit, 2 /* GA_ROOT */);
+            if (root == IntPtr.Zero) { root = hit; }
+            if (root != hWnd) { mask |= (1 << i); }
+        }
+        return mask;
+    }
+
+    // Read four bytes of the target's own memory. Used to VERIFY that a posted
+    // WM_MOUSEMOVE actually landed in the cursor globals the frontend
+    // hit-tests against, rather than assuming it did.
+    public static byte[] ReadDword(int processId, long address) {
+        // PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
+        IntPtr h = OpenProcess(0x0010 | 0x0400, false, processId);
+        if (h == IntPtr.Zero) { return null; }
+        try {
+            byte[] buf = new byte[4];
+            IntPtr got;
+            if (!ReadProcessMemory(h, new IntPtr(address), buf, 4, out got)) { return null; }
+            if (got.ToInt64() != 4) { return null; }
+            return buf;
+        } finally {
+            CloseHandle(h);
+        }
+    }
+
     public static bool SendScanKey(ushort scanCode, bool keyUp, bool extended) {
         // BEA keyboard state is the LT KeyDown[vk] table filled by WM_KEYDOWN/UP
         // (see references/Onslaught/ltshell.cpp). Scan-only SendInput with wVk=0
@@ -620,7 +708,7 @@ function Ensure-HeldKeyTracked {
 
 function Resolve-TargetWindow {
     $targetProcessName = [System.IO.Path]::GetFileNameWithoutExtension($ProcessName).ToLowerInvariant()
-    $matches = New-Object System.Collections.Generic.List[object]
+    $windowMatches = New-Object System.Collections.Generic.List[object]
     $requestedHandle = [IntPtr]::Zero
     if (-not [string]::IsNullOrWhiteSpace($HwndHex)) {
         $handleText = $HwndHex.Trim()
@@ -687,7 +775,7 @@ function Resolve-TargetWindow {
             [void][GameWindowInputNative]::GetWindowText($hWnd, $title, $title.Capacity)
         }
 
-        $matches.Add([PSCustomObject]@{
+        $windowMatches.Add([PSCustomObject]@{
             processId = [int]$windowProcessId
             processName = "$($process.ProcessName).exe"
             title = $title.ToString()
@@ -701,12 +789,109 @@ function Resolve-TargetWindow {
     }
 
     [void][GameWindowInputNative]::EnumWindows($callback, [IntPtr]::Zero)
-    return $matches
+    return $windowMatches
 }
 
 function Test-ForegroundWindow {
     param([IntPtr]$Handle)
     return ([GameWindowInputNative]::GetForegroundWindow() -eq $Handle)
+}
+
+# --- keyboard lParam ---------------------------------------------------------
+#
+# THE DEFECT THIS FIXES, and it is a real source-versus-binary divergence:
+#
+#   The SHIPPED PCLTShell::MsgProc (0x00512E40) indexes KeyDown[] and
+#   KeyWasDown[] by the SCAN CODE taken out of lParam bits 16-23
+#   (0x00512E62-0x00512ECD), with +0x80 when the KF_EXTENDED bit is set. Every
+#   PostMessage in this script used to pass lParam = 0, so every posted key set
+#   KeyDown[0] and nothing else -- the messages arrived and did nothing.
+#
+#   The pinned GPL reference source writes KeyDown[wParam], indexed by the
+#   VIRTUAL KEY (references/Onslaught/ltshell.cpp:1025,1045). Anyone reading
+#   only the source would conclude lParam = 0 is harmless. It is not: the
+#   shipped binary is what decides released behaviour, and the two artefacts
+#   disagree here. TRACKED EXCEPTION -- do not "simplify" this back to the
+#   source's reading.
+function Get-KeyLParam {
+    param([object]$Action, [bool]$KeyUp)
+
+    $mapped = [GameWindowInputNative]::MapVirtualKey([uint32]$Action.virtualKey, 0) # MAPVK_VK_TO_VSC
+    $scan = if ($mapped -gt 0) { [uint32]$mapped } else { [uint32]$Action.scanCode }
+    $lp = [uint32]1                                  # repeat count
+    $lp = $lp -bor (($scan -band 0xFF) -shl 16)      # bits 16-23: scan code
+    if ([bool]$Action.extended) {
+        $lp = $lp -bor 0x01000000                    # bit 24: KF_EXTENDED
+    }
+    if ($KeyUp) {
+        $lp = $lp -bor 0xC0000000                    # bits 30/31: was down, going up
+    }
+    return [pscustomobject]@{
+        lParam = $lp
+        scanFromApi = $mapped
+        scanFromTable = [uint32]$Action.scanCode
+        # A disagreement is reported rather than silently resolved: the table is
+        # hand-written and the API is authoritative for the live layout.
+        scanAgrees = ($mapped -eq [uint32]$Action.scanCode)
+        # What the shipped MsgProc will actually index with.
+        keyDownIndex = ($scan -band 0xFF) + $(if ([bool]$Action.extended) { 0x80 } else { 0 })
+    }
+}
+
+function Get-MouseLParam {
+    param([int]$X, [int]$Y)
+    return [uint32]((($Y -band 0xFFFF) -shl 16) -bor ($X -band 0xFFFF))
+}
+
+# --- occlusion probe ---------------------------------------------------------
+#
+# Replaces the foreground gate for the message transport. Posted messages do not
+# need focus, so demanding it reported SUSPECT on every otherwise-correct frame.
+# What matters is whether anything is DRAWN OVER the client area.
+function Get-OcclusionState {
+    param([IntPtr]$Handle)
+
+    $mask = [GameWindowInputNative]::ProbeOcclusion($Handle)
+    $names = @("topLeft", "topRight", "bottomLeft", "bottomRight", "centre")
+    $covered = @()
+    if ($mask -gt 0) {
+        for ($i = 0; $i -lt 5; $i++) {
+            if ($mask -band (1 -shl $i)) { $covered += $names[$i] }
+        }
+    }
+    return [pscustomobject]@{
+        probed = ($mask -ge 0)
+        mask = $mask
+        unoccluded = ($mask -eq 0)
+        coveredPoints = @($covered)
+        foreground = (Test-ForegroundWindow -Handle $Handle)
+    }
+}
+
+# --- the game's own cursor state --------------------------------------------
+#
+# Verification, not decoration. The frontend hit-test reads these globals, so a
+# posted WM_MOUSEMOVE that does not change them cannot click anything. Their
+# TYPE is not established anywhere in this repository, so both readings are
+# reported and the caller decides which one tracked the posted coordinate.
+function Get-CursorGlobals {
+    param([int]$ProcessId)
+
+    function Read-One([long]$addr) {
+        $b = [GameWindowInputNative]::ReadDword($ProcessId, $addr)
+        if ($null -eq $b) { return $null }
+        return [pscustomobject]@{
+            address = ("0x{0:X8}" -f $addr)
+            hex = ("0x{0:X8}" -f [BitConverter]::ToUInt32($b, 0))
+            asInt32 = [BitConverter]::ToInt32($b, 0)
+            asFloat = [BitConverter]::ToSingle($b, 0)
+        }
+    }
+    return [pscustomobject]@{
+        a = Read-One $CursorGlobalA
+        b = Read-One $CursorGlobalB
+        mouseGate = Read-One $MouseGateAddress
+    }
 }
 
 function Set-TargetWindowForeground {
@@ -773,7 +958,17 @@ function Assert-TargetStillForeground {
     }
 }
 
-$matches = if ($testOnlyInputMode) {
+# The @(...) MUST be on the outside.
+#
+# `$x = if (c) { @($obj) } else { @($obj) }` does NOT give an array: the branch's
+# array is unrolled into the if-statement's output and a single element is
+# assigned as a SCALAR. `$windowMatches.Count` was then $null, which made the
+# status chain fall through to "ready" while `$windowMatches.Count -eq 1` was
+# false, so `$selected` was $null and the script posted NOTHING while reporting
+# a resolved window. Zero matches happened to behave correctly (unrolled to
+# $null, Count 0, "no-window"), which is why the defect only bit in the one case
+# that matters: exactly one BEA window.
+$windowMatches = @(if ($testOnlyInputMode) {
     @([PSCustomObject]@{
         processId = 0
         processName = "test-only.exe"
@@ -785,18 +980,33 @@ $matches = if ($testOnlyInputMode) {
         handle = [IntPtr]::Zero
     })
 } else {
-    @(Resolve-TargetWindow)
-}
+    Resolve-TargetWindow
+})
 
-$status = if ($matches.Count -eq 0) {
+$status = if ($windowMatches.Count -eq 0) {
     "no-window"
-} elseif ($matches.Count -gt 1) {
+} elseif ($windowMatches.Count -gt 1) {
     "multiple-candidates"
 } else {
     "ready"
 }
 
-$selected = if ($matches.Count -eq 1) { $matches[0] } else { $null }
+# The list above was called $matches until 2026-07-27. That is PowerShell's
+# AUTOMATIC $Matches hashtable: any regex operation replaces it, and indexing a
+# hashtable with [0] yields $null rather than an error. The script therefore
+# reported status "ready" with selectedWindow null and delivered nothing at all
+# -- a silent no-op, and the reason the background message mode looked broken.
+$selected = if ($windowMatches.Count -eq 1) { $windowMatches[0] } else { $null }
+# This assertion is the reason the defect above cannot come back silently: the
+# failure mode was a "successful" run that delivered nothing, which is the worst
+# kind for an instrument. Refuse loudly instead.
+if ($status -eq "ready" -and -not $selected) {
+    Write-Error ("Internal: window resolution reported 'ready' but produced no window object " +
+        "(count={0}, type={1}). See the note above about @() inside an if-expression." -f
+        $windowMatches.Count,
+        $(if ($null -eq $windowMatches) { 'null' } else { $windowMatches.GetType().FullName }))
+    exit 1
+}
 
 if ($PrintOnly -or $status -ne "ready") {
     [PSCustomObject]@{
@@ -830,13 +1040,36 @@ if ($PrintOnly -or $status -ne "ready") {
     exit 1
 }
 
-if (-not $testOnlyInputMode -and $selected.minimized) {
+if (-not $testOnlyInputMode -and $selected.minimized -and $Transport -ne "messages") {
     [void][GameWindowInputNative]::ShowWindow($selected.handle, 9)
     Start-Sleep -Milliseconds 120
 }
 
-$focused = if ($testOnlyInputMode) { $true } else { Set-TargetWindowForeground -Handle $selected.handle }
-$useWindowMessages = -not $focused
+if ($Transport -eq "messages") {
+    # Deliberately never asks for the foreground. This is the whole point of the
+    # transport: it runs unattended, repeats deterministically, and cannot take
+    # the keyboard away from whoever is at the machine.
+    $focused = $false
+    $useWindowMessages = $true
+} elseif ($testOnlyInputMode) {
+    $focused = $true
+    $useWindowMessages = $false
+} else {
+    $focused = Set-TargetWindowForeground -Handle $selected.handle
+    $useWindowMessages = -not $focused
+    if ($Transport -eq "global" -and -not $focused) {
+        Write-Error "Transport 'global' requires the foreground and Windows refused the handoff."
+        exit 1
+    }
+}
+
+$occlusionBefore = if ($testOnlyInputMode) { $null } else { Get-OcclusionState -Handle $selected.handle }
+$cursorGlobalsBefore = if ($testOnlyInputMode -or -not $VerifyCursorGlobals) {
+    $null
+} else {
+    Get-CursorGlobals -ProcessId $selected.processId
+}
+$cursorProbes = [System.Collections.Generic.List[object]]::new()
 
 if ($useWindowMessages -and (-not $AllowBackgroundWindowMessages -or $BackgroundWindowMessagesArm -ne $backgroundWindowMessageArmPhrase)) {
     [PSCustomObject]@{
@@ -886,12 +1119,14 @@ $WM_KEYDOWN = 0x0100
 $WM_KEYUP = 0x0101
 $WM_LBUTTONDOWN = 0x0201
 $WM_LBUTTONUP = 0x0202
+$WM_MOUSEMOVE = 0x0200
 $sent = 0
 $sendInputEventsSent = 0
 $scanKeybdEventsSent = 0
 $windowMessageEventsSent = 0
 $mouseEventsSent = 0
 $heldKeys = [System.Collections.Generic.List[object]]::new()
+$script:keyLParams = @{}
 $deliveryFailure = ""
 $releaseFailures = [System.Collections.Generic.List[string]]::new()
 $sendInputFailures = [System.Collections.Generic.List[object]]::new()
@@ -902,18 +1137,62 @@ foreach ($action in $actions) {
         continue
     }
 
-    if ($action.kind -eq "click") {
+    if ($action.kind -eq "move" -or $action.kind -eq "click") {
         [int]$clientX = [int]$action.x
         [int]$clientY = [int]$action.y
         if ($useWindowMessages) {
-            [uint32]$lParam = (($clientY -band 0xFFFF) -shl 16) -bor ($clientX -band 0xFFFF)
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_LBUTTONDOWN, [UIntPtr]::new(1), [UIntPtr]::new($lParam))) {
+            [uint32]$lParam = Get-MouseLParam -X $clientX -Y $clientY
+
+            # DEFECT FIXED HERE: the frontend hit-test does NOT read this
+            # message's lParam. It reads the cursor globals 0x89BDA8/0x89BDA4
+            # (0x0051B391-0x0051B3FB), which are updated by the WM_MOUSEMOVE
+            # handler. A bare WM_LBUTTONDOWN at a coordinate therefore clicks
+            # wherever the globals happen to point -- usually wherever the real
+            # pointer was left. Move first, let the game's message pump run,
+            # then press.
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_MOUSEMOVE, [UIntPtr]::Zero, [UIntPtr]::new($lParam))) {
                 $windowMessageEventsSent++
                 $mouseEventsSent++
             }
-            Start-Sleep -Milliseconds $StepDelayMs
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_LBUTTONUP, [UIntPtr]::Zero, [UIntPtr]::new($lParam))) {
-                $windowMessageEventsSent++
+            $settle = [Math]::Max($StepDelayMs, 80)
+            Start-Sleep -Milliseconds $settle
+
+            if ($VerifyCursorGlobals) {
+                $after = Get-CursorGlobals -ProcessId $selected.processId
+                $cursorProbes.Add([PSCustomObject]@{
+                    step = $action.kind
+                    postedClientX = $clientX
+                    postedClientY = $clientY
+                    globals = $after
+                    # Whether either global, under either reading, now equals a
+                    # posted coordinate. This is the measurement that says the
+                    # move took; it is reported, never assumed.
+                    matchedX = @($after.a, $after.b | Where-Object { $_ } | Where-Object {
+                        $_.asInt32 -eq $clientX -or [Math]::Abs($_.asFloat - $clientX) -lt 0.5
+                    } | ForEach-Object { $_.address })
+                    matchedY = @($after.a, $after.b | Where-Object { $_ } | Where-Object {
+                        $_.asInt32 -eq $clientY -or [Math]::Abs($_.asFloat - $clientY) -lt 0.5
+                    } | ForEach-Object { $_.address })
+                }) | Out-Null
+            }
+
+            if ($action.kind -eq "click") {
+                if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_LBUTTONDOWN, [UIntPtr]::new(1), [UIntPtr]::new($lParam))) {
+                    $windowMessageEventsSent++
+                    $mouseEventsSent++
+                }
+                Start-Sleep -Milliseconds $StepDelayMs
+                if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_LBUTTONUP, [UIntPtr]::Zero, [UIntPtr]::new($lParam))) {
+                    $windowMessageEventsSent++
+                    $mouseEventsSent++
+                }
+            }
+        } elseif ($action.kind -eq "move") {
+            Assert-TargetStillForeground -Handle $selected.handle
+            $pt = New-Object 'GameWindowInputNative+POINT'
+            $pt.X = $clientX; $pt.Y = $clientY
+            if ([GameWindowInputNative]::ClientToScreen($selected.handle, [ref]$pt)) {
+                [void][GameWindowInputNative]::SetCursorPos($pt.X, $pt.Y)
                 $mouseEventsSent++
             }
         } else {
@@ -934,9 +1213,13 @@ foreach ($action in $actions) {
     [byte]$vk = [byte]$action.virtualKey
     [uint16]$scanCode = [uint16]$action.scanCode
     [bool]$extended = [bool]$action.extended
+    $lpDown = Get-KeyLParam -Action $action -KeyUp $false
+    $lpUp = Get-KeyLParam -Action $action -KeyUp $true
+    $script:keyLParams[[string]$action.key] = $lpDown
+
     if ($action.kind -eq "tap" -or $action.kind -eq "down") {
         if ($useWindowMessages) {
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYDOWN, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYDOWN, [UIntPtr]::new([uint32]$vk), [UIntPtr]::new($lpDown.lParam))) {
                 $sent++
                 $windowMessageEventsSent++
             }
@@ -962,9 +1245,11 @@ foreach ($action in $actions) {
                 $sent++
                 $scanKeybdEventsSent++
             }
-            # Dual-path: also post WM_KEYDOWN so BEA's KeyDown[vk] table is set
+            # Dual-path: also post WM_KEYDOWN so BEA's KeyDown[] table is set
             # even when system SendInput does not deliver a usable WM to MsgProc.
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYDOWN, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+            # The lParam matters here for the same reason it matters in the
+            # message transport -- see Get-KeyLParam.
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYDOWN, [UIntPtr]::new([uint32]$vk), [UIntPtr]::new($lpDown.lParam))) {
                 $windowMessageEventsSent++
             }
             $heldKeys.Add([PSCustomObject]@{
@@ -979,7 +1264,7 @@ foreach ($action in $actions) {
     }
     if ($action.kind -eq "tap" -or $action.kind -eq "up") {
         if ($useWindowMessages) {
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYUP, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYUP, [UIntPtr]::new([uint32]$vk), [UIntPtr]::new($lpUp.lParam))) {
                 $sent++
                 $windowMessageEventsSent++
             }
@@ -1007,7 +1292,7 @@ foreach ($action in $actions) {
                 $sent++
                 $scanKeybdEventsSent++
             }
-            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYUP, [UIntPtr]::new([uint32]$vk), [UIntPtr]::Zero)) {
+            if ([GameWindowInputNative]::PostMessage($selected.handle, $WM_KEYUP, [UIntPtr]::new([uint32]$vk), [UIntPtr]::new($lpUp.lParam))) {
                 $windowMessageEventsSent++
             }
             if ($confirmedKeyUp) {
@@ -1093,8 +1378,30 @@ $resultPayload = [PSCustomObject]@{
     deliveryFailure = if ([string]::IsNullOrWhiteSpace($deliveryFailure)) { $null } else { $deliveryFailure }
     releaseFailures = @($releaseFailures)
     unconfirmedReleaseKeys = @($unconfirmedReleaseKeys)
+    transport = $Transport
     nativeInputLayout = $nativeInputLayout
     sendInputFailures = @($sendInputFailures)
+    # The occlusion probe REPLACES the foreground gate for the message
+    # transport. `unoccluded` true with `foreground` false is the normal, good
+    # case: posted messages need no focus, and the client area is fully visible.
+    occlusionBefore = $occlusionBefore
+    occlusionAfter = if ($testOnlyInputMode) { $null } else { Get-OcclusionState -Handle $selected.handle }
+    # Evidence that a posted WM_MOUSEMOVE reached the globals the frontend
+    # actually hit-tests against. Empty when -VerifyCursorGlobals was not passed.
+    cursorGlobalsBefore = $cursorGlobalsBefore
+    cursorProbes = @($cursorProbes)
+    # Every key's lParam, and the KeyDown[] index the SHIPPED MsgProc will use.
+    # keyDownIndex 0 for a non-zero key means the scan code did not make it in.
+    keyLParams = @($script:keyLParams.GetEnumerator() | ForEach-Object {
+        [PSCustomObject]@{
+            key = $_.Key
+            lParamHex = ("0x{0:X8}" -f $_.Value.lParam)
+            scanFromApi = $_.Value.scanFromApi
+            scanFromTable = $_.Value.scanFromTable
+            scanAgrees = $_.Value.scanAgrees
+            keyDownIndex = $_.Value.keyDownIndex
+        }
+    })
     testOnlySendCalls = if ($testOnlyInputMode) { @($script:testOnlySendCalls) } else { $null }
     actions = @($actions)
     selectedWindow = [PSCustomObject]@{

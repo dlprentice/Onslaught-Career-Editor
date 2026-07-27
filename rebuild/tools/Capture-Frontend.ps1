@@ -138,18 +138,59 @@ try {
     # the shipping build no matter what the operator meant, so it is forced to
     # 'probe'. That is exactly the case that fooled the water gate: the
     # macro-colour terrain probe was an uncommitted one-line shader edit.
+    #
+    # CLEANLINESS IS TRI-STATE AND FAILS CLOSED, because the two-state version
+    # lied. `git status --porcelain` outside a work tree prints nothing and exits
+    # non-zero, and the old code read that empty output as "no changes" - so a
+    # capture run from a `git archive` extraction of MODIFIED renderer source
+    # stamped itself `godotSourceDirty: False`. That happened on 2026-07-27 (task
+    # #135); see local-lab/godot-captures/t105-objmarker-*, whose manifests carry
+    # a null sourceCommit and a "clean" flag from a tree that had no .git at all.
+    # A flag that silently reads clean when it cannot tell is worse than no flag,
+    # so "cannot tell" is now its own value and is never treated as clean.
     $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
     $godotSource = Join-Path $repoRoot 'rebuild\OnslaughtRebuild.Godot'
-    $sourceCommit = (& git -C $repoRoot rev-parse HEAD 2>$null)
-    $dirtyEntries = @(& git -C $repoRoot status --porcelain -- $godotSource 2>$null |
-        Where-Object { $_ })
-    $sourceDirty = $dirtyEntries.Count -gt 0
+    $sourceCommit = $null
+    $sourceCleanliness = 'unknown'
+    $dirtyEntries = @()
+    try {
+        $insideWorkTree = (& git -C $repoRoot rev-parse --is-inside-work-tree 2>$null)
+        if ($LASTEXITCODE -eq 0 -and "$insideWorkTree".Trim() -eq 'true') {
+            $head = (& git -C $repoRoot rev-parse HEAD 2>$null)
+            if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($head)) {
+                $sourceCommit = "$head".Trim()
+            }
+            $status = @(& git -C $repoRoot status --porcelain -- $godotSource 2>$null |
+                Where-Object { $_ })
+            if ($LASTEXITCODE -eq 0) {
+                $dirtyEntries = $status
+                $sourceCleanliness = if ($dirtyEntries.Count -gt 0) { 'dirty' } else { 'clean' }
+            }
+        }
+    }
+    catch {
+        # git absent or unusable. That is precisely the case that must not read
+        # as clean.
+        $sourceCleanliness = 'unknown'
+    }
+
+    # Retained for readers that already consume it, and deliberately NOT a
+    # faithful "is dirty": it is "is not provably clean". Under the tri-state
+    # above, unknown reports $true here so an old consumer inherits the
+    # conservative answer rather than the silent pass. godotSourceCleanliness is
+    # the field that distinguishes the three cases.
+    $sourceDirty = $sourceCleanliness -ne 'clean'
 
     $effectivePurpose = $Purpose
     $downgradeReason = $null
-    if ($Purpose -eq 'production' -and $sourceDirty) {
+    if ($Purpose -eq 'production' -and $sourceCleanliness -ne 'clean') {
         $effectivePurpose = 'probe'
-        $downgradeReason = "rebuild/OnslaughtRebuild.Godot has $($dirtyEntries.Count) uncommitted change(s); a capture of modified renderer source is not the shipping build."
+        $downgradeReason = if ($sourceCleanliness -eq 'dirty') {
+            "rebuild/OnslaughtRebuild.Godot has $($dirtyEntries.Count) uncommitted change(s); a capture of modified renderer source is not the shipping build."
+        }
+        else {
+            "git could not determine whether rebuild/OnslaughtRebuild.Godot is clean at $repoRoot (no work tree, or git unavailable). Cleanliness is UNKNOWN, and a build whose source cannot be identified is not the shipping build."
+        }
         Write-Warning "Purpose downgraded to 'probe': $downgradeReason"
     }
 
@@ -157,6 +198,7 @@ try {
     $manifest | Add-Member -NotePropertyName 'requestedPurpose' -NotePropertyValue $Purpose -Force
     $manifest | Add-Member -NotePropertyName 'purposeDowngradeReason' -NotePropertyValue $downgradeReason -Force
     $manifest | Add-Member -NotePropertyName 'sourceCommit' -NotePropertyValue $sourceCommit -Force
+    $manifest | Add-Member -NotePropertyName 'godotSourceCleanliness' -NotePropertyValue $sourceCleanliness -Force
     $manifest | Add-Member -NotePropertyName 'godotSourceDirty' -NotePropertyValue $sourceDirty -Force
     $manifest | ConvertTo-Json -Depth 64 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -228,6 +270,7 @@ try {
         ParityVerdict = $parityVerdict
         ParityReport = if (Test-Path -LiteralPath $parityReport) { $parityReport } else { $null }
         Purpose = $effectivePurpose
+        GodotSourceCleanliness = $sourceCleanliness
         GodotSourceDirty = $sourceDirty
         WrongSizeShots = $wrongSize.Count
         MissingShots = $missing

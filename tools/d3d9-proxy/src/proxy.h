@@ -55,6 +55,19 @@ void bea_log_summary(void);
 void bea_lock(void);
 void bea_unlock(void);
 
+/* ---- back-buffer grab (shot.c) ------------------------------------------- */
+
+/* Nonzero only when BEA_D3D9_SHOT selected at least one frame AND the output
+ * directory and manifest were both opened. Enables device wrapping on its own,
+ * so a capture run needs no draw log. */
+extern int bea_shot_enabled;
+
+void bea_shot_init(void);                       /* from bea_init, once */
+void bea_shot_present(IDirect3DDevice9 *real, unsigned frame);
+void bea_shot_pre_reset(void);                  /* BEFORE Reset: drop DEFAULT pool */
+void bea_shot_reset(void);                      /* AFTER Reset: back buffer may differ */
+void bea_shot_close(void);
+
 /* ---- wrappers ------------------------------------------------------------ */
 
 IDirect3D9 *bea_wrap_d3d9(IDirect3D9 *real);

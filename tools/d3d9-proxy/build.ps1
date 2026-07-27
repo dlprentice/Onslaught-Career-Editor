@@ -86,7 +86,7 @@ $cc = @(
     '-Wno-unused-parameter',
     "-I$gen", "-I$here\src",
     '-o', $out,
-    "$here\src\proxy.c", "$here\src\wrap.c", $defPath
+    "$here\src\proxy.c", "$here\src\wrap.c", "$here\src\shot.c", $defPath
 )
 Write-Host "zig $($cc -join ' ')"
 & $Zig @cc

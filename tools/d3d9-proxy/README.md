@@ -209,11 +209,59 @@ tallied by reason in the `# refusals` block at the end of the log.
   object unwrapped, and logs `qi-unwrapped`.
 - Textures are not wrapped, so texture *contents* are not recorded — only
   identity, dimensions, format and level count.
-- **Screenshots are not available from the window DC.** `PrintWindow` with
-  `PW_RENDERFULLCONTENT` returns the window chrome and a blank white client
-  area, because the Direct3D back buffer is never composited into the window DC.
-  Measured 2026-07-27; this confirms the same note in
-  `rebuild/tools/Capture-Retail.ps1`. The clean fix is a back-buffer grab from
-  inside this proxy at `Present` (`GetRenderTargetData` into a lockable
-  system-memory surface), which would need no foreground window and no
-  synthetic input at all. Not implemented here.
+
+## Back-buffer grab
+
+`PrintWindow` with `PW_RENDERFULLCONTENT` returns the window chrome and a blank
+white client area for this title, because the Direct3D back buffer is never
+composited into the window DC (measured 2026-07-27; same note in
+`rebuild/tools/Capture-Retail.ps1`). So the frame is taken from inside the
+process instead, at `Present`, **before** the real call — with
+`D3DSWAPEFFECT_DISCARD` the back buffer is undefined the moment `Present`
+returns. It needs no foreground window, no focus and no synthetic input, and
+nothing on the desktop can get in front of it.
+
+```powershell
+./Test-Shot.ps1                                        # prove it against known colours
+./Run-FrontendPageCapture.ps1 -Route frontend-options   # drive to a page and capture it
+```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `BEA_D3D9_SHOT` | — | `all`, `change`, or a frame list: `1,3`, `40-90`, `0-600/30`. Setting it arms the grab; **nothing else does**, and with it unset no directory is created. |
+| `BEA_D3D9_SHOTDIR` | `G:\bea-d3d9-shots` | Output root. A `<stamp>-<pid>` run directory is created under it. |
+| `BEA_D3D9_SHOTEVERY` | `15` | `change` mode: sample every N frames. The VRAM read-back is the expensive part, and this title's frame timing is a measured quantity. |
+| `BEA_D3D9_SHOTMAX` | `64` | Hard cap on images written. |
+| `BEA_D3D9_SHOTTHRESH` | `6` | `change` mode: per-cell channel delta (4x4 grid) that counts as a change. |
+
+Each run writes `manifest.csv` — one row per **sampled** frame, whether or not an
+image was written, carrying the full-frame mean. The back buffer *is* the client
+area, so that mean is directly comparable to the measured retail screen
+signatures, and the manifest works as a signature oracle without any screenshot.
+
+PNG is emitted with **stored (uncompressed) deflate blocks**. That is a
+conformant zlib stream and needs no compression library, so a DLL injected into
+a retail game gains no dependency. Files are large; the capture volume is bounded
+by `BEA_D3D9_SHOTMAX` and the default output drive is chosen for having the room.
+
+`Test-Shot.ps1` clears four frames of a real HAL device — on an off-screen window
+that is never shown — to exact colours, two of them the measured retail
+signatures `35,37,60` and `73,79,94`, and asserts the manifest mean **and** the
+PNG's decoded pixels are those colours. The PNG is parsed independently in
+Python (chunk CRCs, zlib, IHDR, filter bytes), which is what proves the channel
+order and the hand-rolled encoder rather than assuming them.
+
+Two behaviours worth knowing:
+
+- `GetRenderTargetData` **fails** against this game's device with
+  `D3DERR_INVALIDCALL`, though it succeeds against a plain HAL device. The grab
+  falls back to `StretchRect` into a single-sampled `CreateRenderTarget`
+  intermediate and reads back from that. The direct HRESULT and the fact that
+  the fallback was taken are both recorded, so it is never silent.
+- The cached `D3DPOOL_SYSTEMMEM` surface is **deliberately leaked** at
+  `DLL_PROCESS_DETACH`: releasing it there is a call into the real `d3d9.dll`
+  under the loader lock, at a point where that DLL may already be gone, and it
+  crashed the self-test host at exit. The `D3DPOOL_DEFAULT` resolve target is
+  released in a **pre**-`Reset` hook, because holding one across `Reset` makes
+  `Reset` fail.
+
