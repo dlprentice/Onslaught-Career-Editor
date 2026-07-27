@@ -1080,9 +1080,12 @@ public sealed class Simulation
         ref int velocityZ,
         FixedBodyBasis basis)
     {
+        // Half a SECOND of travel ahead, per BattleEngineJetPart.cpp:548. This
+        // read `velocity / 2` - half a Core tick - and was 30x too near; see
+        // SimulationConstants.JetGroundEffectLookaheadTicks for the derivation.
         var samplePosition = new SimVector2(
-            PlayerPosition.X + (velocityX / 2),
-            PlayerPosition.Z + (velocityZ / 2));
+            PlayerPosition.X + (velocityX * SimulationConstants.JetGroundEffectLookaheadTicks),
+            PlayerPosition.Z + (velocityZ * SimulationConstants.JetGroundEffectLookaheadTicks));
         int ground = Level100Terrain.Instance.SampleGroundElevationMillimeters(samplePosition);
         bool overWater = Level100Terrain.WaterElevationMillimeters > ground;
         int support = overWater

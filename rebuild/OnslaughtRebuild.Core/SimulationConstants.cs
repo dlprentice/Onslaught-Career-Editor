@@ -161,6 +161,28 @@ public static class SimulationConstants
     public const int JetSkimRetentionNumerator = WalkerYawRetentionNumerator;
     public const int JetSkimRetentionDenominator = WalkerYawRetentionDenominator;
     public const int JetGroundEffectHeightMillimeters = 5_000;
+
+    // The ground-effect sample point is HALF A SECOND of travel ahead, not half
+    // a tick. BattleEngineJetPart.cpp:548:
+    //
+    //     FVector pos = mMainPart->mPos + (mMainPart->mVelocity * GAME_FR * 0.5f);
+    //
+    // GAME_FR is 20.0f (thing.h:28) and mVelocity is per released UPDATE, not
+    // per second - actor.cpp computes its own limit as
+    // `GetMaxVelocity()/GAME_FR`, which only type-checks as a per-update
+    // quantity. So `mVelocity * GAME_FR` is units per SECOND and the 0.5f makes
+    // the lookahead half a second of travel.
+    //
+    // At 30 Hz that is 15 Core ticks of velocity. Core previously used
+    // `velocity / 2` - half a Core tick - which is 30x too near. Measured
+    // consequence at cruise (600 mm/tick): retail samples 9,000 mm ahead and
+    // Core sampled 300 mm. Flying level at a rising slope, the released Aquila
+    // begins its lift and pitch-follow about fourteen ticks earlier; Core flew
+    // into the hill because it could not see it yet.
+    //
+    // This is a lookahead DISTANCE, so it scales with velocity and carries no
+    // tick-rate factor of its own beyond the 15.
+    public const int JetGroundEffectLookaheadTicks = TicksPerSecond / 2;
     public const int JetSkimHeightMillimeters = 500;
     public const int JetSkimMinimumHorizontalSpeedPerTick = 200;
     // One retail world-unit per released 20 Hz update expressed as a 30 Hz

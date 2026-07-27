@@ -294,6 +294,49 @@ public sealed class SimulationTests
         Assert.Equal(674_610, coast.FacingYawMicroRad);
     }
 
+    /// <summary>
+    /// The jet's ground-effect lookahead is HALF A SECOND of travel, not half a
+    /// tick.
+    ///
+    /// <para><c>BattleEngineJetPart.cpp:548</c> is
+    /// <c>pos = mMainPart-&gt;mPos + (mMainPart-&gt;mVelocity * GAME_FR * 0.5f)</c>.
+    /// <c>GAME_FR</c> is <c>20.0f</c> (<c>thing.h:28</c>) and <c>mVelocity</c> is
+    /// per released UPDATE - <c>actor.cpp</c> bounds it with
+    /// <c>GetMaxVelocity()/GAME_FR</c>, which only type-checks as a per-update
+    /// quantity. So <c>mVelocity * GAME_FR</c> is units per second and the
+    /// <c>0.5f</c> makes the sample point half a second ahead.</para>
+    ///
+    /// <para>This asserts the LAW as a ratio rather than pinning a distance,
+    /// because the distance is velocity-dependent and a pinned number would have
+    /// to be re-derived every time the flight model moves. Core read
+    /// <c>velocity / 2</c> and was 30x too near; the ratio is what was wrong and
+    /// the ratio is what is guarded.</para>
+    /// </summary>
+    [Fact]
+    public void JetGroundEffectLookahead_IsHalfASecondOfTravel_NotHalfATick()
+    {
+        // The released law, stated independently of our constant so that
+        // changing the constant cannot make this test agree with itself.
+        const double ReleasedSeconds = 0.5;
+        int expectedTicks = (int)(ReleasedSeconds * SimulationConstants.TicksPerSecond);
+
+        Assert.Equal(SimulationConstants.JetGroundEffectLookaheadTicks, expectedTicks);
+
+        // And the thing that actually went wrong: it must be a multiplier on
+        // velocity, not a divisor. `velocity / 2` satisfies no positive tick
+        // count, so this would have failed on the old code for the right reason.
+        Assert.True(
+            SimulationConstants.JetGroundEffectLookaheadTicks > 1,
+            "a lookahead of one tick or less is the defect this guards");
+
+        // 30x is the measured size of the old error at the documented cruise
+        // speed, recorded so the magnitude is not lost if the constant moves.
+        const int CruiseSpeedMillimetresPerTick = 600;
+        Assert.Equal(
+            9_000,
+            CruiseSpeedMillimetresPerTick * SimulationConstants.JetGroundEffectLookaheadTicks);
+    }
+
     [Fact]
     public void TerrainPitch_IsNegatedAgainstForwardRise_AndRollIsNot()
     {
