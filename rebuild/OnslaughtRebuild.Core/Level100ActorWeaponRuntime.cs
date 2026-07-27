@@ -224,6 +224,32 @@ public sealed partial class Level100ActorMechanics
                 continue;
             }
 
+            // AI_OFF silences the unit. The released script command was being
+            // parsed and stored and then never read by anything - AiState was
+            // written at Level100ActorMechanics, copied into the snapshot and
+            // hashed, and NOTHING branched on it. Measured consequence: six
+            // drones kept firing after the LevelScript posted its abort, which
+            // turns off their AI.
+            //
+            // AI_OFF is 1, from the released `data\MissionScripts\onsldef.msl`
+            // lines 2-6 - authored developer text that the source itself
+            // #includes as a header (Career.cpp:11, game.cpp:46):
+            //     AI_ON 0, AI_OFF 1, AI_NORMAL 2, AI_DEFENSIVE 3, AI_ONF 4
+            // The default is 0, so an actor that was never given an AI state
+            // reads as AI_ON and is unaffected by this gate.
+            //
+            // ONLY AI_OFF is gated here. The sibling defect - SetAllegiance
+            // being equally unread - is NOT fixed alongside it, because
+            // FRIENDLY_ALLIGENCE is 0 and our Allegiance field also defaults to
+            // 0, so a naive "friendly units do not attack" gate would silence
+            // every actor in the level. That needs each actor's AUTHORED
+            // allegiance established first and is tracked separately.
+            if (state.AiState == SimulationConstants.ReleasedAiStateOff)
+            {
+                weapon.BurstShotsRemaining = 0;
+                continue;
+            }
+
             if (state.Intent != Level100ActorCommandIntent.Attacking ||
                 state.TargetActorId is not { } targetId)
             {

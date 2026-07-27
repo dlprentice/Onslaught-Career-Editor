@@ -189,6 +189,17 @@ public static class SimulationConstants
     // 20.0 is released life per released unit of depth below the 0.5 skim
     // ceiling, applied once per released 20 Hz update.
     public const int JetWaterSkimDamagePerReleasedUnit = 20;
+
+    // Released AI states, from `data\MissionScripts\onsldef.msl` lines 2-6 -
+    // authored developer text, shipped with the game, and #included as a header
+    // by the developers' own source (Career.cpp:11, game.cpp:46). This is the
+    // strongest evidence class available for these values: it outranks anything
+    // recovered from disassembly.
+    //     AI_ON 0, AI_OFF 1, AI_NORMAL 2, AI_DEFENSIVE 3, AI_ONF 4
+    // Only AI_OFF is currently acted on; the rest are stored and carried but
+    // nothing distinguishes them yet.
+    public const int ReleasedAiStateOn = 0;
+    public const int ReleasedAiStateOff = 1;
     // One retail world-unit per released 20 Hz update expressed as a 30 Hz
     // Core speed. This conversion scale is independent of Blaster's 0.9 target.
     public const int RetailVelocityUnitPerUpdateAsCoreSpeed = 667;
