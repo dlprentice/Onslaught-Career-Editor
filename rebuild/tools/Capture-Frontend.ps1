@@ -16,7 +16,9 @@ param(
     [switch]$Offline,
     [string]$GameRoot,
     [string]$OutputDirectory,
-    [ValidateSet('startup', 'gameplay')]
+    # 'mainmenu' is a dense FEP_MAIN sweep for scoring the animated underlay
+    # against a no-skipfmv retail burst; see FrontendCaptureRig's plan comment.
+    [ValidateSet('startup', 'gameplay', 'mainmenu')]
     [string]$Plan = 'startup',
     [string]$Resolution = '640x480',
     # gameplay plan only. Point this at

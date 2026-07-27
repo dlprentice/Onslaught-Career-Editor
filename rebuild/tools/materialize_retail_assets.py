@@ -94,19 +94,31 @@ FRONTEND_LOCALIZATION_SHA256 = (
     "b27d7b1b3f8cd8aa22b664cacf7c87a8b0907c7dea4c4f07dff8da763dbb70f3"
 )
 # CFEPMain underlay: data/video/FEBack128.vid (BIKi 128² @30fps) decoded to a
-# lean rgb24 strip at 15fps for Godot Control draw (stretch to 640×480 stage).
+# lean rgb24 strip at the SHIPPED rate for Godot Control draw (stretched to the
+# 640×480 stage).
+#
+# It used to decode at fps=15 / 286 frames — exactly half the shipped rate. That
+# was recorded as a defect on 2026-07-25 and left in place because nothing drew
+# the strip. It is now drawn (the main-menu underlay), and a half-rate strip
+# cannot be at the right phase at ANY instant, so the decimation is removed here
+# rather than compensated for downstream.
+#
+# The `-vf fps=N` argument is deliberately absent: passing a frame-rate filter is
+# what produced the decimation, and RetailStartupSequenceTests already asserts
+# the startup decode passes no `-r` / `fps=` / `-vf` rate argument for the same
+# reason. `format=rgb24` is a pixel-format conversion, not a rate filter.
 FEBACK_SOURCE = "data/video/FEBack128.vid"
 FEBACK_SOURCE_SHA256 = (
     "c251f4be8ab7f2ac5d4f6b952ca44d0cf5aadd7552ad61725420009a6f0e79ba"
 )
-FEBACK_STRIP = GODOT_ASSETS / "Frontend/Backgrounds/fe-back-128x128x15.rgb"
+FEBACK_STRIP = GODOT_ASSETS / "Frontend/Backgrounds/fe-back-128x128x30.rgb"
 FEBACK_STRIP_SHA256 = (
-    "b9795baf2cc5c68618799ce4128b0788c6aca4a424fea41d7881e0541c035c7b"
+    "6ba092b1b43959db8eb73f6d0b9434addbdcf5ddc030e10d8d35c11208001265"
 )
 FEBACK_STRIP_WIDTH = 128
 FEBACK_STRIP_HEIGHT = 128
-FEBACK_STRIP_FPS = 15
-FEBACK_STRIP_FRAME_COUNT = 286
+FEBACK_STRIP_FPS = 30
+FEBACK_STRIP_FRAME_COUNT = 572
 FEBACK_STRIP_FRAME_BYTES = FEBACK_STRIP_WIDTH * FEBACK_STRIP_HEIGHT * 3
 FEBACK_STRIP_BYTES = FEBACK_STRIP_FRAME_BYTES * FEBACK_STRIP_FRAME_COUNT
 ROOT_TERRAIN_TEXTURE = (
@@ -2967,7 +2979,7 @@ def _materialize_feback_strip(game_root: Path, stage: Path) -> None:
     target = stage / FEBACK_STRIP
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="feback-") as temporary:
-        temporary_strip = Path(temporary) / "fe-back-128x128x15.rgb"
+        temporary_strip = Path(temporary) / FEBACK_STRIP.name
         completed = subprocess.run(
             [
                 str(ffmpeg),
@@ -2978,7 +2990,7 @@ def _materialize_feback_strip(game_root: Path, stage: Path) -> None:
                 "-i",
                 str(game_root / FEBACK_SOURCE),
                 "-vf",
-                f"fps={FEBACK_STRIP_FPS},format=rgb24",
+                "format=rgb24",
                 "-f",
                 "rawvideo",
                 str(temporary_strip),

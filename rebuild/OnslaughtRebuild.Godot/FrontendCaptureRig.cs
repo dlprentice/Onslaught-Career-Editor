@@ -103,6 +103,23 @@ public sealed partial class FrontendCaptureRig : Node
     /// FEBack128 runs at 15 fps over 286 frames; at --fixed-fps 60 one video
     /// frame is four engine frames, so multiples of 4 sample a stable video frame.
     /// </summary>
+    /// <summary>
+    /// First frame on which FEP_MAIN is drawn: the confirm at frame 128 is applied
+    /// by this rig's `_Process`, which runs after `RetailFrontendFlow`'s, so the
+    /// flow first sees the main menu on the following frame.
+    /// </summary>
+    private const int MainMenuEntryFrame = 129;
+
+    /// <summary>Every third engine frame — 20 Hz against the underlay's 30 fps.</summary>
+    private const int MainMenuSweepStride = 3;
+
+    /// <summary>
+    /// 129 + 8 s at 60 fps. The retail reference burst runs to 7,027 ms after the
+    /// same origin, so this covers it with a second of margin either side of any
+    /// phase lag the sweep might have to reveal.
+    /// </summary>
+    private const int MainMenuSweepLastFrame = 129 + 480;
+
     private static readonly (int Frame, string Label, RetailFrontendScreen? Screen)[] StartupPlan =
     [
         (12, "01-click-early", RetailFrontendScreen.ClickToStart),
@@ -209,10 +226,10 @@ public sealed partial class FrontendCaptureRig : Node
             throw new ArgumentException("Capture mode requires an absolute --capture-dir path.");
         }
 
-        if (plan is not ("startup" or "gameplay"))
+        if (plan is not ("startup" or "gameplay" or "mainmenu"))
         {
             throw new ArgumentException(
-                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay.");
+                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay, mainmenu.");
         }
 
         rig = new FrontendCaptureRig
@@ -345,6 +362,35 @@ public sealed partial class FrontendCaptureRig : Node
             // rather than predicted. Only the frontend traversal is scheduled now.
             _plannedShots = GameplayOffsetsMs().Count();
         }
+        else if (_planName == "mainmenu")
+        {
+            // A DENSE SWEEP of FEP_MAIN, and the density is the point.
+            //
+            // The main-menu underlay is a 30 fps video, so scoring it against a
+            // retail frame is only meaningful if the two are at the same video
+            // frame. A plan that emits one shot per retail offset cannot tell a
+            // wrong drawing from a right drawing at the wrong phase — it reports
+            // one number that confounds both. Sweeping every third engine frame
+            // across the whole retail burst window lets the phase be MEASURED
+            // (best-matching sweep frame per retail frame) instead of assumed, and
+            // a constant best-match lag is then a phase error while a scattered
+            // one is not a phase error at all.
+            //
+            // Labels are milliseconds after the main menu is first drawn, which is
+            // the same origin the retail bursts are marked from.
+            for (int frame = MainMenuEntryFrame; frame <= MainMenuSweepLastFrame; frame += MainMenuSweepStride)
+            {
+                int offsetMs = (int)Math.Round((frame - MainMenuEntryFrame) * 1000.0 / 60.0);
+                _shots.Add(new Shot(
+                    frame,
+                    $"mainmenu-t{offsetMs:D6}ms",
+                    RetailFrontendScreen.MainMenu,
+                    null,
+                    null));
+            }
+
+            _plannedShots = _shots.Count;
+        }
         else
         {
             foreach ((int frame, string label, RetailFrontendScreen? screen) in StartupPlan)
@@ -358,9 +404,15 @@ public sealed partial class FrontendCaptureRig : Node
         // The gameplay plan reuses the startup traversal verbatim: it is the
         // proven path from cold start to Level 100, and reusing it means the
         // in-level capture cannot disagree with the frontend capture about how
-        // the level was entered.
+        // the level was entered. The mainmenu plan takes only the first confirm,
+        // because it must STAY on FEP_MAIN for the whole sweep.
         foreach ((int frame, string action) in StartupSteps)
         {
+            if (_planName == "mainmenu" && frame > StartupSteps[0].Frame)
+            {
+                break;
+            }
+
             _steps.Add(new Step(frame, action));
         }
 

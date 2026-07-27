@@ -63,6 +63,16 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color ReleasedUnavailable = RetailColor(0x7f1f1f1f);
     private static readonly Color ReleasedSelected = RetailColor(0xffff6f3f);
     private static readonly Color ReleasedBlue = RetailColor(0xff1f4f7f);
+    // NOTE, so it is not re-proposed: RetailColor() applies MODULATE2X, and
+    // 0xafcfff doubles past white on every channel (0xaf*2 = 350, 0xcf*2 = 414,
+    // 0xff*2 = 510), so all three clamp to 1.0 and this tint's hue is discarded
+    // entirely — the logo is drawn with an effectively white modulate. That looks
+    // like a defect and it was tested as one on 2026-07-26: drawing it as a plain
+    // MODULATE (0xaf,0xcf,0xff)/255 instead was REFUTED by capture. Against the
+    // no-skipfmv reference at matched phase, full-frame material rose 18.54 ->
+    // 18.73 % and meanD rose 6.19 -> 7.07 on every one of 13 paired frames. The
+    // clamp is therefore not the cause of the title-logo residual. See
+    // local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md.
     private static readonly Color TitleLogoTint = RetailColor(0xfeafcfff);
     private static readonly Color HighlightTint = RetailColor(0x7e000000);
     private static readonly Color BracketTint = RetailColor(0xfeffffff);
@@ -72,8 +82,6 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color ClickSlideShadow = RetailColor(0x3f000000);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
-    // Settled additive gray: (((255*0x7f)>>8)*0x10101) → RGB 0x7e; keep α modest for Add blend.
-    private static readonly Color GlowTint = new(0x7e / 255f, 0x7e / 255f, 0x7e / 255f, 0.5f);
     // Released overlay format string is "V%1d.%02d" at VA 0x00629454 in pristine
     // BEA.exe (sha256 74154bfa…), rendering "V1.00". The prior value here was
     // "V1.00 - PATCHED", transcribed from a reference capture taken on a safe copy
@@ -336,22 +344,48 @@ public sealed partial class RetailFrontendFlow : Control
     // alpha 0x7f fill lands on (11,11,24) after this renderer's blend rounding.
     private static readonly Color HeaderBoxTint = new(12f / 255f, 12f / 255f, 24f / 255f, 1f);
     private const float ShadowScaleBoost = 1.05f;
-    // Materialized decode of data/video/FEBack128.vid (128² BIKi → rgb24).
-    //
-    // KNOWN DEFECT: the released file is 572 frames at 30 fps (Bink header, frames
-    // at +8, fps dividend/divider at +28/+32). The materialized strip is 286 frames
-    // and this declares 15 fps - exactly half of each, so every second frame is
-    // dropped. Duration is preserved (19.1s) but the animation is half as smooth as
-    // released. It does not currently show, because the main-menu underlay was
-    // measured to be a flat fill and this is not drawn there; it will matter
-    // wherever FEBack128 is actually used, which is still unresolved.
-    // See local-lab/INTRO-FMV-FINDINGS-2026-07-25.md.
+    // Materialized decode of data/video/FEBack128.vid (128² BIKi → rgb24) at the
+    // SHIPPED 30 fps × 572 frames. The old 15 fps / 286-frame strip dropped every
+    // second frame; that was harmless while nothing drew it and is not harmless
+    // now, because a half-rate strip is at the wrong phase at every instant.
     private const string FeBackStripPath =
-        "res://Assets/Frontend/Backgrounds/fe-back-128x128x15.rgb";
+        "res://Assets/Frontend/Backgrounds/fe-back-128x128x30.rgb";
     private const int FeBackWidth = 128;
     private const int FeBackHeight = 128;
-    private const int FeBackFps = 15;
+    private const int FeBackFps = 30;
     private const int FeBackFrameBytes = FeBackWidth * FeBackHeight * 3;
+    // Additive gain of the FEBack128 underlay over the flat page fill, MEASURED
+    // per channel by least squares against retail captured WITHOUT -skipfmv.
+    //
+    // Reference: local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26/run1,
+    // main-menu frames mm-t001020ms .. mm-t007027ms (13 settled frames), scored on
+    // the 222,683 pixels the -skipfmv main-menu capture proves are pure underlay
+    // (exactly (23,23,48) within 1 — a geometric mask, not a rectangle).
+    //
+    // Per-frame fits are stable: R 0.2523..0.2687, G 0.2456..0.2674,
+    // B 0.2290..0.2467. The competing alpha-mix model (y = (1-a)·bg + a·frame)
+    // fits these pixels WORSE: residual rms 4.6..11.9 against additive's 2.4..5.7.
+    //
+    // Its fitted `a` also wanders 0.29..0.57 across frames where the additive gain
+    // does not move. That is recorded but is NOT independent evidence, and an
+    // earlier draft of this comment claimed it was. A cross-model review pointed
+    // out the circularity: if the truth is y = bg + g·F then forcing an alpha mix
+    // gives a = g·F/(F - bg), which MUST vary with frame content. The residual rms
+    // is what carries this conclusion.
+    //
+    // What is established is narrower than "the compositor is additive": it is
+    // that over a flat destination these pixels are described by bg + g·frame.
+    // A D3D SRCALPHA/ONE draw of a modulated frame reduces to exactly that form,
+    // and this measurement cannot separate the two.
+    //
+    // 0.2471 = (0x7e/255) × 0.5 — the frontend's own 0x7e7e7e modulate at alpha
+    // 0.5 under D3D SRCALPHA/ONE — lands inside the measured band on all three
+    // channels. That is a plausible generator and is NOT asserted here: the
+    // constants below are the measurements, not the theory.
+    private static readonly float[] FeBackUnderlayGain = [0.2610f, 0.2590f, 0.2420f];
+
+    /// <summary>See <see cref="FeBackFrameIndex"/> - measured, over a full loop.</summary>
+    private const int FeBackPhaseFrames = 3;
     // Fallback only when the strip is missing (materialize not run).
     private static readonly Color MainUnderlayFallback = new(23f / 255f, 23f / 255f, 48f / 255f, 1f);
 
@@ -363,7 +397,6 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _rockBackground = null!;
     private Texture2D[] _feBackFrames = [];
     private Texture2D _forsetiWritingLarge = null!;
-    private Texture2D _reflectionMap = null!;
     private Texture2D _titleLogo = null!;
     private Texture2D _titleBracket01 = null!;
     private Texture2D _titleBracket02 = null!;
@@ -382,7 +415,6 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _feArrow = null!;
     private Texture2D[] _menuIcons = [];
     private int[] _glyphWidths = [];
-    private CanvasItemMaterial? _additiveMaterial;
     private string _selectLevelText = string.Empty;
     private string _level100Text = string.Empty;
     private string _loadingText = string.Empty;
@@ -391,6 +423,10 @@ public sealed partial class RetailFrontendFlow : Control
     private double _animationSeconds;
     private double _clickPulseTimer;
     private double _clickPageSeconds;
+    // Seconds since the frontend left click-to-start, which is MEASURED to be
+    // FEBack128's phase origin. See FeBackFrameIndex for the phase itself and for
+    // the alias that nearly got this wrong.
+    private double _feBackSeconds;
     private RetailFrontendScreen _lastDrawnScreen = RetailFrontendScreen.ClickToStart;
     private int _loadingFrames;
     private bool _initialized;
@@ -526,6 +562,16 @@ public sealed partial class RetailFrontendFlow : Control
             // Retail Process accumulates roughly 2 * frameΔ into this+0x18.
             _clickPulseTimer += 2d * step;
             _clickPageSeconds += step;
+        }
+        else
+        {
+            // Free-runs from the moment click-to-start is left, and is NOT reset on
+            // later page changes. Retail's underlay is measured to be page-anchored
+            // on the main menu and NOT page-anchored on FEP_DEVSELECT or
+            // FEP_LEVEL_SELECT (matched-offset cross-run material 7-44 % and
+            // 5.8-63 % there against 0.4-1.5 % on the main menu), which is what a
+            // single clock started once at frontend entry produces.
+            _feBackSeconds += step;
         }
 
         _lastDrawnScreen = _session.Screen;
@@ -695,6 +741,24 @@ public sealed partial class RetailFrontendFlow : Control
     {
         DrawMainUnderlay();
 
+        // The faint crosshair guides. FEP_DEVSELECT and FEP_LEVEL_SELECT have drawn
+        // these since the font22 work; FEP_MAIN never did, and retail draws them on
+        // all three. Counting exact (50,51,72) on the pristine -skipfmv main-menu
+        // capture: 618 px, of which 370 are the column x=123 and 248 are the row
+        // y=180. Ours held 1.
+        //
+        // KNOWN RESIDUAL, recorded rather than fudged: retail's guide is NOT an
+        // opaque fill, it is a constant ADDITION. At (123,300) the -skipfmv capture
+        // reads (50,51,72) over a (23,23,48) fill — delta (+27,+28,+24) — and the
+        // no-skipfmv capture reads (64,68,100) over a (39,43,80) underlay at the
+        // same pixel — delta (+25,+25,+20). An opaque (50,51,72) is exact on the
+        // first and 14 levels low on the second. All three pages draw it opaquely
+        // today, so this residual is shared and is not introduced here; closing it
+        // needs a per-pixel composite of the guide against the live underlay, which
+        // this canvas cannot express as a blend mode. See DrawMainUnderlay.
+        DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
+        DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
+
         // DAT_0089d7f0 Forseti writing chrome — three settled tiles (Y thunk ≈ 175).
         DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f, 1f, 1f, ChromeTint);
         DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, ChromeTint);
@@ -750,13 +814,42 @@ public sealed partial class RetailFrontendFlow : Control
 
         DrawTextFlat(VersionText, new Vector2(0f, DesignHeight - 16f), 1f, VersionTint);
 
-        // DAT_0089d7fc reflection streaks — retail additive over the stage.
-        // Draw before the logo so a failed additive fallback cannot bury Title2.
-        // x ≈ (256 - FpuThunk()) + 65 with thunk≈0.
-        const float glowX0 = 256f + 65f;
-        DrawAdditiveSurfaceCentered(_reflectionMap, glowX0, 120f, 1f, 2f, GlowTint);
-        DrawAdditiveSurfaceCentered(_reflectionMap, glowX0 + 512f, 120f, 1f, 2f, GlowTint);
-
+        // DAT_0089d7fc reflection streaks — REMOVED 2026-07-26, and this is a
+        // deletion on evidence rather than a simplification.
+        //
+        // Two 512x128 quads were drawn at scale (1,2) centred on (321,120) and
+        // (833,120), covering x65..640, y-8..248 of the stage. Two independent
+        // measurements say retail does not put that there:
+        //
+        // 1. It was not additive. The helper set CanvasItem.Material for the
+        //    duration of one call, but a CanvasItem's material
+        //    applies to the whole item, not to a bracketed span of _Draw commands,
+        //    and the trailing `Material = null` leaves the item non-additive at
+        //    submit time. The proof is in the pixels, not in that reading: our
+        //    captured main menu held (26,24,33) at (320,0) where the page fill is
+        //    (23,23,48). Additive blending cannot LOWER a channel by 15.
+        // 2. Retail shows no excess there: fitting fill + gain x FEBack128 over
+        //    the proven-underlay mask and splitting the residual by this footprint
+        //    gives mean -0.43..+0.84 (|mean| 1.5..3.4) over 84,912 pixels INSIDE
+        //    it against +0.27..+1.45 (|mean| 1.8..3.1) over 137,771 outside, on 13
+        //    frames.
+        //
+        //    THE STRENGTH OF (2) IS BOUNDED, and an earlier draft of this comment
+        //    overstated it as "retail has no such layer". A cross-model review is
+        //    right that a mean residual mostly constrains the DC component: a
+        //    reflection texture that is near zero-mean over the footprint can
+        //    carry a real gain while moving the mean by nothing, and if it
+        //    correlates with FEBack128 the FEBack fit absorbs part of it. What (2)
+        //    supports is a DC bound of order one level, not absence. The
+        //    projection of the residual onto the reflection texture orthogonalised
+        //    to FEBack128 was NOT computed and would settle it.
+        //
+        //    The deletion does not rest on (2). It rests on (1): what was drawn
+        //    here was provably not the blend it claimed to be.
+        //
+        // The FEBack128 underlay explains this band on its own. The texture stays
+        // materialized; if a reflection layer is ever found, it is a low-gain
+        // additive that must be measured before it is drawn.
         DrawSurfaceCentered(_titleLogo, 325f, 140f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
         DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
     }
@@ -807,61 +900,108 @@ public sealed partial class RetailFrontendFlow : Control
         DrawTextureRectRegion(_feArrow, new Rect2(273f, 253f, 22f, 30f), arrowSource, ChromeTint);
     }
 
+    /// <summary>
+    /// FEP_MAIN's underlay: the flat page fill with FEBack128.vid composited
+    /// additively over it.
+    ///
+    /// THE ARGUMENT THIS REPLACED, AND WHY IT WAS WRONG. The previous
+    /// implementation drew a flat (23,23,48) fill, justified by the observation
+    /// that two disjoint 120x120 regions of the retail main-menu reference hold
+    /// exactly one colour at sd 0.0, which a stretched 128-square video cannot
+    /// produce. That observation was correct and the conclusion did not follow:
+    /// every capture it rested on was taken with `-skipfmv`, and `-skipfmv`
+    /// removes the video. The same "zero variance, so no video" signature had
+    /// already been shown to be reproduced on FEP_LEVEL_SELECT, a page that DOES
+    /// carry the video. The comment that stood here named the experiment that
+    /// would settle it — one main-menu frame captured without `-skipfmv` — and
+    /// that frame has now been taken.
+    ///
+    /// MEASURED, from retail without `-skipfmv`
+    /// (local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26/, two runs,
+    /// phase-anchored to the click that leaves click-to-start):
+    ///
+    ///   identity   the underlay IS FEBack128.vid. Scoring every decoded strip
+    ///              frame upscaled 128^2 -> 640x480 by normalised cross-correlation
+    ///              over the 222,683 pixels the `-skipfmv` reference proves are
+    ///              pure underlay peaks at ncc +0.81..+0.92 on five sampled frames.
+    ///   rate       best-match frame is 30 at t=1020 ms, 74 at 2529, 119 at 4030,
+    ///              164 at 5522, 209 at 7027 — 29.80 fps, i.e. the shipped 30.
+    ///   phase      that line passes through frame 0 at t = 13 ms. The clip starts
+    ///              when the frontend leaves click-to-start, within one frame.
+    ///   composite  flat fill PLUS gain x frame (see FeBackUnderlayGain). Alpha
+    ///              mix is refuted on the same pixels.
+    ///
+    /// The composite is baked into the frame textures at load rather than issued as
+    /// an additive draw. That is exact here and not an approximation: this is the
+    /// bottom-most layer, it is drawn over a known constant fill, and
+    /// fill + gain x frame peaks at 114 so nothing clamps. It also avoids depending
+    /// on a canvas blend mode. The only additive helper this file had was
+    /// measurably NOT additive (see DrawMainMenu's reflection-streak note), and a
+    /// layer this large must not inherit that defect.
+    /// </summary>
     private void DrawMainUnderlay()
     {
-        // MEASURED, not inferred: the released main menu draws a FLAT background.
-        //
-        // In captures/08-main-retail.png (640x480 retail), 67 of 192 40x40 tiles are
-        // perfectly flat (population sd < 0.5), including large areas mid-left and
-        // mid-right where no UI is drawn. Two disjoint 120x120 background regions
-        // measure exactly (23,23,48) with ONE distinct colour and sd 0.0, and two
-        // independently captured retail main-menu frames are bit-identical there.
-        //
-        // A 128² video stretched across the stage cannot produce that. Upscaling
-        // yields gradients in every tile, and any non-zero modulate of a textured
-        // source leaves variance behind. Zero variance across 14,400 pixels means no
-        // video contribution is visible on this screen.
-        //
-        // Contrast the click-to-start frame, which IS textured (sd ~27-40, 60,821
-        // distinct colours) with flat pillarbox bars left and right — consistent
-        // with the centred 480² splash that extents.json records.
-        //
-        // So FEBack128 is not the visible main-menu underlay. Its actual role is
-        // unresolved and the decoded strip is retained (it materializes to exactly
-        // 128*128*3*286 bytes, so the decode itself is sound). See
-        // local-lab/PARITY-FINDINGS-2026-07-25.md finding 5.
-        //
-        // ================= 2026-07-26: THE ARGUMENT ABOVE DOES NOT HOLD =========
-        //
-        // Every capture that argument rests on was taken with -skipfmv, and the
-        // same argument applied to a page now PROVEN to carry a video underlay
-        // reproduces it exactly. On FEP_LEVEL_SELECT, the -skipfmv reference's
-        // underlay is flat (23,23,48) with standard deviation 0.06/0.08/0.06 over
-        // 229,803 pixels — the same "zero variance, so no video" signature — while
-        // the no-skipfmv control of that same page carries a swirling field at
-        // mean (32.2,34.3,65.8), sd 3.18/4.36/7.45.
-        //
-        // And that field IS FEBack128. Admitting only the pixels the -skipfmv
-        // capture proves are pure underlay (exactly (23,23,48) within 1; a
-        // geometric mask, not a rectangle) and scoring every decoded strip frame
-        // upscaled 128² -> 640x480 by normalised cross-correlation peaks at
-        // frame 115, ncc +0.8190, with a coherent shoulder (113..117 all >= 0.747)
-        // against a distribution of mean +0.4163 / sd 0.2204 running down to
-        // -0.0885. A per-channel fit against that frame gives gain 0.2198/0.2209/
-        // 0.2225 over offsets 24.53/24.78/49.35 — i.e. the flat fill plus ~0.22x
-        // the video frame — with residual mad 1.07/1.33/2.23.
-        //
-        // What that does NOT establish: whether the MAIN MENU carries it. There is
-        // no no-skipfmv main-menu capture in the reference set, so this page's
-        // underlay is neither confirmed nor refuted, only left unproven by a
-        // method that cannot decide it. One main-menu frame captured without
-        // -skipfmv, run through the same mask, settles it.
-        //
-        // The flat fill therefore stays: it is faithful to the only reference that
-        // exists, and drawing FEBack128 here on the strength of another page would
-        // be speculation. _feBackFrames is loaded and deliberately not drawn.
-        // See local-lab/CROSS-MODEL-STARTUP-PARITY-2026-07-26.md.
-        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
+        if (_feBackFrames.Length == 0)
+        {
+            // Strip missing (materialize not run). Fall back to the flat fill: it
+            // is what the page held before the video was identified, and it is
+            // strictly better than drawing nothing.
+            DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
+            return;
+        }
+
+        int frame = FeBackFrameIndex(_feBackSeconds, _feBackFrames.Length);
+        DrawTextureRect(
+            _feBackFrames[frame],
+            new Rect2(0f, 0f, DesignWidth, DesignHeight),
+            false,
+            Colors.White);
+    }
+
+    /// <summary>
+    /// Which FEBack128 frame is on screen at <paramref name="seconds"/> after the
+    /// frontend left click-to-start. Pure, so it is unit-testable without Godot.
+    ///
+    /// <para><b>The phase, and the alias that nearly took its place.</b></para>
+    /// Fitting best-matching strip frames over a 7 s retail burst gave a clean
+    /// 29.80 fps line through frame 0 at t = 13 ms. It also gave, on EVERY sample,
+    /// a near-equal runner-up exactly +205 frames away. A cross-model review
+    /// flagged that as an alias risk rather than clip self-similarity, and it was
+    /// right to: normalised cross-correlation cannot pick the origin of a
+    /// self-similar signal from peaks that are within noise of each other, and a
+    /// 7 s window is barely a third of the clip's 19.07 s period.
+    ///
+    /// Settled by capturing 22 s of retail main menu - more than one full loop -
+    /// and scoring the WHOLE burst against each candidate offset instead of
+    /// scoring each frame independently. Over 56 frames and 521 candidate offsets:
+    ///
+    ///   offset  -3    mean ncc 0.8546   min  0.6983   frames below 0.5:  0
+    ///   offset +202   mean ncc 0.5112   min -0.2441   frames below 0.5: 23
+    ///   offset -206   mean ncc 0.3791   min -0.2412   frames below 0.5: 34
+    ///
+    /// -3 is the global argmax. The +205 coset is refuted, and the true phase is
+    /// three frames LATER than the short-window fit said - frame 0 at t = 100 ms,
+    /// not 13 ms. That correction was predicted independently: before it was
+    /// applied, our sweep's best match to each retail frame sat at a median
+    /// -74 ms, i.e. our underlay ran about two and a half frames early.
+    /// </summary>
+    internal static int FeBackFrameIndex(double seconds, int frameCount)
+    {
+        if (frameCount <= 0)
+        {
+            return 0;
+        }
+
+        // Rounding, not truncation, because the offset above was fitted against
+        // round(t x 30 / 1000); truncating here would silently re-introduce half a
+        // frame of the very phase error the offset exists to remove.
+        long index = (long)Math.Round(seconds * FeBackFps) - FeBackPhaseFrames;
+        if (index <= 0)
+        {
+            return 0;
+        }
+
+        return (int)(index % frameCount);
     }
 
     private void DrawQuitConfirm()
@@ -1877,11 +2017,6 @@ public sealed partial class RetailFrontendFlow : Control
             CuratedAyaTextureLoader.Compression.Dxt1);
         _clickSlide = LoadTexture("click-slide", 128, 128);
         _forsetiWritingLarge = LoadTexture("forseti-writing-large", 128, 512);
-        _reflectionMap = LoadTexture(
-            "reflection-map",
-            512,
-            128,
-            CuratedAyaTextureLoader.Compression.Dxt1);
         _titleLogo = LoadTexture("title-logo", 512, 256);
         _titleBracket01 = LoadTexture("title-bracket-01", 256, 256);
         _titleBracket02 = LoadTexture("title-bracket-02", 256, 256);
@@ -1956,10 +2091,26 @@ public sealed partial class RetailFrontendFlow : Control
 
         int frameCount = strip.Length / FeBackFrameBytes;
         var frames = new Texture2D[frameCount];
+        // The flat page fill, pre-added into every frame. See DrawMainUnderlay for
+        // why baking the composite is exact rather than an approximation, and for
+        // the measurement behind FeBackUnderlayGain.
+        byte[] fill =
+        [
+            (byte)Math.Round(MainUnderlayFallback.R * 255f),
+            (byte)Math.Round(MainUnderlayFallback.G * 255f),
+            (byte)Math.Round(MainUnderlayFallback.B * 255f),
+        ];
         for (int index = 0; index < frameCount; index++)
         {
             byte[] frame = new byte[FeBackFrameBytes];
             Buffer.BlockCopy(strip, index * FeBackFrameBytes, frame, 0, FeBackFrameBytes);
+            for (int offset = 0; offset < FeBackFrameBytes; offset++)
+            {
+                int channel = offset % 3;
+                double value = fill[channel] + (FeBackUnderlayGain[channel] * frame[offset]);
+                frame[offset] = (byte)Math.Clamp(Math.Round(value), 0d, 255d);
+            }
+
             Image image = Image.CreateFromData(
                 FeBackWidth,
                 FeBackHeight,
@@ -1999,23 +2150,6 @@ public sealed partial class RetailFrontendFlow : Control
             new Rect2(centerX - (width * 0.5f), centerY - (height * 0.5f), width, height),
             false,
             modulate);
-    }
-
-    private void DrawAdditiveSurfaceCentered(
-        Texture2D texture,
-        float centerX,
-        float centerY,
-        float widthScale,
-        float heightScale,
-        Color modulate)
-    {
-        _additiveMaterial ??= new CanvasItemMaterial
-        {
-            BlendMode = CanvasItemMaterial.BlendModeEnum.Add,
-        };
-        Material = _additiveMaterial;
-        DrawSurfaceCentered(texture, centerX, centerY, widthScale, heightScale, modulate);
-        Material = null;
     }
 
     private void DrawCenteredRotated(

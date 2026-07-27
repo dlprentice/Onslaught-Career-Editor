@@ -127,10 +127,18 @@ public static class BeaCaptureNativeV2 {
 '@
 }
 
+# Start-Process throws "Cannot bind argument to parameter 'ArgumentList' because it
+# is an empty array" when -ArgumentList receives @(). So the no-argument case must
+# omit the parameter entirely rather than pass an empty list. This is why
+# -SkipFmv:$false was unrunnable, and it is why every pinned frontend reference in
+# local-lab/retail-reference-pristine/ was captured with -skipfmv: the flagless
+# control was never capturable through this script.
 $arguments = @()
 if ($SkipFmv) { $arguments += '-skipfmv' }
 
-$process = Start-Process -FilePath $exe -WorkingDirectory $TargetRoot -ArgumentList $arguments -PassThru
+$startArgs = @{ FilePath = $exe; WorkingDirectory = $TargetRoot; PassThru = $true }
+if ($arguments.Count -gt 0) { $startArgs['ArgumentList'] = $arguments }
+$process = Start-Process @startArgs
 $shots = @()
 try {
     # Wait for a real main window handle rather than sleeping a fixed amount.

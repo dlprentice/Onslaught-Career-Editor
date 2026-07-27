@@ -26,7 +26,7 @@ lane.
 | --- | --- | --- |
 | `Backgrounds/click-to-start.texture.aya` | `FrontEnd%v2%fe_splash1.tga(0)A8R8G8B8.aya` | `46AB45168875B5B686E3534B3F66AB65B5A5B5512F697E5A98B03DD12708731A` |
 | `Backgrounds/rock.texture.aya` | `FrontEnd%v2%FE_Rock_Background.tga(0)A8R8G8B8.aya` | `89213B441332F060ACDB3E55AA28C290FA0E530983C16A57B8CE1A7413E9E86D` |
-| `Backgrounds/fe-back-128x128x15.rgb` | Exact rgb24 decode of `data/video/FEBack128.vid` (SHA-256 `C251F4BE…0E79BA`, BIKi 128×128) at 15 fps × 286 frames; CFEPMain underlay via `CDXFrontEndVideo__Render`. Requires local `ffmpeg`. Godot stretches each frame to the 640×480 stage. | `B9795BAF2CC5C68618799CE4128B0788C6ACA4A424FEA41D7881E0541C035C7B` |
+| `Backgrounds/fe-back-128x128x30.rgb` | Exact rgb24 decode of `data/video/FEBack128.vid` (SHA-256 `C251F4BE…0E79BA`, BIKi 128×128) at the shipped 30 fps × 572 frames; CFEPMain underlay via `CDXFrontEndVideo__Render`. Requires local `ffmpeg`. Godot stretches each frame to the 640×480 stage. Replaces the half-rate `fe-back-128x128x15.rgb` (286 frames), whose decimation made the underlay phase wrong at every instant once it was actually drawn. | `6BA092B1B43959DB8EB73F6D0B9434ADDBDCF5DDC030E10D8D35C11208001265` |
 | `click-slide.texture.aya` | `FrontEnd%LostToys.tga(0)A8R8G8B8.aya` (`DAT_0089d7bc`) | `AB1B3654842335983E7170F233137731FEA5A25E8632A1F94CFCADCCF758040B` |
 | `forseti-writing-large.texture.aya` | `FrontEnd%v2%FE_Forseti_Writing_large.tga(0)A8R8G8B8.aya` (`DAT_0089d7f0`) | `6BC5671A482817E4B5702E348433C66D1E87178D068C6DA36500273885B004C9` |
 | `reflection-map.texture.aya` | `FrontEnd%v2%FE_Reflection_map.tga(0)A8R8G8B8.aya` (`DAT_0089d7fc`) | `E480261FBBA5CFAFB646D52F217BC11983BAE1285DE16D6F80A9DE6C017F0121` |
@@ -66,7 +66,7 @@ They are deliberately not staged here. Everything in this directory is inside
 the Godot project, and a `.gitignore` entry stops a `git commit` but does **not**
 stop a Godot export from packing an ignored file into the PCK — the export scans
 the project directory, not the git index. Two decoded retail movies are the last
-thing that should depend on that distinction. `fe-back-128x128x15.rgb` in
+thing that should depend on that distinction. `fe-back-128x128x30.rgb` in
 `Backgrounds/` predates this lane and IS exposed to that hazard; no export preset
 exists in the project today, so the risk is latent rather than active.
 
