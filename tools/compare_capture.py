@@ -40,7 +40,23 @@ def region_stats(ref: Image.Image, cmp_: Image.Image, box: tuple[int, int, int, 
 
     diffs = [abs(p[0] - q[0]) + abs(p[1] - q[1]) + abs(p[2] - q[2]) for p, q in zip(a, b)]
     changed = sum(1 for d in diffs if d > 0)
-    # 24 = ~3% of full-scale on each channel; below this is dither/AA noise.
+    # Threshold is on the SUMMED L1 delta across the three channels, so the
+    # per-channel cliff sits at 8: 3*8 = 24 is not > 24, and 3*9 = 27 is.
+    #
+    # This comment used to read "below this is dither/AA noise". That was FALSE
+    # and load-bearing, because it licensed reading a 0.00% as "no error".
+    # Measured 2026-07-26 on retail t025065 against itself:
+    #     uniform +8/channel  -> material 0.00%   (meanD 7.71)
+    #     uniform +9/channel  -> material 89.89%  (meanD 8.66)
+    #     multiplicative 1.03 -> material 0.00%   (meanD 3.18)
+    # A uniform 3% shading error is not dither and it is not AA. material% is
+    # BLIND to it while meanD rises monotonically throughout. So:
+    #
+    #   * material% is an ORDERING statistic, sound at a fixed threshold - rank
+    #     order was invariant across thresholds 4..96 on every real capture pair
+    #     tested. Use it to compare candidates.
+    #   * material% is NOT a shading metric. For a suspected gain or offset
+    #     error, read meanD, which does not have this blind spot.
     material = sum(1 for d in diffs if d > 24)
 
     def mean(xs):

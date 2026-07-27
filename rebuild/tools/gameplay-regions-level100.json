@@ -3,15 +3,63 @@
   "_caveats": {
     "cockpit frame (left)": "19-27% NON-COCKPIT. Measured 2026-07-26 by counting the winning part at every pixel of a retail-pose z-buffered raster: this box is Object03 (6,739 px) plus Lsidebit01 (400 px). On the same-surface mask the shading is close; the box mean is dominated by silhouette disagreement, not by shading. Do not read this box as a cockpit shading metric.",
     "cockpit frame (right)": "19% NON-COCKPIT. The box is Object01 (6,125 px) and nothing else, and Object01's shading is correct to 1.5% (retail/build 0.992/0.985/0.985 over 5,566 same-surface px). 1,713 of the box's 9,000 px are bright scene in retail and cockpit in the build, because our Object01 covers 8,856 px against retail's 6,306. R-channel decomposition is exact: +15.89 (build-only) +7.06 (both) +0.99 (neither) -1.86 (retail-only) = +22.08 against a measured 22.1 gap. That deficit is the 2.8774 degree composition residual, and it is the floor on this box. Do not read this box as a cockpit shading metric.",
-    "_note": "Neither cockpit box contains Lsidebit02, which sits at y=371..420 below both."
+    "_note": "Neither cockpit box contains Lsidebit02, which sits at y=371..420 below both.",
+    "terrain mid-band": "38.86% CONTAMINATED by 'threat circle'. The two boxes intersect at [230,230,420,320] = 17,100 px of this box's 44,000. Measured 2026-07-26: that 38.9% of the area carries 66% of the box's material pixels (6,511 of 9,836). PROVEN CAUSALLY: commit dba2948e changed ONLY the compass gauge blend, yet moved this box 22.35 -> 20.75; with the threat box excised the real terrain moved 12.36 -> 12.27, i.e. 94% of that 'terrain' win was the compass overlay. Do NOT read this box as a terrain shading metric - use 'terrain mid-band (clean)'. Every historical number for this box, including the 91.15 -> 72.85 -> 65.12 sequence, is a blend of terrain and whatever the compass was doing.",
+    "terrain mid-band (clean)": "'terrain mid-band' minus the 'threat circle' intersection: 26,900 px, no HUD element. This is the box to use for terrain shading work. HAND-MEASURED at HEAD against retail t025065: 12.36% material / meanD 4.91, mean delta (ours-retail) [-0.77, +0.03, +0.81]. Split at x=320 the G channel FLIPS SIGN - left [-0.27, +0.53, +0.88], right [-1.30, -0.50, +0.73] - at magnitudes under 1.3 DN. That refutes a global-constant shading model rather than proving there is no residual: 12.36% material remains in pixels the threat circle never touches, and it is high-frequency, not an offset.",
+    "_noise floors": "RETAIL'S CROSS-RUN FLOOR IS NOT ONE NUMBER. The widely-quoted 0.02% is real and reproducible, but ONLY for full-frame at level-100 t025065 (verified: pristine-verification-2026-07-26/chain-20260726-164610 vs -164822 = 0.02% material, portrait/compass 0.00%). It does NOT generalise. Measured floors: frontend pages 1.28-5.57% (select-configuration worst); settled-camera level-100 full frame ~0.93%; speaker-portrait frames give portrait/compass 15.6-21.5% because retail's portrait carries a per-run non-deterministic dither. Opening-pan frames labelled 'reference-only (camera in motion)' reach 36.79% and must never be quoted as a floor. ALSO: our own capture self-noise at t025065 is ~2.53% full-frame, so any full-frame improvement under ~2.5 points is not measurable from a single capture pair."
   },
-  "sky": [60, 20, 580, 130],
-  "horizon ridge": [400, 140, 640, 220],
-  "terrain mid-band": [120, 230, 520, 340],
-  "cockpit frame (left)": [0, 190, 60, 340],
-  "cockpit frame (right)": [580, 190, 640, 340],
-  "threat circle": [230, 130, 420, 320],
-  "scanner (lower left)": [20, 350, 150, 470],
-  "portrait/compass (lower right)": [500, 350, 630, 470],
-  "message panel": [175, 395, 470, 455]
+  "sky": [
+    60,
+    20,
+    580,
+    130
+  ],
+  "horizon ridge": [
+    400,
+    140,
+    640,
+    220
+  ],
+  "terrain mid-band": [
+    120,
+    230,
+    520,
+    340
+  ],
+  "cockpit frame (left)": [
+    0,
+    190,
+    60,
+    340
+  ],
+  "cockpit frame (right)": [
+    580,
+    190,
+    640,
+    340
+  ],
+  "threat circle": [
+    230,
+    130,
+    420,
+    320
+  ],
+  "scanner (lower left)": [
+    20,
+    350,
+    150,
+    470
+  ],
+  "portrait/compass (lower right)": [
+    500,
+    350,
+    630,
+    470
+  ],
+  "message panel": [
+    175,
+    395,
+    470,
+    455
+  ]
 }
