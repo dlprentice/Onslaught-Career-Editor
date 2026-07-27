@@ -55,10 +55,31 @@ local material. Source retains only the bounded recipe and implementation.
 Passing an output safety test proves neither format completeness nor visual
 fidelity.
 
+## Parity measurement
+
+- `compare_capture.py` compares one reconstruction frame against one retail
+  frame per region. It refuses mismatched sizes rather than resampling.
+- `pair_gameplay_capture.py` and `score_frontend_capture.py` pair whole capture
+  runs against the retail reference by offset. `score_frontend_capture.py` is a
+  **gate**: `rebuild/tools/Capture-Frontend.ps1` folds its verdict into `Status`,
+  so a frontend regression fails the capture. Its thresholds live in
+  `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
+  parity claims — each sits beside the measured value it was derived from.
+
+A run that can score nothing reports `UNSCORED`, never `PASS`. Reference frames
+are retail-derived and live under ignored local paths, so a fresh clone scores
+nothing and must say so.
+
 ## Ghidra and runtime research
 
 The retained Java scripts are generic address, metadata, tag, disassembly,
-xref, scalar, vtable, and reviewed-correction helpers. Applied wave-specific
+xref, scalar, vtable, analysis-attribution, and reviewed-correction helpers.
+`ListAnalysisOptions.java` reads a program's saved analyser state,
+`RunIsolatedAnalyzer.java` runs one analyser with the rest switched off so a
+database delta is attributable, and `ExportFullFunctionInventory.java` plus
+`ghidra_inventory_diff.py` measure what a pass did to work that was already
+correct. `RunIsolatedAnalyzer.java` mutates and belongs only on a disposable
+canary copy. Applied wave-specific
 mutations live in Git history. `ghidra_project_backup.py` and the provenance/
 rename guards operate only on explicitly selected local project roots.
 

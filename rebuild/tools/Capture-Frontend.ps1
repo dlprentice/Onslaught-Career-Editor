@@ -179,8 +179,54 @@ try {
     $missing = [Math]::Max(0, $planned - $manifest.shots.Count)
     $boundary = if ($manifest.PSObject.Properties.Name -contains 'boundary') { $manifest.boundary } else { $null }
 
+    # RETAIL COMPARISON. Everything above this line is a property of our own
+    # capture run - right screen, right size, saved, complete. Until 2026-07-27
+    # that WAS the whole gate, so it reported PASS without comparing a single
+    # pixel against retail and could not detect divergence from the target: the
+    # only thing a parity gate appears to guarantee (task #113).
+    #
+    # score_frontend_capture.py supplies the missing half. Its verdicts:
+    #   PASS      every gated region is at or under its regression ceiling
+    #   FAIL      at least one is above it
+    #   ERROR     the comparison could not be made soundly (pairing out of
+    #             tolerance, size mismatch, missing frame)
+    #   UNSCORED  no retail reference set present, or no plan page targets this
+    #             capture plan
+    #
+    # UNSCORED is deliberately NOT folded into PASS. A fresh clone has no
+    # retail material - it is gitignored, retail-derived - and "no evidence"
+    # rendering as "no problem" is precisely the defect being closed here.
+    $repoRootPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+    $scorer = Join-Path $repoRootPath 'tools\score_frontend_capture.py'
+    $parityReport = Join-Path $OutputDirectory 'frontend-parity.json'
+    $parityVerdict = 'UNSCORED'
+    if (Test-Path -LiteralPath $scorer) {
+        & py -3 $scorer --capture-dir $OutputDirectory --json-out $parityReport
+        if (Test-Path -LiteralPath $parityReport) {
+            $parityVerdict = (Get-Content -LiteralPath $parityReport -Raw | ConvertFrom-Json).verdict
+        }
+        else {
+            $parityVerdict = 'ERROR'
+        }
+    }
+    else {
+        $parityVerdict = 'ERROR'
+        Write-Warning "score_frontend_capture.py not found at $scorer; parity was NOT measured."
+    }
+
+    $captureHealthy = $mismatched.Count -eq 0 -and $failedSaves.Count -eq 0 -and
+        $wrongSize.Count -eq 0 -and $missing -eq 0
+    $status =
+        if (-not $captureHealthy) { 'SUSPECT' }
+        elseif ($parityVerdict -eq 'PASS') { 'PASS' }
+        elseif ($parityVerdict -eq 'FAIL') { 'FAIL' }
+        elseif ($parityVerdict -eq 'UNSCORED') { 'UNSCORED' }
+        else { 'SUSPECT' }
+
     [pscustomobject]@{
-        Status = if ($mismatched.Count -eq 0 -and $failedSaves.Count -eq 0 -and $wrongSize.Count -eq 0 -and $missing -eq 0) { 'PASS' } else { 'SUSPECT' }
+        Status = $status
+        ParityVerdict = $parityVerdict
+        ParityReport = if (Test-Path -LiteralPath $parityReport) { $parityReport } else { $null }
         Purpose = $effectivePurpose
         GodotSourceDirty = $sourceDirty
         WrongSizeShots = $wrongSize.Count

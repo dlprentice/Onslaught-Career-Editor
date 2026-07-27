@@ -16,6 +16,7 @@ options, not a required sequence.
 | Rebuild Core | `npm run test:rebuild-core` |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
+| Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |
 | Portable ZIP inputs or layout | `npm run release:winui-zip` |
 
 Rebuild commands materialize their exact retail inputs to ignored paths from a

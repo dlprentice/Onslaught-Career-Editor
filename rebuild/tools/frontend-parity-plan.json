@@ -1,0 +1,234 @@
+{
+  "_doc": [
+    "Which frontend pages the capture gate scores against retail, and how badly",
+    "each is allowed to do before the gate FAILS. Consumed by",
+    "tools/score_frontend_capture.py, which Capture-Frontend.ps1 calls.",
+    "",
+    "regressionCeiling is a REGRESSION CEILING, NOT A PARITY CLAIM. Every entry",
+    "sits above a `measured` value recorded beside it, and several of those",
+    "measured values are enormous - title-logo and bg-emblem-topright are both",
+    "wrong by a third of their area (task #17). The ceiling says 'do not get",
+    "worse than this'. It does not say the page is right. Anyone quoting a",
+    "ceiling as a parity number is misreading the file.",
+    "",
+    "The gated statistic is gapPct: pixels where we differ materially from the",
+    "retail reference AND retail's own second run does not. Per-pixel and",
+    "floor-aware, so animated content retail cannot reproduce itself is not",
+    "charged to us, while a layer we never drew still is.",
+    "",
+    "Ceilings are applied to the WORST sample, never the mean - a regression",
+    "visible at one video phase is still a regression."
+  ],
+  "referenceRoot": "local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26",
+  "_referenceNote": [
+    "The no-skipfmv two-run set. -skipfmv degrades the main menu itself by",
+    "84.18% material, so the older -skipfmv reference could not be used for",
+    "this at all. See local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md."
+  ],
+  "_measurementProvenance": {
+    "measuredAtCommit": "684c7c52",
+    "measuredOn": "2026-07-27",
+    "captureDeterminism": [
+      "Two full mainmenu captures of 684c7c52 taken back to back were",
+      "byte-identical on all 161 frames. Our own contribution to run-to-run",
+      "variance is 0.00%, so the 2.00pp margin below is entirely headroom",
+      "against incidental change, not an allowance for our own flake."
+    ],
+    "marginPp": 2.0
+  },
+  "_windowNote": [
+    "FEP_MAIN is gated as THREE windows rather than one, because retail builds",
+    "the page up in stages and a single window would hide a regression behind",
+    "the stage we are worst at.",
+    "",
+    "Measured 2026-07-27 from the retail run1 burst, region mean RGB:",
+    "  t000014  lang-selector, menu-column and the arcs are ALL exactly the",
+    "           flat fill (23,23,48). Only title-logo and bg-emblem-topright",
+    "           are drawn. Retail's first main-menu frame carries background",
+    "           plus logo plus emblem and NOTHING ELSE.",
+    "  t000524  all chrome present and over-bright (lang-selector 66,82,122)",
+    "  t001020+ settling to its steady value (lang-selector 58,52,74)",
+    "",
+    "We draw the entire page on frame 0, which is why the entry window scores",
+    "76% gap against a retail cross-run floor of 0.24% - retail is perfectly",
+    "reproducible there and we simply differ. That is a real defect, tracked",
+    "separately; it is NOT a capture artefact and must not be excluded to make",
+    "the numbers look better. Gating it in its own window keeps it visible and",
+    "keeps the settled window sensitive at its own ~20% scale."
+  ],
+  "pages": [
+    {
+      "id": "FEP_MAIN@entry",
+      "capturePlan": "mainmenu",
+      "shotPrefix": "mainmenu",
+      "reference": {
+        "run": "run1",
+        "prefix": "mm"
+      },
+      "noiseFloor": {
+        "run": "run2",
+        "prefix": "mm"
+      },
+      "regions": "rebuild/tools/frontend-regions-main-menu.json",
+      "samples": [
+        14
+      ],
+      "measured": {
+        "FULL FRAME": 76.18,
+        "bg-empty-left": 97.94,
+        "bg-emblem-topright": 68.87,
+        "title-logo": 72.9,
+        "lang-selector": 99.72,
+        "menu-column": 90.38,
+        "decor-left-arc": 93.56,
+        "decor-right-arc": 98.35,
+        "decor-right-glyph": 90.18,
+        "version-overlay": 90.78
+      },
+      "regressionCeiling": {
+        "FULL FRAME": 78.18,
+        "bg-empty-left": 99.94,
+        "bg-emblem-topright": 70.87,
+        "title-logo": 74.9,
+        "lang-selector": 100.0,
+        "menu-column": 92.38,
+        "decor-left-arc": 95.56,
+        "decor-right-arc": 100.0,
+        "decor-right-glyph": 92.18,
+        "version-overlay": 92.78
+      }
+    },
+    {
+      "id": "FEP_MAIN@reveal",
+      "capturePlan": "mainmenu",
+      "shotPrefix": "mainmenu",
+      "reference": {
+        "run": "run1",
+        "prefix": "mm"
+      },
+      "noiseFloor": {
+        "run": "run2",
+        "prefix": "mm"
+      },
+      "regions": "rebuild/tools/frontend-regions-main-menu.json",
+      "samples": [
+        524,
+        1020
+      ],
+      "measured": {
+        "FULL FRAME": 27.0,
+        "bg-empty-left": 6.99,
+        "bg-emblem-topright": 38.7,
+        "title-logo": 43.39,
+        "lang-selector": 74.23,
+        "menu-column": 49.64,
+        "decor-left-arc": 30.58,
+        "decor-right-arc": 22.56,
+        "decor-right-glyph": 37.21,
+        "version-overlay": 10.39
+      },
+      "regressionCeiling": {
+        "FULL FRAME": 29.0,
+        "bg-empty-left": 8.99,
+        "bg-emblem-topright": 40.7,
+        "title-logo": 45.39,
+        "lang-selector": 76.23,
+        "menu-column": 51.64,
+        "decor-left-arc": 32.58,
+        "decor-right-arc": 24.56,
+        "decor-right-glyph": 39.21,
+        "version-overlay": 12.39
+      }
+    },
+    {
+      "id": "FEP_MAIN@settled",
+      "capturePlan": "mainmenu",
+      "shotPrefix": "mainmenu",
+      "reference": {
+        "run": "run1",
+        "prefix": "mm"
+      },
+      "noiseFloor": {
+        "run": "run2",
+        "prefix": "mm"
+      },
+      "regions": "rebuild/tools/frontend-regions-main-menu.json",
+      "_samplesNote": [
+        "Every settled retail run1 burst offset, not the five the hand",
+        "measurements used. The extra seven cost a few seconds and they are",
+        "the ones that would catch a phase regression that happens to look",
+        "fine at the five offsets a human picked."
+      ],
+      "samples": [
+        1530,
+        2024,
+        2529,
+        3022,
+        3531,
+        4030,
+        4519,
+        5022,
+        5522,
+        6031,
+        6524,
+        7027
+      ],
+      "measured": {
+        "FULL FRAME": 19.53,
+        "bg-empty-left": 5.61,
+        "bg-emblem-topright": 35.57,
+        "title-logo": 41.21,
+        "lang-selector": 17.19,
+        "menu-column": 23.35,
+        "decor-left-arc": 12.15,
+        "decor-right-arc": 7.41,
+        "decor-right-glyph": 21.9,
+        "version-overlay": 6.82
+      },
+      "regressionCeiling": {
+        "FULL FRAME": 21.53,
+        "bg-empty-left": 7.61,
+        "bg-emblem-topright": 37.57,
+        "title-logo": 43.21,
+        "lang-selector": 19.19,
+        "menu-column": 25.35,
+        "decor-left-arc": 14.15,
+        "decor-right-arc": 9.41,
+        "decor-right-glyph": 23.9,
+        "version-overlay": 8.82
+      }
+    }
+  ],
+  "unscored": [
+    {
+      "id": "FEP_DEVSELECT",
+      "capturePlan": "startup",
+      "task": "115",
+      "reason": "retail's own two runs disagree by 5.8-44.2% material at matched page-entry offsets, so no reconstruction improvement below that is measurable. Gating on it would be theatre."
+    },
+    {
+      "id": "FEP_LEVEL_SELECT",
+      "capturePlan": "startup",
+      "task": "115",
+      "reason": "retail's own two runs disagree by 9.6-62.5% material; best-match offset drifts by a near-constant -2.0 s whose mechanism is not established."
+    },
+    {
+      "id": "FEP_MISSION_BRIEFING",
+      "capturePlan": "startup",
+      "task": "115",
+      "reason": "the no-skipfmv two-run set carries no briefing burst, so there is no second retail run to form a noise floor from."
+    },
+    {
+      "id": "FEP_SELECT_CONFIGURATION",
+      "capturePlan": "startup",
+      "task": "115",
+      "reason": "as FEP_MISSION_BRIEFING - no second retail run in the no-skipfmv set."
+    },
+    {
+      "id": "FEP_LOADING",
+      "capturePlan": "startup",
+      "task": "115",
+      "reason": "as FEP_MISSION_BRIEFING - no second retail run in the no-skipfmv set."
+    }
+  ]
+}
