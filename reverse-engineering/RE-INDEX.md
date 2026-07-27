@@ -81,6 +81,13 @@ waves, superseded plans, and generated accounting.
 - [The terrain ambient-light term, implemented and measured](binary-analysis/terrain-ambient-light-applied-2026-07-26.md)
 - [The terrain third light — falsified; `SetupLights` dominates every terrain draw, and the three-light rig is a front-end page](binary-analysis/terrain-third-light-2026-07-26.md)
 - [No missing high-frequency terrain term — the spectra match, and the frame is half a pixel out](binary-analysis/terrain-spatial-dispersion-negative-2026-07-26.md)
+- [The default render-state block `0x004EB1E0` — re-derived from bytes; the API is D3D9, `COLORVERTEX` is `0x8D` not `60`, and the function has 7 callers not 547](binary-analysis/d3d-default-render-state-block-2026-07-27.md)
+  — 2026-07-27. Promotes the static block that several committed rendering
+  decisions rested on while living only in agent reports. Bounded to
+  `[0x004EB1E0, 0x004EB99D)`. Corrects the "Direct3D 8" attribution, the 547
+  figure (`440 + 50 + 57`, where the 57 are `SetTexture`; the render-state total
+  is **490**), and the `COLORVERTEX` state id. Records which of the decisions
+  have a runtime capture behind them — only *lighting-on* does.
 - [The cockpit lighting law — decoded, and already what the reconstruction computes](binary-analysis/cockpit-lighting-law-2026-07-26.md)
 - [The cockpit world matrix — the third upload site, traced by hand and confirmed at runtime](binary-analysis/cockpit-world-matrix-static-2026-07-26.md)
 - [Controlled copied-runtime observations — four questions static reading could not settle](binary-analysis/controlled-runtime-observations-2026-07-26.md)

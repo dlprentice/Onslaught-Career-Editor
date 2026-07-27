@@ -45,6 +45,7 @@ evidence lives under the ignored lab’s apply logs when present.
 - [Terrain material record and the `LANDSCAPE_LIGHTING` gate](terrain-ambient-light-material-2026-07-26.md)
 - [Terrain ambient-light term implemented and measured](terrain-ambient-light-applied-2026-07-26.md)
 - [Cockpit lighting law — located, decoded, already implemented](cockpit-lighting-law-2026-07-26.md)
+- [The default render-state block `0x004EB1E0` — re-derived from bytes](d3d-default-render-state-block-2026-07-27.md)
 - [Half-pixel pixel-centre offset corrected in the projection](pixel-centre-projection-offset-applied-2026-07-26.md)
 - [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
