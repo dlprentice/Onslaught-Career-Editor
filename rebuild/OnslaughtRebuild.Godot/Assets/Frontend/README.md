@@ -54,6 +54,27 @@ lane.
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
 | `english.json` | Ten menu/launch strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `B27D7B1B3F8CD8AA22B664CACF7C87A8B0907C7DEA4C4F07DFF8DA763DBB70F3` |
 
+## Cold-start media is NOT in this directory
+
+Retail's splash and intro FMV — `data/video/LTLogo.vid`,
+`data/video/OpeningFMV.vid` and `data/textures/splash.tga` — are decoded by
+`materialize_retail_assets.py --startup-media` into a cache **outside**
+`res://`, defaulting to `%LOCALAPPDATA%/OnslaughtToolkit/startup-media` and
+overridable with `--startup-media-root` or `ONSLAUGHT_STARTUP_MEDIA`.
+
+They are deliberately not staged here. Everything in this directory is inside
+the Godot project, and a `.gitignore` entry stops a `git commit` but does **not**
+stop a Godot export from packing an ignored file into the PCK — the export scans
+the project directory, not the git index. Two decoded retail movies are the last
+thing that should depend on that distinction. `fe-back-128x128x15.rgb` in
+`Backgrounds/` predates this lane and IS exposed to that hazard; no export preset
+exists in the project today, so the risk is latent rather than active.
+
+The reconstruction plays them through `RetailStartupSequence`, gated by
+`--intro` / `--skipfmv` (retail's own flag name). Capture and smoke runs suppress
+them, because every retail reference frame in this repository was captured with
+`-skipfmv` on.
+
 ## Evidence boundary
 
 - Steam Ghidra: startup handlers `0x0051B660`/`0x0051B6B0`, prompt render

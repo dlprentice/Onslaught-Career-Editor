@@ -35,6 +35,15 @@
              Link="godot-hud-source\Level100MessagePlaybackState.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\Level100TerrainCompositor.cs"
              Link="godot-terrain-source\Level100TerrainCompositor.cs" />
+    <!-- The deterministic half of the cold-start media lane. Both files are
+         deliberately free of Godot types so the sequence can be tested without
+         an engine: the capture rig suppresses the intro (as retail's -skipfmv
+         does), so these tests are the only thing standing between the intro
+         path and silent rot. -->
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailStartupSchedule.cs"
+             Link="godot-startup-source\RetailStartupSchedule.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailStartupMediaIndex.cs"
+             Link="godot-startup-source\RetailStartupMediaIndex.cs" />
   </ItemGroup>
 
   <ItemGroup>

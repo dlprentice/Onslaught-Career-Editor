@@ -39,6 +39,10 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _pauseExitAudioCompleted;
     private bool _smokeMode;
     private bool _captureMode;
+    private bool _captureArgumentsPresent;
+    private bool _skipStartupMedia;
+    private bool _forceStartupMedia;
+    private RetailStartupSequence? _startupSequence;
     private bool _smokeCompleting;
     private bool _windowHasFocus;
     private bool _focusLossHandlerInputCleared;
@@ -115,6 +119,8 @@ public sealed partial class FirstFlightGame : Node3D
                 _captureMode = true;
                 AddChild(rig);
             }
+
+            StartRetailStartupMedia();
         }
         catch (Exception exception)
         {
@@ -1104,6 +1110,71 @@ public sealed partial class FirstFlightGame : Node3D
         _Notification((int)NotificationWMWindowFocusIn);
     }
 
+    /// <summary>
+    /// Runs retail's cold-start media — the Lost Toys logo movie, the opening
+    /// montage and the splash card — ahead of the interactive frontend.
+    ///
+    /// <para><b>When it is suppressed, and why that is parity rather than an
+    /// escape hatch.</b></para>
+    /// Capture and smoke runs suppress it, exactly as retail's <c>-skipfmv</c>
+    /// does. That is not a convenience: EVERY retail reference frame this
+    /// project compares against was captured with <c>-skipfmv</c> on, so a
+    /// capture run that played the intro would be measuring the reconstruction
+    /// against a reference that structurally cannot contain it, and the 13
+    /// pinned startup shots — whose first shot is click-to-start at engine
+    /// frame 12 — would all land on the wrong screen.
+    ///
+    /// The risk this creates is real and was named in the cross-model consult:
+    /// if the only automated visual path skips the intro, the intro can rot
+    /// unobserved, which is precisely how <c>_feBackFrames</c> came to be loaded
+    /// and never drawn. The mitigation is that the deterministic part of this
+    /// lane — the schedule and the media index — carries no Godot types and is
+    /// unit tested directly in <c>OnslaughtRebuild.Client.Tests</c>, and
+    /// <c>--intro</c> forces the sequence on for a human or a future rig.
+    /// </summary>
+    private void StartRetailStartupMedia()
+    {
+        bool suppressed = !_forceStartupMedia &&
+            (_skipStartupMedia || _smokeMode || _captureArgumentsPresent);
+        if (suppressed)
+        {
+            return;
+        }
+
+        var sequence = new RetailStartupSequence { Name = "RetailStartupSequence" };
+        sequence.Initialize(
+            RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
+            // A capture run is deterministic by contract, so the sequence has to
+            // advance on the tick rather than on a delta the host could jitter.
+            _captureArgumentsPresent
+                ? RetailStartupClockMode.FixedTick
+                : RetailStartupClockMode.Wall);
+
+        if (sequence.ScheduledSeconds <= 0d)
+        {
+            // Nothing was decoded. Do not hold a black screen, and above all do
+            // not draw a stand-in for the missing footage.
+            GD.PushWarning(
+                "Startup media is absent, so splash and intro FMV do not play. " +
+                (sequence.MediaUnavailableReason ?? "No cue had decoded media."));
+            sequence.QueueFree();
+            return;
+        }
+
+        // The frontend must not tick or draw underneath the sequence: its
+        // click-to-start pulse timer starts when the page is first shown, and
+        // letting it run for 90 s would put the pulse at an arbitrary phase the
+        // moment the player finally sees the page.
+        RetailFrontendFlow frontend = _frontend ??
+            throw new InvalidOperationException(
+                "The startup media sequence needs the frontend to already exist.");
+        frontend.SuspendForStartupMedia();
+        sequence.Completed += frontend.ResumeAfterStartupMedia;
+
+        _startupSequence = sequence;
+        AddChild(sequence);
+    }
+
     private void ParseUserArguments()
     {
         foreach (string argument in OS.GetCmdlineUserArgs())
@@ -1122,6 +1193,21 @@ public sealed partial class FirstFlightGame : Node3D
                      argument.StartsWith("--capture-offsets-ms=", StringComparison.Ordinal))
             {
                 // Consumed by FrontendCaptureRig.TryCreate during _Ready.
+                _captureArgumentsPresent = true;
+            }
+            else if (argument == "--skipfmv")
+            {
+                // Retail's own flag, reproduced by name: CLIParams.cpp:272 sets
+                // mSkipFMV, and CGame::GetIntroFMV returns -1 when it is set.
+                _skipStartupMedia = true;
+            }
+            else if (argument == "--intro")
+            {
+                _forceStartupMedia = true;
+            }
+            else if (argument.StartsWith("--startup-media=", StringComparison.Ordinal))
+            {
+                // Consumed by RetailStartupSequence.ResolveMediaRoot.
             }
             else
             {

@@ -462,6 +462,41 @@ public sealed partial class RetailFrontendFlow : Control
         Confirm();
     }
 
+    /// <summary>
+    /// Hides and freezes the frontend while retail's cold-start media owns the
+    /// screen.
+    ///
+    /// This is not cosmetic. <see cref="_clickPulseTimer"/> and
+    /// <see cref="_clickPageSeconds"/> accumulate in <c>_Process</c> whenever
+    /// the session is on click-to-start, and the released splash pulse is
+    /// <c>((cos(t*pi)+1)*0.375)+0.46875</c> — a function of that timer. Letting
+    /// it run for the ~93 s the intro lasts would put the pulse at an arbitrary
+    /// phase on the first frame the player actually sees, where retail's starts
+    /// from zero because the page has only just been created.
+    /// </summary>
+    public void SuspendForStartupMedia()
+    {
+        Visible = false;
+        SetProcess(false);
+        SetProcessInput(false);
+    }
+
+    /// <summary>
+    /// Hands the screen back after the cold-start media finishes or is skipped.
+    /// The click-to-start timers are reset so the page begins from zero exactly
+    /// as it does when the frontend is created cold.
+    /// </summary>
+    public void ResumeAfterStartupMedia()
+    {
+        _animationSeconds = 0d;
+        _clickPulseTimer = 0d;
+        _clickPageSeconds = 0d;
+        Visible = true;
+        SetProcess(true);
+        SetProcessInput(true);
+        QueueRedraw();
+    }
+
     public override void _Ready()
     {
         if (!_initialized)

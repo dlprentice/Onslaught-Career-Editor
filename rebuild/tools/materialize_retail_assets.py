@@ -3631,6 +3631,168 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     return all_outputs
 
 
+# --- retail cold-start media -------------------------------------------------
+#
+# The intro sequencer in pristine BEA.exe (0x004efce3-0x004efee9) loads
+# data/textures/splash.tga and then plays "ltlogo" and "openingfmv" through the
+# format string "data\\video\\%s.vid". The gated
+# Play("TWIMTBP_GefFX_640x480_Audio") between them is not materialized, but NOT
+# because it is dead code — that first reading was wrong. Its gate [0x83d404] is
+# the value field of a CVar named "TWIMTBP" constructed at 0x83d3f8 (0x004efae0)
+# and written object-relative by CVar::Init's `mov [eax+0xc], ecx`, which an
+# absolute-address scan cannot see; the shipped cardid.txt sets
+# `Tweak:TWIMTBP 1` for exactly one device, Vendor:10DE Device:0330 GeForce FX
+# 5900 Ultra. It is omitted because no modern adapter matches that entry and the
+# measured startup has no 5 s slot for it.
+#
+# WHERE THIS WRITES, AND WHY IT IS NOT WITH THE OTHER ASSETS.
+# Everything above lands under rebuild/OnslaughtRebuild.Godot/Assets, i.e.
+# inside res://. That is already a latent hazard for the FEBack strip: a
+# .gitignore entry stops a git commit but does NOT stop a Godot export from
+# packing an ignored file into the PCK. Startup media is two decoded retail
+# movies, so it goes to a cache OUTSIDE the project tree where packing it is
+# structurally impossible. It is therefore NOT part of _all_outputs() and does
+# not participate in the exact-file count.
+#
+# FORMAT. One lossless PNG per video frame, not a raw RGB24 strip. Measured on
+# the reference machine: LTLogo 229 frames = 24 MB and OpeningFMV 2054 frames =
+# 244 MB, against 98.9 MB and 887 MB for RGB24 strips of the same footage. PNG
+# is lossless, so these ARE the Bink decode and can serve as their own parity
+# oracle; and because frames are separately addressable the player holds one
+# frame resident instead of 2,054 textures.
+STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v1"
+STARTUP_MEDIA_CLIPS = (
+    ("LostToysLogo", "data/video/LTLogo.vid", "lost-toys-logo", 480, 300, 25, 229),
+    ("OpeningMontage", "data/video/OpeningFMV.vid", "opening-montage", 480, 300, 25, 2054),
+)
+STARTUP_MEDIA_SPLASH_SOURCE = "data/textures/splash.tga"
+
+
+def _default_startup_media_root() -> Path:
+    configured = os.environ.get("ONSLAUGHT_STARTUP_MEDIA")
+    if configured:
+        return Path(configured)
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        return Path(local) / "OnslaughtToolkit" / "startup-media"
+    return ROOT / "local-lab/startup-media"
+
+
+def _ffprobe_stream(source: Path) -> dict[str, str]:
+    completed = subprocess.run(
+        [
+            "ffprobe", "-hide_banner", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width,height,r_frame_rate,duration",
+            "-of", "default=nw=1",
+            str(source),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    fields: dict[str, str] = {}
+    for line in completed.stdout.splitlines():
+        if "=" in line:
+            key, _, value = line.partition("=")
+            fields[key.strip()] = value.strip()
+    return fields
+
+
+def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
+    media_root.mkdir(parents=True, exist_ok=True)
+    index: dict[str, object] = {
+        "schema": STARTUP_MEDIA_SCHEMA,
+        "generatedBy": "rebuild/tools/materialize_retail_assets.py --startup-media",
+        "gameRoot": str(game_root),
+        "note": (
+            "Decoded from the user's own retail installation. Never commit, "
+            "never place under res://, never redistribute."
+        ),
+        "clips": {},
+        "stills": {},
+    }
+
+    for cue, relative, folder, width, height, fps, frames in STARTUP_MEDIA_CLIPS:
+        source = game_root / relative
+        if not source.is_file():
+            raise RuntimeError(f"startup media source missing: {source}")
+
+        # Read the shipped header back rather than trusting the constants above.
+        # A decode whose frame count silently disagrees with the source is
+        # exactly the class of defect that produced the half-rate FEBack strip.
+        probe = _ffprobe_stream(source)
+        if int(probe["width"]) != width or int(probe["height"]) != height:
+            raise RuntimeError(
+                f"{relative} is {probe['width']}x{probe['height']}, expected {width}x{height}"
+            )
+        if probe["r_frame_rate"] != f"{fps}/1":
+            raise RuntimeError(
+                f"{relative} reports frame rate {probe['r_frame_rate']}, expected {fps}/1"
+            )
+        expected_duration = frames / fps
+        if abs(float(probe["duration"]) - expected_duration) > 0.02:
+            raise RuntimeError(
+                f"{relative} reports duration {probe['duration']}s, "
+                f"expected {expected_duration:.3f}s for {frames} frames at {fps} fps"
+            )
+
+        destination = media_root / folder
+        if destination.exists():
+            shutil.rmtree(destination)
+        destination.mkdir(parents=True)
+
+        # No -r, no fps filter, no -vf: any rate argument here is how a decode
+        # silently drops every second frame while preserving total duration.
+        subprocess.run(
+            [
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                "-i", str(source),
+                "-pix_fmt", "rgb24",
+                str(destination / "f%05d.png"),
+            ],
+            check=True,
+        )
+
+        written = sorted(destination.glob("f*.png"))
+        if len(written) != frames:
+            raise RuntimeError(
+                f"{relative} decoded to {len(written)} frames, expected {frames}"
+            )
+
+        index["clips"][cue] = {  # type: ignore[index]
+            "source": relative,
+            "sourceSha256": _sha256(source.read_bytes()),
+            "width": width,
+            "height": height,
+            "fpsNumerator": fps,
+            "fpsDenominator": 1,
+            "frameCount": frames,
+            "framePathFormat": f"{folder}/f{{0:D5}}.png",
+        }
+
+    splash_source = game_root / STARTUP_MEDIA_SPLASH_SOURCE
+    if not splash_source.is_file():
+        raise RuntimeError(f"startup media source missing: {splash_source}")
+    subprocess.run(
+        [
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-i", str(splash_source),
+            str(media_root / "splash.png"),
+        ],
+        check=True,
+    )
+    index["stills"]["Splash"] = {  # type: ignore[index]
+        "source": STARTUP_MEDIA_SPLASH_SOURCE,
+        "sourceSha256": _sha256(splash_source.read_bytes()),
+        "path": "splash.png",
+    }
+
+    manifest = media_root / "startup-media.json"
+    manifest.write_text(json.dumps(index, indent=2), encoding="utf-8")
+    return manifest
+
+
 def _publish(stage: Path, outputs: tuple[tuple[Path, str], ...]) -> None:
     for relative, expected in outputs:
         source = stage / relative
@@ -3650,7 +3812,32 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Materialize the exact retail assets used by the rebuild")
     parser.add_argument("--game-root", type=Path, help="Battle Engine Aquila retail installation root")
     parser.add_argument("--force", action="store_true", help="reverify source data and regenerate every asset")
+    parser.add_argument(
+        "--startup-media",
+        action="store_true",
+        help=(
+            "decode the cold-start media (LTLogo.vid, OpeningFMV.vid, splash.tga) "
+            "into a cache OUTSIDE res://, and do nothing else"
+        ),
+    )
+    parser.add_argument(
+        "--startup-media-root",
+        type=Path,
+        help="where to write the cold-start media cache (default: %%LOCALAPPDATA%%/OnslaughtToolkit/startup-media)",
+    )
     args = parser.parse_args()
+
+    if args.startup_media:
+        try:
+            game_root = _resolve_game_root(args.game_root)
+            media_root = args.startup_media_root or _default_startup_media_root()
+            manifest = _materialize_startup_media(game_root, media_root)
+        except (OSError, RuntimeError, UnicodeError, ValueError, KeyError,
+                subprocess.SubprocessError) as error:
+            print(f"startup media materialization failed: {error}", file=sys.stderr)
+            return 2
+        print(f"startup media materialized: {manifest}")
+        return 0
 
     if not args.force and args.game_root is None and _outputs_ready():
         print(f"retail rebuild assets ready: {len(_all_outputs(ROOT))} exact files")
