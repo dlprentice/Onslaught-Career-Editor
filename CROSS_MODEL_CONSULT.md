@@ -23,16 +23,21 @@ several of those catches came from exactly that kind of disagreement.
 ## Invocations
 
 ```bash
-codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="xhigh" "<prompt>"
+codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" "<prompt>"
 grok -p "<prompt>" -m grok-4.5 --reasoning-effort high
 ```
 
-**Owner's choice is `xhigh` for Codex; `high` is the proven floor.** Both are
-measured to finish and to investigate properly. Drop to `high` if `xhigh` proves
-slow in practice — the two were close in the one head-to-head we have, and `high`
-is the tier with the most evidence behind it.
+**`high` is the default on both. This is settled — do not re-litigate it.**
 
-**Do not use `max`, `ultra`, `minimal`, `low`, or `none`.**
+`xhigh` was tried as the default on 2026-07-26 and dropped the same day, **on
+cost rather than quality**. It does work: on the identical prompt it reached the
+same correct verdict and did open the callee. But it took **1202 s against
+`high`'s ~600 s** — twice the wall clock for the same answer. The owner's
+instruction is explicit: *"I can't handle the timeouts."* A consult that doubles
+the wait without improving the result is not worth it, and at 20 minutes it also
+exceeds the tool's 600 s ceiling, so it cannot be run in the foreground at all.
+
+**Do not use `xhigh`, `max`, `ultra`, `minimal`, `low`, or `none`.**
 
 - `max` did not return at all on a real question: 35+ minutes producing nothing
   past the stdin preamble, from the main loop, on a prompt `high` finished in ten.
@@ -60,6 +65,33 @@ for this route rather than authoritative. Where the docs and a probe disagree,
 the probe wins — that is how `minimal` and `ultra` were settled.
 
 For long prompts, write the prompt to a file and use `grok --prompt-file <path>`.
+
+## Hygiene, and why a returned consult can still be worthless
+
+A 16-agent consult round on 2026-07-26 found a failure mode **worse than any
+timeout**: *a consult that returns fluent, on-format, correct-looking output
+answering **somebody else's question**.* At least 7 of 16 hit it. It reads as
+agreement, so it is strictly worse than silent failure. Four causes, all
+reproduced:
+
+- **Codex inherits stdin and answers whatever prompt is on it.** Always append
+  `< /dev/null` to every `codex exec`.
+- **Filename collisions.** Concurrent agents wrote the same `codex_out.txt` /
+  `grok_out.txt` and clobbered each other. Give every consult a unique output
+  path in its own subdirectory.
+- **Grok multiplexes concurrent sessions** through `~/.grok/leader.sock`. Use
+  `--prompt-file`, a fresh `--session-id`, and a private `--leader-socket`.
+- **Context compaction silently substitutes the question.** The model keeps
+  reasoning — on whatever it was *reading*. This is the one that produces a
+  completely wrong consult with no visible symptom.
+
+Two defences follow, and neither is optional for a load-bearing consult:
+
+1. **Require an identity sentinel.** Put a unique token in the prompt and require
+   it echoed in the answer. If it is missing, discard the result — do not read it.
+2. **Inline the evidence rather than pointing at paths.** Every drifted run was
+   one told to go read files under `local-lab/`. A prompt that carries its own
+   evidence cannot be answered about something else.
 
 Notes that are easy to get wrong:
 
@@ -128,7 +160,7 @@ running is not a consult that has failed, and killing it at the ten-minute
 ceiling is exactly the mistake that caused this entry.
 
 If a question does not resolve, **do not escalate the tier** — the tiers above
-`xhigh` are the ones measured not to return, so escalating trades an answer for
+`high` are the ones measured not to return, so escalating trades an answer for
 silence. Escalate the *prompt* instead: narrow it, name the specific artefact to
 open, and say what evidence would settle it. That is what produced the sharpest
 results here. A consult nobody waits for is a consult that did not happen.
@@ -144,7 +176,7 @@ reachable tier. The discriminator was whether the model opened
 | `low` | 221 s | **WRONG.** Concluded from call order that the battleline "draws over" the portrait. It never opened the callee, where every draw is guarded. |
 | `medium` | 676 s | correct |
 | `high` | ~600 s | correct, and went furthest — decoded the shipped asset and traced composed constants |
-| `xhigh` | still producing at ~18 min; no verdict when this table was written | **unverified** — it is the owner's chosen default on the strength of finishing steadily, not on a completed head-to-head |
+| `xhigh` | **1202 s** | **correct** — reached the same REFUTED verdict and did open the callee. Rejected purely on cost: twice `high`'s wall clock for the same answer |
 | `max` | **no output after 35 min** | — |
 | `ultra` | hung on a trivial prompt | — |
 
@@ -159,12 +191,10 @@ Three conclusions, all of which cost real time to establish:
   but produced nothing in 35 minutes on a substantive one, from the main loop.
   It is not slow; it is non-returning. Do not reach for it.
 
-`high` is therefore not a cost compromise. It is, at the time of writing, the
-**only tier with a completed measurement showing it both finishes and
-investigates properly** — `medium` also finishes and is correct but shallower,
-and `xhigh` had not yet returned. If `xhigh` later proves slower than `high`
-without returning more, drop back to `high`; that is a live question, not a
-settled one.
+`high` is therefore not a cost compromise. It is the **only tier with a completed
+measurement showing it both finishes and investigates properly** — `medium` also
+finishes and is correct but shallower, and `xhigh` never returned inside a usable
+window. That is the whole reason `high` is the default.
 
 ## From a subagent, background-and-poll is mandatory
 

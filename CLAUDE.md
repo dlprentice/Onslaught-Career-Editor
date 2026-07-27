@@ -25,9 +25,11 @@ highest-stakes rules early and does not restate or override it.
   [`CROSS_MODEL_CONSULT.md`](CROSS_MODEL_CONSULT.md) for the invocations and why
   their output is data rather than authority. It has repeatedly caught real
   errors, so reach for it on load-bearing or contested calls; it is not owed on
-  every routine one. What remains **mandatory** whenever a consult IS run is the
-  `-s read-only` sandbox, which is a safety rule about what a consult may do, not
-  a rule about when to run one.
+  every routine one. The tiers are settled: **`gpt-5.6-sol` and `grok-4.5`, both
+  at `high`** — higher tiers were measured and do not return in a usable window,
+  lower ones answer wrongly. Do not raise them. What remains **mandatory**
+  whenever a consult IS run is the `-s read-only` sandbox, which is a safety rule
+  about what a consult may do, not a rule about when to run one.
 
 ## Orientation
 
