@@ -1,5 +1,12 @@
 # Name-grading ledger — 2026-07-26 revision
 
+> **Amended 2026-07-27 in two cells.** `0x005386d0`, which this note reports as
+> false but explicitly leaves untouched, has since been demoted to
+> `DestructorBody_005386d0`. `RESIDUAL_FREEFORM` 97 → **98**,
+> `IMAGE_TYPE_TOKEN` 1,099 → **1,098**, honest residual 1,866 → **1,867**.
+> Nothing else in this note changes. See
+> [`name-grading-ledger-2026-07-27-demotion2.md`](name-grading-ledger-2026-07-27-demotion2.md).
+
 Supersedes the counts in
 [`name-grading-ledger-2026-07-25.md`](name-grading-ledger-2026-07-25.md), which
 remains the record of the RTTI re-prefix wave and of the 0x08-byte incident. This
@@ -277,7 +284,9 @@ which is direct evidence that the cohort over-collects as this paragraph says.
   (`CPostEventData` vtable `0x5e4f34` slot 1 `0x5386b0` → `0x005386d0`) while
   `CScriptEventNB` has its own body at `0x00538950`; the two classes share only
   `CMonitor`/`IListener`. **`0x005386d0` was not touched** — it is reported, not
-  applied. `RTTI_CONFLICT`'s 25 rows are the separate, already-graded channel
+  applied. *(Superseded 2026-07-27: it has since been re-verified from bytes and
+  demoted to `DestructorBody_005386d0`; see the 07-27 note.)*
+  `RTTI_CONFLICT`'s 25 rows are the separate, already-graded channel
   where direct vtable membership contradicts the prefix.
 
 - The suffix of every name remains ungraded, under every grade in the table.

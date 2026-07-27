@@ -43,6 +43,13 @@ waves, superseded plans, and generated accounting.
   and records the 13 renames applied to the live database. Honest residual:
   **1,866 of a human-namable 5,790** (the ledger's own §"honest residual"; a
   demotion inside the same wave took it from 1,865 to 1,866).
+- [The second demotion — `0x005386d0`, and the residual goes up again](binary-analysis/name-grading-ledger-2026-07-27-demotion2.md)
+  — 2026-07-27. Amends the 07-26 ledger **in two cells only**: the false name
+  `CScriptEventNB__Destructor` on `CPostEventData`'s destroy path is withdrawn to
+  `DestructorBody_005386d0`, taking the honest residual to **1,867 of 5,790**.
+  Also restates the limit that keeps getting dropped: the sweep behind these
+  demotions sees **only the destructor channel**, so its six findings are a
+  **floor, not a bound**.
 - **Aggressive Ghidra analysis does not reduce that residual — measured, not
   assumed.** Six isolated analyser passes on a disposable canary (Aggressive
   Instruction Finder, Decompiler Parameter ID, address/switch-table aggression,
