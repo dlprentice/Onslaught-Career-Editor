@@ -300,6 +300,10 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Hud/crosshair-secondary.texture.aya", "data/resources/dxtntextures/hud%v3%hud_crosshair_secondary.tga(0)A8R8G8B8.aya", "7b078344e64d1e78ef64a8e21bdd3787e059b628c6a442634e9d13ba7d3a0487"),
     (GODOT_ASSETS / "Hud/damage-flash.texture.aya", "data/resources/dxtntextures/hud%v2%DamageFlash.tga(0)X8R8G8B8.aya", "8a25ec2e0ba8e66d86217684125d2e245dae3eddeb327ee2a7b144e2b45391c0"),
     (GODOT_ASSETS / "Hud/dial.raw", "data/Dial.raw", "2c57b657b92cd8bd73ca8c8986e8ce60aaffb065fdde09940053a2dd6d59671c"),
+    # [hud+0x1d4] in CHud__LoadTextures (0x00481650), from the string at
+    # 0x0062ceb0 - the sprite CHud__RenderBattleline draws when no message is
+    # active and CInfluenceMapManager is empty. 64x64 DXT2.
+    (GODOT_ASSETS / "Hud/forseti-icon.texture.aya", "data/resources/dxtntextures/hud%ForsetiIcon.tga(0)A8R8G8B8.aya", "0093b1a1a1e89327b90cef93f06882dded060a3023510ca0f49e6ebbf3666da1"),
     (GODOT_ASSETS / "Hud/font-13ps.texture.aya", "data/resources/textures/mustbe_Font13PS.tga(0)A8R8G8B8.aya", "7acc088b75e729cbdc2782e239a7d18ba0ec409e1bc890109aa1020f5ee81dc0"),
     (GODOT_ASSETS / "Hud/font-22.texture.aya", "data/resources/textures/mustbe_font22.512.tga(0)A8R8G8B8.aya", "acc8dbdd60839c0f9686250025672cf9c370530114bc44910df09be487b247c6"),
     (GODOT_ASSETS / "Hud/guns-darken.texture.aya", "data/resources/dxtntextures/hud%v2%GunsDarken.tga(0)A8R8G8B8.aya", "0054e526a0980c5f89fc1271e7d34cfb551fc2567f6259f0be11d63100ab12b1"),

@@ -335,4 +335,71 @@ public sealed class Level100MessageScheduleTests
         // are vacuous.
         Assert.True(observedActive > 100, $"only {observedActive} active ticks");
     }
+
+    /// <summary>
+    /// The lower-right socket runs on retail's <c>CMessageBox +0x8</c>, which is
+    /// NOT the text-visibility window: it is re-pointed when the next queued
+    /// message is promoted, so it is held right through the six-tick
+    /// inter-message gap while the text rectangle is empty.
+    ///
+    /// <para>Pinned to four measured retail frames and the message boundaries in
+    /// <c>rebuild/PROVENANCE.md</c>. Three of them - <c>t011756</c> (tick
+    /// 352.7), <c>t019074</c> (572.2) and <c>t031058</c> (931.7) - sit in gaps
+    /// and draw the message-noise page in the socket, which
+    /// <c>CMessageBox__RenderBattleLinePulseSprites</c> (<c>0x004b82b0</c>)
+    /// reaches only when <c>+0x8 != 0</c>. The fourth, <c>t025065</c> (751.9),
+    /// sits inside HUD_06's clear lead and draws the influence overlay, every
+    /// draw of which requires <c>+0x8 == 0</c>.</para>
+    /// </summary>
+    [Theory]
+    [InlineData(352, true)]   // t011756, gap after HUD_01: noise in the socket
+    [InlineData(572, true)]   // t019074, gap after HUD_02: noise in the socket
+    [InlineData(751, false)]  // t025065, HUD_06's clear lead: overlay
+    [InlineData(931, true)]   // t031058, gap after the message log: noise
+    public void TheMessageBoxHoldsItsActiveMessageThroughTheGapButNotTheClearLead(
+        int tick,
+        bool expected)
+    {
+        // The released Level 100 opening, exactly as measured in PROVENANCE.
+        Level100HudMessageDeliverySnapshot[] deliveries =
+        [
+            Delivery(tick: 182, messageId: 1, ticks: 169),   // HUD_01  182..351
+            Delivery(tick: 357, messageId: 2, ticks: 210),   // HUD_02  357..567
+            Delivery(tick: 573, messageId: 3, ticks: 183),   // HUD_06  573..756
+            Delivery(tick: 762, messageId: 4, ticks: 164),   // LOG     762..926
+            Delivery(tick: 932, messageId: 5, ticks: 66),    // TECH    932..998
+        ];
+
+        Assert.Equal(
+            expected,
+            Level100MessageSchedule.MessageBoxHoldsActiveMessage(deliveries, tick));
+    }
+
+    [Fact]
+    public void TheMessageBoxHoldsNothingBeforeTheFirstMessageOrAfterTheLast()
+    {
+        Level100HudMessageDeliverySnapshot[] deliveries =
+        [
+            Delivery(tick: 182, messageId: 1, ticks: 169),
+            Delivery(tick: 357, messageId: 2, ticks: 210),
+        ];
+
+        Assert.False(Level100MessageSchedule.MessageBoxHoldsActiveMessage(deliveries, 181));
+        // Inside HUD_02's clear lead: text gone, +0x8 nulled, nothing promoted.
+        Assert.False(Level100MessageSchedule.MessageBoxHoldsActiveMessage(deliveries, 562));
+        // The promote window is the advance delay off the window end, and it
+        // does NOT need the successor to be in the list - Core appends a
+        // delivery only when it becomes active, so inside a gap the successor
+        // never is.
+        Assert.True(Level100MessageSchedule.MessageBoxHoldsActiveMessage(deliveries, 567));
+        Assert.True(
+            Level100MessageSchedule.MessageBoxHoldsActiveMessage(
+                deliveries,
+                567 + Level100MissionTiming.MessageAdvanceDelayTicks - 1));
+        Assert.False(
+            Level100MessageSchedule.MessageBoxHoldsActiveMessage(
+                deliveries,
+                567 + Level100MissionTiming.MessageAdvanceDelayTicks));
+        Assert.False(Level100MessageSchedule.MessageBoxHoldsActiveMessage(deliveries, 600));
+    }
 }

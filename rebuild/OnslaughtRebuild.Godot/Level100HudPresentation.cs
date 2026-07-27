@@ -345,13 +345,124 @@ public sealed record Level100HudMessageDeliverySnapshot(
     bool ScriptWaitsForDuration,
     int ExpectedPlaybackTicks);
 
+/// <summary>
+/// Whether <c>CInfluenceMapManager</c> holds any influence maps. Three-valued
+/// on purpose: <see cref="Unknown"/> is not <see cref="Empty"/>.
+/// </summary>
+/// <remarks>
+/// <c>CInfluenceMapManager__IsEmpty</c> (<c>0x0048c2d0</c>) is
+/// <c>return *(int *)(this + 0x14) &lt; 1</c> - a list count. Core does not model
+/// that manager at all, so this reconstruction cannot report either answer for
+/// Level 100 and says so rather than defaulting to <see cref="Empty"/>. See
+/// <see cref="Level100HudLowerRightSocketLaw"/> for why the difference is not
+/// cosmetic.
+/// </remarks>
+public enum Level100HudInfluenceMapState
+{
+    Unknown = 0,
+    Empty = 1,
+    Populated = 2,
+}
+
+/// <summary>
+/// What occupies the lower-right HUD socket.
+/// </summary>
+public enum Level100HudLowerRightSocket
+{
+    /// <summary>Nothing beyond the darkener - this reconstruction cannot say.</summary>
+    Indeterminate = 0,
+
+    /// <summary>The speaker portrait and the message-noise page over it.</summary>
+    PortraitAndNoise = 1,
+
+    /// <summary>The battleline / influence overlay.</summary>
+    InfluenceOverlay = 2,
+
+    /// <summary>The single <c>hud\ForsetiIcon.tga</c> sprite.</summary>
+    ForsetiIcon = 3,
+}
+
+/// <summary>
+/// The recovered two-factor state table for the lower-right socket.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <c>CHud__RenderBattleline</c> (<c>0x00487d10</c>) branches on
+/// <c>CInfluenceMapManager__IsEmpty</c>: the non-empty arm calls
+/// <c>CDXBattleLine__PopulateBattleLineAndInfluenceOverlayVertices</c> then
+/// <c>CDXBattleLine__Render</c>; the empty arm draws the single sprite at
+/// <c>[hud+0x1d4]</c> - filled by <c>CHud__LoadTextures</c> from the string at
+/// <c>0x0062ceb0</c>, <c>hud\ForsetiIcon.tga</c> - but only when
+/// <c>*(int *)(CMessageBox + 8) == 0</c>.
+/// </para>
+/// <para>
+/// The second factor is the one both earlier single-factor readings missed.
+/// Inside <c>CDXBattleLine__Render</c> (<c>0x0053abe0</c>) EVERY draw is
+/// separately guarded by the same <c>*(int *)(DAT_008a9d84 + 8) == 0</c> test:
+/// the three <c>CEngine__DrawIndexedPrimitives</c> calls, the
+/// <c>CDXBattleLine__RenderTriOverlayPass</c> call, and the BattleEngine marker
+/// sprite loop. So the overlay is invoked after the portrait pass but paints
+/// nothing while a message is active. "The battleline draws last, over the
+/// portrait" is false and must not be reinstated.
+/// </para>
+/// <para>
+/// The resulting table, which is what this class implements:
+/// </para>
+/// <code>
+/// active message | influence list | visible content
+/// ---------------|----------------|-------------------------------------
+/// yes            | either         | portrait/noise; battleline SUPPRESSED
+/// no             | non-empty      | battleline / influence overlay
+/// no             | empty          | Forseti icon
+/// </code>
+/// </remarks>
+public static class Level100HudLowerRightSocketLaw
+{
+    public static Level100HudLowerRightSocket Select(
+        bool messageBoxHoldsActiveMessage,
+        Level100HudInfluenceMapState influenceMap) =>
+        messageBoxHoldsActiveMessage
+            ? Level100HudLowerRightSocket.PortraitAndNoise
+            : influenceMap switch
+            {
+                Level100HudInfluenceMapState.Populated =>
+                    Level100HudLowerRightSocket.InfluenceOverlay,
+                Level100HudInfluenceMapState.Empty =>
+                    Level100HudLowerRightSocket.ForsetiIcon,
+                _ => Level100HudLowerRightSocket.Indeterminate,
+            };
+}
+
 public sealed record Level100HudBattleLineSnapshot(
     bool HasInfluenceValues,
-    IReadOnlyList<short> InfluencePermille)
+    IReadOnlyList<short> InfluencePermille,
+    Level100HudInfluenceMapState InfluenceMap)
 {
+    /// <summary>
+    /// No influence magnitudes AND no answer about whether the released
+    /// manager holds any maps.
+    /// </summary>
+    /// <remarks>
+    /// Reporting <see cref="Level100HudInfluenceMapState.Empty"/> here would be
+    /// a measured falsehood for Level 100. Classifying the socket disc across
+    /// all 183 pinned retail frames in
+    /// <c>local-lab/retail-reference-pristine/level100-gameplay/</c> finds the
+    /// influence overlay on 20 of them - all 17 of
+    /// <c>settled-timeline-run3</c>, plus <c>hud-timeline-run1/t025065</c> and
+    /// <c>t011756</c> in BOTH opening-pan runs, which puts the overlay on
+    /// screen 11.8 s into the level - and
+    /// the ForsetiIcon page on ZERO - template correlation against the decoded
+    /// 64x64 page peaks at 0.29 anywhere in the lower-right quadrant on every
+    /// frame, where an injected control scores 0.79 additive / 0.94 alpha at
+    /// exactly the byte-predicted origin (536, 320). Level 100's manager is
+    /// therefore non-empty for at least part of the level and its Forseti arm
+    /// is never taken; a client that reported <c>Empty</c> would draw an icon
+    /// retail never shows.
+    /// </remarks>
     public static Level100HudBattleLineSnapshot Unavailable { get; } = new(
         HasInfluenceValues: false,
-        Array.AsReadOnly(Array.Empty<short>()));
+        Array.AsReadOnly(Array.Empty<short>()),
+        Level100HudInfluenceMapState.Unknown);
 }
 
 public sealed record Level100HudSnapshot(

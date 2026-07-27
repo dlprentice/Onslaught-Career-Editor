@@ -145,6 +145,81 @@ public static class Level100MessageSchedule
 
         return null;
     }
+
+    /// <summary>
+    /// Whether retail's <c>CMessageBox</c> holds an active <c>CMessage*</c> at
+    /// <c>+0x8</c>. This is NOT the same predicate as
+    /// <see cref="ActiveAt(IReadOnlyList{Level100HudMessageDeliverySnapshot}, int)"/>,
+    /// and the lower-right socket needs this one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>+0x8</c> is nulled by the <c>0xbba</c> completion event
+    /// <see cref="MessageTextClearLeadTicks"/> ticks before a delivery's window
+    /// ends, and is re-pointed by <c>CMessageBox__TryAdvanceQueuedMessage</c>
+    /// (<c>0x004b7b80</c>) when the next queued message is promoted, 0.2 s
+    /// before its reveal starts. Level 100's script queues from level start, so
+    /// the promote happens at the previous window's end and <c>+0x8</c> is
+    /// non-null right through the six-tick inter-message gap. The reveal has not
+    /// begun, which is why the text rectangle is empty there.
+    /// </para>
+    /// <para>
+    /// MEASURED, on four pinned retail frames whose socket disc was classified
+    /// this session. The three frames the two-gate work identified as carrying
+    /// zero glyph pixels in a gap - <c>hud-timeline-run1/t011756</c> (tick
+    /// 352.7, HUD_01 ends 351), <c>t019074</c> (572.2, HUD_02 ends 567) and
+    /// <c>t031058</c> (931.7, TUTORIAL_MESSAGE_LOG ends 926) - all draw the
+    /// message-noise page in the socket. That page is drawn AFTER the
+    /// <c>if (+0x8 == 0) return</c> at the head of
+    /// <c>CMessageBox__RenderBattleLinePulseSprites</c> (<c>0x004b82b0</c>), so
+    /// <c>+0x8</c> is non-null on all three. The fourth, <c>t025065</c> (751.9,
+    /// HUD_06 ends 756, i.e. inside the clear lead), draws the influence overlay
+    /// instead - and every draw inside <c>CDXBattleLine__Render</c> requires
+    /// <c>+0x8 == 0</c>. The gap is held; the lead is not.
+    /// </para>
+    /// <para>
+    /// The portraits are absent on those three gap frames while the noise is
+    /// present, which the same function explains with a second gate: its six
+    /// portrait draws sit inside <c>if (*(int *)(this + 0x24) == 0)</c>. That
+    /// field is not modelled, and it does not need to be here: the client's
+    /// speaker and pose come from
+    /// <see cref="ActiveAt(IReadOnlyList{Level100HudMessageDeliverySnapshot}, int)"/>,
+    /// which is already null through the gap, so the socket draws the noise page
+    /// alone there - which is what retail draws. Whether the two predicates stay
+    /// aligned outside Level 100 is untested.
+    /// </para>
+    /// </remarks>
+    public static bool MessageBoxHoldsActiveMessage(
+        IReadOnlyList<Level100HudMessageDeliverySnapshot> deliveries,
+        int tick)
+    {
+        ArgumentNullException.ThrowIfNull(deliveries);
+        for (int index = 0; index < deliveries.Count; index++)
+        {
+            Level100HudMessageDeliverySnapshot delivery = deliveries[index];
+            int start = delivery.Tick;
+            if (tick >= start && tick < start + VisibleTicks(delivery))
+            {
+                return true;
+            }
+
+            // The promote window, which is exactly Core's advance delay - the
+            // released 0.2 s of CMessageBox__TryAdvanceQueuedMessage - off the
+            // end of this delivery's window. It is deliberately NOT expressed
+            // as "until the next delivery's tick": Core appends a delivery when
+            // it becomes active, so at any tick inside the gap the next
+            // delivery is not in this list yet and that formulation collapses
+            // to false on every real frame. That defect was caught by a capture
+            // pair that came back byte-identical, not by these types.
+            int end = start + DisplayTicks(delivery);
+            if (tick >= end && tick < end + Level100MissionTiming.MessageAdvanceDelayTicks)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 /// <summary>

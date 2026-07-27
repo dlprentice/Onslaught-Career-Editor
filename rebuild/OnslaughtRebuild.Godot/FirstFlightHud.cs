@@ -92,6 +92,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
     public int Level100Health => _glowLayer.Health;
     public bool Level100BattleLineInfluenceAvailable =>
         _baseLayer.BattleLineInfluenceAvailable;
+
+    /// <summary>
+    /// Which of the three recovered contents the lower-right socket is showing,
+    /// per <see cref="Level100HudLowerRightSocketLaw"/>.
+    /// </summary>
+    public Level100HudLowerRightSocket Level100LowerRightSocket
+    {
+        get;
+        private set;
+    } = Level100HudLowerRightSocket.Indeterminate;
     public bool Level100MessagePlaybackAvailable { get; private set; }
     public bool Level100MessagePlaying { get; private set; }
     public double Level100MessagePlaybackPositionSeconds { get; private set; }
@@ -167,14 +177,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
         Level100MessagePlaybackPositionSeconds = activePlayback.PositionSeconds;
         Level100MessagePlaybackLengthSeconds = activePlayback.LengthSeconds;
 
+        // The lower-right socket's gate is retail's CMessageBox +0x8, which is
+        // held through the six-tick promote gap that ActiveAt (the TEXT gate)
+        // excludes. See Level100MessageSchedule.MessageBoxHoldsActiveMessage.
+        Level100HudLowerRightSocket socket = Level100HudLowerRightSocketLaw.Select(
+            Level100MessageSchedule.MessageBoxHoldsActiveMessage(
+                hud.DeliveredMessages,
+                missionTick),
+            hud.BattleLine.InfluenceMap);
+        Level100LowerRightSocket = socket;
+
         _baseLayer.SetState(
             snapshot,
             hud,
+            socket,
             message,
             activeDelivery?.Speaker,
             activePlayback.PortraitPoseIndex,
             MessageNoisePhaseIndex(scheduled, missionTick));
-        _glowLayer.SetState(snapshot, hud, message is not null);
+        _glowLayer.SetState(snapshot, hud, socket);
         _textLayer.SetState(hud, message, activePlayback);
     }
 
@@ -324,6 +345,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 128,
                 128,
                 CuratedAyaTextureLoader.Compression.Dxt1),
+            ForsetiIcon = LoadHudTexture("forseti-icon", 64, 64),
             MessageNoise = messageNoise,
             ObjectiveInnerCentre = LoadHudTexture("objective-inner-centre", 64, 128),
             ObjectiveInnerLeft = LoadHudTexture("objective-inner-left", 64, 128),
@@ -857,6 +879,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
         public required Texture2D ObjectiveInnerCentre { get; init; }
         public required Texture2D ObjectiveInnerLeft { get; init; }
         public required Texture2D ObjectiveInnerRight { get; init; }
+        /// <summary>
+        /// <c>hud\ForsetiIcon.tga</c>, the sprite <c>CHud__LoadTextures</c>
+        /// (<c>0x00481650</c>) puts in <c>[hud+0x1d4]</c> from the string at
+        /// <c>0x0062ceb0</c>. 64x64 DXT2.
+        /// </summary>
+        public required Texture2D ForsetiIcon { get; init; }
         public required Texture2D ObjectiveLeft { get; init; }
         public required Texture2D ObjectiveRight { get; init; }
         public required Texture2D OffscreenArrow { get; init; }
@@ -887,6 +915,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private Level100HudSpeaker? _speaker;
         private int? _portraitPoseIndex;
         private int _messageNoisePhase;
+        private Level100HudLowerRightSocket _socket =
+            Level100HudLowerRightSocket.Indeterminate;
 
         public bool IsReady =>
             assets.CircleDarkener.GetSize() == new Vector2I(128, 128) &&
@@ -910,6 +940,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         public void SetState(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud,
+            Level100HudLowerRightSocket socket,
             Level100HudMessageDefinition? message,
             Level100HudSpeaker? speaker,
             int? portraitPoseIndex,
@@ -917,6 +948,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
         {
             _snapshot = snapshot;
             _hud = hud;
+            _socket = socket;
             _message = message;
             _speaker = speaker;
             _portraitPoseIndex = portraitPoseIndex;
@@ -1197,8 +1229,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 false,
                 new Color(1f, 1f, 1f, CircleDarkenerAlpha));
 
-            if (_message is not null &&
-                _speaker is Level100HudSpeaker speaker &&
+            // WHICH of the three recovered contents goes in the socket is
+            // Level100HudLowerRightSocketLaw's decision, not this method's.
+            // InfluenceOverlay and ForsetiIcon are the additive layer's;
+            // Indeterminate draws the darkener and nothing else.
+            if (_socket != Level100HudLowerRightSocket.PortraitAndNoise)
+            {
+                return;
+            }
+
+            if (_speaker is Level100HudSpeaker speaker &&
                 _portraitPoseIndex is int pose)
             {
                 int speakerIndex = speaker switch
@@ -1217,19 +1257,20 @@ public sealed partial class FirstFlightHud : CanvasLayer
                         false,
                         new Color(1f, 1f, 1f, PortraitCompositeAlpha));
                 }
-
-                // OVER the portrait, neutral, every frame of a message. The
-                // previous pass had all four of those wrong: it was additive,
-                // blue-tinted (0.48, 0.66, 1), on the glow layer above the
-                // instrument, and unscrolled.
-                DrawTextureRect(
-                    assets.MessageNoiseDiscPhases[
-                        _messageNoisePhase % assets.MessageNoiseDiscPhases.Length],
-                    BattleLinePortraitRect(),
-                    false,
-                    new Color(1f, 1f, 1f, MessageNoiseAlpha));
-                return;
             }
+
+            // OVER the portrait, neutral, every frame of a message - and, in
+            // the promote gap where retail has an active CMessage* but no
+            // selected portrait, ALONE. Retail's noise sprite is drawn after
+            // the six portrait draws in 0x004b82b0 and outside their
+            // this+0x24 gate, which is why the three pinned gap frames
+            // (t011756, t019074, t031058) show noise and no face.
+            DrawTextureRect(
+                assets.MessageNoiseDiscPhases[
+                    _messageNoisePhase % assets.MessageNoiseDiscPhases.Length],
+                BattleLinePortraitRect(),
+                false,
+                new Color(1f, 1f, 1f, MessageNoiseAlpha));
         }
 
         /// <summary>
@@ -1453,6 +1494,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private static Rect2 BattleLinePortraitRect() =>
         new(DesignWidth - 137f, DesignHeight - 128f, 128f, 128f);
 
+    // 104 and 32 are _DAT_005dbeb0 and _DAT_005db2b8 from the ForsetiIcon call
+    // in 0x00487d10, against the same hudX/fVar1 pair the two rects above are
+    // expressed in. See RetailHudGlowLayer.DrawForsetiIcon.
+    private static Rect2 ForsetiIconRect() =>
+        new(DesignWidth - 104f, (DesignHeight - 128f) - 32f, 64f, 64f);
+
     // The weapon-selection page is not on screen in the retail reference frame,
     // so its offsets are unverified and deliberately left as they were - note
     // that its 137 is no longer tied to the battleline's corrected 121.
@@ -1496,9 +1543,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
     {
         private WorldSnapshot? _snapshot;
         private Level100HudSnapshot? _hud;
-        private bool _messageActive;
+        private Level100HudLowerRightSocket _socket =
+            Level100HudLowerRightSocket.Indeterminate;
 
         public bool IsReady =>
+            assets.ForsetiIcon.GetSize() == new Vector2I(64, 64) &&
             assets.RadarOutline.GetSize() == new Vector2I(128, 128) &&
             assets.WeaponOutline.GetSize() == new Vector2I(128, 128) &&
             assets.BattleLineOutline.GetSize() == new Vector2I(128, 128) &&
@@ -1523,11 +1572,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
         public void SetState(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud,
-            bool messageActive)
+            Level100HudLowerRightSocket socket)
         {
             _snapshot = snapshot;
             _hud = hud;
-            _messageActive = messageActive;
+            _socket = socket;
             Energy = snapshot.Energy;
             Shield = snapshot.Shield;
             Health = snapshot.Hull;
@@ -1546,8 +1595,59 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawInstrumentOutlines(snapshot, hud);
             DrawDynamicCompass(snapshot, hud);
             DrawBattleLineOutline(snapshot, hud);
+            DrawForsetiIcon();
             DrawWorldMarkerReticles(snapshot, hud);
             EndDesignSpace();
+        }
+
+        /// <summary>
+        /// The third row of <see cref="Level100HudLowerRightSocketLaw"/>: the
+        /// single <c>hud\ForsetiIcon.tga</c> sprite retail draws when no message
+        /// is active and the influence-map list is empty.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// GEOMETRY, from the shipped call in <c>CHud__RenderBattleline</c>
+        /// (<c>0x00487d10</c>):
+        /// <c>DrawSpriteEx((hudX - _DAT_005dbeb0) - shift, fVar1 - _DAT_005db2b8,
+        /// 0.001, [this+0x1d4], 2, 0, 1.0, 0.0, …, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0)</c>
+        /// - mode 2, unit scale, full UV. The three constants read out of the
+        /// pristine image are <c>_DAT_005dbeb0 = 104.0</c>,
+        /// <c>_DAT_005db2b8 = 32.0</c> and, on the darkener's own call,
+        /// <c>_DAT_005dbeb8 = 121.0</c> against this client's already-fitted
+        /// <see cref="BattleLineInstrumentRect"/> x of
+        /// <c>DesignWidth - 121</c>, which is what ties retail's
+        /// <c>hudX</c> to <c>DesignWidth</c> and <c>fVar1</c> to
+        /// <c>DesignHeight - 128</c> (the portrait page origin, likewise
+        /// already fitted). The icon page is 64x64, so it lands at
+        /// (536, 320)..(600, 384) on the 640x480 frame: horizontally centred on
+        /// the fitted ring centre x = 568.08 to 0.1 px, and sitting high, with
+        /// its lower edge 33 px above the ring centre.
+        /// </para>
+        /// <para>
+        /// BLEND: the branch inherits the <c>ONE/ONE</c> state set for the
+        /// BattleLineOutline draw immediately above it and sets none of its own,
+        /// so it is additive and belongs on this layer.
+        /// </para>
+        /// <para>
+        /// UNVERIFIED AGAINST PIXELS, and it cannot be: this state occurs on
+        /// ZERO of the 183 pinned retail frames (see
+        /// <see cref="Level100HudBattleLineSnapshot.Unavailable"/>), so nothing
+        /// here - placement, blend or premultiplication - has a retail frame to
+        /// be checked against. Level 100's producer reports
+        /// <see cref="Level100HudInfluenceMapState.Unknown"/> and never reaches
+        /// this draw; it exists so the recovered third row is implemented rather
+        /// than merely described.
+        /// </para>
+        /// </remarks>
+        private void DrawForsetiIcon()
+        {
+            if (_socket != Level100HudLowerRightSocket.ForsetiIcon)
+            {
+                return;
+            }
+
+            DrawTextureRect(assets.ForsetiIcon, ForsetiIconRect(), false, Colors.White);
         }
 
         /// <summary>
