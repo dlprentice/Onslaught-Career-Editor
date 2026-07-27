@@ -409,6 +409,90 @@ public sealed partial class RetailFrontendFlow : Control
     // Fallback only when the strip is missing (materialize not run).
     private static readonly Color MainUnderlayFallback = new(23f / 255f, 23f / 255f, 48f / 255f, 1f);
 
+    // ================= THE RELEASED PAGE-TRANSITION MACHINE =================
+    //
+    // Ported from the pinned GPL drop:
+    //
+    //   references/Onslaught/FrontEnd.cpp:563-592  CFrontEnd::SetPage(page, time)
+    //       time == 0 goes straight there; time > 0 sets mTransitionCount = 0,
+    //       mTransitionTime = time and parks mActivePage at FEP_TRANSITION.
+    //   references/Onslaught/FrontEnd.cpp:665-675  CFrontEnd::Process()
+    //       mTransitionCount++ ONCE per Process, and the destination page becomes
+    //       active on the Process where mTransitionCount == mTransitionTime.
+    //   references/Onslaught/FrontEnd.cpp:1291     CFrontEnd::Render()
+    //       trans = float(mTransitionCount) / float(mTransitionTime).
+    //   references/Onslaught/FrontEnd.cpp:1431-1438 CFrontEnd::Run()
+    //       exactly one Process per rendered frame;
+    //   references/Onslaught/FrontEnd.cpp:1261     Render() refuses to draw until
+    //       1/60 s has passed, so a transition length is a FRAME COUNT and one
+    //       frame is AT LEAST 1/60 s. Lengths are never stored as milliseconds:
+    //       a wall-clock length would make the reveal host-dependent.
+    //
+    // Frontend.h:97 `#define MAINTIME 70` is NOT this length. It has exactly one
+    // caller in the drop — FEPGoodies.cpp:1461, the Goodies BACK edge — and
+    // FEPIntro.cpp is absent. The cold-start length came from the shipped bytes
+    // instead; see MainMenuEntryTransitionFrames.
+    //
+    // NOT IMPLEMENTED, and why. FrontEnd.cpp:1291-1334 renders BOTH pages during
+    // a transition (higher page ordinal first), the outgoing one at 1 - trans.
+    // On this edge the outgoing page is the click page, and retail's own first
+    // main-menu frame REFUTES a visible outgoing draw: at t = 14 ms
+    // (run1/mm-t000014ms.png) the frame is the flat fill plus the title logo plus
+    // the crosshair guides and NOTHING else, while 1 - trans = 0.98 there. The
+    // ordinals are known for this edge anyway — SetPage is called with page 0 and
+    // CFEPMain__Render tests dest == 0x0c, so to = 0 and from = 12, meaning
+    // FrontEnd.cpp:1304 draws the click page FIRST and the main menu over it —
+    // so a second draw would have to be visible under the (video-less) main menu
+    // and is not. Drawing one would ADD a defect, so this lane keeps the single
+    // atomic page swap it already had and records the divergence here.
+    //
+    /// <summary>
+    /// Length of the cold-start click-to-start -> FEP_MAIN transition, in
+    /// frontend frames.
+    ///
+    /// RECOVERED FROM THE SHIPPED BYTES, not from the drop. Read out of
+    /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>
+    /// (sha256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750;
+    /// the installed Steam BEA.exe is deliberately patched and is not a valid
+    /// specimen). At VA 0x0051B660 / file 0x11B660, the click page's action
+    /// handler:
+    /// <code>
+    ///   0051b660  83 7c 24 04 2c    cmp   dword [esp+4], 0x2C   ; the click action
+    ///   0051b686  6a 32             push  0x32                  ; time  = 50
+    ///   0051b690  6a 00             push  0                     ; page  = 0 = FEP_MAIN
+    ///   0051b698  b9 58 d7 89 00    mov   ecx, 0x0089d758       ; &amp;FRONTEND
+    ///   0051b69d  e8 3e b4 f4 ff    call  0x00466ae0            ; CFrontEnd::SetPage
+    /// </code>
+    /// So the released cold-start reveal is 50 frames, and FEP_MAIN's ordinal is 0.
+    ///
+    /// <para><b>The rate is the unresolved part, and it is not papered over.</b>
+    /// 50 frames at the source's own 1/60 s gate settles at 817 ms. Retail's burst
+    /// is settled at t = 1020 ms and NOT settled at t = 812 ms (menu-column peak
+    /// channel 155 against 253 settled), so retail's realised reveal is somewhat
+    /// slower than 50/60 s. FrontEnd.cpp:1261 is a floor, not a target — a frame
+    /// whose work or whose <c>PLATFORM.Flip()</c> exceeds 1/60 s simply takes
+    /// longer, and FrontEnd.cpp:1437 <c>while(!Render());</c> also burns whole
+    /// frames without ticking the count whenever RenderStart fails, which is
+    /// exactly what an async-loading video does at page entry. The frame count is
+    /// evidenced; the realised frontend frame rate is NOT, and no rate constant is
+    /// fitted here to close the ~15 % gap.</para>
+    /// </summary>
+    private const int MainMenuEntryTransitionFrames = 50;
+
+    // WHICH BRANCH THE MAIN MENU TAKES ON THIS EDGE, and why there is no `dest`
+    // variable for it. `dest` is the OTHER page of the transition, as passed at
+    // FrontEnd.cpp:1299-1305 — the parameter is named for the destination but each
+    // page receives its counterpart. CFEPMain__Render (0x00462D40) branches on
+    // `dest == 0x0c` at five sites verified in the pristine specimen — 0x004636B2,
+    // 0x00463920, 0x00463B44, 0x00463DCC and 0x0046423D, all `83 fb 0c cmp ebx,0Ch`
+    // — and the page we arrive from is the click page, ordinal 12. This lane can
+    // therefore only ever be on the 0x0c side, so the constant is folded into the
+    // ported laws rather than carried as state. See MainMenuLeftDecor for how that
+    // was settled against pixels instead of assumed.
+
+    private int _mainTransitionCount;
+    private int _mainTransitionTime;
+
     private readonly RetailFrontendSession _session = new();
     private readonly Dictionary<RetailFrontendMenuItemKind, string> _menuText = [];
 
@@ -585,6 +669,33 @@ public sealed partial class RetailFrontendFlow : Control
     {
         double step = Math.Max(0d, delta);
         _animationSeconds += step;
+
+        // CFrontEnd::SetPage, FrontEnd.cpp:583-591 — arm the transition on the
+        // edge, exactly the edge the click page's 0x2C handler takes. Every OTHER
+        // way into FEP_MAIN stays instant: FrontEnd.cpp:228-232 re-enters the
+        // frontend with SetPage(FEP_MAIN, 0) on FEE_TITLE_SCREEN, and no other
+        // released entry length is evidenced, so none is invented.
+        if (_session.Screen == RetailFrontendScreen.MainMenu &&
+            _lastDrawnScreen == RetailFrontendScreen.ClickToStart)
+        {
+            _mainTransitionCount = 0;
+            _mainTransitionTime = MainMenuEntryTransitionFrames;
+        }
+
+        // CFrontEnd::Process, FrontEnd.cpp:665-675 — one increment per Process,
+        // and the page goes active on the frame where count == time. Godot's
+        // _Process is this lane's Process, and it stages the frame that _Draw
+        // then rasterizes, so the first drawn frame carries count == 1 exactly as
+        // FrontEnd.cpp:1433-1437 does.
+        if (_mainTransitionTime > 0)
+        {
+            _mainTransitionCount++;
+            if (_mainTransitionCount >= _mainTransitionTime)
+            {
+                _mainTransitionTime = 0;
+            }
+        }
+
         if (_session.Screen == RetailFrontendScreen.ClickToStart)
         {
             if (_lastDrawnScreen != RetailFrontendScreen.ClickToStart)
@@ -673,9 +784,31 @@ public sealed partial class RetailFrontendFlow : Control
         layer.SetScroll(_feBackSeconds);
     }
 
+    /// <summary>
+    /// <c>trans</c> as FrontEnd.cpp:1291 computes it, and 1.0 once the page is
+    /// active (FrontEnd.cpp:1310 renders a settled page with a literal 1.f).
+    /// </summary>
+    private float MainMenuTransition =>
+        _mainTransitionTime <= 0
+            ? 1f
+            : Math.Min(1f, (float)_mainTransitionCount / _mainTransitionTime);
+
     public override void _Input(InputEvent inputEvent)
     {
         if (_session.Screen is RetailFrontendScreen.Loading or RetailFrontendScreen.Gameplay)
+        {
+            return;
+        }
+
+        // FrontEnd.cpp:551-552 — while mActivePage == FEP_TRANSITION the button
+        // action is never forwarded to a page. CFEPMain__Render corroborates from
+        // the other side: both of its hit-test blocks are guarded by
+        // `_DAT_005d8bb0 < transition` with _DAT_005d8bb0 = 0.9 (verified 0.9 in
+        // the pristine specimen's float pool), so retail additionally ignores the
+        // pointer over the last tenth of the reveal. Only the coarse page-level
+        // gate is ported; the 0.9 pointer gate is a CFEPMain detail this lane's
+        // hit-testing does not model.
+        if (_mainTransitionTime > 0)
         {
             return;
         }
@@ -800,9 +933,241 @@ public sealed partial class RetailFrontendFlow : Control
         }
     }
 
+    /// <summary>The released clamp idiom, <c>_DAT_005d856c</c> / <c>_DAT_005d8568</c>.</summary>
+    private static float Clamp01(float value) => value < 0f ? 0f : value > 1f ? 1f : value;
+
+    /// <summary>
+    /// <c>RangeTransition(t, lo, hi)</c> — the drop's normalise-and-clamp helper.
+    ///
+    /// Its body is NOT in the drop: Frontend.h:292 includes TransitionHelpers.h,
+    /// which is one of the 200 absent headers, and no other file defines it. That
+    /// it CLAMPS rather than extrapolating is settled from three independent uses
+    /// that are only correct under clamping:
+    /// FrontEnd.cpp:856-866 writes <c>alpha = 0</c> for transition &lt; 0.2 and
+    /// then immediately overwrites it with <c>MakeAlpha(RangeTransition(t,0.2,0.5))</c>
+    /// through a second non-else <c>if</c> — harmless dead code under clamping,
+    /// a negative alpha without it; FrontEnd.cpp:1039 uses
+    /// <c>MakeAlpha(RangeTransition(t,0,0.5))</c> as an alpha for all t up to 1;
+    /// and FEPGoodies.cpp:1849 does <c>SINT(RangeTransition(t,0.75,1)*255)</c> for
+    /// t from 0. The shipped main menu computes the same shape inline with an
+    /// explicit clamp at every site (0x00462D40), which corroborates it.
+    /// </summary>
+    private static float RangeTransition(float value, float low, float high) =>
+        Clamp01((value - low) / (high - low));
+
+    /// <summary>
+    /// <c>MakeAlpha(t)</c> — also absent from the drop; the shipped inline form is
+    /// <c>ROUND(clamp(t) * 255.0)</c> clamped to 0..255 (<c>_DAT_005d8c70</c> =
+    /// 255.0, verified in the pristine specimen), returned here as 0..1.
+    /// </summary>
+    private static float MakeAlpha(float value) =>
+        Math.Clamp(MathF.Round(Clamp01(value) * 255f), 0f, 255f) / 255f;
+
+    /// <summary>Scale, rotation and alpha of one animated main-menu decoration.</summary>
+    private readonly record struct MainMenuDecor(float Scale, float Rotation, float Alpha, bool Draw);
+
+    /// <summary>
+    /// Left decoration <c>DAT_0089d894</c> (title-bracket-01) at (219, 344).
+    ///
+    /// PORTED FROM THE SHIPPED BYTES, dest == 0x0c branch of CFEPMain__Render
+    /// (0x00462D40, pristine BEA.exe.original.backup sha256 74154bfa…). The drop
+    /// has no FEPMain.cpp, so this law is not available from source; what the drop
+    /// does carry is the same law's SHAPE in CFrontEnd's shared helpers —
+    /// FrontEnd.cpp:854-876 for a bordered page whose other side is FEP_MAIN, and
+    /// the generic FrontEnd.cpp:881-887 — and the breakpoint/scale idioms match.
+    /// The thresholds below are the shipped ones and the float pool addresses are
+    /// verified: 0.2 @0x005d8604, 0.4 @0x005d8c40, 0.6 @0x005d8bb8, 5.0 @0x005db564,
+    /// 0.25 @0x005d858c, 0.3 @0x005d8cb4.
+    ///
+    /// <para><b>Why dest == 0x0c and not the generic branch.</b> The generic branch
+    /// fades the TITLE LOGO with the page (its alpha is the same clamp as the menu
+    /// rows); the 0x0c branch forces the logo to 0xff (0x0046423D). Retail's first
+    /// main-menu frame has the logo at ~96 % of its settled value while the menu
+    /// column, the language selector and both bracket pairs are still exactly the
+    /// flat fill. Only the 0x0c branch can produce that frame.</para>
+    /// </summary>
+    private static MainMenuDecor MainMenuLeftDecor(float transition)
+    {
+        float scale = 1.25f;
+        float rotation = 0f;
+        float alpha = 1f;
+        if (transition < 1f)
+        {
+            if (transition < 0.2f)
+            {
+                float t = Clamp01(transition * 5f);
+                alpha = MakeAlpha(t);
+                rotation = -((1f - t) * 0.3f);
+                scale = t;
+            }
+            else if (transition < 0.4f)
+            {
+                scale = 1f;
+            }
+            else if (transition < 0.6f)
+            {
+                scale = (Clamp01((transition - 0.4f) * 5f) * 0.25f) + 1f;
+            }
+        }
+
+        return new MainMenuDecor(scale, rotation, alpha, Draw: true);
+    }
+
+    /// <summary>
+    /// Left transition twin <c>DAT_0089d898</c> (title-bracket-02), same anchor.
+    /// Drawn ONLY while transition &lt; 1 and only on the dest == 0x0c side, and
+    /// gone from 0.8 onward — the settled main menu has never drawn it, which is
+    /// why it is absent from this lane's settled frame today.
+    ///
+    /// Note the rotation sign flips between the two moving windows in the shipped
+    /// code (positive below 0.2, negative in 0.6..0.8). That is reproduced rather
+    /// than tidied.
+    /// </summary>
+    private static MainMenuDecor MainMenuLeftDecorTwin(float transition)
+    {
+        if (transition >= 1f)
+        {
+            return default;
+        }
+
+        if (transition < 0.2f)
+        {
+            float t = Clamp01(transition * 5f);
+            return new MainMenuDecor(t, (1f - t) * 0.3f, MakeAlpha(t), Draw: true);
+        }
+
+        if (transition < 0.6f)
+        {
+            return new MainMenuDecor(1f, 0f, 1f, Draw: true);
+        }
+
+        if (transition < 0.8f)
+        {
+            float t = 1f - Clamp01((transition - 0.6f) * 5f);
+            return new MainMenuDecor(t, -((1f - t) * 0.3f), MakeAlpha(t), Draw: true);
+        }
+
+        return default;
+    }
+
+    /// <summary>
+    /// Right decoration <c>DAT_0089d8a0</c> (symbol-bracket-01) at (457, 355).
+    /// Same dest == 0x0c branch, one breakpoint set earlier than the left pair:
+    /// 0.1 @0x005d85c0, 0.3 @0x005d8cb4, 0.5 @0x005d85ec, 0.7 @0x005d8bec.
+    /// Below 0.1 the shipped code leaves the scale at 1.25 and zeroes the alpha,
+    /// so it is invisible rather than small — reproduced as written.
+    /// </summary>
+    private static MainMenuDecor MainMenuRightDecor(float transition)
+    {
+        float scale = 1.25f;
+        float rotation = 0f;
+        float alpha = 1f;
+        if (transition < 1f)
+        {
+            if (transition < 0.1f)
+            {
+                alpha = 0f;
+            }
+            else if (transition < 0.3f)
+            {
+                float t = Clamp01((transition - 0.1f) * 5f);
+                alpha = MakeAlpha(t);
+                rotation = -(t * 0.3f);
+                scale = t;
+            }
+            else if (transition < 0.5f)
+            {
+                scale = 1f;
+            }
+            else if (transition < 0.7f)
+            {
+                scale = (Clamp01((transition - 0.5f) * 5f) * 0.25f) + 1f;
+            }
+        }
+
+        return new MainMenuDecor(scale, rotation, alpha, Draw: alpha > 0f);
+    }
+
+    /// <summary>
+    /// Right transition twin <c>DAT_0089d8a4</c> (symbol-bracket-02), same anchor,
+    /// drawn only while 0.1 &lt;= transition &lt; 0.9 on the dest == 0x0c side.
+    /// </summary>
+    private static MainMenuDecor MainMenuRightDecorTwin(float transition)
+    {
+        if (transition >= 1f || transition < 0.1f)
+        {
+            return default;
+        }
+
+        if (transition < 0.3f)
+        {
+            float t = Clamp01((transition - 0.1f) * 5f);
+            return new MainMenuDecor(t, -(t * 0.3f), MakeAlpha(t), Draw: true);
+        }
+
+        if (transition < 0.7f)
+        {
+            return new MainMenuDecor(1f, 0f, 1f, Draw: true);
+        }
+
+        if (transition < 0.9f)
+        {
+            float t = 1f - Clamp01((transition - 0.7f) * 5f);
+            return new MainMenuDecor(t, -(t * 0.3f), MakeAlpha(t), Draw: true);
+        }
+
+        return default;
+    }
+
+    private void DrawMainMenuDecor(Texture2D texture, Vector2 body, Vector2 shadow, MainMenuDecor decor)
+    {
+        if (!decor.Draw || decor.Alpha <= 0f)
+        {
+            return;
+        }
+
+        var size = new Vector2(texture.GetWidth(), texture.GetHeight());
+        // Shadow first, at scale * 1.05 (_DAT_005db4ac) and the same rotation. Its
+        // packed colour is (alpha * 0x3f & 0xff00) << 0x10, i.e. ShadowTint scaled
+        // by the decoration's own alpha.
+        DrawCenteredRotated(
+            texture,
+            shadow,
+            size * (decor.Scale * ShadowScaleBoost),
+            decor.Rotation,
+            new Color(ShadowTint.R, ShadowTint.G, ShadowTint.B, ShadowTint.A * decor.Alpha));
+        DrawCenteredRotated(
+            texture,
+            body,
+            size * decor.Scale,
+            decor.Rotation,
+            new Color(BracketTint.R, BracketTint.G, BracketTint.B, BracketTint.A * decor.Alpha));
+    }
+
     private void DrawMainMenu()
     {
-        DrawMainUnderlay();
+        float transition = MainMenuTransition;
+
+        // CFEPMain__Render's page fade, computed once at 0x00462D5x as
+        // local_68 = (transition - 0.75) * 4.0 and then clamped at every use:
+        // 0.75 @_DAT_005d8bc4, 4.0 @_DAT_005d85bc, both verified in the pristine
+        // specimen. It drives the right chrome strips, the language row, every
+        // menu label and the version string.
+        float fade = Clamp01((transition - 0.75f) * 4f);
+
+        // The selection icon (and, on the literal reading of the same block, the
+        // selected row's highlight box) fade on their own later window,
+        // clamp((transition - 0.8) * 5): 0.8 @_DAT_005d85f8, 5.0 @_DAT_005db4b8.
+        //
+        // INFERRED OPERAND, marked because it matters: the highlight box's driver
+        // decompiles as an uninitialised stack float rather than as `transition`
+        // itself. `(x - 0.8) * 5` is the same expression the icon block uses a few
+        // hundred bytes later, so `transition` is the reading taken here, but the
+        // operand identity is not proven and both candidates differ only inside
+        // 0.75..0.8.
+        float iconFade = Clamp01((transition - 0.8f) * 5f);
+
+        DrawMainUnderlay(transition);
 
         // The faint crosshair guides. FEP_DEVSELECT and FEP_LEVEL_SELECT have drawn
         // these since the font22 work; FEP_MAIN never did, and retail draws them on
@@ -819,15 +1184,23 @@ public sealed partial class RetailFrontendFlow : Control
         // today, so this residual is shared and is not introduced here; closing it
         // needs a per-pixel composite of the guide against the live underlay, which
         // this canvas cannot express as a blend mode. See DrawMainUnderlay.
+        //
+        // UNGATED, and that is measured rather than assumed: the guides are drawn
+        // by the COMMON page (FrontEnd.cpp:1314 renders it with the raw trans and
+        // FEP_NONE), not by CFEPMain, and retail's t = 14 ms frame already carries
+        // the full-height x = 123 column and the full-width y = 180 row while
+        // every CFEPMain element is still absent.
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
-        // DAT_0089d7f0 Forseti writing chrome — three settled tiles (Y thunk ≈ 175).
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f, 1f, 1f, ChromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, ChromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 700f, 1f, 1f, ChromeTint);
+        // DAT_0089d7f0 Forseti writing chrome — three settled tiles (Y thunk ≈ 175),
+        // packed colour (alpha * 0x3f0000) | 0xffffff, so alpha is the page fade.
+        var chromeTint = new Color(ChromeTint.R, ChromeTint.G, ChromeTint.B, ChromeTint.A * fade);
+        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f, 1f, 1f, chromeTint);
+        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, chromeTint);
+        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 700f, 1f, 1f, chromeTint);
 
-        DrawLanguageSelector();
+        DrawLanguageSelector(fade);
 
         for (int index = 0; index < _session.Items.Count; index++)
         {
@@ -849,33 +1222,80 @@ public sealed partial class RetailFrontendFlow : Control
                 // Mathf.Max(160f, ...) floor forced 160 and made the box 39px too
                 // wide. Retail sizes it to the label plus a fixed padding.
                 float boxWidth = textWidth + 22f;
-                DrawTextureRect(
-                    _titleTextBox,
-                    new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 10f, boxWidth, 20f),
-                    false,
-                    HighlightTint);
+                if (iconFade > 0f)
+                {
+                    DrawTextureRect(
+                        _titleTextBox,
+                        new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 10f, boxWidth, 20f),
+                        false,
+                        new Color(
+                            HighlightTint.R,
+                            HighlightTint.G,
+                            HighlightTint.B,
+                            HighlightTint.A * iconFade));
+                }
+            }
+
+            if (fade <= 0f)
+            {
+                continue;
             }
 
             Color textColor = selected
                 ? ReleasedSelected
                 : item.IsAvailable ? ReleasedNormal : ReleasedUnavailable;
-            DrawText(label, textPos, textScale, textColor);
+            DrawText(label, textPos, textScale, new Color(textColor, textColor.A * fade));
         }
 
-        // Shadows (offset bases; GetShadowOffset* ≈ 0 settled), then bodies.
-        const float bracketScale = 1.25f;
-        float bracketShadowScale = bracketScale * ShadowScaleBoost;
-        DrawSurfaceCentered(_titleBracket01, 224f, 349f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_titleBracket01, 219f, 344f, bracketScale, bracketScale, BracketTint);
-        DrawSurfaceCentered(_symbolBracket01, 462f, 365f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_symbolBracket01, 457f, 355f, bracketScale, bracketScale, BracketTint);
+        // Shadows (offset bases; GetShadowOffset* ≈ 0 settled), then bodies. Order
+        // is the shipped order: left decoration, its transition twin, right
+        // decoration, its transition twin, then the selection icon. At transition
+        // >= 1 every state below collapses to the previous constants — scale 1.25,
+        // rotation 0, alpha 1, twins not drawn — so the settled frame is unchanged
+        // by this whole block.
+        DrawMainMenuDecor(
+            _titleBracket01,
+            new Vector2(219f, 344f),
+            new Vector2(224f, 349f),
+            MainMenuLeftDecor(transition));
+        DrawMainMenuDecor(
+            _titleBracket02,
+            new Vector2(219f, 344f),
+            new Vector2(224f, 349f),
+            MainMenuLeftDecorTwin(transition));
+        DrawMainMenuDecor(
+            _symbolBracket01,
+            new Vector2(457f, 355f),
+            new Vector2(462f, 365f),
+            MainMenuRightDecor(transition));
+        DrawMainMenuDecor(
+            _symbolBracket02,
+            new Vector2(457f, 355f),
+            new Vector2(462f, 365f),
+            MainMenuRightDecorTwin(transition));
 
-        Texture2D icon = _menuIcons[_session.SelectedMainIndex];
-        Color iconTint = _session.SelectedMainItem.IsAvailable ? BracketTint : ReleasedUnavailable;
-        DrawSurfaceCentered(icon, 462f, 365f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
-        DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, iconTint);
+        if (iconFade > 0f)
+        {
+            Texture2D icon = _menuIcons[_session.SelectedMainIndex];
+            Color iconTint = _session.SelectedMainItem.IsAvailable ? BracketTint : ReleasedUnavailable;
+            DrawSurfaceCentered(
+                icon,
+                462f,
+                365f,
+                ShadowScaleBoost,
+                ShadowScaleBoost,
+                new Color(ShadowTint, ShadowTint.A * iconFade));
+            DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, new Color(iconTint, iconTint.A * iconFade));
+        }
 
-        DrawTextFlat(VersionText, new Vector2(0f, DesignHeight - 16f), 1f, VersionTint);
+        if (fade > 0f)
+        {
+            DrawTextFlat(
+                VersionText,
+                new Vector2(0f, DesignHeight - 16f),
+                1f,
+                new Color(VersionTint, VersionTint.A * fade));
+        }
 
         // DAT_0089d7fc reflection sheen — RESTORED 2026-07-27 from the shipped
         // bytes, as a separate additive CanvasItem clipped to the logo's own
@@ -938,10 +1358,17 @@ public sealed partial class RetailFrontendFlow : Control
     ///   right chevron x 273..294 (w 22), y 253..282 (h 30)
     /// The content is symmetric about x = 219.0, which independently confirms
     /// MenuColumnX as a centre anchor rather than a left edge.
+    ///
+    /// <paramref name="fade"/> is CFEPMain__Render's page fade. The language row is
+    /// drawn inside the same loop as the menu labels and every one of its packed
+    /// colours is multiplied by the same alpha byte, so it reveals with them. The
+    /// released row additionally carries a sine brightness pulse when it is the
+    /// selected row and two per-arrow blink timers; neither is modelled here, and
+    /// neither is introduced by this change.
     /// </summary>
-    private void DrawLanguageSelector()
+    private void DrawLanguageSelector(float fade)
     {
-        if (_languageFlags.Length == 0)
+        if (_languageFlags.Length == 0 || fade <= 0f)
         {
             return;
         }
@@ -961,15 +1388,16 @@ public sealed partial class RetailFrontendFlow : Control
             _languageFlags[language],
             new Rect2(177f, 252f, 85f, 33f),
             false,
-            FlagTint);
+            new Color(FlagTint, FlagTint.A * fade));
 
         // FE_Arrow points RIGHT, and its artwork occupies only (16,12)-(46,52) of
         // the 64x64 texture (measured from the decoded DDS alpha bbox). Drawing the
         // whole texture would shrink the visible chevron by the margins, so source
         // the content region explicitly. Retail's LEFT chevron is the mirrored one.
         var arrowSource = new Rect2(16f, 12f, 30f, 40f);
-        DrawTextureRectRegion(_feArrow, new Rect2(166f, 254f, -22f, 30f), arrowSource, ChromeTint);
-        DrawTextureRectRegion(_feArrow, new Rect2(273f, 253f, 22f, 30f), arrowSource, ChromeTint);
+        var arrowTint = new Color(ChromeTint, ChromeTint.A * fade);
+        DrawTextureRectRegion(_feArrow, new Rect2(166f, 254f, -22f, 30f), arrowSource, arrowTint);
+        DrawTextureRectRegion(_feArrow, new Rect2(273f, 253f, 22f, 30f), arrowSource, arrowTint);
     }
 
     /// <summary>
@@ -1011,14 +1439,56 @@ public sealed partial class RetailFrontendFlow : Control
     /// measurably NOT additive (see DrawMainMenu's reflection-streak note), and a
     /// layer this large must not inherit that defect.
     /// </summary>
-    private void DrawMainUnderlay()
+    /// <param name="transition">
+    /// <c>trans</c> for FEP_MAIN. The video ramps IN with the incoming page:
+    /// <c>CFrontEnd::DrawStandardVideoBackground</c>, FrontEnd.cpp:1023-1045.
+    ///
+    /// <para><b>The law is ported; the BRANCH SELECTION is measured, and that
+    /// distinction is the honest part of this method.</b> FrontEnd.cpp:1038-1041
+    /// offers exactly two alphas —
+    /// <c>MakeAlpha(RangeTransition(transition, 0, 0.5))</c> when the other page is
+    /// FEP_MAIN and <c>MakeAlpha(RangeTransition(transition, 0.5, 1))</c>
+    /// otherwise — and <c>dest</c> at FrontEnd.cpp:1299-1305 is the OTHER page, so
+    /// the literal condition for FEP_MAIN's own call selects the second. The second
+    /// is REFUTED: fitting retail's underlay strength as
+    /// <c>pixel = fill + a * gain * FEBack[k]</c> over the pure-underlay box
+    /// (0,181)-(120,300) gives a = 0.000 with zero residual at t = 14 ms (run1) and
+    /// t = 29 ms (run2) — the box is bit-exactly the flat fill — and then
+    /// a = 1.07 at t = 422 ms, 1.13 at 524 ms, 1.02 at 1020 ms. Full video at
+    /// 422 ms cannot come from a (0.5, 1) window on a 50-frame transition. The
+    /// (0, 0.5) window does produce it, so that is the branch taken here.</para>
+    ///
+    /// <para>Neither branch is FEP_MAIN's own: the video draw belongs to
+    /// <c>CFEPMain__RenderPreCommon</c> (0x00462B70), which has no source in the
+    /// drop and no decompile in this lab, and the source comment at
+    /// FrontEnd.cpp:1025-1034 says the DirectX video is async-loading and "needs
+    /// time before it's visible" independently of any alpha. So the exact retail
+    /// mechanism for the first ~400 ms is NOT established. What is established is
+    /// the pair of measurements above, and the ported law is the one of the two
+    /// available that reproduces them.</para>
+    /// </param>
+    private void DrawMainUnderlay(float transition)
     {
+        // The flat page fill is drawn FIRST and opaque, then the baked
+        // fill+gain*frame composite over it at the video's own alpha. That is
+        // exact rather than convenient: a * (fill + gain*frame) + (1-a) * fill
+        // == fill + a * gain * frame, which is the released additive composite
+        // with the alpha applied only to the video term. Modulating the baked
+        // texture alone would have faded the FILL as well, and retail's page fill
+        // is present at full strength on the very first frame.
+        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
+
         if (_feBackFrames.Length == 0)
         {
-            // Strip missing (materialize not run). Fall back to the flat fill: it
-            // is what the page held before the video was identified, and it is
-            // strictly better than drawing nothing.
-            DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
+            // Strip missing (materialize not run). The flat fill above is what the
+            // page held before the video was identified, and it is strictly better
+            // than drawing nothing.
+            return;
+        }
+
+        float alpha = MakeAlpha(RangeTransition(transition, 0f, 0.5f));
+        if (alpha <= 0f)
+        {
             return;
         }
 
@@ -1027,7 +1497,7 @@ public sealed partial class RetailFrontendFlow : Control
             _feBackFrames[frame],
             new Rect2(0f, 0f, DesignWidth, DesignHeight),
             false,
-            Colors.White);
+            new Color(1f, 1f, 1f, alpha));
     }
 
     /// <summary>
@@ -1137,7 +1607,10 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawDevSelect()
     {
-        DrawMainUnderlay();
+        // Settled: this lane models no transition into FEP_DEVSELECT, and its
+        // entry length is not evidenced. Passing 1 keeps this page byte-identical
+        // to what it drew before the transition machine existed.
+        DrawMainUnderlay(1f);
 
         // Faint crosshair guides, present on this page and on the retail main
         // menu; the reconstruction has not drawn them anywhere before now.
@@ -1318,7 +1791,8 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawLevelSelect()
     {
-        DrawMainUnderlay();
+        // Settled, for the same reason as DrawDevSelect.
+        DrawMainUnderlay(1f);
 
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
