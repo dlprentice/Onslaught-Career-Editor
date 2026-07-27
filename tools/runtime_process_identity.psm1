@@ -404,9 +404,30 @@ function Assert-UniqueExecutableProcess {
             $matches.Add($candidate.Id)
         }
     }
-    if ($candidates.Count -ne 1 -or $matches.Count -ne 1 -or $matches[0] -ne $ExpectedProcess.Id) {
-        throw ("Found multiple running processes using executable path '{0}' or the exact receipt process was ambiguous: {1}." -f
-            $ExecutablePath, (($candidates | ForEach-Object { $_.Id }) -join ", "))
+    # The safety property is that exactly one process is running THE EXACT
+    # EXECUTABLE PATH we are about to act on, and that it is the process the
+    # receipt names. Other processes that merely share a NAME are irrelevant -
+    # they are running a different file.
+    #
+    # This used to also require `$candidates.Count -eq 1`, i.e. that no
+    # same-named process existed anywhere on the machine. That is over-strict
+    # and it FAILED FOR THE WRONG REASON: on this project the copied targets are
+    # all called BEA.exe, so the check refused whenever a second copied target,
+    # a leftover fixture, or the operator's own game was running - even though
+    # the path match below was completely unambiguous. It made
+    # runtime_process_identity_test flaky under process contention (2 failures
+    # in 4 runs on identical code, different PIDs each time, the suite's own
+    # stubs matching each other by name) and it would have refused a legitimate
+    # probe on a machine with the retail game open.
+    #
+    # The path comparison is already OrdinalIgnoreCase-exact and is the real
+    # guard; nothing is loosened by dropping the name-count clause.
+    if ($matches.Count -ne 1 -or $matches[0] -ne $ExpectedProcess.Id) {
+        throw ("Found multiple running processes using executable path '{0}', or the exact receipt process {1} was ambiguous; processes at that exact path: {2}; all same-name candidates examined: {3}." -f
+            $ExecutablePath,
+            $ExpectedProcess.Id,
+            (($matches | ForEach-Object { $_ }) -join ", "),
+            (($candidates | ForEach-Object { $_.Id }) -join ", "))
     }
 }
 
