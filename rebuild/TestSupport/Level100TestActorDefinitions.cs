@@ -189,45 +189,78 @@ internal static class Level100TestActorDefinitions
 
     private static int FloatBits(float value) => BitConverter.SingleToInt32Bits(value);
 
-    // Synthetic, deliberately distant points keep Core-only tests independent
-    // of retail route data. Client tests load the exact materialized manifest.
+    // Every route below is the released one, transcribed point for point from
+    // the materialized manifest `level100-static-world.json` (`waypointPaths`),
+    // which the Client tests load directly.
+    //
+    // They used to be synthetic single points 500-620 m out at exactly 45
+    // degrees, with a comment claiming that kept Core-only tests independent of
+    // retail route data. It did not: it made whole released beats unreachable
+    // in Core, because every actor that follows one of these paths drives off
+    // the authored map and parks in deep water where no walker can follow it.
+    // Measured before this correction, with beat 3 completing for the first
+    // time: the three beat-4 Target Trucks stopped at (197322, -11060, 213103),
+    // (187162, -11060, 203960) and (176998, -11060, 194815) - 170-197 m from
+    // the player and 11 m below the water plane. Beat 4 could not complete, and
+    // beats 5, 6, 8 and 10 are behind it. This is the same class of fixture
+    // defect that `Target Tank Path 1` carried until it was corrected on
+    // 2026-07-26, and nothing pins the synthetic values.
+    //
+    // `Transporter Path` keeps its released duplicate leading node, which is
+    // what `TransporterArrival_UsesStrictClassRadiusAndRetainsDuplicateNodes`
+    // asserts: the retail route repeats (-95688, -42250).
+    //
+    // Every field is the manifest's, including the retail `nodeIndex` and the
+    // retail `retailComponentsFloatBits`. The previous corrections renumbered
+    // nodes 0..N-1 and rebuilt the float bits from the rounded millimetres,
+    // which produces *different bits* - harmless today because nothing in the
+    // movement path reads either field, and wrong tomorrow because both are
+    // part of the hashed definition set.
     private static IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths() =>
     [
-        Path("Flyby Path",
-            (0, 500_000, 500_000)),
-        Path("Target Truck Path 3",
-            (0, 530_000, 530_000)),
-        Path("Target Truck Path 2",
-            (0, 520_000, 520_000)),
-        Path("Target Truck Path 1",
-            (0, 510_000, 510_000)),
-        Path("Transporter Path",
-            (0, 540_000, 540_000),
-            (1, 540_000, 540_000),
-            (2, 541_000, 541_000)),
-        Path("Target Tank Path 2",
-            (0, 620_000, 620_000)),
-        // The released `Target Tank Path 1`, transcribed from the materialized
-        // manifest (`level100-static-world.json`). It was previously the
-        // synthetic triple (610000, 610000)..(612000, 612000) - 610 m away at
-        // exactly 45 degrees - so `Target Tank #23`, the fourth beat-3 static
-        // target, drove away from the firing range forever and beat 3 could
-        // never complete. That is the G2 gap recorded in
-        // LEVEL100-TUTORIAL-BEATS-2026-07-26.md, and it is a fixture artefact
-        // rather than a guidance defect. Nothing pinned the synthetic value.
-        Path("Target Tank Path 1",
-            (0, 33_313, 69_750),
-            (1, -11_688, 91_750),
-            (2, 33_313, 69_750)),
-        // The released `Drone Path 1`, transcribed from the materialized
-        // manifest (`level100-static-world.json`), because a synthetic point
-        // would make the beat-7 flight measurement meaningless. Node indices
-        // and positions are the retail ones.
-        Path("Drone Path 1",
-            (1, -99_688, -3_250),
-            (2, -108_688, 37_750),
-            (3, -66_688, 16_750),
-            (4, -77_688, 84_750)),
+        ExactPath("Flyby Path",
+            (43, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
+            (42, 33_813, 10_000, 21_250, 1_134_641_152, 1_132_740_608, 1_092_616_192, 0),
+            (41, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0)),
+        ExactPath("Target Truck Path 3",
+            (36, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
+            (35, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0),
+            (34, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0),
+            (33, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0)),
+        ExactPath("Target Truck Path 2",
+            (32, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
+            (31, 33_813, 10_000, 21_250, 1_134_641_152, 1_132_740_608, 1_092_616_192, 0),
+            (30, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0),
+            (29, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0)),
+        ExactPath("Target Truck Path 1",
+            (25, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
+            (26, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0),
+            (27, -43_688, 10_000, 57_750, 1_131_741_184, 1_133_936_640, 1_092_616_192, 0),
+            (28, -11_688, 10_000, 91_750, 1_133_150_208, 1_135_050_752, 1_092_616_192, 0)),
+        ExactPath("Transporter Path",
+            (44, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0),
+            (22, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0),
+            (23, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0)),
+        ExactPath("Target Tank Path 2",
+            (38, -43_688, 10_000, 57_750, 1_131_741_184, 1_133_936_640, 1_092_616_192, 0),
+            (37, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0),
+            (8, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0),
+            (10, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
+            (24, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0)),
+        // `Target Tank Path 1` was the synthetic triple (610000, 610000)..
+        // (612000, 612000) - 610 m away at exactly 45 degrees - so
+        // `Target Tank #23`, the fourth beat-3 static target, drove away from
+        // the firing range forever and beat 3 could never complete. That is the
+        // G2 gap recorded in LEVEL100-TUTORIAL-BEATS-2026-07-26.md.
+        ExactPath("Target Tank Path 1",
+            (18, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0),
+            (6, -11_688, 10_000, 91_750, 1_133_150_208, 1_135_050_752, 1_092_616_192, 0),
+            (7, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0)),
+        ExactPath("Drone Path 1",
+            (1, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0),
+            (2, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0),
+            (3, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
+            (4, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0)),
     ];
 
     private static IReadOnlyList<Level100ActorMotionDefinition>
@@ -288,18 +321,19 @@ internal static class Level100TestActorDefinitions
             4,
             100);
 
-    private static Level100WaypointPathDefinition Path(
+    /// <summary>
+    /// One released waypoint path, every field taken verbatim from the
+    /// materialized manifest: node index, millimetre position, and the retail
+    /// float components. Nothing here is reconstructed or renumbered.
+    /// </summary>
+    private static Level100WaypointPathDefinition ExactPath(
         string name,
-        params (int Node, int X, int Z)[] points) => new(
+        params (int Node, int X, int Y, int Z, int B0, int B1, int B2, int B3)[] points) => new(
         name,
         Array.AsReadOnly(points
             .Select(point => new Level100WaypointPointDefinition(
                 point.Node,
-                new SimVector3(point.X, 10_000, point.Z),
-                new Level100FloatVector4Bits(
-                    FloatBits((point.X / 1_000f) + 288.6875f),
-                    FloatBits((point.Z / 1_000f) + 243.25f),
-                    FloatBits(10f),
-                    FloatBits(0f))))
+                new SimVector3(point.X, point.Y, point.Z),
+                new Level100FloatVector4Bits(point.B0, point.B1, point.B2, point.B3)))
             .ToArray()));
 }

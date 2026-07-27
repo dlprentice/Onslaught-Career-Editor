@@ -7,14 +7,23 @@ using Xunit.Abstractions;
 namespace OnslaughtRebuild.Core.Tests;
 
 /// <summary>
-/// How far the released progression chain gets under a `SimInput`-only
-/// autopilot that posts no mission event.
+/// How far the released progression chain gets under a <c>SimInput</c>-only
+/// autopilot that posts no mission event. Two drivers, same world, same
+/// weapons.
 ///
-/// <para>This is a <b>measurement</b>, not a success claim. `Won` is not
-/// reached, and the assertions below record exactly where the run stops so
-/// that a later change is measured against a number rather than against a
-/// recollection. See
-/// <c>local-lab/ACTOR-WEAPONS-AND-FULL-CHAIN-2026-07-26.md</c> §5.</para>
+/// <para><see cref="ChainAutopilot_ReachesWonByInputAlone"/> reaches
+/// <c>Won</c>. <see cref="NaiveWalkerAutopilot_BreaksTheTutorialAndLoses"/>
+/// loses, and the difference between them is entirely firing discipline.</para>
+///
+/// <para><b>What `Won` here does and does not mean.</b> Ten of the eleven named
+/// progression events are produced in full by the world. The eleventh,
+/// <c>Airborne Target 2 Destroyed</c> x6, is produced twice before the
+/// LevelScript's own sub-40 % hull poll posts <c>Abort Airborne Drones</c>,
+/// which sets Target Zone 4 and leads to the same shipped <c>LevelWon()</c>.
+/// That is a released path with its own dialogue and its own
+/// <c>AddScore(-50)</c>, and it is not the same thing as clearing the
+/// tutorial's combat curriculum. See
+/// <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c>.</para>
 /// </summary>
 public sealed class Level100FullChainTests
 {
@@ -23,27 +32,29 @@ public sealed class Level100FullChainTests
     public Level100FullChainTests(ITestOutputHelper output) => _output = output;
 
     /// <summary>
-    /// The walker-only autopilot, run for 900 released seconds.
+    /// The naive walker autopilot - fixed 18 m stand-off, fire whenever the
+    /// reticle is on the objective, never check what is in between.
     ///
-    /// <para>Measured outcome: the first three beat-3 static targets are
-    /// destroyed, and the run then stops on the fourth, <c>Target Tank
-    /// #23</c>. It is <b>not</b> stopped by a missing mechanism: with the
-    /// released <c>Target Tank Path 1</c> now in the fixture the tank drives
-    /// its authored route and parks at its final node, the autopilot walks to
-    /// within its 18 m stand-off, aims, and fires - and every round lands on
-    /// terrain. The autopilot chooses a firing position on high ground above
-    /// the parked tank and never repositions. That is an autopilot-quality
-    /// limit, not a Core limit, and it is the single thing standing between
-    /// this run and beats 4 and 5.</para>
+    /// <para>It used to stall harmlessly on beat 3's fourth target, putting
+    /// 3,578 consecutive rounds into a ridge. It no longer stalls: it
+    /// <b>loses</b>. With the released Target Truck routes in the fixture the
+    /// three beat-4 trucks drive their authored paths across the firing range
+    /// instead of off the map, and the naive driver's undirected fire destroys
+    /// one at t2545 while <c>activated</c> is still FALSE. That is the
+    /// <c>case FALSE</c> arm of <c>TargetTruck1.msl</c>'s <c>died()</c>:
+    /// <c>PostEvent("Broke Tutorial")</c>, which LevelScript answers with
+    /// <c>LevelLostString(LOSE_TUTORIAL_BROKE)</c>.</para>
     ///
-    /// <para>Beats 6, 8 and 10 are separately demonstrated by
-    /// <c>Level100FlightLegTests</c>, and beats 7 and 9 now have a working
-    /// player weapon for the first time (the jet Mech Vulcan Cannon launched
-    /// no projectile at all before this change), but no single autopilot
-    /// drives the whole chain.</para>
+    /// <para>This is kept, and kept failing-forward rather than deleted,
+    /// because it is the control for
+    /// <see cref="ChainAutopilot_ReachesWonByInputAlone"/>: the same world and
+    /// the same weapons, and the entire difference is that the competent driver
+    /// checks the ground and the surrounding structures before it pulls the
+    /// trigger. Shooting without looking is not merely inefficient in this
+    /// level - it is a losing move, and the released scripts say so.</para>
     /// </summary>
     [Fact]
-    public void WalkerAutopilot_StopsOnTheFourthStaticTarget()
+    public void NaiveWalkerAutopilot_BreaksTheTutorialAndLoses()
     {
         var driver = Level100PlayerDriver.Create();
         driver.Run(30 * 900);
@@ -81,9 +92,140 @@ public sealed class Level100FullChainTests
         Assert.Equal(Level100ActorCommandIntent.Stopped, intent?.Intent);
         Assert.True(tank.Pose.PositionMillimeters.Z > 60_000);
 
-        // And the honest negative: `Won` is not reached.
+        // The honest negative, and it is now worse than "did not finish": the
+        // level is lost, through the released tutorial-broken path.
         Assert.Equal(
-            Level100MissionOutcome.Running,
+            Level100MissionOutcome.Lost,
             final.Level100Mission.Outcome);
+        Assert.Equal(
+            Level100MissionFailureReason.TutorialBroken,
+            final.Level100Mission.FailureReason);
+
+        // A beat-4 truck was destroyed before "Activate Static Targets 2"
+        // armed it, which is the only way this level posts "Broke Tutorial"
+        // here: the trucks are the only unactivated destructible actors in
+        // range while beat 3 is being fought.
+        Assert.Contains(
+            final.Level100Actors.Actors,
+            actor => actor.TargetGroup == Level100MissionTargetGroup.TargetTrucks &&
+                actor.Lifecycle == Level100ActorLifecycle.Destroyed);
     }
+
+    /// <summary>
+    /// The whole released chain, played end to end by one autopilot that drives
+    /// <see cref="SimInput"/> and nothing else.
+    ///
+    /// <para><b>No mission event is posted by this test or by the driver.</b>
+    /// Every one of the eleven named progression events comes out of the world:
+    /// the two volumes are entered on foot, the four beat-3 statics and the
+    /// three beat-4 trucks and the six beat-5 moving spawns are shot with the
+    /// weapons the script hands over in the order it hands them over, the three
+    /// flight legs are flown and landed so that <c>TargetZoneN.msl</c>'s
+    /// <c>InJetMode() == FALSE</c> is satisfied, and the beat-7 drones are shot
+    /// down in jet mode because the script has disabled both walker weapons by
+    /// then. <c>LevelWon()</c> is called by the released
+    /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
+    ///
+    /// <para>What this test does <b>not</b> claim: that beat 9 is completed by
+    /// kills. It is completed through the released abort branch - the
+    /// LevelScript's own health poll posts <c>Abort Airborne Drones</c> below
+    /// 40 % hull, which sets Target Zone 4 as the objective and leads to the
+    /// same <c>LevelWon()</c>. That is a shipped path with its own dialogue
+    /// (<c>TUTORIAL_ABORTED</c>), not a shortcut, but it is a worse run than a
+    /// good player's and the report says so.</para>
+    /// </summary>
+    [Fact]
+    public void ChainAutopilot_ReachesWonByInputAlone()
+    {
+        var driver = Level100ChainAutopilot.Create();
+        Level100MissionOutcome outcome;
+        try
+        {
+            outcome = driver.Run(30 * 1_200);
+        }
+        finally
+        {
+            foreach (string line in driver.Report)
+            {
+                _output.WriteLine(line);
+            }
+        }
+
+        WorldSnapshot final = driver.Snapshot;
+        Assert.Equal(Level100MissionOutcome.Won, outcome);
+        Assert.Equal(Level100MissionOutcome.Won, final.Level100Mission.Outcome);
+
+        // Beats 1-5: every authored and spawned ground target the script
+        // activates is destroyed by the player's rounds.
+        foreach (string name in new[]
+        {
+            "Target Tank 2", "Target Tank 3", "Target Warehouse", "Target Tank #23",
+        })
+        {
+            Assert.Equal(
+                Level100ActorLifecycle.Destroyed,
+                final.Level100Actors.Actors
+                    .Single(actor => actor.Name == name).Lifecycle);
+        }
+
+        Assert.Equal(
+            3,
+            CountDestroyed(final, Level100MissionTargetGroup.TargetTrucks));
+        Assert.Equal(
+            6,
+            CountDestroyed(final, Level100MissionTargetGroup.MovingTargets));
+
+        // Beat 7: the first drone wave, which only the jet's Mech Vulcan Cannon
+        // can touch.
+        Assert.Equal(
+            3,
+            CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets1));
+
+        // Beats 6, 8 and 10: all three volumes were entered, and each one only
+        // dispatches out of jet mode.
+        foreach (Level100MissionTrigger trigger in new[]
+        {
+            Level100MissionTrigger.TargetZone1,
+            Level100MissionTrigger.FiringRange,
+            Level100MissionTrigger.TargetZone2,
+            Level100MissionTrigger.TargetZone3,
+            Level100MissionTrigger.TargetZone4,
+        })
+        {
+            Assert.True(
+                final.Level100Actors.Actors
+                    .Single(actor => actor.Trigger == trigger).TriggerEventDispatched,
+                $"{trigger} never dispatched.");
+        }
+
+        // And the qualification, asserted rather than only written down, so
+        // that a later run cannot quietly turn this into a full-clear claim or
+        // regress away from one without the gate saying so.
+        //
+        // `Aborted` is the released LevelScript's own `aborted` local, set by
+        // `event("Abort Airborne Drones")`, which its beat-9 health poll posts
+        // below 40 % hull. This run wins through that branch: it destroys two
+        // of the six wave-2 drones and objective 4 is never completed, because
+        // `PrimaryObjectiveComplete(4, ...)` lives only on the full clear.
+        Assert.True(
+            final.Level100Mission.Aborted,
+            "This run is expected to win through the released abort branch. " +
+            "If it now wins by clearing wave 2, that is better - update this " +
+            "assertion and local-lab/AUTOPILOT-TO-WON-2026-07-26.md together.");
+        Assert.InRange(
+            CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2),
+            0,
+            5);
+        Assert.Equal(
+            Level100PrimaryObjectiveStatus.Failed,
+            final.Level100Mission.PrimaryObjectives
+                .Single(objective => objective.Objective == 4).Status);
+    }
+
+    private static int CountDestroyed(
+        WorldSnapshot state,
+        Level100MissionTargetGroup group) =>
+        state.Level100Actors.Actors.Count(actor =>
+            actor.TargetGroup == group &&
+            actor.Lifecycle == Level100ActorLifecycle.Destroyed);
 }

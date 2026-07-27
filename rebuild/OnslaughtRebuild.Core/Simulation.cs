@@ -2640,11 +2640,41 @@ public sealed class Simulation
         _fireCooldownTicksRemaining = 0;
         _twinVulcanReloadThirdMillisecondsRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
-        _level100FlightEnabled = false;
-        _level100PulseCannonEnabled = false;
-        _level100VulcanCannonEnabled = false;
-        _level100MechVulcanCannonEnabled = false;
-        _level100MissilePodEnabled = false;
+        // A configured weapon starts ACTIVE. `CBattleEngineJetPart::
+        // ResetConfiguration` and `CBattleEngineWalkerPart::ResetConfiguration`
+        // spawn one CWeapon per name in the configuration's weapon list, call
+        // `weapon->Init(init)` and append it; neither ever calls
+        // `SetActive(FALSE)`, and `EnableWeapon`/`DisableWeapon` only flip that
+        // flag on a weapon that is already owned
+        // (references/Onslaught/BattleEngineJetPart.cpp:976-1044,
+        // BattleEngineWalkerPart.cpp:1030-1065).
+        //
+        // The shipped Level 100 object proves the same thing on its own, and
+        // more sharply. Across all 25 hash-pinned compiled scripts,
+        // `Mech Vulcan Cannon` and `Missile Pod` are named exactly once each -
+        // in `DisableWeapon` inside `event("Abort Airborne Drones")` - and are
+        // never enabled anywhere; and `init()` opens by *disabling*
+        // `Mech Twin Vulcan Cannon` and `Pulse Cannon Pod`. Under a
+        // start-disabled model every one of those four instructions is dead
+        // code and beat 7 is unwinnable, because the script disables both
+        // walker weapons at the end of beat 5 and the jet's Mech Vulcan Cannon
+        // is the only weapon the player has for the first drone wave. Under
+        // start-enabled every one of them is necessary. Aquila Prototype ships
+        // walker `["Mech Twin Vulcan Cannon"]`, mPrimaryWeapon
+        // `"Pulse Cannon Pod"` and jet `["Mech Vulcan Cannon", "Missile Pod"]`
+        // (battle engine configurations.dat @0x2d2), so all four are owned.
+        //
+        // Measured before this change: a `SimInput`-only autopilot that reached
+        // beat 7 held Fire in jet mode with `Level100MechVulcanCannonEnabled`
+        // false for 570 released seconds and launched no round, because
+        // `TryFire` returns on that flag. Flight mode gets the same treatment
+        // for the same reason; the released `init()` disables it explicitly on
+        // the first tick, so the observable start state is unchanged there.
+        _level100FlightEnabled = true;
+        _level100PulseCannonEnabled = true;
+        _level100VulcanCannonEnabled = true;
+        _level100MechVulcanCannonEnabled = true;
+        _level100MissilePodEnabled = true;
         _level100HudEmphasisMask = 0;
         _walkerToJetUsesTakeoffLift = false;
         _walkerToJetLiftApplied = false;
