@@ -57,8 +57,18 @@ repository ran **~30 minutes and 216k tokens**, and another exceeded a
 600-second timeout. A consult killed at 120 s surfaces as a stall, a truncated
 error, or `CreateProcessAsUserW failed: 5`, and reads as failure.
 
-So: **give every Codex call an explicit long timeout (600 s is the tool maximum),
-and background anything larger and poll it.** Do not "fix" this by disabling the
+So: **run every real Codex consult in the background and poll it.** 600 s is the
+*tool's* maximum timeout, which is well under what a serious consult needs, so a
+foreground call is only appropriate for a trivial question. Budget **at least an
+hour**, and be willing to wait up to about three — a consult that is still
+running is not a consult that has failed, and killing it at the ten-minute
+ceiling is exactly the mistake that caused this entry.
+
+If failures persist on a given question, **stair-step the effort** rather than
+retrying identically: `high` converges faster than `max` and is usually enough;
+reserve `max` for questions where the first pass genuinely could not decide.
+
+Do not "fix" this by disabling the
 sandbox — `--dangerously-bypass-approvals-and-sandbox` (`--yolo`) removes the one
 guard that stops Codex writing to the repository while other agents are editing
 it, and does not address the cause. Grok appears more reliable here only because

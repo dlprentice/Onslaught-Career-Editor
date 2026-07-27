@@ -49,7 +49,7 @@ was true when this file was first written and is **no longer true**. Thirteen of
 the proposed fifteen renames were applied to the live maintainer database under
 backup → canary → dual readback → promote, with the full receipts and the
 address-by-address evidence in
-[`local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md`](../../local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md).
+`local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md` (lab-only, gitignored).
 Two of the fifteen were **refuted by test and not applied**:
 
 - `0x0053a050` is not `CBLTexture`'s constructor. It allocates a 0x158-byte
@@ -235,7 +235,7 @@ which is direct evidence that the cohort over-collects as this paragraph says.
 - No claim that any specific name is correct. This grades evidence, not accuracy.
 - The 13 renames applied on 2026-07-26 change the class **prefix** only. Each is
   supported by a byte chain recorded per address in
-  [`local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md`](../../local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md).
+  `local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md` (lab-only, gitignored).
   Two of the 15 proposed were refuted by test and not applied. The three
   "family-level leads" (`CSquadNormal`, `CScriptObjectCode`, `CSpawnerThng`)
   were **not** applied as families: only the individually adjudicated members
