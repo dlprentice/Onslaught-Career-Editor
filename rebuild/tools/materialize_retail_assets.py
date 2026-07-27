@@ -432,6 +432,10 @@ DIRECT_ASSETS = (
 
 # Small exact released frontend surface used by the startup -> Level 100 path.
 FRONTEND_ASSETS = (
+    # CFrontEnd::Init (0x004662a0) plays MUS_FRONTEND, which CMusic::PlaySelection
+    # (0x004bb8c0) resolves to zero-based track 8 of the alphabetical data\music
+    # *.ogg playlist, i.e. BEA_09(Master).ogg. See Level100AudioCatalog.FrontendMusic.
+    (GODOT_ASSETS / "Frontend/Music/frontend-track-08.ogg", "data/Music/BEA_09(Master).ogg", "4f6166f655e62dec6993643a8a860bdea0abb7d853ad443f5d03e95368be93a1"),
     (GODOT_ASSETS / "Frontend/Backgrounds/click-to-start.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%fe_splash1.tga(0)A8R8G8B8.aya", "46ab45168875b5b686e3534b3f66ab65b5a5b5512f697e5a98b03dd12708731a"),
     (GODOT_ASSETS / "Frontend/Backgrounds/rock.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_Rock_Background.tga(0)A8R8G8B8.aya", "89213b441332f060acdb3e55aa28c290fa0e530983c16a57b8ce1a7413e9e86d"),
     # DAT_0089d7bc — click-to-start sliding pair (LostToys, not BarL/C/R).

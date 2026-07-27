@@ -187,6 +187,74 @@ public sealed class Level100AudioCatalogTests
             music.ResourcePath);
     }
 
+    // The recovered MUS_FRONTEND law, in one place: which track, that it loops,
+    // and that level entry stops it before the tutorial track starts.
+    // Evidence for each clause is cited in Level100AudioCatalog.FrontendMusic.
+    [Fact]
+    public void FrontendMusic_IsTrackEightLoopedAndStoppedOnLevelEntry()
+    {
+        Level100MusicRecipe music = Level100AudioCatalog.FrontendMusic;
+
+        Assert.Equal("MUS_FRONTEND", music.RetailSelection);
+        Assert.Equal(8, music.RetailTrackIndex);
+        Assert.Equal("data/Music/BEA_09(Master).ogg", music.RetailSourceName);
+        Assert.Equal(
+            "res://Assets/Frontend/Music/frontend-track-08.ogg",
+            music.ResourcePath);
+
+        // Track 8 is the ninth entry of the alphabetical data\music playlist, and
+        // track 3 is the fourth. Both must agree with the same zero-based rule.
+        string[] playlist =
+        [
+            "BEA_01(Master).ogg", "BEA_02(Master).ogg", "BEA_03(Master).ogg",
+            "BEA_04(Master).ogg", "BEA_05(Master).ogg", "BEA_06(Master).ogg",
+            "BEA_07(Master).ogg", "BEA_08(Master).ogg", "BEA_09(Master).ogg",
+            "BEA_10(Master).ogg",
+        ];
+        Assert.Equal(
+            playlist,
+            playlist.OrderBy(name => name, StringComparer.OrdinalIgnoreCase));
+        Assert.Equal(
+            music.RetailSourceName,
+            "data/Music/" + playlist[music.RetailTrackIndex]);
+        Assert.Equal(
+            Level100AudioCatalog.TutorialMusic.RetailSourceName,
+            "data/Music/" +
+                playlist[Level100AudioCatalog.TutorialMusic.RetailTrackIndex]);
+
+        // The exact retail source must be materialized, and the frontend track
+        // must load looping and stop at level entry before the tutorial track.
+        string audio = ReadGodotSource("Level100Audio.cs");
+        string game = ReadGodotSource("FirstFlightGame.cs");
+        string materializer = ReadGodotSource("materialize_retail_assets.py");
+
+        Assert.Contains(music.RetailSourceName, materializer, StringComparison.Ordinal);
+        Assert.Contains(
+            "LoadOgg(recipe.ResourcePath, looping: true)",
+            audio,
+            StringComparison.Ordinal);
+        AssertOccursInOrder(
+            game,
+            "_audio.StartFrontendMusic();",
+            "_audio.StopFrontendMusic();",
+            "_audio.StartTutorialMusic();");
+    }
+
+    private static string ReadGodotSource(string fileName) =>
+        File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", fileName));
+
+    private static void AssertOccursInOrder(string source, params string[] values)
+    {
+        int cursor = 0;
+        foreach (string value in values)
+        {
+            int found = source.IndexOf(value, cursor, StringComparison.Ordinal);
+            Assert.True(found >= 0, $"Expected '{value}' after offset {cursor}.");
+            cursor = found + value.Length;
+        }
+    }
+
     [Fact]
     public void AudioOptionCurve_MatchesReleasedEndpointsAndRejectsInvalidValues()
     {

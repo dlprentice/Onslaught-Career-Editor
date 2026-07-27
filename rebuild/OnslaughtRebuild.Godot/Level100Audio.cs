@@ -43,8 +43,15 @@ public sealed partial class Level100Audio : Node3D
     private readonly Dictionary<AudioStreamPlayer, float> _frontendBaseVolumes = [];
 
     private AudioStreamPlayer _tutorialVoice = null!;
-    private AudioStreamPlayer _tutorialMusic = null!;
+
+    // Retail owns exactly one music channel: the CMusic singleton at
+    // &DAT_00889a48, whose every PlaySelection replaces the single current song.
+    // One player here keeps that law, so a frontend track and a level track can
+    // never overlap.
+    private AudioStreamPlayer _music = null!;
     private AudioStreamOggVorbis? _tutorialMusicStream;
+    private AudioStreamOggVorbis? _frontendMusicStream;
+    private string? _activeMusicPath;
     private Node3D? _aquila;
     private Level100ActorId? _aquilaActorId;
     private AudioStreamPlayer3D? _aquilaFlightLoop;
@@ -92,7 +99,10 @@ public sealed partial class Level100Audio : Node3D
     }
 
     public bool TutorialMusicPlaying =>
-        GodotObject.IsInstanceValid(_tutorialMusic) && _tutorialMusic.Playing;
+        MusicPlaying(Level100AudioCatalog.TutorialMusic);
+
+    public bool FrontendMusicPlaying =>
+        MusicPlaying(Level100AudioCatalog.FrontendMusic);
 
     public override void _Ready()
     {
@@ -110,13 +120,13 @@ public sealed partial class Level100Audio : Node3D
         _tutorialVoice.Finished += BeginCharacterMessageHandoff;
         AddChild(_tutorialVoice);
 
-        _tutorialMusic = new AudioStreamPlayer
+        _music = new AudioStreamPlayer
         {
-            Name = "RetailLevel100TutorialMusic",
+            Name = "RetailMusic",
             ProcessMode = ProcessModeEnum.Always,
             VolumeDb = MixedMusicVolumeDb(),
         };
-        AddChild(_tutorialMusic);
+        AddChild(_music);
     }
 
     public override void _Process(double delta)
@@ -137,24 +147,53 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
-    public void StartTutorialMusic()
+    public void StartTutorialMusic() =>
+        PlayMusic(
+            Level100AudioCatalog.TutorialMusic,
+            ref _tutorialMusicStream);
+
+    // CFrontEnd::Init (FrontEnd.cpp:332-333, retail 0x004662a0) starts
+    // MUS_FRONTEND once for the whole frontend, so one call covers click-to-start
+    // through briefing.
+    public void StartFrontendMusic() =>
+        PlayMusic(
+            Level100AudioCatalog.FrontendMusic,
+            ref _frontendMusicStream);
+
+    public void StopTutorialMusic() => StopMusic();
+
+    public void StopFrontendMusic() => StopMusic();
+
+    private bool MusicPlaying(Level100MusicRecipe recipe) =>
+        GodotObject.IsInstanceValid(_music) &&
+        _music.Playing &&
+        StringComparer.Ordinal.Equals(_activeMusicPath, recipe.ResourcePath);
+
+    // Selection playback loops: at track end CMusic::UpdateStatus re-enters
+    // PlaySelection with fade 0 (Music.cpp:298-299, retail 0x004bb530), and both
+    // MUS_FRONTEND and MUS_TUTORIAL resolve to a fixed index, so the same track
+    // restarts. Godot's stream-level Loop reproduces that.
+    private void PlayMusic(
+        Level100MusicRecipe recipe,
+        ref AudioStreamOggVorbis? cachedStream)
     {
-        if (_tutorialMusic.Playing)
+        if (MusicPlaying(recipe))
         {
             return;
         }
 
-        Level100MusicRecipe recipe = Level100AudioCatalog.TutorialMusic;
-        _tutorialMusicStream ??= LoadOgg(recipe.ResourcePath, looping: true);
-        _tutorialMusic.Stream = _tutorialMusicStream;
-        _tutorialMusic.VolumeDb = MixedMusicVolumeDb();
-        _tutorialMusic.Play();
+        cachedStream ??= LoadOgg(recipe.ResourcePath, looping: true);
+        _music.Stream = cachedStream;
+        _activeMusicPath = recipe.ResourcePath;
+        _music.VolumeDb = MixedMusicVolumeDb();
+        _music.Play();
     }
 
-    public void StopTutorialMusic()
+    private void StopMusic()
     {
-        _tutorialMusic.Stop();
-        _tutorialMusic.Stream = null;
+        _music.Stop();
+        _music.Stream = null;
+        _activeMusicPath = null;
     }
 
     public void BindAquila(
@@ -499,9 +538,9 @@ public sealed partial class Level100Audio : Node3D
     public void SetMusicOption(float optionValue)
     {
         _musicOptionMix = Level100AudioCatalog.ToRetailOptionMix(optionValue);
-        if (GodotObject.IsInstanceValid(_tutorialMusic))
+        if (GodotObject.IsInstanceValid(_music))
         {
-            _tutorialMusic.VolumeDb = MixedMusicVolumeDb();
+            _music.VolumeDb = MixedMusicVolumeDb();
         }
     }
 

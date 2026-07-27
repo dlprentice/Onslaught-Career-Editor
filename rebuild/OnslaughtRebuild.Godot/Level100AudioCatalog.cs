@@ -173,6 +173,34 @@ public static class Level100AudioCatalog
         3,
         "data/Music/BEA_04(Master).ogg");
 
+    // MUS_FRONTEND resolves to track index 8, verified 2026-07-27 in all three
+    // steps against pristine BEA.exe (sha256 74154bfa..., file
+    // local-lab/safe-copy-bea-pristine/BEA.exe.original.backup):
+    //
+    // 1. INDEX 8. CMusic::PlaySelection (0x004bb8c0) case 0 computes
+    //    `(-(uint)(DAT_0083d448 != 0) & 0xfffffff9) + 8`, i.e. Music.cpp:466-472's
+    //    `PLAYABLE_DEMO ? 1 : 8`. DAT_0083d448 sits past .data's raw-backed extent
+    //    (raw covers VA 0x00622000-0x00661000) so it loads zero, and its only
+    //    writer in the image is CLIParams::ParseCommandLine (0x00423bc0) on the
+    //    "-playabledemo" argument. A normal launch therefore selects 8.
+    // 2. ZERO-BASED. The GetSong walk inlined at 0x004bb8c0 starts at mFirstSong
+    //    (this+0xc) and advances `index` times through mNext (song+0x104), so
+    //    index 0 is the head. Matches Music.cpp:476-490.
+    // 3. ALPHABETICAL. PCPlatform::InitMusicPlaylist (0x00515320) calls
+    //    LoadPlaylistFromDir("data\music") with the extension token at
+    //    0x00630a04, which is the asciiz string "ogg". CMusic::AddToPlayList
+    //    (Music.cpp:306-362) inserts before the first stricmp-greater filename.
+    //    data/Music holds exactly BEA_01..BEA_10(Master).ogg and nothing else, and
+    //    stricmp order equals numeric order there, so index 8 is BEA_09.
+    //
+    // The same rule at index 3 yields TutorialMusic's BEA_04, which is already
+    // materialized and hash-verified, so it is corroborated at a second point.
+    public static Level100MusicRecipe FrontendMusic { get; } = new(
+        "res://Assets/Frontend/Music/frontend-track-08.ogg",
+        "MUS_FRONTEND",
+        8,
+        "data/Music/BEA_09(Master).ogg");
+
     public static Level100MessageAudioSpec GetCharacterMessage(int messageId)
     {
         foreach (Level100MessageAudioSpec message in s_characterMessages)

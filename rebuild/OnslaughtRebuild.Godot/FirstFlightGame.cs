@@ -106,6 +106,10 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
             AddChild(_frontend);
             ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
+            // CFrontEnd::Init starts MUS_FRONTEND once for the whole frontend
+            // (FrontEnd.cpp:332-333, retail 0x004662a0), so it spans click-to-start,
+            // main menu, level select and briefing.
+            _audio.StartFrontendMusic();
 
             if (FrontendCaptureRig.TryCreate(OS.GetCmdlineUserArgs(), _frontend, out FrontendCaptureRig? rig))
             {
@@ -638,6 +642,11 @@ public sealed partial class FirstFlightGame : Node3D
         _audio.BindAquila(
             RequirePlayerAquilaActorId(snapshot.Level100Actors),
             snapshot.Level100Actors);
+        // Level entry is a stop-then-start handoff, not a crossfade: CGame::RunLevel
+        // stops the frontend track (game.cpp:1584-1586, retail 0x0046e240) and the
+        // level loop then selects MUS_TUTORIAL (game.cpp:1431-1441, retail
+        // CGame::PlayMusicForCurrentLevel 0x0046dc00).
+        _audio.StopFrontendMusic();
         _audio.StartTutorialMusic();
 
         _hud = new FirstFlightHud();
@@ -800,6 +809,11 @@ public sealed partial class FirstFlightGame : Node3D
     {
         SuspendFrontendGameplay();
         DestroyLevel100World();
+        // Retail restores MUS_FRONTEND whenever the frontend takes the screen back
+        // — CFEPMain::Process (0x00462640) and CFEPGoodies::Process (0x0045d7e0)
+        // both stop and re-select it. The exact retail post-level path is not
+        // established here; without this the main menu would return silent.
+        _audio.StartFrontendMusic();
     }
 
     private void DestroyLevel100World()
