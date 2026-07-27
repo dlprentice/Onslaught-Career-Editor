@@ -188,7 +188,9 @@ public sealed record Level100MissionSnapshot(
     int ScoreDelta,
     Level100TutorialProgress TutorialProgress,
     IReadOnlyList<Level100PrimaryObjectiveSnapshot> PrimaryObjectives,
-    IReadOnlyList<Level100MissionEvent> PendingEvents);
+    IReadOnlyList<Level100MissionEvent> PendingEvents,
+    int MessageClearTick,
+    IReadOnlyList<Level100MessageRequested> PendingMessages);
 
 public abstract record Level100MissionEvent(int Tick);
 

@@ -103,6 +103,82 @@ public static class Level100MissionTiming
             MidpointRounding.AwayFromZero));
     }
 
+    /// <summary>
+    /// One released 20 Hz event-manager frame, expressed in whole Core ticks.
+    /// 30/20 = 1.5, and a released <c>NEXT_FRAME</c> event cannot fire before
+    /// the frame boundary, so it rounds up.
+    /// </summary>
+    private const int ReleasedEventFrameTicks =
+        (SimulationConstants.TicksPerSecond +
+            Level100ActorMechanics.RetailBaseTicksPerSecond - 1) /
+        Level100ActorMechanics.RetailBaseTicksPerSecond;
+
+    /// <summary>
+    /// The first Core tick on which a character message may become active.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The released level script runs from level start — it deactivates the
+    /// player, disables both weapons and initialises the four primary
+    /// objectives before the opening pan is over — but the message box is
+    /// <em>not permitted to play anything</em> until the game leaves
+    /// <c>GAME_STATE_PANNING</c>. <c>CGame::StartPlayingState</c>
+    /// (<c>references/Onslaught/game.cpp:3026-3031</c>) is the whole law:
+    /// </para>
+    /// <code>
+    ///   mGameState = GAME_STATE_PLAYING ;
+    ///   SCRIPT_EVENT_NB.PostEvent("game playing");
+    ///   EVENT_MANAGER.AddEvent(ALLOWED_TO_PLAY_MESSAGES, mMessageBox, NEXT_FRAME) ;
+    /// </code>
+    /// <para>
+    /// So the greeting is held, not skipped, and every later message inherits
+    /// the same offset. <c>FINISHED_PANNING</c> arrives at the end of the
+    /// six-second pan (<c>SimulationConstants.Level100OpeningPanTicks</c> =
+    /// 180, and <c>CPanCamera::GetShowHUD</c> is false for all of it), and
+    /// <c>ALLOWED_TO_PLAY_MESSAGES</c> is one released event frame later.
+    /// 180 + 2 = <b>182</b>, which is exactly the tick two fresh uninterrupted
+    /// app-owned Steam runs measured for the first message boundary
+    /// (<c>rebuild/PROVENANCE.md</c>, "HUD introduction 182..351").
+    /// </para>
+    /// <para>
+    /// This is why the reconstruction showed no greeting at all: the script
+    /// initialiser ran at tick 0, so HUD_01 was delivered and had already
+    /// finished before the HUD became visible at tick ~179, and the first
+    /// thing the player ever saw was HUD_02 mid-reveal.
+    /// </para>
+    /// </remarks>
+    public const int MessageBoxAllowedTick =
+        SimulationConstants.Level100OpeningPanTicks + ReleasedEventFrameTicks;
+
+    /// <summary>
+    /// The gap between one character message clearing and the next queued one
+    /// becoming active, in Core ticks.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 0.2 s at the released 0.05 s event clock, from
+    /// <c>CMessageBox__TryAdvanceQueuedMessage</c> (<c>0x004b7b80</c>), which
+    /// waits 0.2 s before starting the voice/reveal path of the message it
+    /// dequeues.
+    /// </para>
+    /// <para>
+    /// Independently measured: the eight retail opening boundaries in
+    /// <c>rebuild/PROVENANCE.md</c> are 182..351, 357..567, 573..756,
+    /// 762..926, 932..998, 1004..1220, 1226..1387, 1393..1530. Every single
+    /// end-to-next-start gap is exactly six ticks, and every span equals this
+    /// file's <see cref="MessagePlaybackTicks"/> entry to within the ±1 tick
+    /// the 50 ms sampler can resolve.
+    /// </para>
+    /// <para>
+    /// That measurement also settles what the 18-tick offset in
+    /// <see cref="MessagePlaybackTicks"/> is <em>not</em>: it is not a
+    /// post-roll to subtract for display. Retail activates the message before
+    /// the voice starts and retains it through the completion hold, so the
+    /// table value <b>is</b> the on-screen duration.
+    /// </para>
+    /// </remarks>
+    public const int MessageAdvanceDelayTicks = SimulationConstants.TicksPerSecond / 5;
+
     internal static int MessagePlaybackTicks(int messageId) => messageId switch
     {
         292562 => 169,       // HUD_01

@@ -23,7 +23,7 @@ public sealed class Level100HudPresentationTests
 
         Consume(session.AdvanceFrameTicks(0));
         for (int tick = 0;
-             tick < 1_100 &&
+             tick < 1_400 &&
              !string.Equals(
                  session.CurrentSnapshot.Level100Mission.NavigationObjective,
                  "Target Zone 1",
@@ -36,6 +36,16 @@ public sealed class Level100HudPresentationTests
         Assert.Equal(
             "Target Zone 1",
             session.CurrentSnapshot.Level100Mission.NavigationObjective);
+
+        // The objective is set on the tick TUTORIAL_13_MOD clears, and the
+        // released message box does not start TUTORIAL_01 until
+        // Level100MissionTiming.MessageAdvanceDelayTicks later. Step over that
+        // gap so there is a message on screen to assert about.
+        for (int tick = 0; tick <= Level100MissionTiming.MessageAdvanceDelayTicks; tick++)
+        {
+            Consume(session.AdvanceFrameTicks(OneCoreStepTicks));
+        }
+
         Level100MessageRequested playing = requestedMessages[^1];
         Level100HudSnapshot hud = presentation.Project(
             session.CurrentSnapshot,
@@ -146,9 +156,22 @@ public sealed class Level100HudPresentationTests
             Level100TestActorDefinitions.Create());
         var presentation = new Level100HudPresentationState();
         FrameAdvanceResult initial = session.AdvanceFrameTicks(0);
-        Level100MessageRequested message = Assert.Single(
-            initial.Level100MissionEvents.OfType<Level100MessageRequested>());
         presentation.Consume(initial.Level100MissionEvents);
+        // The released message box holds every message until
+        // Level100MissionTiming.MessageBoxAllowedTick, so the greeting arrives
+        // after the opening pan rather than on tick 0.
+        Level100MessageRequested? first = null;
+        FrameAdvanceResult onScreen = initial;
+        while (first is null)
+        {
+            onScreen = session.AdvanceFrameTicks(OneCoreStepTicks);
+            presentation.Consume(onScreen.Level100MissionEvents);
+            first = onScreen.Level100MissionEvents
+                .OfType<Level100MessageRequested>()
+                .FirstOrDefault();
+        }
+
+        Level100MessageRequested message = first;
         presentation.Consume(
         [
             new Level100HelpRequested(
@@ -194,7 +217,7 @@ public sealed class Level100HudPresentationTests
         foreach (Level100MessagePlaybackState mixer in mixerStates)
         {
             Level100HudSnapshot hud = presentation.Project(
-                initial.CurrentSnapshot,
+                onScreen.CurrentSnapshot,
                 mixer);
 
             Assert.Equal(
@@ -204,8 +227,8 @@ public sealed class Level100HudPresentationTests
                     Level100HudHelpPrompt.Fire,
                 ],
                 hud.DeliveredHelp);
-            // Tick 0 is inside this message's own playback window, so it is on
-            // screen regardless of what the mixer says.
+            // This is the message's own first tick, so it is on screen
+            // regardless of what the mixer says.
             Assert.Equal(message.MessageId, hud.ActiveMessage?.MessageId);
             Assert.Equal(message.SpeakerId, (int?)hud.ActiveMessage?.Speaker);
         }

@@ -178,7 +178,13 @@ public sealed class SimulationTests
         Assert.False(simulation.Snapshot.Level100FlightEnabled);
         Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
         Assert.Empty(simulation.Snapshot.Level100Mission.PendingEvents);
-        Assert.Contains(
+        // The greeting is NOT delivered here. CPanCamera::GetShowHUD is false
+        // for the whole opening pan, and CGame::StartPlayingState only lets the
+        // message box play once the pan is over
+        // (Level100MissionTiming.MessageBoxAllowedTick). Delivering HUD_01 on
+        // tick 0 is exactly how the reconstruction managed to show no greeting
+        // at all: it was over before the HUD appeared.
+        Assert.DoesNotContain(
             simulation.Snapshot.Level100MissionEvents.OfType<Level100MessageRequested>(),
             message => message.MessageId == 292562);
 
@@ -209,15 +215,26 @@ public sealed class SimulationTests
                 state.Level100Mission.NavigationObjective,
                 "Target Zone 1",
                 StringComparison.Ordinal),
-            1_000,
+            1_500,
             state => messages.AddRange(state.Level100MissionEvents
                 .OfType<Level100MessageRequested>()
                 .Select(message => message.MessageId)));
 
+        Assert.Equal(1_217, simulation.Snapshot.Level100Mission.Tick);
+
+        // TUTORIAL_01 and TUTORIAL_SCANNER are both PlayCharMessage - the
+        // script does not wait for them - so the objective is set before either
+        // reaches the message box. They arrive at the box's own pace.
+        for (int tick = 0; tick < 200; tick++)
+        {
+            messages.AddRange(simulation.Step(SimInput.Idle).Level100MissionEvents
+                .OfType<Level100MessageRequested>()
+                .Select(message => message.MessageId));
+        }
+
         Assert.Equal(
             [292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830, 175347826],
             messages);
-        Assert.Equal(1_005, simulation.Snapshot.Level100Mission.Tick);
         Assert.True(simulation.Snapshot.Level100PlayerActive);
         Assert.True(simulation.Snapshot.Level100PlayerControlEnabled);
         Level100TriggerActorSnapshot trigger = simulation.Snapshot.Level100TriggerActors
@@ -1127,8 +1144,12 @@ public sealed class SimulationTests
             SimInput.Idle,
             [new Level100MissionInputFact(Level100MissionInput.BrokeTutorial)]);
         hashes.Add(StateHasher.ComputeHex(snapshot));
+        // "Broke Tutorial" is posted on tick 1, while HUD_01 still owns the
+        // message box until tick 351. Its own two messages queue behind that
+        // and behind each other at the released advance gap, so the terminal
+        // call lands at tick 594 rather than 291.
         for (int tick = 0;
-             tick < 500 && snapshot.Level100Mission.Outcome != Level100MissionOutcome.Lost;
+             tick < 800 && snapshot.Level100Mission.Outcome != Level100MissionOutcome.Lost;
              tick++)
         {
             snapshot = simulation.Step(SimInput.Idle);

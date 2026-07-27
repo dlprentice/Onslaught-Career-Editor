@@ -877,7 +877,14 @@ internal sealed class Level100ChainAutopilot
         // aiming moves the terrain pitch the released limiter is holding the
         // nose against, and the misses that killed Target Truck #25 were 0.06
         // rad high while the walker was closing at speed.
-        if (precise && clear && horizontal <= GroundStandOffMillimeters)
+        // ...but not when the watchdog above has just said the target's health
+        // is not moving. Cancelling the reposition on `precise` alone made the
+        // precision branch outrank the only check that can see a stance which
+        // cannot work: measured, the driver stood at (23608, 69303) with a
+        // clear ray, a converged yaw and a live Target Tank for 34,000 ticks
+        // because every reposition the watchdog asked for was cancelled on the
+        // same tick it was requested.
+        if (precise && clear && horizontal <= GroundStandOffMillimeters && !notHurtingIt)
         {
             _repositionTicksRemaining = 0;
             _strafeTicksRemaining = 0;
@@ -897,6 +904,22 @@ internal sealed class Level100ChainAutopilot
             }
             else
             {
+                // Standing on top of it is its own failure mode, and it is not
+                // fixed by walking round. AimPoint's ladder is bounded in
+                // ANGLE, so at the minimum stand-off it collapses to its 100 mm
+                // floor and the whole ladder can sit below the terrain the ray
+                // is sampled against: measured against Target Warehouse, whose
+                // authored origin is 0.6 m below the ground the walker stands
+                // on (buildings are not ground-seated - see the open list in
+                // local-lab/INDEX.md), every rung of the ladder was under
+                // ground + LineOfSightClearanceMillimeters, so `clear` was
+                // false at every point on a 3.3 m orbit and the driver circled
+                // for 34,000 ticks. Backing out restores the ladder's reach.
+                if (horizontal <= MinimumGroundStandOffMillimeters)
+                {
+                    forward = -1;
+                }
+
                 if (_strafeTicksRemaining == 0)
                 {
                     _strafeTicksRemaining = StrafeSegmentTicks;
@@ -1477,7 +1500,7 @@ internal sealed class Level100ChainAutopilot
     /// than shooting at the pivot; the sweep also covers the unmodelled
     /// difference between an actor's origin and its hull centre.
     /// </summary>
-    private static SimVector3 AimPoint(
+    private SimVector3 AimPoint(
         WorldSnapshot state,
         Level100ActorSnapshot target,
         bool sweep = true,
@@ -1510,10 +1533,27 @@ internal sealed class Level100ChainAutopilot
             }
         }
 
-        return new SimVector3(
-            (int)(position.X + (target.Pose.LinearVelocityMillimetersPerTick.X * flightTicks)),
+        int aimX = (int)(position.X +
+            (target.Pose.LinearVelocityMillimetersPerTick.X * flightTicks));
+        int aimZ = (int)(position.Z +
+            (target.Pose.LinearVelocityMillimetersPerTick.Z * flightTicks));
+
+        // The reticle never goes into the dirt. Several released targets carry
+        // an authored origin at or below the ground the walker stands on -
+        // Target Warehouse's is 0.6 m below it, because buildings are still not
+        // ground-seated (open list, local-lab/INDEX.md). The ladder is bounded
+        // in ANGLE, so at short range it collapses to its 100 mm floor and
+        // every rung of it can sit under
+        // ground + LineOfSightClearanceMillimeters, which makes
+        // HasLineOfSight false from every stance. Measured: the driver orbited
+        // Target Warehouse at 3.3-4.4 m for 34,000 ticks and never fired.
+        int groundUnderAim = _terrain.SampleGroundElevationMillimeters(
+            new SimVector2(aimX, aimZ));
+        int aimY = Math.Max(
             position.Y + aimHeight,
-            (int)(position.Z + (target.Pose.LinearVelocityMillimetersPerTick.Z * flightTicks)));
+            groundUnderAim + (2 * LineOfSightClearanceMillimeters));
+
+        return new SimVector3(aimX, aimY, aimZ);
     }
 
     private static bool IsAirborneTarget(Level100ActorSnapshot target) =>

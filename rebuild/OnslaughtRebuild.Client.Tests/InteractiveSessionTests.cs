@@ -8,7 +8,16 @@ namespace OnslaughtRebuild.Client.Tests;
 
 public sealed class InteractiveSessionTests
 {
-    private const int FirstRunControlTick = 790;
+    // The first tick a first run has player control. The released
+    // LevelScript reaches player.Activate() when TUTORIAL_TECHNICIAN_01
+    // clears, and the released message box holds the opening five messages
+    // to Level100MissionTiming.MessageBoxAllowedTick + the advance gaps:
+    // 182 +169 +6+210 +6+183 +6+163 +6+65 = 996. Two fresh app-owned Steam
+    // runs measured the Battle Engine power flag at +0x580 changing 0 -> 1
+    // at tick 1000 (rebuild/PROVENANCE.md); the four-tick residual is the
+    // 50 ms sampler. The old value here was 790, which is the same sum with
+    // the gate and the gaps both absent.
+    private const int FirstRunControlTick = 996;
     private static Level100ActorDefinitionSet ActorDefinitions =>
         Level100TestActorDefinitions.Create();
     private const long OneCoreStepTicks = 333_334;
@@ -559,17 +568,40 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult next = session.AdvanceFrameTicks(0);
 
         Assert.Equal(0, initial.StepsAdvanced);
-        Level100MessageRequested message = Assert.Single(
-            initial.Level100MissionEvents.OfType<Level100MessageRequested>());
-        Assert.Equal(292562, message.MessageId);
+        // No character message is delivered on tick 0. The released message box
+        // is not allowed to play anything until the opening pan is over
+        // (Level100MissionTiming.MessageBoxAllowedTick, from
+        // CGame::StartPlayingState in references/Onslaught/game.cpp:3026-3031),
+        // and the HUD is not even drawn before then.
+        Assert.Empty(initial.Level100MissionEvents.OfType<Level100MessageRequested>());
         Assert.Empty(next.Level100MissionEvents);
+
+        var session2 = new InteractiveSession(Seed, ActorDefinitions);
+        session2.AdvanceFrameTicks(0);
+        Level100MessageRequested? greeting = null;
+        for (int tick = 0;
+             tick < Level100MissionTiming.MessageBoxAllowedTick && greeting is null;
+             tick++)
+        {
+            greeting = session2.AdvanceFrameTicks(OneCoreStepTicks)
+                .Level100MissionEvents
+                .OfType<Level100MessageRequested>()
+                .FirstOrDefault();
+        }
+
+        Assert.NotNull(greeting);
+        Assert.Equal(292562, greeting!.MessageId);
+        Assert.Equal(Level100MissionTiming.MessageBoxAllowedTick, greeting.Tick);
     }
 
     [Fact]
     public void FrameMissionEvents_AggregateEverySimulationStepInOrder()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
-        for (int tick = 0; tick < 168; tick++)
+        // HUD_02 becomes active at MessageBoxAllowedTick + HUD_01's 169 ticks +
+        // the released 6-tick advance gap = 357. Step to 355 so the two-step
+        // frame below straddles it.
+        for (int tick = 0; tick < 356; tick++)
         {
             session.AdvanceFrameTicks(OneCoreStepTicks);
         }
@@ -1212,8 +1244,17 @@ public sealed class InteractiveSessionTests
         // above zero - it only feeds `_shield` - so neither trajectory nor
         // final value differs. Checked both ways: the constant at 4 and at 33
         // both produce fb2219b6... exactly.
+        // MOVED 2026-07-27 for the released message-box gate
+        // (Level100MissionTiming.MessageBoxAllowedTick /
+        // MessageAdvanceDelayTicks). The scenario's inputs are unchanged, but
+        // the LevelScript now blocks on PlayCharMessageWait until the message
+        // box is allowed to play, so player.Activate() lands at tick 996
+        // instead of 790 and every later script step follows. Isolated
+        // causally, not argued: stashing this change alone and re-running this
+        // test returns fb2219b6f39e768ad68facf648c1697d8de955b46316b991e547262
+        // 77c6c4927 exactly, and restoring it returns this value again.
         Assert.Equal(
-            "fb2219b6f39e768ad68facf648c1697d8de955b46316b991e54726277c6c4927",
+            "84d6fcaef69eac44faae485a2f90e76867dee2563c1dd5d4c570aade31df8ea1",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 
@@ -1246,7 +1287,10 @@ public sealed class InteractiveSessionTests
         tape.Step([new Level100MissionInputFact(Level100MissionInput.BrokeTutorial)]);
         tape.AdvanceUntil(
             state => state.Level100Mission.Outcome == Level100MissionOutcome.Lost,
-            500);
+            // "Broke Tutorial" is posted while HUD_01 still owns the message
+            // box, so its two messages queue behind it at the released advance
+            // gap and the terminal call lands at tick 594 rather than 291.
+            800);
         tape.Advance(Level100MissionTiming.FailureCountdownTicks);
         return tape;
     }

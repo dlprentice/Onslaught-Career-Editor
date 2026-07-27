@@ -157,7 +157,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    Assert-SmokeValue 'stateHash' 'fb2219b6f39e768ad68facf648c1697d8de955b46316b991e54726277c6c4927' $report.stateHash
+    Assert-SmokeValue 'stateHash' '84d6fcaef69eac44faae485a2f90e76867dee2563c1dd5d4c570aade31df8ea1' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
@@ -166,13 +166,18 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
     # The message sequence the released script has requested by this tick is a
     # Core fact and is pinned exactly, in order.
+    # Thirteen, not fourteen, since the released message-box gate
+    # (Level100MissionTiming.MessageBoxAllowedTick / MessageAdvanceDelayTicks):
+    # the script blocks on PlayCharMessageWait until the box may play, so the
+    # whole chain sits later and TUTORIAL_PULSE_CANNON_2 (-1715818922) now falls
+    # outside this scenario's fixed tick budget. The scenario was not extended
+    # to keep the old count - that would be fitting the gate to the pin.
     $expectedMessageIds = @(
         292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830,
-        175347826, 4458134, 4493438, 295858, 1339691000, 669198996,
-        -1715818922)
+        175347826, 4458134, 4493438, 295858, 1339691000, 669198996)
     Assert-SmokeSequence 'level100DeliveredMessageIds' $expectedMessageIds `
         $report.level100DeliveredMessageIds
-    Assert-SmokeValue 'level100DeliveredMessageCount' 14 $report.level100DeliveredMessageCount
+    Assert-SmokeValue 'level100DeliveredMessageCount' 13 $report.level100DeliveredMessageCount
     # Recorded where the host forwards Core message events to the audio adapter,
     # so it cross-checks the audio path against the HUD path above rather than
     # restating it. Speaker identity is Core-ordered and was previously unpinned.
@@ -180,7 +185,7 @@ function Test-FirstFlightSmokeEvidence {
         $report.level100AudioQueuedMessageIds
     Assert-SmokeSequence 'level100AudioQueuedSpeakerIds' @(
         1508464, 1508464, 1508464, 1508464, 10565784, 1508464, 1508464,
-        1508464, 1508464, 1508464, 1508464, 1508464, 1508464,
+        1508464, 1508464, 1508464, 1508464, 1508464,
         1508464) $report.level100AudioQueuedSpeakerIds
     # Which of those the Godot mixer is audibly playing at the same tick is NOT
     # a Core fact. AudioStreamPlayer playback advances on the audio thread in

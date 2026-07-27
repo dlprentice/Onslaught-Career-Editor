@@ -499,6 +499,9 @@ public static class StateHasher
         }
 
         WriteLevel100Events(writer, mission.PendingEvents);
+
+        writer.Write(mission.MessageClearTick);
+        WriteLevel100Events(writer, mission.PendingMessages);
     }
 
     private static void WriteLevel100Events(

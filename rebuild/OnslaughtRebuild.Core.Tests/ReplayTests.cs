@@ -10,7 +10,16 @@ public sealed class ReplayTests
     private static Level100ActorDefinitionSet ActorDefinitions =>
         Level100TestActorDefinitions.Create();
 
-    private const int FirstRunControlTick = 790;
+    // The first tick a first run has player control. The released
+    // LevelScript reaches player.Activate() when TUTORIAL_TECHNICIAN_01
+    // clears, and the released message box holds the opening five messages
+    // to Level100MissionTiming.MessageBoxAllowedTick + the advance gaps:
+    // 182 +169 +6+210 +6+183 +6+163 +6+65 = 996. Two fresh app-owned Steam
+    // runs measured the Battle Engine power flag at +0x580 changing 0 -> 1
+    // at tick 1000 (rebuild/PROVENANCE.md); the four-tick residual is the
+    // 50 ms sampler. The old value here was 790, which is the same sum with
+    // the gate and the gaps both absent.
+    private const int FirstRunControlTick = 996;
     [Fact]
     public void FirstFlightReplay_IsDeterministic()
     {

@@ -12,8 +12,9 @@ namespace OnslaughtRebuild.Core.Tests;
 /// weapons.
 ///
 /// <para><see cref="ChainAutopilot_ReachesWonByInputAlone"/> reaches
-/// <c>Won</c>. <see cref="NaiveWalkerAutopilot_BreaksTheTutorialAndLoses"/>
-/// loses, and the difference between them is entirely firing discipline.</para>
+/// <c>Won</c>. <see cref="NaiveWalkerAutopilot_StallsOnBeatThreeAndNeverFinishes"/>
+/// never leaves beat 3, and the difference between them is entirely firing
+/// discipline.</para>
 ///
 /// <para><b>What `Won` here does and does not mean.</b> Ten of the eleven named
 /// progression events are produced in full by the world. The eleventh,
@@ -63,26 +64,33 @@ public sealed class Level100FullChainTests
     /// The naive walker autopilot - fixed 18 m stand-off, fire whenever the
     /// reticle is on the objective, never check what is in between.
     ///
-    /// <para>It used to stall harmlessly on beat 3's fourth target, putting
-    /// 3,578 consecutive rounds into a ridge. It no longer stalls: it
-    /// <b>loses</b>. With the released Target Truck routes in the fixture the
-    /// three beat-4 trucks drive their authored paths across the firing range
-    /// instead of off the map, and the naive driver's undirected fire destroys
-    /// one at t2545 while <c>activated</c> is still FALSE. That is the
-    /// <c>case FALSE</c> arm of <c>TargetTruck1.msl</c>'s <c>died()</c>:
-    /// <c>PostEvent("Broke Tutorial")</c>, which LevelScript answers with
-    /// <c>LevelLostString(LOSE_TUTORIAL_BROKE)</c>.</para>
+    /// <para>It stalls on beat 3's fourth target, putting thousands of
+    /// consecutive rounds into the ridge in front of it.</para>
+    ///
+    /// <para><b>This assertion was weakened, deliberately, and the reason is a
+    /// correction.</b> It previously asserted <c>Lost</c> through
+    /// <c>TargetTruck1.msl</c>'s <c>died()</c> <c>case FALSE</c> arm - the
+    /// naive driver's undirected fire clipped an unactivated beat-4 truck at
+    /// t2545, which posts <c>Broke Tutorial</c>. That outcome was a coincidence
+    /// of timing, not a property of the driver, and it did not survive the
+    /// released message-box gate
+    /// (<c>Level100MissionTiming.MessageBoxAllowedTick</c>): the trucks run
+    /// their authored routes from level start either way, but the player now
+    /// arrives at the firing range about 190 ticks later and the stray round no
+    /// longer meets a truck. Measured at a 54,000-tick budget - twice the
+    /// pinned one - the run stays <c>Running</c>. Asserting <c>Lost</c> again
+    /// would mean pinning an accident.</para>
     ///
     /// <para>This is kept, and kept failing-forward rather than deleted,
     /// because it is the control for
     /// <see cref="ChainAutopilot_ReachesWonByInputAlone"/>: the same world and
     /// the same weapons, and the entire difference is that the competent driver
     /// checks the ground and the surrounding structures before it pulls the
-    /// trigger. Shooting without looking is not merely inefficient in this
-    /// level - it is a losing move, and the released scripts say so.</para>
+    /// trigger. Shooting without looking does not merely cost rounds in this
+    /// level - it does not finish it at all.</para>
     /// </summary>
     [Fact]
-    public void NaiveWalkerAutopilot_BreaksTheTutorialAndLoses()
+    public void NaiveWalkerAutopilot_StallsOnBeatThreeAndNeverFinishes()
     {
         var driver = Level100PlayerDriver.Create();
         driver.Run(30 * 900);
@@ -120,23 +128,17 @@ public sealed class Level100FullChainTests
         Assert.Equal(Level100ActorCommandIntent.Stopped, intent?.Intent);
         Assert.True(tank.Pose.PositionMillimeters.Z > 60_000);
 
-        // The honest negative, and it is now worse than "did not finish": the
-        // level is lost, through the released tutorial-broken path.
-        Assert.Equal(
-            Level100MissionOutcome.Lost,
-            final.Level100Mission.Outcome);
-        Assert.Equal(
-            Level100MissionFailureReason.TutorialBroken,
-            final.Level100Mission.FailureReason);
-
-        // A beat-4 truck was destroyed before "Activate Static Targets 2"
-        // armed it, which is the only way this level posts "Broke Tutorial"
-        // here: the trucks are the only unactivated destructible actors in
-        // range while beat 3 is being fought.
-        Assert.Contains(
-            final.Level100Actors.Actors,
-            actor => actor.TargetGroup == Level100MissionTargetGroup.TargetTrucks &&
-                actor.Lifecycle == Level100ActorLifecycle.Destroyed);
+        // The honest negative: shooting without looking does not finish this
+        // level. The driver never leaves beat 3 - Target Tank #23 is still
+        // alive and still the objective after 900 released seconds, and the
+        // rounds are going into the ridge in front of it rather than into it.
+        Assert.NotEqual(Level100MissionOutcome.Won, final.Level100Mission.Outcome);
+        Assert.Equal("Firing Range", final.Level100Mission.NavigationObjective);
+        Assert.Equal(Level100ActorLifecycle.Alive, tank.Lifecycle);
+        Assert.True(
+            driver.ImpactsByActor.TryGetValue(0, out int terrainImpacts) &&
+                terrainImpacts > 1_000,
+            "the naive driver's failure mode is thousands of rounds into terrain");
     }
 
     /// <summary>

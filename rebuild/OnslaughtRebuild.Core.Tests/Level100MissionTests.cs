@@ -165,6 +165,123 @@ public sealed class Level100MissionTests
     }
 
     /// <summary>
+    /// The recovered delivery LAW for the released message box, asserted
+    /// against the eight retail opening boundaries.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The law has three parts and none of it is fitted to a picture:
+    /// </para>
+    /// <list type="number">
+    /// <item>nothing plays before
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/>, because
+    /// <c>CGame::StartPlayingState</c> (<c>game.cpp:3026-3031</c>) only then
+    /// posts <c>ALLOWED_TO_PLAY_MESSAGES</c> to the message box;</item>
+    /// <item>a message is on screen for its full
+    /// <c>Level100MissionTiming.MessagePlaybackTicks</c> entry — retail
+    /// activates it before the voice and retains it through the completion
+    /// hold, so the 18-tick offset in that table is NOT a post-roll to
+    /// subtract;</item>
+    /// <item>the next queued message becomes active exactly
+    /// <see cref="Level100MissionTiming.MessageAdvanceDelayTicks"/> after the
+    /// previous one clears (<c>CMessageBox__TryAdvanceQueuedMessage</c>
+    /// <c>0x004b7b80</c>, 0.2 s on the released 0.05 s event clock).</item>
+    /// </list>
+    /// <para>
+    /// The retail column is the measurement recorded in
+    /// <c>rebuild/PROVENANCE.md</c>: one clean control and two fresh
+    /// uninterrupted app-owned Steam Level 100 runs repeated these eight
+    /// boundaries within one 50 ms retail sample, with Core tick zero aligned
+    /// to Steam's game-time-3.0 pan start. 50 ms is 1.5 Core ticks, and each
+    /// span it reports differs from the shipped Ogg-derived table by at most
+    /// one tick, so the residual is allowed to accumulate to four ticks
+    /// (0.13 s) across the eight. The gap is asserted EXACTLY because every
+    /// one of the seven measured gaps is exactly six.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void ReleasedMessageBox_ReproducesTheRetailOpeningDeliverySchedule()
+    {
+        // (message id, retail measured start, retail measured end)
+        (int Id, int Start, int End)[] retail =
+        [
+            (292562, 182, 351),          // HUD_01, the greeting
+            (293386, 357, 567),          // HUD_02, threat circle
+            (296682, 573, 756),          // HUD_06, scanner
+            (-1575499396, 762, 926),     // TUTORIAL_MESSAGE_LOG
+            (-257967449, 932, 998),      // TUTORIAL_TECHNICIAN_01
+            (82987417, 1004, 1220),      // TUTORIAL_13_MOD
+            (4422830, 1226, 1387),       // TUTORIAL_01
+            (175347826, 1393, 1530),     // TUTORIAL_SCANNER
+        ];
+
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false),
+            initialPlayerHealth: 735);
+
+        var delivered = new List<Level100MessageRequested>();
+        void Drain()
+        {
+            delivered.AddRange(mission.DrainEvents().OfType<Level100MessageRequested>());
+        }
+
+        Drain();
+        // The whole opening runs on script waits alone: no player input, no
+        // trigger and no destruction event is involved.
+        Assert.Empty(delivered);
+        for (int tick = 1; tick <= 1_600 && delivered.Count < retail.Length; tick++)
+        {
+            mission.AdvanceTick(735);
+            Drain();
+        }
+
+        Assert.Equal(retail.Length, delivered.Count);
+
+        // 1. The greeting exists, and it is delivered after the opening pan
+        //    rather than behind it. CPanCamera::GetShowHUD is false for the
+        //    whole pan, so a delivery before tick 180 is invisible.
+        Assert.Equal(292562, delivered[0].MessageId);
+        Assert.Equal(Level100MissionTiming.MessageBoxAllowedTick, delivered[0].Tick);
+        Assert.True(
+            delivered[0].Tick >= SimulationConstants.Level100OpeningPanTicks,
+            "the greeting must not be delivered behind the opening pan");
+
+        int previousEnd = int.MinValue;
+        for (int index = 0; index < retail.Length; index++)
+        {
+            Level100MessageRequested actual = delivered[index];
+            (int id, int start, int end) = retail[index];
+
+            Assert.Equal(id, actual.MessageId);
+
+            // 2. Display duration is the full shipped table entry.
+            Assert.Equal(
+                Level100MissionTiming.MessagePlaybackTicks(id),
+                actual.ExpectedPlaybackTicks);
+
+            // 3. The advance gap is exact.
+            if (previousEnd != int.MinValue)
+            {
+                Assert.Equal(
+                    Level100MissionTiming.MessageAdvanceDelayTicks,
+                    actual.Tick - previousEnd);
+            }
+
+            Assert.InRange(actual.Tick, start - 4, start + 4);
+            Assert.InRange(
+                actual.Tick + actual.ExpectedPlaybackTicks,
+                end - 4,
+                end + 4);
+            previousEnd = actual.Tick + actual.ExpectedPlaybackTicks;
+        }
+    }
+
+    /// <summary>
     /// The complete released Level 100 tutorial, driven by exactly the eleven
     /// named events its own side scripts post (LevelScript.msl SHA-256
     /// d51f8864564b5bde872092ec822df5af49daac16563f500719135f1a8c6c04a4:

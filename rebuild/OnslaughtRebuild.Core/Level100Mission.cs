@@ -14,6 +14,7 @@ public sealed class Level100Mission
     private readonly Level100ActorId _playerActorId;
     private readonly Level100ScriptValue[] _locals;
     private readonly Queue<QueuedEvent> _eventQueue = new();
+    private readonly Queue<PendingMessage> _pendingMessages = new();
     private readonly List<Continuation> _continuations = [];
     private readonly List<Level100MissionEvent> _events = [];
     private readonly ObjectiveState[] _primaryObjectives =
@@ -48,6 +49,16 @@ public sealed class Level100Mission
     private bool _tutorialVulcanCannon;
     private bool _tutorialStatusBars;
     private int _scoreDelta;
+
+    /// <summary>
+    /// The Core tick the most recently scheduled character message clears, or
+    /// <see cref="int.MinValue"/> before the first one. The released message
+    /// box owns this, not the script: see
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/> and
+    /// <see cref="Level100MissionTiming.MessageAdvanceDelayTicks"/>.
+    /// </summary>
+    private int _messageClearTick = int.MinValue;
+
     public Level100Mission(
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
@@ -137,7 +148,9 @@ public sealed class Level100Mission
             item.Objective,
             item.TextId,
             item.Status)).ToArray(),
-        _events.ToArray());
+        _events.ToArray(),
+        _messageClearTick,
+        _pendingMessages.Select(item => item.Message).ToArray());
 
     public Level100MissionOutcome Outcome => _outcome;
 
@@ -163,6 +176,8 @@ public sealed class Level100Mission
             AdvanceTerminalCountdown();
             return;
         }
+
+        ReleaseDueMessages();
 
         while (_outcome == Level100MissionOutcome.Running)
         {
@@ -319,6 +334,7 @@ public sealed class Level100Mission
         {
             _eventQueue.Clear();
             _continuations.Clear();
+            _pendingMessages.Clear();
         }
     }
 
@@ -581,19 +597,67 @@ public sealed class Level100Mission
         }
     }
 
+    /// <summary>
+    /// Schedules one <c>PlayCharMessage</c>/<c>PlayCharMessageWait</c> against
+    /// the released message box and returns how many ticks a waiting script
+    /// must sleep, measured from the current tick.
+    /// </summary>
+    /// <remarks>
+    /// The message box, not the script, decides when a message becomes active:
+    /// nothing may play before
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/>, and a message
+    /// requested while another is up waits out the previous one plus
+    /// <see cref="Level100MissionTiming.MessageAdvanceDelayTicks"/>. The
+    /// emitted <see cref="Level100MessageRequested"/> is therefore held back to
+    /// the tick the message actually becomes active, so the HUD and the audio
+    /// adapter both see the released delivery instant rather than the instant
+    /// the script line executed.
+    /// </remarks>
     private int RequestMessage(IReadOnlyList<Level100ScriptValue> arguments, bool waits)
     {
         int speakerId = arguments[0].AsInteger();
         int messageId = arguments[1].AsInteger();
         _ = arguments[2].AsFloat();
         int ticks = Level100MissionTiming.MessagePlaybackTicks(messageId);
-        _events.Add(new Level100MessageRequested(
-            _tick,
+
+        int earliest = Level100MissionTiming.MessageBoxAllowedTick;
+        if (_messageClearTick != int.MinValue)
+        {
+            earliest = Math.Max(
+                earliest,
+                checked(_messageClearTick + Level100MissionTiming.MessageAdvanceDelayTicks));
+        }
+
+        int startTick = Math.Max(_tick, earliest);
+        _messageClearTick = checked(startTick + ticks);
+
+        var message = new Level100MessageRequested(
+            startTick,
             speakerId,
             messageId,
             waits,
-            ticks));
-        return ticks;
+            ticks);
+        if (startTick <= _tick)
+        {
+            _events.Add(message);
+        }
+        else
+        {
+            _pendingMessages.Enqueue(new PendingMessage(startTick, message));
+        }
+
+        // The script sleeps until the message CLEARS, not for its own duration:
+        // retail's PlayCharMessageWait resumes when the message box reports the
+        // message finished, which is startTick + ticks.
+        return checked(_messageClearTick - _tick);
+    }
+
+    private void ReleaseDueMessages()
+    {
+        while (_pendingMessages.Count > 0 && _pendingMessages.Peek().StartTick <= _tick)
+        {
+            _events.Add(_pendingMessages.Dequeue().Message);
+        }
     }
 
     private void PostEvent(string eventName)
@@ -1030,6 +1094,10 @@ public sealed class Level100Mission
         Execution Execution);
 
     private readonly record struct QueuedEvent(long Sequence, string EventName);
+
+    private readonly record struct PendingMessage(
+        int StartTick,
+        Level100MessageRequested Message);
 
     private readonly record struct ObjectiveState(
         int Objective,
