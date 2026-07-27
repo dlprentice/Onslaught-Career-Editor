@@ -937,7 +937,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawLowerLeftInstrument(snapshot, hud);
             DrawWeaponSelection(hud);
             DrawBattleLine();
-            if (_message is not null)
+            if (MessageBoxIsDeployed(snapshot))
             {
                 DrawMessageFrame();
             }
@@ -1231,6 +1231,41 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
         }
+
+        /// <summary>
+        /// Whether the panel box art is on screen. This is NOT "a message is
+        /// active" - that was the defect.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <c>CMessageBox__RenderOverlay</c> (<c>0x004b8850</c>) gates the
+        /// segmented meter bar on its deploy animator <c>+0x2c4</c> alone, and
+        /// gates the text separately on the active <c>CMessage*</c> at
+        /// <c>+0x8</c>. The animator retracts only when there is no active
+        /// message AND the queue at <c>+0x18</c> is empty, so through an
+        /// inter-message gap it is frozen fully open and the box does not
+        /// blink. Level 100's script queues its messages from level start, so
+        /// the queue is never empty across the captured timeline.
+        /// </para>
+        /// <para>
+        /// Measured, not assumed: the box is present on ALL 68 HUD-visible
+        /// retail reference frames, including the four whose text rectangle is
+        /// completely empty (<c>t011756</c>, <c>t019074</c>, <c>t025065</c>,
+        /// <c>t031058</c> - the first in both independent opening-pan runs).
+        /// It is also already fully deployed on the very first frame the HUD is
+        /// visible at all (<c>t006248</c>/<c>t006256</c>), because the deploy
+        /// ran unseen behind the opening pan, so no fade-in is modelled here.
+        /// </para>
+        /// <para>
+        /// The gate is the same one Core uses to release the first message -
+        /// Stuart's <c>ALLOWED_TO_PLAY_MESSAGES</c>
+        /// (<c>references/Onslaught/game.cpp:3026-3031</c>) - because no
+        /// capture can separate it from HUD visibility: the HUD appears at tick
+        /// ~179 and the box is allowed at tick 182, one 250 ms sample apart.
+        /// </para>
+        /// </remarks>
+        private static bool MessageBoxIsDeployed(WorldSnapshot snapshot) =>
+            snapshot.Level100Mission.Tick >= Level100MissionTiming.MessageBoxAllowedTick;
 
         private void DrawMessageFrame()
         {

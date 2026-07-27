@@ -96,7 +96,12 @@ def main(argv: list[str]) -> int:
 
     regions: dict[str, list[int]] = {"FULL FRAME": [0, 0, 640, 480]}
     if args.regions:
-        regions.update(json.loads(args.regions.read_text(encoding="utf-8")))
+        # `_`-prefixed keys in the regions file are documentation (_comment,
+        # _caveats), not boxes. Without this filter the summary path silently
+        # works (it only reads FULL FRAME) while --offsets crashes in crop().
+        regions.update({k: v for k, v in
+                        json.loads(args.regions.read_text(encoding="utf-8")).items()
+                        if not k.startswith("_")})
 
     detail = {int(o) for o in args.offsets.split(",") if o.strip()} if args.offsets else None
 

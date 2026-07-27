@@ -44,7 +44,7 @@ public sealed class Level100MessageScheduleTests
             ticks);
 
     [Fact]
-    public void ADeliveryIsOnScreenFromItsOwnTickForItsOwnDuration()
+    public void ADeliveryIsOnScreenFromItsOwnTickUntilTheTextClearLead()
     {
         Level100HudMessageDeliverySnapshot[] deliveries =
             [Delivery(tick: 40, messageId: 1, ticks: 60)];
@@ -54,13 +54,34 @@ public sealed class Level100MessageScheduleTests
             Level100MessageSchedule.ActiveAt(deliveries, 40);
         Assert.NotNull(first);
         Assert.Equal(40, first!.Value.StartTick);
+        // The entry still carries the FULL window. Only the containment test is
+        // shortened, so the reveal clock and the portrait-pose frame index keep
+        // the denominator they had before the lead existed.
         Assert.Equal(60, first.Value.DurationTicks);
         Assert.Equal(0, first.Value.ElapsedTicksAt(40));
         Assert.Equal(59, first.Value.ElapsedTicksAt(99));
 
-        // Half-open window: the last tick of the message is 99, and 100 is a gap.
-        Assert.NotNull(Level100MessageSchedule.ActiveAt(deliveries, 99));
+        // Half-open window ending MessageTextClearLeadTicks before the window
+        // does: retail's text is gated on the active CMessage* at +0x8 and is
+        // nulled by the 0xbba completion event, while the panel box keeps
+        // drawing off the separate +0x2c4 deploy animator. See the remarks on
+        // Level100MessageSchedule.MessageTextClearLeadTicks.
+        int lastVisible = 99 - Level100MessageSchedule.MessageTextClearLeadTicks;
+        Assert.NotNull(Level100MessageSchedule.ActiveAt(deliveries, lastVisible));
+        Assert.Null(Level100MessageSchedule.ActiveAt(deliveries, lastVisible + 1));
+        Assert.Null(Level100MessageSchedule.ActiveAt(deliveries, 99));
         Assert.Null(Level100MessageSchedule.ActiveAt(deliveries, 100));
+    }
+
+    [Fact]
+    public void AMessageShorterThanTheClearLeadStillShowsForOneTick()
+    {
+        Level100HudMessageDeliverySnapshot[] deliveries =
+            [Delivery(tick: 40, messageId: 1, ticks: 2)];
+
+        Assert.Equal(1, Level100MessageSchedule.VisibleTicks(deliveries[0]));
+        Assert.NotNull(Level100MessageSchedule.ActiveAt(deliveries, 40));
+        Assert.Null(Level100MessageSchedule.ActiveAt(deliveries, 41));
     }
 
     [Fact]
@@ -77,10 +98,16 @@ public sealed class Level100MessageScheduleTests
                 ticks: 30),
         ];
 
+        // The gap the HUD shows is now Core's six-tick advance delay PLUS the
+        // text-clear lead off the end of the first window - retail's empty
+        // panel box spans both, and the box itself is drawn across the whole of
+        // it by FirstFlightHud, not by this lookup.
+        int firstTextEnd = 100 - Level100MessageSchedule.MessageTextClearLeadTicks;
         Assert.Equal(
             1,
-            Level100MessageSchedule.ActiveAt(deliveries, 99)!.Value.Delivery.MessageId);
-        for (int tick = 100;
+            Level100MessageSchedule.ActiveAt(deliveries, firstTextEnd - 1)!
+                .Value.Delivery.MessageId);
+        for (int tick = firstTextEnd;
              tick < 100 + Level100MissionTiming.MessageAdvanceDelayTicks;
              tick++)
         {
@@ -178,7 +205,81 @@ public sealed class Level100MessageScheduleTests
         Assert.True(
             greetingTicks[0] >= SimulationConstants.Level100OpeningPanTicks,
             "the greeting must not be spent behind the opening pan");
-        Assert.Equal(169, greetingTicks.Count);
+        // The greeting's TEXT is on screen for the shipped table entry minus the
+        // text-clear lead. Its window still starts at MessageBoxAllowedTick and
+        // still runs 169 ticks - the schedule did not move - but retail nulls
+        // the active CMessage* before the window ends and keeps drawing the
+        // empty panel box off a separate animator.
+        Assert.Equal(
+            169 - Level100MessageSchedule.MessageTextClearLeadTicks,
+            greetingTicks.Count);
+    }
+
+    /// <summary>
+    /// Retail's message panel has THREE states - typing, holding, and an EMPTY
+    /// BOX - and this reconstruction modelled two. These are the transcribed
+    /// retail reference frames that separate them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Detector, applied to every frame of
+    /// <c>local-lab/retail-reference-pristine/level100-gameplay/</c>: count the
+    /// white glyph pixels (min channel &gt;= 185) inside the measured text
+    /// rectangle. Of the 68 HUD-visible frames exactly four have ZERO -
+    /// <c>t011756</c> (also <c>t011755</c> in the second independent
+    /// opening-pan run), <c>t019074</c>, <c>t025065</c> and <c>t031058</c> -
+    /// while the panel box is drawn on ALL 68, so the box is not what comes and
+    /// goes.
+    /// </para>
+    /// <para>
+    /// The offsets below are the level offsets in ms of the retail frames that
+    /// bound the text gate on both sides. <c>t025065</c> is the one that
+    /// regressed when the message-box gate landed: retail had already cleared
+    /// HUD_06's text and this client still held all three lines.
+    /// <c>t033071</c> is the opposite bound and is the one frame this fix
+    /// costs - see the remarks on
+    /// <c>Level100MessageSchedule.MessageTextClearLeadTicks</c> for why the two
+    /// cannot both be satisfied against a schedule whose recovered starts drift
+    /// up to 4 ticks from the 50 ms retail sampler.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [InlineData(11_756, false)] // gap after HUD_01: empty box
+    [InlineData(19_074, false)] // gap after HUD_02: empty box
+    [InlineData(25_065, false)] // HUD_06 text already cleared
+    [InlineData(24_066, true)]  // HUD_06 still holding, one second earlier
+    [InlineData(22_080, true)]  // HUD_06 settled, three lines
+    [InlineData(30_071, true)]  // TUTORIAL_MESSAGE_LOG settled
+    public void TheTextGateMatchesTheRetailReferenceFrames(
+        int levelOffsetMs,
+        bool expectText)
+    {
+        // The capture rig keys its shots on Core ticks, so a retail level
+        // offset maps to a tick by the simulation rate alone.
+        int tick = (int)(levelOffsetMs / 1000d * SimulationConstants.TicksPerSecond);
+
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        var presentation = new Level100HudPresentationState();
+
+        FrameAdvanceResult frame = session.AdvanceFrameTicks(0);
+        presentation.Consume(frame.Level100MissionEvents);
+        Level100HudSnapshot hud = presentation.Project(frame.CurrentSnapshot, default);
+        while (frame.CurrentSnapshot.Level100Mission.Tick < tick)
+        {
+            frame = session.AdvanceFrameTicks(OneCoreStepTicks);
+            presentation.Consume(frame.Level100MissionEvents);
+            hud = presentation.Project(frame.CurrentSnapshot, default);
+        }
+
+        Assert.Equal(expectText, hud.ActiveMessage is not null);
+        // The panel box is drawn on every one of these frames either way: it is
+        // gated on Level100MissionTiming.MessageBoxAllowedTick in
+        // FirstFlightHud, not on the active message.
+        Assert.True(
+            frame.CurrentSnapshot.Level100Mission.Tick >=
+                Level100MissionTiming.MessageBoxAllowedTick);
     }
 
     [Fact]
