@@ -1,0 +1,6 @@
+# Built artefacts and generated wrapper bodies. Source only in this tree:
+# build.ps1 regenerates everything from d3d9.h and the system export table.
+build/
+*.dll
+*.exe
+*.log

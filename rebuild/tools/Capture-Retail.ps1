@@ -24,10 +24,17 @@ param(
     [string]$TargetRoot = "$PSScriptRoot\..\..\local-lab\safe-copy-bea-pristine",
     [string]$OutputDirectory,
     [int[]]$CaptureSecondsAfterWindow = @(2, 6, 10),
-    # Seconds after the window appears at which to click the client centre.
-    # The released frontend advances click-to-start on a real mouse click; the game
-    # polls input rather than reading the message queue, so a posted message is not
-    # enough and synthetic SendInput-level events are required.
+    # ---- GLOBAL SYNTHETIC INPUT IS FORBIDDEN BY AGENTS.md --------------------
+    # Every click/key/hover step below drives the game with mouse_event,
+    # keybd_event and SetCursorPos. Those are GLOBAL: they land in whatever
+    # window has focus, which on this machine is usually the maintainer's. A
+    # PrtScn sent by an agent on 2026-07-27 froze his screen; AGENTS.md now bans
+    # the whole class outright. Nothing here may fire without -ArmGlobalInput.
+    #
+    # The comment that used to sit here claimed "the game polls input rather than
+    # reading the message queue, so a posted message is not enough". That is not
+    # what the evidence says for the frontend. See the ARMING block below for the
+    # message-based replacement and what it still needs.
     [int[]]$ClickAtSeconds = @(),
     [int]$ClickOffsetY = 0,
     # Explicit clicks as "seconds:x:y" in CLIENT coordinates, e.g. "16:219:304".
@@ -74,7 +81,11 @@ param(
     #   "sleep SECONDS"
     [string[]]$Steps = @(),
     [int]$TimeoutSeconds = 90,
-    [switch]$SkipFmv = $true
+    [switch]$SkipFmv = $true,
+    # Exact arm phrase required before ANY global synthetic input or foreground
+    # steal is issued. Defaults to empty, so the input path cannot fire by
+    # accident, by habit, or by an agent copying an old command line.
+    [string]$ArmGlobalInput = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -94,6 +105,121 @@ if ($hash -ieq '74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750
     throw ("Target is unmodified pristine BEA.exe. It runs fullscreen (m_bWindowed is " +
            "BSS with no writer), which this window-grab capture cannot read. Apply " +
            "force_windowed (0x12A644) to the COPY first.")
+}
+
+# --- refuse to capture against an instrumented target -----------------------
+#
+# tools/d3d9-proxy/ installs a d3d9.dll next to BEA.exe and removes it in a
+# finally block. A finally does not run if the host is killed, the machine loses
+# power, or someone Ctrl-Breaks the wrong window. A leftover proxy changes the
+# frames this script records and says nothing, so the next parity capture would
+# be poisoned invisibly. The producer already refuses to overwrite an existing
+# d3d9.dll; this is the matching check on the CONSUMER side, which is where a
+# stale one actually does the damage.
+foreach ($stray in @('d3d9.dll', 'd3d9.log', 'dinput8.dll', 'ddraw.dll', 'dxgi.dll')) {
+    $strayPath = Join-Path $TargetRoot $stray
+    if (Test-Path -LiteralPath $strayPath) {
+        throw ("Refusing to capture: '$stray' is present in $TargetRoot. A retail " +
+               "capture must run against an uninstrumented target. If this is a " +
+               "leftover from tools/d3d9-proxy, delete it and re-run; if the game " +
+               "genuinely shipped it, remove this name from the pre-flight list " +
+               "and say why in the commit.")
+    }
+}
+
+# --- global synthetic input: armed, or refused ------------------------------
+#
+# AGENTS.md: "NEVER send global synthetic input. No SendInput, no keybd_event, no
+# mouse_event, no SetCursorPos, and above all no PrtScn. The maintainer sits at
+# this machine while agents run."
+#
+# This script predates that rule and is built on exactly those calls, plus a
+# per-shot SetForegroundWindow (a focus steal, which is the same hazard wearing a
+# different hat: it takes the keyboard away from whoever is typing). Rather than
+# rewrite the rig blind, the offending paths are gated behind an exact arm
+# phrase and are OFF by default.
+$globalInputArmPhrase = 'I AM AWAY FROM THE KEYBOARD'
+$globalInputArmed = ($ArmGlobalInput -ceq $globalInputArmPhrase)
+
+$inputVerbs = @('click', 'hover', 'key', 'keydown', 'keyup')
+$stepsNeedingInput = @($Steps | Where-Object {
+    $verb = ($_ -split '\s+')[0]
+    $inputVerbs -contains $verb
+})
+$needsGlobalInput = ($stepsNeedingInput.Count -gt 0) -or
+                    ($ClickAtSeconds.Count -gt 0) -or
+                    ($ClickAt.Count -gt 0) -or
+                    ($KeyAt.Count -gt 0)
+
+if ($needsGlobalInput -and -not $globalInputArmed) {
+    throw (@"
+Refusing to run: this request needs GLOBAL SYNTHETIC INPUT, which AGENTS.md
+forbids. Requested by: $(@(
+    if ($stepsNeedingInput.Count) { "$($stepsNeedingInput.Count) step(s): $($stepsNeedingInput -join '; ')" }
+    if ($ClickAtSeconds.Count)    { "-ClickAtSeconds" }
+    if ($ClickAt.Count)           { "-ClickAt" }
+    if ($KeyAt.Count)             { "-KeyAt" }
+) -join ', ')
+
+mouse_event / keybd_event / SetCursorPos are global. They land in whatever window
+has focus, which is the maintainer's if he is at the machine, and SetCursorPos
+moves his pointer. To proceed anyway, pass:
+
+    -ArmGlobalInput '$globalInputArmPhrase'
+
+and only when that is literally true.
+
+THE REPLACEMENT, and what it still needs (do this instead of arming):
+post messages to the target HWND. tools/send_game_window_input.ps1 already has a
+background mode (-AllowBackgroundWindowMessages with its own arm phrase), but it
+is NOT correct for this title yet:
+
+  * Its four PostMessage calls (lines ~939, ~967, ~982, ~1010) pass lParam=0.
+    The SHIPPED PCLTShell::MsgProc (0x00512E40) indexes KeyDown[]/KeyWasDown[]
+    by the SCAN CODE out of lParam (0x00512E62-0x00512ECD, +0x80 for
+    KF_EXTENDED), so every posted key currently sets KeyDown[0].
+    Build lParam with MapVirtualKey(vk, MAPVK_VK_TO_VSC) << 16.
+    NOTE the artefacts disagree and both facts matter: the pinned GPL source
+    (references/Onslaught/ltshell.cpp:1025,1045) writes KeyDown[wParam]. The
+    shipped binary is what decides released behaviour.
+  * The frontend hit-tests read the cursor GLOBALS 0x89BDA8/0x89BDA4
+    (0x0051B391-0x0051B3FB), not the button message's lParam, so a posted
+    WM_LBUTTONDOWN alone will not click a menu row. Post WM_MOUSEMOVE first and
+    verify the position took.
+  * The foreground gate below must be replaced in the same change by a five-point
+    ClientToScreen + WindowFromPoint + GetAncestor(GA_ROOT) occlusion probe, or
+    every correct frame will still be reported SUSPECT.
+  * The cold frontend is message-driven; IN-LEVEL is not (mouse gate 0x0089BDF0,
+    DirectInput DISCL_EXCLUSIVE|DISCL_FOREGROUND). This replacement covers the
+    frontend only.
+
+See local-lab/PARITY-WORKLIST-2026-07-27.md item 15.
+"@)
+}
+
+if ($globalInputArmed) {
+    Write-Warning ("GLOBAL SYNTHETIC INPUT IS ARMED. mouse_event / keybd_event / " +
+        "SetCursorPos and per-shot SetForegroundWindow will fire. Do not use the " +
+        "keyboard or mouse until this run finishes.")
+}
+
+# Foreground is asserted only when armed. Un-armed, the script still captures --
+# CopyFromScreen reads whatever is on screen -- but it does not STEAL focus, and
+# every shot still records whether the target was foreground, so a frame grabbed
+# while the game was behind something is marked SUSPECT rather than trusted.
+function Set-TargetForeground {
+    param([IntPtr]$Handle)
+    if (-not $globalInputArmed) { return $false }
+    return [BeaCaptureNativeV2]::SetForegroundWindow($Handle)
+}
+
+function Assert-GlobalInputArmed {
+    param([string]$What)
+    if (-not $globalInputArmed) {
+        throw ("Refusing '$What': global synthetic input is not armed. " +
+               "Pass -ArmGlobalInput '$globalInputArmPhrase', or use the " +
+               "message-based route described at the top of this script.")
+    }
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
@@ -151,7 +277,10 @@ try {
     }
     $hwnd = $process.MainWindowHandle
     if ($hwnd -eq [IntPtr]::Zero) { throw "No window appeared within $TimeoutSeconds s." }
-    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+    # FOCUS STEAL (AGENTS.md). Only when armed; otherwise rely on the game having
+    # taken foreground itself at launch, and let the per-shot foreground check
+    # mark anything grabbed while it had not.
+    [void](Set-TargetForeground $hwnd)
     $windowAppeared = Get-Date
 
     function Get-ClientFrame {
@@ -160,7 +289,9 @@ try {
         $pt = New-Object 'BeaCaptureNativeV2+POINT'
         [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
         $w = $cr.Right - $cr.Left; $h = $cr.Bottom - $cr.Top
-        [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+        # FOCUS STEAL (AGENTS.md): gated. Unarmed, the grab still happens and the
+        # foreground check on each shot decides whether it is trustworthy.
+        [void](Set-TargetForeground $hwnd)
         Start-Sleep -Milliseconds 120
         $bmp = New-Object System.Drawing.Bitmap $w, $h
         $gfx = [System.Drawing.Graphics]::FromImage($bmp)
@@ -219,25 +350,40 @@ try {
                 }
                 'sleep' { Start-Sleep -Milliseconds ([int]([double]$tok[1] * 1000)) }
                 'key' {
-                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    # GLOBAL SYNTHETIC INPUT (AGENTS.md): keybd_event is global.
+                    # Replacement: PostMessage WM_KEYDOWN/WM_KEYUP to the HWND with
+                    # lParam carrying MapVirtualKey(vk, MAPVK_VK_TO_VSC) << 16 --
+                    # the shipped MsgProc indexes KeyDown[] by that scan code.
+                    Assert-GlobalInputArmed 'key'
+                    [void](Set-TargetForeground $hwnd); Start-Sleep -Milliseconds 150
                     [byte]$vk = [int]$tok[1]; [byte]$sc = 0; [uint32]$dn = 0; [uint32]$up = [BeaCaptureNativeV2]::KEYEVENTF_KEYUP
                     [BeaCaptureNativeV2]::keybd_event($vk, $sc, $dn, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
                     [BeaCaptureNativeV2]::keybd_event($vk, $sc, $up, [UIntPtr]::Zero)
                 }
                 'click' {
+                    # GLOBAL SYNTHETIC INPUT (AGENTS.md): SetCursorPos moves the
+                    # maintainer's pointer; mouse_event lands wherever focus is.
+                    # Replacement: post WM_MOUSEMOVE (the frontend hit-tests read
+                    # the cursor globals 0x89BDA8/0x89BDA4, not the button lParam),
+                    # verify the position took, then WM_LBUTTONDOWN/UP.
+                    Assert-GlobalInputArmed 'click'
                     $xy = $tok[1] -split ','
                     $pt = New-Object 'BeaCaptureNativeV2+POINT'
                     [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
-                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [void](Set-TargetForeground $hwnd); Start-Sleep -Milliseconds 150
                     [void][BeaCaptureNativeV2]::SetCursorPos($pt.X + [int]$xy[0], $pt.Y + [int]$xy[1]); Start-Sleep -Milliseconds 120
                     [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
                     [BeaCaptureNativeV2]::mouse_event([BeaCaptureNativeV2]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
                 }
                 'hover' {
+                    # GLOBAL SYNTHETIC INPUT (AGENTS.md): SetCursorPos is global.
+                    # Replacement: PostMessage WM_MOUSEMOVE with lParam =
+                    # MAKELPARAM(clientX, clientY).
+                    Assert-GlobalInputArmed 'hover'
                     $xy = $tok[1] -split ','
                     $pt = New-Object 'BeaCaptureNativeV2+POINT'
                     [void][BeaCaptureNativeV2]::ClientToScreen($hwnd, [ref]$pt)
-                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    [void](Set-TargetForeground $hwnd); Start-Sleep -Milliseconds 150
                     [void][BeaCaptureNativeV2]::SetCursorPos($pt.X + [int]$xy[0], $pt.Y + [int]$xy[1])
                     Start-Sleep -Milliseconds 400
                 }
@@ -271,11 +417,19 @@ try {
                     }
                 }
                 'keydown' {
-                    [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 150
+                    # GLOBAL SYNTHETIC INPUT (AGENTS.md): a HELD global key is the
+                    # worst case -- if this script dies between keydown and keyup
+                    # the key stays down in the maintainer's session.
+                    # Replacement: repeated PostMessage WM_KEYDOWN with the
+                    # KF_REPEAT bit and the scan code in lParam.
+                    Assert-GlobalInputArmed 'keydown'
+                    [void](Set-TargetForeground $hwnd); Start-Sleep -Milliseconds 150
                     [byte]$vk = [int]$tok[1]
                     [BeaCaptureNativeV2]::keybd_event($vk, 0, 0, [UIntPtr]::Zero)
                 }
                 'keyup' {
+                    # GLOBAL SYNTHETIC INPUT (AGENTS.md). See 'keydown'.
+                    Assert-GlobalInputArmed 'keyup'
                     [byte]$vk = [int]$tok[1]
                     [BeaCaptureNativeV2]::keybd_event($vk, 0, [BeaCaptureNativeV2]::KEYEVENTF_KEYUP, [UIntPtr]::Zero)
                 }
@@ -356,7 +510,10 @@ try {
         if ($wait -gt 0) { Start-Sleep -Milliseconds ([int]($wait * 1000)) }
 
         if ($event.Kind -eq 'key') {
-            [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+            # GLOBAL SYNTHETIC INPUT (AGENTS.md): keybd_event is global. See the
+            # 'key' step above for the message-based replacement.
+            Assert-GlobalInputArmed '-KeyAt'
+            [void](Set-TargetForeground $hwnd)
             Start-Sleep -Milliseconds 150
             [byte]$vk = $event.X
             [byte]$scan = 0
@@ -370,6 +527,9 @@ try {
         }
 
         if ($event.Kind -eq 'click') {
+            # GLOBAL SYNTHETIC INPUT (AGENTS.md): SetCursorPos + mouse_event. See
+            # the 'click' step above for the message-based replacement.
+            Assert-GlobalInputArmed '-ClickAt/-ClickAtSeconds'
             $cr = New-Object 'BeaCaptureNativeV2+RECT'
             [void][BeaCaptureNativeV2]::GetClientRect($hwnd, [ref]$cr)
             $pt = New-Object 'BeaCaptureNativeV2+POINT'
@@ -382,7 +542,7 @@ try {
                 $cx = $pt.X + [int](($cr.Right - $cr.Left) / 2)
                 $cy = $pt.Y + [int](($cr.Bottom - $cr.Top) / 2) + $ClickOffsetY
             }
-            [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+            [void](Set-TargetForeground $hwnd)
             Start-Sleep -Milliseconds 150
             [void][BeaCaptureNativeV2]::SetCursorPos($cx, $cy)
             Start-Sleep -Milliseconds 120
@@ -410,9 +570,17 @@ try {
         $offsetY = $origin.Y - $windowRect.Top
         # PrintWindow returns a blank (white) client area for this D3D surface, so
         # read the composited pixels off the desktop at the client rect's screen
-        # position instead. This requires the window to be foreground and
-        # unobstructed, which is why SetForegroundWindow is re-asserted per shot.
-        [void][BeaCaptureNativeV2]::SetForegroundWindow($hwnd)
+        # position instead. That needs the window foreground and unobstructed,
+        # which is why SetForegroundWindow used to be re-asserted per shot.
+        #
+        # FOCUS STEAL (AGENTS.md): re-asserting foreground on every shot takes the
+        # keyboard away from the maintainer repeatedly through a long capture. It
+        # is now gated on -ArmGlobalInput. Unarmed, the grab still runs and the
+        # foreground test below decides whether the frame is trustworthy.
+        # The real fix is a back-buffer grab from inside tools/d3d9-proxy at
+        # Present (GetRenderTargetData into a lockable system-memory surface),
+        # which needs no foreground, no focus change and no input at all.
+        [void](Set-TargetForeground $hwnd)
         Start-Sleep -Milliseconds 200
 
         $bitmap = New-Object System.Drawing.Bitmap $w, $h
@@ -472,6 +640,14 @@ $manifest = [pscustomobject]@{
     # click-to-start by seconds), so the steps are the only reproducible account
     # of what the capture actually did. They are cheap to store and they are the
     # difference between a reference set and a pile of PNGs.
+    # Whether this capture was allowed to send global synthetic input and steal
+    # foreground. A frame captured under either condition was taken in a session
+    # the operator was not using, and one captured without them may have been
+    # grabbed while the game was not foreground -- both change how far the frame
+    # can be trusted, so neither may be left implicit.
+    globalInputArmed = [bool]$globalInputArmed
+    foregroundAsserted = [bool]$globalInputArmed
+
     steps = $Steps
     clickAt = $ClickAt
     clickAtSeconds = $ClickAtSeconds

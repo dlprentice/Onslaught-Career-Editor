@@ -1,0 +1,36 @@
+; bea-d3d9-proxy export table.
+;
+; Every export of C:\Windows\SysWOW64\d3d9.dll is re-exported at its original
+; ordinal. Ordinals 16-19, 22 and 23 are NONAME in the system DLL and stay
+; NONAME here. build.ps1 fails the build if the live system DLL's export table
+; no longer matches this list, because a missing forward is a crash at startup.
+;
+; Only Direct3DCreate9 / Direct3DCreate9Ex are implemented; the rest are lazy
+; tail-jump thunks (see proxy.c).
+
+LIBRARY d3d9.dll
+
+EXPORTS
+    d3d9_ord16                               = bea_thunk_16 @16 NONAME
+    d3d9_ord17                               = bea_thunk_17 @17 NONAME
+    d3d9_ord18                               = bea_thunk_18 @18 NONAME
+    d3d9_ord19                               = bea_thunk_19 @19 NONAME
+    Direct3DCreate9On12                      = bea_thunk_20 @20
+    Direct3DCreate9On12Ex                    = bea_thunk_21 @21
+    d3d9_ord22                               = bea_thunk_22 @22 NONAME
+    d3d9_ord23                               = bea_thunk_23 @23 NONAME
+    Direct3DShaderValidatorCreate9           = bea_thunk_24 @24
+    PSGPError                                = bea_thunk_25 @25
+    PSGPSampleTexture                        = bea_thunk_26 @26
+    D3DPERF_BeginEvent                       = bea_thunk_27 @27
+    D3DPERF_EndEvent                         = bea_thunk_28 @28
+    D3DPERF_GetStatus                        = bea_thunk_29 @29
+    D3DPERF_QueryRepeatFrame                 = bea_thunk_30 @30
+    D3DPERF_SetMarker                        = bea_thunk_31 @31
+    D3DPERF_SetOptions                       = bea_thunk_32 @32
+    D3DPERF_SetRegion                        = bea_thunk_33 @33
+    DebugSetLevel                            = bea_thunk_34 @34
+    DebugSetMute                             = bea_thunk_35 @35
+    Direct3D9EnableMaximizedWindowedModeShim = bea_thunk_36 @36
+    Direct3DCreate9                          = bea_Direct3DCreate9 @37
+    Direct3DCreate9Ex                        = bea_Direct3DCreate9Ex @38
