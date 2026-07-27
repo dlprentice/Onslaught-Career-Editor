@@ -98,6 +98,72 @@ internal sealed class Level100ChainAutopilot
     internal WorldSnapshot Snapshot => _simulation.Snapshot;
 
     /// <summary>
+    /// One released actor round, recorded on the first tick it is visible in
+    /// <c>Level100ActorMechanics.ActorRounds</c>, together with the
+    /// <c>AiState</c> its owner held on that tick.
+    /// </summary>
+    internal readonly record struct ObservedRoundLaunch(
+        int Tick,
+        int RoundId,
+        int OwnerActorId,
+        int OwnerAiState);
+
+    private readonly List<ObservedRoundLaunch> _roundLaunches = [];
+    private readonly HashSet<int> _seenRoundIds = [];
+    private int? _abortTick;
+    private IReadOnlyList<Level100ActorCommandIntentSnapshot> _mechanicsAtAbort =
+        Array.Empty<Level100ActorCommandIntentSnapshot>();
+
+    /// <summary>Every actor round this run ever saw, in first-seen order.</summary>
+    internal IReadOnlyList<ObservedRoundLaunch> RoundLaunches => _roundLaunches;
+
+    /// <summary>
+    /// The first tick on which the LevelScript's <c>aborted</c> local was set,
+    /// i.e. the tick <c>event("Abort Airborne Drones")</c> landed.
+    /// </summary>
+    internal int? AbortTick => _abortTick;
+
+    /// <summary>Actor mechanics state as it stood on <see cref="AbortTick"/>.</summary>
+    internal IReadOnlyList<Level100ActorCommandIntentSnapshot> MechanicsAtAbort =>
+        _mechanicsAtAbort;
+
+    /// <summary>
+    /// Records the abort boundary and every round launch either side of it.
+    ///
+    /// <para>This is always on, and it is the only observable this run carries
+    /// that is sensitive to anything happening <b>after</b> the abort. See
+    /// <c>Level100FullChainTests.AbortAirborneDrones_SilencesTheDronesThatWereAttacking</c>
+    /// for why that matters.</para>
+    /// </summary>
+    private void RecordArmamentEvidence(WorldSnapshot state)
+    {
+        if (_abortTick is null && state.Level100Mission.Aborted)
+        {
+            _abortTick = state.Tick;
+            _mechanicsAtAbort = state.Level100ActorMechanics.Actors;
+        }
+
+        Dictionary<int, int> aiStateByActor = state.Level100ActorMechanics.Actors
+            .ToDictionary(actor => actor.ActorId.Value, actor => actor.AiState);
+        foreach (Level100ActorRoundSnapshot round in
+                 state.Level100ActorMechanics.ActorRounds)
+        {
+            if (!_seenRoundIds.Add(round.Id))
+            {
+                continue;
+            }
+
+            _roundLaunches.Add(new ObservedRoundLaunch(
+                state.Tick,
+                round.Id,
+                round.OwnerActorId.Value,
+                aiStateByActor.TryGetValue(round.OwnerActorId.Value, out int ai)
+                    ? ai
+                    : SimulationConstants.ReleasedAiStateOn));
+        }
+    }
+
+    /// <summary>
     /// A run with all four released tutorial slots already saved
     /// (<c>SLOT_TUTORIAL_1..4</c>). That is a returning player, not a cold
     /// first career: it skips the <c>GetSlot(...) == FALSE</c> arms, which are
@@ -158,6 +224,7 @@ internal sealed class Level100ChainAutopilot
 
     private void Observe(WorldSnapshot state)
     {
+        RecordArmamentEvidence(state);
         string? navigation = state.Level100Mission.NavigationObjective;
         if (!string.Equals(navigation, _lastNavigation, StringComparison.Ordinal))
         {

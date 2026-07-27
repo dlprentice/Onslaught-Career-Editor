@@ -25,11 +25,37 @@ namespace OnslaughtRebuild.Core.Tests;
 /// tutorial's combat curriculum. See
 /// <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c>.</para>
 /// </summary>
+/// <summary>
+/// One chain run, shared by every test that reads it. The run is deterministic
+/// and takes the better part of a minute, so it is paid for once rather than
+/// once per assertion.
+/// </summary>
+public sealed class Level100ChainRunFixture
+{
+    internal Level100ChainAutopilot Driver { get; }
+
+    internal Level100MissionOutcome Outcome { get; }
+
+    public Level100ChainRunFixture()
+    {
+        Driver = Level100ChainAutopilot.Create();
+        Outcome = Driver.Run(30 * 1_200);
+    }
+}
+
 public sealed class Level100FullChainTests
+    : IClassFixture<Level100ChainRunFixture>
 {
     private readonly ITestOutputHelper _output;
+    private readonly Level100ChainRunFixture _chain;
 
-    public Level100FullChainTests(ITestOutputHelper output) => _output = output;
+    public Level100FullChainTests(
+        ITestOutputHelper output,
+        Level100ChainRunFixture chain)
+    {
+        _output = output;
+        _chain = chain;
+    }
 
     /// <summary>
     /// The naive walker autopilot - fixed 18 m stand-off, fire whenever the
@@ -137,18 +163,11 @@ public sealed class Level100FullChainTests
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
     {
-        var driver = Level100ChainAutopilot.Create();
-        Level100MissionOutcome outcome;
-        try
+        Level100ChainAutopilot driver = _chain.Driver;
+        Level100MissionOutcome outcome = _chain.Outcome;
+        foreach (string line in driver.Report)
         {
-            outcome = driver.Run(30 * 1_200);
-        }
-        finally
-        {
-            foreach (string line in driver.Report)
-            {
-                _output.WriteLine(line);
-            }
+            _output.WriteLine(line);
         }
 
         WorldSnapshot final = driver.Snapshot;
@@ -220,6 +239,84 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Failed,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
+    }
+
+    /// <summary>
+    /// <c>SetAIState(AI_OFF)</c> silences a unit's weapons.
+    ///
+    /// <para><b>Why this test exists, and the trap it closes.</b> The AI_OFF
+    /// gate in <c>Level100ActorWeaponRuntime.AdvanceActorWeapons</c> was once
+    /// believed inert, because adding it left the chain trace byte-identical:
+    /// hull 17500 / 16300 / 11200 / 7500 and <c>Won</c> at t10504, unchanged.
+    /// It was not inert. <b>The chain's last hull checkpoint is t10028 and the
+    /// abort lands at t10030</b>, so a real, load-bearing behaviour change was
+    /// invisible to every number anyone was looking at. Nothing in this suite
+    /// observed anything after the abort. This test is that observable, and it
+    /// is deliberately the only assertion here that lives past t10030.</para>
+    ///
+    /// <para><b>The law, not a number.</b> The assertion is "an actor whose
+    /// <c>AiState</c> is <c>AI_OFF</c> launches no further rounds", not a
+    /// pinned hull figure. Hull values move whenever any damage constant moves,
+    /// and a test pinned to 6700-versus-6500 gets deleted rather than fixed.
+    /// Rounds already in flight at the abort are unaffected and are expected to
+    /// keep arriving - the released gate stops the weapon, not the
+    /// ammunition.</para>
+    ///
+    /// <para>The mechanism is <c>AirborneDrone2.msl</c>: <c>init()</c> issues
+    /// <c>Attack(player)</c> at line 26, and
+    /// <c>event("Abort Airborne Drones")</c> at lines 40-43 answers with
+    /// <c>SetAIState(AI_OFF)</c>. LevelScript's beat-9 health poll posts that
+    /// event below 40 % hull.</para>
+    /// </summary>
+    [Fact]
+    public void AbortAirborneDrones_SilencesTheDronesThatWereAttacking()
+    {
+        Level100ChainAutopilot driver = _chain.Driver;
+        int abortTick = Assert.IsType<int>(driver.AbortTick);
+
+        // The test is only meaningful if the abort actually put a *firing*
+        // actor into AI_OFF. Without this, a run that never reached beat 9
+        // would pass vacuously.
+        Level100ActorCommandIntentSnapshot[] silenced =
+            driver.MechanicsAtAbort
+                .Where(actor =>
+                    actor.AiState == SimulationConstants.ReleasedAiStateOff &&
+                    actor.Intent == Level100ActorCommandIntent.Attacking)
+                .ToArray();
+        _output.WriteLine(
+            $"abort at t{abortTick}; AI_OFF and attacking: " +
+            string.Join(", ", silenced.Select(actor => actor.ActorId.Value)));
+        Assert.NotEmpty(silenced);
+
+        // Every round that was ever launched by an AI_OFF owner after the
+        // abort. The released gate makes this set empty.
+        Level100ChainAutopilot.ObservedRoundLaunch[] violations =
+            driver.RoundLaunches
+                .Where(launch =>
+                    launch.Tick > abortTick &&
+                    launch.OwnerAiState == SimulationConstants.ReleasedAiStateOff)
+                .ToArray();
+        foreach (Level100ChainAutopilot.ObservedRoundLaunch launch in violations)
+        {
+            _output.WriteLine(
+                $"  t{launch.Tick} round {launch.RoundId} launched by actor " +
+                $"{launch.OwnerActorId} while AiState=AI_OFF");
+        }
+
+        Assert.True(
+            violations.Length == 0,
+            $"{violations.Length} round(s) were launched after t{abortTick} by " +
+            "actors the released script had already put into AI_OFF. " +
+            "SetAIState(AI_OFF) must silence a unit's weapons - see " +
+            "Level100ActorWeaponRuntime.AdvanceActorWeapons.");
+
+        // And the control: the same drones did fire before the abort, so the
+        // gate is what emptied the set above rather than the run never having
+        // armed them.
+        Assert.Contains(
+            driver.RoundLaunches,
+            launch => launch.Tick <= abortTick &&
+                silenced.Any(actor => actor.ActorId.Value == launch.OwnerActorId));
     }
 
     private static int CountDestroyed(
