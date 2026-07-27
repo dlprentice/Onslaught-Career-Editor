@@ -7,8 +7,8 @@ Repo-wide OFFLINE markdown REACHABILITY check.
 
 A tracked document that nothing links to is invisible in practice: it is found
 only by accident, by `git ls-files`, or by a lucky grep. This project has
-already been bitten by it -- `CROSS_MODEL_CONSULT.md` sat at the repository root
-referenced from nowhere. This gate builds the reachability graph from the
+already been bitten by it -- a root-level policy document sat referenced from
+nowhere for weeks and was acted on by nobody. This gate builds the reachability graph from the
 documented entry points and reports what cannot be reached.
 
 Design notes:
