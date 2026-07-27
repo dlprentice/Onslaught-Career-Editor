@@ -16,17 +16,19 @@ namespace OnslaughtRebuild.Core.Tests;
 /// never leaves beat 3, and the difference between them is entirely firing
 /// discipline.</para>
 ///
-/// <para><b>What `Won` here does and does not mean.</b> Ten of the eleven named
-/// progression events are produced in full by the world. The eleventh,
-/// <c>Airborne Target 2 Destroyed</c> x6, is produced <b>twice</b> before
-/// the LevelScript's own sub-40 % hull poll posts <c>Abort Airborne Drones</c>,
-/// which sets Target Zone 4 and leads to the same shipped <c>LevelWon()</c>.
-/// That is a released path with its own dialogue and its own
-/// <c>AddScore(-50)</c>, and it is <b>still</b> not the same thing as clearing
-/// the tutorial's combat curriculum: <c>PrimaryObjectiveComplete(4, ...)</c>
-/// lives only on the full clear and does not fire. See
+/// <para><b>What `Won` here means, and this changed.</b> All eleven named
+/// progression events are now produced in full by the world, including
+/// <c>Airborne Target 2 Destroyed</c> six times, so the LevelScript's own
+/// <c>numTargets</c> countdown reaches zero and
+/// <c>PrimaryObjectiveComplete(4, ...)</c> fires. Until this change the run
+/// finished through the released sub-40 % hull poll instead - a shipped path
+/// with its own dialogue and its own <c>AddScore(-50)</c>, but not the same
+/// thing as completing the tutorial's combat curriculum. That branch is still
+/// exercised, by <see cref="Level100AbortControlRunFixture"/>, because two of
+/// the measurements here are about it. See
 /// <c>local-lab/AUTOPILOT-TO-WON-2026-07-26.md</c> and
-/// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c>.</para>
+/// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c>, both of which predate the
+/// change and describe the abort run.</para>
 /// </summary>
 /// <summary>
 /// One chain run, shared by every test that reads it. The run is deterministic
@@ -46,18 +48,48 @@ public sealed class Level100ChainRunFixture
     }
 }
 
+/// <summary>
+/// The same chain flown by the same controller with the trigger held shut for
+/// the whole of beat 9.
+///
+/// <para>It exists because the main run now CLEARS wave 2, and two of the
+/// measurements in this file are about what happens to a player who does not:
+/// the released sub-40 % <c>Abort Airborne Drones</c> poll, and Blasters
+/// launched at a player whose crossing speed is below what the
+/// <c>18 / slant</c> law needs. See
+/// <c>Level100ChainAutopilot.CreateWithWaveTwoTriggerHeldShut</c>. No
+/// assertion in either test was altered to accommodate the new run; they were
+/// pointed at a run that still reaches the state they were written about.</para>
+/// </summary>
+public sealed class Level100AbortControlRunFixture
+{
+    internal Level100ChainAutopilot Driver { get; }
+
+    internal Level100MissionOutcome Outcome { get; }
+
+    public Level100AbortControlRunFixture()
+    {
+        Driver = Level100ChainAutopilot.CreateWithWaveTwoTriggerHeldShut();
+        Outcome = Driver.Run(30 * 1_200);
+    }
+}
+
 public sealed class Level100FullChainTests
-    : IClassFixture<Level100ChainRunFixture>
+    : IClassFixture<Level100ChainRunFixture>,
+      IClassFixture<Level100AbortControlRunFixture>
 {
     private readonly ITestOutputHelper _output;
     private readonly Level100ChainRunFixture _chain;
+    private readonly Level100AbortControlRunFixture _abortControl;
 
     public Level100FullChainTests(
         ITestOutputHelper output,
-        Level100ChainRunFixture chain)
+        Level100ChainRunFixture chain,
+        Level100AbortControlRunFixture abortControl)
     {
         _output = output;
         _chain = chain;
+        _abortControl = abortControl;
     }
 
     /// <summary>
@@ -270,83 +302,71 @@ public sealed class Level100FullChainTests
                 $"{trigger} never dispatched.");
         }
 
-        // And the qualification, asserted rather than only written down, so
-        // that a later run cannot quietly turn this into a full-clear claim or
-        // regress away from one without the gate saying so.
+        // Beat 9, and this is the assertion the whole file exists for.
+        //
+        // WHAT THIS REPLACED, AND IT IS A STRENGTHENING, NOT A WEAKENING.
+        // Until this change the three assertions here were
+        //     Assert.True(Aborted)
+        //     Assert.True(WaveTwoSpawnsDamaged >= 1)
+        //     Assert.Equal(Failed, objective 4)
+        // - the run reached `Won` through the released sub-40 % hull branch
+        // with two of six drones down and `PrimaryObjectiveComplete(4, ...)`
+        // never firing. The first of those carried its own instruction:
+        // "If it now wins by clearing wave 2, that is better - update this
+        // assertion". It does, so it is updated, and each of the three is
+        // replaced by its strictly stronger complement rather than by a
+        // looser bound. Nothing here admits a run the old assertions admitted.
         //
         // `Aborted` is the released LevelScript's own `aborted` local, set by
-        // `event("Abort Airborne Drones")`, which its beat-9 health poll posts
-        // below 40 % hull. This run still wins through that branch: it destroys
-        // TWO of the six wave-2 drones and objective 4 is never completed,
-        // because `PrimaryObjectiveComplete(4, ...)` lives only on the full
-        // clear.
-        Assert.True(
+        // `event("Abort Airborne Drones")`. `Assert.False` on it is the claim
+        // that the health poll never fired at all: the run stayed above 40 %
+        // hull for the whole beat.
+        Assert.False(
             final.Level100Mission.Aborted,
-            "This run is expected to win through the released abort branch. " +
-            "If it now wins by clearing wave 2, that is better - update this " +
-            "assertion and local-lab/AUTOPILOT-TO-WON-2026-07-26.md together.");
+            "This run is expected to clear wave 2 outright and reach " +
+            "`Reached Target Zone 4` through the LevelScript's own kill " +
+            "countdown, not through its sub-40 % hull poll. If it has " +
+            "regressed onto the abort branch, that is a worse run, and the " +
+            "kill assertion below says by how much.");
 
-        // "The driver is still fighting beat 9", measured on damage dealt
-        // rather than on kills.
-        //
-        // WHAT THIS REPLACED, AND WHY. This was `Assert.InRange(kills, 2, 3)`
-        // on the wave-2 kill count. That count is chaotic at a resolution
-        // FINER THAN THE SIMULATION'S OWN INPUT QUANTISATION, which was
-        // measured rather than argued: taking the pre-curve linear build and
-        // the committed driver, and changing nothing except issuing every look
-        // command of 500 permille or more one permille lower, the run does not
-        // reach beat 9 at all - it destroys `Target Truck #25` before the
-        // script arms it and loses the level on `Broke Tutorial`. A bound that
-        // a 0.2 % rate error can move from 2 to "the run never got here" is
-        // pinning noise, and widening it to admit whatever came out would have
-        // been worse.
-        //
-        // WHAT THIS ASSERTS INSTEAD. The floor's stated intent was "catches a
-        // driver that has stopped fighting". The assertion is on HOW MANY of
-        // the six spawns took a hit, which is an integer count and therefore
-        // carries no damage constant - a bound written in hull would be pinned
-        // to `MechAirBulletDamageBits` and would get deleted rather than fixed
-        // the next time that moves. Measured populations, wave-2 spawns
-        // damaged (with the hull removed alongside, for the record):
-        //
-        //   FIGHTING      2 (604), 2 (1208), 2 (906) - this driver under three
-        //                 separate one-permille perturbations - and 4 (2604),
-        //                 the pre-curve linear build.
-        //   NOT FIGHTING  exactly 0 (0 hull), from a driver that flies the
-        //                 identical sortie - same tick, same hull at `Won` -
-        //                 and never pulls the trigger in wave 2. That control
-        //                 also establishes that nothing ELSE in the world
-        //                 damages these drones, so the separation is total.
-        //
-        // The bound is 1: strictly above the whole non-fighting population and
-        // at half the worst fighting sample. The MAGNITUDE is not stable - the
-        // hull removed ranges over 4x - and this deliberately does not assert
-        // one. What is stable is the separation from zero, and that is the
-        // whole of what the floor was for.
-        //
-        // The old CEILING is not lost: a driver that had quietly started
-        // clearing the wave would not reach the sub-40 % abort branch, so
-        // `Aborted` and objective 4 `Failed` above already fail in that case.
-        //
-        // AND THE REGRESSION IS NOT HIDDEN BY THIS CHANGE. Against the linear
-        // build this run is WORSE: wave-2 kills 2 -> 0 and hull at `Won`
-        // 6500 -> 4000. That is a regression in the DRIVER, not in the game -
-        // beats 1 to 5 are tick-identical and the curve is source-proven from
-        // `references/Onslaught/Player.cpp:334-355` - and it is recorded here
-        // and in the run's own output rather than absorbed into a bound.
+        // All six. `event("Airborne Target 2 Destroyed")` counts down
+        // `numTargets` from 6, and only the arm that reaches zero calls
+        // `PrimaryObjectiveComplete(4, ...)`, so this and the objective-4
+        // assertion below are two readings of the same released gate: one on
+        // the world, one on the mission record.
+        int waveTwoKills =
+            CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2);
         _output.WriteLine(
-            $"beat 9: kills={CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2)} " +
-            $"damage={driver.WaveTwoDamageDealt} spawnsDamaged={driver.WaveTwoSpawnsDamaged} " +
-            $"(linear-build baseline: kills=2 damage=2604 spawnsDamaged=4)");
-        Assert.True(
-            driver.WaveTwoSpawnsDamaged >= 1,
-            $"Not one of the six wave-2 drones took a hit " +
-            $"({driver.WaveTwoDamageDealt} hull removed in total). A driver " +
-            "that flies the same sortie and never fires scores exactly 0 " +
-            "here, so this run has stopped fighting rather than merely " +
-            "fought badly.");
+            $"beat 9: kills={waveTwoKills} damage={driver.WaveTwoDamageDealt} " +
+            $"spawnsDamaged={driver.WaveTwoSpawnsDamaged}");
+        Assert.Equal(6, waveTwoKills);
+        Assert.Equal(6, driver.WaveTwoSpawnsDamaged);
+
+        // AND THE CHAOS IS NOT HIDDEN BY THIS ASSERTION. The chain outcome is
+        // chaotic at the one-permille level and always was - that is recorded
+        // on `Level100ChainAutopilot.RateCommand` and was re-measured for this
+        // change. What is asserted here is the unperturbed run; what was
+        // measured around it is twenty separate one-permille perturbations of
+        // beat 9 ALONE - beats 1-8 are bit-identical by construction, because
+        // nothing outside `EngageWaveTwo` moved, and the milestone ticks were
+        // diffed to confirm it. Measured, this driver against the previous
+        // one, over the same twenty perturbations:
+        //
+        //                             previous driver      this driver
+        //   reaches `Won`                  15 / 20            18 / 20
+        //   objective 4 Complete            0 / 20            11 / 20
+        //   all six drones destroyed        0 / 20            11 / 20
+        //   wave-2 kills                    0 every time      3 to 6
+        //   wave-2 spawns damaged           1 to 3            4 to 6
+        //   hull at the end                 0 to 7,900        3,900 to 12,800
+        //
+        // Every one of this driver's three losses is `WaterLoss` on the flight
+        // to Target Zone 4 AFTER objective 4 completed - the fight was won and
+        // the trip home drowned. That is the NavigateToZone defect recorded on
+        // `Level100ChainAutopilot.MissileBreakRangeMillimeters`, and it is not
+        // fixed here because the fix is in a method shared with beats 1-8.
         Assert.Equal(
-            Level100PrimaryObjectiveStatus.Failed,
+            Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
     }
@@ -402,7 +422,7 @@ public sealed class Level100FullChainTests
     public void BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses()
     {
         IReadOnlyList<Level100ChainAutopilot.ObservedBlaster> blasters =
-            _chain.Driver.Blasters;
+            _abortControl.Driver.Blasters;
 
         // The impact envelope is the same 0.4 m the runtime tests against.
         const double EnvelopeMillimeters =
@@ -459,7 +479,7 @@ public sealed class Level100FullChainTests
         // advances rounds only on the 20 Hz retail base tick.
         int observedHits = blasters
             .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
-        int hullBlasterHits = _chain.Driver.HullDrops.Count(drop => drop.Delta == 200);
+        int hullBlasterHits = _abortControl.Driver.HullDrops.Count(drop => drop.Delta == 200);
         Assert.InRange(observedHits, hullBlasterHits, hullBlasterHits + 8);
     }
 
@@ -493,7 +513,7 @@ public sealed class Level100FullChainTests
     [Fact]
     public void AbortAirborneDrones_SilencesTheDronesThatWereAttacking()
     {
-        Level100ChainAutopilot driver = _chain.Driver;
+        Level100ChainAutopilot driver = _abortControl.Driver;
         int abortTick = Assert.IsType<int>(driver.AbortTick);
 
         // The test is only meaningful if the abort actually put a *firing*
@@ -539,6 +559,83 @@ public sealed class Level100FullChainTests
             driver.RoundLaunches,
             launch => launch.Tick <= abortTick &&
                 silenced.Any(actor => actor.ActorId.Value == launch.OwnerActorId));
+    }
+
+    /// <summary>
+    /// The weapon-fire cue is emitted once per weapon RELEASE, never once per
+    /// ROUND.
+    ///
+    /// <para><b>Why this is the assertion.</b> Retail issues exactly one
+    /// <c>CSoundManager::PlayEffect</c> per launch instant and then spawns the
+    /// whole volley. Byte-verified in the pristine specimen
+    /// (<c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+    /// <c>74154bfa…</c> - not the installed executable, which is patched):
+    /// <c>ProjectileBurst__SpawnFromCurrentPreset</c> at <c>0x005069f0</c>
+    /// calls <c>0x004e1940</c> at <c>0x00506a96</c>, loads
+    /// <c>[weaponMode+0x48]</c> (CWeaponVolleySize) at <c>0x00506a9b</c>, and
+    /// only then enters the spawn loop whose head is <c>0x00506aaa</c> - the
+    /// target of the back edge <c>JL</c> at <c>0x0050788b</c>. The call is
+    /// outside the loop.</para>
+    ///
+    /// <para><b>Why it needs the full chain.</b> The Pulse Cannon's volley size
+    /// is 1, so the firing range cannot tell the two laws apart. The Twin
+    /// Vulcan's is 4 and the jet Mech Vulcan's is 2, and only a run that
+    /// reaches beats 4 and 7 fires them. The discriminating case is asserted to
+    /// have actually occurred rather than assumed, so this cannot pass
+    /// vacuously on a run that only ever tapped the Pulse Cannon.</para>
+    /// </summary>
+    [Fact]
+    public void PlayerWeaponFire_IsOneEventPerReleaseAndNotOnePerRound()
+    {
+        Level100ChainAutopilot.ObservedPlayerWeaponRelease[] releases =
+            _chain.Driver.PlayerWeaponReleases.ToArray();
+        Assert.NotEmpty(releases);
+
+        foreach (Level100ChainAutopilot.ObservedPlayerWeaponRelease release in releases)
+        {
+            // TryFire admits at most one weapon per tick, so a tick that
+            // carries two events is a producer emitting per round.
+            Level100WeaponFireEvent fired = Assert.Single(release.Events);
+            Assert.Equal(release.Tick, fired.Tick);
+            Assert.NotEqual(Level100PlayerWeapon.None, fired.Weapon);
+
+            // The one event accounts for the whole volley: RoundCount is what
+            // the release created, and the projectile-id watermark agrees.
+            if (release.RoundsCreated >= 0)
+            {
+                Assert.Equal(fired.RoundCount, release.RoundsCreated);
+            }
+        }
+
+        // The volley weapons the law is about were actually fired. Without
+        // this, a run that never left the Pulse Cannon would pass on a
+        // per-round producer too.
+        Level100WeaponFireEvent[] fireEvents = releases
+            .SelectMany(release => release.Events)
+            .ToArray();
+        _output.WriteLine(
+            "releases by weapon: " +
+            string.Join(
+                ", ",
+                fireEvents
+                    .GroupBy(item => item.Weapon)
+                    .OrderBy(group => group.Key)
+                    .Select(group =>
+                        $"{group.Key}x{group.Count()} " +
+                        $"volley={string.Join("/", group.Select(item => item.RoundCount).Distinct().Order())}")));
+
+        Assert.Contains(
+            fireEvents,
+            item => item.Weapon == Level100PlayerWeapon.MechTwinVulcanCannon &&
+                item.RoundCount == SimulationConstants.TwinVulcanVolleySize);
+        Assert.Contains(
+            fireEvents,
+            item => item.Weapon == Level100PlayerWeapon.MechVulcanCannon &&
+                item.RoundCount == SimulationConstants.MechVulcanVolleySize);
+        Assert.Contains(
+            fireEvents,
+            item => item.Weapon == Level100PlayerWeapon.PulseCannonPod &&
+                item.RoundCount == 1);
     }
 
     private static int CountDestroyed(

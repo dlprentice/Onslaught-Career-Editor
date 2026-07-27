@@ -118,6 +118,55 @@ internal sealed class Level100ChainAutopilot
     internal IReadOnlyList<ObservedRoundLaunch> RoundLaunches => _roundLaunches;
 
     /// <summary>
+    /// One simulated tick on which the player released a weapon, paired with
+    /// the number of player rounds that tick actually created.
+    ///
+    /// <para><see cref="Events"/> is the whole ordered stream for the tick, not
+    /// a count, so a producer that emitted one cue per ROUND instead of one per
+    /// RELEASE is visible here rather than having to be inferred.</para>
+    /// </summary>
+    internal readonly record struct ObservedPlayerWeaponRelease(
+        int Tick,
+        IReadOnlyList<Level100WeaponFireEvent> Events,
+        int RoundsCreated);
+
+    private readonly List<ObservedPlayerWeaponRelease> _playerWeaponReleases = [];
+    private int _lastObservedTick = -1;
+    private int _lastObservedNextProjectileId;
+
+    /// <summary>Every player weapon release this run saw, in tick order.</summary>
+    internal IReadOnlyList<ObservedPlayerWeaponRelease> PlayerWeaponReleases =>
+        _playerWeaponReleases;
+
+    /// <summary>
+    /// Pairs each tick's <c>Level100WeaponFireEvents</c> with the advance of
+    /// <c>NextProjectileId</c> over the same tick. The id watermark is used
+    /// rather than the live projectile list because a round can be created and
+    /// expire without ever being sampled.
+    /// </summary>
+    private void RecordPlayerWeaponFire(WorldSnapshot state)
+    {
+        if (state.Tick == _lastObservedTick)
+        {
+            return;
+        }
+
+        int roundsCreated = state.NextProjectileId - _lastObservedNextProjectileId;
+        bool contiguous = state.Tick == _lastObservedTick + 1;
+        _lastObservedTick = state.Tick;
+        _lastObservedNextProjectileId = state.NextProjectileId;
+        if (state.Level100WeaponFireEvents.Count == 0)
+        {
+            return;
+        }
+
+        _playerWeaponReleases.Add(new ObservedPlayerWeaponRelease(
+            state.Tick,
+            state.Level100WeaponFireEvents,
+            contiguous ? roundsCreated : -1));
+    }
+
+    /// <summary>
     /// The first tick on which the LevelScript's <c>aborted</c> local was set,
     /// i.e. the tick <c>event("Abort Airborne Drones")</c> landed.
     /// </summary>
@@ -240,6 +289,37 @@ internal sealed class Level100ChainAutopilot
 
         return new Level100ChainAutopilot(simulation);
     }
+
+    /// <summary>
+    /// The same run with the trigger held shut for the whole of beat 9.
+    ///
+    /// <para><b>This is a control, and it is the only way two of this suite's
+    /// measurements are still takeable.</b> Both
+    /// <see cref="Level100FullChainTests.AbortAirborneDrones_SilencesTheDronesThatWereAttacking"/>
+    /// and
+    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
+    /// observe things that only happen to a player who is losing beat 9: the
+    /// released sub-40 % <c>Abort Airborne Drones</c> poll, and Blasters
+    /// launched at a player whose crossing speed is below what the
+    /// <c>18 / slant</c> law needs. The main run no longer supplies either,
+    /// because it clears the wave. Neither assertion in either test was
+    /// changed; they were given a run that still reaches the state they are
+    /// about.</para>
+    ///
+    /// <para>The only difference is <see cref="SimActions.Fire"/> in beat 9.
+    /// Firing does not steer this airframe - <c>Simulation.TryFire</c> runs
+    /// after <c>UpdateMovement</c> and touches no motion state - so this is
+    /// the same sortie, flown by the same controller, that simply never shoots
+    /// anything down.</para>
+    /// </summary>
+    internal static Level100ChainAutopilot CreateWithWaveTwoTriggerHeldShut()
+    {
+        Level100ChainAutopilot driver = Create();
+        driver._waveTwoTriggerHeldShut = true;
+        return driver;
+    }
+
+    private bool _waveTwoTriggerHeldShut;
 
     /// <summary>Runs until the mission leaves <c>Running</c> or the budget ends.</summary>
     internal Level100MissionOutcome Run(int maximumTicks)
@@ -491,6 +571,7 @@ internal sealed class Level100ChainAutopilot
 
     private void Observe(WorldSnapshot state)
     {
+        RecordPlayerWeaponFire(state);
         RecordArmamentEvidence(state);
         RecordBlasterBallistics(state);
         RecordWaveTwoDamage(state);
@@ -1246,15 +1327,7 @@ internal sealed class Level100ChainAutopilot
             return SimInput.Idle;
         }
 
-        // The round that will actually be fired here is the jet's
-        // `Mech Air Bullet` at CRoundVelocity 60.0, not the walker Pulse
-        // round's 35.0. Leading a 5.5 m/s drone with the wrong flight time
-        // puts the aim point 70 % too far ahead of it.
-        SimVector3 aim = AimPoint(
-            state,
-            target,
-            sweep: false,
-            roundSpeedPerTick: SimulationConstants.MechAirBulletSpeedPerTick);
+        SimVector3 aim = WaveTwoAimPoint(state, target);
         double horizontal = Horizontal(state, aim);
         double slant = SlantRange(state, aim);
         double yawError = YawErrorTo(state, aim.X, aim.Z);
@@ -1337,7 +1410,18 @@ internal sealed class Level100ChainAutopilot
         double altitudePitchError =
             commandedPitch - (state.FacingPitchMicroRad / 1_000_000d);
 
-        short lookYAltitude = LookAxis(altitudePitchError, 4_000);
+        // Both airborne axes are RATE commands from here down. See
+        // `RateCommand`: on the ground the released input gain is speed
+        // scheduled and the inversion below does not hold, which is why the
+        // walker branch above still uses the proportional law.
+        short lookYAltitude = RateCommand(
+            WaveTwoPitchLambda * altitudePitchError * 1_000_000d,
+            state.WalkerPitchVelocityMicroRadPerTick,
+            SimulationConstants.JetPitchInputMicroRadPerTick);
+        lookX = RateCommand(
+            WaveTwoYawLambda * yawError * 1_000_000d,
+            state.WalkerYawVelocityMicroRadPerTick,
+            SimulationConstants.JetYawInputMicroRadPerTick);
 
         // Missile defence, and it is the larger half of this fight. Recorded
         // hull losses across the previous revision's beat 9 came in steps of
@@ -1367,6 +1451,10 @@ internal sealed class Level100ChainAutopilot
             double beam = bearing + (_crabDirection * Math.PI / 2);
             double beamError =
                 NormalizeRadians(beam - (state.FacingYawMicroRad / 1_000_000d));
+            short breakLookX = RateCommand(
+                WaveTwoYawLambda * beamError * 1_000_000d,
+                state.WalkerYawVelocityMicroRadPerTick,
+                SimulationConstants.JetYawInputMicroRadPerTick);
 
             // The break does not stop the guns. The nose sweeps across the
             // wave while it turns, and a volley taken on the way past costs
@@ -1376,10 +1464,13 @@ internal sealed class Level100ChainAutopilot
             return new SimInput(
                 (sbyte)WaveTwoCrab(state),
                 1,
-                WaveTwoFireGate(state, aim, slant, altitude, yawError),
+                _waveTwoTriggerHeldShut
+                    ? SimActions.None
+                    : WaveTwoFireGate(
+                        state, aim, slant, altitude, yawError, breakLookX, lookYAltitude),
                 0,
                 0,
-                LookAxis(beamError, 2_000),
+                breakLookX,
                 lookYAltitude);
         }
 
@@ -1388,8 +1479,7 @@ internal sealed class Level100ChainAutopilot
             return new SimInput(0, -1, SimActions.ToggleMode, 0, 0, lookX, 0);
         }
 
-        double pitchError = altitudePitchError;
-        short lookY = LookAxis(pitchError, 4_000);
+        short lookY = lookYAltitude;
 
         // Throttle. Backing off is what makes this airframe turn: the released
         // speed correction drives it to JetMinimumSpeedPerTick (6 m/s) at
@@ -1404,9 +1494,9 @@ internal sealed class Level100ChainAutopilot
             throttle = -1;
         }
 
-        SimActions actions = overWater
+        SimActions actions = overWater || _waveTwoTriggerHeldShut
             ? SimActions.None
-            : WaveTwoFireGate(state, aim, slant, altitude, yawError);
+            : WaveTwoFireGate(state, aim, slant, altitude, yawError, lookX, lookY);
         return new SimInput(
             (sbyte)WaveTwoCrab(state),
             throttle,
@@ -1455,17 +1545,239 @@ internal sealed class Level100ChainAutopilot
         SimVector3 aim,
         double slant,
         int altitude,
-        double targetYawError)
+        double targetYawError,
+        short lookX,
+        short lookY)
     {
         double tolerance = FireTolerance(slant);
-        double pitchError =
-            PitchErrorTo(state, aim, Horizontal(state, aim));
+
+        // The gate is tested against the pose the round will ACTUALLY be
+        // launched from and along, not the one in the snapshot the driver is
+        // reading. `Simulation.Step` runs `UpdateMovement` - and inside it
+        // `UpdateJetOrientation` - at line 188, and `TryFire` at line 192, so
+        // by the time `LaunchWalkerRound` reads `_facingYawMicroRad` and
+        // `PlayerPosition` both have already advanced by this tick's input.
+        //
+        // Measured on the baseline run: the nose moves up to 0.07 rad in that
+        // one tick, which is half of the whole tolerance at 15 m, and the
+        // muzzle moves up to 400 mm. Not one of the 76 wave-2 rounds the
+        // baseline fired passed within 500 mm of a drone measured on the swept
+        // segment, and the median miss was 1,198 mm - a systematic bias, not
+        // scatter.
+        double muzzleX = state.PlayerPosition.X + state.PlayerVelocity.X;
+        double muzzleZ = state.PlayerPosition.Z + state.PlayerVelocity.Z;
+        double muzzleY = state.PlayerElevationMillimeters +
+            state.PlayerVerticalVelocityMillimetersPerTick +
+            SimulationConstants.PulseCannonEmitterUpMillimeters;
+        double deltaX = (double)aim.X - muzzleX;
+        double deltaY = (double)aim.Y - muzzleY;
+        double deltaZ = (double)aim.Z - muzzleZ;
+        double horizontal = Math.Max(
+            1.0, Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ)));
+
+        double yawError = NormalizeRadians(
+            Math.Atan2(-deltaX, deltaZ) -
+            PredictedAngle(
+                state.FacingYawMicroRad,
+                state.WalkerYawVelocityMicroRadPerTick,
+                lookX,
+                SimulationConstants.JetYawInputMicroRadPerTick));
+        double pitchError = -Math.Atan2(deltaY, horizontal) -
+            PredictedAngle(
+                state.FacingPitchMicroRad,
+                state.WalkerPitchVelocityMicroRadPerTick,
+                lookY,
+                SimulationConstants.JetPitchInputMicroRadPerTick);
+
         return altitude >= 6_000 &&
             slant is > 800 and < 55_000 &&
-            Math.Abs(targetYawError) < tolerance &&
+            Math.Abs(yawError) < tolerance &&
             Math.Abs(pitchError) < tolerance
                 ? SimActions.Fire
                 : SimActions.None;
+    }
+
+    /// <summary>
+    /// The released jet attitude plant, written from the two constants that
+    /// produce it in <c>Simulation.UpdateJetOrientation</c>:
+    /// <c>velocity(t+1) = RETAIN * velocity(t) + fullScale * response</c>,
+    /// then <c>angle(t+1) = angle(t) + velocity(t+1)</c>.
+    /// </summary>
+    private const double AttitudeRetain =
+        (double)SimulationConstants.WalkerYawRetentionNumerator /
+        SimulationConstants.WalkerYawRetentionDenominator;
+
+    /// <summary>
+    /// Fraction of the remaining yaw error the controller asks the airframe to
+    /// remove per tick.
+    ///
+    /// <para>With <see cref="RateCommand"/> inverting the lag this is a
+    /// first-order closed-loop pole rather than a gain: against a stationary
+    /// reference the error decays as <c>(1 - lambda)</c> per tick for as long
+    /// as the airframe has the authority, and saturates into a bang-bang slew
+    /// when it does not. That is why it can be near unity at all - the old
+    /// proportional law had to stay slow because it had no braking term.</para>
+    ///
+    /// <para>Swept against the whole chain at pitch lambda 0.30, wave-2 kills:
+    /// 0.20 -&gt; 0, 0.30 -&gt; 1, 0.45 -&gt; 2, 0.60 -&gt; 2, 0.80 -&gt; 6,
+    /// 0.85 -&gt; 6, 0.90 -&gt; 6, 0.95 -&gt; 3. A three-point plateau, not a
+    /// spike.</para>
+    /// </summary>
+    private const double WaveTwoYawLambda = 0.90;
+
+    /// <summary>
+    /// The same pole on the pitch axis, and it is deliberately a third of the
+    /// yaw one.
+    ///
+    /// <para>Two reasons, both measurable. The released pitch authority is
+    /// <c>WalkerPitchInputMicroRadPerTick</c> 3,938 against
+    /// <c>JetYawInputMicroRadPerTick</c> 9,805 - a ratio of 2.49 - so the same
+    /// pole asks the pitch axis for a rate it more often cannot deliver.
+    /// And the pitch REFERENCE is not a clean bearing: it is the aim pitch
+    /// plus <c>verticalCorrection</c>, which already carries a derivative term
+    /// in the airframe's own vertical velocity. Closing a fast loop around a
+    /// reference that contains a rate term of the same loop is the classic
+    /// destabilising case.</para>
+    ///
+    /// <para>Measured at yaw lambda 0.90, wave-2 kills by pitch lambda:
+    /// 0.15 -&gt; 1, 0.20 -&gt; 6, 0.25 -&gt; 3, 0.30 -&gt; 6, 0.35 -&gt; 5,
+    /// 0.40 -&gt; 0. Over twenty one-permille perturbations of beat 9, 0.20
+    /// and 0.30 are indistinguishable (full clear on 10 and 11 of 20
+    /// respectively, never fewer than three kills on either); 0.30 is kept
+    /// because it also holds the higher floor on wave-2 spawns damaged.</para>
+    /// </summary>
+    private const double WaveTwoPitchLambda = 0.30;
+
+    /// <summary>
+    /// The stick position that makes the NEXT tick's angular velocity equal
+    /// the requested one, given the velocity the airframe already carries.
+    ///
+    /// <para><b>This is the whole controller change, and it is a frame error
+    /// in TIME rather than in space.</b> Core integrates a look axis into an
+    /// angular VELOCITY behind a retention pole
+    /// (<c>WalkerYawRetentionNumerator</c> 0.861774, so a steady stick reaches
+    /// 7.23x its per-tick increment) and only then into an angle. A stick
+    /// position is therefore a rate demand with a five-tick lag, not an angle
+    /// demand, and a proportional controller on angle error carries no term
+    /// that can take an accumulated rate back out again: it can only stop
+    /// turning by waiting for the pole. Inverting the recurrence gives that
+    /// term for nothing, and every quantity it needs is already in the
+    /// snapshot.</para>
+    ///
+    /// <para><b>Measured, on the committed driver, over the 1,957 ticks of
+    /// beat 9.</b> Median absolute yaw error 0.79 rad and upper-quartile
+    /// 1.99 rad against a fire tolerance of 0.02-0.15, with roughly three
+    /// times the required authority available; a firing solution existed on
+    /// 7.3 % of ticks; bank angle reached 69 degrees because the yaw stick was
+    /// saturated for most of the beat and <c>Simulation.cs:1255-1259</c> drives
+    /// roll from the same axis. None of that is a gain problem - the airframe
+    /// was being asked for the right thing in the wrong units.</para>
+    ///
+    /// <para><b>It is not a Core bypass and it is not privileged state.</b>
+    /// <see cref="WorldSnapshot.WalkerYawVelocityMicroRadPerTick"/> and
+    /// <see cref="WorldSnapshot.WalkerPitchVelocityMicroRadPerTick"/> are the
+    /// same public snapshot fields this driver already reads for altitude, and
+    /// the result still goes through <see cref="LookAxisCommand"/> and then
+    /// through Core's own <c>LookAxisResponse</c>. What a player has that the
+    /// old driver did not is the knowledge that the nose keeps swinging after
+    /// the stick is centred.</para>
+    ///
+    /// <para><b>Airborne only.</b> <c>Simulation.UpdateJetOrientation</c>
+    /// scales the axis by a <c>ratePermille</c> that is 1000 only in flight
+    /// past the input ramp; on the ground it is speed-scheduled and this
+    /// inversion does not hold. The walker branch of
+    /// <see cref="EngageWaveTwo"/> is deliberately left on the proportional
+    /// law.</para>
+    /// </summary>
+    private static short RateCommand(
+        double desiredMicroRadPerTick,
+        int measuredMicroRadPerTick,
+        int fullScaleMicroRadPerTick)
+    {
+        double increment =
+            desiredMicroRadPerTick - (AttitudeRetain * measuredMicroRadPerTick);
+        int permille = (int)Math.Round(
+            increment * 1_000d / fullScaleMicroRadPerTick);
+        return LookAxisCommand.ForResponsePermille(
+            Math.Clamp(permille, -1_000, 1_000));
+    }
+
+    /// <summary>
+    /// The attitude the airframe will hold on the tick a look command is
+    /// issued, for a command that has already been chosen. The forward half of
+    /// the recurrence <see cref="RateCommand"/> inverts.
+    /// </summary>
+    private static double PredictedAngle(
+        int angleMicroRad,
+        int velocityMicroRadPerTick,
+        short command,
+        int fullScaleMicroRadPerTick)
+    {
+        double velocity = (AttitudeRetain * velocityMicroRadPerTick) +
+            (fullScaleMicroRadPerTick * LookAxisResponse.Apply(command) / 1_000d);
+        return (angleMicroRad + velocity) / 1_000_000d;
+    }
+
+    /// <summary>
+    /// Where the reticle goes on a wave-2 drone.
+    ///
+    /// <para>Three corrections to the shared <see cref="AimPoint"/>, and the
+    /// shared one is deliberately left alone because it is exact for the
+    /// ground targets of beats 3-5 and moving it would move those beats.</para>
+    ///
+    /// <list type="number">
+    ///   <item><description><b>The muzzle has already moved.</b>
+    ///   <c>Simulation.Step</c> runs <c>UpdateMovement</c> before
+    ///   <c>TryFire</c>, so the round leaves from the snapshot position plus
+    ///   one tick of player velocity - up to 400 mm on this
+    ///   airframe.</description></item>
+    ///   <item><description><b>So has the drone.</b>
+    ///   <c>AdvanceLevel100ActorMechanics</c> is the first thing the same step
+    ///   does.</description></item>
+    ///   <item><description><b>The lead has to be three-dimensional.</b>
+    ///   <see cref="AimPoint"/> leads in the horizontal plane only, which is
+    ///   exact for a tank and wrong for a drone that is climbing, and it takes
+    ///   the flight time from the horizontal range rather than the slant
+    ///   range.</description></item>
+    /// </list>
+    ///
+    /// <para>The round is the jet's <c>Mech Air Bullet</c> at
+    /// <c>CRoundVelocity</c> 60.0, not the walker Pulse round's 35.0; the
+    /// intercept is solved by three fixed-point iterations because the flight
+    /// time depends on the range to the lead point and the lead point depends
+    /// on the flight time.</para>
+    /// </summary>
+    private static SimVector3 WaveTwoAimPoint(
+        WorldSnapshot state,
+        Level100ActorSnapshot target)
+    {
+        SimVector3 position = target.Pose.PositionMillimeters;
+        SimVector3 velocity = target.Pose.LinearVelocityMillimetersPerTick;
+
+        double muzzleX = state.PlayerPosition.X + state.PlayerVelocity.X;
+        double muzzleY = state.PlayerElevationMillimeters +
+            state.PlayerVerticalVelocityMillimetersPerTick;
+        double muzzleZ = state.PlayerPosition.Z + state.PlayerVelocity.Z;
+
+        double droneX = position.X + velocity.X;
+        double droneY = position.Y + velocity.Y;
+        double droneZ = position.Z + velocity.Z;
+
+        double flightTicks = 0;
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            double deltaX = droneX + (velocity.X * flightTicks) - muzzleX;
+            double deltaY = droneY + (velocity.Y * flightTicks) - muzzleY;
+            double deltaZ = droneZ + (velocity.Z * flightTicks) - muzzleZ;
+            flightTicks = Math.Sqrt(
+                (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ)) /
+                SimulationConstants.MechAirBulletSpeedPerTick;
+        }
+
+        return new SimVector3(
+            (int)(droneX + (velocity.X * flightTicks)),
+            (int)(droneY + (velocity.Y * flightTicks)),
+            (int)(droneZ + (velocity.Z * flightTicks)));
     }
 
     /// <summary>
@@ -1476,6 +1788,67 @@ internal sealed class Level100ChainAutopilot
     /// <c>CRoundTurnRate</c>, which needs the missile close.
     /// </summary>
     private const int MissileBreakRangeMillimeters = 22_000;
+
+    // ==================================================================
+    // Beat 9: what was measured on the way to clearing it, including the
+    // things that did not work. Kept here rather than in a note because the
+    // note is not in this repository and these are expensive to re-derive.
+    //
+    // WHAT THE OLD DRIVER WAS ACTUALLY DOING, from 1,957 ticks of telemetry:
+    //   - median |yaw error| 0.79 rad, upper quartile 1.99, against a fire
+    //     tolerance of 0.02-0.15. A firing solution existed on 7.3 % of ticks.
+    //   - nineteen target switches, ten of them steps of more than two radians
+    //     taken at a slant of 4-15 m. At t13605 the driver held 0.046 rad on
+    //     drone 40; one tick later it was asked for 2.692 rad on drone 41.
+    //     EVERY hull-loss cluster in the trace is one of those slews.
+    //   - bank reached 69 degrees, because the yaw stick was saturated for most
+    //     of the beat and Simulation.cs:1255-1259 drives roll from that same
+    //     axis.
+    //   - of 76 rounds fired at wave 2, measured on the swept segment against
+    //     the drone origin: closest approach median 1,198 mm, and NOT ONE
+    //     inside 500 mm. Two hits in the whole beat.
+    //
+    // TRIED AND MEASURED WORSE. All of these are single changes against the
+    // shipped controller, all confined to this method, all at the same
+    // 36,000-tick budget:
+    //   - target selection by bearing-weighted cost with a commitment window
+    //     (the obvious fix for the slews): 2 kills, 4 spawns damaged, and 0-2
+    //     under perturbation. Worse than doing nothing about it.
+    //   - line-of-sight-frame crab: choosing MoveX by projecting the ROLLED
+    //     body-right axis (the direction Simulation.UpdateJetMovement actually
+    //     applies the strafe along) onto the evasion direction. 0-4 kills, and
+    //     1 spawn damaged at the unperturbed point. The frame transform is
+    //     real and the arithmetic is right; reversing a crab still costs the
+    //     five released seconds it takes to rebuild one.
+    //   - a two-phase manoeuvre - stop strafing to get the flight path back,
+    //     fly a tangent to a 14 m circle, then re-strafe to freeze the path
+    //     and track with the nose. This is the manoeuvre the released
+    //     mechanism suggests: JetAlignmentPermille is ~0 for 120 ticks after
+    //     ANY strafing tick, so a driver that holds MoveX every tick of beat 9
+    //     has switched off AlignVelocityToForward - and with the mix at 1000
+    //     that call puts the whole velocity on the nose in one tick, i.e. a
+    //     3 m turn radius at minimum speed. Measured: 0 kills, 0 spawns
+    //     damaged, and the beat ended 700 ticks EARLIER because the hull fell
+    //     faster.
+    //   - survive-first throttle (hold MoveZ +1 whenever the crossing speed is
+    //     under what 18/slant needs): on its own, 2 kills and 5 spawns damaged
+    //     and 2.2x the time alive - the best single change other than the
+    //     controller - but it loses the level outright on two of five
+    //     perturbations, and combined with the rate controller it is worse
+    //     than the rate controller alone.
+    //   - line-of-sight rate feed-forward added to the rate command: 4-6
+    //     kills, never better than without it.
+    //   - tightening the wave-2 fire tolerance from 1,100 mm of target to 800:
+    //     six kills on five of five NARROW perturbations and three to four on
+    //     the wider set. A spike, and not shipped for exactly the reason the
+    //     previous 3-kill spike was not.
+    //   - deferring the flight-leg landing while the descent path is over
+    //     water: inert. The landing that drowns a six-kill run is not
+    //     committed in FlyLeg at all - NavigateToZone toggles to walker as
+    //     soon as the zone is inside 20 m, and on the Target Zone 4 approach
+    //     that happens 28 m up. It is a real defect and it is NOT fixed here,
+    //     because the fix is in a method shared with beats 1-8.
+    // ==================================================================
 
     /// <summary>
     /// The nearest still-locked released seeker heading for the player, or
