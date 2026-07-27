@@ -690,26 +690,50 @@ public sealed class SimulationTests
     }
 
     [Fact]
-    public void WalkerAnalogLook_IsProportionalAndUsesTheSameRetailCoast()
+    public void WalkerAnalogLook_FollowsTheReleasedCurveAndUsesTheSameRetailCoast()
     {
+        // This test asserted PROPORTIONALITY until 2026-07-27 — half input,
+        // half rate. That was the defect, not the specification.
+        // Player.cpp:334-355 curves every look axis through
+        // tan(1.2*val)/tan(1.2) before it reaches the battle engine, so half
+        // deflection commands about 27% of full rate. Full deflection is
+        // unchanged, which is why nothing else caught this.
         Simulation half = CreatePlayingSimulation();
         Simulation full = CreatePlayingSimulation();
 
         WorldSnapshot halfInput = half.Step(new SimInput(0, 0, LookXAnalogPermille: 500));
         WorldSnapshot fullInput = full.Step(new SimInput(0, 0, LookXAnalogPermille: 1_000));
 
-        Assert.Equal(5_222, halfInput.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(10_444, fullInput.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(
-            halfInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad,
-            (fullInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad) / 2);
+
+        // Asserted as the law rather than as a golden number: whatever full
+        // deflection commands, half deflection commands the curve's fraction
+        // of it, to within the integer rounding of one scaling step.
+        int expectedHalf =
+            fullInput.WalkerYawVelocityMicroRadPerTick * LookAxisResponse.Apply(500) / 1_000;
+        Assert.InRange(
+            halfInput.WalkerYawVelocityMicroRadPerTick, expectedHalf - 1, expectedHalf + 1);
+
+        // And the compression is real, not a rounding artefact: half input
+        // turns the walker through well under half the angle.
+        long halfTurn =
+            halfInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad;
+        long fullTurn =
+            fullInput.FacingYawMicroRad - SimulationConstants.Level100PlayerStartYawMicroRad;
+        Assert.True(halfTurn * 3 < fullTurn, $"half turned {halfTurn} against full {fullTurn}");
 
         WorldSnapshot coast = half.Step(SimInput.Idle);
-        Assert.Equal(4_500, coast.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(
+            RetainedYawFor(halfInput.WalkerYawVelocityMicroRadPerTick),
+            coast.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(
             halfInput.FacingYawMicroRad + coast.WalkerYawVelocityMicroRadPerTick,
             coast.FacingYawMicroRad);
     }
+
+    private static int RetainedYawFor(int velocity) =>
+        (int)((long)velocity * SimulationConstants.WalkerYawRetentionNumerator /
+            SimulationConstants.WalkerYawRetentionDenominator);
 
     [Fact]
     public void LookX_OneTick_DoesNotYetLeaveForwardFacing()

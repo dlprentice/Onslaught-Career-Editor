@@ -1487,8 +1487,12 @@ public sealed class Simulation
         SimulationConstants.WalkerVerticalRetentionNumerator,
         SimulationConstants.WalkerVerticalRetentionDenominator);
 
+    // Player.cpp:334-355 curves the look axis before it reaches the battle
+    // engine, so the curve belongs at the single point where Core resolves a
+    // look input rather than at each of the four consumers.
     private static int ResolveLookInputPermille(sbyte digital, short analog) =>
-        Math.Clamp((digital * 1_000) + analog, -1_000, 1_000);
+        LookAxisResponse.Apply(
+            Math.Clamp((digital * 1_000) + analog, -1_000, 1_000));
 
     private static int ScaleLookInput(int fullScale, int inputPermille)
     {

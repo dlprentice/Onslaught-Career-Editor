@@ -127,6 +127,60 @@ internal sealed class Level100ChainAutopilot
     internal IReadOnlyList<Level100ActorCommandIntentSnapshot> MechanicsAtAbort =>
         _mechanicsAtAbort;
 
+    private readonly Dictionary<int, int> _waveTwoPeakHealth = [];
+    private readonly Dictionary<int, int> _waveTwoLowestHealth = [];
+
+    /// <summary>
+    /// Total hull removed from the six <c>AirborneDrone2</c> spawns across the
+    /// whole run, in the released health units the registry reports.
+    ///
+    /// <para>Pure observation, like <see cref="Blasters"/>: it reads only
+    /// snapshot fields the driver already consults and is never fed back into a
+    /// decision. A destroyed drone contributes its full life; a damaged one
+    /// contributes the deepest cut it ever took, so a spawn that is destroyed
+    /// after being wounded is not double-counted and one that is wounded and
+    /// then vanishes from the snapshot is not lost.</para>
+    ///
+    /// <para><b>Why this exists.</b> It replaces the wave-2 <b>kill count</b> as
+    /// the evidence that the driver is still fighting beat 9. The kill count is
+    /// chaotic at a resolution finer than the simulation's own input
+    /// quantisation - see the remarks on
+    /// <c>Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone</c> - and
+    /// damage dealt is not, because it accumulates every hit instead of only
+    /// the last one of six.</para>
+    /// </summary>
+    internal int WaveTwoDamageDealt => _waveTwoPeakHealth
+        .Sum(pair => pair.Value - _waveTwoLowestHealth[pair.Key]);
+
+    /// <summary>How many wave-2 spawns took any damage at all.</summary>
+    internal int WaveTwoSpawnsDamaged => _waveTwoPeakHealth
+        .Count(pair => _waveTwoLowestHealth[pair.Key] < pair.Value);
+
+    private void RecordWaveTwoDamage(WorldSnapshot state)
+    {
+        foreach (Level100ActorSnapshot actor in state.Level100Actors.Actors)
+        {
+            if (actor.TargetGroup != Level100MissionTargetGroup.AirborneTargets2)
+            {
+                continue;
+            }
+
+            int id = actor.ActorId.Value;
+            int health = actor.Lifecycle == Level100ActorLifecycle.Destroyed
+                ? 0
+                : actor.Health;
+            if (!_waveTwoPeakHealth.TryGetValue(id, out int peak) || health > peak)
+            {
+                _waveTwoPeakHealth[id] = Math.Max(peak, health);
+            }
+
+            if (!_waveTwoLowestHealth.TryGetValue(id, out int lowest) || health < lowest)
+            {
+                _waveTwoLowestHealth[id] = health;
+            }
+        }
+    }
+
     /// <summary>
     /// Records the abort boundary and every round launch either side of it.
     ///
@@ -439,6 +493,7 @@ internal sealed class Level100ChainAutopilot
     {
         RecordArmamentEvidence(state);
         RecordBlasterBallistics(state);
+        RecordWaveTwoDamage(state);
         if (state.PlayerOnGround && !state.PlayerInWater)
         {
             _lastDryGround = state.PlayerPosition;
@@ -1787,8 +1842,32 @@ internal sealed class Level100ChainAutopilot
             Math.Max(1.0, horizontal)) -
         (state.FacingPitchMicroRad / 1_000_000d);
 
+    /// <summary>
+    /// The stick position that turns the airframe at <c>error * gain</c> of its
+    /// full rate.
+    ///
+    /// <para><b>The gain is a rate gain, not a stick gain, and the distinction
+    /// became load-bearing when Core stopped being linear.</b> Every call site
+    /// below chooses its gain by asking how fast the nose should sweep for a
+    /// given aim error - 2,000 per radian in yaw, 4,000 in pitch, both tuned
+    /// against measured convergence. Retail curves the axis
+    /// (<c>references/Onslaught/Player.cpp:334-355</c>, ported to
+    /// <see cref="LookAxisResponse"/>) and the curve is compressive, so handing
+    /// that number straight to <see cref="SimInput"/> asks for a rate and gets
+    /// 0.4665 of it near centre. <see cref="LookAxisCommand"/> converts the
+    /// rate into the deflection that produces it, which is what a player's hand
+    /// does; Core still applies the curve to the result.</para>
+    ///
+    /// <para>Measured without it, on the run this file exists to produce: the
+    /// beat-3 precision shot at <c>Target Tank #23</c> stopped converging, a
+    /// Pulse round destroyed the still-unactivated <c>Target Truck #25</c>
+    /// 1.46 m behind it at t4240 - thirty ticks before the tank died rather
+    /// than thirty-six after, which is the whole difference - and the run ended
+    /// at t4281 when <c>event("Activate Static Targets 2")</c> ran
+    /// <c>SetObjective()</c> on a destroyed actor.</para>
+    /// </summary>
     private static short LookAxis(double error, double gain) =>
-        (short)Math.Clamp((int)(error * gain), -1_000, 1_000);
+        LookAxisCommand.ForResponsePermille((int)(error * gain));
 
     private static double NormalizeRadians(double value)
     {

@@ -73,6 +73,164 @@ public sealed class Level100TutorialProgressionTests
     }
 
     /// <summary>
+    /// Shooting a Target Truck before the script arms it loses the level the
+    /// released way, and the dead truck's script stops existing.
+    ///
+    /// <para><b>This path had never been exercised, and until now it could
+    /// not be.</b> <c>TargetTruckN.msl</c> answers <c>died()</c> with
+    /// <c>switch (activated)</c> whose <c>case FALSE</c> arm is
+    /// <c>PostEvent("Broke Tutorial")</c>, and LevelScript answers that with
+    /// <c>LevelLostString(LOSE_TUTORIAL_BROKE)</c>
+    /// (<c>level100/LevelScript.msl:310-315</c>). Core reached the loss and
+    /// then threw on the way to it: the destroyed truck's script was still in
+    /// the runtime's instance table, so the next
+    /// <c>event("Activate Static Targets 2")</c> broadcast also ran the dead
+    /// truck's activation handler, which calls <c>SetObjective()</c> on its own
+    /// destroyed owner. That is unreachable in retail.</para>
+    ///
+    /// <para><b>The released rule, cited.</b>
+    /// <c>references/Onslaught/thing.cpp:711-724</c>,
+    /// <c>CComplexThing::AddShutdownEvent</c>, runs
+    /// <c>mMissionScript-&gt;Died()</c> and then <c>delete mMissionScript;
+    /// mMissionScript = NULL;</c> on the same call - <c>died()</c> is the last
+    /// thing a script ever runs, and every later <c>if (mMissionScript)</c> in
+    /// the released thing fails silently.
+    /// <c>CBattleEngine::StartDieProcess</c> (BattleEngine.cpp:2617-2640) does
+    /// the same for the player. So the guard on
+    /// <c>Level100ActorRegistry.SetObjective</c> is not what retail relies on -
+    /// <c>CThing::SetObjective</c> (thing.cpp:269-287) has no lifecycle test at
+    /// all, it is a flag plus a noticeboard membership - the invariant is
+    /// upstream and structural, and that is where Core now enforces it.</para>
+    ///
+    /// <para>The truck is destroyed by the player's own Pulse Cannon through
+    /// <see cref="SimInput"/>, not by a fact or a seam, so this is the released
+    /// hazard rather than a synthetic one: <c>Target Truck #25</c> is parked
+    /// 1.46 m behind beat 3's <c>Target Tank #23</c> and a round that clears
+    /// the tank reaches it.</para>
+    /// </summary>
+    [Fact]
+    public void TargetTruckKilledBeforeActivation_LosesTheLevelAndRetiresItsScript()
+    {
+        var driver = Level100PlayerDriver.Create();
+
+        // Let the released driver walk itself into the firing range and take
+        // delivery of the Pulse Cannon, then close on beat 3's objective - the
+        // truck is parked next to it.
+        WorldSnapshot state = driver.RunUntil(
+            snapshot => snapshot.Level100PulseCannonEnabled &&
+                DistanceToTruck(snapshot) < 22_000,
+            20_000);
+        Assert.True(
+            state.Level100PulseCannonEnabled,
+            "the driver never took delivery of the Pulse Cannon");
+
+        Level100ActorId truckId = Truck(state).ActorId;
+        Assert.False(Truck(state).IsObjective, "the truck is armed already");
+        Assert.Contains(
+            state.Level100ActorScripts.Instances,
+            instance => instance.ActorId == truckId);
+
+        // Hand-aim at the truck and fire until it dies. Nothing but SimInput.
+        for (int tick = 0; tick < 9_000; tick++)
+        {
+            Level100ActorSnapshot truck = Truck(state);
+            if (truck.Lifecycle == Level100ActorLifecycle.Destroyed ||
+                state.Level100Mission.Outcome != Level100MissionOutcome.Running)
+            {
+                break;
+            }
+
+            SimVector3 aim = truck.Pose.PositionMillimeters;
+            double deltaX = (double)aim.X - state.PlayerPosition.X;
+            double deltaZ = (double)aim.Z - state.PlayerPosition.Z;
+            double horizontal = Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ));
+            double yawError = NormalizeRadians(
+                Math.Atan2(-deltaX, deltaZ) - (state.FacingYawMicroRad / 1_000_000d));
+            double pitchError =
+                -Math.Atan2(
+                    aim.Y + 600 - state.PlayerElevationMillimeters,
+                    Math.Max(1.0, horizontal)) -
+                (state.FacingPitchMicroRad / 1_000_000d);
+            // Walk right up to it. From the 18 m stand-off the driver arrives
+            // at, the player stands on a ridge 5.2 m above this truck and every
+            // round that is on the hull is also in the crest between them -
+            // the same stance that put 3,578 rounds into the terrain in front
+            // of Target Tank #23. Closing collapses the depression angle.
+            double tolerance = Math.Clamp(1_100.0 / Math.Max(horizontal, 1.0), 0.02, 0.15);
+            SimActions actions =
+                Math.Abs(yawError) < tolerance && Math.Abs(pitchError) < tolerance
+                    ? SimActions.Fire
+                    : SimActions.None;
+            state = driver.Step(new SimInput(
+                0,
+                horizontal > 4_000 ? (sbyte)1 : (sbyte)0,
+                actions,
+                0,
+                0,
+                LookAxisCommand.ForResponsePermille((int)(yawError * 2_000)),
+                LookAxisCommand.ForResponsePermille((int)(pitchError * 4_000))));
+        }
+
+        _output.WriteLine(
+            $"t{state.Tick} truck hp={Truck(state).Health} " +
+            $"life={Truck(state).Lifecycle} d={DistanceToTruck(state):F0} " +
+            $"player=({state.PlayerPosition.X},{state.PlayerPosition.Z}) " +
+            $"elev={state.PlayerElevationMillimeters} " +
+            $"truckPos={Truck(state).Pose.PositionMillimeters} " +
+            $"outcome={state.Level100Mission.Outcome}");
+        Assert.Equal(Level100ActorLifecycle.Destroyed, Truck(state).Lifecycle);
+
+        // The released teardown: `died()` ran - it is what posts
+        // `Broke Tutorial` - and the script is gone with the same call.
+        Assert.DoesNotContain(
+            state.Level100ActorScripts.Instances,
+            instance => instance.ActorId == truckId);
+
+        // And the level is lost the released way rather than by an exception.
+        // The loss is not instantaneous: LevelScript's handler plays
+        // TUTORIAL_BROKE_1 and then a blocking TUTORIAL_BROKE_2 before it calls
+        // LevelLostString, so the outcome arrives some ticks later.
+        for (int tick = 0;
+             tick < 9_000 &&
+                 state.Level100Mission.Outcome == Level100MissionOutcome.Running;
+             tick++)
+        {
+            state = driver.Step(SimInput.Idle);
+        }
+
+        Assert.Equal(Level100MissionOutcome.Lost, state.Level100Mission.Outcome);
+        Assert.Equal(
+            Level100MissionFailureReason.TutorialBroken,
+            state.Level100Mission.FailureReason);
+    }
+
+    private static Level100ActorSnapshot Truck(WorldSnapshot state) =>
+        state.Level100Actors.Actors.Single(actor => actor.Name == "Target Truck #25");
+
+    private static double DistanceToTruck(WorldSnapshot state)
+    {
+        SimVector3 position = Truck(state).Pose.PositionMillimeters;
+        double deltaX = (double)position.X - state.PlayerPosition.X;
+        double deltaZ = (double)position.Z - state.PlayerPosition.Z;
+        return Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ));
+    }
+
+    private static double NormalizeRadians(double value)
+    {
+        while (value > Math.PI)
+        {
+            value -= 2 * Math.PI;
+        }
+
+        while (value < -Math.PI)
+        {
+            value += 2 * Math.PI;
+        }
+
+        return value;
+    }
+
+    /// <summary>
     /// The Twin Vulcan's Mech Bullet against the released Target Tank life.
     /// This is what the second firing-range exercise depends on, and it also
     /// bounds the open sum-versus-round-only damage question: the two
@@ -507,6 +665,31 @@ internal sealed class Level100PlayerDriver
         return new Level100PlayerDriver(simulation);
     }
 
+    /// <summary>
+    /// Drives this driver's own input until <paramref name="stop"/> is
+    /// satisfied. Still input-only: it changes nothing about what the driver
+    /// commands, it only decides when the caller takes over.
+    /// </summary>
+    internal WorldSnapshot RunUntil(Func<WorldSnapshot, bool> stop, int maximumTicks)
+    {
+        for (int tick = 0; tick < maximumTicks; tick++)
+        {
+            WorldSnapshot state = _simulation.Snapshot;
+            if (stop(state) ||
+                state.Level100Mission.Outcome != Level100MissionOutcome.Running)
+            {
+                return state;
+            }
+
+            _simulation.Step(NextInput(state));
+        }
+
+        return _simulation.Snapshot;
+    }
+
+    /// <summary>One player-input tick, for a caller driving by hand.</summary>
+    internal WorldSnapshot Step(SimInput input) => _simulation.Step(input);
+
     internal void Run(int maximumTicks)
     {
         string? lastNavigation = null;
@@ -596,7 +779,13 @@ internal sealed class Level100PlayerDriver
             (target.Pose.LinearVelocityMillimetersPerTick.Z * flightTicks));
         double yawError = NormalizeRadians(
             Math.Atan2(-deltaX, deltaZ) - (state.FacingYawMicroRad / 1_000_000d));
-        short lookX = (short)Math.Clamp((int)(yawError * 2_000), -1_000, 1_000);
+        // Rate in, stick position out. Retail curves the look axis
+        // (Player.cpp:334-355, ported to LookAxisResponse) and the curve is
+        // compressive, so a controller that hands its desired rate straight to
+        // SimInput gets 0.4665 of it near centre and never converges: measured,
+        // this driver put 386 rounds into the terrain over 900 released seconds
+        // and left every Target Tank on full health. See LookAxisCommand.
+        short lookX = LookAxisCommand.ForResponsePermille((int)(yawError * 2_000));
         double horizontal = Math.Sqrt((double)((deltaX * deltaX) + (deltaZ * deltaZ)));
 
         // A player sweeps the target's body rather than shooting at its pivot.
@@ -609,7 +798,7 @@ internal sealed class Level100PlayerDriver
                     state.PlayerElevationMillimeters,
                 horizontal) -
             (state.FacingPitchMicroRad / 1_000_000d);
-        short lookY = (short)Math.Clamp((int)(pitchError * 4_000), -1_000, 1_000);
+        short lookY = LookAxisCommand.ForResponsePermille((int)(pitchError * 4_000));
 
         if (target.Trigger.HasValue)
         {

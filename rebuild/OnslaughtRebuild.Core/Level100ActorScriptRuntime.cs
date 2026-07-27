@@ -255,6 +255,46 @@ public sealed class Level100ActorScriptRuntime
             : null;
         RunBuiltIn(instance, builtInIndex, parameter);
         PumpEvents(instance);
+
+        if (fact.Kind == Level100ActorFactKind.Died)
+        {
+            // `died()` is the LAST thing a released script ever runs. The
+            // engine deletes the script object on the same call, before the
+            // thing itself is shut down:
+            //
+            //   references/Onslaught/thing.cpp:711-724
+            //     void CComplexThing::AddShutdownEvent()
+            //     {
+            //         if ((mFlags & TF_DECLARED_SHUTDOWN) == 0)
+            //         {
+            //             if (mMissionScript)
+            //             {
+            //                 mMissionScript->Died();
+            //                 delete mMissionScript;
+            //                 mMissionScript = NULL;
+            //             }
+            //         }
+            //         SUPERTYPE::AddShutdownEvent();
+            //     }
+            //
+            // (`CBattleEngine::StartDieProcess`, BattleEngine.cpp:2617-2640,
+            // does the same for the player.) Every later `if (mMissionScript)`
+            // in the released thing then fails silently, so a destroyed thing
+            // receives no further named event, no `hit()`, and no pending
+            // `Pause` continuation - the delete takes those with it.
+            //
+            // WHAT THIS FIXES. Without it a destroyed actor's script stayed in
+            // `_instances` and `PublishEvent` kept broadcasting to it. Measured
+            // on the Level 100 chain: `Target Truck #25` was destroyed before
+            // `event("Activate Static Targets 2")` was posted, its `died()`
+            // correctly posted `Broke Tutorial`, and then the SAME dead script
+            // also ran the activation handler and called `SetObjective()` on
+            // its own destroyed owner. Retail cannot reach that call at all -
+            // the listener is gone - so the released outcome is the
+            // `LevelLostString(LOSE_TUTORIAL_BROKE)` that `Broke Tutorial` was
+            // already on its way to producing.
+            _instances.Remove(fact.ActorId.Value);
+        }
     }
 
     public IReadOnlyList<Level100ActorScriptEventPosted> DrainPostedEvents()
@@ -389,13 +429,26 @@ public sealed class Level100ActorScriptRuntime
             }
         }
 
-        int[] expectedActorIds = _actors.Snapshot.Actors
+        // A script that has run `died()` has been deleted - see the citation in
+        // `DispatchFact` - so a destroyed actor is expected to have NO
+        // instance, and the binding set can no longer be an exact equality.
+        // The two halves it still has to satisfy are: nothing in `_instances`
+        // that is not a scripted actor, and an instance for every scripted
+        // actor that has not died. `Destroyed` with an instance is permitted
+        // only because the registry sets the lifecycle when it enqueues the
+        // `Died` fact and the teardown happens when that fact is dispatched.
+        var scriptedActorIds = _actors.Snapshot.Actors
             .Where(actor => actor.ScriptName is not null)
             .Select(actor => actor.ActorId.Value)
-            .OrderBy(value => value)
+            .ToHashSet();
+        int[] undestroyedScriptedActorIds = _actors.Snapshot.Actors
+            .Where(actor => actor.ScriptName is not null &&
+                actor.Lifecycle != Level100ActorLifecycle.Destroyed)
+            .Select(actor => actor.ActorId.Value)
             .ToArray();
         if (_setup is null || !_setup.Initialized ||
-            !expectedActorIds.SequenceEqual(_instances.Keys) ||
+            _instances.Keys.Any(id => !scriptedActorIds.Contains(id)) ||
+            undestroyedScriptedActorIds.Any(id => !_instances.ContainsKey(id)) ||
             _instances.Values.Any(instance => !instance.Initialized))
         {
             throw new ArgumentException(
