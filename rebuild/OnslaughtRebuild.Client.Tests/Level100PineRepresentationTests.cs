@@ -10,8 +10,31 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <summary>
 /// A retail Level 1.00 pine has exactly two representations and no third one.
 ///
-/// Byte evidence: <c>defaultoptions.bea</c> file offset 0x26CA holds
-/// <c>00 00 8C 42</c> = 70.0f, the mesh-quality distance. Archive evidence: the
+/// <para><b>WARNING, 2026-07-27: 70.0 IS NOT AN AUTHORED CONSTANT. It is this
+/// machine's graphics setting.</b> <c>defaultoptions.bea</c> file offset 0x26CA
+/// holds <c>00 00 8C 42</c> = 70.0f — but <c>proof_defaultoptions.bea</c>, in the
+/// same install, holds <c>00 00 F0 41</c> = <b>30.0f</b> at the identical offset.
+/// Measured directly. That file is RUN STATE, not shipped defaults: it is absent
+/// from <c>INSTALL.LOG</c>'s CopyFiles list and the game rewrites it.
+///
+/// The field is the <b>Geometry detail</b> options row. Its setter at
+/// <c>0x004dd6b0</c> has exactly three arms — <c>10 / 30 / 70</c> — and the
+/// executable's own static initialisers are the MIDDLE arm, so the released
+/// default is <b>30.0 (Medium)</b> and 70.0 is High.
+///
+/// So the swap distance below is pinned to whatever this workstation last chose,
+/// and the reconstruction may be drawing full pine meshes 2.3x further out than
+/// a default retail install does. THE VALUE IS DELIBERATELY LEFT AT 70.0 HERE
+/// rather than changed to 30.0, because changing it alters what is rendered and
+/// must be settled by measurement against a retail capture, not by swapping one
+/// unverified constant for another. Tracked separately.
+///
+/// What these tests still prove, and it is worth keeping: every pine
+/// representation the reconstruction draws is GATED on one distance, so no pass
+/// can survive at all distances. That structural claim is independent of which
+/// number the gate holds.</para>
+///
+/// Archive evidence for the representation count, unaffected by the above: the
 /// level's IMPS/IMPT/VIEW chunk stores exactly six views per pine variant, each
 /// a 32x32 atlas cell plus two floats, and those float pairs are the variant's
 /// own mesh bounding-box half-extents scaled by exactly 1.05 on all three axes
@@ -29,12 +52,14 @@ public sealed class Level100PineRepresentationTests
 
     /// <summary>
     /// 70.0f is exactly <c>00 00 8C 42</c> little-endian, the four bytes read
-    /// from <c>defaultoptions.bea</c> at 0x26CA.
+    /// from <c>defaultoptions.bea</c> at 0x26CA — which is this machine's
+    /// Geometry detail setting (High), NOT a shipped default. See the class
+    /// remarks: the released default is 30.0 (Medium).
     /// </summary>
     private const int MeshQualityDistanceBits = 0x428C0000;
 
     [Fact]
-    public void ManifestPinsTheAuthoredSeventyUnitSwapDistanceBitExact()
+    public void ManifestPinsTheCurrentSwapDistanceBitExact()
     {
         JsonElement billboards = LoadManifest().GetProperty("pineBillboards");
 
