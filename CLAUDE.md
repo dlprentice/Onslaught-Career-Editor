@@ -17,7 +17,12 @@ highest-stakes rules early and does not restate or override it.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation,
   filesystem, clock, process, network, and GPU APIs.
 - Keep public claims bounded to demonstrated evidence. Separate proven behavior
-  from plans and reconstruction aspirations.
+  from plans and reconstruction aspirations. "Never a code path" targets
+  **decompiler output** — it is not a ban on the pinned GPL source, which is the
+  developers' own text and the fastest correct route for structure and intent.
+  Port from it by default and cite file and line; override from bytes only where
+  a measurement proves divergence. See
+  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md).
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation
   is local.
 - Cross-model consults are **recommended on load-bearing or contested calls, not

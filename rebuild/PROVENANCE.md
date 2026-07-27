@@ -30,6 +30,35 @@ The reference source is implementation evidence, not automatic proof that the
 Steam build is byte- or behavior-identical. When sources disagree, use this
 order for the released PC game:
 
+**Read that as a tie-breaker, not a permission gate.** It says what wins *when
+sources disagree*; it does not say a port must wait for byte proof. The working
+rule is the opposite default:
+
+> **Port Stuart's shape first. Cite the file and line. Override from bytes only
+> where a measurement proves divergence.**
+
+Divergences are a tracked exception list, not a per-claim burden. The ones found
+so far are few and specific — `InJetMode` 0.3 s in source against 0.5 s in the
+shipped bytes, `CPanCamera` length 6.0 in the binary rather than Stuart's value,
+a differing weapon resource path. Those are exceptions worth recording precisely
+*because* they are exceptions.
+
+Treating every ported line as unproven until re-derived from decompilation is
+slower and produces *worse* results, because the decompiler cannot recover
+intent, naming or control-flow shape the way the developers' own text can. The
+released tree covers the game loop (`game.cpp`, `PCGame`, `PCEngine`, `ltshell`,
+`d3dapp`), the whole battle engine (`BattleEngine`, walker part, jet part,
+configurations, data manager), the frontend (`FrontEnd`, `FEPGoodies`, load/save
+pages, `DXFrontend`), the world model (`thing`, `Camera`, `Career`,
+`EndLevelData`) and the systems layer. Most behaviour questions should be
+answered by reading it.
+
+What the source does *not* carry — and what genuinely does need bytes or data —
+is the shipped constant values, and the authored content under the retail `data/`
+folder: `MissionScripts/level***`, `battle engine configurations.dat`,
+`worldheaders.dat`, `default physics.dat`. Those are data files, readable
+directly; they are not a reverse-engineering problem either.
+
 1. controlled retail runtime observation;
 2. retail binary/static evidence;
 3. pinned source implementation and vocabulary;
