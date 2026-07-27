@@ -331,22 +331,43 @@ public sealed class InteractiveSessionTests
         const long oneCoreStepTicks =
             (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
 
-        session.QueuePointerMotionMilliPixels(80_000, -40_000);
+        // 15 px, not the 80 px this test used before 2026-07-27. At retail's
+        // sensitivity an 80 px flick SATURATES the axis, and both samples came
+        // back at the full 10,444 - which would have made this test pass for
+        // almost any sensitivity at all, blind to the constants it exists to
+        // protect. 15 px lands mid-range, where the sensitivity scalar and the
+        // Player.cpp:334-355 response curve both actually show up.
+        session.QueuePointerMotionMilliPixels(15_000, -7_500);
         FrameAdvanceResult first = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(3_812, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-721, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
-        Assert.Equal(startingYaw + 3_812, first.CurrentSnapshot.FacingYawMicroRad);
+        Assert.Equal(1_640, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-299, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(startingYaw + 1_640, first.CurrentSnapshot.FacingYawMicroRad);
         Assert.True(session.HasHeldOrPendingInput);
+
+        // The guard that makes the numbers above mean something. If a future
+        // sensitivity change pushes this input to the clamp, these fail loudly
+        // instead of the goldens quietly becoming a constant.
+        Assert.True(
+            first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick < FullDeflectionYawPerTick,
+            "pointer input saturated the yaw axis - pick a smaller motion");
+        Assert.True(
+            Math.Abs(first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick) <
+                FullDeflectionYawPerTick,
+            "pointer input saturated the pitch axis - pick a smaller motion");
 
         FrameAdvanceResult second = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(5_959, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-1_125, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(2_531, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-466, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
         Assert.Equal(
-            first.CurrentSnapshot.FacingYawMicroRad + 5_959,
+            first.CurrentSnapshot.FacingYawMicroRad + 2_531,
             second.CurrentSnapshot.FacingYawMicroRad);
     }
+
+    // Yaw rate at full look deflection, from
+    // WalkerAnalogLook_FollowsTheReleasedCurveAndUsesTheSameRetailCoast.
+    private const int FullDeflectionYawPerTick = 10_444;
 
     [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()

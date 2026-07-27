@@ -60,11 +60,18 @@ After the user restored the installed copy, the live install and the clean repo 
 
 So the current workstation state is back to a clean retail runtime specimen.
 
-### 2026-07-27 Finding — the installed executable has drifted again
+### 2026-07-27 — the installed executable is patched ON PURPOSE
 
-**`retail-specimen-manifest-2026-03-14.json` records
-`installed_live_exe_matches_clean_repo: true`. That is no longer true, and the
-manifest is a dated snapshot, so it is left as history rather than rewritten.**
+**This is not drift and it is not a problem to be escalated. The maintainer
+patches his own retail install deliberately, because it is easier for him to test
+with, and keeps the pristine original beside it as
+`BEA.exe.original.backup` in the same Steam folder. Do not raise it again.**
+
+What *is* a problem is that
+`retail-specimen-manifest-2026-03-14.json` still records
+`installed_live_exe_matches_clean_repo: true`. That is stale. The manifest is a
+dated snapshot, so it is left as history rather than rewritten, and the standing
+state is recorded here instead.
 
 Measured today:
 

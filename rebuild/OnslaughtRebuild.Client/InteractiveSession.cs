@@ -42,15 +42,34 @@ public sealed class InteractiveSession
     public const long PhaseUnitsPerStep = TimeSpan.TicksPerSecond;
     public const long MaximumFrameElapsedTicks = TimeSpan.TicksPerSecond / 4;
 
-    // Steam CController::DoMappings maps a centered mouse displacement with
-    // sensitivity 1.5 and scalar 0.004333333, then clamps the analogue axis.
-    // Input__UpdateCursorCenterWithWindowScale recenters by 10/17 at 20 Hz;
-    // 702049/1000000 is the time-equivalent retention at Core's 30 Hz step.
+    // Steam CController::DoMappings maps a centered mouse displacement by
+    // g_MouseSensitivity and the scalar 0.004333333, then clamps the analogue
+    // axis. Input__UpdateCursorCenterWithWindowScale recenters by 10/17 at
+    // 20 Hz; 702049/1000000 is the time-equivalent retention at Core's 30 Hz.
+    //
+    // The scalar is exactly 13/3000. Verified in the PRISTINE specimen
+    // (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+    // 74154bfa...) at VA 0x005d97c8 -> file 0x001d97c8, float32
+    // 0.004333333112299442. Read it from that file and no other: the installed
+    // Steam executable is e7881829... and carries four local patches - see
+    // reverse-engineering/binary-analysis/retail-specimen-baseline.md.
+    //
+    // SENSITIVITY WAS 1.5 HERE, AND THAT IS NOT A RETAIL VALUE. The old
+    // 13/2000 is exactly 1.5 x 13/3000. Retail's slider is
+    // g_MouseSensitivity = (index + 1) * 3.0f (setter 0x004cefe0, const 3.0 at
+    // 0x005d8cc0, max index 0x14 at PauseMenu__Init 0x004ce27d), so the
+    // reachable values are 3, 6, ... 63 and 1.5 is below the FLOOR. The image
+    // default, before the slider is ever touched, is the static initialiser at
+    // VA 0x006254f4 = float32 7.0 - itself not reachable from the slider.
+    //
+    // 7.0 x 13/3000 = 91/3000. Aiming was 4.67x too slow at equal hand motion.
+    // The slider itself is not implemented yet; when it is, this becomes
+    // (index + 1) * 3 * 13/3000 and 91/3000 stays the untouched default.
     private const int PointerOffsetScale = 1_000;
     private const int PointerOffsetRetentionNumerator = 702_049;
     private const int PointerOffsetRetentionDenominator = 1_000_000;
-    private const int PointerAxisNumerator = 13;
-    private const int PointerAxisDenominator = 2_000;
+    private const int PointerAxisNumerator = 91;
+    private const int PointerAxisDenominator = 3_000;
     private const int MaximumPointerOffsetMilliPixels = 1_000_000;
 
     private readonly Simulation _simulation;

@@ -8,6 +8,12 @@ highest-stakes rules early and does not restate or override it.
 
 - Never patch or mutate an installed Battle Engine Aquila directory or the
   original `BEA.exe`. Operate on verified copied targets only.
+- **The maintainer's own Steam `BEA.exe` is already patched, deliberately, for
+  his personal testing — this is not drift and is not to be flagged.** The
+  pristine original sits beside it as `BEA.exe.original.backup` (`74154bfa…`),
+  and identically at `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`.
+  **Read byte evidence from a pristine specimen, never from the live `BEA.exe`,
+  and name the specimen file and hash in every byte finding.**
 - Never synthesize `.bes` saves from scratch. Start from a real retail baseline
   and preserve file length, reserved fields, and unknown bytes.
 - Do not track retail game assets, converted copies, game binaries, arbitrary
