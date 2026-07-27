@@ -245,6 +245,18 @@ public static class Level100ScannerProjection
     /// <summary>Neutral brightened by flag 0x400: +0x101010 -&gt; 0x707070.</summary>
     public const int NeutralHighlightAdd = 0x101010;
 
+    /// <summary>
+    /// The objective marker's colour: <c>PUSH 0xFFFFFF00</c>, a hard immediate at
+    /// <c>0x00485424</c>, i.e. opaque yellow. Retail draws it from the global
+    /// objective list at <c>DAT_00855140</c> (`0x00485372`), inside the same
+    /// scanner function and against the same scanner centre, AFTER the
+    /// allegiance buckets. CONFIRMED at the pixel level: retail
+    /// <c>hud-timeline-run1/level100-t041063ms.png</c> and
+    /// <c>t042062ms.png</c> each carry 13 pixels of <c>(254, 254, 0)</c> in
+    /// Medium's 5x5 diamond inside the scanner disc.
+    /// </summary>
+    public const int ObjectiveTintRgb = 0xFFFF00;
+
     public static int TintRgb(Level100HudAllegiance allegiance) => allegiance switch
     {
         Level100HudAllegiance.Friendly => FriendlyTintRgb,
@@ -297,6 +309,49 @@ public static class Level100ScannerProjection
         }
 
         return new Level100ScannerPlacement(rx, -ry, alpha, Drawn: true, clamped);
+    }
+
+    /// <summary>
+    /// Places one OBJECTIVE. Retail's objective loop (<c>0x00485372</c>) shares
+    /// the rotation and the r = 46 clamp with <see cref="Place"/>, but it
+    /// differs in two ways that are visible on screen and are read straight off
+    /// the instruction stream:
+    ///
+    /// <para>It has NO cull test - there is no <c>fcom [0x005dbe70]</c> anywhere
+    /// between <c>0x004853c1</c> and the draw at <c>0x00485462</c>, where the
+    /// three allegiance loops all have one. An objective at any range is drawn,
+    /// pinned to the rim.</para>
+    ///
+    /// <para>It has NO alpha fade - the colour is the hard immediate
+    /// <c>PUSH 0xFFFFFF00</c> at <c>0x00485424</c>, not an
+    /// <c>alpha &lt;&lt; 24</c> composed from the rim distance. Alpha is always
+    /// 255.</para>
+    ///
+    /// <para>The clamp itself is identical: <c>fsqrt</c>,
+    /// <c>fdivr [0x005dbe6c]</c>, compare against <c>[0x005d8568]</c>, and scale
+    /// both components when 46/r &lt; 1 (<c>0x004853f3</c>-<c>0x00485410</c>).</para>
+    /// </summary>
+    public static Level100ScannerPlacement PlaceObjective(
+        float deltaX,
+        float deltaZ,
+        float yawRadians)
+    {
+        float sin = MathF.Sin(-yawRadians) * PixelsPerWorldUnit;
+        float cos = MathF.Cos(-yawRadians) * PixelsPerWorldUnit;
+        float rx = (deltaX * cos) - (deltaZ * sin);
+        float ry = (deltaX * sin) + (deltaZ * cos);
+
+        float radius = MathF.Sqrt((rx * rx) + (ry * ry));
+        bool clamped = false;
+        float scale = ClampRadiusPixels / radius;
+        if (scale < 1f)
+        {
+            clamped = true;
+            rx *= scale;
+            ry *= scale;
+        }
+
+        return new Level100ScannerPlacement(rx, -ry, 255, Drawn: true, clamped);
     }
 
     /// <summary>

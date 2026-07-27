@@ -272,6 +272,70 @@ public sealed class Level100ScannerProjectionTests
         Assert.Equal(22, allegiance.Values.Count(value => value == 2));
     }
 
+    /// <summary>
+    /// The objective pass differs from the three allegiance passes in exactly
+    /// two ways, and both are absences in the instruction stream rather than
+    /// extra constants: between the rotation at <c>0x004853c1</c> and the draw
+    /// at <c>0x00485462</c> there is no <c>fcom [0x005dbe70]</c> (no cull) and
+    /// no <c>fmul [0x005d8c70]</c> (no fade). The clamp is byte-identical.
+    /// </summary>
+    [Fact]
+    public void AnObjectiveIsNeverCulledAndNeverFades()
+    {
+        // Twice the cull radius in world units: an allegiance contact here is
+        // gone, an objective is pinned to the rim at full alpha.
+        const float farAway = 2f * 92f / (40f / 96f);
+
+        Assert.False(Level100ScannerProjection.Place(0f, farAway, 0f).Drawn);
+
+        Level100ScannerPlacement objective =
+            Level100ScannerProjection.PlaceObjective(0f, farAway, 0f);
+
+        Assert.True(objective.Drawn);
+        Assert.True(objective.Clamped);
+        Assert.Equal(255, objective.Alpha);
+        Assert.Equal(
+            Level100ScannerProjection.ClampRadiusPixels,
+            MathF.Sqrt((objective.OffsetX * objective.OffsetX) +
+                (objective.OffsetY * objective.OffsetY)),
+            3);
+    }
+
+    /// <summary>
+    /// Inside the rim the objective placement is the SAME projection as a
+    /// contact's - the two paths share the rotation and the scale, so an
+    /// objective marker must land exactly on the blob of the unit it marks.
+    /// </summary>
+    [Fact]
+    public void AnObjectiveInsideTheRimLandsExactlyOnItsContact()
+    {
+        foreach (float yaw in new[] { 0f, 0.509829998f, 2.7f, -1.3f })
+        {
+            Level100ScannerPlacement contact =
+                Level100ScannerProjection.Place(37f, -52f, yaw);
+            Level100ScannerPlacement objective =
+                Level100ScannerProjection.PlaceObjective(37f, -52f, yaw);
+
+            Assert.False(contact.Clamped);
+            Assert.False(objective.Clamped);
+            Assert.Equal(contact.OffsetX, objective.OffsetX, 5);
+            Assert.Equal(contact.OffsetY, objective.OffsetY, 5);
+        }
+    }
+
+    /// <summary>
+    /// <c>PUSH 0xFFFFFF00</c> at <c>0x00485424</c>. Confirmed at the pixel
+    /// level, not merely decoded: retail
+    /// <c>hud-timeline-run1/level100-t041063ms.png</c> carries 13 pixels of
+    /// <c>(254, 254, 0)</c> inside the scanner disc, in the same 5x5 diamond
+    /// footprint as every other blob on that frame.
+    /// </summary>
+    [Fact]
+    public void TheObjectiveTintIsTheHardYellowImmediate()
+    {
+        Assert.Equal(0xFFFF00, Level100ScannerProjection.ObjectiveTintRgb);
+    }
+
     private static string ManifestPath => Path.Combine(
         AppContext.BaseDirectory,
         "Assets",

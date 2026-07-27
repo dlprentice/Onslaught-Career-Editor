@@ -1083,6 +1083,29 @@ public sealed partial class FirstFlightHud : CanvasLayer
                     ContactColor(contact, placement.Alpha));
             }
 
+            // Retail's objective pass is step 4 of six in
+            // CHud__RenderTacticalRadarContacts, after the friendly, enemy and
+            // repair-pad buckets, so it lands ON TOP of a contact for the same
+            // unit. It walks the global objective list DAT_00855140, takes the
+            // same blob from the size selector - Medium for an unremarkable
+            // unit - and paints it with the hard immediate 0xFFFFFF00.
+            foreach (Level100HudObjectiveSnapshot objective in hud.Objectives)
+            {
+                Level100ScannerPlacement placement =
+                    Level100ScannerProjection.PlaceObjective(
+                        (objective.PositionMillimeters.X - snapshot.PlayerPosition.X) / 1_000f,
+                        (objective.PositionMillimeters.Z - snapshot.PlayerPosition.Z) / 1_000f,
+                        yawRadians);
+                DrawTextureRect(
+                    assets.ScannerBlobs[(int)Level100HudContactSize.Medium],
+                    new Rect2(
+                        radarCenter + new Vector2(placement.OffsetX, placement.OffsetY) -
+                            new Vector2(8f, 8f),
+                        new Vector2(16f, 16f)),
+                    false,
+                    RetailColor(0xff000000u | Level100ScannerProjection.ObjectiveTintRgb));
+            }
+
             float yaw = snapshot.FacingYawMicroRad / 1_000_000f;
             Vector2 northCenter = new(65f, DesignHeight - 64f);
             Vector2 northPosition = northCenter + new Vector2(
