@@ -45,19 +45,35 @@ a differing weapon resource path. Those are exceptions worth recording precisely
 
 Treating every ported line as unproven until re-derived from decompilation is
 slower and produces *worse* results, because the decompiler cannot recover
-intent, naming or control-flow shape the way the developers' own text can. The
-released tree covers the game loop (`game.cpp`, `PCGame`, `PCEngine`, `ltshell`,
-`d3dapp`), the whole battle engine (`BattleEngine`, walker part, jet part,
-configurations, data manager), the frontend (`FrontEnd`, `FEPGoodies`, load/save
-pages, `DXFrontend`), the world model (`thing`, `Camera`, `Career`,
-`EndLevelData`) and the systems layer. Most behaviour questions should be
-answered by reading it.
+intent, naming or control-flow shape the way the developers' own text can.
 
-What the source does *not* carry — and what genuinely does need bytes or data —
-is the shipped constant values, and the authored content under the retail `data/`
-folder: `MissionScripts/level***`, `battle engine configurations.dat`,
-`worldheaders.dat`, `default physics.dat`. Those are data files, readable
-directly; they are not a reverse-engineering problem either.
+**But the drop is PARTIAL, and this is the single most important fact about it.**
+Measured 2026-07-26: 105 files present, **200 `#include`d headers absent, and 174
+implementation files missing**. Do not assume a file exists because the game
+obviously has that subsystem. Check first.
+
+Work the partition:
+
+- **Port from source — present in the drop.** Player-vehicle physics and flight
+  (`BattleEngine.cpp`, `BattleEngineWalkerPart`, `BattleEngineJetPart`,
+  configurations, data manager), the game loop (`game.cpp`, `PCGame`, `PCEngine`,
+  `ltshell`, `d3dapp`), frontend page flow (`FrontEnd`, `FEPGoodies`, load/save
+  pages, `DXFrontend`), `Career`, `Camera`, `thing.cpp`, `SoundManager`.
+- **Read from the retail `data/` folder — authored content, no RE required.**
+  `MissionScripts/level***`, `battle engine configurations.dat`,
+  `worldheaders.dat`, `default physics.dat`, textures, video, language.
+- **Recover from shipped bytes — ABSENT from the drop.** The HUD (`Hud.h`,
+  `DXHud.h`, `PCHud.h`), `Cockpit`, `BattleLine`, `MessageBox`, `Unit`, `UnitAi`,
+  `Weapon`, the mission-script VM (`MissionScript/vm.h`, `scripteventnb.h`), and
+  the core math types `FVector` / `FMatrix`.
+
+That last bullet is why the Ghidra lane is not optional: the subsystems carrying
+most of the open render and tutorial defects have no source at all. It is also
+why any conclusion resting on the sign convention of `FVector::operator^` is
+*consistent* rather than *proven* — that operator's definition is not in the
+drop. Derivations that apply the operator an even number of times (such as the
+double cross in the ground-pitch law) are immune and may be relied on; ones that
+apply it once (such as roll) may not.
 
 1. controlled retail runtime observation;
 2. retail binary/static evidence;
