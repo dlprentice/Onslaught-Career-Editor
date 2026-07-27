@@ -14,9 +14,14 @@ A clean app-owned Level 100 run, the complete Level 100 mission script, and the
 released HUD render paths establish the retained composition: generated threat
 circle plus target layers, the lower-left scanner/weapon assembly, the
 lower-right influence-map/portrait region, and the conditional lower-center
-message treatment. Fifty-four exact textures plus the exact dial byte-sprite
-source are retained here; the executable manifest in
+message treatment. Fifty-five exact textures plus the exact dial byte-sprite
+source are **retained** here; the executable manifest in
 `rebuild/tools/materialize_retail_assets.py` is authoritative.
+**Retained is not the same as composed**: the client loads and composes
+**twenty-nine** of these, which is the count `CURRENT_CAPABILITIES.md` and
+`rebuild/README.md` quote. Neither figure is wrong; they count different sets.
+*(Updated 2026-07-27: was "Fifty-four exact textures"; `cdf8979d` added
+`Hud/forseti-icon.texture.aya`.)*
 
 | Curated file | Released source name | SHA-256 |
 | --- | --- | --- |

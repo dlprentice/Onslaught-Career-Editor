@@ -34,27 +34,105 @@ waves, superseded plans, and generated accounting.
 
 ## Current static authority
 
-- [2026-07 fullpass expedition handoff (branch status)](binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md)
+### The name-grading residual — current figure, and the flag it requires
+
+**`1,867` of a human-namable `6,376` = 29.3 %**, as of 2026-07-27.
+
+**This figure is meaningless without its precondition.** It is only valid when
+the grader is run with `--reference-source references/Onslaught`. **Without that
+flag the same inventory grades to `2,089`** — a difference of 222. A residual
+quoted bare is ambiguous and must not be relied on; state the flag every time.
+
+The denominator moved and the residual did not. Three Ghidra mutation waves and
+the naming wave, all applied to the live maintainer DB on 2026-07-27, took the
+graded function count `6,969 → 7,555` and the human-namable denominator
+`5,790 → 6,376`, because the Instruction Finder created real functions. The
+residual stayed at `1,867` throughout — these waves extend *coverage*; they
+recover no developer-authored name. So the ratio improved from
+`1,867 / 5,790 = 32.2 %` to `1,867 / 6,376 = 29.3 %` **without a single name
+being recovered**, which is exactly the trap this metric sets.
+
+*(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
+**6,969**-function inventory and are quoted as those ledgers state them; they
+are not the current figure. Evidence for the current figure is untracked:
+`local-lab/agent-notes-2026-07-27/ghidra-mutation-waves.md` and `naming-wave.md`.
+The tracked `ghidra/` snapshot is 2026-07-18 and deliberately lags the live DB.)*
+
+### Specimen, coverage, and symbol ground truth
+
+**Name the specimen and its hash on every byte finding.** There are two retail
+binaries on this project and they are not interchangeable — the installed Steam
+executable carries local patches. The rule and the three authoritative hashes:
+
+- [Retail specimen baseline — which binary, which hash, and why it matters](binary-analysis/retail-specimen-baseline.md)
+
+*(Indexed 2026-07-27. These four entries were previously reachable from no
+tracked document, or — for the specimen baseline — only from
+`binary-analysis/_index.md`. The repo-wide link check passes on all of them
+because it validates link **targets**, not document **reachability**; the two are
+different failure modes and only the first was being tested.)*
+
+- [RE coverage baseline — what the 6,411-function pass actually covers](binary-analysis/re-coverage-baseline-2026-07-25.md)
+  — 2026-07-25. The functions that exist are sound; the **set** of functions is
+  incomplete. 468,804 exported instructions verified against the pristine binary
+  with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
+  **79.8 % of `.text` is covered by a function body at all**. Reproducible in
+  under a minute with `tools/re_verify.py`. This is the document that bounds
+  what any function-count figure on this page can mean.
+- [RTTI and source-path evidence — a documented ground truth was wrong](binary-analysis/rtti-and-source-path-evidence-2026-07-25.md)
+  — 2026-07-25. **Read this before repeating "the binary has no symbols."**
+  Direct ASCII scan of the pristine specimen finds **667 RTTI type descriptors**
+  and **166 source-file path strings** (`C:\dev\ONSLAUGHT2\*.cpp`/`.h`). The PE
+  debug directory *is* stripped and there is no `.pdb` — that half of the old
+  claim holds — but "no symbols, nothing was missed" was an over-generalisation
+  from it. The RTTI owners and `__FILE__` translation-unit names that the 2026-07
+  naming waves are built on come from exactly this material.
+- [Retail capture provenance — what the reference screenshots actually show](binary-analysis/retail-capture-provenance-2026-07-25.md)
+  — 2026-07-25. The frontend/HUD reference captures were taken from a **safe copy
+  of the installed `BEA.exe`, not from pristine retail**. Anything that binary
+  draws differently from pristine is a false parity target that will be
+  faithfully reproduced as a defect — and at least one already was. Static byte
+  comparison of both binaries plus direct pixel measurement; no decompiler
+  output involved.
+
+### Ghidra name grading and the fullpass expedition
+
+- [2026-07 fullpass expedition handoff](binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md)
+  — **historic; the branch it reports on no longer exists.**
+  `ghidra/fullpass-quality-2026-07-23` was **merged into `main` at `af22af95`**
+  on 2026-07-25 and the branch ref was deleted on 2026-07-27. Its history is in
+  `main`. The document still carries standing instructions for a live branch
+  ("Do not merge to main unless the user asks", a worktree path that no longer
+  exists); read it as a record of that expedition, not as a live work item.
+  *(Corrected 2026-07-27: this entry was labelled "(branch status)" and led the
+  list as current authority.)*
 - [Name-grading ledger — every name graded by its evidence](binary-analysis/name-grading-ledger-2026-07-26.md)
   — 2026-07-26 revision. Corrects `SOURCE_BACKED` (1,009 → **528**; the old figure
   matched elaborated type specifiers, and `CDXTexture` alone backed 368 rows with
   no definition anywhere), partitions `UNBACKED` into seven measured cohorts of
   which **1,179 are MSVC unwind funclets that can never carry a developer name**,
-  and records the 13 renames applied to the live database. Honest residual:
-  **1,866 of a human-namable 5,790** (the ledger's own §"honest residual"; a
-  demotion inside the same wave took it from 1,865 to 1,866).
+  and records the 13 renames applied to the live database. Honest residual **as
+  that ledger states it**: 1,866 of a human-namable 5,790 (the ledger's own
+  §"honest residual"; a demotion inside the same wave took it from 1,865 to
+  1,866). **Snapshot, not current** — see the current figure above:
+  **1,867 of 6,376**, with `--reference-source references/Onslaught`.
 - [The second demotion — `0x005386d0`, and the residual goes up again](binary-analysis/name-grading-ledger-2026-07-27-demotion2.md)
   — 2026-07-27. Amends the 07-26 ledger **in two cells only**: the false name
   `CScriptEventNB__Destructor` on `CPostEventData`'s destroy path is withdrawn to
-  `DestructorBody_005386d0`, taking the honest residual to **1,867 of 5,790**.
-  Also restates the limit that keeps getting dropped: the sweep behind these
+  `DestructorBody_005386d0`, taking the honest residual to **1,867** — of 5,790
+  as that document states it, **of 6,376 today**; the residual itself has not
+  moved since. Also restates the limit that keeps getting dropped: the sweep behind these
   demotions sees **only the destructor channel**, so its six findings are a
   **floor, not a bound**.
 - **Aggressive Ghidra analysis does not reduce that residual — measured, not
   assumed.** Six isolated analyser passes on a disposable canary (Aggressive
   Instruction Finder, Decompiler Parameter ID, address/switch-table aggression,
   external-parameter propagation, variadic override, and a combined pass) left
-  the residual at **1,866 before and 1,866 after**. The Instruction Finder
+  the residual **unmoved: 1,866 before and 1,866 after**, that pair being the
+  experiment's own canary measurement against its then-baseline of 1,866, before
+  the `0x005386d0` demotion above. **The current residual is 1,867 of 6,376**;
+  the "does not reduce" verdict is what carries forward, not the baseline.
+  The Instruction Finder
   recovered ~4,404 bytes of real application code but those land in `UNNAMED`,
   enlarging the namable denominator without moving the residual; external-
   parameter propagation moved it *up*, to 1,867, by correctly naming one

@@ -63,8 +63,21 @@ split-screen layouts are not implied.
 The modern-input defect reproduced here was an internal preset disagreement:
 WinUI instructed Steam Input users to lower retail mouse sensitivity to its
 minimum while Enhanced Copy wrote `2.25`. Enhanced Copy now writes and reads
-back the retail minimum `0.1`. This proves the copied option and live global,
-not subjective mouse feel or physical-controller behavior.
+back `0.1`, **which is AppCore's own lowest preset, not a retail minimum**
+(`GameProfileControlOptionsService.MinimumMouseLookSensitivity`). This proves
+the copied option and live global, not subjective mouse feel or
+physical-controller behavior.
+
+> **Superseded 2026-07-27 — over-claim withdrawn.** This previously read
+> "Enhanced Copy now writes and reads back **the retail minimum `0.1`**". `0.1`
+> is not a retail minimum and not a retail value. Retail's own selectable
+> minimum is **`3.0`** — the slider is `(index + 1) * 3.0f`, giving `3, 6, … 63`
+> — and its compiled default is **`7.0`**. `0.1` is one of AppCore's four
+> presets (`0.1`, `1.5`, `2.25`, `3.0`). The demonstrated capability is
+> unchanged: AppCore writes the value into a safe copy and reads it back. Only
+> the attribution of `0.1` to retail was wrong. This exact line was named as an
+> unactioned over-claim by the project's own adversarial pass
+> (`local-lab/agent-notes-2026-07-27/adverse-settings.md`, F7).
 
 The bounded retail-content go/no-go also passed for one English mission line.
 WinUI can opt a safe copy into a fixed-size replacement of Level 100 text ID
@@ -180,11 +193,24 @@ and a Pulse Cannon direction matching the crosshair-derived yaw/pitch vector
 within `0.00119` per component. Godot now pitches the retained retail cockpit
 and camera and renders the resulting three-dimensional Core projectile path.
 It also follows the released input ownership: `WASD` and arrow keys move the
-Battle Engine, while mouse or trackpad motion owns look and aim. At copied
-Steam sensitivity `1.5`, the Godot adapter preserves pointer magnitude, applies
+Battle Engine, while mouse or trackpad motion owns look and aim. At retail's
+compiled default sensitivity `7.0`, the Godot adapter preserves pointer
+magnitude, applies
 the released centered-offset mapping and recentering rate, and feeds Core's
-released inertial walker yaw/pitch response. Other sensitivity settings,
+released walker yaw/pitch response. Other sensitivity settings,
 inversion, and jet mouse response are not yet claimed.
+
+> **Superseded 2026-07-27.** This previously read "At copied Steam sensitivity
+> `1.5`". **`1.5` is not a retail value at all.** Retail's slider law is
+> `g_MouseSensitivity = (index + 1) * 3.0f` with max index `0x14`, so the
+> selectable values are `3, 6, … 63` and **`1.5` is below the floor a player can
+> reach**. The compiled image default, before the slider is ever touched, is
+> `7.0` — itself not reachable from the slider either. All three constants were
+> read from the **pristine** specimen (sha256 `74154bfa…`), not the installed
+> executable: `0x006254f4 = 7.0`, `0x005d8cc0 = 3.0`,
+> `0x005d97c8 = 0.004333333`. The old pointer scalar `13/2000` is exactly
+> `1.5 × 13/3000`; it is now `91/3000 = 7.0 × 13/3000`, so aiming had been
+> 4.67× too slow at equal hand motion (`fed5829b`).
 Core retains the previously measured 16-tick walker-to-jet transition, but the
 clean opening's flight gate keeps it unavailable until later tutorial
 progression is implemented. The walker, jet, and first-person cockpit now load
@@ -217,7 +243,9 @@ fixed-yaw retail repetitions per facility establish circular walker contact only
 for the Control Tower and Tank Factory: inward motion is removed, while tangent
 motion slides around the tower. Core consumes those two observed envelopes; it
 does not claim general mesh collision.
-Twenty-nine exact released HUD textures, including Font13PS and the three v3
+Twenty-nine exact released HUD textures — **the count the client loads and
+composes**, not the count the asset materializer retains, which is larger and is
+stated in `rebuild/PROVENANCE.md` — including Font13PS and the three v3
 crosshair layers, replace the prototype overlay for the bounded threat circle,
 lower-left scanner/weapon instrument, lower-right battleline/portrait,
 active-objective markers, and conditional message panel. All fifty-one
@@ -309,19 +337,54 @@ body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
 **None of the above is a parity claim, and the measured gap is large.** As of
-2026-07-27 the best Level 100 gameplay frame scores **23.06% of pixels
-materially different from retail, mean channel distance 7.85**, against a
+2026-07-27 the best Level 100 gameplay frame scores **22.55% of pixels
+materially different from retail, mean channel distance 7.6**, against a
 retail reference at t0+25065 ms.
 
 The startup and frontend path is further off. FEP_MAIN's settled window measures
-**15.14%** full-frame, its reveal window 22.35%, and its **entry frame 71.47%** —
-retail staggers the page's build-up and we draw it all on frame 0 (tracked). Its
-regression ceilings are recorded in `rebuild/tools/frontend-parity-plan.json`
+**15.14%** full-frame, its reveal window **19.49%**, and its **entry frame
+7.53%**. Its regression ceilings are recorded in
+`rebuild/tools/frontend-parity-plan.json`
 beside the measured value each was derived from, and several are tens of percent
 wrong — `title-logo` alone measures 29.48%. Those ceilings say "do not get
 worse"; they are not parity numbers, and quoting one as a parity number is a
-misreading. Three frontend pages are deliberately ungated because retail's own
-two runs disagree, and are reported `UNSCORED`.
+misreading. **Five** frontend pages are deliberately ungated and reported
+`UNSCORED`, **for two different reasons**: `FEP_DEVSELECT` and
+`FEP_LEVEL_SELECT` because retail's own two runs disagree (by 5.8–44.2% and
+9.6–62.5% material respectively), so no improvement below that is measurable;
+`FEP_MISSION_BRIEFING`, `FEP_SELECT_CONFIGURATION` and `FEP_LOADING` because
+there is **no second retail run at all** in the no-skipfmv set to form a noise
+floor from.
+
+> **Superseded 2026-07-27.** The paragraphs above previously read: "the best
+> Level 100 gameplay frame scores **23.06% of pixels materially different from
+> retail, mean channel distance 7.85**" and "FEP_MAIN's settled window measures
+> **15.14%** full-frame, its reveal window 22.35%, and its **entry frame 71.47%**
+> — retail staggers the page's build-up and **we draw it all on frame 0
+> (tracked)**" and "**Three** frontend pages are deliberately ungated **because
+> retail's own two runs disagree**".
+>
+> Four corrections, all landing the same afternoon the original was written:
+>
+> 1. **Gameplay full frame is 22.55% / meanD 7.6.** Trajectory 23.47 → 23.99 →
+>    23.32 → 22.55.
+> 2. **FEP_MAIN entry is 7.53%, not 71.47%; reveal is 19.49%, not 22.35%.**
+>    Settled (15.14%) and `title-logo` (29.48%) are unchanged.
+> 3. **"We draw it all on frame 0" describes a defect that was fixed**, by
+>    `8618e773` — the main menu now builds up over the released 50-frame
+>    transition recovered from the shipped bytes, which is what produced the
+>    entry-frame drop in (2). The sentence is deleted rather than amended,
+>    because there is no longer a stagger gap to describe.
+> 4. **It is five ungated pages, not three, and the single stated reason covered
+>    only two of them.** This one was wrong when written, not merely stale —
+>    `frontend-parity-plan.json`'s `unscored[]` has carried five entries with two
+>    distinct `reason` strings throughout.
+>
+> **Caveat on (2), and it is load-bearing:** `frontend-parity-plan.json` still
+> stores the pre-`8618e773` `measured` values of 71.47 @entry and 22.35 @reveal,
+> because `8618e773` states "Ceilings are NOT re-derived here." The JSON and the
+> figures above will therefore disagree until the ceilings are re-derived. The
+> figures above are the current measurement; the JSON holds the ceiling basis.
 
 These numbers move, and they moved several times on 2026-07-27 alone. Treat any
 figure here as the value at the commit that wrote it, and re-measure before
@@ -329,11 +392,44 @@ relying on one — `tools/score_frontend_capture.py` and
 `tools/pair_gameplay_capture.py` are the instruments, and the frontend gate will
 now FAIL on a regression rather than reporting a healthy capture as a pass.
 
-`Won` is likewise not a full clear. The observed route to the level's `Won`
-state runs through the **released ABORT branch**: the LevelScript's sub-40%
-hull poll posts `Abort Airborne Drones`, which retires the airborne phase with
-its own dialogue and score penalty. That is the released script doing what it
-was written to do, not the tutorial completed on its intended path.
+**The `Won` status has two halves, and stating either one alone misrepresents
+it.**
+
+The full sequence runs as **one** thing and reaches `Won` **on the intended
+path, not the abort branch**: startup, logo, montage, splash, click-to-start,
+main menu, New Game, level select, briefing, configuration select, loading, then
+the Level 100 beat chain — entered by clicking the level node.
+`PrimaryObjectiveComplete(4, ...)` fires, the second drone wave is destroyed
+6 of 6, and `aborted` is false.
+
+That run was measured as a **returning player**, with all four
+`SLOT_TUTORIAL_*` saved. **The shipping client can only start a cold first
+career**, and on a cold career the same sequence ends **`Lost` /
+`TutorialBroken` at tick 5051**, at full hull 20000/20000, with objective 4 never
+reached. The cause is the career premise rather than the join: a cold-career
+control with no client involved loses identically. The tutorial lectures shift
+`Activate Static Targets` by +1338 ticks while the trucks drive their authored
+routes regardless, so `TargetTruck1.msl`'s `died()` case FALSE posts
+`Broke Tutorial`. The returning-player run cleared that margin by 36 ticks —
+1.2 released seconds.
+
+> **Superseded 2026-07-27.** This section previously read: "`Won` is likewise not
+> a full clear. The observed route to the level's `Won` state runs through the
+> **released ABORT branch**: the LevelScript's sub-40% hull poll posts `Abort
+> Airborne Drones`, which retires the airborne phase with its own dialogue and
+> score penalty. That is the released script doing what it was written to do, not
+> the tutorial completed on its intended path."
+>
+> That was accurate when written and was superseded twice the same day. First by
+> `a923d157`, which cleared beat 9 on the intended path — the unlock was not the
+> mid-beat ground recharge that had been named as the blocker, but the discovery
+> that a stick position is a **rate** demand behind a five-tick lag, not an angle
+> demand. Then by `b9e1ae50`, which joined the frontend and the beat chain for
+> the first time and established the cold-first-career result above.
+>
+> **Do not compress this to "it reaches `Won`", and do not compress it to "it
+> does not reach `Won`".** Both are current, under different career preconditions.
+> `GOAL.md` and `developer_state.json` carry the same two-halves phrasing.
 
 The current source tree and release packages do not include retail game assets
 or their conversions. The rebuild materializes the exact currently consumed slice

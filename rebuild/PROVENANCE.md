@@ -449,8 +449,17 @@ pose. Static placement retains measured lower-bound metadata, but only the
 `SAT Turret` currently has the type-specific released pivot-grounding correction
 described above.
 
-Fifty-four retained HUD textures and `Dial.raw` are exact released files named
-by the Steam binary or the pinned Stuart weapon resource path. A clean
+Fifty-five HUD textures and `Dial.raw` are **retained by the asset materializer**
+(`rebuild/tools/materialize_retail_assets.py`, which is authoritative for this
+count) and are exact released files named
+by the Steam binary or the pinned Stuart weapon resource path. **This is the
+retention count, not the composition count**: the client loads and composes
+**twenty-nine** of them, which is the figure `CURRENT_CAPABILITIES.md` and
+`rebuild/README.md` quote. The two numbers count different sets and do not
+conflict.
+*(Updated 2026-07-27: was "Fifty-four retained HUD textures"; `cdf8979d` added
+`Hud/forseti-icon.texture.aya`. The manifest now carries 56 unique `Hud/`
+entries, one of which is `Hud/dial.raw`.)* A clean
 copied-runtime frame,
 the complete Level 100 mission script, and the released render paths establish
 the first-person composition now used by Godot: the central threat compass and
