@@ -40,6 +40,22 @@ highest-stakes rules early and does not restate or override it.
   model is consulted, from the main loop or anywhere else. See
   [`AGENTS.md`](AGENTS.md#delegation).
 
+## Resuming work — read this first
+
+**[`developer_state.json`](developer_state.json) is the pick-up-where-we-left-off
+file.** It carries the current HEAD, gate status, what is in flight, where every
+evidence store lives — including the two that are invisible to a fresh clone —
+and the honest state of the goal. Read it before anything else, especially after
+a compaction.
+
+It is **pointers and state only, never findings**. That is deliberate: a claim
+written into a file everything trusts becomes an unfalsifiable premise, which is
+the failure this file's own "Editing this file" section describes. If
+`developer_state.json` disagrees with a measurement, the measurement wins.
+
+Keep it current as work lands. It is maintained from the main loop, not written
+at handoff time.
+
 ## Orientation
 
 - [`README.MD`](README.MD) — product and lane overview.

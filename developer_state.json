@@ -1,0 +1,93 @@
+{
+  "_what_this_is": "A POINTER FILE for an agent resuming work, especially after a context compaction. It says where things ARE and what state they are IN. It is maintained continuously from the main loop, not written at handoff time.",
+  "_what_this_is_NOT": "Evidence. It contains no findings, no measurements presented as settled, and no reasoning. That is deliberate: a claim written here would be read as fact by every future session and would become very hard to overturn. CLAUDE.md warns about exactly this, and the project has been bitten by it. If you want to know WHY something is true, follow a pointer below and read the evidence. If this file and a measurement disagree, THE MEASUREMENT WINS and this file is stale.",
+  "_maintenance": "Update as work lands, from the main loop. Keep it to pointers and state. If you find yourself writing a sentence that could be wrong, it belongs in a dated note or a commit message instead.",
+
+  "as_of": {
+    "date": "2026-07-27",
+    "head": "b9e1ae50",
+    "branch": "main",
+    "remote_in_sync": true,
+    "note": "Verify with `git log --oneline -1`. If HEAD differs, this file is behind."
+  },
+
+  "read_first": [
+    "CLAUDE.md — rules that bind, loaded every session",
+    "AGENTS.md — contributor guide, especially ## Delegation and ## Evidence",
+    "rebuild/PROVENANCE.md — the evidence partition and the Authority order",
+    "local-lab/INDEX.md — the front door to all working notes; says what each one SETTLES",
+    "local-lab/PARITY-WORKLIST-2026-07-27.md — ranked work, plus a REFUTED table that must not be re-derived",
+    "git log — the reasoning lives in commit messages, not only in code"
+  ],
+
+  "evidence_stores": {
+    "tracked_in_git": [
+      "reverse-engineering/RE-INDEX.md — RE evidence front door",
+      "reverse-engineering/binary-analysis/ — promoted findings",
+      "reverse-engineering/ghidra/ — the PROMOTED snapshot, deliberately behind the live DB"
+    ],
+    "not_in_git_and_invisible_to_a_fresh_clone": [
+      "local-lab/ — gitignored by design; holds retail-derived material and all working notes",
+      "local-lab/TASK-LEDGER-2026-07-27.md — a verbatim snapshot of the numbered task store, which lives in Claude Code's own storage, NOT in this repo",
+      "local-lab/agent-notes-2026-07-27/ — 66 subagent working notes rescued out of a TEMP directory on 2026-07-27",
+      "C:\\Users\\david\\Ghidra\\Projects — the LIVE Ghidra database, ahead of the tracked snapshot"
+    ],
+    "backups": {
+      "repo_full_copy": "F:\\OnslaughtLabBackups\\repo-full-2026-07-27 (45,170 files, 9.37 GB, includes gitignored)",
+      "ghidra": "F:\\GhidraBackups\\ — pre/post pairs with open-proof receipts",
+      "retired_branches": "local-lab/retired-branches-2026-07-27/codex-branches.bundle and on F:"
+    }
+  },
+
+  "goal_status": {
+    "statement": "Startup through Level 100 completed, driven to Won by player input alone, feeling like the original.",
+    "met": false,
+    "accurate_phrasing": "The whole sequence RUNS as one thing. It reaches Won as a RETURNING PLAYER. On a COLD FIRST CAREER — which is the only thing the shipping client can start — it ends Lost/TutorialBroken. It does not yet feel like the original.",
+    "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. That was said for weeks on the strength of two halves that each passed separately.",
+    "evidence": "task #140, commit b9e1ae50"
+  },
+
+  "environment": {
+    "retail_install": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Battle Engine Aquila",
+    "steam_exe_is_patched_deliberately": "sha256 e7881829. NOT a valid specimen. Do not flag it; the maintainer did it on purpose.",
+    "pristine_specimen": "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256 74154bfa — read ALL byte evidence from this and name it in every claim",
+    "capture_target": "local-lab/safe-copy-bea-pristine/BEA.exe, sha256 e1436ef7 — pristine plus force_windowed only. LAUNCH ONLY FROM THIS PATH; the firewall rule is bound to it.",
+    "large_files": "G:\\ has the most free space. F:\\ is the backup drive and is the tightest.",
+    "toolchain": "Ghidra 12.1.2 on D:. Zig on PATH via WinGet Links (builds the 32-bit d3d9 proxy). RenderDoc installed but CANNOT capture D3D9 — proven, do not retry. tttracer.exe is in System32, unused so far."
+  },
+
+  "instruments_built_2026_07_27": {
+    "d3d9_proxy": "tools/d3d9-proxy/ — sits between the game and Direct3D, records draw calls with screen-space vertex positions, textures and blend state, and grabs the backbuffer at Present. Passive: no window, no input, no focus. THIS IS WHAT ENDS PIXEL-FITTING FOR HUD POSITIONS.",
+    "message_based_input": "tools/send_game_window_input.ps1 — posts to a target HWND, no global input. Fixed 2026-07-27; it was a silent no-op before.",
+    "frontend_gate": "tools/score_frontend_capture.py — compares retail pixels and CAN fail; returns UNSCORED rather than PASS when nothing is scorable."
+  },
+
+  "in_flight": {
+    "note": "Check whether these landed before assuming. If an agent is gone and nothing was committed, its work may be in local-lab/agent-notes-2026-07-27/ only.",
+    "items": [
+      "Cold-career Won attempt, reframed to also measure PLAYER-PLAUSIBLE input (integer mouse pixels)",
+      "Skip-panning plus deciding the full released action set before SimActions changes shape",
+      "In-level d3d9 capture to read real HUD coordinates and diff them against ours"
+    ]
+  },
+
+  "highest_value_open": {
+    "note": "Task numbers only. Read the task for the evidence; do not trust a one-line summary of it.",
+    "parity_felt": [114, 105, 100, 106, 130, 17],
+    "correctness": [137, 141, 136, 139, 138],
+    "settings": [132],
+    "blocked_on_a_human": [63, 61, 33, 121]
+  },
+
+  "traps_recorded_the_hard_way": {
+    "note": "These are pointers to WHY, not the reasoning itself. Each has a task or a note.",
+    "items": [
+      "A constant traceable to defaultoptions.bea is a USER SETTING, not a default. The image is the authority. (#137)",
+      "A filename does not give you a class name. SquadNormal.cpp contains CNormalSquad. (#138)",
+      "A region mean is a detector, not a diagnosis.",
+      "Bound every byte scan to the function extent.",
+      "Ask whether a check is CAPABLE of failing before trusting that it passed. (#113, #104, #139)",
+      "The REFUTED table in local-lab/PARITY-WORKLIST-2026-07-27.md holds ~50 claims that must not be re-derived."
+    ]
+  }
+}
