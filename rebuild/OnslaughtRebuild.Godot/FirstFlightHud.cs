@@ -480,6 +480,81 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // 225.2/255, 227.1/255, 226.8/255 at the regressed alpha 0.53.
     private static Color RetailCrosshairOuter => new(0.883f, 0.891f, 0.889f, 0.53f);
 
+    // COMPASS GAUGE ARCS. The reconstruction drew these ADDITIVELY; that is
+    // refuted by measurement, and retail's actual blend is now byte-backed.
+    //
+    // MECHANISM, from the shipped image. CDXCompass__RenderWorldSpaceOverlay
+    // (0x0053cd30) binds a runtime-built overlay texture at this+0x3f04 and the
+    // ring vertex buffer at this+0x3f10, then:
+    //
+    //     RenderState_Set(0x13, 2);   // SRCBLEND  = D3DBLEND_ONE
+    //     RenderState_Set(0x14, 6);   // DESTBLEND = D3DBLEND_INVSRCALPHA
+    //     CDXEngine__ApplyPendingRenderState(...);
+    //     (**(code **)(*DAT_00888a50 + 0x144))();   // the draw
+    //
+    // That is a PREMULTIPLIED-ALPHA blend and a SINGLE draw:
+    //
+    //     out = P + (1 - a) * bg
+    //
+    // where P is the texture's premultiplied RGB and a its alpha. The texture is
+    // built per frame by CDXCompass__UpdateDynamicOverlayTexture (0x0053c510) as
+    // ARGB4444 - the alpha nibble is written as value * 0x1000 and the colour as
+    // ((R * 0x10 + G) * 0x10 + B) - with a per-row alpha gradient, so `a` is not
+    // constant across the 12 px band and the fitted value below is its mean.
+    //
+    // MAGNITUDE, from a perturbation capture - the instrument that needs no model
+    // of what is drawn where. One capture with the base ring, gauges, dial and
+    // needles switched off supplies a per-pixel background; only the 14,950
+    // px/frame that RESPONDED to that perturbation are admitted. Over the 27
+    // paired hud-timeline-run1 frames, regressing retail's pixel on that
+    // background inside r 80..92:
+    //
+    //   green arc, bearings 65-145, n=38,024
+    //     R slope 0.819 intercept  9.3      B slope 0.825 intercept  8.9
+    //     G is CLIPPED in retail (mean 250.7) and its slope is not usable.
+    //   violet arc, bearings 250-345, n=45,936
+    //     R slope 0.750 intercept 15.7      G slope 0.801 intercept  7.9
+    //     B is the strong channel and is not used for alpha.
+    //
+    // slope = 1 - a and intercept = P, giving a = 0.178 / P = (9.3, 72.6, 9.0)
+    // for health and a = 0.225 / P = (15.7, 7.8, 79.6) for energy.
+    //
+    // ADDITIVE IS REFUTED, not merely beaten: retail's green arc LOWERS the
+    // background by 22.1 (R) and 24.1 (B), and its violet arc by 26.3 (R) and
+    // 21.3 (G). A ONE/ONE pass cannot lower any channel. The scene controls rule
+    // out a background difference: at the SAME bearings, immediately inside the
+    // arc (r 70..79) and outside the ring (r 102..112), retail and our
+    // gauges-off capture agree to [2.3, 1.3, 1.6] and [-1.3, -1.6, -1.3] on the
+    // green bearings and to [-5.7, -3.9, -2.3] on the violet ones.
+    //
+    // WITHDRAWN, and recorded because it was wrong for a day: an earlier draft of
+    // this block claimed the arcs are issued TWICE, once under each of the two
+    // blend states CDXCompass__Render (0x00427210) installs at its head
+    // (0x00482090 sets SRCALPHA/INVSRCALPHA, 0x004821b0 then sets ONE/ONE).
+    // There is NO DRAW between those two calls - the second simply overwrites the
+    // first - and the sprites that follow them are BarLine and the threat/damage
+    // flashes, not the gauge ring. Both consulted model families caught this
+    // independently, and the decompile confirms it. `out = (1-a)bg + K(1+a)` and
+    // `out = (1-a)bg + P` are the same equation; a fit cannot choose a pass count.
+    //
+    // Godot exposes blend mode per CanvasItem, not per draw, so the single
+    // premultiplied blend is REALISED here as two draws: the alpha-blended base
+    // layer contributes (1-a)*bg + a*K and the additive glow layer adds K, with
+    // K = P / (1 + a). That is an implementation identity, not a claim about
+    // retail's draw count; CanvasItemMaterial.BlendModeEnum.PremultAlpha on a
+    // third layer would express it directly and is the cleaner future form.
+    //
+    // The health arc's colour is measured only at full health - every retail
+    // frame in the reference set is at full health - so the existing damage hue
+    // ramp is retained and only its MAGNITUDE is replaced by the measurement.
+    internal const float GaugeHealthBlendAlpha = 0.178f;
+    internal const float GaugeEnergyBlendAlpha = 0.225f;
+    private static Color GaugeHealthPaint(float health) => new(
+        ((1f - health) * 61.6f / 255f) + (7.9f / 255f),
+        health * 61.6f / 255f,
+        7.6f / 255f);
+    private static Color GaugeEnergyPaint => new(12.8f / 255f, 6.4f / 255f, 65.0f / 255f);
+
     private static Color RetailColor(uint argb) => new(
         ((argb >> 16) & 0xff) / 255f,
         ((argb >> 8) & 0xff) / 255f,
@@ -646,6 +721,63 @@ public sealed partial class FirstFlightHud : CanvasLayer
             }
         }
 
+        /// <summary>
+        /// One half of the compass gauge arcs. Retail issues them as a SINGLE
+        /// premultiplied-alpha draw, SRCBLEND=ONE DESTBLEND=INVSRCALPHA, in
+        /// CDXCompass__RenderWorldSpaceOverlay (0x0053cd30): out = P + (1-a)*bg.
+        /// Godot's blend mode is per CanvasItem, so that one blend is realised as
+        /// two draws - the alpha-blended base layer contributes (1-a)*bg + a*K
+        /// and the additive glow layer adds K, with K = P/(1+a). See the block
+        /// comment on GaugeHealthPaint for the byte evidence and the fit.
+        ///
+        /// The highlight pulse is applied to the additive half only: raising the
+        /// alpha of the attenuating half would DARKEN an emphasised gauge, which
+        /// is the opposite of what HighlightHudPart means.
+        /// </summary>
+        protected void DrawCompassGaugeArcs(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud,
+            bool alphaBlendedHalf)
+        {
+            float health = Math.Clamp(
+                snapshot.Hull / (float)SimulationConstants.MaximumHull, 0f, 1f);
+            float energy = Math.Clamp(
+                snapshot.Energy / (float)SimulationConstants.MaximumEnergy, 0f, 1f);
+            const float radius =
+                (CompassGaugeInnerRadius + CompassGaugeOuterRadius) * 0.5f;
+            const float width = CompassGaugeOuterRadius - CompassGaugeInnerRadius;
+
+            Color healthPaint = GaugeHealthPaint(health);
+            Color energyPaint = GaugeEnergyPaint;
+            if (alphaBlendedHalf)
+            {
+                healthPaint.A = GaugeHealthBlendAlpha;
+                energyPaint.A = GaugeEnergyBlendAlpha;
+            }
+            else
+            {
+                healthPaint.A = 1f + HighlightAlpha(snapshot, hud, Level100HudPart.Health);
+                energyPaint.A = 1f + HighlightAlpha(snapshot, hud, Level100HudPart.Energy);
+            }
+
+            DrawSegmentedRing(
+                DesignCenter,
+                radius,
+                50,
+                width,
+                (150f - (health * 90f)) / 360f,
+                health * (90f / 360f),
+                healthPaint);
+            DrawSegmentedRing(
+                DesignCenter,
+                radius,
+                40,
+                width,
+                225f / 360f,
+                energy * (135f / 360f),
+                energyPaint);
+        }
+
         protected static float HighlightAlpha(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud,
@@ -679,6 +811,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // this file already carried for it was alpha 0.25, so only the BLEND changed
     // - the constant did not.
     private const float CompassBaseRingInnerRadius = 95f;
+    private const float CompassGaugeInnerRadius = 80f;
+    private const float CompassGaugeOuterRadius = 92f;
     private const float CompassBaseRingOuterRadius = 101f;
 
     private static Color CompassBaseColor(
@@ -824,6 +958,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             const float width =
                 CompassBaseRingOuterRadius - CompassBaseRingInnerRadius;
             DrawSegmentedRing(DesignCenter, radius, 50, width, 0f, 1f, baseColor);
+            DrawCompassGaugeArcs(snapshot, hud, alphaBlendedHalf: true);
             DrawCompassObjectiveMarkers(snapshot, hud);
         }
 
@@ -1458,10 +1593,8 @@ public sealed partial class FirstFlightHud : CanvasLayer
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
             Color baseColor = new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
 
-            const float gaugeInnerRadius = 80f;
-            const float gaugeOuterRadius = 92f;
-            const float innerRadius = (gaugeInnerRadius + gaugeOuterRadius) * 0.5f;
-            const float innerWidth = gaugeOuterRadius - gaugeInnerRadius;
+            // The gauge band radii now live on CompassGaugeInnerRadius /
+            // CompassGaugeOuterRadius, because both halves of the arc need them.
             const float outerRadius =
                 (CompassBaseRingInnerRadius + CompassBaseRingOuterRadius) * 0.5f;
             const float outerWidth =
@@ -1521,15 +1654,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // 60-150 deg against a green arc measured over 57-148 deg, and the
             // energy sweep runs 225-360 deg against a violet arc measured over
             // 220-345 deg. Only the radii were wrong.
-            DrawSegmentedRing(
-                center,
-                innerRadius,
-                50,
-                innerWidth,
-                (150f - (health * 90f)) / 360f,
-                health * (90f / 360f),
-                healthColor);
-            DrawSegmentedRing(center, innerRadius, 40, innerWidth, 225f / 360f, energy * (135f / 360f), energyColor);
+            _ = healthColor;
+            _ = energyColor;
+            DrawCompassGaugeArcs(snapshot, hud, alphaBlendedHalf: false);
             DrawDialNorthOverlay(
                 snapshot,
                 center,
