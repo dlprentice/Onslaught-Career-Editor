@@ -127,11 +127,11 @@ hour**, and be willing to wait up to about three — a consult that is still
 running is not a consult that has failed, and killing it at the ten-minute
 ceiling is exactly the mistake that caused this entry.
 
-If a question does not resolve, **escalate deliberately** rather than retrying it
-identically — `high` (the default) to `xhigh` to `max`, one step, and record in
-the write-up that you escalated and why. Do not start at `max`: it is the slowest
-path to the same answer on almost every question, and a consult nobody waits for
-is a consult that did not happen.
+If a question does not resolve, **do not escalate the tier** — the tiers above
+`xhigh` are the ones measured not to return, so escalating trades an answer for
+silence. Escalate the *prompt* instead: narrow it, name the specific artefact to
+open, and say what evidence would settle it. That is what produced the sharpest
+results here. A consult nobody waits for is a consult that did not happen.
 
 ## Measured tier behaviour, 2026-07-26
 
@@ -144,7 +144,7 @@ reachable tier. The discriminator was whether the model opened
 | `low` | 221 s | **WRONG.** Concluded from call order that the battleline "draws over" the portrait. It never opened the callee, where every draw is guarded. |
 | `medium` | 676 s | correct |
 | `high` | ~600 s | correct, and went furthest — decoded the shipped asset and traced composed constants |
-| `xhigh` | untested at time of writing | — |
+| `xhigh` | still producing at ~18 min; no verdict when this table was written | **unverified** — it is the owner's chosen default on the strength of finishing steadily, not on a completed head-to-head |
 | `max` | **no output after 35 min** | — |
 | `ultra` | hung on a trivial prompt | — |
 
@@ -159,8 +159,12 @@ Three conclusions, all of which cost real time to establish:
   but produced nothing in 35 minutes on a substantive one, from the main loop.
   It is not slow; it is non-returning. Do not reach for it.
 
-`high` is therefore not a cost compromise. It is the only tier measured to both
-finish and dig.
+`high` is therefore not a cost compromise. It is, at the time of writing, the
+**only tier with a completed measurement showing it both finishes and
+investigates properly** — `medium` also finishes and is correct but shallower,
+and `xhigh` had not yet returned. If `xhigh` later proves slower than `high`
+without returning more, drop back to `high`; that is a live question, not a
+settled one.
 
 ## From a subagent, background-and-poll is mandatory
 
