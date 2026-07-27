@@ -40,6 +40,13 @@ highest-stakes rules early and does not restate or override it.
   model is consulted, from the main loop or anywhere else. See
   [`AGENTS.md`](AGENTS.md#delegation).
 
+## The goal
+
+[`GOAL.md`](GOAL.md) holds the maintainer's standing objective verbatim — what
+"done" means, the evidence partition, the evidence rule, and the standing
+constraints. It is the one document here that is **not** superseded by
+measurement, because it states what is wanted rather than what is true.
+
 ## Resuming work — read this first
 
 **[`developer_state.json`](developer_state.json) is the pick-up-where-we-left-off
