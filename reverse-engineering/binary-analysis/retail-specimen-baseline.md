@@ -60,6 +60,52 @@ After the user restored the installed copy, the live install and the clean repo 
 
 So the current workstation state is back to a clean retail runtime specimen.
 
+### 2026-07-27 Finding — the installed executable has drifted again
+
+**`retail-specimen-manifest-2026-03-14.json` records
+`installed_live_exe_matches_clean_repo: true`. That is no longer true, and the
+manifest is a dated snapshot, so it is left as history rather than rewritten.**
+
+Measured today:
+
+- installed live `BEA.exe`: `e78818292a1dbe31dc6987c71665857de3a8cf3e7619745689d74c7da829c918`
+- pristine specimen: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+  (`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, and identically
+  `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`)
+
+Same size, **28 bytes differ across exactly four sites**, and all four are this
+repository's own catalogued patches:
+
+| File offset | Change | Catalogue entry |
+|---|---|---|
+| `0x06416F` | pushed string pointer `0x00629454` → `0x005AA444` | `BinaryPatchEngine.cs:162` version-overlay marker pointer |
+| `0x129696` | `jne` rel32 displacement `0xCC` → `0x00` | `BinaryPatchEngine.cs:114` aspect/4:3 reject gate |
+| `0x12A644` | `a1 f0 2d 66 00` → `b8 01 00 00 00` (`mov eax,[0x662df0]` → `mov eax,1`) | `BinaryPatchEngine.cs:127` `force_windowed` |
+| `0x1AA444` | 20 bytes of `cc` padding → `"V%1d.%02d - PATCHED\0"` | `BinaryPatchEngine.cs:177` version-overlay cave payload |
+
+**Scope of the damage to existing findings: none identified, and the reason is
+specific rather than reassuring.** 2,506,724 of 2,506,752 bytes are identical, so
+a byte finding is only at risk if its bounded scan overlapped one of those four
+sites — and those sites *are* the patches, which no analysis pass has targeted.
+The exposure is prospective, not retrospective: any future scan run against the
+Steam path reads a different binary from the one the Ghidra project was imported
+from.
+
+**The capture lane is unaffected and was already doing the right thing.**
+`Capture-Retail.ps1` targets `local-lab/safe-copy-bea-pristine`, which carries
+`force_windowed` **only** — 4 bytes at `0x12A644`, verified — and deliberately
+leaves the version overlay and the 4:3 gate pristine so nothing cosmetic leaks
+into a reference capture. The two are different builds and must not be confused:
+copied capture target `e1436ef7…`, installed live `e7881829…`.
+
+**Standing consequence.** Every byte finding must state the specimen file and its
+hash, not just an address. "Read from the binary" is ambiguous on this
+workstation and has been since at least 2026-03-14.
+
+Restoring the install is a mutation of an installed game directory and is
+therefore separately authorized; the pristine bytes are held in two places above,
+so it is reversible whenever the user wants it done.
+
 ## Operational Rule
 
 Before any serious runtime-validation wave:
