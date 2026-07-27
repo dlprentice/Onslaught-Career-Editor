@@ -66,7 +66,7 @@ internal sealed class Level100ChainAutopilot
 
     private const int StrafeSegmentTicks = 45;
 
-    private readonly Simulation _simulation;
+    private readonly ILevel100ChainHost _host;
     private readonly List<string> _log = [];
     private readonly SortedDictionary<int, int> _impactsByActor = [];
     private readonly Level100Terrain _terrain = Level100Terrain.Instance;
@@ -89,13 +89,13 @@ internal sealed class Level100ChainAutopilot
     private bool _flightLegLaunched;
     private Level100MissionTrigger? _flightLegTrigger;
 
-    private Level100ChainAutopilot(Simulation simulation) => _simulation = simulation;
+    private Level100ChainAutopilot(ILevel100ChainHost host) => _host = host;
 
     internal IReadOnlyList<string> Report => _log;
 
     internal IReadOnlyDictionary<int, int> ImpactsByActor => _impactsByActor;
 
-    internal WorldSnapshot Snapshot => _simulation.Snapshot;
+    internal WorldSnapshot Snapshot => _host.Snapshot;
 
     /// <summary>
     /// One released actor round, recorded on the first tick it is visible in
@@ -276,18 +276,56 @@ internal sealed class Level100ChainAutopilot
     /// outside those arms. Stated because it changes what this run is evidence
     /// of.
     /// </summary>
-    internal static Level100ChainAutopilot Create()
+    internal static Level100ChainAutopilot Create() =>
+        Create(new Level100TutorialProgress(true, true, true, true));
+
+    /// <summary>
+    /// The same driver on a chosen tutorial-slot state. <c>default</c> is the
+    /// cold first career - all four <c>SLOT_TUTORIAL_*</c> unsaved - which is
+    /// what the client's own New Game path produces and what
+    /// <see cref="CreateOnClientSession"/> therefore runs.
+    /// </summary>
+    internal static Level100ChainAutopilot Create(
+        Level100TutorialProgress progress,
+        bool quantizeLookToClientPointerPath = false,
+        uint seed = 1u)
     {
+        // The seed is snapshot and hash material only - the released gameplay
+        // RNG is `ReleasedRandomSeed`, reseeded to 123456 at level start - but a
+        // run compared against another run has to match on it anyway, or the
+        // state hashes differ for a reason that is not the thing being measured.
         var simulation = new Simulation(
-            1u,
+            seed,
             Level100TestActorDefinitions.Create(),
-            new Level100TutorialProgress(true, true, true, true));
+            progress);
+        return CreateOn(
+            new Level100DirectChainHost(simulation, quantizeLookToClientPointerPath));
+    }
+
+    /// <summary>
+    /// The same driver, delivering every decision through the shipping client's
+    /// player-input surface instead of straight into Core.
+    /// </summary>
+    internal static Level100ChainAutopilot CreateOnClientSession(
+        Level100InteractiveChainHost host) => CreateOn(host);
+
+    /// <summary>
+    /// Idles through the released opening pan and hands back a driver bound to
+    /// <paramref name="host"/>. The pan is spent as input, not skipped: it is
+    /// <see cref="SimInput.Idle"/> for
+    /// <see cref="SimulationConstants.Level100OpeningPanTicks"/> ticks, which is
+    /// what a player who does not touch the controls supplies, and
+    /// <c>CPlayer__ReceiveButtonAction</c> rejects everything else that early
+    /// anyway.
+    /// </summary>
+    private static Level100ChainAutopilot CreateOn(ILevel100ChainHost host)
+    {
         for (int tick = 0; tick < SimulationConstants.Level100OpeningPanTicks; tick++)
         {
-            simulation.Step(SimInput.Idle);
+            host.Step(SimInput.Idle);
         }
 
-        return new Level100ChainAutopilot(simulation);
+        return new Level100ChainAutopilot(host);
     }
 
     /// <summary>
@@ -326,14 +364,14 @@ internal sealed class Level100ChainAutopilot
     {
         for (int tick = 0; tick < maximumTicks; tick++)
         {
-            WorldSnapshot state = _simulation.Snapshot;
+            WorldSnapshot state = _host.Snapshot;
             Observe(state);
             if (state.Level100Mission.Outcome != Level100MissionOutcome.Running)
             {
                 return state.Level100Mission.Outcome;
             }
 
-            WorldSnapshot next = _simulation.Step(NextInput(state));
+            WorldSnapshot next = _host.Step(NextInput(state));
             foreach (Level100DestructionEvent destruction in next.Level100DestructionEvents)
             {
                 if (destruction.Kind != Level100DestructionEventKind.PulseImpact)
@@ -346,7 +384,7 @@ internal sealed class Level100ChainAutopilot
             }
         }
 
-        WorldSnapshot final = _simulation.Snapshot;
+        WorldSnapshot final = _host.Snapshot;
         Observe(final);
         _log.Add(
             $"t{final.Tick} BUDGET EXHAUSTED outcome={final.Level100Mission.Outcome} " +
@@ -569,8 +607,28 @@ internal sealed class Level100ChainAutopilot
             (offsetX * offsetX) + (offsetY * offsetY) + (offsetZ * offsetZ));
     }
 
+    private readonly List<long> _poseTrace = [];
+
+    /// <summary>
+    /// One packed player pose per observed tick, for comparing two runs that are
+    /// supposed to be the same run.
+    ///
+    /// <para>Pure observation of fields the driver already reads, and consulted
+    /// by no decision. It exists because "the client's input surface is
+    /// lossless" is a claim that has to be measured against a control rather
+    /// than argued, and a final-state hash only says <i>whether</i> two runs
+    /// diverged, never <i>when</i>.</para>
+    /// </summary>
+    internal IReadOnlyList<long> PoseTrace => _poseTrace;
+
     private void Observe(WorldSnapshot state)
     {
+        _poseTrace.Add(
+            ((long)state.PlayerPosition.X * 31L) +
+            ((long)state.PlayerPosition.Z * 131L) +
+            ((long)state.FacingYawMicroRad * 1_009L) +
+            ((long)state.FacingPitchMicroRad * 10_007L) +
+            state.Hull);
         RecordPlayerWeaponFire(state);
         RecordArmamentEvidence(state);
         RecordBlasterBallistics(state);

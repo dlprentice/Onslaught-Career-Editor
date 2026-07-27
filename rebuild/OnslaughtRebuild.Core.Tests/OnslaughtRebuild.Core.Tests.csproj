@@ -27,6 +27,12 @@
   <ItemGroup>
     <Compile Include="..\TestSupport\Level100TestActorDefinitions.cs"
              Link="TestSupport\Level100TestActorDefinitions.cs" />
+    <!-- The cold-start media schedule. Deliberately free of Godot types (see the
+         same include in OnslaughtRebuild.Client.Tests), so the one end-to-end
+         run that begins at startup can replay the released beat order without
+         an engine. -->
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailStartupSchedule.cs"
+             Link="godot-startup-source\RetailStartupSchedule.cs" />
   </ItemGroup>
 
   <ItemGroup>
