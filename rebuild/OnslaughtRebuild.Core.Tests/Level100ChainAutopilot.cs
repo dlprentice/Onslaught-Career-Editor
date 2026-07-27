@@ -232,9 +232,213 @@ internal sealed class Level100ChainAutopilot
     /// </summary>
     private SimVector2 _lastDryGround;
 
+    // ------------------------------------------------------------------
+    // Blaster ballistics measurement
+    //
+    // Pure observation of snapshots the driver already reads. It changes no
+    // input and is not consulted by any decision: it exists to test the
+    // `18 / slant` crossing-speed law against the run's own hits and misses.
+    // ------------------------------------------------------------------
+
+    /// <summary>One <c>Blaster</c> aimed at the player, from launch to expiry.</summary>
+    internal readonly record struct ObservedBlaster(
+        int LaunchTick,
+        double LaunchSlantMeters,
+        double PerpendicularSpeedMetersPerSecond,
+        double ClosestApproachMillimeters,
+        int LifeTicks,
+        int FinalRemainingBaseTicks);
+
+    private sealed class TrackedBlaster
+    {
+        public int LaunchTick;
+        public double LaunchSlantMeters;
+        public double PerpendicularSpeed;
+        public double Closest = double.MaxValue;
+        public SimVector3 Previous;
+        public bool HasPrevious;
+        public int LastSeenTick;
+        public int FinalRemainingBaseTicks;
+    }
+
+    private readonly Dictionary<int, TrackedBlaster> _liveBlasters = [];
+    private readonly List<ObservedBlaster> _blasters = [];
+    private SimVector3 _previousPlayerPoint;
+    private bool _hasPreviousPlayerPoint;
+
+    internal IReadOnlyList<ObservedBlaster> Blasters => _blasters;
+
+    private readonly List<(int Tick, int Delta)> _hullDrops = [];
+    private int _previousHull = int.MinValue;
+
+    /// <summary>Every hull decrease this run saw, with the tick it landed on.</summary>
+    internal IReadOnlyList<(int Tick, int Delta)> HullDrops => _hullDrops;
+
+    private void RecordBlasterBallistics(WorldSnapshot state)
+    {
+        if (_previousHull != int.MinValue && state.Hull < _previousHull)
+        {
+            _hullDrops.Add((state.Tick, _previousHull - state.Hull));
+        }
+
+        _previousHull = state.Hull;
+
+        Level100ActorSnapshot? player = state.Level100Actors.Actors
+            .FirstOrDefault(actor => actor.Name == "Player 1");
+        if (player is null)
+        {
+            return;
+        }
+
+        var playerPoint = new SimVector3(
+            state.PlayerPosition.X,
+            state.PlayerElevationMillimeters,
+            state.PlayerPosition.Z);
+        double velocityX = 0;
+        double velocityY = 0;
+        double velocityZ = 0;
+        if (_hasPreviousPlayerPoint)
+        {
+            velocityX = (double)playerPoint.X - _previousPlayerPoint.X;
+            velocityY = (double)playerPoint.Y - _previousPlayerPoint.Y;
+            velocityZ = (double)playerPoint.Z - _previousPlayerPoint.Z;
+        }
+
+        _previousPlayerPoint = playerPoint;
+        _hasPreviousPlayerPoint = true;
+
+        var seen = new HashSet<int>();
+        foreach (Level100ActorRoundSnapshot round in
+                 state.Level100ActorMechanics.ActorRounds)
+        {
+            if (round.Kind != Level100ActorRoundKind.Blaster ||
+                round.TargetActorId != player.ActorId)
+            {
+                continue;
+            }
+
+            seen.Add(round.Id);
+            double yaw = round.YawMicroRadians / 1_000_000d;
+            double pitch = round.PitchMicroRadians / 1_000_000d;
+            double directionX = -Math.Sin(yaw) * Math.Cos(pitch);
+            double directionY = Math.Sin(pitch);
+            double directionZ = Math.Cos(yaw) * Math.Cos(pitch);
+
+            if (!_liveBlasters.TryGetValue(round.Id, out TrackedBlaster? tracked))
+            {
+                // The muzzle is the owning drone: the round has already taken
+                // one base-tick step by the time this snapshot is published.
+                Level100ActorSnapshot owner = state.Level100Actors.Actors
+                    .First(actor => actor.ActorId == round.OwnerActorId);
+                SimVector3 muzzle = owner.Pose.PositionMillimeters;
+                double slantX = (double)playerPoint.X - muzzle.X;
+                double slantY = (double)playerPoint.Y - muzzle.Y;
+                double slantZ = (double)playerPoint.Z - muzzle.Z;
+
+                double along = (velocityX * directionX) +
+                    (velocityY * directionY) +
+                    (velocityZ * directionZ);
+                double perpX = velocityX - (along * directionX);
+                double perpY = velocityY - (along * directionY);
+                double perpZ = velocityZ - (along * directionZ);
+                double perpendicular = Math.Sqrt(
+                    (perpX * perpX) + (perpY * perpY) + (perpZ * perpZ));
+
+                tracked = new TrackedBlaster
+                {
+                    LaunchTick = state.Tick,
+                    LaunchSlantMeters = Math.Sqrt(
+                        (slantX * slantX) + (slantY * slantY) + (slantZ * slantZ)) / 1_000d,
+                    PerpendicularSpeed =
+                        perpendicular * SimulationConstants.TicksPerSecond / 1_000d,
+                };
+                _liveBlasters[round.Id] = tracked;
+            }
+
+            tracked.LastSeenTick = state.Tick;
+            tracked.FinalRemainingBaseTicks = round.RemainingBaseTicks;
+
+            // The engine's own test, forward-looking. `AdvanceLevel100ActorMechanics`
+            // runs BEFORE `UpdateMovement`, so the segment it sweeps next is
+            // [this snapshot's round position, +one base-tick step] against THIS
+            // snapshot's player pose. Reconstructing it backwards from
+            // consecutive snapshots misses the fatal segment entirely, because a
+            // round that impacts is removed inside the step that killed it.
+            const double BlasterStepMillimeters =
+                (double)SimulationConstants.Level100BlasterSpeedMillimetersPerSecond /
+                Level100ActorMechanics.RetailBaseTicksPerSecond;
+            var swept = new SimVector3(
+                (int)(round.PositionMillimeters.X + (directionX * BlasterStepMillimeters)),
+                (int)(round.PositionMillimeters.Y + (directionY * BlasterStepMillimeters)),
+                (int)(round.PositionMillimeters.Z + (directionZ * BlasterStepMillimeters)));
+            tracked.Closest = Math.Min(
+                tracked.Closest,
+                PointToSegmentMillimeters(
+                    playerPoint, round.PositionMillimeters, swept));
+            tracked.Previous = round.PositionMillimeters;
+            tracked.HasPrevious = true;
+        }
+
+        foreach (int id in _liveBlasters.Keys.ToArray())
+        {
+            if (seen.Contains(id))
+            {
+                continue;
+            }
+
+            TrackedBlaster finished = _liveBlasters[id];
+            _liveBlasters.Remove(id);
+            _blasters.Add(new ObservedBlaster(
+                finished.LaunchTick,
+                finished.LaunchSlantMeters,
+                finished.PerpendicularSpeed,
+                finished.Closest,
+                finished.LastSeenTick - finished.LaunchTick,
+                finished.FinalRemainingBaseTicks));
+        }
+    }
+
+    private static double Distance(SimVector3 a, SimVector3 b)
+    {
+        double deltaX = (double)a.X - b.X;
+        double deltaY = (double)a.Y - b.Y;
+        double deltaZ = (double)a.Z - b.Z;
+        return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+    }
+
+    private static double PointToSegmentMillimeters(
+        SimVector3 point,
+        SimVector3 start,
+        SimVector3 end)
+    {
+        double segmentX = (double)end.X - start.X;
+        double segmentY = (double)end.Y - start.Y;
+        double segmentZ = (double)end.Z - start.Z;
+        double lengthSquared =
+            (segmentX * segmentX) + (segmentY * segmentY) + (segmentZ * segmentZ);
+        if (lengthSquared < 1.0)
+        {
+            return Distance(point, start);
+        }
+
+        double toX = (double)point.X - start.X;
+        double toY = (double)point.Y - start.Y;
+        double toZ = (double)point.Z - start.Z;
+        double projection = Math.Clamp(
+            ((toX * segmentX) + (toY * segmentY) + (toZ * segmentZ)) / lengthSquared,
+            0,
+            1);
+        double offsetX = toX - (projection * segmentX);
+        double offsetY = toY - (projection * segmentY);
+        double offsetZ = toZ - (projection * segmentZ);
+        return Math.Sqrt(
+            (offsetX * offsetX) + (offsetY * offsetY) + (offsetZ * offsetZ));
+    }
+
     private void Observe(WorldSnapshot state)
     {
         RecordArmamentEvidence(state);
+        RecordBlasterBallistics(state);
         if (state.PlayerOnGround && !state.PlayerInWater)
         {
             _lastDryGround = state.PlayerPosition;
@@ -922,6 +1126,40 @@ internal sealed class Level100ChainAutopilot
     /// that window is open, so the released velocity-to-forward alignment stops
     /// pulling the flight path back onto the nose and the airframe holds a
     /// standing crab. The reticle does not move; the aeroplane does.</para>
+    ///
+    /// <para><b>Standing off was the obvious next move and it was measured and
+    /// rejected.</b> The <c>18 / slant</c> requirement falls as range grows, so
+    /// fighting at 15-20 m rather than 4-8 m should be nearly free - and on the
+    /// Blaster axis it is. See
+    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
+    /// for the law itself. Two stand-off disciplines were flown, both holding a
+    /// band by putting the nearest drone off the nose while inside the floor
+    /// and re-attacking past the ceiling:</para>
+    ///
+    /// <list type="table">
+    ///   <item><description>11-19 m band, 90 degrees off: Blaster damage fell
+    ///   from 7,600 hull to <b>200</b> - one hit in the whole beat, exactly what
+    ///   the law predicts - but <c>Forseti</c> hits rose from two to <b>seven</b>
+    ///   and the run finished with <b>zero</b> kills at 2,500
+    ///   hull.</description></item>
+    ///   <item><description>10-16 m band, 60 degrees off, to stop the airframe
+    ///   overshooting into missile range: 26 Blaster hits and three Forseti,
+    ///   7,300 hull - the same total as this driver - and again <b>zero</b>
+    ///   kills.</description></item>
+    /// </list>
+    ///
+    /// <para>Both fail for the same two shipped reasons. First, the
+    /// <c>Forseti Drone Missile Launcher</c> carries <c>CWeaponMinRange</c>
+    /// 20.0 and <c>CanActorWeaponFire</c> rejects the shot below it, so knife
+    /// range is the only place in the level where the 2,500-hull weapon cannot
+    /// fire at all: hull saved from the 200-hull Blaster is handed back at
+    /// 12.5 times the price. Second, and decisively, the Aquila cannot hover -
+    /// the released speed correction floors the magnitude at
+    /// <c>JetMinimumSpeedPerTick</c> even at <c>MoveZ</c> -1 - so a range band
+    /// is held only by pointing the nose away from the target, and the time
+    /// spent doing that is the same time the driver needs to hold a drone on
+    /// the reticle. The stand-off does not resolve the track-or-dodge conflict;
+    /// it renames it.</para>
     /// </summary>
     private SimInput EngageWaveTwo(WorldSnapshot state, Level100ActorSnapshot target)
     {
@@ -1126,6 +1364,7 @@ internal sealed class Level100ChainAutopilot
 
     private int _crabDirection = 1;
     private int _crabSinceTick;
+
 
     /// <summary>
     /// Pull the trigger whenever the reticle is genuinely on a drone, whatever

@@ -302,6 +302,118 @@ public sealed class Level100FullChainTests
     }
 
     /// <summary>
+    /// The <c>18 / slant</c> Blaster miss law, tested against the run's own
+    /// hits and misses instead of being asserted from the weapon record.
+    ///
+    /// <para><b>The derivation.</b> <c>Drone Vulcan Cannon</c> carries no
+    /// <c>CWeaponTrack</c> and no lead law, so <c>LaunchActorRound</c> points
+    /// every <c>Blaster</c> at the player's pose on the tick it is fired and
+    /// the round then flies a fixed heading at <c>CRoundVelocity</c> 45.0.
+    /// <c>TryReportActorRoundImpact</c> sweeps that segment against the target's
+    /// <c>CBattleEngine::GetRadius</c> 0.4 m sphere. A round launched from
+    /// <c>R</c> metres therefore arrives after <c>R / 45</c> seconds and needs
+    /// the player to have crossed 0.4 m by then, which is a perpendicular speed
+    /// of <c>0.4 * 45 / R = 18 / R</c> m/s.
+    /// </para>
+    ///
+    /// <para><b>The measurement.</b> <see cref="Level100ChainAutopilot"/>
+    /// records every player-directed Blaster: its launch slant range, the
+    /// player's perpendicular speed on the launch tick, and the closest
+    /// approach of the round's swept segment across its whole life. The
+    /// dimensionless ratio <c>v_perp * R / 18</c> then separates hits from
+    /// misses sharply. Measured over the run's 262 player-directed Blasters:
+    /// </para>
+    ///
+    /// <list type="table">
+    ///   <item><description>ratio &lt; 0.50: <b>20 of 20</b> hit</description></item>
+    ///   <item><description>ratio 0.50-1.00: 20 of 28 hit</description></item>
+    ///   <item><description>ratio 1.00-2.50: 4 of 41 hit</description></item>
+    ///   <item><description>ratio &gt; 2.50: <b>0 of 173</b> hit</description></item>
+    /// </list>
+    ///
+    /// <para>The soft shoulder either side of 1.0 is the shipped
+    /// <c>CWeaponInaccuracy</c> 0.01745329 rad - one degree, which is 0.09 m of
+    /// lateral scatter at 5 m and 0.63 m at 36 m - plus the player accelerating
+    /// during the round's flight. The law is a separatrix, not a threshold, and
+    /// this test asserts it as one.</para>
+    ///
+    /// <para><b>What follows from it, and it is the reason the measurement was
+    /// taken.</b> The required crossing speed falls as range grows, so the
+    /// Blaster is a knife-range weapon: the measured hit rate by launch band is
+    /// 70 % inside 5 m, 65 % from 5-10 m, and 5 % or less at every band beyond
+    /// 10 m. All 7,600 hull this run loses to Blasters is spent inside 10 m.
+    /// <b>Standing off does not follow from that, and was measured.</b> See the
+    /// class remarks on <c>Level100ChainAutopilot.EngageWaveTwo</c>: the
+    /// <c>Forseti Drone Missile Launcher</c>'s <c>CWeaponMinRange</c> 20.0 means
+    /// the range band that defeats the Blaster is also the band that switches
+    /// on a weapon costing 2,500 hull a hit rather than 200.</para>
+    /// </summary>
+    [Fact]
+    public void BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses()
+    {
+        IReadOnlyList<Level100ChainAutopilot.ObservedBlaster> blasters =
+            _chain.Driver.Blasters;
+
+        // The impact envelope is the same 0.4 m the runtime tests against.
+        const double EnvelopeMillimeters =
+            SimulationConstants.Level100PlayerContactRadiusMillimeters;
+
+        static double Ratio(Level100ChainAutopilot.ObservedBlaster shot) =>
+            shot.PerpendicularSpeedMetersPerSecond * shot.LaunchSlantMeters / 18.0;
+
+        var comfortablyInside = blasters
+            .Where(shot => Ratio(shot) < 0.5)
+            .ToList();
+        var comfortablyOutside = blasters
+            .Where(shot => Ratio(shot) > 2.5)
+            .ToList();
+
+        // Both populations have to be large enough for a rate to mean anything.
+        Assert.True(
+            comfortablyInside.Count >= 10,
+            $"Only {comfortablyInside.Count} Blasters were launched against a " +
+            "crossing speed below half the law's requirement; the law is not " +
+            "being exercised on that side.");
+        Assert.True(
+            comfortablyOutside.Count >= 50,
+            $"Only {comfortablyOutside.Count} Blasters were launched against a " +
+            "crossing speed above 2.5x the law's requirement.");
+
+        double insideHitRate = comfortablyInside
+            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters) /
+            (double)comfortablyInside.Count;
+        double outsideHitRate = comfortablyOutside
+            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters) /
+            (double)comfortablyOutside.Count;
+
+        _output.WriteLine(
+            $"inside n={comfortablyInside.Count} rate={insideHitRate:F3}; " +
+            $"outside n={comfortablyOutside.Count} rate={outsideHitRate:F3}");
+
+        // A player moving at less than half the required crossing speed is hit.
+        Assert.True(
+            insideHitRate >= 0.9,
+            $"Blasters fired at a stationary-enough player hit only " +
+            $"{insideHitRate:P0} of the time; the 18/slant law does not hold.");
+
+        // A player moving at more than 2.5x it is not.
+        Assert.True(
+            outsideHitRate <= 0.02,
+            $"Blasters fired at a player crossing well above the law's " +
+            $"requirement still hit {outsideHitRate:P0} of the time.");
+
+        // And the closest-approach observable has to agree with the hull, which
+        // is what makes it evidence rather than a second geometry engine. Each
+        // Blaster is 200 hull; the observable over-counts slightly because it
+        // evaluates a swept segment on every Core tick while the runtime
+        // advances rounds only on the 20 Hz retail base tick.
+        int observedHits = blasters
+            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
+        int hullBlasterHits = _chain.Driver.HullDrops.Count(drop => drop.Delta == 200);
+        Assert.InRange(observedHits, hullBlasterHits, hullBlasterHits + 8);
+    }
+
+    /// <summary>
     /// <c>SetAIState(AI_OFF)</c> silences a unit's weapons.
     ///
     /// <para><b>Why this test exists, and the trap it closes.</b> The AI_OFF
