@@ -24,9 +24,12 @@ namespace OnslaughtRebuild.Client.Tests;
 /// (<c>D3DRS_DIFFUSEMATERIALSOURCE</c> = <c>D3DMCS_COLOR1</c>) and
 /// <c>RenderState_SetRaw(0x93, 1)</c> (<c>D3DRS_AMBIENTMATERIALSOURCE</c> =
 /// <c>D3DMCS_COLOR1</c>). <c>D3DRS_COLORVERTEX</c> (<c>0x8D</c>) is written at
-/// none of the 547 render-state call sites reachable from the three setters
+/// none of the 490 render-state call sites reachable from the two general setters
 /// <c>0x00513BC0</c>, <c>0x00513C20</c> and <c>0x00513A50</c>, so it keeps its
-/// <c>TRUE</c> Direct3D 8 default.</description></item>
+/// <c>TRUE</c> Direct3D <b>9</b> default. (The binary imports d3d9.dll - two
+/// occurrences, zero of d3d8.dll - and every setter resolves on the
+/// IDirect3DDevice9 vtable at +0xE4. The default value is the same in both
+/// APIs, so only the attribution was wrong.)</description></item>
 /// <item><description>The mesh draw keeps lighting on. Statically, <c>0x89</c>
 /// is cleared only around the mode 2 and mode 6 passes of
 /// <c>CMeshRenderer__RenderMeshCore</c> (<c>0x00549570</c>) and the two overlay

@@ -741,8 +741,9 @@ internal sealed class RetailAquilaWalkerAsset
     /// <c>D3DRS_DIFFUSEMATERIALSOURCE</c> and
     /// <c>D3DRS_AMBIENTMATERIALSOURCE</c> at <c>D3DMCS_COLOR1</c>, and stage
     /// zero to <c>COLORARG1 = D3DTA_TEXTURE</c> / <c>COLORARG2 =
-    /// D3DTA_DIFFUSE</c>. <c>D3DRS_COLORVERTEX</c> is written at none of the
-    /// 547 render-state call sites, so it keeps its TRUE D3D8 default.
+    /// D3DTA_DIFFUSE</c>. <c>D3DRS_COLORVERTEX</c> (<c>0x8D</c>, NOT 60 - 60 is TEXTUREFACTOR and IS
+    /// written) is written at none of the
+    /// 490 render-state call sites, so it keeps its TRUE D3D9 default.
     /// The base mesh pass runs lit, now measured rather than inferred:
     /// <c>D3DRS_LIGHTING</c>, read from the render-state shadow at
     /// <c>0x00855764</c> (the array at <c>0x00855540</c> indexed

@@ -17,8 +17,8 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <c>D3DRS_DIFFUSEMATERIALSOURCE</c> and <c>D3DRS_AMBIENTMATERIALSOURCE</c>
 /// both <c>D3DMCS_COLOR1</c>, and stage zero
 /// <c>COLORARG1 = D3DTA_TEXTURE</c> / <c>COLORARG2 = D3DTA_DIFFUSE</c>;
-/// <c>D3DRS_COLORVERTEX</c> is written at none of the 547 render-state call
-/// sites and so keeps its <c>TRUE</c> Direct3D 8 default; and the base mesh
+/// <c>D3DRS_COLORVERTEX</c> (<c>0x8D</c>) is written at none of the 490 render-state call
+/// sites and so keeps its <c>TRUE</c> Direct3D <b>9</b> default; and the base mesh
 /// pass runs lit — now read at runtime rather than inferred, with
 /// <c>D3DRS_LIGHTING</c> at <c>[0x00855764]</c> equal to <c>1</c> across all
 /// 576 world and tree mesh draws of a Level 100 frame, and the mode-2 and

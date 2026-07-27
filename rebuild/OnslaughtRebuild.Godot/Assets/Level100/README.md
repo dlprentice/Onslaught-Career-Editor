@@ -531,7 +531,7 @@ additional byte-rounding steps.
 `(0.5*R.x+0.5,-0.5*R.y+0.5)` from the per-vertex camera-space reflection
 vector. The draw inherits the world stage-0 sampler: wrapping U/V, linear
 magnification and mip interpolation, anisotropic minification capped at 4, and
-mip LOD bias `-1`. The D3D8 path has no sRGB texture read/write state, so its
+mip LOD bias `-1`. The D3D9 fixed-function path has no sRGB texture read/write state, so its
 texture arithmetic is on encoded channel values; `retail_output` performs only
 the transfer required by Godot's active output contract. Released exponential
 fog is applied after the texture cascade and before target blending. Applying
