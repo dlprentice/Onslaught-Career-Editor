@@ -62,6 +62,15 @@ reading files a subagent could have read for you.
   once once produced answers to *other agents'* questions, through inherited
   stdin, shared output paths and a shared client socket. Give every agent its own
   output path, and treat a result that does not name its own question as suspect.
+- **NEVER send global synthetic input. No `SendInput`, no `keybd_event`, no
+  `mouse_event`, no `SetCursorPos`, and above all no PrtScn.** The maintainer sits
+  at this machine while agents run. Global input lands in whatever window has
+  focus: a `PrtScn` sent by an agent on 2026-07-27 froze his screen, and the same
+  hazard is why retail captures were blocked for days as "needs the user away from
+  the keyboard". To drive a window, post messages to its `HWND`
+  (`tools/send_game_window_input.ps1` has a background mode). To grab pixels, use
+  `PrintWindow`/`BitBlt` on the target's DC. If a task appears to *require* global
+  input, that is a finding to report, not a licence to send it.
 
 ## Evidence
 
