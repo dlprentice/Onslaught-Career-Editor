@@ -967,6 +967,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             BeginDesignSpace();
             DrawCompassBaseRing(snapshot, hud);
             DrawLowerLeftInstrument(snapshot, hud);
+            DrawLowerRightArcShellFill();
             DrawWeaponSelection(hud);
             DrawBattleLine();
             if (MessageBoxIsDeployed(snapshot))
@@ -1094,6 +1095,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 yaw,
                 RetailColor(0xff5f7fff));
         }
+
+        /// <summary>
+        /// The alpha-blended half of the lower-right arc shell. Retail's
+        /// <c>CHud__RenderObjectiveSlotFillPanel</c> (<c>0x00486940</c>) sets
+        /// <c>SRCBLEND = SRCALPHA</c> / <c>DESTBLEND = INVSRCALPHA</c>
+        /// (<c>RenderState_Set(0x13, 5)</c>, <c>(0x14, 6)</c> at
+        /// <c>0x004869f6</c>) and draws <c>this+0x128</c> - WeaponFill - with the
+        /// packed colour <b><c>0x3f000000</c></b>, a hard immediate
+        /// (<c>push 0x3f000000</c> at <c>0x00486a5d</c>). Colour zero, alpha
+        /// 0x3f: the fill is a pure 24.7 % darkener, which is why it is here and
+        /// not on the additive layer. See
+        /// <see cref="LowerRightArcShellRect"/> for the placement and the mirror.
+        /// </summary>
+        private void DrawLowerRightArcShellFill() =>
+            DrawTextureRectRegion(
+                assets.WeaponFill,
+                LowerRightArcShellRect(),
+                MirroredWeaponPageSource(),
+                RetailColor(0x3f000000));
 
         private void DrawWeaponResource(
             WorldSnapshot snapshot,
@@ -1491,6 +1511,62 @@ public sealed partial class FirstFlightHud : CanvasLayer
     private static Rect2 BattleLineInstrumentRect() =>
         new(DesignWidth - 121f, DesignHeight - 112f, 128f, 128f);
 
+    /// <summary>
+    /// The pale hooked arc shell around the lower-right instrument: a
+    /// horizontally MIRRORED copy of the same 128x128 weapon page the lower-left
+    /// panel uses, at <c>Rect2(DesignWidth - 141, DesignHeight - 141, 128, 128)</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// PLACEMENT, read out of <c>CHud__RenderObjectiveSlotFillPanel</c>
+    /// (<c>0x00486940</c>) in the pristine image rather than fitted. Its
+    /// single-player energy-weapon branch computes
+    /// <c>x = ((width - _DAT_005dbe98) + _DAT_005dbe7c) - _DAT_005dbe34) - _DAT_0067a628</c>
+    /// and <c>y = (height - _DAT_005dbe80) - _DAT_0067a62c</c>, with
+    /// <c>_DAT_005dbe98 = 122.0</c>, <c>_DAT_005dbe7c = 9.0</c>,
+    /// <c>_DAT_005dbe34 = 28.0</c> and <c>_DAT_005dbe80 = 13.0</c>. The two
+    /// <c>0x0067a6xx</c> viewport terms are zero in single player - that is the
+    /// same pair already tied to zero by the ForsetiIcon/darkener fit in
+    /// <see cref="BattleLineInstrumentRect"/>. So x = width - 141 = 499 and the
+    /// bottom-anchored y = height - 13 = 467, i.e. the page occupies
+    /// (499, 339)..(627, 467). That is EXACTLY the mirror of the lower-left
+    /// weapon rect (9, 339)..(137, 467) under x' = 635 - x.
+    /// </para>
+    /// <para>
+    /// The MIRROR itself is pixel-derived, not byte-derived. Correlating a
+    /// median-high-passed 27-frame mean of
+    /// <c>retail-reference-pristine/level100-gameplay/hud-timeline-run1/</c>
+    /// against the high-passed weapon template in band r 48..82 about the fitted
+    /// right ring centre (568.08, 416.46) gives <b>r = +0.532 mirrored at
+    /// dx = dy = 0</b> against <b>r = +0.072 unmirrored</b> (best of an 81-offset
+    /// sweep); the same estimator on the left band about (66.01, 417.25) gives
+    /// <b>+0.481 unmirrored</b> against <b>+0.076 mirrored</b>. Ghidra's reading
+    /// of the shipped call's trailing <c>(0.0, 1.0)</c> argument pair - which the
+    /// split-screen branch swaps to <c>(1.0, 0.0)</c>, exactly the shape of a u
+    /// range - would say this draw is UNmirrored. The pixels say otherwise by a
+    /// factor of seven, so either that argument mapping is wrong or the
+    /// lower-left panel is the mirrored one. Recorded as unresolved.
+    /// </para>
+    /// <para>
+    /// The dynamic resource/heat fill and the weapon icon are deliberately NOT
+    /// mirrored here. Retail's function draws a middle
+    /// <c>CVBufTexture__DrawSpriteEx</c> between the two below, reusing the same
+    /// <c>this+0x128</c> page scaled by the ammo percentage and tinted from it;
+    /// this client's producer does not carry that state for a right-hand slot,
+    /// and mirroring the left panel's heat bar would be an invention. Retail's
+    /// <c>DAT_008aa530</c>/<c>DAT_008aa534</c> visibility gate is likewise not
+    /// implemented: the shell is drawn unconditionally, as the left panel is.
+    /// </para>
+    /// </remarks>
+    private static Rect2 LowerRightArcShellRect() =>
+        new(DesignWidth - 141f, DesignHeight - 141f, 128f, 128f);
+
+    /// <summary>
+    /// A negative-width source rect, which is how Godot's canvas item asks for a
+    /// horizontal flip of the whole 128x128 page.
+    /// </summary>
+    private static Rect2 MirroredWeaponPageSource() => new(0f, 0f, -128f, 128f);
+
     private static Rect2 BattleLinePortraitRect() =>
         new(DesignWidth - 137f, DesignHeight - 128f, 128f, 128f);
 
@@ -1710,6 +1786,25 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 weaponHighlight > 0f
                     ? new Color(0.50f, 1f, 0.25f, 1f)
                     : RetailColor(0xff7f7f7f));
+
+            // The additive half of the lower-right arc shell. The same shipped
+            // function sets ONE/ONE (RenderState_Set(0x13, 2), (0x14, 2) at
+            // 0x00486c2b) and draws this+0x124 - WeaponOutline - with the packed
+            // colour 0xffaf8f6f, a hard immediate: push 0xffaf8f6f at
+            // 0x00486c7b. That is NOT the 0xff7f7f7f the left panel above uses,
+            // which is exactly why this was left open rather than mirrored.
+            // Independent corroboration from the framebuffer: regressing retail's
+            // 27-frame mean on this client's own capture as background over the
+            // right shell band recovers per-channel additive gains
+            // [128.5, 111.4, 85.8] DN against the byte value [175, 143, 111] -
+            // the same channel ratios to within 5 %, at a common gain of 0.76
+            // that the free-parameter fit cannot separate from texture filtering
+            // and background error. The bytes are used; the fit is not.
+            DrawTextureRectRegion(
+                assets.WeaponOutline,
+                LowerRightArcShellRect(),
+                MirroredWeaponPageSource(),
+                RetailColor(0xffaf8f6f));
 
             Rect2 gunsRect = GunsRect();
             Level100HudWeaponSnapshot weapon = hud.Weapon;
