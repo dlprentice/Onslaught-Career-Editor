@@ -454,11 +454,32 @@ finally {
 }
 
 $manifest = [pscustomobject]@{
-    schema = 'onslaught-retail-capture.v1'
+    schema = 'onslaught-retail-capture.v2'
     targetRoot = $TargetRoot
     targetSha256 = $hash
     targetNote = 'pristine BEA.exe + force_windowed only (0x12A644); version overlay and 4:3 gate left pristine'
     skipFmv = [bool]$SkipFmv
+
+    # THE INPUTS THAT PRODUCED THESE FRAMES. v1 recorded the target hash but not
+    # the script, so a v1 capture could be traced to the exact BYTES that drew it
+    # and NOT to the actions that got it there. That is the failure this file's
+    # own header warns about - "evidence whose method is unreproducible decays
+    # into folklore" - and it bit on 2026-07-27: re-deriving the reveal window of
+    # the no-skipfmv main-menu burst meant reconstructing its step script by
+    # inference, because run1's manifest did not carry it.
+    #
+    # Retail startup is not deterministic (disk caching alone moves
+    # click-to-start by seconds), so the steps are the only reproducible account
+    # of what the capture actually did. They are cheap to store and they are the
+    # difference between a reference set and a pile of PNGs.
+    steps = $Steps
+    clickAt = $ClickAt
+    clickAtSeconds = $ClickAtSeconds
+    clickOffsetY = $ClickOffsetY
+    keyAt = $KeyAt
+    captureSecondsAfterWindow = $CaptureSecondsAfterWindow
+    timeoutSeconds = $TimeoutSeconds
+
     shots = $shots
 }
 $manifest | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $OutputDirectory 'retail-capture-manifest.json')
