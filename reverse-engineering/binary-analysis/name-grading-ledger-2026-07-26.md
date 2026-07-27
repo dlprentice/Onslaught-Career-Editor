@@ -7,13 +7,21 @@ note records three corrections to the *grader itself*. The 07-25 file's
 `SOURCE_BACKED` figure of 1,009 and its sentence "declaration-aware, not a
 substring match" are **both wrong** and are corrected here.
 
-Cross-model scrutiny of these changes was **one model, not two**: `grok-4.5`
+Cross-model scrutiny of the **regrade** was one model, not two: `grok-4.5`
 (effort `high`) returned in full, and `codex exec` / `gpt-5.6-sol` (effort `max`,
-`-s read-only`) **failed to converge** — every shell invocation died inside the
+`-s read-only`) failed to converge — every shell invocation died inside the
 Windows sandbox before executing. Six of grok's objections were checked and held,
 and two of them changed the shipped tool (see
-`local-lab/GHIDRA-REGRADE-2026-07-26.md` §3a). A missing consult is not agreement,
-and this revision has had half the scrutiny the protocol asks for.
+`local-lab/GHIDRA-REGRADE-2026-07-26.md` §3a).
+
+**The rename wave HAS both families.** `grok-4.5` (`high`) returned in full, and
+`gpt-5.6-sol` (`max`, `-s read-only`) returned in full **when run from the main
+loop rather than from a subagent shell** — the `CreateProcessAsUserW failed: 5`
+that killed four consecutive attempts is an access-denied on process spawn
+specific to subagent shells, not a property of the sandbox mode. That is worth
+carrying: a consult that "cannot run" may simply need to be run from elsewhere.
+Codex upheld two of the three contested decisions on independent byte evidence
+and **refuted the third**, which is recorded and acted on below.
 
 Produced by `tools/re_ledger.py` over the same 6,969-function inventory and the
 same pristine specimen (sha256 `74154bfa…`, which the tool refuses to run
@@ -34,7 +42,7 @@ restores the undivided eight-grade view for comparison only.
 
 Working detail and per-address diffs: `local-lab/GHIDRA-REGRADE-2026-07-26.md`.
 
-## Update 2026-07-26 (later) — 13 renames APPLIED to the live database
+## Update 2026-07-26 (later) — 13 renames and 1 demotion APPLIED to the live database
 
 The sentence "no Ghidra database was opened or mutated; no function was renamed"
 was true when this file was first written and is **no longer true**. Thirteen of
@@ -57,8 +65,11 @@ Two of the fifteen were **refuted by test and not applied**:
   as implementation identity — the same over-claim this revision exists to
   correct. **Not applied.**
 
-The counts below are the **post-rename** figures, measured from a fresh export of
-the live database (`targets=6969 found=6969 missing=0`).
+A fourteenth mutation followed, of a different kind: **`0x0048c300` was demoted**,
+not renamed. See "Not claimed" below and §the demotion note.
+
+The counts below are the **post-rename, post-demotion** figures, measured from a
+fresh export of the live database (`targets=6969 found=6969 missing=0`).
 
 ## Correction 1 — `SOURCE_BACKED` was over-claiming by 481 rows
 
@@ -120,7 +131,7 @@ and the two independent implementations agree on **3,888 of 3,888** addresses.
 
 ## Results
 
-| grade | 2026-07-25 | 07-26 regrade | 07-26 post-rename | what it licenses |
+| grade | 2026-07-25 | 07-26 regrade | 07-26 final | what it licenses |
 | --- | ---: | ---: | ---: | --- |
 | RTTI_CONFIRMED | 1,400 | 1,400 | 1,400 | prefix equals the RTTI-resolved owning class |
 | RTTI_CONFLICT | 35 | 25 | 25 | RTTI resolves an owner, the prefix disagrees |
@@ -133,15 +144,22 @@ and the two independent implementations agree on **3,888 of 3,888** addresses.
 | **UNBACKED (total)** | **3,888** | **4,369** | **4,368** | **still one parent, now with seven children** |
 | … COMPILER_EH_FUNCLET | — | 1,179 | 1,179 | MSVC unwind funclet; **not human-namable** |
 | … PE_IMPORT | — | 36 | 36 | import-table identity (32 exact, 4 ordinal) |
-| … RESIDUAL_FREEFORM | — | 96 | 96 | no `Prefix__` in the name |
+| … RESIDUAL_FREEFORM | — | 96 | **97** | no `Prefix__` in the name |
 | … VTABLE_VA_IN_BODY | — | 176 | **188** | that class's vtable VA appears in these bytes — **upper bound, not ownership** |
-| … IMAGE_TYPE_TOKEN | — | 1,100 | 1,100 | the class exists in this build — **not ownership** |
+| … IMAGE_TYPE_TOKEN | — | 1,100 | **1,099** | the class exists in this build — **not ownership** |
 | … IMAGE_TYPE_SUBSTRING | — | 668 | 668 | the token occurs as bytes somewhere |
 | … INVENTED_PREFIX | — | 1,114 | **1,101** | **no artefact of any kind** |
 | **total** | **6,969** | **6,969** | **6,969** | |
 
-The post-rename column moves by exactly the 13 applied rows: 13 leave
-`INVENTED_PREFIX`, 12 land in `VTABLE_VA_IN_BODY` and 1 in `BINARY_STRING`.
+The final column moves by exactly the 14 applied rows. The 13 renames: 13 leave
+`INVENTED_PREFIX`, 12 land in `VTABLE_VA_IN_BODY` and 1 in `BINARY_STRING`. The
+1 demotion: `0x0048c300` leaves `IMAGE_TYPE_TOKEN` for `RESIDUAL_FREEFORM`,
+because the demoted name makes no class claim at all.
+
+**The demotion raises the residual, and that is correct.** 1,865 → **1,866**.
+Removing a false claim is not a gain in evidence; it is the withdrawal of a claim
+that never had any. A ledger that fell here would be measuring confidence rather
+than evidence.
 
 **That last row is a located grader defect, not a result.** `0x004e6870`
 `CNormalSquad__Constructor` graded `BINARY_STRING` rather than
@@ -173,13 +191,13 @@ positive finding of absence — no type descriptor, no byte occurrence anywhere 
 2,506,752 bytes, no reference-source definition. 120 distinct tokens, `CFastVB`
 alone accounting for 393 functions.
 
-**The honest residual is 1,865, not 3,888 and not 0.** Removing the 1,179
+**The honest residual is 1,866, not 3,888 and not 0.** Removing the 1,179
 compiler funclets leaves 5,790 functions that could in principle carry a
 developer name; of those, 1,101 `INVENTED_PREFIX` + 668 `IMAGE_TYPE_SUBSTRING` +
-96 `RESIDUAL_FREEFORM` = **1,865** rest on nothing image-local. That is 32.2% of
+97 `RESIDUAL_FREEFORM` = **1,866** rest on nothing image-local. That is 32.2% of
 the human-namable set. It was 1,878 after the regrade — *up* by 18 from the 1,860
-estimated on 07-25 because 18 rows fell out of `SOURCE_BACKED` entirely — and the
-rename wave took 13 off it.
+estimated on 07-25 because 18 rows fell out of `SOURCE_BACKED` entirely — the
+rename wave took 13 off it, and the demotion put 1 back.
 
 **Thirteen names is 0.7% of the residual, and that is the honest scale of the
 result.** The technique behind it (§ the rename-wave note) is accurate — 95.2%
@@ -223,16 +241,45 @@ which is direct evidence that the cohort over-collects as this paragraph says.
   were **not** applied as families: only the individually adjudicated members
   were renamed, and the sibling functions carrying those prefixes still carry
   them.
-- **`0x0048c300` is still named `CInfluenceMap__dtor` and that name is wrong.**
-  Measured: its deleting wrapper `0x0048c2e0` is slot 1 of **`CInfluenceNode`**'s
-  vtable `0x5dc050`, while `CInfluenceMap`'s vtable `0x5dfcb4` slot 1 reaches
-  `0x0050b950` instead; and `0x0048c300`'s body stores no recovered vtable at
-  all. Both consulted models raised this independently. It was **not** renamed,
-  because it fails the ancestor-shadow gate that licensed the other thirteen —
-  `IListener` and `IRenderableThing` have no recovered destructor to rule out.
-  Renaming it on weaker evidence than the wave's own standard would be the
-  over-claim this revision exists to correct. Recorded here so the wrong name is
-  not mistaken for a checked one.
+- **`0x0048c300` was DEMOTED, not retained and not reassigned.** It was named
+  `CInfluenceMap__dtor` and that name is positively **false** by RTTI. Measured,
+  and independently reached by both consulted models: its wrapper `0x0048c2e0`
+  carries the canonical scalar-deleting-destructor bytes and is slot 1 of
+  **`CInfluenceNode`**'s vtable `0x5dc050`; `CInfluenceMap`'s own vtable
+  `0x5dfcb4` slot 1 is `0x0050b930`, whose wrapper calls `0x0050b950`, and *that*
+  body stores `0x5dfcb4` into entry-`this`; `CInfluenceNode`'s RTTI hierarchy does
+  not contain `CInfluenceMap` (they share only `CMonitor`/`IListener`); and
+  `0x0048c300` stores no recovered vtable at all.
+
+  The first version of this note **retained** the false name and merely warned
+  about it here, on the grounds that the only alternative — asserting
+  `CInfluenceNode` — fails the ancestor-shadow gate that licensed the rename wave.
+  `gpt-5.6-sol` refuted that as a false binary and it was right: the third option
+  lowers no gate at all. The symbol is now the class-neutral
+  **`DestructorBody_0048c300`**, which asserts only what is proven (it is a
+  destructor body), with all of the above attached as a function comment in the
+  database itself.
+
+  **A known-false class name is worse than an unknown one**, because it
+  contaminates decompiler output, symbol search, and every automated ownership
+  pass built on top — none of which read this file. A warning in a document does
+  not repair a false assertion living in the database.
+
+- **A mechanical sweep for the same class of error found 6 more, of which 2 are
+  strong.** Criterion: a function named `P__*` where `P` is a real RTTI class,
+  which sits uniquely on class `Q`'s destroy path with `P != Q`, and where `P`
+  has a destructor body of its own that is uniquely claimed by `P` — so the
+  function cannot be `P`'s. Six rows qualify. In four the two classes are related
+  by RTTI, which is the same undecidable base/derived situation as `0x004a4e80`
+  and is **not** demonstrably false. In **two** the classes are RTTI-unrelated,
+  which is the strong form: `0x0048c300` (now demoted) and **`0x005386d0`
+  `CScriptEventNB__Destructor`**, which sits on `CPostEventData`'s destroy path
+  (`CPostEventData` vtable `0x5e4f34` slot 1 `0x5386b0` → `0x005386d0`) while
+  `CScriptEventNB` has its own body at `0x00538950`; the two classes share only
+  `CMonitor`/`IListener`. **`0x005386d0` was not touched** — it is reported, not
+  applied. `RTTI_CONFLICT`'s 25 rows are the separate, already-graded channel
+  where direct vtable membership contradicts the prefix.
+
 - The suffix of every name remains ungraded, under every grade in the table.
 - The abstract-base misattribution recorded on 07-25 is unchanged and still
   unbounded.
