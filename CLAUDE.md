@@ -70,8 +70,8 @@ Keep it to **rules and pointers**. Do not put findings here. A finding belongs i
 a dated evidence document that can be superseded in place; a finding pasted here
 becomes an unfalsifiable premise that later work will quietly build on. This has
 already bitten the project: a correction published on 2026-07-26 was itself wrong
-within the hour, and was only caught because it lived in a document that could be
-withdrawn rather than in a file everything trusts by default.
+later the same day, and was only caught because it lived in a document that could
+be withdrawn rather than in a file everything trusts by default.
 
 Before adding a line, ask whether it is still true if the measurement behind it
 turns out to be wrong. If the answer is no, it is a finding — link to it instead.

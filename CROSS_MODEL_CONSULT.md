@@ -45,7 +45,24 @@ Always pass `-s read-only`. Never use `codex apply`, and never accept a patch
 either model generates. Consultation is analysis only; implementation stays with
 the agent that owns the file.
 
-## Two traps that have already cost time
+## Three traps that have already cost time
+
+**A real Codex consult takes ten to thirty minutes, and the default tool timeout
+is two.** This is the single largest cause of "Codex failed" on this project, and
+it was misdiagnosed for most of a day as a permissions problem. Measured
+2026-07-26: six concurrent `codex exec` calls all exited 0 with no spawn failure,
+and `max` reasoning on a trivial prompt returned in **12 s** — so it is neither
+contention nor inherent slowness. But a genuine research consult over this
+repository ran **~30 minutes and 216k tokens**, and another exceeded a
+600-second timeout. A consult killed at 120 s surfaces as a stall, a truncated
+error, or `CreateProcessAsUserW failed: 5`, and reads as failure.
+
+So: **give every Codex call an explicit long timeout (600 s is the tool maximum),
+and background anything larger and poll it.** Do not "fix" this by disabling the
+sandbox — `--dangerously-bypass-approvals-and-sandbox` (`--yolo`) removes the one
+guard that stops Codex writing to the repository while other agents are editing
+it, and does not address the cause. Grok appears more reliable here only because
+it answers in seconds; that is a latency difference, not a quality one.
 
 **Codex must be launched from inside the repository.** Running `codex exec` from
 a scratchpad directory fails with `Not inside a trusted directory` — the trust
