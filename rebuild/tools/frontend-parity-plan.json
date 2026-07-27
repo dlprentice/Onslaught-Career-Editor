@@ -1,23 +1,22 @@
 {
   "_doc": [
-    "Which frontend pages the capture gate scores against retail, and how badly",
-    "each is allowed to do before the gate FAILS. Consumed by",
+    "Which frontend pages the capture gate scores against retail, and what each",
+    "scored when it was last measured. Consumed by",
     "tools/score_frontend_capture.py, which Capture-Frontend.ps1 calls.",
     "",
-    "regressionCeiling is a REGRESSION CEILING, NOT A PARITY CLAIM. Every entry",
-    "sits above a `measured` value recorded beside it, and several of those",
-    "measured values are enormous - title-logo and bg-emblem-topright are both",
-    "wrong by a third of their area (task #17). The ceiling says 'do not get",
-    "worse than this'. It does not say the page is right. Anyone quoting a",
-    "ceiling as a parity number is misreading the file.",
+    "`measured` is the FACT. The gate's ceiling is DERIVED from it as",
+    "min(measured + marginPp, 100) at load time and is deliberately NOT stored",
+    "here - it was, briefly, as 30 values that were each exactly measured + 2.0,",
+    "and two copies of one fact drift. Use `regressionCeilingOverride` on a page",
+    "if some region ever needs a bound other than the blanket margin, with a",
+    "comment saying why. None does today.",
     "",
-    "The gated statistic is gapPct: pixels where we differ materially from the",
-    "retail reference AND retail's own second run does not. Per-pixel and",
-    "floor-aware, so animated content retail cannot reproduce itself is not",
-    "charged to us, while a layer we never drew still is.",
+    "A ceiling is NOT a parity claim - title-logo is 41.21% wrong. The canonical",
+    "explanation of that distinction is the module docstring of",
+    "tools/score_frontend_capture.py; do not restate it, point at it.",
     "",
-    "Ceilings are applied to the WORST sample, never the mean - a regression",
-    "visible at one video phase is still a regression."
+    "Ceilings apply to the WORST sample, never the mean - a regression visible at",
+    "one video phase is still a regression."
   ],
   "referenceRoot": "local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26",
   "_referenceNote": [
@@ -84,18 +83,6 @@
         "decor-right-arc": 98.35,
         "decor-right-glyph": 90.18,
         "version-overlay": 90.78
-      },
-      "regressionCeiling": {
-        "FULL FRAME": 78.18,
-        "bg-empty-left": 99.94,
-        "bg-emblem-topright": 70.87,
-        "title-logo": 74.9,
-        "lang-selector": 100.0,
-        "menu-column": 92.38,
-        "decor-left-arc": 95.56,
-        "decor-right-arc": 100.0,
-        "decor-right-glyph": 92.18,
-        "version-overlay": 92.78
       }
     },
     {
@@ -126,18 +113,6 @@
         "decor-right-arc": 22.56,
         "decor-right-glyph": 37.21,
         "version-overlay": 10.39
-      },
-      "regressionCeiling": {
-        "FULL FRAME": 29.0,
-        "bg-empty-left": 8.99,
-        "bg-emblem-topright": 40.7,
-        "title-logo": 45.39,
-        "lang-selector": 76.23,
-        "menu-column": 51.64,
-        "decor-left-arc": 32.58,
-        "decor-right-arc": 24.56,
-        "decor-right-glyph": 39.21,
-        "version-overlay": 12.39
       }
     },
     {
@@ -184,18 +159,6 @@
         "decor-right-arc": 7.41,
         "decor-right-glyph": 21.9,
         "version-overlay": 6.82
-      },
-      "regressionCeiling": {
-        "FULL FRAME": 21.53,
-        "bg-empty-left": 7.61,
-        "bg-emblem-topright": 37.57,
-        "title-logo": 43.21,
-        "lang-selector": 19.19,
-        "menu-column": 25.35,
-        "decor-left-arc": 14.15,
-        "decor-right-arc": 9.41,
-        "decor-right-glyph": 23.9,
-        "version-overlay": 8.82
       }
     }
   ],

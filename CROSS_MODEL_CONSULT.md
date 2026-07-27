@@ -23,7 +23,7 @@ several of those catches came from exactly that kind of disagreement.
 ## Invocations
 
 ```bash
-codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" "<prompt>"
+codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" "<prompt>" < /dev/null
 grok -p "<prompt>" -m grok-4.5 --reasoning-effort high
 ```
 
@@ -171,9 +171,10 @@ hour**, and be willing to wait up to about three — a consult that is still
 running is not a consult that has failed, and killing it at the ten-minute
 ceiling is exactly the mistake that caused this entry.
 
-If a question does not resolve, **do not escalate the tier** — the tiers above
-`high` are the ones measured not to return, so escalating trades an answer for
-silence. Escalate the *prompt* instead: narrow it, name the specific artefact to
+If a question does not resolve, **do not escalate the tier** — every tier above
+`high` was measured to cost two to nine times as much for the same verdict, or
+to produce nothing inside a usable window, so escalating trades an answer for a
+much longer wait. Escalate the *prompt* instead: narrow it, name the specific artefact to
 open, and say what evidence would settle it. That is what produced the sharpest
 results here. A consult nobody waits for is a consult that did not happen.
 
@@ -189,8 +190,8 @@ reachable tier. The discriminator was whether the model opened
 | `medium` | 676 s | correct |
 | `high` | ~600 s | correct, and went furthest — decoded the shipped asset and traced composed constants |
 | `xhigh` | **1202 s** | **correct** — reached the same REFUTED verdict and did open the callee. Rejected purely on cost: twice `high`'s wall clock for the same answer |
-| `max` | **no output after 35 min** | — |
-| `ultra` | hung on a trivial prompt | — |
+| `max` | **no output after 35 min in this run**; a later 16-agent round completed 14 of 16 in **33–95 min** | — (this run); correct but far too slow in the later round |
+| `ultra` | 7 s on a trivial prompt; **nothing after 11 min** on the full prompt | — |
 
 Three conclusions, all of which cost real time to establish:
 
@@ -199,14 +200,18 @@ Three conclusions, all of which cost real time to establish:
   forbids. A cheap consult that ratifies a false claim is worse than none,
   because it launders it.
 - **`medium` costs the same as `high` and returns less.** There is no saving.
-- **`max` does not return on real questions.** It answers a trivial prompt in 12 s
-  but produced nothing in 35 minutes on a substantive one, from the main loop.
-  It is not slow; it is non-returning. Do not reach for it.
+- **`max` returns, but at three to nine times the cost.** This run produced
+  nothing in 35 minutes; a later 16-agent round showed it does finish, in 33 to
+  95 minutes. An earlier revision of this file called it "non-returning" on the
+  strength of the 35-minute wait alone — that was wrong. It is rejected on cost,
+  not on capability.
 
-`high` is therefore not a cost compromise. It is the **only tier with a completed
-measurement showing it both finishes and investigates properly** — `medium` also
-finishes and is correct but shallower, and `xhigh` never returned inside a usable
-window. That is the whole reason `high` is the default.
+`high` is therefore a cost decision, not a capability compromise. `medium`
+finishes and is correct but shallower; `xhigh` reaches the same verdict at
+**twice** the wall clock and exceeds the tool's 600 s foreground ceiling; `max`
+finishes at three to nine times the cost. `high` is the cheapest tier with a
+completed measurement showing it both finishes and investigates properly. That
+is the whole reason it is the default.
 
 ## Why main-loop-only, in one paragraph
 

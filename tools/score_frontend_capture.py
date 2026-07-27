@@ -46,13 +46,19 @@ beside it for continuity with the hand measurements, but they are not the gate.
 
 Thresholds are REGRESSION CEILINGS, not parity claims
 -----------------------------------------------------
-Each gated region carries a `measured` value - what the build scored when the
-ceiling was set - and a `regressionCeiling` above it. The ceiling says "do not
-get worse than this". It does not say the page is correct: FEP_MAIN's title logo
-and top-right emblem are both ~32-37 % wrong and their ceilings encode exactly
-that. Reading a ceiling as a parity statement is the mistake this docstring
-exists to prevent. The plan file records both numbers side by side so the
-distinction cannot be lost.
+Each gated region carries a `measured` value - what the build scored when it was
+last measured - and the ceiling is DERIVED from it here as
+`min(measured + marginPp, 100)`. The ceiling says "do not get worse than this".
+It does not say the page is correct: FEP_MAIN's title logo and top-right emblem
+are both ~35-41 % wrong and their ceilings encode exactly that. Reading a ceiling
+as a parity statement is the mistake this docstring exists to prevent, and this
+docstring is the canonical statement of it - other files should point here rather
+than restate it.
+
+The ceiling is derived rather than stored because it was briefly both: the plan
+carried 30 `regressionCeiling` values, every one exactly `measured + 2.0`. Two
+copies of one fact drift - re-measure after a fix, forget to regenerate, and the
+gate silently guards the old build. `measured` is the fact; the margin is policy.
 
 Honesty rules baked in
 ----------------------
@@ -109,6 +115,7 @@ def score_page(
     capture_dir: Path,
     reference_root: Path,
     tolerance_ms: int,
+    plan_margin: float,
 ) -> dict:
     """Score one page. Returns a result dict; never raises for data problems,
     because a page that cannot be scored must be REPORTED as unscorable rather
@@ -148,7 +155,26 @@ def score_page(
     if result["verdict"] == "ERROR":
         return result
 
-    ceilings: dict[str, float] = page["regressionCeiling"]
+    # Ceilings are DERIVED from `measured`, not stored beside it.
+    #
+    # They used to be a second block of 30 numbers in the plan, every one of them
+    # exactly min(measured + marginPp, 100). Two copies of the same fact drift:
+    # re-measure after a fix, forget to regenerate, and the gate silently guards
+    # the old build. `measured` is the fact; the ceiling is a policy applied to
+    # it, so the policy is applied here.
+    #
+    # `regressionCeilingOverride` stays available for a region that genuinely
+    # needs a tighter or looser bound than the blanket margin. There are none
+    # today, and one should carry a comment saying why.
+    margin = float(plan_margin)
+    ceilings: dict[str, float] = {
+        name: min(round(value + margin, 2), 100.0)
+        for name, value in page["measured"].items()
+    }
+    ceilings.update(page.get("regressionCeilingOverride", {}))
+    result["marginPp"] = margin
+    result["regressionCeiling"] = ceilings
+
     unknown = sorted(set(ceilings) - set(regions) - {FULL_FRAME})
     if unknown:
         result["verdict"] = "ERROR"
@@ -288,6 +314,7 @@ def main(argv: list[str]) -> int:
             args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
         return 0
 
+    margin_pp = float(plan.get("_measurementProvenance", {}).get("marginPp", 2.0))
     applicable = [p for p in plan["pages"] if p["capturePlan"] == capture_plan]
     unscored = [u for u in plan.get("unscored", []) if u.get("capturePlan") == capture_plan]
 
@@ -311,7 +338,8 @@ def main(argv: list[str]) -> int:
     print()
 
     for page in applicable:
-        result = score_page(page, args.capture_dir, reference_root, args.tolerance_ms)
+        result = score_page(
+            page, args.capture_dir, reference_root, args.tolerance_ms, margin_pp)
         report["pages"].append(result)
 
         print(f"{result['id']}: {result['verdict']}")
@@ -335,13 +363,10 @@ def main(argv: list[str]) -> int:
             print(f"    ERROR {err}")
 
         if args.measure and result.get("worstGapPct"):
-            margin = plan.get("_measurementProvenance", {}).get("marginPp", 2.0)
-            worst = result["worstGapPct"]
-            print(f'    "measured": {json.dumps(worst)},')
-            # Capped at 100: gapPct is a share of pixels, so a ceiling above
-            # 100 is unreachable and would silently un-gate the region.
-            print(f'    "regressionCeiling": '
-                  f'{json.dumps({k: min(round(v + margin, 2), 100.0) for k, v in worst.items()})}')
+            # Only `measured` is printed. The ceiling is derived from it at
+            # load time, so pasting a second block back into the plan would
+            # recreate the drift this removed.
+            print(f'    "measured": {json.dumps(result["worstGapPct"])},')
         print()
 
     for entry in unscored:

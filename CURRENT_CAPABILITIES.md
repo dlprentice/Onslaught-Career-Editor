@@ -308,6 +308,23 @@ presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
+**None of the above is a parity claim, and the measured gap is large.** As of
+2026-07-27 the best Level 100 gameplay frame scores **23.75% of pixels
+materially different from retail, mean channel distance 8.9**, against a
+retail reference at t0+25065 ms. The startup and frontend path is further off:
+its regression ceilings are recorded in `rebuild/tools/frontend-parity-plan.json`
+beside the measured value each was derived from, and several are tens of percent
+wrong — `title-logo` alone measures 41.21%. Those ceilings say "do not get
+worse"; they are not parity numbers, and quoting one as a parity number is a
+misreading. Three frontend pages are deliberately ungated because retail's own
+two runs disagree, and are reported `UNSCORED`.
+
+`Won` is likewise not a full clear. The observed route to the level's `Won`
+state runs through the **released ABORT branch**: the LevelScript's sub-40%
+hull poll posts `Abort Airborne Drones`, which retires the airborne phase with
+its own dialogue and score penalty. That is the released script doing what it
+was written to do, not the tutorial completed on its intended path.
+
 The current source tree and release packages do not include retail game assets
 or their conversions. The rebuild materializes the exact currently consumed slice
 from a user-provided supported retail installation into ignored local paths.

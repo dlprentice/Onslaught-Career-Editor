@@ -308,6 +308,15 @@ checks focus/cursor policy, a fresh retry, and return to the same Main Menu with
 the Level 100 world released. It writes structured report and log evidence
 only; it has no screenshot or visual-parity machinery.
 
+Visual regression is a separate gate. `rebuild/tools/Capture-Frontend.ps1`
+captures a plan and scores it against the retail reference through
+`tools/score_frontend_capture.py`, folding that verdict into `Status`: a
+frontend regression returns `FAIL`, and a run with nothing to score against
+returns `UNSCORED` rather than `PASS`. Its thresholds live in
+`rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
+parity claims. Reference frames are retail-derived and live under ignored local
+paths, so a fresh clone scores nothing.
+
 Read [PROVENANCE.md](PROVENANCE.md) before implementation work. Retail behavior
 claims must point to the smallest relevant binary/source/runtime evidence; Core
 agreement never re-proves retail.

@@ -46,9 +46,31 @@ def write_frame(path: Path, chrome: tuple[int, int, int], animated: int) -> None
     img.save(path)
 
 
-def build_fixture(root: Path, *, chrome: tuple[int, int, int]) -> tuple[Path, Path]:
-    """Lay out a retail reference set, a capture, and a plan. `chrome` is the
-    colour the CAPTURE draws its chrome in; retail always draws CHROME."""
+REF_ANIMATED = 10
+FLOOR_ANIMATED = 250
+
+
+def build_fixture(
+    root: Path,
+    *,
+    chrome: tuple[int, int, int],
+    capture_animated: int = FLOOR_ANIMATED,
+    floor_animated: int = FLOOR_ANIMATED,
+) -> tuple[Path, Path]:
+    """Lay out a retail reference set, a capture, and a plan.
+
+    `chrome` is the colour the CAPTURE draws its chrome in; retail always draws
+    CHROME, so a different value is a regression in a floor-stable region.
+
+    `capture_animated` defaults to differing from run1 and MATCHING run2, so the
+    animated patch is a real difference that the floor should excuse. It used to
+    be hard-coded equal to run1's value, which made the difference zero and meant
+    NO test exercised the floor at all while a comment claimed one did.
+
+    `floor_animated` exists so a test can take the floor away - set it equal to
+    run1 and the same candidate difference stops being excused. That pair is what
+    actually demonstrates the floor, rather than one run that could pass for
+    either reason."""
     ref_root = root / "reference"
     (ref_root / "run1").mkdir(parents=True)
     (ref_root / "run2").mkdir(parents=True)
@@ -56,11 +78,9 @@ def build_fixture(root: Path, *, chrome: tuple[int, int, int]) -> tuple[Path, Pa
     capture.mkdir()
 
     for offset in OFFSETS:
-        # run1 and run2 agree on chrome and disagree on the animated patch.
-        write_frame(ref_root / "run1" / f"mm-t{offset:06d}ms.png", CHROME, 10)
-        write_frame(ref_root / "run2" / f"mm-t{offset:06d}ms.png", CHROME, 250)
-        # The capture matches run1's animated value; the floor still excuses it.
-        write_frame(capture / f"mainmenu-t{offset:06d}ms.png", chrome, 10)
+        write_frame(ref_root / "run1" / f"mm-t{offset:06d}ms.png", CHROME, REF_ANIMATED)
+        write_frame(ref_root / "run2" / f"mm-t{offset:06d}ms.png", CHROME, floor_animated)
+        write_frame(capture / f"mainmenu-t{offset:06d}ms.png", chrome, capture_animated)
 
     (capture / "capture-manifest.json").write_text(json.dumps({
         "plan": "mainmenu", "capturePurpose": "production", "sourceCommit": "0" * 40,
@@ -81,8 +101,9 @@ def build_fixture(root: Path, *, chrome: tuple[int, int, int]) -> tuple[Path, Pa
             "noiseFloor": {"run": "run2", "prefix": "mm"},
             "regions": str(regions),
             "samples": OFFSETS,
+            # Ceilings are derived as measured + marginPp, so this is a 2.0
+            # ceiling on both regions.
             "measured": {"FULL FRAME": 0.0, "chrome": 0.0},
-            "regressionCeiling": {"FULL FRAME": 2.0, "chrome": 2.0},
         }],
         "unscored": [],
     }), encoding="utf-8")
@@ -99,14 +120,38 @@ def run(plan: Path, capture: Path, out: Path) -> tuple[int, dict]:
 
 
 def test_clean_capture_passes(root: Path) -> None:
+    """Baseline: a capture that differs from retail ONLY where retail's own two
+    runs also differ. The gap must be zero everywhere."""
     plan, capture = build_fixture(root, chrome=CHROME)
     code, report = run(plan, capture, root / "out.json")
     assert report["verdict"] == "PASS", report["verdict"]
     assert code == 0, code
-    # And it passed WHILE the animated patch differed from the noise-floor run,
-    # which is the floor doing its job rather than the gate being blind.
     worst = report["pages"][0]["worstGapPct"]
     assert worst["FULL FRAME"] == 0.0, worst
+
+
+def test_floor_excuses_only_what_retail_cannot_reproduce(root: Path) -> None:
+    """THE FLOOR TEST, and it is a PAIR because one run alone proves nothing.
+
+    Both halves present the identical candidate difference on the animated
+    patch. The only thing that changes is whether retail's second run also
+    differs there. If the verdict flips, the floor is what flipped it."""
+    # Half 1: run2 disagrees with run1 on the patch -> excused.
+    plan, capture = build_fixture(root, chrome=CHROME)
+    _, excused = run(plan, capture, root / "excused.json")
+    assert excused["verdict"] == "PASS", excused["verdict"]
+    assert excused["pages"][0]["worstGapPct"]["FULL FRAME"] == 0.0
+
+    # Half 2: same candidate, but retail's two runs now AGREE on the patch, so
+    # the difference is ours and must be charged.
+    root2 = root / "no-floor"
+    root2.mkdir()
+    plan2, capture2 = build_fixture(
+        root2, chrome=CHROME, floor_animated=REF_ANIMATED)
+    code, charged = run(plan2, capture2, root / "charged.json")
+    assert charged["verdict"] == "FAIL", charged["verdict"]
+    assert code == 1, code
+    assert charged["pages"][0]["worstGapPct"]["FULL FRAME"] > 0.0, charged
 
 
 def test_regression_is_caught(root: Path) -> None:
@@ -172,7 +217,7 @@ def test_ceiling_naming_an_unknown_region_is_an_error(root: Path) -> None:
     """A ceiling on a region that does not exist would silently gate nothing."""
     plan, capture = build_fixture(root, chrome=CHROME)
     body = json.loads(plan.read_text(encoding="utf-8"))
-    body["pages"][0]["regressionCeiling"]["chrom"] = 2.0
+    body["pages"][0]["measured"]["chrom"] = 0.0
     plan.write_text(json.dumps(body), encoding="utf-8")
     code, report = run(plan, capture, root / "out.json")
     assert report["verdict"] == "ERROR", report["verdict"]

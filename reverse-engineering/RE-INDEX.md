@@ -41,7 +41,22 @@ waves, superseded plans, and generated accounting.
   no definition anywhere), partitions `UNBACKED` into seven measured cohorts of
   which **1,179 are MSVC unwind funclets that can never carry a developer name**,
   and records the 13 renames applied to the live database. Honest residual:
-  **1,865 of a human-namable 5,790**.
+  **1,866 of a human-namable 5,790** (the ledger's own §"honest residual"; a
+  demotion inside the same wave took it from 1,865 to 1,866).
+- **Aggressive Ghidra analysis does not reduce that residual — measured, not
+  assumed.** Six isolated analyser passes on a disposable canary (Aggressive
+  Instruction Finder, Decompiler Parameter ID, address/switch-table aggression,
+  external-parameter propagation, variadic override, and a combined pass) left
+  the residual at **1,866 before and 1,866 after**. The Instruction Finder
+  recovered ~4,404 bytes of real application code but those land in `UNNAMED`,
+  enlarging the namable denominator without moving the residual; external-
+  parameter propagation moved it *up*, to 1,867, by correctly naming one
+  function. Seven of the nine analysers the exercise set out to enable were
+  **already on**. Do not re-run this as an untried lever. Evidence and
+  per-pass verdicts: `local-lab/GHIDRA-AGGRESSIVE-ANALYSIS-2026-07-27.md`
+  (untracked); tooling is `tools/ListAnalysisOptions.java`,
+  `tools/RunIsolatedAnalyzer.java`, `tools/ExportFullFunctionInventory.java`,
+  `tools/ExportLooseInstructions.java`, and `tools/ghidra_inventory_diff.py`.
   The [2026-07-25 revision](binary-analysis/name-grading-ledger-2026-07-25.md) is
   **superseded in its counts** and retained as the record of the RTTI re-prefix
   wave and the 0x08-byte incident.
