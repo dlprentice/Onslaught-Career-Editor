@@ -35,7 +35,16 @@ waves, superseded plans, and generated accounting.
 ## Current static authority
 
 - [2026-07 fullpass expedition handoff (branch status)](binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md)
-- [Name-grading ledger — every name graded by its evidence](binary-analysis/name-grading-ledger-2026-07-25.md)
+- [Name-grading ledger — every name graded by its evidence](binary-analysis/name-grading-ledger-2026-07-26.md)
+  — 2026-07-26 revision. Corrects `SOURCE_BACKED` (1,009 → **528**; the old figure
+  matched elaborated type specifiers, and `CDXTexture` alone backed 368 rows with
+  no definition anywhere), partitions `UNBACKED` into seven measured cohorts of
+  which **1,179 are MSVC unwind funclets that can never carry a developer name**,
+  and records the 13 renames applied to the live database. Honest residual:
+  **1,865 of a human-namable 5,790**.
+  The [2026-07-25 revision](binary-analysis/name-grading-ledger-2026-07-25.md) is
+  **superseded in its counts** and retained as the record of the RTTI re-prefix
+  wave and the 0x08-byte incident.
 - [PhysicsScript round and weapon-mode value ids — resolved](binary-analysis/physics-round-value-ids-2026-07-25.md)
 - [Direct3D fog render states — `D3DFOG_EXP` slot, parameters, and far plane](binary-analysis/d3d-fog-render-state-static-contract-2026-07-25.md)
 - [Player camera attach, projection FOV, and mesh `HFOV`](binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md)

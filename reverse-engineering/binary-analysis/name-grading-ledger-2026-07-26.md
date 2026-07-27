@@ -17,18 +17,48 @@ and this revision has had half the scrutiny the protocol asks for.
 
 Produced by `tools/re_ledger.py` over the same 6,969-function inventory and the
 same pristine specimen (sha256 `74154bfa…`, which the tool refuses to run
-without). No Ghidra database was opened or mutated; no function was renamed.
+without).
 
 ```
 py -3 tools/re_ledger.py \
   --binary <pristine BEA.exe> \
   --inventory <exported inventory>.tsv \
   --reference-source references/Onslaught \
-  --verify <re-verify>.tsv --partition-unbacked
+  --verify <re-verify>.tsv
 ```
 
-Working detail, per-address diffs and the proposed (unapplied) rename wave:
-`local-lab/GHIDRA-REGRADE-2026-07-26.md`.
+The seven-cohort partition is the **default** as of 2026-07-26.
+`--partition-unbacked` is retained as an accepted no-op so the invocation printed
+in earlier revisions of this file keeps reproducing; `--no-partition-unbacked`
+restores the undivided eight-grade view for comparison only.
+
+Working detail and per-address diffs: `local-lab/GHIDRA-REGRADE-2026-07-26.md`.
+
+## Update 2026-07-26 (later) — 13 renames APPLIED to the live database
+
+The sentence "no Ghidra database was opened or mutated; no function was renamed"
+was true when this file was first written and is **no longer true**. Thirteen of
+the proposed fifteen renames were applied to the live maintainer database under
+backup → canary → dual readback → promote, with the full receipts and the
+address-by-address evidence in
+[`local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md`](../../local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md).
+Two of the fifteen were **refuted by test and not applied**:
+
+- `0x0053a050` is not `CBLTexture`'s constructor. It allocates a 0x158-byte
+  object, constructs a CBLTexture into it, and stores the pointer at `[this+4]`.
+  It owns a CBLTexture; it is not one. The 22-factory exclusion missed it because
+  that filter matches on the **name** and this one is named `__Constructor`.
+- `0x004a4e80` is called by `CConfirmMenuOptionsList`'s scalar deleting
+  destructor but its body only ever installs `CMenuOptionsList`'s vtable
+  `0x5dc650`, never its own `0x5dc664`. The call edge and the body disagree about
+  which class the code implements, and the bytes cannot separate "a second
+  non-folded copy of the base destructor" from "an empty derived destructor that
+  runs only base cleanup". Naming it from the call edge would encode reachability
+  as implementation identity — the same over-claim this revision exists to
+  correct. **Not applied.**
+
+The counts below are the **post-rename** figures, measured from a fresh export of
+the live database (`targets=6969 found=6969 missing=0`).
 
 ## Correction 1 — `SOURCE_BACKED` was over-claiming by 481 rows
 
@@ -90,29 +120,43 @@ and the two independent implementations agree on **3,888 of 3,888** addresses.
 
 ## Results
 
-| grade | 2026-07-25 | 2026-07-26 | what it licenses |
-| --- | ---: | ---: | --- |
-| RTTI_CONFIRMED | 1,400 | 1,400 | prefix equals the RTTI-resolved owning class |
-| RTTI_CONFLICT | 35 | 25 | RTTI resolves an owner, the prefix disagrees |
-| RTTI_AMBIGUOUS | 104 | 100 | in several vtables, no single ancestor |
-| OWNER_PREFIX_MISSING | — | 14 | RTTI reaches it; the name makes no class claim |
-| BINARY_STRING | 217 | 217 | the token exists as a string — never ownership |
-| SOURCE_BACKED | 1,009 | **528** | a *different* codebase defines this class |
-| UNNAMED_RTTI_TARGET | — | 8 | default name, in a vtable, owner unresolved |
-| UNNAMED | 316 | 308 | default Ghidra name |
-| **UNBACKED (total)** | **3,888** | **4,369** | **still one parent, now with seven children** |
-| … COMPILER_EH_FUNCLET | — | 1,179 | MSVC unwind funclet; **not human-namable** |
-| … PE_IMPORT | — | 36 | import-table identity (32 exact, 4 ordinal) |
-| … RESIDUAL_FREEFORM | — | 96 | no `Prefix__` in the name |
-| … VTABLE_VA_IN_BODY | — | 176 | that class's vtable VA appears in these bytes — **upper bound, not ownership** |
-| … IMAGE_TYPE_TOKEN | — | 1,100 | the class exists in this build — **not ownership** |
-| … IMAGE_TYPE_SUBSTRING | — | 668 | the token occurs as bytes somewhere |
-| … INVENTED_PREFIX | — | 1,114 | **no artefact of any kind** |
-| **total** | **6,969** | **6,969** | |
+| grade | 2026-07-25 | 07-26 regrade | 07-26 post-rename | what it licenses |
+| --- | ---: | ---: | ---: | --- |
+| RTTI_CONFIRMED | 1,400 | 1,400 | 1,400 | prefix equals the RTTI-resolved owning class |
+| RTTI_CONFLICT | 35 | 25 | 25 | RTTI resolves an owner, the prefix disagrees |
+| RTTI_AMBIGUOUS | 104 | 100 | 100 | in several vtables, no single ancestor |
+| OWNER_PREFIX_MISSING | — | 14 | 14 | RTTI reaches it; the name makes no class claim |
+| BINARY_STRING | 217 | 217 | **218** | the token exists as a string — never ownership |
+| SOURCE_BACKED | 1,009 | **528** | 528 | a *different* codebase defines this class |
+| UNNAMED_RTTI_TARGET | — | 8 | 8 | default name, in a vtable, owner unresolved |
+| UNNAMED | 316 | 308 | 308 | default Ghidra name |
+| **UNBACKED (total)** | **3,888** | **4,369** | **4,368** | **still one parent, now with seven children** |
+| … COMPILER_EH_FUNCLET | — | 1,179 | 1,179 | MSVC unwind funclet; **not human-namable** |
+| … PE_IMPORT | — | 36 | 36 | import-table identity (32 exact, 4 ordinal) |
+| … RESIDUAL_FREEFORM | — | 96 | 96 | no `Prefix__` in the name |
+| … VTABLE_VA_IN_BODY | — | 176 | **188** | that class's vtable VA appears in these bytes — **upper bound, not ownership** |
+| … IMAGE_TYPE_TOKEN | — | 1,100 | 1,100 | the class exists in this build — **not ownership** |
+| … IMAGE_TYPE_SUBSTRING | — | 668 | 668 | the token occurs as bytes somewhere |
+| … INVENTED_PREFIX | — | 1,114 | **1,101** | **no artefact of any kind** |
+| **total** | **6,969** | **6,969** | **6,969** | |
 
-The seven children sum to the 4,369 parent with no remainder. `UNBACKED (total)`
-**rose** from 3,888 to 4,369, because the `SOURCE_BACKED` repair released 481 rows
-into it.
+The post-rename column moves by exactly the 13 applied rows: 13 leave
+`INVENTED_PREFIX`, 12 land in `VTABLE_VA_IN_BODY` and 1 in `BINARY_STRING`.
+
+**That last row is a located grader defect, not a result.** `0x004e6870`
+`CNormalSquad__Constructor` graded `BINARY_STRING` rather than
+`VTABLE_VA_IN_BODY` because `BINARY_STRING` is tested in the main grade chain
+**before** the partition runs, and `CNormalSquad` occurs as a literal ASCII string
+as well as being a type descriptor. It is a measured instance of weak point #10 in
+the regrade note — `BINARY_STRING` is largely redundant with `IMAGE_TYPE_TOKEN`
+and ranked above it. Left unrepaired here for the reason that note already gives:
+reordering the grade chain breaks comparability with the before/after measured in
+this wave.
+
+The seven children sum to their parent with no remainder in both columns.
+`UNBACKED (total)` **rose** from 3,888 to 4,369 because the `SOURCE_BACKED` repair
+released 481 rows into it, then fell by 1 to 4,368 when the rename wave moved
+`0x004e6870` out to `BINARY_STRING`.
 
 RTTI reach: **2,127** `.text` DWORDs appear in a recovered vtable slot, of which
 **1,547** are inventory function starts. 656 classes have a recovered hierarchy.
@@ -129,12 +173,20 @@ positive finding of absence — no type descriptor, no byte occurrence anywhere 
 2,506,752 bytes, no reference-source definition. 120 distinct tokens, `CFastVB`
 alone accounting for 393 functions.
 
-**The honest residual is 1,878, not 3,888 and not 0.** Removing the 1,179
+**The honest residual is 1,865, not 3,888 and not 0.** Removing the 1,179
 compiler funclets leaves 5,790 functions that could in principle carry a
-developer name; of those, 1,114 `INVENTED_PREFIX` + 668 `IMAGE_TYPE_SUBSTRING` +
-96 `RESIDUAL_FREEFORM` = **1,878** rest on nothing image-local. That is 32.4% of
-the human-namable set. The figure is *up* by 18 from the 1,860 estimated on
-07-25, because 18 rows fell out of `SOURCE_BACKED` entirely.
+developer name; of those, 1,101 `INVENTED_PREFIX` + 668 `IMAGE_TYPE_SUBSTRING` +
+96 `RESIDUAL_FREEFORM` = **1,865** rest on nothing image-local. That is 32.2% of
+the human-namable set. It was 1,878 after the regrade — *up* by 18 from the 1,860
+estimated on 07-25 because 18 rows fell out of `SOURCE_BACKED` entirely — and the
+rename wave took 13 off it.
+
+**Thirteen names is 0.7% of the residual, and that is the honest scale of the
+result.** The technique behind it (§ the rename-wave note) is accurate — 95.2%
+measured — but nearly exhausted: it works through MSVC scalar deleting
+destructors, and destructor bodies in this image were already mostly named with a
+real class prefix. Only 12 residual rows were reachable by it at all. The
+remaining 1,865 will not fall to another vtable-shaped trick.
 
 **`IMAGE_TYPE_TOKEN` is not ownership.** It says the class exists in this build
 and the prefix spells it. A non-virtual member, a constructor and a static of
@@ -156,16 +208,31 @@ true of a constructor, of a factory building an instance, and of a member seatin
 a sibling subobject's vptr. Measured: **4 of the 176** rows are Create/Spawn-shaped
 (`CSpawnerData__CreateAndRegisterByName`). The sound version needs a backward
 slice proving the store's destination is entry `ECX` plus a known subobject
-offset; that was not run.
+offset; that was not run **for the cohort**. It *was* run by hand on the six
+constructor-shaped rename candidates, and it refuted one of them (`0x0053a050`),
+which is direct evidence that the cohort over-collects as this paragraph says.
 
 ## Not claimed
 
 - No claim that any specific name is correct. This grades evidence, not accuracy.
-- No rename was applied and no Ghidra database was opened. A proposed wave of 15
-  ctor/dtor-shaped functions (3 of them family-level) is recorded in
-  `local-lab/GHIDRA-REGRADE-2026-07-26.md` and is explicitly **not applied**; the
-  22 factory-shaped functions in the same set are excluded because the vtable
-  they store is the object being constructed, not their owner.
+- The 13 renames applied on 2026-07-26 change the class **prefix** only. Each is
+  supported by a byte chain recorded per address in
+  [`local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md`](../../local-lab/GHIDRA-RENAME-WAVE-2026-07-26.md).
+  Two of the 15 proposed were refuted by test and not applied. The three
+  "family-level leads" (`CSquadNormal`, `CScriptObjectCode`, `CSpawnerThng`)
+  were **not** applied as families: only the individually adjudicated members
+  were renamed, and the sibling functions carrying those prefixes still carry
+  them.
+- **`0x0048c300` is still named `CInfluenceMap__dtor` and that name is wrong.**
+  Measured: its deleting wrapper `0x0048c2e0` is slot 1 of **`CInfluenceNode`**'s
+  vtable `0x5dc050`, while `CInfluenceMap`'s vtable `0x5dfcb4` slot 1 reaches
+  `0x0050b950` instead; and `0x0048c300`'s body stores no recovered vtable at
+  all. Both consulted models raised this independently. It was **not** renamed,
+  because it fails the ancestor-shadow gate that licensed the other thirteen —
+  `IListener` and `IRenderableThing` have no recovered destructor to rule out.
+  Renaming it on weaker evidence than the wave's own standard would be the
+  over-claim this revision exists to correct. Recorded here so the wrong name is
+  not mistaken for a checked one.
 - The suffix of every name remains ungraded, under every grade in the table.
 - The abstract-base misattribution recorded on 07-25 is unchanged and still
   unbounded.

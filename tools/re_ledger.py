@@ -32,13 +32,19 @@ Grades, strongest first:
   UNBACKED             no supporting evidence found (not disproven - a
                        non-polymorphic class emits no RTTI at all)
 
-With --partition-unbacked, UNBACKED is subdivided into seven mechanical cohorts.
+UNBACKED is subdivided into seven mechanical cohorts BY DEFAULT since 2026-07-26.
 See partition_unbacked() for the criteria. UNBACKED is one word for six materially
 different situations and the headline percentage is not a naming-quality metric
-until they are separated. The UNBACKED (total) parent line is printed either way,
-deliberately: emitting only the seven children makes the headline read
-"UNBACKED: 0", which would be quoted as if the naming had gained evidence. It has
-not. Subdividing a bucket is not backing it.
+until they are separated, so the undivided form is no longer what a plain run
+emits. The UNBACKED (total) parent line is printed either way, deliberately:
+emitting only the seven children makes the headline read "UNBACKED: 0", which
+would be quoted as if the naming had gained evidence. It has not. Subdividing a
+bucket is not backing it.
+
+--partition-unbacked is retained as an accepted no-op so the invocations recorded
+in the published ledger keep reproducing. --no-partition-unbacked restores the
+undivided eight-grade view for before/after comparison against the 07-25 figures;
+it is a comparison aid, not a reporting mode.
 
 FIXED 2026-07-25: SOURCE_BACKED previously reported 0. An editing pass had written
 the word-boundary escape through a non-raw string, so a literal backspace byte
@@ -344,8 +350,18 @@ def main(argv: list[str]) -> int:
                     help="re-verify.tsv, for MEASURED function extents. Without it "
                          "extents fall back to next-start, which over-states size "
                          "wherever padding follows.")
-    ap.add_argument("--partition-unbacked", action="store_true",
-                    help="split UNBACKED into its seven mechanical cohorts")
+    # Default ON as of 2026-07-26. The seven cohorts are byte tests, not
+    # judgements, and reporting one opaque 4,369-row bucket hid 1,179 compiler
+    # funclets that can never carry a developer name. Leaving the split behind an
+    # opt-in flag meant the misleading form was the one a plain run printed.
+    ap.add_argument("--partition-unbacked", dest="_legacy_partition_flag",
+                    action="store_true",
+                    help="accepted no-op; the partition is now the default. Kept so "
+                         "the invocations recorded in the published ledger reproduce.")
+    ap.add_argument("--no-partition-unbacked", dest="partition_unbacked",
+                    action="store_false", default=True,
+                    help="report the undivided eight-grade view, for comparison "
+                         "against the pre-2026-07-26 figures only")
     ap.add_argument("--out-tsv", type=Path)
     args = ap.parse_args(argv)
 
