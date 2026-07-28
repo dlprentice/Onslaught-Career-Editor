@@ -18,7 +18,10 @@ param(
     [string]$OutputDirectory,
     # 'mainmenu' is a dense FEP_MAIN sweep for scoring the animated underlay
     # against a no-skipfmv retail burst; see FrontendCaptureRig's plan comment.
-    [ValidateSet('startup', 'gameplay', 'mainmenu')]
+    # 'options' walks FEP_OPTIONS and its three subpages, one settled shot each,
+    # so they can be compared to the retail frames in
+    # local-lab/retail-captures-options-pause-2026-07-27/.
+    [ValidateSet('startup', 'gameplay', 'mainmenu', 'options')]
     [string]$Plan = 'startup',
     [string]$Resolution = '640x480',
     # gameplay plan only. Point this at

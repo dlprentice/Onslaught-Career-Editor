@@ -142,6 +142,43 @@ public sealed partial class FrontendCaptureRig : Node
         (489, "13-loading-handoff", RetailFrontendScreen.Loading),
     ];
 
+    /// <summary>
+    /// FEP_OPTIONS and its three subpages, one settled shot each.
+    ///
+    /// These exist so the options pages can be COMPARED to the retail frames in
+    /// local-lab/retail-captures-options-pause-2026-07-27/ rather than eyeballed.
+    /// Frames sit well clear of the main-menu entry transition (50 frames from
+    /// 129) and of each page change.
+    /// </summary>
+    private static readonly (int Frame, string Label, RetailFrontendScreen? Screen)[] OptionsPlan =
+    [
+        (220, "fep-options-root", RetailFrontendScreen.Options),
+        (280, "fep-options-controller", RetailFrontendScreen.Options),
+        (400, "fep-options-sound", RetailFrontendScreen.Options),
+        (520, "fep-options-video", RetailFrontendScreen.Options),
+        // Navigation OUT, asserted rather than assumed: two Backs from the Video
+        // subpage must land on FEP_MAIN, and the rig fails the run if the screen
+        // does not match.
+        (600, "fep-options-exit-to-main", RetailFrontendScreen.MainMenu),
+    ];
+
+    private static readonly (int Frame, string Action)[] OptionsSteps =
+    [
+        (128, "confirm"),           // click-to-start -> main menu
+        (200, "main-select=5"),     // Options is main-menu row 5
+        (204, "confirm"),           // -> FEP_OPTIONS root
+        (240, "options-select=0"),  // Controller Options
+        (244, "options-confirm"),
+        (320, "options-back"),
+        (360, "options-select=1"),  // Sound Options
+        (364, "options-confirm"),
+        (440, "options-back"),
+        (480, "options-select=2"),  // Video Options
+        (484, "options-confirm"),
+        (560, "options-back"),      // Video -> Options root
+        (580, "options-back"),      // Options root -> FEP_MAIN
+    ];
+
     private static readonly (int Frame, string Action)[] StartupSteps =
     [
         (128, "confirm"), // click-to-start -> main menu
@@ -226,10 +263,10 @@ public sealed partial class FrontendCaptureRig : Node
             throw new ArgumentException("Capture mode requires an absolute --capture-dir path.");
         }
 
-        if (plan is not ("startup" or "gameplay" or "mainmenu"))
+        if (plan is not ("startup" or "gameplay" or "mainmenu" or "options"))
         {
             throw new ArgumentException(
-                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay, mainmenu.");
+                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay, mainmenu, options.");
         }
 
         rig = new FrontendCaptureRig
@@ -391,6 +428,15 @@ public sealed partial class FrontendCaptureRig : Node
 
             _plannedShots = _shots.Count;
         }
+        else if (_planName == "options")
+        {
+            foreach ((int frame, string label, RetailFrontendScreen? screen) in OptionsPlan)
+            {
+                _shots.Add(new Shot(frame, label, screen, null, null));
+            }
+
+            _plannedShots = _shots.Count;
+        }
         else
         {
             foreach ((int frame, string label, RetailFrontendScreen? screen) in StartupPlan)
@@ -406,7 +452,8 @@ public sealed partial class FrontendCaptureRig : Node
         // in-level capture cannot disagree with the frontend capture about how
         // the level was entered. The mainmenu plan takes only the first confirm,
         // because it must STAY on FEP_MAIN for the whole sweep.
-        foreach ((int frame, string action) in StartupSteps)
+        foreach ((int frame, string action) in
+            _planName == "options" ? OptionsSteps : StartupSteps)
         {
             if (_planName == "mainmenu" && frame > StartupSteps[0].Frame)
             {
@@ -547,7 +594,25 @@ public sealed partial class FrontendCaptureRig : Node
             case "confirm":
                 _frontend.ConfirmForSmoke();
                 break;
+            case "options-confirm":
+                _frontend.ConfirmOptionsForCapture();
+                break;
+            case "options-back":
+                _frontend.BackFromOptionsForCapture();
+                break;
             default:
+                if (action.StartsWith("main-select=", System.StringComparison.Ordinal))
+                {
+                    _frontend.SelectMainIndexForCapture(
+                        int.Parse(action["main-select=".Length..]));
+                    break;
+                }
+                if (action.StartsWith("options-select=", System.StringComparison.Ordinal))
+                {
+                    _frontend.SelectOptionsRowForCapture(
+                        int.Parse(action["options-select=".Length..]));
+                    break;
+                }
                 throw new ArgumentException($"Unknown capture action '{action}'.");
         }
     }

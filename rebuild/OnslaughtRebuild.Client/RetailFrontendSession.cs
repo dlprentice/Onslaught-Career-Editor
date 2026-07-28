@@ -252,6 +252,14 @@ public sealed class RetailFrontendSession
                     return RetailFrontendSignal.PageChanged;
                 }
 
+                if (SelectedMainItem.Kind == RetailFrontendMenuItemKind.Options)
+                {
+                    // CFEPMain__DoAction case 5 -> SetPage(0x11, 0x46), UNGATED -
+                    // unlike Continue/Load, which test mCareerInProgress.
+                    Screen = RetailFrontendScreen.Options;
+                    return RetailFrontendSignal.PageChanged;
+                }
+
                 return RetailFrontendSignal.None;
 
             case RetailFrontendScreen.QuitConfirm:
@@ -305,6 +313,15 @@ public sealed class RetailFrontendSession
             Screen = RetailFrontendScreen.MainMenu;
             SelectedCareerIndex = -1;
             _gameName = DefaultGameName;
+            return RetailFrontendSignal.PageChanged;
+        }
+
+        if (Screen == RetailFrontendScreen.Options)
+        {
+            // Leaving the frontend Options page is where retail writes
+            // defaultoptions.bea (CFEPOptions__SaveDefaultOptions 0x0051F500).
+            // This lane persists nothing, so the write has no counterpart here.
+            Screen = RetailFrontendScreen.MainMenu;
             return RetailFrontendSignal.PageChanged;
         }
 
@@ -407,6 +424,18 @@ public enum RetailFrontendScreen
     /// visually and sequentially only: no save or career persistence.
     /// </summary>
     DevSelect,
+
+    /// <summary>
+    /// Retail FEP_OPTIONS (page 0x11, vtable 0x005DB8A8), reached from the main
+    /// menu's Options entry. CFEPOptions builds no rows of its own: it calls
+    /// PauseMenu__Init (0x004CDE60) with mode 1 and renders through
+    /// CPauseMenu__Render, so the frontend Options page and the in-game options
+    /// pages are literally the same widget tree.
+    ///
+    /// Reference frames: local-lab/retail-captures-options-pause-2026-07-27/
+    /// fep-options-{root,controller,video,sound}-640x480.png.
+    /// </summary>
+    Options,
     LevelSelect,
 
     /// <summary>

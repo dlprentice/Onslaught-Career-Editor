@@ -59,9 +59,22 @@ public sealed partial class RetailFrontendFlow : Control
     private const int Font22Columns = 16;
     private const int Font22CellSize = 32;
 
-    private static readonly Color ReleasedNormal = RetailColor(0xff4f4f4f);
-    private static readonly Color ReleasedUnavailable = RetailColor(0x7f1f1f1f);
-    private static readonly Color ReleasedSelected = RetailColor(0xffff6f3f);
+    // Main-menu row tints. The RGB triples were already exact; the ALPHA BYTE was
+    // 2/255 high on all three and is corrected here from retail's own diffuse
+    // values, 2026-07-27 d3d9 sweep,
+    // G:\bea-frontend-pages\SWEEP-2026-07-27\inventories\main-menu-settled.csv
+    // frame 3000: the six live rows and their shadows carry 0xFD (draws 12-25,
+    // e.g. d17 0xFD4F4F4F, d13 0xFDFF6F3F) and the single disabled row carries
+    // 0x7D (d14/d15, 0x7D000000 / 0x7D1F1F1F). Counted over that frame: 0xFD x36,
+    // 0x7D x6, and no 0xFF or 0x7F anywhere in the row block.
+    //
+    // 0xFD IS NOT A GLOBAL FRONTEND CONSTANT and is deliberately not applied as
+    // one: the same sweep measures 0xFF on the version string and on every
+    // options row, and 0xFE on the mission-briefing body. Only the FEP_MAIN rows
+    // are 0xFD.
+    private static readonly Color ReleasedNormal = RetailColor(0xfd4f4f4f);
+    private static readonly Color ReleasedUnavailable = RetailColor(0x7d1f1f1f);
+    private static readonly Color ReleasedSelected = RetailColor(0xfdff6f3f);
     private static readonly Color ReleasedBlue = RetailColor(0xff1f4f7f);
     // 0xfeafcfff is an immediate in the image: `and edx,0xffafcfff` /
     // `or edx,0xafcfff` at 0x004642e4 / 0x004642f1 inside CFEPMain__Render.
@@ -94,10 +107,32 @@ public sealed partial class RetailFrontendFlow : Control
         0xffu / 255f,
         0xfeu / 255f);
     private static readonly Color HighlightTint = RetailColor(0x7e000000);
-    private static readonly Color BracketTint = RetailColor(0xfeffffff);
-    private static readonly Color ChromeTint = RetailColor(0x3ecfffff);
+    // 0xfe7f7f7f, CORRECTED 2026-07-28 from 0xfeffffff. The RGB byte was never
+    // measured; it was the neutral guess, and 0xff is the one value MODULATE2X
+    // cannot round-trip — (0xff*255)>>7 saturates at 255, so any authored byte
+    // above 0x80 renders identically and the constant carried no information.
+    // main-menu-settled.csv frame 3000 gives the exact byte on all three decor
+    // bodies this tints: draw 27 (left arc, 320x320), draw 29 (right arc,
+    // 160x160) and draw 31 (selected-row icon, 128x128) are each 0xFE7F7F7F.
+    // A census of the settled frame of every other page in the same sweep
+    // (select-level, options-root, options-video, mission-briefing,
+    // choose-game-name, select-configuration) finds this class of draw at
+    // 0xFE7F7F7F or 0xFF7F7F7F and NEVER at 0xFFFFFFFF, so the correction is
+    // toward retail on the pages that share the constant too. The rendered
+    // delta is 1/255 per channel; the point is that the byte is now measured.
+    private static readonly Color BracketTint = RetailColor(0xfe7f7f7f);
+    // 0x3e7f7f7f, CORRECTED 2026-07-28 from 0x3ecfffff. Same class of error and
+    // worse: 0xcf was a *hue* that MODULATE2X clamps straight back to 255, so
+    // the constant claimed a warm tint that could never reach a pixel. Retail's
+    // byte is 0x3E7F7F7F, shared bit-for-bit by both element groups this tints:
+    // the three Forseti chrome strips (frame 3000 draws 3, 4 and 5, 128x512
+    // DXT2) and the two language chevrons (draws 7 and 9, 64x64 DXT2).
+    // Alpha 0x3E was already exact.
+    private static readonly Color ChromeTint = RetailColor(0x3e7f7f7f);
     // Language-selector flag tint; see DrawLanguageSelector for the measurement.
-    private static readonly Color FlagTint = RetailColor(0xff3f3f3f);
+    // Alpha 0xfd, CORRECTED 2026-07-28 from 0xff: frame 3000 draw 6 is
+    // 0xFD3F3F3F. Same alpha-byte class as the row-label correction at :75-77.
+    private static readonly Color FlagTint = RetailColor(0xfd3f3f3f);
     private static readonly Color ClickSlideShadow = RetailColor(0x3f000000);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
@@ -406,7 +441,39 @@ public sealed partial class RetailFrontendFlow : Control
 
     /// <summary>See <see cref="FeBackFrameIndex"/> - measured, over a full loop.</summary>
     private const int FeBackPhaseFrames = 3;
-    // Fallback only when the strip is missing (materialize not run).
+    // ---- THE PAGE FILL IS A TWO-STEP COMPOSITE, NOT A COLOUR ----
+    //
+    // MEASURED 2026-07-27 (local-lab/D3D9-FULL-SWEEP-2026-07-27.md section 5.3;
+    // G:\bea-frontend-pages\SWEEP-2026-07-27\page-index.csv and
+    // inventories\main-menu-settled.csv frame 3000 draw 0):
+    //
+    //   1. Clear(0x001F1F3F) = RGB(31,31,63). page-index.csv records this Clear
+    //      colour on EVERY frontend page from frame ~46 onward; only the boot
+    //      first page and the loading page clear to 0x00000000.
+    //   2. Draw 0 of the page is a full-screen DrawPrimitiveUP TRIFAN spanning
+    //      (-40,-3)-(680,483) from a 128x128 DXT2, diffuse 0x3E000000, blend
+    //      SRCALPHA/INVSRCALPHA. Its stage-0 COLOROP is MODULATE(TEXTURE,
+    //      DIFFUSE) with a BLACK diffuse RGB, so it contributes no colour at all
+    //      whatever its texture holds, and it is the only draw on the page whose
+    //      stage-0 ALPHAOP is DISABLE, so its alpha is the diffuse alpha
+    //      0x3E/255 = 0.24314 flat.
+    //
+    // The arithmetic closes exactly: 31 x (1 - 0.24314) = 23.46 -> 23 and
+    // 63 x 0.75686 = 47.68 -> 48, and the retail pixel at f000800.png(5,470)
+    // reads exactly (23,23,48).
+    //
+    // We used to draw the (23,23,48) ANSWER as one opaque rect. That is right
+    // today and wrong in principle: it bakes a result whose two inputs are
+    // separately measured, so it silently stops tracking if either moves — and
+    // one of them (the FEBack128 underlay this page composites next) is known to
+    // be absent under -skipfmv, which is the only condition the fill has ever
+    // been measured under.
+    private static readonly Color FrontendClearColor = new(31f / 255f, 31f / 255f, 63f / 255f, 1f);
+    private static readonly Color FrontendFillDarkener = new(0f, 0f, 0f, 0x3Eu / 255f);
+
+    // The composed result of the two terms above. It is NOT drawn; it is the
+    // base the FEBack128 strip is baked against (see BuildFeBackFrames), where a
+    // single already-composited colour is what the algebra needs.
     private static readonly Color MainUnderlayFallback = new(23f / 255f, 23f / 255f, 48f / 255f, 1f);
 
     // ================= THE RELEASED PAGE-TRANSITION MACHINE =================
@@ -566,6 +633,7 @@ public sealed partial class RetailFrontendFlow : Control
         _feBackFrames = LoadFeBackFrames();
         _glyphWidths = MeasureGlyphWidths(_titleFont.GetImage(), GlyphCellSize, GlyphColumns);
         _font22Widths = MeasureGlyphWidths(_font22.GetImage(), Font22CellSize, Font22Columns);
+        InitializeOptions();
 
         _initialized = true;
     }
@@ -602,6 +670,12 @@ public sealed partial class RetailFrontendFlow : Control
     internal void ConfirmForSmoke()
     {
         Confirm();
+    }
+
+    internal void SelectMainIndexForCapture(int index)
+    {
+        _session.SelectMainIndex(index);
+        QueueRedraw();
     }
 
     /// <summary>
@@ -851,6 +925,9 @@ public sealed partial class RetailFrontendFlow : Control
             case RetailFrontendScreen.DevSelect:
                 DrawDevSelect();
                 break;
+            case RetailFrontendScreen.Options:
+                DrawOptions();
+                break;
             case RetailFrontendScreen.LevelSelect:
                 DrawLevelSelect();
                 break;
@@ -864,6 +941,12 @@ public sealed partial class RetailFrontendFlow : Control
                 DrawLoading();
                 break;
         }
+
+        // LAST DRAW OF THE FRAME, measured. Retail closes every interactive
+        // frontend frame with its 32x32 cursor sprite; see
+        // RetailFrontendFlow.Cursor.cs for the fourteen inventory rows and the
+        // byte evidence for the texture.
+        DrawRetailMouseCursor();
 
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
     }
@@ -1202,6 +1285,17 @@ public sealed partial class RetailFrontendFlow : Control
 
         DrawLanguageSelector(fade);
 
+        // The selector bar is drawn BEFORE every row, not interleaved into the
+        // row loop. Retail's order is not ambiguous: the bar is frame 3000
+        // draw 11 and the fourteen row draws are 12..25, so the bar is under all
+        // of them. Interleaved, it was emitted after rows 0..k-1 for a selection
+        // at index k, and because the bar is 32 tall on a 20 pitch it reaches
+        // 4px into the row above (rowY-16..rowY-12 against that row's glyph box
+        // ending at rowY-12). That washed the bottom 4px of the previous label
+        // with the bar's 49%-alpha black on every selection except row 0 — which
+        // is exactly why nothing caught it: the settled capture selects row 0.
+        DrawMainMenuSelectorBar(iconFade);
+
         for (int index = 0; index < _session.Items.Count; index++)
         {
             RetailFrontendMenuItem item = _session.Items[index];
@@ -1214,27 +1308,6 @@ public sealed partial class RetailFrontendFlow : Control
             const float textScale = 1f;
             float textWidth = MeasureText(label, textScale);
             var textPos = new Vector2(MenuColumnX - (textWidth * 0.5f), rowY - 8f);
-
-            if (selected)
-            {
-                // Highlight box width MEASURED from the pristine 640x480 capture:
-                // the selected row's box spans x 166..272, w = 107. The previous
-                // Mathf.Max(160f, ...) floor forced 160 and made the box 39px too
-                // wide. Retail sizes it to the label plus a fixed padding.
-                float boxWidth = textWidth + 22f;
-                if (iconFade > 0f)
-                {
-                    DrawTextureRect(
-                        _titleTextBox,
-                        new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 10f, boxWidth, 20f),
-                        false,
-                        new Color(
-                            HighlightTint.R,
-                            HighlightTint.G,
-                            HighlightTint.B,
-                            HighlightTint.A * iconFade));
-                }
-            }
 
             if (fade <= 0f)
             {
@@ -1253,35 +1326,59 @@ public sealed partial class RetailFrontendFlow : Control
         // >= 1 every state below collapses to the previous constants — scale 1.25,
         // rotation 0, alpha 1, twins not drawn — so the settled frame is unchanged
         // by this whole block.
+        // THE SHADOW OFFSETS ARE ANIMATED. Recovered 2026-07-27 from retail's own
+        // draw calls over 3,756 settled frames of the A2 main-menu log and
+        // re-verified in the main loop on seven frames, two of them outside the
+        // reported range. The law, its evidence, its dt-driven clock and its one
+        // soft term are all in RetailFrontendDecorShadow; only the wiring is here.
+        //
+        // The literals this replaces — (224,349) and (462,365), i.e. offsets
+        // (+5,+5) and (+5,+10) — are EXACTLY the centre of the measured ellipse,
+        // so they were retail's law evaluated at its time-mean. Nothing about
+        // them was wrong-signed; the oscillation around them was simply absent.
+        // The BODY anchors (219,344) and (457,355) are measured-exact and are
+        // untouched.
+        var leftShadow = RetailFrontendDecorShadow.LeftArcOffsetAtPhase(
+            RetailFrontendDecorShadow.PhaseAtSeconds(_animationSeconds));
+        var sharedShadow = RetailFrontendDecorShadow.OffsetAtPhase(
+            RetailFrontendDecorShadow.PhaseAtSeconds(_animationSeconds));
+        var leftArcBody = new Vector2(219f, 344f);
+        var rightArcBody = new Vector2(457f, 355f);
+        Vector2 leftArcShadow = leftArcBody + new Vector2((float)leftShadow.X, (float)leftShadow.Y);
+        Vector2 rightArcShadow = rightArcBody + new Vector2((float)sharedShadow.X, (float)sharedShadow.Y);
+
         DrawMainMenuDecor(
             _titleBracket01,
-            new Vector2(219f, 344f),
-            new Vector2(224f, 349f),
+            leftArcBody,
+            leftArcShadow,
             MainMenuLeftDecor(transition));
         DrawMainMenuDecor(
             _titleBracket02,
-            new Vector2(219f, 344f),
-            new Vector2(224f, 349f),
+            leftArcBody,
+            leftArcShadow,
             MainMenuLeftDecorTwin(transition));
         DrawMainMenuDecor(
             _symbolBracket01,
-            new Vector2(457f, 355f),
-            new Vector2(462f, 365f),
+            rightArcBody,
+            rightArcShadow,
             MainMenuRightDecor(transition));
         DrawMainMenuDecor(
             _symbolBracket02,
-            new Vector2(457f, 355f),
-            new Vector2(462f, 365f),
+            rightArcBody,
+            rightArcShadow,
             MainMenuRightDecorTwin(transition));
 
         if (iconFade > 0f)
         {
             Texture2D icon = _menuIcons[_session.SelectedMainIndex];
             Color iconTint = _session.SelectedMainItem.IsAvailable ? BracketTint : ReleasedUnavailable;
+            // Pair C of the four the shadow law was recovered from: the
+            // selected-row icon takes the SHARED (u,v) offset, the same vector as
+            // the right arc, off the same body anchor (457,355).
             DrawSurfaceCentered(
                 icon,
-                462f,
-                365f,
+                rightArcShadow.X,
+                rightArcShadow.Y,
                 ShadowScaleBoost,
                 ShadowScaleBoost,
                 new Color(ShadowTint, ShadowTint.A * iconFade));
@@ -1290,7 +1387,19 @@ public sealed partial class RetailFrontendFlow : Control
 
         if (fade > 0f)
         {
-            DrawTextFlat(
+            // SHADOWED, corrected 2026-07-28 from a single flat run. The version
+            // string is a shadow/body PAIR like every other text run on the page:
+            // frame 3000 draw 32 is (0.5,464.5)-(42.5,480.5) at 0xFF000000 and
+            // draw 33 is (-0.5,463.5)-(41.5,479.5) at 0xFF102025 — the same
+            // "shadow on the anchor, body at anchor-(1,1), shadow RGB black
+            // carrying the body's own alpha" law that was verified on 63 pairs
+            // across six pages and that DrawText already implements. It was left
+            // flat because our MeasureText("V1.00") is 44 against retail's 42px
+            // ink, which was read as evidence that the pair was not understood.
+            // It was not: the width is a glyph-advance question and the pair is a
+            // separate, settled fact. The 2px remains open and is now the only
+            // thing open about this element.
+            DrawText(
                 VersionText,
                 new Vector2(0f, DesignHeight - 16f),
                 1f,
@@ -1342,22 +1451,125 @@ public sealed partial class RetailFrontendFlow : Control
         // the same regression on that footprint and the gain is 0.488/0.489/0.487
         // against 0.025/0.030/0.038 outside it. A rectangle-wide mean could not
         // have seen that, which is exactly the bound the comment already conceded.
-        DrawSurfaceCentered(_titleLogo, 325f, 140f, ShadowScaleBoost, ShadowScaleBoost, ShadowTint);
+        // Pair D of the four the shadow law was recovered from. Retail's title
+        // body is (64,2)-(576,258), centre (320,130) — this anchor exactly — and
+        // its shadow takes the SHARED (u,v) offset off it, at the same 1.05 scale.
+        // The (325,140) that stood here is that offset's time-mean.
+        DrawSurfaceCentered(
+            _titleLogo,
+            320f + (float)sharedShadow.X,
+            130f + (float)sharedShadow.Y,
+            ShadowScaleBoost,
+            ShadowScaleBoost,
+            ShadowTint);
         DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
+    }
+
+    /// <summary>
+    /// The selected row's highlight bar — retail's frame 3000 draw 11, emitted
+    /// before all fourteen row draws (12..25) rather than between them.
+    ///
+    /// <para>WIDTH: the label's own ink width plus exactly 31. MEASURED on two
+    /// selected rows by scanning every 256x32 selector-bar draw in the A3 run
+    /// (<c>G:\bea-frontend-pages\A3-options-20260727-205107\d3d9-draws.log</c>,
+    /// frames 1..2600, 1,165 draws), which returns exactly TWO distinct
+    /// rectangles because the run hovers Options on its way into that page:</para>
+    ///
+    /// <code>
+    ///   New Game selected  (160.5,288)-(277.5,320)  117 x 32  frames  754..1830
+    ///   Options  selected  (173.0,388)-(265.0,420)   92 x 32  frames 1831..1918
+    /// </code>
+    ///
+    /// <para>Both are centred on x = 219 and on their own row centre, both are 32
+    /// tall, and both are ink + 31: 86+31 = 117 and 61+31 = 92. Two rows whose
+    /// labels differ by 25px give the same constant, so the width tracks the
+    /// label and 31 is the padding.</para>
+    ///
+    /// <para>HEIGHT 32, MEASURED, not 20: draw 11 is a 256x32 DXT2 at u,v 0..1,
+    /// diffuse 0x7E000000, identical on frames 3500 and 4000 of the same run.
+    /// <c>rowY - 16</c> lands the quad at y 288 for row 0; a D3D9 quad spanning
+    /// [288,320) covers pixel rows 288..319, which is what a Godot Rect2 at
+    /// y = 288, h = 32 covers.</para>
+    /// </summary>
+    private void DrawMainMenuSelectorBar(float iconFade)
+    {
+        if (iconFade <= 0f)
+        {
+            return;
+        }
+
+        int index = _session.SelectedMainIndex;
+        if (index < 0 || index >= _session.Items.Count)
+        {
+            return;
+        }
+
+        float rowY = MenuStartY + (index * MenuPitch);
+        float boxWidth = MeasureText(_menuText[_session.Items[index].Kind], 1f) + 31f;
+
+        DrawTextureRect(
+            _titleTextBox,
+            new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 16f, boxWidth, 32f),
+            false,
+            new Color(HighlightTint, HighlightTint.A * iconFade));
     }
 
     /// <summary>
     /// The language selector sitting directly above the menu column.
     ///
-    /// Geometry MEASURED from the pristine 640x480 retail main-menu capture
-    /// (local-lab/retail-reference-pristine/main-menu-640x480.png) by finding the
-    /// pixels in the band above the first menu row that differ from the flat
-    /// (23,23,48) background:
-    ///   left chevron  x 144..165 (w 22), y 254..283 (h 30)
-    ///   flag          x 177..261 (w 85), y 252..284 (h 33)
-    ///   right chevron x 273..294 (w 22), y 253..282 (h 30)
-    /// The content is symmetric about x = 219.0, which independently confirms
-    /// MenuColumnX as a centre anchor rather than a left edge.
+    /// GEOMETRY REPLACED 2026-07-28 by retail's own quads. The values below were
+    /// previously read off a 640x480 PNG by hunting pixels that differ from the
+    /// flat (23,23,48) background — left chevron x 144..165 y 254..283, flag
+    /// x 177..261 y 252..284, right chevron x 273..294 y 253..282. That is ink
+    /// measurement, and it was close, but it could not recover the quads and it
+    /// disagreed with itself: it put the two chevrons on different rows (254 and
+    /// 253) and gave them different heights from the flag, which no released
+    /// layout does.
+    ///
+    /// Retail's quads, main-menu-settled.csv frame 3000, confirmed identical on
+    /// frame 4000 and on all 250 frames of main-menu-reveal-frames-613-900.csv:
+    ///
+    ///   draw  6  flag           (177.4,252.0)-(260.6,284.0)   83.2 x 32.0
+    ///   draw  7  left chevron   (128.4,242.4)-(179.6,293.6)   51.2 x 51.2
+    ///   draw  9  right chevron  (258.4,242.4)-(309.6,293.6)   51.2 x 51.2
+    ///
+    /// QUAD IS NOT INK, AND THAT DISTINCTION IS THE WHOLE FINDING HERE. Read as
+    /// appearance, those rectangles say the left chevron's right edge (179.6)
+    /// runs 2.2px PAST the flag's left edge (177.4) — that the chevron overlaps
+    /// the flag. It does not. The d3d9 proxy does not wrap textures, so the
+    /// inventory carries quad, format and dimensions and never ink extent; the
+    /// two prior write-ups both stopped at "blocked on texture contents".
+    ///
+    /// It is not blocked. The texture is on this machine. FE_Arrow.tga decodes
+    /// (Assets/Frontend/fe-arrow.texture.aya, a 64x64 DXT2 DDS, which matches the
+    /// inventory's tex0 exactly) to a right-pointing chevron whose alpha is a
+    /// hard 0-or-255 with ink bounded by texels (16,12)-(46,52) — 30 x 40 inside
+    /// 64 x 64, i.e. u 0.25..0.71875, v 0.1875..0.8125. The draws sample u,v
+    /// 0..1, so composing sprite with quad gives the ink:
+    ///
+    ///   left chevron ink   (142.8,252.0)-(166.8,284.0)   24.0 x 32.0
+    ///   flag               (177.4,252.0)-(260.6,284.0)   83.2 x 32.0
+    ///   right chevron ink  (271.2,252.0)-(295.2,284.0)   24.0 x 32.0
+    ///
+    /// So retail leaves a 10.6px CLEAR GAP on each side, and all three elements
+    /// are exactly 32 tall on exactly the same rows, y 252..284. The overlap was
+    /// entirely in the sprite's transparent margin.
+    ///
+    /// The left chevron is the MIRRORED draw, and the composition proves it
+    /// rather than assuming it: the ink box is off-centre in its texture (16 left
+    /// margin against 18 right), so mirroring shifts it. Mirrored, the row is
+    /// symmetric about x = 219.0 to 0.0 — 219-142.8 = 76.2 = 295.2-219 and
+    /// 219-166.8 = 52.2 = 271.2-219. Unmirrored it would miss by 1.6px. That
+    /// symmetry also independently re-confirms MenuColumnX as a centre anchor.
+    ///
+    /// Draws 8 and 10 are a SECOND COPY of each chevron at exactly twice the
+    /// size, concentric on the same centres (154,268) and (284,268). They are not
+    /// drawn here because they cannot produce a pixel: their diffuse is
+    /// 0x007F7F7F in 500 of 500 sampled rows, stage-0 ALPHAOP is
+    /// MODULATE(TEXTURE, DIFFUSE) so the result alpha is zero, and ALPHATEST is
+    /// enabled at GREATEREQUAL ref 8, which rejects every texel before blending.
+    /// They are real draw calls and they are no-ops; see the diff note for why
+    /// that matters to any "39 of 39" claim.
     ///
     /// <paramref name="fade"/> is CFEPMain__Render's page fade. The language row is
     /// drawn inside the same loop as the menu labels and every one of its packed
@@ -1386,19 +1598,52 @@ public sealed partial class RetailFrontendFlow : Control
         // tint rather than a per-channel correction.
         DrawTextureRect(
             _languageFlags[language],
-            new Rect2(177f, 252f, 85f, 33f),
+            LanguageRowRect(RetailFrontendLanguageRow.Flag),
             false,
             new Color(FlagTint, FlagTint.A * fade));
 
-        // FE_Arrow points RIGHT, and its artwork occupies only (16,12)-(46,52) of
-        // the 64x64 texture (measured from the decoded DDS alpha bbox). Drawing the
-        // whole texture would shrink the visible chevron by the margins, so source
-        // the content region explicitly. Retail's LEFT chevron is the mirrored one.
-        var arrowSource = new Rect2(16f, 12f, 30f, 40f);
+        // Draw the WHOLE 64x64 texture into retail's whole 51.2x51.2 quad, the
+        // way retail does, rather than sourcing the ink sub-rect into an ink-sized
+        // destination. Both put the ink in the same place; this one keeps our
+        // constants equal to the inventory's, so the next reader diffs numbers
+        // against the CSV instead of re-deriving the margin. It also samples the
+        // sprite's transparent border the way retail's sampler does, which is
+        // where the two differ by a texel of edge feathering.
         var arrowTint = new Color(ChromeTint, ChromeTint.A * fade);
-        DrawTextureRectRegion(_feArrow, new Rect2(166f, 254f, -22f, 30f), arrowSource, arrowTint);
-        DrawTextureRectRegion(_feArrow, new Rect2(273f, 253f, 22f, 30f), arrowSource, arrowTint);
+        DrawTextureRect(
+            _feArrow,
+            LanguageRowRect(RetailFrontendLanguageRow.LeftChevron),
+            false,
+            arrowTint);
+        DrawTextureRect(
+            _feArrow,
+            LanguageRowRect(RetailFrontendLanguageRow.RightChevron),
+            false,
+            arrowTint);
     }
+
+    /// <summary>
+    /// Retail's language-row quad as a Godot rect.
+    ///
+    /// <para><b>A negative width flips IN PLACE. It does not move the rect.</b>
+    /// Godot turns a negative <c>Rect2</c> size into a flip flag and the absolute
+    /// size, leaving <c>position</c> as the LEFT edge either way — so the
+    /// position passed here is always <c>quad.X</c>, never <c>quad.Right</c>.
+    /// This is not a style note. The code this replaces read
+    /// <c>Rect2(166, 254, -22, 30)</c> intending x 144..166, and it rendered at
+    /// x 166..188 — 22px right of where it was meant to be, which put the left
+    /// chevron ON TOP of the flag. Measured on our own captured frame
+    /// (local-lab/godot-captures/gaterepair-head-mainmenu/mainmenu-t008000ms.png,
+    /// columns above threshold in the row band): retail shows three separated
+    /// runs 144..165 / 178..260 / 273..294, ours showed two, 167..261 and
+    /// 274..293, with nothing at all where retail's left chevron lives.</para>
+    /// </summary>
+    private static Rect2 LanguageRowRect(RetailFrontendLanguageRow.Quad quad) =>
+        new(
+            (float)quad.X,
+            (float)quad.Y,
+            quad.Mirrored ? (float)-quad.Width : (float)quad.Width,
+            (float)quad.Height);
 
     /// <summary>
     /// FEP_MAIN's underlay: the flat page fill with FEBack128.vid composited
@@ -1476,7 +1721,15 @@ public sealed partial class RetailFrontendFlow : Control
         // with the alpha applied only to the video term. Modulating the baked
         // texture alone would have faded the FILL as well, and retail's page fill
         // is present at full strength on the very first frame.
-        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), MainUnderlayFallback);
+        // Clear first, then the 24.31% black darkener over it — retail's own two
+        // terms rather than their product. See FrontendClearColor /
+        // FrontendFillDarkener for the measurement. The darkener keeps retail's
+        // measured overhang (40px left and right, 3px top and bottom past the
+        // client): it lands on the letterbox bars, which _Draw has already filled
+        // with black, so 24% black over black leaves them black and the client
+        // area is unaffected.
+        DrawRect(new Rect2(0f, 0f, DesignWidth, DesignHeight), FrontendClearColor);
+        DrawRect(new Rect2(-40f, -3f, DesignWidth + 80f, DesignHeight + 6f), FrontendFillDarkener);
 
         if (_feBackFrames.Length == 0)
         {
@@ -2234,6 +2487,16 @@ public sealed partial class RetailFrontendFlow : Control
     private bool HandlePointerMotion(Vector2 position)
     {
         Vector2 design = ToDesignPosition(position);
+        if (_session.Screen == RetailFrontendScreen.Options)
+        {
+            if (!HandleOptionsPointerMotion(design))
+            {
+                return false;
+            }
+            QueueRedraw();
+            return true;
+        }
+
         if (_session.Screen == RetailFrontendScreen.QuitConfirm)
         {
             int choice = QuitConfirmIndexAt(design);
@@ -2274,6 +2537,9 @@ public sealed partial class RetailFrontendFlow : Control
             case RetailFrontendScreen.ClickToStart:
                 Confirm();
                 return true;
+
+            case RetailFrontendScreen.Options:
+                return HandleOptionsPointerConfirm(design);
 
             case RetailFrontendScreen.MainMenu:
                 int index = MainMenuIndexAt(design);
@@ -2375,6 +2641,13 @@ public sealed partial class RetailFrontendFlow : Control
 
     private bool HandleKey(InputEventKey key)
     {
+        // FEP_OPTIONS owns its own selection, left/right value stepping, dropdown
+        // expansion and back stack, so it takes the whole key path.
+        if (_session.Screen == RetailFrontendScreen.Options)
+        {
+            return HandleOptionsKey(key);
+        }
+
         // The FEP_DEVSELECT name field is editable; retail pre-fills it from the
         // highlighted list entry and lets the player type over it.
         if (_session.Screen == RetailFrontendScreen.DevSelect)
@@ -2612,6 +2885,14 @@ public sealed partial class RetailFrontendFlow : Control
             512,
             CuratedAyaTextureLoader.Compression.Rgba8,
             folder: "Hud");
+        // mustbe_SystemFont - the fixed-pitch 7x9 sheet the Controller Options
+        // bindings grid renders with. See RetailFrontendFlow.Options.cs for how it
+        // was identified.
+        _systemFont = LoadTexture(
+            "system-font",
+            256,
+            256,
+            CuratedAyaTextureLoader.Compression.Rgba8);
         // Must match RetailFrontendSession Steam-drawn row order (Update/icons).
         _menuIcons =
         [
@@ -2779,14 +3060,55 @@ public sealed partial class RetailFrontendFlow : Control
             var destination = new Rect2(x, position.Y, glyphWidth, cellSize * scaleY);
             if (dropShadow)
             {
+                // THE SHADOW SITS ON THE ANCHOR AND THE BODY IS DRAWN AT (-1,-1).
+                // MEASURED from retail's own draw calls, 2026-07-27 d3d9 sweep
+                // (local-lab/D3D9-FULL-SWEEP-2026-07-27.md; per-draw CSVs under
+                // G:\bea-frontend-pages\SWEEP-2026-07-27\inventories\). Every
+                // shadowed text run in the frontend is a shadow DrawPrimitive
+                // followed immediately by a body DrawPrimitive whose rectangle is
+                // the shadow's minus (1,1). Six pages, two font atlases, no
+                // exception:
+                //
+                //   main-menu-settled.csv f3000 d12/d13   (175.5,296.5) / (174.5,295.5)
+                //   main-menu-settled.csv f3000 d32/d33   (  0.5,464.5) / ( -0.5,463.5)
+                //   options-root.csv      f2500 d11/d12   (243.5,245.5) / (242.5,244.5)
+                //   options-sound.csv     f4900 d43/d44   ( 44.5,255.5) / ( 43.5,254.5)
+                //   mission-briefing.csv  f3600 d18/d19   ( 80.5,164.5) / ( 79.5,163.5)
+                //   select-level.csv      f2500 d71/d72   (130.5,153.5) / (129.5,152.5)
+                //
+                // AND THE SHADOW CARRIES THE BODY'S OWN ALPHA, not a fraction of
+                // it. The packed diffuse pairs are 0xFD000000/0xFD4F4F4F and
+                // 0x7D000000/0x7D1F1F1F (main menu), 0xFF000000/0xFFD6D6D6
+                // (options), 0xFE000000/0xFEFFDF5F (briefing),
+                // 0xFF000000/0xFF7F7F7F (select level). The alpha byte is equal on
+                // every one of the 63 pairs in those five inventories; the RGB of
+                // the shadow is always exactly 0x000000. The previous
+                // `color.A * 0.82f` is refuted by all 63.
+                //
+                // WHY THIS IS AN EXACT MATCH AND NOT A HALF-PIXEL APPROXIMATION.
+                // Retail's rectangles are half-integer because D3D9 samples a
+                // pixel at its centre, which sits at k + 0.5 in XYZRHW space: a
+                // quad spanning [k+0.5, k+0.5+n) covers pixel rows k..k+n-1, which
+                // is exactly what a Godot Rect2 at integer k with height n covers.
+                // Our anchors were therefore already on retail's SHADOW row; only
+                // the assignment of the two quads to it was inverted. On the seven
+                // main-menu rows this change takes our body from +1,+1 and our
+                // shadow from +2,+2 to a zero-pixel offset on both.
                 DrawTextureRectRegion(
                     atlas,
-                    new Rect2(destination.Position + new Vector2(2f, 2f), destination.Size),
+                    destination,
                     source,
-                    new Color(0f, 0f, 0f, color.A * 0.82f));
+                    new Color(0f, 0f, 0f, color.A));
+                DrawTextureRectRegion(
+                    atlas,
+                    new Rect2(destination.Position - Vector2.One, destination.Size),
+                    source,
+                    color);
             }
-
-            DrawTextureRectRegion(atlas, destination, source, color);
+            else
+            {
+                DrawTextureRectRegion(atlas, destination, source, color);
+            }
             x += glyphWidth + scaleX;
         }
     }
