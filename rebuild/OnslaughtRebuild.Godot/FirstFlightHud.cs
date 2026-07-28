@@ -809,6 +809,41 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawSetTransform(offset, 0f, new Vector2(scale, scale));
         }
 
+        /// <summary>
+        /// ONE continuous polyline, not N independent antialiased quads.
+        ///
+        /// Retail's compass rings are each a SINGLE D3D triangle strip, read
+        /// from the pristine specimen
+        /// local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+        /// 74154BFA...E7750:
+        ///
+        ///   CDXCompass__Init 0x0053be40 creates ring 1's vertex buffer at
+        ///   0x0053c099 with push 0x102 / push 0x14 / push 0x66 - FVF
+        ///   D3DFVF_XYZ|D3DFVF_TEX1, stride 20, 102 vertices - and ring 2's at
+        ///   0x0053c133 with push 0x52, 82 vertices. 102 = 2*(50+1) and
+        ///   82 = 2*(40+1): segmentCount pairs plus one closing pair.
+        ///   CDXCompass__BuildRingGeometry 0x0053c1d0 writes those pairs and
+        ///   closes the strip by copying vertex pair 0, setting u = 1.0 at
+        ///   0x0053c2c9.
+        ///   CDXCompass__RenderWorldSpaceOverlay 0x0053cd30 then issues exactly
+        ///   two DrawPrimitive calls through device vtable byte 0x144:
+        ///   0x0053cf95 push 0x50 / push 0 / push 5 and 0x0053d10a
+        ///   push 0x64 / push 0 / push 5 - D3DPT_TRIANGLESTRIP, StartVertex 0,
+        ///   PrimitiveCount 80 then 100.
+        ///
+        /// A strip has no interior boundary for a rasteriser to feather, so
+        /// retail's ring carries no per-segment seam. The previous loop issued
+        /// segmentCount independent DrawLine(..., antialiased: true) calls,
+        /// which put an antialiasing falloff on BOTH sides of all 50 butt
+        /// joints - task #106's second defect. DrawPolyline emits one primitive
+        /// with joined segments, so only the closure seam remains, which is the
+        /// one seam retail's duplicated vertex pair also has.
+        ///
+        /// The segment counts themselves are unchanged and are not a guess:
+        /// CDXCompass__Init passes push 0x32 (50) at 0x0053c0e7 and push 0x28
+        /// (40) at 0x0053c17e, and the device draw-call log independently
+        /// recorded 100/102 and 80/82 TRISTRIP.
+        /// </summary>
         protected void DrawSegmentedRing(
             Vector2 center,
             float radius,
@@ -823,14 +858,19 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 (int)Math.Ceiling((startTurn + turnLength) * segmentCount),
                 segmentStart,
                 segmentCount);
-            for (int segment = segmentStart; segment < segmentEnd; segment++)
+            if (segmentEnd <= segmentStart)
             {
-                float first = (segment / (float)segmentCount) * Mathf.Tau;
-                float second = ((segment + 1) / (float)segmentCount) * Mathf.Tau;
-                Vector2 firstPoint = center + new Vector2(Mathf.Sin(first), -Mathf.Cos(first)) * radius;
-                Vector2 secondPoint = center + new Vector2(Mathf.Sin(second), -Mathf.Cos(second)) * radius;
-                DrawLine(firstPoint, secondPoint, color, width, true);
+                return;
             }
+
+            var points = new Vector2[segmentEnd - segmentStart + 1];
+            for (int index = 0; index < points.Length; index++)
+            {
+                float turn = ((segmentStart + index) / (float)segmentCount) * Mathf.Tau;
+                points[index] =
+                    center + (new Vector2(Mathf.Sin(turn), -Mathf.Cos(turn)) * radius);
+            }
+            DrawPolyline(points, color, width, true);
         }
 
         /// <summary>

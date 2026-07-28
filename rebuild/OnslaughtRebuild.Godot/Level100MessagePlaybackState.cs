@@ -84,6 +84,27 @@ public static class Level100MessagePanel
     /// cross-correlating the white and shadow masks of t022080, which peaks at
     /// (dx,dy)=(1,1).
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NOT MOVED to the 203.5 the d3d9 draw log of 2026-07-27 reports for
+    /// retail's text quads (in-level draws 1211-1218), and the reason is a
+    /// measurement rather than a preference. Setting the pen to
+    /// (203.5, 411.5) and re-capturing moves this client's rendered glyph ink
+    /// two rows up and two to three columns left of retail's, and costs the
+    /// message-panel region 48.03 -> 53.45 % material at t029072. At (206, 413)
+    /// the rendered rows land on retail's EXACTLY - 415-426 / 430-441 / 445-453
+    /// with identical per-row ink counts (420:34, 435:59, 450:12).
+    /// </para>
+    /// <para>
+    /// The log and this constant are therefore not in conflict about retail;
+    /// they are quoting different things. The log gives the issued vertex, and
+    /// the (+2.5, +1.5) between it and this pen is D3D9's half-pixel rule plus
+    /// the shadow-versus-white quad the log does not distinguish. The
+    /// rasterised comparison is the stronger test of the two and it is the one
+    /// that decides. See
+    /// local-lab/agent-notes-2026-07-27/hud-corrections-applied.md.
+    /// </para>
+    /// </remarks>
     public const float TextPenLeft = 206f;
 
     /// <summary>
@@ -94,6 +115,11 @@ public static class Level100MessagePanel
     /// block, cell rows 412..458, is centred in the measured panel body
     /// (405.5..464.5, centre 435) to the half pixel.
     /// </summary>
+    /// <remarks>
+    /// The device log's 411.5 / 426.5 / 441.5 line tops confirm the 15.0 pitch
+    /// exactly and are NOT adopted as this constant; see
+    /// <see cref="TextPenLeft"/> for the rasterised measurement that decided it.
+    /// </remarks>
     public const float FirstLinePenTop = 413f;
 
     /// <summary>Type-on speed, in source characters per second.</summary>

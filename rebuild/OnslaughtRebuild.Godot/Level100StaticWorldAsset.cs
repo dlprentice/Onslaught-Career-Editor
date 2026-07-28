@@ -12,6 +12,8 @@ internal sealed partial class Level100StaticWorldAsset
 {
     private const string ManifestPath =
         "res://Assets/Level100/StaticWorld/level100-static-world.json";
+    private const string AnimationManifestPath =
+        "res://Assets/Level100/StaticWorld/level100-static-world-animation.json";
     private const string ManifestSha256 =
         Level100ActorDefinitionManifest.ExpectedManifestSha256;
     private const string SourceArchiveSha256 =
@@ -80,13 +82,15 @@ internal sealed partial class Level100StaticWorldAsset
         IReadOnlyList<MeshInstance3D> objects,
         int surfaceCount,
         int pineInstanceCount,
-        Level100WaterAsset water)
+        Level100WaterAsset water,
+        Level100StaticWorldAnimationDriver animation)
     {
         Root = root;
         Objects = objects;
         SurfaceCount = surfaceCount;
         PineInstanceCount = pineInstanceCount;
         Water = water;
+        Animation = animation;
     }
 
     public Node3D Root { get; }
@@ -98,6 +102,13 @@ internal sealed partial class Level100StaticWorldAsset
     public int PineInstanceCount { get; }
 
     public Level100WaterAsset Water { get; }
+
+    /// <summary>
+    /// The released base-world hierarchy idle loops. Presentation only: it
+    /// advances from frame delta, mutates nothing but node transforms, and is
+    /// never observed by Core or the mission.
+    /// </summary>
+    public Level100StaticWorldAnimationDriver Animation { get; }
 
     public static Level100ActorDefinitionSet LoadActorDefinitions() =>
         Level100ActorDefinitionManifest.Decode(LoadManifestBytes());
@@ -113,6 +124,8 @@ internal sealed partial class Level100StaticWorldAsset
     {
         Manifest manifest = LoadManifest();
         ValidateManifest(manifest, terrain);
+        Level100StaticWorldAnimationSet animation =
+            Level100StaticWorldAnimationManifest.Decode(LoadAnimationManifestBytes());
         float pineMeshDistance = checked((float)manifest.PineBillboards.MeshQualityDistance);
 
         var root = new Node3D { Name = "RetailLevel100StaticWorld" };
@@ -123,6 +136,7 @@ internal sealed partial class Level100StaticWorldAsset
         }
 
         var meshes = new Dictionary<string, ArrayMesh>(StringComparer.Ordinal);
+        var partitioned = new Dictionary<string, PartitionedObjMesh>(StringComparer.Ordinal);
         foreach ((string key, MeshDefinition definition) in manifest.Meshes)
         {
             // The four `pinesnow` meshes are the only meshes in the manifest no
@@ -143,11 +157,30 @@ internal sealed partial class Level100StaticWorldAsset
                         ? RetailMeshLightRig.ClosePine(terrain)
                         : RetailMeshLightRig.StaticWorld(terrain)),
                 StringComparer.Ordinal);
+            // Only the meshes the released data says actually loop are split by
+            // hierarchy part. The three one-shot turret hierarchies hold their
+            // authored rest pose, which is virtual frame 0 and therefore exactly
+            // the merged mesh already emitted, so splitting them would fragment
+            // their material surfaces for no visual difference.
+            if (animation.Meshes.TryGetValue(key, out Level100StaticWorldMeshAnimation? meshAnimation) &&
+                meshAnimation.Playback == Level100StaticWorldPlayback.CyclicLoop)
+            {
+                partitioned.Add(key, CuratedObjMeshLoader.LoadPartitioned(
+                    definition.ResourcePath,
+                    surfaceMaterials,
+                    [.. meshAnimation.Parts.Select(part => new ObjPartRange(
+                        part.Part,
+                        part.ObjVertexStart,
+                        part.ObjVertexCount))]));
+                continue;
+            }
+
             ArrayMesh mesh = CuratedObjMeshLoader.Load(definition.ResourcePath, surfaceMaterials);
             meshes.Add(key, mesh);
         }
 
         var objects = new List<MeshInstance3D>(manifest.Objects.Length);
+        var animatedParts = new List<Level100StaticWorldAnimationBinding>();
         foreach (WorldObject worldObject in manifest.Objects.OrderBy(item => item.Ordinal))
         {
             float retailX = checked((float)worldObject.RetailPosition[0]);
@@ -195,21 +228,83 @@ internal sealed partial class Level100StaticWorldAsset
                     -relativeZ),
                 Rotation = new Vector3(0f, checked((float)worldObject.Yaw), 0f),
             };
+            bool isPartitioned = partitioned.TryGetValue(
+                worldObject.Mesh,
+                out PartitionedObjMesh? split);
             var geometry = new MeshInstance3D
             {
                 Name = $"{worldObject.Name}Geometry",
-                Mesh = meshes[worldObject.Mesh],
+                Mesh = isPartitioned ? split!.Remainder : meshes[worldObject.Mesh],
                 RotationDegrees = new Vector3(-90f, 0f, 0f),
             };
+
+            if (isPartitioned)
+            {
+                // `geometry`'s -90 degree X rotation is the only thing between
+                // the OBJ vertices and this object's space, so `geometry`'s own
+                // local frame IS the OBJ space the released deltas are expressed
+                // in. Its children therefore take those deltas verbatim, with no
+                // further conversion.
+                Level100StaticWorldMeshAnimation meshAnimation = animation.Meshes[worldObject.Mesh];
+                foreach (Level100StaticWorldAnimatedPart part in meshAnimation.Parts)
+                {
+                    var partNode = new MeshInstance3D
+                    {
+                        Name = $"Part{part.Part:D2}-{SanitizeNodeName(part.Name)}",
+                        Mesh = split!.Parts[part.Part],
+                        Transform = Level100StaticWorldAnimationDriver.ToObjSpaceTransform(
+                            part.Frames[0]),
+                    };
+                    geometry.AddChild(partNode);
+                    animatedParts.Add(new Level100StaticWorldAnimationBinding(
+                        meshAnimation,
+                        part,
+                        partNode));
+                }
+            }
+
             objectRoot.AddChild(geometry);
             root.AddChild(objectRoot);
             objects.Add(geometry);
         }
 
+        // Every part the manifest says moves on a looping mesh must have reached
+        // a node. Without this, a mesh key drifting out of the placed set would
+        // silently go back to being frozen scenery - which is exactly the defect
+        // this whole path exists to fix.
+        int expectedBindings = manifest.Objects
+            .Where(item => partitioned.ContainsKey(item.Mesh))
+            .Sum(item => animation.Meshes[item.Mesh].Parts.Count);
+        if (animatedParts.Count != expectedBindings || animatedParts.Count == 0)
+        {
+            throw new InvalidDataException(
+                "The Level 100 static-world animated parts were not all bound at load.");
+        }
+
         int pineCount = AddPines(root, manifest, terrain, meshes, textures);
         Level100WaterAsset water = AddWater(root, manifest, terrain, textures);
-        int surfaceCount = objects.Sum(item => item.Mesh?.GetSurfaceCount() ?? 0);
-        return new Level100StaticWorldAsset(root, objects, surfaceCount, pineCount, water);
+        int surfaceCount =
+            objects.Sum(item => item.Mesh?.GetSurfaceCount() ?? 0) +
+            animatedParts.Sum(item => item.Node.Mesh?.GetSurfaceCount() ?? 0);
+        return new Level100StaticWorldAsset(
+            root,
+            objects,
+            surfaceCount,
+            pineCount,
+            water,
+            new Level100StaticWorldAnimationDriver(animation.FramesPerSecond, animatedParts));
+    }
+
+    private static string SanitizeNodeName(string value)
+    {
+        Span<char> buffer = stackalloc char[value.Length];
+        for (int index = 0; index < value.Length; index++)
+        {
+            char character = value[index];
+            buffer[index] = char.IsAsciiLetterOrDigit(character) ? character : '_';
+        }
+
+        return buffer.IsEmpty ? "Part" : new string(buffer);
     }
 
     private static int AddPines(
@@ -588,6 +683,24 @@ internal sealed partial class Level100StaticWorldAsset
         {
             PropertyNameCaseInsensitive = true,
         }) ?? throw new InvalidDataException("The Level 100 static-world manifest is empty.");
+    }
+
+    /// <summary>
+    /// The animation manifest is a separate hash-pinned file; its own SHA-256 is
+    /// checked inside
+    /// <see cref="Level100StaticWorldAnimationManifest.Decode"/>, so this only
+    /// bounds the read.
+    /// </summary>
+    private static byte[] LoadAnimationManifestBytes()
+    {
+        byte[] source = Godot.FileAccess.GetFileAsBytes(AnimationManifestPath);
+        if (source.Length is < 1 or > 512_000)
+        {
+            throw new InvalidDataException(
+                "The locally materialized Level 100 static-world animation manifest is missing.");
+        }
+
+        return source;
     }
 
     private static byte[] LoadManifestBytes()
@@ -1362,5 +1475,123 @@ internal static class RetailFixedFunctionMaterial
             byte.MinValue,
             byte.MaxValue);
         return alpha / (float)byte.MaxValue;
+    }
+}
+
+/// <summary>One released hierarchy part bound to the node that carries it.</summary>
+internal sealed record Level100StaticWorldAnimationBinding(
+    Level100StaticWorldMeshAnimation Mesh,
+    Level100StaticWorldAnimatedPart Part,
+    MeshInstance3D Node);
+
+/// <summary>
+/// Plays the released Level 100 base-world hierarchy idle loops.
+///
+/// <para>Presentation only. It advances from the frame delta the world view
+/// already passes to the water and cloud-shadow owners, holds its own wrapped
+/// accumulator, writes nothing but node transforms, and is never read back by
+/// Core or by the mission. The tracks it plays are decorative rigid parts on
+/// scenery - a spinning docks crane, two counter-rotating radar dishes, four
+/// solar-pod petals - so no simulation state observes them.</para>
+///
+/// <para>Playback snaps to a stored virtual frame and never interpolates,
+/// because the released selection through <c>VHFM</c> is a table lookup per
+/// virtual frame, not a curve.</para>
+/// </summary>
+internal sealed class Level100StaticWorldAnimationDriver(
+    int framesPerSecond,
+    IReadOnlyList<Level100StaticWorldAnimationBinding> bindings)
+{
+    private readonly int[] _shownFrames = new int[bindings.Count];
+    private double _elapsedSeconds;
+
+    public int BindingCount => bindings.Count;
+
+    /// <summary>
+    /// Virtual frames per second, straight from the manifest's own
+    /// <c>framesPerSecond</c>. No rate is chosen here.
+    /// </summary>
+    public int FramesPerSecond { get; } = framesPerSecond;
+
+    public void Update(float frameDelta)
+    {
+        if (!float.IsFinite(frameDelta) || frameDelta <= 0f)
+        {
+            return;
+        }
+
+        // Wrap on the longest lap present so the accumulator cannot drift into
+        // the range where a double loses whole-frame resolution during a long
+        // session. Every lap length divides evenly into its own modulus, so this
+        // never shifts a mesh's phase.
+        _elapsedSeconds += frameDelta;
+        double period = LongestLapSeconds();
+        if (period > 0d && _elapsedSeconds >= period)
+        {
+            _elapsedSeconds %= period;
+        }
+
+        for (int index = 0; index < bindings.Count; index++)
+        {
+            Level100StaticWorldAnimationBinding binding = bindings[index];
+            int frame = binding.Mesh.SelectVirtualFrame(_elapsedSeconds, FramesPerSecond);
+            if (frame == _shownFrames[index])
+            {
+                continue;
+            }
+
+            _shownFrames[index] = frame;
+            binding.Node.Transform = ToObjSpaceTransform(binding.Part.Frames[frame]);
+        }
+    }
+
+    /// <summary>
+    /// One released delta into a Godot <see cref="Transform3D"/>, applied in OBJ
+    /// space with no conversion.
+    ///
+    /// <para><c>basis</c> is nine floats ROW-major
+    /// (<c>cmsh_static_preview.py:1084</c> flattens <c>obj_rows</c> row by row,
+    /// under the storage convention stated at <c>:901-902</c>). Godot's
+    /// three-vector constructor takes COLUMNS - the shipped
+    /// <c>GodotSharp.dll</c> names its parameters
+    /// <c>column0, column1, column2</c> - so the rows are transposed into
+    /// columns here. Passing them straight through would build the transpose,
+    /// which for a rotation is its inverse: every dish would spin backwards.</para>
+    /// </summary>
+    public static Transform3D ToObjSpaceTransform(Level100RigidFrame frame)
+    {
+        float[] basis = frame.Basis;
+        return new Transform3D(
+            new Basis(
+                new Vector3(basis[0], basis[3], basis[6]),
+                new Vector3(basis[1], basis[4], basis[7]),
+                new Vector3(basis[2], basis[5], basis[8])),
+            new Vector3(frame.Origin[0], frame.Origin[1], frame.Origin[2]));
+    }
+
+    private double LongestLapSeconds()
+    {
+        long lapFrames = 1;
+        foreach (Level100StaticWorldAnimationBinding binding in bindings)
+        {
+            if (binding.Mesh.LoopFrameCount > 0)
+            {
+                lapFrames = Lcm(lapFrames, binding.Mesh.LoopFrameCount);
+            }
+        }
+
+        return lapFrames / (double)FramesPerSecond;
+    }
+
+    private static long Lcm(long left, long right)
+    {
+        long a = left;
+        long b = right;
+        while (b != 0)
+        {
+            (a, b) = (b, a % b);
+        }
+
+        return left / a * right;
     }
 }

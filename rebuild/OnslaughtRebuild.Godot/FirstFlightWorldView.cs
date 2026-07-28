@@ -289,6 +289,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             _level100Terrain.Update(_camera);
         _level100TerrainAppearance.Update(terrainSelection, frameDelta);
         _level100StaticWorld.Water.Update(_camera.GlobalPosition, frameDelta);
+        _level100StaticWorld.Animation.Update(frameDelta);
     }
 
     public void ConsumeLevel100DestructionEvents(

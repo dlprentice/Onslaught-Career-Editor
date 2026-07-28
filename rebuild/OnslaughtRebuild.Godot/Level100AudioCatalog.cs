@@ -477,6 +477,38 @@ public static class Level100AudioCatalog
         _ => throw new ArgumentOutOfRangeException(nameof(cue)),
     };
 
+    /// <summary>
+    /// The engine loop a Level 100 world actor emits, resolved from its
+    /// canonical definition name. The loop is a property of the SHIPPED UNIT
+    /// DEFINITION, not of the script attached to an instance, so both Air
+    /// Trainer instances - the ambient <c>Flyby</c> aircraft and the
+    /// dodge-exercise attacker - carry the same one.
+    ///
+    /// <para>MEASURED from <c>default physics.dat</c>, component id 54
+    /// (<c>CUnitNoise</c>): <c>Air Trainer</c> (record #601, component at
+    /// <c>0x1e330</c>) carries <c>Forsetti Fighter Flyby 02</c> and
+    /// <c>U-17 Highside Transporter</c> (record #636, component at
+    /// <c>0x21255</c>) carries <c>Bomber Flyby 03</c>. <c>Target Drone</c>
+    /// (record #660) carries NO <c>CUnitNoise</c> at all, which is why it maps
+    /// to null here rather than borrowing the Air Trainer's loop despite
+    /// sharing its mesh.</para>
+    ///
+    /// <para>Retail attaches both aircraft's scripts at level load - MEASURED at
+    /// <c>CComplexThing__SetScript</c> in the 2026-07-28 TTD trace - but that
+    /// trace stops at the briefing, so it does NOT show either loop sounding.
+    /// The mapping is authored data; audibility remains unproven.</para>
+    /// </summary>
+    public static Level100ActorLoopCue? GetActorEngineLoop(string definitionName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(definitionName);
+        return definitionName switch
+        {
+            "Air Trainer" => Level100ActorLoopCue.AirTrainer,
+            "U-17 Highside Transporter" => Level100ActorLoopCue.Transport,
+            _ => null,
+        };
+    }
+
     public static float ToRetailOptionMix(float optionValue)
     {
         if (!float.IsFinite(optionValue) || optionValue is < 0f or > 1f)

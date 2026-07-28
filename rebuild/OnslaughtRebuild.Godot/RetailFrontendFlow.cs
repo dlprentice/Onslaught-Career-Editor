@@ -782,7 +782,7 @@ public sealed partial class RetailFrontendFlow : Control
             _clickPulseTimer += 2d * step;
             _clickPageSeconds += step;
         }
-        else
+        else if (_session.Screen != RetailFrontendScreen.IntroCutscene)
         {
             // Free-runs from the moment click-to-start is left, and is NOT reset on
             // later page changes. Retail's underlay is measured to be page-anchored
@@ -790,6 +790,12 @@ public sealed partial class RetailFrontendFlow : Control
             // FEP_LEVEL_SELECT (matched-offset cross-run material 7-44 % and
             // 5.8-63 % there against 0.4-1.5 % on the main menu), which is what a
             // single clock started once at frontend entry produces.
+            //
+            // IntroCutscene is excluded because retail's frontend page machine is
+            // not running at all during RunIntroFMV — that call sits inside
+            // CGame::RestartLoopRunLevel, not inside the frontend. Letting this
+            // clock run would inject 123.8 s of phase into a MEASURED underlay
+            // scroll, which is a lab artefact and not a released behaviour.
             _feBackSeconds += step;
         }
 
@@ -812,22 +818,51 @@ public sealed partial class RetailFrontendFlow : Control
 
             if (_level100Ready)
             {
-                _session.CompleteLevel100Load();
+                // Retail runs the level's intro FMV HERE — after the load, with
+                // the loading screen driven to 100 % and dismissed, before the
+                // first gameplay frame (references/Onslaught/game.cpp:1336-1345).
+                // See RetailFrontendFlow.Cutscene.cs. When there is no cutscene
+                // to play this falls through to the pre-existing handoff.
+                if (!TryBeginLevel100IntroCutscene())
+                {
+                    _session.CompleteLevel100Load();
+                }
             }
         }
 
-        if (_session.Screen == RetailFrontendScreen.Gameplay && !_gameplayActivationRaised)
+        if (TryRaiseGameplayActivation())
         {
-            _gameplayActivationRaised = true;
-            Visible = false;
-            SetProcessInput(false);
-            SetProcess(false);
-            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Captured);
-            GameplayActivated?.Invoke();
             return;
         }
 
         QueueRedraw();
+    }
+
+    /// <summary>
+    /// Hands the screen to gameplay on the frame the session first reaches it.
+    ///
+    /// Extracted from <c>_Process</c> so the intro-cutscene completion can raise
+    /// the SAME edge in the SAME frame. The cutscene finishes inside its own
+    /// child node's <c>_Process</c>, which Godot runs after this node's, so
+    /// leaving the edge to the next frame put the session on Gameplay for one
+    /// frame while nothing had been activated — a window the smoke harness
+    /// observed and threw on. It is the ordering artefact, not the state, that
+    /// this removes.
+    /// </summary>
+    private bool TryRaiseGameplayActivation()
+    {
+        if (_session.Screen != RetailFrontendScreen.Gameplay || _gameplayActivationRaised)
+        {
+            return false;
+        }
+
+        _gameplayActivationRaised = true;
+        Visible = false;
+        SetProcessInput(false);
+        SetProcess(false);
+        CursorModeRequested?.Invoke(RetailFrontendCursorMode.Captured);
+        GameplayActivated?.Invoke();
+        return true;
     }
 
     /// <summary>
@@ -869,7 +904,12 @@ public sealed partial class RetailFrontendFlow : Control
 
     public override void _Input(InputEvent inputEvent)
     {
-        if (_session.Screen is RetailFrontendScreen.Loading or RetailFrontendScreen.Gameplay)
+        // IntroCutscene is included because the movie owns the screen and the
+        // RetailStartupSequence child owns the abort. A frontend page reacting to
+        // the keypress that skips the movie would navigate an invisible page.
+        if (_session.Screen is RetailFrontendScreen.Loading or
+            RetailFrontendScreen.IntroCutscene or
+            RetailFrontendScreen.Gameplay)
         {
             return;
         }

@@ -27,22 +27,28 @@ public enum RetailStartupClockMode
 }
 
 /// <summary>
-/// The cold-start media sequence retail plays before the interactive frontend:
-/// the Lost Toys logo movie, the opening montage, and the static splash card.
+/// Retail's FMV player. It serves both the cold-start chain (the Lost Toys logo
+/// movie, the opening montage, the static splash card) and a single level
+/// cutscene played through <see cref="InitializeForClip"/> — which is what
+/// retail does too, since both routes end in the same <c>FMV.PlayFullscreen</c>
+/// and the D3D9 capture shows one presentation path.
 ///
 /// <para><b>This is presentation only.</b></para>
 /// It touches textures, the filesystem and a clock, so it can never be
 /// referenced from <c>OnslaughtRebuild.Core</c>. The deterministic part — which
-/// beat is on screen at time t, and which video frame — lives in
-/// <see cref="RetailStartupSchedule"/>, which has no Godot types and is unit
+/// beat is on screen at time t, which video frame, and every measured value of
+/// the draw itself — lives in <see cref="RetailStartupSchedule"/> and
+/// <see cref="RetailFmvPresentation"/>, which have no Godot types and are unit
 /// tested directly.
 ///
 /// <para><b>Residency.</b></para>
-/// Exactly ONE decoded frame is resident at a time. The frame is read from the
-/// media cache as a PNG and pushed into a single reused <see cref="ImageTexture"/>.
-/// Building a texture per frame — the pattern the FEBack strip loader uses for
-/// its 286 128² frames — would mean 2,054 textures at 480×300 for the montage
-/// alone, and is deliberately not done here.
+/// Exactly <see cref="RetailFmvPresentation.BufferCount"/> decoded frames are
+/// resident, matching retail's measured double buffering. Each frame is read
+/// from the media cache as a PNG and pushed into one of two reused
+/// <see cref="ImageTexture"/> handles. Building a texture per frame — the
+/// pattern the FEBack strip loader uses for its 286 128² frames — would mean
+/// 2,054 textures at 480×300 for the montage and 3,095 for the Level 100
+/// cutscene, and is deliberately not done here.
 ///
 /// <para><b>Nothing is imitated.</b></para>
 /// If a clip was not decoded, its beat does not exist and nothing is drawn in
@@ -52,21 +58,8 @@ public enum RetailStartupClockMode
 /// </summary>
 public sealed partial class RetailStartupSequence : Control
 {
-    private const float DesignWidth = 640f;
-    private const float DesignHeight = 480f;
-
-    /// <summary>
-    /// Where a 480×300 clip lands on the 640×480 stage.
-    ///
-    /// Measured, not assumed: across the eight 2026-07-25 intro reference frames
-    /// the per-pixel maximum over all frames is zero above y=40 and below y=440
-    /// and non-zero across the full width, so the drawn rectangle is
-    /// (0,40)-(640,440). 480×300 is 1.6:1, which at 640 wide is 400 tall, so the
-    /// 40-pixel bars are a consequence of the source aspect rather than a
-    /// separate authored border.
-    /// </summary>
-    private const float VideoTop = 40f;
-    private const float VideoHeight = 400f;
+    private const float DesignWidth = RetailFmvPresentation.StageWidth;
+    private const float DesignHeight = RetailFmvPresentation.StageHeight;
 
     /// <summary>
     /// The capture tick. <c>FrontendCaptureRig</c> launches the engine with
@@ -75,12 +68,26 @@ public sealed partial class RetailStartupSequence : Control
     /// </summary>
     private const double FixedTicksPerSecond = 60d;
 
+    /// <summary>
+    /// Retail's measured "full brightness" vertex diffuse, <c>0xFFFEFEFE</c>,
+    /// applied here as Godot's canvas modulate against the same MODULATE
+    /// semantics. See <see cref="RetailFmvPresentation.FullBrightnessChannel"/>
+    /// for the evidence and for what about it is inferred.
+    /// </summary>
+    private static readonly Color FullBrightnessDiffuse = Color.Color8(
+        (byte)RetailFmvPresentation.FullBrightnessChannel,
+        (byte)RetailFmvPresentation.FullBrightnessChannel,
+        (byte)RetailFmvPresentation.FullBrightnessChannel);
+
+    private readonly ImageTexture?[] _videoBuffers =
+        new ImageTexture?[RetailFmvPresentation.BufferCount];
+
     private RetailStartupMediaIndex _media = RetailStartupMediaIndex.Missing("not initialized");
     private RetailStartupSchedule _schedule = null!;
     private RetailStartupClockMode _clock = RetailStartupClockMode.Wall;
-    private ImageTexture? _videoTexture;
     private Texture2D? _splashTexture;
     private (RetailStartupCue Cue, int Index)? _residentFrame;
+    private int _presentedBuffer;
     private double _elapsedSeconds;
     private bool _aborted;
     private bool _completed;
@@ -127,14 +134,10 @@ public sealed partial class RetailStartupSequence : Control
             : Path.Combine(local, "OnslaughtToolkit", "startup-media");
     }
 
+    /// <summary>The cold-start chain: Lost Toys logo, opening montage, splash.</summary>
     public void Initialize(string mediaRoot, RetailStartupClockMode clock)
     {
-        if (_initialized)
-        {
-            throw new InvalidOperationException("The startup sequence is already initialized.");
-        }
-
-        _clock = clock;
+        BeginInitialize(clock);
         _media = RetailStartupMediaIndex.Load(mediaRoot, File.Exists);
         _schedule = new RetailStartupSchedule(_media.Clips, _media.HasSplash);
 
@@ -150,6 +153,29 @@ public sealed partial class RetailStartupSequence : Control
         }
 
         _initialized = true;
+    }
+
+    /// <summary>
+    /// One clip, alone: retail's <c>FMV.PlayFullscreen</c> call for a level
+    /// cutscene. No splash, no chain, no black padding.
+    /// </summary>
+    public void InitializeForClip(
+        string mediaRoot, RetailStartupCue cue, RetailStartupClockMode clock)
+    {
+        BeginInitialize(clock);
+        _media = RetailStartupMediaIndex.Load(mediaRoot, File.Exists);
+        _schedule = RetailStartupSchedule.ForSingleClip(cue, _media.Clips);
+        _initialized = true;
+    }
+
+    private void BeginInitialize(RetailStartupClockMode clock)
+    {
+        if (_initialized)
+        {
+            throw new InvalidOperationException("The startup sequence is already initialized.");
+        }
+
+        _clock = clock;
     }
 
     public override void _Ready()
@@ -262,25 +288,49 @@ public sealed partial class RetailStartupSequence : Control
         }
         else if (frame.Cue is { } cue && EnsureFrameResident(cue, frame.FrameIndex))
         {
+            // The measured quad and the measured diffuse. Retail draws one
+            // TRIFAN at (0,40)-(640,440) with stage 0 MODULATE against
+            // 0xFFFEFEFE; Godot's canvas modulate multiplies the sampled texel
+            // by the same value, and a CanvasItem's default Mix blend IS
+            // SRCALPHA/INVSRCALPHA, which is what the capture logged
+            // (ab=1 sb=5 db=6 bop=1). The remaining logged states — depth test
+            // off, depth write off, cull NONE, unlit, fog off — are properties
+            // of drawing on a 2D canvas at all, so they are satisfied by
+            // construction rather than by a setting.
             DrawTextureRect(
-                _videoTexture!,
-                new Rect2(0f, VideoTop, DesignWidth, VideoHeight),
-                false);
+                _videoBuffers[_presentedBuffer]!,
+                new Rect2(
+                    RetailFmvPresentation.QuadLeft,
+                    RetailFmvPresentation.QuadTop,
+                    RetailFmvPresentation.QuadWidth,
+                    RetailFmvPresentation.QuadHeight),
+                false,
+                FullBrightnessDiffuse);
         }
 
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
     }
 
     /// <summary>
-    /// Brings one decoded frame into the single resident texture. Returns false
-    /// if the frame could not be read, in which case NOTHING is drawn for it —
-    /// the letterbox stays black rather than repeating the previous frame,
-    /// because a held frame would read as a stall in the footage that retail
-    /// does not have.
+    /// Brings one decoded frame into the buffer retail would have decoded it
+    /// into, and presents that buffer. Returns false if the frame could not be
+    /// read, in which case NOTHING is drawn for it — the letterbox stays black
+    /// rather than repeating the previous frame, because a held frame would read
+    /// as a stall in the footage that retail does not have.
+    ///
+    /// <para><b>Two textures, not one.</b> Retail's decoder is double-buffered
+    /// and the capture shows the two textures alternating strictly, with no
+    /// exception across 896 draws. The frame being presented is therefore never
+    /// the frame being written, which is the property this reproduces via
+    /// <see cref="RetailFmvPresentation.BufferIndexForFrame"/>. Only
+    /// <see cref="RetailFmvPresentation.BufferCount"/> textures are ever
+    /// resident: the 2,054-frame montage and the 3,095-frame Level 100 cutscene
+    /// both rule out the FEBack strip loader's texture-per-frame pattern.</para>
     /// </summary>
     private bool EnsureFrameResident(RetailStartupCue cue, int frameIndex)
     {
-        if (_residentFrame == (cue, frameIndex) && _videoTexture is not null)
+        if (_residentFrame == (cue, frameIndex) &&
+            _videoBuffers[_presentedBuffer] is not null)
         {
             return true;
         }
@@ -303,17 +353,20 @@ public sealed partial class RetailStartupSequence : Control
             return false;
         }
 
-        if (_videoTexture is null ||
-            _videoTexture.GetWidth() != image.GetWidth() ||
-            _videoTexture.GetHeight() != image.GetHeight())
+        int target = RetailFmvPresentation.BufferIndexForFrame(frameIndex);
+        ImageTexture? buffer = _videoBuffers[target];
+        if (buffer is null ||
+            buffer.GetWidth() != image.GetWidth() ||
+            buffer.GetHeight() != image.GetHeight())
         {
-            _videoTexture = ImageTexture.CreateFromImage(image);
+            _videoBuffers[target] = ImageTexture.CreateFromImage(image);
         }
         else
         {
-            _videoTexture.Update(image);
+            buffer.Update(image);
         }
 
+        _presentedBuffer = target;
         _residentFrame = (cue, frameIndex);
         return true;
     }
@@ -341,7 +394,7 @@ public sealed partial class RetailStartupSequence : Control
         Visible = false;
         SetProcess(false);
         SetProcessInput(false);
-        _videoTexture = null;
+        Array.Clear(_videoBuffers);
         _splashTexture = null;
         _residentFrame = null;
         Completed?.Invoke();

@@ -222,11 +222,14 @@ def score_page(
             result["samples"].append(sample)
             continue
 
+        # Boxes are passed through unconverted: compare_capture accepts either a
+        # single rectangle or a list of them (a disjoint union), and wrapping in
+        # tuple() here would have to know which it got.
         boxes = {FULL_FRAME: [0, 0, ref_img.size[0], ref_img.size[1]], **regions}
         for name, box in boxes.items():
-            stats = region_stats(ref_img, cap_img, tuple(box))
-            stats["gapPct"] = gap_pct(ref_img, cap_img, floor_img, tuple(box))
-            stats["floorPct"] = region_stats(ref_img, floor_img, tuple(box))["materialPct"]
+            stats = region_stats(ref_img, cap_img, box)
+            stats["gapPct"] = gap_pct(ref_img, cap_img, floor_img, box)
+            stats["floorPct"] = region_stats(ref_img, floor_img, box)["materialPct"]
             sample["regions"][name] = stats
 
         result["samples"].append(sample)

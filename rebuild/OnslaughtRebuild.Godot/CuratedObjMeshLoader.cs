@@ -14,6 +14,122 @@ internal static class CuratedObjMeshLoader
         string resourcePath,
         IReadOnlyDictionary<string, Material> materials)
     {
+        ParsedObj parsed = Parse(resourcePath, materials);
+        return BuildMesh(parsed, parsed.Surfaces, materials);
+    }
+
+    /// <summary>
+    /// Split one curated OBJ into a mesh per released hierarchy part, plus the
+    /// remainder every unlisted part shares. The released rigid tracks in
+    /// <c>level100-static-world-animation.json</c> address geometry by 1-based
+    /// OBJ vertex range, and those ranges are contiguous and non-overlapping, so
+    /// the split needs no geometry data the OBJ does not already carry.
+    ///
+    /// <para>Every triangle must lie wholly inside one listed range. That is a
+    /// released property of these hierarchies, not an assumption: measured over
+    /// the three split meshes, 6,437 triangles straddle zero part boundaries. It
+    /// is asserted rather than worked around, because a straddling triangle
+    /// would mean the part ranges no longer describe the emitted OBJ.</para>
+    ///
+    /// <para>Each produced mesh keeps the whole vertex/normal/UV/colour array and
+    /// differs only in its index array, exactly as <see cref="Load"/> already
+    /// does for its material surfaces. The wider bounding box that implies is
+    /// conservative for culling.</para>
+    /// </summary>
+    public static PartitionedObjMesh LoadPartitioned(
+        string resourcePath,
+        IReadOnlyDictionary<string, Material> materials,
+        IReadOnlyList<ObjPartRange> partRanges)
+    {
+        ParsedObj parsed = Parse(resourcePath, materials);
+        var remainder = new List<MaterialSurface>();
+        var byPart = new Dictionary<int, List<MaterialSurface>>();
+
+        foreach (MaterialSurface surface in parsed.Surfaces)
+        {
+            for (int offset = 0; offset < surface.Indices.Count; offset += 3)
+            {
+                int a = surface.Indices[offset];
+                int b = surface.Indices[offset + 1];
+                int c = surface.Indices[offset + 2];
+                int owner = -1;
+                foreach (ObjPartRange range in partRanges)
+                {
+                    // ObjVertexStart is 1-based in the released manifest.
+                    int first = range.FirstVertex - 1;
+                    int last = first + range.VertexCount - 1;
+                    int inside =
+                        (a >= first && a <= last ? 1 : 0) +
+                        (b >= first && b <= last ? 1 : 0) +
+                        (c >= first && c <= last ? 1 : 0);
+                    if (inside == 0)
+                    {
+                        continue;
+                    }
+
+                    if (inside != 3 || owner >= 0)
+                    {
+                        throw new InvalidDataException(
+                            "Curated mesh has a triangle straddling a released hierarchy part range.");
+                    }
+
+                    owner = range.Part;
+                }
+
+                List<MaterialSurface> target;
+                if (owner < 0)
+                {
+                    target = remainder;
+                }
+                else if (!byPart.TryGetValue(owner, out List<MaterialSurface>? partSurfaces))
+                {
+                    target = [];
+                    byPart.Add(owner, target);
+                }
+                else
+                {
+                    target = partSurfaces;
+                }
+
+                MaterialSurface? bucket = target.Find(item =>
+                    StringComparer.Ordinal.Equals(item.Name, surface.Name));
+                if (bucket is null)
+                {
+                    bucket = new MaterialSurface(surface.Name);
+                    target.Add(bucket);
+                }
+
+                bucket.Indices.Add(a);
+                bucket.Indices.Add(b);
+                bucket.Indices.Add(c);
+            }
+        }
+
+        var parts = new Dictionary<int, ArrayMesh>();
+        foreach (ObjPartRange range in partRanges)
+        {
+            if (!byPart.TryGetValue(range.Part, out List<MaterialSurface>? partSurfaces))
+            {
+                throw new InvalidDataException(
+                    "Curated mesh has a released hierarchy part range covering no triangle.");
+            }
+
+            parts.Add(range.Part, BuildMesh(parsed, partSurfaces, materials));
+        }
+
+        if (remainder.Count == 0)
+        {
+            throw new InvalidDataException(
+                "Curated mesh has no geometry outside its released hierarchy part ranges.");
+        }
+
+        return new PartitionedObjMesh(BuildMesh(parsed, remainder, materials), parts);
+    }
+
+    private static ParsedObj Parse(
+        string resourcePath,
+        IReadOnlyDictionary<string, Material> materials)
+    {
         string source = Godot.FileAccess.GetFileAsString(resourcePath);
         if (string.IsNullOrEmpty(source))
         {
@@ -116,6 +232,19 @@ internal static class CuratedObjMeshLoader
             throw new InvalidDataException("Curated mesh has inconsistent geometry arrays.");
         }
 
+        return new ParsedObj(vertices, normals, textureCoordinates, colors, surfaces);
+    }
+
+    private static ArrayMesh BuildMesh(
+        ParsedObj parsed,
+        IReadOnlyList<MaterialSurface> surfaces,
+        IReadOnlyDictionary<string, Material> materials)
+    {
+        List<Vector3> vertices = parsed.Vertices;
+        List<Vector3> normals = parsed.Normals;
+        List<Vector2> textureCoordinates = parsed.TextureCoordinates;
+        List<Color> colors = parsed.Colors;
+
         var mesh = new ArrayMesh();
         foreach (MaterialSurface surface in surfaces)
         {
@@ -189,4 +318,25 @@ internal static class CuratedObjMeshLoader
 
         public List<int> Indices { get; } = [];
     }
+
+    private sealed record ParsedObj(
+        List<Vector3> Vertices,
+        List<Vector3> Normals,
+        List<Vector2> TextureCoordinates,
+        List<Color> Colors,
+        List<MaterialSurface> Surfaces);
 }
+
+/// <summary>
+/// One released hierarchy part's 1-based OBJ vertex range, as carried by
+/// <c>level100-static-world-animation.json</c>.
+/// </summary>
+internal readonly record struct ObjPartRange(int Part, int FirstVertex, int VertexCount);
+
+/// <summary>
+/// A curated OBJ split into one mesh per released hierarchy part, plus the
+/// remainder shared by every part with no rigid track.
+/// </summary>
+internal sealed record PartitionedObjMesh(
+    ArrayMesh Remainder,
+    IReadOnlyDictionary<int, ArrayMesh> Parts);

@@ -77,7 +77,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--retail-root", type=Path, default=DEFAULT_RETAIL_ROOT)
     ap.add_argument("--runs", default=",".join(DEFAULT_RUNS))
     ap.add_argument("--regions", type=Path,
-                    help="JSON: {name: [x0,y0,x1,y1], ...}")
+                    help="JSON: {name: [x0,y0,x1,y1], ...}. A value may also be "
+                         "a LIST of rectangles whose disjoint union is the "
+                         "region - that is how the attribution-clean level-100 "
+                         "boxes are expressed. See tools/check_region_overlap.py.")
     ap.add_argument("--offsets", default="",
                     help="comma-separated level offsets in ms to compare in "
                          "detail. Default: every paired offset, summary only.")
@@ -94,7 +97,7 @@ def main(argv: list[str]) -> int:
     manifest, rebuild = load_rebuild(args.rebuild_manifest)
     rebuild_dir = args.rebuild_manifest.parent
 
-    regions: dict[str, list[int]] = {"FULL FRAME": [0, 0, 640, 480]}
+    regions: dict[str, list] = {"FULL FRAME": [0, 0, 640, 480]}
     if args.regions:
         # `_`-prefixed keys in the regions file are documentation (_comment,
         # _caveats), not boxes. Without this filter the summary path silently
@@ -173,7 +176,10 @@ def main(argv: list[str]) -> int:
 
         wanted = regions if (detail is None or pair["levelOffsetMs"] in detail) else {
             "FULL FRAME": regions["FULL FRAME"]}
-        stats = {name: region_stats(ref_img, cand_img, tuple(box))
+        # Passed through unconverted: a region is one rectangle OR a list of
+        # disjoint rectangles (see compare_capture.rects), and tuple() here would
+        # have to know which it got.
+        stats = {name: region_stats(ref_img, cand_img, box)
                  for name, box in wanted.items()}
         pair["regions"] = stats
         report["pairs"].append(pair)

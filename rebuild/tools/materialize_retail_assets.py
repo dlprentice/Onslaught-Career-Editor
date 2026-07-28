@@ -403,6 +403,25 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
     (GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", "data/resources/meshes/m_f_truck_training.msh.aya", "3bd92ce93d0619b7c4b0dd158680641fbab6cd88580a68c6ef34e5f22f7596c5"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
+    # The authored particle set itself. `ParticleSetFile` parses it and
+    # `ParticleEffectResolver` resolves named effects out of it, so the
+    # descriptor values stop being hand-copied constants. rebuild/PROVENANCE.md
+    # already pins this exact file.
+    (GODOT_ASSETS / "Level100/ParticleSets/MainSet.par", "data/ParticleSets/MainSet.par", "a51fe4419b55e1af132e31c6b3cd8133c937745d8f4ab691eb5a0d81017ded06"),
+    # Particle textures named by descriptors in the file above. `Blend_Mode`
+    # selects WHICH shipped copy is loaded: mode 0 resolves to the alpha-less
+    # `(0)R5G6B5` archive and mode 1 to the `(0)A4R4G4B4` archive. That is
+    # measured, not chosen - see
+    # ParticleEffectResolver.BlendModeSelectsShippedTextureFormat. The three
+    # rows here are the additive copies that no earlier retention needed; the
+    # alpha copies of `alparticle4` and `fireball` are already retained below
+    # under their older role-based names. `Small Puff.tga` is deliberately NOT
+    # retained: the only path to it in the two effects wired up so far is the
+    # `Flaming Debris Emitter` branch of `Debris Selector`, whose authored
+    # weight is 2 of 62 and rounds to zero of the ten debris particles the
+    # Warehouse starts. Retaining an asset nothing reaches is drift.
+    (GODOT_ASSETS / "Level100/Textures/particle-alparticle5-additive.texture.aya", "data/resources/dxtntextures/Particle%alparticle5.tga(0)R5G6B5.aya", "5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0"),
+    (GODOT_ASSETS / "Level100/Textures/particle-fireball-additive.texture.aya", "data/resources/dxtntextures/Particle%fireball.tga(0)R5G6B5.aya", "26b1b080e89323d077764e6dcb66038757737d5c73d104c9e8dba73c33cad244"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-halo.texture.aya", "data/resources/dxtntextures/Particle%Halo.tga(0)R5G6B5.aya", "cde6efc90dc7958c5bda425a04486e277beb85a7f1c33fb9074f369e92d58edb"),
@@ -517,6 +536,24 @@ FRONTEND_ASSETS = (
     (GODOT_ASSETS / "Frontend/level-ring-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_ring_bracket02.tga(0)A8R8G8B8.aya", "620900d34c153e722b6d78a9fbecab2d69b8e81abcdbda084b0f90eb96142dff"),
     (GODOT_ASSETS / "Frontend/title-font.texture.aya", "data/resources/textures/mustbe_TitleFont.tga(0)A8R8G8B8.aya", "1941e28a5665665fb7f8f733e7a4854c60def33e1d4f1cb9caa979bc204d0707"),
     (GODOT_ASSETS / "Frontend/loading-screen.texture.aya", "data/resources/dxtntextures/LoadingScreen.tga(0)X8R8G8B8.aya", "e4ad32fee41a31477e97d4f6f0b280f33c360756e3aba27bf23746038443fc2c"),
+    # The mouse cursor sprite. Retail closes every interactive frontend frame
+    # with a 32x32 quad of this texture at the pointer position, measured on 14
+    # draws across 13 pages and 4 launches in the 2026-07-27 d3d9 sweep
+    # (local-lab/D3D9-FULL-SWEEP-2026-07-27.md).
+    #
+    # The name is read from the pristine specimen
+    # local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (sha256
+    # 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750): VA
+    # 0x00640058 / file 0x240058 holds "mouse.tga\0", the string the cursor
+    # renderer at 0x00523A70 hands to CTexture::FindTexture, and VA 0x00640054
+    # holds FF 00 00 00, which that renderer packs into the 0xFFFFFFFF diffuse
+    # the sweep measured.
+    #
+    # The file is DXT2 on disk (128x128, mipMapCount 8) even though the sweep
+    # measured D3DFMT_A8R8G8B8 at runtime: the texture loader special-cases this
+    # one filename and forces the create-format. Godot decodes the DXT2 the file
+    # actually holds, so the loader asks for Dxt2.
+    (GODOT_ASSETS / "Frontend/mouse-cursor.texture.aya", "data/resources/dxtntextures/mouse.tga(0)A8R8G8B8.aya", "366021def699de220ad018c40250eefaccaab356c6c5d93fe0aa1b7f5302354c"),
 )
 
 
@@ -3900,10 +3937,31 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
 # is lossless, so these ARE the Bink decode and can serve as their own parity
 # oracle; and because frames are separately addressable the player holds one
 # frame resident instead of 2,054 textures.
+#
+# THE THIRD CLIP IS NOT A STARTUP CLIP. data/video/cutscenes/01.vid is Level
+# 100's intro cutscene, played by CGame::RunIntroFMV
+# (references/Onslaught/game.cpp:1122-1152) from CGame::RestartLoopRunLevel
+# (game.cpp:1336-1345) — after the level loads and before the first gameplay
+# frame, not during startup. It is decoded here because it is the same decode
+# contract, the same cache, the same 480x300 at 25 fps, and the same
+# startup-media.json the client already reads; a second recipe for the same job
+# is how the half-rate FEBack strip happened. Which clip: the campaign FMV table
+# at file offset 0x23FD70 (VA 0x0063FD70) of the pristine specimen
+# local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (sha256 74154bfa…)
+# holds [level][intro][outroA][outroB] records, and row 0 is (100, 1, 2, -1).
+# game.cpp:1130 formats that id as "cutscenes\\%02d".
+#
+# Clip 02 — the row's outro — is deliberately NOT decoded. RunOutroFMV plays it
+# only on (mQuit == QT_QUIT_TO_FRONTEND) && (mFinalState == GAME_STATE_LEVEL_WON)
+# (game.cpp:1166), and nothing in the reconstruction produces that signal yet.
+# Decoding 62 MB of frames nothing can play would be retention without a
+# consumer.
 STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v1"
 STARTUP_MEDIA_CLIPS = (
     ("LostToysLogo", "data/video/LTLogo.vid", "lost-toys-logo", 480, 300, 25, 229),
     ("OpeningMontage", "data/video/OpeningFMV.vid", "opening-montage", 480, 300, 25, 2054),
+    ("Level100IntroCutscene", "data/video/cutscenes/01.vid",
+     "level100-intro-cutscene", 480, 300, 25, 3095),
 )
 STARTUP_MEDIA_SPLASH_SOURCE = "data/textures/splash.tga"
 
@@ -4056,8 +4114,9 @@ def main() -> int:
         "--startup-media",
         action="store_true",
         help=(
-            "decode the cold-start media (LTLogo.vid, OpeningFMV.vid, splash.tga) "
-            "into a cache OUTSIDE res://, and do nothing else"
+            "decode the retail movies (LTLogo.vid, OpeningFMV.vid, splash.tga and "
+            "the Level 100 intro cutscene cutscenes/01.vid) into a cache OUTSIDE "
+            "res://, and do nothing else"
         ),
     )
     parser.add_argument(

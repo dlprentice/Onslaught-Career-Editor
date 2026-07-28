@@ -31,9 +31,44 @@ def load_rgb(path: Path) -> Image.Image:
     return Image.open(path).convert("RGB")
 
 
-def region_stats(ref: Image.Image, cmp_: Image.Image, box: tuple[int, int, int, int]) -> dict:
-    a = list(ref.crop(box).get_flattened_data())
-    b = list(cmp_.crop(box).get_flattened_data())
+def rects(box) -> list[tuple[int, int, int, int]]:
+    """Normalise a region to a list of rectangles.
+
+    A region is either one `[x0,y0,x1,y1]` rectangle or a LIST of them, whose
+    union is the region. The union form exists because the only attribution-clean
+    shapes this project has been able to establish are not rectangles: excising
+    one measurement box from another leaves an L or a U, and until this existed
+    `"terrain mid-band (clean)"` could only be described in prose. A region that
+    no tool can compute is not a measurement, and the caveat block of
+    `rebuild/tools/gameplay-regions-level100.json` carried exactly that for two
+    days while the contaminated box it warns against went on being quoted.
+
+    Rectangles in a union MUST be pairwise disjoint or their shared pixels are
+    counted twice. `tools/check_region_overlap.py` enforces that mechanically;
+    this function does not, because it is on the per-frame path.
+    """
+    if box and isinstance(box[0], (list, tuple)):
+        return [tuple(part) for part in box]
+    return [tuple(box)]
+
+
+def region_pixels(image: Image.Image, box) -> list:
+    parts = rects(box)
+    if len(parts) == 1:
+        return list(image.crop(parts[0]).get_flattened_data())
+    out: list = []
+    for part in parts:
+        out.extend(image.crop(part).get_flattened_data())
+    return out
+
+
+def region_area(box) -> int:
+    return sum(max(0, x1 - x0) * max(0, y1 - y0) for x0, y0, x1, y1 in rects(box))
+
+
+def region_stats(ref: Image.Image, cmp_: Image.Image, box) -> dict:
+    a = region_pixels(ref, box)
+    b = region_pixels(cmp_, box)
     n = len(a)
     if n == 0:
         return {"pixels": 0}
@@ -77,7 +112,7 @@ def gap_pct(
     ref: Image.Image,
     cmp_: Image.Image,
     floor: Image.Image,
-    box: tuple[int, int, int, int],
+    box,
 ) -> float:
     """Percentage of pixels where the candidate differs materially from the
     reference AND retail's own second run does not.
@@ -92,9 +127,9 @@ def gap_pct(
     layer it failed to draw, because an omitted layer produces a difference at
     pixels that may well be floor-stable, and those still count.
     """
-    a = list(ref.crop(box).get_flattened_data())
-    b = list(cmp_.crop(box).get_flattened_data())
-    f = list(floor.crop(box).get_flattened_data())
+    a = region_pixels(ref, box)
+    b = region_pixels(cmp_, box)
+    f = region_pixels(floor, box)
     n = len(a)
     if n == 0:
         return 0.0
@@ -133,7 +168,11 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reference", required=True, type=Path)
     ap.add_argument("--candidate", required=True, type=Path)
-    ap.add_argument("--regions", type=Path, help="JSON: {name: [x0,y0,x1,y1], ...}")
+    ap.add_argument("--regions", type=Path,
+                    help="JSON: {name: [x0,y0,x1,y1], ...}. A value may also be "
+                         "a LIST of rectangles, whose disjoint union is the "
+                         "region - that is how a box with another box excised "
+                         "from it is expressed. See tools/check_region_overlap.py.")
     ap.add_argument(
         "--noise-floor",
         type=Path,
@@ -224,9 +263,9 @@ def main(argv: list[str]) -> int:
         print("-" * (width + 40))
 
     for name, box in regions.items():
-        stats = region_stats(ref, cmp_, tuple(box))
+        stats = region_stats(ref, cmp_, box)
         if floor is not None:
-            fstats = region_stats(ref, floor, tuple(box))
+            fstats = region_stats(ref, floor, box)
             stats["floorPct"] = fstats["materialPct"]
             # gapPct is PER-PIXEL, and it must stay that way.
             #
@@ -242,7 +281,7 @@ def main(argv: list[str]) -> int:
             # The correct question is "where does the candidate differ from the
             # reference BEYOND what retail's own run-to-run variation explains",
             # which is a property of each pixel, not of two summary statistics.
-            stats["gapPct"] = gap_pct(ref, cmp_, floor, tuple(box))
+            stats["gapPct"] = gap_pct(ref, cmp_, floor, box)
         report["regions"][name] = stats
         if not stats["pixels"]:
             continue

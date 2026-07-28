@@ -22,6 +22,169 @@ public enum RetailStartupCue
 
     /// <summary><c>data/textures/splash.tga</c> — the static Lost Toys / Atari card.</summary>
     Splash,
+
+    /// <summary>
+    /// <c>data/video/cutscenes/01.vid</c> — the Level 100 campaign cutscene,
+    /// 3,095 frames of 480x300 at 25 fps (123.80 s, 32,067,000 bytes).
+    ///
+    /// <para><b>This enum outgrew its name and is deliberately not renamed.</b>
+    /// Its member names are the JSON keys in <c>startup-media.json</c>, so a
+    /// rename is a silent cache-format break, and the index reads the file with
+    /// <c>Enum.TryParse</c>.</para>
+    ///
+    /// <para><b>Why this cue exists.</b> It is NOT part of the cold-start chain.
+    /// <c>CGame::RunIntroFMV</c> (<c>references/Onslaught/game.cpp:1122-1152</c>)
+    /// formats <c>"cutscenes\\%02d"</c> and is called from
+    /// <c>CGame::RestartLoopRunLevel</c> at <c>game.cpp:1336-1345</c>, i.e.
+    /// AFTER the level has loaded and BEFORE the first gameplay frame. The clip
+    /// id comes from the campaign FMV table, read from the pristine specimen
+    /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>
+    /// (sha256 <c>74154bfa…</c>) at file offset <c>0x23FD70</c>
+    /// (VA <c>0x0063FD70</c>), records of
+    /// <c>[i32 level][i32 intro][i32 outroA][i32 outroB]</c>. Row 0 reads
+    /// <c>100, 1, 2, -1</c>, so Level 100's intro is clip <c>01</c> and its
+    /// outro is clip <c>02</c>.</para>
+    /// </summary>
+    Level100IntroCutscene,
+}
+
+/// <summary>
+/// How retail draws ONE frame of an FMV — measured from its own draw calls, not
+/// inferred from ours.
+///
+/// <para><b>Provenance.</b> Passive D3D9 proxy capture
+/// <c>G:\bea-d3d9-capture\d3d9-20260728-111552.log</c>, 900 presented frames /
+/// 896 draws, <c>refusals total=0 warnings=0</c>, specimen verified unchanged
+/// after the run. Target <c>local-lab/safe-copy-bea-pristine/BEA.exe</c>
+/// (pristine plus the four-byte force-windowed patch at <c>0x12A644</c>), run
+/// with NO arguments — the first proxy capture ever taken without
+/// <c>-skipfmv</c>. Written up in
+/// <c>local-lab/FMV-PRESENTATION-2026-07-28.md</c>.</para>
+///
+/// <para><b>The whole FMV is one draw per frame:</b>
+/// <c>DrawPrimitiveUP</c>, <c>TRIFAN</c>, 2 primitives, 4 vertices,
+/// <c>upstride=28</c>, <c>fvf=0x144</c> (XYZRHW + DIFFUSE + one 2-D texture
+/// coordinate set); tex0 512x512 <c>D3DFMT_A8R8G8B8</c>, 1 level; alpha blend
+/// on with <c>SRCALPHA</c>/<c>INVSRCALPHA</c>/<c>ADD</c>; depth test off, depth
+/// write off, cull <c>NONE</c>, unlit, fog off; stage 0 colour op
+/// <c>MODULATE</c>, alpha op <c>SELECTARG1</c>; viewport
+/// <c>(0,0,640x480)</c>.</para>
+///
+/// <para>Everything here is MEASURED. The one inferred statement is marked as
+/// such at <see cref="FullBrightnessChannel"/>.</para>
+/// </summary>
+public static class RetailFmvPresentation
+{
+    /// <summary>The viewport the capture logged: <c>vp = (0,0,640x480)</c>.</summary>
+    public const float StageWidth = 640f;
+
+    /// <inheritdoc cref="StageWidth"/>
+    public const float StageHeight = 480f;
+
+    /// <summary>
+    /// Edge of the drawn quad, from the four logged <c>xyzrhw</c> positions:
+    /// <c>(0,40)</c>, <c>(640,40)</c>, <c>(640,440)</c>, <c>(0,440)</c>.
+    /// The video is LETTERBOXED, not full-screen — 40-pixel bars top and bottom.
+    ///
+    /// <para>Independently corroborated from pixels: across the eight
+    /// 2026-07-25 intro reference frames the per-pixel maximum over all frames
+    /// is zero above y=40 and below y=440, and non-zero across the full width.
+    /// Two instruments, one rectangle.</para>
+    /// </summary>
+    public const float QuadLeft = 0f;
+
+    /// <inheritdoc cref="QuadLeft"/>
+    public const float QuadTop = 40f;
+
+    /// <inheritdoc cref="QuadLeft"/>
+    public const float QuadRight = 640f;
+
+    /// <inheritdoc cref="QuadLeft"/>
+    public const float QuadBottom = 440f;
+
+    public const float QuadWidth = QuadRight - QuadLeft;
+
+    public const float QuadHeight = QuadBottom - QuadTop;
+
+    /// <summary>
+    /// Logged texture dimension: <c>tex0 = 512x512 fmt21</c>
+    /// (<c>D3DFMT_A8R8G8B8</c>), 1 level.
+    ///
+    /// <para><b>STATED DIVERGENCE.</b> This reconstruction's decoded frames are
+    /// <see cref="SourceWidth"/> x <see cref="SourceHeight"/> textures drawn
+    /// whole, not 512x512 textures sampled through
+    /// <see cref="MaxU"/>/<see cref="MaxV"/>. The two address exactly the same
+    /// texels: retail's UVs select the top-left 480x300 region and nothing else.
+    /// The power-of-two allocation is a 2003 D3D9 constraint that Godot does not
+    /// have, so reproducing it would cost 40 % more texture memory per buffer to
+    /// hold padding that is never sampled.</para>
+    ///
+    /// <para>The one place the two are not identical is the outermost texel row
+    /// and column, where retail's bilinear filter can reach one texel past the
+    /// video into the padding and ours clamps to the edge. That is a sub-pixel
+    /// difference on the frame border, and it is recorded rather than
+    /// asserted away.</para>
+    /// </summary>
+    public const int TextureSize = 512;
+
+    /// <summary>
+    /// The logged texture coordinates are <c>(0,0)</c>, <c>(0.9375,0)</c>,
+    /// <c>(0.9375,0.5859)</c>, <c>(0,0.5859)</c>.
+    ///
+    /// That is what fixes the DECODE SIZE: the video occupies the top-left
+    /// <c>0.9375 x 512 = 480</c> by <c>0.5859 x 512 = 300</c> texels of a
+    /// power-of-two texture. <c>300/512 = 0.5859375</c>, which the log's four
+    /// decimal places print as <c>0.5859</c>.
+    /// </summary>
+    public const float MaxU = SourceWidth / (float)TextureSize;
+
+    /// <inheritdoc cref="MaxU"/>
+    public const float MaxV = SourceHeight / (float)TextureSize;
+
+    /// <summary>Decoded video size implied by <see cref="MaxU"/>/<see cref="MaxV"/>.</summary>
+    public const int SourceWidth = 480;
+
+    /// <inheritdoc cref="SourceWidth"/>
+    public const int SourceHeight = 300;
+
+    /// <summary>
+    /// Every vertex in the capture carries <c>diff=0xFFFEFEFE</c> — alpha
+    /// <c>0xFF</c>, and <c>0xFE</c> (254/255 = 0.99608) on each colour channel,
+    /// NOT white.
+    ///
+    /// <para>With stage 0 set to <c>MODULATE</c> the sampled video is multiplied
+    /// by that diffuse, so this is the value "full brightness" actually takes.
+    /// It is reproduced rather than rounded up to <c>0xFF</c> because rounding it
+    /// would discard the only direct evidence of the fade mechanism.</para>
+    ///
+    /// <para><b>INFERRED, NOT MEASURED:</b> that retail's fade to black sweeps
+    /// this diffuse toward zero. The mechanism follows from MODULATE against a
+    /// non-unit diffuse and from alpha staying <c>0xFF</c> throughout (so the
+    /// blend mode is not what fades it), but these 900 frames hold ONE
+    /// brightness level and contain no transition. No fade curve is implemented
+    /// here, because none has been measured; a capture across a transition would
+    /// settle it and has not been taken.</para>
+    /// </summary>
+    public const int FullBrightnessChannel = 0xFE;
+
+    /// <summary>
+    /// The decoder is DOUBLE-BUFFERED. Two textures alternate strictly, with no
+    /// exception anywhere in the captured range:
+    /// <c>frame 2 -> 0x0F220EE0, frame 3 -> 0x0F2214C0, frame 4 -> 0x0F220EE0</c>
+    /// and so on. One texture is presented while the next frame decodes into the
+    /// other.
+    /// </summary>
+    public const int BufferCount = 2;
+
+    /// <summary>
+    /// Which of the <see cref="BufferCount"/> textures a decoded source frame
+    /// lands in. Retail alternates per PRESENTED frame; this reconstruction
+    /// alternates per DECODED source frame, which is the same law wherever the
+    /// engine frame rate differs from the clip's 25 fps and each source frame is
+    /// still decoded exactly once.
+    /// </summary>
+    public static int BufferIndexForFrame(int frameIndex) =>
+        ((frameIndex % BufferCount) + BufferCount) % BufferCount;
 }
 
 /// <summary>What the startup sequence is drawing at a sampled instant.</summary>
@@ -215,6 +378,83 @@ public sealed class RetailStartupSchedule
         }
 
         TotalSeconds = cursor;
+    }
+
+    /// <summary>
+    /// Whether any FMV should play at all on this run.
+    ///
+    /// <para><c>--skipfmv</c> is RETAIL'S own gate, reproduced by name.
+    /// <c>CGame::GetIntroFMV</c>
+    /// (<c>references/Onslaught/game.cpp:1103-1119</c>) opens with
+    /// <c>if (CLIPARAMS.mSkipFMV) return -1;</c>, and every FMV route consults
+    /// it, so the one flag suppresses the cold-start chain and the level
+    /// cutscene alike.</para>
+    ///
+    /// <para><c>--smoke</c> and the capture arguments are OURS, not retail's:
+    /// the smoke route and the frontend capture plan are frame-counted, and a
+    /// two-minute movie inserted into either would make them time out rather
+    /// than fail. <c>--intro</c> is also ours and overrides all of it, so a
+    /// human or a future rig can always force the movie on — without it the
+    /// intro would have no observed path at all, which is exactly how
+    /// <c>_feBackFrames</c> came to be loaded and never drawn.</para>
+    ///
+    /// <para><b>Known duplication.</b>
+    /// <c>FirstFlightGame.StartRetailStartupMedia</c> still carries its own
+    /// inline copy of this rule. It should call this method; that file was owned
+    /// by another lane when this landed and was deliberately not edited.</para>
+    /// </summary>
+    public static bool IsSuppressedByArguments(IReadOnlyList<string> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(arguments);
+
+        bool forced = false;
+        bool suppressed = false;
+        foreach (string argument in arguments)
+        {
+            if (argument == "--intro")
+            {
+                forced = true;
+            }
+            else if (argument == "--skipfmv" || argument == "--smoke" ||
+                     argument.StartsWith("--capture-dir=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-plan=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-size=", StringComparison.Ordinal) ||
+                     argument.StartsWith("--capture-offsets-ms=", StringComparison.Ordinal))
+            {
+                suppressed = true;
+            }
+        }
+
+        return !forced && suppressed;
+    }
+
+    /// <summary>
+    /// A schedule of exactly ONE clip and nothing else — no splash, no
+    /// inter-clip black, no chain.
+    ///
+    /// This is what retail's level cutscenes are. <c>CGame::RunIntroFMV</c>
+    /// (<c>references/Onslaught/game.cpp:1122-1152</c>) makes a single
+    /// <c>FMV.PlayFullscreen("cutscenes\\NN", FALSE, localise)</c> call; there is
+    /// no sequencer around it and nothing else is drawn. Reusing the cold-start
+    /// chain's constructor and hoping the other beats stayed absent would make
+    /// the difference implicit, so it is a separate entry point.
+    ///
+    /// A cue with no decoded clip yields an EMPTY schedule, reported through
+    /// <see cref="MissingCues"/>. It is never padded with black.
+    /// </summary>
+    public static RetailStartupSchedule ForSingleClip(
+        RetailStartupCue cue,
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
+    {
+        ArgumentNullException.ThrowIfNull(clips);
+        return new RetailStartupSchedule(cue, clips);
+    }
+
+    private RetailStartupSchedule(
+        RetailStartupCue cue,
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
+    {
+        TotalSeconds = AppendVideo(cue, clips, 0d);
     }
 
     /// <summary>Total length of the sequence, in seconds of injected time.</summary>

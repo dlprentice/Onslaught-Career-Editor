@@ -1,5 +1,11 @@
 # Onslaught Toolkit
 
+Status: active — the product and lane overview
+Last updated: 2026-07-28. Only the rebuild entry-path sentence was corrected on
+that date, in place and with the old text quoted; nothing else was re-reviewed.
+Summary: what this project is, which surfaces are active, and where each lane's
+authoritative document lives.
+
 Onslaught Toolkit is a preservation, tooling, and original-code reconstruction
 project for *Battle Engine Aquila* (2003). The primary product is a WinUI 3
 Windows app for inspecting and safely editing real save/options files, preparing
@@ -14,8 +20,11 @@ game, its assets, names, or trademarks.
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
-now enters through a bounded released-style click-to-start, main menu, Level 100
-selector, and loading handoff into the canonical Level 100 simulation. The
+now enters through a bounded released-style click-to-start, main menu, a
+career-name entry page (visual only — it saves nothing), Level 100 selector,
+mission briefing, select configuration, and loading handoff into the canonical
+Level 100 simulation; an Options page and a quit confirmation are reachable from
+the main menu. The
 frontend owns no gameplay, save, result, or later campaign-selection state. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by
@@ -24,6 +33,14 @@ the released macro/detail terrain blend, and sky at their bounded reconstruction
 does not claim retail parity. The exact retail inputs used by that slice are
 materialized locally from the user's own installation and are not distributed
 as files in the current source tree or its release packages.
+
+> **Extended 2026-07-28.** The entry-path sentence previously read "It now
+> enters through a bounded released-style click-to-start, main menu, Level 100
+> selector, and loading handoff into the canonical Level 100 simulation." That
+> understated shipped work by five screens. Nothing was withdrawn, and the
+> career-name page still persists nothing — see
+> [`rebuild/README.md`](rebuild/README.md)'s `## Current truth` for the full list
+> and its authority.
 
 ## Active surfaces
 

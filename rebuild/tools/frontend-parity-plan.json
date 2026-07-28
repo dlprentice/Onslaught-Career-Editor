@@ -16,7 +16,16 @@
     "tools/score_frontend_capture.py; do not restate it, point at it.",
     "",
     "Ceilings apply to the WORST sample, never the mean - a regression visible at",
-    "one video phase is still a regression."
+    "one video phase is still a regression.",
+    "",
+    "A STALE `measured` IS A DEAD GATE, AND THAT IS NOT HYPOTHETICAL. From",
+    "8618e773 (2026-07-27) to 2026-07-28 this file held FEP_MAIN@entry FULL FRAME",
+    "= 71.47 while the build measured 7.53 - a ceiling of 73.47 guarding a value",
+    "of 7.53, nine times loose. It could not have failed for any regression short",
+    "of the page not drawing at all. 8618e773 said so in its own message",
+    "('Ceilings are NOT re-derived here') and nothing in npm test notices, so the",
+    "re-derivation is a DELIBERATE ACT that has to be scheduled by a human. Do it",
+    "in the same session as any change that moves these numbers."
   ],
   "referenceRoot": "local-lab/retail-reference-pristine/nofmv-frontend-2026-07-26",
   "_referenceNote": [
@@ -25,31 +34,43 @@
     "this at all. See local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md."
   ],
   "_measurementProvenance": {
-    "measuredAtCommit": "0c96fb1d",
+    "measuredAtCommit": "432c53f7",
+    "measuredOn": "2026-07-28",
+    "measuredFromCapture": "local-lab/godot-captures/gaterepair-head-mainmenu",
     "_measuredAtCommitNote": [
-      "These values were first derived from a capture the rig stamped",
-      "purpose=probe, because the TitleLogoReflectionLayer change was still",
-      "uncommitted - the rig working exactly as designed. After it landed as",
-      "0c96fb1d they were RE-DERIVED from mainmenu-clean-0c96fb1d, taken from a",
-      "clean tree with Purpose=production and GodotSourceDirty=False.",
-      "They reproduce exactly: FULL FRAME 15.14, title-logo 29.48,",
-      "bg-emblem-topright 19.92. So the probe stamp was a provenance caveat and",
-      "not a wrong number - but that was CONFIRMED rather than assumed, because",
-      "a ceiling derived from an unlabelled experiment is precisely the failure",
-      "the purpose stamp exists to prevent."
-    ],
-    "measuredOn": "2026-07-27",
-    "captureDeterminism": [
-      "Re-derived with tools/score_frontend_capture.py --measure from",
-      "local-lab/godot-captures/20260727-143002-mainmenu. The capture stamped",
-      "purpose=probe because the working tree is dirty - the change these numbers",
-      "measure is exactly that dirt, so 'production' was not obtainable and the",
-      "numbers must be re-derived from a clean tree when it lands.",
+      "Re-derived with tools/score_frontend_capture.py --measure from a capture",
+      "stamped purpose=production, godotSourceCleanliness=clean,",
+      "sourceCommit=432c53f79ff2876aa30556b97eb684f7c5cedda7, 161/161 shots,",
+      "0 screen mismatches, 0 wrong-size frames.",
       "",
+      "The main working tree was DIRTY with unrelated in-flight work at the time,",
+      "which would have forced the purpose stamp down to 'probe'. Rather than",
+      "measure the dirt or disturb it, the capture was taken from a detached",
+      "`git worktree` at HEAD, which is clean by construction. That is why this",
+      "block can name a commit and mean it.",
+      "",
+      "WHAT THIS REPLACED. The previous values were measured at 0c96fb1d on",
+      "2026-07-27 and were correct for that build - re-measuring",
+      "mainmenu-clean-0c96fb1d today still reproduces all 30 of them exactly. They",
+      "went stale when 8618e773 landed the staged main-menu reveal and explicitly",
+      "did not re-derive. Seventeen of the thirty numbers had drifted; the worst",
+      "was FEP_MAIN@entry lang-selector at 99.72 stored against 0.00 measured.",
+      "@settled did not move on any of its ten regions."
+    ],
+    "captureDeterminism": [
       "Two full mainmenu captures of 684c7c52 taken back to back were",
-      "byte-identical on all 161 frames. Our own contribution to run-to-run",
-      "variance is 0.00%, so the 2.00pp margin below is entirely headroom",
-      "against incidental change, not an allowance for our own flake."
+      "byte-identical on all 161 frames, and the pair taken at 432c53f7 on",
+      "2026-07-28 reproduces every one of these thirty numbers. Our own",
+      "contribution to run-to-run variance is 0.00%, so the 2.00pp margin is",
+      "entirely headroom against incidental change, not an allowance for flake.",
+      "",
+      "THE MARGIN DOES NOT NEED TO COVER RETAIL'S CROSS-RUN FLOOR, and must not be",
+      "widened on the argument that it should. That floor reaches 8.95% on",
+      "lang-selector @settled and 7.15% on bg-empty-left @settled, both far above",
+      "2.00pp - but the gated statistic is gapPct, which discards floor-unstable",
+      "pixels ONE AT A TIME before counting. The floor is already gone from the",
+      "number the ceiling bounds. What the margin covers is our own variance,",
+      "which is measured at zero."
     ],
     "marginPp": 2.0
   },
@@ -66,12 +87,18 @@
     "  t000524  all chrome present and over-bright (lang-selector 66,82,122)",
     "  t001020+ settling to its steady value (lang-selector 58,52,74)",
     "",
-    "We draw the entire page on frame 0, which is why the entry window scores",
-    "76% gap against a retail cross-run floor of 0.24% - retail is perfectly",
-    "reproducible there and we simply differ. That is a real defect, tracked",
-    "separately; it is NOT a capture artefact and must not be excluded to make",
-    "the numbers look better. Gating it in its own window keeps it visible and",
-    "keeps the settled window sensitive at its own ~20% scale."
+    "SUPERSEDED 2026-07-28, and left here because the reasoning is why the three",
+    "windows exist. This read: 'We draw the entire page on frame 0, which is why",
+    "the entry window scores 76% gap against a retail cross-run floor of 0.24% -",
+    "retail is perfectly reproducible there and we simply differ. That is a real",
+    "defect, tracked separately.' It WAS, and 8618e773 closed it by porting",
+    "retail's 50-frame staged reveal: the entry window is now 7.53% against the",
+    "same 0.24% floor, and seven of its nine named regions are at or under 0.30%.",
+    "",
+    "The three windows earned their keep exactly as intended. A single window",
+    "would have averaged a 76% defect into a ~20% page and hidden it, and the",
+    "same split now keeps the settled window sensitive at its own ~15% scale",
+    "while the entry window gates at 7.53%."
   ],
   "pages": [
     {
@@ -90,17 +117,25 @@
       "samples": [
         14
       ],
+      "_measuredNote": [
+        "8618e773 landed retail's 50-frame staged reveal and took this window",
+        "from 'we draw the whole page on frame 0' to 'we draw what retail draws'.",
+        "All ten regions moved and none was re-derived until 2026-07-28. What is",
+        "LEFT here is the honest remainder: the title logo and the top-right",
+        "emblem, the two layers retail forces opaque from frame 0, are still",
+        "22.17% and 12.96% wrong. Everything else is at or under 0.30%."
+      ],
       "measured": {
-        "FULL FRAME": 71.47,
-        "bg-empty-left": 97.94,
-        "bg-emblem-topright": 52.38,
-        "title-logo": 60.86,
-        "lang-selector": 99.72,
-        "menu-column": 90.38,
-        "decor-left-arc": 93.56,
-        "decor-right-arc": 98.35,
-        "decor-right-glyph": 90.18,
-        "version-overlay": 90.78
+        "FULL FRAME": 7.53,
+        "bg-empty-left": 0.01,
+        "bg-emblem-topright": 12.96,
+        "title-logo": 22.17,
+        "lang-selector": 0.0,
+        "menu-column": 0.3,
+        "decor-left-arc": 0.0,
+        "decor-right-arc": 0.0,
+        "decor-right-glyph": 0.0,
+        "version-overlay": 0.23
       }
     },
     {
@@ -120,17 +155,24 @@
         524,
         1020
       ],
+      "_measuredNote": [
+        "Seven of ten moved with 8618e773; bg-empty-left, bg-emblem-topright and",
+        "title-logo did not move at all. The worst remaining region is",
+        "lang-selector at 61.55% - retail is brighter there at 524 ms than the",
+        "ported fade model makes it, which 8618e773 recorded as explicitly NOT",
+        "closed rather than scaling a constant until it went away."
+      ],
       "measured": {
-        "FULL FRAME": 22.35,
+        "FULL FRAME": 19.49,
         "bg-empty-left": 6.99,
         "bg-emblem-topright": 22.97,
         "title-logo": 31.83,
-        "lang-selector": 74.23,
-        "menu-column": 49.64,
-        "decor-left-arc": 30.58,
-        "decor-right-arc": 22.56,
-        "decor-right-glyph": 37.21,
-        "version-overlay": 10.39
+        "lang-selector": 61.55,
+        "menu-column": 38.51,
+        "decor-left-arc": 28.06,
+        "decor-right-arc": 22.36,
+        "decor-right-glyph": 19.56,
+        "version-overlay": 9.12
       }
     },
     {

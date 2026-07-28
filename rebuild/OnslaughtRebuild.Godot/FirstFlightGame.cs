@@ -104,6 +104,7 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.ReturnToMainMenuRequested += ReleaseLevel100ForMainMenu;
             _frontend.CursorModeRequested += ApplyFrontendCursorMode;
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
+            _frontend.OptionsSettingsChanged += ApplyOptionsSettings;
             AddChild(_frontend);
             ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
             // CFrontEnd::Init starts MUS_FRONTEND once for the whole frontend
@@ -324,6 +325,34 @@ public sealed partial class FirstFlightGame : Node3D
         if (IsKey(keyEvent, Key.Space))
         {
             _session.QueueFirePulse();
+        }
+
+        // BUTTON_SKIP_PANNING (0x3a). The shipped 47-row binding table
+        // (OptionsEntries__InitDefaultSingleBindingsTable, 0x00514210) gives it
+        // four hard-wired active=0 KEY_ONCE rows at indices 22-25, DIK scan
+        // codes 0x39 / 0x1c / 0x01 / 0x9c = Space, Enter, Escape, Numpad Enter.
+        //
+        // Escape is deliberately NOT included here. It is bound to this action
+        // AND to BUTTON_PAUSE (row 34) AND to BUTTON_FRONTEND_MENU_BACK (row
+        // 17) AND to BUTTON_SKIP_CUTSCENE (row 20), and which of those a single
+        // press reaches depends on whether retail's GetKeyOnce (vtable +0x18)
+        // consumes the key-down flag. Stuart's PC path does consume it
+        // (references/Onslaught/ltshell.h:292,
+        // `BYTE a=KeyWasDown[c]; KeyWasDown[c]=0; return a;`), which would give
+        // the whole press to row 17. That body is not in the drop for retail
+        // and is not decompiled, so Escape's routing is unresolved. Escape
+        // already opens this build's authentic pause menu, which is the same
+        // key's other shipped meaning; leave it there until the edge model is
+        // settled.
+        //
+        // Core ignores this action outside the opening pan
+        // (references/Onslaught/Player.cpp:311), so Space keeps meaning fire
+        // and Enter keeps meaning nothing once play has started.
+        if (IsKey(keyEvent, Key.Space) ||
+            IsKey(keyEvent, Key.Enter) ||
+            IsKey(keyEvent, Key.KpEnter))
+        {
+            _session.QueueSkipPanning();
         }
 
         if (togglePressed)
@@ -677,6 +706,7 @@ public sealed partial class FirstFlightGame : Node3D
                 DestroyLevel100World();
             }
             _session = CreateSession();
+            ReapplyOptionsSettings();
             CreateLevel100World();
             _frontend!.MarkLevel100Ready();
         }
@@ -942,6 +972,16 @@ public sealed partial class FirstFlightGame : Node3D
                         _requestedCursorMode == RetailFrontendCursorMode.Hidden;
                     return;
 
+                // Retail's level intro FMV, between the load and the first
+                // gameplay frame (references/Onslaught/game.cpp:1336-1345). The
+                // smoke never sees this by default — --smoke suppresses the FMV
+                // for the same reason retail's -skipfmv does, and the movie is
+                // 123.8 s against this harness's 75 s budget. It IS reachable
+                // with --smoke --intro, which is how the state was exercised, so
+                // the smoke waits it out rather than throwing once a frame.
+                case RetailFrontendScreen.IntroCutscene:
+                    return;
+
                 default:
                     throw new InvalidOperationException(
                         $"Cold frontend smoke reached unexpected state {frontend.CurrentScreen}.");
@@ -997,6 +1037,37 @@ public sealed partial class FirstFlightGame : Node3D
             !_windowHasFocus || _session.IsPaused
                 ? RetailFrontendCursorMode.Visible
                 : RetailFrontendCursorMode.Captured);
+    }
+
+    /// <summary>
+    /// The options rows that HAVE a consumer, pushed to their owners.
+    ///
+    /// The two volume rows hand the RAW slider value to the audio owner, which is
+    /// what references/Onslaught/SoundManager.cpp:170 and Music.cpp:572 do -
+    /// retail stores the slider position and applies tan(x*1.38) only on the way
+    /// to the mixer, so this must not pre-curve it. Mouse sensitivity goes to the
+    /// session's pointer axis, where 7.0 reproduces the existing 91/3000 exactly.
+    /// Every other row is presented and remembered but has no owner yet.
+    /// </summary>
+    private void ApplyOptionsSettings(RetailOptionsSettings settings)
+    {
+        if (_audio is not null)
+        {
+            _audio.SetMasterSoundOption(settings.SoundVolume);
+            _audio.SetMusicOption(settings.MusicVolume);
+        }
+
+        // The session is constructed per level load, so a change made on the
+        // frontend before one exists is picked up by ReapplyOptionsSettings.
+        _session?.SetMouseSensitivity(settings.MouseSensitivity);
+    }
+
+    private void ReapplyOptionsSettings()
+    {
+        if (_frontend is not null)
+        {
+            ApplyOptionsSettings(_frontend.Options.Settings);
+        }
     }
 
     private void ForwardFrontendAudioCue(RetailFrontendAudioCue cue)

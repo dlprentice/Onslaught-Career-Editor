@@ -25,7 +25,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <c>RenderState_SetRaw(0x93, 1)</c> (<c>D3DRS_AMBIENTMATERIALSOURCE</c> =
 /// <c>D3DMCS_COLOR1</c>). <c>D3DRS_COLORVERTEX</c> (<c>0x8D</c>) is written at
 /// none of the 490 render-state call sites reachable from the two general setters
-/// <c>0x00513BC0</c>, <c>0x00513C20</c> and <c>0x00513A50</c>, so it keeps its
+/// <c>0x00513BC0</c> (440 sites) and <c>0x00513C20</c> (50 sites), so it keeps its
 /// <c>TRUE</c> Direct3D <b>9</b> default. (The binary imports d3d9.dll - two
 /// occurrences, zero of d3d8.dll - and every setter resolves on the
 /// IDirect3DDevice9 vtable at +0xE4. The default value is the same in both

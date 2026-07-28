@@ -127,8 +127,14 @@ public sealed partial class RetailFrontendFlow
     /// </summary>
     private void DrawRetailMouseCursor()
     {
-        // The two pages retail does not draw a cursor on; see the class remarks.
-        if (_session.Screen is RetailFrontendScreen.Loading or RetailFrontendScreen.Gameplay)
+        // The pages retail does not draw a cursor on; see the class remarks.
+        // IntroCutscene joins them: RunIntroFMV is called from inside
+        // CGame::RestartLoopRunLevel (references/Onslaught/game.cpp:1341), where
+        // no frontend page is active, and the D3D9 capture of the FMV shows one
+        // draw per frame with no cursor sprite after it.
+        if (_session.Screen is RetailFrontendScreen.Loading or
+            RetailFrontendScreen.IntroCutscene or
+            RetailFrontendScreen.Gameplay)
         {
             return;
         }

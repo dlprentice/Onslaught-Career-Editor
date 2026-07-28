@@ -369,6 +369,65 @@ public sealed class RetailFrontendSession
     }
 
     /// <summary>
+    /// Whether retail would still play this level's intro cutscene.
+    ///
+    /// This is <c>CGame::mFirstTimeRound</c>. <c>CGame::GetIntroFMV</c> opens
+    /// with <c>if (!mFirstTimeRound) return -1;</c>
+    /// (<c>references/Onslaught/game.cpp:1105-1106</c>), and the restart loop
+    /// sets the flag TRUE when the level is entered
+    /// (<c>game.cpp:1607</c>) and FALSE at the bottom of each iteration
+    /// (<c>game.cpp:1691</c>). So the cutscene plays on entering the level from
+    /// the frontend and NOT on an in-level Retry — which is exactly the
+    /// distinction between <see cref="RestartLevel100"/> and
+    /// <see cref="ReturnToMainMenu"/> here.
+    /// </summary>
+    public bool Level100IntroCutscenePending { get; private set; } = true;
+
+    /// <summary>
+    /// Enters the intro cutscene once the level is loaded. Retail reaches this
+    /// point with the loading screen already dismissed
+    /// (<c>CONSOLE.SetLoading(FALSE)</c>, <c>game.cpp:1339</c>).
+    ///
+    /// The caller owns the decision that a cutscene is actually AVAILABLE —
+    /// whether the clip was decoded, and whether retail's own
+    /// <c>CLIPARAMS.mSkipFMV</c> gate applies. This method owns only the
+    /// once-per-entry rule.
+    /// </summary>
+    public void BeginLevel100IntroCutscene()
+    {
+        if (Screen != RetailFrontendScreen.Loading || _level100LaunchPending)
+        {
+            throw new InvalidOperationException(
+                "The intro cutscene can begin only after Level 100 has loaded.");
+        }
+
+        if (!Level100IntroCutscenePending)
+        {
+            throw new InvalidOperationException(
+                "Retail plays a level's intro cutscene only on the first time round.");
+        }
+
+        Level100IntroCutscenePending = false;
+        Screen = RetailFrontendScreen.IntroCutscene;
+    }
+
+    /// <summary>
+    /// Hands the screen from the cutscene to gameplay, whether it played out or
+    /// the player aborted it. Retail treats both identically: <c>PlayFullscreen</c>
+    /// returns and the load resumes (<c>game.cpp:1342-1345</c>).
+    /// </summary>
+    public void CompleteLevel100IntroCutscene()
+    {
+        if (Screen != RetailFrontendScreen.IntroCutscene)
+        {
+            throw new InvalidOperationException(
+                "There is no intro cutscene to complete.");
+        }
+
+        Screen = RetailFrontendScreen.Gameplay;
+    }
+
+    /// <summary>
     /// Restarts the bounded Level 100 run from a pause owned by the gameplay
     /// presenter. Pause is intentionally not a second frontend state machine:
     /// it leaves this lifecycle in Gameplay.
@@ -408,6 +467,12 @@ public sealed class RetailFrontendSession
         SelectedCareerIndex = -1;
         _gameName = DefaultGameName;
         _level100LaunchPending = false;
+        // Leaving the level ends CGame's restart loop. The next entry runs
+        // RestartLoopRunLevel afresh, which sets mFirstTimeRound TRUE again
+        // (references/Onslaught/game.cpp:1607), so the intro cutscene is armed
+        // once more. RestartLevel100 deliberately does NOT do this: an in-level
+        // Retry stays inside the same loop, where the flag is already FALSE.
+        Level100IntroCutscenePending = true;
         Screen = RetailFrontendScreen.MainMenu;
     }
 }
@@ -453,6 +518,23 @@ public enum RetailFrontendScreen
     /// </summary>
     SelectConfiguration,
     Loading,
+
+    /// <summary>
+    /// Retail's level intro cutscene, between the loading screen and the first
+    /// gameplay frame.
+    ///
+    /// <c>CGame::RestartLoopRunLevel</c> runs it AFTER the level has loaded:
+    /// <c>references/Onslaught/game.cpp:1336-1345</c> reads
+    /// <c>if (GetIntroFMV()!=-1) { SetLoadingFraction(1.f); SetLoading(FALSE);
+    /// RunIntroFMV(); SetLoading(TRUE); ... }</c> — the loading screen is driven
+    /// to 100 %, turned OFF, the movie plays over black, and only then does the
+    /// remaining load resume. That is why this is a state between Loading and
+    /// Gameplay rather than an overlay on either.
+    ///
+    /// For Level 100 the clip is <c>data/video/cutscenes/01.vid</c>, 123.80 s.
+    /// See <c>RetailStartupCue.Level100IntroCutscene</c> for the byte evidence.
+    /// </summary>
+    IntroCutscene,
     Gameplay,
 }
 
