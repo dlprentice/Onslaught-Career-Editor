@@ -14,15 +14,29 @@ namespace OnslaughtRebuild.Client;
 public static class Level100ActorDefinitionManifest
 {
     // Moved 2026-07-27 from
-    // F136110D2CCA008EE7527459DBDB359FB80027A3178E080CF5EBEFCF314F9224 by the
-    // pine mesh-quality distance correction 70.0 -> 30.0 (GOAL.md defaults
-    // rule, task #137). Verified: the regenerated manifest differs from its
-    // predecessor on exactly one of 9,685 leaves,
-    // pineBillboards.meshQualityDistance. Nothing this decoder reads changed.
+    // E4CC77FF457EDD7ADA351CC92347108CEE2E2AE6E01A16DEE277B5CB83841F06 by the
+    // waypoint-path coordinate correction (task #114 section 4-B). The eight
+    // named paths index RLWD initial-actor ordinals of the 30 thingType-18
+    // marker records, not the 121-entry navigation graph the materializer was
+    // reading; nodeIndex was already right, only the coordinate lookup was
+    // wrong. Schema v13 -> v14 for the two fields the correction adds.
+    //
+    // Verified against the previous manifest, 9,685 -> 9,723 leaves:
+    //   changed 181 - schema (1) and waypointPaths (180)
+    //   added    38 - waypointPaths[].isClosed and .targetChainNodeIndices
+    //   removed   0
+    // Nothing outside waypointPaths and schema moved.
+    //
+    // UNLIKE the pine move this replaces, this one DOES reach the decoder and
+    // DOES move the simulation state hash, by two independent routes: the
+    // waypoint positions and retail component bits feed
+    // Level100ActorRegistry.ComputeIdentity, whose digest StateHasher writes;
+    // and the ground actors now drive along different, much longer routes. Both
+    // are intended. See the golden in InteractiveSessionTests.
     public const string ExpectedManifestSha256 =
-        "E4CC77FF457EDD7ADA351CC92347108CEE2E2AE6E01A16DEE277B5CB83841F06";
+        "2DFAD0DC536B2CDF5E01B26F04CF81C4185975D85357C16498ADBACDBB8B8568";
 
-    private const string ExpectedSchema = "onslaught.level100-static-world.v13";
+    private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =
         "ED6350C0E214D00AB1BF6A7BD137FBA3E77D0AFE19A6DC4C0607F56AC037496A";
     private const string ExpectedPhysicsSourceSha256 =

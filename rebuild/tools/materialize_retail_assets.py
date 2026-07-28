@@ -169,10 +169,27 @@ STATIC_WORLD_ANIMATED_MESHES = {
     "ft_sam": 21,
 }
 # Reproducibility pin for the generated manifest. Moved 2026-07-27 from
-# f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314f9224 by the
-# PINE_MESH_QUALITY_DISTANCE 70.0 -> 30.0 correction above; the regenerated
-# manifest differs from its predecessor on that one field and nothing else.
-STATIC_WORLD_MANIFEST_SHA256 = "e4cc77ff457edd7ada351cc92347108cee2e2ae6e01a16dee277b5cb83841f06"
+# e4cc77ff457edd7ada351cc92347108cee2e2ae6e01a16dee277b5cb83841f06 by the
+# waypoint-path coordinate correction in
+# `_parse_level_world_actors_and_waypoints`; schema v13 -> v14. (Its own
+# predecessor was f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314
+# f9224, moved by the PINE_MESH_QUALITY_DISTANCE 70.0 -> 30.0 correction.)
+#
+# MEASURED leaf diff against the previous manifest, 9,685 -> 9,723 leaves:
+#   changed 181 - `schema` (1) and `waypointPaths` (180)
+#   added    38 - `waypointPaths[].isClosed` (8) and
+#                 `waypointPaths[].targetChainNodeIndices` (30 elements)
+#   removed   0
+# NOTHING outside `waypointPaths` and `schema` moved. Meshes, textures, pines,
+# actor definitions, spawn definitions, motion definitions, objects, water and
+# every source hash are leaf-for-leaf identical.
+#
+# The 180 changed waypoint leaves are exactly 30 points x (3 position + 3 of 4
+# retail float-bit components). The 30 fourth components did NOT change, and
+# that is a check rather than a coincidence: the navigation graph's w was 0.0
+# for all 121 entries, and the marker records have no fourth component, so both
+# readings emit the float bits of 0.0f there.
+STATIC_WORLD_MANIFEST_SHA256 = "2dfad0dc536b2cdf5e01b26f04cf81c4185975d85357c16498adbacdbb8b8568"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -651,6 +668,22 @@ def _definition_string(fields: dict[int, bytes], field_id: int) -> str:
 def _level100_actor_motion_definitions(
     physics: dict[tuple[int, str], dict[int, bytes]],
 ) -> list[dict[str, object]]:
+    # UNSOURCED: `arrivalRadiusMillimeters` 2_000 / 5_000 / 8_000, below.
+    #
+    # Every other constant in this function cites a `default physics.dat` field
+    # id or a Steam address. These three cite nothing, and the reason is that
+    # there is nothing to cite: MEASURED 2026-07-27, there is no arrival-radius
+    # field anywhere in the 69-id Unit lane of `default physics.dat`, and no
+    # derivation for these values exists under `local-lab/` or
+    # `reverse-engineering/`. They were invented.
+    #
+    # They are left in place deliberately rather than deleted. They are load
+    # bearing - Core's waypoint arrival test reads them, and removing a working
+    # value with no replacement would be a worse defect than an unsourced one.
+    # The defect being fixed here is that they were *unmarked*. Recover the real
+    # arrival test from the released `CUnit` waypoint follower before relying on
+    # any of them, and above all before relying on 8_000 for the Transporter,
+    # whose motion class is not implemented at all.
     rows: list[dict[str, object]] = []
     for definition_name, expected_life_bits in (
         ("Target Tank", 0x40C00000),
@@ -668,7 +701,7 @@ def _level100_actor_motion_definitions(
             )
         rows.append(
             {
-                "arrivalRadiusMillimeters": 2_000,
+                "arrivalRadiusMillimeters": 2_000,  # UNSOURCED - see the note above
                 "authoredOrder": len(rows),
                 "behaviorInternalId": 2,
                 "behaviorSerializedType": 3,
@@ -715,7 +748,7 @@ def _level100_actor_motion_definitions(
             )
         rows.append(
             {
-                "arrivalRadiusMillimeters": 5_000,
+                "arrivalRadiusMillimeters": 5_000,  # UNSOURCED - see the note above
                 "authoredOrder": len(rows),
                 "behaviorInternalId": 8,
                 "behaviorSerializedType": 9,
@@ -735,7 +768,7 @@ def _level100_actor_motion_definitions(
         raise RuntimeError("Level 100 transporter dropship behavior changed")
     rows.append(
         {
-            "arrivalRadiusMillimeters": 8_000,
+            "arrivalRadiusMillimeters": 8_000,  # UNSOURCED - see the note above
             "authoredOrder": len(rows),
             "behaviorInternalId": 12,
             "behaviorSerializedType": 12,
@@ -1020,7 +1053,7 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
         )
     manifest = json.loads(manifest_bytes)
     if (
-        manifest.get("schema") != "onslaught.level100-static-world.v13"
+        manifest.get("schema") != "onslaught.level100-static-world.v14"
         or manifest.get("sourceArchiveSha256") != LEVEL_ARCHIVE_SHA256
         or manifest.get("physicsSourceSha256") != PHYSICS_DEFINITIONS_SHA256
         or manifest.get("sourceAggregateSha256") != STATIC_WORLD_SOURCE_AGGREGATE_SHA256
@@ -1060,6 +1093,28 @@ def _static_world_outputs(root: Path) -> tuple[tuple[Path, str], ...]:
             "Target Tank Path 2",
             "Target Tank Path 1",
             "Drone Path 1",
+        ]
+        # The authored `target` chains, and the two that close on themselves.
+        # These are the leaves the 2026-07-27 waypoint correction added; pinning
+        # them here is what stops a future decode regression from silently
+        # re-flattening the routes.
+        or [
+            (
+                path.get("name"),
+                tuple(path.get("targetChainNodeIndices", ())),
+                path.get("isClosed"),
+            )
+            for path in manifest.get("waypointPaths", ())
+        ]
+        != [
+            ("Flyby Path", (41, 42, 43), False),
+            ("Target Truck Path 3", (33, 34, 35, 36), False),
+            ("Target Truck Path 2", (29, 30, 31, 32), False),
+            ("Target Truck Path 1", (25, 26, 27, 28), False),
+            ("Transporter Path", (22, 23, 44), False),
+            ("Target Tank Path 2", (38, 37, 10, 24, 8), True),
+            ("Target Tank Path 1", (6, 7, 18), False),
+            ("Drone Path 1", (1, 2, 3, 4), True),
         ]
         or len(manifest.get("pines", ())) != 1481
         or len(manifest.get("meshes", {})) != 28
@@ -1465,6 +1520,63 @@ def _parse_level_world_scripts(
     return reader, scripts
 
 
+def _waypoint_target_chain(
+    markers: dict[int, dict[str, object]],
+    path_name: str,
+    node_indices: list[int],
+) -> tuple[list[int], bool]:
+    """Order one named path's markers by their own `target` next-node pointers.
+
+    Every thingType-18 marker record carries a `target` ordinal, and within a
+    single named path those pointers form exactly one chain over exactly that
+    path's members. Two of the eight chains close on themselves; the serialized
+    index list cannot express that, so the chain is the only field in the
+    shipped data that can encode a loop at all.
+    """
+    members = list(node_indices)
+    member_set = set(members)
+    if len(member_set) != len(members):
+        raise RuntimeError(f"Level 100 waypoint path {path_name!r} repeats a marker")
+    targets = {node: int(markers[node]["target"]) for node in members}
+    successors = {target for target in targets.values() if target in member_set}
+    heads = [node for node in members if node not in successors]
+    if len(heads) > 1:
+        raise RuntimeError(
+            f"Level 100 waypoint path {path_name!r} target pointers form "
+            f"{len(heads)} chains rather than one"
+        )
+    is_closed = not heads
+    head = members[0] if is_closed else heads[0]
+    chain = [head]
+    visited = {head}
+    current = head
+    while True:
+        following = targets[current]
+        if following not in member_set:
+            if following != -1:
+                raise RuntimeError(
+                    f"Level 100 waypoint path {path_name!r} marker {current} "
+                    f"targets {following}, which is outside its own path"
+                )
+            break
+        if following in visited:
+            if not is_closed or following != head:
+                raise RuntimeError(
+                    f"Level 100 waypoint path {path_name!r} target pointers "
+                    "close on a node other than the chain head"
+                )
+            break
+        chain.append(following)
+        visited.add(following)
+        current = following
+    if sorted(chain) != sorted(members):
+        raise RuntimeError(
+            f"Level 100 waypoint path {path_name!r} target chain does not cover "
+            "its own serialized markers"
+        )
+    return chain, is_closed
+
+
 def _parse_level_world_actors_and_waypoints(
     raw_level: bytes,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
@@ -1529,9 +1641,17 @@ def _parse_level_world_actors_and_waypoints(
             reader.single()
             reader.int32()
 
+    # The 121-entry table is the navigation/occupancy graph, NOT the array the
+    # eight named paths index. It is still read and range-validated in full,
+    # because the 198-edge count landing exactly at `+ 121 * 16` is what proves
+    # this offset and stride; only its use as a path-coordinate source is gone.
+    # Its 121 entries hold just 11 distinct XY tuples physically repeated 11
+    # times (period 176 bytes), every one with z = 10.0 and w = 0.0 - which is
+    # why reading paths out of it flattened every node to Y = +10000 mm and
+    # aliased whole routes onto each other.
     if reader.uint16() != 1 or reader.int32() != 121:
         raise RuntimeError("Level 100 waypoint node table changed")
-    waypoint_nodes = [
+    navigation_nodes = [
         tuple(reader.single() for _ in range(4))
         for _ in range(121)
     ]
@@ -1543,11 +1663,32 @@ def _parse_level_world_actors_and_waypoints(
         start = reader.int32()
         end = reader.int32()
         enabled = reader.int32()
-        if start not in range(len(waypoint_nodes)) or end not in range(len(waypoint_nodes)):
+        if start not in range(len(navigation_nodes)) or end not in range(len(navigation_nodes)):
             raise RuntimeError("Level 100 waypoint edge refers to an invalid node")
         if enabled != 1:
             raise RuntimeError("Level 100 waypoint edge state changed")
 
+    # A named path's uint16 entries are RLWD *initial-actor ordinals* of the 30
+    # thingType-18 marker records, not indices into the navigation graph above.
+    # Three independent legs establish this, all measured from the shipped
+    # archive (local-lab/AMBIENT-LIFE-INVENTORY-2026-07-27.md section 1.4):
+    #   1. the union of all eight index lists is exactly the 30 thingType-18
+    #      ordinals, each used exactly once - which the guard below re-checks
+    #      on every materialization rather than trusting the note;
+    #   2. every marker's own `target` field is a next-node pointer, and those
+    #      pointers form exactly the eight chains the path lists name;
+    #   3. only under this reading do the altitudes make sense - `Flyby Path`'s
+    #      markers sit at the Air Trainer's own z = -15 and `Transporter Path`'s
+    #      at z = -20, against a uniform z = +10 from the navigation graph.
+    waypoint_markers = {
+        int(actor["ordinal"]): actor
+        for actor in actors
+        if actor["thingType"] == 18
+    }
+    if len(waypoint_markers) != 30:
+        raise RuntimeError(
+            f"Level 100 authored waypoint marker count changed ({len(waypoint_markers)})"
+        )
     path_count = reader.uint16()
     if path_count != 8:
         raise RuntimeError("Level 100 named waypoint path count changed")
@@ -1555,16 +1696,18 @@ def _parse_level_world_actors_and_waypoints(
     for _ in range(path_count):
         name = reader.string8()
         node_count = reader.int32()
-        if node_count <= 0 or node_count > len(waypoint_nodes):
+        if node_count <= 0 or node_count > len(waypoint_markers):
             raise RuntimeError(f"Level 100 waypoint path {name!r} has an invalid node count")
         points: list[dict[str, object]] = []
         for _ in range(node_count):
             node_index = reader.uint16()
-            if node_index >= len(waypoint_nodes):
+            marker = waypoint_markers.get(node_index)
+            if marker is None:
                 raise RuntimeError(
-                    f"Level 100 waypoint path {name!r} refers to an invalid node"
+                    f"Level 100 waypoint path {name!r} refers to initial-actor "
+                    f"ordinal {node_index}, which is not an authored waypoint marker"
                 )
-            components = waypoint_nodes[node_index]
+            components = marker["retailPosition"]
             points.append(
                 {
                     "positionMillimeters": [
@@ -1577,12 +1720,62 @@ def _parse_level_world_actors_and_waypoints(
                         ),
                     ],
                     "nodeIndex": node_index,
+                    # The marker record carries three position floats, against
+                    # the navigation graph's four. `Level100FloatVector4Bits` is
+                    # a Core-owned shape this tool cannot narrow, so the fourth
+                    # slot is the float bits of 0.0f: a structural filler, not a
+                    # retail value. The graph's own w was 0.0 for all 121
+                    # entries, so nothing measured is lost by the substitution.
                     "retailComponentsFloatBits": [
-                        _float_bits(component) for component in components
+                        _float_bits(components[0]),
+                        _float_bits(components[1]),
+                        _float_bits(components[2]),
+                        _float_bits(0.0),
                     ],
                 }
             )
-        waypoint_paths.append({"name": name, "points": points})
+        # Serialized order and `target`-chain order agree for `Target Truck
+        # Path 1` and `Drone Path 1` and disagree - reversed or rotated - for
+        # the other six. Which one retail traverses is NOT settled here, so both
+        # are recorded and `points` deliberately keeps the serialized order the
+        # consumer already reads. `isClosed` is the loop fact the serialized
+        # list cannot carry; consuming it is a separate mechanics change.
+        chain, is_closed = _waypoint_target_chain(
+            waypoint_markers,
+            name,
+            [int(point["nodeIndex"]) for point in points],
+        )
+        waypoint_paths.append(
+            {
+                "name": name,
+                "points": points,
+                "targetChainNodeIndices": chain,
+                "isClosed": is_closed,
+            }
+        )
+
+    # The guard that would have caught the defect this replaced: the eight paths
+    # must partition the 30 authored markers, and no two emitted points may
+    # share a position. Under the navigation-graph reading both failed - the
+    # eight paths drew 30 indices from an 11-position table, so `Flyby Path` and
+    # `Target Truck Path 2` resolved to the same first three points.
+    used = [
+        int(point["nodeIndex"])
+        for path in waypoint_paths
+        for point in path["points"]
+    ]
+    if len(used) != len(set(used)) or set(used) != set(waypoint_markers):
+        raise RuntimeError(
+            "Level 100 named waypoint paths no longer partition the 30 authored "
+            "waypoint markers exactly once each"
+        )
+    emitted = [
+        tuple(point["positionMillimeters"])
+        for path in waypoint_paths
+        for point in path["points"]
+    ]
+    if len(set(emitted)) != len(emitted):
+        raise RuntimeError("Level 100 waypoint paths resolved two markers to one position")
 
     expected_paths = {
         "Flyby Path": (43, 42, 41),
@@ -2824,7 +3017,7 @@ def _materialize_static_world(
         },
         "pineInstanceCount": len(pines),
         "pines": pines,
-        "schema": "onslaught.level100-static-world.v13",
+        "schema": "onslaught.level100-static-world.v14",
         "sourceAggregateSha256": aggregate,
         "sourceArchiveSha256": LEVEL_ARCHIVE_SHA256,
         "physicsSourceSha256": PHYSICS_DEFINITIONS_SHA256,

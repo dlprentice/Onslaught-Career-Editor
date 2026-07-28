@@ -163,13 +163,55 @@ defaults rule.** The pristine specimen
 (`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
 `74154bfa…`) dispatches "Geometry detail" at `0x004DD6B0` to three arms writing
 `10.0` / `30.0` / `70.0` to `0x006321A0`, and the image's own static
-initialisers — `0x006321A0` (file `0x231CA0`) `= 30.0`, LOD bias `0x00631E88`
-`= 1.0`, quality scale `0x00630E0C` `= 1.0` — are uniquely the middle arm, so
-the released out-of-box state is Medium. The previous `70.0` came from this
-machine's `defaultoptions.bea` at OptionsTail `+0x0C` (file `0x26CA`), which is
-persisted run state: `proof_defaultoptions.bea` from the same install holds
-`30.0` there, and no `.bea` appears in `INSTALL.LOG`. A value read from that
-file is a **user setting**, not a default. Manifest v7 owns the corrected value.
+initialisers are uniquely the middle arm, so the released out-of-box state is
+Medium. **File offset is `VA − 0x400000` uniformly** — the three section deltas
+(`.text` `0x401000`/`0x1000`, `.rdata` `0x5D8000`/`0x1D8000`, `.data`
+`0x622000`/`0x222000`) are all `0x400000`:
+
+| global | VA | file | bytes | value |
+| --- | --- | --- | --- | --- |
+| mesh-quality distance | `0x006321A0` | `0x2321A0` | `00 00 f0 41` | `30.0` |
+| LOD bias | `0x00631E88` | `0x231E88` | `00 00 80 3f` | `1.0` |
+| quality scale | `0x00630E0C` | `0x230E0C` | `00 00 80 3f` | `1.0` |
+
+> **Corrected 2026-07-27.** This table first shipped with the file offsets
+> `0x231CA0`, `0x231988` and `0x230F0C`. All three were wrong — `0x231CA0`
+> holds the ASCII `"ing "` — and they were not even a consistent alternative
+> convention (two implied a `0x400500` delta, one `0x3FFF00`). The **values**
+> were right; only the offsets were wrong. Recorded rather than silently
+> replaced because a reader who checks `0x231CA0`, finds a string fragment and
+> concludes the finding was fabricated is the exact failure this file exists to
+> prevent.
+
+Two independent corroborations, neither needed for the result but both
+narrowing it. The getter pair at `0x004DD770`/`0x004DD786` classifies the live
+value against `.rdata` `[0x005D85D4] = 15.0` and `[0x005D8610] = 40.0`
+(`<15 → 0`, `15..40 → 1`, `>40 → 2`), so `30.0` sits **mid-band** of index 1
+rather than merely equalling arm 1's immediate. And the only route to those
+arms is an options page: `0x004DD6B0` has one caller, the thunk `0x004CEF50`,
+which is slot 14 of the vtable at `0x005DE478` whose RTTI type descriptor
+`0x006313A0` names **`CTreeDetail`**. No startup path reaches it.
+
+`0x006321A0` has exactly **five** writers and ten readers. The fifth,
+`0x004DD832`, writes `45.0` but is **dead in the shipped image**: its gate
+`0x00662F10` has two `.text` references and both are reads, and it lies past
+`.data`'s raw size so it is BSS and zero at load.
+
+The previous `70.0` came from this machine's `defaultoptions.bea` at OptionsTail
+`+0x0C` (file `0x26CA`), which is persisted run state. The decisive proof is in
+code, not in file comparison: the only writer of that file
+(`0x0051F595 → Serialise → OptionsTail_Write 0x00420B10`) reads the **live
+globals** — `mov ecx,[0x6321a0]` at `0x00420B9E` — so the file is by
+construction a snapshot of current state, and no path writes it from authored
+constants. `INSTALL.LOG` lists `cardid.txt` but no `.bea` at all, so the absence
+is meaningful rather than a category gap. A value read from that file is a
+**user setting**, not a default. Manifest v7 owns the corrected value.
+
+> **Do not cite `proof_defaultoptions.bea` as a pristine specimen.** It is also
+> run state — it holds `12.0` at OptionsTail `+0x04` where the image initialiser
+> `0x006254F4` is `7.0`, so it is simply a run whose geometry detail happened to
+> sit at Medium. It corroborates that the field is user state; it is not
+> independent evidence of the authored value.
 After the world and global-imposter
 passes, `CDXTrees` submits one standing fast card selected by
 `(tree_object_address >> 4) & 3` and a fifth-view horizontal card only when the
