@@ -307,8 +307,48 @@ $final = if (Test-Path -LiteralPath $traceFile) { (Get-Item -LiteralPath $traceF
 $span = if ($runFileSeenUtc) { ((Get-Date).ToUniversalTime() - $runFileSeenUtc).TotalSeconds } else { 0 }
 $rate = if ($span -gt 0) { [math]::Round(($final / 1MB) / $span, 2) } else { 0 }
 
+# THE GUEST'S OWN EXIT CODE. Added 2026-07-27 after this script reported
+# "exit = 0" with healthy-looking receipts for THREE consecutive runs in which
+# BEA died in its fatal-error handler seconds after launch. TTD recorded the
+# death faithfully and said so in its own log; nothing here read it. The traces
+# were 328-340 MB of a game that never got past sound initialisation, and every
+# question asked of them came back a confident zero.
+#
+# That is the second instrument-lies defect in this file today - the first was
+# -Module @('BEA.exe') producing an empty 4 MiB chunk that the size check read as
+# success. Both have the same shape: a proxy for success (file exists / file is
+# big) standing in for the thing actually wanted (the game ran).
+#
+# The exit code is authoritative and TTD prints it in two places, so read both.
+$guestExit = $null
+$guestExitSource = $null
+foreach ($candidate in @((Join-Path $outDir "$Name.out"), (Join-Path $outDir 'ttd-stdout.txt'))) {
+    if ($guestExit -ne $null) { break }
+    if (-not (Test-Path -LiteralPath $candidate)) { continue }
+    $text = Get-Content -LiteralPath $candidate -Raw -ErrorAction SilentlyContinue
+    if ($text -match 'exited with exit code\s+(-?\d+)') {
+        $guestExit = [int]$Matches[1]
+        $guestExitSource = $candidate
+    }
+}
+
+# BEA writes its own fatal reason into the log it drops in its CWD. Surfacing it
+# turns "the game died" into "the game died BECAUSE", which is the difference
+# between a wasted elevation and a fixed launch.
+$guestFatal = $null
+$setupLog = Join-Path $TargetRoot 'setuphistory.txt'
+if (Test-Path -LiteralPath $setupLog) {
+    $tail = Get-Content -LiteralPath $setupLog -Tail 5 -ErrorAction SilentlyContinue
+    $hit = $tail | Where-Object { $_ -match 'Fatal error' } | Select-Object -Last 1
+    if ($hit) { $guestFatal = $hit.Trim() }
+}
+
 $receipt = [pscustomobject]@{
     schemaVersion        = 'ttd-record-receipt.v1'
+    guestExitCode        = $guestExit
+    guestExitSource      = $guestExitSource
+    guestFatalError      = $guestFatal
+    guestRanCleanly      = ($guestExit -eq 0)
     name                 = $Name
     recordedAtUtc        = $startedUtc.ToString('o')
     recorder             = $ttd
@@ -335,3 +375,26 @@ Write-Host ("trace  : {0} ({1} MB)" -f $traceFile, $receipt.traceMB)
 Write-Host ("rate   : {0} MB/s over {1} s" -f $rate, $receipt.actualRecordSeconds)
 Write-Host ("receipt: {0}" -f $receiptPath)
 $receipt
+
+# Refuse to call a dead guest a success. This is deliberately the LAST thing the
+# script does, so the receipt is still written and the trace is still kept - a
+# trace of a crash is exactly what you want when diagnosing the crash. What must
+# not happen is the caller reading exit 0 and believing the recording is usable.
+if ($guestExit -ne $null -and $guestExit -ne 0) {
+    Write-Host ''
+    Write-Warning ("THE GAME DIED. Guest exit code {0} (from {1})." -f $guestExit, $guestExitSource)
+    if ($guestFatal) { Write-Warning ("Its own reason: {0}" -f $guestFatal) }
+    Write-Warning 'The trace is kept, but it records a broken launch and its silences mean nothing.'
+    Write-Warning 'Most likely cause on this title: the game resolves data\ RELATIVE TO ITS CWD.'
+    exit 3
+}
+if ($guestExit -eq $null) {
+    Write-Warning 'Could not read a guest exit code from the TTD log - treat this trace as UNVERIFIED.'
+    exit 4
+}
+# A recording far shorter than asked for is not automatically wrong - the target
+# may legitimately exit - but with a zero exit code it is worth flagging rather
+# than silently accepting, because that is what a clean early quit looks like.
+if ($span -gt 0 -and $Seconds -gt 0 -and $span -lt ($Seconds * 0.5)) {
+    Write-Warning ("Recorded {0:N1} s of a requested {1} s, though the guest exited cleanly." -f $span, $Seconds)
+}
