@@ -133,7 +133,7 @@
   "_STOPPING_POINT_2026_07_28_END_OF_SESSION": {
     "_read_this_first": "Work stopped here at the maintainer's instruction, at 98% of the weekly usage budget. The tree is COMMITTED and the working tree is clean apart from this file. Written for whoever picks this up next, including a different tool - nothing here depends on Claude-specific state.",
 
-    "gate_state_AT_THE_STOPPING_POINT": "CLIENT IS GREEN: npm run test:rebuild-client = 408 passed, 0 failed. CORE IS UNVERIFIED: npm run test:rebuild-core was killed before it reported and has NOT been run against these commits. RUN IT FIRST. Do not treat commit fff49ccf as validated until core is green.",
+    "gate_state_AT_THE_STOPPING_POINT": "ALL THREE GATES GREEN, run from the main loop against these exact commits on a quiet tree. npm run test:rebuild-client = 408 passed / 0 failed. npm run test:rebuild-core = 153 passed / 0 failed (9 m 43 s). dotnet build of OnslaughtRebuild.Godot = succeeded, 0 warnings, 0 errors - which matters because the new cutscene code lives in the Godot project and NEITHER test gate compiles it. CORRECTION, same day: an earlier revision of this field said 'CORE IS UNVERIFIED' because its run had been killed before reporting. It has since been run and it passes. NOT RUN, and therefore still unproven: the Godot smoke (npm run test:rebuild-godot-smoke) and the frontend/gameplay capture gates. Green unit gates are not a parity claim - see GOAL.md.",
 
     "commits_that_close_the_session": [
       "382001a3 - AGENTS.md worktree rule, and the withdrawal of the false 'eleven lanes running' handoff",
