@@ -61,7 +61,8 @@
       "ghidra": "12.1.2 at D:\\ghidra_12.1.2_PUBLIC_20260605",
       "zig": "0.16.0 via WinGet Links — builds the 32-bit d3d9 proxy",
       "renderdoc": "1.45 installed. Injects, but does NOT capture D3D9. Before retrying, read local-lab/agent-notes-2026-07-27/renderdoc-feasibility.md — sections 4a and 5 carry the measurement.",
-      "ttd": "tttracer.exe is in System32. Unused so far. See the same note, section 7."
+      "ttd": "WORKS, but RECORDING IS BLOCKED ON A HUMAN. tttracer.exe 1.11.580.0 in System32 plus TTD.exe 1.11.584.0 in the WinDbg app package. Recording needs an ELEVATED token (SeDebugPrivilege); measured against a harmless cmd.exe target on BOTH builds, so it is a property of TTD not of BEA. TTDService.exe does NOT exist on this machine, so the usual 'TTD -initialize, elevate once' route is inert — EVERY session needs its own elevation. Plan one long-lived elevated shell. Do NOT raise the UAC prompt without the maintainer present: PromptOnSecureDesktop=1 dims the whole screen. Harness and ranked target list: local-lab/TTD-PIPELINE-2026-07-27.md.",
+      "ttd_caveat_that_changes_readings": "BEA's clock is QueryPerformanceCounter-based, which keeps REAL time while TTD slows execution. Inside a trace, tick counts and ordering are trustworthy; SECONDS ARE NOT. Do not read a duration out of a trace."
     }
   },
 
