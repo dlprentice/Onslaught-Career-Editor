@@ -81,6 +81,42 @@
     "frontend_gate": "tools/score_frontend_capture.py — compares retail pixels and CAN fail (exit 1 on ceiling breach); returns UNSCORED rather than PASS when nothing is scorable."
   },
 
+  "_HANDOFF_2026_07_28_READ_THIS_FIRST": {
+    "_what_this_is": "Written immediately before a context compaction. It is the shortest path back to full working knowledge. Everything here is a POINTER or a STATE; the reasoning lives in the commit messages and the local-lab notes.",
+
+    "where_the_goal_actually_stands": "NOT MET, and the gap is now ONE thing. On a cold first career driven through the product's own input surface with player-plausible input, the run clears EVERY beat - all 22 targets destroyed, objective 4 Complete, abort poll never fired, 0 of 12,639 look commands below what a human could produce - and then DROWNS on the ferry flight home at t17699. NavigateToZone leaves jet mode within 20 m of the target volume regardless of what is underneath. That is the whole remaining gap in the acceptance test.",
+
+    "why_the_ditch_is_not_being_fixed_yet": "A shield-stage lane is rewriting the damage model right now: retail routes every hit through shields at mShieldEfficiency 98.0 and couples mEnergy to mShields, while we do Math.Max(0, hull - damage) with the shield a write-only mirror - roughly 50x hull damage per hit. Fixing the ditch first would fit a navigation rule to a damage model about to change. Sequence: shield lands, RE-MEASURE the run, then fix what actually remains. A naive water-landing guard was ALREADY TRIED and measured WORSE - it broke the Won test and turned the cold control's Won into WaterLoss. Read local-lab/UNCOMMITTED-CORE-ADVERSARY-2026-07-27.md before retrying that shape.",
+
+    "lanes_running_at_compaction": [
+      "shield stage - Core and Core.Tests, exclusive",
+      "particles - FirstFlightWorldView.cs, CuratedObjMeshLoader.cs, Level100StaticWorldAsset.cs, ParticleSet*.cs, ParticleEffect*.cs, materialize_retail_assets.py",
+      "parity gates - frontend-parity-plan.json, gameplay-regions-level100.json, score_frontend_capture.py, tools/compare_capture.py, check_region_overlap*.py",
+      "system map - reverse-engineering/",
+      "save-editor data-loss audit - OnslaughtCareerEditor.* only",
+      "divergence adjudication WORKFLOW - read-only, hostile-verifying the 16 unadjudicated source divergences",
+      "intro FMV (#142) - RetailFrontendFlow*.cs, RetailFrontendSession.cs, RetailStartup*.cs",
+      "documentation integrity sweep WORKFLOW - every .md, ranked WRONG > STALE > BROKEN > SHAPE, plus a header standard and its checker",
+      "Ghidra-from-trace - the live Ghidra DB plus a local-lab note; NOT reverse-engineering/ docs",
+      "ambient life #114 - everything outside contended files, plus an applyable patch for the Core part"
+    ],
+
+    "function_docs_state_MEASURED": "322 of the 407 purged per-function documents were restored to reverse-engineering/binary-analysis/functions/ before that lane was STOPPED. They are UNTRACKED and UNCORRECTED. tools/re_function_doc_names_check.py exists, works, and FAILS: 322 documents scanned, 819 name assertions resolved, 95 DRIFTED, exit 1. Examples: CScriptObjectCode__* is now CMissionScriptObjectCode__*; CMissionScriptObjectCode__LoadAsync is actually CXBOXAsyncCache__LoadAsync (a different class); CUnit__FinishedPlayingCurrentAnimation is actually CBattleEngine__FinishedPlayingCurrentAnimation. DO NOT COMMIT THEM UNTIL THE CHECKER PASSES - committing 95 authoritative-looking wrong names into the front-door RE evidence is exactly the failure the restore was meant to avoid.",
+
+    "lore_book_mirror_question_SETTLED": "Measured by blob hash across ca9fe1c7^: 866 mirror paths, 872 canonical, ZERO files in the mirror that are not in canonical, 863 of 866 BYTE-IDENTICAL. It was a pure publication duplicate and deleting it lost NOTHING. The 3 that differ are all BattleEngine.cpp/ - AddProjectile, SelectNearestForwardTargetFromGlobalSet, UpdateAutoTargetSetAndFireProjectiles - and are almost certainly the mirror lagging a correction the canonical received, which is itself an argument for the purge.",
+
+    "instrument_lies_count_is_now_FOUR": "Named because the shape recurs and each one cost real work. (1) TTD -Module @('BEA.exe') produced an empty 4 MiB chunk a size check read as success. (2) The recorder reported exit 0 for three runs that died in a fatal handler. (3) score_frontend_capture.py returns UNSCORED, which is not a pass. (4) THE WORST: on the unindexed 32 GiB trace, dd of a runtime-written global after !tt <percent> SILENTLY RETURNS THE ON-DISK BYTES FROM BEA.exe - image sections read correctly so naive controls pass, and it produced a complete confident FALSE answer. The first three fail loudly; the fourth lies. Section 1 of local-lab/TTD-LEVEL100-FINDINGS-2026-07-28.md.",
+
+    "two_main_loop_errors_worth_not_repeating": "QUAD EXTENT IS NOT VISUAL EXTENT - I read overlapping draw rectangles as overlapping ink and got the language-flag diagnosis exactly backwards; the sprite was materialized and decodable all along. And A CONTROL IS ONLY A CONTROL FOR THE TRACE CLASS IT WAS DESIGNED FOR - I reported a positive control passing on a healthy trace when it was written for dead ones, where its meaning inverts.",
+
+    "first_actions_after_compaction": [
+      "git log --oneline -20 - the reasoning is in the commit messages, not only in code.",
+      "Check which lanes reported while compacting; land what is green with full gates.",
+      "Re-measure the cold-career run AFTER the shield stage lands, before touching the water ditch.",
+      "Do not commit the function docs until tools/re_function_doc_names_check.py exits 0."
+    ]
+  },
+
   "in_flight": {
     "_caution": "Check whether these landed before assuming. If an agent is gone and nothing was committed, its work may exist only in local-lab/agent-notes-2026-07-27/.",
     "_as_of": "2026-07-28 ~11:00. NINE LANES RUNNING. The 2026-07-27 entries below are HISTORY - read them for the reasoning, not for current state.",
