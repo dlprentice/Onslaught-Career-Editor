@@ -180,6 +180,18 @@ function Test-FirstFlightSmokeEvidence {
     # and both read 673661bb... on the tree measured earlier today. They are the
     # same quantity, so the in-process golden IS a legitimate cross-check.
     #
+    # CONFIRMED EMPIRICALLY, not just from history. After the waypoint-path
+    # correction (58d9ce57) moved the in-process golden to
+    #     0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba
+    # a real out-of-process Godot smoke run on the same tree observed EXACTLY
+    # that value. Two independent harnesses, same number. That settles it by
+    # measurement rather than by argument.
+    #
+    # STILL NOT PINNED, and the reason has changed. It is no longer doubt about
+    # what the value is - it is that Core work is in flight under review and may
+    # move it again, so pinning now would simply mint a second stale golden. Pin
+    # it once Core lands, from a run on that tree.
+    #
     # The POLICY stands and the reason for it is different from what was written:
     # measure it, do not infer it, because an inferred value silently launders a
     # second scenario's result into this one the first time they ever diverge -
