@@ -83,12 +83,14 @@
 
   "in_flight": {
     "_caution": "Check whether these landed before assuming. If an agent is gone and nothing was committed, its work may exist only in local-lab/agent-notes-2026-07-27/.",
-    "items": [
-      "Cold-career Won attempt, reframed to also measure PLAYER-PLAUSIBLE input (integer mouse pixels)",
-      "Skip-panning plus deciding the full released action set before SimActions changes shape",
-      "In-level d3d9 capture to read real HUD coordinates and diff them against ours",
-      "Applying corrections from the 2026-07-27 documentation accuracy audit"
-    ]
+    "_as_of": "2026-07-27 ~22:35. No new work is to be started - the maintainer is near a usage limit. Let the three below finish, land what is green, start nothing.",
+    "still_running": [
+      "Core diff remediation - the BLOCKING lane. Fixing the adversary's named defects (a dead gate clause proved dead by deletion, CommandTape.CurrentSchemaVersion not bumped, a skip-panning gate asserting unproven reachability for Space/Enter/NumEnter) plus a test fixture that asserts a waypoint DEFECT as retail truth.",
+      "Options guesses - converting guessed Options values into read ones from battle engine configurations.dat and the image's own static initialisers.",
+      "Shipped-data sweep workflow - every file type in the 5,515-file game folder against what our pipelines actually read."
+    ],
+    "uncommitted_and_why": "The frontend draw corrections and the four Options pages are DONE and green (Client 349/349, build clean) but CANNOT be committed independently: InteractiveSession.cs:510 references SimActions.SkipPanning, which does not exist in HEAD. They are coupled to the uncommitted Core skip-panning change, so committing them alone breaks the build at HEAD. Verified, not assumed. Land them together once Core remediation reports.",
+    "adjudicated_do_not_relitigate": "The DrawAtlasText change (shadow on the anchor, body at -1,-1) is CORRECT - checked on 63 shadow pairs across six pages and two atlases, zero exceptions, and our menu anchors already ARE retail's shadow anchors on 5 of 7 rows. The Options pages' fitted constants had absorbed the old error and need RE-FITTING; do not add a per-page compensating offset, which would be a double correction."
   },
 
   "highest_value_open": {
