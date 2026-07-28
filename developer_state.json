@@ -86,20 +86,32 @@
 
     "where_the_goal_actually_stands": "NOT MET, and the gap is now ONE thing. On a cold first career driven through the product's own input surface with player-plausible input, the run clears EVERY beat - all 22 targets destroyed, objective 4 Complete, abort poll never fired, 0 of 12,639 look commands below what a human could produce - and then DROWNS on the ferry flight home at t17699. NavigateToZone leaves jet mode within 20 m of the target volume regardless of what is underneath. That is the whole remaining gap in the acceptance test.",
 
-    "why_the_ditch_is_not_being_fixed_yet": "A shield-stage lane is rewriting the damage model right now: retail routes every hit through shields at mShieldEfficiency 98.0 and couples mEnergy to mShields, while we do Math.Max(0, hull - damage) with the shield a write-only mirror - roughly 50x hull damage per hit. Fixing the ditch first would fit a navigation rule to a damage model about to change. Sequence: shield lands, RE-MEASURE the run, then fix what actually remains. A naive water-landing guard was ALREADY TRIED and measured WORSE - it broke the Won test and turned the cold control's Won into WaterLoss. Read local-lab/UNCOMMITTED-CORE-ADVERSARY-2026-07-27.md before retrying that shape.",
+    "why_the_ditch_is_not_being_fixed_yet_CORRECTED_2026_07_28": "THE ORIGINAL REASON WAS WRONG AND IS WITHDRAWN. It read: 'A shield-stage lane is rewriting the damage model right now ... Sequence: shield lands, RE-MEASURE the run, then fix what actually remains.' THE SHIELD LANE IS NOT RUNNING AND NEVER LANDED. Agent afb4f1777567e777b was INTERRUPTED at 130 transcript lines by the maintainer's stop request, and `git grep -i shield` in OnslaughtRebuild.Core returns only the pre-existing scaffold. Nothing is blocking the ditch except that nobody is working on the shield. The DAMAGE-MODEL FACT is still true and still worth acting on: retail routes every hit through shields at mShieldEfficiency 98.0 and couples mEnergy to mShields, while we do Math.Max(0, hull - damage) with the shield a write-only mirror - roughly 50x hull damage per hit. So the sequencing argument stands ON ITS MERITS - fitting a navigation rule to a damage model that is about to change is still wrong - but it now requires RELAUNCHING the shield lane, not waiting for it. A naive water-landing guard was ALREADY TRIED and measured WORSE - it broke the Won test and turned the cold control's Won into WaterLoss. Read local-lab/UNCOMMITTED-CORE-ADVERSARY-2026-07-27.md before retrying that shape.",
 
-    "lanes_running_at_compaction": [
-      "shield stage - Core and Core.Tests, exclusive",
-      "particles - FirstFlightWorldView.cs, CuratedObjMeshLoader.cs, Level100StaticWorldAsset.cs, ParticleSet*.cs, ParticleEffect*.cs, materialize_retail_assets.py",
-      "parity gates - frontend-parity-plan.json, gameplay-regions-level100.json, score_frontend_capture.py, tools/compare_capture.py, check_region_overlap*.py",
-      "system map - reverse-engineering/",
-      "save-editor data-loss audit - OnslaughtCareerEditor.* only",
-      "divergence adjudication WORKFLOW - read-only, hostile-verifying the 16 unadjudicated source divergences",
-      "intro FMV (#142) - RetailFrontendFlow*.cs, RetailFrontendSession.cs, RetailStartup*.cs",
-      "documentation integrity sweep WORKFLOW - every .md, ranked WRONG > STALE > BROKEN > SHAPE, plus a header standard and its checker",
-      "Ghidra-from-trace - the live Ghidra DB plus a local-lab note; NOT reverse-engineering/ docs",
-      "ambient life #114 - everything outside contended files, plus an applyable patch for the Core part"
+    "lanes_running_at_compaction_CORRECTED_2026_07_28": "THE LIST BELOW WAS WRONG WHEN WRITTEN. It claimed eleven lanes were in flight. Checked afterwards by reading the final record of every transcript: of the sixteen agents launched in the 10:39 wave, THIRTEEN ended INTERRUPTED - killed mid-write by the maintainer's earlier 'stop all background tasks' request - and only three completed (static-world animation, the address->name table, and the main-menu 39-draw diff, the last already committed as 5e82ae42). The uncommitted particle, parity-gate, function-doc and lore-book changes sitting in the working tree are the HALF-FINISHED OUTPUT OF KILLED AGENTS, not finished work awaiting a gate. They have never been built. Treat every one as unverified until it is gated file by file. The original list is kept below because it still records what each lane OWNED, which is useful when attributing a change in the tree to a lane.",
+
+    "lanes_launched_in_the_10_39_wave_MOSTLY_INTERRUPTED": [
+      "shield stage - Core and Core.Tests, exclusive - INTERRUPTED, landed NOTHING",
+      "particles - FirstFlightWorldView.cs, CuratedObjMeshLoader.cs, Level100StaticWorldAsset.cs, ParticleSet*.cs, ParticleEffect*.cs, materialize_retail_assets.py - INTERRUPTED, files in tree",
+      "parity gates - frontend-parity-plan.json, gameplay-regions-level100.json, score_frontend_capture.py, tools/compare_capture.py, check_region_overlap*.py - INTERRUPTED, files in tree",
+      "system map - reverse-engineering/ - INTERRUPTED",
+      "save-editor data-loss audit - OnslaughtCareerEditor.* only - INTERRUPTED early",
+      "divergence adjudication WORKFLOW - read-only, the 16 unadjudicated source divergences - INTERRUPTED",
+      "function-doc restore - INTERRUPTED, which is WHY 95 of 819 name assertions are drifted",
+      "static-world animation - COMPLETED, Level100StaticWorldAnimationManifest.cs in tree",
+      "address->function-name table - COMPLETED, ghidra-function-name-table-2026-07-27.tsv in tree",
+      "main-menu 39-draw diff - COMPLETED and COMMITTED as 5e82ae42"
     ],
+
+    "lanes_launched_after_the_compaction": [
+      "intro FMV (#142) - DONE, measured, UNCOMMITTED and BLOCKED on the cutscene-audio task (#145)",
+      "Ghidra-from-trace - DONE, applied 1 rename + 17 comments to the live DB, backed up both sides, main-loop verified from the pristine specimen; staged a 144-native wave it deliberately did NOT apply (#143)",
+      "documentation integrity sweep WORKFLOW - every .md, ranked WRONG > STALE > BROKEN > SHAPE, plus a header standard and its checker",
+      "ambient life #114",
+      "HUD blind spots from the trace"
+    ],
+
+    "the_lane_management_mistake_2026_07_28": "Stated file ownership is ADVISORY; only a worktree is enforcement. Four writing lanes interleaved edits into SimulationTypes.cs, FirstFlightGame.cs and materialize_retail_assets.py, which made the tree unmeasurable until every one of them finished - a failing gate could not be attributed to a lane. The rule is now written into AGENTS.md: any lane that WRITES gets isolation 'worktree' and lands one at a time with a gate between; read-only lanes run free. And never stop writing lanes mid-flight to pause work - that is what produced the unattributable tree in the first place.",
 
     "function_docs_state_MEASURED": "322 of the 407 purged per-function documents were restored to reverse-engineering/binary-analysis/functions/ before that lane was STOPPED. They are UNTRACKED and UNCORRECTED. tools/re_function_doc_names_check.py exists, works, and FAILS: 322 documents scanned, 819 name assertions resolved, 95 DRIFTED, exit 1. Examples: CScriptObjectCode__* is now CMissionScriptObjectCode__*; CMissionScriptObjectCode__LoadAsync is actually CXBOXAsyncCache__LoadAsync (a different class); CUnit__FinishedPlayingCurrentAnimation is actually CBattleEngine__FinishedPlayingCurrentAnimation. DO NOT COMMIT THEM UNTIL THE CHECKER PASSES - committing 95 authoritative-looking wrong names into the front-door RE evidence is exactly the failure the restore was meant to avoid.",
 

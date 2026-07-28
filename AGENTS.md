@@ -62,6 +62,22 @@ reading files a subagent could have read for you.
   once once produced answers to *other agents'* questions, through inherited
   stdin, shared output paths and a shared client socket. Give every agent its own
   output path, and treat a result that does not name its own question as suspect.
+- **A stated file lane is advisory. Only a worktree is enforcement.** Telling an
+  agent which files it owns does not stop it writing elsewhere, and it should not:
+  an agent that needs a one-line `case` in a shared file to make its own work run
+  is right to take it. What that costs is the tree — on 2026-07-28 four writing
+  lanes interleaved edits into `SimulationTypes.cs`, `FirstFlightGame.cs` and
+  `materialize_retail_assets.py`, and no gate could be run until all of them
+  finished, because a failure could not be attributed to a lane.
+  So: **any lane that writes gets `isolation: "worktree"`. Read-only lanes run
+  free and unlimited.** Land worktrees one at a time, gating between each. The
+  cost is a few hundred ms of setup per agent; the thing it buys is the ability to
+  measure at all while work is in flight.
+- **Never stop a writing lane mid-flight to "pause work".** Killing thirteen
+  writing agents at once on 2026-07-28 left half-finished edits from every one of
+  them in a single shared tree, with no record of which agent wrote what — the
+  work was not paused, it was made unattributable. Let a writing lane reach its
+  own stopping point, or discard its worktree whole.
 - **Do not send global synthetic input by default** — `SendInput`, `keybd_event`,
   `mouse_event`, `SetCursorPos`, and above all PrtScn. The maintainer usually sits
   at this machine while agents run, and global input lands in whatever window has
