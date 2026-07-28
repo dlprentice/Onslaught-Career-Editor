@@ -24,10 +24,19 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 32: added Level100Mission.MessageBoxAllowedTick. The released
+            // message-box gate is StartPlayingState + NEXT_FRAME, and
+            // BUTTON_SKIP_PANNING can move StartPlayingState to any tick of
+            // the opening pan, so the gate is player-controllable state rather
+            // than a constant. Every hashed tick gains four bytes plus this
+            // version bump, so this moves every pinned hash even for a run
+            // that never skips. The simulated trajectory of such a run is
+            // unchanged - see the causal isolation in the skip-panning note.
+            //
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(31);
+            writer.Write(32);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -512,6 +521,7 @@ public static class StateHasher
 
         writer.Write(mission.MessageClearTick);
         WriteLevel100Events(writer, mission.PendingMessages);
+        writer.Write(mission.MessageBoxAllowedTick);
     }
 
     private static void WriteLevel100Events(

@@ -64,6 +64,63 @@ internal sealed class Level100ChainAutopilot
     /// </summary>
     private const int MinimumGroundStandOffMillimeters = 3_500;
 
+    /// <summary>
+    /// The stand-off a shot is taken from while <see cref="CollateralRiskBehind"/>
+    /// is true, replacing <see cref="GroundStandOffMillimeters"/>.
+    ///
+    /// <para><b>Why closing is the answer, measured rather than assumed.</b> On
+    /// a cold first career the driver reached <c>(21171, 79180)</c>, 13.5 m from
+    /// <c>Target Tank #23</c> and 4.2 m above it, and held the trigger down with
+    /// a converged reticle from t4716. <b>Every round it fired for the next
+    /// twenty-five ticks missed the tank and hit
+    /// <c>Target Truck #25</c></b> - which is parked 1.13 m beyond the tank
+    /// along the shot line and 0.93 m off it - and the tank did not take its
+    /// first damage until t4747, six ticks after the truck was destroyed
+    /// unarmed and <c>TargetTruck1.msl</c>'s <c>died()</c> <c>case FALSE</c> arm
+    /// had already posted <c>Broke Tutorial</c>.</para>
+    ///
+    /// <para>That is not a stray. At <c>atan(4241/13513)</c> = 0.304 rad of
+    /// depression a round threads the gap over the tank's hull - its
+    /// <c>tankbody</c> part tops out 514 mm above the actor origin and
+    /// <see cref="AimPoint"/> aims at 600 mm - and is still 231 mm above the
+    /// truck's origin when it arrives, inside the 188..762 mm band the truck's
+    /// single collidable part occupies. Closing removes the gap: at short range
+    /// the same aim height plunges through the hull, so every round is in the
+    /// tank or in the dirt and the tank cannot help but die first.</para>
+    ///
+    /// <para><b>The number, and the cliff either side of it.</b> Beat 3 was run
+    /// on the cold career at 3.6, 4, 5, 6, 8, 9, 10, 11, 12, 13 and 14 m. From
+    /// 3.6 m to 10 m the truck is <b>never touched at all</b>; at 11 m and
+    /// beyond it dies before the tank and the run is lost. Measured separately
+    /// with the trigger gate alone, a shot taken at 8,992 mm is safe and one at
+    /// 9,494 mm is not, so the transition is between 9.0 and 9.5 m of RANGE at
+    /// this stance. 10 m is chosen and not a deeper 6 m because the returning
+    /// player's own first beat-3 shot is at 8,204 mm, so 10 m is a measured
+    /// <b>no-op</b> on <c>ChainAutopilot_ReachesWonByInputAlone</c> - trace for
+    /// trace, <c>Won</c> at t16301 with 10,900 hull either way - while 6 m moves
+    /// that run onto the released sub-40 % abort branch with two of six wave-2
+    /// drones. The deeper constant is the better one for beat 3 and it may not
+    /// be taken without weakening assertions elsewhere.</para>
+    ///
+    /// <para><b>It is not a lucky basin.</b> Under twenty +-1 permille
+    /// perturbations of every look command at or above thresholds of 100 to
+    /// 1000 - the generalisation of the "one permille shaved off every command
+    /// &gt;= 500" control that broke this same guard before - the committed
+    /// driver loses the cold career <b>20 of 20</b> times, and 20 of 20 again
+    /// with the look axis restricted to whole mouse pixels. With this stand-off
+    /// it is <b>20 of 20 clean</b> sub-pixel and <b>19 of 20</b> on whole
+    /// pixels.</para>
+    /// </summary>
+    private const int PrecisionStandOffMillimeters = 10_000;
+
+    /// <summary>
+    /// How far outside <see cref="PrecisionStandOffMillimeters"/> the trigger
+    /// may still open. The walker is still moving when it arrives, so a gate
+    /// exactly on the stand-off costs shots without buying safety; half a metre
+    /// is inside the measured transition by more than four metres.
+    /// </summary>
+    private const int PrecisionFireMarginMillimeters = 500;
+
     private const int StrafeSegmentTicks = 45;
 
     private readonly ILevel100ChainHost _host;
@@ -288,7 +345,8 @@ internal sealed class Level100ChainAutopilot
     internal static Level100ChainAutopilot Create(
         Level100TutorialProgress progress,
         bool quantizeLookToClientPointerPath = false,
-        uint seed = 1u)
+        uint seed = 1u,
+        bool quantizeLookToIntegerMousePixels = false)
     {
         // The seed is snapshot and hash material only - the released gameplay
         // RNG is `ReleasedRandomSeed`, reseeded to 123456 at level start - but a
@@ -299,7 +357,10 @@ internal sealed class Level100ChainAutopilot
             Level100TestActorDefinitions.Create(),
             progress);
         return CreateOn(
-            new Level100DirectChainHost(simulation, quantizeLookToClientPointerPath));
+            new Level100DirectChainHost(
+                simulation,
+                quantizeLookToClientPointerPath,
+                quantizeLookToIntegerMousePixels));
     }
 
     /// <summary>
@@ -1010,9 +1071,16 @@ internal sealed class Level100ChainAutopilot
         // sweep comes off, the feet stop, and the trigger tolerance tightens.
         // Measured cost of getting this wrong: two rounds.
         bool precise = CollateralRiskBehind(state, target);
+        double standOff = precise
+            ? PrecisionStandOffMillimeters
+            : GroundStandOffMillimeters;
+        double fireRange = precise
+            ? PrecisionStandOffMillimeters + PrecisionFireMarginMillimeters
+            : double.MaxValue;
 
         SimVector3 aim = AimPoint(state, target, sweep: !precise);
         double horizontal = Horizontal(state, aim);
+
         double yawError = YawErrorTo(state, aim.X, aim.Z);
         short lookX = LookAxis(yawError, 2_000);
         double pitchError = PitchErrorTo(state, aim, horizontal);
@@ -1054,7 +1122,7 @@ internal sealed class Level100ChainAutopilot
         }
 
         bool notHurtingIt = clear &&
-            horizontal <= GroundStandOffMillimeters &&
+            horizontal <= standOff &&
             state.Tick - _engagedSinceTick > 4 * SimulationConstants.TicksPerSecond;
         if (!clear || notHurtingIt)
         {
@@ -1078,7 +1146,7 @@ internal sealed class Level100ChainAutopilot
         // clear ray, a converged yaw and a live Target Tank for 34,000 ticks
         // because every reposition the watchdog asked for was cancelled on the
         // same tick it was requested.
-        if (precise && clear && horizontal <= GroundStandOffMillimeters && !notHurtingIt)
+        if (precise && clear && horizontal <= standOff && !notHurtingIt)
         {
             _repositionTicksRemaining = 0;
             _strafeTicksRemaining = 0;
@@ -1128,7 +1196,7 @@ internal sealed class Level100ChainAutopilot
         {
             _blockedTicks = 0;
             _strafeTicksRemaining = 0;
-            if (horizontal > GroundStandOffMillimeters)
+            if (horizontal > standOff)
             {
                 forward = 1;
             }
@@ -1154,7 +1222,8 @@ internal sealed class Level100ChainAutopilot
             ? PrecisionTolerance(horizontal)
             : FireTolerance(horizontal);
         SimActions actions =
-            clear && Math.Abs(yawError) < tolerance && Math.Abs(pitchError) < tolerance
+            clear && horizontal <= fireRange &&
+            Math.Abs(yawError) < tolerance && Math.Abs(pitchError) < tolerance
                 ? SimActions.Fire
                 : SimActions.None;
         return new SimInput(strafe, forward, actions, 0, 0, lookX, lookY);

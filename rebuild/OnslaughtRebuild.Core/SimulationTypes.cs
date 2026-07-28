@@ -118,14 +118,167 @@ public sealed record Level100WeaponFireEvent(
     Level100PlayerWeapon Weapon,
     int RoundCount);
 
+/// <summary>
+/// The complete discrete player action set of the released PC build, plus the
+/// one rebuild-owned harness action.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>The width is decided once, here, deliberately.</b> This was a
+/// four-member <c>byte</c>; the released set does not fit in eight bits, and
+/// discovering that one action at a time would re-cut the command tape and the
+/// replay trace every time. So the whole released set is declared now and the
+/// storage is <c>ushort</c>, leaving six spare bits.
+/// </para>
+/// <para>
+/// The set is taken from the shipped 47-row binding table
+/// (<c>OptionsEntries__InitDefaultSingleBindingsTable</c>, <c>0x00514210</c>)
+/// intersected with what <c>CPlayer::ReceiveButtonAction</c> actually
+/// dispatches (<c>references/Onslaught/Player.cpp:283-511</c>, retail
+/// <c>0x004D3110</c>). Axes — yaw <c>0x19</c>/<c>0x1b</c>, pitch
+/// <c>0x1a</c>/<c>0x1c</c>, strafe <c>0x1d</c>/<c>0x1e</c>, forward/back
+/// <c>0x1f</c>/<c>0x20</c> — are not flags; they are the
+/// <see cref="SimInput"/> axis fields.
+/// </para>
+/// <para><b>Deliberately absent, each verified against the shipped table's
+/// <c>entry_id</c> multiset:</b></para>
+/// <list type="bullet">
+///   <item><c>BUTTON_HELP</c> <c>0x39</c> — no row binds it, and retail
+///   <c>0x004D3110</c> short-circuits the entire body on
+///   <c>if (button != 0x39)</c>. Stuart's handler
+///   (<c>Player.cpp:302-309</c>) is a commented-out stub that returns.</item>
+///   <item><c>BUTTON_MECH_CONFIGURATION_DOWN</c> <c>0x3d</c> and
+///   <c>BUTTON_MECH_CONFIGURATION_UP</c> <c>0x3e</c>
+///   (<c>references/Onslaught/Controller.h:161-162</c> — note that order) — no
+///   row binds either, and both retail cases reach only <c>DebugTrace</c>.</item>
+///   <item><c>BUTTON_MECH_JET_AFTERBURNER</c> <c>0x16</c> — no row binds it,
+///   and Stuart's case body is commented out
+///   (<c>Player.cpp:490-494</c>).</item>
+///   <item><c>BUTTON_PAUSE</c> <c>0x38</c> — bound (row 34, Escape) but handled
+///   by <c>CGame::Pause</c> before any player dispatch. Pause is a client
+///   lifecycle concern; Core advances zero steps while paused and owns no
+///   pause state.</item>
+/// </list>
+/// </remarks>
 [Flags]
-public enum SimActions : byte
+public enum SimActions : ushort
 {
     None = 0,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_MORPH</c> <c>0x21</c>. Shipped row 9, <c>active=1</c>,
+    /// KEY_ONCE, DIK_SPACE.
+    /// </summary>
     ToggleMode = 1 << 0,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_FIRE_GUN_POD</c> <c>0x12</c>. Shipped row 11,
+    /// <c>active=1</c>, mouse device <c>0x11</c>.
+    /// </summary>
     Fire = 1 << 1,
+
+    /// <summary>
+    /// Rebuild-owned. No released button dispatches this; it exists so a tape
+    /// or a client can restart a run deterministically.
+    /// </summary>
     Reset = 1 << 2,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_LANDING_JETS</c> <c>0x15</c>. Shipped row 15,
+    /// <c>active=1</c>, KEY_ON, DIK_LSHIFT.
+    /// </summary>
     LandingJets = 1 << 3,
+
+    /// <summary>
+    /// <c>BUTTON_SKIP_PANNING</c> <c>0x3a</c>
+    /// (<c>references/Onslaught/Controller.h:158</c>). Shipped rows 22-25,
+    /// <c>active=0</c> (hard-wired, not rebindable), KEY_ONCE, DIK scan codes
+    /// <c>0x39</c>/<c>0x1c</c>/<c>0x01</c>/<c>0x9c</c> = Space, Enter, Escape,
+    /// Numpad Enter.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>WHICH KEY ACTUALLY REACHES THIS ACTION IN RETAIL IS UNPROVEN, FOR ALL
+    /// FOUR SCAN CODES.</b> The rows are byte-read facts; the routing is not.
+    /// Recorded here 2026-07-27 because the client's binding excluded Escape on
+    /// exactly this reasoning and then applied none of it to the other three,
+    /// which is an asymmetry rather than a conclusion.
+    /// </para>
+    /// <para>
+    /// Reading a KEY_ONCE flag CONSUMES it in the developers' own PC shell —
+    /// <c>references/Onslaught/ltshell.h:292</c>,
+    /// <c>BYTE xKeyOnce(int c) { BYTE a = KeyWasDown[c]; KeyWasDown[c] = 0;
+    /// return a; }</c> — and <c>CController::DoMappings</c> walks the shipped
+    /// table in row order. Every one of the four scan codes is also bound to an
+    /// EARLIER row:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>Space <c>0x39</c> — row 9, <c>BUTTON_MECH_MORPH</c>
+    ///   <c>0x21</c>, KEY_ONCE, <c>active=1</c>;</item>
+    ///   <item>Enter <c>0x1c</c> and Numpad Enter <c>0x9c</c> — row 20,
+    ///   <c>BUTTON_SKIP_CUTSCENE</c>
+    ///   (<c>reverse-engineering/source-code/frontend/fep-systems.md:19</c>);</item>
+    ///   <item>Escape <c>0x01</c> — rows 17 <c>BUTTON_FRONTEND_MENU_BACK</c>,
+    ///   20 <c>BUTTON_SKIP_CUTSCENE</c> and 34 <c>BUTTON_PAUSE</c>.</item>
+    /// </list>
+    /// <para>
+    /// If retail's <c>GetKeyOnce</c> (vtable <c>+0x18</c>) consumes the way
+    /// Stuart's does, the earlier row eats the press and rows 22-25 never see
+    /// it. That body is not in the partial drop and is not decompiled.
+    /// Corroborating the doubt rather than settling it,
+    /// <c>references/Onslaught/PCController.cpp:76</c> binds
+    /// <c>BUTTON_SKIP_PANNING</c> as <c>BUTTON_ONCE, 1</c> — <b>a pad button,
+    /// not a key</b>.
+    /// </para>
+    /// <para>
+    /// None of this touches the LAW Core implements, which is
+    /// <c>Player.cpp:311-315</c> and is about game state, not about scan codes:
+    /// Core takes the action from whoever raises it. It bounds what a CLIENT
+    /// binding may claim. The Godot client's Space/Enter/Numpad Enter choice is
+    /// a reconstruction decision made for playability, and
+    /// <c>Level100SkipPanningClientTests</c> pins it as such rather than as
+    /// released reachability.
+    /// </para>
+    /// </remarks>
+    SkipPanning = 1 << 4,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_CHARGE_GUN_POD</c> <c>0x13</c>, shipped row 10
+    /// (<c>active=1</c>, mouse device <c>0x0f</c>). DECLARED, NOT IMPLEMENTED:
+    /// Core currently models a release as a single <see cref="Fire"/> edge and
+    /// has no charge accumulator. <see cref="SimInput.Validate"/> rejects it.
+    /// </summary>
+    ChargeWeapon = 1 << 5,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_CHANGE_WEAPON</c> <c>0x14</c>, shipped row 12
+    /// (<c>active=1</c>, mouse device <c>0x10</c> code 2). DECLARED, NOT
+    /// IMPLEMENTED: Core has no selected-weapon state.
+    /// <see cref="SimInput.Validate"/> rejects it.
+    /// </summary>
+    ChangeWeapon = 1 << 6,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_CHANGE_ZOOM_IN</c> <c>0x10</c>, shipped row 13
+    /// (<c>active=1</c>, mouse device <c>0x10</c> code 4). DECLARED, NOT
+    /// IMPLEMENTED: zoom is a projection term with no Core state.
+    /// <see cref="SimInput.Validate"/> rejects it.
+    /// </summary>
+    ZoomIn = 1 << 7,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_CHANGE_ZOOM_OUT</c> <c>0x11</c>, shipped row 14
+    /// (<c>active=1</c>, mouse device <c>0x10</c> code 3). DECLARED, NOT
+    /// IMPLEMENTED. <see cref="SimInput.Validate"/> rejects it.
+    /// </summary>
+    ZoomOut = 1 << 8,
+
+    /// <summary>
+    /// <c>BUTTON_MECH_CLOAK</c> <c>0x3b</c>, shipped row 8 (<c>active=1</c>,
+    /// KEY_ONCE, DIK_TAB). DECLARED, NOT IMPLEMENTED: Core has no cloak state.
+    /// <see cref="SimInput.Validate"/> rejects it.
+    /// </summary>
+    Cloak = 1 << 9,
 }
 
 public readonly record struct SimVector2(int X, int Z)
@@ -143,7 +296,8 @@ public readonly record struct SimInput(
     short LookYAnalogPermille = 0)
 {
     // Fire and LandingJets may be held. UI adapters must edge-sample
-    // ToggleMode and Reset.
+    // ToggleMode, Reset and SkipPanning - every shipped BUTTON_SKIP_PANNING
+    // row is KEY_ONCE (push type 8).
     // LookX is body look left/right and LookY is screen up/down (-1/0/+1).
     // Analog look is the deterministic -1000..1000 axis produced by an input adapter.
     public static SimInput Idle => new(0, 0);
@@ -186,15 +340,44 @@ public readonly record struct SimInput(
                 "LookYAnalogPermille must be between -1000 and 1000.");
         }
 
-        const SimActions known = SimActions.ToggleMode |
-            SimActions.Fire |
-            SimActions.Reset |
-            SimActions.LandingJets;
-        if ((Actions & ~known) != 0)
+        if ((Actions & ~DeclaredActions) != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(Actions), "Input contains an unknown action bit.");
         }
+
+        // A declared-but-unimplemented action must NOT be accepted and
+        // silently ignored. The enum fixes the released set and the storage
+        // width in one decision; this keeps that from becoming a bit that
+        // looks bound and does nothing.
+        SimActions unimplemented = Actions & ~ImplementedActions;
+        if (unimplemented != 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(Actions),
+                $"Input requests released action(s) {unimplemented} that Core declares but does not implement.");
+        }
     }
+
+    /// <summary>Every bit this enum assigns a meaning to.</summary>
+    public const SimActions DeclaredActions =
+        SimActions.ToggleMode |
+        SimActions.Fire |
+        SimActions.Reset |
+        SimActions.LandingJets |
+        SimActions.SkipPanning |
+        SimActions.ChargeWeapon |
+        SimActions.ChangeWeapon |
+        SimActions.ZoomIn |
+        SimActions.ZoomOut |
+        SimActions.Cloak;
+
+    /// <summary>The subset Core actually acts on.</summary>
+    public const SimActions ImplementedActions =
+        SimActions.ToggleMode |
+        SimActions.Fire |
+        SimActions.Reset |
+        SimActions.LandingJets |
+        SimActions.SkipPanning;
 }
 
 public sealed record TargetSnapshot(

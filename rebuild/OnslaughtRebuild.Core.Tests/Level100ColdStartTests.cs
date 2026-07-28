@@ -70,7 +70,8 @@ public sealed class Level100ClientPointerQuantisedRunFixture
         Driver = Level100ChainAutopilot.Create(
             default,
             quantizeLookToClientPointerPath: true,
-            seed: Level100ColdStartRun.SimulationSeed);
+            seed: Level100ColdStartRun.SimulationSeed,
+            quantizeLookToIntegerMousePixels: true);
         Outcome = Driver.Run(30 * 1_200);
     }
 }
@@ -239,13 +240,16 @@ public sealed class Level100ColdStartTests
         }
 
         // The level really was played: the opening pan ran, the script handed
-        // over control, both walked-to volumes dispatched, and beats 1-3's four
-        // authored statics were destroyed by the player's own rounds.
+        // over control, and ALL FIVE trigger volumes dispatched - each of which
+        // only dispatches out of jet mode, so the three flight legs were flown
+        // and landed.
         Assert.True(final.Tick > SimulationConstants.Level100OpeningPanTicks);
         foreach (Level100MissionTrigger trigger in new[]
         {
             Level100MissionTrigger.TargetZone1,
             Level100MissionTrigger.FiringRange,
+            Level100MissionTrigger.TargetZone2,
+            Level100MissionTrigger.TargetZone3,
         })
         {
             Assert.True(
@@ -265,20 +269,76 @@ public sealed class Level100ColdStartTests
                     .Single(actor => actor.Name == name).Lifecycle);
         }
 
-        // The honest negative, and the control that says whose fault it is.
+        // Beats 4, 5, 7 and 9, every one of them shot with the weapon the
+        // script hands over in the order it hands it over.
+        Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.TargetTrucks));
+        Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.MovingTargets));
+        Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.AirborneTargets1));
+        Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+
+        // Beat 9 was cleared by KILLS, not by the released sub-40 % hull poll:
+        // `aborted` is the LevelScript's own local and `Assert.False` on it is
+        // the claim that the poll never fired at all.
+        Assert.False(
+            final.Level100Mission.Aborted,
+            "this run is expected to clear wave 2 outright");
+        Assert.Equal(
+            Level100PrimaryObjectiveStatus.Complete,
+            final.Level100Mission.PrimaryObjectives
+                .Single(objective => objective.Objective == 4).Status);
+
+        // THE OUTPUT-CHANNEL CONTRACT, and it is the reason the joined run gets
+        // this far at all. The driver is held to the stick positions an INTEGER
+        // mouse pixel can produce, so the client's pointer dead zone - which
+        // only ever eats magnitudes below 15 permille while one pixel is 30 -
+        // has nothing to eat. Before this run was quantised, 2,575 of its 5,439
+        // analogue look commands arrived as ZERO and it lost the level at t5277.
+        //
+        // This is HALF of player-plausibility, and the half that is cheap. What
+        // the driver READS is still omniscient - exact Health, full 3D actor
+        // poses, line-of-sight ray tests - so a `Won` here is not yet evidence
+        // that a human could reach it. GOAL.md's demotion of the driven run to
+        // an acceptance test is aimed at exactly that gap.
+        Assert.Equal(0, run.Host.UnreachableLookCommands);
+        Assert.True(run.Host.LookCommands > 1_000);
+
+        // THE HONEST TERMINAL STATE, failing-forward in the style of the naive
+        // walker control.
+        //
+        // The fight is over and won: objective 4 is `Complete` above, and what
+        // is left is the ferry flight to Target Zone 4. `NavigateToZone` drops
+        // out of jet mode inside 20 m of the volume whatever is underneath, and
+        // on this route that point is open water, so the run ends
+        // `Level100MissionFailureReason.WaterLoss` - a lost level at 10,700 of
+        // 20,000 hull with every target in the level destroyed. That defect is
+        // already recorded on `Level100ChainAutopilot.MissileBreakRangeMillimeters`
+        // as the cause of three of twenty perturbed losses on the returning
+        // player, and it is NOT fixed here because it was tried and measured
+        // worse: keeping the airframe in jet mode over water cost the
+        // returning-player run `ChainAutopilot_ReachesWonByInputAlone` outright
+        // and turned this control's `Won` into `WaterLoss` as well.
+        //
+        // WHEN THAT FLIGHT LEG IS FIXED, replace `Lost`/`WaterLoss` here with
+        // `Won`/`None` and delete this paragraph. Nothing else needs to change.
         Assert.Equal(Level100MissionOutcome.Lost, _coldStart.Outcome);
         Assert.Equal(
-            Level100MissionFailureReason.TutorialBroken,
+            Level100MissionFailureReason.WaterLoss,
             final.Level100Mission.FailureReason);
-        Assert.Equal(_coldStart.Outcome, _control.Outcome);
-        Assert.Equal(
-            final.Level100Mission.FailureReason,
-            controlFinal.Level100Mission.FailureReason);
 
-        // Full hull at the loss. This is not a run that was worn down; it is a
-        // run that broke a released rule.
-        Assert.Equal(SimulationConstants.MaximumHull, final.Hull);
+        // AND THE CONTROL IS THE POINT: the same cold first career driven
+        // straight into `Simulation.Step` REACHES `Won`. The career premise is
+        // no longer what stops this run.
+        Assert.Equal(Level100MissionOutcome.Won, _control.Outcome);
+        Assert.Equal(
+            Level100MissionFailureReason.None,
+            controlFinal.Level100Mission.FailureReason);
     }
+
+    private static int Destroyed(
+        WorldSnapshot state,
+        Level100MissionTargetGroup group) => state.Level100Actors.Actors
+        .Count(actor => actor.TargetGroup == group &&
+            actor.Lifecycle == Level100ActorLifecycle.Destroyed);
 
     /// <summary>
     /// The joined run is the direct run plus exactly one thing: the analogue

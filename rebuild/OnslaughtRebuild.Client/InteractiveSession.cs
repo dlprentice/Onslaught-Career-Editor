@@ -55,6 +55,24 @@ public sealed class InteractiveSession
     // Steam executable is e7881829... and carries four local patches - see
     // reverse-engineering/binary-analysis/retail-specimen-baseline.md.
     //
+    // "Four" was queried in review 2026-07-27 and is CONFIRMED, but only for
+    // the STEAM executable - do not carry the number across specimens. Measured
+    // by byte diff against its own neighbouring pristine backup: 28 differing
+    // bytes in exactly four contiguous runs -
+    //     0x06416F..0x064171   3 bytes   version-string pointer
+    //     0x129696             1 byte
+    //     0x12A644..0x12A647   4 bytes   force_windowed
+    //     0x1AA444..0x1AA457  20 bytes   "V%1d.%02d - PATCHED" into padding
+    // The maintainer applied these deliberately for his own testing; CLAUDE.md
+    // says so and they are not drift.
+    //
+    // The CAPTURE TARGET is a different specimen and carries only ONE of them:
+    // local-lab/safe-copy-bea-pristine/BEA.exe (e1436ef7...) differs from
+    // pristine in 4 bytes at 0x12A644 alone, the same force_windowed site. A
+    // reviewer diffing the safe-copy pair therefore finds one patch and can
+    // conclude "four" is wrong; it is not, it is a statement about the Steam
+    // install.
+    //
     // SENSITIVITY WAS 1.5 HERE, AND THAT IS NOT A RETAIL VALUE. The old
     // 13/2000 is exactly 1.5 x 13/3000. Retail's slider is
     // g_MouseSensitivity = (index + 1) * 3.0f (setter 0x004cefe0, const 3.0 at
@@ -64,13 +82,20 @@ public sealed class InteractiveSession
     // VA 0x006254f4 = float32 7.0 - itself not reachable from the slider.
     //
     // 7.0 x 13/3000 = 91/3000. Aiming was 4.67x too slow at equal hand motion.
-    // The slider itself is not implemented yet; when it is, this becomes
-    // (index + 1) * 3 * 13/3000 and 91/3000 stays the untouched default.
+    //
+    // The slider now exists (RetailOptionsMenu, Controller Options row 0) and
+    // this IS (index + 1) * 3 * 13/3000 when it is moved. 91/3000 remains the
+    // untouched default, because the default is the image's own static
+    // initialiser at VA 0x006254f4 and nothing in this change is allowed to move
+    // it: see SetMouseSensitivity.
     private const int PointerOffsetScale = 1_000;
     private const int PointerOffsetRetentionNumerator = 702_049;
     private const int PointerOffsetRetentionDenominator = 1_000_000;
-    private const int PointerAxisNumerator = 91;
+    private const int DefaultPointerAxisNumerator = 91;
     private const int PointerAxisDenominator = 3_000;
+
+    /// <summary>The 13/3000 in <c>CController::DoMappings</c>, as an exact ratio.</summary>
+    private const int PointerAxisPerSensitivityNumerator = 13;
     private const int MaximumPointerOffsetMilliPixels = 1_000_000;
 
     private readonly Simulation _simulation;
@@ -86,12 +111,14 @@ public sealed class InteractiveSession
     private bool _toggleEdgePending;
     private bool _resetEdgePending;
     private bool _firePulsePending;
+    private bool _skipPanningEdgePending;
     private sbyte _movementPulseX;
     private sbyte _movementPulseZ;
     private sbyte _lookPulseX;
     private sbyte _lookPulseY;
     private int _pointerOffsetXMilliPixels;
     private int _pointerOffsetYMilliPixels;
+    private int _pointerAxisNumerator = DefaultPointerAxisNumerator;
     private InteractivePauseReason _pauseReasons;
     private bool _inputSuspendedUntilReleased;
     private long _interpolationPhase;
@@ -141,6 +168,7 @@ public sealed class InteractiveSession
         _toggleEdgePending ||
         _resetEdgePending ||
         _firePulsePending ||
+        _skipPanningEdgePending ||
         _movementPulseX != 0 ||
         _movementPulseZ != 0 ||
         _lookPulseX != 0 ||
@@ -213,6 +241,25 @@ public sealed class InteractiveSession
         }
 
         _resetEdgePending = true;
+    }
+
+    /// <summary>
+    /// One <c>BUTTON_SKIP_PANNING</c> (<c>0x3a</c>) edge.
+    /// </summary>
+    /// <remarks>
+    /// Every shipped row for this action is KEY_ONCE (push type 8), so it is
+    /// an edge and never a held level. Core ignores it outside the opening
+    /// pan, exactly as <c>references/Onslaught/Player.cpp:311</c> requires, so
+    /// a client may bind it to a key that means something else during play.
+    /// </remarks>
+    public void QueueSkipPanning()
+    {
+        if (IsPaused || _inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        _skipPanningEdgePending = true;
     }
 
     public void QueueFirePulse()
@@ -314,6 +361,7 @@ public sealed class InteractiveSession
         _toggleEdgePending = false;
         _resetEdgePending = false;
         _firePulsePending = false;
+        _skipPanningEdgePending = false;
         _movementPulseX = 0;
         _movementPulseZ = 0;
         _lookPulseX = 0;
@@ -457,6 +505,11 @@ public sealed class InteractiveSession
                     _resetEdgesConsumed++;
                 }
 
+                if (_skipPanningEdgePending)
+                {
+                    actions |= SimActions.SkipPanning;
+                }
+
                 if (_firePulsePending)
                 {
                     _firePulseEdgesConsumed++;
@@ -470,6 +523,7 @@ public sealed class InteractiveSession
                 _toggleEdgePending = false;
                 _resetEdgePending = false;
                 _firePulsePending = false;
+                _skipPanningEdgePending = false;
                 _movementPulseX = 0;
                 _movementPulseZ = 0;
                 _lookPulseX = 0;
@@ -543,9 +597,30 @@ public sealed class InteractiveSession
         return Math.Abs(retained) < PointerOffsetScale / 2 ? 0 : retained;
     }
 
-    private static short ToPointerAxisPermille(int offsetMilliPixels)
+    /// <summary>
+    /// The mouse-sensitivity slider's only consumer.
+    ///
+    /// Retail's reachable values are <c>(index + 1) * 3</c> for index 0..20, so
+    /// the range floors at 3.0 and the axis scale is
+    /// <c>sensitivity * 13/3000</c>. Passing the image default 7.0 reproduces
+    /// 91/3000 exactly, which is what keeps this from silently changing the
+    /// untouched default.
+    /// </summary>
+    public void SetMouseSensitivity(float sensitivity)
     {
-        long scaled = (long)offsetMilliPixels * PointerAxisNumerator;
+        if (!float.IsFinite(sensitivity) || sensitivity <= 0f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sensitivity));
+        }
+
+        _pointerAxisNumerator = (int)Math.Round(
+            sensitivity * PointerAxisPerSensitivityNumerator,
+            MidpointRounding.AwayFromZero);
+    }
+
+    private short ToPointerAxisPermille(int offsetMilliPixels)
+    {
+        long scaled = (long)offsetMilliPixels * _pointerAxisNumerator;
         long rounded = scaled >= 0
             ? (scaled + (PointerAxisDenominator / 2)) / PointerAxisDenominator
             : (scaled - (PointerAxisDenominator / 2)) / PointerAxisDenominator;

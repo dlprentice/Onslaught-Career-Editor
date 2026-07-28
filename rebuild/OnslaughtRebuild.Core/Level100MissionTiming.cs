@@ -108,13 +108,14 @@ public static class Level100MissionTiming
     /// 30/20 = 1.5, and a released <c>NEXT_FRAME</c> event cannot fire before
     /// the frame boundary, so it rounds up.
     /// </summary>
-    private const int ReleasedEventFrameTicks =
+    public const int ReleasedEventFrameTicks =
         (SimulationConstants.TicksPerSecond +
             Level100ActorMechanics.RetailBaseTicksPerSecond - 1) /
         Level100ActorMechanics.RetailBaseTicksPerSecond;
 
     /// <summary>
-    /// The first Core tick on which a character message may become active.
+    /// The first Core tick on which a character message may become active
+    /// <b>when the player lets the opening pan run to its full length</b>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -145,6 +146,21 @@ public static class Level100MissionTiming
     /// initialiser ran at tick 0, so HUD_01 was delivered and had already
     /// finished before the HUD became visible at tick ~179, and the first
     /// thing the player ever saw was HUD_02 mid-reveal.
+    /// </para>
+    /// <para>
+    /// <b>This is the unskipped value, not a fixed one.</b> The gate is
+    /// <c>StartPlayingState + NEXT_FRAME</c>, and
+    /// <c>CPlayer::ReceiveButtonAction</c> lets
+    /// <c>BUTTON_SKIP_PANNING</c> call <c>StartPlayingState</c> at any tick of
+    /// the pan (<c>Player.cpp:311-315</c>). A player who skips at tick
+    /// <c>T</c> therefore moves the whole opening message chain — and with it
+    /// <c>player.Activate()</c>, which the script reaches when
+    /// <c>TUTORIAL_TECHNICIAN_01</c> clears — to <c>T + 2</c>. That makes the
+    /// released tutorial's message schedule a
+    /// <b>player-controllable timing input</b>, not a fixed table.
+    /// <see cref="Level100Mission"/> owns the live value; this constant is
+    /// only the value it starts at, and is what the two measured no-input
+    /// Steam runs saw.
     /// </para>
     /// </remarks>
     public const int MessageBoxAllowedTick =

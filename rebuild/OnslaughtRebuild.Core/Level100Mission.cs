@@ -59,6 +59,25 @@ public sealed class Level100Mission
     /// </summary>
     private int _messageClearTick = int.MinValue;
 
+    /// <summary>
+    /// The first Core tick on which the released message box may make a
+    /// character message active, i.e. the tick
+    /// <c>ALLOWED_TO_PLAY_MESSAGES</c> lands.
+    /// </summary>
+    /// <remarks>
+    /// <c>CGame::StartPlayingState</c>
+    /// (<c>references/Onslaught/game.cpp:3025-3031</c>) posts that event
+    /// <c>NEXT_FRAME</c>, so this is
+    /// <c>playingStateStartTick + ReleasedEventFrameTicks</c>. It starts at
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/> — the value
+    /// for a pan that is allowed to run its full six seconds — and
+    /// <see cref="NotifyPlayingStateStarted"/> moves it earlier when the
+    /// player skips the pan. It is canonical simulation state, so it is
+    /// hashed.
+    /// </remarks>
+    private int _messageBoxAllowedTick =
+        Level100MissionTiming.MessageBoxAllowedTick;
+
     public Level100Mission(
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
@@ -150,9 +169,111 @@ public sealed class Level100Mission
             item.Status)).ToArray(),
         _events.ToArray(),
         _messageClearTick,
-        _pendingMessages.Select(item => item.Message).ToArray());
+        _pendingMessages.Select(item => item.Message).ToArray(),
+        _messageBoxAllowedTick);
 
     public Level100MissionOutcome Outcome => _outcome;
+
+    /// <summary>
+    /// <c>CGame::StartPlayingState</c>
+    /// (<c>references/Onslaught/game.cpp:3025-3031</c>): the game leaves
+    /// <c>GAME_STATE_PANNING</c> and the message box is allowed to play from
+    /// the next released event frame.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Idempotent by taking the earlier value, which is the deterministic
+    /// equivalent of retail's <c>if (mGameState == GAME_STATE_PLAYING)
+    /// return;</c> guard at <c>game.cpp:3027</c>: the pan can only ever end
+    /// early, never late, so a second notification can never move the gate
+    /// back.
+    /// </para>
+    /// <para>
+    /// <b>Moving the gate has to re-base what is already queued against it.</b>
+    /// Retail's message box holds a queue and starts the head the moment
+    /// <c>ALLOWED_TO_PLAY_MESSAGES</c> lands; nothing precomputes a wall-clock
+    /// start. Core reformulates that as precomputed ticks, which is equivalent
+    /// only while the gate is known at scheduling time — and the released
+    /// script schedules its first messages during the pan, before the player
+    /// has decided whether to sit through it.
+    /// </para>
+    /// <para>
+    /// The re-base is exact rather than approximate. At any tick of the pan no
+    /// message can have become active, because every scheduled start is at or
+    /// after the old gate and the old gate is after the end of the pan. So each
+    /// of the three quantities below is <c>oldGate + k</c> for some <c>k</c>
+    /// that does not depend on the gate, and subtracting the delta yields
+    /// <c>newGate + k</c>:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>queued message start ticks;</item>
+    ///   <item><see cref="_messageClearTick"/>, the box's own cursor;</item>
+    ///   <item>continuations with
+    ///   <see cref="Level100ScriptWaitKind.CharacterMessage"/>, whose due tick
+    ///   IS a message-clear tick — <c>PlayCharMessageWait</c> sleeps exactly
+    ///   until the box is done.</item>
+    /// </list>
+    /// <para>
+    /// <see cref="Level100ScriptWaitKind.Pause"/> continuations are
+    /// deliberately left alone: a script <c>Pause(seconds)</c> is an
+    /// event-manager delay with no relationship to the message box.
+    /// </para>
+    /// <para>
+    /// <b>Mission time is not simulation time.</b> <c>SimActions.Reset</c>
+    /// rebuilds this object with a fresh clock while
+    /// <see cref="Simulation"/>'s tick keeps running, so the gate has to be
+    /// computed from this object's own tick. Passing the simulation tick would
+    /// make every post-reset skip land after the initial gate and be silently
+    /// discarded. <see cref="Simulation.Step"/> calls this before
+    /// <see cref="AdvanceTick"/>, so the mission tick that is beginning is
+    /// <c>_tick + 1</c>.
+    /// </para>
+    /// </remarks>
+    public void NotifyPlayingStateStarted()
+    {
+        int allowed = checked(
+            _tick + 1 + Level100MissionTiming.ReleasedEventFrameTicks);
+        if (allowed >= _messageBoxAllowedTick)
+        {
+            return;
+        }
+
+        int shift = _messageBoxAllowedTick - allowed;
+        _messageBoxAllowedTick = allowed;
+
+        if (_messageClearTick != int.MinValue)
+        {
+            _messageClearTick = checked(_messageClearTick - shift);
+        }
+
+        PendingMessage[] queued = _pendingMessages.ToArray();
+        _pendingMessages.Clear();
+        foreach (PendingMessage item in queued)
+        {
+            int startTick = checked(item.StartTick - shift);
+            if (startTick <= _tick)
+            {
+                throw new InvalidOperationException(
+                    "The released message box cannot start a message before the game leaves GAME_STATE_PANNING.");
+            }
+
+            _pendingMessages.Enqueue(new PendingMessage(
+                startTick,
+                item.Message with { Tick = startTick }));
+        }
+
+        for (int index = 0; index < _continuations.Count; index++)
+        {
+            Continuation continuation = _continuations[index];
+            if (continuation.WaitKind == Level100ScriptWaitKind.CharacterMessage)
+            {
+                _continuations[index] = continuation with
+                {
+                    DueTick = checked(continuation.DueTick - shift),
+                };
+            }
+        }
+    }
 
     public IReadOnlyList<Level100MissionEvent> DrainEvents()
     {
@@ -620,7 +741,7 @@ public sealed class Level100Mission
         _ = arguments[2].AsFloat();
         int ticks = Level100MissionTiming.MessagePlaybackTicks(messageId);
 
-        int earliest = Level100MissionTiming.MessageBoxAllowedTick;
+        int earliest = _messageBoxAllowedTick;
         if (_messageClearTick != int.MinValue)
         {
             earliest = Math.Max(

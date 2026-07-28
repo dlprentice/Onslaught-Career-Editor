@@ -190,7 +190,16 @@ public sealed record Level100MissionSnapshot(
     IReadOnlyList<Level100PrimaryObjectiveSnapshot> PrimaryObjectives,
     IReadOnlyList<Level100MissionEvent> PendingEvents,
     int MessageClearTick,
-    IReadOnlyList<Level100MessageRequested> PendingMessages);
+    IReadOnlyList<Level100MessageRequested> PendingMessages,
+    /// <summary>
+    /// The tick <c>ALLOWED_TO_PLAY_MESSAGES</c> lands, i.e.
+    /// <c>StartPlayingState + NEXT_FRAME</c>
+    /// (<c>references/Onslaught/game.cpp:3025-3031</c>). Equal to
+    /// <see cref="Level100MissionTiming.MessageBoxAllowedTick"/> for a pan that
+    /// runs its full length, and earlier when the player used
+    /// <c>BUTTON_SKIP_PANNING</c>.
+    /// </summary>
+    int MessageBoxAllowedTick);
 
 public abstract record Level100MissionEvent(int Tick);
 

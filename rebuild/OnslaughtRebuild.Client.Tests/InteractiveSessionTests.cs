@@ -323,6 +323,47 @@ public sealed class InteractiveSessionTests
         Assert.Equal(-3_938, lookTick.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
     }
 
+    /// <summary>
+    /// The mouse-sensitivity slider's consumer.
+    ///
+    /// Steam <c>CController::DoMappings</c> scales a centred displacement by
+    /// <c>g_MouseSensitivity * 0.004333333</c> (= 13/3000), and the slider's
+    /// reachable values are <c>(index + 1) * 3</c>. Two things must hold together
+    /// and neither is safe alone: passing the image default 7.0 must leave the
+    /// axis EXACTLY where it was before the slider existed (91/3000), and a
+    /// different sensitivity must actually move it. Asserting only the first
+    /// would pass on a setter that does nothing.
+    /// </summary>
+    [Fact]
+    public void PointerMotion_SensitivitySliderScalesTheAxisAndSevenIsTheDefault()
+    {
+        const long oneCoreStepTicks =
+            (TimeSpan.TicksPerSecond / SimulationConstants.TicksPerSecond) + 1;
+
+        InteractiveSession explicitDefault = CreatePlayingSession(1);
+        explicitDefault.SetMouseSensitivity(7f);
+        explicitDefault.QueuePointerMotionMilliPixels(15_000, -7_500);
+        FrameAdvanceResult atSeven = explicitDefault.AdvanceFrameTicks(oneCoreStepTicks);
+
+        // The goldens PointerMotion_PreservesMagnitudeAndRetailRecenteringCoast
+        // pins for the untouched session, reproduced through the slider at 7.0.
+        Assert.Equal(1_640, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-299, atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+
+        // The lowest reachable stop is 3.0, well under the shipped 7.0, so the
+        // same hand motion must turn the walker measurably less far.
+        InteractiveSession slowest = CreatePlayingSession(1);
+        slowest.SetMouseSensitivity(3f);
+        slowest.QueuePointerMotionMilliPixels(15_000, -7_500);
+        FrameAdvanceResult atThree = slowest.AdvanceFrameTicks(oneCoreStepTicks);
+
+        Assert.True(
+            atThree.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick <
+                atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick,
+            "the sensitivity slider did not reach the pointer axis");
+        Assert.True(atThree.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick > 0);
+    }
+
     [Fact]
     public void PointerMotion_PreservesMagnitudeAndRetailRecenteringCoast()
     {
@@ -805,19 +846,50 @@ public sealed class InteractiveSessionTests
                 "Drone Path 1",
             ],
             definitions.WaypointPaths.Select(path => path.Name));
+        // Re-pinned 2026-07-27 by the waypoint coordinate correction. These
+        // values used to come from the 121-entry navigation graph, which holds
+        // 11 distinct XY tuples repeated 11 times, all at z = 10.0. Node 25 is
+        // RLWD initial-actor ordinal 25, a thingType-18 marker authored at
+        // retail (248.75, 275.0, -0.0).
         Level100WaypointPathDefinition truckPath =
             definitions.GetWaypointPath("Target Truck Path 1");
         Assert.Equal([25, 26, 27, 28], truckPath.Points.Select(point => point.NodeIndex));
         Assert.Equal(
-            new SimVector3(-66_688, 10_000, 16_750),
+            new SimVector3(-39_938, 0, 31_750),
             truckPath.Points[0].PositionMillimeters);
         Assert.Equal(
             new Level100FloatVector4Bits(
-                BitConverter.SingleToInt32Bits(222.0f),
-                BitConverter.SingleToInt32Bits(260.0f),
-                BitConverter.SingleToInt32Bits(10.0f),
+                BitConverter.SingleToInt32Bits(248.75f),
+                BitConverter.SingleToInt32Bits(275.0f),
+                BitConverter.SingleToInt32Bits(-0.0f),
                 BitConverter.SingleToInt32Bits(0.0f)),
             truckPath.Points[0].RetailComponentsFloatBits);
+        // No two of the 30 authored markers resolve to one position any more.
+        // Before the correction these 30 points collapsed onto 11, and this
+        // assertion is the regression guard for that specific failure.
+        Assert.Equal(
+            30,
+            definitions.WaypointPaths
+                .SelectMany(path => path.Points)
+                .Select(point => point.PositionMillimeters)
+                .Distinct()
+                .Count());
+        // `Flyby Path` and `Target Truck Path 2` used to share their first
+        // three points exactly. They are the aliasing pair named in the
+        // measurement, so they are the pair pinned here.
+        Assert.Empty(
+            definitions.GetWaypointPath("Flyby Path").Points
+                .Select(point => point.PositionMillimeters)
+                .Intersect(
+                    definitions.GetWaypointPath("Target Truck Path 2").Points
+                        .Select(point => point.PositionMillimeters)));
+        // The two ambient aircraft routes carry their own authored altitude:
+        // the Air Trainer's markers sit at retail z = -15 and the Transporter's
+        // at z = -20. Every node used to be flattened to Y = +10000 mm.
+        Assert.Equal(
+            [0, -15_000, -15_000],
+            definitions.GetWaypointPath("Flyby Path").Points
+                .Select(point => point.PositionMillimeters.Y));
         Level100SpawnDefinition[] trainingTrucks = definitions.Spawns
             .Where(spawn => spawn.ScriptName is
                 "TargetTruck1" or "TargetTruck2" or "TargetTruck3")
@@ -828,12 +900,25 @@ public sealed class InteractiveSessionTests
         Level100WaypointPathDefinition transporterPath =
             definitions.GetWaypointPath("Transporter Path");
         Assert.Equal([44, 22, 23], transporterPath.Points.Select(point => point.NodeIndex));
-        Assert.Equal(
+        // This pair used to assert the defect: nodes 44 and 22 resolved to the
+        // SAME point, because the navigation graph they were read from repeats
+        // its 11 positions. They are 92.2 m apart in the authored data, and
+        // node 22 carries the Transporter's own -20 m cruise altitude.
+        Assert.NotEqual(
             transporterPath.Points[0].PositionMillimeters,
             transporterPath.Points[1].PositionMillimeters);
-        Assert.Equal(
+        Assert.NotEqual(
             transporterPath.Points[0].RetailComponentsFloatBits,
             transporterPath.Points[1].RetailComponentsFloatBits);
+        Assert.Equal(
+            new SimVector3(68_313, 0, 28_750),
+            transporterPath.Points[0].PositionMillimeters);
+        Assert.Equal(
+            new SimVector3(-47_688, -20_000, 36_500),
+            transporterPath.Points[1].PositionMillimeters);
+        Assert.Equal(
+            new SimVector3(-20_188, -20_000, 23_250),
+            transporterPath.Points[2].PositionMillimeters);
         Assert.Equal(64, definitions.IdentitySha256.Length);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Airfield").ScriptName);
         Assert.Null(definitions.Actors.Single(actor => actor.Name == "Hangar").ScriptName);
@@ -1288,8 +1373,52 @@ public sealed class InteractiveSessionTests
         // The first row is the proof: revert only the hasher edit and the old
         // golden returns bit for bit, so the four fire events at ticks 3157,
         // 3165, 3173 and 3185 changed no state - they are only now recorded.
+        // MOVED AGAIN 2026-07-27 for the released action set. STRUCTURAL, like
+        // the last one: StateHasher went 31 -> 32 and one int32 is appended.
+        // Isolated MECHANICALLY, not argued — canonical bytes were dumped at 15
+        // ticks before and after, and every "after" stream was reconstructed
+        // from its "before" by exactly two edits: the version int at byte 23,
+        // and an inserted int32 182 (MessageBoxAllowedTick). ALL TICKS
+        // EXPLAINED. Message start ticks are identical either side
+        // (182, 357, 573, 762, 931, 1002, 1223), so no schedule moved.
+        // The same three-point ladder as before also holds: with the whole
+        // change in place EXCEPT the two StateHasher lines, this test passes
+        // with the previous golden reproduced exactly.
+        //
+        // MOVED AGAIN 2026-07-27 by the waypoint-path coordinate correction
+        // (task #114 section 4-B). This one is BEHAVIOURAL, not structural:
+        // StateHasher is unchanged at version 32. The manifest's eight named
+        // paths now resolve against the RLWD thingType-18 marker records
+        // instead of the 121-entry navigation graph, so the routes are real.
+        //
+        // TWO mechanisms, both intended, and both were measured rather than
+        // argued. Reverting ONLY the two files the correction touches
+        // (materialize_retail_assets.py and Level100ActorDefinitionManifest.cs)
+        // and re-materializing returns this assertion to
+        // 673661bba2fd43b4af3175b9fa028fb00133460361fb2b93137a289b497c1fe8
+        // exactly. A field-level dump of the same scenario either side isolates
+        // the whole delta to:
+        //   1. Level100ActorRegistry.ComputeIdentity, which hashes every
+        //      waypoint point's position and retail component bits, and whose
+        //      digest StateHasher writes. It moves
+        //      1a6bb9b711f4eba15f7c2f51132b3ca5141399a37b748ac47b532975e1d0585b
+        //      -> e3916c3c1614e251a62e177489d45b66e55ad8fde603e2928a372b475e2029e3.
+        //   2. The five waypoint-following actors' poses and intents, because
+        //      they now drive the authored routes. Target Tank 1 ends at
+        //      (-68648, 1100, 50244) rather than (31409, 9277, 70361); the
+        //      ambient Air Trainer finishes its three-point pass and reaches
+        //      Retreating instead of still sitting on point 1 at tick 3228.
+        //
+        // NOTHING ELSE MOVED, and that is the check that makes the move safe to
+        // accept. Every mission schedule transition is identical either side -
+        // NextSequence at ticks 1..3202, PulseCannon Disabled at 1 and Enabled
+        // at 3142, MechVulcan at 1, player Activate at 3142, TargetsDestroyed
+        // unchanged. Player position, yaw, pitch, mission tick and outcome are
+        // identical. All 39 static and base-world actor poses are identical,
+        // including the Transporter, whose Dropship motion class is still
+        // unimplemented so it stays frozen at its authored pose.
         Assert.Equal(
-            "7153d97f2edfe98ab79facd529ca092300628a1cff5e7062de6e079ff49ef053",
+            "0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

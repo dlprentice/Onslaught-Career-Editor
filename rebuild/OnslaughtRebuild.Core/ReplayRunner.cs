@@ -60,7 +60,10 @@ public static class ReplayRunner
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(Encoding.ASCII.GetBytes("ONSLAUGHT-REBUILD-TRACE"));
-            writer.Write(3);
+            // 4: SimActions widened from byte to ushort so the complete
+            // released action set fits (see SimActions). Each trace entry's
+            // action field is two bytes from here on.
+            writer.Write(4);
         }
 
         return stream.ToArray();
@@ -79,7 +82,7 @@ public static class ReplayRunner
             writer.Write(input.LookY);
             writer.Write(input.LookXAnalogPermille);
             writer.Write(input.LookYAnalogPermille);
-            writer.Write((byte)input.Actions);
+            writer.Write((ushort)input.Actions);
             writer.Write(stateBytes.Length);
             writer.Write(stateBytes);
         }

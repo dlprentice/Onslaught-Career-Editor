@@ -32,6 +32,7 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
 {
     private readonly Simulation _simulation;
     private readonly bool _quantizeLookToClientPointerPath;
+    private readonly bool _quantizeLookToIntegerMousePixels;
 
     /// <param name="quantizeLookToClientPointerPath">
     /// Apply only the analogue-look quantisation the client's pointer path
@@ -44,19 +45,57 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
     /// costs. Without it, "the client is lossy" and "this driver mistranslates"
     /// are the same observation.</para>
     /// </param>
+    /// <param name="quantizeLookToIntegerMousePixels">
+    /// Restrict the analogue look axis to the positions a hand on a mouse can
+    /// actually reach. See
+    /// <see cref="Level100InteractiveChainHost.PlayerPlausiblePermille"/>.
+    ///
+    /// <para>This constrains the driver's OUTPUT channel, and only that. With
+    /// it set the driver is no longer allowed sub-pixel aim: every stick
+    /// position it asks for snaps to one a whole retail mouse pixel can
+    /// produce, so a beat it then fails is a beat a player would also have to
+    /// fight for <em>with the same hand</em>.</para>
+    ///
+    /// <para><b>It does not make the run player-plausible.</b> The PERCEPTION
+    /// channel is still omniscient: this driver reads exact
+    /// <c>Health</c>, full three-dimensional actor poses, and sampled
+    /// line-of-sight ray tests against terrain. A player has a compass, a
+    /// scanner and a windscreen. <c>GOAL.md</c> demotes the driven <c>Won</c>
+    /// run to an acceptance test precisely because "an autopilot that reaches
+    /// <c>Won</c> by means no player could reproduce has proved nothing";
+    /// integer mouse pixels close one half of that gap and the wording here
+    /// used to claim the whole of it.</para>
+    /// </param>
     internal Level100DirectChainHost(
         Simulation simulation,
-        bool quantizeLookToClientPointerPath = false)
+        bool quantizeLookToClientPointerPath = false,
+        bool quantizeLookToIntegerMousePixels = false)
     {
         _simulation = simulation;
         _quantizeLookToClientPointerPath = quantizeLookToClientPointerPath;
+        _quantizeLookToIntegerMousePixels = quantizeLookToIntegerMousePixels;
     }
 
     public WorldSnapshot Snapshot => _simulation.Snapshot;
 
-    public WorldSnapshot Step(SimInput input) => _simulation.Step(
-        _quantizeLookToClientPointerPath
-            ? input with
+    public WorldSnapshot Step(SimInput input)
+    {
+        if (_quantizeLookToIntegerMousePixels)
+        {
+            input = input with
+            {
+                LookXAnalogPermille =
+                    Level100InteractiveChainHost.PlayerPlausiblePermille(
+                        input.LookXAnalogPermille),
+                LookYAnalogPermille =
+                    Level100InteractiveChainHost.PlayerPlausiblePermille(
+                        input.LookYAnalogPermille),
+            };
+        }
+
+        if (_quantizeLookToClientPointerPath)
+        {
+            input = input with
             {
                 LookXAnalogPermille =
                     Level100InteractiveChainHost.DeliverablePermille(
@@ -64,8 +103,11 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
                 LookYAnalogPermille =
                     Level100InteractiveChainHost.DeliverablePermille(
                         input.LookYAnalogPermille),
-            }
-            : input);
+            };
+        }
+
+        return _simulation.Step(input);
+    }
 }
 
 /// <summary>
@@ -131,6 +173,7 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     private const int PointerDeadZoneMilliPixels = 500;
 
     private readonly InteractiveSession _session;
+    private readonly bool _quantizeLookToIntegerMousePixels;
 
     /// <summary>
     /// What the session's stored pointer offset is after the last step.
@@ -149,8 +192,26 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     private int _lookCommands;
     private int _subRetailPixelLookCommands;
 
-    internal Level100InteractiveChainHost(InteractiveSession session) =>
+    /// <param name="quantizeLookToIntegerMousePixels">
+    /// Restrict the driver to stick positions a hand on a mouse can reach
+    /// (<see cref="PlayerPlausiblePermille"/>) BEFORE the pointer path is asked
+    /// for them.
+    ///
+    /// <para><b>With it set, this host is lossless.</b> The dead zone measured
+    /// by <see cref="UnreachableLookCommands"/> only ever eats magnitudes below
+    /// 15 permille, and the smallest position an integer pixel can produce is
+    /// 30. So the loss this class exists to expose is a loss of commands
+    /// <i>no player could issue in the first place</i>, and a driver that does
+    /// not issue them travels through <c>InteractiveSession</c> unchanged.
+    /// </para>
+    /// </param>
+    internal Level100InteractiveChainHost(
+        InteractiveSession session,
+        bool quantizeLookToIntegerMousePixels = false)
+    {
         _session = session;
+        _quantizeLookToIntegerMousePixels = quantizeLookToIntegerMousePixels;
+    }
 
     public WorldSnapshot Snapshot => _session.CurrentSnapshot;
 
@@ -181,6 +242,39 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     /// <summary>The permille a one-pixel mouse move produces at the image's
     /// untouched sensitivity.</summary>
     internal const int RetailSinglePixelPermille = 30;
+
+    /// <summary>
+    /// The nearest stick position to <paramref name="requested"/> that a hand
+    /// on a mouse can actually produce on the released build.
+    ///
+    /// <para>Retail's <c>CController::DoMappings</c> (0x0042DB40) maps an
+    /// INTEGER pixel displacement by <c>sensitivity * 13/3000</c>. At the
+    /// image's untouched sensitivity of 7.0 one pixel is <c>91/3000</c> of full
+    /// deflection, so the reachable axis is the lattice
+    /// <c>{0, ±30, ±61, ±91, ±121, …}</c> permille and NOTHING lies between
+    /// zero and thirty. This snaps a requested position to the nearest whole
+    /// number of pixels and returns what that many pixels deliver.</para>
+    ///
+    /// <para><b>Why it exists.</b> Measured over the joined cold-start run,
+    /// 2,904 of this driver's 4,937 analogue look commands (58.8 %) are finer
+    /// than one mouse pixel and 2,184 (44.2 %) fall inside the client's own
+    /// pointer dead zone and arrive as zero. A run that needs those commands is
+    /// evidence about the MECHANISM of the level, not about whether a person
+    /// can play it. Driving through this function is the honest playability
+    /// question.</para>
+    /// </summary>
+    internal static short PlayerPlausiblePermille(short requested)
+    {
+        int pixels = (int)Math.Round(
+            requested * (double)PointerAxisDenominator /
+                (PointerAxisNumerator * 1_000.0),
+            MidpointRounding.AwayFromZero);
+        long scaled = (long)pixels * PointerAxisNumerator * 1_000;
+        long permille = scaled >= 0
+            ? (scaled + (PointerAxisDenominator / 2)) / PointerAxisDenominator
+            : (scaled - (PointerAxisDenominator / 2)) / PointerAxisDenominator;
+        return (short)Math.Clamp(permille, -1_000, 1_000);
+    }
 
     /// <summary>
     /// What the client's pointer path actually delivers when a driver asks for
@@ -217,10 +311,19 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
             _session.QueueReset();
         }
 
+        // The counters read what the DRIVER ASKED FOR, always, so the
+        // sub-pixel census below is a statement about the driver rather than
+        // about this host's configuration.
         CountLookCommand(input.LookXAnalogPermille);
         CountLookCommand(input.LookYAnalogPermille);
-        int targetX = PointerOffsetFor(input.LookXAnalogPermille, ref _lookCommands, ref _unreachableLookCommands);
-        int targetY = PointerOffsetFor(input.LookYAnalogPermille, ref _lookCommands, ref _unreachableLookCommands);
+        short requestedX = _quantizeLookToIntegerMousePixels
+            ? PlayerPlausiblePermille(input.LookXAnalogPermille)
+            : input.LookXAnalogPermille;
+        short requestedY = _quantizeLookToIntegerMousePixels
+            ? PlayerPlausiblePermille(input.LookYAnalogPermille)
+            : input.LookYAnalogPermille;
+        int targetX = PointerOffsetFor(requestedX, ref _lookCommands, ref _unreachableLookCommands);
+        int targetY = PointerOffsetFor(requestedY, ref _lookCommands, ref _unreachableLookCommands);
         int deltaX = targetX - _storedOffsetX;
         int deltaY = targetY - _storedOffsetY;
         if (deltaX != 0 || deltaY != 0)

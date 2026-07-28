@@ -188,7 +188,16 @@ internal sealed class Level100ColdStartRun
             // session, build the world, then tell the frontend it is ready. The
             // seed is the client's own SimulationSeed.
             _session = CreateSession();
-            _host = new Level100InteractiveChainHost(_session);
+            // The driver is held to what a hand on a mouse can issue. Retail's
+            // CController::DoMappings maps an INTEGER pixel displacement, so
+            // the reachable axis is {0, +-30, +-61, +-91, ...} permille and the
+            // client's own dead zone - which only ever eats magnitudes below 15
+            // - cannot touch it. Without this the run is not a playthrough: it
+            // asks for 3,243 positions finer than one mouse pixel and 2,575 of
+            // them arrive as ZERO.
+            _host = new Level100InteractiveChainHost(
+                _session,
+                quantizeLookToIntegerMousePixels: true);
             _frontend.MarkLevel100Ready();
         };
 

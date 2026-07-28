@@ -158,7 +158,16 @@ public sealed class Simulation
         _level100MissionEvents.Clear();
         _level100ActorScriptCommands.Clear();
         _level100Destruction.BeginTick();
-        AdvanceOpeningCamera();
+
+        // Read the pan state BEFORE AdvanceOpeningCamera consumes it. On the
+        // tick the player skips, that call sets _level100OpeningTicksRemaining
+        // to 0, so the gate below cannot see the pan it is supposed to be
+        // gating on. See AdvanceOpeningCamera's remarks for the released
+        // dispatch order this reproduces.
+        bool skippedThePanThisTick = _level100OpeningTicksRemaining > 0 &&
+            input.HasAction(SimActions.SkipPanning);
+
+        AdvanceOpeningCamera(input);
         SyncLevel100PlayerState();
         _level100ActorScripts.AdvanceTick();
         PumpLevel100EventBus();
@@ -167,9 +176,30 @@ public sealed class Simulation
         ApplyLevel100Facts(level100Facts);
         AdvanceLevel100ActorMechanics();
 
+        // Three independent released gates, not one restated three ways.
+        //
+        //   Outcome == Running        - the level is still being played.
+        //   Level100PlayerActive      - the SCRIPT's player.Deactivate() /
+        //                               player.Activate() pair, retail Battle
+        //                               Engine power at +0x580.
+        //   OpeningTicksRemaining     - GAME.GetGameState() < GAME_STATE_PLAYING
+        //   / skippedThePanThisTick     at Player.cpp:319.
+        //
+        // The last two are NOT redundant, even though the cold career's windows
+        // overlap. On a COLD first career the shipped init() runs
+        // player.Deactivate() (LevelScript.msl:51-52) and does not Activate
+        // until TUTORIAL_TECHNICIAN_01 clears at ~t996, so the player is
+        // inactive for the whole 180-tick pan and the activation gate alone
+        // would look sufficient. On a RETURNING career -
+        // GetSlot(SLOT_TUTORIAL_1) == TRUE, Level100TutorialProgress.
+        // Introduction - init() takes the other branch, never Deactivates, and
+        // the player is ACTIVE from tick 0. There the pan gate is the only
+        // thing holding the player still through the released fly-in.
+        // Level100SkipPanningTests asserts exactly that separation.
         SimInput playerInput = _level100Mission.Outcome == Level100MissionOutcome.Running &&
             Level100PlayerActive &&
-            _level100OpeningTicksRemaining == 0
+            _level100OpeningTicksRemaining == 0 &&
+            !skippedThePanThisTick
             ? input
             : SimInput.Idle;
 
@@ -198,11 +228,108 @@ public sealed class Simulation
         return CreateSnapshot();
     }
 
-    private void AdvanceOpeningCamera()
+    /// <summary>
+    /// The opening pan, and the released law that lets the player end it early.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>CPlayer::ReceiveButtonAction</c>
+    /// (<c>references/Onslaught/Player.cpp:311-315</c>, retail
+    /// <c>0x004D3110</c> lines 39-47) handles the skip action ABOVE the
+    /// movement gate:
+    /// </para>
+    /// <code>
+    ///   if (button == BUTTON_SKIP_PANNING &amp;&amp; mCurrentViewMode == PLAYER_PAN_VIEW
+    ///       &amp;&amp; GAME.GetGameState() == GAME_STATE_PANNING)
+    ///   {
+    ///       GotoControlView() ;
+    ///       GAME.StartPlayingState() ;
+    ///   }
+    ///   // if game is pre running or panning don't allow control of movement
+    ///   if (GAME.GetGameState() &lt; GAME_STATE_PLAYING) return ;   // Player.cpp:319
+    /// </code>
+    /// <para>
+    /// That placement is the whole mechanism, and it encodes three separate
+    /// facts:
+    /// </para>
+    /// <list type="number">
+    ///   <item>the skip is accepted <em>only</em> while panning — the retail
+    ///   condition is <c>DAT_008a9ac0 == 2</c>, <c>GAME_STATE_PANNING</c>
+    ///   (<c>references/Onslaught/game.h:46</c>);</item>
+    ///   <item>no movement or weapon input does anything during the pan,
+    ///   because every other button falls through to the <c>:319</c>
+    ///   gate;</item>
+    ///   <item>after <c>StartPlayingState</c> the skip does nothing —
+    ///   <c>CGame::StartPlayingState</c> itself early-returns when the state is
+    ///   already <c>GAME_STATE_PLAYING</c> (<c>game.cpp:3027</c>).</item>
+    /// </list>
+    /// <para>
+    /// <b>The skip tick is still a panning tick for every other input.</b>
+    /// Retail's <c>CController::DoMappings</c> walks the shipped table in
+    /// order, and every player-action row (indices 0-15, the
+    /// <c>active=1</c> block) comes BEFORE the four
+    /// <c>BUTTON_SKIP_PANNING</c> rows (22-25). So on the frame the pan is
+    /// skipped, movement, morph, fire and the rest have already been dispatched
+    /// and rejected by the <c>:319</c> gate; they take effect from the next
+    /// frame.
+    /// </para>
+    /// <para>
+    /// <b>CORRECTED 2026-07-27.</b> This paragraph used to end "Core reproduces
+    /// that by leaving this tick's <c>playerInput</c> gated in
+    /// <see cref="Step"/>", and it also claimed the law test asserted all three
+    /// facts above. Both were false, and an adversarial review caught it by
+    /// deleting the <c>_level100OpeningTicksRemaining == 0</c> clause outright
+    /// and watching the whole suite stay green. This method zeroes
+    /// <c>_level100OpeningTicksRemaining</c>, and the gate then read that same
+    /// field and found it already zero — so on the skip tick the pan clause
+    /// gated nothing. What was actually suppressing input was
+    /// <c>Level100PlayerActive</c>, which is a different released gate that
+    /// merely happens to be closed at the same time <em>on a cold career</em>.
+    /// On a returning career it is open from tick 0 and the divergence was
+    /// live. <see cref="Step"/> now reads the pan state before this call runs.
+    /// </para>
+    /// <para>
+    /// <b>Still open, and deliberately not claimed:</b> the tick on which the
+    /// pan ends NATURALLY. There <c>StartPlayingState</c> is reached from
+    /// <c>FINISHED_PANNING</c> (<c>game.cpp:3051-3055</c>), which is the game's
+    /// own update rather than the controller dispatch, and the drop does not
+    /// establish whether that update runs before or after
+    /// <c>CController::DoMappings</c> within a frame. Core therefore leaves
+    /// that tick accepting input, exactly as it did before, rather than
+    /// extending the skip-tick rule to it on an argument. Only the skip tick is
+    /// proven, because there the state change happens <em>inside</em>
+    /// <c>ReceiveButtonAction</c>, below rows 0-15.
+    /// </para>
+    /// <para>
+    /// <c>GotoControlView()</c> (<c>Player.cpp:72-83</c>) is the camera half
+    /// and belongs to the client; Core owns only
+    /// <c>GAME.StartPlayingState()</c>.
+    /// </para>
+    /// </remarks>
+    private void AdvanceOpeningCamera(SimInput input)
     {
-        if (_level100OpeningTicksRemaining > 0)
+        bool wasPanning = _level100OpeningTicksRemaining > 0;
+        if (!wasPanning)
         {
-            _level100OpeningTicksRemaining--;
+            return;
+        }
+
+        _level100OpeningTicksRemaining--;
+
+        if (input.HasAction(SimActions.SkipPanning))
+        {
+            _level100OpeningTicksRemaining = 0;
+        }
+
+        if (_level100OpeningTicksRemaining == 0)
+        {
+            // CGame::StartPlayingState (game.cpp:3025-3031). Reached exactly
+            // once per run, either from FINISHED_PANNING at the end of the
+            // six-second pan (game.cpp:3051-3055) or from the skip above.
+            // The mission keeps its own clock - SimActions.Reset gives it a
+            // fresh one while _tick keeps running - so it derives the gate
+            // itself rather than being handed a simulation tick.
+            _level100Mission.NotifyPlayingStateStarted();
         }
     }
 

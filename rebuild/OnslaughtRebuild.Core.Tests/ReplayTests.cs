@@ -72,7 +72,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v1",
+              "schemaVersion": "onslaught-rebuild-command-tape.v2",
               "name": "missing-spans",
               "seed": 1,
               "durationTicks": 10,
@@ -103,7 +103,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v1",
+              "schemaVersion": "onslaught-rebuild-command-tape.v2",
               "name": "unknown-property",
               "seed": 1,
               "durationTicks": 1,
@@ -264,7 +264,7 @@ public sealed class ReplayTests
     {
         const string json = """
               {
-                "schemaVersion": "onslaught-rebuild-command-tape.v1",
+                "schemaVersion": "onslaught-rebuild-command-tape.v2",
                 "name": "no-look",
                 "seed": 1,
                 "durationTicks": 1,
