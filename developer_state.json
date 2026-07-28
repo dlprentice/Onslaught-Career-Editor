@@ -135,6 +135,8 @@
 
     "gate_state_AT_THE_STOPPING_POINT": "ALL THREE GATES GREEN, run from the main loop against these exact commits on a quiet tree. npm run test:rebuild-client = 408 passed / 0 failed. npm run test:rebuild-core = 153 passed / 0 failed (9 m 43 s). dotnet build of OnslaughtRebuild.Godot = succeeded, 0 warnings, 0 errors - which matters because the new cutscene code lives in the Godot project and NEITHER test gate compiles it. CORRECTION, same day: an earlier revision of this field said 'CORE IS UNVERIFIED' because its run had been killed before reporting. It has since been run and it passes. NOT RUN, and therefore still unproven: the Godot smoke (npm run test:rebuild-godot-smoke) and the frontend/gameplay capture gates. Green unit gates are not a parity claim - see GOAL.md.",
 
+    "two_checkers_exit_1_ON_PURPOSE_do_not_panic": "tools/re_function_doc_names_check.py and tools/doc_header_check.py BOTH EXIT 1 at this stopping point. That is them working, not the repo being broken - a check that cannot fail is not a gate. re_function_doc_names_check reports real drift between per-function document titles and the live Ghidra names (e.g. CUnit__FinishedPlayingCurrentAnimation at 0x0040eeb0 is actually CBattleEngine__FinishedPlayingCurrentAnimation); doc_header_check reports the header backlog the documentation sweep did not reach before it was stopped, listed in tools/doc_header_backlog.txt. Drive both to 0 as work; do not 'fix' them by loosening the check.",
+
     "commits_that_close_the_session": [
       "382001a3 - AGENTS.md worktree rule, and the withdrawal of the false 'eleven lanes running' handoff",
       "89aa1c49 - the documentation-integrity sweep, PARTIAL, 21 of 29 agents reported",
