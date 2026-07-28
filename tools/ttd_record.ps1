@@ -373,8 +373,16 @@ if (-not $runFileSeenUtc) {
 & $ttd -accepteula -stop $target.Id 2>&1 | Out-String | Write-Verbose
 & $ttd -accepteula -wait 120        2>&1 | Out-String | Write-Verbose
 
-Get-Process -Id $target.Id -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -ieq $exe } | Stop-Process -Force -ErrorAction SilentlyContinue
+# In -Attach mode the game is the MAINTAINER'S SESSION, not ours to end. Killing
+# it would throw away whatever they were in the middle of, which defeats the
+# entire point of attaching: play at full speed, record a moment, keep playing.
+# Recording several segments from one playthrough is the intended workflow.
+if (-not $Attach) {
+    Get-Process -Id $target.Id -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -ieq $exe } | Stop-Process -Force -ErrorAction SilentlyContinue
+} else {
+    Write-Host 'attach mode: tracing stopped, THE GAME IS STILL RUNNING - carry on playing.'
+}
 if (-not $recorder.HasExited) { $recorder.WaitForExit(60000) | Out-Null }
 
 $final = if (Test-Path -LiteralPath $traceFile) { (Get-Item -LiteralPath $traceFile).Length } else { 0 }
