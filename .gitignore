@@ -96,3 +96,10 @@ tmp*/
 # Canonical reviewed RE database exception.
 !reverse-engineering/ghidra/
 !reverse-engineering/ghidra/**
+
+# BEA.exe writes runtime logs into its CURRENT WORKING DIRECTORY, not next to
+# its own image. tools/ttd_record.ps1 now pins the CWD to the copied target, but
+# any launcher that forgets will drop these in the repo root, and they are
+# retail-derived runtime output that must never be tracked.
+setuphistory.txt
+cardid.txt

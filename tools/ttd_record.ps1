@@ -229,7 +229,16 @@ $null = [IO.Directory]::CreateDirectory($outDir)
 
 # ------------------------------------------------------------------ record
 $startedUtc = (Get-Date).ToUniversalTime()
+# -WorkingDirectory is load-bearing, not tidiness. BEA.exe writes runtime logs
+# into its CURRENT WORKING DIRECTORY, not next to its own image: the first
+# elevated session was launched with the repository root as CWD and the game
+# deposited a 2,770-byte setuphistory.txt straight into the repo, where it showed
+# up as an untracked file. That is retail-derived runtime output, which CLAUDE.md
+# forbids tracking, and it would have been one careless `git add .` from being
+# committed. Pinning the CWD to the copied target keeps the game's own droppings
+# inside the copy, where they belong and are already ignored.
 $recorder = Start-Process -FilePath $ttd -ArgumentList $ttdArgs -PassThru -NoNewWindow `
+    -WorkingDirectory $TargetRoot `
     -RedirectStandardOutput (Join-Path $outDir 'ttd-stdout.txt') `
     -RedirectStandardError  (Join-Path $outDir 'ttd-stderr.txt')
 
