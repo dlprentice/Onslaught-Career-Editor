@@ -13,8 +13,14 @@ namespace OnslaughtRebuild.Client;
 /// </summary>
 public static class Level100ActorDefinitionManifest
 {
+    // Moved 2026-07-27 from
+    // F136110D2CCA008EE7527459DBDB359FB80027A3178E080CF5EBEFCF314F9224 by the
+    // pine mesh-quality distance correction 70.0 -> 30.0 (GOAL.md defaults
+    // rule, task #137). Verified: the regenerated manifest differs from its
+    // predecessor on exactly one of 9,685 leaves,
+    // pineBillboards.meshQualityDistance. Nothing this decoder reads changed.
     public const string ExpectedManifestSha256 =
-        "F136110D2CCA008EE7527459DBDB359FB80027A3178E080CF5EBEFCF314F9224";
+        "E4CC77FF457EDD7ADA351CC92347108CEE2E2AE6E01A16DEE277B5CB83841F06";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v13";
     private const string ExpectedSourceArchiveSha256 =

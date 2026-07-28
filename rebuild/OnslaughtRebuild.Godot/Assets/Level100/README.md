@@ -311,11 +311,21 @@ all-distance billboard owner. The static ownership trace is:
   `CMesh` and a six-view `CImposter`. `CRTTree__VFuncSlot02_BuildRenderOutputs`
   at `0x004DD960` submits the full mesh when squared horizontal camera distance
   is at or below `g_MeshQualityDistance²`, or while the tree is falling. The
-  supported image initializes that option-backed global to `30.0`; boot-time
-  `CCareer::Load(flag=0)` then applies `defaultoptions.bea` OptionsTail `+0x0C`.
-  The installed max-quality snapshot read for this milestone stores `70.0`
-  (`0x428C0000`) at file offset `0x26CA`; manifest v7 selects that released
-  high-quality value. A separate capability branch can write `45.0`.
+  image initializes that option-backed global to **`30.0`** (`.data`
+  `0x006321A0`, file `0x231CA0` = `00 00 F0 41`), and that is the value manifest
+  v7 now selects — **corrected from `70.0` on 2026-07-27 under GOAL.md's
+  defaults rule.** The "Geometry detail" setter at `0x004DD6B0` has exactly
+  three arms writing `10.0` / `30.0` / `70.0` to that global, and the image's
+  companion initializers (LOD bias `0x00631E88` = `1.0`, quality scale
+  `0x00630E0C` = `1.0`) pick out the middle arm uniquely. Boot-time
+  `CCareer::Load(flag=0)` then overwrites it from `defaultoptions.bea`
+  OptionsTail `+0x0C`, which is **persisted user state, not shipped data**: this
+  machine's snapshot stores `70.0` (`0x428C0000`) at file offset `0x26CA` while
+  `proof_defaultoptions.bea` from the same install stores `30.0` there, and no
+  `.bea` appears in `INSTALL.LOG`. A separate capability branch at `0x004DD832`
+  can write `45.0` when `[0x00662F10]` is non-zero; that global is statically
+  zero and no writer to it was found by a literal-operand scan, so the branch is
+  not reconstructed here.
 - Outside that boundary, `CRTTree__VFuncSlot03_UpdateVisibilityState` at
   `0x004DD850` queues `CDXEngine__RenderImposterBillboardSet` at `0x00543300`.
   That helper emits all six `VIEW` records for the tree, not one chosen card:

@@ -157,9 +157,20 @@ hierarchies, plus bounded static conversions of 24 Level 100 static-world mesh
 types, four `pinesnow` variants, Target Tank, and Warehouse meshes. Static Steam
 evidence separates three tree owners. `CRTTree` submits each exact pine mesh at
 or inside the selected profile's horizontal mesh-quality distance and queues
-its six-view imposter outside that boundary. The supported high-quality
-`defaultoptions.bea` snapshot stores `70.0` at OptionsTail `+0x0C` (file
-`0x26CA`), and manifest v7 owns that value. After the world and global-imposter
+its six-view imposter outside that boundary. **That distance is retail's
+authored default `30.0`, corrected from `70.0` on 2026-07-27 under GOAL.md's
+defaults rule.** The pristine specimen
+(`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
+`74154bfa…`) dispatches "Geometry detail" at `0x004DD6B0` to three arms writing
+`10.0` / `30.0` / `70.0` to `0x006321A0`, and the image's own static
+initialisers — `0x006321A0` (file `0x231CA0`) `= 30.0`, LOD bias `0x00631E88`
+`= 1.0`, quality scale `0x00630E0C` `= 1.0` — are uniquely the middle arm, so
+the released out-of-box state is Medium. The previous `70.0` came from this
+machine's `defaultoptions.bea` at OptionsTail `+0x0C` (file `0x26CA`), which is
+persisted run state: `proof_defaultoptions.bea` from the same install holds
+`30.0` there, and no `.bea` appears in `INSTALL.LOG`. A value read from that
+file is a **user setting**, not a default. Manifest v7 owns the corrected value.
+After the world and global-imposter
 passes, `CDXTrees` submits one standing fast card selected by
 `(tree_object_address >> 4) & 3` and a fifth-view horizontal card only when the
 camera differs from sampled ground height by more than 20 units. A manifest

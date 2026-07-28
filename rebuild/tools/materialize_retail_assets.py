@@ -168,7 +168,11 @@ STATIC_WORLD_ANIMATED_MESHES = {
     "ft_pulse": 101,
     "ft_sam": 21,
 }
-STATIC_WORLD_MANIFEST_SHA256 = "f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314f9224"
+# Reproducibility pin for the generated manifest. Moved 2026-07-27 from
+# f136110d2cca008ee7527459dbdb359fb80027a3178e080cf5ebefcf314f9224 by the
+# PINE_MESH_QUALITY_DISTANCE 70.0 -> 30.0 correction above; the regenerated
+# manifest differs from its predecessor on that one field and nothing else.
+STATIC_WORLD_MANIFEST_SHA256 = "e4cc77ff457edd7ada351cc92347108cee2e2ae6e01a16dee277b5cb83841f06"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -197,9 +201,32 @@ PINE_IMPOSTER_TEXTURE = (
     "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
     "7368ba0c586221ff1b1572cee8f84de2bf6db426c005a73a10bad54a938ad882",
 )
-# The bounded high-quality reconstruction profile selects the released value
-# persisted at defaultoptions.bea OptionsTail +0x0C (file offset 0x26CA).
-PINE_MESH_QUALITY_DISTANCE = 70.0
+# Retail's AUTHORED default, read from the pristine specimen
+# local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (sha256
+# 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750).
+# It is deliberately NOT read from defaultoptions.bea, which is per-machine run
+# state; see GOAL.md's defaults rule and task #137.
+#
+# The "Geometry detail:" setter at VA 0x004DD6B0 dispatches its state argument
+# to exactly three arms, each a `mov dword [0x006321A0], imm32`
+# (opcode bytes C7 05 A0 21 63 00):
+#     0x004DD737  00 00 20 41 = 10.0  Low     (bias 3.0, scale 0.1)
+#     0x004DD6FF  00 00 F0 41 = 30.0  Medium  (bias 1.0, scale 1.0)
+#     0x004DD6CA  00 00 8C 42 = 70.0  High    (bias 0.3, scale 2.0)
+# The image's own static initialisers pick out exactly one of those arms:
+# .data 0x006321A0 (file 0x231CA0) = 00 00 F0 41 = 30.0, LOD bias 0x00631E88
+# (file 0x231988) = 1.0, quality scale 0x00630E0C (file 0x230F0C) = 1.0. That is
+# arm 1 and only arm 1, so the released out-of-box Geometry detail is Medium and
+# the authored mesh-quality distance is 30.0.
+#
+# 70.0 was one workstation's "High" choice, not a shipped value. This machine's
+# defaultoptions.bea holds 70.0/0.3/2.0 at file offsets 0x26CA/0x26CE/0x26D2
+# while proof_defaultoptions.bea from the same install holds 30.0/1.0/1.0 at the
+# identical offsets, and no .bea appears anywhere in INSTALL.LOG's 5,773
+# installed-file lines. OptionsTail +0x0C is bound to 0x006321A0 by the
+# serializer itself: 0x00420E0F `A3 A0 21 63 00` on load, 0x00420BA0
+# `8B 0D A0 21 63 00` on save.
+PINE_MESH_QUALITY_DISTANCE = 30.0
 # Steam's fast standing view is address-derived, but the exact runtime owner
 # sequence and phase are unresolved. This reconstruction-owned phase makes the
 # four-view assignment deterministic without inferring a retail heap identity.

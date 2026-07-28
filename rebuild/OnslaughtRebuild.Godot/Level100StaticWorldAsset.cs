@@ -220,14 +220,23 @@ internal sealed partial class Level100StaticWorldAsset
         IReadOnlyDictionary<string, Texture2D> textures)
     {
         // A retail Level 1.00 pine has exactly two representations: the
-        // pinesnow mesh at or inside the authored 70.0 mesh-quality distance,
-        // and the six-face box imposter outside it. `defaultoptions.bea`
-        // offset 0x26CA is `00 00 8C 42` = 70.0f, and the archive's
-        // IMPS/IMPT/VIEW chunk carries exactly six views per variant whose
-        // (width, height) pairs are that variant's own mesh bounding-box
-        // half-extents inflated by 1.05 on all three axes. The two shader
-        // gates below are complementary about the same 70.0 value, so every
-        // pine is covered at every distance and neither pass is ungated.
+        // pinesnow mesh at or inside the authored mesh-quality distance, and
+        // the six-face box imposter outside it. That distance is retail's
+        // authored default 30.0, read from the pristine specimen
+        // (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+        // 74154bfa...): the "Geometry detail:" setter at 0x004DD6B0 has three
+        // arms writing 10.0 / 30.0 / 70.0 to 0x006321A0, and the image's own
+        // static initialisers — 0x006321A0 = 30.0, bias 0x00631E88 = 1.0, scale
+        // 0x00630E0C = 1.0 — are uniquely the middle arm. It is NOT read from
+        // `defaultoptions.bea`, whose 0x26CA is one machine's "High" setting;
+        // see GOAL.md's defaults rule and materialize_retail_assets.py's
+        // PINE_MESH_QUALITY_DISTANCE for the full byte evidence.
+        //
+        // The archive's IMPS/IMPT/VIEW chunk carries exactly six views per
+        // variant whose (width, height) pairs are that variant's own mesh
+        // bounding-box half-extents inflated by 1.05 on all three axes. The two
+        // shader gates below are complementary about the same single value, so
+        // every pine is covered at every distance and neither pass is ungated.
         PinePlacement[] placements = BuildPinePlacements(manifest.Pines, terrain);
         AddClosePineMeshes(root, manifest, meshes, placements);
 
@@ -320,7 +329,7 @@ internal sealed partial class Level100StaticWorldAsset
             // AddClosePineMeshes places at GroundOrigin + Up * baseClearance.
             // Omitting the clearance here put the box bottom 0.0804 below
             // ground for pinesnow0 and stepped the tree vertically at the
-            // 70.0 swap.
+            // mesh-quality swap distance.
             float baseClearance = checked(
                 (float)manifest.Meshes[$"pinesnow{variant}"].BaseClearance);
             var multiMesh = new MultiMesh
@@ -707,8 +716,12 @@ internal sealed partial class Level100StaticWorldAsset
             texture.Width != 1024 ||
             texture.Height != 256 ||
             !StringComparer.Ordinal.Equals(texture.Compression, "Dxt2") ||
+            // Retail's authored Geometry detail default: 0x004DD6B0 arm 1,
+            // pinned by the image's own static initialiser at .data 0x006321A0
+            // (file 0x231CA0) = 00 00 F0 41. Not this machine's
+            // defaultoptions.bea, which holds the "High" arm's 70.0.
             BitConverter.SingleToInt32Bits(checked((float)definition.MeshQualityDistance)) !=
-                BitConverter.SingleToInt32Bits(70f) ||
+                BitConverter.SingleToInt32Bits(30f) ||
             // Manifest identity only. Retail's fast tree batch has no
             // established enable condition and is not drawn here, so nothing
             // consumes this phase; it stays pinned so a manifest change is

@@ -10,29 +10,37 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <summary>
 /// A retail Level 1.00 pine has exactly two representations and no third one.
 ///
-/// <para><b>WARNING, 2026-07-27: 70.0 IS NOT AN AUTHORED CONSTANT. It is this
-/// machine's graphics setting.</b> <c>defaultoptions.bea</c> file offset 0x26CA
-/// holds <c>00 00 8C 42</c> = 70.0f — but <c>proof_defaultoptions.bea</c>, in the
-/// same install, holds <c>00 00 F0 41</c> = <b>30.0f</b> at the identical offset.
-/// Measured directly. That file is RUN STATE, not shipped defaults: it is absent
-/// from <c>INSTALL.LOG</c>'s CopyFiles list and the game rewrites it.
+/// <para>The swap distance is retail's AUTHORED default, <b>30.0</b>, corrected
+/// from 70.0 on 2026-07-27 under GOAL.md's defaults rule (task #137). All bytes
+/// below are read from the pristine specimen
+/// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+/// <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c> —
+/// never the installed <c>BEA.exe</c>, which is deliberately patched.
 ///
 /// The field is the <b>Geometry detail</b> options row. Its setter at
-/// <c>0x004dd6b0</c> has exactly three arms — <c>10 / 30 / 70</c> — and the
-/// executable's own static initialisers are the MIDDLE arm, so the released
-/// default is <b>30.0 (Medium)</b> and 70.0 is High.
+/// <c>0x004DD6B0</c> dispatches to exactly three arms, each a
+/// <c>mov dword [0x006321A0], imm32</c> (<c>C7 05 A0 21 63 00</c>):
+/// <c>0x004DD737</c> = 10.0 Low, <c>0x004DD6FF</c> = 30.0 Medium,
+/// <c>0x004DD6CA</c> = 70.0 High. The image's own static initialisers select one
+/// arm uniquely: <c>.data 0x006321A0</c> (file <c>0x231CA0</c>) is
+/// <c>00 00 F0 41</c> = 30.0, LOD bias <c>0x00631E88</c> (file <c>0x231988</c>)
+/// is 1.0 and quality scale <c>0x00630E0C</c> (file <c>0x230F0C</c>) is 1.0 —
+/// arm 1, Medium. Low would be 10.0/3.0/0.1 and High 70.0/0.3/2.0.
 ///
-/// So the swap distance below is pinned to whatever this workstation last chose,
-/// and the reconstruction may be drawing full pine meshes 2.3x further out than
-/// a default retail install does. THE VALUE IS DELIBERATELY LEFT AT 70.0 HERE
-/// rather than changed to 30.0, because changing it alters what is rendered and
-/// must be settled by measurement against a retail capture, not by swapping one
-/// unverified constant for another. Tracked separately.
+/// <b>70.0 was this machine's graphics setting, not an authored constant.</b>
+/// <c>defaultoptions.bea</c> file offset 0x26CA holds <c>00 00 8C 42</c> = 70.0f
+/// with 0.3/2.0 beside it — but <c>proof_defaultoptions.bea</c>, in the same
+/// install, holds <c>00 00 F0 41</c> = 30.0f with 1.0/1.0 at the identical
+/// offsets. That file is RUN STATE, not shipped defaults: no <c>.bea</c> appears
+/// in any of <c>INSTALL.LOG</c>'s 5,773 installed-file lines, and the game
+/// rewrites it. OptionsTail +0x0C is bound to <c>0x006321A0</c> by the
+/// serializer itself (<c>0x00420E0F</c> <c>A3 A0 21 63 00</c> on load,
+/// <c>0x00420BA0</c> <c>8B 0D A0 21 63 00</c> on save), which is exactly why a
+/// value taken from that file is a user setting and not a default.
 ///
-/// What these tests still prove, and it is worth keeping: every pine
-/// representation the reconstruction draws is GATED on one distance, so no pass
-/// can survive at all distances. That structural claim is independent of which
-/// number the gate holds.</para>
+/// What these tests also prove: every pine representation the reconstruction
+/// draws is GATED on one distance, so no pass can survive at all distances. That
+/// structural claim is independent of which number the gate holds.</para>
 ///
 /// Archive evidence for the representation count, unaffected by the above: the
 /// level's IMPS/IMPT/VIEW chunk stores exactly six views per pine variant, each
@@ -42,8 +50,9 @@ namespace OnslaughtRebuild.Client.Tests;
 /// the mesh's own bounding box, not a camera-facing card: a billboard needs one
 /// view and one size pair and would never carry a top-down disc.
 ///
-/// These tests pin the 70.0 swap and prove that every pine representation the
-/// reconstruction draws is gated on it, so no pass can survive at all distances.
+/// These tests pin the authored 30.0 swap and prove that every pine
+/// representation the reconstruction draws is gated on it, so no pass can
+/// survive at all distances.
 /// </summary>
 public sealed class Level100PineRepresentationTests
 {
@@ -51,15 +60,14 @@ public sealed class Level100PineRepresentationTests
         "Level100StaticWorldAsset.cs");
 
     /// <summary>
-    /// 70.0f is exactly <c>00 00 8C 42</c> little-endian, the four bytes read
-    /// from <c>defaultoptions.bea</c> at 0x26CA — which is this machine's
-    /// Geometry detail setting (High), NOT a shipped default. See the class
-    /// remarks: the released default is 30.0 (Medium).
+    /// 30.0f is exactly <c>00 00 F0 41</c> little-endian, the four bytes the
+    /// shipped image statically initialises at <c>.data 0x006321A0</c>, file
+    /// offset <c>0x231CA0</c>, in the pristine specimen. See the class remarks.
     /// </summary>
-    private const int MeshQualityDistanceBits = 0x428C0000;
+    private const int MeshQualityDistanceBits = 0x41F00000;
 
     [Fact]
-    public void ManifestPinsTheCurrentSwapDistanceBitExact()
+    public void ManifestPinsTheAuthoredSwapDistanceBitExact()
     {
         JsonElement billboards = LoadManifest().GetProperty("pineBillboards");
 
@@ -67,13 +75,16 @@ public sealed class Level100PineRepresentationTests
 
         Assert.Equal(MeshQualityDistanceBits, BitConverter.SingleToInt32Bits(distance));
         Assert.Equal(
-            new byte[] { 0x00, 0x00, 0x8C, 0x42 },
+            new byte[] { 0x00, 0x00, 0xF0, 0x41 },
             BitConverter.GetBytes(distance));
-        Assert.Equal(70f, distance);
+        Assert.Equal(30f, distance);
+        // The value this replaced. 70.0f is the "High" arm at 0x004DD6CA and was
+        // sourced from this machine's defaultoptions.bea; it must not come back.
+        Assert.NotEqual(0x428C0000, BitConverter.SingleToInt32Bits(distance));
     }
 
     [Fact]
-    public void EverySourceMeshQualityDistanceIsTheSameSeventyUnitValue()
+    public void EverySourceMeshQualityDistanceIsTheSameAuthoredValue()
     {
         // The close mesh and the far box must gate on one shared value, or a
         // band opens where both discard and the tree disappears.
@@ -204,7 +215,8 @@ public sealed class Level100PineRepresentationTests
         double bottomWithoutClearance = centerHeight - halfHeight;
         double bottomWithClearance = bottomWithoutClearance + baseClearance;
 
-        // Before: the box hung well below the terrain and stepped at 70 units.
+        // Before: the box hung well below the terrain and stepped at the
+        // mesh-quality swap distance.
         Assert.True(
             bottomWithoutClearance < -0.06,
             $"variant {variant} ungrounded bottom {bottomWithoutClearance}");

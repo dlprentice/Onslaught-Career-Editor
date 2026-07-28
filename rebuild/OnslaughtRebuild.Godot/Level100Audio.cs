@@ -64,8 +64,30 @@ public sealed partial class Level100Audio : Node3D
     private int? _activeCharacterMessageId;
     private double _activeCharacterMessageLengthSeconds;
     private double _characterMessageHandoffSecondsRemaining;
-    private float _soundOptionMix = 1f;
-    private float _musicOptionMix = 1f;
+    // Retail's AUTHORED out-of-box option volumes, not full scale. Corrected
+    // 2026-07-27 from 1f/1f under GOAL.md's defaults rule; the reconstruction's
+    // defaults are retail's defaults, and 1f was ours, not theirs.
+    //
+    // Two independent sources agree exactly, which is why these are stated
+    // rather than fitted:
+    //   references/Onslaught/Career.cpp:173-174, CCareer::CCareer --
+    //       mSoundVolume=0.8f;
+    //       mMusicVolume=0.9f;
+    //   and the pristine specimen's own initialiser bytes
+    //   (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+    //   74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750),
+    //   in CCareer::StaticInitDefaults 0x0041B6A0:
+    //       VA 0x0041B70D  c7 05 ac 2a 66 00 cd cc 4c 3f
+    //                      mov dword [0x00662AAC], 0.8f   <- sound
+    //       VA 0x0041B717  c7 05 b0 2a 66 00 66 66 66 3f
+    //                      mov dword [0x00662AB0], 0.9f   <- music
+    //
+    // A fresh career therefore reads 8/10 and 9/10 on the Options bars, not
+    // 10/10. Anything that later loads a career overwrites both through
+    // Level100AudioCatalog.ToRetailOptionMix at :563 and :569; these are the
+    // cold-start values only.
+    private float _soundOptionMix = 0.8f;
+    private float _musicOptionMix = 0.9f;
     private float _gameplayMix = 1f;
     private bool _gameplayPaused;
 

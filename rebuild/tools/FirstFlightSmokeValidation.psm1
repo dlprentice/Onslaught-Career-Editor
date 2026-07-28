@@ -157,6 +157,37 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
+    # KNOWN STALE, 2026-07-27, and deliberately not guessed.
+    #
+    # StateHasher moved twice today: 30 -> 31 (the weapon-fire event stream,
+    # 5f6b30f5) and 31 -> 32 (the released action set). Both moves were isolated
+    # causally and the in-process golden in InteractiveSessionTests was updated
+    # from a measured run each time. THIS value was not, because it can only be
+    # obtained from a real Godot smoke run and this module is not part of
+    # `npm test` — so nothing failed to tell us it had gone stale.
+    #
+    # Do NOT infer it from the in-process hash: this is a different scenario at
+    # tick 3228. Re-measure with `npm run test:rebuild-godot-smoke` from a CLEAN
+    # tree, and only then update. Guessing it would defeat the one thing the
+    # value is for.
+    #
+    # MEASURED 2026-07-27 20:59-21:07, two independent runs, byte-identical:
+    #     673661bba2fd43b4af3175b9fa028fb00133460361fb2b93137a289b497c1fe8
+    #     tick 3228, exitReason 'smoke-complete'
+    # DELIBERATELY NOT PINNED. That measurement was taken on a tree carrying
+    # uncommitted Core work from two other lanes (skip-panning, cold-career), so
+    # pinning it would bake unreviewed simulation changes into the golden and
+    # silently bless them. Re-measure once that work lands, and pin THAT.
+    #
+    # The value above is stale and this assertion is EXPECTED TO FAIL until then.
+    # That failure is the honest signal; suppressing it would remove the only
+    # thing telling us the golden needs re-measuring.
+    #
+    # Ruled out as a cause, 2026-07-27: the pine mesh-quality correction
+    # (70.0 -> 30.0, task #137). PineBillboards.MeshQualityDistance is read only
+    # by rebuild/OnslaughtRebuild.Godot/Level100StaticWorldAsset.cs - it reaches
+    # no file under OnslaughtRebuild.Core or OnslaughtRebuild.Client, so it
+    # cannot move a simulation state hash. Core determinism is intact.
     Assert-SmokeValue 'stateHash' '84d6fcaef69eac44faae485a2f90e76867dee2563c1dd5d4c570aade31df8ea1' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode

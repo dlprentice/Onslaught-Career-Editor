@@ -48,7 +48,7 @@
     "accurate_phrasing": "The whole sequence RUNS as one thing. The acceptance test passes as a RETURNING PLAYER. On a COLD FIRST CAREER — the only thing the shipping client can start — it ends Lost/TutorialBroken. It does not yet feel like the original.",
     "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. Do not report a Won run as goal progress without saying whether the input was player-plausible — the goal now states explicitly that an autopilot reaching Won by means no player could reproduce has proved nothing.",
     "evidence": "task #140 and commit b9e1ae50 for the joined run; task #109 and commit a923d157 for beat 9. READ THOSE, do not take the phrasing above on trust.",
-    "defaults_rule_open_items": "The goal now forbids shipping a lab artefact as authored behaviour. Known instances: task #137 (pine LOD pinned to THIS machine's graphics setting, retail default is 30, we use 70). The capture rig's 4-byte force-windowed patch is a rig artefact and must not become the reconstruction's default presentation — retail shipped fullscreen."
+    "defaults_rule_open_items": "The goal forbids shipping a lab artefact as authored behaviour. FIRST SWEEP DONE 2026-07-27: local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md. Task #137 is CLOSED — the pine LOD is now retail's authored 30.0, established from the pristine specimen's own initialisers, and gated by a test. Eight further shipping defaults are NOT retail's; five are unexplained. Read the sweep, do not take this line on trust. The worst is the look-axis dead zone at OnslaughtRebuild.Client/InteractiveSession.cs:571 (task #141). The window mode and resolution items need the maintainer, not an agent. NOTE: the force-windowed patch is at file offset 0x12A644 (VA 0x0052A644), not 0x12A6C4 — measured by diffing the two safe-copy binaries."
   },
 
   "environment": {
@@ -85,7 +85,8 @@
   "highest_value_open": {
     "_caution": "Task numbers only, because a one-line summary of a task rots faster than the task does. Read the task. NOTE: #137 and above are NOT in TASK-LEDGER-2026-07-27.md.",
     "parity_felt": [114, 105, 100, 106, 130, 17],
-    "correctness": [137, 141, 136, 139, 138],
+    "correctness": [141, 136, 139, 138],
+    "_correctness_note": "#137 was closed 2026-07-27 (pine LOD 70.0 -> retail's authored 30.0). #141 is now characterised: its cause is the uncommented half-pixel dead zone at rebuild/OnslaughtRebuild.Client/InteractiveSession.cs:571, which makes look permille +/-1..14 unreachable. See local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md.",
     "settings": [132],
     "blocked_on_a_human": [63, 61, 33, 121]
   },
