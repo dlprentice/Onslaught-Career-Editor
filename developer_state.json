@@ -44,9 +44,11 @@
 
   "goal_status": {
     "met": false,
-    "accurate_phrasing": "The whole sequence RUNS as one thing. It reaches Won as a RETURNING PLAYER. On a COLD FIRST CAREER — the only thing the shipping client can start — it ends Lost/TutorialBroken. It does not yet feel like the original.",
-    "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier.",
-    "evidence": "task #140 and commit b9e1ae50 for the joined run; task #109 and commit a923d157 for beat 9. READ THOSE, do not take the phrasing above on trust."
+    "_goal_revised": "2026-07-27. GOAL.md is authoritative and now carries a Revision history section. Three clauses were added (Godot named, method rule, defaults rule) and one was DEMOTED: the agent-driven Won run is now stated as the ACCEPTANCE TEST for a property, not as the property itself.",
+    "accurate_phrasing": "The whole sequence RUNS as one thing. The acceptance test passes as a RETURNING PLAYER. On a COLD FIRST CAREER — the only thing the shipping client can start — it ends Lost/TutorialBroken. It does not yet feel like the original.",
+    "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. Do not report a Won run as goal progress without saying whether the input was player-plausible — the goal now states explicitly that an autopilot reaching Won by means no player could reproduce has proved nothing.",
+    "evidence": "task #140 and commit b9e1ae50 for the joined run; task #109 and commit a923d157 for beat 9. READ THOSE, do not take the phrasing above on trust.",
+    "defaults_rule_open_items": "The goal now forbids shipping a lab artefact as authored behaviour. Known instances: task #137 (pine LOD pinned to THIS machine's graphics setting, retail default is 30, we use 70). The capture rig's 4-byte force-windowed patch is a rig artefact and must not become the reconstruction's default presentation — retail shipped fullscreen."
   },
 
   "environment": {

@@ -4,6 +4,10 @@
 > Recorded here 2026-07-27 because it previously existed only outside the
 > repository, which meant a fresh clone — and any session resuming after a
 > context compaction — could not read it.
+>
+> **Revised 2026-07-27** after a day of measurement. Three clauses were added
+> and one was demoted; see [Revision history](#revision-history) at the bottom
+> for what changed and what each change is a reaction to.
 
 This is **the maintainer's statement of what is wanted**. It is not a finding and
 it is not superseded by measurement. Everything else in this repository is in
@@ -13,11 +17,21 @@ service of it.
 
 ## The objective
 
-Make Battle Engine Aquila's released experience run again, faithfully, from
-startup through Level 100 completed — splash, intro FMV, click-to-start, main
-menu, level select, loading, and the full Level 100 tutorial driven to outcome
-**Won** by an agent using only player input and posting no mission event — such
-that **it feels like the original game, not a resemblance of it**.
+Rebuild Battle Engine Aquila **in Godot** so its released experience runs again,
+faithfully, from startup through Level 100 completed — splash, intro FMV,
+click-to-start, main menu, level select, loading, and the full Level 100 tutorial
+— such that **it feels like the original game, not a resemblance of it**.
+
+### The property, and the test that stands in for it
+
+The **property wanted** is that a human starting a **cold first career** — the
+only career the shipping client can start — gets the released experience.
+
+The **acceptance test** is that an agent drives Level 100 to outcome **Won**
+using only player input and posting no mission event.
+
+That test is a **proxy, not the goal**. An autopilot that reaches `Won` by means
+no player could reproduce has proved nothing.
 
 ## The evidence partition
 
@@ -50,6 +64,21 @@ model's opinion.**
 Prefer a test that asserts a recovered law over a pixel comparison, which can
 only detect that something is wrong, not what.
 
+## The method rule
+
+**Build the instrument before doing by hand what it could do wholesale.** Prefer
+a measurement that answers many questions at once — a draw-call log, a
+time-travel trace, a table read straight from the shipped data — over fitting one
+value at a time.
+
+Fitting produces confident wrong answers that cost more to withdraw than to make.
+
+## The defaults rule
+
+**The reconstruction's defaults are retail's defaults.** A value traceable to
+this machine's settings, or to a convenience patch in the capture rig, is a lab
+artefact and must never ship as authored behaviour.
+
 ## Supporting aims
 
 - A Ghidra reconstruction in which every function that can carry a developer name
@@ -75,10 +104,39 @@ must not be restated from memory — see
 Two things about that status are worth stating here because they have been
 mis-said before:
 
-1. "Driven to **Won** by player input" is the wording. Measured 2026-07-27: the
-   full sequence runs as one thing and reaches `Won` **as a returning player**,
-   but the shipping client can only start a **cold first career**, and on that it
-   ends `Lost`. Do not report the first without the second.
+1. "Driven to **Won**" is the acceptance test, and it currently passes only **as
+   a returning player**. On the cold first career — the only one the shipping
+   client can start — it ends `Lost`. Do not report the first without the second.
 2. "**Feels like** the original" is a higher bar than any percentage. A frame can
    score well and still feel wrong — a silent menu, an unskippable pan, a dead
    world. Pixel scores are necessary and are not the goal.
+
+---
+
+## Revision history
+
+### 2026-07-27 — the Godot naming, the proxy demotion, and two method rules
+
+The objective previously read "make ... run again" without naming an engine, and
+stated the agent-driven `Won` run as though it were the goal itself. Three
+changes, each a reaction to something that actually happened:
+
+- **Godot is now named.** The deliverable surface was implicit and the goal read
+  engine-agnostic.
+- **The `Won` run was demoted from goal to acceptance test**, with the underlying
+  property stated separately. As written before, an autopilot that reached `Won`
+  counted as fidelity progress, which let effort drift toward the harness instead
+  of the game.
+- **The method rule was added.** The D3D9 draw-call proxy was built late in a
+  day and used once; time-travel tracing sat installed and unused across roughly
+  33 game launches. Before the proxy existed, every HUD coordinate was recovered
+  by fitting pixels, which produced at least one conclusion — a claimed "1.49
+  energy surplus" — that had to be withdrawn because it was a fit to an artefact
+  rather than a measurement.
+- **The defaults rule was added.** Two lab artefacts had already reached, or come
+  close to reaching, authored behaviour: a pine LOD distance pinned to this
+  machine's graphics setting rather than retail's default, and the capture rig's
+  four-byte force-windowed patch.
+
+Nothing was removed. The evidence partition, the evidence rule, the supporting
+aims and the standing constraints are unchanged.
