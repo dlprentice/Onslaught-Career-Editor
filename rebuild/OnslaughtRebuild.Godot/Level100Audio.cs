@@ -83,11 +83,40 @@ public sealed partial class Level100Audio : Node3D
     //                      mov dword [0x00662AB0], 0.9f   <- music
     //
     // A fresh career therefore reads 8/10 and 9/10 on the Options bars, not
-    // 10/10. Anything that later loads a career overwrites both through
-    // Level100AudioCatalog.ToRetailOptionMix at :563 and :569; these are the
-    // cold-start values only.
-    private float _soundOptionMix = 0.8f;
-    private float _musicOptionMix = 0.9f;
+    // 10/10.
+    //
+    // UNIT, and it is not the obvious one. These fields hold the POST-CURVE
+    // mix, which is what :563 and :569 assign via ToRetailOptionMix. 0.8f and
+    // 0.9f are the retail OPTION VALUES and must be pushed through the same
+    // curve; writing them here raw was a defect on 2026-07-27, caught in
+    // review, and it left the game measurably quiet:
+    //
+    //   ToRetailOptionMix(0.8) = 1 - tan(0.276)/tan(1.38) = 0.94530
+    //       20*log10(0.94530/0.8) = 1.45 dB too quiet
+    //   ToRetailOptionMix(0.9) = 1 - tan(0.138)/tan(1.38) = 0.97317
+    //       20*log10(0.97317/0.9) = 0.68 dB too quiet
+    //
+    // Calling the curve rather than pasting 0.94530f/0.97317f is deliberate:
+    // the option value is the sourced quantity, the mix is derived, and a
+    // pasted derived constant silently goes stale if the curve is ever
+    // corrected. Level100AudioCatalogTests pins both the curve and these two
+    // defaults, because nothing caught this the first time.
+    private float _soundOptionMix =
+        Level100AudioCatalog.ToRetailOptionMix(RetailSoundOptionValue);
+    private float _musicOptionMix =
+        Level100AudioCatalog.ToRetailOptionMix(RetailMusicOptionValue);
+
+    /// <summary>
+    /// Retail's authored cold-start sound option value, <c>CCareer::CCareer</c>
+    /// (<c>references/Onslaught/Career.cpp:173</c>, <c>mSoundVolume=0.8f</c>).
+    /// </summary>
+    internal const float RetailSoundOptionValue = 0.8f;
+
+    /// <summary>
+    /// Retail's authored cold-start music option value, <c>CCareer::CCareer</c>
+    /// (<c>references/Onslaught/Career.cpp:174</c>, <c>mMusicVolume=0.9f</c>).
+    /// </summary>
+    internal const float RetailMusicOptionValue = 0.9f;
     private float _gameplayMix = 1f;
     private bool _gameplayPaused;
 

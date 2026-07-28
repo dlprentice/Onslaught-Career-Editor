@@ -267,6 +267,77 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.ToRetailOptionMix(1.01f));
     }
 
+    // Regression fence for a unit error that shipped on 2026-07-27 and was
+    // caught in review rather than by a test.
+    //
+    // Retail's authored cold-start values are OPTION VALUES -
+    // CCareer::CCareer (references/Onslaught/Career.cpp:173-174,
+    // mSoundVolume=0.8f / mMusicVolume=0.9f), corroborated by the pristine
+    // specimen's own initialisers in CCareer::StaticInitDefaults 0x0041B6A0
+    // (mov [0x00662AAC], 0.8f at 0x0041B70D; mov [0x00662AB0], 0.9f at
+    // 0x0041B717).
+    //
+    // Level100Audio's _soundOptionMix/_musicOptionMix fields hold the
+    // POST-CURVE mix. Assigning 0.8f/0.9f into them directly is therefore a
+    // unit error, and a quiet one - it under-drives the game by 1.45 dB and
+    // 0.68 dB, which no existing assertion noticed because the endpoint test
+    // above only pins ToRetailOptionMix(0) and (1).
+    //
+    // This test fails on the raw-literal form and on any drift in the curve.
+    [Fact]
+    public void ColdStartOptionMixes_PushRetailOptionValuesThroughTheCurve()
+    {
+        const float retailSoundOption = 0.8f;
+        const float retailMusicOption = 0.9f;
+
+        string audio = ReadGodotSource("Level100Audio.cs");
+
+        // The option values must still be the sourced retail quantities.
+        Assert.Contains(
+            $"RetailSoundOptionValue = {retailSoundOption:0.0}f",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            $"RetailMusicOptionValue = {retailMusicOption:0.0}f",
+            audio,
+            StringComparison.Ordinal);
+
+        // ...and they must reach the fields THROUGH the curve, not raw.
+        Assert.Contains(
+            "_soundOptionMix =\r\n        Level100AudioCatalog.ToRetailOptionMix(RetailSoundOptionValue)"
+                .Replace("\r\n", "\n", StringComparison.Ordinal),
+            audio.Replace("\r\n", "\n", StringComparison.Ordinal),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_musicOptionMix =\r\n        Level100AudioCatalog.ToRetailOptionMix(RetailMusicOptionValue)"
+                .Replace("\r\n", "\n", StringComparison.Ordinal),
+            audio.Replace("\r\n", "\n", StringComparison.Ordinal),
+            StringComparison.Ordinal);
+
+        // The exact defect that shipped: the option value written straight in.
+        Assert.DoesNotContain(
+            "_soundOptionMix = 0.8f", audio, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "_musicOptionMix = 0.9f", audio, StringComparison.Ordinal);
+
+        // And the curve must actually attenuate less than the raw value would,
+        // by the measured amount. This is the half that cannot be satisfied by
+        // renaming things.
+        float soundMix = Level100AudioCatalog.ToRetailOptionMix(retailSoundOption);
+        float musicMix = Level100AudioCatalog.ToRetailOptionMix(retailMusicOption);
+
+        Assert.Equal(0.9453f, soundMix, 4);
+        Assert.Equal(0.9732f, musicMix, 4);
+
+        double soundDecibelsQuieterIfRaw =
+            20d * Math.Log10(soundMix / retailSoundOption);
+        double musicDecibelsQuieterIfRaw =
+            20d * Math.Log10(musicMix / retailMusicOption);
+
+        Assert.Equal(1.45d, soundDecibelsQuieterIfRaw, 2);
+        Assert.Equal(0.68d, musicDecibelsQuieterIfRaw, 2);
+    }
+
     // Every Level 100 mix level is reproduced from two released facts rather
     // than chosen: the integer volume/pitch fields of the matching
     // data/sounds/sounds.sfx record (version 103, 170 records), and
