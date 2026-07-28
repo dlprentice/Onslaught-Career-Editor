@@ -53,7 +53,26 @@ public sealed partial class FirstFlightHud : CanvasLayer
     // framebuffer slope alone would imply, because 66 is the decoded byte and 71
     // is a fit; the two differ by less than the observed per-frame spread.
     internal const float MessageNoiseAlpha = 66f / 255f;
+
+    // ...and WITHOUT one. The device log has two regimes, not one. Over the
+    // twelve logged in-level frames of 2026-07-27, the message-noise quad's
+    // diffuse alpha is 0x3c..0x4a whenever the six portrait draws precede it and
+    // 0x6c..0x74 whenever they do not - the "promote gap" frames this client
+    // already models as socket = PortraitAndNoise with no speaker. 0x70 = 112 is
+    // the centre of the measured band (effective alpha 0.424-0.455). The single
+    // 66/255 constant above is inside the first band and 40 % below the second,
+    // so the three pinned gap frames (t011756, t019074, t031058) were drawn too
+    // faint. local-lab/agent-notes-2026-07-27/inlevel-hud-coordinates.md section 6.
+    internal const float MessageNoiseAlphaWithoutPortrait = 112f / 255f;
     internal const int MessageNoisePhaseCount = 16;
+
+    /// <summary>
+    /// The additive diffuse both weapon-outline arc shells carry, #AE8E6E. Read
+    /// off the device as the MODULATE2X quad diffuse 0xFF574737 on in-level draws
+    /// 1163 (left) and 1167 (right), byte-identical in three independent
+    /// captures; see <see cref="RetailHudGlowLayer"/>.DrawInstrumentOutlines.
+    /// </summary>
+    internal const uint RetailArcShellDiffuse = 0xffae8e6eu;
 
     private HudAssets _assets = null!;
     private Level100HudAssetCatalog _catalog = null!;
@@ -314,16 +333,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 32,
                 CuratedAyaTextureLoader.Compression.Dxt1),
             Dial = LoadHudBytes("dial.raw", 8_192),
-            Font13Ps = LoadHudTexture(
+            Font13Ps = ApplyReleasedAlphaTest(LoadHudTexture(
                 "font-13ps",
                 256,
                 256,
-                CuratedAyaTextureLoader.Compression.Rgba8),
-            Font22 = LoadHudTexture(
+                CuratedAyaTextureLoader.Compression.Rgba8)),
+            Font22 = ApplyReleasedAlphaTest(LoadHudTexture(
                 "font-22",
                 512,
                 512,
-                CuratedAyaTextureLoader.Compression.Rgba8),
+                CuratedAyaTextureLoader.Compression.Rgba8)),
             GunsDarken = LoadHudTexture("guns-darken", 128, 128),
             GunsFront = LoadHudTexture(
                 "guns-front",
@@ -443,6 +462,54 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return phases;
     }
 
+    /// <summary>
+    /// Retail's <c>D3DRS_ALPHATESTENABLE = TRUE</c>,
+    /// <c>ALPHAFUNC = GREATEREQUAL</c>, <c>ALPHAREF = 0x8</c>, applied to the
+    /// font atlases.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Measured 2026-07-27: <b>every</b> one of the 74 in-level HUD draws runs
+    /// that alpha test, and this renderer runs none. It is not bookkeeping -
+    /// <c>font-13ps</c> alone carries 603 texels with alpha 1..7, the glyph
+    /// anti-aliasing fringe, which retail discards and this client composited.
+    /// </para>
+    /// <para>
+    /// The test is on the value AFTER the alpha stage, i.e.
+    /// <c>texelAlpha * diffuseAlpha</c>, so in general it cannot be baked into a
+    /// texture: a page drawn at diffuse alpha 0.3412 has an effective texel
+    /// cutoff of 8/(255*0.3412) = 92, not 8. It CAN be baked here, exactly,
+    /// because both text draws carry a diffuse alpha of 0xFF (shadow
+    /// 0xFF000000, glyph 0xFFFFFFFF) and the glyph blit is 1:1 under
+    /// TextureFilterEnum.Nearest, so no interpolated alpha is ever produced.
+    /// The remaining HUD pages are NOT alpha-tested by this client; doing that
+    /// faithfully needs the test on the modulated alpha, i.e. a discard in a
+    /// canvas shader, and it is recorded as unimplemented rather than
+    /// approximated.
+    /// </para>
+    /// </remarks>
+    private static Texture2D ApplyReleasedAlphaTest(Texture2D atlas)
+    {
+        const float alphaRef = 8f / 255f;
+        Image image = atlas.GetImage();
+        MakeCpuReadable(image);
+        int width = image.GetWidth();
+        int height = image.GetHeight();
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Color texel = image.GetPixel(x, y);
+                if (texel.A > 0f && texel.A < alphaRef)
+                {
+                    image.SetPixel(x, y, new Color(texel.R, texel.G, texel.B, 0f));
+                }
+            }
+        }
+
+        return ImageTexture.CreateFromImage(image);
+    }
+
     private static Texture2D[] LoadPortraitSet(string speaker) =>
     [
         LoadHudTexture($"{speaker}-portrait-oo", 128, 128),
@@ -519,12 +586,27 @@ public sealed partial class FirstFlightHud : CanvasLayer
         return source;
     }
 
-    // Measured off the 27 retail hud-timeline-run1 frames; see DrawCrosshair.
-    // 208.5/255, 209.0/255, 231.0/255 at alpha 1 (background-independent).
-    private static Color RetailCrosshairInner => new(0.818f, 0.820f, 0.906f, 1f);
+    // THE CROSSHAIR PAGES ARE PURE WHITE. Read off the device 2026-07-27
+    // (in-level draws 1156-1158, identical in three independent captures):
+    // retail issues exactly THREE crosshair quads, all SRCALPHA/INVSRCALPHA,
+    // all with an effective RGB of 255/255/255 and only the alpha differing:
+    //
+    //   1156  64x64  at (288.0098, 208.0001)  MODULATE   0xAFFFFFFF -> a 0.6863
+    //   1157  128x128 at (256.0098, 176.0001) MODULATE2X 0x577F7F7F -> a 0.3412
+    //   1158  64x64  at (288.0098, 208.0001)  MODULATE2X 0x577F7F7F -> a 0.3412
+    //
+    // The two colours this file used to carry - (0.818, 0.820, 0.906) at alpha 1
+    // and (0.883, 0.891, 0.889) at alpha 0.53 - were regressed from the retail
+    // framebuffer, and the regression could not separate "a white page at alpha
+    // a" from "a slightly coloured page at alpha b". It picked the wrong one:
+    // the inner ring is not blue-biased and the outer ring is not at 0.53.
+    // Photometric cross-check on retail t029072 (background taken from the
+    // adjacent radii): the r<=2 centre reads 156 where white at 0.3412 over a
+    // 104 background predicts 153; the r 26..28 ring reads 206-215 where white
+    // at 0.6863 over a ~150 background predicts 222 at full coverage.
+    private static Color RetailCrosshairBright => new(1f, 1f, 1f, 0.6863f);
 
-    // 225.2/255, 227.1/255, 226.8/255 at the regressed alpha 0.53.
-    private static Color RetailCrosshairOuter => new(0.883f, 0.891f, 0.889f, 0.53f);
+    private static Color RetailCrosshairFaint => new(1f, 1f, 1f, 0.3412f);
 
     // COMPASS GAUGE ARCS. The reconstruction drew these ADDITIVELY; that is
     // refuted by measurement, and retail's actual blend is now byte-backed.
@@ -967,7 +1049,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
             BeginDesignSpace();
             DrawCompassBaseRing(snapshot, hud);
             DrawLowerLeftInstrument(snapshot, hud);
-            DrawLowerRightArcShellFill();
+            DrawLowerRightArcShellFill(snapshot, hud);
             DrawWeaponSelection(hud);
             DrawBattleLine();
             if (MessageBoxIsDeployed(snapshot))
@@ -1131,17 +1213,88 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// not on the additive layer. See
         /// <see cref="LowerRightArcShellRect"/> for the placement and the mirror.
         /// </summary>
-        private void DrawLowerRightArcShellFill() =>
+        private void DrawLowerRightArcShellFill(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud)
+        {
             DrawTextureRectRegion(
                 assets.WeaponFill,
                 LowerRightArcShellRect(),
                 MirroredWeaponPageSource(),
                 RetailColor(0x3f000000));
+            // Retail's issue order is backing (1165), bar (1166), shell (1167).
+            DrawLowerRightWeaponResource(snapshot, hud);
+        }
 
+        /// <summary>
+        /// The weapon resource bar, on BOTH panels.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Read off the device 2026-07-27 (in-level draws 1162 and 1166, three
+        /// independent captures). Retail's bar is <b>horizontal and
+        /// edge-anchored, not vertical</b>: the left one is anchored at x = 9
+        /// with u = 0 at the anchor and spans the panel's full height
+        /// y 339..467; the right one is anchored at x = 627 and mirrors it. Both
+        /// were at width 0 (0 %) in every logged frame, which is why no captured
+        /// retail pixel could ever have shown the axis - the geometry is the only
+        /// evidence there is, and it is unambiguous.
+        /// </para>
+        /// <para>
+        /// Both quads carry the pre-halved MODULATE2X diffuse 0x..3F7F1F, i.e.
+        /// the effective colour <b>#7EFE3E</b>, with alpha <b>0x7F</b> on the
+        /// left and <b>0xCC</b> on the right. This client previously drew a
+        /// vertical, bottom-anchored bar at a fitted (0.28, 0.92, 0.38, 0.64) and
+        /// drew no right-hand bar at all.
+        /// </para>
+        /// <para>
+        /// NOT REACHABLE TODAY, and that is a Core gap rather than a HUD one:
+        /// <c>Level100HudPresentationState.Project</c> reports
+        /// <c>SelectedWeapon: null</c>, so neither bar is drawn. The overheat
+        /// flash tint is retained unmeasured - retail's overheat state never
+        /// occurs in the captured timeline.
+        /// </para>
+        /// </remarks>
         private void DrawWeaponResource(
             WorldSnapshot snapshot,
             Level100HudSnapshot hud,
             Rect2 rect)
+        {
+            if (ResourceFraction(hud) is not float fraction)
+            {
+                return;
+            }
+
+            float width = rect.Size.X * fraction;
+            DrawTextureRectRegion(
+                assets.WeaponFill,
+                new Rect2(rect.Position.X, rect.Position.Y, width, rect.Size.Y),
+                new Rect2(0f, 0f, 128f * fraction, 128f),
+                ResourceTint(snapshot, hud, RetailColor(0x7f7efe3eu)));
+        }
+
+        /// <summary>The mirrored right-hand bar, retail draw 1166.</summary>
+        private void DrawLowerRightWeaponResource(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud)
+        {
+            if (ResourceFraction(hud) is not float fraction)
+            {
+                return;
+            }
+
+            Rect2 rect = LowerRightArcShellRect();
+            float width = rect.Size.X * fraction;
+            // u = 0 sits at the anchor, x = 627, and grows leftwards; a negative
+            // source width is how a Godot canvas item asks for that flip.
+            DrawTextureRectRegion(
+                assets.WeaponFill,
+                new Rect2(rect.End.X - width, rect.Position.Y, width, rect.Size.Y),
+                new Rect2(128f * fraction, 0f, -128f * fraction, 128f),
+                ResourceTint(snapshot, hud, RetailColor(0xcc7efe3eu)));
+        }
+
+        private static float? ResourceFraction(Level100HudSnapshot hud)
         {
             Level100HudWeaponSnapshot weapon = hud.Weapon;
             int? resource = weapon.SelectedWeapon switch
@@ -1151,24 +1304,18 @@ public sealed partial class FirstFlightHud : CanvasLayer
                     : null,
                 _ => null,
             };
-            if (resource is not int resourcePermille)
-            {
-                return;
-            }
-
-            float fraction = Math.Clamp(resourcePermille / 1_000f, 0f, 1f);
-            float height = rect.Size.Y * fraction;
-            var destination = new Rect2(
-                rect.Position.X,
-                rect.End.Y - height,
-                rect.Size.X,
-                height);
-            var source = new Rect2(0f, 128f - (128f * fraction), 128f, 128f * fraction);
-            Color tint = weapon.PulseCannonOverheated == true && (snapshot.Tick / 3) % 2 == 0
-                ? new Color(1f, 0.15f, 0.05f, 0.82f)
-                : new Color(0.28f, 0.92f, 0.38f, 0.64f);
-            DrawTextureRectRegion(assets.WeaponFill, destination, source, tint);
+            return resource is int resourcePermille
+                ? Math.Clamp(resourcePermille / 1_000f, 0f, 1f)
+                : null;
         }
+
+        private static Color ResourceTint(
+            WorldSnapshot snapshot,
+            Level100HudSnapshot hud,
+            Color measured) =>
+            hud.Weapon.PulseCannonOverheated == true && (snapshot.Tick / 3) % 2 == 0
+                ? new Color(1f, 0.15f, 0.05f, measured.A)
+                : measured;
 
         private void DrawWeaponIcon(Level100HudWeaponSnapshot weapon, Rect2 panel)
         {
@@ -1249,6 +1396,23 @@ public sealed partial class FirstFlightHud : CanvasLayer
         //                        the portrait on EVERY frame of a message
         //       BattleLineOutline diffuse 0xff6f8faf, SRCBLEND=ONE DESTBLEND=ONE
         //
+        // (c) THE ISSUED RECTANGLES, from the d3d9 draw log of 2026-07-27, which
+        //     is the first evidence that gives them rather than implying them.
+        //     All three captures agree byte for byte:
+        //
+        //       CircleDarkener   (519, 368) 128x128            <- BattleLineInstrumentRect
+        //       CircleMask       (471, 320) 192x192, UV -0.25..1.25
+        //       portrait x6      (519, 368)  96x96             <- 0.75 about (567, 416)
+        //       message-noise    (503, 352) 128x128            <- BattleLinePortraitRect
+        //       BattleLineOutline(519, 368) 128x128
+        //
+        //     The mask's -0.25..1.25 over a 192 px quad is 1.5 UV units across
+        //     192 px, i.e. 128 px per unit: the page lands 1:1 on (503, 352)
+        //     .. (631, 480) with its border texels CLAMP-extended 32 px on every
+        //     side. So retail's depth-stamped disc is centred on (567.5, 416.5)
+        //     at r 46.5, which is exactly where this client's baked CircleMask
+        //     alpha puts it. The stamp is reproduced, not merely approximated.
+        //
         // The two reconcile exactly. Six stacked draws at alpha 64/255 pass
         // 1 - (1 - 64/255)^6 = 0.8234 of the page; the noise drawn over them at
         // alpha ~= 66/255 = 0.259 attenuates that to 0.8234 * 0.741 = 0.610,
@@ -1281,6 +1445,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 return;
             }
 
+            bool portraitDrawn = false;
             if (_speaker is Level100HudSpeaker speaker &&
                 _portraitPoseIndex is int pose)
             {
@@ -1294,11 +1459,22 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 if (speakerIndex >= 0)
                 {
                     // One draw at the closed-form composite of retail's six.
+                    //
+                    // THE 0.75 SCALE IS ALREADY APPLIED, in the texture rather
+                    // than in the rect, and that is easy to misread as missing.
+                    // ApplyReleasedPortraitMask resamples the 128x128 page to
+                    // 96x96 and insets it by 16, so drawing the result 1:1 into
+                    // this 128x128 rect at (503, 352) puts the portrait IMAGERY
+                    // at (519, 368) 96x96 - exactly the rect retail issues
+                    // (device draws 1221-1226, 2026-07-27). Moving the rect to
+                    // (519, 368, 96, 96) would apply the scale a SECOND time and
+                    // shrink the face to 72x72.
                     DrawTextureRect(
                         assets.Portraits[speakerIndex][pose],
                         BattleLinePortraitRect(),
                         false,
                         new Color(1f, 1f, 1f, PortraitCompositeAlpha));
+                    portraitDrawn = true;
                 }
             }
 
@@ -1308,12 +1484,22 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // the six portrait draws in 0x004b82b0 and outside their
             // this+0x24 gate, which is why the three pinned gap frames
             // (t011756, t019074, t031058) show noise and no face.
+            //
+            // Retail's diffuse alpha is NOT one constant: it is 0x3c..0x4a with
+            // a portrait under it and 0x6c..0x74 without. Both regimes are
+            // modelled; see MessageNoiseAlphaWithoutPortrait. Retail's rect for
+            // this draw is (503, 352) 128x128 - the portrait rect, not the
+            // instrument rect - and that is confirmed exactly.
             DrawTextureRect(
                 assets.MessageNoiseDiscPhases[
                     _messageNoisePhase % assets.MessageNoiseDiscPhases.Length],
                 BattleLinePortraitRect(),
                 false,
-                new Color(1f, 1f, 1f, MessageNoiseAlpha));
+                new Color(
+                    1f,
+                    1f,
+                    1f,
+                    portraitDrawn ? MessageNoiseAlpha : MessageNoiseAlphaWithoutPortrait));
         }
 
         /// <summary>
@@ -1439,48 +1625,52 @@ public sealed partial class FirstFlightHud : CanvasLayer
             Level100HudSnapshot hud)
         {
             // The retail frame's crosshair rings are centred on (320, 240) at
-            // 640x480, i.e. exactly the design-stage centre.
+            // 640x480, i.e. exactly the design-stage centre, and the device log
+            // confirms the rects to the hundredth of a pixel: the 64x64 pages at
+            // (288.0098, 208.0001) and the 128x128 page at (256.0098,
+            // 176.0001), against this code's (288, 208) and (256, 176).
             //
-            // The RADII were already right and are confirmed by the 27
-            // hud-timeline-run1 frames: retail's inner reticle occupies r 25..29
-            // (peak r 26..28) and its outer ring r 33..37, and so does this
-            // code. The MODULATE was not: both sprites carry RGB 255 at alpha
-            // 255, and drawing them unmodulated saturated both rings to
-            // (255, 255, 255) where retail measures (208.5, 209.0, 231.0) and
-            // (182.0, 180.5, 214.0).
+            // ORDER, and it is retail's, not ours: 64 -> 128 -> 64. This file
+            // used to draw 128 -> 64 -> 64, which puts the faint outer ring
+            // UNDER the bright reticle instead of over it.
             //
-            // Regressing observed against per-bearing background (3,240 samples,
-            // background taken at r 44..48) separates alpha from colour:
-            //   inner ring  slope -0.24/-0.18/-0.11 -> background-independent,
-            //               i.e. alpha 1; its measured core colour IS the paint.
-            //   outer ring  slope 0.47/0.47/0.33 -> alpha 0.53 toward a colour
-            //               of (225.2, 227.1, 226.8).
+            // COUNT: retail issues THREE crosshair quads in this frame and this
+            // path used to issue FOUR. The proxy cannot name which two 64x64
+            // pages it saw - it records size and format, not identity - so the
+            // assignment below is an inference from the photometry noted on
+            // RetailCrosshairBright, not a measurement: a 64x64 page at alpha
+            // 0.3412 accounts for retail's r<=2 centre dot exactly, and one at
+            // 0.6863 accounts for the r 26..28 reticle, which leaves no
+            // brightness budget for a fourth draw into the same band.
+            // crosshair-outline is therefore no longer drawn in the untargeted
+            // state; this file's own note that it "draws into the same r 25..29
+            // band as crosshair-primary" is why it is the one that goes.
+            //
+            // Confirmed against retail t029072 by capture, not left as an
+            // argument. Radial mean brightness about (320,240), before -> after
+            // -> retail: r0 216 -> 161 -> 156; r2 179 -> 135 -> 121; r13
+            // 161 -> 111 -> 116; r27 203 -> 212 -> 212; r35 200 -> 199 -> 200.
+            // The r 12..15 band was 25-45 DN hot and only the removed fourth
+            // draw explains it.
             Vector2 center = DesignCenter;
-            DrawTextureRect(
-                assets.CrosshairSecondary,
-                new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
-                false,
-                RetailCrosshairOuter);
             DrawTextureRect(
                 assets.CrosshairPrimary,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
                 false,
-                RetailCrosshairInner);
+                RetailCrosshairBright);
+            DrawTextureRect(
+                assets.CrosshairSecondary,
+                new Rect2(center - new Vector2(64f, 64f), new Vector2(128f, 128f)),
+                false,
+                RetailCrosshairFaint);
             DrawTextureRect(
                 assets.CrosshairDot,
                 new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                false);
+                false,
+                RetailCrosshairFaint);
 
             if (hud.Target is not Level100HudTargetSnapshot target)
             {
-                // crosshair-outline draws into the same r 25..29 band as
-                // crosshair-primary, so it takes the same measured paint;
-                // leaving it white re-saturated the band on its own.
-                DrawTextureRect(
-                    assets.CrosshairOutline,
-                    new Rect2(center - new Vector2(32f, 32f), new Vector2(64f, 64f)),
-                    false,
-                    RetailCrosshairInner);
                 return;
             }
 
@@ -1566,9 +1756,16 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// <b>+0.481 unmirrored</b> against <b>+0.076 mirrored</b>. Ghidra's reading
     /// of the shipped call's trailing <c>(0.0, 1.0)</c> argument pair - which the
     /// split-screen branch swaps to <c>(1.0, 0.0)</c>, exactly the shape of a u
-    /// range - would say this draw is UNmirrored. The pixels say otherwise by a
-    /// factor of seven, so either that argument mapping is wrong or the
-    /// lower-left panel is the mirrored one. Recorded as unresolved.
+    /// range - would say this draw is UNmirrored.
+    /// </para>
+    /// <para>
+    /// RESOLVED 2026-07-27 in favour of the pixels, from the issued vertices
+    /// rather than from either inference: the device log gives
+    /// <b>u = 1 at x = 499 and u = 0 at x = 627</b> on this draw AND on the
+    /// WeaponFill backing under it, in all three independent captures. The draw
+    /// is MIRRORED and the Ghidra argument mapping is the thing that was wrong.
+    /// The rect itself is confirmed byte-for-byte: retail issues
+    /// (499, 339) 128x128.
     /// </para>
     /// <para>
     /// The dynamic resource/heat fill and the weapon icon are deliberately NOT
@@ -1590,6 +1787,27 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// </summary>
     private static Rect2 MirroredWeaponPageSource() => new(0f, 0f, -128f, 128f);
 
+    /// <summary>
+    /// The 128x128 page rect at (503, 352) shared by the message-noise draw and
+    /// by the pre-scaled, pre-masked portrait page.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Retail issues message-noise at exactly this rect (device draw 1227,
+    /// 2026-07-27) and the portrait at <b>(519, 368) 96x96</b> (draws
+    /// 1221-1226). Those are not two different placements of the same thing:
+    /// <see cref="ApplyReleasedPortraitMask(Texture2D, Image)"/> has always
+    /// resampled the 128x128 portrait page to 96x96 and inset it by 16, so the
+    /// portrait IMAGERY this rect puts on screen already occupies
+    /// (519, 368) 96x96. Retail's 0.75 is applied in the quad; ours is applied
+    /// in the texture; the screen result is the same rectangle.
+    /// </para>
+    /// <para>
+    /// Do not "fix" this to (519, 368, 96, 96). That would scale the already
+    /// scaled page again - a 72x72 face - and would shrink the baked disc clip
+    /// from retail's r 46.5 to r 34.9.
+    /// </para>
+    /// </remarks>
     private static Rect2 BattleLinePortraitRect() =>
         new(DesignWidth - 137f, DesignHeight - 128f, 128f, 128f);
 
@@ -1625,10 +1843,17 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// luminance into alpha. There is no luminance-keying and no colour-keying in
     /// the released engine.
     ///
-    /// And retail only ever uses three blends: across 6,429 exported
-    /// decompilations, SRCBLEND/DESTBLEND take SRCALPHA/INVSRCALPHA (58/54
-    /// sites), ONE/ONE (20/24) and ZERO/ONE (8/2) - no SRCCOLOR, INVSRCCOLOR,
-    /// DESTALPHA or DESTCOLOR appears anywhere. A DXT1 page drawn
+    /// And retail selects FOUR blends, not the three this comment used to
+    /// claim. Across 6,429 exported decompilations, SRCBLEND/DESTBLEND take
+    /// SRCALPHA/INVSRCALPHA (58/54 sites), ONE/ONE (20/24) and ZERO/ONE (8/2) -
+    /// no SRCCOLOR, INVSRCCOLOR, DESTALPHA or DESTCOLOR appears anywhere. The
+    /// fourth was measured at the device on 2026-07-27 rather than counted in
+    /// the decompilations: the two threat-compass rings (in-level draws 1153 and
+    /// 1154) are issued <b>ONE/INVSRCALPHA</b>, a PREMULTIPLIED-alpha blend,
+    /// which CDXCompass__RenderWorldSpaceOverlay already sets at 0x0053cd30 (see
+    /// the block on GaugeHealthBlendAlpha). It is a fourth pair, not one of the
+    /// three, and any statement of the form "retail only ever uses two blends"
+    /// or "...three blends" is wrong. A DXT1 page drawn
     /// SRCALPHA/INVSRCALPHA is therefore an opaque rectangle, which retail
     /// plainly does not show; the twelve DXT1 pages are its ONE/ONE passes, and
     /// they stay additive. CDXCompass__Render and CHud__RenderBattleline both
@@ -1802,32 +2027,52 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 new Rect2(17f, DesignHeight - 112f, 128f, 128f),
                 false,
                 new Color(0.44f + radarHighlight, 0.56f + (radarHighlight * 0.35f), 0.69f, 1f));
+            // THE LEFT AND RIGHT ARC SHELLS CARRY THE SAME DIFFUSE. There is no
+            // asymmetry, and the one this file used to draw was an artefact of
+            // reading the two shells from two different kinds of evidence.
+            //
+            // Read off the device 2026-07-27 (in-level draws 1163 and 1167, three
+            // independent captures, byte-identical in all three): BOTH shells are
+            // issued ONE/ONE with s0.COLOROP = MODULATE2X and the quad diffuse
+            // 0xFF574737, so both reach the framebuffer as the additive colour
+            // 0x57*2 / 0x47*2 / 0x37*2 = #AE8E6E. This layer draws MODULATE with
+            // the doubled colour, which is the same arithmetic (see the
+            // MODULATE2X block on RetailHudGlowLayer).
+            //
+            // The right shell was previously 0xffaf8f6f, from the hard immediate
+            // `push 0xffaf8f6f` at 0x00486c7b, and the left was 0xff7f7f7f from
+            // the corresponding left-panel immediate. Retail HALVES those
+            // immediates into the MODULATE2X diffuse, and 0xAF >> 1 = 0x57 loses
+            // the low bit, so what is actually issued is #AE8E6E on both sides.
+            // The 1-LSB difference is why the right shell measured "correct"; the
+            // left one did not, and the "1.49 energy surplus" investigation that
+            // chased the asymmetry was chasing a phantom.
+            // local-lab/agent-notes-2026-07-27/inlevel-hud-coordinates.md section 5.
+            //
+            // Confirmed against retail t029072 on the shell's own 1,054 ink
+            // texels rather than on a box mean: the signed error went from
+            // (-3.3, +7.9, +20.5) at 0xff7f7f7f to (+13.8, +14.1, +13.8) at
+            // this colour - blue-tilted to achromatic within 0.4 DN. The flat
+            // +14 that remains is a brightness residual on this panel that
+            // predates the colour and is not the diffuse.
             DrawTextureRect(
                 assets.WeaponOutline,
                 new Rect2(9f, DesignHeight - 141f, 128f, 128f),
                 false,
                 weaponHighlight > 0f
                     ? new Color(0.50f, 1f, 0.25f, 1f)
-                    : RetailColor(0xff7f7f7f));
+                    : RetailColor(RetailArcShellDiffuse));
 
-            // The additive half of the lower-right arc shell. The same shipped
-            // function sets ONE/ONE (RenderState_Set(0x13, 2), (0x14, 2) at
-            // 0x00486c2b) and draws this+0x124 - WeaponOutline - with the packed
-            // colour 0xffaf8f6f, a hard immediate: push 0xffaf8f6f at
-            // 0x00486c7b. That is NOT the 0xff7f7f7f the left panel above uses,
-            // which is exactly why this was left open rather than mirrored.
-            // Independent corroboration from the framebuffer: regressing retail's
-            // 27-frame mean on this client's own capture as background over the
-            // right shell band recovers per-channel additive gains
-            // [128.5, 111.4, 85.8] DN against the byte value [175, 143, 111] -
-            // the same channel ratios to within 5 %, at a common gain of 0.76
-            // that the free-parameter fit cannot separate from texture filtering
-            // and background error. The bytes are used; the fit is not.
+            // The additive half of the lower-right arc shell, mirrored. The
+            // MIRROR is no longer an inference: the device log gives the issued
+            // UVs directly - u = 1 at x = 499 and u = 0 at x = 627 on BOTH the
+            // outline and the WeaponFill backing under it - which settles the
+            // "recorded as unresolved" note on LowerRightArcShellRect.
             DrawTextureRectRegion(
                 assets.WeaponOutline,
                 LowerRightArcShellRect(),
                 MirroredWeaponPageSource(),
-                RetailColor(0xffaf8f6f));
+                RetailColor(RetailArcShellDiffuse));
 
             Rect2 gunsRect = GunsRect();
             Level100HudWeaponSnapshot weapon = hud.Weapon;
@@ -1878,6 +2123,17 @@ public sealed partial class FirstFlightHud : CanvasLayer
             const float outerWidth =
                 CompassBaseRingOuterRadius - CompassBaseRingInnerRadius;
 
+            // 50 SEGMENTS IS CONFIRMED AT THE DEVICE, not inferred from
+            // CDXCompass__BuildRingGeometry: in-level draw 1154 is a 100-triangle,
+            // 102-vertex TRISTRIP - 50 quads - and draw 1153 is 80/82, i.e. 40.
+            // Their pages are 512x32 and 256x8 A4R4G4B4, which identifies the
+            // "dynamically written 16-bit ring pixels" PROVENANCE lists as
+            // unproven. What the log CANNOT give is where they land: both rings
+            // are the only HUD elements issued in 3-D (fvf=0x102), so their
+            // positions pass through SetTransform, which the proxy does not
+            // shadow, and their colour comes entirely from those dynamic
+            // textures, which it does not record. Tasks #96, #117 and #106's
+            // base-ring colour therefore remain open for a STRUCTURAL reason.
             DrawSegmentedRing(center, outerRadius, 50, outerWidth, 0f, 1f, baseColor);
 
             // Retail's base ring is the only full-circle band, and retail draws
@@ -1983,15 +2239,50 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         // bar-line is DXT1 - alpha 255 at every texel - so it stays additive
         // with the rest of the compass body sprites.
+        //
+        // Read off the device 2026-07-27 (in-level draw 1155, four bar-line
+        // quads, ONE/ONE + MODULATE2X, identical in three captures):
+        //
+        //   r = 110.000 exactly, about (320, 240)   <- CompassGaugeNeedleRadius
+        //   bearings 0, 59.063, 149.063, 225.000 degrees
+        //   diffuse 0xFF1F1F1F on the health needle -> additive #3E3E3E
+        //   diffuse 0xFF0F0F0F on the other three   -> additive #1E1E1E
+        //
+        // Two corrections follow. The ANCHOR is 149.063 deg, not 150: this
+        // client's health track ran 150 - health*90 and its energy track
+        // 225 + energy*135, which at the captured full health/full energy pose
+        // gives 60/150/360/225 against retail's 59.063/149.063/0/225. Shifting
+        // the health anchor by -0.937 deg reproduces all four bearings, and
+        // confirms that the 225 and 360 ends were already exact.
+        //
+        // And the health needle is TWICE as bright as the other three, which
+        // this file drew identically. #3E3E3E and #1E1E1E are the effective
+        // additive colours; the pre-halved MODULATE2X diffuses are 0x1F and 0x0F.
+        // local-lab/agent-notes-2026-07-27/inlevel-hud-coordinates.md section 5.
+        private const float CompassGaugeHealthAnchorDegrees = 149.063f;
+        private const float CompassGaugeEnergyAnchorDegrees = 225f;
+
         private void DrawGaugeNeedles(Vector2 center, float health, float energy)
         {
-            DrawGaugeNeedle(center, Mathf.DegToRad(150f - (health * 90f)));
-            DrawGaugeNeedle(center, Mathf.DegToRad(150f));
-            DrawGaugeNeedle(center, Mathf.DegToRad(225f + (energy * 135f)));
-            DrawGaugeNeedle(center, Mathf.DegToRad(225f));
+            DrawGaugeNeedle(
+                center,
+                Mathf.DegToRad(CompassGaugeHealthAnchorDegrees - (health * 90f)),
+                RetailColor(0xff3e3e3eu));
+            DrawGaugeNeedle(
+                center,
+                Mathf.DegToRad(CompassGaugeHealthAnchorDegrees),
+                RetailColor(0xff1e1e1eu));
+            DrawGaugeNeedle(
+                center,
+                Mathf.DegToRad(CompassGaugeEnergyAnchorDegrees + (energy * 135f)),
+                RetailColor(0xff1e1e1eu));
+            DrawGaugeNeedle(
+                center,
+                Mathf.DegToRad(CompassGaugeEnergyAnchorDegrees),
+                RetailColor(0xff1e1e1eu));
         }
 
-        private void DrawGaugeNeedle(Vector2 center, float angle)
+        private void DrawGaugeNeedle(Vector2 center, float angle, Color tint)
         {
             Vector2 position = center +
                 new Vector2(Mathf.Sin(angle), -Mathf.Cos(angle)) * CompassGaugeNeedleRadius;
@@ -2000,7 +2291,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
                 position,
                 new Vector2(16f, 64f),
                 angle,
-                RetailColor(0xff1f1f1f));
+                tint);
         }
 
         private void DrawDialNorthOverlay(
@@ -2179,7 +2470,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // and the drop shadow is offset (+1,+1) from the white glyph, so the
             // pen origin is (206, 413) with a 15px pitch. That block, cell rows
             // 412..458, is centred to the half pixel in the panel body this file
-            // already pins at y 405.5..464.5.
+            // already pins at y 405.5..464.5. The d3d9 log's issued vertex
+            // (203.5, 411.5) was tested against this and rejected; see
+            // Level100MessagePanel.TextPenLeft.
             //
             // The clip is the panel body itself. No captured retail message
             // reaches it - the widest 25-column line in the released text table

@@ -21,10 +21,12 @@ namespace OnslaughtRebuild.Client.Tests;
 /// Retail has nowhere else to get coverage from: every
 /// D3DXCreateTextureFromFileEx call site in the released binary passes
 /// ColorKey=0, and its luminance code is all L8/A8L8/A4L4/L16 surface-format
-/// packing that never writes luminance into alpha. And retail only ever selects
-/// three blends - SRCALPHA/INVSRCALPHA, ONE/ONE and ZERO/ONE. A page with no
-/// coverage drawn SRCALPHA/INVSRCALPHA is an opaque rectangle, which no retail
-/// frame shows, so these pages are its ONE/ONE passes.
+/// packing that never writes luminance into alpha. And retail selects four
+/// blends - SRCALPHA/INVSRCALPHA, ONE/ONE, ZERO/ONE and, on the two threat-
+/// compass rings only, the premultiplied ONE/INVSRCALPHA measured at the device
+/// on 2026-07-27. A page with no coverage drawn SRCALPHA/INVSRCALPHA is an
+/// opaque rectangle, which no retail frame shows, so these pages are its
+/// ONE/ONE passes.
 ///
 /// This test reads the page list out of FirstFlightHud.cs itself, so adding a
 /// DXT1 page or changing a page's declared compression re-checks the bytes.

@@ -646,6 +646,12 @@ public sealed class Level100HudPresentationTests
         // Measured off opening-pan-run1/level100-t016011ms.png: the three white
         // glyph cells start on rows 412, 427 and 442, and the shadow sits one
         // pixel down-right of the white glyph, so the pen tops are 413/428/443.
+        //
+        // HELD against the d3d9 draw log's (203.5, 411.5) on 2026-07-27, which
+        // is the vertex retail issues rather than the row it rasterises to.
+        // Capturing this client at 411.5 puts its glyph ink two rows above
+        // retail's; at 413 the rows coincide exactly. See
+        // Level100MessagePanel.TextPenLeft.
         Assert.Equal(413f, Level100MessagePanel.FirstLinePenTop);
         Assert.Equal(15f, Level100MessagePanel.LineHeightPixels);
         Assert.Equal(206f, Level100MessagePanel.TextPenLeft);
