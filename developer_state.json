@@ -103,6 +103,40 @@
     "blocked_on_a_human": [63, 61, 33, 121]
   },
 
+  "_2026_07_27_evening_consolidation": {
+    "_what_this_is": "The night's output gathered in one place so nothing is re-derived. POINTERS ONLY - each report is the authority for its own findings; this block is a route to them, not a summary that can drift. Two workflows and eleven agents produced these.",
+
+    "reports_written_tonight": {
+      "local-lab/SHIPPED-DATA-SWEEP-2026-07-27.md": "22 agents over all 5,515 retail files, ten format families, each hostile-reviewed. 87 gaps survived, 85 open (34 on the startup-through-Level-100 path), 2 killed with refutations. 910 lines.",
+      "local-lab/SOURCE-DIVERGENCE-AUDIT-2026-07-27.md": "12 agents pairing all 106 GPL files against our 99 C# files, adversarially verified. 35 divergences survived. Supersedes its own earlier edition in place. CAUTION: its C# line cites can run 30-60 lines low because the tree moved under it.",
+      "local-lab/TTD-FIRST-FINDINGS-2026-07-27.md": "Why all six traces are worthless, established with positive and negative controls. Plus 15 reusable command files under G:\\bea-ttd\\queries\\.",
+      "local-lab/D3D9-FULL-SWEEP-2026-07-27.md": "17 frontend page inventories and 3 in-level ticks, self-validated on nine frames against nine DIFFERENT promoted references.",
+      "local-lab/FRONTEND-DRAW-CORRECTIONS-2026-07-27.md": "All six draw corrections, plus six places the sweep above is wrong.",
+      "local-lab/OPTIONS-PAGE-IMPLEMENTATION-2026-07-27.md": "Task #132, provenance split into source-backed, capture-backed and guessed.",
+      "local-lab/OPTIONS-GUESSES-RESOLVED-2026-07-27.md": "All four guesses converted to read values; five further defects found.",
+      "local-lab/AUDIO-PARITY-LAWS-2026-07-27.md": "Three laws fixed with dB and Hz tables; the fourth refuted on bytes.",
+      "local-lab/AMBIENT-LIFE-INVENTORY-2026-07-27.md": "Task #114's full inventory. STILL STATIC-ONLY - the traces cannot corroborate it; see the TTD note.",
+      "local-lab/WAYPOINT-PATH-CORRECTION-2026-07-27.md": "Before/after geometry for all eight paths.",
+      "local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md": "First sweep under the defaults rule. CAUTION: its three .data file offsets are wrong; rebuild/PROVENANCE.md carries the correction.",
+      "local-lab/UNCOMMITTED-CORE-ADVERSARY-2026-07-27.md": "DO NOT COMMIT verdict on the Core diff. Its 'tree is red' half is STALE - it judged 20:32/20:47 snapshots, and the finished tree measured Core 149/149 clean at 21:34. Its NAMED DEFECTS STAND.",
+      "local-lab/TTD-PIPELINE-2026-07-27.md": "The harness, its validation, and the ranked target list for when traces work."
+    },
+
+    "next_actions_ranked": [
+      "1. LAND THE BLOCKED PILE. Frontend draw corrections + four Options pages + Options guess resolutions are done and green but coupled to uncommitted Core through SimActions.SkipPanning. Check whether Core remediation landed, then commit it all together and re-run every gate.",
+      "2. RE-PIN THE SMOKE GOLDEN once Core lands, from a run on that tree. It is deliberately stale and failing; read the comment in rebuild/tools/FirstFlightSmokeValidation.psm1 first.",
+      "3. RE-FIT THE OPTIONS PAGE CONSTANTS against retail. The DrawAtlasText shadow-anchoring fix is correct and exposed that those constants had absorbed the old error. Do NOT add a compensating offset.",
+      "4. TTD: short trace first, confirm guestExitCode is 0, only then anything long.",
+      "5. THE UNREAD ANIMATION FILE. level100-static-world-animation.json is built, hash-pinned and shipped, and nothing reads it. Six Level 100 objects are frozen for that reason alone. Cheapest high-severity item in tonight's output.",
+      "6. THE PARTICLE SYSTEM. 1,479 descriptors in data/ParticleSets/*.par with no parser. Root of five on-path holes including FirstFlightWorldView.cs's `case FacilityDestroyed: break;`.",
+      "7. THE SHIELD STAGE. Top of the source-divergence audit: retail routes every hit through shields at mShieldEfficiency 98.0 and couples mEnergy to mShields; we do Math.Max(0, hull - damage) with _shield a write-only mirror. On the cold-career path.",
+      "8. THE COLD CAREER'S LAST GAP. Every beat now clears; it drowns on the ferry home because NavigateToZone leaves jet mode within 20 m of the volume regardless of terrain. A naive water guard was TRIED and measured WORSE - read the note before retrying that shape.",
+      "9. THE 24,636-BYTE WORLD-CHUNK TRAILER. Three nested 256x256 bit planes on 115 of 115 chunks, strongly level-dependent. Sizes MEASURED, occupancy-grid reading INFERRED."
+    ],
+
+    "instrument_lessons_paid_for_tonight": "Three instruments reported success while measuring nothing: -Module @('BEA.exe') produced an empty 4 MiB chunk that a size check read as success; the TTD recorder reported exit 0 for three runs that died in a fatal handler; and score_frontend_capture.py returns UNSCORED on the Options page, which is not a pass. All three share one shape - a proxy for success standing in for the thing actually wanted. Ask whether a check is CAPABLE of failing before trusting that it passed."
+  },
+
   "traps_recorded_the_hard_way": {
     "_caution": "Pointers, not reasoning. Follow each one before acting on it.",
     "items": [
