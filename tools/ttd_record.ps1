@@ -50,6 +50,21 @@ param(
     # first appears (i.e. from the start of recording, not from process launch).
     [int]$Seconds = 20,
 
+    # Record until the GAME EXITS rather than for a fixed duration. This is the
+    # mode for a human playing a level: launch, play for as long as you like,
+    # quit the game, and the trace closes itself.
+    #
+    # -Seconds is ignored when this is set. The sampling loop already breaks when
+    # the target process disappears; this only stops the duration deadline from
+    # cutting the recording short first.
+    #
+    # SIZE. Measured cost is 26-32 MB/s, so budget roughly 1.8 GB per minute of
+    # play. A fifteen-minute run is about 27 GB. G: is the designated capture
+    # drive and had 923 GB free on 2026-07-27, so this is affordable - but the
+    # free-space floor below is checked DURING recording, not only at the start,
+    # because a long session is exactly where a disk fills up.
+    [switch]$UntilExit,
+
     # Trace destination. MUST be on G: - TTD traces are large and G: is the
     # designated capture drive on this machine.
     [string]$TraceRoot = 'G:\bea-ttd',
@@ -95,6 +110,23 @@ param(
     # Growth-rate sampling interval. The measured rate is reported and written to
     # the receipt; it is what makes the cost of a longer trace predictable.
     [int]$SampleIntervalSeconds = 2,
+
+    # ATTACH to a BEA that is ALREADY RUNNING instead of launching one.
+    #
+    # This is the mode for capturing a specific moment. TTD instruments every
+    # instruction, so a traced game is a slideshow - the maintainer played 13.5
+    # minutes that way on 2026-07-28 and it was unpleasant. With -Attach the game
+    # runs at FULL SPEED until the moment you care about, and only then does it
+    # slow down.
+    #
+    # Workflow: start the game normally from the copied target, play to the part
+    # you want, then run this with -Attach. Recording begins where you are.
+    #
+    # The CWD interlock does not apply here because the game is already running -
+    # but the SPECIMEN interlock does, and is enforced harder: this refuses to
+    # attach to any BEA whose image is not the copied target, so it can never
+    # instrument the Steam install by accident.
+    [switch]$Attach,
 
     # Run every interlock, print the exact TTD command line, launch nothing.
     [switch]$DryRun
@@ -189,8 +221,33 @@ $traceFile = Join-Path $outDir ("{0}.run" -f $Name)
 $ttdArgs = @('-accepteula', '-noUI', '-out', $traceFile, '-maxFile', "$MaxFileMB")
 if ($Ring) { $ttdArgs += '-ring' }
 foreach ($m in $Module) { $ttdArgs += @('-module', $m) }
-# -launch must be the last option before the program and its arguments.
-$ttdArgs += @('-launch', $exe) + $GameArguments
+
+$attachPid = $null
+if ($Attach) {
+    # Find the running game, and refuse anything that is not the copied target.
+    # This interlock is stricter than the launch path's, because the launch path
+    # chooses the image while this one inherits whatever is already running - and
+    # the maintainer's Steam install is a deliberately patched binary that must
+    # never be treated as a specimen.
+    $running = @(Get-Process -Name 'BEA' -ErrorAction SilentlyContinue)
+    if ($running.Count -eq 0) {
+        Fail "-Attach was given but no BEA process is running. Start the game from`n  $TargetRoot`nfirst, play to the moment you want, then run this again."
+    }
+    $ours = @($running | Where-Object { $_.Path -ieq $exe })
+    if ($ours.Count -eq 0) {
+        $paths = ($running | ForEach-Object { $_.Path }) -join "`n  "
+        Fail "A BEA is running but it is NOT the copied target. Refusing to attach.`nExpected:`n  $exe`nFound:`n  $paths"
+    }
+    if ($ours.Count -gt 1) {
+        Fail "More than one copy of the target is running ($($ours.Count)). Refusing to guess which to trace."
+    }
+    $attachPid = $ours[0].Id
+    Write-Host ("attaching to PID {0} ({1})" -f $attachPid, $exe)
+    $ttdArgs += @('-attach', "$attachPid")
+} else {
+    # -launch must be the last option before the program and its arguments.
+    $ttdArgs += @('-launch', $exe) + $GameArguments
+}
 
 $commandPreview = ('& "{0}" {1}' -f $ttd, (($ttdArgs | ForEach-Object {
     if ($_ -match '\s') { '"{0}"' -f $_ } else { $_ } }) -join ' '))
@@ -259,8 +316,10 @@ if (-not $target) {
 
 $samples = [System.Collections.Generic.List[object]]::new()
 $runFileSeenUtc = $null
-$deadline = (Get-Date).AddSeconds($Seconds + 300)
+$deadline = if ($UntilExit) { (Get-Date).AddHours(6) } else { (Get-Date).AddSeconds($Seconds + 300) }
 $recordDeadline = $null
+$traceDriveRoot = [IO.Path]::GetPathRoot([IO.Path]::GetFullPath($TraceRoot))
+$spaceAborted = $false
 
 while ((Get-Date) -lt $deadline) {
     $len = 0
@@ -272,7 +331,9 @@ while ((Get-Date) -lt $deadline) {
     }
     if ($len -gt 0 -and -not $runFileSeenUtc) {
         $runFileSeenUtc = (Get-Date).ToUniversalTime()
-        $recordDeadline = (Get-Date).AddSeconds($Seconds)
+        # -UntilExit deliberately leaves this null, so the only things that end
+        # the loop are the game exiting or the free-space floor below.
+        if (-not $UntilExit) { $recordDeadline = (Get-Date).AddSeconds($Seconds) }
     }
     if ($runFileSeenUtc) {
         $samples.Add([pscustomobject]@{
@@ -282,6 +343,19 @@ while ((Get-Date) -lt $deadline) {
         })
     }
     if ($recordDeadline -and (Get-Date) -ge $recordDeadline) { break }
+
+    # Free space is re-checked DURING recording, not only up front. At 26-32 MB/s
+    # a long play session is precisely where a drive fills, and a trace truncated
+    # by a full disk is worse than one stopped deliberately - TTD may not finalise
+    # it, and the failure would land on the maintainer mid-level.
+    try {
+        $freeGB = [math]::Round((Get-PSDrive -Name $traceDriveRoot.TrimEnd(':\') -ErrorAction Stop).Free / 1GB, 1)
+        if ($freeGB -lt 10) {
+            Write-Warning ("Stopping: only {0} GB free on {1}. The trace is finalised, not truncated." -f $freeGB, $traceDriveRoot)
+            $spaceAborted = $true
+            break
+        }
+    } catch { }
     $t = Get-Process -Id $target.Id -ErrorAction SilentlyContinue
     if (-not $t) { break }
     # If the recorder itself gave up before a .run ever appeared, stop immediately
@@ -343,12 +417,40 @@ if (Test-Path -LiteralPath $setupLog) {
     if ($hit) { $guestFatal = $hit.Trim() }
 }
 
+# CLASSIFY THE OUTCOME, rather than treating "no exit code" as failure.
+#
+# The first version of this check rejected any run it could not read an exit code
+# from. That is exactly backwards for a TIMED recording: the recorder stops
+# tracing while the game is still alive, so TTD never prints an exit line, and a
+# perfectly good trace was reported as a dead guest. It cost a real play session.
+#
+# The three outcomes are genuinely different and only one of them is bad:
+#   exited-error  guest exited non-zero            -> REJECT
+#   exited-clean  guest exited 0                   -> accept
+#   alive-at-stop no exit line, tracing completed,
+#                 and the game logged no fatal     -> accept, this is normal
+# "unknown" is kept for the case where none of those hold, so an ambiguous run is
+# still visible rather than being quietly folded into one of the good ones.
+$tracingCompleted = $false
+$outFile = Join-Path $outDir "$Name.out"
+if (Test-Path -LiteralPath $outFile) {
+    $outText = Get-Content -LiteralPath $outFile -Raw -ErrorAction SilentlyContinue
+    $tracingCompleted = $outText -match 'Tracing completed at:'
+}
+$guestOutcome =
+    if ($guestFatal)                            { 'exited-error' }
+    elseif ($guestExit -ne $null -and $guestExit -ne 0) { 'exited-error' }
+    elseif ($guestExit -eq 0)                   { 'exited-clean' }
+    elseif ($tracingCompleted -and $final -gt 0){ 'alive-at-stop' }
+    else                                        { 'unknown' }
+
 $receipt = [pscustomobject]@{
     schemaVersion        = 'ttd-record-receipt.v1'
+    guestOutcome         = $guestOutcome
     guestExitCode        = $guestExit
     guestExitSource      = $guestExitSource
     guestFatalError      = $guestFatal
-    guestRanCleanly      = ($guestExit -eq 0)
+    guestRanCleanly      = ($guestOutcome -in @('exited-clean','alive-at-stop'))
     name                 = $Name
     recordedAtUtc        = $startedUtc.ToString('o')
     recorder             = $ttd
@@ -380,7 +482,7 @@ $receipt
 # script does, so the receipt is still written and the trace is still kept - a
 # trace of a crash is exactly what you want when diagnosing the crash. What must
 # not happen is the caller reading exit 0 and believing the recording is usable.
-if ($guestExit -ne $null -and $guestExit -ne 0) {
+if ($guestOutcome -eq 'exited-error') {
     Write-Host ''
     Write-Warning ("THE GAME DIED. Guest exit code {0} (from {1})." -f $guestExit, $guestExitSource)
     if ($guestFatal) { Write-Warning ("Its own reason: {0}" -f $guestFatal) }
@@ -388,9 +490,12 @@ if ($guestExit -ne $null -and $guestExit -ne 0) {
     Write-Warning 'Most likely cause on this title: the game resolves data\ RELATIVE TO ITS CWD.'
     exit 3
 }
-if ($guestExit -eq $null) {
-    Write-Warning 'Could not read a guest exit code from the TTD log - treat this trace as UNVERIFIED.'
+if ($guestOutcome -eq 'unknown') {
+    Write-Warning 'Cannot tell whether the guest ran - no exit code, no completion marker. UNVERIFIED.'
     exit 4
+}
+if ($guestOutcome -eq 'alive-at-stop') {
+    Write-Host 'guest: still running when the timer stopped tracing (normal for a timed trace).'
 }
 # A recording far shorter than asked for is not automatically wrong - the target
 # may legitimately exit - but with a zero exit code it is worth flagging rather

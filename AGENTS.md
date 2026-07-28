@@ -99,6 +99,46 @@ reading files a subagent could have read for you.
 - Use ignored local overlays for large intermediate and lab artifacts. Promote
   only the smallest reviewed inputs that a live product or rebuild path consumes.
 
+### Iterating toward a bar
+
+Assessed 2026-07-28 against an external method that proposes looping a builder
+against a critic until the gap closes. Both a constructive and an adversarial
+review are in `local-lab/GAUNTLET-LOOP-ASSESSMENT-*-2026-07-28.md`. The rules
+below are what survived both.
+
+- **Iterate only where the bar is DISCRETE and countable. Never against a
+  continuous score.** A draw-call table is discrete: 74 draws, each matching
+  retail's rectangle, colour and blend state or not, and termination is 74/74.
+  A pixel score is continuous, and iterating it here is measurably a fitting
+  procedure — the beat-9 and look-axis sweeps produced a 3-kill point whose
+  immediate neighbours score 0 and 2, and a null perturbation that changed
+  nothing threw the run outright. The objective is chaotic below the
+  simulation's own input quantisation.
+- **A continuous score can be loud about a defect that does not exist and blind
+  to the one that does.** After the arc shell's real hue error was corrected
+  (`#7F7F7F` → `#AE8E6E`), mean error over its 1,054 ink texels moved
+  31.53 → 31.47. The same estimator had reported a 49 % energy surplus that was
+  an artefact.
+- **A critic that cannot return UNSCORED is not a gate.** `score_frontend_capture.py`
+  returns UNSCORED precisely because "no evidence" must never render as "no
+  problem" — and a language model cannot make that distinction about its own
+  looking. "I found no gap" and "I was unable to look" are the same sentence.
+  Pair any model critic with a mechanical check that can abstain.
+- **Run the loop at least twice.** This project builds strong bars and runs them
+  roughly once, and that is where its error rate lives: one extra pass over an
+  existing sweep found six real errors with no new measurement, two of six
+  in-level divergences certified with exact retail numbers did not survive being
+  applied, and the measured error rate is about 1-in-6 unadjudicated against 0
+  on adjudicated groups.
+- **When marginal gain reaches the per-region cross-run noise floor, change
+  instrument rather than iterating.** That floor is not one number: it ranges
+  from 0.02 % to 36.79 % depending on frame class.
+- **Brief an agent with existence claims, not value comparisons from one
+  sample.** Wrong existence claims ("this file holds that table", "this sound
+  plays") die in one cheap step. A wrong value comparison drawn from a single
+  sample of a periodic signal cost a full re-derivation, and a wrong mechanism
+  premise cost 32+ parameter dead ends before anyone ran the cheap check.
+
 ## Validation
 
 Root `package.json` owns commands. Choose the smallest gate that proves the changed contract.
