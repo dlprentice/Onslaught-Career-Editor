@@ -493,6 +493,208 @@ public static class Level100AudioCatalog
         return Math.Clamp(mix, 0f, 1f);
     }
 
+    // ------------------------------------------------------------------
+    // The released volume -> attenuation law.
+    //
+    // This is NOT a linear->dB conversion. Retail computes a DirectSound
+    // attenuation in MILLIBELS (hundredths of a dB) with a piecewise-linear
+    // map, a saturation plateau at the top, and a second PC-only shaping stage.
+    // Until 2026-07-27 this adapter called Mathf.LinearToDb instead, which has
+    // neither the plateau nor the linear-in-dB knee, and which compressed the
+    // whole Level 100 mix into roughly a third of retail's dynamic range.
+    //
+    // The chain, in order, from the pinned source:
+    //
+    //   references/Onslaught/SoundManager.cpp:437-442  GetVolumeForPos
+    //   references/Onslaught/SoundManager.cpp:519-524  the non-looping early-out
+    //   references/Onslaught/SoundManager.cpp:526-531  the two source volumes
+    //   references/Onslaught/SoundManager.cpp:760-793  CSoundManager::Fade
+    //   references/Onslaught/pcsoundmanager.cpp:405-412 the PC shaping + SetVolume
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// <c>FAR_SOUND</c>, <c>references/Onslaught/SoundManager.h:21</c>. The whole
+    /// spatial law: linear from full at the listener to nothing at 50 units.
+    /// <c>NEAR_SOUND</c> (<c>:22</c>) and <c>CEffect::mFalloff</c>
+    /// (parsed at <c>SoundManager.cpp:1541</c>) are never read anywhere in the
+    /// drop, so there is no per-record curve to honour.
+    /// </summary>
+    public const float RetailFarSoundUnits = 50f;
+
+    /// <summary>
+    /// <c>SINT vol = 127;</c>, <c>references/Onslaught/SoundManager.cpp:526</c>.
+    /// This is the source volume of an <c>ST_NOTRACKING</c> event — one started
+    /// with a null owner (<c>:479-480</c>). <c>CFrontEnd::PlaySound</c>
+    /// (<c>references/Onslaught/FrontEnd.cpp:1609</c>) passes
+    /// <c>PlayEffect(effect, NULL)</c>, so every frontend cue is one of these.
+    /// </summary>
+    public const int RetailUntrackedSourceVolume = 127;
+
+    /// <summary>
+    /// The ceiling of <c>GetVolumeForPos</c>
+    /// (<c>references/Onslaught/SoundManager.cpp:442</c>), and therefore the
+    /// source volume of a TRACKED event sitting on the listener. Retail's HUD
+    /// cues are tracked on the player's own Battle Engine
+    /// (<c>BattleEngine.cpp:3180-3183</c> <c>PlayHudSample</c>), and the camera is at
+    /// the Battle Engine's position in the released first-person view, so they
+    /// resolve here rather than to 127. Message-box samples reach the same value
+    /// through <c>ignore_owner_pos</c>, which pins the event to the camera
+    /// (<c>SoundManager.cpp:457</c>, <c>:1004-1011</c>).
+    /// </summary>
+    public const int RetailListenerSourceVolume = 100;
+
+    /// <summary>
+    /// <c>event-&gt;mSubVolume = 1;</c> for an event started with no fade,
+    /// <c>references/Onslaught/SoundManager.cpp:486-487</c>. This adapter does
+    /// not implement <c>FadeTo</c>/<c>FadeAllSamples</c>, so every event it
+    /// starts is an unfaded one.
+    /// </summary>
+    public const float RetailUnfadedSubVolume = 1f;
+
+    /// <summary>
+    /// <c>CSoundManager::GetVolumeForPos</c>,
+    /// <c>references/Onslaught/SoundManager.cpp:437-442</c>, verbatim:
+    /// <code>
+    /// float fvol = FAR_SOUND - dist;
+    /// if (fvol &gt; FAR_SOUND) fvol = FAR_SOUND;
+    /// if (fvol &lt; 0)        fvol = 0;
+    /// SINT vol = SINT((fvol * 100) / FAR_SOUND);
+    /// </code>
+    /// The camera fetch above it is commented out and <c>cpos</c> is
+    /// <c>(0,0,0)</c>, but <c>UpdateSoundPosition</c> has already moved the
+    /// event into camera-local space (<c>SoundManager.cpp:992-993</c>), so this
+    /// really is distance from the listener.
+    /// </summary>
+    public static int RetailSourceVolumeForDistance(float distanceUnits)
+    {
+        float fvol = RetailFarSoundUnits - distanceUnits;
+        if (fvol > RetailFarSoundUnits)
+        {
+            fvol = RetailFarSoundUnits;
+        }
+        if (fvol < 0f)
+        {
+            fvol = 0f;
+        }
+
+        return (int)((fvol * 100f) / RetailFarSoundUnits);
+    }
+
+    /// <summary>
+    /// <c>CSoundManager::StartSoundEvent</c>'s "SRG early out",
+    /// <c>references/Onslaught/SoundManager.cpp:519-524</c>. A NON-LOOPING event
+    /// starting at or beyond <c>FAR_SOUND</c> is deleted and never plays at all;
+    /// a looping one is exempt and starts silent.
+    /// </summary>
+    public static bool RetailRefusesNonLoopingStart(float distanceUnits) =>
+        distanceUnits >= RetailFarSoundUnits;
+
+    /// <summary>
+    /// <c>CSoundManager::Fade</c>,
+    /// <c>references/Onslaught/SoundManager.cpp:760-793</c>, verbatim, returning
+    /// DirectSound millibels. The parameter order is the source's own multiply
+    /// order so the float rounding matches:
+    /// <code>
+    /// tv = SINT(float(v) * event-&gt;mMasterVolume * event-&gt;mSubVolume *
+    ///           mMasterVolume * mGameSoundsMasterVolume);
+    /// tv = tv * 200;                  //was 350...
+    /// if (tv &gt; 10000) tv = 10000;
+    /// tv = ((tv - 10000)/2);
+    /// if (tv &lt; -10000) tv = -10000;
+    /// </code>
+    /// Two consequences the linear->dB form did not have. The truncation to
+    /// <c>SINT</c> happens BEFORE the scale, so the output is quantised to whole
+    /// 100-millibel (1 dB) steps. And the <c>10000</c> cap is a genuine
+    /// PLATEAU: every combined multiplier at or above <c>0.5</c> tracked, or
+    /// <c>50/127 = 0.3937</c> untracked, plays at exactly 0 dB.
+    /// The floor is <c>-5000</c> mB, not silence.
+    /// </summary>
+    public static int RetailFadeMillibels(
+        int sourceVolume,
+        float eventVolume,
+        float subVolume,
+        float masterMix,
+        float typeMasterMix)
+    {
+        int tv = (int)(sourceVolume * eventVolume * subVolume * masterMix * typeMasterMix);
+
+        tv *= 200;
+        if (tv > 10_000)
+        {
+            tv = 10_000;
+        }
+        tv = (tv - 10_000) / 2;
+        if (tv < -10_000)
+        {
+            tv = -10_000;
+        }
+
+        return tv;
+    }
+
+    /// <summary>
+    /// <c>CPCSoundManager::UpdateSound</c>'s shaping stage,
+    /// <c>references/Onslaught/pcsoundmanager.cpp:405-410</c>, under the
+    /// developer's own comment "Ensure we actually fall off to silence":
+    /// <code>
+    /// int vol = event-&gt;mCurrentAttenuatedVolume;
+    /// if (vol &lt; -4000) vol = vol + ((vol+4000)*2);
+    /// </code>
+    /// It triples the slope below -40 dB. It does not in fact reach silence:
+    /// <c>Fade</c>'s -5000 floor shapes to -7000 mB, i.e. -70 dB.
+    /// This is applied to the ATTENUATED volume — <c>:405</c> reads
+    /// <c>mCurrentAttenuatedVolume</c>, not <c>mCurrentVolume</c>.
+    /// </summary>
+    public static int RetailPcShapedMillibels(int millibels) =>
+        millibels < -4_000
+            ? millibels + ((millibels + 4_000) * 2)
+            : millibels;
+
+    /// <summary>
+    /// The whole released chain, in Godot's <c>VolumeDb</c> unit. DirectSound
+    /// <c>SetVolume</c> takes hundredths of a decibel
+    /// (<c>references/Onslaught/pcsoundmanager.cpp:412</c>), so the conversion
+    /// is a divide by 100 and nothing else.
+    /// </summary>
+    public static float RetailVolumeDb(
+        int sourceVolume,
+        float eventVolume,
+        float subVolume,
+        float masterMix,
+        float typeMasterMix) =>
+        RetailPcShapedMillibels(RetailFadeMillibels(
+            sourceVolume,
+            eventVolume,
+            subVolume,
+            masterMix,
+            typeMasterMix)) / 100f;
+
+    /// <summary>
+    /// <c>CPCSoundManager::UpdateSound</c>,
+    /// <c>references/Onslaught/pcsoundmanager.cpp:398-401</c>, with the
+    /// developer's own comment kept because it is the whole explanation:
+    /// <code>
+    /// // ## SRG  clamp to 1.0 to stop stalls  (why won't it work??)
+    /// if (event-&gt;mPitchMultiplier &gt; 1.0f) event-&gt;mPitchMultiplier = 1.0f ;
+    /// mDSBuffer[event-&gt;mChannel]-&gt;SetFrequency((UINT)(event-&gt;mPitchMultiplier*44000));
+    /// </code>
+    /// This runs immediately before the single <c>SetFrequency</c> call, both at
+    /// PlaySound time (<c>:268</c>) and on every later update, so there is no
+    /// path on the released PC build by which a pitch above 1.0 reaches a
+    /// buffer. BOTH producers only ever emit values at or above 1.0 —
+    /// <c>PlayEffect</c>'s <c>pitch = 1.0f + (rand() % mPitchVariance)/100.0f</c>
+    /// (<c>references/Onslaught/SoundManager.cpp:1188-1196</c>) and the jet's
+    /// <c>SetPitch(event, 1.f + thruster*0.25f)</c>
+    /// (<c>references/Onslaught/BattleEngine.cpp:1541</c>) — so retail PC plays
+    /// every sample at a constant 44000 Hz.
+    ///
+    /// The producers are deliberately still reproduced at the call sites and
+    /// then passed through here, rather than deleted, so a future reader sees
+    /// why the answer is always 1.0 and does not "restore" the modulation.
+    /// </summary>
+    public static float RetailPcPitchMultiplier(float desiredPitchMultiplier) =>
+        desiredPitchMultiplier > 1f ? 1f : desiredPitchMultiplier;
+
     private static Level100MessageAudioSpec Message(
         int messageId,
         string symbol,

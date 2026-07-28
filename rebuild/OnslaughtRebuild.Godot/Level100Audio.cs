@@ -166,7 +166,8 @@ public sealed partial class Level100Audio : Node3D
             ProcessMode = ProcessModeEnum.Always,
             VolumeDb = MixedSoundVolumeDb(
                 Level100AudioCatalog.RetailRadioMessageVolume,
-                gameplay: true),
+                gameplay: true,
+                Level100AudioCatalog.RetailListenerSourceVolume),
         };
         _tutorialVoice.Finished += BeginCharacterMessageHandoff;
         AddChild(_tutorialVoice);
@@ -182,8 +183,20 @@ public sealed partial class Level100Audio : Node3D
 
     public override void _Process(double delta)
     {
-        if (_gameplayPaused ||
-            _characterMessageHandoffSecondsRemaining <= 0d ||
+        if (_gameplayPaused)
+        {
+            return;
+        }
+
+        // CSoundManager::UpdateStatus recomputes GetVolumeForPos and re-Fades
+        // every live ST_FOLLOW* event on every update
+        // (references/Onslaught/SoundManager.cpp:1361-1370), so the listener
+        // walking away from a sound attenuates it. Doing this only at start
+        // would leave every moving emitter - the jet loop, the Air Trainer
+        // flyby, the transport - stuck at its first frame's level.
+        UpdateSpatialAttenuation();
+
+        if (_characterMessageHandoffSecondsRemaining <= 0d ||
             !double.IsFinite(delta) ||
             delta <= 0d)
         {
@@ -400,7 +413,17 @@ public sealed partial class Level100Audio : Node3D
 
         if (IsPlaying(_aquilaFlightLoop))
         {
-            _aquilaFlightLoop!.PitchScale = 1f + (thrusterFraction * 0.25f);
+            // The jet's producer is CBattleEngine's
+            // `SOUND.SetPitch(mEngineSound, 1.f + mThrusterAmount*0.25f)`
+            // (references/Onslaught/BattleEngine.cpp:1541), but the released PC
+            // device layer clamps it away before the buffer ever sees it
+            // (references/Onslaught/pcsoundmanager.cpp:398-401). Retail's jet
+            // engine is a FLAT drone; this used to raise it by a musical third
+            // with throttle, one of the most recognisable sounds in Level 100's
+            // flight segment.
+            _aquilaFlightLoop!.PitchScale =
+                Level100AudioCatalog.RetailPcPitchMultiplier(
+                    1f + (thrusterFraction * 0.25f));
         }
     }
 
@@ -555,7 +578,16 @@ public sealed partial class Level100Audio : Node3D
             Name = $"RetailTerminal{cue}",
             ProcessMode = ProcessModeEnum.Always,
             Stream = GetTerminalStream(cue, spec),
-            VolumeDb = MixedSoundVolumeDb(spec.LinearVolume, gameplay: true),
+            // Retail's HUD cues are TRACKED on the player's own Battle Engine
+            // (CBattleEngine::PlayHudSample, references/Onslaught/
+            // BattleEngine.cpp:3180-3183, taking PlayEffect's ST_FOLLOWDONTDIE
+            // default at SoundManager.h:189), and the released first-person
+            // camera sits at the Battle Engine's position, so they resolve to
+            // GetVolumeForPos's ceiling of 100 and not to the untracked 127.
+            VolumeDb = MixedSoundVolumeDb(
+                spec.LinearVolume,
+                gameplay: true,
+                Level100AudioCatalog.RetailListenerSourceVolume),
             PitchScale = PitchFor(spec),
         };
         player.Finished += () => ReleaseTerminalOneShot(player);
@@ -577,7 +609,14 @@ public sealed partial class Level100Audio : Node3D
             Name = $"RetailFrontend{cueName}",
             ProcessMode = ProcessModeEnum.Always,
             Stream = GetFrontendStream(cueName, spec),
-            VolumeDb = MixedSoundVolumeDb(spec.LinearVolume, gameplay: false),
+            // CFrontEnd::PlaySound passes PlayEffect(effect, NULL)
+            // (references/Onslaught/FrontEnd.cpp:1609), and a null owner forces
+            // ST_NOTRACKING (references/Onslaught/SoundManager.cpp:479-480), so
+            // a frontend cue is one of the 127-source-volume events.
+            VolumeDb = MixedSoundVolumeDb(
+                spec.LinearVolume,
+                gameplay: false,
+                Level100AudioCatalog.RetailUntrackedSourceVolume),
             PitchScale = PitchFor(spec),
         };
         player.Finished += () => ReleaseFrontendOneShot(player);
@@ -720,15 +759,41 @@ public sealed partial class Level100Audio : Node3D
             ProcessMode = ProcessModeEnum.Always,
             Stream = GetEventStream(spec),
             Position = position,
-            MaxDistance = 80f,
-            UnitSize = 8f,
-            VolumeDb = MixedSoundVolumeDb(spec.LinearVolume, gameplay: true),
+            // Godot's own distance model is DISABLED because retail's is not one
+            // of them. The released PC build never enables DSBCAPS_CTRL3D - the
+            // flag word and the whole DS3D parameter block are commented out at
+            // references/Onslaught/pcsoundmanager.cpp:209 and :366-395 - so
+            // there is no hardware rolloff at all. CSoundManager::GetVolumeForPos
+            // computes the attenuation in code and CPCSoundManager::UpdateSound
+            // writes it straight to SetVolume (:405-412).
+            //
+            // The invented `MaxDistance 80 / UnitSize 8` this replaces was 37 dB
+            // too loud at 45 units and kept sounds audible out to 80 units that
+            // retail silences at 50. Neither number appears anywhere in the
+            // source. MaxDistance 0 disables Godot's culling as well, because
+            // retail's cut-off is the early-out below, not a radius.
+            AttenuationModel = AudioStreamPlayer3D.AttenuationModelEnum.Disabled,
+            MaxDistance = 0f,
             PitchScale = PitchFor(spec),
         };
+        parent.AddChild(player);
+
+        float distanceUnits = ListenerDistance(player);
+        if (Level100AudioCatalog.RetailRefusesNonLoopingStart(distanceUnits))
+        {
+            // CSoundManager::StartSoundEvent's "SRG early out",
+            // references/Onslaught/SoundManager.cpp:519-524: a non-looping event
+            // at or beyond FAR_SOUND is deleted and never plays. Every cue that
+            // reaches PlaySpatial is non-looping - the guard above rejects
+            // looping recipes - so the branch applies unconditionally here.
+            player.QueueFree();
+            return;
+        }
+
+        player.VolumeDb = SpatialVolumeDb(spec.LinearVolume, distanceUnits);
         player.Finished += () => ReleaseGameplayOneShot(player);
         _gameplayOneShots.Add(player);
         _gameplayBaseVolumes.Add(player, spec.LinearVolume);
-        parent.AddChild(player);
         player.Play();
         player.StreamPaused = _gameplayPaused;
     }
@@ -764,13 +829,19 @@ public sealed partial class Level100Audio : Node3D
             ProcessMode = ProcessModeEnum.Always,
             Stream = GetLoopStream(spec),
             Position = Vector3.Zero,
-            MaxDistance = 80f,
-            UnitSize = 8f,
-            VolumeDb = MixedSoundVolumeDb(spec.LinearVolume, gameplay: true),
+            // Same released law as PlaySpatial, and see its comment for why
+            // Godot's model is disabled. A LOOPING event is exempt from the
+            // FAR_SOUND early-out (references/Onslaught/SoundManager.cpp:520
+            // tests `!event->mLooping`), so a distant loop starts and simply
+            // plays at zero source volume until the listener closes.
+            AttenuationModel = AudioStreamPlayer3D.AttenuationModelEnum.Disabled,
+            MaxDistance = 0f,
             PitchScale = PitchFor(spec),
         };
         _gameplayBaseVolumes.Add(player, spec.LinearVolume);
         owner.AddChild(player);
+        player.VolumeDb =
+            SpatialVolumeDb(spec.LinearVolume, ListenerDistance(player));
         player.Play();
         player.StreamPaused = _gameplayPaused;
     }
@@ -857,7 +928,8 @@ public sealed partial class Level100Audio : Node3D
         _tutorialVoice.Stream = stream;
         _tutorialVoice.VolumeDb = MixedSoundVolumeDb(
             Level100AudioCatalog.RetailRadioMessageVolume,
-            gameplay: true);
+            gameplay: true,
+            Level100AudioCatalog.RetailListenerSourceVolume);
         _tutorialVoice.Play();
         _tutorialVoice.StreamPaused = _gameplayPaused;
     }
@@ -868,46 +940,107 @@ public sealed partial class Level100Audio : Node3D
         {
             _tutorialVoice.VolumeDb = MixedSoundVolumeDb(
                 Level100AudioCatalog.RetailRadioMessageVolume,
-                gameplay: true);
+                gameplay: true,
+                Level100AudioCatalog.RetailListenerSourceVolume);
         }
-        ApplyMixVolumes(_gameplayBaseVolumes, gameplay: true);
-        ApplyMixVolumes(_terminalBaseVolumes, gameplay: true);
-        ApplyMixVolumes(_frontendBaseVolumes, gameplay: false);
-    }
-
-    private void ApplyMixVolumes(
-        Dictionary<AudioStreamPlayer3D, float> baseVolumes,
-        bool gameplay)
-    {
         // Finished/stop owners remove entries, so option and fade updates can
-        // iterate directly without a temporary key-copy allocation.
-        foreach ((AudioStreamPlayer3D player, float baseVolume) in baseVolumes)
-        {
-            if (GodotObject.IsInstanceValid(player))
-            {
-                player.VolumeDb = MixedSoundVolumeDb(baseVolume, gameplay);
-            }
-        }
+        // iterate directly without a temporary key-copy allocation. The spatial
+        // players' source volume is their live distance, which is exactly what
+        // the per-update attenuation pass computes, so they share it.
+        UpdateSpatialAttenuation();
+        ApplyMixVolumes(
+            _terminalBaseVolumes,
+            gameplay: true,
+            Level100AudioCatalog.RetailListenerSourceVolume);
+        ApplyMixVolumes(
+            _frontendBaseVolumes,
+            gameplay: false,
+            Level100AudioCatalog.RetailUntrackedSourceVolume);
     }
 
     private void ApplyMixVolumes(
         Dictionary<AudioStreamPlayer, float> baseVolumes,
-        bool gameplay)
+        bool gameplay,
+        int sourceVolume)
     {
         foreach ((AudioStreamPlayer player, float baseVolume) in baseVolumes)
         {
             if (GodotObject.IsInstanceValid(player))
             {
-                player.VolumeDb = MixedSoundVolumeDb(baseVolume, gameplay);
+                player.VolumeDb =
+                    MixedSoundVolumeDb(baseVolume, gameplay, sourceVolume);
             }
         }
     }
 
-    private float MixedSoundVolumeDb(float baseVolume, bool gameplay)
+    // The released volume -> attenuation law, not a linear->dB conversion.
+    //
+    // This used to be a plain linear-to-decibel conversion of the product of the
+    // recipe volume and the option mix, floored at -80. That was wrong in three
+    // separate ways against CSoundManager::Fade
+    // (references/Onslaught/SoundManager.cpp:760-793) plus the PC shaping stage
+    // (references/Onslaught/pcsoundmanager.cpp:405-412): it had no saturation
+    // plateau, it was logarithmic where retail is linear in dB below the knee,
+    // and it compressed Level 100's dynamic range to roughly a third of
+    // retail's. Every level was wrong and the RELATIVE balance was wrong by up
+    // to ~14 dB between cues seconds apart - the Pulse Cannon report sat only
+    // 3.7 dB below the jet engine loop where retail puts it 17 dB below.
+    //
+    // `sourceVolume` is retail's `v`, and it is NOT one value. See
+    // Level100AudioCatalog.RetailUntrackedSourceVolume (127, an event with a
+    // null owner) and RetailListenerSourceVolume (100, a tracked event on the
+    // listener). Spatial emitters take RetailSourceVolumeForDistance instead.
+    //
+    // NOTE the interaction with the cold-start option values: `_soundOptionMix`
+    // is the POST-CURVE mix, so the plateau is reached at a combined multiplier
+    // of 0.5, which with retail's authored 0.8 sound option is a pre-mix volume
+    // of 0.529. ToRetailOptionMix and the 0.8/0.9 defaults are untouched by
+    // this change; they feed it unchanged.
+    private float MixedSoundVolumeDb(float baseVolume, bool gameplay, int sourceVolume) =>
+        Level100AudioCatalog.RetailVolumeDb(
+            sourceVolume,
+            baseVolume,
+            Level100AudioCatalog.RetailUnfadedSubVolume,
+            _soundOptionMix,
+            gameplay ? _gameplayMix : 1f);
+
+    // A spatial emitter's source volume is retail's GetVolumeForPos rather than
+    // a constant: linear from 100 at the listener to 0 at FAR_SOUND = 50 units
+    // (references/Onslaught/SoundManager.h:21,
+    // references/Onslaught/SoundManager.cpp:437-442). Retail recomputes it on
+    // every update for every ST_FOLLOW* event (SoundManager.cpp:1360-1370), so
+    // _Process does the same here.
+    private float SpatialVolumeDb(float baseVolume, float distanceUnits) =>
+        Level100AudioCatalog.RetailVolumeDb(
+            Level100AudioCatalog.RetailSourceVolumeForDistance(distanceUnits),
+            baseVolume,
+            Level100AudioCatalog.RetailUnfadedSubVolume,
+            _soundOptionMix,
+            _gameplayMix);
+
+    // Retail measures from GAME.GetCamera(0)->GetPos()
+    // (references/Onslaught/SoundManager.cpp:948-949). Godot routes
+    // AudioStreamPlayer3D through the current Camera3D unless an
+    // AudioListener3D is made current, and this client makes none, so the two
+    // listeners are the same node. With no camera at all retail leaves campos
+    // at ZERO_FVECTOR and the event keeps its absolute position, which puts
+    // every Level 100 emitter past FAR_SOUND; that fallback is reproduced here
+    // rather than special-cased.
+    private Vector3 ListenerPosition() =>
+        GetViewport()?.GetCamera3D() is { } camera ? camera.GlobalPosition : Vector3.Zero;
+
+    private float ListenerDistance(Node3D emitter) =>
+        emitter.GlobalPosition.DistanceTo(ListenerPosition());
+
+    private void UpdateSpatialAttenuation()
     {
-        float linear =
-            baseVolume * _soundOptionMix * (gameplay ? _gameplayMix : 1f);
-        return linear <= 0f ? -80f : Mathf.LinearToDb(linear);
+        foreach ((AudioStreamPlayer3D player, float baseVolume) in _gameplayBaseVolumes)
+        {
+            if (GodotObject.IsInstanceValid(player) && player.IsInsideTree())
+            {
+                player.VolumeDb = SpatialVolumeDb(baseVolume, ListenerDistance(player));
+            }
+        }
     }
 
     private float MixedMusicVolumeDb() =>
@@ -924,10 +1057,26 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
+    // CSoundManager::PlayEffect's producer
+    // (references/Onslaught/SoundManager.cpp:1188-1196) passed through the
+    // released PC device clamp (references/Onslaught/pcsoundmanager.cpp:398-401,
+    // "## SRG  clamp to 1.0 to stop stalls  (why won't it work??)").
+    //
+    // The producer only ever emits values at or above 1.0, and the clamp runs
+    // before the single SetFrequency call on every update, so the result is
+    // ALWAYS 1.0 on the released PC build: every sample plays at a constant
+    // 44000 Hz. Until 2026-07-27 this returned the producer's raw value, which
+    // randomly detuned every explosion, impact and weapon report by up to +29%
+    // - a wobble the released game does not have.
+    //
+    // The producer is kept rather than deleted so the clamp is visibly the
+    // reason, and so nobody "restores" the modulation from the source's
+    // SoundManager.cpp half without reaching the PC device layer.
     private static float PitchFor(Level100AudioCueRecipe spec) =>
-        spec.PitchVariancePercent == 0
-            ? 1f
-            : 1f + ((GD.Randi() % (uint)spec.PitchVariancePercent) / 100f);
+        Level100AudioCatalog.RetailPcPitchMultiplier(
+            spec.PitchVariancePercent == 0
+                ? 1f
+                : 1f + ((GD.Randi() % (uint)spec.PitchVariancePercent) / 100f));
 
     private void ReleaseGameplayOneShot(AudioStreamPlayer3D player)
     {

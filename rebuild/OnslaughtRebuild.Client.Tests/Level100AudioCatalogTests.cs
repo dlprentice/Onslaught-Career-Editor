@@ -455,6 +455,302 @@ public sealed class Level100AudioCatalogTests
             5);
     }
 
+    // ==================================================================
+    // The three released audio laws recovered on 2026-07-27.
+    // See local-lab/AUDIO-PARITY-LAWS-2026-07-27.md.
+    // ==================================================================
+
+    /// <summary>ToRetailOptionMix(0.8f), retail's cold-start sound option.</summary>
+    private const float ColdStartSoundMix = 0.945312f;
+
+    // LAW 1. CSoundManager::Fade, references/Onslaught/SoundManager.cpp:760-793.
+    //
+    //   tv = SINT(float(v) * mMasterVolume * mSubVolume * MASTER * GAME);
+    //   tv = tv * 200;  if (tv > 10000) tv = 10000;
+    //   tv = ((tv - 10000)/2);  if (tv < -10000) tv = -10000;
+    //
+    // The three properties Mathf.LinearToDb did not have, each pinned below:
+    // a saturation PLATEAU at the top, a map that is linear IN DECIBELS below
+    // the knee, and a floor that is not silence.
+    [Fact]
+    public void ReleasedFadeLaw_SaturatesAtTheKneeAndFloorsAtMinusFiftyDecibels()
+    {
+        // (a) The plateau. A tracked event's source volume is 100, so any
+        // combined multiplier at or above 0.5 gives tv >= 50, tv*200 >= 10000,
+        // and the cap makes the millibel result exactly zero.
+        foreach (float multiplier in new[] { 0.5f, 0.6f, 0.75f, 1f })
+        {
+            Assert.Equal(
+                0,
+                Level100AudioCatalog.RetailFadeMillibels(100, multiplier, 1f, 1f, 1f));
+        }
+
+        // The step immediately below the knee is one integer of tv, i.e. one
+        // whole decibel. That quantisation is the source's own SINT truncation.
+        Assert.Equal(
+            -100,
+            Level100AudioCatalog.RetailFadeMillibels(100, 0.499f, 1f, 1f, 1f));
+        Assert.Equal(
+            -200,
+            Level100AudioCatalog.RetailFadeMillibels(100, 0.489f, 1f, 1f, 1f));
+
+        // (b) An untracked event's source volume is 127
+        // (SoundManager.cpp:526), so its knee is at 50/127 = 0.3937, not 0.5.
+        Assert.Equal(
+            0,
+            Level100AudioCatalog.RetailFadeMillibels(127, 0.394f, 1f, 1f, 1f));
+        Assert.NotEqual(
+            0,
+            Level100AudioCatalog.RetailFadeMillibels(127, 0.39f, 1f, 1f, 1f));
+
+        // (c) The floor is -5000 mB, and the tv < -10000 clamp in the source is
+        // unreachable for any v <= 127.
+        Assert.Equal(
+            -5_000,
+            Level100AudioCatalog.RetailFadeMillibels(0, 1f, 1f, 1f, 1f));
+        Assert.Equal(
+            -5_000,
+            Level100AudioCatalog.RetailFadeMillibels(100, 0f, 1f, 1f, 1f));
+    }
+
+    // The PC-only second stage, references/Onslaught/pcsoundmanager.cpp:405-410,
+    // under the developer's comment "Ensure we actually fall off to silence".
+    // It does not reach silence: Fade's -5000 floor shapes to -70 dB.
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(-3_900, -3_900)]
+    [InlineData(-4_000, -4_000)]
+    [InlineData(-4_100, -4_300)]
+    [InlineData(-4_600, -5_800)]
+    [InlineData(-5_000, -7_000)]
+    public void ReleasedPcShaping_TriplesTheSlopeBelowMinusFortyDecibels(
+        int fadeMillibels,
+        int expectedShaped)
+    {
+        Assert.Equal(
+            expectedShaped,
+            Level100AudioCatalog.RetailPcShapedMillibels(fadeMillibels));
+    }
+
+    // The player-visible half of law 1: the RELATIVE balance of the two loudest
+    // things in Level 100's flight segment. Retail puts the jet engine 17 dB
+    // above the Pulse Cannon report. Mathf.LinearToDb put them 3.7 dB apart
+    // (-6.51 vs -10.25), so the weapon dominated a mix retail has the engine
+    // dominate. Both cues sit on the listener, so both take source volume 100.
+    [Fact]
+    public void ReleasedFadeLaw_KeepsTheJetEngineAboveTheWeaponReport()
+    {
+        float engine = Level100AudioCatalog
+            .GetAquilaTransition(AquilaTransitionCue.InFlight).LinearVolume;
+        float weapon = Level100AudioCatalog
+            .GetEffect(Level100EffectCue.PulseCannonFire).LinearVolume;
+
+        float engineDb = Level100AudioCatalog.RetailVolumeDb(
+            Level100AudioCatalog.RetailListenerSourceVolume,
+            engine,
+            Level100AudioCatalog.RetailUnfadedSubVolume,
+            ColdStartSoundMix,
+            1f);
+        float weaponDb = Level100AudioCatalog.RetailVolumeDb(
+            Level100AudioCatalog.RetailListenerSourceVolume,
+            weapon,
+            Level100AudioCatalog.RetailUnfadedSubVolume,
+            ColdStartSoundMix,
+            1f);
+
+        Assert.Equal(-3.0f, engineDb, 3);
+        Assert.Equal(-20.0f, weaponDb, 3);
+        Assert.Equal(17.0f, engineDb - weaponDb, 3);
+    }
+
+    // LAW 2. CSoundManager::GetVolumeForPos,
+    // references/Onslaught/SoundManager.cpp:437-442, with FAR_SOUND 50 from
+    // references/Onslaught/SoundManager.h:21. Linear from 100 at the listener
+    // to 0 at 50 units, and flat at 0 beyond. This replaces an invented Godot
+    // inverse-distance model with MaxDistance 80 / UnitSize 8, neither of which
+    // appears anywhere in the source.
+    [Theory]
+    [InlineData(0f, 100)]
+    [InlineData(4f, 92)]
+    [InlineData(8f, 84)]
+    [InlineData(20f, 60)]
+    [InlineData(25f, 50)]
+    [InlineData(45f, 10)]
+    [InlineData(50f, 0)]
+    [InlineData(80f, 0)]
+    public void ReleasedSpatialAttenuation_IsLinearToZeroAtFiftyUnits(
+        float distanceUnits,
+        int expectedSourceVolume)
+    {
+        Assert.Equal(50f, Level100AudioCatalog.RetailFarSoundUnits);
+        Assert.Equal(
+            expectedSourceVolume,
+            Level100AudioCatalog.RetailSourceVolumeForDistance(distanceUnits));
+    }
+
+    // The "SRG early out", references/Onslaught/SoundManager.cpp:519-524. A
+    // NON-LOOPING event at or beyond FAR_SOUND is deleted and never plays;
+    // looping events are exempt by the `!event->mLooping` test at :520.
+    [Fact]
+    public void ReleasedSpatialAttenuation_RefusesANonLoopingStartBeyondFarSound()
+    {
+        Assert.False(Level100AudioCatalog.RetailRefusesNonLoopingStart(49.99f));
+        Assert.True(Level100AudioCatalog.RetailRefusesNonLoopingStart(50f));
+        Assert.True(Level100AudioCatalog.RetailRefusesNonLoopingStart(80f));
+    }
+
+    // The player-visible half of law 2, using the same Pulse impact cue the
+    // divergence audit worked through (LinearVolume 0.49 = 0.7 caller x record
+    // 70/100) at unity mix so the numbers are directly comparable. The old
+    // inverse-distance model gave roughly -14 dB at 20 units and -21 dB at 45;
+    // it was 37 dB too loud at the far end and kept playing out to 80 units.
+    [Theory]
+    [InlineData(20f, -21.0f)]
+    [InlineData(45f, -58.0f)]
+    public void ReleasedSpatialAttenuation_PutsTheImpactCueAtTheReleasedLevel(
+        float distanceUnits,
+        float expectedDb)
+    {
+        float impact = Level100AudioCatalog
+            .GetEffect(Level100EffectCue.PulseImpact).LinearVolume;
+        Assert.Equal(0.49f, impact, 5);
+
+        Assert.Equal(
+            expectedDb,
+            Level100AudioCatalog.RetailVolumeDb(
+                Level100AudioCatalog.RetailSourceVolumeForDistance(distanceUnits),
+                impact,
+                Level100AudioCatalog.RetailUnfadedSubVolume,
+                1f,
+                1f),
+            3);
+    }
+
+    // LAW 3. references/Onslaught/pcsoundmanager.cpp:398-401. The clamp runs
+    // immediately before the single SetFrequency call, on PlaySound and on every
+    // later update, and BOTH producers only ever emit values at or above 1.0 -
+    // PlayEffect's 1 + (rand() % variance)/100 (SoundManager.cpp:1188-1196) and
+    // the jet's 1 + thruster*0.25 (BattleEngine.cpp:1541). Retail PC therefore
+    // plays every sample at a constant 44000 Hz.
+    [Fact]
+    public void ReleasedPcPitchClamp_MakesEveryLevel100CueConstantPitch()
+    {
+        // The jet at full throttle, which used to raise the engine loop by a
+        // musical third.
+        Assert.Equal(1f, Level100AudioCatalog.RetailPcPitchMultiplier(1.25f));
+
+        // Every pitch variance the Level 100 catalog actually carries, at its
+        // loudest possible random draw.
+        foreach (Level100AudioCueRecipe recipe in AllCatalogRecipes())
+        {
+            float worstCaseProducer = recipe.PitchVariancePercent == 0
+                ? 1f
+                : 1f + ((recipe.PitchVariancePercent - 1) / 100f);
+            Assert.Equal(
+                1f,
+                Level100AudioCatalog.RetailPcPitchMultiplier(worstCaseProducer));
+        }
+
+        // The clamp is one-sided: it is a ceiling, not a pin. Nothing in the
+        // Level 100 catalog reaches this branch, but the source's `>` is the
+        // whole condition and a two-sided clamp would be a different law.
+        Assert.Equal(0.5f, Level100AudioCatalog.RetailPcPitchMultiplier(0.5f));
+    }
+
+    // The adapter half of all three laws. Level100Audio.cs is Godot-typed and
+    // cannot be compiled into this project, so it is asserted as source text -
+    // the same technique ColdStartOptionMixes_PushRetailOptionValuesThroughTheCurve
+    // already uses on the same file.
+    [Fact]
+    public void Level100Audio_AppliesTheThreeReleasedLawsAndNotTheInventedOnes()
+    {
+        string audio = ReadGodotSource("Level100Audio.cs");
+
+        // Law 1: the linear->dB conversion is gone from the SOUND path. The one
+        // surviving use is music, which is CMusic and never passes through
+        // CSoundManager::Fade at all.
+        Assert.Equal(1, CountOccurrences(audio, "Mathf.LinearToDb("));
+        Assert.Contains(
+            "Mathf.LinearToDb(_musicOptionMix)",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100AudioCatalog.RetailVolumeDb(",
+            audio,
+            StringComparison.Ordinal);
+
+        // Law 2: the invented distances are gone, Godot's model is off, and the
+        // released early-out and per-update tracking are present.
+        Assert.DoesNotContain("MaxDistance = 80f", audio, StringComparison.Ordinal);
+        Assert.DoesNotContain("UnitSize = 8f", audio, StringComparison.Ordinal);
+        Assert.Contains(
+            "AttenuationModel = AudioStreamPlayer3D.AttenuationModelEnum.Disabled",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100AudioCatalog.RetailRefusesNonLoopingStart(distanceUnits)",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "UpdateSpatialAttenuation();",
+            audio,
+            StringComparison.Ordinal);
+
+        // Law 3: both producers reach the buffer through the PC clamp, and
+        // neither assigns a raw PitchScale any more.
+        Assert.DoesNotContain(
+            "PitchScale = 1f + (thrusterFraction * 0.25f)",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Equal(
+            2,
+            CountOccurrences(audio, "Level100AudioCatalog.RetailPcPitchMultiplier("));
+    }
+
+    private static int CountOccurrences(string source, string value)
+    {
+        int count = 0;
+        int cursor = 0;
+        while (true)
+        {
+            int found = source.IndexOf(value, cursor, StringComparison.Ordinal);
+            if (found < 0)
+            {
+                return count;
+            }
+            count++;
+            cursor = found + value.Length;
+        }
+    }
+
+    private static IEnumerable<Level100AudioCueRecipe> AllCatalogRecipes()
+    {
+        foreach (Level100EffectCue cue in Enum.GetValues<Level100EffectCue>())
+        {
+            yield return Level100AudioCatalog.GetEffect(cue);
+        }
+        foreach (Level100TerminalCue cue in Enum.GetValues<Level100TerminalCue>())
+        {
+            yield return Level100AudioCatalog.GetTerminal(cue);
+        }
+        foreach (Level100ActorLoopCue cue in Enum.GetValues<Level100ActorLoopCue>())
+        {
+            yield return Level100AudioCatalog.GetActorLoop(cue);
+        }
+        foreach (AquilaTransitionCue cue in Enum.GetValues<AquilaTransitionCue>())
+        {
+            yield return Level100AudioCatalog.GetAquilaTransition(cue);
+        }
+        yield return Level100AudioCatalog.GetAquilaWarning(
+            AquilaWarningAudioState.EnergyLow);
+        yield return Level100AudioCatalog.GetAquilaWarning(
+            AquilaWarningAudioState.HullCritical);
+        foreach (string cueName in new[] { "Back", "Move", "Select" })
+        {
+            yield return Level100AudioCatalog.GetFrontend(cueName);
+        }
+    }
+
     private static Level100AudioCueRecipe Effect(Level100EffectCue cue) =>
         Level100AudioCatalog.GetEffect(cue);
 
