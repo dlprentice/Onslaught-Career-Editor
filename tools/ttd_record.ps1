@@ -71,7 +71,26 @@ param(
     # practical trace and an impractical one on a 60 fps title; every question this
     # instrument was stood up to answer - the mission-script VM, the HUD, unit AI,
     # weapons - lives inside BEA.exe. Pass @() for an unrestricted full trace.
-    [string[]]$Module = @('BEA.exe'),
+    # MEASURED 2026-07-27 AND DEFAULTED OFF. This was @('BEA.exe') on the
+    # reasoning above, and that reasoning is wrong on this title: module
+    # restriction records NOTHING here. A controlled pair, one variable, same
+    # target and arguments (-skipfmv -level 100), same elevated session:
+    #     -Module @('BEA.exe')  ->  2.19 s,   4 MB   (one empty 4 MiB chunk)
+    #     -Module @()           -> 14.15 s, 340 MB   (a real trace)
+    # The 4 MB file is a preallocated chunk with nothing written into it, and
+    # because the file EXISTS the recorder treated the run as a success and
+    # computed a growth rate by dividing a constant by elapsed time. Two earlier
+    # traces were reported "recorded" on exactly that basis and contained
+    # nothing.
+    #
+    # So the default is now unrestricted. Real measured cost is about 24 MB/s,
+    # which is affordable - the prior "GB per few seconds" estimate had no
+    # measurement behind it and is roughly 40x too pessimistic.
+    #
+    # Pass -Module @('BEA.exe') only if you first re-establish that it captures
+    # anything; do not restore it as a default on the strength of the argument
+    # in the comment above, which sounded correct and was not.
+    [string[]]$Module = @(),
 
     # Growth-rate sampling interval. The measured rate is reported and written to
     # the receipt; it is what makes the cost of a longer trace predictable.

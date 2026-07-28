@@ -166,10 +166,27 @@ function Test-FirstFlightSmokeEvidence {
     # obtained from a real Godot smoke run and this module is not part of
     # `npm test` — so nothing failed to tell us it had gone stale.
     #
-    # Do NOT infer it from the in-process hash: this is a different scenario at
-    # tick 3228. Re-measure with `npm run test:rebuild-godot-smoke` from a CLEAN
-    # tree, and only then update. Guessing it would defeat the one thing the
-    # value is for.
+    # Re-measure with `npm run test:rebuild-godot-smoke` from a CLEAN tree, and
+    # only then update. Guessing it would defeat the one thing the value is for.
+    #
+    # CORRECTION 2026-07-27. This block previously said "do NOT infer it from the
+    # in-process hash: this is a different scenario at tick 3228." That reason is
+    # FALSE and was refuted from this repository's own history. The smoke golden
+    # and the InteractiveSessionTests golden have been set to BIT-IDENTICAL
+    # values by the same commit, three times running:
+    #     424483da -> ab1e5844...
+    #     50ac9ea2 -> fb2219b6...
+    #     016ebf38 -> 84d6fcae...   <- the value still pinned below
+    # and both read 673661bb... on the tree measured earlier today. They are the
+    # same quantity, so the in-process golden IS a legitimate cross-check.
+    #
+    # The POLICY stands and the reason for it is different from what was written:
+    # measure it, do not infer it, because an inferred value silently launders a
+    # second scenario's result into this one the first time they ever diverge -
+    # and nothing here would detect that. Keeping a correct policy propped up by
+    # a false justification is worse than having no comment, because the next
+    # reader checks the justification, finds it wrong, and discards the policy
+    # with it.
     #
     # MEASURED 2026-07-27 20:59-21:07, two independent runs, byte-identical:
     #     673661bba2fd43b4af3175b9fa028fb00133460361fb2b93137a289b497c1fe8
