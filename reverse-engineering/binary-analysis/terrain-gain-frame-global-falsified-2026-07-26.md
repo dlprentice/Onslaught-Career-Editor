@@ -139,7 +139,9 @@ raise the mean.
 
 ### 3.1 There is no second gradient doubling, and no second gradient build
 
-Scanning the pristine specimen for every `E8 rel32` whose computed target is one
+Scanning the specimen named in the header — `e1436ef7…`, the capture target, not
+pristine *(corrected 2026-07-28; this sentence previously said "the pristine
+specimen")* — for every `E8 rel32` whose computed target is one
 of the three terrain-lighting entry points:
 
 | target | function | `E8` call sites in the whole image |

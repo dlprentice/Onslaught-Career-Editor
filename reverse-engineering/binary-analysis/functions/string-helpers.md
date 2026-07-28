@@ -2,6 +2,21 @@
 
 Static helper rows whose evidence is binary-local string/memory behavior rather than a confirmed Stuart source file owner.
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004daff0` | `CFearGrid__LookupFearWeightByArchetype` | `FearGridTrackedObject__LookupFearWeightByArchetype` | class prefix moved; suffix unchanged |
+
+---
+
 ## Wave834 FromWCHAR String Conversion
 
 Wave834 FromWCHAR string conversion (`fromwchar-string-conversion-wave834`, `wave834-readback-verified`) saved comments/tags for `0x004f7d30 FromWCHAR` while preserving the already clean signature `char * __cdecl FromWCHAR(short * wstr)`. This row is important shared string/path infrastructure, not throwaway tail code.
@@ -33,6 +48,6 @@ Static read-back evidence:
 | `0x00441740 CConsole__Printf` | Caller xref at `0x0044185c`; formats into a 700-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final console ring-entry byte. |
 | `0x004418a0 CConsole__PrintfNoNewline` | Caller xref at `0x00441998`; formats into a 256-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final console ring-entry byte. |
 
-Post-Wave825 queue telemetry is `6098` total, `5633` commented, `465` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict proxy `5633/6098 = 92.37%`, and next raw commentless row `0x004daff0 CFearGrid__LookupFearWeightByArchetype`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`.
+Post-Wave825 queue telemetry is `6098` total, `5633` commented, `465` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict proxy `5633/6098 = 92.37%`, and next raw commentless row `0x004daff0 FearGridTrackedObject__LookupFearWeightByArchetype`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`.
 
 Boundary: exact source-body identity, exact console buffer lifetime, runtime truncation policy, runtime console output behavior, BEA patching, and rebuild parity remain deferred.

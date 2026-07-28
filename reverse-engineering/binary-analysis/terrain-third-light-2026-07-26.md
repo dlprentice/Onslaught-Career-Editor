@@ -17,10 +17,26 @@
 > over eleven seconds in which retail's terrain colour does not change. **No
 > static light can do that.** **Nothing was changed and no factor was fitted.**
 
-Specimen: `BEA.exe`, SHA-256
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe`, SHA-256
 `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`,
-2,506,752 bytes (`local-lab/safe-copy-bea-pristine/BEA.exe`, read-only). Image
-base `0x00400000`. All disassembly is `capstone` linear decode of the pristine
+2,506,752 bytes — the **capture target**: pristine plus the
+`force_windowed` patch and nothing else.
+*(Corrected 2026-07-28. This line previously read "`BEA.exe`, SHA-256
+`e1436ef7…`, 2,506,752 bytes (`local-lab/safe-copy-bea-pristine/BEA.exe`, read-only)". `e1436ef7` is **not** pristine —
+the pristine specimen is `BEA.exe.original.backup`, SHA-256 `74154bfa…`, in
+the same directory; see
+[`retail-specimen-baseline.md`](retail-specimen-baseline.md) and
+[`retail-capture-provenance-2026-07-25.md`](retail-capture-provenance-2026-07-25.md),
+which records that the two file names are inverted in that directory.
+Re-measured 2026-07-28: the two builds differ at exactly **four** bytes,
+file offsets `0x12a644`–`0x12a647` = VA `0x0052a644`–`0x0052a647`
+(`a1 f0 2d 66 00` → `b8 01 00 00 00`). No address cited anywhere in this
+note falls in that range — the nearest are `0x005225ec` below and `0x0053e2e0`
+above — and no disassembly quoted here decodes through it, so **every byte
+claim below stands unchanged.** This is a specimen-label correction, not a
+re-measurement.)* Read-only.
+Image
+base `0x00400000`. All disassembly is `capstone` linear decode of the capture-target
 file through `tools/disasm_va.py`; all reference counts are whole-file
 little-endian operand scans through `tools/operand_scan.py` and
 `tools/call_xref_scan.py`. **The Ghidra database was not opened.** The
@@ -380,7 +396,7 @@ py -3 tools/terrain_transfer_probe.py \
 ## Gates
 
 **No source file, asset, shader, test or pinned artefact was touched by this
-work.** It is a read-only analysis of the pristine specimen plus a re-run of an
+work.** It is a read-only analysis of the capture-target specimen plus a re-run of an
 existing probe over captures that already existed. No gate is affected and none
 was re-run.
 

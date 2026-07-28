@@ -1,5 +1,14 @@
 # Current Capabilities
 
+Status: active — what is demonstrated today, and what is not
+Last updated: 2026-07-28. Three claims were corrected in place on that date —
+the cold-first-career outcome, the pine mesh-quality boundary, and where the
+frontend regression ceilings live — each under its own dated supersede block.
+**Sections not named there were not re-reviewed by that pass.**
+Summary: the demonstrated capability of each lane with the measured gap stated
+beside it. Every figure here is the value at the commit that wrote it;
+re-measure before relying on one.
+
 Onslaught Toolkit has one player-facing product: the WinUI 3 Windows app.
 AppCore owns its file and copied-target correctness. Reverse engineering, the
 unshipped CLI, focused tools, and the early GPL rebuild support that product and
@@ -226,8 +235,9 @@ heightfield contact; Godot selects each leg's `LegMotion` frame by required
 root-to-foot extension rather than replaying one synthetic gait cycle. The 24
 non-tree static-world mesh types, four `pinesnow` variants, and two target types
 remain bounded static conversions. The 1,481 pine placements use exact released
-meshes through the selected high-quality 70-unit horizontal boundary and exact
-six-view atlas geometry beyond it. A separate fast-tree owner adds its always-on
+meshes inside retail's **authored 30-unit** horizontal mesh-quality boundary —
+the image's own static initialiser, which is the Geometry detail = Medium arm —
+and exact six-view atlas geometry beyond it. A separate fast-tree owner adds its always-on
 camera-facing standing card and its camera-height-gated horizontal card. Its
 standing view uses a manifest-pinned phase-0 ordinal cycle only as a
 deterministic reconstruction; all 1,481 assignments and their four counts are
@@ -243,6 +253,27 @@ fixed-yaw retail repetitions per facility establish circular walker contact only
 for the Control Tower and Tank Factory: inward motion is removed, while tangent
 motion slides around the tower. Core consumes those two observed envelopes; it
 does not claim general mesh collision.
+
+> **Superseded 2026-07-27, recorded here 2026-07-28 — the pine mesh-quality
+> boundary.** The paragraph above previously read "The 1,481 pine placements use
+> exact released meshes through the **selected high-quality 70-unit** horizontal
+> boundary and exact six-view atlas geometry beyond it." **`70.0` was this
+> workstation's `defaultoptions.bea`, which is persisted run state, not an
+> authored default** — precisely the lab artefact `GOAL.md`'s defaults rule
+> exists to keep out of shipped behaviour. The released out-of-box arm is
+> **Medium, not High**. `0x004DD6B0` dispatches Geometry detail to three arms
+> writing `10.0` / `30.0` / `70.0`, and the image's own static initialisers are
+> uniquely the middle arm: file `0x2321A0` = `00 00 f0 41` = `30.0f`, with
+> `0x231E88` and `0x230E0C` both `1.0f`. Read this pass from
+> `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+> 2,506,752 bytes — the **pristine** specimen, not the deliberately patched
+> installed `BEA.exe`. Corrected in code on 2026-07-27 (task #137); the offset
+> table and the proof that `defaultoptions.bea` is run state are in
+> [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md). **Unchanged:** everything
+> else in that sentence — the placement count, the exact meshes inside the
+> boundary, and the six-view atlas geometry beyond it.
+
 Twenty-nine exact released HUD textures — **the count the client loads and
 composes**, not the count the asset materializer retains, which is larger and is
 stated in `rebuild/PROVENANCE.md` — including Font13PS and the three v3
@@ -343,10 +374,13 @@ retail reference at t0+25065 ms.
 
 The startup and frontend path is further off. FEP_MAIN's settled window measures
 **15.14%** full-frame, its reveal window **19.49%**, and its **entry frame
-7.53%**. Its regression ceilings are recorded in
-`rebuild/tools/frontend-parity-plan.json`
-beside the measured value each was derived from, and several are tens of percent
-wrong — `title-logo` alone measures 29.48%. Those ceilings say "do not get
+7.53%**. Only the per-region **measured** values are recorded in
+`rebuild/tools/frontend-parity-plan.json`; the regression ceiling is **derived**
+from each by `tools/score_frontend_capture.py` as `min(measured + marginPp, 100)`
+using the plan's single `_measurementProvenance.marginPp` of `2.0`, and is
+deliberately **not stored**. Several regions are tens of percent off retail: at
+the settled window `title-logo` measures 29.48% and `bg-emblem-topright` 19.92%,
+and at the reveal window 31.83% and 22.97%. Those ceilings say "do not get
 worse"; they are not parity numbers, and quoting one as a parity number is a
 misreading. **Five** frontend pages are deliberately ungated and reported
 `UNSCORED`, **for two different reasons**: `FEP_DEVSELECT` and
@@ -380,11 +414,30 @@ floor from.
 >    `frontend-parity-plan.json`'s `unscored[]` has carried five entries with two
 >    distinct `reason` strings throughout.
 >
-> **Caveat on (2), and it is load-bearing:** `frontend-parity-plan.json` still
-> stores the pre-`8618e773` `measured` values of 71.47 @entry and 22.35 @reveal,
-> because `8618e773` states "Ceilings are NOT re-derived here." The JSON and the
-> figures above will therefore disagree until the ceilings are re-derived. The
-> figures above are the current measurement; the JSON holds the ceiling basis.
+> **Caveat on (2) — CLOSED 2026-07-28.** It read: "`frontend-parity-plan.json`
+> still stores the pre-`8618e773` `measured` values of 71.47 @entry and 22.35
+> @reveal, because `8618e773` states 'Ceilings are NOT re-derived here.' The JSON
+> and the figures above will therefore disagree until the ceilings are
+> re-derived." They no longer disagree. The plan was re-derived at `432c53f7`
+> from a production capture off a clean worktree; **17 of its 30 stored numbers
+> were stale**, the worst by 99.72 points. The `@entry` ceiling had been 73.47
+> against a real 7.53 — nine times loose, incapable of failing. See
+> `local-lab/PARITY-GATE-REPAIR-2026-07-28.md`.
+
+> **Superseded 2026-07-28 — where the ceilings live.** The paragraph above
+> previously read: "Its regression ceilings are recorded in
+> `rebuild/tools/frontend-parity-plan.json` beside the measured value each was
+> derived from, and several are tens of percent wrong — `title-logo` alone
+> measures 29.48%." **The plan no longer stores ceilings at all.** It holds
+> `measured` per region plus one global `_measurementProvenance.marginPp`, and
+> the ceiling is derived at load time by `tools/score_frontend_capture.py`, whose
+> own docstring is the canonical statement of the reasoning: "The ceiling is
+> derived rather than stored because it was briefly both" — the plan had carried
+> 30 `regressionCeiling` values, every one exactly `measured + 2.0`, and two
+> copies of one fact drift. Verified 2026-07-28 by parsing the plan at HEAD and
+> in the working tree: no `ceiling` key in either, `marginPp` `2.0` in both.
+> **Unchanged:** the four figures themselves, and the fact that several regions
+> are tens of percent off retail.
 
 These numbers move, and they moved several times on 2026-07-27 alone. Treat any
 figure here as the value at the commit that wrote it, and re-measure before
@@ -404,14 +457,57 @@ the Level 100 beat chain — entered by clicking the level node.
 
 That run was measured as a **returning player**, with all four
 `SLOT_TUTORIAL_*` saved. **The shipping client can only start a cold first
-career**, and on a cold career the same sequence ends **`Lost` /
-`TutorialBroken` at tick 5051**, at full hull 20000/20000, with objective 4 never
-reached. The cause is the career premise rather than the join: a cold-career
-control with no client involved loses identically. The tutorial lectures shift
-`Activate Static Targets` by +1338 ticks while the trucks drive their authored
-routes regardless, so `TargetTruck1.msl`'s `died()` case FALSE posts
-`Broke Tutorial`. The returning-player run cleared that margin by 36 ticks —
-1.2 released seconds.
+career**, and the cold-career result is now a different one. Driven through the
+client, the cold first career **clears every beat and then loses on the way
+home**: outcome `Lost` with failure reason **`WaterLoss`**, primary objective 4
+`Complete`, the LevelScript's sub-40% hull abort poll never fired, and **all 22
+targets destroyed** — three Target Trucks, six Moving Targets, three and six
+Airborne Targets, plus `Target Tank 2`, `Target Tank 3`, `Target Warehouse` and
+`Target Tank #23`. **The career premise is no longer the blocker:** the
+cold-career control with no client involved reaches **`Won`**. Every one of
+those figures is asserted, not merely logged, by
+[`rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
+
+What remains is the flight home. `NavigateToZone` leaves jet mode within 20 m of
+the target volume regardless of what is underneath, and on the ferry to Target
+Zone 4 that point is open water, so the run ditches. A naive water-landing guard
+was **tried and measured worse** — it broke the returning-player `Won` test and
+turned the cold control's `Won` into `WaterLoss` — so it is deliberately not
+fixed.
+
+The terminal **tick and hull are recorded but not gated**. The test writes them
+to its log rather than asserting them; `developer_state.json` records `t17699`
+and the test's own comment says roughly 10,700 of 20,000 hull. Treat both as
+re-measurable, not as pinned facts. Note also that the summary comment at the
+head of that test file still describes the superseded `TutorialBroken` result —
+**the assertions are the record, not the comment.**
+
+> **Superseded 2026-07-28 — every load-bearing clause of the paragraph these
+> three replaced is now false.** It read: "on a cold career the same sequence ends **`Lost` /
+> `TutorialBroken` at tick 5051**, at full hull 20000/20000, with objective 4
+> never reached. The cause is the career premise rather than the join: a
+> cold-career control with no client involved loses identically. The tutorial
+> lectures shift `Activate Static Targets` by +1338 ticks while the trucks drive
+> their authored routes regardless, so `TargetTruck1.msl`'s `died()` case FALSE
+> posts `Broke Tutorial`. The returning-player run cleared that margin by 36
+> ticks — 1.2 released seconds."
+>
+> **It was accurate when written.** `t5051` was the joined client run and
+> `t4978` the no-client control — two different runs, both correctly recorded at
+> the time (`local-lab/agent-notes-2026-07-27/end-to-end-run.md`, lines 14, 18
+> and 43). Three of the changes are **asserted** in
+> `Level100ColdStartTests.cs`: the failure reason is `WaterLoss`, not
+> `TutorialBroken`; objective 4 **is** reached and `Complete`; and the control
+> does **not** lose identically — it reaches `Won`, which inverts the old
+> sentence's conclusion about the career premise. The fourth, that hull is no
+> longer full, is **recorded but not asserted** — it appears in the test's own
+> comment and in its log output, not in a gate.
+>
+> **Unchanged:** the two-halves framing above. `Won` as a returning player and
+> `Lost` on a cold first career are both still current, under different career
+> preconditions. The 36-tick margin figure is dropped rather than restated —
+> it described the returning-player run against a guard the cold run no longer
+> trips, and it lives in a test comment rather than an assertion.
 
 > **Superseded 2026-07-27.** This section previously read: "`Won` is likewise not
 > a full clear. The observed route to the level's `Won` state runs through the

@@ -7,6 +7,28 @@
 > Binary-to-source function mappings for DXMemBuffer.cpp
 > Last updated: 2026-05-24
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0048f2f0` | `CDXLandscape__SetUpdateBoundsAndRebuildVB` | `CDXPatch__SetGridOriginStepAndRebuild` | class prefix and suffix both moved |
+| `0x004cf050` | `CMenuItem__Destructor` | `CMenuItem__Destructor_Thunk` | same class; suffix re-read |
+| `0x00548ec0` | `CDXEngine__FreeLandscapeCellList_Debug` | `CMemoryManager__DeleteTagList_CtorUnwind` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 `CDXMemBuffer` is the PC buffered file I/O implementation used through the source `CMEMBUFFER` abstraction. It supports buffered reads and writes, optional compressed/CRC side data paths, and OID-backed allocation.
@@ -139,16 +161,16 @@ Wave606 verifies the neighboring write and text-line helpers:
 
 ## Wave606 Queue Note
 
-Wave606 added comments/signatures and owner-corrected six rows. Post-Wave606 queue telemetry is `6093` total, `3109` commented, `2984` commentless, `1305` exact-undefined signatures, and `1071` `param_N` signatures. Strict clean-signature proxy is `3064/6093 = 50.29%`. The next queue head is `0x00548ec0 CDXEngine__FreeLandscapeCellList_Debug`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified`.
+Wave606 added comments/signatures and owner-corrected six rows. Post-Wave606 queue telemetry is `6093` total, `3109` commented, `2984` commentless, `1305` exact-undefined signatures, and `1071` `param_N` signatures. Strict clean-signature proxy is `3064/6093 = 50.29%`. The next queue head is `0x00548ec0 CMemoryManager__DeleteTagList_CtorUnwind`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-204906_post_wave606_dxmembuffer_io_verified`.
 
 ## Wave806 Close Thunk Note
 
-Wave806 raw commentless head (`raw-commentless-head-wave806`, `wave806-readback-verified`) saved `0x0048ddf0 CDXMemBuffer__Close_Thunk` as `bool __fastcall CDXMemBuffer__Close_Thunk(void * this)`. Static instruction evidence shows a direct jump to `0x00548c00 CDXMemBuffer__Close`, and xref evidence ties the thunk to `CParticleSet__LoadParticleSetFile`. Post-Wave806 queue telemetry is `6098` total, `5581` commented, `517` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5581/6098 = 91.52%`, and next raw head `0x0048f2f0 CDXLandscape__SetUpdateBoundsAndRebuildVB`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`.
+Wave806 raw commentless head (`raw-commentless-head-wave806`, `wave806-readback-verified`) saved `0x0048ddf0 CDXMemBuffer__Close_Thunk` as `bool __fastcall CDXMemBuffer__Close_Thunk(void * this)`. Static instruction evidence shows a direct jump to `0x00548c00 CDXMemBuffer__Close`, and xref evidence ties the thunk to `CParticleSet__LoadParticleSetFile`. Post-Wave806 queue telemetry is `6098` total, `5581` commented, `517` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5581/6098 = 91.52%`, and next raw head `0x0048f2f0 CDXPatch__SetGridOriginStepAndRebuild`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-102416_post_wave806_raw_commentless_head_verified`.
 
 This proves saved static Ghidra metadata for the thunk only. Runtime particle file teardown, exact CDXMemBuffer layout, BEA patching, and rebuild parity remain deferred.
 
 ## Wave823 Destructor Thunk Note
 
-Wave823 particle archive buffer cleanup (`particle-archive-buffer-cleanup-wave823`, `wave823-readback-verified`) saved `0x004cdb90 CDXMemBuffer__dtor_base_Thunk` as `void __fastcall CDXMemBuffer__dtor_base_Thunk(void)`. Static instruction evidence shows a direct jump to `0x00547d90 CDXMemBuffer__dtor_base`, and xref evidence ties the thunk to `0x005d4230 Unwind@005d4230` for the ParticleSet.cpp stack-local buffer at `EBP-0x140`. The same wave corrected `0x004cd7a0 CParticleSet__FindByNameAndTrackLinkSlot`; queue after Wave823 is `6098` total, `5628` commented, `470` commentless, strict proxy `5628/6098 = 92.29%`, and next raw commentless row `0x004cf050 CMenuItem__Destructor`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-183746_post_wave823_particle_archive_buffer_cleanup_verified`.
+Wave823 particle archive buffer cleanup (`particle-archive-buffer-cleanup-wave823`, `wave823-readback-verified`) saved `0x004cdb90 CDXMemBuffer__dtor_base_Thunk` as `void __fastcall CDXMemBuffer__dtor_base_Thunk(void)`. Static instruction evidence shows a direct jump to `0x00547d90 CDXMemBuffer__dtor_base`, and xref evidence ties the thunk to `0x005d4230 Unwind@005d4230` for the ParticleSet.cpp stack-local buffer at `EBP-0x140`. The same wave corrected `0x004cd7a0 CParticleSet__FindByNameAndTrackLinkSlot`; queue after Wave823 is `6098` total, `5628` commented, `470` commentless, strict proxy `5628/6098 = 92.29%`, and next raw commentless row `0x004cf050 CMenuItem__Destructor_Thunk`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-183746_post_wave823_particle_archive_buffer_cleanup_verified`.
 
 This proves saved static Ghidra metadata for the thunk only. Runtime stack-local buffer lifetime, runtime particle archive behavior, exact unwind parent/source-body identity, exact CDXMemBuffer layout, BEA patching, and rebuild parity remain deferred.

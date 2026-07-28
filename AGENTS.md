@@ -2,6 +2,11 @@
 
 > Status: active public-primary contributor guide
 > Current truth: this is the normal collaboration repository for the Battle Engine Aquila preservation, tooling, and reconstruction project.
+> Last updated: 2026-07-28 (body). Header fields added the same day under
+> [`DOCUMENTATION.md`](DOCUMENTATION.md); no guidance below was re-reviewed by
+> that pass.
+> Summary: how to work in this repository — the hard boundaries, the delegation
+> rules, the evidence bar, and which gate a given change has to run.
 
 ## Direction
 
@@ -167,6 +172,10 @@ npm run dev
 - WinUI/AppCore/CLI changes: use the matching focused .NET build/tests.
 - Rebuild changes: read `rebuild/PROVENANCE.md` and `rebuild/README.md`; run only the focused Core, Client, or native smoke check matching the change. Use `npm run test:rebuild` only for broad cross-cutting changes.
 - Docs changes: use `git diff --check` and only affected link, JSON, command, or mirror checks.
+- New or edited tracked `.md`: [`DOCUMENTATION.md`](DOCUMENTATION.md) is the
+  header contract — Status, Date, Verdict/Summary on everything, plus Evidence
+  and Specimen on a finding. `npm run test:doc-headers` gates it, and a document
+  is gated from the moment it exists rather than when it is committed.
 - Release/public-boundary changes: follow `README.RELEASE.md` and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 
 Commit, push, publication, release, live launch, and mutation remain separately authorized actions.

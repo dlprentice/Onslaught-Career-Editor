@@ -56,4 +56,16 @@ baseline.
 
 Accept
 [jet-forward-retail-to-core-translation-policy.md](jet-forward-retail-to-core-translation-policy.md)
-before editing `JetSpeedPerTick` in Core.
+before editing the Core jet-speed constants.
+
+**CORRECTED 2026-07-28.** This line previously ended "before editing
+`JetSpeedPerTick` in Core." That symbol no longer exists — it was replaced by
+`JetMinimumSpeedPerTick` / `JetMaximumSpeedPerTick`
+(`rebuild/OnslaughtRebuild.Core/SimulationConstants.cs:125-129`), read from
+shipped bytes rather than from this measurement. A reader following the old
+pointer was sent to edit a symbol that is not there.
+
+**Unaffected:** the retail measurement recorded in this document. Its envelope
+(steady speed 10.859509–12.002790 retail units/s) and both accepted attempts
+(11.431062, 11.431229) are unchanged and still match
+`battleengine-jet-forward-scalar-response.v1`.

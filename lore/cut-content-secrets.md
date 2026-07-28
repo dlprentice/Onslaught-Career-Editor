@@ -1,5 +1,18 @@
 # Cut Content & Easter Eggs
 
+- **Status:** live preservation record — developer recollection and community
+  discovery, not measurement. Some claims here rest on Discord recollection
+  preserved in
+  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  raw channel dumps were retired after extraction, so those cannot be
+  re-verified from this repository. Where an entry disagrees with a measurement
+  under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), the
+  measurement wins. Header block added 2026-07-28; no claim in this file was
+  changed, so the date below is still the date of the last content change.
+- **Last updated:** 2026-03-12
+- **Summary:** features cut before release, community discoveries, and easter
+  eggs including the debriefing-screen team faces and the Gill-M boss naming.
+
 ## Cut Content & What-Ifs
 
 ### Confirmed Cut Features

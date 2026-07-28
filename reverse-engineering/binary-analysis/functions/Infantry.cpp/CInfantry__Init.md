@@ -1,6 +1,30 @@
-# CInfantry__Init
+# CInfantryUnit__Init
 
-> Address: 0x00488bb0 | Source: Infantry.cpp (source file not present in `references/Onslaught/` snapshot)
+> Source File: `Infantry.cpp` — named by the debug-path string at `0x0062d4a8`, not present in the `references/Onslaught/` snapshot | Binary: BEA.exe (the Ghidra database's specimen, SHA-256 `74154bfa…`)
+> Address: `0x00488bb0`
+> Status: name corrected 2026-07-28
+> Last updated: 2026-07-28
+> The **filename** is retained at the withdrawn name so historical links resolve.
+
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00488bb0` | `CInfantry__Init` | `CInfantryUnit__Init` | class prefix moved; suffix unchanged |
+
+Only the class prefix moved, so nothing below about allocation sizes, offsets,
+flags or the heading calculation is affected. Two other places carried the
+withdrawn label and now read the current one: the H1 and the saved signature.
+The pseudocode block still spells the class `CInfantry::` because it is a
+transcript of the decompiler's output at the time it was taken, not an assertion
+about the current database.
+
+---
 
 ## Status
 - **Named in Ghidra:** Yes
@@ -13,7 +37,7 @@ Initialize an infantry unit by allocating three child component objects and conf
 
 ## Signature
 ```c
-void __thiscall CInfantry__Init(void * this, void * infantryInit);
+void __thiscall CInfantryUnit__Init(void * this, void * infantryInit);
 ```
 
 Saved metadata, decompile, xref, tag, and instruction exports support this boundary.

@@ -4,6 +4,35 @@
 > Functions found: 8
 > Last updated: 2026-05-20
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00501310` | `FUN_00501310` | `CDXEngine__DecrementResourceRefCount` | placeholder replaced; this address carries a name now |
+| `0x00513930` | `FUN_00513930` | `D3DStateCache__SetState114Raw` | placeholder replaced; this address carries a name now |
+| `0x00513a50` | `FUN_00513a50` | `CEngine__SetRenderStateCached` | placeholder replaced; this address carries a name now |
+| `0x00513e20` | `FUN_00513e20` | `CEngine__SetShaderObject` | placeholder replaced; this address carries a name now |
+| `0x00513f20` | `FUN_00513f20` | `CEngine__CreatePixelShaderFromText` | placeholder replaced; this address carries a name now |
+| `0x00514010` | `FUN_00514010` | `IUnknown__ReleaseAndNull` | placeholder replaced; this address carries a name now |
+| `0x00515970` | `FUN_00515970` | `PlatformInput__GetKeyOn` | placeholder replaced; this address carries a name now |
+| `0x00549220` | `OID__FreeObject` | `CDXMemoryManager__Free` | class prefix and suffix both moved |
+| `0x00550380` | `CDXPatch__Constructor` | `CLandscapeVB__ctor` | class prefix and suffix both moved |
+| `0x00558690` | `FUN_00558690` | `CDXTexture__GetAnimatedFrame` | placeholder replaced; this address carries a name now |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 DXParticleTexture is a DirectX rendering class that manages particle system textures and their associated vertex/index buffers. It maintains a global linked list of particle texture objects for efficient batch rendering and resource management.
@@ -30,7 +59,7 @@ Wave612 saved Ghidra signatures/comments/tags for the four engine-side particle 
 
 Read-back evidence: `ApplyParticleTextureBundleWave612.java` dry/apply/final dry reported `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=13 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `13` metadata rows, `13` tag rows, `23` xref rows, `3393` instruction rows, `13` decompile rows, and `667` callsite instruction rows.
 
-Queue telemetry after the pass: `6093` total, `3147` commented, `2946` commentless, `1283` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3147/6093 = 51.65%`, strict clean-signature proxy `3102/6093 = 50.91%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-234626_post_wave612_particle_texture_verified`, `19` files, `161581959` bytes, `DiffCount=0`. Next queue head: `0x00550380 CDXPatch__Constructor`.
+Queue telemetry after the pass: `6093` total, `3147` commented, `2946` commentless, `1283` exact-undefined signatures, `1056` `param_N`, comment-backed proxy `3147/6093 = 51.65%`, strict clean-signature proxy `3102/6093 = 50.91%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260519-234626_post_wave612_particle_texture_verified`, `19` files, `161581959` bytes, `DiffCount=0`. Next queue head: `0x00550380 CLandscapeVB__ctor`.
 
 This is static saved-Ghidra evidence only. Exact particle bundle, DXParticleTexture, CParticleDescriptor, CTexture, CVBufTexture, shader/global, and render-state layouts, runtime particle output, BEA patching, and rebuild parity remain unproven.
 
@@ -283,19 +312,19 @@ Instance method that renders this particle texture's geometry.
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x004f27e0 | CTexture__DecrementRefCountFromNameField | Release CTexture refcount helper |
-| 0x00501310 | FUN_00501310 | Release CVBufTexture |
-| 0x00514010 | FUN_00514010 | Release pixel shader |
-| 0x00513f20 | FUN_00513f20 | Create pixel shader |
-| 0x00513e20 | FUN_00513e20 | Set vertex shader |
+| 0x00501310 | CDXEngine__DecrementResourceRefCount | Release CVBufTexture |
+| 0x00514010 | IUnknown__ReleaseAndNull | Release pixel shader |
+| 0x00513f20 | CEngine__CreatePixelShaderFromText | Create pixel shader |
+| 0x00513e20 | CEngine__SetShaderObject | Set vertex shader |
 | 0x00513bc0 | RenderState_Set | Cached render-state setter |
-| 0x00513930 | FUN_00513930 | Set sampler state |
-| 0x00513a50 | FUN_00513a50 | Set texture |
-| 0x00549220 | OID__FreeObject | Free object memory |
-| 0x00558690 | FUN_00558690 | Get texture surface |
+| 0x00513930 | D3DStateCache__SetState114Raw | Set sampler state |
+| 0x00513a50 | CEngine__SetRenderStateCached | Set texture |
+| 0x00549220 | CDXMemoryManager__Free | Free object memory |
+| 0x00558690 | CDXTexture__GetAnimatedFrame | Get texture surface |
 | 0x00568390 | stricmp (`FUN_00568390`) | Case-insensitive string compare |
 | 0x00441740 | CConsole__Printf (`FUN_00441740`) | Debug log marker |
 | 0x004725d0 | CGame__IsMultiplayer | Check multiplayer/current-level render condition |
-| 0x00515970 | FUN_00515970 | Check render pass |
+| 0x00515970 | PlatformInput__GetKeyOn | Check render pass |
 
 ## Texture Type Meanings
 

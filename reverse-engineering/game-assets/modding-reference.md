@@ -15,6 +15,32 @@ From Dominating David (Discord #media, April 1, 2025):
 
 ### Discovered (Effect Unknown/Untested)
 
+> **SUPERSEDED IN PART 2026-07-28 — one row only.** The table below is April 2025
+> community testing and is left intact as the historical record, correctly
+> attributed and dated. The authority for what the *shipped* Steam parser accepts
+> is [`../quick-reference/cli-parameters.md`](../quick-reference/cli-parameters.md)
+> (last updated 2026-07-18, sourced from the canonical unpatched Steam `BEA.exe`
+> parser, specimen SHA-256 `74154bfa…7750`).
+>
+> - **`-level` is resolved.** `cli-parameters.md` lists `-level N` as a supported
+>   launch parameter ("The retail parser accepts a numeric level id"), and it is
+>   used routinely by this repository's controlled workflows. It is no longer
+>   "effect unknown".
+> - **`-forcewindowed` is NOT resolved, and the April 2025 note is still
+>   consistent with current evidence.** `cli-parameters.md` establishes only that
+>   the canonical parser *contains* the guarded branch and that the guard byte is
+>   enabled — and in the same row it records that Toolkit safe copies "also carry
+>   the verified force-windowed compatibility patch". Parser reachability is not
+>   the same as an unpatched retail executable launching windowed:
+>   [`../binary-analysis/windowed-mode-analysis.md`](../binary-analysis/windowed-mode-analysis.md):123
+>   is explicit that "`-forcewindowed` parsing and startup fullscreen toggles are
+>   separate gates. Even when parsing is reachable, startup flow can still force
+>   fullscreen without additional display-flow patches." So "didn't work in
+>   testing" on a stock install remains a fair description.
+> - **`-showdebugtrace` is NOT resolved.** `cli-parameters.md` says the parser
+>   accepts the flag but that "visible output is not promised" — which is
+>   precisely "effect untested", the column this row is already in.
+
 | Option | Suspected Purpose |
 |--------|-------------------|
 | `-32bittextures` | Force 32-bit texture mode |
@@ -38,7 +64,7 @@ From Dominating David (Discord #media, April 1, 2025):
 Stuart noted: "These must of been used to help development. The --level one was important, because when you're coding and testing a particular level, you just want the game to start straight into the action and not keep going through the menus. I suspect many of these options won't work on the released version."
 
 Historical context from preserved Discord extracts:
-- `-forcewindowed` behavior discussions referenced a dev/release class split context (`CD3DApplication` vs `CEditorD3DApp`), which aligns with the two-gate startup behavior documented in `windowed-mode-analysis.md`.
+- `-forcewindowed` behavior discussions referenced a dev/release class split context (`CD3DApplication` vs `CEditorD3DApp`), which aligns with the two-gate startup behavior documented in [`../binary-analysis/windowed-mode-analysis.md`](../binary-analysis/windowed-mode-analysis.md). (Path repaired 2026-07-28 — this was a bare filename that resolved nowhere.)
 - `cardid` handling in retail-era startup flow appears to post-date Stuart’s currently available source snapshot; treat retail binary evidence as authoritative when source and behavior differ.
 
 ---

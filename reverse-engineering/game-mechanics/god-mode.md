@@ -364,8 +364,41 @@ This may affect grade eligibility or goodie unlocks.
 - [x] Compare gold save 0x240C region byte-by-byte with patched saves - **DONE**: Gold save has `0x01000000` - now understood as tech slot data, not god mode
 - [x] Test if 0x01000000 (gold save value) enables god mode - **DONE**: It doesn't - because it's not god mode! It's `mSlots[1]` tech slot bits
 - [x] **CORRECTED**: Offset 0x240C is `mSlots[1]`, NOT `mIsGod[0]` - bits 29-30 control mission 500 branching paths
-- [x] Check if PS_CHEATED stat is stored in save file - **DONE**: Documented in "Player Stats (Career.h)" section. Stored at `mStats` array in career save.
-- [x] Look for cheat code input handlers in the binary - **DONE**: Debug keys documented in "God Mode Mystery SOLVED" section (PCController.cpp). Stripped from release builds.
+- [x] Check if PS_CHEATED stat is stored in save file - **DONE, and the answer is NO.** See the correction below.
+- [x] Look for cheat code input handlers in the binary - **DONE**: Debug keys are in `PCController.cpp`; see [`../source-code/frontend/controller-system.md`](../source-code/frontend/controller-system.md). Stripped from release builds. (Cross-reference repointed 2026-07-28 — see below.)
+
+**CORRECTED 2026-07-28 — the PS_CHEATED line recorded the opposite of the truth,
+and both of its cross-references were dead.** The two lines above previously read:
+
+> - [x] Check if PS_CHEATED stat is stored in save file - **DONE**: Documented in "Player Stats (Career.h)" section. Stored at `mStats` array in career save.
+> - [x] Look for cheat code input handlers in the binary - **DONE**: Debug keys documented in "God Mode Mystery SOLVED" section (PCController.cpp). Stripped from release builds.
+
+Three defects, quoted rather than deleted because a closed question that is
+closed the wrong way is worse than an open one:
+
+1. **Player stats are not in the career save.** They are
+   `int mStat[PS_NUM_PLAYERSTATS];` — a member of **`CPlayer`**, not `CCareer`
+   (`references/Onslaught/Player.h:106`), private, reached only through
+   `SetStat` / `GetStat` / `IncStat` (`Player.h:86-88`), and zeroed at
+   `CPlayer::WipeStats` (`Player.cpp:247-251`). `Career.h` declares no stats
+   member at all (its only `mState` hits are `CGoodie::mState`, `Career.h:53-54`,
+   `140-141`). The 0x24BC career block is fully assigned by
+   [`../save-file/save-format.md`](../save-file/save-format.md)'s layout table,
+   with no stats region. Consequence of the old line: a save-editor contributor
+   was told a stat array is persisted at an unspecified offset, inside a
+   byte-preserving editor's blast radius.
+2. **`mStats` is not the name of anything in `CCareer`.** The plural identifier
+   does exist in the corpus, but it is unrelated —
+   `CUnitData *mStats` on `CUnitInitThing` (`InitThing.h:873`, `881`, `884`).
+3. **Both cited sections do not exist in this document.** There is no
+   "Player Stats (Career.h)" section and no "God Mode Mystery SOLVED" section.
+   The real headings are `## Complete Player Stats (PS_*) System` (below) and
+   `## PS_CHEATED Stat`; the debug-key material lives in
+   `../source-code/frontend/controller-system.md`.
+
+**Unchanged:** `PS_CHEATED` itself is real and is documented in
+`## PS_CHEATED Stat` in this document; only its claimed persistence in the career
+save is withdrawn. Nothing else in the checklist above is affected.
 - [ ] Re-test god mode persistence for Steam build with corrected field mapping (note: `0x249A/0x249E/...` are invert-Y toggles)
 - [x] **SOLVED via FEPSaveGame.cpp**: B4K42 checks `strstr(saveName, "B4K42")` using `IsCheatActive(3)`
 - [x] Verify whether `Maladim` exposes a visible Steam-build menu toggle - **DONE**: live 2026-03-15 testing confirmed `God OFF` / `God ON` under `Controller Options`

@@ -3,6 +3,28 @@
 > DirectX terrain patch manager for LOD (Level of Detail) rendering
 > Debug path: `[maintainer-local-source-export-root]\DXPatchManager.cpp` (0x0065211c)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0048f320` | `CDXPatch__RestoreAndRebuildIfDirty` | `CLandscapeVB__RestoreAndRebuildIfDirty` | class prefix moved; suffix unchanged |
+| `0x0048f620` | `CDXEngine__RenderPostMissionOverlayAndMenu` | `CLevelBriefingLog__Render` | class prefix and suffix both moved |
+| `0x00550380` | `CDXPatch__Constructor` | `CLandscapeVB__ctor` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 DXPatchManager manages terrain patches for the landscape LOD system. It allocates pools of `CDXPatch` objects at different detail levels (likely near/medium/far) and manages landscape textures with mipmap levels.
@@ -69,8 +91,8 @@ struct CDXPatchPool {
 | 0x0048f1e0 | CDXPatch__CreateGridVertexBuffer | 0x30 | Wave422 owner/signature correction; creates a grid vertex buffer from one `grid_step` argument |
 | 0x0048f210 | CDXPatch__RebuildHeightGridVertexBuffer | 0x110 | Wave422 owner/signature correction; rebuilds height-sampled grid vertices |
 | 0x0048f2f0 | CDXPatch__SetGridOriginStepAndRebuild | 0x30 | Wave807 owner/signature correction; sets patch grid origin/step fields and rebuilds vertices from `CDXLandscape__UpdateLOD` callsite `0x00546fe6` |
-| 0x0048f320 | CDXPatch__RestoreAndRebuildIfDirty | 0x30 | Wave422 owner/signature correction; vtable slot restore/rebuild wrapper |
-| 0x00550380 | CDXPatch__Constructor | 0x20 | Sets vtable to 0x005e5114 |
+| 0x0048f320 | CLandscapeVB__RestoreAndRebuildIfDirty | 0x30 | Wave422 owner/signature correction; vtable slot restore/rebuild wrapper |
+| 0x00550380 | CLandscapeVB__ctor | 0x20 | Sets vtable to 0x005e5114 |
 | 0x005503a0 | CDXPatch__Destructor_thunk | 0x10 | Thunk to CVBuffer destructor |
 | 0x005503b0 | CDXPatchManager__ReleasePatches | 0x20 | Releases patch pool via vtable call |
 | 0x005503d0 | CDXPatchManager__ResetPatchSlots | 0x30 | Resets all slot indices to -1 (0xFFFF) |
@@ -88,7 +110,7 @@ Wave807 landscape patch raw head (`landscape-patch-raw-head-wave807`, `wave807-r
 
 Static evidence: `RET 0x10` proves four stack arguments after `ECX=this`; `CDXLandscape__UpdateLOD` callsite `0x00546fe6` calls this immediately after `CDXPatchManager__AllocatePatchSlot` returns a patch pointer, then passes two tile coordinates scaled by `8`, `grid_step` derived as `4 >> lod_slot`, and a tile-record metadata value from `[ESI+0x0b]`. The body stores the args into CDXPatch fields `+0x2c`, `+0x30`, `+0x34`, and `+0x4c`, then calls `CDXPatch__RebuildHeightGridVertexBuffer(this)`.
 
-Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CDXEngine__RenderPostMissionOverlayAndMenu`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
+Post-Wave807 queue telemetry is `6098` total, `5582` commented, `516` commentless, `0` exact-undefined signatures, `0` `param_N`, strict proxy `5582/6098 = 91.54%`, and next raw head `0x0048f620 CLevelBriefingLog__Render`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-105819_post_wave807_landscape_patch_raw_head_verified`.
 
 This is static Ghidra read-back evidence only. Exact source-body identity, exact CDXPatch field names, tile-record layout, runtime terrain rendering/GPU behavior, BEA patching, and rebuild parity remain deferred.
 

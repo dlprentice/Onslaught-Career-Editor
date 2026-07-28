@@ -1,6 +1,13 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
+Last updated: 2026-07-28. Four claims were corrected in place on that date — the
+startup page list, the pine mesh-quality boundary, the frontend's owned screens,
+and the mouse-sensitivity clause — each with the old text quoted. **Nothing else
+was re-reviewed by that pass.**
+Summary: what the `rebuild/` lane is, who owns which assembly, and what the
+Level 100 Opening Slice does and does not currently do.
+[`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
 
 This subtree is the replacement-engine effort for *Battle Engine Aquila*. It is
 source- and RE-informed, not clean-room. The immediate target is a bounded
@@ -20,9 +27,14 @@ of readiness tooling.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
 The current Godot app is the **Level 100 Opening Slice**. Normal startup follows
-the released click-to-start page, v3 main-menu language, a Level 100-only level
-selector, and the released loading-screen language before constructing the
-existing gameplay world. The startup movie is deliberately omitted, matching
+the released click-to-start page, v3 main-menu language, retail's career-name
+page, a Level 100-only level selector, the mission-briefing and
+select-configuration pages, and the released loading-screen language before
+constructing the existing gameplay world.
+(*Extended 2026-07-28: this read "click-to-start page, v3 main-menu language, a
+Level 100-only level selector, and the released loading-screen language". The
+three pages added had already shipped; see* `## Current truth` *below for the
+full list and its authority.*) The startup movie is deliberately omitted, matching
 the retail `-skipfmv` path's arrival at click-to-start. It renders the locally
 materialized released Federation Aquila; all 33 visible static objects
 serialized by Level 100; exact close meshes for the 1,481 pine placements
@@ -39,8 +51,16 @@ height contacts select independent `LegMotion` extension poses for each leg.
 The exact 54-part jet and 21-part cockpit hierarchies own the bounded
 walker-to-jet presentation. The 24 non-tree static-world mesh types, four pine
 variants, and two target types retain bounded static conversions. The 1,481
-pine placements use their exact meshes inside the selected released
-high-quality 70-unit boundary and their six-face imposters outside it. The
+pine placements use their exact meshes inside retail's **authored 30-unit**
+mesh-quality boundary and their six-face imposters outside it.
+(*Corrected 2026-07-27, recorded here 2026-07-28: this read "inside the selected
+released high-quality 70-unit boundary".* `70.0` *was not a released value — it
+was this workstation's saved* `defaultoptions.bea`*, i.e. persisted run state.
+The image's own static initialiser is* `30.0f` *at file* `0x2321A0` *of the
+pristine specimen* `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`*,
+SHA-256* `74154bfa…`*, read again during this pass; the released out-of-box
+Geometry detail arm is Medium. Offset table and the proof that*
+`defaultoptions.bea` *is run state:* [`PROVENANCE.md`](PROVENANCE.md)*.*) The
 separate fast-tree owner adds one camera-facing standing card at every range
 and its height-gated horizontal card above the released 20-unit camera/ground
 delta. The converted meshes render with
@@ -140,8 +160,18 @@ Controls:
 
 ## Current truth
 
-The frontend owns only click-to-start, Main Menu, the Level 100-only selector,
-and Loading. Each launch request makes the host construct a fresh canonical
+The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
+(retail's `CHOOSE GAME NAME` page, implemented visually and sequentially only —
+no save and no career persistence), Options, the Level 100-only selector,
+Mission Briefing, Select Configuration, and Loading. The
+`RetailFrontendScreen` enum in
+`rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
+that list; read it rather than this sentence when the two disagree.
+(*Corrected 2026-07-28: this read "The frontend owns **only** click-to-start,
+Main Menu, the Level 100-only selector, and Loading." The word "only" made it a
+completeness claim and it was false — five further screens were already declared
+and shipping. Nothing was removed; the list was understated.*)
+Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
 `WorldSnapshot.Level100Mission` or own gameplay, save, result, or later
@@ -195,8 +225,7 @@ retention translated to 30 Hz, with the two repeated absolute limits measured
 on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
 direction as the crosshair camera and begin at the measured cockpit `Gun`
 emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
-terrain clipping, mouse inversion and sensitivity settings other than the
-copied Steam `1.5` baseline,
+terrain clipping, mouse inversion,
 jet movement,
 jet-to-walker simulation, exact backend attenuation, resource semantics,
 the rest of the weapon
@@ -206,6 +235,32 @@ beyond grounded height following, AI, the mission
 beyond the first four-target exercise and its weapon handoff,
 campaign, and networking
 remain provisional or absent.
+
+Mouse sensitivity is **not** in that list. The slider exists — `RetailOptionsMenu`,
+Controller Options row 0 — and `InteractiveSession.SetMouseSensitivity` is its
+only consumer, scaling the pointer axis by `sensitivity * 13/3000`. The
+untouched default is retail's **compiled `7.0`**, the image's own static
+initialiser. What remains unproven is the *runtime mapping at any value other
+than the single one that was actually measured*; no run has been captured at a
+second sensitivity.
+
+> **Superseded 2026-07-27, recorded here 2026-07-28.** The list above previously
+> read "mouse inversion and sensitivity settings other than the copied Steam
+> `1.5` baseline". **`1.5` is not a Steam value and no retail player can select
+> it.** Retail's slider law is `g_MouseSensitivity = (index + 1) * 3.0f` with max
+> index `0x14`, so the reachable set is `{3, 6, … 63}` and `1.5` is below the
+> floor; it reached the reconstruction from the copied `defaultoptions.bea` those
+> runs were configured through, which is persisted run state rather than an
+> authored value. Read this pass from the pristine specimen
+> `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`: file
+> `0x2254F4` (VA `0x006254F4`) = `00 00 e0 40` = `7.0f`, `0x1D8CC0`
+> (VA `0x005D8CC0`) = `3.0f`, `0x1D97C8` (VA `0x005D97C8`) = `0.004333333f`.
+> The pointer scalar moved from `13/2000` to `91/3000` in `fed5829b` — aiming
+> had been 4.67× too slow at equal hand motion. See
+> [`../CURRENT_CAPABILITIES.md`](../CURRENT_CAPABILITIES.md) for the withdrawal
+> in full. **Unchanged:** mouse inversion really is still absent, and it stays in
+> the list above.
 
 The client switches between the released walker's and jet's exact part
 hierarchies and independently animates the exact first-person cockpit. It

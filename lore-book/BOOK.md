@@ -1,5 +1,16 @@
 # Onslaught Lore
 
+- **Status:** live entry guide for the packaged offline Lore reader. **This is
+  the only file that belongs in `lore-book/`** — the pack builder rejects any
+  other path under this directory, and the articles themselves live once under
+  [`lore/`](../lore/_index.md) with no tracked mirror. Header block added
+  2026-07-28, which also recorded that invariant here for the first time; no
+  existing claim in this file was changed, and a stray duplicate tree under
+  `lore-book/` was removed on the same date.
+- **Last updated:** 2026-07-28
+- **Summary:** how to move around the offline reader, and the reading order
+  through the lore corpus.
+
 Welcome to the story, history, and preservation record of *Battle Engine
 Aquila*. This short guide is packaged with Onslaught Toolkit; the canonical
 articles live once under [`lore/`](../lore/_index.md), and packaged builds make

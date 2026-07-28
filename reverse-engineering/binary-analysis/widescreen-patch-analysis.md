@@ -127,10 +127,37 @@ The widescreen patch uses a classic **code cave** technique:
 ## Windowed Mode Analysis
 
 ### Guard Flag Location
-- **Address**: `DAT_00662f3e` (VA 0x00662F3E, file offset 0x262F3E)
-- **Historical baseline reports**: 0x00 (disabled in some unpatched binaries)
-- **Value in current repo `game/BEA.exe`**: 0x01
-- **Value in current repo `BEA_Widescreen.exe`**: 0x01
+
+> **Corrected 2026-07-28.** This subsection previously read:
+>
+> > - **Address**: `DAT_00662f3e` (VA 0x00662F3E, file offset 0x262F3E)
+> > - **Historical baseline reports**: 0x00 (disabled in some unpatched binaries)
+> > - **Value in current repo `game/BEA.exe`**: 0x01
+> > - **Value in current repo `BEA_Widescreen.exe`**: 0x01
+>
+> Every one of those byte values is a **misread**. VA `0x00662F3E` is RVA
+> `0x262F3E`, which lies past `.data`'s raw extent (`0x222000`–`0x261000`) — it
+> is **BSS, zero at image load, with no file byte**. File offset `0x262F3E`
+> belongs to `.rsrc` (raw `0x261000`–`0x264000`), so a hex editor at that offset
+> reads and writes a **resource** byte. Measured on
+> `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+> `74154bfa…`, 2,506,752 bytes: `tools/pe_read_va.py` refuses the VA, and
+> `tools/operand_scan.py` finds two absolute reads (`0x00424150`, `0x004714f0`)
+> and **zero** absolute writes. The guard is `CCLIParams` member `this+0x186`
+> (`0x00662DB8 + 0x186`), written only by `mov byte ptr [ebx+0x186], 1` at
+> `0x00423c7d` on the `-testeur` path. Full derivation in
+> [windowed-mode-analysis.md](windowed-mode-analysis.md).
+
+- **Address**: `DAT_00662f3e` (VA `0x00662F3E`, RVA `0x262F3E`) — **BSS; there is
+  no corresponding file offset.** It is `CCLIParams+0x186`.
+- **Value at image load, all builds**: `0x00`.
+- **Set to `0x01` at runtime** by `-testeur`, and only when `-testeur` precedes
+  `-forcewindowed` in the same argument sweep (`jl 0x423c6b` at `0x0042418d`
+  makes the comparisons one pass per token).
+- **`BEA_Widescreen.exe`**: UNKNOWN and not re-measurable here — the byte
+  previously reported for it was a `.rsrc` byte. Nothing in this document now
+  depends on it. Parsing that file's section table would settle what, if
+  anything, it changed.
 
 ### CLIParams Check (from decompilation)
 ```c
@@ -147,17 +174,31 @@ The check at file offset 0x24150:
 00424157: 74 15            JZ +0x15                      ; Skip if zero (taken only when DAT_00662f3e == 0x00)
 ```
 
-When the flag is `0x00`, the JZ (jump if zero) is taken and `-forcewindowed` is not processed.
-In current repo binaries (`0x01`), that guard no longer blocks CLI parsing.
+When the flag is `0x00`, the JZ (jump if zero) is taken and `-forcewindowed` is not processed. *(Corrected 2026-07-28. The sentence that followed here previously read: "In current repo binaries (`0x01`), that guard no longer blocks CLI parsing." That is false — the guard is zero at load in **every** build, so it blocks CLI parsing on every stock command line until `-testeur` opens it.)*
 
-### Guard-Byte Normalization for Variants Where 0x262F3E == 0x00
+### ~~Guard-Byte Normalization for Variants Where 0x262F3E == 0x00~~ — WITHDRAWN 2026-07-28
+
+> **Corrected 2026-07-28.** This subsection previously read:
+>
+> > Quick summary:
+> > - If guard byte `0x262F3E` is `0x00`, set it to `0x01` to allow `-forcewindowed` parsing.
+> > - Optional branch tweak at `0x24157` (`74 15` pathway) can bypass the guard gate but does not by itself guarantee forced windowed behavior in every environment.
+> > - Wrapper fallback (`DxWnd` / `dgVoodoo2`) can still be needed on some setups.
+>
+> The first bullet is a **harmful instruction**: file offset `0x262F3E` is in
+> `.rsrc`, so following it corrupts a resource and leaves the gate shut. It is
+> quoted rather than deleted so a reader who saw the old text can tell it was
+> withdrawn, not lost.
 
 Canonical operational guidance is maintained in [windowed-mode-analysis.md](windowed-mode-analysis.md) to avoid drift.
 
-Quick summary:
-- If guard byte `0x262F3E` is `0x00`, set it to `0x01` to allow `-forcewindowed` parsing.
-- Optional branch tweak at `0x24157` (`74 15` pathway) can bypass the guard gate but does not by itself guarantee forced windowed behavior in every environment.
-- Wrapper fallback (`DxWnd` / `dgVoodoo2`) can still be needed on some setups.
+What survives of the old summary:
+- The **branch tweak at file offset `0x24157`** (VA `0x00424157`, `74 15`) is a
+  real `.text` byte and does bypass the guard gate — but it does not by itself
+  guarantee forced windowed behavior in every environment. Not re-verified by
+  this correction pass; treat as INFERRED from the disassembly above.
+- **Wrapper fallback** (`DxWnd` / `dgVoodoo2`) can still be needed on some setups.
+- The unpatched route is **`-testeur -forcewindowed`**, in that order.
 
 ## Technical Notes
 

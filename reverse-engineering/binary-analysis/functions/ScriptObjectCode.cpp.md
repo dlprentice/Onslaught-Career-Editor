@@ -6,11 +6,34 @@ Wave1189 current-risk update: Wave1189 (`wave1189-missionscript-bytecode-iscript
 
 2026-06-08 event/object-code lifecycle schema proof: `missionscript-event-object-code-lifecycle-proof.md` and `missionscript-event-object-code-lifecycle.v1.json` now preserve the static event-call side of this owner file. The schema ties `CScriptObjectCode__CallEvent`, `CScriptObjectCode__CallEventDirect`, and `CScriptObjectCode__Run` to `CEventFunction__Execute`, `CScriptEventNB__PostEvent`, `IScript__ScheduleEvent`, `CMissionScriptObjectCode__StartLoadAsync`, `CMissionScriptObjectCode__LoadAsync`, and `CMissionScriptObjectCode__ClearFields`; it also preserves `script_object_code+0x68`, descriptor dependency `0x0064ce50`, and `795` loose event-name counts as corpus context. This is static lifecycle accounting only, not runtime event dispatch/outcome, live loose-MSL loading, exact object-code/event layout, patch, Godot, rebuild, or no-noticeable-difference proof.
 
-2026-06-08 packed-vs-loose script-selection proof plan: `missionscript-packed-vs-loose-script-selection-proof-plan.md` and `missionscript-packed-vs-loose-script-selection.v1.json` now preserve the static planning boundary around this owner file's async load anchors. The plan keeps `0x00539dc0 CMissionScriptObjectCode__StartLoadAsync`, `0x00539ca0 CMissionScriptObjectCode__LoadAsync`, `this+0x20`, `this+0x124`, and `CDXMemBuffer__InitFromFile` as path-buffer/object-code load evidence, then separates that from `733` loose `.msl` corpus files, `95` level rows, `795` event-name counts, `301` packed AYA archives scanned, `0` inflate errors, and `0` literal Goodie API/token hits. This is static source-selection planning only, not runtime MissionScript execution, live loose-MSL loading, packed-resource script-selection proof, exact async-cache layout, patch, Godot, rebuild, or no-noticeable-difference proof.
+2026-06-08 packed-vs-loose script-selection proof plan: `missionscript-packed-vs-loose-script-selection-proof-plan.md` and `missionscript-packed-vs-loose-script-selection.v1.json` now preserve the static planning boundary around this owner file's async load anchors. The plan keeps `0x00539dc0 CMissionScriptObjectCode__StartLoadAsync`, `0x00539ca0 CXBOXAsyncCache__LoadAsync`, `this+0x20`, `this+0x124`, and `CDXMemBuffer__InitFromFile` as path-buffer/object-code load evidence, then separates that from `733` loose `.msl` corpus files, `95` level rows, `795` event-name counts, `301` packed AYA archives scanned, `0` inflate errors, and `0` literal Goodie API/token hits. This is static source-selection planning only, not runtime MissionScript execution, live loose-MSL loading, packed-resource script-selection proof, exact async-cache layout, patch, Godot, rebuild, or no-noticeable-difference proof.
 
 **Source File:** `[maintainer-local-source-export-root]\MissionScript\ScriptObjectCode.cpp`
 **Analysis Date:** December 2025
 **Binary:** BEA.exe (Steam release)
+
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00538ea0` | `CScriptObjectCode__scalar_deleting_dtor` | `CMissionScriptObjectCode__scalar_deleting_dtor` | class prefix moved; suffix unchanged |
+| `0x00538ec0` | `CScriptObjectCode__CScriptObjectCode` | `CMissionScriptObjectCode__ctor` | class prefix and suffix both moved |
+| `0x005391a0` | `CScriptObjectCode__Destructor` | `CMissionScriptObjectCode__dtor` | class prefix and suffix both moved |
+| `0x00539ca0` | `CMissionScriptObjectCode__LoadAsync` | `CXBOXAsyncCache__LoadAsync` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
 
 ## Overview
 
@@ -68,9 +91,9 @@ Wave583 identified two adjacent CVM stack cleanup rows near the script object-co
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| `0x00538ec0` | `CScriptObjectCode__CScriptObjectCode` | Constructor - reads bytecode from buffer, creates instruction array, symbol table, event functions |
-| `0x00538ea0` | `CScriptObjectCode__scalar_deleting_dtor` | Scalar deleting destructor (calls Destructor then frees memory) |
-| `0x005391a0` | `CScriptObjectCode__Destructor` | Destructor - frees instructions, event functions, symbol table |
+| `0x00538ec0` | `CMissionScriptObjectCode__ctor` | Constructor - reads bytecode from buffer, creates instruction array, symbol table, event functions |
+| `0x00538ea0` | `CMissionScriptObjectCode__scalar_deleting_dtor` | Scalar deleting destructor (calls Destructor then frees memory) |
+| `0x005391a0` | `CMissionScriptObjectCode__dtor` | Destructor - frees instructions, event functions, symbol table |
 | `0x00539040` | `CScriptObjectCode__Clone` | Creates a deep copy of the script object with cloned instructions and state |
 | `0x005392a0` | `CScriptObjectCode__CollectSpawnThings` | Scans instructions for "SpawnThing" opcodes and adds to world mesh list |
 | `0x00539350` | `CScriptObjectCode__RestoreStack` | Restores stack state from a saved state buffer |
@@ -96,7 +119,7 @@ Wave583 identified two adjacent CVM stack cleanup rows near the script object-co
 | Address | Name | Purpose |
 |---------|------|---------|
 | `0x00539c80` | `CMissionScriptObjectCode__CMissionScriptObjectCode` | Constructor - initializes fields |
-| `0x00539ca0` | `CMissionScriptObjectCode__LoadAsync` | Async load completion handler |
+| `0x00539ca0` | `CXBOXAsyncCache__LoadAsync` | Async load completion handler |
 | `0x00539dc0` | `CMissionScriptObjectCode__StartLoadAsync` | Starts async script file loading |
 | `0x00539f00` | `CMissionScriptObjectCode__InitFields` | Zero-initializes all instance fields |
 | `0x00539f30` | `CMissionScriptObjectCode__ClearFields_Thunk` | One-instruction jump thunk into `CMissionScriptObjectCode__ClearFields` |

@@ -3,16 +3,41 @@
 This directory owns the ignored, locally materialized retail inputs used by the
 bounded startup → main menu → Level 100 → loading path. Run
 `npm run prepare:rebuild-assets` to verify a user-provided Steam installation
-and reproduce these exact files. The payloads remain outside Git and release
-packages and remain copyright of their respective rights holders;
+and reproduce these exact files — **with two exceptions that command does not
+produce today; see [Two inputs the materializer does NOT
+produce](#two-inputs-the-materializer-does-not-produce) before assuming the
+recipe is sufficient.** The payloads remain outside Git and
+release packages and remain copyright of their respective rights holders;
 `rebuild/LICENSE` covers reconstruction code only.
 
 The path intentionally begins at the released click-to-start page. Steam's
 `-skipfmv` path skips the startup movie but retains this page, so no startup,
-briefing, or outro video is copied or simulated. New Game and Quit are the only
-working main-menu actions. Continue, Load Game, Multiplayer, Goodies, and
-Options remain visible but explicitly unavailable. Level select exposes only
+briefing, or outro video is copied or simulated. New Game, Options and Quit are
+the working main-menu actions. Continue, Load Game, Multiplayer and Goodies are
+visible and enter no page in this lane. Only Continue Game is drawn dim; the
+other four are drawn bright exactly like Quit. Level select exposes only
 `1.00 - Training Level` (world 100).
+
+> **Corrected 2026-07-28 — both halves of this were false at HEAD.** The
+> paragraph above previously read "New Game and Quit are the only working
+> main-menu actions. Continue, Load Game, Multiplayer, Goodies, and Options
+> remain visible but explicitly unavailable." That predates commit `5e82ae42`
+> (2026-07-28), which shipped the Options pages; this file was last touched by
+> `32f3ce8b` one day earlier and was not carried along.
+>
+> Evidence: SOURCE (this reconstruction's own code, at HEAD, not a capture).
+> `../../../OnslaughtRebuild.Client/RetailFrontendSession.cs` routes Options to
+> a real page in its `MainMenu` `Confirm()` arm — `Screen =
+> RetailFrontendScreen.Options; return RetailFrontendSignal.PageChanged;`, under
+> the comment "CFEPMain__DoAction case 5 -> SetPage(0x11, 0x46), UNGATED".
+> The page is built by `../../../OnslaughtRebuild.Client/RetailOptionsMenu.cs`
+> (Root, Controller, Video and Sound, with a live `ApplyPage()`) and presented by
+> `../../RetailFrontendFlow.Options.cs`. In the same file's `MainMenuItems`, only
+> `ContinueGame` carries `IsAvailable: false`; `LoadGame`, `Multiplayer`,
+> `Goodies` and `Options` all carry `IsAvailable: true`, under a comment stating
+> that this is measured from the pristine 640×480 main-menu capture. Load Game,
+> Multiplayer and Goodies fall through to `RetailFrontendSignal.None`, which is
+> why they are described as entering no page rather than as unavailable.
 
 This lane ends when Loading hands a fresh canonical Level 100 session to the
 gameplay host. The gameplay pause owner's Retry and Quit actions reuse that
@@ -43,6 +68,12 @@ lane.
 | `Icons/goodies.texture.aya` | Released v3 Goodies symbol | `EFA9EC1D2317E3CDF2ED9A90CC8B6CB391E6ED1099740DDAEB2C808B49F33358` |
 | `Icons/options.texture.aya` | Released v3 Options symbol | `0824D66ACEC9DAD5037BE8BFC2B863201F94404D21795EAC4FAD82D8C4DA2ABA` |
 | `Icons/quit.texture.aya` | Released v3 Quit symbol | `7096F573FF30302B5D5DAD8F56EBD633E51F2BD70613D5349B974DADA17B7A93` |
+| `Flags/flag-uk.texture.aya` | `FrontEnd%v2%Flag_UK.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `EFBDBA2A567B771F48B5314A941A2196BD83C75363FBCF5DB91050AB9765D7E9` |
+| `Flags/flag-fr.texture.aya` | `FrontEnd%v2%Flag_FR.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `1FA4179014B9B0C20F1BBD2336B8680A9F58452B46BDACED042FE685668D7452` |
+| `Flags/flag-gr.texture.aya` | `FrontEnd%v2%Flag_GR.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `55ED2BB99B8572B5BDA2EC3A89E9A4897462533FF46C7C6E0B66AA2FD20A23AF` |
+| `Flags/flag-it.texture.aya` | `FrontEnd%v2%Flag_IT.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `B397A80418458A253EA83DD54A03BD4FA035843BD629511C846CD28CDCF01432` |
+| `Flags/flag-sp.texture.aya` | `FrontEnd%v2%Flag_SP.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `75A99ECA5236DC940032D874F5F039A6C42307CC20534572CEA80E2B8631BF1B` |
+| `fe-arrow.texture.aya` | `FrontEnd%v2%FE_Arrow.tga(0)A8R8G8B8.aya` *(row added 2026-07-28)* | `ECF729F9402512B5FCE21CD53D2A239A4B0991230DDDC089C4AF59325105AB82` |
 | `level-bracket-01.texture.aya` | Released v3 level-select bracket 1 | `560DB1621169C1B5787FC9C4691F4BEDE1AF292674F84D4D43BE11CA05166AA5` |
 | `level-bracket-02.texture.aya` | Released v3 level-select bracket 2 | `7AD21E2A6E64F61998F7A43E92FE92D69AC013B169FD8107B648B1FA69877B27` |
 | `level-ring-01.texture.aya` | Released v3 level-select ring 1 | `687EAF0945B701B622BDEBDE805E88CAC394734A4B4420155379993EF9F74E1C` |
@@ -54,6 +85,67 @@ lane.
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
 | `english.json` | Ten menu/launch strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `B27D7B1B3F8CD8AA22B664CACF7C87A8B0907C7DEA4C4F07DFF8DA763DBB70F3` |
 | `Music/frontend-track-08.ogg` | Exact copy of `data/Music/BEA_09(Master).ogg`, the released `MUS_FRONTEND` zero-based track 8 of the alphabetical `data\music` `*.ogg` playlist | `4F6166F655E62DEC6993643A8A860BDEA0ABB7D853AD443F5D03E95368BE93A1` |
+
+### Six rows added 2026-07-28
+
+The table above previously listed 30 files while the directory held 38. The
+five language flags and `fe-arrow.texture.aya` were absent, and they are not
+incidental: they are the language selector added by commit `e9b86162`. No
+existing row changed, and all 30 pre-existing hashes were recomputed against
+disk in the same pass and all match. MEASURED: differencing this table's rows
+against the tracked `GODOT_ASSETS` entries for `Frontend/` at HEAD returns
+exactly these six, and each hash above equals both the file on disk and the
+value the tracked materializer pins.
+
+The two remaining files on disk are the subject of the next section, because
+neither of them is something the documented recipe produces.
+
+## Two inputs the materializer does NOT produce
+
+> **Added 2026-07-28. Read this before trusting the recipe at the top of this
+> file.** The opening paragraph says to run `npm run prepare:rebuild-assets` and
+> "reproduce these exact files". For two of the 38 files in this directory that
+> is **not** true at HEAD, and nothing previously said so.
+
+| File | State at HEAD | What it is used for |
+| --- | --- | --- |
+| `system-font.texture.aya` | **No producer anywhere.** No tracked or untracked tool in this repository materializes it. | `mustbe_SystemFont`, the fixed-pitch 7×9 sheet the Controller Options bindings grid renders with |
+| `mouse-cursor.texture.aya` | **Producer is in flight, not yet committed.** `mouse.tga(0)A8R8G8B8.aya` | the frontend mouse cursor |
+
+MEASURED, both:
+
+- `git check-ignore -v` resolves `system-font.texture.aya` to
+  `.gitignore:86:/rebuild/OnslaughtRebuild.Godot/Assets/Frontend/**`, so it is
+  absent from a fresh clone. Searching `rebuild/tools/` and `tools/` for
+  `system-font`, `systemfont` and `system_font` returns no match in the working
+  tree, and `git grep -n system-font HEAD` returns exactly one line — the
+  consumer that loads it, `../../RetailFrontendFlow.cs`. Its same-lane
+  neighbours — the five flags and `fe-arrow`, all added by commit `e9b86162` —
+  do have manifest entries, so this is an omission rather than a deliberate
+  separate route.
+- `mouse-cursor.texture.aya` has a manifest entry in the **working tree** of
+  `../../../tools/materialize_retail_assets.py` but none at HEAD, while its
+  consumer `../../RetailFrontendFlow.Cursor.cs` is already tracked at HEAD. It
+  will become an ordinary row in the table above when that materializer edit
+  lands; it is recorded here rather than in the table so that the table does not
+  imply the tracked recipe already produces it.
+
+INFERRED, and stated as inference because no run was made for this note: the
+frontend loads `system-font` eagerly rather than lazily —
+`../../RetailFrontendFlow.cs` calls `LoadTextures()` from `Initialize()`, and
+`LoadTexture` resolves to `CuratedAyaTextureLoader.Load`, which throws
+`InvalidDataException("Curated texture '…' is missing …")` on a missing file. If
+that path behaves as written, a fresh clone following this document's recipe
+does not merely lose the Options page, it fails during frontend initialisation —
+which would make the whole `startup → main menu → Level 100 → loading` path this
+directory scopes unreachable. **What would settle it:** delete the file locally
+(or clone clean), run `npm run prepare:rebuild-assets`, and run the frontend
+smoke.
+
+**This is not a documentation fix.** The repair is a manifest entry for
+`mustbe_SystemFont` beside the other `Frontend/` textures, and it belongs to the
+lane that owns `../../../tools/materialize_retail_assets.py`. When it lands,
+move the row into the table above and delete it from here.
 
 ## Cold-start media is NOT in this directory
 

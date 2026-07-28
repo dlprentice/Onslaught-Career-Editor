@@ -22,6 +22,15 @@ source are **retained** here; the executable manifest in
 `rebuild/README.md` quote. Neither figure is wrong; they count different sets.
 *(Updated 2026-07-27: was "Fifty-four exact textures"; `cdf8979d` added
 `Hud/forseti-icon.texture.aya`.)*
+*(Corrected 2026-07-28: the 2026-07-27 update above bumped this prose count but
+never added the row it names, so the table below listed 54 textures plus
+`dial.raw` while the directory and the manifest held 55 plus `dial.raw`. The
+`forseti-icon.texture.aya` row has now been added and the 2026-07-27 note is
+left standing, because it correctly records the change — it was the table that
+was wrong, not the note. MEASURED: differencing the table's rows against the
+directory listing and against the tracked `GODOT_ASSETS` entries for `Hud/` at
+HEAD returns exactly that one file in both directions, and the other 55 rows
+were recomputed against disk in the same pass and all match.)*
 
 | Curated file | Released source name | SHA-256 |
 | --- | --- | --- |
@@ -41,6 +50,7 @@ source are **retained** here; the executable manifest in
 | `crosshair-secondary.texture.aya` | `hud%v3%hud_crosshair_secondary.tga(0)A8R8G8B8.aya` | `7B078344E64D1E78EF64A8E21BDD3787E059B628C6A442634E9D13BA7D3A0487` |
 | `damage-flash.texture.aya` | `hud%v2%DamageFlash.tga(0)X8R8G8B8.aya` | `8A25EC2E0BA8E66D86217684125D2E245DAE3EDDEB327EE2A7B144E2B45391C0` |
 | `dial.raw` | `data/Dial.raw` | `2C57B657B92CD8BD73CA8C8986E8CE60AAFFB065FDDE09940053A2DD6D59671C` |
+| `forseti-icon.texture.aya` | `hud%ForsetiIcon.tga(0)A8R8G8B8.aya` *(row added 2026-07-28 — see the note above the table)* | `0093B1A1A1E89327B90CEF93F06882DDED060A3023510CA0F49E6EBBF3666DA1` |
 | `message-noise.texture.aya` | `MessageBox%noisebig.tga(0)X8R8G8B8.aya` | `F5C43C330394DB9EB7C1E782F3F30FE847DE01D7CE9335D2C7F9FD24BABB1825` |
 | `radio-view.texture.aya` | `hud%v2%RadioView.tga(0)A8R8G8B8.aya` | `888D5A70AB812E23F75DB76AB2ED71CD2CCE04191EE282D525C86E337CC01778` |
 | `radio-north.texture.aya` | `hud%v2%RadioNorth.tga(0)A8R8G8B8.aya` | `E5DFD8DB4DD73E9AEEFFBB009FCA68D889572C996987BCE365B0B5B4D0A7ED85` |

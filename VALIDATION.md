@@ -1,5 +1,12 @@
 # Validation
 
+Status: active — the gate-selection table
+Last updated: 2026-07-28 (body; the tracked-`.md`-header row was added that
+day). Header fields added at the same time under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); no other row was re-reviewed.
+Summary: choosing the smallest evidence that proves the contract you changed.
+[`package.json`](package.json) owns the commands.
+
 Validation is proportional to the contract changed. Root
 [`package.json`](package.json) is the command authority; the commands below are
 options, not a required sequence.
@@ -7,6 +14,7 @@ options, not a required sequence.
 | Change | Focused evidence |
 | --- | --- |
 | Documentation or deletion only | `git diff --check`, `npm run test:docs`, and the affected generator/reference check |
+| A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | AppCore behavior | `npm run test:appcore` or a narrower `dotnet test --filter` |
 | WinUI behavior or copy | `npm run test:ui` or the affected test fixture, then one real-app workflow smoke |
 | Save, options, copied-target, or patch safety | `npm run test:safe-copy` plus the owning focused test |

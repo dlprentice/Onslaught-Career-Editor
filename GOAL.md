@@ -8,6 +8,14 @@
 > **Revised 2026-07-27** after a day of measurement. Three clauses were added
 > and one was demoted; see [Revision history](#revision-history) at the bottom
 > for what changed and what each change is a reaction to.
+>
+> Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
+> [`DOCUMENTATION.md`](DOCUMENTATION.md). **Nothing in this document was
+> reviewed, re-verified or altered by that pass** — it states what is wanted,
+> not what is true, and is not superseded by measurement.
+> Summary: what "done" means here — the objective, the acceptance test that
+> stands in for it, the evidence partition, the evidence rule, and the standing
+> constraints.
 
 This is **the maintainer's statement of what is wanted**. It is not a finding and
 it is not superseded by measurement. Everything else in this repository is in

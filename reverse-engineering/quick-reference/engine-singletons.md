@@ -71,23 +71,50 @@ The DirectX 8 shell singleton. Inherits from `CD3DApplication` (D3D8 framework c
 
 **Render State Caching:**
 ```cpp
-DWORD mRenderStateCache[256];
-DWORD mTextureStageStateCache[8][32];
+// references/Onslaught/ltshell.h:48-49, 59-60
+#define N_RENDERSTATES        172
+#define N_TEXTURESTAGESTATES   30
+
+static DWORD mRenderStates[N_RENDERSTATES];
+static DWORD mTextureStageStates[8][N_TEXTURESTAGESTATES];
 ```
 
 ### Key Methods
 
 **Cached State Setters:**
-- `SRS(D3DRENDERSTATETYPE rs, DWORD v)` - Cached SetRenderState
-- `STSS(int s, D3DTEXTURESTAGESTATETYPE rs, DWORD v)` - Cached SetTextureStageState
-- `SVSS(UINT reg, CONST void* data)` - Cached SetVertexShaderConstant
+- `SRS(D3DRENDERSTATETYPE state, DWORD value)` - Cached SetRenderState (`ltshell.h:175`)
+- `STS(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD val)` - Cached SetTextureStageState (`ltshell.h:190`)
+- `D3D_SetVertexShaderConstant(DWORD Register, CONST void* pConstantData, DWORD ConstantCount)` - Vertex shader constant wrapper (`ltshell.h:256`)
 
 **Display:**
-- `GetWidth()` / `GetHeight()` - Render target dimensions
-- `m_dwCreationWidth` / `m_dwCreationHeight` - Window dimensions
+- `m_dwCreationWidth` / `m_dwCreationHeight` - Window dimensions (`d3dapp.h:175-176`)
 
 **GPU:**
-- `CheckForGeforce3()` - Detect GeForce 3 hardware
+- `IsThisAGeForce3()` - Detect GeForce 3 hardware (declared `ltshell.h:331`, defined `ltshell.cpp:1742`)
+
+**CORRECTED 2026-07-28 — six identifiers in this section did not exist.**
+
+`grep -rn 'mRenderStateCache\|mTextureStageStateCache\|CheckForGeforce3\|SVSS\|STSS' references/Onslaught/`
+returns **zero hits**, and neither `GetWidth` nor `GetHeight` is declared in
+`ltshell.h` or `d3dapp.h`. The withdrawn text is quoted in full below so that a
+reader who memorised any of it can tell it was corrected rather than lost, and so
+that nobody wastes time grepping for a name this document invented:
+
+| Withdrawn (did not exist) | Real declaration |
+| --- | --- |
+| `DWORD mRenderStateCache[256];` | `static DWORD mRenderStates[N_RENDERSTATES];` — `ltshell.h:59`, bound 172 not 256 |
+| `DWORD mTextureStageStateCache[8][32];` | `static DWORD mTextureStageStates[8][N_TEXTURESTAGESTATES];` — `ltshell.h:60`, second bound 30 not 32 |
+| `STSS(int s, D3DTEXTURESTAGESTATETYPE rs, DWORD v)` | `STS(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD val)` — `ltshell.h:190` |
+| `SVSS(UINT reg, CONST void* data)` | `D3D_SetVertexShaderConstant(DWORD, CONST void*, DWORD)` — `ltshell.h:256`, three parameters not two |
+| `CheckForGeforce3()` | `BOOL IsThisAGeForce3();` — `ltshell.h:331`, `ltshell.cpp:1742` |
+| `GetWidth()` / `GetHeight()` | no such members; use `m_dwCreationWidth` / `m_dwCreationHeight` (`d3dapp.h:175-176`) |
+
+**Unchanged:** `SRS` was and remains real (`ltshell.h:175`), as are
+`m_pd3dDevice` / `m_pD3D` (`d3dapp.h:154-155`) and `m_dwCreationWidth` /
+`m_dwCreationHeight` (`d3dapp.h:175-176`). Only the six rows above were wrong. Note
+also that the "Inherits from `CD3DApplication`" line above is conditional in
+source: `ltshell.h:52-56` selects `CD3DApplication` normally and
+`CEditorD3DApp` under `EDITORBUILD2`.
 
 ### Window Title
 

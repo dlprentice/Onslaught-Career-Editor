@@ -37,10 +37,39 @@ struct CCareerNode {
 
 ```c
 struct CCareerNodeLink {
-    /* +0x00 */ uint32_t mLinkType;  // Raw (0/1 observed; preserve unknown values)
+    /* +0x00 */ uint32_t mLinkType;  // Raw ECNLinkType: 0 NOT_COMPLETE, 1 COMPLETE,
+                                     // 2 COMPLETE_BROKEN; preserve unknown values
     /* +0x04 */ int32_t  mToNode;    // Destination node index (0xFFFFFFFF for unused)
 };
 ```
+
+A node whose parent links are **all** `COMPLETE_BROKEN (2)` reads as LOCKED at the
+retail `Career_IsWorldUnlocked` gate, which unlocks only on a parent link equal to
+`COMPLETE (1)`. See
+[`../save-file/struct-layouts.md`](../save-file/struct-layouts.md) for the
+downgrade rule and [`../save-file/career-graph.md`](../save-file/career-graph.md)
+for the gate; those documents carry the retail address, and this quick reference
+deliberately does not repeat it, because a byte claim belongs with the specimen
+that backs it.
+
+**SUPERSEDED 2026-07-28.** The comment on `mLinkType` previously read:
+
+> `// Raw (0/1 observed; preserve unknown values)`
+
+That was true when written (this document's `Last updated` was 2026-04-29) and
+has since been overtaken. A third value is observed and is load-bearing for the
+campaign graph: [`../save-file/save-format.md`](../save-file/save-format.md)
+(last updated 2026-07-16) records `+0x00` as "the link type/state (`0`, `1`, or
+observed alternate-parent value `2`)", and `../save-file/struct-layouts.md` names
+it `COMPLETE_BROKEN`. The enum is source-backed —
+`references/Onslaught/Career.h:58-62` declares `ECNLinkType` with
+`CN_NOT_COMPLETE`, `CN_COMPLETE`, `CN_COMPLETE_BROKEN`, written at
+`Career.cpp:508` inside `CCareer::ReCalcLinks` (`Career.cpp:423`).
+
+**What changed is the semantics, not the safety rule.** The old comment already
+said "preserve unknown values", so an editor obeying it would not have clobbered
+a `2`. What it failed to say is that a `2` *means* something: writing `1` over a
+`2`, or leaving a `2` where a `1` belongs, changes whether a world unlocks.
 
 ## CGoodie (4 bytes)
 

@@ -1,5 +1,12 @@
 # Reverse-Engineering Index
 
+Status: active — the RE evidence front door
+Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); no evidence rule or pointer below was
+re-reviewed by that pass.
+Summary: where RE evidence lives, what each store is authoritative for, and the
+rules a claim about the shipped binary has to meet before it is written down.
+
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
 waves, superseded plans, and generated accounting.

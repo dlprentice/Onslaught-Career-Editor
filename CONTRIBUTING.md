@@ -1,5 +1,12 @@
 # Contributing
 
+Status: active — the contributor entry point
+Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
+pass.
+Summary: what a focused change looks like here, what must never be added to the
+repository, and which checks a change owes.
+
 Onslaught Toolkit accepts focused changes to the WinUI product, shared
 AppCore/CLI behavior, deterministic rebuild, and evidence-backed preservation
 material. Git history is the archive: do not add mirrors, wave bookkeeping,

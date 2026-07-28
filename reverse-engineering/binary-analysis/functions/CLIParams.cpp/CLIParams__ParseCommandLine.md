@@ -50,9 +50,33 @@ for (int i = 0; i < token_count; i++) {
 
 The windowed mode parameter is guarded by a global flag:
 
+> **Corrected 2026-07-28.** The table and the "How to Enable" step below
+> previously read:
+>
+> > | 0x00662f3e | DAT_00662f3e | 0x262F3E | Canonical Steam hash `74154bfa...` = **0x01** (historical variants with `0x00` reported) |
+> >
+> > `-forcewindowed` parsing is guard-gated by this byte. In the canonical Steam
+> > hash used in this repo (`74154bfa...`), the byte is `0x01`; historical
+> > variants with `0x00` explain reports where parser gating blocked the
+> > parameter.
+> >
+> > ### How to Enable
+> >
+> > If a variant has `0x262F3E = 0x00`, patch to `0x01` to allow parser processing of `-forcewindowed`.
+>
+> Both are false and the patch step is harmful. VA `0x00662F3E` = RVA
+> `0x262F3E` lies past `.data`'s raw extent (`0x222000`–`0x261000`): it is
+> **BSS, zero at load, with no file byte**. File offset `0x262F3E` is inside
+> `.rsrc` (`0x261000`–`0x264000`), so the "patch to `0x01`" step edits a
+> resource. Measured on `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+> SHA-256 `74154bfa…`, 2,506,752 bytes: `tools/pe_read_va.py` refuses the VA;
+> `tools/operand_scan.py` finds two absolute reads and no absolute write. Full
+> derivation and evidence in
+> [windowed-mode-analysis.md](../../windowed-mode-analysis.md).
+
 | Address | Symbol | File Offset | Value |
 |---------|--------|-------------|-------|
-| 0x00662f3e | DAT_00662f3e | 0x262F3E | Canonical Steam hash `74154bfa...` = **0x01** (historical variants with `0x00` reported) |
+| 0x00662f3e | `DAT_00662f3e` — really `CCLIParams+0x186` (`0x00662DB8 + 0x186`) | **none — BSS** | `0x00` at image load, all builds; set to `0x01` at runtime by `mov byte ptr [ebx+0x186], 1` at `0x00423c7d` on the `-testeur` path |
 
 ```c
 // Guard check
@@ -61,11 +85,18 @@ if (DAT_00662f3e != 0) {
 }
 ```
 
-`-forcewindowed` parsing is guard-gated by this byte. In the canonical Steam hash used in this repo (`74154bfa...`), the byte is `0x01`; historical variants with `0x00` explain reports where parser gating blocked the parameter.
+`-forcewindowed` parsing is guard-gated by this byte, and the gate is **shut on
+every stock command line**.
 
 ### How to Enable
 
-If a variant has `0x262F3E = 0x00`, patch to `0x01` to allow parser processing of `-forcewindowed`.
+Pass **`-testeur` before `-forcewindowed`** on the command line. The token
+comparisons run one pass per argument (`jl 0x423c6b` at `0x0042418d`), so
+`-testeur` must be seen first for the guard to be set when `-forcewindowed` is
+tested at `0x00424150`. Verified by running pristine — see
+[retail-capture-provenance-2026-07-25.md](../../retail-capture-provenance-2026-07-25.md).
+
+There is no byte patch for the guard, because there is no byte.
 
 See [windowed-mode-analysis.md](../../windowed-mode-analysis.md) for the full investigation into windowed mode.
 

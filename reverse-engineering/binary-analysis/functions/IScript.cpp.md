@@ -13,6 +13,27 @@ Current corrected metadata is owned by the
 records observed assignments without claiming an exact descriptor layout,
 arity, runtime dispatch effect, or complete command semantics.
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00535560` | `IScript__SetThingRefViaCUnitHelper4FD830_FromArg` | `IScript__SetFactionForHierarchy_FromArg` | same class; suffix re-read |
+| `0x005362a0` | `IScript__GetTextWidth` | `IScript__GetWorldTextSlotTimerValue` | same class; suffix re-read |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Functions (44 listed)
 
 | Address | Name | Purpose |
@@ -45,10 +66,10 @@ arity, runtime dispatch effect, or complete command semantics.
 | 0x00535010 | IScript__SetThingValueViaEngineHelper4FE390_FromArg | Enable a thing-name flag through the engine helper |
 | 0x00535040 | IScript__SetThingValueViaEngineHelper4FE3F0_FromArg | Disable a thing-name flag through the engine helper |
 | 0x00535530 | IScript__SetThingFloatViaVFunc1C8_FromArg | Dispatch a script-provided float to selected thing vtable slot `+0x1c8` |
-| 0x00535560 | IScript__SetThingRefViaCUnitHelper4FD830_FromArg | Dispatch an integer/faction-like state through `CUnit__SetFactionForHierarchy` |
+| 0x00535560 | IScript__SetFactionForHierarchy_FromArg | Dispatch an integer/faction-like state through `CUnit__SetFactionForHierarchy` |
 | 0x00535670 | IScript__GetThingName | Get name string of a game object |
 | 0x005357b0 | IScript__GetThingTypeName | Get type/class name of a game object |
-| 0x005362a0 | IScript__GetTextWidth | Calculate text width for UI rendering |
+| 0x005362a0 | IScript__GetWorldTextSlotTimerValue | Calculate text width for UI rendering |
 | 0x005363e0 | IScript__GetPlayerBattleEngine | Get player's battle engine reference |
 | 0x00537410 | IScript__PlaySound | Play sound effect with default settings |
 | 0x00537500 | IScript__PlaySoundWithCallback | Play sound with completion callback |

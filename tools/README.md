@@ -1,5 +1,9 @@
 # Tools
 
+Status: active — the reusable support surface, not a product lane
+Last updated: 2026-07-28
+Summary: what each tool in `tools/` is for, and which of them are gates.
+
 `tools/` contains the small reusable support surface for the WinUI product,
 release packaging, guarded asset extraction, format inspection, Ghidra work,
 and controlled copied-runtime research. It is not a product GUI or a historical
@@ -25,6 +29,20 @@ npm run test:safety
 Use [`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](../release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
 for release-specific command selection. These tools do not publish, sign, or
 install anything by themselves.
+
+## Documentation integrity
+
+- `md_link_check.py` validates local link **targets**; `md_reachability_check.py`
+  answers the different question of whether a document is linked from anywhere.
+- `doc_header_check.py` enforces the header contract in
+  [`DOCUMENTATION.md`](../DOCUMENTATION.md) — Status, Date, Verdict/Summary
+  everywhere, plus Evidence and Specimen on findings. It rejects a byte claim
+  that names no specimen, and a specimen that cites the deliberately patched
+  Steam install. `doc_header_backlog.txt` holds the pre-standard documents and
+  may only shrink; `--self-test` runs 44 cases with no repository present, and
+  exit `2` means the check could not run rather than that it found nothing.
+- `re_function_doc_names_check.py` re-resolves every per-function note's name
+  assertion against a dated Ghidra name table.
 
 ## Payload and output safety
 
@@ -87,3 +105,38 @@ PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
 checks. Full Ghidra stores, backups, raw CDB transcripts, frames, copied
 executables, and bulk retail exports never belong in Git.
+
+### The two wholesale instruments
+
+Both were built on 2026-07-27 to replace one-question-per-launch probing, and
+both were missing from this index until 2026-07-28. Detail belongs in each
+tool's own documentation, not here.
+
+- [`d3d9-proxy/`](d3d9-proxy/README.md) — a passive Direct3D 9 draw-call
+  recorder for a **copied** target. It records, per frame and in draw order,
+  every draw call with the render state in force and the vertex data, which for
+  this title means literal screen coordinates. It exists because there is no HUD
+  element *position* table in the shipped data, so positions were previously
+  recovered by fitting pixels. It modifies no executable: `d3d9` is not a
+  `KnownDLL`, so a `d3d9.dll` beside the application wins the load.
+  `Run-D3D9Capture.ps1` and `Run-FrontendPageCapture.ps1` drive it.
+- `ttd_record.ps1` / `ttd_query.ps1` / `Record-GameMoment.ps1` — Time Travel
+  Debugging. `ttd_record.ps1` records one run's complete user-mode instruction
+  and memory history into a `.run` file; `ttd_query.ps1` then answers any number
+  of later questions offline against that file, with no relaunch and no input.
+  `Record-GameMoment.ps1` attaches to a game that is already running at full
+  speed, records a fixed number of seconds, and leaves it running.
+  **Standing caveat: TTD recording requires an elevated token**, and this
+  machine has no `TTDService`, so each recording raises a UAC prompt.
+
+See also [`../patches/README.md`](../patches/README.md) for the patch-catalog
+boundary that the copied-runtime helpers operate inside.
+
+*(Added 2026-07-28. This section previously named neither instrument: a
+case-insensitive search of this file for `d3d9`, `ttd`, `proxy` and
+`Record-GameMoment` returned nothing, while the opening paragraph claims to
+index "controlled copied-runtime research". `git grep -n d3d9-proxy -- '*.md'`
+returned exactly one hit, the proxy README's own title line, so nothing in
+tracked documentation led a reader to a 267-line README; on a fresh clone it
+was reachable only by listing the directory. Nothing else in this file
+changed.)*

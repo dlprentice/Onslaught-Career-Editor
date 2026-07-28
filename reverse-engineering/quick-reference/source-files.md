@@ -61,4 +61,28 @@ Summary: Stuart source file organization lookup.
 **Rendering (19 DX*.cpp):**
 - DXLandscape.cpp, DXShadows.cpp
 
-See stuart-request-list.md for full inventory.
+**CITATION REPAIRED 2026-07-28 — and the figure it backed is now marked UNKNOWN.**
+This line previously read, in full:
+
+> See stuart-request-list.md for full inventory.
+
+`stuart-request-list.md` **does not exist anywhere in this repository**
+(`find . -iname 'stuart-request-list*'` outside `.git` returns nothing), so the
+"117 of 169" heading above and the missing-file list under it had no resolvable
+backing at all.
+
+- **UNKNOWN** — the total original file count (169) and the 117 not provided are
+  inherited from an archived note that is not in this repository. Nothing here
+  can confirm or refute them. What would settle it: the archived request list
+  itself, or a statement from Stuart of the original project's file count.
+- **MEASURED** — the pinned drop's own inventory, read on 2026-07-28 from
+  `git -C references/Onslaught ls-tree -r HEAD --name-only`: **108 entries — 52
+  `.cpp`, 54 headers (53 `.h` + 1 `.H`), 1 `.md`, 1 `LICENSE`.** That confirms
+  the "52 files provided" heading at the top of this document, and 52 + 117 = 169
+  is internally consistent — but consistency is not evidence.
+- The current inventory posture is owned by
+  [`../source-code/reference-submodule-audit-2026-07-12.md`](../source-code/reference-submodule-audit-2026-07-12.md),
+  which is the correct place to look and resolves from here.
+
+This matters more than a normal dead link: a missing-corpus inventory is what
+decides whether a rebuild lane ports from source or recovers from bytes.

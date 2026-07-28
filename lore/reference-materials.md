@@ -1,5 +1,14 @@
 # Reference Materials
 
+- **Status:** live source register for the lore corpus. Preservation record —
+  where an entry here disagrees with a measurement under
+  [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), the measurement
+  wins.
+- **Last updated:** 2026-07-28
+- **Summary:** where the claims in this directory came from — maintainer-local
+  reference material, external archives, publications, presentations, interviews
+  and primary sources.
+
 ### Maintainer-Local Reference Inventory
 
 These paths describe optional local research material. The files are ignored
@@ -78,4 +87,10 @@ and are not tracked in this repository or included in app releases.
 
 *This document preserves development history that would otherwise be lost. Battle Engine Aquila remains an underappreciated gem from a talented team that deserved better commercial success.*
 
-*Last updated: December 2025*
+**Date footer CORRECTED 2026-07-28.** A footer here previously read
+`Last updated: December 2025`. That was false about its own file: `git log` shows
+this file's last content change was **2026-07-11** (`5a7bacec`), which renamed a
+section and added a scope paragraph — seven months after the date the footer
+claimed. The authoritative date is now the `Last updated:` field in the header
+block at the top of this file. This footer is not maintained and carries no
+date.

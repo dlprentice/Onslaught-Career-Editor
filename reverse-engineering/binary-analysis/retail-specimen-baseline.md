@@ -109,6 +109,42 @@ copied capture target `e1436ef7…`, installed live `e7881829…`.
 hash, not just an address. "Read from the binary" is ambiguous on this
 workstation and has been since at least 2026-03-14.
 
+> ### 2026-07-28 — the trap this rule is meant to stop, and it has already been sprung
+>
+> **`e1436ef7…` is not pristine. Do not call it pristine.** It is the *capture
+> target*: pristine plus `force_windowed` and nothing else. The pristine
+> specimen is `BEA.exe.original.backup`, `74154bfa…`. The directory
+> `local-lab/safe-copy-bea-pristine/` is named after its purpose, not its
+> contents, and the file named `BEA.exe` inside it is the **patched** one — the
+> names are inverted, as
+> [`retail-capture-provenance-2026-07-25.md`](retail-capture-provenance-2026-07-25.md)
+> recorded and did not fix.
+>
+> On 2026-07-28, **nine** tracked notes were found attaching the word "pristine"
+> to `e1436ef7…` in a `Specimen:` header or in the body sentence "linear decode
+> of the pristine file": the seven `2026-07-26` terrain and cockpit notes, plus
+> `cockpit-world-matrix-static-2026-07-26.md` (which also carried **no hash at
+> all**) and one body sentence in
+> `terrain-gain-frame-global-falsified-2026-07-26.md`. All nine were corrected in
+> place. **No conclusion changed** — the two builds differ at exactly four bytes,
+> `0x12a644`–`0x12a647` = VA `0x0052a644`–`0x0052a647`, and no address cited in
+> any of the nine falls in that range.
+>
+> Three sentences make a `Specimen:` line safe, and all three are required:
+>
+> 1. **Name the file, not the directory.** `BEA.exe.original.backup` and
+>    `BEA.exe` live side by side.
+> 2. **Carry the hash**, and check which of `74154bfa…` / `e1436ef7…` /
+>    `e7881829…` it is before writing an adjective.
+> 3. **Say which role it plays** — pristine, capture target, or the deliberately
+>    patched Steam install — because "safe copy" does not distinguish them.
+>
+> This is now gated for new documents: [`DOCUMENTATION.md`](../../DOCUMENTATION.md)
+> makes `Specimen:` mandatory on any finding quoting a retail address, and
+> `tools/doc_header_check.py` enforces it. The checker validates **shape, not
+> truth** — it cannot tell `e1436ef7` from `74154bfa`. That check is still a
+> reader's job, which is why the three rules above are written out here.
+
 Restoring the install is a mutation of an installed game directory and is
 therefore separately authorized; the pristine bytes are held in two places above,
 so it is reversible whenever the user wants it done.

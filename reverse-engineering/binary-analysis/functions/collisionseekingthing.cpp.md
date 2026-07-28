@@ -7,11 +7,36 @@
 > Source File: collisionseekingthing.cpp | Binary: BEA.exe
 > Debug Path: 0x006246d8 (`[maintainer-local-source-export-root]\collisionseekingthing.cpp`)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00425a10` | `CCollisionSeekingInfantryBloke__CheckMountStateOrCollisionFlags` | `CCollisionSeekingInfantryBloke__CheckCollisionFlagsWithDeadSideBranch` | same class; suffix re-read |
+| `0x004261be` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
+| `0x0042627a` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
+| `0x004264a0` | `CCollisionSeekingRound__ResolveRoundCollisionResponse` | `CCollisionSeekingThing__ResolveRoundCollisionResponse` | class prefix moved; suffix unchanged |
+| `0x00426920` | `CCollisionSeekingRound__ComputeScaledMapCellChebyshevDistance` | `CCollisionSeekingThing__ComputeScaledMapCellChebyshevDistance` | class prefix moved; suffix unchanged |
+| `0x00426ad3` | `CCollisionSeekingRound__CreateEffect` | `CCSRay__CreateEffect` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Current Status
 
 Wave 322 (2026-05-11) supersedes the earlier stub wording. The retail database does not yet have a standalone fully mapped `collisionseekingthing.cpp` function family, but the debug-path string is now tied to concrete allocation contexts inside the recovered `CCollisionSeekingRound` cluster.
 
-Wave1059 (`collision-seeking-round-tail-review-wave1059`, `wave1059-readback-verified`) saved function-tag normalization for the collision-seeking round tail and context rows after fresh read-back. Relevant context anchors include `0x00425a10 CCollisionSeekingInfantryBloke__CheckMountStateOrCollisionFlags`, `0x00425c60 CCollisionSeekingRound__FilterCollisionCandidateByTrajectory`, `0x00426900 CCollisionSeekingRound__CheckCollisionFlags`, `0x00426920 CCollisionSeekingRound__ComputeScaledMapCellChebyshevDistance`, `0x00426a00 CCollisionSeekingRound__ProcessMapWhoCollisionSweep`, and `0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady`; primary anchors include `0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound`, `0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector`, `0x004263f0 CCollisionSeekingRound__Destructor`, and `0x004264a0 CCollisionSeekingRound__ResolveRoundCollisionResponse`. The pass saved `131` tags across fourteen rows with no rename, signature, comment, boundary, or executable-byte change. Queue closure remains `6246/6246 = 100.00%`; Wave911 focused progress advances to `812/1408 = 57.67%`; expanded static surface progress advances to `1140/1509 = 75.55%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`. Probe token anchor: Wave1059; collision-seeking-round-tail-review-wave1059; 0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound; 0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector; 0x00426300 CMeshCollisionVolume__ScalarDeletingDestructor_00426300; 0x00426370 CCollisionSeekingRound__ReplacePrimarySeekerAndRefreshOffset; 0x004263f0 CCollisionSeekingRound__Destructor; 0x00426480 CCollisionSeekingRound__SetCollisionMask; 0x004264a0 CCollisionSeekingRound__ResolveRoundCollisionResponse; 0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady; 812/1408 = 57.67%; 1140/1509 = 75.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified; tag normalization.
+Wave1059 (`collision-seeking-round-tail-review-wave1059`, `wave1059-readback-verified`) saved function-tag normalization for the collision-seeking round tail and context rows after fresh read-back. Relevant context anchors include `0x00425a10 CCollisionSeekingInfantryBloke__CheckCollisionFlagsWithDeadSideBranch`, `0x00425c60 CCollisionSeekingRound__FilterCollisionCandidateByTrajectory`, `0x00426900 CCollisionSeekingRound__CheckCollisionFlags`, `0x00426920 CCollisionSeekingThing__ComputeScaledMapCellChebyshevDistance`, `0x00426a00 CCollisionSeekingRound__ProcessMapWhoCollisionSweep`, and `0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady`; primary anchors include `0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound`, `0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector`, `0x004263f0 CCollisionSeekingRound__Destructor`, and `0x004264a0 CCollisionSeekingThing__ResolveRoundCollisionResponse`. The pass saved `131` tags across fourteen rows with no rename, signature, comment, boundary, or executable-byte change. Queue closure remains `6246/6246 = 100.00%`; Wave911 focused progress advances to `812/1408 = 57.67%`; expanded static surface progress advances to `1140/1509 = 75.55%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`. Probe token anchor: Wave1059; collision-seeking-round-tail-review-wave1059; 0x00425b50 CCollisionSeekingRound__InitCollisionLineAndSound; 0x00425e30 CCollisionSeekingRound__UpdatePrimarySeekerLeadVector; 0x00426300 CMeshCollisionVolume__ScalarDeletingDestructor_00426300; 0x00426370 CCollisionSeekingRound__ReplacePrimarySeekerAndRefreshOffset; 0x004263f0 CCollisionSeekingRound__Destructor; 0x00426480 CCollisionSeekingRound__SetCollisionMask; 0x004264a0 CCollisionSeekingThing__ResolveRoundCollisionResponse; 0x00426a20 CCollisionSeekingRound__MarkDelayedCollisionReady; 812/1408 = 57.67%; 1140/1509 = 75.55%; 500/500 = 100.00%; 6246/6246 = 100.00%; [maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified; tag normalization.
 
 This page records public-safe allocation, ownership, and tag-normalization evidence only. It does not prove exact source bodies, concrete helper layouts, local variable names, runtime collision behavior, or rebuild parity.
 
@@ -19,9 +44,9 @@ This page records public-safe allocation, ownership, and tag-normalization evide
 
 | From address | Current saved owner | Alloc size / line | Observed role |
 |--------------|---------------------|-------------------|---------------|
-| 0x004261be | `CCollisionSeekingRound__Init` | `0x1c`, line `0x28` | Primary CLine-style seeker/helper setup context. |
-| 0x0042627a | `CCollisionSeekingRound__Init` | `0x28`, line `0x39` | Secondary CMeshCollisionVolume-style helper setup context. |
-| 0x00426ad3 | `CCollisionSeekingRound__CreateEffect` | `0x34`, line `0x13a` | Effect/trace helper allocation context. |
+| 0x004261be | `CCollisionSeekingThing__Init` | `0x1c`, line `0x28` | Primary CLine-style seeker/helper setup context. |
+| 0x0042627a | `CCollisionSeekingThing__Init` | `0x28`, line `0x39` | Secondary CMeshCollisionVolume-style helper setup context. |
+| 0x00426ad3 | `CCSRay__CreateEffect` | `0x34`, line `0x13a` | Effect/trace helper allocation context. |
 
 The allocator callsites pass the `collisionseekingthing.cpp` debug path for provenance. The exact source helper class names and layouts are still bounded because the current retail evidence comes from debug-path strings, allocation sizes, vtable assignments, and the surrounding `CCollisionSeekingRound` decompile/read-back context.
 

@@ -5,11 +5,27 @@
 > Header string: `0x0064c628` ("[maintainer-local-source-export-root]\MissionScript\DataType.h")
 > Last updated: 2026-06-08
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0052ea40` | `CAsmInstruction__ExecuteCall` | `CInstructionOP_CALL__ExecuteCall` | class prefix moved; suffix unchanged |
+| `0x0052f430` | `CStringDataType__Print` | `CThingPtrDataType__Print` | class prefix moved; suffix unchanged |
+
+---
+
 ## Overview
 
 DataType.cpp implements the **mission script data type system** - a polymorphic class hierarchy for representing different data types (int, float, bool, string, position, thing pointer) used by the mission scripting engine.
 
-2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static datatype factory inventory at `0x0052ec60 CDataType__CreateFromType`: `6` serialized datatype ids, `1..6`, covering int, float, string, bool, thing pointer, and position. The same schema links these datatype ids to the opcode/VM anchors `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x00539b00 CScriptObjectCode__Run`, `0x0052ea40 CAsmInstruction__ExecuteCall`, `script_state+0x218`, and `script_object_code+0x68`; runtime datatype behavior, exact layouts, and rebuild parity remain separate proof.
+2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static datatype factory inventory at `0x0052ec60 CDataType__CreateFromType`: `6` serialized datatype ids, `1..6`, covering int, float, string, bool, thing pointer, and position. The same schema links these datatype ids to the opcode/VM anchors `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x00539b00 CScriptObjectCode__Run`, `0x0052ea40 CInstructionOP_CALL__ExecuteCall`, `script_state+0x218`, and `script_object_code+0x68`; runtime datatype behavior, exact layouts, and rebuild parity remain separate proof.
 
 ## Wave576 String/Thing/Position Static Read-Back
 
@@ -177,7 +193,7 @@ CDataType                    (base class)
 |---------|------|---------|
 | 0x0052f2c0 | CStringDataType__Clone | Creates copy of string data type |
 | 0x0052f360 | CStringDataType__Equals | String comparison (strcmp) |
-| 0x0052f430 | CStringDataType__Print | Print string value |
+| 0x0052f430 | CThingPtrDataType__Print | Print string value |
 | 0x0052f690 | CStringDataType__InitFromString | Initialize from C string |
 | 0x0052f720 | CStringDataType__ScalarDeletingDestructor | Scalar deleting destructor |
 | 0x0052f740 | CStringDataType__Destructor | Frees string buffer |

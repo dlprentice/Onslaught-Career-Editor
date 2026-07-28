@@ -1,7 +1,31 @@
 # Retail → Core translation policy (jet-forward scalar)
 
-Status: **accepted** (2026-07-14) — identity scale \(s=1\); Core edits may now cite this policy  
+Status: **accepted (2026-07-14) for the retail measurement; SUPERSEDED 2026-07-28
+for the Core mapping** — identity scale \(s=1\)  
 Depends on: [jet-forward-scalar-response-v1.md](jet-forward-scalar-response-v1.md)
+
+> **SUPERSEDED 2026-07-28 — the Core mapping only.** The Status line above
+> previously read, in full:
+>
+> > Status: **accepted** (2026-07-14) — identity scale \(s=1\); Core edits may now cite this policy
+>
+> The constant this policy authorises no longer exists.
+> `grep -rn 'JetSpeedPerTick' rebuild/OnslaughtRebuild.Core/` returns nothing.
+> Core now carries a two-ended envelope instead of a flat scalar —
+> `JetMinimumSpeedPerTick = 200` / `JetMaximumSpeedPerTick = 600`
+> (`rebuild/OnslaughtRebuild.Core/SimulationConstants.cs:125-129`) — read from the
+> shipped `mMinAirVelocity 0.3` / `mMaxAirVelocity 0.9` bytes in record 3 of
+> `data/battle engine configurations.dat` (SHA-256 `58722b12…`, 1,514 bytes). So
+> the authority for the Core value moved from a copied-runtime pair to shipped
+> data, and the shape of the model changed with it.
+>
+> **What is NOT withdrawn:** the retail measurement. `jet-p06`'s steady speed of
+> 11.431 retail units/s still matches
+> `battleengine-jet-forward-scalar-response.v1` exactly, and
+> [`jet-forward-scalar-response-v1.md`](jet-forward-scalar-response-v1.md)
+> remains the copied-runtime authority for retail jet cruise speed. Only the
+> "Core edits may now cite this policy" clause is dead, because there is no
+> longer a `JetSpeedPerTick` for a Core edit to set.
 
 ## Purpose
 
@@ -47,3 +71,9 @@ citing this policy and schema `battleengine-jet-forward-scalar-response.v1`.
 Core self-agreement does not re-prove retail.
 
 The previous unmeasured placeholder `650` is superseded by this measurement.
+
+**SUPERSEDED 2026-07-28.** The authorization above is retained verbatim as the
+record of what was accepted on 2026-07-14, but it no longer describes the tree:
+there is no `JetSpeedPerTick` in `rebuild/OnslaughtRebuild.Core/` to set. See the
+block under the Status line at the head of this document. Do not act on this
+section without reading that block first.

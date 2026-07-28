@@ -1,5 +1,12 @@
 # Local lab overlay
 
+Status: active — the ignored-directory boundary
+Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
+pass.
+Summary: which local paths own retail inputs and bulky generated work, and what
+may be promoted out of them into tracked evidence.
+
 Use ignored local directories for retail inputs and bulky/generated work. They
 are not source and must not be copied wholesale into a release candidate.
 The rebuild materializer writes its exact verified retail inputs to ignored

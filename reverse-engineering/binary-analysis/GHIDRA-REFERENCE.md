@@ -15,6 +15,23 @@ rejected. Exact outcomes and before/after metadata are recorded in the
 The closeout numbers do not mean that all names, prototypes, semantics,
 layouts, or behaviors are proven.
 
+> **Corrected 2026-07-28 — the closeout is a record, not the current name
+> state.** The paragraph above is unchanged and still accurate about what the
+> 2026-07-13 audit did. What it omitted is that the "trusted 6,411-address
+> snapshots" it describes have since been overtaken. Established in tracked
+> evidence: the inventory grew **6,411 → 6,969**
+> ([re-coverage-baseline-2026-07-25.md](re-coverage-baseline-2026-07-25.md));
+> **332** RTTI re-prefixes, then **13** renames and **two** destructor
+> demotions, were applied to the live database. **The current record of which
+> names are demoted is the three name-grading ledgers**, not this closeout:
+> [2026-07-25](name-grading-ledger-2026-07-25.md) (read its banner — two of its
+> figures are superseded), [2026-07-26](name-grading-ledger-2026-07-26.md),
+> [2026-07-27](name-grading-ledger-2026-07-27-demotion2.md).
+>
+> A larger vtable-naming wave and a higher live inventory count exist only in
+> the header of an untracked export and are deliberately not quoted here; see
+> the same note in [`_index.md`](_index.md).
+
 ## Safe workflow
 
 1. Record the executable specimen and database identity without committing

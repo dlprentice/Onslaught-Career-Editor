@@ -124,7 +124,7 @@ BOOL CCareer::Load(void* buffer, int size) {
 
 ### CRITICAL: Cheat Codes are NAME-based
 
-**Scope note:** The strings below are from the **source/internal build**. The Steam PC port uses different XOR-decrypted cheat strings (`MALLOY`, `TURKEY`, `V3R5IOF`, `Maladim`, `Aurore`, `latête`). Later Steam-build testing confirmed `Maladim` exposes a visible `God OFF` / `God ON` toggle and normal combat-damage effect; `V3R5IOF` and some exact behavior boundaries remain open. See `../game-mechanics/cheat-codes.md` for PC-port details.
+**Scope note:** The strings below are from the **source/internal build**. The Steam PC port uses different XOR-decrypted cheat strings (`MALLOY`, `TURKEY`, `V3R5IOF`, `Maladim`, `Aurore`, `latête`). Later Steam-build testing confirmed `Maladim` exposes a visible `God OFF` / `God ON` toggle and normal combat-damage effect; `V3R5IOF` and some exact behavior boundaries remain open. See [`../../game-mechanics/cheat-codes.md`](../../game-mechanics/cheat-codes.md) for PC-port details. (Path repaired 2026-07-28 — this read `../game-mechanics/cheat-codes.md`, which from `source-code/frontend/` resolves to `source-code/game-mechanics/`, a directory that does not exist.)
 
 **Source/internal behavior (FEPSaveGame.cpp):** Cheat codes are checked against the save game **NAME** using `strstr()`, so the code can appear anywhere in the name.
 

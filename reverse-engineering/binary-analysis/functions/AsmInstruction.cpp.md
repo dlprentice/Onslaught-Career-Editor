@@ -6,6 +6,35 @@ Wave1189 current-risk update: Wave1189 (`wave1189-missionscript-bytecode-iscript
 > Debug Path: 0x0064c5c4 (`[maintainer-local-source-export-root]\MissionScript\AsmInstruction.cpp`)
 > Last updated: 2026-06-08
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0052e0f0` | `CAsmInstruction__ExecutePop` | `CInstructionOP_RETURN__ExecutePop` | Class moved **and the class names a different opcode** than the row's own gloss (`RETURN` against a gloss that says POP). Recorded as an open conflict below, not resolved. |
+| `0x0052e380` | `CAsmInstruction__ExecuteCompareEqual` | `CInstructionOP_CMPB__ExecuteCompareEqual` | class prefix moved; suffix unchanged |
+| `0x0052e4d0` | `CAsmInstruction__ExecuteOr` | `CInstructionOP_OR__ExecuteOr` | class prefix moved; suffix unchanged |
+| `0x0052e580` | `CAsmInstruction__ExecuteAnd` | `CInstructionOP_AND__ExecuteAnd` | class prefix moved; suffix unchanged |
+| `0x0052e630` | `CAsmInstruction__ExecuteGreaterThan` | `CInstructionOP_GREAT_THAN__ExecuteGreaterThan` | class prefix moved; suffix unchanged |
+| `0x0052e6d0` | `CAsmInstruction__ExecuteLessThan` | `CInstructionOP_LESS_THAN__ExecuteLessThan` | class prefix moved; suffix unchanged |
+| `0x0052e770` | `CAsmInstruction__ExecuteGreaterOrEqual` | `CInstructionOP_GREAT_EQ_THAN__ExecuteGreaterOrEqual` | class prefix moved; suffix unchanged |
+| `0x0052e810` | `CAsmInstruction__ExecuteLessOrEqual` | `CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual` | class prefix moved; suffix unchanged |
+| `0x0052e8b0` | `CAsmInstruction__ExecuteCompareNotEqual` | `CInstructionOP_CMPNEB__ExecuteCompareNotEqual` | class prefix moved; suffix unchanged |
+| `0x0052ea40` | `CAsmInstruction__ExecuteCall` | `CInstructionOP_CALL__ExecuteCall` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factory/head cleanup with saved Ghidra read-back for the adjacent opcode executor and bool-result cluster. Wave863 hardened the important MissionScript bytecode VM operator vfuncs for PLUS, MINUS, MULTIPLY, DIVIDE, and CMP. The current evidence is static retail-binary evidence only: the current Stuart source snapshot does not include a matching `MissionScript/AsmInstruction.cpp` body, so no source identity or runtime behavior is claimed.
@@ -28,22 +57,22 @@ Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factor
 
 | Address | Name | Saved signature | Purpose | Status |
 | --- | --- | --- | --- | --- |
-| `0x0052e0f0` | `CAsmInstruction__ExecutePop` | `void __thiscall CAsmInstruction__ExecutePop(void * this, void * script_state, void * data_stack, void * object_code)` | POP executor that decrements `script_state+0x224`, pops a datatype, reads scalar data through vtable slot `+0x30`, writes `script_state+0x214`, releases the object, and pushes a one-valued CInt status object when allocation succeeds. | Saved/read-back |
+| `0x0052e0f0` | `CInstructionOP_RETURN__ExecutePop` | `void __thiscall CInstructionOP_RETURN__ExecutePop(void * this, void * script_state, void * data_stack, void * object_code)` | POP executor that decrements `script_state+0x224`, pops a datatype, reads scalar data through vtable slot `+0x30`, writes `script_state+0x214`, releases the object, and pushes a one-valued CInt status object when allocation succeeds. | Saved/read-back |
 | `0x0052e2c0` | `CInstructionOP_PUSH__VFunc_00_0052e2c0` | `void __thiscall CInstructionOP_PUSH__VFunc_00_0052e2c0(void * this, void * script_state, void * data_stack, void * object_code)` | OP_PUSH executor that resolves `this+0x04` attribute data through `CAsmInstruction__GetAttributeValue` and pushes the returned datatype. | Saved/read-back |
-| `0x0052e380` | `CAsmInstruction__ExecuteCompareEqual` | `void __thiscall CAsmInstruction__ExecuteCompareEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Equality executor that dispatches datatype vtable slot `+0x18`, pushes an allocated boolean result, and releases both operands. | Saved/read-back |
-| `0x0052e4d0` | `CAsmInstruction__ExecuteOr` | `void __thiscall CAsmInstruction__ExecuteOr(void * this, void * script_state, void * data_stack, void * object_code)` | Boolean OR executor over datatype vtable slot `+0x3c`, producing an allocated boolean result. | Saved/read-back |
-| `0x0052e580` | `CAsmInstruction__ExecuteAnd` | `void __thiscall CAsmInstruction__ExecuteAnd(void * this, void * script_state, void * data_stack, void * object_code)` | Boolean AND executor over datatype vtable slot `+0x3c`, producing an allocated boolean result. | Saved/read-back |
-| `0x0052e630` | `CAsmInstruction__ExecuteGreaterThan` | `void __thiscall CAsmInstruction__ExecuteGreaterThan(void * this, void * script_state, void * data_stack, void * object_code)` | Greater-than executor that dispatches datatype comparison slot `+0x24`. | Saved/read-back |
-| `0x0052e6d0` | `CAsmInstruction__ExecuteLessThan` | `void __thiscall CAsmInstruction__ExecuteLessThan(void * this, void * script_state, void * data_stack, void * object_code)` | Less-than executor that dispatches datatype comparison slot `+0x20`. | Saved/read-back |
-| `0x0052e770` | `CAsmInstruction__ExecuteGreaterOrEqual` | `void __thiscall CAsmInstruction__ExecuteGreaterOrEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Greater-or-equal executor that dispatches datatype comparison slot `+0x2c`. | Saved/read-back |
-| `0x0052e810` | `CAsmInstruction__ExecuteLessOrEqual` | `void __thiscall CAsmInstruction__ExecuteLessOrEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Less-or-equal executor that dispatches datatype comparison slot `+0x28`. | Saved/read-back |
-| `0x0052e8b0` | `CAsmInstruction__ExecuteCompareNotEqual` | `void __thiscall CAsmInstruction__ExecuteCompareNotEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Inequality executor that dispatches datatype vtable slot `+0x1c`, pushes an allocated boolean result, and releases both operands. | Saved/read-back |
+| `0x0052e380` | `CInstructionOP_CMPB__ExecuteCompareEqual` | `void __thiscall CInstructionOP_CMPB__ExecuteCompareEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Equality executor that dispatches datatype vtable slot `+0x18`, pushes an allocated boolean result, and releases both operands. | Saved/read-back |
+| `0x0052e4d0` | `CInstructionOP_OR__ExecuteOr` | `void __thiscall CInstructionOP_OR__ExecuteOr(void * this, void * script_state, void * data_stack, void * object_code)` | Boolean OR executor over datatype vtable slot `+0x3c`, producing an allocated boolean result. | Saved/read-back |
+| `0x0052e580` | `CInstructionOP_AND__ExecuteAnd` | `void __thiscall CInstructionOP_AND__ExecuteAnd(void * this, void * script_state, void * data_stack, void * object_code)` | Boolean AND executor over datatype vtable slot `+0x3c`, producing an allocated boolean result. | Saved/read-back |
+| `0x0052e630` | `CInstructionOP_GREAT_THAN__ExecuteGreaterThan` | `void __thiscall CInstructionOP_GREAT_THAN__ExecuteGreaterThan(void * this, void * script_state, void * data_stack, void * object_code)` | Greater-than executor that dispatches datatype comparison slot `+0x24`. | Saved/read-back |
+| `0x0052e6d0` | `CInstructionOP_LESS_THAN__ExecuteLessThan` | `void __thiscall CInstructionOP_LESS_THAN__ExecuteLessThan(void * this, void * script_state, void * data_stack, void * object_code)` | Less-than executor that dispatches datatype comparison slot `+0x20`. | Saved/read-back |
+| `0x0052e770` | `CInstructionOP_GREAT_EQ_THAN__ExecuteGreaterOrEqual` | `void __thiscall CInstructionOP_GREAT_EQ_THAN__ExecuteGreaterOrEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Greater-or-equal executor that dispatches datatype comparison slot `+0x2c`. | Saved/read-back |
+| `0x0052e810` | `CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual` | `void __thiscall CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Less-or-equal executor that dispatches datatype comparison slot `+0x28`. | Saved/read-back |
+| `0x0052e8b0` | `CInstructionOP_CMPNEB__ExecuteCompareNotEqual` | `void __thiscall CInstructionOP_CMPNEB__ExecuteCompareNotEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Inequality executor that dispatches datatype vtable slot `+0x1c`, pushes an allocated boolean result, and releases both operands. | Saved/read-back |
 | `0x0052e950` | `CInstructionOP_JMPFALSE__VFunc_00_0052e950` | `void __thiscall CInstructionOP_JMPFALSE__VFunc_00_0052e950(void * this, void * script_state, void * data_stack, void * object_code)` | JMPFALSE executor that reads a popped datatype bool through slot `+0x3c` and writes `this+0x04` to `script_state+0x214` when false. | Saved/read-back |
-| `0x0052ea40` | `CAsmInstruction__ExecuteCall` | `void __thiscall CAsmInstruction__ExecuteCall(void * this, void * script_state, void * data_stack, void * object_code)` | CALL executor that stages arguments in the global scratch array near `0x0089c300`, dispatches through descriptor table `0x0064ce50`, pushes the result datatype, and releases temporaries. | Saved/read-back |
+| `0x0052ea40` | `CInstructionOP_CALL__ExecuteCall` | `void __thiscall CInstructionOP_CALL__ExecuteCall(void * this, void * script_state, void * data_stack, void * object_code)` | CALL executor that stages arguments in the global scratch array near `0x0089c300`, dispatches through descriptor table `0x0064ce50`, pushes the result datatype, and releases temporaries. | Saved/read-back |
 
 2026-06-08 descriptor schema proof: `missionscript-command-descriptor-schema-proof.md` and `missionscript-command-descriptor-schema.v1.json` now account for the `0x0064ce50` descriptor table consumed by `CAsmInstruction__ExecuteCall`: `144` declared `0x40`-stride slots, `144` slots with observed assignments, `143` observed name-field assignments, and first/last observed names `FollowWaypointWait` / `IsOverWater`. This is static descriptor-slot accounting only; exact descriptor field layout, exact arity, runtime command dispatch, command effects, and VM/datatype/opcode runtime behavior remain separate proof.
 
-2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static MissionScript opcode inventory around `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x0052ea40 CAsmInstruction__ExecuteCall`, opcode ids `0x00..0x1a`, `19` proven executor/shared no-op cases, and `8` unpromoted opcode cases. The schema keeps `CDataType__CreateFromType`, `CScriptObjectCode__Run`, `script_state+0x218`, and `script_object_code+0x68` as static planning anchors only; runtime opcode behavior, exact instruction/object layouts, and rebuild parity remain separate proof.
+2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static MissionScript opcode inventory around `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x0052ea40 CInstructionOP_CALL__ExecuteCall`, opcode ids `0x00..0x1a`, `19` proven executor/shared no-op cases, and `8` unpromoted opcode cases. The schema keeps `CDataType__CreateFromType`, `CScriptObjectCode__Run`, `script_state+0x218`, and `script_object_code+0x68` as static planning anchors only; runtime opcode behavior, exact instruction/object layouts, and rebuild parity remain separate proof.
 
 ## Wave863 Static Read-Back
 

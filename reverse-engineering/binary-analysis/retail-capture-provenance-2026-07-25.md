@@ -137,8 +137,11 @@ Released retail renders **`V1.00`**.
 2. **The version overlay string is not.** `RetailFrontendFlow` had hardcoded
    `"V1.00 - PATCHED"`, transcribed from the contaminated capture. Corrected. This
    is the clearest instance of a contaminated reference becoming a product defect,
-   and `drawlists/COORDINATOR.md` had listed `version` as an unresolved item for
-   precisely this reason.
+   and `local-lab/startup-parity-ghidra-ro-2026-07-23/drawlists/COORDINATOR.md`
+   (lab-only, gitignored) had listed `version` as an unresolved item for
+   precisely this reason. *(Path corrected 2026-07-28; this previously read
+   `drawlists/COORDINATOR.md`, which resolves nowhere relative to this file or to
+   the repository root. Only the path changed — the claim is unaltered.)*
 3. **Future captures should stay at 640x480, or use a pristine safe copy.** A
    capture at a non-4:3 resolution on this safe copy would run unpatched 4:3 aspect
    math against a widescreen mode — a state neither pristine nor fully-patched
@@ -150,14 +153,27 @@ The conclusions above were derived statically. They have since been **confirmed 
 running both builds and comparing frames**, which removes the remaining inference.
 
 A **capture build** was made: a copy of pristine `BEA.exe` with **only**
-`force_windowed` applied (5 bytes at `0x12A644`), sha256
-`e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`. The version
+`force_windowed` applied (a 5-byte instruction rewritten at `0x12A644`, of which
+**4 bytes actually differ** — `a1 f0 2d 66 00` → `b8 01 00 00 00`), sha256
+`e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`. *(Clarified
+2026-07-28: this previously read "**only** `force_windowed` applied (5 bytes at
+`0x12A644`)", which read as a byte-difference count and contradicted this
+document's own table above — Len **4** — and its section heading "Complete
+difference: 28 bytes in 4 runs", which sums only with 4 (3 + 1 + 4 + 20 = 28).
+Both readings are defensible for the patch itself: `BinaryPatchEngine.cs` writes
+five bytes, and the fifth is unchanged. Re-measured 2026-07-28 —
+`BEA.exe.original.backup` vs `BEA.exe` differ at exactly four offsets,
+`0x12a644`–`0x12a647`.)* The version
 overlay and the 4:3 gate were deliberately left pristine. It presented at
 **640x480**, independently confirming the composition size from a build that has
 never carried a cosmetic patch.
 
 Main menu, pristine capture build vs the existing patched reference frame
-(`tools/compare_capture.py`, per-region):
+(`tools/compare_capture.py`, per-region). **This is a subset**: seven of the nine
+regions defined in `rebuild/tools/frontend-regions-main-menu.json` — `decor-left-arc`
+and `decor-right-glyph` are not tabulated here, though `decor-right-glyph` is
+relied on below as one of the animated residuals. *(Noted 2026-07-28; the table
+was previously presented without saying it was partial. No row changed.)*
 
 | region | changed% | material% | mean delta |
 | --- | ---: | ---: | ---: |

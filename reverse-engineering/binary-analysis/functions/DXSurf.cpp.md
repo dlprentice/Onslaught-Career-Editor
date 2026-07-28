@@ -8,13 +8,38 @@
 > Debug path address: `0x006525a0`
 > Last updated: 2026-05-20
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004f5b70` | `CParticleDescriptor__SetIndexedParam` | `CTokenArchive__BindIndexedFieldPointer` | class prefix and suffix both moved |
+| `0x00556d70` | `CDXSurf__ScalarDeletingDestructor` | `CDXTexture__ScalarDeletingDestructor` | class prefix moved; suffix unchanged |
+| `0x00556d90` | `CDXSurf__dtor` | `CDXTexture__Destructor` | class prefix and suffix both moved |
+| `0x00556fc0` | `CDXSurf__SetupSurface` | `CDXTexture__SetupSurface` | class prefix moved; suffix unchanged |
+| `0x00557060` | `CTextureSequence__EnsureLoaded` | `CDXTexture__EnsureLoaded` | class prefix moved; suffix unchanged |
+| `0x005572c0` | `CTextureSequence__ReleaseIfLoaded` | `CDXTexture__ReleaseIfLoaded` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Current Status
 
 Wave832 Texture/Surface Prelude (`texture-surface-prelude-wave832`, `wave832-readback-verified`) hardened the adjacent global texture/surface list unlink row `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList` as `void __fastcall CDXSurf__UnlinkNodeFromGlobalList(void * texture_base)` and paired it with texture-base initialization evidence for `0x004f2710 CTextureBase__Init` as `void * __fastcall CTextureBase__Init(void * texture_base)`. These rows are important connective/static infrastructure for the shared list that ties texture-base construction to CDXSurf teardown.
 
-Probe anchors: `Wave832 Texture/Surface Prelude`, `texture-surface-prelude-wave832`, `0x004f2710 CTextureBase__Init`, `void * __fastcall CTextureBase__Init(void * texture_base)`, `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList`, `void __fastcall CDXSurf__UnlinkNodeFromGlobalList(void * texture_base)`, `DAT_0083d9b0`, `JCLTEX #%d`, `0x00556ce1`, `0x00556e70`, `5654/6098 = 92.72%`, `0x004f5b70 CParticleDescriptor__SetIndexedParam`, `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
+Probe anchors: `Wave832 Texture/Surface Prelude`, `texture-surface-prelude-wave832`, `0x004f2710 CTextureBase__Init`, `void * __fastcall CTextureBase__Init(void * texture_base)`, `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList`, `void __fastcall CDXSurf__UnlinkNodeFromGlobalList(void * texture_base)`, `DAT_0083d9b0`, `JCLTEX #%d`, `0x00556ce1`, `0x00556e70`, `5654/6098 = 92.72%`, `0x004f5b70 CTokenArchive__BindIndexedFieldPointer`, `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
 
-Static evidence: `CDXSurf__dtor` at `0x00556e70` and unwind rows `0x005d7d30`/`0x005d7d50` load `ECX` with `object+0x08` or null before calling/jumping to `CDXSurf__UnlinkNodeFromGlobalList`, correcting the stale cdecl stack-argument signature. The body walks `DAT_0083d9b0` through `node+0xa0` links, compares against `texture_base-0x08`, and unlinks by updating the previous node link or the global head. The paired init row uses `JCLTEX #%d` and `0x00556ce1` evidence in [`texture.cpp`](texture.cpp/_index.md). Post-Wave832 queue telemetry is `5654/6098 = 92.72%`, next raw head `0x004f5b70 CParticleDescriptor__SetIndexedParam`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
+Static evidence: `CDXSurf__dtor` at `0x00556e70` and unwind rows `0x005d7d30`/`0x005d7d50` load `ECX` with `object+0x08` or null before calling/jumping to `CDXSurf__UnlinkNodeFromGlobalList`, correcting the stale cdecl stack-argument signature. The body walks `DAT_0083d9b0` through `node+0xa0` links, compares against `texture_base-0x08`, and unlinks by updating the previous node link or the global head. The paired init row uses `JCLTEX #%d` and `0x00556ce1` evidence in [`texture.cpp`](texture.cpp/_index.md). Post-Wave832 queue telemetry is `5654/6098 = 92.72%`, next raw head `0x004f5b70 CTokenArchive__BindIndexedFieldPointer`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-230834_post_wave832_texture_surface_prelude_verified`.
 
 Wave1028 static re-audit (`cdx-render-resource-lifecycle-review-wave1028`) re-read `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList` with context `0x004f2710 CTextureBase__Init` and no mutation. Fresh exports verified the same ECX-only global list unlink shape, `CDXSurf__dtor`/unwind caller set, and `DAT_0083d9b0` node walk while keeping runtime texture/surface teardown behavior and exact layout proof separate. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-021726_post_wave1028_cdx_render_resource_lifecycle_review_verified`.
 
@@ -32,13 +57,13 @@ Wave616 bounds only the slots below through static saved-Ghidra evidence. Slots 
 
 | Slot | Address | Pointer | Status |
 | ---: | --- | --- | --- |
-| `0x00` | `0x005e59a0` | `0x00556d70 CDXSurf__ScalarDeletingDestructor` | Bounded |
+| `0x00` | `0x005e59a0` | `0x00556d70 CDXTexture__ScalarDeletingDestructor` | Bounded |
 | `0x04` | `0x005e59a4` | `0x00557a90 CDXTexture__LoadTextureFromFile_Core` | Existing context row |
-| `0x08` | `0x005e59a8` | `0x00557060 CTextureSequence__EnsureLoaded` | Existing context row |
-| `0x0c` | `0x005e59ac` | `0x005572c0 CTextureSequence__ReleaseIfLoaded` | Existing context row |
+| `0x08` | `0x005e59a8` | `0x00557060 CDXTexture__EnsureLoaded` | Existing context row |
+| `0x0c` | `0x005e59ac` | `0x005572c0 CDXTexture__ReleaseIfLoaded` | Existing context row |
 | `0x10` | `0x005e59b0` | `0x00558600` | No Ghidra function boundary yet |
 | `0x14` | `0x005e59b4` | `0x00556e90` | No Ghidra function boundary yet |
-| `0x18` | `0x005e59b8` | `0x00556fc0 CDXSurf__SetupSurface` | Bounded |
+| `0x18` | `0x005e59b8` | `0x00556fc0 CDXTexture__SetupSurface` | Bounded |
 | `0x1c` | `0x005e59bc` | `0x00405930 SharedVFunc__ReturnZero_00405930` | Shared inherited helper |
 
 ## Wave616 Function Map
@@ -53,10 +78,10 @@ Wave616 bounds only the slots below through static saved-Ghidra evidence. Slots 
 | `0x005565d0` | `CDXSurf__CreateSurfaceStrip` | `void __thiscall CDXSurf__CreateSurfaceStrip(void * this, void * chunk_reader)` | Called from `CDXSurf__CreateSurfaceArray` at `0x0055655f`. Allocates two `0x2c` `CVBuffer` objects from `DXSurf.cpp` lines `0xa8` and `0xab`, creates buffers with `count*2+2` vertices and shader `0x242`, reads strip positions, fills sine-offset wave vertices, handles `DAT_0082b4a4` UV ordering, writes `0x00ffffff` / `0xc0ffffff` / `0xff000000` colors, and unlocks both buffers. |
 | `0x005569e0` | `CDXSurf__Destroy` | `void __thiscall CDXSurf__Destroy(void * this)` | `CDXLandscape__Shutdown` callsite `0x00544f8b`; clears initialized flag, destroys the strip array through `CDXLandscape__DestroyArrayWithCallback`, frees the count header, clears the array pointer, and releases the wave texture at `this+0x8` through `CTexture__DecrementRefCountFromNameField`. |
 | `0x00556a30` | `CDXSurf__Render` | `void __thiscall CDXSurf__Render(void * this, byte validated_mode)` | `CWaterRenderSystem__RenderMainPass` callsites `0x0055bf37` and `0x0055d520`; validates shared water state when requested, sets projection depth bias index `4`, resolves the animated waves texture frame, binds render state, iterates strip entries, sets each stream source, draws D3D triangle strips through device vtable `+0x144`, marks accepted in validated mode, then resets depth bias. |
-| `0x00556d70` | `CDXSurf__ScalarDeletingDestructor` | `void * __thiscall CDXSurf__ScalarDeletingDestructor(void * this, byte delete_flags)` | Vtable `0x005e59a0` slot `0`; calls `CDXSurf__dtor`, frees through `CDXMemoryManager__Free` when `delete_flags & 1`, and returns `this`. |
-| `0x00556d90` | `CDXSurf__dtor` | `void __fastcall CDXSurf__dtor(void * this)` | Reached from the scalar-deleting destructor and a destructor thunk at `0x0053a140`. Installs vtable `0x005e59a0`, unlinks render-object lists, optionally reports nonzero texture refcounts through `Texture: %s refcount %d`, clears texture entries, runs base/device cleanup, and calls Wave832 `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList` with `ECX=this+0x08` or null. The decompile still shows an `unaff_ESI` artifact. |
+| `0x00556d70` | `CDXTexture__ScalarDeletingDestructor` | `void * __thiscall CDXTexture__ScalarDeletingDestructor(void * this, byte delete_flags)` | Vtable `0x005e59a0` slot `0`; calls `CDXSurf__dtor`, frees through `CDXMemoryManager__Free` when `delete_flags & 1`, and returns `this`. |
+| `0x00556d90` | `CDXTexture__Destructor` | `void __fastcall CDXTexture__Destructor(void * this)` | Reached from the scalar-deleting destructor and a destructor thunk at `0x0053a140`. Installs vtable `0x005e59a0`, unlinks render-object lists, optionally reports nonzero texture refcounts through `Texture: %s refcount %d`, clears texture entries, runs base/device cleanup, and calls Wave832 `0x004f2790 CDXSurf__UnlinkNodeFromGlobalList` with `ECX=this+0x08` or null. The decompile still shows an `unaff_ESI` artifact. |
 | `0x00556f80` | `CDXSurf__DestroyRenderTarget` | `void __thiscall CDXSurf__DestroyRenderTarget(void * this)` | `CFEPGoodies__FreeUpGoodyResources` callsite `0x0045cd7e`; releases resource pointer at `this+0x140`, destructs/frees a `CVBufTexture` when still present, clears `this+0x140`, and returns. |
-| `0x00556fc0` | `CDXSurf__SetupSurface` | `bool __thiscall CDXSurf__SetupSurface(void * this, int setup_value, short format_word, int size_x, int size_y, byte setup_flags, int extra_config)` | Vtable `0x005e59a0` slot `+0x18` and `CDXBattleLine__Constructor` computed callsites; `RET 0x18`. Copies default surface name from `0x00662b2c` into `this+0x8`, stores setup fields at `+0xac/+0xb0/+0x13c/+0x144/+0x148/+0x14c/+0x150`, increments `this+0xa4`, invokes vtable slot `+0x04`, and returns true on nonnegative result. |
+| `0x00556fc0` | `CDXTexture__SetupSurface` | `bool __thiscall CDXTexture__SetupSurface(void * this, int setup_value, short format_word, int size_x, int size_y, byte setup_flags, int extra_config)` | Vtable `0x005e59a0` slot `+0x18` and `CDXBattleLine__Constructor` computed callsites; `RET 0x18`. Copies default surface name from `0x00662b2c` into `this+0x8`, stores setup fields at `+0xac/+0xb0/+0x13c/+0x144/+0x148/+0x14c/+0x150`, increments `this+0xa4`, invokes vtable slot `+0x04`, and returns true on nonnegative result. |
 
 ## Constants And Strings
 

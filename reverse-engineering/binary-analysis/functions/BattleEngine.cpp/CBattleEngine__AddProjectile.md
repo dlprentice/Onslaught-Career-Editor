@@ -1,12 +1,61 @@
-# CBattleEngine__AddProjectile
+# CBattleEngine__AddTrackedActiveReader
 
-> Address: `0x00406fc0` | Source family: `references/Onslaught/BattleEngine.cpp`
-> The filename and saved Ghidra symbol are retained so historical links and
-> exports remain resolvable.
+> Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe (the Ghidra database's specimen, SHA-256 `74154bfa…`)
+> Address: `0x00406fc0`
+> Status: name corrected 2026-07-28; source identity still hypothesis-only
+> Last updated: 2026-07-28
+> The **filename** is retained at the withdrawn name so historical links and
+> exports remain resolvable. A filename here is a research label, not a claim.
+
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00406fc0` | `CBattleEngine__AddProjectile` | `CBattleEngine__AddTrackedActiveReader` | same class; suffix re-read |
+
+Three places carried the withdrawn label until 2026-07-28: the H1, the
+`Saved Ghidra name` line below, and the function name inside the saved-signature
+block. All three now read the current name. **Nothing else changed** — the
+lock-entry interpretation, the argument shape, the boundaries and the contract
+link were already written against the lock reading and are unaffected by the
+rename.
+
+### The rename and this note's source candidate do not conflict — and neither is settled
+
+Recorded rather than smoothed over, because a reader could otherwise take the new
+Ghidra label as having displaced the source candidate.
+
+- **MEASURED (database):** the 2026-07-27 export names `0x00406fc0`
+  `CBattleEngine__AddTrackedActiveReader`.
+- **SOURCE:** `references/Onslaught/BattleEngine.h:142` declares
+  `void CBattleEngine::StartLock(CUnit*, float, BOOL=FALSE)` and
+  `references/Onslaught/BattleEngine.cpp:801` defines it. Its body, at
+  `BattleEngine.cpp:806-824`, performs the five steps this note's
+  "Current Static Interpretation" already lists, in the same order: reject a
+  dying unit, scan `mLocks` for a duplicate, `new CLockInfo()`, store
+  start/finish/direct-lock, `mLocks.Append(info)`. The declared argument list
+  matches the saved signature below argument for argument. The Ghidra label
+  describes the same act — the appended `CLockInfo` holds a reader set by
+  `SetReader` — in different words.
+- **UNKNOWN:** whether `0x00406fc0` *is* `CBattleEngine::StartLock`. The
+  correspondence above is between this note's own decompile-derived description
+  and the pinned source; **no byte-level identification was made**, and no
+  reviewed retail rename has been applied. What would settle it: a byte or
+  call-graph comparison of `0x00406fc0` against the compiled shape of
+  `StartLock`, bounded to the function extent and read from the pristine
+  specimen.
+
+---
 
 ## Status
 
-- Saved Ghidra name: `CBattleEngine__AddProjectile`
+- Saved Ghidra name: `CBattleEngine__AddTrackedActiveReader` (was
+  `CBattleEngine__AddProjectile` until 2026-07-28)
 - Current static semantic role: lock-entry creation, not projectile spawning
 - Source candidate: `CBattleEngine::StartLock`
 - Source candidate status: `hypothesis-only`; no reviewed retail rename was applied
@@ -15,7 +64,7 @@
 ## Saved Signature
 
 ```c
-void __thiscall CBattleEngine__AddProjectile(
+void __thiscall CBattleEngine__AddTrackedActiveReader(
     void * this,
     void * target,
     float lockTime,

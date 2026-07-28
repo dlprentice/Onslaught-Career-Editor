@@ -1,5 +1,35 @@
 # Name-grading ledger — every function name graded by its evidence
 
+> **Superseded in two figures and one sentence, 2026-07-26 — banner added
+> 2026-07-28.** Both defects are in the grader, not in this wave, and both are
+> corrected in
+> [`name-grading-ledger-2026-07-26.md`](name-grading-ledger-2026-07-26.md).
+>
+> 1. **`SOURCE_BACKED` 1,009 is wrong.** The declaration pattern also matched
+>    **elaborated type specifiers** (`class CDXTexture *image`, which uses a type
+>    rather than declaring one), and `CDXTexture` — which has no definition
+>    anywhere in the 106-file reference tree — alone backed **368 of the 1,009**
+>    rows. The repaired count is **528**. The sentence below, "`SOURCE_BACKED` is
+>    declaration-aware, not a substring match", is wrong for the same reason and
+>    is likewise superseded. (07-26 note, Correction 1.)
+> 2. **"Functions reached by RTTI: 2,127" over-states reach by 580 — the wrong
+>    word is "Functions", not the number.** 2,127 is the correct count of
+>    RTTI-reached `.text` DWORDs, and the independent 2026-07-27 scan quoted
+>    further down this same file reproduces it exactly. But only **1,547** of
+>    those DWORDs are inventory *function starts*; the other 580 are never
+>    graded. (07-26 note, Correction 2.)
+>
+> **Everything else in this note stands**, and is why it is not withdrawn: the
+> RTTI re-prefix wave and its before/after table, the 0x08-byte incident and its
+> method lesson, and the resolver-limitation section together with its own
+> 2026-07-27 supersede blockquote.
+>
+> *Unreconciled and left as UNKNOWN:* the 07-26 note's residual figure appears as
+> **1,865** in its own prose while the amendment banner at its head tracks
+> 1,866 → **1,867**. Which is right is not settled here, and nothing in *this*
+> file depends on it. Re-running `tools/re_ledger.py` against the export that
+> note used, and diffing the residual bucket, would settle it.
+
 Date: 2026-07-25. Produced by `tools/re_ledger.py` over the live 6,969-function
 inventory and the pristine specimen (sha256 `74154bfa…`, which the tool refuses to
 run without). Reproducible:
@@ -29,6 +59,8 @@ attributes a shared function to the candidate that is an ancestor of all the oth
 
 Classes with a recovered hierarchy: **656**. Functions reached by RTTI: **2,127**,
 of which owner resolved for **1,982** and **145** remain ambiguous.
+*(Superseded 2026-07-26 — see banner. 2,127 is the count of RTTI-reached `.text`
+DWORDs, not of functions; only **1,547** are inventory function starts.)*
 
 | grade | count | share | meaning |
 | --- | ---: | ---: | --- |
@@ -36,7 +68,7 @@ of which owner resolved for **1,982** and **145** remain ambiguous.
 | RTTI_CONFLICT | 367 | 5.3% | RTTI resolves an owner and the current prefix disagrees |
 | RTTI_AMBIGUOUS | 104 | 1.5% | in several vtables, hierarchy could not pick one owner |
 | BINARY_STRING | 217 | 3.1% | prefix appears verbatim as a string in the binary |
-| SOURCE_BACKED | 1,009 | 14.5% | the pinned reference source *declares* this class or struct |
+| SOURCE_BACKED | 1,009 | 14.5% | the pinned reference source *declares* this class or struct — ***superseded 2026-07-26: the repaired count is 528, see banner*** |
 | UNNAMED | 316 | 4.5% | still a default Ghidra `FUN_`/`SUB_` name |
 | UNBACKED | 3,888 | 55.8% | no supporting evidence found |
 
@@ -46,6 +78,10 @@ of which owner resolved for **1,982** and **145** remain ambiguous.
 no RTTI whatsoever, so a perfectly correct prefix for such a class scores UNBACKED
 by construction. The figure bounds how much of the naming layer currently rests on
 inference rather than artefact — it does not condemn any individual name.
+
+*(Superseded 2026-07-26 — see banner. The following paragraph is wrong: the
+pattern also matched elaborated type specifiers, so it was not
+declaration-aware.)*
 
 `SOURCE_BACKED` is declaration-aware, not a substring match. An earlier substring
 version scored 31.4% by counting any incidental occurrence of a prefix — inside a
@@ -124,7 +160,7 @@ scratch.** The prediction was stated in advance and met exactly:
 | RTTI_CONFLICT | 367 | **35** | **−332** |
 | RTTI_AMBIGUOUS | 104 | 104 | 0 |
 | BINARY_STRING | 217 | 217 | 0 |
-| SOURCE_BACKED | 1,009 | 1,009 | 0 |
+| SOURCE_BACKED | 1,009 | 1,009 | 0 | *(superseded — 528, see banner)* |
 | UNNAMED | 316 | 316 | 0 |
 | UNBACKED | 3,888 | 3,888 | 0 |
 | total | 6,969 | 6,969 | 0 |

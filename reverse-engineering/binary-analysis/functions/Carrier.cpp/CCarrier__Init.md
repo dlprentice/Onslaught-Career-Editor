@@ -2,6 +2,21 @@
 
 > Address: 0x00421a80 | Source: Carrier.cpp (source file not present in `references/Onslaught/` snapshot)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00422970` | `CCarverAI__CanStartAttack` | `CCarver__CanStartAttack` | class prefix moved; suffix unchanged |
+
+---
+
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes (headless postscript + read-back verified, refreshed 2026-05-10)
@@ -41,7 +56,7 @@ Static read-back supports the saved name, signature, and boundary described here
 
 Wave 318 saved a bounded function comment in Ghidra: Carrier init takes `this` plus an init object, seeds init flags at `+0x7c` / `+0x80` / `+0x70`, calls `CAirUnit__Init`, allocates two Carrier.cpp child helper objects at `+0x208` and `+0x13c`, and installs their vtables. This note intentionally avoids raw decompile excerpts and does not assign concrete structure field names.
 
-Wave1129 (`wave1129-lifecycle-init-current-risk-review`) re-read and tag-normalized `0x00421a80 CCarrier__Init` as part of a `5 rows` score-22 lifecycle/init current-risk cluster with fresh Ghidra export evidence. Static anchors for the full cluster are `0x00405970 CDXCockpit__scalar_deleting_dtor`, `0x00421a80 CCarrier__Init`, `0x00422440 CCarver__Init`, `0x00422970 CCarverAI__CanStartAttack`, and `0x00424710 CCockpit__scalar_deleting_dtor`. Current focused accounting is `155/1179 = 13.15%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1024; static closure remains `6410/6410 = 100.00%` with `0 / 0 / 0` debt. Mutation status was comment/tag normalization (`69 tags`) with no rename, signature, function-boundary, or executable-byte change. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified`; previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`. Runtime carrier behavior, exact source-body identity, concrete layouts, BEA patching, gameplay outcomes, visual QA, and rebuild parity remain separate proof. Probe token anchor: Wave1129; wave1129-lifecycle-init-current-risk-review; 155/1179 = 13.15%; 5 rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1024; score-22 lifecycle/init current-risk cluster; fresh Ghidra export; comment/tag normalization; 69 tags; 0 / 0 / 0; 0x00405970 CDXCockpit__scalar_deleting_dtor; 0x00421a80 CCarrier__Init; 0x00422440 CCarver__Init; 0x00422970 CCarverAI__CanStartAttack; 0x00424710 CCockpit__scalar_deleting_dtor; [maintainer-local-ghidra-backup-root]\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified.
+Wave1129 (`wave1129-lifecycle-init-current-risk-review`) re-read and tag-normalized `0x00421a80 CCarrier__Init` as part of a `5 rows` score-22 lifecycle/init current-risk cluster with fresh Ghidra export evidence. Static anchors for the full cluster are `0x00405970 CDXCockpit__scalar_deleting_dtor`, `0x00421a80 CCarrier__Init`, `0x00422440 CCarver__Init`, `0x00422970 CCarver__CanStartAttack`, and `0x00424710 CCockpit__scalar_deleting_dtor`. Current focused accounting is `155/1179 = 13.15%`; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1024; static closure remains `6410/6410 = 100.00%` with `0 / 0 / 0` debt. Mutation status was comment/tag normalization (`69 tags`) with no rename, signature, function-boundary, or executable-byte change. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified`; previous completed backup: `[maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified`. Runtime carrier behavior, exact source-body identity, concrete layouts, BEA patching, gameplay outcomes, visual QA, and rebuild parity remain separate proof. Probe token anchor: Wave1129; wave1129-lifecycle-init-current-risk-review; 155/1179 = 13.15%; 5 rows; current focused candidates: 1178; live regenerated current focused candidates: 1178; remaining active focused work: 1024; score-22 lifecycle/init current-risk cluster; fresh Ghidra export; comment/tag normalization; 69 tags; 0 / 0 / 0; 0x00405970 CDXCockpit__scalar_deleting_dtor; 0x00421a80 CCarrier__Init; 0x00422440 CCarver__Init; 0x00422970 CCarver__CanStartAttack; 0x00424710 CCockpit__scalar_deleting_dtor; [maintainer-local-ghidra-backup-root]\BEA_20260605-075206_post_wave1129_lifecycle_init_current_risk_review_verified; [maintainer-local-ghidra-backup-root]\BEA_20260605-072044_post_wave1128_generalvolume_current_risk_review_verified.
 
 ## Notes
 

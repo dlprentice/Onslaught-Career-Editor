@@ -1,12 +1,24 @@
 # Technical Deep Dive
 
+- **Status:** live preservation record — this is the **developers' account** of
+  the engine, from the post-mortem and from Jeremy Longley's cross-platform
+  presentation. It is not a measurement of the shipped PC executable, and where
+  it disagrees with one under
+  [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
+  measurement wins**. One correction landed 2026-07-28 and is marked at the row
+  it affects.
+- **Last updated:** 2026-07-28
+- **Summary:** the constraints the team worked under, their memory and resource
+  systems, and the cross-platform architecture that let one codebase build for
+  PC, Xbox and PS2.
+
 ### Technical Constraints
 
 | Constraint | Impact |
 |------------|--------|
 | **PS2 had 32MB physical RAM (~28MB usable after executable load)** | Major limitation on battle size and map scope |
 | **Island-based design** | Due to engine limitations (not story choice) |
-| **Display resolution** | Hardcoded to 640x480, assumed GeForce 3 card |
+| **Display resolution** | Default 640x480; dev machines used GeForce 3 cards. **CORRECTED 2026-07-28** — previously read "Hardcoded to 640x480, assumed GeForce 3 card". MEASURED: `CD3DApplication__Init` sets 640x480 as the default *creation* size only, `CD3DApplication__BuildDeviceList` enumerates adapter/device/mode support, and `-res W H` overrides it (minimum 640x480) — [display-settings.md](../reverse-engineering/binary-analysis/functions/display-settings.md) lines 73, 91, 95, 169, 195. SOURCE: the pinned GPL source selects 640x480 out of an enumerated mode list too (`references/Onslaught/d3dapp.cpp:420`), so it is a default there as well. GeForce 3 is from the post-mortem's dev-hardware inventory (see "Technical Stats" in [development-history.md](development-history.md)), not a stated minimum spec. |
 | **PC version** | Not high priority — game was primarily for PS2/Xbox |
 
 ### Memory Management

@@ -1,6 +1,11 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
+Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
+pass.
+Summary: how to report a defect that touches saves, local paths or copied
+executables, and the safety contracts a report is judged against.
 
 Onslaught Toolkit handles save files, local game paths, copied executables, and
 generated asset output. Reports should expose only what is needed to reproduce

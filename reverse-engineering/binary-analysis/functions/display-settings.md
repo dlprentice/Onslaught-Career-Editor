@@ -136,7 +136,7 @@ Wave572 read-back shows no clamp inside `CD3DApplication__SetResolution`. Minimu
 
 | Address | Type | Description |
 |---------|------|-------------|
-| 0x00662f3e | byte | Guard flag for `-forcewindowed` (canonical Steam hash `74154bfa...` = 0x01; some historical baselines reported 0x00) |
+| 0x00662f3e | byte | Guard flag for `-forcewindowed` — `CCLIParams+0x186`, **BSS: `0x00` at image load**, set to `0x01` at runtime by `-testeur` only. *(Corrected 2026-07-28; previously read "canonical Steam hash `74154bfa...` = 0x01; some historical baselines reported 0x00". That value was read at file offset `0x262F3E`, which is `.rsrc`, not this variable. See [windowed-mode-analysis.md](../windowed-mode-analysis.md).)* |
 | 0x0082b484 | int | Aspect ratio mode: 1=16:9, 2=1:1, else=4:3 |
 
 ## Structure Offsets
@@ -175,7 +175,7 @@ Attempts to run in windowed mode:
 BEA.exe -forcewindowed
 ```
 
-**Status**: In the canonical Steam hash used in this repo (`74154bfa...`), guard flag `0x00662f3e` is `0x01`, so parser gating does not block `-forcewindowed`; startup fullscreen flow can still override launch mode.
+**Status** *(corrected 2026-07-28; previously read "In the canonical Steam hash used in this repo (`74154bfa...`), guard flag `0x00662f3e` is `0x01`, so parser gating does not block `-forcewindowed`; startup fullscreen flow can still override launch mode.")*: guard flag `0x00662f3e` is **BSS and zero at load in every build**, so parser gating **does** block `-forcewindowed` on a stock command line. Use `-testeur -forcewindowed`, in that order. Startup fullscreen flow can still override launch mode.
 
 ## Aspect Ratio Handling
 
@@ -203,7 +203,7 @@ The retail Video Options surface is now mapped through `CFEPOptions__ProcessInpu
 
 ## Known Issues
 
-1. **Windowed mode is multi-gate**: Canonical Steam hash `74154bfa...` already has `0x00662f3e = 0x01`; inconsistent windowed startup is primarily startup-flow behavior unless a variant binary has this byte at `0x00`.
+1. **Windowed mode is multi-gate**: the parser gate `0x00662f3e` is closed at load in every build (BSS) and is opened only by `-testeur`; beyond it, startup fullscreen flow can still force fullscreen. *(Corrected 2026-07-28; previously read "Canonical Steam hash `74154bfa...` already has `0x00662f3e = 0x01`; inconsistent windowed startup is primarily startup-flow behavior unless a variant binary has this byte at `0x00`.")*
 
 2. **Widescreen requires config**: 16:9 modes may not appear in Video Options without enabling `ALLOW_WIDESCREEN_MODES`.
 

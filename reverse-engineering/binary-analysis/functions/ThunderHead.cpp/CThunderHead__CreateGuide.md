@@ -2,6 +2,26 @@
 
 > Address: 0x004f48a0 | Size: ~96 bytes | Source: ThunderHead.cpp line 49 (source file not present in `references/Onslaught/` snapshot)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x005490e0` | `MemoryManager_Alloc` | `CDXMemoryManager__Alloc` | label replaced |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Summary
 
 Creates a CThunderheadGuide object for the ThunderHead unit and stores the result at `this+0x208`. The exact runtime guide/targeting contract remains unproven.
@@ -66,7 +86,7 @@ void __thiscall CThunderHead__CreateGuide(CThunderHead *this)
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x005490e0 | MemoryManager_Alloc | Allocates memory from pool |
+| 0x005490e0 | CDXMemoryManager__Alloc | Allocates memory from pool |
 | 0x004f4e00 | CThunderheadGuide__Init | Initializes guide base, vtable, and copied owner state |
 
 ## Object Fields Read

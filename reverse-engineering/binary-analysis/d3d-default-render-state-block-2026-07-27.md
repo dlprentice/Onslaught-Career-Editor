@@ -67,6 +67,15 @@ default" (§9). The **conclusion** is unaffected — `D3DRS_COLORVERTEX` default
 `TRUE` in both APIs — but the attribution is wrong and the correct D3D9 vtable
 indices are what make the decode below checkable.
 
+*Landed 2026-07-27 in commit `a4ca1405` ("docs(rebuild): the binary is Direct3D 9,
+and there are 490 render-state call sites, not 547"). The sentence above is kept
+in the present tense as the record of what was wrong; as of 2026-07-28 a grep for
+"Direct3D 8" over committed `.cs`, `.py` and `.gd` returns **zero**. One
+tracked-documentation residue survived that sweep and was corrected on
+2026-07-28: [`d3d-fog-render-state-static-contract-2026-07-25.md`](d3d-fog-render-state-static-contract-2026-07-25.md),
+which carried seven `D3D8` / `IDirect3DDevice8` / `D3DCAPS8` attributions.
+Task #129.*
+
 ## 3. The object graph, and the five setters
 
 `0x00855BB0` is the state-cache object. Its device pointer is the member at
@@ -348,6 +357,25 @@ vtable `+0x104`, shadow `0x008554D0` indexed by stage), not a render-state
 setter. Its 57 call sites could never have carried a render state, so quoting 547
 as the number of *render-state* call sites over-counts by 57. The correct figure
 is **490**.
+
+*Landed, in two steps.* **2026-07-27, commit `a4ca1405`:** the comment's figure
+was corrected to 490 and the phrase changed to "two general setters". **But the
+correction left `0x00513A50` in the setter list**, so the sentence then named
+three addresses under the word "two" and still attributed the 490 to the setter
+whose 57 sites the correction had just removed. **2026-07-28:** `0x00513A50`
+was deleted from that list and the two survivors annotated with their own
+counts. `rebuild/OnslaughtRebuild.Client.Tests/Level100VertexDiffuseTests.cs`
+now reads:
+
+> `D3DRS_COLORVERTEX` (`0x8D`) is written at none of the 490 render-state call
+> sites reachable from the two general setters `0x00513BC0` (440 sites) and
+> `0x00513C20` (50 sites), so it keeps its `TRUE` Direct3D **9** default.
+
+The text it replaced, quoted so the record survives, was "…reachable from the two
+general setters `0x00513BC0`, `0x00513C20` and `0x00513A50`, so it keeps its
+`TRUE` Direct3D **9** default." Comment only; no behavioural change. The sibling
+`RetailAquilaVertexDiffuseTests.cs` never carried the defect — it quotes 490 with
+no setter list at all.
 
 Separately, 547 was **never** a count of call sites of `0x004EB1E0`, and any
 restatement that reads it that way — "across all 547 call sites" of the default

@@ -1,5 +1,16 @@
 # The Battle Engine - Technology Lore
 
+- **Status:** live preservation record — mostly **in-universe fiction**,
+  reproduced as authored, plus one out-of-universe section ("The Origami Frog")
+  which is developer recollection. Nothing here is a claim about the shipped
+  executable and none of it must be read as one: the in-universe power, flight
+  and weapon descriptions are fiction, not the simulation's numbers. Header block
+  added 2026-07-28; no claim in this file was changed, so the date below is still
+  the date of the last content change.
+- **Last updated:** 2026-03-12
+- **Summary:** the in-universe Aquila programme memo and the fictional technology
+  behind the Battle Engine.
+
 ### The Aquila Program
 
 The following is an in-universe memo from Tatiana Kiralova to High Command:

@@ -8,9 +8,25 @@
 > island texels. **No divergence exists here, and none was invented to close
 > the terrain gain.**
 
-Specimen: `BEA.exe`, SHA-256
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe`, SHA-256
 `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`,
-2,506,752 bytes (local pristine safe copy). Image base `0x00400000`.
+2,506,752 bytes — the **capture target**: pristine plus the
+`force_windowed` patch and nothing else.
+*(Corrected 2026-07-28. This line previously read "`BEA.exe`, SHA-256
+`e1436ef7…`, 2,506,752 bytes (local pristine safe copy)". `e1436ef7` is **not** pristine —
+the pristine specimen is `BEA.exe.original.backup`, SHA-256 `74154bfa…`, in
+the same directory; see
+[`retail-specimen-baseline.md`](retail-specimen-baseline.md) and
+[`retail-capture-provenance-2026-07-25.md`](retail-capture-provenance-2026-07-25.md),
+which records that the two file names are inverted in that directory.
+Re-measured 2026-07-28: the two builds differ at exactly **four** bytes,
+file offsets `0x12a644`–`0x12a647` = VA `0x0052a644`–`0x0052a647`
+(`a1 f0 2d 66 00` → `b8 01 00 00 00`). No address cited anywhere in this
+note falls in that range — the nearest are `0x0048ea80` below and `0x006fadc8`
+above — and no disassembly quoted here decodes through it, so **every byte
+claim below stands unchanged.** This is a specimen-label correction, not a
+re-measurement.)*
+Image base `0x00400000`.
 
 ## 1. The call is ten arguments, not nine — resolved from the push sequence
 
@@ -166,7 +182,8 @@ island's non-zero support spans rows 144–368 and columns 136–432
 
 ## Boundary
 
-Static evidence from the pristine specimen, plus arithmetic over locally
+Static evidence from the capture-target specimen named in the header
+(`e1436ef7…`, pristine + `force_windowed`), plus arithmetic over locally
 materialized Level 100 asset bytes. It establishes the blit's interpolation
 exactly and shows the reconstruction reproduces it. It does **not** identify
 the mechanism behind retail's measured 1.40 / 1.30 / 1.08 terrain chain gain;

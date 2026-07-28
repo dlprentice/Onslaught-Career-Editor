@@ -3,6 +3,21 @@
 > CSentinel class - AI-controlled defensive turret/sentinel unit
 > Debug path: `[maintainer-local-source-export-root]\Sentinel.cpp` (0x0063221c)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004dec00` | `CSentinel__ScalarDeletingDestructor` | `CSentinelAI__ScalarDeletingDestructor` | class prefix moved; suffix unchanged |
+
+---
+
 ## Overview
 
 `CSentinel` is a defensive unit with activation/deactivation animation states and flamethrower-style weapon behavior. Wave498 supersedes the older manual-creation note for `0x004dea50`: the saved Ghidra project now has a function object at that address named `CSentinel__Init`.
@@ -26,7 +41,7 @@ CThing
 | Address | Saved name | Signature | Static evidence |
 | --- | --- | --- | --- |
 | `0x004dea50` | `CSentinel__Init` | `void __thiscall CSentinel__Init(void * this, void * init_data)` | Primary table `0x005e0904` slot 0 points here. `RET 0x4` confirms one `init_data` stack argument after `this`. The body edits init data, delegates to `CGroundUnit__Init`, optionally selects the `inactive` animation, allocates Sentinel.cpp line-backed helpers, attaches `CMCSentinel` at `this+0x70`, stores helpers at `this+0x208` and `this+0x13c`, clears a `this+0x12c` record, and registers through `DAT_00855090`. |
-| `0x004dec00` | `CSentinel__ScalarDeletingDestructor` | `void * __thiscall CSentinel__ScalarDeletingDestructor(void * this, byte flags)` | Secondary table `0x005deca0` slot 0 points here. Wrapper calls `CSentinel__Destructor(this)`, frees through `CDXMemoryManager__Free(&DAT_009c3df0, this)` when `flags & 1`, returns `this`, and ends with `RET 0x4`. |
+| `0x004dec00` | `CSentinelAI__ScalarDeletingDestructor` | `void * __thiscall CSentinelAI__ScalarDeletingDestructor(void * this, byte flags)` | Secondary table `0x005deca0` slot 0 points here. Wrapper calls `CSentinel__Destructor(this)`, frees through `CDXMemoryManager__Free(&DAT_009c3df0, this)` when `flags & 1`, returns `this`, and ends with `RET 0x4`. |
 | `0x004dec20` | `CSentinel__Destructor` | `void __fastcall CSentinel__Destructor(void * this)` | Restores base CMonitor-style vtable `0x005d8d1c`, removes `CSPtrSet`-linked cells at `this+0x28`, `this+0x24`, and `this+0x0c` when populated, then calls `CMonitor__Shutdown`. |
 | `0x004decc0` | `CSentinel__UpdateFlamethrowers` | `void __fastcall CSentinel__UpdateFlamethrowers(void * this)` | Primary table slot 57 points here. Updates linked ground-unit effects, walks the `this+0x17c` linked list, filters entries named `Sentinel Flamethrower`, checks distance/range eligibility, calls `CSentinel__CheckWeaponSlot(this, weapon_context)`, and spawns a projectile burst only when all gates pass. |
 | `0x004ded30` | `CSentinel__Activate` | `void __fastcall CSentinel__Activate(void * this)` | Primary table slot 13 points here. Resolves the `activate` animation through the render/model object at `this+0x30`, finds its animation index, and dispatches through vtable slot `+0xf0`. |

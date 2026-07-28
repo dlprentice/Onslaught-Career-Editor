@@ -1,5 +1,12 @@
 # Onslaught Toolkit
 
+Status: active — rules and pointers, loaded into every session; never findings.
+Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); no rule below was changed or
+re-reviewed by that pass.
+Summary: the highest-stakes rules that bind every session, and the pointers to
+where the current state actually lives.
+
 [`AGENTS.md`](AGENTS.md) is the authoritative contributor guide for this
 repository. Read it before making changes; this file only surfaces the
 highest-stakes rules early and does not restate or override it.

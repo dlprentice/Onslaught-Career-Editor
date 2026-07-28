@@ -1,8 +1,30 @@
 # Handoff — Ghidra fullpass + fullbreadth corrections (2026-07-25)
 
-> For the next agent. **Do not merge to main** unless the user asks.  
-> Branch: `ghidra/fullpass-quality-2026-07-23`  
-> Worktree: `C:\Users\david\source\Onslaught-Career-Editor-ghidra-fullpass-2026-07-23`
+> ## HISTORIC — the branch this handoff directs work on no longer exists
+>
+> **Superseded 2026-07-27.** This document opened with, and still contains,
+> standing instructions for a live branch:
+>
+> > "For the next agent. **Do not merge to main** unless the user asks.
+> > Branch: `ghidra/fullpass-quality-2026-07-23`
+> > Worktree: `C:\Users\david\source\Onslaught-Career-Editor-ghidra-fullpass-2026-07-23`"
+>
+> `ghidra/fullpass-quality-2026-07-23` **was merged into `main` at `af22af95`**
+> on 2026-07-25, and the branch ref was deleted on 2026-07-27. Its history is in
+> `main`; nothing is lost. The worktree path above **does not exist**.
+>
+> **Every branch, worktree, and merge instruction below is spent.** That includes
+> the "Merge this branch into `main` without explicit user request" non-goal and
+> the `Branch:` / `Worktree:` lines in the machine checklist — they describe a
+> decision that has already been taken, not one awaiting the next agent. Read
+> this file as the **record of that expedition**: its authority map, findings,
+> and evidence boundaries remain useful. Do not read it as a live work item.
+>
+> Ghidra work has moved on since. For the current name-grading residual and the
+> flag it requires, see
+> [`reverse-engineering/RE-INDEX.md`](../RE-INDEX.md) — "The name-grading
+> residual". The live maintainer DB has been mutated since this handoff was
+> written; the tracked `ghidra/` snapshot (2026-07-18) has not.
 
 ## Authority map (read first)
 
@@ -143,6 +165,10 @@ Bulk create without per-span dual **code vs pad** filter risks mass false functi
 - Re-arm agent loop without user request  
 
 ## Machine checklist for next agent
+
+**The `Worktree:` and `Branch:` lines below are spent — see the banner at the top
+of this file. The branch was merged at `af22af95` and deleted; the worktree path
+does not exist.** The remaining paths were still accurate as of 2026-07-27.
 
 ```
 Worktree:  C:\Users\david\source\Onslaught-Career-Editor-ghidra-fullpass-2026-07-23

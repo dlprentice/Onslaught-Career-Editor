@@ -6,9 +6,25 @@
 > holds the exact retail bytes, and the axis convention it uses is confirmed
 > against an independent asset.
 
-Specimen: `BEA.exe`, SHA-256
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe`, SHA-256
 `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`,
-2,506,752 bytes (local pristine safe copy). Image base `0x00400000`;
+2,506,752 bytes — the **capture target**: pristine plus the
+`force_windowed` patch and nothing else.
+*(Corrected 2026-07-28. This line previously read "`BEA.exe`, SHA-256
+`e1436ef7…`, 2,506,752 bytes (local pristine safe copy)". `e1436ef7` is **not** pristine —
+the pristine specimen is `BEA.exe.original.backup`, SHA-256 `74154bfa…`, in
+the same directory; see
+[`retail-specimen-baseline.md`](retail-specimen-baseline.md) and
+[`retail-capture-provenance-2026-07-25.md`](retail-capture-provenance-2026-07-25.md),
+which records that the two file names are inverted in that directory.
+Re-measured 2026-07-28: the two builds differ at exactly **four** bytes,
+file offsets `0x12a644`–`0x12a647` = VA `0x0052a644`–`0x0052a647`
+(`a1 f0 2d 66 00` → `b8 01 00 00 00`). No address cited anywhere in this
+note falls in that range — the nearest are `0x005232b0` below and `0x00541f50`
+above — and no disassembly quoted here decodes through it, so **every byte
+claim below stands unchanged.** This is a specimen-label correction, not a
+re-measurement.)*
+Image base `0x00400000`;
 `.text` VA `0x00401000`, file offset `0x1000`.
 
 ## 1. The plane is owned by a global `CMixerMap`, not by the height field
@@ -143,7 +159,8 @@ gain.
 
 ## Boundary
 
-Static evidence from the pristine specimen plus arithmetic over locally
+Static evidence from the capture-target specimen named in the header
+(`e1436ef7…`, pristine + `force_windowed`) plus arithmetic over locally
 materialized Level 100 asset bytes. It establishes the plane's provenance,
 ownership, layout and axis order, and bounds what the plane can contribute to
 output brightness. It does not establish why retail's rendered terrain sits at

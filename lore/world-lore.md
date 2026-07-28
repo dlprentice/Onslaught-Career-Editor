@@ -1,5 +1,15 @@
 # The World of Allium - In-Game Lore
 
+- **Status:** live preservation record — mostly **in-universe fiction** drawn
+  from the game's own story material, with two out-of-universe sections clearly
+  marked as such ("The Vegetable Naming Scheme", "Faction Design Philosophy"),
+  which are developer recollection. Nothing here is a claim about the shipped
+  executable. Header block added 2026-07-28; no claim in this file was changed,
+  so the date below is still the date of the last content change.
+- **Last updated:** 2026-03-12
+- **Summary:** Planet Allium, the Forseti and Muspell factions, the Sohra Treaty,
+  and the war the campaign takes place in.
+
 ### Setting
 
 Battle Engine Aquila takes place on an Earth-like planet called **Allium** in the **Porrum system**.

@@ -1,7 +1,18 @@
 # Patch Catalog Contract
 
 Status: active normative contract
-Last reviewed: 2026-07-12
+Last updated: 2026-07-28
+Summary: what the active executable patch catalog means, and what must be true
+of a row before it may appear in Onslaught Toolkit.
+
+*(Corrected 2026-07-28: this header read "Last reviewed: 2026-07-12" while the
+file had in fact been edited on 2026-07-17 by commit `a777a4ea`, which deleted
+a paragraph about the retired standalone Python patcher without bumping the
+date. The field therefore understated the document's currency across exactly
+the window in which the catalog gained a new evidence class — see the row added
+to the evidence-class table below. The field was also renamed `Last reviewed:`
+→ `Last updated:` to match [`DOCUMENTATION.md`](../DOCUMENTATION.md), which is
+the spelling for a document revised in place.)*
 
 This contract defines what the active executable patch catalog means and what
 must be true before a row can appear in Onslaught Toolkit. It replaces
@@ -77,6 +88,25 @@ row:
 | `title_screen_runtime_visual_smoke` or `goodies_wall_runtime_visual_smoke` | Exact bytes plus the named bounded copied-runtime visual observation are accepted. |
 | `experimental_byte_verified_*` | Exact bytes are accepted; user-visible runtime benefit remains unproven. |
 | `experimental_copied_runtime_cdb_*` | Exact bytes plus the specifically named copied-runtime debugger observation are accepted. |
+| `copied_gameplay_runtime_16_9` | Exact bytes plus the named bounded copied Level 100 gameplay observation at 1600×900 on the supported Steam specimen are accepted; other resolutions and other machines are not implied. |
+
+> **Row added 2026-07-28.** The table above listed four classes and did not
+> cover `copied_gameplay_runtime_16_9`, which the live catalog has carried since
+> 2026-07-17. MEASURED: the `proof_level` histogram over all 29 rows of
+> `catalog/patches.v2.json` contains it exactly once, on `resolution_gate` —
+> a `track: stable`, `selectability: profile_visible`, `confidence: high` row,
+> and the headline widescreen patch of the default Enhanced Copy profile.
+> `OnslaughtCareerEditor.AppCore/BinaryPatchEngine.cs` agrees. `git log -S`
+> shows the class entered the catalog in commit `e4dd7493` on 2026-07-17, after
+> the review date this file then carried. The wording above is taken from that
+> row's own `verification_probe` — "launch copied Level 100 at 1600x900, and
+> observe dimensions 1600x900 plus aspect scratch values 0.5625, 1.333333, and
+> 1.777778" — and claims nothing beyond it. Note that the paragraph below
+> already says the **checker**, not this table, owns the row-to-`proof_level`
+> mapping, so the omission was a documentation gap rather than a contract
+> violation. A focused assertion in `BinaryPatchCatalogContractTests` that every
+> distinct `proof_level` in the catalog matches a class named here would stop
+> the next new class drifting the same way; it is not yet written.
 
 The checker owns the row-to-`proof_level` mapping and each runtime class's
 required direct evidence. Adding or promoting a row requires evidence, checker

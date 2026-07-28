@@ -1,13 +1,53 @@
 # Binary Analysis
 
+Status: living index for `reverse-engineering/binary-analysis/`
+Last updated: 2026-07-28
+Summary: front door to the static and byte-level evidence for the Steam
+`BEA.exe`. Names the current naming authority, the specimen baseline, and the
+per-system contracts. Makes no claim of its own — every claim below belongs to
+the document it links.
+
 ## Current authority and provenance
 
 - [Ghidra workflow and evidence boundary](GHIDRA-REFERENCE.md)
-- [Full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
+- [Full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md) — the
+  record of the 2026-07-13 audit, **not the current name state**
 - [Reviewed correction plan](ghidra-reviewed-correction-plan-2026-07-13.json)
 - [Fullpass discovery findings](ghidra-fullpass-findings/) (waves W001–W018)
 - [Retail specimen baseline](retail-specimen-baseline.md)
-- Host paths and tracked snapshot posture: [Canonical Ghidra project](../ghidra/README.md)
+- [Retail capture provenance](retail-capture-provenance-2026-07-25.md) — which
+  binary the reference captures came from, and why it matters
+- [RE coverage baseline](re-coverage-baseline-2026-07-25.md) — the 6,411 → 6,969
+  inventory growth and the byte-level verifier
+- **Current name state — the three grading ledgers, newest last:**
+  - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
+    RTTI re-prefix wave. Two of its figures are superseded; see its banner.
+  - [2026-07-26](name-grading-ledger-2026-07-26.md) — grader corrections plus 13
+    renames and 1 destructor demotion applied
+  - [2026-07-27](name-grading-ledger-2026-07-27-demotion2.md) — second
+    destructor demotion, `0x005386d0`
+
+> **Corrected 2026-07-28 — this section previously said only:** "The closeout and
+> per-address plan supersede older saved names where they conflict." That is
+> still true and is kept below, but it left the 2026-07-13 closeout reading as
+> the current naming authority when it is not. **The closeout has itself been
+> overtaken.** Since it, and established in tracked evidence: the function
+> inventory grew **6,411 → 6,969**
+> ([re-coverage-baseline-2026-07-25.md](re-coverage-baseline-2026-07-25.md)),
+> **332** RTTI re-prefixes were applied to the live database
+> ([07-25 ledger](name-grading-ledger-2026-07-25.md)), then **13** renames and
+> **1** destructor demotion ([07-26](name-grading-ledger-2026-07-26.md)), then a
+> **second** destructor demotion, `0x005386d0`
+> ([07-27](name-grading-ledger-2026-07-27-demotion2.md)). The ledgers, not the
+> closeout, are the current record of which names are demoted.
+>
+> *Deliberately not stated as a single total.* A larger vtable-naming wave and a
+> higher live inventory figure are described only in the header comments of an
+> **untracked** export, `ghidra-function-name-table-2026-07-27.tsv`, which a
+> fresh clone does not have. Quoting a precise count with no tracked citation is
+> the unfalsifiable-premise failure [`CLAUDE.md`](../../CLAUDE.md) warns about,
+> so this index states only what tracked evidence supports. If that export is
+> landed, this paragraph should be replaced with its numbers and a link.
 
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,

@@ -219,6 +219,27 @@ def main() -> int:
         lines.append(f"- Files scanned: `{len(md_files)}`")
         lines.append(f"- Local links checked: `{total_links}`")
         lines.append(f"- Broken links: `{len(broken)}`")
+        # State the bound. A report that prints "0 broken" without naming the set
+        # it scanned reads as a repo-wide result; it is not one. Gitignored trees
+        # (notably local-lab/, ~470 markdown files) are structurally invisible
+        # here, so this report must never be cited as evidence that their links
+        # resolve. Added 2026-07-28.
+        if args.scope == "public-core":
+            scope_note = (
+                "an explicit list of public-core documents only. Every other "
+                "markdown file in the repository is **not** scanned"
+            )
+        else:
+            scope_note = (
+                "**git-tracked markdown only** (`git ls-files '*.md'`). Gitignored "
+                "trees are structurally invisible to this check — including "
+                "`local-lab/` — and `include_markdown_path()` additionally drops "
+                "`.git/`, `.venv/`, `.pytest_cache/`, `node_modules/`, "
+                "`release/artifacts/`, `.artifacts/`, `wave_*`, and any `/bin/` or "
+                "`/obj/` path. A `0` above is a result about that set, not about "
+                "the repository"
+            )
+        lines.append(f"- Scope: `{args.scope}` — {scope_note}.")
         lines.append("")
         if broken:
             lines.append("## Broken Links (Top 200)")

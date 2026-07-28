@@ -2,6 +2,37 @@
 
 > Address: 0x004662a0 | Source: `references/Onslaught/FrontEnd.cpp` | Line: ~179 (0xb3)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0044b060` | `FUN_0044b060` | `CEventManager__Init` | placeholder replaced; this address carries a name now |
+| `0x0044d320` | `FUN_0044d320` | `CFrontEnd__InitPageStateDefaults` | placeholder replaced; this address carries a name now |
+| `0x00459810` | `FUN_00459810` | `CFEPMultiplayerStart__SubObj39B8__QueuePageId` | placeholder replaced; this address carries a name now |
+| `0x004687e0` | `FUN_004687e0` | `CFrontEnd__LoadSharedResources` | placeholder replaced; this address carries a name now |
+| `0x004bb8c0` | `FUN_004bb8c0` | `CMusic__PlaySelection` | placeholder replaced; this address carries a name now |
+| `0x004f2150` | `FUN_004f2150` | `CText__Ctor` | placeholder replaced; this address carries a name now |
+| `0x004f21f0` | `FUN_004f21f0` | `CText__Init` | placeholder replaced; this address carries a name now |
+| `0x004fdc10` | `FUN_004fdc10` | `CFrontEndPage__Init_ReturnTrue` | placeholder replaced; this address carries a name now |
+| `0x005145f0` | `FUN_005145f0` | `CController__ctor` | placeholder replaced; this address carries a name now |
+| `0x005159b0` | `FUN_005159b0` | `PlatformInput__ResetKeyStateTables` | placeholder replaced; this address carries a name now |
+| `0x00541240` | `FUN_00541240` | `CDXFrontEndVideo__SetDefaultSize` | placeholder replaced; this address carries a name now |
+| `0x005490e0` | `OID__AllocObject` | `CDXMemoryManager__Alloc` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Summary
 
 Initializes the entire frontend menu system. This is a large function that:
@@ -140,23 +171,23 @@ Complex logic determines which page to show first:
 | 0x0042bbc0 | CConsole__SetLoading | Loading-screen/progress enable-disable control |
 | 0x0042cf40 | CConsole__SetLoadingRange | Progress bar range |
 | 0x0042cf70 | CConsole__SetLoadingFraction | Progress bar value |
-| 0x0044b060 | FUN_0044b060 | Unknown init |
+| 0x0044b060 | CEventManager__Init | Unknown init |
 | 0x0041bd00 | CCareer__Update | Career update |
-| 0x004687e0 | FUN_004687e0 | Resource loading |
-| 0x004fdc10 | FUN_004fdc10 | Resource loading |
-| 0x00541240 | FUN_00541240 | Resource loading |
+| 0x004687e0 | CFrontEnd__LoadSharedResources | Resource loading |
+| 0x004fdc10 | CFrontEndPage__Init_ReturnTrue | Resource loading |
+| 0x00541240 | CDXFrontEndVideo__SetDefaultSize | Resource loading |
 | 0x0040c640 | DebugTrace | Debug logging |
-| 0x0044d320 | FUN_0044d320 | Unknown |
+| 0x0044d320 | CFrontEnd__InitPageStateDefaults | Unknown |
 | 0x0055de9b | sprintf (`FUN_0055de9b`) | sprintf equivalent |
-| 0x005490e0 | OID__AllocObject | Memory allocation |
-| 0x005145f0 | FUN_005145f0 | Object constructor |
-| 0x005159b0 | FUN_005159b0 | Unknown |
+| 0x005490e0 | CDXMemoryManager__Alloc | Memory allocation |
+| 0x005145f0 | CController__ctor | Object constructor |
+| 0x005159b0 | PlatformInput__ResetKeyStateTables | Unknown |
 | 0x00466ae0 | CFrontEnd__SetPage | Page transition (`SetPage(page,time)`) |
-| 0x00459810 | FUN_00459810 | Load level |
+| 0x00459810 | CFEPMultiplayerStart__SubObj39B8__QueuePageId | Load level |
 | 0x004e2c50 | CSoundManager__ReloadLanguageSampleBank | Conditional language sound-bank reload |
-| 0x004f2150 | FUN_004f2150 | Loop init |
-| 0x004f21f0 | FUN_004f21f0 | Loop body (5 iterations) |
-| 0x004bb8c0 | FUN_004bb8c0 | Unknown (conditional) |
+| 0x004f2150 | CText__Ctor | Loop init |
+| 0x004f21f0 | CText__Init | Loop body (5 iterations) |
+| 0x004bb8c0 | CMusic__PlaySelection | Unknown (conditional) |
 
 ## Callers
 

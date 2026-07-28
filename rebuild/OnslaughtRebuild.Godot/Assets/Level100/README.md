@@ -3,7 +3,7 @@
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
 three training target meshes, nine Pulse Cannon/target-destruction
-effect textures, 25 exact mission effects, the tutorial music selection, and all
+effect textures, 26 exact mission effects, the tutorial music selection, and all
 51 English character messages in the accepted Level 100 mission table. The
 three shared front-end effects retain the startup lane's `Assets/Frontend` paths. Run
 `npm run prepare:rebuild-assets` to materialize the exact supported files from a
@@ -29,7 +29,7 @@ bit-identical retail collision geometry.
 | Local materialized file | Role | SHA-256 |
 | --- | --- | --- |
 | `../../../OnslaughtRebuild.Core/Assets/Level100/level100-heightfield.hfld.bin` | Exact released `HFLD` chunk embedded in Core and adapted by Godot | `7A4C7C5B9400E2C8D2325CECB5C44701CD8A6E6F8609CBC8BC31D449C0620F5D` |
-| `../../../OnslaughtRebuild.Core/Assets/Level100/level100-contact-owners.json` | Hash-verified deterministic contact projection for the 24 static definitions plus Target Tank and Warehouse | `FE5F109526E39231EA3D02898A035DBC7EB842B7B37776EC5EFDA7BA45F138B0` |
+| `../../../OnslaughtRebuild.Core/Assets/Level100/level100-contact-owners.json` | Hash-verified deterministic contact projection for the 24 static definitions plus the Target Tank, Target Truck, Warehouse and Target Drone definitions *(hash corrected 2026-07-28 — see below)* | `C45E89D14AD7ABD9BED37D388453018C4F5C5E37E10F3B8307BEC16C81D524F2` |
 | `Source/level100-root-terrain.rgb565.bin` | Exact initial 512x512 root landscape pixels reconstructed from the released Level 100 and base archives | `6EB202F450926097930BEDCA440F0163A1886572981E3C69B4EDF9289A68AE2B` |
 | `Source/level100-terrain-hierarchy.bin` | Exact retained sources for the five released logical landscape caches | `541EACD0AA75FAE8BEFB8A3E1505EA52AE6B1F6C1367C15C65D7DD23B7CFE977` |
 | `Textures/terrain-detail-00.texture.aya` | Exact released 512×512 DXT1 `mixers%detail00.tga(0)R5G6B5.aya` selected by Level 100 | `7C9C22169D13ED8B7D6AD69286BDB59CC88F9AE3BFB6A9D3A0503D320386BFEF` |
@@ -41,15 +41,16 @@ bit-identical retail collision geometry.
 | `StaticWorld/Textures/water-sun-blob.texture.aya` | Exact released 128×128 RGBA8 water-sun blob | `5D97F24F514383C928C58C7F333BF489888B6A402004213FFBAAAAD2EF30A53E` |
 | `StaticWorld/Textures/water-sun-reflection.texture.aya` | Exact released 64×64 RGBA8 sun-reflection stage | `A65940D6CDFE93F8B8820EFB883FD33166AEC63863ED894673466F3F58527AB4` |
 | `Source/m_f_pulsetank_training.msh.aya` | Released Firing Range Target Tank CMSH archive | `9B2CFDCEB86ED700ED924051FBFF13C32DC30BD8F8B948EA1CF8AA9FBFE8B97B` |
-| `level100-target-tank.obj` | Target Tank geometry and exact material group consumed by Godot | `3A67F2BF49C9505855F73259D8D5829A7E0D1A0AED0F5A8802E82C4CF2C5DF9F` |
+| `level100-target-tank.obj` | Target Tank geometry and exact material group consumed by Godot *(hash corrected 2026-07-28 — see below)* | `88BAE82B7D5080E307CBE49AA39C06C21EFBCC7DE806E236B5CB663AA7D5BA63` |
 | `Source/m_f_truck_training.msh.aya` | Released moving Target Truck CMSH archive | `3BD92CE93D0619B7C4B0DD158680641FBAB6CD88580A68C6EF34E5F22F7596C5` |
-| `level100-target-truck.obj` | Target Truck geometry and exact material group consumed by Godot | `76EF7ED7E78D39BF9606CB47B630CA4E10D1773CAB38008BBEE35B935544581D` |
+| `level100-target-truck.obj` | Target Truck geometry and exact material group consumed by Godot *(hash corrected 2026-07-28 — see below)* | `39EB4F7723725422EE348CA6052C437BE2E59AAC38DDAC0CA4559213FC4E0113` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
-| `level100-target-warehouse.obj` | Static intact Warehouse geometry and exact material groups consumed by Godot | `3883B651A9963813A4AB9982460425910BE5D7F8F7EDCE15ADE475CF6D8EB5CE` |
+| `level100-target-warehouse.obj` | Static intact Warehouse geometry and exact material groups consumed by Godot *(hash corrected 2026-07-28 — see below)* | `DD605F3778D465A5E25A99B43C7721DEC37D509732E65DB3E6C71534F6B4A9AC` |
 | `Textures/target-tank.texture.aya` | Released 512×512 DXT2 Target Tank base texture | `97DDD1E18E45B19E249E91E881D773D80D36768A2CD48F6549A769C2559A7B7E` |
 | `Textures/target-truck.texture.aya` | Released 512×512 DXT2 Target Truck base texture | `AB4125242321DE4963C51C9B22F63C951A33C22E874D8F039FA2C61A109F5E81` |
 | `Textures/target-warehouse-m001.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material groups 0 and 1 | `689B184AB8A5D03F33B69E5C35EDCFDFDEC12AA9B4B31F7C74CE5209F6236A49` |
 | `Textures/target-warehouse-m002.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material group 3 | `8FABADBE1C5AF067A740CF05DEBD1C952C628FD5FA3EA92B8202094704B8A20D` |
+| `Textures/material-overlay-a8trust5.texture.aya` | Released 128×128 `meshtex%a8trust5.tga(0)A8R8G8B8.aya` Warehouse material overlay stage *(row added 2026-07-28 — see below)* | `4CCDE973F9741C110A82F350E102F1A12C566FF3D3B1B4F5426F2BBF536BE843` |
 | `Textures/pulse-bolt-blue-spark.texture.aya` | Exact released 64×64 DXT2 `Particle%Blue Spark 2.tga(0)A4R4G4B4.aya` Pulse Bolt sprite | `B3730B1E9D7713910E0DE4BD0CB0DCFEFCB9CEB8F6402D50681A524ADC0DCB08` |
 | `Textures/pulse-bolt-blue-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Blue Trail.tga(0)R5G6B5.aya` Pulse Bolt trail | `2B4BC5CF8902D7EA8452F1068AC8F11514C8238A733CA33AAD7D6D0667688A63` |
 | `Textures/mech-pulse-medium-halo.texture.aya` | Exact released 64×64 DXT1 `Particle%Halo.tga(0)R5G6B5.aya` medium-round halo | `CDE6EFC90DC7958C5BDA425A04486E277BEB85A7F1C33FB9074F369E92D58EDB` |
@@ -141,6 +142,47 @@ bit-identical retail collision geometry.
 | `SoundEffects/repair-idle.wav` | Exact repair-pad idle loop | `EC3F2AF86C5281D42923C3AE00FB66222E4E358A5F986FD26C7A43C34406F7D4` |
 | `SoundEffects/pulse-cannon-fire.wav` | Exact 44.1 kHz mono PCM decode of `Battle Engine\N_BE_pulse_cannon_fire` | `710FF06DB55BC694EFB8FF7D3A5AB658125E7CA0FE6B4733A805DA98B22B0277` |
 | `SoundEffects/target-tank-explosion-medium.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_medium` | `7228AE049CB0A9877E63671A65E51829443017B2C4981DF90A9C64D2F38B6D9C` |
+| `SoundEffects/pulse-impact-small.wav` | Exact 44.1 kHz mono PCM decode of `Impact\N_I_explosion_small`, `sounds.sfx` record 105 *(row added 2026-07-28 — see below)* | `3296B13938928F54847A29E17307E7875E9933F8FD6381BF0DFCD260CD6FC131` |
+
+### Corrections to the table above, 2026-07-28
+
+**Four hashes were superseded, and one Role text with them.** The values this
+table carried and what replaced them, recorded so that a reader holding an old
+hash can tell it was corrected rather than lost:
+
+| Row | Was | Is |
+| --- | --- | --- |
+| `level100-contact-owners.json` | `FE5F1095…45F138B0`, Role "…for the 24 static definitions plus Target Tank and Warehouse" | `C45E89D1…C81D524F2`, Role naming all four target definitions |
+| `level100-target-tank.obj` | `3A67F2BF…C5DF9F` | `88BAE82B…A7D5BA63` |
+| `level100-target-truck.obj` | `76EF7ED7…44581D` | `39EB4F77…FC4E0113` |
+| `level100-target-warehouse.obj` | `3883B651…D8EB5CE` | `DD605F37…F6B4A9AC` |
+
+MEASURED: SHA-256 recomputed over the four files as materialized on this
+machine. Each new value is independently pinned by the tracked producer — the
+three OBJ hashes at `../../../tools/materialize_retail_assets.py` beside their
+`.msh.aya` sources, and the contact-owners hash both there and at
+`../../../OnslaughtRebuild.Core/Level100ContactMap.cs`. The three OBJ hashes
+moved together in commit `dd325044`, which made the OBJ conversion carry
+per-vertex `DIFFUSE`; the contact-owners hash and its Role moved in commit
+`9688ee0b`, the same schema bump described under [Dependency-inverted contact
+and destruction payload](#dependency-inverted-contact-and-destruction-payload).
+In each case the table was not carried along. **The other 109 hashes in the
+table were recomputed in the same pass and all match**, so these four were the
+only stale values.
+
+**Two rows were added.** `Textures/material-overlay-a8trust5.texture.aya` and
+`SoundEffects/pulse-impact-small.wav` are both produced by
+`../../../tools/materialize_retail_assets.py`, both landed on 2026-07-20, and
+neither was ever listed here. No existing row changed to accommodate them, and
+the "25 exact mission effects" count in the opening paragraph was corrected to
+26 in the same pass. MEASURED: differencing this table's rows against the
+`GODOT_ASSETS` entries for `Level100/SoundEffects/` and `Level100/Textures/`
+returns exactly these two and nothing else, in both directions.
+
+Two further texture files present on disk — `particle-alparticle5-additive` and
+`particle-fireball-additive` — are deliberately **not** added here. They exist
+only in an uncommitted working tree, so they are not yet materialized inputs of
+the tracked producer, and they belong to the lane that owns them.
 
 ## Complete Level 100 audio contract
 
@@ -381,17 +423,34 @@ The four close meshes are not cards: their exact converted topology is
 `674/499`, `411/270`, `586/396`, and `598/396` vertices/triangles for
 `pinesnow0..3`. They select three exact 256×256 BC2 snowy bark/needle textures.
 The authored placement data also proves overlap: only 15 pine owners lie inside
-the proof profile's 30-unit boundary at player start, while 616 lie inside the
-selected 70-unit high-quality boundary. The nearest six form a cluster only
-3.51–5.21 units from the start. One retail tree contributes either mesh or
+the **selected 30-unit** high-quality boundary at player start, while 616 lie
+inside the 70-unit boundary this reconstruction used before 2026-07-27. The
+nearest six form a cluster only 3.51–5.21 units from the start.
+
+> **Corrected 2026-07-28 — labels only, both counts unchanged.** The two
+> sentences above previously read "only 15 pine owners lie inside *the proof
+> profile's* 30-unit boundary at player start, while 616 lie inside *the
+> selected* 70-unit high-quality boundary". That called `70.0` the selected
+> value after the 2026-07-27 defaults-rule correction had already moved the
+> manifest to `30.0` — see the `CRTTree__Init` paragraph above. MEASURED: both
+> counts were re-derived for this correction and neither moved — 15 pine owners
+> within 30 units and 616 within 70, computed over the 1,481 `pines` entries in
+> `StaticWorld/level100-static-world.json` against the player start
+> `(73_904/256, 62_272/256) = (288.6875, 243.25)`
+> (`../../../OnslaughtRebuild.Core/Level100Terrain.cs:20-21`), whose six nearest
+> distances are `3.51/4.28/4.35/4.39/4.73/5.21`. What changed is which of the
+> two numbers the reconstruction actually uses.
+
+One retail tree contributes either mesh or
 six-face imposter work depending on range, plus the separate fast-card pass;
 nearby tree owners can also overlap in the image.
 
 The current slice preserves those owners separately. It renders the exact four
-meshes at or inside the manifest's selected 70-unit cutoff and all six fixed
+meshes at or inside the manifest's selected **30-unit** cutoff and all six fixed
 imposter faces outside it, then adds the camera-facing fast standing card for
 every placement and the `VIEW`-4 horizontal card only above the strict 20-unit
-camera/ground delta. Manifest v7 explicitly pins fast-standing-view
+camera/ground delta. The static-world manifest (schema
+`onslaught.level100-static-world.v14`) explicitly pins fast-standing-view
 reconstruction phase `0`; the client maps placement ordinal plus that phase
 across `VIEW` 0..3 and checks all 1,481 assignments and their
 `371/370/370/370` counts. This is a deterministic reconstruction choice, not a
@@ -403,6 +462,33 @@ released `CStaticShadows` query; exact `CStaticShadows` interpolation has not
 been independently equated to that adapter. Falling-tree retention,
 `CDXTrees::HideTree`, other user-selected quality distances, and pixel-level
 fixed-function/Godot sampler equivalence remain outside this slice.
+
+> **Corrected 2026-07-28 — two corrections to the paragraph above.**
+>
+> 1. It previously read "renders the exact four meshes at or inside the
+>    manifest's selected **70-unit** cutoff". The manifest selects `30.0`, and
+>    has since the 2026-07-27 defaults-rule correction described in the
+>    `CRTTree__Init` paragraph. MEASURED: `pineBillboards.meshQualityDistance` in
+>    `StaticWorld/level100-static-world.json` reads `30.0`; the client consumes
+>    that field rather than a constant
+>    (`../../../OnslaughtRebuild.Godot/Level100StaticWorldAsset.cs:129` and
+>    `:411`), and
+>    `../../../OnslaughtRebuild.Client.Tests/Level100PineRepresentationTests.cs`
+>    asserts the manifest's bits equal `0x41F00000`, which is `30.0f`. The
+>    sentence stated the reconstruction's own cutoff and stated it wrongly; this
+>    is exactly the lab value that [`GOAL.md`](../../../../GOAL.md)'s defaults
+>    rule exists to keep out of authored behaviour.
+> 2. It previously read "**Manifest v7** explicitly pins fast-standing-view
+>    reconstruction phase `0`". There is no manifest v7 — it existed briefly and
+>    was superseded seven revisions ago. The claim itself is unchanged and still
+>    true: `fastStandingViewPhase` reads `0`. Only the version label was stale,
+>    so the text now names the schema string, which is greppable when it next
+>    moves. MEASURED: the manifest declares
+>    `onslaught.level100-static-world.v14`, and three tracked consumers reject
+>    anything else —
+>    `../../../OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs:39`,
+>    `../../../OnslaughtRebuild.Godot/Level100StaticWorldAsset.cs:727`, and
+>    `../../../tools/materialize_retail_assets.py:1093` and `:3057`.
 
 The 33 static records select 24 mesh types: nearby facilities and turrets,
 houses, city/tall buildings, an airfield, docks, hangar, radar, solar pod, and
@@ -704,12 +790,27 @@ validated before retention; Godot validates the PCM envelope again at load.
 
 ## Dependency-inverted contact and destruction payload
 
-`level100-contact-owners.json` schema v3 de-duplicates the 33 WRES instance
-rows into 24 reusable static definitions and separately retains the Target Tank
-and Warehouse definitions. Its 349 parts preserve names, hierarchy links,
+`level100-contact-owners.json` schema v4 de-duplicates the 33 WRES instance
+rows into 24 reusable static definitions and separately retains four target
+definitions — Target Tank, Target Truck, Warehouse and Target Drone. Its 362
+parts preserve names, hierarchy links,
 float segment-value bits, BBOX metadata, and a deterministic
 millimetre-quantized projection of transformed vertices and expanded triangle
-strips. BBOX is broadphase metadata only; Core reports actor hits from the
+strips.
+
+> **Corrected 2026-07-28 — three superseded values, one unchanged.** This
+> paragraph previously read "schema **v3**", "the **Target Tank and Warehouse**
+> definitions" and "Its **349** parts". MEASURED by loading
+> `../../../OnslaughtRebuild.Core/Assets/Level100/level100-contact-owners.json`:
+> `schema = onslaught.level100-contact-owners.v4`, `partCount = 362`,
+> `targetDefinitionCount = 4` with the four named `Target Tank`, `Target Truck`,
+> `Warehouse` and `Target Drone`. The producer agrees at
+> `../../../tools/materialize_retail_assets.py`, which emits
+> `"schema": "onslaught.level100-contact-owners.v4"`. The schema bump and the
+> two extra targets landed together in commit `9688ee0b` and this paragraph was
+> not carried along. The de-duplication claim is **unchanged and still exact**:
+> `instanceCount = 33` into `definitionCount = 24`. This file is regenerated by
+> the materializer, so re-read it rather than trusting these numbers. BBOX is broadphase metadata only; Core reports actor hits from the
 swept-sphere projected-mesh path. The pinned
 medium-pulse radius is the released `0x3D8F5C29` float rounded to `70`
 millimetres. This is a hash-verified deterministic Core input, not a claim of

@@ -1,6 +1,13 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
+Last updated: 2026-07-28. Several claims were corrected or amended in place on
+that date — the frontend page list, the frontend AYA texture count, the
+mouse-sensitivity measurement, and the dead "Manifest v7" label — each under its
+own dated block. **A dated block is the record of what was reviewed; nothing
+outside one was re-checked.**
+Summary: the licence boundary, permitted evidence, and authority order for the
+`rebuild/` reconstruction lane, plus what the current slice actually covers.
 
 `rebuild/` is a GPL-3.0-or-later, source- and reverse-engineering-informed
 reconstruction. It is not a clean-room lane. The root MIT license does not
@@ -116,9 +123,14 @@ not provenance.
 
 The normal Godot entry path now belongs to a presentation-only frontend state
 machine outside Core. It begins at click-to-start, then exposes the released
-main-menu entries, a world-100-only level selector, the released loading image,
+main-menu entries, a quit confirmation, retail's `CHOOSE GAME NAME` career-name
+page (visual and sequential only — no save and no career persistence), an
+Options page, a world-100-only level selector, the mission-briefing and
+select-configuration pages, the released loading image,
 and one lifecycle seam that constructs, replaces, or disposes the existing
-Level 100 session/world. The
+Level 100 session/world. The `RetailFrontendScreen` enum in
+`rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
+that list; re-read it rather than quoting this sentence. The
 startup FMV is absent: Steam's `-skipfmv` flag at
 `CLIParams__ParseCommandLine` (`0x00423BC0`) skips that movie but still reaches
 the click page. That page's Steam handlers at `0x0051B660`/`0x0051B6B0` accept
@@ -129,11 +141,49 @@ the vtable at `0x005DBAE4`, input/action/render entries
 `PCFrontend.cpp`. Level select uses Steam input/render entries
 `0x004606B0`/`0x00460B40`; only released world 100 is exposed. The loading page
 uses the exact image and `Loading...` text established by
-`CConsole__RenderLoadingScreen` (`0x0042C810`). Twenty-one exact AYA textures,
-three exact XAP PCM decodes, and ten English strings decoded from the
+`CConsole__RenderLoadingScreen` (`0x0042C810`). The Options page is retail's
+own rather than a new surface: read from the pristine specimen
+(`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+2,506,752 bytes) during this pass, the vtable at `0x005DB8A8` holds eight
+entries inside one `.text` cluster (`0x0051F4B0`–`0x0051F7E0`), and within that
+cluster at `0x0051F8A6` the image executes `6a 01 8b c8 e8 b1 e5 fa ff` —
+`push 1; mov ecx,eax; call 0x004CDE60` — so the frontend Options page enters,
+with mode `1`, the same routine that builds the in-game pause options. **Those
+bytes are measured here; the names `CFEPOptions` and `PauseMenu__Init` and the
+FEP page id `0x11` are the live Ghidra database's and the implementation's own
+comment, and are not established by this document.**
+**Thirty** exact AYA textures at HEAD on 2026-07-28 —
+`rebuild/tools/materialize_retail_assets.py`'s `FRONTEND_ASSETS` is
+authoritative for that count and should be re-read rather than quoted from
+here — three exact XAP PCM decodes, and ten English strings decoded from the
 supported shipped table are materialized to ignored frontend paths. This lane
 emits move/select/back cue identities; it does not load or play those WAVs, so
 the integrating audio owner remains singular.
+
+> **Superseded 2026-07-28 — one page list and one count in the paragraph
+> above.**
+>
+> 1. **The page list was incomplete.** It read: "It begins at click-to-start,
+>    then exposes the released main-menu entries, a world-100-only level
+>    selector, the released loading image, and one lifecycle seam that
+>    constructs, replaces, or disposes the existing Level 100 session/world."
+>    Five further screens — quit confirmation, DevSelect, Options, mission
+>    briefing and select configuration — were already declared and shipping.
+>    Nothing was withdrawn; the list was simply short, and
+>    [`../CURRENT_CAPABILITIES.md`](../CURRENT_CAPABILITIES.md) already listed
+>    briefing and configuration select on the run path, so the two governance
+>    documents disagreed with each other.
+>
+> 2. **"Twenty-one exact AYA textures" is thirty at HEAD.** That was true when
+>    written. The increment is the five-flag language selector (task #16), the
+>    v3 title/bracket/symbol set, the menu icons, the level brackets and rings,
+>    the title font and the loading screen. It is stated with its owner named
+>    for the same reason the 55-retained-versus-29-composed HUD split below is:
+>    two copies of one number drift. One further `Frontend/` entry
+>    (`mouse-cursor.texture.aya`) exists **uncommitted in the working tree** and
+>    is deliberately not counted here. **Unchanged:** the three XAP PCM decodes
+>    and the ten English strings, both still exact.
 
 Result ownership is deliberately split at the evidence boundary. Stuart's
 `CGame::DeclareLevelWon`, `CGame::DeclareLevelLost`, and end-level render path
@@ -205,7 +255,8 @@ globals** — `mov ecx,[0x6321a0]` at `0x00420B9E` — so the file is by
 construction a snapshot of current state, and no path writes it from authored
 constants. `INSTALL.LOG` lists `cardid.txt` but no `.bea` at all, so the absence
 is meaningful rather than a category gap. A value read from that file is a
-**user setting**, not a default. Manifest v7 owns the corrected value.
+**user setting**, not a default. The static-world manifest (schema
+`onslaught.level100-static-world.v14`) owns the corrected value.
 
 > **Do not cite `proof_defaultoptions.bea` as a pristine specimen.** It is also
 > run state — it holds `12.0` at OptionsTail `+0x04` where the image initialiser
@@ -218,12 +269,27 @@ passes, `CDXTrees` submits one standing fast card selected by
 camera differs from sampled ground height by more than 20 units. A manifest
 ordinal is not the retail selection input. The client preserves the close,
 six-face far, always-on standing, and height-gated horizontal owners separately.
-It does not infer Steam identity from its own heap. Manifest v7 instead pins an
-explicit phase-0 ordinal cycle for deterministic reconstruction and validates
+It does not infer Steam identity from its own heap. That manifest instead pins
+an explicit phase-0 ordinal cycle for deterministic reconstruction and validates
 all 1,481 selected views with counts `371/370/370/370`. Steam's exact tree
 allocation/view sequence and address-selector phase remain the precise
-unresolved runtime boundary. Exact
-source/output hashes live in the materializer and ignored generated manifest;
+unresolved runtime boundary.
+
+> **Corrected 2026-07-28 — a dead version label, twice.** Both sentences above
+> named "**Manifest v7**"; there is no manifest v7. It existed briefly and was
+> superseded seven revisions ago. **Both claims attached to that label are
+> unchanged and still true** — the manifest owns the corrected `30.0`, and it
+> pins `fastStandingViewPhase` `0` — so this is a stale citation, not a false
+> claim. MEASURED: the manifest declares
+> `onslaught.level100-static-world.v14`, and three tracked consumers reject
+> anything else — `OnslaughtRebuild.Client/Level100ActorDefinitionManifest.cs`,
+> `OnslaughtRebuild.Godot/Level100StaticWorldAsset.cs`, and
+> `tools/materialize_retail_assets.py` in two places. The text now names the
+> schema string rather than a bare version number, so the next bump is
+> greppable. The same dead label was corrected in
+> `OnslaughtRebuild.Godot/Assets/Level100/README.md` in the same pass.
+
+Exact source/output hashes live in the materializer and ignored generated manifest;
 detailed card, atlas, and render-state evidence lives in the Level 100 asset note and
 `reverse-engineering/binary-analysis/functions/DXTrees.cpp.md`.
 The released Level 100 WRES
@@ -487,6 +553,32 @@ sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and checkpoint
 states. The Godot adapter consumes that bounded proportional mapping at its
 30 Hz fixed step. Other sensitivity values, inversion, and jet mouse response
 remain unproven.
+
+> **Amended 2026-07-28 — the measurement stands; `1.5` is not a retail value.**
+> The paragraph above is a record of what was actually run and is not withdrawn:
+> those copies really were configured at sensitivity `1.5`, and the sampled yaw
+> and pitch deltas are what they produced. What must not be carried away from it
+> is that `1.5` is a retail baseline. **It is not reachable by any retail
+> player.** The slider law is `g_MouseSensitivity = (index + 1) * 3.0f` with max
+> index `0x14`, so the selectable set is `{3, 6, … 63}` and `1.5` sits below the
+> floor; it is the value in the copied `defaultoptions.bea` those runs were
+> configured through, which is persisted run state under `GOAL.md`'s defaults
+> rule and not an authored default. Read
+> during this pass from the pristine specimen
+> (`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`): file
+> `0x2254F4` (VA `0x006254F4`) = `00 00 e0 40` = `7.0f`, file `0x1D8CC0`
+> (VA `0x005D8CC0`) = `3.0f`, file `0x1D97C8` (VA `0x005D97C8`) =
+> `0.004333333f`. This document already knew the first of those — see the
+> `proof_defaultoptions.bea` warning above, which cites `0x006254F4` as `7.0` —
+> and simply never joined the two halves. The mapping measured here is
+> proportional, so it transfers; the shipped adapter now runs at the image
+> default `7.0` (`fed5829b`). `../CURRENT_CAPABILITIES.md` carries the same
+> withdrawal. **Unchanged, and deliberately so:** "Other sensitivity values,
+> inversion, and jet mouse response remain unproven" is still exactly true. A
+> sensitivity slider now exists in the client, but no run has been *measured* at
+> any value other than the one above, and "unproven" is a statement about
+> evidence, not about implementation.
 
 Separately, a disposable expected-byte-only change to the player constructor's
 preferred-view immediate

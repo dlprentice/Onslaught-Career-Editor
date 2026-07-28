@@ -1,6 +1,38 @@
-# CBattleEngine__IsCurrentResolvedEntry
+# CBattleEngine__IsExpectedCurrentWeapon
 
-> Address: `0x00407310` | Source family: `references/Onslaught/BattleEngine.cpp`
+> Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe (the Ghidra database's specimen, SHA-256 `74154bfa…`)
+> Address: `0x00407310`
+> Status: name corrected 2026-07-28; the supporting read-back below predates the rename
+> Last updated: 2026-07-28
+> The **filename** is retained at the withdrawn name so historical links resolve.
+
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00407310` | `CBattleEngine__IsCurrentResolvedEntry` | `CBattleEngine__IsExpectedCurrentWeapon` | same class; suffix re-read |
+
+**The rename invalidates part of this note's own supporting argument, and that is
+said here rather than left for a reader to notice.** The "Summary" section below
+argues that the decompile read-back *supports the name*, and one of the four
+signals it lists is the exported signature line, which quoted the withdrawn name
+back to itself. That signal is circular now and was always weak. The remaining
+three signals — the two neighbouring symbols and the `ret 0x4` evidence — are
+untouched and still support a **one-stack-argument boolean comparator**; what
+they never established is what the compared thing *is*.
+
+- **MEASURED:** the current symbol is `CBattleEngine__IsExpectedCurrentWeapon`.
+- **UNKNOWN:** whether the compared entry is a weapon. `entry` and `weapon` are
+  different claims and this note contains evidence for neither. What would settle
+  it: the type of the argument at the call sites, which requires the type
+  propagation the database does not currently carry.
+
+---
 
 ## Status
 

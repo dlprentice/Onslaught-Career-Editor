@@ -1,5 +1,17 @@
 # Discord Archive Extract (2026-03)
 
+- **Status:** live preservation record, and a **terminal** one — the raw channel
+  dumps this was extracted from were retired after extraction, so nothing here
+  can be re-verified from this repository. The "Source (historical dump line)"
+  column names files that no longer exist. Treat every row as recollection
+  preserved at a moment, not as measurement. Header block added 2026-07-28; no
+  claim in this file was changed, so the date below is still the date of the last
+  content change.
+- **Last updated:** 2026-06-23
+- **Summary:** the high-signal developer and community claims kept from a March
+  2026 read of the community Discord, retained because other lore and RE
+  documents cite them.
+
 Purpose: preserve high-value developer/community facts extracted from historical Discord channel dumps before raw dump removal.
 
 ## Scope

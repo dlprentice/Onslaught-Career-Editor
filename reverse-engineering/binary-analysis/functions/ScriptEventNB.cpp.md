@@ -4,6 +4,31 @@
 > Debug path: `[maintainer-local-source-export-root]\MissionScript\ScriptEventNB.cpp` (0x0064fe98)
 > Last updated: 2026-05-19
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0044b370` | `FUN_0044b370` | `CEventManager__AddEvent_AtTime` | placeholder replaced; this address carries a name now |
+| `0x005385e0` | `CScriptEventNB__HandleMessage` | `IScript__HandleMessage` | Class moved, suffix unchanged. UNKNOWN on what evidence — no tracked ledger records this rename; the 2026-07-27 export is the only artefact that carries it. |
+| `0x005386b0` | `CScriptEventNB__ScalarDeletingDestructor` | `CPostEventData__ScalarDeletingDestructor` | Class moved, suffix unchanged. MEASURED from the pristine specimen: `CPostEventData`'s vtable `0x005e4f34` slot 1 is this address ([second demotion ledger](../name-grading-ledger-2026-07-27-demotion2.md)). |
+| `0x005386d0` | `CScriptEventNB__Destructor` | `DestructorBody_005386d0` | **Demotion, not a rename.** The class name was proven false and withdrawn on 2026-07-27; see the [second demotion ledger](../name-grading-ledger-2026-07-27-demotion2.md). No positive name is claimed. |
+| `0x00538ea0` | `CScriptObjectCode__scalar_deleting_dtor` | `CMissionScriptObjectCode__scalar_deleting_dtor` | class prefix moved; suffix unchanged |
+| `0x00549220` | `OID__FreeObject` | `CDXMemoryManager__Free` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 Non-blocking script event system for mission scripting. "NB" stands for "Non-Blocking" - these are script events that execute without pausing the game loop, allowing waypoint following, message handling, and event posting to continue in parallel.
@@ -23,8 +48,8 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 | Address | Name | Status | Notes |
 |---------|------|--------|-------|
 | 0x00538760 | CScriptEventNB__Init | WAVE586 | `void __fastcall ... (void * event_nb)`; sets vtable, zeroes fields |
-| 0x005386d0 | CScriptEventNB__Destructor | WAVE586 | `void __fastcall ... (void * event_nb)`; cleans up listener set and monitor base |
-| 0x005386b0 | CScriptEventNB__ScalarDeletingDestructor | WAVE586 | `void * __thiscall ... (void * this, byte delete_flags)` |
+| 0x005386d0 | DestructorBody_005386d0 | WAVE586 | `void __fastcall ... (void * event_nb)`; cleans up listener set and monitor base |
+| 0x005386b0 | CPostEventData__ScalarDeletingDestructor | WAVE586 | `void * __thiscall ... (void * this, byte delete_flags)` |
 | 0x00538780 | CScriptEventNB__ScalarDeletingDestructor2 | WAVE586 | `void * __thiscall ... (void * this, byte delete_flags)` |
 | 0x00538950 | CScriptEventNB__BaseDestructor | WAVE586 | `void __fastcall ... (void * event_nb)`; restores vtable and shuts down monitor base |
 | 0x00538860 | CScriptEventNB__CreateEventListener | WAVE586 | `void __fastcall ... (void * event_nb)`; allocates the listener set |
@@ -32,7 +57,7 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 | 0x005387b0 | CScriptEventNB__ClearEventListeners | WAVE586 | `void __fastcall ... (void * listener_entry)`; clears one listener entry |
 | 0x005388d0 | CScriptEventNB__DestroyAllEvents | WAVE586 | `void __fastcall ... (void * event_nb)`; destroys all listener entries |
 | 0x00538470 | CScriptEventNB__UpdateWaypointFollowing | WAVE586 | `void __fastcall ... (void * event_nb)`; waypoint following logic with distance checks |
-| 0x005385e0 | CScriptEventNB__HandleMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; message IDs 2000, 0x7d1, 0x7d2 |
+| 0x005385e0 | IScript__HandleMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; message IDs 2000, 0x7d1, 0x7d2 |
 | 0x00538b70 | CScriptEventNB__PostEvent | WAVE586 | `void __thiscall ... (void * this, char * event_name)`; posts event to matching listeners |
 | 0x00538c70 | CScriptEventNB__HandleEventMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; handles event-manager payload message 2000 |
 
@@ -44,7 +69,7 @@ Note: `0x00538ea0` and `0x00538ec0` were previously attributed to this file, but
 
 Wave586 hardened the CScriptEventNB listener/event-manager tranche at `0x00538470` through `0x00538c70`. The saved signatures classify ECX-only helpers as `__fastcall`, one-stack-argument methods as `__thiscall`, deleting destructor wrappers with a `byte delete_flags` parameter, and the named event post method with a `char * event_name` argument.
 
-Read-back evidence: `ApplyScriptEventNBWave586.java` dry/apply/final dry reported `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=13 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `13` metadata rows, `13` tag rows, `18` xref rows, `5577` instruction rows, `13` decompile rows, and `72` vtable rows. The queue refresh after Wave586 reports `6093` functions, `2978` commented, `3115` commentless, `1387` exact-undefined signatures, `1116` `param_N` signatures, and next queue head `0x00538ea0 CScriptObjectCode__scalar_deleting_dtor`.
+Read-back evidence: `ApplyScriptEventNBWave586.java` dry/apply/final dry reported `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=13 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=13 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `13` metadata rows, `13` tag rows, `18` xref rows, `5577` instruction rows, `13` decompile rows, and `72` vtable rows. The queue refresh after Wave586 reports `6093` functions, `2978` commented, `3115` commentless, `1387` exact-undefined signatures, `1116` `param_N` signatures, and next queue head `0x00538ea0 CMissionScriptObjectCode__scalar_deleting_dtor`.
 
 The bounded evidence is static retail Ghidra state only. Runtime mission-script behavior remains unproven, script corpus coverage remains separate evidence, exact `CScriptEventNB`/listener/message/payload/waypoint layouts remain open, and 0x00538ea0 and 0x00538ec0 remain CScriptObjectCode rows rather than ScriptEventNB rows.
 
@@ -503,11 +528,11 @@ Offsets formerly listed from `0x58` through `0x6c` came from the now-moved `CScr
 ### Calls
 | Address | Function | Notes |
 |---------|----------|-------|
-| 0x00549220 | OID__FreeObject | Memory deallocation |
+| 0x00549220 | CDXMemoryManager__Free | Memory deallocation |
 | 0x004e5bd0 | CSPtrSet__Remove | Remove entry from list (returns node to pool) |
 | 0x004e5c60 | CSPtrSet__Clear | List cleanup |
 | 0x004bac40 | CMonitor__Shutdown | Base monitor cleanup helper (formerly `FUN_004bac40`) |
-| 0x0044b370 | FUN_0044b370 | Event scheduling; this call uses `NEXT_FRAME` |
+| 0x0044b370 | CEventManager__AddEvent_AtTime | Event scheduling; this call uses `NEXT_FRAME` |
 | 0x00441740 | CConsole__Printf (`FUN_00441740`) | Debug/error output |
 
 ---

@@ -4,6 +4,26 @@
 > Debug Path: `[maintainer-local-source-export-root]\MCTentacle.cpp` at `0x0062e06c`
 > Current evidence: Wave435 saved Ghidra read-back on 2026-05-16; Wave515 follow-up saved the adjacent `0x004f0c50` matrix helper on 2026-05-17
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0049efe0` | `CMCWarspiteDome__VFunc_04_UpdateDomeTransform_0049efe0` | `CMCWarspiteDome__VFunc_04_UpdateNamedPartTransforms_0049efe0` | same class; suffix re-read |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 `CMCTentacle` is the tentacle boss motion-controller cluster. The recovered functions animate a multi-segment tentacle by caching bone transforms, evaluating cubic Bezier spline positions, and writing interpolated mesh-part transforms through a `CMotionController` vtable.
@@ -42,7 +62,7 @@ Wave756 static read-back (`unwind-continuation-wave756`, `wave756-readback-verif
 | `0x0049ef80` | `CMCWarspiteDome__Constructor` | Adjacent dome motion-controller constructor; installs vtable `0x005dc484` and stores owner dome at `+0x08`. |
 | `0x0049efa0` | `CMCWarspiteDome__ScalarDeletingDestructor` | Delete-flags wrapper for `CMCWarspiteDome__Destructor`. |
 | `0x0049efc0` | `CMCWarspiteDome__Destructor` | Restores vtable `0x005dc484`, clears owner/cached fields, and tails into the base motion-controller destructor. |
-| `0x0049efe0` | `CMCWarspiteDome__VFunc_04_UpdateDomeTransform_0049efe0` | Dome motion-controller slot 4; updates dome mesh-part transforms and cached owner-driven state. |
+| `0x0049efe0` | `CMCWarspiteDome__VFunc_04_UpdateNamedPartTransforms_0049efe0` | Dome motion-controller slot 4; updates dome mesh-part transforms and cached owner-driven state. |
 
 ## Vtable Evidence
 

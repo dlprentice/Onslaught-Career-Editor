@@ -2,6 +2,26 @@
 
 > Address: 0x00402ad0 | Source: AirUnit.cpp (source file not present in `references/Onslaught/` snapshot)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004cd7a0` | `CWorldPhysicsManager__FindNodeByNameGE` | `CParticleSet__FindByNameAndTrackLinkSlot` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes (headless postscript + read-back verified, 2026-03-01)
@@ -11,7 +31,7 @@
 
 Initialize an air unit by calling the base CUnit constructor and creating aircraft-specific visual effects. Creates "Trail" effects (exhaust contrails) and "Engine" effects (thrust particles) in two separate loops.
 
-Wave822 particle manager owner links (`particle-manager-owner-links-wave822`) corrected the shared registration helper from old `CWorldPhysicsManager__PushNodeGlobalList` to `0x004cb040 ParticleEffectLink__PushGlobalList`. The same static read-back wave also hardened `0x004caf30 CParticleManager__ClearParticleOwnerBacklinks`, `0x004cb080 CParticleManager__PruneDeadOwnerLinks`, and `0x004cbc60 CParticleManager__UpdateRenderNodesAndResetState`. Queue after Wave822 is `5626/6098 = 92.26%`; next raw commentless row is `0x004cd7a0 CWorldPhysicsManager__FindNodeByNameGE`; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified`. Exact effect-handle/link-node/render-node/owner layouts, exact source-body identity, runtime particle shutdown behavior, runtime particle/effect behavior, runtime render behavior, BEA patching, and rebuild parity remain deferred.
+Wave822 particle manager owner links (`particle-manager-owner-links-wave822`) corrected the shared registration helper from old `CWorldPhysicsManager__PushNodeGlobalList` to `0x004cb040 ParticleEffectLink__PushGlobalList`. The same static read-back wave also hardened `0x004caf30 CParticleManager__ClearParticleOwnerBacklinks`, `0x004cb080 CParticleManager__PruneDeadOwnerLinks`, and `0x004cbc60 CParticleManager__UpdateRenderNodesAndResetState`. Queue after Wave822 is `5626/6098 = 92.26%`; next raw commentless row is `0x004cd7a0 CParticleSet__FindByNameAndTrackLinkSlot`; verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260524-180249_post_wave822_particle_manager_owner_links_verified`. Exact effect-handle/link-node/render-node/owner layouts, exact source-body identity, runtime particle shutdown behavior, runtime particle/effect behavior, runtime render behavior, BEA patching, and rebuild parity remain deferred.
 
 ## Signature
 ```c

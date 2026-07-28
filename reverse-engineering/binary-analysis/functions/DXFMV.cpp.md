@@ -3,6 +3,26 @@
 > Source File: DXFMV.CPP | Binary: BEA.exe
 > Debug Path: 0x00650644 (`[maintainer-local-source-export-root]\DXFMV.CPP`)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0053f730` | `CDXBitmapFont__ctor_like_0053f730` | `CDXBitmapFont__ctor_base` | same class; suffix re-read |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 DirectX full-motion-video wrapper around the front-end video implementation. Wave594 is the first static saved-Ghidra pass that documents this file's adjacent retail FMV lifecycle head.
@@ -26,7 +46,7 @@ Wave594 saved signatures, comments, and tags for five adjacent FMV rows and one 
 | `0x0053f160` | `VFuncSlot_01_0053f160` | Shared slot-1 deleting-destructor shape through the `CFMV`/base table at `0x005e5018`; exact owner remains unresolved |
 | `0x0053f180` | `CDXFMV__VFunc_06_0053f180` | `CDXFMV` vtable slot 6 and direct-call target from `CLTShell__InitializeRuntimeAndLoadCoreResources`; tail-jumps `PlatformInput__ResetKeyStateTables` |
 
-Read-back evidence verified 6 metadata rows, 6 tag rows, 27 xref rows, 1446 instruction rows, 6 target decompile rows, 2 caller decompile rows, 126 callsite instruction rows, and 48 vtable rows across the whole Wave594 tranche. Queue after Wave594: `6093` total, `3039` commented, `3054` commentless, `1347` exact-undefined signatures, `1095` `param_N`, comment-backed proxy `3039/6093 = 49.88%`, strict proxy `2993/6093 = 49.12%`, and next head `0x0053f730 CDXBitmapFont__ctor_like_0053f730`.
+Read-back evidence verified 6 metadata rows, 6 tag rows, 27 xref rows, 1446 instruction rows, 6 target decompile rows, 2 caller decompile rows, 126 callsite instruction rows, and 48 vtable rows across the whole Wave594 tranche. Queue after Wave594: `6093` total, `3039` commented, `3054` commentless, `1347` exact-undefined signatures, `1095` `param_N`, comment-backed proxy `3039/6093 = 49.88%`, strict proxy `2993/6093 = 49.12%`, and next head `0x0053f730 CDXBitmapFont__ctor_base`.
 
 This is static retail evidence only. Runtime FMV/Bink behavior, exact `CFMV`/`CDXFMV`/`CDXFrontEndVideo` layouts, exact source identity, full vtable boundaries, BEA patching, and rebuild parity remain unproven.
 

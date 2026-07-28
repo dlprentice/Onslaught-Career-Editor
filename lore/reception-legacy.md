@@ -1,5 +1,15 @@
 # Reception & Legacy
 
+- **Status:** live preservation record — press and sales history from
+  contemporary reviews and aggregators, not measurement. **No score on this page
+  cites a retrieval date or a URL**, and aggregate scores drift, so treat every
+  number here as an undated snapshot until one is sourced. Header block added
+  2026-07-28; no claim in this file was changed, so the date below is still the
+  date of the last content change.
+- **Last updated:** 2026-03-12
+- **Summary:** contemporary reviews, Metacritic scores and commercial
+  performance.
+
 ### Critical Reception
 
 | Platform | Metacritic | Consensus |

@@ -12,9 +12,22 @@
 > **What `[renderable + 8]` points at could not be established statically** — see
 > §6 for the precise negative and the one observation that settles it.
 
-Specimen: `BEA.exe`, local pristine safe copy
-`local-lab/safe-copy-bea-pristine/BEA.exe`, image base `0x00400000`. All
-disassembly is `capstone` linear decode of the pristine file through
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe`, SHA-256
+`e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`,
+2,506,752 bytes — the **capture target**: pristine plus the `force_windowed`
+patch and nothing else.
+*(Corrected 2026-07-28. This line previously read "`BEA.exe`, local pristine safe
+copy `local-lab/safe-copy-bea-pristine/BEA.exe`", and carried no hash at all.
+`e1436ef7` is **not** pristine — the pristine specimen is
+`BEA.exe.original.backup`, SHA-256 `74154bfa…`, in the same directory; see
+[`retail-specimen-baseline.md`](retail-specimen-baseline.md), which records that
+the two file names in that directory are inverted. Re-measured 2026-07-28: the
+two builds differ at exactly **four** bytes, file offsets `0x12a644`–`0x12a647`
+= VA `0x0052a644`–`0x0052a647`. No address cited anywhere in this note falls in
+that range — the nearest are `0x00527960` below and `0x0053bb50` above — so
+**every byte claim below stands unchanged.**)*
+Image base `0x00400000`. All
+disassembly is `capstone` linear decode of that file through
 `tools/disasm_va.py`; all reference counts are whole-file scans through
 `tools/operand_scan.py` / `tools/call_xref_scan.py`; all data reads through
 `tools/pe_read_va.py`. No Ghidra database was opened. `BEA.exe` was not launched.

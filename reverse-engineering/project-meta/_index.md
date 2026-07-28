@@ -26,7 +26,7 @@ This folder contains project-level documentation that supports the preservation/
 ## See Also
 
 - [../../lore/](../../lore/) - Full team roster, development history, and community history
-- [CURRENT_CAPABILITIES.md](/CURRENT_CAPABILITIES.md) - Current app surface and supported workflows
+- [CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md) - Current app surface and supported workflows (path repaired 2026-07-28; was `/CURRENT_CAPABILITIES.md`, a root-absolute link that resolves to the filesystem/site root rather than the repository root and so fails both locally and on a GitHub blob page)
 
 ---
 

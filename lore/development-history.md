@@ -1,5 +1,20 @@
 # Development History
 
+- **Status:** live preservation record — the April 2003 Game Developer Magazine
+  post-mortem, plus developer recollection. Some claims here rest on Discord
+  recollection preserved in
+  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  raw channel dumps were retired after extraction, so those cannot be
+  re-verified from this repository. Where this file disagrees with a measurement
+  under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
+  measurement wins**. Five changes landed 2026-07-28, each marked at the line it
+  affects: three corrections (`CORRECTED 2026-07-28`), one qualifier added to a
+  claim that was true but unbounded, and one cross-reference note.
+- **Last updated:** 2026-07-28
+- **Summary:** the project timeline, the Ben Carter post-mortem, the in-house PC
+  retail port, and why the pinned GPL source does not match the shipped retail
+  game.
+
 ### Timeline
 
 | Period | Milestone |
@@ -245,7 +260,36 @@ The engine's flexibility became a serious liability during optimization:
 
 Trees were originally added as standard "things," handled like units and troops — they could be shot at, knocked over, or block line-of-sight:
 
-> "While the programming team was attempting to figure out how to achieve this, the level designers implemented the mission without it by misusing some of the scripting functionality in a clever way... Unfortunately, **we realized a few weeks later that some levels now had in excess of 6,000 individual trees on them (which accounted for nearly 2MB of RAM at one stage)**, and re-engineering the code to handle this efficiently without breaking the now-established behavior took a great deal of thought and effort."
+> "[...] Unfortunately, **we realized a few weeks later that some levels now had in excess of 6,000 individual trees on them (which accounted for nearly 2MB of RAM at one stage)**, and re-engineering the code to handle this efficiently without breaking the now-established behavior took a great deal of thought and effort."
+
+**CORRECTED 2026-07-28 — a spliced sentence was removed from the front of this
+quotation.** The block above previously opened with:
+
+> "While the programming team was attempting to figure out how to achieve this,
+> the level designers implemented the mission without it by misusing some of the
+> scripting functionality in a clever way..."
+
+**MEASURED (internal to this repository, before this correction was applied):**
+that sentence was byte-identical to the quotation under [What Went Right → 1.
+Flexible Core Technologies](#1-flexible-core-technologies), in the "Scrolling
+World Example" paragraph earlier in this same file. A repository-wide
+`grep -rn "misusing some of the scripting" --include=*.md` returned exactly two
+hits — that quotation and this block — and nothing anywhere else. In the
+Scrolling World passage, "how to achieve this" has an antecedent (making the
+normally static world map scroll). Here it had none: the paragraph it followed is
+about trees being shot at, knocked over and blocking line-of-sight.
+
+**INFERRED, not measured:** that the sentence *originates* in the Scrolling World
+passage and was copied here in error, rather than Ben Carter having used closely
+similar words in two places. That is reasoned from the internal structure above;
+it was not checked against the source.
+
+**UNKNOWN — the tree passage's true opening sentence.** What would settle it: a
+read of the Game Developer Magazine April 2003 post-mortem.
+`media/publications/GDM_April_2003.pdf` is a maintainer-local ignored path and is
+absent from this machine; an Internet Archive copy is listed in
+[reference-materials.md](reference-materials.md). Until someone reads it, the
+quotation above is left deliberately truncated rather than reconstructed.
 
 ---
 
@@ -283,6 +327,11 @@ PC Development Build (Stuart's code)
 
 **Jan** (surname unknown) was the primary PC port developer. He previously worked at **Mucky Foot** (UK studio known for Startopia, Urban Chaos, Blade II). Jan changed the cheat codes from the original Lost Toys codes (B4K42, !EVAH!, 105770Y2) to new ones (MALLOY, TURKEY, Maladim, etc.).
 
+*A lead on Jan's surname exists and is deliberately **not** merged into the name
+above; it is INFERRED, not confirmed. It is recorded once, with its weaknesses
+and what would settle it, in [team-roster.md](team-roster.md) under "PC Port
+Team". (Note added 2026-07-28; nothing above was changed by it.)*
+
 Source retention note (from preserved Discord archive extracts): ex-team recollection indicates no one retained the full finished retail PC source tree, which aligns with the current partial-source preservation reality.
 
 The PC version was a **minimal-effort console port**, not a native PC build:
@@ -292,7 +341,7 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 | **Base version** | Xbox (explains split-screen multiplayer) |
 | **Graphics** | Console textures ported directly without enhancement |
 | **Multiplayer** | Only split-screen 2-player (no online/LAN) |
-| **Config file** | Main configuration file is **encrypted** |
+| **Config file** | **CORRECTED 2026-07-28** — this cell previously read "Main configuration file is **encrypted**". Nothing shipped is encrypted. MEASURED: `defaultoptions.bea` is a plain 10,004-byte options snapshot written through `fopen`/`fwrite`/`fclose` with no crypt step, and `cardid.txt` is 18 KB of plain text. See [game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md) and [modding-reference.md](../reverse-engineering/game-assets/modding-reference.md). |
 | **Data encoding** | Retail `.bes` values are raw little-endian dwords; many only *look* “shift-16” in 4-byte-aligned hex dumps because CCareer bytes are copied at `file + 2` |
 | **Cheat codes** | Changed from original Lost Toys codes by Jan |
 
@@ -302,13 +351,49 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 - The retail `.bes` on-disk layout differs (CCareer blob begins at `file + 2`), which made many values appear “shift-16” in naive hex dumps
 - This explains many of the encoding/offset discrepancies documented in `reverse-engineering/`
 
-**First Public RE Documentation**: This project represents the first public documentation of the .bes save file format. No prior hex editing or modding discussions exist online.
+**Save-format documentation status** — **CORRECTED 2026-07-28.** This line
+previously read, in full:
+
+> **First Public RE Documentation**: This project represents the first public
+> documentation of the .bes save file format. No prior hex editing or modding
+> discussions exist online.
+
+The second sentence is **withdrawn outright**. It was an unbounded universal
+negative about the entire internet, and it is contradicted by this same corpus:
+[community-preservation.md](community-preservation.md) lists a 2007 +4 trainer on
+GameCopyWorld, a 2018 widescreen fix, a 2024 Cheat Engine table and a
+PCGamingWiki page — all of them prior public memory- or binary-editing work on
+this title. The widescreen fix's aspect constant and hooks are documented at
+[widescreen-patch-analysis.md](../reverse-engineering/binary-analysis/widescreen-patch-analysis.md).
+
+The first sentence is **bounded, not restated**: no prior public description of
+the `.bes` on-disk layout is known to this project. **This repository holds no
+search record**, so treat that as absence of evidence, not a proven first.
+
+**What would settle it:** a dated search of the venues where such work is
+published, with its results written down and cited here. Until that record
+exists, do not restate this as a first.
 
 ---
 
 ## Development Tools
 
-- Written entirely in **C++** using **DirectX 8**
+- Written entirely in **C++** using **DirectX 8** — this describes the Lost Toys
+  internal / console-era codebase (SOURCE: `references/Onslaught/d3dapp.cpp:19`
+  `#include <D3D8.h>`; `references/Onslaught/ltshell.cpp:31-32`
+  `d3dx8.lib` / `d3d8.lib`).
+
+  > **Qualifier added 2026-07-28.** The fact above is unchanged and was not
+  > wrong; it was unqualified, two paragraphs after the retail-port section,
+  > which invited readers to carry it onto the shipped Windows build. The
+  > **shipped PC retail build is Direct3D 9** — MEASURED: `BEA.exe`'s import
+  > directory names `d3d9.dll` and the setter vtable displacements resolve on
+  > the `IDirect3DDevice9` layout
+  > ([d3d-default-render-state-block-2026-07-27.md](../reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md)
+  > section 2), and
+  > [executable-analysis.md](../reverse-engineering/binary-analysis/executable-analysis.md)
+  > records "Format: PE / D3D9" with `D3D9.DLL` in the dependency list. Do not
+  > carry the DirectX 8 attribution onto the retail binary.
 - Custom in-house scripting language built with **Lex and Yacc** for level designers
 - The scripting files were accidentally left on the retail CD (but modifying them does nothing — they're compiled)
 - The team essentially built a "very cut down version of Unity" as their engine

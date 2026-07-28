@@ -307,7 +307,18 @@ From `Controller.cpp` analysis:
 - [x] Test the PC cheat codes (MALLOY, TURKEY, Maladim) in game - **DONE**: MALLOY=goodies (works), TURKEY=levels (works), Maladim=god toggle works in mission pause flow
 - [x] Verify Maladim shows god mode toggle in pause menu during mission - **DONE**: visible under `Controller Options` as `God OFF` / `God ON`
 - [ ] Test binary patch on actual BEA.exe
-- [x] Calculate exact file offset for binary patch byte (see `patches/README.md` and `binary-patching/SKILL.md`)
+- [x] Calculate exact file offset for binary patch byte (see [`../../patches/README.md`](../../patches/README.md), which carries the PE-section proof this line needs)
+
+  **CITATION REPAIRED 2026-07-28.** This line previously read
+  "(see `patches/README.md` and `binary-patching/SKILL.md`)". `patches/README.md`
+  resolves; **`binary-patching/SKILL.md` does not exist anywhere in this
+  repository** — there is no `binary-patching/` directory, and
+  `find . -name 'SKILL.md'` outside `.git` returns nothing. The dead half is
+  dropped rather than repointed: `patches/README.md` already owns the
+  offset-and-section derivation. Whether a `binary-patching` skill was
+  intentionally removed or never tracked is **UNKNOWN**; what would settle it is
+  a `git log --diff-filter=D -- '*SKILL.md'`, which returns nothing, meaning the
+  file was never in this repository's history at all.
 - [x] Document what cheats 0, 1, 2 actually do when activated - **DONE Dec 2025**
 
 ### Low Priority

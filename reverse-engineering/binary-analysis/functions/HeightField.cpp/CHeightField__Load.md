@@ -2,6 +2,26 @@
 
 > Address: 0x0047f750 | Source: HeightField.cpp (source file not present in `references/Onslaught/` snapshot)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0040c640` | `DebugPrint` | `DebugTrace` | label replaced |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes, corrected in Wave396
@@ -91,7 +111,7 @@ After loading, the function doubles color values in the gradient table and clamp
 | 0x00423960 | StreamReader::Read | Read data from stream |
 | 0x0047e8e0 | CHeightField__InitColorGradient | Initialize color gradient table |
 | 0x0055de9b | sprintf | Format error messages |
-| 0x0040c640 | DebugPrint | Debug output |
+| 0x0040c640 | DebugTrace | Debug output |
 
 ## Key Values
 - **Struct Size:** 0x13dc (5084 bytes)

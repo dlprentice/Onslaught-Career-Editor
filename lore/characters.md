@@ -1,5 +1,15 @@
 # Characters
 
+- **Status:** live preservation record — **in-universe fiction**, drawn from the
+  game's own character bios and briefings. Nothing here is a claim about the
+  shipped executable. The `media/portraits/*.gif` paths cited per character are
+  maintainer-local ignored paths and are not present in a clone. Header block
+  added 2026-07-28; no claim in this file was changed, so the date below is still
+  the date of the last content change.
+- **Last updated:** 2026-03-12
+- **Summary:** profiles of Hawk Winter, Tatiana Kiralova, Col. Chuck Kramer and
+  Lewis Carver.
+
 ### Hawk Winter (Protagonist)
 
 | Detail | Information |

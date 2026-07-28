@@ -1,5 +1,18 @@
 # The Team
 
+- **Status:** live preservation record — credits from the archived Lost Toys
+  website, plus developer recollection. Some claims rest on Discord recollection
+  preserved in
+  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  raw channel dumps were retired after extraction, so those cannot be
+  re-verified from this repository. **Named people are real and living**: do not
+  merge, infer or extend an identity here without a source that states it. One
+  correction and one explicitly-inferred lead landed 2026-07-28 and are marked
+  at the lines they affect.
+- **Last updated:** 2026-07-28
+- **Summary:** the credited development team, the 2003 PC port team, and where
+  the people traced so far are now.
+
 ### Core Development Team (Lost Toys Website, c. 2003)
 
 #### Directors
@@ -58,7 +71,33 @@ After the console versions were complete, the core team moved onto other project
 
 | Name | Role | Notes |
 |------|------|-------|
-| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes |
+| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes. See the lead recorded below. |
+
+**Lead on Jan's surname — INFERRED, NOT CONFIRMED (recorded 2026-07-28).**
+"Surname unknown" above is still accurate: nothing establishes who this Jan was.
+It is recorded here only so the strongest available lead is visible rather than
+buried in the RE corpus.
+
+`cardid.txt`, a PC-retail-only GPU-tweak file loaded by
+`CD3DApplication__LoadCardIdAndApplyVendorTweaks`, is credited to **Jan
+Svarovsky and Tom Forsyth**, "originally from StarTopia at Mucky Foot" —
+[modding-reference.md](../reverse-engineering/game-assets/modding-reference.md)
+and
+[game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md).
+First name, former studio and named title all match this row.
+
+**Why that is weaker than it looks, and must not be written in as fact:**
+
+- The credit names **two** people, and "originally from StarTopia at Mucky Foot"
+  most naturally describes the **file's** lineage, not either author's employment
+  at Lost Toys. A file carried over from Startopia can reach Battle Engine Aquila
+  without either author working on this game.
+- The file's own header comment carries the same credit, so reading it does
+  **not** settle the question; it only restates the lead.
+
+**What would settle it:** a direct confirmation from Stuart Gillam, who sat next
+to this Jan, or a surname in the retail PC credits or printed manual. Until one
+of those exists, do not merge the two names.
 
 **Note**: Encore Software was only the **publisher** for the PC version. The actual port work was done in-house at Lost Toys by Jan and possibly others. Stuart confirmed this on Discord (Dec 2025): *"The PC version was done inhouse at LT though. When the original console versions were complete the team moved onto other work and LT got a person or persons to convert our already 'inhouse' development version into something releasable."*
 
@@ -102,7 +141,17 @@ On VR: *"I've been fascinated by VR. In fact, I added support for three differen
 - Experiments with Unity game engine
 - Active on Discord as "desimbr" / "desiado"
 - **GitHub**: [stuart73](https://github.com/stuart73) - Preserving game history:
-  - **Onslaught** - Original BEA source code (GPL-3.0, April 2025)
+  - **Onslaught** - Original BEA source code (GPL-3.0). **CORRECTED 2026-07-28**;
+    this previously read "(GPL-3.0, April 2025)". The drop is **staged**, and
+    dating it to April 2025 understated it by roughly 3.4x and misdated the
+    gameplay code this project ports from. MEASURED from the pinned repository's
+    own git history: `2025-04-10` published LICENSE and README plus 30 platform,
+    memory and controller files (`0fa6b19` +2, `f4ca46d` +30); `2025-12-12` added
+    76 more including the `BattleEngine*` gameplay code (`24939a6` +72,
+    `ac5eff7` +2, `a073df7` +2). The pinned checkout is **108 files at
+    `5352a81` (2025-12-12)**, and 2 + 30 + 72 + 2 + 2 = 108 exactly. Commits
+    after that point on `origin/main` add and then remove tooling and dotfiles,
+    not source, and are not in the pinned checkout.
   - **AYAResourceExtractor** - Extract BEA models to FBX for Blender
   - **UnityPacmania** - Complete Pacmania arcade clone in Unity/C#
   - **DCMoHo** - Fork of Ball Breakers/MoHo for Dreamcast

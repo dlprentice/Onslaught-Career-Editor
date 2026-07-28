@@ -8,10 +8,51 @@ authority; Core agreement does not re-prove retail.
 | Scalar | Core constant | Evidence |
 | --- | --- | --- |
 | Level 100 walker translation | acceleration `33`, retention `0.7884`, cap `100` milli-units/tick | clean control + two fresh repeats |
-| Jet forward | `JetSpeedPerTick = 381` | jet-p06 |
+| ~~Jet forward~~ | ~~`JetSpeedPerTick = 381`~~ | ~~jet-p06~~ — **SUPERSEDED 2026-07-28, see below** |
+| Jet forward (envelope) | `JetMinimumSpeedPerTick = 200` / `JetMaximumSpeedPerTick = 600` | shipped bytes — `SimulationConstants.cs:125-129` |
 | Level 100 walker body yaw | input `10,444` micro-rad/tick, retention `0.861774` | clean control + two fresh repeats |
-| Jet energy drain | `JetEnergyDrainPerTick = 17` | energy-p02 |
+| ~~Jet energy drain~~ | ~~`JetEnergyDrainPerTick = 17`~~ | ~~energy-p02~~ — **SUPERSEDED 2026-07-28, see below** |
+| Jet energy drain (envelope) | `JetMinimumEnergyDrainMicroPerRetailTick = 5_000` / `JetMaximumEnergyDrainMicroPerRetailTick = 12_000` | shipped bytes — `SimulationConstants.cs:346-377` |
+| Walker energy regeneration | `WalkerEnergyRegenerationPerTick = 33` | shipped byte + source — `SimulationConstants.cs:318-345` |
 | Walker-to-jet raw state interval | `WalkerToJetTransitionTicks = 16` | Level 100 control + two repeats |
+
+**SUPERSEDED 2026-07-28 — two of these constants no longer exist in Core, and the
+model changed shape, not merely value.** The two struck rows above previously
+read, unqualified:
+
+> | Jet forward | `JetSpeedPerTick = 381` | jet-p06 |
+> | Jet energy drain | `JetEnergyDrainPerTick = 17` | energy-p02 |
+
+`grep -rn 'JetSpeedPerTick\|JetEnergyDrainPerTick' rebuild/OnslaughtRebuild.Core/`
+returns nothing. Both symbols survive only in a stale build-output copy under
+`rebuild/OnslaughtRebuild.Core.Tests/bin/Release/net8.0/core-source/`, which is
+an artefact and not the tree.
+
+What replaced them, and why the change is substantive:
+
+- A single flat scalar became a **thruster-interpolated envelope**. Jet speed is
+  now two ends, `200`/`600`, from `mMinAirVelocity 0.3` / `mMaxAirVelocity 0.9`
+  (`rebuild/OnslaughtRebuild.Core/SimulationConstants.cs:125-129`). Jet energy
+  drain is likewise two ends, `5_000`/`12_000` micro-retail per retail tick, from
+  `mMinAirEnergyCost 0.005` (`0x3BA3D70A`) / `mMaxAirEnergyCost 0.012`
+  (`0x3C449BA6`), interpolated by thruster value (`SimulationConstants.cs:346-377`).
+- **The authority moved.** `jet-p06` and `energy-p02` are copied-runtime pairs
+  taken at level 850. The replacements are read out of shipped data: record 3
+  "Aquila Prototype" @`0x2d2` of `data/battle engine configurations.dat`,
+  SHA-256 `58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a`,
+  1,514 bytes (re-hashed for this correction on 2026-07-28 against
+  `local-lab/safe-copy-bea-pristine/data/`).
+
+**Unchanged by this correction:** the three walker rows and the transition row
+all still verify against the current tree — `WalkerAccelerationPerTick = 33`
+(`:52`), `WalkerVelocityRetentionNumerator = 7_884` (`:53`),
+`WalkerMaximumSpeedPerTick = 100` (`:55`), `WalkerYawInputMicroRadPerTick = 10_444`
+(`:251`), `WalkerYawRetentionNumerator = 861_774` (`:252`),
+`WalkerToJetTransitionTicks = 16` (`:316`). Nothing in the observation sections
+below is withdrawn; the retail measurements they record stand, and only the
+Core-side mapping of the two jet rows changed. The retail jet measurement itself
+is still recorded at
+[`jet-forward-scalar-response-v1.md`](jet-forward-scalar-response-v1.md).
 
 ## Level 100 walker observation
 
@@ -72,3 +113,12 @@ within `0.00119` per component. Core consumes this bounded attached-view aim;
 terrain-relative pitch limits, mouse scaling, emitter origin, auto-aim, and
 vertical target collision remain absent. Energy regeneration, shield behavior,
 and non-Level-100 movement configurations remain provisional or absent.
+
+**AMENDED 2026-07-28, in the energy-regeneration clause only.** Walker energy
+regeneration is no longer provisional: Core carries
+`WalkerEnergyRegenerationPerTick = 33`
+(`rebuild/OnslaughtRebuild.Core/SimulationConstants.cs:318-345`), derived from
+`references/Onslaught/BattleEngineWalkerPart.cpp:374-388` together with the
+shipped byte `mGroundEnergyIncrease 0.05` in the record cited above. The rest of
+that sentence — shield behavior and non-Level-100 movement configurations —
+stands unchanged.

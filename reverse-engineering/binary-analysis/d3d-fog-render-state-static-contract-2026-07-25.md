@@ -32,10 +32,34 @@ per-vertex fog would be a regression.
 
 ### Correction to the state numbering used in the request
 
-The states are the D3D8 `D3DRENDERSTATETYPE` values, not the ones assumed in the
-task framing. Confirmed by `D3DRS_CULLMODE == 22 == 0x16`, which both
-`RenderState_Set` and `RenderState_SetRaw` special-case for a `2`↔`3` winding
-swap (see below).
+The states are the `D3DRENDERSTATETYPE` values — the enumeration is identical in
+Direct3D 8 and Direct3D 9 — not the ones assumed in the task framing. Confirmed
+by `D3DRS_CULLMODE == 22 == 0x16`, which both `RenderState_Set` and
+`RenderState_SetRaw` special-case for a `2`↔`3` winding swap (see below).
+
+> **Corrected 2026-07-28 — the API attribution, not the numbers.** This
+> paragraph previously read: "The states are the D3D8 `D3DRENDERSTATETYPE`
+> values, not the ones assumed in the task framing." **The binary is Direct3D
+> 9.** Measured on the pristine specimen named at the head of this document
+> (`74154bfa…`): the import directory contains `d3d9.dll` and `d3d9d.dll` and
+> the import name table contains `Direct3DCreate9`; there is **no `d3d8.dll`
+> import**. The three `Direct3DCreate8_*` strings that live in `.data` around
+> file offset `0x24bea0` are leftover log text, not imports. This document
+> self-refutes at its own line for `CALL dword ptr [ECX + 0xe4]`: `+0xe4` is
+> `IDirect3DDevice9` index 57, whereas Direct3D 8 puts `SetRenderState` at
+> `+0x0A4`.
+>
+> **Nothing in the verdict, the state table, or the byte evidence changes.** The
+> `D3DRENDERSTATETYPE` values quoted here (`CULLMODE` 22, `FOGENABLE` 28,
+> `FOGCOLOR` 34, `FOGTABLEMODE` 35, `FOGSTART` 36, `FOGEND` 37, `FOGDENSITY` 38,
+> `RANGEFOGENABLE` 48, `FOGVERTEXMODE` `0x8C`) are the same in both APIs, and so
+> are the `D3DCAPS` field offsets used below, which lie in the prefix that
+> `D3DCAPS8` and `D3DCAPS9` share byte-for-byte through `TextureOpCaps`
+> (`+0x90`). Only the attribution was wrong.
+>
+> See [`d3d-default-render-state-block-2026-07-27.md`](d3d-default-render-state-block-2026-07-27.md)
+> §2 and its Correction 1, which established this from the same import
+> directory and a nine-slot vtable table. Task #129.
 
 | Name | Decimal | Hex |
 | --- | ---: | --- |
@@ -60,11 +84,11 @@ Complete 44-instruction body, exported with
 00514030  8a 44 24 04                 MOV   AL, byte ptr [ESP + 0x4]     ; enable
 00514034  84 c0                       TEST  AL, AL
 00514036  74 67                       JZ    0x0051409f                   ; -> disable path
-00514038  a1 78 8a 88 00              MOV   EAX, [0x00888a78]            ; D3DCAPS8.RasterCaps
+00514038  a1 78 8a 88 00              MOV   EAX, [0x00888a78]            ; D3DCAPS9.RasterCaps
 0051403d  f6 c4 01                    TEST  AH, 0x1                      ; == RasterCaps & 0x100
 00514040  74 1f                       JZ    0x00514061                   ; -> no-table-fog path
 ; ---- table-fog path (RasterCaps & D3DPRASTERCAPS_FOGTABLE) ----
-00514042  a1 50 8a 88 00              MOV   EAX, [0x00888a50]            ; IDirect3DDevice8 *
+00514042  a1 50 8a 88 00              MOV   EAX, [0x00888a50]            ; IDirect3DDevice9 *
 00514047  c7 05 cc 55 85 00 01 ...    MOV   dword ptr [0x008555cc], 0x1  ; shadow of state 0x23
 00514051  6a 01                       PUSH  0x1                          ; D3DFOG_EXP
 00514053  6a 23                       PUSH  0x23                         ; D3DRS_FOGTABLEMODE
@@ -128,14 +152,17 @@ render-state setters (`CEngine__SetRenderStateCached 0x00513A50`,
 call passing `0x23` or `0x8C` as a state id. Nothing else in the binary writes
 either fog-mode state.
 
-### `DAT_00888a78` is `D3DCAPS8.RasterCaps`
+### `DAT_00888a78` is `D3DCAPS9.RasterCaps`
 
 Never written through direct addressing anywhere in the image — only read,
 consistent with a field inside a caps block filled by `GetDeviceCaps`. Taking
-the caps base as `0x00888A54`, the observed accesses line up with the `D3DCAPS8`
-layout on every field the binary touches:
+the caps base as `0x00888A54`, the observed accesses line up with the `D3DCAPS9`
+layout on every field the binary touches. *(All six offsets below lie in the
+prefix that `D3DCAPS8` and `D3DCAPS9` share byte-for-byte through
+`TextureOpCaps` (`+0x90`), so the table is unchanged by the 2026-07-28 API
+correction above; only the struct name is.)*
 
-| Global | Offset from `0x00888A54` | `D3DCAPS8` field | Observed use |
+| Global | Offset from `0x00888A54` | `D3DCAPS9` field | Observed use |
 | --- | --- | --- | --- |
 | `0x00888A78` | `+0x24` | `RasterCaps` | `& 0x100` = `FOGTABLE` at `0x00514038`; `& 0x20000` = `ANISOTROPY` at `0x005138C6`, `0x005138F2`, `0x00513970` |
 | `0x00888A90` | `+0x3C` | `TextureCaps` | bit-tested in `CDXBattleLine__Constructor`, `CDXCompass__Init` |
@@ -216,8 +243,10 @@ Fog mode is re-armed here around the vertex-shader boundary:
   render-info shader is being torn down (returning to fixed function).
 - `RenderState_Set_23_8C_Compat(EBX)` at `0x00550F71` — the disable call
   (`EBX == 0`) taken when a vertex shader is installed. With a vertex shader
-  bound, both fog modes are set to `D3DFOG_NONE`, which is the correct D3D8
-  posture (fog factor then comes from the shader's `oFog` register).
+  bound, both fog modes are set to `D3DFOG_NONE`, which is the correct
+  fixed-function posture (fog factor then comes from the shader's `oFog`
+  register). *(Corrected 2026-07-28; previously read "the correct D3D8
+  posture".)*
 
 `CDXEngine__SetShaderMode` (`0x005513F0`) calls
 `RenderState_Set_23_8C_Compat(1)` at `0x00551416` when mode returns to `0`.

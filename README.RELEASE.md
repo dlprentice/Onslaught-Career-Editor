@@ -1,5 +1,12 @@
 # WinUI release candidate
 
+Status: active — the release-candidate shape and its boundary
+Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
+[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
+pass.
+Summary: what a candidate ZIP contains, what it explicitly does not claim, and
+which steps remain separately authorized.
+
 The supported downloadable shape is an unsigned, self-contained Windows x64
 portable ZIP. It is not an installer, MSIX, Store package, signed artifact, or
 SmartScreen/reputation claim.

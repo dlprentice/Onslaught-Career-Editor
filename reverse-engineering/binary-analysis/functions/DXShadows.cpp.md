@@ -5,6 +5,26 @@
 
 Last updated: 2026-05-20
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x0055515e` | `CDXSnow__Init` | `CSnow__ResetAndInitSnowResources` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Source And Evidence Status
 
 Current `CDXShadows` coverage is saved Steam retail Ghidra evidence only. Wave614 replaced the old stub with read-back signatures, comments, tags, xrefs, instruction exports, decompiles, and caller context for the three known `DXShadows.cpp` functions.
@@ -52,7 +72,7 @@ Wave614 saved signatures, comments, and tags in Ghidra after dry/apply/read-back
 
 The dry run reported `updated=0 skipped=3 renamed=0 would_rename=0 missing=0 bad=0`; the apply reported `updated=3 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`; the final dry reported `updated=0 skipped=3 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`.
 
-Read-back verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, `3` target decompile rows, and `141` callsite instruction rows. The queue refresh after Wave614 reports `6093` functions, `3159` commented functions, `2934` commentless functions, `1272` exact-undefined signatures, `1056` `param_N` signatures, and next head `0x0055515e CDXSnow__Init`. The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260520-004026_post_wave614_cdxshadows_head_verified` with `19` files, `161614727` bytes, and `DiffCount=0`.
+Read-back verified `3` metadata rows, `3` tag rows, `3` xref rows, `783` instruction rows, `3` target decompile rows, and `141` callsite instruction rows. The queue refresh after Wave614 reports `6093` functions, `3159` commented functions, `2934` commentless functions, `1272` exact-undefined signatures, `1056` `param_N` signatures, and next head `0x0055515e CSnow__ResetAndInitSnowResources`. The actual live Ghidra project backup was verified at `[maintainer-local-ghidra-backup-root]\BEA_20260520-004026_post_wave614_cdxshadows_head_verified` with `19` files, `161614727` bytes, and `DiffCount=0`.
 
 ## Related Systems
 

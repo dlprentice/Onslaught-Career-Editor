@@ -12,7 +12,7 @@ Wave907 reviews the frontend, menu-page, controller/input, pause/message, player
 
 Classification: `static-coherent frontend/input/game-loop core`.
 
-Static-to-proof planning: `frontend-input-game-loop-proof-plan.md` records the bounded copied-profile/app-owned child proof lanes for this Wave907 surface. It is a planning artifact only, not runtime menu/input behavior, save/load/defaultoptions behavior, frontend-video playback, visual QA, patch behavior, rebuild parity, or no-noticeable-difference proof.
+Static-to-proof planning: *(corrected 2026-07-28 — this sentence previously read, in the present tense, "`frontend-input-game-loop-proof-plan.md` records the bounded copied-profile/app-owned child proof lanes for this Wave907 surface. It is a planning artifact only, …". That file **no longer exists anywhere in the working tree**, tracked or untracked, including under `local-lab/`; it was removed in commit `ca9fe1c7` "Reduce repository to active product and evidence".)* The companion planning note `frontend-input-game-loop-proof-plan.md` recorded the bounded copied-profile/app-owned child proof lanes for this Wave907 surface. **Recover it from Git history if the proof-lane breakdown is needed** — `git show ca9fe1c7^:<path>`. It was a planning artifact only, not runtime menu/input behavior, save/load/defaultoptions behavior, frontend-video playback, visual QA, patch behavior, rebuild parity, or no-noticeable-difference proof.
 
 Source boundary: Stuart's source remains useful architecture/name/logic evidence, but the authority for this review is the Steam retail binary as loaded in Ghidra plus current public-safe read-back docs. This review is not runtime UI, input, audio, video, or visual proof.
 

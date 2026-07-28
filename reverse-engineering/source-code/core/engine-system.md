@@ -18,10 +18,19 @@ The Engine system is the core 3D rendering and world management framework. It ha
 
 ```
 CEngine (base - abstract interface)
-    ├── CDXEngine (DirectX 8 implementation - PC/Xbox)
-    │     └── CPCEngine (PC-specific extensions)
-    └── CPS2Engine (PlayStation 2 implementation)
+    ├── CDXEngine (DirectX 8 implementation - PC/Xbox)   -- DXEngine.h:22
+    ├── CPCEngine (parallel PC implementation)           -- PCEngine.h:19
+    └── CPS2Engine (PlayStation 2 implementation)        -- INFERRED, see note
 ```
+
+**CORRECTED 2026-07-28.** This tree previously nested `CPCEngine (PC-specific
+extensions)` one level under `CDXEngine`. That derivation does not exist:
+`references/Onslaught/PCEngine.h:19` is `class CPCEngine : public CEngine`, the
+same abstract base `CDXEngine` derives from at
+`references/Onslaught/DXEngine.h:22`. The two are parallel implementations, not a
+base and an extension. `CPS2Engine` is INFERRED — it occurs only as
+`extern class CPS2Engine ENGINE;` at `engine.h:237`, and `PS2Engine.h` is not in
+the pinned drop.
 
 Platform selection is compile-time via preprocessor:
 
@@ -104,9 +113,20 @@ All rendering state is runtime-only and not persisted to save files.
 
 ## PC Rendering Engine (CPCEngine)
 
-> Extends CDXEngine with PC-specific features
+> Parallel PC implementation of `CEngine`, sibling to `CDXEngine` — `PCEngine.h:19`
 
-### PC-Specific Features
+**CORRECTED 2026-07-28.** This blockquote previously read "Extends CDXEngine with
+PC-specific features". It does not: `references/Onslaught/PCEngine.h:19` is
+`class CPCEngine : public CEngine`, exactly as `CDXEngine` is at `DXEngine.h:22`.
+
+This is not cosmetic. The table below is written as though these were features
+CPCEngine *adds on top of* CDXEngine. They are not inherited from CDXEngine —
+they are `CPCEngine`'s own members over the abstract base, so a reader porting
+water reflections or the PatchManager LOD ladder must not go looking for
+CDXEngine behaviour underneath them. (Under `_DIRECTX` the pinned drop selects
+`CDXEngine`, not `CPCEngine` — `engine.h:229-233`.)
+
+### PC-Specific Features (CPCEngine's own, not inherited from CDXEngine)
 
 | Feature | Implementation |
 |---------|----------------|
@@ -241,11 +261,39 @@ The engine is important for understanding the game's architecture but has **no i
 
 ---
 
-## DirectX 8 Framework
+## DirectX 8 Framework (internal source lineage)
 
-The game uses DirectX 8 (2000-era API):
+The pinned internal source targets DirectX 8 (2000-era API). The **shipped retail
+Steam `BEA.exe` does not** — it imports `d3d9.dll`. See
+[`../../binary-analysis/d3d-default-render-state-block-2026-07-27.md`](../../binary-analysis/d3d-default-render-state-block-2026-07-27.md)
+section 2.
 
-### Rendering Features
+**CORRECTED 2026-07-28.** This section previously opened with the unqualified
+sentence "The game uses DirectX 8 (2000-era API):". That sentence is true of
+Stuart's source drop and false of the game people play, and this document gives a
+reader no way to tell which it meant — it interleaves a "Steam build correction
+(Feb 2026)" and a Steam-build `CCareer` offset table above.
+
+- **MEASURED (retail):** `BEA.exe.original.backup`, SHA-256
+  `74154bfa…7750`, 2,506,752 bytes
+  (`local-lab/safe-copy-bea-pristine/`, read-only) contains `d3d9.dll` ×2 and
+  `d3d9d.dll` ×1 and **zero** occurrences of `d3d8.dll`. Re-read for this
+  correction on 2026-07-28; the live installed `BEA.exe` was not read, because it
+  is deliberately patched. The vtable displacement evidence
+  (`SetRenderState` at +0x0E4, and a `SetSamplerState` at +0x114 that D3D8 does
+  not have at all) is in the binary-analysis note cited above and indexed from
+  `RE-INDEX.md`.
+- **SOURCE (pinned drop):** genuinely D3D8 — `ltshell.h:168-169`
+  (`LPDIRECT3DDEVICE8`), `d3dapp.h:154-155` (`LPDIRECT3D8` /
+  `LPDIRECT3DDEVICE8`).
+
+**Unchanged by this correction:** the feature bullets below are accurate
+descriptions of the pinned source's D3D8 usage and are not withdrawn. The
+equivalent D3D8 statement in
+[`../../quick-reference/engine-singletons.md`](../../quick-reference/engine-singletons.md)
+is also correct as written, because it is explicitly scoped to `ltshell.h`.
+
+### Rendering Features (as written in the pinned D3D8 source)
 
 - Fixed-function pipeline (pre-shader model 2.0)
 - Optional vertex shader support (GeForce 3+)

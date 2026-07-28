@@ -2,6 +2,21 @@
 
 > Address: 0x00445070 | Source: DiveBomber.cpp (source file not present in `references/Onslaught/` snapshot)
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004fd4d0` | `CCannon__SelectTarget` | `CUnit__SelectTarget` | class prefix moved; suffix unchanged |
+
+---
+
 ## Status
 - **Named in Ghidra:** Yes
 - **Signature Set:** Yes (Wave800 headless postscript + read-back verified, 2026-05-24)
@@ -16,7 +31,7 @@ AI target selection logic for dive bomber aircraft. Iterates through potential t
 void __thiscall CDiveBomber__SelectTarget(void * this, void * out_target_position);
 ```
 
-The older no-argument return-pointer signature was incomplete: direct caller `0x004fd4d0 CCannon__SelectTarget` passes an output pointer at `0x004fd4e1`, and the decompile writes fallback center position through `CThing__GetCentrePos` when no higher-priority candidate is selected.
+The older no-argument return-pointer signature was incomplete: direct caller `0x004fd4d0 CUnit__SelectTarget` passes an output pointer at `0x004fd4e1`, and the decompile writes fallback center position through `CThing__GetCentrePos` when no higher-priority candidate is selected.
 
 ## Responsibilities
 

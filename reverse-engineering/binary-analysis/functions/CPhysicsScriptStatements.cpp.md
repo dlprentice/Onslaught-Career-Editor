@@ -11,6 +11,21 @@ The debug-path anchor points to a maintainer-local `CPhysicsScriptStatements.cpp
 export. It is provenance context, not copied source and not proof of exact retail
 source-body identity.
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00426150` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
+
+---
+
 ## Top-Level Statement Bodies
 
 | Address | Saved signature | Current evidence |
@@ -29,7 +44,7 @@ source-body identity.
 | `0x0042ff60` | `void __fastcall CRoundStatement__CreateRoundAndRecurse(void * this)` | Corrected from stale vfunc label to top-level round create-and-recurse update body. |
 | `0x0042ffa0` | `void __cdecl CRoundStatement__Create(char * name)` | Creates a `0xa8` round-like record, handles `Stream_Laser` / `Gill_M_Breath` special-case flags, and appends it to `DAT_008553f0`. |
 | `0x00430190` | `int __fastcall CRoundStatement__GetSerializedSize(void * this)` | Recovered top-level round-statement serialized-size body. |
-| `0x00430210` | `void __thiscall CRoundStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level round-statement load body; dispatches type-5 child load helpers or skips unknown payload bytes. Wave991 re-exported this row as part of the `0x00426150 CCollisionSeekingRound__Init` round config bridge context. |
+| `0x00430210` | `void __thiscall CRoundStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level round-statement load body; dispatches type-5 child load helpers or skips unknown payload bytes. Wave991 re-exported this row as part of the `0x00426150 CCollisionSeekingThing__Init` round config bridge context. |
 | `0x004304d0` | `void __fastcall CSpawnerStatement__CreateSpawnerAndRecurse(void * this)` | Corrected from stale vfunc label to top-level spawner create-and-recurse update body. |
 | `0x00430510` | `void __cdecl CSpawnerData__CreateAndRegisterByName(char * name)` | Creates a `0x3c` spawner-data-like record by name, initializes default spawner fields, and appends it to `DAT_008553f4`. |
 | `0x00430660` | `int __fastcall CSpawnerStatement__GetSerializedSize(void * this)` | Recovered top-level spawner-statement serialized-size body. |

@@ -48,7 +48,27 @@ Private/public boundary check (write `none` or name affected paths/artifacts):
 
 ## State And Risks
 
-State baton update: name updated files, or write `read-only/no state edit`.
+<!--
+Corrected 2026-07-28. This line previously read:
+
+    State baton update: name updated files, or write `read-only/no state edit`.
+
+"State baton" is a retired concept. Commit 868667b0 ("Remove agent workflow
+ceremony", 2026-07-16) deleted its definition from AGENTS.md, removed the
+"state batons" text from CONTRIBUTING.md, and removed the "State baton update:"
+line from CONTRIBUTING's own checklist. This template was last touched by
+21ade228 on 2026-07-13, three days earlier, and was never revisited, so it kept
+asking contributors to update an artefact that no longer exists. `git grep -i
+baton` over the tree now returns only this comment and three unrelated uses of
+a runtime "baton" in a 2026-07-12 RE design document.
+
+Note deliberately NOT substituted here: developer_state.json. CLAUDE.md states
+it is maintained from the main loop, so asking a contributor to update it would
+replace one wrong instruction with another.
+-->
+Documentation state update — name the docs this change puts out of date and
+whether they were updated (for example `CURRENT_CAPABILITIES.md`, the affected
+`README`, an evidence document), or write `read-only/no doc state edit`.
 
 Installed game / original `BEA.exe` mutation: none
 

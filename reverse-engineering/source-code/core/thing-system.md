@@ -163,31 +163,62 @@ This confirms `CCareerNode` (64 bytes) and other structs are properly aligned fo
 The source code uses a macro to establish the inheritance chain:
 
 ```cpp
-DECLARE_THING_CLASS(CComplexThing, CThing)
-DECLARE_THING_CLASS(CActor, CComplexThing)
-DECLARE_THING_CLASS(CUnit, CActor)
-DECLARE_THING_CLASS(CBattleEngine, CUnit)
+DECLARE_THING_CLASS(CComplexThing, CThing)    // thing.h:257        — SOURCE
+DECLARE_THING_CLASS(CActor, CComplexThing)    // actor.h:13         — SOURCE
+DECLARE_THING_CLASS(CUnit, CActor)            // INFERRED — Unit.h is not in the drop
+DECLARE_THING_CLASS(CBattleEngine, CUnit)     // BattleEngine.h:72  — SOURCE
 ```
 
-This macro:
-1. Defines a `SUPERTYPE` typedef pointing to the parent class
-2. Sets up virtual function table inheritance
-3. Registers the type in the global type bitmask
-4. Creates the `IsA()` type-checking method
+**CORRECTED 2026-07-28 — this section overstated what the macro does, and the
+macro's own body is not in the pinned drop.** `grep -rn 'DECLARE_THING_CLASS'`
+over `references/Onslaught/` returns exactly three use sites (`thing.h:257`,
+`actor.h:13`, `BattleEngine.h:72`) and **no `#define` anywhere**, so the
+expansion below is a reconstruction, not source. The `CUnit` line above is
+likewise inference: `Unit.h` is not in the drop.
 
-**Expanded Example:**
+This macro:
+1. Defines a `SUPERTYPE` typedef pointing to the parent class — INFERRED
+2. Sets up virtual function table inheritance — INFERRED
+3. Registers the type in the global type bitmask — INFERRED
+4. ~~Creates the `IsA()` type-checking method~~ — **WITHDRAWN 2026-07-28.** It
+   does not. `CThing` declares `IsA` exactly once, **non-virtually**, at
+   `references/Onslaught/thing.h:174`. Nothing generates a per-class override.
+
+**Expanded Example — INFERRED, not source.** `DECLARE_THING_CLASS`'s definition is
+outside the pinned corpus; this block is a reconstruction of what the three use
+sites imply, and no part of it has been checked against a macro body:
 ```cpp
-// What DECLARE_THING_CLASS(CBattleEngine, CUnit) expands to:
+// INFERRED reconstruction of DECLARE_THING_CLASS(CBattleEngine, CUnit).
+// The macro body is NOT in references/Onslaught/ — do not cite this as source.
 class CBattleEngine : public CUnit {
     typedef CUnit SUPERTYPE;
-
-    virtual BOOL IsA(ULONG type) {
-        return (mThingType & type) != 0;
-    }
 
     // Constructor sets: mThingType = SUPERTYPE::mThingType | THING_TYPE_BATTLE_ENGINE
 };
 ```
+
+The reconstruction previously carried a fifth line inside that class body:
+
+```cpp
+    virtual BOOL IsA(ULONG type) {
+        return (mThingType & type) != 0;
+    }
+```
+
+It is withdrawn. The real, and only, declaration is on `CThing`:
+
+```cpp
+// references/Onslaught/thing.h:174
+const BOOL IsA(EThingType type) const { return (type & mThingType); }
+```
+
+Non-virtual; `const` return and const-qualified member; takes `EThingType`, not
+`ULONG`; returns the raw masked value rather than a normalised 0/1.
+`grep -rn 'virtual.*IsA' references/Onslaught/` finds only the unrelated
+`BattleEngine.h:250 virtual BOOL IsAThreat()`. The same withdrawal was applied
+the same day to
+[`../../quick-reference/source-hierarchy.md`](../../quick-reference/source-hierarchy.md),
+which carried the identical wrong signature.
 
 ---
 

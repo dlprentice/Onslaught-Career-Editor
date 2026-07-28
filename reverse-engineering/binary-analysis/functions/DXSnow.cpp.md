@@ -4,20 +4,44 @@
 > Debug path string: `0x00652534` (`[maintainer-local-source-export-root]\DXSnow.cpp`)
 > Last updated: 2026-05-25
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00554f80` | `CAtmosphericsProfile__ctor` | `CSnow__ctor` | class prefix moved; suffix unchanged |
+| `0x00555010` | `CAtmosphericsProfile__VFunc00_GetNameString` | `CSnow__VFunc00_GetNameString` | class prefix moved; suffix unchanged |
+| `0x00555020` | `CAtmosphericsProfile__ResetAndInitSnowResources` | `CSnow__ResetAndInitSnowResources` | class prefix moved; suffix unchanged |
+| `0x0055515e` | `CDXSnow__Init` | `CSnow__ResetAndInitSnowResources` | class prefix and suffix both moved |
+| `0x00555410` | `CAtmosphericsProfile__ReleaseResources` | `CSnow__ReleaseResources` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Wave874 CAtmosphericsProfile / DXSnow Static Setup
 
 Wave874 atmospherics profile (`atmospherics-profile-wave874`, `wave874-readback-verified`) created seven missing function boundaries and saved signatures/comments/tags for ten DXSnow/CAtmosphericsProfile snow-weather renderer rows. These rows are high-importance weather-renderer infrastructure with low local-evidence density, not low-importance filler. The pass made no executable-byte changes and did not launch BEA.
 
-Probe anchors for this wave: `Wave874 atmospherics profile`, `0x00554e80 DXSnow__StaticInitPrimaryTransformGlobals`, `0x00554f50 DXSnow__StaticInitDisableSnowConfig`, `0x00554f70 DXSnow__StaticDestroyDisableSnowConfig`, `0x00554f80 CAtmosphericsProfile__ctor`, `0x00555010 CAtmosphericsProfile__VFunc00_GetNameString`, `0x00555410 CAtmosphericsProfile__ReleaseResources`, `0x00555460 CAtmosphericsProfile__RenderOverlay`, `0x00555600 CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay`, `0x00555af0 DXSnow__StaticZeroOverlayVectorGlobals`, `0x00555b10 DXSnow__StaticInitOverlayTransformGlobals`, `DISABLE_SNOW`, next raw commentless row `0x00555be0 CVBufTexture__DrawSpriteEx`, strict proxy `5872/6113 = 96.06%`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`.
+Probe anchors for this wave: `Wave874 atmospherics profile`, `0x00554e80 DXSnow__StaticInitPrimaryTransformGlobals`, `0x00554f50 DXSnow__StaticInitDisableSnowConfig`, `0x00554f70 DXSnow__StaticDestroyDisableSnowConfig`, `0x00554f80 CSnow__ctor`, `0x00555010 CSnow__VFunc00_GetNameString`, `0x00555410 CSnow__ReleaseResources`, `0x00555460 CAtmosphericsProfile__RenderOverlay`, `0x00555600 CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay`, `0x00555af0 DXSnow__StaticZeroOverlayVectorGlobals`, `0x00555b10 DXSnow__StaticInitOverlayTransformGlobals`, `DISABLE_SNOW`, next raw commentless row `0x00555be0 CVBufTexture__DrawSpriteEx`, strict proxy `5872/6113 = 96.06%`, and verified backup `[maintainer-local-ghidra-backup-root]\BEA_20260525-201600_post_wave874_atmospherics_profile_verified`.
 
 | Address | Current saved signature | Static evidence |
 | --- | --- | --- |
 | `0x00554e80 DXSnow__StaticInitPrimaryTransformGlobals` | `void __cdecl DXSnow__StaticInitPrimaryTransformGlobals(void)` | Created from pointer table `0x00622ab8`; writes transform-basis values into globals `0x009c7f88` through `0x009c7fb4`. |
 | `0x00554f50 DXSnow__StaticInitDisableSnowConfig` | `void __cdecl DXSnow__StaticInitDisableSnowConfig(void)` | Created from pointer table `0x00622abc`; registers `DISABLE_SNOW` with `CVar__Init` and cleanup callback `0x00554f70`. |
 | `0x00554f70 DXSnow__StaticDestroyDisableSnowConfig` | `void __cdecl DXSnow__StaticDestroyDisableSnowConfig(void)` | Cleanup callback for the `DISABLE_SNOW` CVar object through `CTweak__dtor_base_thunk_004530a0`. |
-| `0x00554f80 CAtmosphericsProfile__ctor` | `void * __fastcall CAtmosphericsProfile__ctor(void * this)` | `Atmospherics__Init` callsite `0x00404a98`; installs vtable `0x005e5974` and initializes snow/profile fields. |
-| `0x00555010 CAtmosphericsProfile__VFunc00_GetNameString` | `char * __fastcall CAtmosphericsProfile__VFunc00_GetNameString(void * this)` | Created from vtable `0x005e5974` slot `+0x00`; returns `0x0065246c`, dumped as `Snow`. |
-| `0x00555410 CAtmosphericsProfile__ReleaseResources` | `void __fastcall CAtmosphericsProfile__ReleaseResources(void * this)` | Vtable slot `+0x10`; releases `this+0x0c`, destroys/frees `this+0x08`, and releases `this+0x10`. |
+| `0x00554f80 CSnow__ctor` | `void * __fastcall CSnow__ctor(void * this)` | `Atmospherics__Init` callsite `0x00404a98`; installs vtable `0x005e5974` and initializes snow/profile fields. |
+| `0x00555010 CSnow__VFunc00_GetNameString` | `char * __fastcall CSnow__VFunc00_GetNameString(void * this)` | Created from vtable `0x005e5974` slot `+0x00`; returns `0x0065246c`, dumped as `Snow`. |
+| `0x00555410 CSnow__ReleaseResources` | `void __fastcall CSnow__ReleaseResources(void * this)` | Vtable slot `+0x10`; releases `this+0x0c`, destroys/frees `this+0x08`, and releases `this+0x10`. |
 | `0x00555460 CAtmosphericsProfile__RenderOverlay` | `void __fastcall CAtmosphericsProfile__RenderOverlay(void * this)` | Called from `0x00555a09`; copies matrix globals, samples camera/viewpoint globals, clamps `atm_snowdensity`, and renders through `this+0x08`. |
 | `0x00555600 CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay` | `void __fastcall CAtmosphericsProfile__VFunc08_UpdateSnowAndRenderOverlay(void * this)` | Created from vtable slot `+0x08`, dispatched by `Atmospherics__UpdateAll`; gates snow/shader/resource state, copies wind globals, iterates 50 entries, calls `CDXTexture__GetAnimatedFrame`, and calls the overlay renderer. |
 | `0x00555af0 DXSnow__StaticZeroOverlayVectorGlobals` | `void __cdecl DXSnow__StaticZeroOverlayVectorGlobals(void)` | Created from pointer table `0x00622ac0`; clears overlay vector globals `0x009c8000`, `0x009c8004`, and `0x009c8008`. |
@@ -27,11 +51,11 @@ Post-Wave874 queue telemetry: `6113` total functions, `5872` commented, `241` co
 
 ## Wave615 Boundary Correction
 
-Wave615 supersedes the older `0x0055515e CDXSnow__Init` note. The saved Ghidra database now records the full vtable-dispatched body as:
+Wave615 supersedes the older `0x0055515e CSnow__ResetAndInitSnowResources` note. The saved Ghidra database now records the full vtable-dispatched body as:
 
 | Address | Current saved name | Current saved signature | Evidence boundary |
 | --- | --- | --- | --- |
-| `0x00555020` | `CAtmosphericsProfile__ResetAndInitSnowResources` | `void __thiscall CAtmosphericsProfile__ResetAndInitSnowResources(void * this)` | Vtable `0x005e5974` slot `+0x0c` / address `0x005e5980` points here; `Atmospherics__ResetAndUpdate` dispatches slot `+0x0c`. Body covers `0x00555020-0x00555403`. |
+| `0x00555020` | `CSnow__ResetAndInitSnowResources` | `void __thiscall CSnow__ResetAndInitSnowResources(void * this)` | Vtable `0x005e5974` slot `+0x0c` / address `0x005e5980` points here; `Atmospherics__ResetAndUpdate` dispatches slot `+0x0c`. Body covers `0x00555020-0x00555403`. |
 | `0x0055515e` | no longer a function entry | n/a | Former stale `CDXSnow__Init` split address; post-Wave615 metadata/decompile exports report it missing as a function entry, and instruction export shows it inside the corrected `0x00555020` body. |
 
 The older `0x0055515e` boundary began after the SEH prologue and early resource setup, used stack artifacts such as `unaff_EBP`, and had no xrefs. Treat old docs, screenshots, or notes that identify `0x0055515e` as the function start as stale.

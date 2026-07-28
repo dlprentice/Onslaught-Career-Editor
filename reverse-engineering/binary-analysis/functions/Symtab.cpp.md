@@ -4,6 +4,26 @@
 > Source: `MissionScript/Symtab.cpp`
 > Debug path string: `[maintainer-local-source-export-root]\MissionScript\Symtab.cpp` at 0x00650134
 
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x005490e0` | `OID__AllocObject` | `CDXMemoryManager__Alloc` | class prefix and suffix both moved |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
 ## Overview
 
 The symbol table (CSymtab) stores variable names and their data types for the mission scripting system. Each script has its own symbol table that maps variable names to their runtime values. This enables scripts to reference variables by name and provides type safety during script execution.
@@ -197,7 +217,7 @@ These functions are called by CSymtab but are defined elsewhere:
 | 0x0052ec60 | CDataType__CreateFromType | DataType.cpp | Factory for data types |
 | 0x004241a0 | CFlexArray__InitWithGrowth | flexarray.cpp | Init array with growth |
 | 0x004241f0 | CFlexArray__Add | flexarray.cpp | Add element to array |
-| 0x005490e0 | OID__AllocObject | oids.cpp | Object allocator |
+| 0x005490e0 | CDXMemoryManager__Alloc | oids.cpp | Object allocator |
 
 ---
 
