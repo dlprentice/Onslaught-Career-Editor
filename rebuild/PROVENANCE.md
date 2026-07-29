@@ -736,11 +736,13 @@ and the nearest 30 Hz integer speed.
 The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
 five-entry particle descriptor references four unique texture archives: Blue
 Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
-authored base dimensions supply the bounded projectile presentation. Exact
-`data/ParticleSets/MainSet.par` (SHA-256
+authored base dimensions supply the bounded projectile presentation. Static
+inspection of exact `data/ParticleSets/MainSet.par` (SHA-256
 `A51FE4419B55E1AF132E31C6B3CD8133C937745D8F4AB691EB5A0D81017DED06`)
-supplies the retained small-impact and medium tank-destruction primary
-sprite layers, atlas ranges, scales, and lifetimes. Exact
+established the small-impact and medium tank-destruction primary sprite layers,
+atlas ranges, scales, and lifetimes represented by the current bounded
+presentation. The archive is not a current materialized runtime input and no
+general particle-set parser is claimed. Exact
 `data/sounds/sounds_english_pc.xap` (SHA-256
 `658C15E3BAB844D65DD3C07C4AC880F16F741C0EA116F48C603449BBD4DDA8B7`)
 records 35, 106, and 102 supply the retained 44.1 kHz mono fire, small-impact,

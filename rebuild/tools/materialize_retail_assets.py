@@ -404,25 +404,6 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
     (GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", "data/resources/meshes/m_f_truck_training.msh.aya", "3bd92ce93d0619b7c4b0dd158680641fbab6cd88580a68c6ef34e5f22f7596c5"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
-    # The authored particle set itself. `ParticleSetFile` parses it and
-    # `ParticleEffectResolver` resolves named effects out of it, so the
-    # descriptor values stop being hand-copied constants. rebuild/PROVENANCE.md
-    # already pins this exact file.
-    (GODOT_ASSETS / "Level100/ParticleSets/MainSet.par", "data/ParticleSets/MainSet.par", "a51fe4419b55e1af132e31c6b3cd8133c937745d8f4ab691eb5a0d81017ded06"),
-    # Particle textures named by descriptors in the file above. `Blend_Mode`
-    # selects WHICH shipped copy is loaded: mode 0 resolves to the alpha-less
-    # `(0)R5G6B5` archive and mode 1 to the `(0)A4R4G4B4` archive. That is
-    # measured, not chosen - see
-    # ParticleEffectResolver.BlendModeSelectsShippedTextureFormat. The three
-    # rows here are the additive copies that no earlier retention needed; the
-    # alpha copies of `alparticle4` and `fireball` are already retained below
-    # under their older role-based names. `Small Puff.tga` is deliberately NOT
-    # retained: the only path to it in the two effects wired up so far is the
-    # `Flaming Debris Emitter` branch of `Debris Selector`, whose authored
-    # weight is 2 of 62 and rounds to zero of the ten debris particles the
-    # Warehouse starts. Retaining an asset nothing reaches is drift.
-    (GODOT_ASSETS / "Level100/Textures/particle-alparticle5-additive.texture.aya", "data/resources/dxtntextures/Particle%alparticle5.tga(0)R5G6B5.aya", "5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0"),
-    (GODOT_ASSETS / "Level100/Textures/particle-fireball-additive.texture.aya", "data/resources/dxtntextures/Particle%fireball.tga(0)R5G6B5.aya", "26b1b080e89323d077764e6dcb66038757737d5c73d104c9e8dba73c33cad244"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-halo.texture.aya", "data/resources/dxtntextures/Particle%Halo.tga(0)R5G6B5.aya", "cde6efc90dc7958c5bda425a04486e277beb85a7f1c33fb9074f369e92d58edb"),

@@ -774,11 +774,12 @@ start width. The current ribbon spans one Core movement tick; the released
 five-point trail history, emitted secondary sprite, pulsation, color ranges,
 scrolling, and lifetimes are not yet reproduced.
 
-The exact released `data/ParticleSets/MainSet.par` (SHA-256
+Static inspection of the exact released `data/ParticleSets/MainSet.par` (SHA-256
 `A51FE4419B55E1AF132E31C6B3CD8133C937745D8F4AB691EB5A0D81017DED06`)
-names the retained small-impact and medium tank-explosion layers. The
-presentation consumes the unambiguous bright sprite animation, scale, and
-lifetime values directly. Tank smoke's mode-1 blend cannot yet be reproduced
+established the small-impact and medium tank-explosion layers represented by
+the bounded presentation. The archive is not materialized or parsed at runtime;
+the current code retains only the evidenced animation, scale, and lifetime
+constants it consumes. Tank smoke's mode-1 blend cannot yet be reproduced
 without an opaque card and is omitted, along with descriptor color ranges,
 debris, wreck geometry, and the other subordinate emitters. The three PCM files
 currently presented by the Pulse exercise were
