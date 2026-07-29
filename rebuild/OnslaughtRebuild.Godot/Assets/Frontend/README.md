@@ -91,10 +91,9 @@ The table above previously listed 30 files while the directory held 38. The
 five language flags and `fe-arrow.texture.aya` were absent, and they are not
 incidental: they are the language selector added by commit `e9b86162`. No
 existing row changed, and all 30 pre-existing hashes were recomputed against
-disk in the same pass and all match. MEASURED: differencing this table's rows
-against the tracked `GODOT_ASSETS` entries for `Frontend/` at HEAD returns
-exactly these six, and each hash above equals both the file on disk and the
-value the tracked materializer pins.
+disk in the same pass and all match. In that historical `e9b86162` pass,
+differencing the table against the then-current materializer returned exactly
+these six, and each hash matched both the file on disk and its pinned value.
 
 **Corrected 2026-07-28:** the table previously excluded
 `system-font.texture.aya` and `mouse-cursor.texture.aya`, and the materializer

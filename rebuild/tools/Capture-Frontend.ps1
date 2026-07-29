@@ -249,11 +249,28 @@ try {
     $repoRootPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
     $scorer = Join-Path $repoRootPath 'tools\score_frontend_capture.py'
     $parityReport = Join-Path $OutputDirectory 'frontend-parity.json'
+    $allowedVerdicts = @('PASS', 'FAIL', 'ERROR', 'UNSCORED')
     $parityVerdict = 'UNSCORED'
     if (Test-Path -LiteralPath $scorer) {
+        Remove-Item -LiteralPath $parityReport -Force -ErrorAction SilentlyContinue
         & py -3 $scorer --capture-dir $OutputDirectory --json-out $parityReport
         if (Test-Path -LiteralPath $parityReport) {
-            $parityVerdict = (Get-Content -LiteralPath $parityReport -Raw | ConvertFrom-Json).verdict
+            try {
+                $candidateVerdict =
+                    [string](Get-Content -LiteralPath $parityReport -Raw |
+                        ConvertFrom-Json).verdict
+                if ($allowedVerdicts -contains $candidateVerdict) {
+                    $parityVerdict = $candidateVerdict
+                }
+                else {
+                    $parityVerdict = 'ERROR'
+                    Write-Warning "Frontend parity scorer wrote an invalid verdict."
+                }
+            }
+            catch {
+                $parityVerdict = 'ERROR'
+                Write-Warning "Frontend parity scorer wrote an unreadable report."
+            }
         }
         else {
             $parityVerdict = 'ERROR'
@@ -270,10 +287,25 @@ try {
         $optionsScorer = Join-Path $repoRootPath 'rebuild\tools\compare_options_capture.py'
         $optionsInkReport = Join-Path $OutputDirectory 'options-ink-regression.json'
         if (Test-Path -LiteralPath $optionsScorer) {
+            Remove-Item -LiteralPath $optionsInkReport -Force -ErrorAction SilentlyContinue
             & py -3 $optionsScorer $OutputDirectory --json-out $optionsInkReport
             if (Test-Path -LiteralPath $optionsInkReport) {
-                $optionsInkVerdict =
-                    (Get-Content -LiteralPath $optionsInkReport -Raw | ConvertFrom-Json).verdict
+                try {
+                    $candidateVerdict =
+                        [string](Get-Content -LiteralPath $optionsInkReport -Raw |
+                            ConvertFrom-Json).verdict
+                    if ($allowedVerdicts -contains $candidateVerdict) {
+                        $optionsInkVerdict = $candidateVerdict
+                    }
+                    else {
+                        $optionsInkVerdict = 'ERROR'
+                        Write-Warning "Options ink scorer wrote an invalid verdict."
+                    }
+                }
+                catch {
+                    $optionsInkVerdict = 'ERROR'
+                    Write-Warning "Options ink scorer wrote an unreadable report."
+                }
             }
             else {
                 $optionsInkVerdict = 'ERROR'
