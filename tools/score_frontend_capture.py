@@ -299,6 +299,23 @@ def main(argv: list[str]) -> int:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     capture_plan = manifest.get("plan")
 
+    measurement = plan.get("_measurementProvenance", {})
+    if measurement.get("status", "CURRENT") == "STALE" and not args.measure:
+        report = {
+            "verdict": "UNSCORED",
+            "reason": measurement.get(
+                "staleReason", "frontend parity measurements are stale"),
+            "captureDir": str(args.capture_dir),
+            "capturePlan": capture_plan,
+            "measurementStatus": "STALE",
+            "pages": [],
+        }
+        print(f"UNSCORED: {report['reason']}")
+        if args.json_out:
+            args.json_out.parent.mkdir(parents=True, exist_ok=True)
+            args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return 0
+
     reference_root = REPO_ROOT / plan["referenceRoot"]
     if not reference_root.is_dir():
         # The reference set is retail-derived and lives under the gitignored
@@ -317,7 +334,7 @@ def main(argv: list[str]) -> int:
             args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
         return 0
 
-    margin_pp = float(plan.get("_measurementProvenance", {}).get("marginPp", 2.0))
+    margin_pp = float(measurement.get("marginPp", 2.0))
     applicable = [p for p in plan["pages"] if p["capturePlan"] == capture_plan]
     unscored = [u for u in plan.get("unscored", []) if u.get("capturePlan") == capture_plan]
 

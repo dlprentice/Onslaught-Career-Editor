@@ -34,6 +34,9 @@
     "this at all. See local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md."
   ],
   "_measurementProvenance": {
+    "status": "STALE",
+    "staleSinceCommit": "5e82ae42",
+    "staleReason": "The released language row, cursor, decor shadow, and frontend composition changed after the measured build. Preserve these measurements as history; remeasure from a fresh clean production main-menu capture before gating again.",
     "measuredAtCommit": "432c53f7",
     "measuredOn": "2026-07-28",
     "measuredFromCapture": "local-lab/godot-captures/gaterepair-head-mainmenu",

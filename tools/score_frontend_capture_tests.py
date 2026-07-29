@@ -178,6 +178,21 @@ def test_missing_reference_set_is_unscored_not_pass(root: Path) -> None:
     assert report["pages"] == []
 
 
+def test_stale_measurements_are_unscored(root: Path) -> None:
+    """A known-inapplicable measurement set must abstain rather than PASS/FAIL."""
+    plan, capture = build_fixture(root, chrome=CHROME)
+    body = json.loads(plan.read_text(encoding="utf-8"))
+    body["_measurementProvenance"]["status"] = "STALE"
+    body["_measurementProvenance"]["staleReason"] = "fixture changed"
+    plan.write_text(json.dumps(body), encoding="utf-8")
+    code, report = run(plan, capture, root / "out.json")
+    assert report["verdict"] == "UNSCORED", report["verdict"]
+    assert report["measurementStatus"] == "STALE", report
+    assert report["reason"] == "fixture changed", report
+    assert report["pages"] == [], report
+    assert code == 0, code
+
+
 def test_capture_plan_with_no_page_is_unscored(root: Path) -> None:
     plan, capture = build_fixture(root, chrome=CHROME)
     manifest = capture / "capture-manifest.json"
