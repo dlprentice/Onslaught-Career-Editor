@@ -68,6 +68,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightGame.cs"
              Link="godot-pause-source\FirstFlightGame.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.cs"
+             Link="godot-pause-source\RetailFrontendFlow.cs"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
              Link="godot-pause-source\FirstFlightPauseMenu.cs"
              CopyToOutputDirectory="PreserveNewest" />

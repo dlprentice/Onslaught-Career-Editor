@@ -230,7 +230,12 @@ try {
     # pixel against retail and could not detect divergence from the target: the
     # only thing a parity gate appears to guarantee (task #113).
     #
-    # score_frontend_capture.py supplies the missing half. Its verdicts:
+    # The generic scorer supplies the parity verdict. Options remains UNSCORED
+    # there because only one retail run exists, so no cross-run noise floor can
+    # support an overall parity claim. A separate phase-resistant ink-mask
+    # diagnostic reports Options row-placement differences without promoting
+    # that narrow, single-run measurement to a gate or page-parity result.
+    # Shared verdict meanings:
     #   PASS      every gated region is at or under its regression ceiling
     #   FAIL      at least one is above it
     #   ERROR     the comparison could not be made soundly (pairing out of
@@ -256,13 +261,35 @@ try {
     }
     else {
         $parityVerdict = 'ERROR'
-        Write-Warning "score_frontend_capture.py not found at $scorer; parity was NOT measured."
+        Write-Warning "Frontend parity scorer not found at $scorer; parity was NOT measured."
+    }
+
+    $optionsInkVerdict = $null
+    $optionsInkReport = $null
+    if ($Plan -eq 'options') {
+        $optionsScorer = Join-Path $repoRootPath 'rebuild\tools\compare_options_capture.py'
+        $optionsInkReport = Join-Path $OutputDirectory 'options-ink-regression.json'
+        if (Test-Path -LiteralPath $optionsScorer) {
+            & py -3 $optionsScorer $OutputDirectory --json-out $optionsInkReport
+            if (Test-Path -LiteralPath $optionsInkReport) {
+                $optionsInkVerdict =
+                    (Get-Content -LiteralPath $optionsInkReport -Raw | ConvertFrom-Json).verdict
+            }
+            else {
+                $optionsInkVerdict = 'ERROR'
+            }
+        }
+        else {
+            $optionsInkVerdict = 'ERROR'
+            Write-Warning "Options ink scorer not found at $optionsScorer."
+        }
     }
 
     $captureHealthy = $mismatched.Count -eq 0 -and $failedSaves.Count -eq 0 -and
         $wrongSize.Count -eq 0 -and $missing -eq 0
     $status =
         if (-not $captureHealthy) { 'SUSPECT' }
+        elseif ($optionsInkVerdict -eq 'ERROR') { 'SUSPECT' }
         elseif ($parityVerdict -eq 'PASS') { 'PASS' }
         elseif ($parityVerdict -eq 'FAIL') { 'FAIL' }
         elseif ($parityVerdict -eq 'UNSCORED') { 'UNSCORED' }
@@ -272,6 +299,14 @@ try {
         Status = $status
         ParityVerdict = $parityVerdict
         ParityReport = if (Test-Path -LiteralPath $parityReport) { $parityReport } else { $null }
+        OptionsInkVerdict = $optionsInkVerdict
+        OptionsInkReport =
+            if ($optionsInkReport -and (Test-Path -LiteralPath $optionsInkReport)) {
+                $optionsInkReport
+            }
+            else {
+                $null
+            }
         Purpose = $effectivePurpose
         GodotSourceCleanliness = $sourceCleanliness
         GodotSourceDirty = $sourceDirty

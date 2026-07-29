@@ -212,6 +212,21 @@ public sealed class RetailLevel100CutsceneTests
     }
 
     [Fact]
+    public void SuppressingTheCutsceneStillConsumesTheFirstRound()
+    {
+        RetailFrontendSession frontend = LoadedLevel100();
+
+        frontend.CompleteLevel100Load();
+
+        Assert.Equal(RetailFrontendScreen.Gameplay, frontend.Screen);
+        Assert.False(frontend.Level100IntroCutscenePending);
+
+        frontend.RestartLevel100();
+        Assert.True(frontend.ConsumeLevel100LaunchRequest());
+        Assert.Throws<InvalidOperationException>(frontend.BeginLevel100IntroCutscene);
+    }
+
+    [Fact]
     public void ARetryDoesNotReplayTheCutsceneButLeavingAndReenteringDoes()
     {
         // mFirstTimeRound: set TRUE when the level is entered

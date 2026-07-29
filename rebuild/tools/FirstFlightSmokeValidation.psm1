@@ -153,71 +153,14 @@ function Test-FirstFlightSmokeEvidence {
     }
 
     $report = $rawReport | ConvertFrom-Json
-    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v16' $report.schemaVersion
+    Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v17' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 3228 $report.tick
-    # KNOWN STALE, 2026-07-27, and deliberately not guessed.
-    #
-    # StateHasher moved twice today: 30 -> 31 (the weapon-fire event stream,
-    # 5f6b30f5) and 31 -> 32 (the released action set). Both moves were isolated
-    # causally and the in-process golden in InteractiveSessionTests was updated
-    # from a measured run each time. THIS value was not, because it can only be
-    # obtained from a real Godot smoke run and this module is not part of
-    # `npm test` — so nothing failed to tell us it had gone stale.
-    #
-    # Re-measure with `npm run test:rebuild-godot-smoke` from a CLEAN tree, and
-    # only then update. Guessing it would defeat the one thing the value is for.
-    #
-    # CORRECTION 2026-07-27. This block previously said "do NOT infer it from the
-    # in-process hash: this is a different scenario at tick 3228." That reason is
-    # FALSE and was refuted from this repository's own history. The smoke golden
-    # and the InteractiveSessionTests golden have been set to BIT-IDENTICAL
-    # values by the same commit, three times running:
-    #     424483da -> ab1e5844...
-    #     50ac9ea2 -> fb2219b6...
-    #     016ebf38 -> 84d6fcae...   <- the value still pinned below
-    # and both read 673661bb... on the tree measured earlier today. They are the
-    # same quantity, so the in-process golden IS a legitimate cross-check.
-    #
-    # CONFIRMED EMPIRICALLY, not just from history. After the waypoint-path
-    # correction (58d9ce57) moved the in-process golden to
-    #     0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba
-    # a real out-of-process Godot smoke run on the same tree observed EXACTLY
-    # that value. Two independent harnesses, same number. That settles it by
-    # measurement rather than by argument.
-    #
-    # STILL NOT PINNED, and the reason has changed. It is no longer doubt about
-    # what the value is - it is that Core work is in flight under review and may
-    # move it again, so pinning now would simply mint a second stale golden. Pin
-    # it once Core lands, from a run on that tree.
-    #
-    # The POLICY stands and the reason for it is different from what was written:
-    # measure it, do not infer it, because an inferred value silently launders a
-    # second scenario's result into this one the first time they ever diverge -
-    # and nothing here would detect that. Keeping a correct policy propped up by
-    # a false justification is worse than having no comment, because the next
-    # reader checks the justification, finds it wrong, and discards the policy
-    # with it.
-    #
-    # MEASURED 2026-07-27 20:59-21:07, two independent runs, byte-identical:
-    #     673661bba2fd43b4af3175b9fa028fb00133460361fb2b93137a289b497c1fe8
-    #     tick 3228, exitReason 'smoke-complete'
-    # DELIBERATELY NOT PINNED. That measurement was taken on a tree carrying
-    # uncommitted Core work from two other lanes (skip-panning, cold-career), so
-    # pinning it would bake unreviewed simulation changes into the golden and
-    # silently bless them. Re-measure once that work lands, and pin THAT.
-    #
-    # The value above is stale and this assertion is EXPECTED TO FAIL until then.
-    # That failure is the honest signal; suppressing it would remove the only
-    # thing telling us the golden needs re-measuring.
-    #
-    # Ruled out as a cause, 2026-07-27: the pine mesh-quality correction
-    # (70.0 -> 30.0, task #137). PineBillboards.MeshQualityDistance is read only
-    # by rebuild/OnslaughtRebuild.Godot/Level100StaticWorldAsset.cs - it reaches
-    # no file under OnslaughtRebuild.Core or OnslaughtRebuild.Client, so it
-    # cannot move a simulation state hash. Core determinism is intact.
-    Assert-SmokeValue 'stateHash' '84d6fcaef69eac44faae485a2f90e76867dee2563c1dd5d4c570aade31df8ea1' $report.stateHash
+    # Measured 2026-07-28 after the reviewed Core changes landed: two independent
+    # native Godot runs produced byte-identical reports at tick 3228, and the
+    # hash also matches the in-process scenario pinned by InteractiveSessionTests.
+    Assert-SmokeValue 'stateHash' '0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
@@ -310,7 +253,9 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailCockpitSurfaceCount' 10 $report.retailCockpitSurfaceCount
     Assert-SmokeNear 'level100PlayerStartRelativeHeight' 0.21149921 $report.level100PlayerStartRelativeHeight
     Assert-SmokeValue 'retailLevel100StaticObjectCount' 33 $report.retailLevel100StaticObjectCount
-    Assert-SmokeValue 'retailLevel100StaticObjectSurfaceCount' 111 $report.retailLevel100StaticObjectSurfaceCount
+    # The 13 separately animated static-world subparts are now bound and counted
+    # in addition to the original 111 object surfaces.
+    Assert-SmokeValue 'retailLevel100StaticObjectSurfaceCount' 124 $report.retailLevel100StaticObjectSurfaceCount
     Assert-SmokeValue 'retailLevel100PineCount' 1481 $report.retailLevel100PineCount
     Assert-SmokeValue 'retailLevel100WaterPresent' $true $report.retailLevel100WaterPresent
     Assert-SmokeValue 'retailLevel100WaterGridVertexCount' 625 $report.retailLevel100WaterGridVertexCount
@@ -337,7 +282,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'coldSelectConfiguration' $true $report.coldSelectConfiguration
     Assert-SmokeValue 'coldLoading' $true $report.coldLoading
     Assert-SmokeValue 'coldGameplay' $true $report.coldGameplay
-    Assert-SmokeValue 'cursorPolicyVisibleAtFrontend' $true $report.cursorPolicyVisibleAtFrontend
+    Assert-SmokeValue 'cursorPolicyCustomAtFrontend' $true $report.cursorPolicyCustomAtFrontend
     Assert-SmokeValue 'cursorPolicyHiddenAtLoading' $true $report.cursorPolicyHiddenAtLoading
     # Replaces cursorPolicyCapturedAtGameplay, which observed False in 1 of 6
     # runs because Godot cannot capture an unfocused window - it pinned whether
@@ -357,7 +302,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'returnToMainMenuRequested' $true $report.returnToMainMenuRequested
     Assert-SmokeValue 'returnedToMainMenu' $true $report.returnedToMainMenu
     Assert-SmokeValue 'worldReleasedAtMainMenu' $true $report.worldReleasedAtMainMenu
-    Assert-SmokeValue 'mainMenuCursorPolicyVisible' $true $report.mainMenuCursorPolicyVisible
+    Assert-SmokeValue 'mainMenuCursorPolicyCustom' $true $report.mainMenuCursorPolicyCustom
     Assert-SmokeValue 'finalFrontendScreen' 'MainMenu' $report.finalFrontendScreen
 
     $log = Get-Content -LiteralPath $LogPath -Raw

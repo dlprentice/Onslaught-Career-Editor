@@ -34,8 +34,9 @@ What is deliberately excluded, with reasons
 * The top-left Forseti emblem. Unidentified art that NO page in this lane draws.
   Charging it to the options page would report the same constant on every page
   forever and hide real movement underneath it.
-* The retail mouse cursor. Present in every retail frame, at a different place
-  on each, and absent from ours.
+* The retail mouse cursor. Present in every retail frame at a different place
+  on each. The capture rig pins our custom cursor at (0,0), outside every scored
+  band, so live operator input cannot contaminate this comparison.
 Both exclusions are boxes, stated below, not adaptive masks - an adaptive mask
 would be able to excuse a real defect.
 
@@ -45,10 +46,14 @@ as UNSCORED, which is correct and must not be read as a pass.
 
 Usage:
     py -3 rebuild/tools/compare_options_capture.py <capture-dir> [--min-iou N]
+
+`--min-iou` is an explicitly supplied regression threshold, not a retail-parity
+bar. No default floor is inferred from the single retained retail run.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -91,11 +96,34 @@ def main() -> int:
         default=0.0,
         help="Fail if any page's ink IoU falls below this percentage.",
     )
+    parser.add_argument("--json-out", type=Path)
     args = parser.parse_args()
 
+    report: dict = {
+        "verdict": "UNSCORED",
+        "scope": "options-ink-placement-only",
+        "captureDir": str(args.capture_dir),
+        "referenceRoot": str(RETAIL),
+        "minimumIoUPct": args.min_iou,
+        "pages": [],
+        "errors": [],
+    }
+
+    def finish(verdict: str, exit_code: int, message: str | None = None) -> int:
+        report["verdict"] = verdict
+        if message:
+            if verdict == "ERROR":
+                report["errors"].append(message)
+            else:
+                report["reason"] = message
+            print(f"{verdict}: {message}")
+        if args.json_out:
+            args.json_out.parent.mkdir(parents=True, exist_ok=True)
+            args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return exit_code
+
     if not RETAIL.is_dir():
-        print(f"UNSCORED: no retail reference set at {RETAIL}")
-        return 0
+        return finish("UNSCORED", 0, f"no retail reference set at {RETAIL}")
 
     print(f"{'page':12s} {'inkIoU':>8s} {'retailInk':>10s} {'ourInk':>8s} "
           f"{'retailOnly':>11s} {'oursOnly':>9s}")
@@ -103,16 +131,23 @@ def main() -> int:
     for page, (retail_name, our_name, band, cursor) in PAGES.items():
         retail_path = RETAIL / retail_name
         our_path = args.capture_dir / our_name
+        if not retail_path.is_file():
+            return finish("ERROR", 2, f"retail reference missing {retail_path}")
         if not our_path.is_file():
-            print(f"ERROR: capture missing {our_path}")
-            return 2
+            return finish("ERROR", 2, f"capture missing {our_path}")
 
-        retail = np.asarray(Image.open(retail_path).convert("RGB")).astype(int)
-        ours = np.asarray(Image.open(our_path).convert("RGB")).astype(int)
+        try:
+            retail = np.asarray(Image.open(retail_path).convert("RGB")).astype(int)
+            ours = np.asarray(Image.open(our_path).convert("RGB")).astype(int)
+        except OSError as exception:
+            return finish("ERROR", 2, f"{page} image decode failed: {exception}")
         if retail.shape != ours.shape:
-            print(f"ERROR: {page} size mismatch {retail.shape} vs {ours.shape}; "
-                  "frames are never resampled")
-            return 2
+            return finish(
+                "ERROR",
+                2,
+                f"{page} size mismatch {retail.shape} vs {ours.shape}; "
+                "frames are never resampled",
+            )
 
         a = ink_mask(retail, band)
         b = ink_mask(ours, band)
@@ -127,19 +162,46 @@ def main() -> int:
         a &= keep
         b &= keep
 
+        if int(a.sum()) == 0:
+            return finish(
+                "ERROR",
+                2,
+                f"{page} retail reference ink mask is empty; comparison is unsound",
+            )
+
         union = int((a | b).sum())
-        iou = 100.0 * int((a & b).sum()) / union if union else 100.0
+        iou = 100.0 * int((a & b).sum()) / union
         worst = min(worst, iou)
+        page_result = {
+            "id": page,
+            "inkIoUPct": iou,
+            "retailInk": int(a.sum()),
+            "ourInk": int(b.sum()),
+            "retailOnly": int((a & ~b).sum()),
+            "oursOnly": int((b & ~a).sum()),
+            "reference": str(retail_path),
+            "capture": str(our_path),
+        }
+        report["pages"].append(page_result)
         print(f"{page:12s} {iou:7.2f}% {int(a.sum()):10d} {int(b.sum()):8d} "
               f"{int((a & ~b).sum()):11d} {int((b & ~a).sum()):9d}")
 
     if args.min_iou > 0.0:
         verdict = "PASS" if worst >= args.min_iou else "FAIL"
-        print(f"\nworst page {worst:.2f}% against floor {args.min_iou:.2f}% -> {verdict}")
-        return 0 if verdict == "PASS" else 1
+        report["worstInkIoUPct"] = worst
+        print(
+            f"\nworst page {worst:.2f}% against regression minimum "
+            f"{args.min_iou:.2f}% -> {verdict}"
+        )
+        return finish(verdict, 0 if verdict == "PASS" else 1)
 
-    print(f"\nworst page {worst:.2f}% (no floor requested)")
-    return 0
+    report["worstInkIoUPct"] = worst
+    print(f"\nworst page {worst:.2f}% (no regression minimum requested)")
+    return finish(
+        "UNSCORED",
+        0,
+        "measurement completed without a regression minimum",
+    )
 
 
 if __name__ == "__main__":

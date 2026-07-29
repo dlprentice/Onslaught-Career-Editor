@@ -365,6 +365,10 @@ public sealed class RetailFrontendSession
                 "Level 100 can complete only after its pending launch request is consumed.");
         }
 
+        // Reaching gameplay without BeginLevel100IntroCutscene means the
+        // released intro was suppressed or unavailable. Either way the first
+        // round has been consumed; an in-level Retry must not replay it.
+        Level100IntroCutscenePending = false;
         Screen = RetailFrontendScreen.Gameplay;
     }
 
@@ -570,6 +574,7 @@ public enum RetailFrontendLanguage
 
 public enum RetailFrontendCursorMode
 {
+    Custom,
     Visible,
     Hidden,
     Captured,

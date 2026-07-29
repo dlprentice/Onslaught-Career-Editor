@@ -226,6 +226,7 @@ public sealed class Level100AudioCatalogTests
         // must load looping and stop at level entry before the tutorial track.
         string audio = ReadGodotSource("Level100Audio.cs");
         string game = ReadGodotSource("FirstFlightGame.cs");
+        string frontend = ReadGodotSource("RetailFrontendFlow.cs");
         string materializer = ReadGodotSource("materialize_retail_assets.py");
 
         Assert.Contains(music.RetailSourceName, materializer, StringComparison.Ordinal);
@@ -233,11 +234,38 @@ public sealed class Level100AudioCatalogTests
             "LoadOgg(recipe.ResourcePath, looping: true)",
             audio,
             StringComparison.Ordinal);
-        AssertOccursInOrder(
+        string ready = MethodBody(game, "public override void _Ready()");
+        string startupComplete = MethodBody(
             game,
+            "private void StartFrontendMusicAfterStartupMedia()");
+        string stopForLevel = MethodBody(
+            game,
+            "private void StopFrontendMusicForLevelEntry()");
+        string navigation = MethodBody(
+            frontend,
+            "private void HandleNavigationSignal(RetailFrontendSignal signal)");
+        string activateGameplay = MethodBody(
+            game,
+            "private void ActivateFrontendGameplay()");
+
+        Assert.DoesNotContain("_audio.StartFrontendMusic();", ready, StringComparison.Ordinal);
+        Assert.Contains(
             "_audio.StartFrontendMusic();",
-            "_audio.StopFrontendMusic();",
-            "_audio.StartTutorialMusic();");
+            startupComplete,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;",
+            ready,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100LoadingStarted?.Invoke();",
+            navigation,
+            StringComparison.Ordinal);
+        Assert.Contains("_audio.StopFrontendMusic();", stopForLevel, StringComparison.Ordinal);
+        AssertOccursInOrder(
+            activateGameplay,
+            "_audio.StartTutorialMusic();",
+            "_gameplayActive = true;");
     }
 
     private static string ReadGodotSource(string fileName) =>
@@ -253,6 +281,18 @@ public sealed class Level100AudioCatalogTests
             Assert.True(found >= 0, $"Expected '{value}' after offset {cursor}.");
             cursor = found + value.Length;
         }
+    }
+
+    private static string MethodBody(string source, string declaration)
+    {
+        int start = source.IndexOf(declaration, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Expected method declaration '{declaration}'.");
+        int next = source.IndexOf("\n    private ", start + declaration.Length, StringComparison.Ordinal);
+        if (next < 0)
+        {
+            next = source.IndexOf("\n    public ", start + declaration.Length, StringComparison.Ordinal);
+        }
+        return next < 0 ? source[start..] : source[start..next];
     }
 
     [Fact]

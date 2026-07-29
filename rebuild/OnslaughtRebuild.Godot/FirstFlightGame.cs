@@ -55,7 +55,7 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeSawSelectConfiguration;
     private bool _smokeSawLoading;
     private bool _smokeSawGameplay;
-    private bool _smokeCursorVisibleAtFrontend;
+    private bool _smokeCursorCustomAtFrontend;
     private bool _smokeCursorHiddenAtLoading;
     private bool _smokeCursorPolicyAppliedAtGameplay;
     private bool _smokeWindowFocusedAtGameplay;
@@ -73,9 +73,9 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeReturnRequested;
     private bool _smokeReturnedToMainMenu;
     private bool _smokeWorldReleasedAtMainMenu;
-    private bool _smokeCursorVisibleAtMainMenu;
+    private bool _smokeCursorCustomAtMainMenu;
     private string? _smokeReportPath;
-    private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Visible;
+    private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Custom;
     private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
     private SmokeReport? _smokeReport;
 
@@ -98,6 +98,7 @@ public sealed partial class FirstFlightGame : Node3D
 
             _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
             _frontend.Initialize();
+            _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
             _frontend.Level100LoadRequested += LoadLevel100FromFrontend;
             _frontend.GameplayActivated += ActivateFrontendGameplay;
             _frontend.GameplaySuspended += SuspendFrontendGameplay;
@@ -106,12 +107,7 @@ public sealed partial class FirstFlightGame : Node3D
             _frontend.AudioCueRequested += ForwardFrontendAudioCue;
             _frontend.OptionsSettingsChanged += ApplyOptionsSettings;
             AddChild(_frontend);
-            ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
-            // CFrontEnd::Init starts MUS_FRONTEND once for the whole frontend
-            // (FrontEnd.cpp:332-333, retail 0x004662a0), so it spans click-to-start,
-            // main menu, level select and briefing.
-            _audio.StartFrontendMusic();
-
+            ApplyFrontendCursorMode(RetailFrontendCursorMode.Custom);
             if (FrontendCaptureRig.TryCreate(OS.GetCmdlineUserArgs(), _frontend, out FrontendCaptureRig? rig))
             {
                 // The gameplay capture plan holds the level for 42 s of engine
@@ -671,13 +667,6 @@ public sealed partial class FirstFlightGame : Node3D
         _audio.BindAquila(
             RequirePlayerAquilaActorId(snapshot.Level100Actors),
             snapshot.Level100Actors);
-        // Level entry is a stop-then-start handoff, not a crossfade: CGame::RunLevel
-        // stops the frontend track (game.cpp:1584-1586, retail 0x0046e240) and the
-        // level loop then selects MUS_TUTORIAL (game.cpp:1431-1441, retail
-        // CGame::PlayMusicForCurrentLevel 0x0046dc00).
-        _audio.StopFrontendMusic();
-        _audio.StartTutorialMusic();
-
         _hud = new FirstFlightHud();
         AddChild(_hud);
         _hud.Initialize(_hudAssetCatalog);
@@ -718,6 +707,15 @@ public sealed partial class FirstFlightGame : Node3D
         }
     }
 
+    private void StopFrontendMusicForLevelEntry()
+    {
+        // CGame::RunLevel stops the frontend track in the same call stack that
+        // enters loading (game.cpp:1584-1586, retail 0x0046e240). Waiting for
+        // Level100LoadRequested leaves two rendered loading frames playing
+        // MUS_FRONTEND because that request is deliberately delayed.
+        _audio.StopFrontendMusic();
+    }
+
     private void ActivateFrontendGameplay()
     {
         if (!_level100WorldCreated)
@@ -727,6 +725,7 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        _audio.StartTutorialMusic();
         _gameplayActive = true;
         UpdateGameplayCursorMode();
         if (_smokeMode)
@@ -921,29 +920,29 @@ public sealed partial class FirstFlightGame : Node3D
             {
                 case RetailFrontendScreen.ClickToStart:
                     _smokeSawClickToStart = true;
-                    _smokeCursorVisibleAtFrontend =
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend =
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
                 case RetailFrontendScreen.MainMenu:
                     _smokeSawMainMenu = true;
-                    _smokeCursorVisibleAtFrontend &=
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
                 case RetailFrontendScreen.DevSelect:
                     _smokeSawDevSelect = true;
-                    _smokeCursorVisibleAtFrontend &=
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
                 case RetailFrontendScreen.LevelSelect:
                     _smokeSawLevelSelect = true;
-                    _smokeCursorVisibleAtFrontend &=
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
@@ -954,15 +953,15 @@ public sealed partial class FirstFlightGame : Node3D
                 // presentation value the simulation does not determine.
                 case RetailFrontendScreen.MissionBriefing:
                     _smokeSawMissionBriefing = true;
-                    _smokeCursorVisibleAtFrontend &=
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
                 case RetailFrontendScreen.SelectConfiguration:
                     _smokeSawSelectConfiguration = true;
-                    _smokeCursorVisibleAtFrontend &=
-                        _requestedCursorMode == RetailFrontendCursorMode.Visible;
+                    _smokeCursorCustomAtFrontend &=
+                        _requestedCursorMode == RetailFrontendCursorMode.Custom;
                     frontend.ConfirmForSmoke();
                     return;
 
@@ -1008,8 +1007,8 @@ public sealed partial class FirstFlightGame : Node3D
         _smokeReturnedToMainMenu =
             _frontend!.CurrentScreen == RetailFrontendScreen.MainMenu;
         _smokeWorldReleasedAtMainMenu = !_level100WorldCreated;
-        _smokeCursorVisibleAtMainMenu =
-            _requestedCursorMode == RetailFrontendCursorMode.Visible;
+        _smokeCursorCustomAtMainMenu =
+            _requestedCursorMode == RetailFrontendCursorMode.Custom;
         _smokePhase = SmokePhase.ReturnedToMainMenu;
         Callable.From(CompleteSmoke).CallDeferred();
     }
@@ -1024,6 +1023,7 @@ public sealed partial class FirstFlightGame : Node3D
 
         Input.MouseMode = mode switch
         {
+            RetailFrontendCursorMode.Custom => Input.MouseModeEnum.Hidden,
             RetailFrontendCursorMode.Visible => Input.MouseModeEnum.Visible,
             RetailFrontendCursorMode.Hidden => Input.MouseModeEnum.Hidden,
             RetailFrontendCursorMode.Captured => Input.MouseModeEnum.Captured,
@@ -1224,6 +1224,7 @@ public sealed partial class FirstFlightGame : Node3D
             (_skipStartupMedia || _smokeMode || _captureArgumentsPresent);
         if (suppressed)
         {
+            StartFrontendMusicAfterStartupMedia();
             return;
         }
 
@@ -1244,6 +1245,7 @@ public sealed partial class FirstFlightGame : Node3D
                 "Startup media is absent, so splash and intro FMV do not play. " +
                 (sequence.MediaUnavailableReason ?? "No cue had decoded media."));
             sequence.QueueFree();
+            StartFrontendMusicAfterStartupMedia();
             return;
         }
 
@@ -1255,10 +1257,27 @@ public sealed partial class FirstFlightGame : Node3D
             throw new InvalidOperationException(
                 "The startup media sequence needs the frontend to already exist.");
         frontend.SuspendForStartupMedia();
-        sequence.Completed += frontend.ResumeAfterStartupMedia;
+        sequence.Completed += FinishRetailStartupMedia;
 
         _startupSequence = sequence;
         AddChild(sequence);
+    }
+
+    private void FinishRetailStartupMedia()
+    {
+        StartFrontendMusicAfterStartupMedia();
+        _frontend?.ResumeAfterStartupMedia();
+        _startupSequence?.QueueFree();
+        _startupSequence = null;
+    }
+
+    private void StartFrontendMusicAfterStartupMedia()
+    {
+        // CFrontEnd::Init starts MUS_FRONTEND for the interactive frontend
+        // (FrontEnd.cpp:332-333). The startup movies precede that frontend and
+        // carry their own authored audio, which is not decoded yet; silence is
+        // preferable to playing the frontend bed over them.
+        _audio.StartFrontendMusic();
     }
 
     private void ParseUserArguments()
@@ -1320,7 +1339,7 @@ public sealed partial class FirstFlightGame : Node3D
         string engineVersion = versionInfo["string"].AsString();
         return new SmokeReport
         {
-            SchemaVersion = "onslaught-first-flight-smoke.v16",
+            SchemaVersion = "onslaught-first-flight-smoke.v17",
                 EngineVersion = engineVersion,
                 ExitReason = "smoke-complete",
                 Tick = _session.CurrentSnapshot.Tick,
@@ -1428,7 +1447,7 @@ public sealed partial class FirstFlightGame : Node3D
             report.ColdSelectConfiguration = _smokeSawSelectConfiguration;
             report.ColdLoading = _smokeSawLoading;
             report.ColdGameplay = _smokeSawGameplay;
-            report.CursorPolicyVisibleAtFrontend = _smokeCursorVisibleAtFrontend;
+            report.CursorPolicyCustomAtFrontend = _smokeCursorCustomAtFrontend;
             report.CursorPolicyHiddenAtLoading = _smokeCursorHiddenAtLoading;
             report.GameplayCursorPolicy = _smokeGameplayCursorPolicy;
             report.CursorPolicyAppliedAtGameplay = _smokeCursorPolicyAppliedAtGameplay;
@@ -1441,7 +1460,7 @@ public sealed partial class FirstFlightGame : Node3D
             report.ReturnToMainMenuRequested = _smokeReturnRequested;
             report.ReturnedToMainMenu = _smokeReturnedToMainMenu;
             report.WorldReleasedAtMainMenu = _smokeWorldReleasedAtMainMenu;
-            report.MainMenuCursorPolicyVisible = _smokeCursorVisibleAtMainMenu;
+            report.MainMenuCursorPolicyCustom = _smokeCursorCustomAtMainMenu;
             report.FinalFrontendScreen = _frontend?.CurrentScreen.ToString() ?? string.Empty;
 
             string json = JsonSerializer.Serialize(report, new JsonSerializerOptions
@@ -1546,7 +1565,7 @@ public sealed partial class FirstFlightGame : Node3D
         public bool ColdSelectConfiguration { get; set; }
         public bool ColdLoading { get; set; }
         public bool ColdGameplay { get; set; }
-        public bool CursorPolicyVisibleAtFrontend { get; set; }
+        public bool CursorPolicyCustomAtFrontend { get; set; }
         public bool CursorPolicyHiddenAtLoading { get; set; }
         public string[] GameplayCursorPolicy { get; set; } = [];
         public bool CursorPolicyAppliedAtGameplay { get; set; }
@@ -1560,7 +1579,7 @@ public sealed partial class FirstFlightGame : Node3D
         public bool ReturnToMainMenuRequested { get; set; }
         public bool ReturnedToMainMenu { get; set; }
         public bool WorldReleasedAtMainMenu { get; set; }
-        public bool MainMenuCursorPolicyVisible { get; set; }
+        public bool MainMenuCursorPolicyCustom { get; set; }
         public string FinalFrontendScreen { get; set; } = string.Empty;
     }
 

@@ -430,6 +430,11 @@ public sealed partial class FrontendCaptureRig : Node
         }
         else if (_planName == "options")
         {
+            // The retail cursor is excluded from each Options ink band at its
+            // measured retail location. Keep our custom cursor at a fixed point
+            // outside every scored band so the operator's live mouse cannot
+            // turn the comparison into a nondeterministic input.
+            _frontend.SetMouseCursorDesignPositionForCapture(Vector2.Zero);
             foreach ((int frame, string label, RetailFrontendScreen? screen) in OptionsPlan)
             {
                 _shots.Add(new Shot(frame, label, screen, null, null));

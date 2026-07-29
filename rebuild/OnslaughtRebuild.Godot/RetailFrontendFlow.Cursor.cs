@@ -98,15 +98,18 @@ namespace OnslaughtRebuild.GodotClient;
 /// through <see cref="RetailFrontendFlow.RetailColor"/>, whose 2x is the
 /// MODULATE2X law.</para>
 ///
-/// <para><b>KNOWN GAP, stated rather than papered over.</b> This draws retail's
-/// sprite; it does not suppress the host OS pointer, so a live window shows both.
-/// Retail must hide the system cursor to draw its own, but this sweep measured
-/// draw calls and cannot witness a <c>ShowCursor</c> call, and the change is not
-/// local: <c>RetailFrontendCursorMode.Visible</c> is the same value the host uses
-/// for focus-loss release and for the paused-gameplay pointer
-/// (<c>FirstFlightGame.UpdateGameplayCursorMode</c>), and three native-smoke
-/// assertions read it back. Separating "pointer is free" from "the OS draws the
-/// pointer" is the follow-up.</para>
+/// <para>The host keeps frontend movement free while suppressing the OS pointer
+/// through <see cref="RetailFrontendCursorMode.Custom"/>. Retail's exact
+/// <c>ShowCursor</c> call was not captured; this is the host-side separation
+/// needed to avoid drawing both the measured retail sprite and the Windows
+/// pointer. Paused gameplay and focus release continue to request
+/// <see cref="RetailFrontendCursorMode.Visible"/>.</para>
+///
+/// <para><b>Remaining boundary.</b> The inventory above proves cursor draws on
+/// three retail boot pages, but those pages are owned here by
+/// <c>RetailStartupSequence</c> while this flow is hidden. This implementation
+/// therefore closes interactive frontend duplication and ordering only; it does
+/// not claim startup-media cursor parity.</para>
 /// </summary>
 public sealed partial class RetailFrontendFlow
 {
@@ -118,47 +121,11 @@ public sealed partial class RetailFrontendFlow
     /// </summary>
     private const float MouseCursorSourceExtent = 124f;
 
-    private Texture2D? _mouseCursor;
+    private RetailMouseCursorLayer? _mouseCursorLayer;
+    private Vector2? _captureMouseCursorDesignPosition;
 
-    /// <summary>
-    /// Retail's cursor sprite, drawn after the active page and before the frame
-    /// ends. Called with the design-space transform already applied, so the
-    /// rectangle below is in 640x480 stage pixels.
-    /// </summary>
-    private void DrawRetailMouseCursor()
-    {
-        // The pages retail does not draw a cursor on; see the class remarks.
-        // IntroCutscene joins them: RunIntroFMV is called from inside
-        // CGame::RestartLoopRunLevel (references/Onslaught/game.cpp:1341), where
-        // no frontend page is active, and the D3D9 capture of the FMV shows one
-        // draw per frame with no cursor sprite after it.
-        if (_session.Screen is RetailFrontendScreen.Loading or
-            RetailFrontendScreen.IntroCutscene or
-            RetailFrontendScreen.Gameplay)
-        {
-            return;
-        }
-
-        // Lazily bound so a missing materialized asset degrades to "no cursor",
-        // which is exactly the behaviour this file replaces, rather than taking
-        // the whole frontend down at load.
-        _mouseCursor ??= LoadMouseCursorTexture();
-        if (_mouseCursor is null)
-        {
-            return;
-        }
-
-        // Retail tracks the pointer in stage coordinates (DAT_0089BDA8 /
-        // DAT_0089BDA4) and uses them as the quad's top-left directly. _Process
-        // queues a redraw every frame, so sampling here is current.
-        Vector2 position = ToDesignPosition(GetLocalMousePosition());
-
-        DrawTextureRectRegion(
-            _mouseCursor,
-            new Rect2(position.X, position.Y, MouseCursorSize, MouseCursorSize),
-            new Rect2(0f, 0f, MouseCursorSourceExtent, MouseCursorSourceExtent),
-            Colors.White);
-    }
+    internal void SetMouseCursorDesignPositionForCapture(Vector2? position) =>
+        _captureMouseCursorDesignPosition = position;
 
     private static Texture2D? LoadMouseCursorTexture()
     {
@@ -166,5 +133,53 @@ public sealed partial class RetailFrontendFlow
         return Godot.FileAccess.FileExists(path)
             ? CuratedAyaTextureLoader.Load(path, 128, 128, CuratedAyaTextureLoader.Compression.Dxt2)
             : null;
+    }
+
+    /// <summary>
+    /// A separate CanvasItem is required here. A child reflection layer renders
+    /// after the frontend parent's <c>_Draw</c>; drawing the cursor in that
+    /// parent therefore let the title sheen brighten the cursor. Retail's
+    /// measured cursor draw is last, so this child owns an explicit higher
+    /// Z-order.
+    /// </summary>
+    private sealed partial class RetailMouseCursorLayer : Node2D
+    {
+        private RetailFrontendFlow _owner = null!;
+        private Texture2D? _texture;
+
+        public void Configure(RetailFrontendFlow owner) => _owner = owner;
+
+        public override void _Draw()
+        {
+            if (_owner._session.Screen is RetailFrontendScreen.Loading or
+                RetailFrontendScreen.IntroCutscene or
+                RetailFrontendScreen.Gameplay)
+            {
+                return;
+            }
+
+            _texture ??= LoadMouseCursorTexture();
+            if (_texture is null)
+            {
+                return;
+            }
+
+            (float scale, Vector2 offset) = _owner.DesignTransform();
+            DrawSetTransform(offset, 0f, new Vector2(scale, scale));
+
+            // Retail uses the posted stage coordinate as the quad top-left.
+            // Capture runs use a deterministic design-space position so the
+            // operator's live pointer cannot contaminate scored page bands.
+            Vector2 position =
+                _owner._captureMouseCursorDesignPosition ??
+                _owner.ToDesignPosition(_owner.GetLocalMousePosition());
+            DrawTextureRectRegion(
+                _texture,
+                new Rect2(position.X, position.Y, MouseCursorSize, MouseCursorSize),
+                new Rect2(0f, 0f, MouseCursorSourceExtent, MouseCursorSourceExtent),
+                Colors.White);
+
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
     }
 }

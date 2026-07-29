@@ -51,8 +51,9 @@ public sealed partial class RetailFrontendFlow
     // with mixed row heights, and one of them (the 17px Joystick/Back pitch) has
     // no byte explanation at all.
     //
-    // Font13PS puts capital ink 3 rows below the cell top, so cell tops are what
-    // is passed to DrawText.
+    // Font13PS puts capital ink 3 rows below the cell top. These measured values
+    // are body origins; DrawOptionsBodyText adapts them to the shared primitive's
+    // shadow-origin contract.
 
     /// <summary>
     /// The Label:Value split, FITTED to the retail frames rather than assumed.
@@ -315,7 +316,7 @@ public sealed partial class RetailFrontendFlow
     /// x261, both measured off the retail frame.
     /// </summary>
     private void DrawOptionTextCentered(string text, float top, Color color) =>
-        DrawText(
+        DrawOptionsBodyText(
             text,
             new Vector2(Mathf.Floor(OptionRowCenterX - (MeasureText(text, 1f) * 0.5f)), top),
             1f,
@@ -330,8 +331,12 @@ public sealed partial class RetailFrontendFlow
     private void DrawLabelValueRow(string label, string value, float top, Color color)
     {
         float labelWidth = MeasureText(label, 1f);
-        DrawText(label, new Vector2(Mathf.Floor(OptionLabelRightX - labelWidth), top), 1f, color);
-        DrawText(value, new Vector2(OptionValueLeftX, top), 1f, color);
+        DrawOptionsBodyText(
+            label,
+            new Vector2(Mathf.Floor(OptionLabelRightX - labelWidth), top),
+            1f,
+            color);
+        DrawOptionsBodyText(value, new Vector2(OptionValueLeftX, top), 1f, color);
     }
 
     private void DrawValueBarRow(RetailOptionsRow row, float top, Color color)
@@ -340,7 +345,7 @@ public sealed partial class RetailFrontendFlow
         float total = labelWidth + BarLabelPad + BarAssemblyWidth;
         float left = Mathf.Floor(OptionRowCenterX - (total * 0.5f));
 
-        DrawText(row.Label, new Vector2(left, top), 1f, color);
+        DrawOptionsBodyText(row.Label, new Vector2(left, top), 1f, color);
 
         float leftArrowX = left + labelWidth + BarLabelPad;
         float barX = leftArrowX + BarLeftArrowToBar;
@@ -424,13 +429,26 @@ public sealed partial class RetailFrontendFlow
         for (int i = 0; i < row.States.Count; i++)
         {
             float entryTop = top + ((i - row.CurrentIndex) * DropdownEntryPitch);
-            DrawText(
-                row.States[i],
+            DrawOptionsBodyText(
+                row.StateLabel(i),
                 new Vector2(DropdownTextLeft, entryTop),
                 1f,
                 i == row.CurrentIndex ? DropdownEntrySelected : DropdownEntry);
         }
     }
+
+    /// <summary>
+    /// Options row constants were measured from the body ink, while the shared
+    /// retail text primitive accepts the shadow origin and draws body ink one
+    /// pixel up-left. Adapt only this page's measured body origins; changing the
+    /// shared primitive would regress every other frontend page.
+    /// </summary>
+    private void DrawOptionsBodyText(
+        string text,
+        Vector2 bodyOrigin,
+        float scale,
+        Color color) =>
+        DrawText(text, bodyOrigin + Vector2.One, scale, color);
 
     /// <summary>
     /// The three-column bindings grid: slot 0 left-aligned at x=51, the action

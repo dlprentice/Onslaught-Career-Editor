@@ -609,6 +609,8 @@ public sealed partial class RetailFrontendFlow : Control
 
     public event Action? Level100LoadRequested;
 
+    public event Action? Level100LoadingStarted;
+
     public event Action? GameplayActivated;
 
     public event Action? GameplaySuspended;
@@ -711,6 +713,7 @@ public sealed partial class RetailFrontendFlow : Control
         SetProcess(true);
         SetProcessInput(true);
         QueueRedraw();
+        _mouseCursorLayer?.QueueRedraw();
     }
 
     public override void _Ready()
@@ -735,6 +738,14 @@ public sealed partial class RetailFrontendFlow : Control
         };
         AddChild(_titleLogoReflection);
         _titleLogoReflection.Configure(_titleLogo, _reflectionMap);
+
+        _mouseCursorLayer = new RetailMouseCursorLayer
+        {
+            Name = "RetailMouseCursor",
+            ZIndex = 2,
+        };
+        _mouseCursorLayer.Configure(this);
+        AddChild(_mouseCursorLayer);
 
         QueueRedraw();
     }
@@ -836,6 +847,7 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         QueueRedraw();
+        _mouseCursorLayer?.QueueRedraw();
     }
 
     /// <summary>
@@ -981,12 +993,6 @@ public sealed partial class RetailFrontendFlow : Control
                 DrawLoading();
                 break;
         }
-
-        // LAST DRAW OF THE FRAME, measured. Retail closes every interactive
-        // frontend frame with its 32x32 cursor sprite; see
-        // RetailFrontendFlow.Cursor.cs for the fourteen inventory rows and the
-        // byte evidence for the texture.
-        DrawRetailMouseCursor();
 
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
     }
@@ -2774,6 +2780,8 @@ public sealed partial class RetailFrontendFlow : Control
         Visible = true;
         SetProcessInput(true);
         SetProcess(true);
+        QueueRedraw();
+        _mouseCursorLayer?.QueueRedraw();
     }
 
     private void HandleNavigationSignal(RetailFrontendSignal signal)
@@ -2784,16 +2792,17 @@ public sealed partial class RetailFrontendFlow : Control
             _level100Ready = false;
             _gameplayActivationRaised = false;
             _loadingFrames = 0;
+            Level100LoadingStarted?.Invoke();
             CursorModeRequested?.Invoke(RetailFrontendCursorMode.Hidden);
         }
         else if (signal == RetailFrontendSignal.ReturnToMainMenuRequested)
         {
-            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Visible);
+            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
             ReturnToMainMenuRequested?.Invoke();
         }
         else if (signal == RetailFrontendSignal.PageChanged)
         {
-            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Visible);
+            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
         }
     }
 

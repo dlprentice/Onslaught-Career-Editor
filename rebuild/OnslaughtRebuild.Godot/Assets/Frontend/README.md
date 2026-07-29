@@ -3,10 +3,7 @@
 This directory owns the ignored, locally materialized retail inputs used by the
 bounded startup → main menu → Level 100 → loading path. Run
 `npm run prepare:rebuild-assets` to verify a user-provided Steam installation
-and reproduce these exact files — **with two exceptions that command does not
-produce today; see [Two inputs the materializer does NOT
-produce](#two-inputs-the-materializer-does-not-produce) before assuming the
-recipe is sufficient.** The payloads remain outside Git and
+and reproduce these exact files. The payloads remain outside Git and
 release packages and remain copyright of their respective rights holders;
 `rebuild/LICENSE` covers reconstruction code only.
 
@@ -79,7 +76,9 @@ lane.
 | `level-ring-01.texture.aya` | Released v3 level-select ring 1 | `687EAF0945B701B622BDEBDE805E88CAC394734A4B4420155379993EF9F74E1C` |
 | `level-ring-02.texture.aya` | Released v3 level-select ring 2 | `620900D34C153E722B6D78A9FBECAB2D69B8E81ABCDBDA084B0F90EB96142DFF` |
 | `title-font.texture.aya` | `mustbe_TitleFont.tga(0)A8R8G8B8.aya` | `1941E28A5665665FB7F8F733E7A4854C60DEF33E1D4F1CB9CAA979BC204D0707` |
+| `system-font.texture.aya` | `mustbe_SystemFont(0)A8R8G8B8.aya` | `475EDC8C9B95E3D3619E9B78E168DFCDA8575042B728D96DE1598CB8917967EB` |
 | `loading-screen.texture.aya` | `LoadingScreen.tga(0)X8R8G8B8.aya` | `E4AD32FEE41A31477E97D4F6F0B280F33C360756E3ABA27BF23746038443FC2C` |
+| `mouse-cursor.texture.aya` | `mouse.tga(0)A8R8G8B8.aya` | `366021DEF699DE220AD018C40250EEFACCAAB356C6C5D93FE0AA1B7F5302354C` |
 | `SoundEffects/move.wav` | Exact 44.1 kHz PCM decode of XAP record 42, `Front End\N_FE_move`; consumed by the integrating audio lane, not this flow | `76B2458E9C5854DAF7237EA81B4F288AE09963BC10E7651E81E858FDB68CE83B` |
 | `SoundEffects/select.wav` | Exact 44.1 kHz PCM decode of XAP record 43, `Front End\N_FE_select`; consumed by the integrating audio lane, not this flow | `F84144C80405FE9F745B8CF4BD352D7FA4F8C0A8BA481C770C2C7C0A9053ADE1` |
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
@@ -97,55 +96,9 @@ against the tracked `GODOT_ASSETS` entries for `Frontend/` at HEAD returns
 exactly these six, and each hash above equals both the file on disk and the
 value the tracked materializer pins.
 
-The two remaining files on disk are the subject of the next section, because
-neither of them is something the documented recipe produces.
-
-## Two inputs the materializer does NOT produce
-
-> **Added 2026-07-28. Read this before trusting the recipe at the top of this
-> file.** The opening paragraph says to run `npm run prepare:rebuild-assets` and
-> "reproduce these exact files". For two of the 38 files in this directory that
-> is **not** true at HEAD, and nothing previously said so.
-
-| File | State at HEAD | What it is used for |
-| --- | --- | --- |
-| `system-font.texture.aya` | **No producer anywhere.** No tracked or untracked tool in this repository materializes it. | `mustbe_SystemFont`, the fixed-pitch 7×9 sheet the Controller Options bindings grid renders with |
-| `mouse-cursor.texture.aya` | **Producer is in flight, not yet committed.** `mouse.tga(0)A8R8G8B8.aya` | the frontend mouse cursor |
-
-MEASURED, both:
-
-- `git check-ignore -v` resolves `system-font.texture.aya` to
-  `.gitignore:86:/rebuild/OnslaughtRebuild.Godot/Assets/Frontend/**`, so it is
-  absent from a fresh clone. Searching `rebuild/tools/` and `tools/` for
-  `system-font`, `systemfont` and `system_font` returns no match in the working
-  tree, and `git grep -n system-font HEAD` returns exactly one line — the
-  consumer that loads it, `../../RetailFrontendFlow.cs`. Its same-lane
-  neighbours — the five flags and `fe-arrow`, all added by commit `e9b86162` —
-  do have manifest entries, so this is an omission rather than a deliberate
-  separate route.
-- `mouse-cursor.texture.aya` has a manifest entry in the **working tree** of
-  `../../../tools/materialize_retail_assets.py` but none at HEAD, while its
-  consumer `../../RetailFrontendFlow.Cursor.cs` is already tracked at HEAD. It
-  will become an ordinary row in the table above when that materializer edit
-  lands; it is recorded here rather than in the table so that the table does not
-  imply the tracked recipe already produces it.
-
-INFERRED, and stated as inference because no run was made for this note: the
-frontend loads `system-font` eagerly rather than lazily —
-`../../RetailFrontendFlow.cs` calls `LoadTextures()` from `Initialize()`, and
-`LoadTexture` resolves to `CuratedAyaTextureLoader.Load`, which throws
-`InvalidDataException("Curated texture '…' is missing …")` on a missing file. If
-that path behaves as written, a fresh clone following this document's recipe
-does not merely lose the Options page, it fails during frontend initialisation —
-which would make the whole `startup → main menu → Level 100 → loading` path this
-directory scopes unreachable. **What would settle it:** delete the file locally
-(or clone clean), run `npm run prepare:rebuild-assets`, and run the frontend
-smoke.
-
-**This is not a documentation fix.** The repair is a manifest entry for
-`mustbe_SystemFont` beside the other `Frontend/` textures, and it belongs to the
-lane that owns `../../../tools/materialize_retail_assets.py`. When it lands,
-move the row into the table above and delete it from here.
+**Corrected 2026-07-28:** the table previously excluded
+`system-font.texture.aya` and `mouse-cursor.texture.aya`, and the materializer
+did not produce the former. Both are now ordinary hash-pinned frontend inputs.
 
 ## Cold-start media is NOT in this directory
 
