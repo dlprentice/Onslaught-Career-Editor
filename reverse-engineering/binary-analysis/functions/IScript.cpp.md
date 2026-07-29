@@ -8,10 +8,13 @@ Current corrected metadata is owned by the
 [reviewed correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json).
 
 `0x0052ff30 ScriptCommandRegistry__InitBuiltins` initializes 144 contiguous
-`0x40`-byte descriptor slots. The retained
+`0x40`-byte descriptor slots. The older
 [command descriptor schema](../missionscript-command-descriptor-schema.v1.json)
-records observed assignments without claiming an exact descriptor layout,
-arity, runtime dispatch effect, or complete command semantics.
+is retained as historical discovery evidence only: its base is one record
+(`0x40` bytes) late and its handler field is another `0x30` bytes late, so it
+must not decide an exact row or binding. The current exact 144-row registry is
+the [MissionScript appendix in `GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry);
+direct stores in the pristine image decide the `Pause` row below.
 
 ## Name corrections — 2026-07-28
 
@@ -34,7 +37,7 @@ unverified against the new name until it is re-measured.
 
 ---
 
-## Functions (44 listed)
+## Functions (45 listed)
 
 | Address | Name | Purpose |
 |---------|------|---------|
@@ -77,12 +80,57 @@ unverified against the new name until it is re-measured.
 | 0x005377e0 | IScript__PlaySoundWithPriority | Play sound with priority level |
 | 0x005378e0 | IScript__PlaySoundWithFadeAndPriority | Play sound with fade and priority |
 | 0x00537c40 | IScript__PrintText | `PrintText(text_id)`: resolve text id through `CText__GetStringById` and print it through `CConsole__Printf("%w", ...)` |
+| 0x00537c70 | FUN_00537c70 | Mission native `Pause(seconds)`: save the current execution and schedule its continuation for current time plus the float argument |
 | 0x00537fd0 | IScript__IsFriendly | Return whether the current script context is friendly (`IsFriendly()`) |
 | 0x005381a0 | IScript__LevelLost | Declare the current level LOST (`LevelLost()`) |
 | 0x005381c0 | IScript__LevelLostString | Declare the current level LOST with a text id (`LevelLostString(message_id)`) |
 | 0x005381e0 | IScript__LevelWon | Declare the current level WON (`LevelWon()`) |
 | 0x005383c0 | IScript__ScheduleEvent | Schedule `PostEvent` payload as event ID `2000` for `NEXT_FRAME` (`-1.0f`) |
 | 0x0052ff30 | ScriptCommandRegistry__InitBuiltins | Wave864 built-in command descriptor registry initializer; 144 contiguous 0x40-byte records |
+
+### `Pause` vertical contract
+
+The shipped registry is runtime-populated, so its descriptor slots are zero in
+the file image. Direct stores from `ScriptCommandRegistry__InitBuiltins`
+establish row 4 at base `0x0064CE20`, stride `0x40`, with the string `Pause` and
+handler `0x00537C70`. The current Ghidra name remains `FUN_00537c70`; this note
+does not silently promote the name.
+
+The pristine handler body reads argument zero through the script value's float
+getter, clones the active `CEventFunction` execution state, appends it to the
+set at `IScript+0x28`, schedules event `0x7D1` for
+`DAT_00672FD0 + seconds`, sets `DAT_0089C800` to 1, and returns with the fixed
+three-argument script-command ABI. This is a timed MissionScript continuation,
+not `CGame__Pause` or the in-game menu.
+
+Level 100 contains 35 authored `Pause` calls across 10 `.msl` files.
+`TargetZone1.msl` supplies the focused law used by the reconstruction:
+`Pause(0.5)` separates setting the zone reached from unsetting/deactivating it
+and posting the firing-range event. The copied-runtime trace
+`G:\bea-ttd\play-level100\play-level100.run`, SHA-256
+`03599CEA7459810F601174A6713EBF17CF12DFE88D593D7F87FD5B94C564E40E`,
+observed one call at `0x00537C70`; current v5 symbolic and numeric
+`TTD.Calls` both returned 1. The positive control
+`CWorldPhysicsManager__CreateThingByType` returned 33/33. Query result:
+`local-lab/pause-native-count-v1/result.json`, SHA-256
+`9B642820D73EA40BEA8CCB9808D0B1EFB33F57B898857300010DD30CBF4BB7F2`.
+
+An independent state query on that same trace sought the first call's exact
+entry and return positions. At entry, `DAT_0089C800` was zero and the
+`IScript+0x28` continuation-set head/tail were both null. At return,
+`DAT_0089C800` was one and both head/tail pointed to the new
+`0x03F90098` continuation, with count one. The return address was inside
+`CInstructionOP_CALL::ExecuteCall`. Result SHA-256:
+`72D18ADF013BC82AB1C6365AB621AD118ED2C18125E04EB788DF2BFD01710C77`.
+The state query did not independently decode the float argument or scheduled
+due time; those parts remain joined by the pristine body, the authored
+`Pause(0.5)` instruction, and the focused reconstruction test rather than
+being overstated as direct trace observations.
+
+The rebuild already owns the same engine-neutral behavior in
+`Level100MissionTiming.PauseTicks` and the two compiled-script execution
+contexts. Its focused `TargetZone1` test retains the raw `0.5f` argument bits,
+proves no continuation through ticks 1–14, and proves resumption at tick 15.
 
 ## Key Patterns
 

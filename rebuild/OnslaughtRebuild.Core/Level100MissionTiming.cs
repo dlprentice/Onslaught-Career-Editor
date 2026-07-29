@@ -91,6 +91,19 @@ public static class Level100MissionTiming
     /// </summary>
     public const int GroundContactRecencyTicks = SimulationConstants.TicksPerSecond / 2;
 
+    /// <summary>Converts an authored MissionScript <c>Pause</c> duration to Core ticks.</summary>
+    /// <remarks>
+    /// Shipped registry row 4 binds <c>Pause</c> to <c>0x00537C70</c>. The
+    /// pristine body reads argument zero through the float getter, clones the
+    /// current script execution, appends that continuation to
+    /// <c>IScript+0x28</c>, and schedules event <c>0x7D1</c> for
+    /// <c>currentTime + seconds</c>. A trace-hashed copied-runtime query observed
+    /// the handler once with equal symbolic/numeric <c>TTD.Calls</c> counts and
+    /// observed its continuation-list/global-flag side effects. The durable
+    /// evidence summary is in
+    /// <c>reverse-engineering/binary-analysis/functions/IScript.cpp.md</c>.
+    /// This is script suspension, not the player-facing game-pause menu.
+    /// </remarks>
     internal static int PauseTicks(float seconds)
     {
         if (!float.IsFinite(seconds) || seconds < 0)

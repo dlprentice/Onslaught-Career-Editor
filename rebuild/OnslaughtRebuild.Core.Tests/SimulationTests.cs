@@ -908,6 +908,10 @@ public sealed class SimulationTests
             Level100MissionTrigger.TargetZone1);
         Assert.False(targetZone.Reached);
         Assert.Equal(Level100ActorScriptWaitKind.Pause, targetZonePause.WaitKind);
+        Assert.Equal(
+            BitConverter.SingleToInt32Bits(0.5f).ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+            targetZonePause.WaitArgument);
         Assert.Equal(15, targetZonePause.DueTick - simulation.Snapshot.Tick);
 
         for (int tick = 1; tick < 15; tick++)
