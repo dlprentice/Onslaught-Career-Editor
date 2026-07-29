@@ -9,6 +9,9 @@ the document it links.
 
 ## Current authority and provenance
 
+- [Executable/Ghidra narrative synthesis](../../GHIDRA_FUNCTONS.md) — dated
+  reviewed synthesis and open queue; the TSV and Ghidra stores below remain the
+  mechanical and database owners
 - [Ghidra workflow and evidence boundary](GHIDRA-REFERENCE.md)
 - [Full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md) — the
   record of the 2026-07-13 audit, **not the current name state**

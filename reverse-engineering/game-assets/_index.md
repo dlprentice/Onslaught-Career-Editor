@@ -6,9 +6,13 @@ packages do not bundle retail asset payloads; see
 [`../project-meta/attribution.md`](../project-meta/attribution.md) for the
 project's attribution and distribution boundary.
 
+The specimen-bounded narrative census for the measured 5,515-file installation
+snapshot is [`BEA_DATA.md`](../../BEA_DATA.md). It is a dated synthesis, not a
+replacement for the installed bytes or the narrower format findings below.
+
 ## Asset formats and extraction
 
-- [Game folder structure](game-folder-analysis.md)
+- [Historical game folder structure](game-folder-analysis.md)
 - [AYA asset format](aya-asset-format.md)
 - [AYA resource tag contract](aya-resource-tag-family-static-contract.md)
 - [Guarded extraction pipeline](extraction-pipeline.md)
