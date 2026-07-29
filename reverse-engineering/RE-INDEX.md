@@ -1,9 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); no evidence rule or pointer below was
-re-reviewed by that pass.
+Last updated: 2026-07-29
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 
@@ -30,6 +28,11 @@ waves, superseded plans, and generated accounting.
 
 | Area | Canonical entry point |
 | --- | --- |
+| Cross-source synthesis | [Data/source/executable delta](../DELTA.md) |
+| Agentic parity and function discovery | [Parity lab](../PARITY_LAB.md) |
+| Installed data narrative | [Measured installation census](../BEA_DATA.md) |
+| Executable/Ghidra narrative | [Ghidra function synthesis](../GHIDRA_FUNCTONS.md) |
+| Pinned-source narrative | [Stuart source synthesis](../STUART_FUNCTIONS.md) |
 | Save and options formats | [Save-file index](save-file/_index.md) |
 | Retail binary analysis | [Binary-analysis index](binary-analysis/_index.md) |
 | Canonical Ghidra project | [Distributable database](ghidra/README.md) |
@@ -83,9 +86,10 @@ different failure modes and only the first was being tested.)*
   — 2026-07-25. The functions that exist are sound; the **set** of functions is
   incomplete. 468,804 exported instructions verified against the pristine binary
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
-  **79.8 % of `.text` is covered by a function body at all**. Reproducible in
-  under a minute with `tools/re_verify.py`. This is the document that bounds
-  what any function-count figure on this page can mean.
+  **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
+  Coverage of the current 7,555-row inventory is **UNKNOWN** until a fresh
+  interval export is measured. Reproducible for the historical population in
+  under a minute with `tools/re_verify.py`.
 - [RTTI and source-path evidence — a documented ground truth was wrong](binary-analysis/rtti-and-source-path-evidence-2026-07-25.md)
   — 2026-07-25. **Read this before repeating "the binary has no symbols."**
   Direct ASCII scan of the pristine specimen finds **667 RTTI type descriptors**

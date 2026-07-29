@@ -1,0 +1,6 @@
+LIBRARY "bea_ttd_symbols"
+EXPORTS
+    DebugExtensionInitialize=_DebugExtensionInitialize@8
+    DebugExtensionUninitialize=_DebugExtensionUninitialize@0
+    beahelp=_beahelp@8
+    beasym=_beasym@8

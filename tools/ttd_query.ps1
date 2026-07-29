@@ -313,6 +313,7 @@ function ExactMarkerIndices([string[]]$src, [string]$marker) {
 }
 
 $problems = [System.Collections.Generic.List[string]]::new()
+$warnings = [System.Collections.Generic.List[string]]::new()
 $beginIndices = @(ExactMarkerIndices $all $BEGIN)
 $bodyEndIndices = @(ExactMarkerIndices $all $BODYEND)
 $endIndices = @(ExactMarkerIndices $all $END)
@@ -330,17 +331,17 @@ foreach ($marker in @(
         Missing = 'END sentinel never appeared - the command script did not complete'
     }
 )) {
-    if ($marker.Indices.Count -eq 0) {
+    if (@($marker.Indices).Count -eq 0) {
         $problems.Add($marker.Missing)
     }
-    elseif ($marker.Indices.Count -ne 1) {
-        $problems.Add("$($marker.Name) sentinel appeared $($marker.Indices.Count) times - the debugger transcript is ambiguous")
+    elseif (@($marker.Indices).Count -ne 1) {
+        $problems.Add("$($marker.Name) sentinel appeared $(@($marker.Indices).Count) times - the debugger transcript is ambiguous")
     }
 }
 $mainMarkersValid =
-    $beginIndices.Count -eq 1 -and
-    $bodyEndIndices.Count -eq 1 -and
-    $endIndices.Count -eq 1
+    @($beginIndices).Count -eq 1 -and
+    @($bodyEndIndices).Count -eq 1 -and
+    @($endIndices).Count -eq 1
 if (
     $mainMarkersValid -and
     -not (
@@ -372,8 +373,8 @@ if (
 }
 if ($timedOut) { $problems.Add("debugger timed out after $TimeoutSeconds s") }
 if ($proc.ExitCode -ne 0) { $problems.Add("debugger exited with code $($proc.ExitCode)") }
-foreach ($pat in @('Could not open', 'is not a crash dump', 'Unable to load image',
-                   'Unrecognized dump', 'File not found', 'Win32 error',
+foreach ($pat in @('Could not open', 'is not a crash dump',
+                   'Unrecognized dump', 'File not found',
                    'Syntax error in', 'Error: Unable to bind name',
                    "Couldn't resolve error",
                    'pass count must be preceeded by whitespace error in')) {
@@ -381,30 +382,61 @@ foreach ($pat in @('Could not open', 'is not a crash dump', 'Unable to load imag
         $problems.Add("debugger reported: $pat")
     }
 }
+$imageLoadPattern = '^Unable to load image (?<path>.+), Win32 error (?<code>\S+)\s*$'
+$knownAnswerLeaf = [IO.Path]::GetFileName($KnownAnswerImage)
+$imageLoadRows = @(
+    $diagnosticLines |
+        Where-Object { $_ -match $imageLoadPattern } |
+        Select-Object -Unique
+)
+foreach ($row in $imageLoadRows) {
+    $match = [regex]::Match($row, $imageLoadPattern)
+    $leaf = [IO.Path]::GetFileName($match.Groups['path'].Value)
+    if ($leaf -ieq $knownAnswerLeaf) {
+        $problems.Add("debugger could not load known-answer image: $row")
+    }
+    else {
+        # TTD replays commonly lack a local image for a recorded system DLL. That
+        # prevents symbols for that DLL, but does not invalidate a BEA query whose
+        # own bytes and dynamic calls are independently checked below.
+        $warnings.Add("debugger could not load unrelated image: $row")
+    }
+}
+$unclassifiedWin32Rows = @(
+    $diagnosticLines |
+        Where-Object {
+            $_ -like '*Win32 error*' -and
+            $_ -notmatch $imageLoadPattern
+        } |
+        Select-Object -Unique
+)
+foreach ($row in $unclassifiedWin32Rows) {
+    $problems.Add("debugger reported an unclassified Win32 error: $row")
+}
 
 # ------------------------------------------------- known-answer cross-check
 $knownAnswerResult = $null
 if ($KnownAnswer) {
     $knownAnswerIndices = @(ExactMarkerIndices $all $KABEG)
-    if ($knownAnswerIndices.Count -eq 0) {
+    if (@($knownAnswerIndices).Count -eq 0) {
         $problems.Add('KNOWN-ANSWER sentinel never appeared - the PE-header compatibility check did not run')
     }
-    elseif ($knownAnswerIndices.Count -ne 1) {
-        $problems.Add("KNOWN-ANSWER sentinel appeared $($knownAnswerIndices.Count) times - the debugger transcript is ambiguous")
+    elseif (@($knownAnswerIndices).Count -ne 1) {
+        $problems.Add("KNOWN-ANSWER sentinel appeared $(@($knownAnswerIndices).Count) times - the debugger transcript is ambiguous")
     }
     $knownAnswerEndIndices =
         if ($NegativeControl) { @(ExactMarkerIndices $all $NCBEG) }
         else { $endIndices }
     $knownAnswerMarkersValid =
         $mainMarkersValid -and
-        $knownAnswerIndices.Count -eq 1 -and
-        $knownAnswerEndIndices.Count -eq 1 -and
+        @($knownAnswerIndices).Count -eq 1 -and
+        @($knownAnswerEndIndices).Count -eq 1 -and
         $bodyEndIndices[0] -lt $knownAnswerIndices[0] -and
         $knownAnswerIndices[0] -lt $knownAnswerEndIndices[0] -and
         $knownAnswerEndIndices[0] -le $endIndices[0]
     if (
-        $knownAnswerIndices.Count -eq 1 -and
-        $knownAnswerEndIndices.Count -eq 1 -and
+            @($knownAnswerIndices).Count -eq 1 -and
+            @($knownAnswerEndIndices).Count -eq 1 -and
         -not $knownAnswerMarkersValid
     ) {
         $problems.Add('KNOWN-ANSWER sentinel appeared out of order')
@@ -461,21 +493,21 @@ if ($NegativeControl) {
     $negativeControlIndices = @(ExactMarkerIndices $all $NCBEG)
     $negativeControlMarkersValid =
         $mainMarkersValid -and
-        $negativeControlIndices.Count -eq 1 -and
+        @($negativeControlIndices).Count -eq 1 -and
         $bodyEndIndices[0] -lt $negativeControlIndices[0] -and
         $negativeControlIndices[0] -lt $endIndices[0] -and
         (
             -not $KnownAnswer -or
             (
-                $knownAnswerIndices.Count -eq 1 -and
+                @($knownAnswerIndices).Count -eq 1 -and
                 $knownAnswerIndices[0] -lt $negativeControlIndices[0]
             )
         )
-    if ($negativeControlIndices.Count -eq 0) {
+    if (@($negativeControlIndices).Count -eq 0) {
         $problems.Add('NEGATIVE-CONTROL sentinel never appeared - the adverse query did not run')
     }
-    elseif ($negativeControlIndices.Count -ne 1) {
-        $problems.Add("NEGATIVE-CONTROL sentinel appeared $($negativeControlIndices.Count) times - the debugger transcript is ambiguous")
+    elseif (@($negativeControlIndices).Count -ne 1) {
+        $problems.Add("NEGATIVE-CONTROL sentinel appeared $(@($negativeControlIndices).Count) times - the debugger transcript is ambiguous")
     }
     elseif (-not $negativeControlMarkersValid) {
         $problems.Add('NEGATIVE-CONTROL sentinel appeared out of order')
@@ -500,7 +532,7 @@ if ($NegativeControl) {
         [regex]::Escape($ABSENT_SENTINEL) +
         '(?:\s|$)'
     $claimedRows = @($nc | Where-Object { $_ -match $moduleRowPattern })
-    $claimedMatch = $claimedRows.Count -gt 0
+    $claimedMatch = @($claimedRows).Count -gt 0
     $negativeControlResult = [pscustomobject]@{
         Sentinel = $ABSENT_SENTINEL
         Output = $ncText
@@ -524,13 +556,14 @@ $result = [pscustomobject]@{
     timedOut        = $timedOut
     ok              = ($problems.Count -eq 0)
     problems        = @($problems)
+    warnings        = @($warnings)
     knownAnswer     = $knownAnswerResult
     negativeControl = $negativeControlResult
     output          = @($body | Where-Object { $null -ne $_ })
 }
 $result | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resultPath -Encoding utf8
 
-if ($result.ok) { Write-Host "OK  - $($result.output.Count) output lines; $resultPath" }
+if ($result.ok) { Write-Host "OK  - $(@($result.output).Count) output lines; $resultPath" }
 else { Write-Host ("FAIL - " + ($problems -join '; ')) -ForegroundColor Red }
 $result
 if (-not $result.ok) { exit 1 }

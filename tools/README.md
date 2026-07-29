@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-07-28
+Last updated: 2026-07-29
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -82,13 +82,26 @@ fidelity.
   **gate**: `rebuild/tools/Capture-Frontend.ps1` folds its verdict into `Status`,
   so a frontend regression fails the capture. Its thresholds live in
   `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
-  parity claims — each sits beside the measured value it was derived from.
+  parity claims. The plan stores each measured value plus the single
+  `marginPp: 2.0` regression allowance used to derive its ceiling.
 
 A run that can score nothing reports `UNSCORED`, never `PASS`. Reference frames
 are retail-derived and live under ignored local paths, so a fresh clone scores
 nothing and must say so.
 
 ## Ghidra and runtime research
+
+[`../PARITY_LAB.md`](../PARITY_LAB.md) is the engine-neutral function-discovery
+and parity-pipeline authority. `parity_lab.py` joins repeated `drcov` or TTD
+Replay coverage to exact Ghidra ranges, emits queryable evidence bundles, and
+generates RVA-safe debugger symbols. `ExportParityLabGraph.java` publishes its
+range/call pair only with a final hash-bound READY receipt;
+`ExportBSimCandidates.java` is a read-only, identity-bound Stuart-source
+candidate exporter. The matching focused gate is:
+
+```powershell
+py -3 tools\parity_lab_tests.py
+```
 
 The retained Java scripts are generic address, metadata, tag, disassembly,
 xref, scalar, vtable, analysis-attribution, and reviewed-correction helpers.
@@ -114,18 +127,20 @@ tool's own documentation, not here.
 
 - [`d3d9-proxy/`](d3d9-proxy/README.md) — a passive Direct3D 9 draw-call
   recorder for a **copied** target. It records, per frame and in draw order,
-  every draw call with the render state in force and the vertex data, which for
-  this title means literal screen coordinates. It exists because there is no HUD
-  element *position* table in the shipped data, so positions were previously
-  recovered by fitting pixels. It modifies no executable: `d3d9` is not a
-  `KnownDLL`, so a `d3d9.dll` beside the application wins the load.
+  every accounted draw call with the render state in force. Vertex/index bytes
+  are present only where the configured cap and implemented extraction path
+  cover them; refusals and omissions remain explicit rather than being called
+  complete geometry. It exists because there is no HUD element *position* table
+  in the shipped data, so positions were previously recovered by fitting
+  pixels. It modifies no executable: `d3d9` is not a `KnownDLL`, so a `d3d9.dll`
+  beside the application wins the load.
   `Run-D3D9Capture.ps1` and `Run-FrontendPageCapture.ps1` drive it.
 - `ttd_record.ps1` / `ttd_query.ps1` / `Record-GameMoment.ps1` — Time Travel
-  Debugging. `ttd_record.ps1` records one run's complete user-mode instruction
-  and memory history into a `.run` file; `ttd_query.ps1` then answers any number
-  of later questions offline against that file, with no relaunch and no input.
-  `Record-GameMoment.ps1` attaches to a game that is already running at full
-  speed, records a fixed number of seconds, and leaves it running.
+  Debugging. `ttd_record.ps1` records a bounded launch or attach interval until
+  the requested duration, guest exit, free-space stop, or configured file cap.
+  `ttd_query.ps1` answers later offline questions against the resulting trace.
+  `Record-GameMoment.ps1` attaches to an already-running copied target, records
+  the requested interval, and normally leaves the target running.
   **Standing caveat: TTD recording requires an elevated token**, and this
   machine has no `TTDService`, so each recording raises a UAC prompt.
 

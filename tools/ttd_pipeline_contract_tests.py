@@ -428,6 +428,53 @@ class TtdPipelineContractTests(unittest.TestCase):
             )
             self.assertEqual([], result["output"])
 
+    def test_query_warns_for_unrelated_recorded_image_load_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            trace = root / "sample.run"
+            trace.write_bytes(b"trace")
+            fake = root / "fake-cdb.cmd"
+            fake.write_text(
+                "@echo off\n"
+                "echo Unable to load image C:\\WINDOWS\\SYSTEM32\\ntdll.dll, Win32 error 0n2\n"
+                "echo === TTDQUERY BEGIN ===\n"
+                "echo === TTDQUERY OUTPUT END ===\n"
+                "echo === TTDQUERY COMPLETE ===\n"
+                "exit /b 0\n",
+                encoding="ascii",
+            )
+            out_dir = root / "query"
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoLogo",
+                    "-NoProfile",
+                    "-File",
+                    str(QUERY),
+                    "-Trace",
+                    str(trace),
+                    "-OutDir",
+                    str(out_dir),
+                    "-CdbPath",
+                    str(fake),
+                ],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                0,
+                completed.returncode,
+                completed.stdout + completed.stderr,
+            )
+            result = json.loads(
+                (out_dir / "result.json").read_text(encoding="utf-8-sig")
+            )
+            self.assertEqual([], result["problems"])
+            self.assertEqual(1, len(result["warnings"]))
+            self.assertIn("ntdll.dll", result["warnings"][0])
+
     def test_negative_control_rejects_module_row_despite_unrelated_warning(
         self,
     ) -> None:
