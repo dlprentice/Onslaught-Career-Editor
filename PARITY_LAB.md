@@ -1412,6 +1412,34 @@ It is `COMPARABLE`, not a semantic function-name verdict. Whole-process
 action-associated candidates until an event-bounded TTD query proves receiver,
 argument, caller, and state effect.
 
+### Options TTD attempts: no action proof, not a negative finding
+
+Evidence: **MEASURED `UNSCORED` attempts** from two copied-target attach
+recordings and their symbol-bound TTD queries.
+
+Two automated attempts recorded valid trace bytes, but neither produced a
+successful page-`0x11` orchestration receipt:
+
+| Attempt | Trace bytes | Trace SHA-256 | Queried calls |
+| --- | ---: | --- | --- |
+| short | 729,808,896 | `6085F250E032248B9B962028932D0F345FE4BAC44B8B8E8ABC908CB61DC7270C` | `PauseMenu__Init` 0/0; `CFEPOptions__EnsureOptionsContext` 0/0 |
+| extended | 9,302,966,272 | `E6AF52464513338FB3B542C56B3674A09995F3CD5A88E432AD5702111005D93D` | `PauseMenu__Init` 0/0; `CFEPOptions__EnsureOptionsContext` 0/0 |
+
+For each query, symbolic and numeric counts agreed, and the known-answer and
+negative controls passed. That proves the query machinery worked; it does not
+establish that the Options action occurred. The short and extended query
+receipts are
+`local-lab/options-ttd-candidate-count-v1/result.json` (SHA-256
+`0A2853C189BC7A06B826BC6DEA6A4E9501FBB9265664A98B0735602F24545128`)
+and `local-lab/options-ttd-candidate-5m-count-v1/result.json` (SHA-256
+`E4D25852015C07675A3DBB59E99D967C6B5903E75A60CF007DA4D04FB36DBE4B`).
+
+Verdict: both attempts are failed-action evidence. They do not show that either
+function is absent, do not adjudicate receiver or arguments, and do not support
+a frontend contract. A second, much larger recording produced the same
+non-observation, so more unattended retries are not justified. The rejected
+trace directories were deleted after recording these hashes and receipts.
+
 ## Short TTD recording: keep it, but measure its stop path
 
 Evidence: **MEASURED limitation** plus **SOURCE-backed API constraints**.
@@ -2536,7 +2564,8 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
 - [x] action canaries pass in every action and no baseline;
 - [x] stable queue reproduced in a second independent campaign;
 - [ ] separate-day recurrence, if later work needs that stronger independence;
-- [ ] TTD adjudication of odd/subobject candidates;
+- [ ] TTD adjudication of odd/subobject candidates; two automated attempts
+      failed the action canary and remain `UNSCORED`;
 - [ ] first engine-neutral frontend transition contract.
 
 ### M3 — TTD Replay one-pass backend
@@ -2605,8 +2634,13 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
 
 ## The next experiment to run
 
-The repeated `drcov` campaign is complete. The next work is one short,
-event-bounded TTD adjudication of its leading shared-widget candidate:
+The repeated `drcov` campaign is complete. Two unattended TTD attempts did not
+produce evidence that the Options action occurred, so the next experiment
+requires one manual action during an attach capture. Start the copied game at
+full speed, settle on the main menu with the Options row ready, attach TTD, wait
+for the recorder's `RECORDING` banner and slowdown, and have the maintainer click
+Options while recording. Then run the same event-bounded adjudication of the
+leading shared-widget candidate:
 
 ```text
 candidate: PauseMenu__Init at 0x004CDE60
@@ -2905,6 +2939,7 @@ any other client.
 | BSim query/export | current identity-bound script: 15 queries, 342 matches, 0 errors, stable output SHA, immutable read-only database hash |
 | BSim no-clobber | existing output identity preserved; 200/200 concurrent publication races admit exactly one writer |
 | PowerShell parsing | all eight relevant build/record/invoke scripts have zero parser errors |
+| Options TTD attempts | two symbol-bound queries passed known-answer/negative controls but produced no successful page-action receipt; results are `UNSCORED`, and the rejected 10,032,775,168 trace bytes were deleted |
 | apitrace cleanup canary | owned `Kill($true)` terminated one parent and two observed children; zero survivors; source contract requires BEA ancestry and does not kill ambiguous same-path survivors |
 | apitrace recovery | raw partial and recovered traces yield 466/466 identical ordered snapshots; recovered trace is EOF-clean, raw EOF is expected |
 | mutation boundary | installed `BEA.exe` still matches the prior documented SHA-256 `E7881829…C918`; no local `d3d9.dll` or BEA/TTD/CDB process remains in either installed or copied-target lane |
@@ -2957,7 +2992,9 @@ The remaining function problem is now mechanically approachable:
 - CPU, D3D9, TTD, images, and receipts can live in one verified query layer.
 
 What remains is substantial but no longer shapeless. Finish the event-bounded
-Options adjudication, then apply the same finite loop to the 144 Mission natives, 26
-definition selectors, Career/save paths, movement, damage, weapons, AI,
-loaders, rendering, and audio. Every wave has an explicit denominator, canary,
-artifact, failure state, and promotion gate.
+Options adjudication with a maintainer-performed click during TTD recording;
+unattended input has produced no successful action receipt twice. Then apply the
+same finite loop to the 144 Mission natives, 26 definition selectors,
+Career/save paths, movement, damage, weapons, AI, loaders, rendering, and audio.
+Every wave has an explicit denominator, canary, artifact, failure state, and
+promotion gate.
