@@ -21,6 +21,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 
 
@@ -3956,7 +3957,8 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
 # (game.cpp:1166), and nothing in the reconstruction produces that signal yet.
 # Decoding 62 MB of frames nothing can play would be retention without a
 # consumer.
-STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v1"
+STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v3"
+STARTUP_FRAME_SET_DOMAIN = b"onslaught-startup-frame-set.v1\0"
 STARTUP_MEDIA_CLIPS = (
     ("LostToysLogo", "data/video/LTLogo.vid", "lost-toys-logo", 480, 300, 25, 229),
     ("OpeningMontage", "data/video/OpeningFMV.vid", "opening-montage", 480, 300, 25, 2054),
@@ -3974,6 +3976,172 @@ def _default_startup_media_root() -> Path:
     if local:
         return Path(local) / "OnslaughtToolkit" / "startup-media"
     return ROOT / "local-lab/startup-media"
+
+
+def _png_dimensions(path: Path) -> tuple[int, int] | None:
+    """Validate a complete PNG chunk stream and return its IHDR dimensions."""
+    png_signature = bytes((0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
+    try:
+        with path.open("rb") as stream:
+            file_size = path.stat().st_size
+            if stream.read(8) != png_signature:
+                return None
+
+            dimensions: tuple[int, int] | None = None
+            rgb8_noninterlaced = False
+            idat = bytearray()
+            first_chunk = True
+            for _ in range(4096):
+                chunk_header = stream.read(8)
+                if len(chunk_header) != 8:
+                    return None
+                length = int.from_bytes(chunk_header[:4], "big")
+                kind = chunk_header[4:8]
+                if stream.tell() + length + 4 > file_size:
+                    return None
+
+                payload = stream.read(length)
+                stored_crc = stream.read(4)
+                if len(payload) != length or len(stored_crc) != 4:
+                    return None
+                actual_crc = zlib.crc32(kind)
+                actual_crc = zlib.crc32(payload, actual_crc) & 0xFFFFFFFF
+                if actual_crc != int.from_bytes(stored_crc, "big"):
+                    return None
+
+                if kind == b"IHDR":
+                    if not first_chunk or length != 13:
+                        return None
+                    dimensions = (
+                        int.from_bytes(payload[:4], "big"),
+                        int.from_bytes(payload[4:8], "big"),
+                    )
+                    rgb8_noninterlaced = payload[8:] == bytes((8, 2, 0, 0, 0))
+                elif kind == b"IDAT":
+                    idat.extend(payload)
+                if kind == b"IEND":
+                    if (
+                        length != 0
+                        or dimensions is None
+                        or not rgb8_noninterlaced
+                        or not idat
+                        or stream.tell() != file_size
+                    ):
+                        return None
+                    width, height = dimensions
+                    row_bytes = 1 + width * 3
+                    expected_bytes = height * row_bytes
+                    decoder = zlib.decompressobj()
+                    decoded = decoder.decompress(idat, expected_bytes + 1)
+                    if len(decoded) <= expected_bytes and not decoder.unconsumed_tail:
+                        decoded += decoder.flush(expected_bytes + 1 - len(decoded))
+                    if (
+                        not decoder.eof
+                        or decoder.unused_data
+                        or decoder.unconsumed_tail
+                        or len(decoded) != expected_bytes
+                        or any(decoded[row * row_bytes] > 4 for row in range(height))
+                    ):
+                        return None
+                    return dimensions
+                first_chunk = False
+    except (OSError, zlib.error):
+        return None
+    return None
+
+
+def _startup_frame_set_sha256(paths: list[Path]) -> str:
+    """Hash one ordered frame set without inflating every PNG on each launch."""
+    digest = hashlib.sha256()
+    digest.update(STARTUP_FRAME_SET_DOMAIN)
+    for path in paths:
+        name = path.name.encode("ascii")
+        size = path.stat().st_size
+        digest.update(name)
+        digest.update(b"\0")
+        digest.update(str(size).encode("ascii"))
+        digest.update(b"\0")
+        with path.open("rb") as stream:
+            while chunk := stream.read(1024 * 1024):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _startup_media_ready(game_root: Path, media_root: Path) -> bool:
+    """Return true for a complete, structurally valid cache of this retail data."""
+    try:
+        manifest_path = media_root / "startup-media.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            return False
+        if manifest.get("schema") != STARTUP_MEDIA_SCHEMA:
+            return False
+
+        clips = manifest.get("clips")
+        stills = manifest.get("stills")
+        if not isinstance(clips, dict) or not isinstance(stills, dict):
+            return False
+
+        expected_cues = {cue for cue, *_ in STARTUP_MEDIA_CLIPS}
+        if set(clips) != expected_cues:
+            return False
+
+        for cue, relative, folder, width, height, fps, frames in STARTUP_MEDIA_CLIPS:
+            entry = clips.get(cue)
+            if not isinstance(entry, dict):
+                return False
+
+            source = game_root / relative
+            expected_format = f"{folder}/f{{0:D5}}.png"
+            if (
+                not source.is_file()
+                or entry.get("source") != relative
+                or entry.get("sourceSha256") != _sha256(source.read_bytes())
+                or entry.get("width") != width
+                or entry.get("height") != height
+                or entry.get("fpsNumerator") != fps
+                or entry.get("fpsDenominator") != 1
+                or entry.get("frameCount") != frames
+                or entry.get("framePathFormat") != expected_format
+            ):
+                return False
+
+            destination = media_root / folder
+            expected_names = [f"f{index:05d}.png" for index in range(1, frames + 1)]
+            actual = sorted(path.name for path in destination.glob("f*.png"))
+            if actual != expected_names:
+                return False
+            frame_paths = [destination / name for name in expected_names]
+            if entry.get("framesSha256") != _startup_frame_set_sha256(frame_paths):
+                return False
+            # Generation validates every decoded frame before publishing the
+            # digest above. Re-inflating all 5,378 PNGs on each launch added
+            # roughly 24 seconds; the ordered digest still checks every byte.
+            edge_names = {expected_names[0], expected_names[-1]}
+            if any(
+                _png_dimensions(destination / name) != (width, height)
+                for name in edge_names
+            ):
+                return False
+
+        splash = stills.get("Splash")
+        splash_source = game_root / STARTUP_MEDIA_SPLASH_SOURCE
+        splash_path = media_root / "splash.png"
+        if (
+            not isinstance(splash, dict)
+            or not splash_source.is_file()
+            or splash.get("source") != STARTUP_MEDIA_SPLASH_SOURCE
+            or splash.get("sourceSha256") != _sha256(splash_source.read_bytes())
+            or splash.get("path") != "splash.png"
+            or not splash_path.is_file()
+            or splash.get("outputSha256") != _sha256(splash_path.read_bytes())
+            or _png_dimensions(splash_path) != (512, 512)
+        ):
+            return False
+
+        return True
+    except (OSError, UnicodeError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+        return False
 
 
 def _ffprobe_stream(source: Path) -> dict[str, str]:
@@ -4057,6 +4225,18 @@ def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
             raise RuntimeError(
                 f"{relative} decoded to {len(written)} frames, expected {frames}"
             )
+        malformed = next(
+            (
+                frame
+                for frame in written
+                if _png_dimensions(frame) != (width, height)
+            ),
+            None,
+        )
+        if malformed is not None:
+            raise RuntimeError(
+                f"{relative} produced an invalid {width}x{height} PNG: {malformed}"
+            )
 
         index["clips"][cue] = {  # type: ignore[index]
             "source": relative,
@@ -4067,6 +4247,7 @@ def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
             "fpsDenominator": 1,
             "frameCount": frames,
             "framePathFormat": f"{folder}/f{{0:D5}}.png",
+            "framesSha256": _startup_frame_set_sha256(written),
         }
 
     splash_source = game_root / STARTUP_MEDIA_SPLASH_SOURCE
@@ -4080,10 +4261,17 @@ def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
         ],
         check=True,
     )
+    splash_output = media_root / "splash.png"
+    if _png_dimensions(splash_output) != (512, 512):
+        raise RuntimeError(
+            f"{STARTUP_MEDIA_SPLASH_SOURCE} produced an invalid 512x512 PNG: "
+            f"{splash_output}"
+        )
     index["stills"]["Splash"] = {  # type: ignore[index]
         "source": STARTUP_MEDIA_SPLASH_SOURCE,
         "sourceSha256": _sha256(splash_source.read_bytes()),
-        "path": "splash.png",
+        "path": splash_output.name,
+        "outputSha256": _sha256(splash_output.read_bytes()),
     }
 
     manifest = media_root / "startup-media.json"
@@ -4130,6 +4318,9 @@ def main() -> int:
         try:
             game_root = _resolve_game_root(args.game_root)
             media_root = args.startup_media_root or _default_startup_media_root()
+            if not args.force and _startup_media_ready(game_root, media_root):
+                print(f"startup media ready: {media_root / 'startup-media.json'}")
+                return 0
             manifest = _materialize_startup_media(game_root, media_root)
         except (OSError, RuntimeError, UnicodeError, ValueError, KeyError,
                 subprocess.SubprocessError) as error:

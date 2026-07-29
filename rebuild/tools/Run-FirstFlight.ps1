@@ -21,6 +21,20 @@ $toolchain = & (Join-Path $PSScriptRoot 'Build-FirstFlight.ps1') @buildArguments
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\OnslaughtRebuild.Godot'))
 
 try {
+    $mediaArguments = @(
+        '-3',
+        (Join-Path $PSScriptRoot 'materialize_retail_assets.py'),
+        '--startup-media'
+    )
+    if (-not [string]::IsNullOrWhiteSpace($GameRoot)) {
+        $mediaArguments += @('--game-root', $GameRoot)
+    }
+
+    & py @mediaArguments | ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Retail startup-media preparation failed with exit code $LASTEXITCODE."
+    }
+
     $engineArgs = @('--path', $projectRoot, '--windowed', '--resolution', '1280x720')
     & $toolchain.EnginePath @engineArgs
     $engineExitCode = $LASTEXITCODE
