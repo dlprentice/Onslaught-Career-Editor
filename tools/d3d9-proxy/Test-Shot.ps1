@@ -123,7 +123,7 @@ for frame, rgb in want:
     if not os.path.exists(p):
         res.append([frame, "missing", None, None]); continue
     b = open(p, "rb").read()
-    assert b[:8] == b"\x89PNG\r\n\x1a\n", "signature"
+    assert b[:8] == bytes((0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)), "signature"
     o, w, h, idat = 8, None, None, b""
     while o < len(b):
         ln = struct.unpack(">I", b[o:o+4])[0]

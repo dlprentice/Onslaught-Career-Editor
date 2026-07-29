@@ -72,6 +72,19 @@ public class SaveEditorFirstSaveJourneyTests
         ];
 
         Assert.That(changed.Select(SaveEditorPlanFingerprint.Build), Has.All.Not.EqualTo(fingerprint));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                SaveEditorPlanFingerprint.Build(BuildRequest(rank: null)),
+                Is.Not.EqualTo(SaveEditorPlanFingerprint.Build(BuildRequest(rank: string.Empty))));
+            Assert.That(
+                SaveEditorPlanFingerprint.Build(BuildRequest(useNewGoodies: null)),
+                Is.Not.EqualTo(SaveEditorPlanFingerprint.Build(BuildRequest(useNewGoodies: false))));
+            Assert.That(
+                SaveEditorPlanFingerprint.Build(BuildRequest(globalKills: null)),
+                Is.Not.EqualTo(SaveEditorPlanFingerprint.Build(BuildRequest(globalKills: 0))));
+        });
     }
 
     [Test]
@@ -578,9 +591,9 @@ public class SaveEditorFirstSaveJourneyTests
     private static SavePatchRequest BuildRequest(
         string input = "career.bes",
         string output = "career_patched.bes",
-        string rank = "S",
-        bool useNewGoodies = false,
-        int globalKills = 100,
+        string? rank = "S",
+        bool? useNewGoodies = false,
+        int? globalKills = 100,
         bool patchNodes = true,
         bool patchLinks = true,
         bool patchGoodies = true,
