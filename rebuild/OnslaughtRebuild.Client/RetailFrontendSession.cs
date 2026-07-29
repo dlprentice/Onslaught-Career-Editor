@@ -496,10 +496,10 @@ public enum RetailFrontendScreen
 
     /// <summary>
     /// Retail FEP_OPTIONS (page 0x11, vtable 0x005DB8A8), reached from the main
-    /// menu's Options entry. CFEPOptions builds no rows of its own: it calls
-    /// PauseMenu__Init (0x004CDE60) with mode 1 and renders through
-    /// CPauseMenu__Render, so the frontend Options page and the in-game options
-    /// pages are literally the same widget tree.
+    /// menu's Options entry. CFEPOptions uses the pause-menu initializer and
+    /// render implementation, lazily retaining a frontend-specific context and
+    /// resetting its root session on each entry. The in-game pause menu is a
+    /// distinct runtime instance of the same widget implementation.
     ///
     /// Reference frames: local-lab/retail-captures-options-pause-2026-07-27/
     /// fep-options-{root,controller,video,sound}-640x480.png.

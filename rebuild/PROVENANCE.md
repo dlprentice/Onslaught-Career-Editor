@@ -152,11 +152,16 @@ own rather than a new surface: read from the pristine specimen
 2,506,752 bytes) during this pass, the vtable at `0x005DB8A8` holds eight
 entries inside one `.text` cluster (`0x0051F4B0`–`0x0051F7E0`), and within that
 cluster at `0x0051F8A6` the image executes `6a 01 8b c8 e8 b1 e5 fa ff` —
-`push 1; mov ecx,eax; call 0x004CDE60` — so the frontend Options page enters,
-with mode `1`, the same routine that builds the in-game pause options. **Those
-bytes are measured here; the names `CFEPOptions` and `PauseMenu__Init` and the
-FEP page id `0x11` are the live Ghidra database's and the implementation's own
-comment, and are not established by this document.**
+`push 1; mov ecx,eax; call 0x004CDE60`. That branch lazily creates the frontend
+Options context with mode `1`; it is not taken on every entry. A replayable
+manual trace observed the same non-null frontend context reused across two
+entries. Static branch evidence shows that state takes the reuse path, and both
+observed transitions called `CPauseMenu__InitPauseSession`, which resets the
+session each time. The frontend and in-game menus therefore share
+initializer/widget behavior but are distinct runtime instances. **Those bytes
+and positive calls establish the branch/session shape;
+the names `CFEPOptions`, `PauseMenu__Init`, and the FEP page id `0x11` come from
+the reviewed Ghidra/source mapping rather than from this byte sequence alone.**
 **Thirty-two** exact AYA textures —
 `rebuild/tools/materialize_retail_assets.py`'s `FRONTEND_ASSETS` is
 authoritative for that count and should be re-read rather than quoted from

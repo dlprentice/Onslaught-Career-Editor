@@ -2761,6 +2761,13 @@ public sealed partial class RetailFrontendFlow : Control
             return;
         }
 
+        // CFEPOptions::TransitionNotification reuses one persistent frontend
+        // pause-menu context/tree but starts a fresh root session on each entry.
+        if (_session.Screen == RetailFrontendScreen.Options)
+        {
+            _options.Reset();
+        }
+
         RequestAudioCue(RetailFrontendAudioCue.Select);
         HandleNavigationSignal(signal);
         if (signal == RetailFrontendSignal.ExitRequested)

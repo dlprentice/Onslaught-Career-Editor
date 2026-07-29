@@ -80,11 +80,10 @@ or parallel mission/frontend state is inferred.
 > `../../RetailFrontendFlow.Options.cs`, which calls
 > `DisplayServer.WindowSetVsyncMode` and raises `OptionsSettingsChanged`, and
 > `../../FirstFlightGame.cs` subscribes to that and applies the sound, music and
-> mouse-sensitivity values. `RetailFrontendSession`'s own doc comment records
-> why this is the same widget tree: "CFEPOptions builds no rows of its own: it
-> calls PauseMenu__Init (0x004CDE60) with mode 1 and renders through
-> CPauseMenu__Render, so the frontend Options page and the in-game options pages
-> are literally the same widget tree."
+> mouse-sensitivity values. The frontend Options page and in-game pause menu use
+> the same pause-menu initializer/widget implementation, but controlled runtime
+> evidence shows distinct instances: frontend Options retains its own context
+> and resets that context's root session on each entry.
 >
 > **What is NOT claimed:** how much work remains to wire these three pause rows
 > to that owner. Nothing here has been measured against retail's in-game Options

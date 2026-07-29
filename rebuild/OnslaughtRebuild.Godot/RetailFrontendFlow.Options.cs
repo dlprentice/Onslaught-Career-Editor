@@ -627,7 +627,6 @@ public sealed partial class RetailFrontendFlow
         {
             return;
         }
-        _options.Reset();
         RequestAudioCue(RetailFrontendAudioCue.Back);
         HandleNavigationSignal(frontend);
         QueueRedraw();
