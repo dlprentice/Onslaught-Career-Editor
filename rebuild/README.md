@@ -1,10 +1,9 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-07-28. Four claims were corrected in place on that date — the
-startup page list, the pine mesh-quality boundary, the frontend's owned screens,
-and the mouse-sensitivity clause — each with the old text quoted. **Nothing else
-was re-reviewed by that pass.**
+Last updated: 2026-07-29. Current startup/frontend, pine-detail, and
+mouse-sensitivity claims were re-reviewed. Other sections retain
+their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
@@ -26,16 +25,18 @@ of readiness tooling.
   state and rolling trace hashes.
 - `OnslaughtRebuild.Godot` renders Core snapshots and supplies player input.
 
-The current Godot app is the **Level 100 Opening Slice**. Normal startup follows
-the released click-to-start page, v3 main-menu language, retail's career-name
-page, a Level 100-only level selector, the mission-briefing and
-select-configuration pages, and the released loading-screen language before
-constructing the existing gameplay world.
+The current Godot app is the **Level 100 Opening Slice**. With locally
+materialized media, a plain launch plays the released Lost Toys logo, opening
+montage, and splash before click-to-start, v3 main-menu language, retail's
+career-name page, a Level 100-only level selector, the mission-briefing and
+select-configuration pages, and loading. Loading constructs the Level 100
+world; the first-time intro then plays before gameplay activation.
+`--skipfmv`, smoke, and capture modes suppress those video sequences. Their
+Bink audio streams are not decoded, so video playback is currently silent.
 (*Extended 2026-07-28: this read "click-to-start page, v3 main-menu language, a
 Level 100-only level selector, and the released loading-screen language". The
 three pages added had already shipped; see* `## Current truth` *below for the
-full list and its authority.*) The startup movie is deliberately omitted, matching
-the retail `-skipfmv` path's arrival at click-to-start. It renders the locally
+full list and its authority.*) It renders the locally
 materialized released Federation Aquila; all 33 visible static objects
 serialized by Level 100; exact close meshes for the 1,481 pine placements
 instantiated by the Steam world loader; the released active-path water grid and
@@ -51,11 +52,13 @@ height contacts select independent `LegMotion` extension poses for each leg.
 The exact 54-part jet and 21-part cockpit hierarchies own the bounded
 walker-to-jet presentation. The 24 non-tree static-world mesh types, four pine
 variants, and two target types retain bounded static conversions. The 1,481
-pine placements use their exact meshes inside retail's **authored 30-unit**
+pine placements use their exact meshes inside the released out-of-box
+**Medium-detail 30-unit**
 mesh-quality boundary and their six-face imposters outside it.
 (*Corrected 2026-07-27, recorded here 2026-07-28: this read "inside the selected
-released high-quality 70-unit boundary".* `70.0` *was not a released value — it
-was this workstation's saved* `defaultoptions.bea`*, i.e. persisted run state.
+released high-quality 70-unit boundary".* `70.0` *is the released High-detail
+arm, but it was not the released out-of-box/current default; this workstation's
+saved* `defaultoptions.bea` *selected it.
 The image's own static initialiser is* `30.0f` *at file* `0x2321A0` *of the
 pristine specimen* `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`*,
 SHA-256* `74154bfa…`*, read again during this pass; the released out-of-box
@@ -163,7 +166,8 @@ Controls:
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` page, implemented visually and sequentially only —
 no save and no career persistence), Options, the Level 100-only selector,
-Mission Briefing, Select Configuration, and Loading. The
+Mission Briefing, Select Configuration, Loading, and the Level 100 intro
+cutscene. The
 `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; read it rather than this sentence when the two disagree.
@@ -246,8 +250,9 @@ second sensitivity.
 
 > **Superseded 2026-07-27, recorded here 2026-07-28.** The list above previously
 > read "mouse inversion and sensitivity settings other than the copied Steam
-> `1.5` baseline". **`1.5` is not a Steam value and no retail player can select
-> it.** Retail's slider law is `g_MouseSensitivity = (index + 1) * 3.0f` with max
+> `1.5` baseline". **`1.5` is not a released default or UI-selectable value.**
+> It was a copied-options test setting consumed by the retail executable.
+> Retail's slider law is `g_MouseSensitivity = (index + 1) * 3.0f` with max
 > index `0x14`, so the reachable set is `{3, 6, … 63}` and `1.5` is below the
 > floor; it reached the reconstruction from the copied `defaultoptions.bea` those
 > runs were configured through, which is persisted run state rather than an

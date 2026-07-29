@@ -1,8 +1,8 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-07-28. Only the rebuild entry-path sentence was corrected on
-that date, in place and with the old text quoted; nothing else was re-reviewed.
+Last updated: 2026-07-29. The rebuild entry path and its current media boundary
+were re-reviewed; nothing else was re-reviewed.
 Summary: what this project is, which surfaces are active, and where each lane's
 authoritative document lives.
 
@@ -20,11 +20,14 @@ game, its assets, names, or trademarks.
 The toolkit never replaces or mutates the installed retail game. The
 GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
-now enters through a bounded released-style click-to-start, main menu, a
-career-name entry page (visual only — it saves nothing), Level 100 selector,
-mission briefing, select configuration, and loading handoff into the canonical
-Level 100 simulation; an Options page and a quit confirmation are reachable from
-the main menu. The
+now enters through the locally materialized released Lost Toys logo, opening
+montage, and splash, then click-to-start, main menu, a career-name entry page
+(visual only — it saves nothing), Level 100 selector, mission briefing, select
+configuration, and loading. Loading constructs the Level 100 world; the
+first-time intro then plays before gameplay activation. An Options page and a
+quit confirmation are reachable from
+the main menu. The video sequences are currently silent because their Bink
+audio streams have not been decoded or assigned to a language. The
 frontend owns no gameplay, save, result, or later campaign-selection state. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by

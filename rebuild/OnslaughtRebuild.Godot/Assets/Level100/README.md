@@ -354,12 +354,13 @@ all-distance billboard owner. The static ownership trace is:
   at `0x004DD960` submits the full mesh when squared horizontal camera distance
   is at or below `g_MeshQualityDistance²`, or while the tree is falling. The
   image initializes that option-backed global to **`30.0`** (`.data`
-  `0x006321A0`, file `0x231CA0` = `00 00 F0 41`), and that is the value manifest
+  `0x006321A0`, file `0x2321A0` = `00 00 F0 41`), and that is the value manifest
   v7 now selects — **corrected from `70.0` on 2026-07-27 under GOAL.md's
   defaults rule.** The "Geometry detail" setter at `0x004DD6B0` has exactly
   three arms writing `10.0` / `30.0` / `70.0` to that global, and the image's
-  companion initializers (LOD bias `0x00631E88` = `1.0`, quality scale
-  `0x00630E0C` = `1.0`) pick out the middle arm uniquely. Boot-time
+  companion initializers (LOD bias `0x00631E88`, file `0x231E88` = `1.0`;
+  quality scale `0x00630E0C`, file `0x230E0C` = `1.0`) pick out the middle arm
+  uniquely. Boot-time
   `CCareer::Load(flag=0)` then overwrites it from `defaultoptions.bea`
   OptionsTail `+0x0C`, which is **persisted user state, not shipped data**: this
   machine's snapshot stores `70.0` (`0x428C0000`) at file offset `0x26CA` while
@@ -423,7 +424,7 @@ The four close meshes are not cards: their exact converted topology is
 `674/499`, `411/270`, `586/396`, and `598/396` vertices/triangles for
 `pinesnow0..3`. They select three exact 256×256 BC2 snowy bark/needle textures.
 The authored placement data also proves overlap: only 15 pine owners lie inside
-the **selected 30-unit** high-quality boundary at player start, while 616 lie
+the **selected 30-unit Medium-detail** boundary at player start, while 616 lie
 inside the 70-unit boundary this reconstruction used before 2026-07-27. The
 nearest six form a cluster only 3.51–5.21 units from the start.
 
@@ -680,7 +681,8 @@ endpoints were `+0.5321228` and `-1.0911411..-1.0912496`. Two player-owned
 Pulse Cannon rounds then repeated the crosshair-derived unit direction within
 `0.00119` per component. These bounds apply to the authored start slope;
 terrain-relative limiting, mouse inversion and sensitivity settings other than
-the copied Steam `1.5` baseline, auto-aim, and
+the copied test setting `1.5`—which is below the retail slider's selectable
+`{3, 6, …, 63}` values—auto-aim, and
 vertical target collision are not claimed.
 
 `TargetZone1.msl` and `FiringRange.msl` each request a 0.5-second wait before

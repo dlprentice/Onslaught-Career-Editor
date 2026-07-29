@@ -1,11 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-07-28. Several claims were corrected or amended in place on
-that date — the frontend page list, the frontend AYA texture count, the
-mouse-sensitivity measurement, and the dead "Manifest v7" label — each under its
-own dated block. **A dated block is the record of what was reviewed; nothing
-outside one was re-checked.**
+Last updated: 2026-07-29. Current startup/frontend, partial-source inventory,
+frontend-asset, mouse-sensitivity, and retained-particle claims were
+re-reviewed. Other sections retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
@@ -55,9 +53,11 @@ slower and produces *worse* results, because the decompiler cannot recover
 intent, naming or control-flow shape the way the developers' own text can.
 
 **But the drop is PARTIAL, and this is the single most important fact about it.**
-Measured 2026-07-26: 105 files present, **200 `#include`d headers absent, and 174
-implementation files missing**. Do not assume a file exists because the game
-obviously has that subsystem. Check first.
+A 2026-07-28 re-count found 106 tracked `.h`/`.cpp` source files. Most include
+project headers absent from the drop; the exact missing-header count depends on
+the system-header filter. No evidence supports a count of missing implementation
+files. Do not assume a file exists because the game obviously has that
+subsystem. Check first.
 
 Work the partition:
 
@@ -122,16 +122,20 @@ not provenance.
 ## Current slice
 
 The normal Godot entry path now belongs to a presentation-only frontend state
-machine outside Core. It begins at click-to-start, then exposes the released
-main-menu entries, a quit confirmation, retail's `CHOOSE GAME NAME` career-name
-page (visual and sequential only — no save and no career persistence), an
-Options page, a world-100-only level selector, the mission-briefing and
-select-configuration pages, the released loading image,
+machine outside Core. With locally materialized media, a plain launch plays the
+released Lost Toys logo, opening montage, and splash before click-to-start, then
+exposes the released main-menu entries, a quit confirmation, retail's
+`CHOOSE GAME NAME` career-name page (visual and sequential only — no save and no
+career persistence), an Options page, a world-100-only level selector, the
+mission-briefing and select-configuration pages, the released loading image, the
+released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
 Level 100 session/world. The `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
-that list; re-read it rather than quoting this sentence. The
-startup FMV is absent: Steam's `-skipfmv` flag at
+that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
+and capture modes suppress the reconstructed video sequences. Their Bink audio
+streams are not decoded, so video playback is currently silent. Steam's
+`-skipfmv` flag at
 `CLIParams__ParseCommandLine` (`0x00423BC0`) skips that movie but still reaches
 the click page. That page's Steam handlers at `0x0051B660`/`0x0051B6B0` accept
 action `0x2C` and full-window mouse input; its render entry at `0x0051B840`
@@ -153,7 +157,7 @@ with mode `1`, the same routine that builds the in-game pause options. **Those
 bytes are measured here; the names `CFEPOptions` and `PauseMenu__Init` and the
 FEP page id `0x11` are the live Ghidra database's and the implementation's own
 comment, and are not established by this document.**
-**Thirty** exact AYA textures at HEAD on 2026-07-28 —
+**Thirty-two** exact AYA textures —
 `rebuild/tools/materialize_retail_assets.py`'s `FRONTEND_ASSETS` is
 authoritative for that count and should be re-read rather than quoted from
 here — three exact XAP PCM decodes, and ten English strings decoded from the
@@ -175,14 +179,14 @@ the integrating audio owner remains singular.
 >    briefing and configuration select on the run path, so the two governance
 >    documents disagreed with each other.
 >
-> 2. **"Twenty-one exact AYA textures" is thirty at HEAD.** That was true when
->    written. The increment is the five-flag language selector (task #16), the
+> 2. **"Twenty-one exact AYA textures" became thirty, and is now thirty-two.**
+>    The intermediate count was true when written. The two later additions are
+>    the exact system font and mouse cursor. The earlier increment was the
+>    five-flag language selector (task #16), the
 >    v3 title/bracket/symbol set, the menu icons, the level brackets and rings,
 >    the title font and the loading screen. It is stated with its owner named
 >    for the same reason the 55-retained-versus-29-composed HUD split below is:
->    two copies of one number drift. One further `Frontend/` entry
->    (`mouse-cursor.texture.aya`) exists **uncommitted in the working tree** and
->    is deliberately not counted here. **Unchanged:** the three XAP PCM decodes
+>    two copies of one number drift. **Unchanged:** the three XAP PCM decodes
 >    and the ten English strings, both still exact.
 
 Result ownership is deliberately split at the evidence boundary. Stuart's
@@ -554,12 +558,14 @@ states. The Godot adapter consumes that bounded proportional mapping at its
 30 Hz fixed step. Other sensitivity values, inversion, and jet mouse response
 remain unproven.
 
-> **Amended 2026-07-28 — the measurement stands; `1.5` is not a retail value.**
+> **Amended 2026-07-28 — the measurement stands; `1.5` is not a released
+> default or UI-selectable value.**
 > The paragraph above is a record of what was actually run and is not withdrawn:
 > those copies really were configured at sensitivity `1.5`, and the sampled yaw
 > and pitch deltas are what they produced. What must not be carried away from it
-> is that `1.5` is a retail baseline. **It is not reachable by any retail
-> player.** The slider law is `g_MouseSensitivity = (index + 1) * 3.0f` with max
+> is that `1.5` is a retail baseline. It was a copied-options test setting
+> consumed by the retail executable. The slider law is
+> `g_MouseSensitivity = (index + 1) * 3.0f` with max
 > index `0x14`, so the selectable set is `{3, 6, … 63}` and `1.5` sits below the
 > floor; it is the value in the copied `defaultoptions.bea` those runs were
 > configured through, which is persisted run state under `GOAL.md`'s defaults

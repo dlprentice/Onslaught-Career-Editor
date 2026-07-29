@@ -232,8 +232,8 @@ PINE_IMPOSTER_TEXTURE = (
 #     0x004DD6FF  00 00 F0 41 = 30.0  Medium  (bias 1.0, scale 1.0)
 #     0x004DD6CA  00 00 8C 42 = 70.0  High    (bias 0.3, scale 2.0)
 # The image's own static initialisers pick out exactly one of those arms:
-# .data 0x006321A0 (file 0x231CA0) = 00 00 F0 41 = 30.0, LOD bias 0x00631E88
-# (file 0x231988) = 1.0, quality scale 0x00630E0C (file 0x230F0C) = 1.0. That is
+# .data 0x006321A0 (file 0x2321A0) = 00 00 F0 41 = 30.0, LOD bias 0x00631E88
+# (file 0x231E88) = 1.0, quality scale 0x00630E0C (file 0x230E0C) = 1.0. That is
 # arm 1 and only arm 1, so the released out-of-box Geometry detail is Medium and
 # the authored mesh-quality distance is 30.0.
 #
