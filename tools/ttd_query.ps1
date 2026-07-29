@@ -12,10 +12,12 @@
 # It is deliberately built to be able to FAIL LOUDLY. A probe that cannot disagree
 # with reality is worthless, and that failure mode has already burned this project.
 # Concretely:
-#   - it refuses to report success unless BOTH sentinel markers appear in the log;
-#   - -KnownAnswer cross-checks what the TRACE says about the target image against
-#     what the PE HEADER ON DISK says, read by a completely independent route
-#     (.NET file parsing). Disagreement is a hard failure, not a warning;
+#   - it refuses to report success unless every exact harness marker appears
+#     once and in order in one complete debugger transcript;
+#   - -KnownAnswer checks PE-header compatibility: four fields exposed at the
+#     caller-selected module base must match the image on disk. This does NOT
+#     identify the complete image or prove that a query sees runtime-written
+#     memory; use a dynamic positive control for that;
 #   - -NegativeControl additionally asserts that a query for something that does
 #     NOT exist is reported as absent. An instrument that answers everything
 #     affirmatively is broken, and this catches that.
@@ -61,6 +63,10 @@ param(
 
     [switch]$AllowNonTraceTarget,
 
+    # Optional explicit debugger path. The normal path is auto-detected; this is
+    # useful for controlled harness validation and unusual WinDbg installations.
+    [string]$CdbPath,
+
     # Print the generated command script and the debugger command line; run nothing.
     [switch]$DryRun
 )
@@ -69,7 +75,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $BEGIN = '=== TTDQUERY BEGIN ==='
-$END   = '=== TTDQUERY END ==='
+$BODYEND = '=== TTDQUERY OUTPUT END ==='
+$END   = '=== TTDQUERY COMPLETE ==='
 $KABEG = '=== KNOWNANSWER BEGIN ==='
 $NCBEG = '=== NEGCONTROL BEGIN ==='
 $ABSENT_SENTINEL = 'NEGCONTROL-MODULE-THAT-CANNOT-EXIST'
@@ -85,6 +92,9 @@ if ([string]::IsNullOrWhiteSpace($OutDir)) {
     $OutDir = Join-Path ([IO.Path]::GetDirectoryName($Trace)) ('query-' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss'))
 }
 $OutDir = [IO.Path]::GetFullPath($OutDir)
+if (Test-Path -LiteralPath $OutDir) {
+    throw "Query output already exists: $OutDir. Choose a fresh -OutDir; stale debugger artifacts are never reused."
+}
 $null = [IO.Directory]::CreateDirectory($OutDir)
 
 $logPath = Join-Path $OutDir 'cdb.log'
@@ -163,7 +173,7 @@ if ($CommandFile) {
         if (-not [string]::IsNullOrWhiteSpace($c)) { $lines.Add($c) }
     }
 }
-$lines.Add(".echo $END")
+$lines.Add(".echo $BODYEND")
 
 if ($KnownAnswer) {
     # Read the PE header OUT OF THE RECORDED PROCESS MEMORY. This needs no symbols
@@ -186,10 +196,20 @@ if ($NegativeControl) {
     $lines.Add(".echo $NCBEG")
     $lines.Add("lm m $ABSENT_SENTINEL")
 }
+$lines.Add(".echo $END")
 $lines.Add('q')
 ($lines -join "`n") | Set-Content -LiteralPath $cmdPath -Encoding ascii
 
-$cdb = & (Join-Path $PSScriptRoot 'get_cdb_path.ps1') -AsLiteral
+$cdb =
+    if ([string]::IsNullOrWhiteSpace($CdbPath)) {
+        & (Join-Path $PSScriptRoot 'get_cdb_path.ps1') -AsLiteral
+    }
+    else {
+        [IO.Path]::GetFullPath($CdbPath)
+    }
+if (-not (Test-Path -LiteralPath $cdb -PathType Leaf)) {
+    throw "No such debugger executable: $cdb"
+}
 $cdbArgs = @('-z', $Trace, '-logo', $logPath, '-cf', $cmdPath)
 $preview = ('& "{0}" {1}' -f $cdb, (($cdbArgs | ForEach-Object {
     if ($_ -match '\s') { '"{0}"' -f $_ } else { $_ } }) -join ' '))
@@ -202,51 +222,201 @@ if ($DryRun) {
     return
 }
 
-$env:_NT_SYMBOL_PATH = ''
-$proc = Start-Process -FilePath $cdb -ArgumentList $cdbArgs -PassThru -NoNewWindow `
-    -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
-$timedOut = $false
-if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
-    $timedOut = $true
-    Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-    $proc.WaitForExit(10000) | Out-Null
-}
+$traceBeforeQuery = Get-Item -LiteralPath $Trace
+$traceSha256Before = (
+    Get-FileHash -LiteralPath $Trace -Algorithm SHA256
+).Hash
 
-$text = ''
-foreach ($p in @($logPath, $stdoutPath)) {
-    if (Test-Path -LiteralPath $p) {
-        $t = Get-Content -LiteralPath $p -Raw -ErrorAction SilentlyContinue
-        if ($t -and $t.Length -gt $text.Length) { $text = $t }
+$env:_NT_SYMBOL_PATH = ''
+$startInfo = [Diagnostics.ProcessStartInfo]::new()
+$startInfo.FileName = $cdb
+$startInfo.UseShellExecute = $false
+$startInfo.CreateNoWindow = $true
+$startInfo.RedirectStandardOutput = $true
+$startInfo.RedirectStandardError = $true
+foreach ($argument in $cdbArgs) {
+    $startInfo.ArgumentList.Add([string]$argument)
+}
+$proc = [Diagnostics.Process]::new()
+$proc.StartInfo = $startInfo
+$stdoutStream = $null
+$stderrStream = $null
+$stdoutCopy = $null
+$stderrCopy = $null
+$timedOut = $false
+$processStarted = $false
+try {
+    if (-not $proc.Start()) {
+        throw "Debugger process did not start: $cdb"
+    }
+    $processStarted = $true
+    $stdoutStream = [IO.File]::Create($stdoutPath)
+    $stderrStream = [IO.File]::Create($stderrPath)
+    $stdoutCopy = $proc.StandardOutput.BaseStream.CopyToAsync($stdoutStream)
+    $stderrCopy = $proc.StandardError.BaseStream.CopyToAsync($stderrStream)
+    if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
+        $timedOut = $true
+        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+        $proc.WaitForExit(10000) | Out-Null
     }
 }
-$all = @($text -split "`r?`n")
-
-function Slice([string[]]$src, [string]$from, [string]$to) {
-    $i = [array]::FindIndex($src, [Predicate[string]] { param($x) $x -like "*$from*" })
-    if ($i -lt 0) { return $null }
-    $j = if ($to) { [array]::FindIndex($src, $i + 1, [Predicate[string]] { param($x) $x -like "*$to*" }) } else { -1 }
-    if ($j -lt 0) { $j = $src.Length }
-    return $src[($i + 1)..([Math]::Max($i + 1, $j - 1))]
+finally {
+    if ($processStarted -and -not $proc.HasExited) {
+        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+        $proc.WaitForExit(10000) | Out-Null
+    }
+    if ($stdoutCopy) { $stdoutCopy.GetAwaiter().GetResult() }
+    if ($stderrCopy) { $stderrCopy.GetAwaiter().GetResult() }
+    if ($stdoutStream) { $stdoutStream.Dispose() }
+    if ($stderrStream) { $stderrStream.Dispose() }
 }
 
-$body = Slice $all $BEGIN $END
-$sawBegin = $all -match [regex]::Escape($BEGIN)
-$sawEnd = $all -match [regex]::Escape($END)
+$channels = [ordered]@{}
+foreach ($entry in @(
+    [pscustomobject]@{ Name = 'log'; Path = $logPath }
+    [pscustomobject]@{ Name = 'stdout'; Path = $stdoutPath }
+    [pscustomobject]@{ Name = 'stderr'; Path = $stderrPath }
+)) {
+    $channels[$entry.Name] =
+        if (Test-Path -LiteralPath $entry.Path) {
+            [string](Get-Content -LiteralPath $entry.Path -Raw -ErrorAction SilentlyContinue)
+        } else { '' }
+}
+
+# Parse one complete primary transcript rather than concatenating the duplicated
+# log and stdout streams. Prefer a stream carrying the completion sentinel, then
+# the longer stream. Diagnostics are checked across all three channels below.
+$primaryChannels = @(
+    [pscustomobject]@{ Name = 'log'; Text = $channels.log }
+    [pscustomobject]@{ Name = 'stdout'; Text = $channels.stdout }
+) | Sort-Object `
+    @{ Expression = { $_.Text -match [regex]::Escape($END) }; Descending = $true },
+    @{ Expression = { $_.Text.Length }; Descending = $true }
+$primaryChannel = $primaryChannels | Select-Object -First 1
+$text = $primaryChannel.Text
+$all = @($text -split "`r?`n")
+$diagnosticText = (($channels.GetEnumerator() | ForEach-Object {
+    "=== $($_.Key) ===`n$($_.Value)"
+}) -join "`n")
+$diagnosticLines = @($diagnosticText -split "`r?`n")
+
+function ExactMarkerIndices([string[]]$src, [string]$marker) {
+    $indices = [System.Collections.Generic.List[int]]::new()
+    for ($index = 0; $index -lt $src.Length; $index++) {
+        # CDB echoes `.echo <marker>` at its prompt before emitting <marker>.
+        # Only the exact emitted line is part of the harness protocol.
+        if ($src[$index] -ceq $marker) {
+            $indices.Add($index)
+        }
+    }
+    return $indices.ToArray()
+}
 
 $problems = [System.Collections.Generic.List[string]]::new()
+$beginIndices = @(ExactMarkerIndices $all $BEGIN)
+$bodyEndIndices = @(ExactMarkerIndices $all $BODYEND)
+$endIndices = @(ExactMarkerIndices $all $END)
+foreach ($marker in @(
+    [pscustomobject]@{
+        Name = 'BEGIN'; Indices = $beginIndices
+        Missing = 'BEGIN sentinel never appeared - the debugger did not reach the commands'
+    }
+    [pscustomobject]@{
+        Name = 'OUTPUT-END'; Indices = $bodyEndIndices
+        Missing = 'OUTPUT-END sentinel never appeared - the query output is incomplete'
+    }
+    [pscustomobject]@{
+        Name = 'END'; Indices = $endIndices
+        Missing = 'END sentinel never appeared - the command script did not complete'
+    }
+)) {
+    if ($marker.Indices.Count -eq 0) {
+        $problems.Add($marker.Missing)
+    }
+    elseif ($marker.Indices.Count -ne 1) {
+        $problems.Add("$($marker.Name) sentinel appeared $($marker.Indices.Count) times - the debugger transcript is ambiguous")
+    }
+}
+$mainMarkersValid =
+    $beginIndices.Count -eq 1 -and
+    $bodyEndIndices.Count -eq 1 -and
+    $endIndices.Count -eq 1
+if (
+    $mainMarkersValid -and
+    -not (
+        $beginIndices[0] -lt $bodyEndIndices[0] -and
+        $bodyEndIndices[0] -lt $endIndices[0]
+    )
+) {
+    $problems.Add('query sentinels appeared out of order - expected BEGIN, OUTPUT-END, COMPLETE')
+    $mainMarkersValid = $false
+}
+$body =
+    if (-not $mainMarkersValid -or $bodyEndIndices[0] -eq $beginIndices[0] + 1) {
+        @()
+    }
+    else {
+        @($all[($beginIndices[0] + 1)..($bodyEndIndices[0] - 1)])
+    }
+
+$traceAfterQuery = Get-Item -LiteralPath $Trace
+$traceSha256After = (
+    Get-FileHash -LiteralPath $Trace -Algorithm SHA256
+).Hash
+if (
+    $traceBeforeQuery.Length -ne $traceAfterQuery.Length -or
+    $traceBeforeQuery.LastWriteTimeUtc -ne $traceAfterQuery.LastWriteTimeUtc -or
+    $traceSha256Before -cne $traceSha256After
+) {
+    $problems.Add('trace changed while the offline debugger query was running')
+}
 if ($timedOut) { $problems.Add("debugger timed out after $TimeoutSeconds s") }
-if (-not $sawBegin) { $problems.Add('BEGIN sentinel never appeared - the debugger did not reach the commands') }
-if (-not $sawEnd) { $problems.Add('END sentinel never appeared - the command script did not complete') }
+if ($proc.ExitCode -ne 0) { $problems.Add("debugger exited with code $($proc.ExitCode)") }
 foreach ($pat in @('Could not open', 'is not a crash dump', 'Unable to load image',
-                   'Unrecognized dump', 'File not found', 'Win32 error')) {
-    if ($all | Where-Object { $_ -like "*$pat*" }) { $problems.Add("debugger reported: $pat") }
+                   'Unrecognized dump', 'File not found', 'Win32 error',
+                   'Syntax error in', 'Error: Unable to bind name',
+                   "Couldn't resolve error",
+                   'pass count must be preceeded by whitespace error in')) {
+    if ($diagnosticLines | Where-Object { $_ -like "*$pat*" }) {
+        $problems.Add("debugger reported: $pat")
+    }
 }
 
 # ------------------------------------------------- known-answer cross-check
 $knownAnswerResult = $null
 if ($KnownAnswer) {
-    $ka = Slice $all $KABEG $NCBEG
-    if (-not $ka) { $ka = Slice $all $KABEG $null }
+    $knownAnswerIndices = @(ExactMarkerIndices $all $KABEG)
+    if ($knownAnswerIndices.Count -eq 0) {
+        $problems.Add('KNOWN-ANSWER sentinel never appeared - the PE-header compatibility check did not run')
+    }
+    elseif ($knownAnswerIndices.Count -ne 1) {
+        $problems.Add("KNOWN-ANSWER sentinel appeared $($knownAnswerIndices.Count) times - the debugger transcript is ambiguous")
+    }
+    $knownAnswerEndIndices =
+        if ($NegativeControl) { @(ExactMarkerIndices $all $NCBEG) }
+        else { $endIndices }
+    $knownAnswerMarkersValid =
+        $mainMarkersValid -and
+        $knownAnswerIndices.Count -eq 1 -and
+        $knownAnswerEndIndices.Count -eq 1 -and
+        $bodyEndIndices[0] -lt $knownAnswerIndices[0] -and
+        $knownAnswerIndices[0] -lt $knownAnswerEndIndices[0] -and
+        $knownAnswerEndIndices[0] -le $endIndices[0]
+    if (
+        $knownAnswerIndices.Count -eq 1 -and
+        $knownAnswerEndIndices.Count -eq 1 -and
+        -not $knownAnswerMarkersValid
+    ) {
+        $problems.Add('KNOWN-ANSWER sentinel appeared out of order')
+    }
+    $ka =
+        if (
+            $knownAnswerMarkersValid -and
+            $knownAnswerEndIndices[0] -gt $knownAnswerIndices[0] + 1
+        ) {
+            @($all[($knownAnswerIndices[0] + 1)..($knownAnswerEndIndices[0] - 1)])
+        }
+        else { @() }
     # Drop cdb's own prompt echo of each command; otherwise the harness reads its
     # own question back as if it were an answer.
     $ka = @($ka | Where-Object { $_ -notmatch '^\s*\d+:\d+(:x86)?>' })
@@ -288,41 +458,79 @@ if ($KnownAnswer) {
 # ------------------------------------------------------- negative control
 $negativeControlResult = $null
 if ($NegativeControl) {
-    $nc = Slice $all $NCBEG $null
+    $negativeControlIndices = @(ExactMarkerIndices $all $NCBEG)
+    $negativeControlMarkersValid =
+        $mainMarkersValid -and
+        $negativeControlIndices.Count -eq 1 -and
+        $bodyEndIndices[0] -lt $negativeControlIndices[0] -and
+        $negativeControlIndices[0] -lt $endIndices[0] -and
+        (
+            -not $KnownAnswer -or
+            (
+                $knownAnswerIndices.Count -eq 1 -and
+                $knownAnswerIndices[0] -lt $negativeControlIndices[0]
+            )
+        )
+    if ($negativeControlIndices.Count -eq 0) {
+        $problems.Add('NEGATIVE-CONTROL sentinel never appeared - the adverse query did not run')
+    }
+    elseif ($negativeControlIndices.Count -ne 1) {
+        $problems.Add("NEGATIVE-CONTROL sentinel appeared $($negativeControlIndices.Count) times - the debugger transcript is ambiguous")
+    }
+    elseif (-not $negativeControlMarkersValid) {
+        $problems.Add('NEGATIVE-CONTROL sentinel appeared out of order')
+    }
+    $nc =
+        if (
+            $negativeControlMarkersValid -and
+            $endIndices[0] -gt $negativeControlIndices[0] + 1
+        ) {
+            @($all[($negativeControlIndices[0] + 1)..($endIndices[0] - 1)])
+        }
+        else { @() }
     # Same prompt-echo trap as above: cdb prints "0:000> lm m <sentinel>" before it
     # answers, so an unfiltered search finds the harness's own question.
     $nc = @($nc | Where-Object { $_ -notmatch '^\s*\d+:\d+(:x86)?>' })
     $ncText = ($nc -join "`n")
     # An honest debugger reports nothing (or an explicit "no matches") for a module
-    # that does not exist. If it echoes a match, the instrument is agreeing with a
-    # question that has no true answer, and every other answer becomes suspect.
-    $claimedMatch = $ncText -match [regex]::Escape($ABSENT_SENTINEL) -and
-                    $ncText -notmatch 'Unable|no matches|not found|Couldn'
+    # that does not exist. Match an actual `lm` module row, not the sentinel inside
+    # an error or an unrelated warning elsewhere in the same section.
+    $moduleRowPattern =
+        '^\s*[0-9A-Fa-f`?]+\s+[0-9A-Fa-f`?]+\s+' +
+        [regex]::Escape($ABSENT_SENTINEL) +
+        '(?:\s|$)'
+    $claimedRows = @($nc | Where-Object { $_ -match $moduleRowPattern })
+    $claimedMatch = $claimedRows.Count -gt 0
     $negativeControlResult = [pscustomobject]@{
         Sentinel = $ABSENT_SENTINEL
         Output = $ncText
-        Passed = (-not $claimedMatch)
+        Passed = ($negativeControlMarkersValid -and -not $claimedMatch)
     }
     if ($claimedMatch) { $problems.Add('NEGATIVE CONTROL FAILED - the debugger reported a match for a module that cannot exist') }
 }
 
 $result = [pscustomobject]@{
-    schemaVersion   = 'ttd-query-result.v1'
+    schemaVersion   = 'ttd-query-result.v3'
     trace           = $Trace
-    traceBytes      = (Get-Item -LiteralPath $Trace).Length
+    traceBytes      = $traceBeforeQuery.Length
+    traceSha256     = $traceSha256Before
     cdb             = $cdb
     commandScript   = $cmdPath
     logPath         = $logPath
+    stdoutPath      = $stdoutPath
+    stderrPath      = $stderrPath
+    primaryChannel  = $primaryChannel.Name
     exitCode        = $proc.ExitCode
     timedOut        = $timedOut
     ok              = ($problems.Count -eq 0)
     problems        = @($problems)
     knownAnswer     = $knownAnswerResult
     negativeControl = $negativeControlResult
-    output          = @($body)
+    output          = @($body | Where-Object { $null -ne $_ })
 }
 $result | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $resultPath -Encoding utf8
 
 if ($result.ok) { Write-Host "OK  - $($result.output.Count) output lines; $resultPath" }
 else { Write-Host ("FAIL - " + ($problems -join '; ')) -ForegroundColor Red }
 $result
+if (-not $result.ok) { exit 1 }

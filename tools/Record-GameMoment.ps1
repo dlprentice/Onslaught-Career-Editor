@@ -44,6 +44,10 @@ $repo = Split-Path $PSScriptRoot -Parent
 $rec  = Join-Path $PSScriptRoot 'ttd_record.ps1'
 $exe  = Join-Path $repo 'local-lab\safe-copy-bea-pristine\BEA.exe'
 
+if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$') {
+    throw "-Name must be 1-64 ASCII letters, digits, dots, underscores, or hyphens, beginning with a letter or digit."
+}
+
 # Check the game is up BEFORE raising UAC. Prompting for elevation and then
 # failing on "no game running" wastes a consent dialog and a screen blackout.
 $running = @(Get-Process -Name 'BEA' -ErrorAction SilentlyContinue |
@@ -69,10 +73,19 @@ if (-not $elevated) {
     Write-Host 'Approve it and go back to the game - recording starts immediately.'
     Write-Host ''
     $self = $MyInvocation.MyCommand.Path
-    Start-Process -FilePath 'pwsh.exe' -Verb RunAs -ArgumentList @(
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = 'pwsh.exe'
+    $startInfo.UseShellExecute = $true
+    $startInfo.Verb = 'runas'
+    foreach ($argument in @(
         '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $self,
-        '-Name', $Name, '-Seconds', "$Seconds", '-MaxFileMB', "$MaxFileMB")
-    exit 0
+        '-Name', $Name, '-Seconds', "$Seconds", '-MaxFileMB', "$MaxFileMB"
+    )) {
+        $startInfo.ArgumentList.Add([string]$argument)
+    }
+    $elevatedProcess = [Diagnostics.Process]::Start($startInfo)
+    $elevatedProcess.WaitForExit()
+    exit $elevatedProcess.ExitCode
 }
 
 Write-Host ''
@@ -83,8 +96,20 @@ Write-Host '  It speeds back up and KEEPS RUNNING when this finishes.'
 Write-Host '================================================================'
 Write-Host ''
 
-& $rec -Name $Name -Attach -Seconds $Seconds -MaxFileMB $MaxFileMB
-$code = $LASTEXITCODE
+$recorderStart = [Diagnostics.ProcessStartInfo]::new()
+$recorderStart.FileName = 'pwsh.exe'
+$recorderStart.UseShellExecute = $false
+$recorderStart.CreateNoWindow = $false
+foreach ($argument in @(
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $rec,
+    '-Name', $Name, '-Attach', '-Seconds', "$Seconds",
+    '-MaxFileMB', "$MaxFileMB"
+)) {
+    $recorderStart.ArgumentList.Add([string]$argument)
+}
+$recorderProcess = [Diagnostics.Process]::Start($recorderStart)
+$recorderProcess.WaitForExit()
+$code = $recorderProcess.ExitCode
 
 Write-Host ''
 if ($code -eq 0) {

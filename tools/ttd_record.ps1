@@ -28,9 +28,10 @@
 #
 # HARD RULES, enforced below and not overridable by any parameter:
 #   - never the Steam install, never anything under Program Files;
-#   - never unmodified pristine BEA.exe (it runs fullscreen);
+#   - only the measured copied specimen: pristine BEA.exe plus force_windowed;
 #   - never while a d3d9 proxy capture is in flight (the proxy dll is the lock);
-#   - never while any BEA.exe is already running;
+#   - launch mode never starts while any BEA.exe is already running;
+#     attach mode accepts exactly one process whose image is the copied target;
 #   - traces are written to G: only. C: and F: are refused.
 # It never writes to the debuggee. TTD records; it does not modify.
 
@@ -102,9 +103,8 @@ param(
     # which is affordable - the prior "GB per few seconds" estimate had no
     # measurement behind it and is roughly 40x too pessimistic.
     #
-    # Pass -Module @('BEA.exe') only if you first re-establish that it captures
-    # anything; do not restore it as a default on the strength of the argument
-    # in the comment above, which sounded correct and was not.
+    # Module-restricted capture remains disabled until a separate implementation
+    # is demonstrated to produce a nonempty trace on this title.
     [string[]]$Module = @(),
 
     # Growth-rate sampling interval. The measured rate is reported and written to
@@ -135,11 +135,18 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$PRISTINE_SHA256 = '74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750'
+$SUPPORTED_COPY_SHA256 = 'E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4'
 
 function Fail([string]$m) { throw $m }
 
 # ---------------------------------------------------------------- interlock 1-3
+if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$') {
+    Fail "-Name must be 1-64 ASCII letters, digits, dots, underscores, or hyphens, beginning with a letter or digit."
+}
+if ($Module.Count -gt 0) {
+    Fail ("Module-restricted recording is disabled: the measured BEA.exe restriction " +
+          "produced an empty preallocated trace. Use the unrestricted default.")
+}
 $TargetRoot = [IO.Path]::GetFullPath($TargetRoot)
 $exe = Join-Path $TargetRoot 'BEA.exe'
 if (-not (Test-Path -LiteralPath $exe)) { Fail "No BEA.exe under $TargetRoot" }
@@ -159,10 +166,10 @@ foreach ($k in 'ProgramFiles', 'ProgramFiles(x86)') {
 }
 
 $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
-if ($hash -ieq $PRISTINE_SHA256) {
-    Fail ("Target is unmodified pristine BEA.exe. It runs fullscreen, which makes an " +
-          "unattended recording unrecoverable on a single display. Apply force_windowed " +
-          "(5 bytes at file offset 0x12A644) to the COPY first.")
+if ($hash -ine $SUPPORTED_COPY_SHA256) {
+    Fail ("Unsupported BEA.exe specimen $hash. TTD evidence is accepted only from " +
+          "the measured copied target: canonical Steam BEA.exe plus force_windowed " +
+          "(sha256 $SUPPORTED_COPY_SHA256).")
 }
 
 # ------------------------------------------- interlock 4-5: mutual exclusion
@@ -175,7 +182,7 @@ if (Test-Path -LiteralPath $proxyLock) {
           "Wait for it to finish; the capture scripts delete that file when they exit.")
 }
 $running = @(Get-Process -Name 'BEA' -ErrorAction SilentlyContinue)
-if ($running.Count -gt 0) {
+if (-not $Attach -and $running.Count -gt 0) {
     Fail ("BEA.exe is already running (pid(s) " + (($running | ForEach-Object { $_.Id }) -join ', ') +
           "). Refusing to launch a second instance.")
 }
@@ -217,6 +224,9 @@ $elevated = (New-Object Security.Principal.WindowsPrincipal($identity)).IsInRole
 
 $outDir = Join-Path $TraceRoot $Name
 $traceFile = Join-Path $outDir ("{0}.run" -f $Name)
+if (Test-Path -LiteralPath $outDir) {
+    Fail "Trace output already exists: $outDir. Choose a fresh -Name; stale trace artifacts are never reused."
+}
 
 $ttdArgs = @('-accepteula', '-noUI', '-out', $traceFile, '-maxFile', "$MaxFileMB")
 if ($Ring) { $ttdArgs += '-ring' }
@@ -272,10 +282,8 @@ if (-not $elevated) {
     Write-Host "not present on this machine, so EVERY recording session needs its own elevation."
     Write-Host "Keep one elevated shell open for a whole capture session rather than elevating twice."
     Write-Host ""
-    Write-Host "Run this script again from an elevated PowerShell:" -ForegroundColor Cyan
-    Write-Host ("  pwsh -NoProfile -File `"{0}`" -Name {1} -Seconds {2}{3}" -f
-        $PSCommandPath, $Name, $Seconds,
-        $(if ($GameArguments.Count) { " -GameArguments " + (($GameArguments | ForEach-Object { "'$_'" }) -join ',') } else { '' }))
+    Write-Host "Re-run your original command unchanged from an elevated PowerShell." -ForegroundColor Cyan
+    Write-Host "For an attach capture, tools\Record-GameMoment.ps1 preserves every argument while raising UAC."
     Write-Host ""
     Write-Host "The raw recorder command it would run is:"
     Write-Host "  $commandPreview"
@@ -294,100 +302,210 @@ $startedUtc = (Get-Date).ToUniversalTime()
 # forbids tracking, and it would have been one careless `git add .` from being
 # committed. Pinning the CWD to the copied target keeps the game's own droppings
 # inside the copy, where they belong and are already ignored.
-$recorder = Start-Process -FilePath $ttd -ArgumentList $ttdArgs -PassThru -NoNewWindow `
-    -WorkingDirectory $TargetRoot `
-    -RedirectStandardOutput (Join-Path $outDir 'ttd-stdout.txt') `
-    -RedirectStandardError  (Join-Path $outDir 'ttd-stderr.txt')
-
-# Wait for the target to appear, then for the .run file to appear.
+$recorder = $null
 $target = $null
-for ($i = 0; $i -lt 480; $i++) {
-    $target = Get-Process -Name 'BEA' -ErrorAction SilentlyContinue |
-        Where-Object { $_.Path -ieq $exe }
-    if ($target) { break }
-    if ($recorder.HasExited) { break }
-    Start-Sleep -Milliseconds 250
-}
-if (-not $target) {
-    $err = if (Test-Path (Join-Path $outDir 'ttd-stdout.txt')) {
-        (Get-Content -LiteralPath (Join-Path $outDir 'ttd-stdout.txt') -Raw) } else { '' }
-    Fail "The copied target never started under TTD.`n$err"
-}
-
 $samples = [System.Collections.Generic.List[object]]::new()
 $runFileSeenUtc = $null
-$deadline = if ($UntilExit) { (Get-Date).AddHours(6) } else { (Get-Date).AddSeconds($Seconds + 300) }
+$runFileInitialBytes = $null
+$deadline =
+    if ($UntilExit) { [datetime]::MaxValue }
+    else { (Get-Date).AddSeconds($Seconds + 300) }
 $recordDeadline = $null
 $traceDriveRoot = [IO.Path]::GetPathRoot([IO.Path]::GetFullPath($TraceRoot))
 $spaceAborted = $false
+$recorderEndedWhileTargetAlive = $false
+$recorderExitCode = $null
+$primaryFailure = $null
+$cleanupProblems = [System.Collections.Generic.List[string]]::new()
+$recorderStdoutStream = $null
+$recorderStderrStream = $null
+$recorderStdoutCopy = $null
+$recorderStderrCopy = $null
+$recorderStarted = $false
 
-while ((Get-Date) -lt $deadline) {
-    $len = 0
-    if (Test-Path -LiteralPath $traceFile) { $len = (Get-Item -LiteralPath $traceFile).Length }
-    else {
-        $any = Get-ChildItem -LiteralPath $outDir -Filter '*.run' -ErrorAction SilentlyContinue |
-            Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        if ($any) { $traceFile = $any.FullName; $len = $any.Length }
+try {
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $ttd
+    $startInfo.WorkingDirectory = $TargetRoot
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $ttdArgs) {
+        $startInfo.ArgumentList.Add([string]$argument)
     }
-    if ($len -gt 0 -and -not $runFileSeenUtc) {
-        $runFileSeenUtc = (Get-Date).ToUniversalTime()
-        # -UntilExit deliberately leaves this null, so the only things that end
-        # the loop are the game exiting or the free-space floor below.
-        if (-not $UntilExit) { $recordDeadline = (Get-Date).AddSeconds($Seconds) }
+    $recorder = [Diagnostics.Process]::new()
+    $recorder.StartInfo = $startInfo
+    if (-not $recorder.Start()) {
+        Fail "TTD recorder did not start: $ttd"
     }
-    if ($runFileSeenUtc) {
-        $samples.Add([pscustomobject]@{
-            SecondsIntoRecording = [math]::Round(((Get-Date).ToUniversalTime() - $runFileSeenUtc).TotalSeconds, 2)
-            Bytes                = $len
-            MB                   = [math]::Round($len / 1MB, 2)
-        })
-    }
-    if ($recordDeadline -and (Get-Date) -ge $recordDeadline) { break }
+    $recorderStarted = $true
+    $recorderStdoutStream = [IO.FileStream]::new(
+        (Join-Path $outDir 'ttd-stdout.txt'),
+        [IO.FileMode]::Create,
+        [IO.FileAccess]::Write,
+        [IO.FileShare]::Read)
+    $recorderStderrStream = [IO.FileStream]::new(
+        (Join-Path $outDir 'ttd-stderr.txt'),
+        [IO.FileMode]::Create,
+        [IO.FileAccess]::Write,
+        [IO.FileShare]::Read)
+    $recorderStdoutCopy = $recorder.StandardOutput.BaseStream.CopyToAsync($recorderStdoutStream)
+    $recorderStderrCopy = $recorder.StandardError.BaseStream.CopyToAsync($recorderStderrStream)
 
-    # Free space is re-checked DURING recording, not only up front. At 26-32 MB/s
-    # a long play session is precisely where a drive fills, and a trace truncated
-    # by a full disk is worse than one stopped deliberately - TTD may not finalise
-    # it, and the failure would land on the maintainer mid-level.
-    try {
-        $freeGB = [math]::Round((Get-PSDrive -Name $traceDriveRoot.TrimEnd(':\') -ErrorAction Stop).Free / 1GB, 1)
-        if ($freeGB -lt 10) {
-            Write-Warning ("Stopping: only {0} GB free on {1}. The trace is finalised, not truncated." -f $freeGB, $traceDriveRoot)
-            $spaceAborted = $true
+    # Wait for the target to appear, then for the .run file to appear.
+    for ($i = 0; $i -lt 480; $i++) {
+        $target = Get-Process -Name 'BEA' -ErrorAction SilentlyContinue |
+            Where-Object { $_.Path -ieq $exe } |
+            Select-Object -First 1
+        if ($target) { break }
+        if ($recorder.HasExited) { break }
+        Start-Sleep -Milliseconds 250
+    }
+    if (-not $target) {
+        $err = if (Test-Path (Join-Path $outDir 'ttd-stdout.txt')) {
+            (Get-Content -LiteralPath (Join-Path $outDir 'ttd-stdout.txt') -Raw) } else { '' }
+        Fail "The copied target never started under TTD.`n$err"
+    }
+
+    while ((Get-Date) -lt $deadline) {
+        $len = 0
+        if (Test-Path -LiteralPath $traceFile) { $len = (Get-Item -LiteralPath $traceFile).Length }
+        else {
+            $any = Get-ChildItem -LiteralPath $outDir -Filter '*.run' -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            if ($any) { $traceFile = $any.FullName; $len = $any.Length }
+        }
+        if ($len -gt 0 -and -not $runFileSeenUtc) {
+            $runFileSeenUtc = (Get-Date).ToUniversalTime()
+            $runFileInitialBytes = $len
+            # -UntilExit deliberately leaves this null, so the only things that end
+            # the loop are the game exiting or the free-space floor below.
+            if (-not $UntilExit) { $recordDeadline = (Get-Date).AddSeconds($Seconds) }
+        }
+        if ($runFileSeenUtc) {
+            $samples.Add([pscustomobject]@{
+                SecondsIntoRecording = [math]::Round(((Get-Date).ToUniversalTime() - $runFileSeenUtc).TotalSeconds, 2)
+                Bytes                = $len
+                MB                   = [math]::Round($len / 1MB, 2)
+            })
+        }
+        if ($recordDeadline -and (Get-Date) -ge $recordDeadline) { break }
+
+        # Free space is re-checked DURING recording, not only up front. At 26-32 MB/s
+        # a long play session is precisely where a drive fills, and a trace truncated
+        # by a full disk is worse than one stopped deliberately - TTD may not finalise
+        # it, and the failure would land on the maintainer mid-level.
+        try {
+            $freeGB = [math]::Round((Get-PSDrive -Name $traceDriveRoot.TrimEnd(':\') -ErrorAction Stop).Free / 1GB, 1)
+            if ($freeGB -lt 10) {
+                Write-Warning ("Stopping: only {0} GB free on {1}. The trace is finalised, not truncated." -f $freeGB, $traceDriveRoot)
+                $spaceAborted = $true
+                break
+            }
+        } catch { }
+        $t = Get-Process -Id $target.Id -ErrorAction SilentlyContinue
+        if (-not $t) { break }
+        # Recorder exit is terminal even after a .run appears. A max-file stop
+        # or recorder failure while the guest remains alive is an incomplete
+        # capture, not a reason to keep waiting and later call the
+        # completion marker a success.
+        if ($recorder.HasExited) {
+            $recorderEndedWhileTargetAlive = [bool]$runFileSeenUtc
+            $recorderExitCode = $recorder.ExitCode
             break
         }
-    } catch { }
-    $t = Get-Process -Id $target.Id -ErrorAction SilentlyContinue
-    if (-not $t) { break }
-    # If the recorder itself gave up before a .run ever appeared, stop immediately
-    # rather than sitting out the whole -Seconds + 300 budget on a dead run.
-    if ($recorder.HasExited -and -not $runFileSeenUtc) { break }
-    Start-Sleep -Seconds $SampleIntervalSeconds
+        Start-Sleep -Seconds $SampleIntervalSeconds
+    }
+    if (-not $runFileSeenUtc) {
+        $so = Join-Path $outDir 'ttd-stdout.txt'
+        $msg = if (Test-Path -LiteralPath $so) { Get-Content -LiteralPath $so -Raw } else { '' }
+        Write-Warning "No .run file ever appeared under $outDir. Recorder output follows:`n$msg"
+    }
 }
-if (-not $runFileSeenUtc) {
-    $so = Join-Path $outDir 'ttd-stdout.txt'
-    $msg = if (Test-Path -LiteralPath $so) { Get-Content -LiteralPath $so -Raw } else { '' }
-    Write-Warning "No .run file ever appeared under $outDir. Recorder output follows:`n$msg"
+catch {
+    $primaryFailure = $_
+}
+finally {
+    $liveTarget =
+        if ($target) {
+            Get-Process -Id $target.Id -ErrorAction SilentlyContinue |
+                Where-Object { $_.Path -ieq $exe } |
+                Select-Object -First 1
+        } else { $null }
+    if ($liveTarget) {
+        # Stop tracing cleanly first so the trace is finalised, then close only a
+        # process launched by this script. An attached game belongs to the user.
+        foreach ($control in @(
+            [pscustomobject]@{ Name = 'stop'; Arguments = @('-accepteula', '-stop', "$($target.Id)") }
+            [pscustomobject]@{ Name = 'wait'; Arguments = @('-accepteula', '-wait', '120') }
+        )) {
+            try {
+                # A non-zero native exit must be retained as a cleanup failure,
+                # not promoted into a terminating error that masks the original
+                # recording exception.
+                $oldNativePreference = $PSNativeCommandUseErrorActionPreference
+                $PSNativeCommandUseErrorActionPreference = $false
+                $controlArguments = $control.Arguments
+                $output = & $ttd @controlArguments 2>&1 | Out-String
+                $controlExit = $LASTEXITCODE
+                $output | Write-Verbose
+                if ($controlExit -ne 0) {
+                    $cleanupProblems.Add("TTD $($control.Name) exited $controlExit")
+                }
+            }
+            catch {
+                $cleanupProblems.Add("TTD $($control.Name) failed: $($_.Exception.Message)")
+            }
+            finally {
+                $PSNativeCommandUseErrorActionPreference = $oldNativePreference
+            }
+        }
+        if (-not $Attach) {
+            Get-Process -Id $liveTarget.Id -ErrorAction SilentlyContinue |
+                Where-Object { $_.Path -ieq $exe } | Stop-Process -Force -ErrorAction SilentlyContinue
+        } else {
+            Write-Host 'attach mode: tracing stopped, THE GAME IS STILL RUNNING - carry on playing.'
+        }
+    }
+    if ($recorderStarted -and -not $recorder.HasExited) {
+        if (-not $recorder.WaitForExit(60000)) {
+            $cleanupProblems.Add("TTD recorder PID $($recorder.Id) did not exit within 60 seconds")
+            Stop-Process -Id $recorder.Id -Force -ErrorAction SilentlyContinue
+            $recorder.WaitForExit(10000) | Out-Null
+        }
+    }
+    try {
+        if ($recorderStdoutCopy) { $recorderStdoutCopy.GetAwaiter().GetResult() }
+        if ($recorderStderrCopy) { $recorderStderrCopy.GetAwaiter().GetResult() }
+    }
+    catch {
+        $cleanupProblems.Add("TTD output capture failed: $($_.Exception.Message)")
+    }
+    finally {
+        if ($recorderStdoutStream) { $recorderStdoutStream.Dispose() }
+        if ($recorderStderrStream) { $recorderStderrStream.Dispose() }
+    }
 }
 
-# Stop tracing cleanly first so the trace is finalised, then close the game.
-& $ttd -accepteula -stop $target.Id 2>&1 | Out-String | Write-Verbose
-& $ttd -accepteula -wait 120        2>&1 | Out-String | Write-Verbose
-
-# In -Attach mode the game is the MAINTAINER'S SESSION, not ours to end. Killing
-# it would throw away whatever they were in the middle of, which defeats the
-# entire point of attaching: play at full speed, record a moment, keep playing.
-# Recording several segments from one playthrough is the intended workflow.
-if (-not $Attach) {
-    Get-Process -Id $target.Id -ErrorAction SilentlyContinue |
-        Where-Object { $_.Path -ieq $exe } | Stop-Process -Force -ErrorAction SilentlyContinue
-} else {
-    Write-Host 'attach mode: tracing stopped, THE GAME IS STILL RUNNING - carry on playing.'
+if ($cleanupProblems.Count -gt 0) {
+    foreach ($problem in $cleanupProblems) { Write-Warning $problem }
 }
-if (-not $recorder.HasExited) { $recorder.WaitForExit(60000) | Out-Null }
+if ($primaryFailure) {
+    throw $primaryFailure
+}
+if ($cleanupProblems.Count -gt 0) {
+    Fail ("TTD cleanup did not complete cleanly: " + ($cleanupProblems -join '; '))
+}
 
 $final = if (Test-Path -LiteralPath $traceFile) { (Get-Item -LiteralPath $traceFile).Length } else { 0 }
 $span = if ($runFileSeenUtc) { ((Get-Date).ToUniversalTime() - $runFileSeenUtc).TotalSeconds } else { 0 }
 $rate = if ($span -gt 0) { [math]::Round(($final / 1MB) / $span, 2) } else { 0 }
+$traceGrew = $runFileInitialBytes -ne $null -and $final -gt $runFileInitialBytes
+$stoppedAtFileCap =
+    $recorderEndedWhileTargetAlive -and
+    -not $Ring -and
+    $final -ge ([int64]($MaxFileMB * 1MB * 0.99))
 
 # THE GUEST'S OWN EXIT CODE. Added 2026-07-27 after this script reported
 # "exit = 0" with healthy-looking receipts for THREE consecutive runs in which
@@ -446,19 +564,42 @@ if (Test-Path -LiteralPath $outFile) {
     $tracingCompleted = $outText -match 'Tracing completed at:'
 }
 $guestOutcome =
-    if ($guestFatal)                            { 'exited-error' }
+    if ($spaceAborted)                          { 'space-aborted' }
+    elseif ($stoppedAtFileCap)                  { 'max-file-aborted' }
+    elseif ($recorderEndedWhileTargetAlive)     { 'recorder-ended-early' }
+    elseif ($guestFatal)                        { 'exited-error' }
     elseif ($guestExit -ne $null -and $guestExit -ne 0) { 'exited-error' }
+    elseif (-not $traceGrew)                    { 'unknown' }
     elseif ($guestExit -eq 0)                   { 'exited-clean' }
     elseif ($tracingCompleted -and $final -gt 0){ 'alive-at-stop' }
     else                                        { 'unknown' }
 
+$traceSha256 = $null
+if ($final -gt 0) {
+    $traceBeforeHash = Get-Item -LiteralPath $traceFile
+    $traceSha256 = (
+        Get-FileHash -LiteralPath $traceFile -Algorithm SHA256
+    ).Hash
+    $traceAfterHash = Get-Item -LiteralPath $traceFile
+    if (
+        $traceBeforeHash.Length -ne $traceAfterHash.Length -or
+        $traceBeforeHash.LastWriteTimeUtc -ne $traceAfterHash.LastWriteTimeUtc
+    ) {
+        Fail 'TTD trace changed while its receipt hash was being computed.'
+    }
+}
+
 $receipt = [pscustomobject]@{
-    schemaVersion        = 'ttd-record-receipt.v1'
+    schemaVersion        = 'ttd-record-receipt.v3'
     guestOutcome         = $guestOutcome
     guestExitCode        = $guestExit
     guestExitSource      = $guestExitSource
     guestFatalError      = $guestFatal
     guestRanCleanly      = ($guestOutcome -in @('exited-clean','alive-at-stop'))
+    stoppedForLowSpace   = $spaceAborted
+    stoppedAtFileCap     = $stoppedAtFileCap
+    recorderEndedEarly   = $recorderEndedWhileTargetAlive
+    recorderExitCode     = $recorderExitCode
     name                 = $Name
     recordedAtUtc        = $startedUtc.ToString('o')
     recorder             = $ttd
@@ -472,6 +613,8 @@ $receipt = [pscustomobject]@{
     actualRecordSeconds  = [math]::Round($span, 2)
     traceFile            = $traceFile
     traceBytes           = $final
+    traceSha256          = $traceSha256
+    traceGrew            = $traceGrew
     traceMB              = [math]::Round($final / 1MB, 2)
     growthMBPerSecond    = $rate
     ring                 = [bool]$Ring
@@ -502,6 +645,18 @@ if ($guestOutcome -eq 'unknown') {
     Write-Warning 'Cannot tell whether the guest ran - no exit code, no completion marker. UNVERIFIED.'
     exit 4
 }
+if ($guestOutcome -eq 'space-aborted') {
+    Write-Warning 'Recording stopped at the free-space floor. The trace was finalized but is incomplete.'
+    exit 5
+}
+if ($guestOutcome -eq 'max-file-aborted') {
+    Write-Warning 'Recording hit the configured max-file boundary while the game was still running. The trace is finalized but incomplete.'
+    exit 6
+}
+if ($guestOutcome -eq 'recorder-ended-early') {
+    Write-Warning ("The TTD recorder exited {0} while the game was still running. The trace is incomplete." -f $recorderExitCode)
+    exit 7
+}
 if ($guestOutcome -eq 'alive-at-stop') {
     Write-Host 'guest: still running when the timer stopped tracing (normal for a timed trace).'
 }
@@ -511,3 +666,4 @@ if ($guestOutcome -eq 'alive-at-stop') {
 if ($span -gt 0 -and $Seconds -gt 0 -and $span -lt ($Seconds * 0.5)) {
     Write-Warning ("Recorded {0:N1} s of a requested {1} s, though the guest exited cleanly." -f $span, $Seconds)
 }
+exit 0
