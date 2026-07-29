@@ -6,8 +6,8 @@ using Xunit.Abstractions;
 namespace OnslaughtRebuild.Core.Tests;
 
 /// <summary>
-/// The whole released experience, once: cold start, frontend, Level 100, played
-/// through the client's own player-input surface.
+/// The deterministic in-process reconstruction path, once: cold start,
+/// frontend, Level 100, played through the client's own player-input surface.
 ///
 /// <para>It takes about six seconds, so it is paid for once.</para>
 /// </summary>
@@ -146,53 +146,25 @@ public sealed class Level100ColdStartTests
     }
 
     /// <summary>
-    /// Startup through the tutorial as ONE run, and the honest result.
+    /// Startup through the tutorial as one deterministic in-process run, and
+    /// the honest current result.
     ///
-    /// <para><b>It does not reach <c>Won</c>. It is lost to
-    /// <c>TutorialBroken</c>, and the cause is NOT the join.</b> The control in
-    /// this same file - the same cold career, driven straight into
-    /// <c>Simulation.Step</c> with no client anywhere - loses the same way, to
-    /// the same released guard, about seventy ticks earlier. What both runs do
-    /// is kill <c>Target Truck #25</c> with a beat-3 miss while it is still
-    /// running its authored route unactivated, and <c>TargetTruck1.msl</c>'s
-    /// <c>died()</c> <c>case FALSE</c> arm posts <c>Broke Tutorial</c>. That is
-    /// the released script defending itself, not a reconstruction gap, and it is
-    /// the same failure mode
-    /// <see cref="Level100FullChainTests.NaiveWalkerAutopilot_StallsOnBeatThreeAndNeverFinishes"/>
-    /// documents at t2545 for a different driver.</para>
+    /// <para>The client/input-adapter path destroys all 22 targets, completes
+    /// primary objective 4, and never fires the released abort poll. It then
+    /// ends <see cref="Level100MissionOutcome.Lost"/> with
+    /// <see cref="Level100MissionFailureReason.WaterLoss"/> at tick 17,699 on
+    /// the ferry flight to Target Zone 4. A direct-Core run with the same
+    /// pointer/integer-pixel quantisation has the same outcome, tick, state
+    /// hash, and pose trace. The <b>unquantised</b> direct-Core control for the
+    /// same cold career reaches
+    /// <see cref="Level100MissionOutcome.Won"/>.</para>
     ///
-    /// <para><b>What is different about the cold career, and why it matters.</b>
-    /// <c>Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone</c> runs
-    /// with all four <c>SLOT_TUTORIAL_*</c> saved - a returning player, which
-    /// skips the HUD lectures and their <c>player.Deactivate()</c> /
-    /// <c>player.Activate()</c> theatre. <b>The client cannot produce that
-    /// player.</b> <c>InteractiveSession</c>'s only constructor takes a seed and
-    /// a definition set and forwards <c>default</c> to <c>Simulation</c>, so
-    /// every level the shipping client enters is a cold first career. The
-    /// lectures cost roughly nine hundred ticks before the player is handed
-    /// control, the beat-4 trucks drive their authored routes from level start
-    /// either way, and the driver therefore arrives at the firing range with a
-    /// truck in a place it was not in when the chain was measured.</para>
-    ///
-    /// <para><b>And this measures how close the passing chain run was, which
-    /// nothing did before.</b> In
-    /// <c>ChainAutopilot_ReachesWonByInputAlone</c>, <c>Target Tank #23</c> dies
-    /// at t6355 — which is what fires <c>Activate Static Targets 2</c> — and
-    /// <c>Target Truck #25</c> dies at t6391. <b>The guard is cleared by 36
-    /// ticks</b>, 1.2 released seconds. The cold career moves the same pair of
-    /// deaths to t4765/t4741 (direct) and t4880/t4814 (through the client), so
-    /// the margin is not merely reduced, it changes sign. The driver was
-    /// already firing at the truck; the only thing that ever made it legal was
-    /// the tank dying first.</para>
-    ///
-    /// <para><b>This assertion is failing-forward, in the style of the naive
-    /// walker control.</b> It pins the outcome that is true today rather than
-    /// the one wanted, because pinning <c>Won</c> would leave a red gate and
-    /// pinning nothing would let the run rot. When a driver clears the cold
-    /// career, replace <see cref="Level100MissionOutcome.Lost"/> here with
-    /// <see cref="Level100MissionOutcome.Won"/> and restore the beat-4 to
-    /// beat-10 assertions from
-    /// <c>Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone</c>.</para>
+    /// <para>This is not a human or native-Godot playthrough. It pins the
+    /// deterministic regression truth of this omniscient synthetic test driver.
+    /// It does not establish a frontend defect or released water-navigation
+    /// behavior. A naive water guard was already tried and measured worse; see
+    /// the ignored local evidence named in <c>developer_state.json</c> before
+    /// changing that behavior.</para>
     /// </summary>
     [Fact]
     public void ColdStart_PlaysLevel100ThroughThePlayerInputSurface()
@@ -306,9 +278,10 @@ public sealed class Level100ColdStartTests
         // walker control.
         //
         // The fight is over and won: objective 4 is `Complete` above, and what
-        // is left is the ferry flight to Target Zone 4. `NavigateToZone` drops
-        // out of jet mode inside 20 m of the volume whatever is underneath, and
-        // on this route that point is open water, so the run ends
+        // is left FOR THIS SYNTHETIC DRIVER is the ferry flight to Target Zone
+        // 4. Its `NavigateToZone` policy drops out of jet mode inside 20 m of
+        // the volume whatever is underneath, and on this route that point is
+        // open water, so the run ends
         // `Level100MissionFailureReason.WaterLoss` - a lost level at 10,700 of
         // 20,000 hull with every target in the level destroyed. That defect is
         // already recorded on `Level100ChainAutopilot.MissileBreakRangeMillimeters`
@@ -326,8 +299,10 @@ public sealed class Level100ColdStartTests
             final.Level100Mission.FailureReason);
 
         // AND THE CONTROL IS THE POINT: the same cold first career driven
-        // straight into `Simulation.Step` REACHES `Won`. The career premise is
-        // no longer what stops this run.
+        // unquantised straight into `Simulation.Step` REACHES `Won`. The
+        // pointer-quantised direct run instead matches the client run exactly;
+        // see the next test. The career premise is no longer what separates
+        // these drivers.
         Assert.Equal(Level100MissionOutcome.Won, _control.Outcome);
         Assert.Equal(
             Level100MissionFailureReason.None,
@@ -351,7 +326,8 @@ public sealed class Level100ColdStartTests
     /// nothing else changed. <b>Equal traces mean the pointer inverse in
     /// <see cref="Level100InteractiveChainHost"/> is exact</b>, which is what
     /// entitles anyone to read the joined run's divergence from the unquantised
-    /// control as a property of the client rather than of this driver.</para>
+    /// control as the measured effect of pointer quantisation, not as an
+    /// additional <c>InteractiveSession</c> or frontend defect.</para>
     /// </summary>
     [Fact]
     public void ClientRoute_IsTheDirectRoutePlusPointerQuantisationAndNothingElse()

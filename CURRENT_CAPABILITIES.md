@@ -1,10 +1,9 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-07-28. Three claims were corrected in place on that date —
-the cold-first-career outcome, the pine mesh-quality boundary, and where the
-frontend regression ceilings live — each under its own dated supersede block.
-**Sections not named there were not re-reviewed by that pass.**
+Last updated: 2026-07-29. Current cold-career, pine-detail, and frontend-gate
+claims were re-reviewed. Other sections retain their narrower
+dated evidence boundaries.
 Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
 re-measure before relying on one.
@@ -445,42 +444,48 @@ relying on one — `tools/score_frontend_capture.py` and
 `tools/pair_gameplay_capture.py` are the instruments, and the frontend gate will
 now FAIL on a regression rather than reporting a healthy capture as a pass.
 
-**The `Won` status has two halves, and stating either one alone misrepresents
-it.**
+**The current outcome comes from four distinct deterministic runs; combining
+them would claim a client or human path that does not exist.**
 
-The full sequence runs as **one** thing and reaches `Won` **on the intended
-path, not the abort branch**: startup, logo, montage, splash, click-to-start,
-main menu, New Game, level select, briefing, configuration select, loading, then
-the Level 100 beat chain — entered by clicking the level node.
-`PrimaryObjectiveComplete(4, ...)` fires, the second drone wave is destroyed
-6 of 6, and `aborted` is false.
-
-That run was measured as a **returning player**, with all four
-`SLOT_TUTORIAL_*` saved. **The shipping client can only start a cold first
-career**, and the cold-career result is now a different one. Driven through the
-client, the cold first career **clears every beat and then loses on the way
-home**: outcome `Lost` with failure reason **`WaterLoss`**, primary objective 4
+The cold-start client/Core harness visits startup, logo, montage, splash,
+click-to-start, main menu, New Game, level select, briefing, configuration
+select, loading, and gameplay in released order. Driven through the client input
+adapter, that same cold first career clears every beat and then loses on the way
+home: outcome `Lost` with failure reason **`WaterLoss`**, primary objective 4
 `Complete`, the LevelScript's sub-40% hull abort poll never fired, and **all 22
-targets destroyed** — three Target Trucks, six Moving Targets, three and six
-Airborne Targets, plus `Target Tank 2`, `Target Tank 3`, `Target Warehouse` and
-`Target Tank #23`. **The career premise is no longer the blocker:** the
-cold-career control with no client involved reaches **`Won`**. Every one of
-those figures is asserted, not merely logged, by
+targets destroyed**—three Target Trucks, six Moving Targets, three and six
+Airborne Targets, plus `Target Tank 2`, `Target Tank 3`, `Target Warehouse`, and
+`Target Tank #23`.
+
+A second, direct-Core cold run applies the same pointer/integer-pixel
+quantisation as the client path. It has the same terminal outcome and tick,
+state hash, and pose trace as the client/input-adapter run: `WaterLoss` is
+therefore not evidence of an additional frontend or `InteractiveSession`
+defect. A third, **unquantised** direct-Core cold-career control reaches
+**`Won`**. All three results are asserted by
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
 
-What remains is the flight home. `NavigateToZone` leaves jet mode within 20 m of
-the target volume regardless of what is underneath, and on the ferry to Target
-Zone 4 that point is open water, so the run ditches. A naive water-landing guard
-was **tried and measured worse** — it broke the returning-player `Won` test and
-turned the cold control's `Won` into `WaterLoss` — so it is deliberately not
-fixed.
+A fourth, returning-player direct-Core run reaches `Won` with the four
+`SLOT_TUTORIAL_*` values already saved; it does not traverse the frontend or
+client adapter. That evidence is
+[`rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs).
+None of these is a human or automated native-Godot end-to-end proof.
+
+For this omniscient synthetic test driver, the remaining loss occurs on the
+flight home. Its `NavigateToZone` policy leaves jet mode within 20 m of the
+target volume regardless of what is underneath, and on the ferry to Target Zone
+4 that point is open water, so the run ditches. A naive water-landing guard was
+**tried and measured worse**—it broke the returning-player `Won` test and turned
+the unquantised cold control's `Won` into `WaterLoss`—so it is deliberately not
+restored. This does not establish a product navigation defect or the released
+behavior; the next correction needs low-over-water retail evidence rather than
+another fit to this driver.
 
 The terminal **tick and hull are recorded but not gated**. The test writes them
 to its log rather than asserting them; `developer_state.json` records `t17699`
 and the test's own comment says roughly 10,700 of 20,000 hull. Treat both as
-re-measurable, not as pinned facts. Note also that the summary comment at the
-head of that test file still describes the superseded `TutorialBroken` result —
-**the assertions are the record, not the comment.**
+re-measurable, not as pinned facts. The test summary now states the same four-run
+boundary as its assertions.
 
 > **Superseded 2026-07-28 — every load-bearing clause of the paragraph these
 > three replaced is now false.** It read: "on a cold career the same sequence ends **`Lost` /
