@@ -2,7 +2,7 @@
 
 Status: **draft — BUT a Core constant shipped anyway. SUPERSEDED IN PART
 2026-07-28; whether the measurement clears this project's dual-accept bar is a
-maintainer decision and is recorded below as UNKNOWN.**  
+maintainer decision and is recorded below as UNKNOWN.**
 Depends on: projectile path-speed dual-accept (not landed)
 
 > **SUPERSEDED IN PART 2026-07-28.** The Status line above previously read, in

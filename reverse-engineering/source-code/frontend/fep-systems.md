@@ -356,12 +356,13 @@ The frontend system provides the menu infrastructure, page management, and playe
 ```
 CFrontEnd : IController (base class - implements controller interface)
     ├── CDXFrontEnd (DirectX implementation)
-    │       └── CPCFrontEnd (PC-specific extensions)
+    ├── CPCFrontEnd (PC implementation)
     └── CPS2FrontEnd (PlayStation 2 implementation - not in provided source)
 ```
 
 **Platform Selection:**
-- PC builds use `CPCFrontEnd` extending `CDXFrontEnd`
+- `CPCFrontEnd` and `CDXFrontEnd` are sibling `CFrontEnd` subclasses in the
+  pinned headers; `CPCFrontEnd` does not derive from `CDXFrontEnd`
 - Xbox builds use `CDXFrontEnd` directly
 - PS2 builds use `CPS2FrontEnd` (not provided)
 

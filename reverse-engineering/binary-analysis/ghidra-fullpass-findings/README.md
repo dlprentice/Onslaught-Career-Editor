@@ -51,16 +51,14 @@ adversarial shard:
 | `0x0048c300` | `CInfluenceMap__dtor` — graded `ok`, `confirm` | `DestructorBody_0048c300` | [`../name-grading-ledger-2026-07-26.md`](../name-grading-ledger-2026-07-26.md) |
 | `0x005386d0` | `CScriptEventNB__Destructor` — graded `possible_missing_neighbor`, `confirm` | `DestructorBody_005386d0` | [`../name-grading-ledger-2026-07-27-demotion2.md`](../name-grading-ledger-2026-07-27-demotion2.md) |
 
-**Which rename moved which address is only partly settled.** Of the 370, 345 are
-accounted for by a named rename or demotion map under `local-lab/re-ledger/`
-(330 of the 332 SAFE_REPREFIX renames of 2026-07-25; 13 from
-`rename-wave13-2026-07-26`; 13 from `rename-wave14-2026-07-26`; and the two
-demotions above). The remaining **25 are UNKNOWN** — no map in that directory
-accounts for them, and no cause is asserted for them here. Also measured: the
-533-name wave of 2026-07-27 accounts for **none** of the 370, because not one of
-its 533 addresses is in this corpus at all. Re-running the attribution against
-the full mutation logs under `local-lab/re-ledger/mutation-waves-2026-07-27/`
-would settle the residual.
+**All 370 name changes are now attributed.** The original comparison found 345
+in the maps under `local-lab/re-ledger/` and left 25 unresolved. The later
+fullbreadth and R1 mutation maps close that remainder: 330 RTTI re-prefixes,
+13 rename-wave addresses, two proven-false demotions, 24 fullbreadth renames,
+and one R1 rename form a disjoint 370-address set. The current reconciliation
+and its source boundaries are recorded in
+[`../../../GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#the-6411-function-fullpass).
+The 533-name wave of 2026-07-27 still accounts for none of this dated corpus.
 
 ## Coverage
 

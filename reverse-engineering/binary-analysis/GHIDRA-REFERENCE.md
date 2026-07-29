@@ -1,8 +1,9 @@
 # Ghidra Reference
 
 This is the active workflow reference for the Steam `BEA.exe` analysis. The
-loaded database and executable are local proprietary inputs and are never
-tracked.
+maintainer's loaded database and executable are local proprietary inputs. The
+reviewed canonical snapshot under [`../ghidra/`](../ghidra/) and narrow
+metadata projections are the explicit tracked evidence exceptions.
 
 ## Current authority
 
@@ -28,9 +29,10 @@ layouts, or behaviors are proven.
 > figures are superseded), [2026-07-26](name-grading-ledger-2026-07-26.md),
 > [2026-07-27](name-grading-ledger-2026-07-27-demotion2.md).
 >
-> A larger vtable-naming wave and a higher live inventory count exist only in
-> the header of an untracked export and are deliberately not quoted here; see
-> the same note in [`_index.md`](_index.md).
+> Later waves raised the live inventory to 7,555 functions. The tracked
+> canonical snapshot remains the reviewed 6,411-function state, while the
+> current 7,555-row name projection and its one known live-name delta are
+> reconciled in [`../../GHIDRA_FUNCTONS.md`](../../GHIDRA_FUNCTONS.md).
 
 ## Safe workflow
 

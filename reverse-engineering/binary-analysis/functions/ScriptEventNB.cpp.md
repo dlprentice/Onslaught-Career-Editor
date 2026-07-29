@@ -63,7 +63,11 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 
 Note: `0x00538ea0` and `0x00538ec0` were previously attributed to this file, but they are now mapped to `CScriptObjectCode` destructor/constructor rows (see `ScriptObjectCode.cpp.md`).
 
-2026-06-08 event/object-code lifecycle schema proof: `missionscript-event-object-code-lifecycle-proof.md` and `missionscript-event-object-code-lifecycle.v1.json` now preserve the static event-manager bridge for this owner file. The schema ties `CScriptEventNB__RegisterEventListener`, `CScriptEventNB__PostEvent`, and `CScriptEventNB__HandleEventMessage` to `IScript__ScheduleEvent`, message id `2000`, `DAT_00855190`, `DAT_0089c590`, `CEventFunction__Execute`, `CScriptObjectCode__CallEvent`, `CScriptObjectCode__CallEventDirect`, and `795` loose event-name counts as corpus context. This is static listener/posting lifecycle accounting only, not runtime event outcomes, exact listener/payload layout, live loose-MSL loading, patch, Godot, rebuild, or no-noticeable-difference proof.
+The current static contract ties `CScriptEventNB__RegisterEventListener`,
+`CScriptEventNB__PostEvent`, and `CScriptEventNB__HandleEventMessage` to the
+path `IScript__ScheduleEvent` → `CScriptEventNB__PostEvent` →
+`CEventFunction__Execute` → `CScriptObjectCode__CallEventDirect`. Runtime event
+outcomes and exact listener/payload layout remain separate proof.
 
 ## Wave586 Static Read-Back
 

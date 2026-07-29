@@ -25,7 +25,10 @@ withdrawn label can tell it was corrected and not lost.
 
 DataType.cpp implements the **mission script data type system** - a polymorphic class hierarchy for representing different data types (int, float, bool, string, position, thing pointer) used by the mission scripting engine.
 
-2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static datatype factory inventory at `0x0052ec60 CDataType__CreateFromType`: `6` serialized datatype ids, `1..6`, covering int, float, string, bool, thing pointer, and position. The same schema links these datatype ids to the opcode/VM anchors `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x00539b00 CScriptObjectCode__Run`, `0x0052ea40 CInstructionOP_CALL__ExecuteCall`, `script_state+0x218`, and `script_object_code+0x68`; runtime datatype behavior, exact layouts, and rebuild parity remain separate proof.
+The retained `missionscript-vm-datatype-opcode-schema.v1.json` accounts for the
+six serialized datatype ids `1..6` (int, float, string, bool, thing pointer, and
+position) created by `0x0052ec60 CDataType__CreateFromType`. Runtime datatype
+behavior and exact layouts remain separate proof.
 
 ## Wave576 String/Thing/Position Static Read-Back
 

@@ -64,9 +64,11 @@ being recovered**, which is exactly the trap this metric sets.
 
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
-are not the current figure. Evidence for the current figure is untracked:
-`local-lab/agent-notes-2026-07-27/ghidra-mutation-waves.md` and `naming-wave.md`.
-The tracked `ghidra/` snapshot is 2026-07-18 and deliberately lags the live DB.)*
+are not the current figure. The tracked `ghidra/` snapshot is the reviewed
+6,411-function state and deliberately lags the live DB. The current 7,555-row
+name projection, live/snapshot distinction, and mutation-wave reconciliation
+are tracked in [`../GHIDRA_FUNCTONS.md`](../GHIDRA_FUNCTONS.md); bulky working
+exports remain ignored under `local-lab/`.)*
 
 ### Specimen, coverage, and symbol ground truth
 

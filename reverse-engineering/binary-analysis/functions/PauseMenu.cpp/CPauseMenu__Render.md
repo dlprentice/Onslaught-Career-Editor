@@ -18,7 +18,10 @@ short * __thiscall CPauseMenu__Render(void * this);
 
 - Wave481 corrected the stale `CEngine__RenderOverlayAndMenuTransitions` owner to `CPauseMenu__Render`.
 - `CDXEngine__PostRender` calls this body with `DAT_008a9d8c` at the source-aligned `GAME.GetPauseMenu()->Render()` point in `references/Onslaught/DXEngine.cpp:1371`.
-- `CFEPOptions__Update` also calls this body through `g_pOptionsContext`; `CFEPOptions__EnsureOptionsContext` allocates that context and initializes it through `PauseMenu__Init`.
+- `CFEPOptions__Update` also calls this body through `g_pOptionsContext`;
+  `CFEPOptions__TransitionNotification @ 0x0051F7E0` allocates that context on
+  first use and resets its session on every frontend Options entry. The older
+  `CFEPOptions__EnsureOptionsContext` label described only one branch.
 - The body sets UI render state, handles pause/menu fade timing, draws the black fade and paired transition sprites, renders the selected `CMenuItemRange`, optionally renders child/prompt ranges, and restores render state / mouse cursor drawing.
 - Return-type evidence is tied to `CMenuItemRange__Render`: the active range render returns the range title text pointer, and this function returns it only when the active range index is nonzero.
 

@@ -10,7 +10,10 @@
 ## Purpose
 Level-loss transition logic: stores/prints loss reason, sets level-lost state/timers, stops vibration, and triggers pause behavior (immediate or delayed depending on `player_died`).
 
-2026-06-08 MissionScript Objective/Outcome Command-Effect static proof: `missionscript-objective-outcome-command-effect-static-proof.md` and `missionscript-objective-outcome-command-effect.v1.json` use this function as the CGame level-lost transition bridge from `0x005381a0 IScript__LevelLost` and `0x005381c0 IScript__LevelLostString`, alongside `CGame__FillOutEndLevelData`, `CCareer__Update`, and `CEndLevelData__IsAllSecondaryObjectivesComplete`. This is static bridge accounting only; runtime command effects, runtime level outcome behavior, runtime save/career behavior, exact layout, patching, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.
+The exact native registry binds `LevelLost` at index 8, record `0x0064d020`,
+to `0x005381a0`, and `LevelLostString` at index 106, record `0x0064e8a0`,
+to `0x005381c0`. This function is the adjacent CGame transition owner; runtime
+outcome and save/career behavior remain separate proof.
 
 ## Signature
 ```c

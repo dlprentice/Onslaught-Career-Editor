@@ -68,11 +68,19 @@ Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factor
 | `0x0052e810` | `CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual` | `void __thiscall CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Less-or-equal executor that dispatches datatype comparison slot `+0x28`. | Saved/read-back |
 | `0x0052e8b0` | `CInstructionOP_CMPNEB__ExecuteCompareNotEqual` | `void __thiscall CInstructionOP_CMPNEB__ExecuteCompareNotEqual(void * this, void * script_state, void * data_stack, void * object_code)` | Inequality executor that dispatches datatype vtable slot `+0x1c`, pushes an allocated boolean result, and releases both operands. | Saved/read-back |
 | `0x0052e950` | `CInstructionOP_JMPFALSE__VFunc_00_0052e950` | `void __thiscall CInstructionOP_JMPFALSE__VFunc_00_0052e950(void * this, void * script_state, void * data_stack, void * object_code)` | JMPFALSE executor that reads a popped datatype bool through slot `+0x3c` and writes `this+0x04` to `script_state+0x214` when false. | Saved/read-back |
-| `0x0052ea40` | `CInstructionOP_CALL__ExecuteCall` | `void __thiscall CInstructionOP_CALL__ExecuteCall(void * this, void * script_state, void * data_stack, void * object_code)` | CALL executor that stages arguments in the global scratch array near `0x0089c300`, dispatches through descriptor table `0x0064ce50`, pushes the result datatype, and releases temporaries. | Saved/read-back |
+| `0x0052ea40` | `CInstructionOP_CALL__ExecuteCall` | `void __thiscall CInstructionOP_CALL__ExecuteCall(void * this, void * script_state, void * data_stack, void * object_code)` | CALL executor that stages arguments in the global scratch array near `0x0089c300`, indexes the `0x0064ce20` descriptor table and its handler field at `+0x30`, pushes the result datatype, and releases temporaries. | Saved/read-back |
 
-2026-06-08 descriptor schema proof: `missionscript-command-descriptor-schema-proof.md` and `missionscript-command-descriptor-schema.v1.json` now account for the `0x0064ce50` descriptor table consumed by `CAsmInstruction__ExecuteCall`: `144` declared `0x40`-stride slots, `144` slots with observed assignments, `143` observed name-field assignments, and first/last observed names `FollowWaypointWait` / `IsOverWater`. This is static descriptor-slot accounting only; exact descriptor field layout, exact arity, runtime command dispatch, command effects, and VM/datatype/opcode runtime behavior remain separate proof.
+The current exact registry records 144 `0x40`-stride descriptors at
+`0x0064ce20`, with names at `+0x00`, handlers at `+0x30`, and distinct
+`FollowWaypoint`-through-`IsOverWater` names and handlers. See the
+[`MissionScript appendix`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry).
+Runtime command effects and exact arity remain separate proof.
 
-2026-06-08 VM/datatype/opcode schema proof: `missionscript-vm-datatype-opcode-schema-proof.md` and `missionscript-vm-datatype-opcode-schema.v1.json` now account for the finite static MissionScript opcode inventory around `0x0052d3d0 CAsmInstruction__SpawnFromOpcode`, `0x0052ea40 CInstructionOP_CALL__ExecuteCall`, opcode ids `0x00..0x1a`, `19` proven executor/shared no-op cases, and `8` unpromoted opcode cases. The schema keeps `CDataType__CreateFromType`, `CScriptObjectCode__Run`, `script_state+0x218`, and `script_object_code+0x68` as static planning anchors only; runtime opcode behavior, exact instruction/object layouts, and rebuild parity remain separate proof.
+The retained `missionscript-vm-datatype-opcode-schema.v1.json` accounts for the
+finite static MissionScript opcode inventory around
+`CAsmInstruction__SpawnFromOpcode` and `CInstructionOP_CALL__ExecuteCall`.
+Runtime opcode behavior and exact instruction/object layouts remain separate
+proof.
 
 ## Wave863 Static Read-Back
 
@@ -97,6 +105,6 @@ Exact anchors: `0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180`, `0x0052e1d0 
 
 ## Open Work
 
-1. Treat `missionscript-vm-datatype-opcode-schema-proof.md` as the static schema handoff for factory/type/opcode accounting.
+1. Treat `missionscript-vm-datatype-opcode-schema.v1.json` as the static schema handoff for factory/type/opcode accounting.
 2. Recover remaining opcode vtable slot labels conservatively, only where xrefs/decompile/vtable evidence justify the name.
 3. Keep runtime MissionScript behavior separate from this static Ghidra read-back until copied-profile runtime proof exists.

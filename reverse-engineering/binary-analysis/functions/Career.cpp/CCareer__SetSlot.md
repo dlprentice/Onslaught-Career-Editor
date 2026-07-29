@@ -9,7 +9,10 @@
 - **Signature Set:** Yes
 - **Verified vs Source:** Yes
 
-2026-06-08 MissionScript Slot Command-Effect static proof: `missionscript-slot-command-effect-static-proof.md` and `missionscript-slot-command-effect.v1.json` bind this persistent slot helper to descriptor slot `SetSlotSave` at `0x0064ef50`, `IScript__SetSlotSave`, runtime helpers `CGame__SetSlot` and `CGame__GetSlot`, runtime storage `CGame+0x308`, true-view save slot base `0x240A`, `6 slot-using level rows`, `18 detailed slot call rows`, `6 GetSlot`, `8 SetSlot`, and `4 SetSlotSave`. This is static bridge accounting only, not runtime command effects, runtime save behavior, runtime slot persistence, live loose-MSL loading, exact `CCareer` layout, patch, Godot, rebuild, or no-noticeable-difference proof.
+The exact native registry binds `SetSlotSave` at index 133, record
+`0x0064ef60`, to handler `0x00533900`. The helper persists the corresponding
+slot through the career/save path; the true-view save slot base is `0x240A`.
+Runtime persistence and exact `CCareer` layout remain separate proof.
 
 ## Purpose
 Set/clear a tech-slot bit in `mSlots` (CCareer offset `0x2408`). Uses standard bit manipulation (NOT shift-16).

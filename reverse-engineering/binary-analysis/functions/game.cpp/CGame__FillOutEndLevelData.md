@@ -15,7 +15,6 @@ Builds the end-of-level summary snapshot consumed by career/progression flows:
 - slot-bit flags (`mSlots`) used by MissionScripts (`GetSlot`/`SetSlot`) and persisted into CCareer on LevelWon
 - related progression/context fields copied out of runtime state
 
-2026-06-08 MissionScript Objective/Outcome Command-Effect static proof: `missionscript-objective-outcome-command-effect-static-proof.md` and `missionscript-objective-outcome-command-effect.v1.json` use this function as the CGame snapshot bridge from objective handler state/text arrays into end-level data consumed by `CCareer__Update` and `CEndLevelData__IsAllSecondaryObjectivesComplete`. This is static bridge accounting for the MissionScript Objective/Outcome Command-Effect lane only; runtime objective UI, runtime level outcomes, runtime save/career behavior, exact layout, patching, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
 ## Notes
 - Called on level shutdown paths before teardown/deallocation completes.

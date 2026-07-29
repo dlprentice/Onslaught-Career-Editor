@@ -11,7 +11,10 @@
 
 Wave803 (`game-slot-helpers-wave803`, `wave803-readback-verified`) saved the Ghidra function comment/tags for `0x0046d410 CGame__GetSlot` without renaming or changing its signature. Post-Wave803 queue head moved to `0x00472e50 CVBufTexture__DrawSpriteWithDefaultTextureFallback`.
 
-2026-06-08 MissionScript Slot Command-Effect static proof: `missionscript-slot-command-effect-static-proof.md` and `missionscript-slot-command-effect.v1.json` bind this helper to descriptor slot `GetSlot` at `0x0064ed10`, `IScript__GetSlotBitValue`, `CGame+0x308`, `CCareer__SetSlot` context through the sibling `SetSlotSave` command, true-view save slot base `0x240A`, `6 slot-using level rows`, `18 detailed slot call rows`, `6 GetSlot`, `8 SetSlot`, and `4 SetSlotSave`. This is static bridge accounting only, not runtime command effects, runtime save behavior, runtime slot persistence, live loose-MSL loading, exact `CGame` layout, patch, Godot, rebuild, or no-noticeable-difference proof.
+The exact native registry binds `GetSlot` at index 124, record `0x0064ed20`,
+to handler `0x005339a0`. Source-backed helpers connect that command to the
+`CGame+0x308` slot state and career persistence path. Runtime persistence and
+exact `CGame` layout remain separate proof.
 
 ## Purpose
 Read a runtime slot bit in `CGame::mSlots` (slot ids `0..255`).

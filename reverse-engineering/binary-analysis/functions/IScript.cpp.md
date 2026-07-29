@@ -8,12 +8,10 @@ Current corrected metadata is owned by the
 [reviewed correction plan](../ghidra-reviewed-correction-plan-2026-07-13.json).
 
 `0x0052ff30 ScriptCommandRegistry__InitBuiltins` initializes 144 contiguous
-`0x40`-byte descriptor slots. The older
-[command descriptor schema](../missionscript-command-descriptor-schema.v1.json)
-is retained as historical discovery evidence only: its base is one record
-(`0x40` bytes) late and its handler field is another `0x30` bytes late, so it
-must not decide an exact row or binding. The current exact 144-row registry is
-the [MissionScript appendix in `GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry);
+`0x40`-byte descriptor slots. An older generated schema, now retained only in
+Git history, mistook record zero's handler field for the table base and cannot
+decide an exact row or binding. The current exact 144-row registry is the
+[MissionScript appendix in `GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry);
 direct stores in the pristine image decide the `Pause` row below.
 
 ## Name corrections — 2026-07-28

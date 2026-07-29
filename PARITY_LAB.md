@@ -1397,7 +1397,7 @@ C2: A4, B4, B5, A5, A6, B6
 
 All 12 receipts are healthy. Three shared canaries hit 12/12 runs.
 `CFEPMain__DoAction @ 0x004623E0`,
-`CFEPOptions__EnsureOptionsContext @ 0x0051F7E0`, and
+`CFEPOptions__TransitionNotification @ 0x0051F7E0`, and
 `CFEPOptions__RenderPreCommon @ 0x0051F6D0` hit 6/6 action runs and 0/6
 baselines. Each campaign independently produced the same 801 stable
 action-associated basic blocks; the cross-campaign comparison has 801 durable
@@ -1412,18 +1412,18 @@ It is `COMPARABLE`, not a semantic function-name verdict. Whole-process
 action-associated candidates until an event-bounded TTD query proves receiver,
 argument, caller, and state effect.
 
-### Options TTD attempts: no action proof, not a negative finding
+### Options TTD adjudication
 
-Evidence: **MEASURED `UNSCORED` attempts** from two copied-target attach
-recordings and their symbol-bound TTD queries.
+Evidence: **MEASURED** from three copied-target attach recordings and
+symbol-bound TTD queries.
 
 Two automated attempts recorded valid trace bytes, but neither produced a
 successful page-`0x11` orchestration receipt:
 
 | Attempt | Trace bytes | Trace SHA-256 | Queried calls |
 | --- | ---: | --- | --- |
-| short | 729,808,896 | `6085F250E032248B9B962028932D0F345FE4BAC44B8B8E8ABC908CB61DC7270C` | `PauseMenu__Init` 0/0; `CFEPOptions__EnsureOptionsContext` 0/0 |
-| extended | 9,302,966,272 | `E6AF52464513338FB3B542C56B3674A09995F3CD5A88E432AD5702111005D93D` | `PauseMenu__Init` 0/0; `CFEPOptions__EnsureOptionsContext` 0/0 |
+| short | 729,808,896 | `6085F250E032248B9B962028932D0F345FE4BAC44B8B8E8ABC908CB61DC7270C` | `PauseMenu__Init` 0/0; `CFEPOptions__TransitionNotification` 0/0 |
+| extended | 9,302,966,272 | `E6AF52464513338FB3B542C56B3674A09995F3CD5A88E432AD5702111005D93D` | `PauseMenu__Init` 0/0; `CFEPOptions__TransitionNotification` 0/0 |
 
 For each query, symbolic and numeric counts agreed, and the known-answer and
 negative controls passed. That proves the query machinery worked; it does not
@@ -1439,6 +1439,79 @@ function is absent, do not adjudicate receiver or arguments, and do not support
 a frontend contract. A second, much larger recording produced the same
 non-observation, so more unattended retries are not justified. The rejected
 trace directories were deleted after recording these hashes and receipts.
+
+A later maintainer-driven recording did contain the action. It has no producer
+receipt and is therefore not promoted as a healthy-capture example. Operator
+output reported a post-finalization wrapper failure, but that observation is not
+itself retained as a durable capture artifact. The finalized, replayable trace is
+`G:\bea-ttd\options-open-manual-01\options-open-manual-01.run`,
+9,755,951,104 bytes, SHA-256
+`9C57324B726E9DB5FCEDB8BA5275FD52AB557BCDBDEA3C23076786F1CE2567A7`.
+Current trace-hashed queries passed PE identity and negative controls and
+observed two calls to `0x0051F7E0`. The recorded PE identity matches the current
+copied target, but the absent producer receipt means the capture-time executable
+SHA-256 remains unbound. Numeric call evidence is in the state query; the
+separate count query proves matching symbolic/numeric counts using the v5 map's
+pre-adjudication `CFEPOptions__EnsureOptionsContext` label at the same address.
+The trace result therefore proves symbol/address agreement, while the receiver,
+argument, caller, and state evidence below corrects the semantic label.
+
+Both calls used the same receiver (`ECX=0x008A1844`) and the same persistent
+options context (`g_pOptionsContext=0x03B61DC0`). Their source-page arguments
+were `0x12` and `0x00`, and both returned to `CFrontEnd__SetPage` at
+`0x00466B8D`. Each called `CPauseMenu__InitPauseSession @ 0x004D0FF0` with
+mode `0`. The same non-null context existed at both observed transitions, and
+bounded static branch evidence shows that state takes the reuse path rather
+than the lazy full-initializer path. Across the first transition the session
+root changed from active to reset (`context+0x0C: 1 -> 0`,
+`context+0x10: 0 -> 1`); the second transition reset the same context again.
+
+That receiver, the source-page argument, and Stuart's timed
+`CFrontEnd::SetPage` call to `TransitionNotification(mTransitionFrom)` identify
+`0x0051F7E0` as `CFEPOptions__TransitionNotification`, not merely an
+ensure-context helper. Engine-neutral contract: the frontend reuses one
+persistent frontend pause-menu context/tree but starts a fresh root session on
+every entry. This is the same initializer/widget implementation as the in-game
+pause menu, not the same runtime instance.
+Evidence receipt:
+`local-lab/options-open-manual-01-entry-state-v1/result.json`, SHA-256
+`61E8FFB9811EAA6BBEF6986306C07C34F3D64750D2B6317D71984723167822B4`.
+
+The same replay query also narrows two still-literal Options-associated bodies:
+
+- `0x00456190` is responsibly described as
+  `Controls__RemapCaptureKeySink`. `Controls__BeginRemapCapture` installs it
+  through `PLATFORM__SetKeySink`; the body handles remap event kinds, duplicate
+  clearing, and binding writes. The trace observed 694 of 1,056 body bytes, so
+  its exact callback ABI and unobserved paths remain open.
+- `0x004CEED0` is responsibly described as
+  `OptionsDetailDropdown__GetLocalizedLabel`. Its complete 19-byte body maps a
+  detail index to `Localization__GetStringById(index + 0x10)` and preserves the
+  returned wide-string pointer. Two detail-dropdown vtables own the callback;
+  the trace does not establish which one invoked it, so no narrower class name
+  is claimed.
+
+The healthy startup-to-main-menu trace closes one additional anonymous
+function: `CPCSoundManager__DirectSoundEnumerateCallback @ 0x00516ED0`.
+`CPCSoundManager__Init` statically passes the address to
+`DirectSoundEnumerateA`; the trace records two calls returning to `DSOUND.dll`,
+first with a null GUID and `"Primary Sound Driver"`, then with a non-null device
+GUID. Both have null context and return `TRUE`. The body ends in `RET 0x10`,
+matching the SDK's exact
+`BOOL CALLBACK (LPGUID, LPCSTR, LPCSTR, LPVOID)` contract. Evidence:
+`local-lab/startup-directsound-enum-query-v1/result.json`, SHA-256
+`D50C23C6F2A92158351B173C939F7FC1262217ACE3778FBEBB92F35F27C962FD`,
+over trace SHA-256
+`D30AC43595EA8E42A5A9FA86719CFD3B73FA10CF3C67A346B739425F70CB7D13`.
+Its healthy `ttd-record-receipt.v3` is
+`G:\bea-ttd\startup-to-main-menu-20260729-173124\receipt.json`, SHA-256
+`26441D9F9FB9E30A681DE717E8E8AE1FD16FDC4C8BB7972CD09A91EBFD774CAC`.
+Known-answer and negative controls passed. The live Ghidra database was not
+renamed.
+
+No broader startup/frontend naming wave follows from these traces. The other
+literal `FUN_*` hits are broad positive coverage without a uniquely attributable
+action, caller, or owner. They remain candidates rather than names.
 
 ## Short TTD recording: keep it, but measure its stop path
 
@@ -2634,38 +2707,14 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
 
 ## The next experiment to run
 
-The repeated `drcov` campaign is complete. Two unattended TTD attempts did not
-produce evidence that the Options action occurred, so the next experiment
-requires one manual action during an attach capture. Start the copied game at
-full speed, settle on the main menu with the Options row ready, attach TTD, wait
-for the recorder's `RECORDING` banner and slowdown, and have the maintainer click
-Options while recording. Then run the same event-bounded adjudication of the
-leading shared-widget candidate:
-
-```text
-candidate: PauseMenu__Init at 0x004CDE60
-caller: CFEPOptions__EnsureOptionsContext at 0x0051F7E0
-question: does the isolated Options action call this function with mode 1 and
-          leave DAT_0082B4E8 set to 1?
-positive controls:
-  symbolic and numeric call counts agree and are nonzero
-  return address belongs to 0x0051F7E0..0x0051F8DC
-  first stack argument is 1
-  DAT_0082B4E8 is 1 after return
-negative/control boundary:
-  a miss is non-observation because TTD traces can contain gaps
-```
-
-Acceptance remains discrete:
-
-1. the trace receipt is healthy and binds the copied target;
-2. symbolic and numeric counts agree;
-3. the exact caller, mode argument, and state write all match;
-4. the result becomes an engine-neutral shared-widget contract;
-5. the matching rebuild owner is compared with a focused test.
-
-If any canary fails, the result is `UNSCORED`; it is not silently retained as a
-negative observation or used to rename the function.
+The repeated `drcov` campaign and event-bounded Options adjudication are
+complete. The rebuild's existing Options owner now applies the proven entry-reset
+contract. The same trace plus complete static bodies supports the bounded,
+owner-neutral descriptions `Controls__RemapCaptureKeySink @ 0x00456190` and
+`OptionsDetailDropdown__GetLocalizedLabel @ 0x004CEED0`; neither change was
+applied to the live Ghidra database. Further runtime work should return to a
+player-visible open contract rather than repeat this capture. Coverage alone
+remains only a candidate selector.
 
 ## Operator runbook
 
@@ -2928,7 +2977,7 @@ any other client.
 | --- | --- |
 | Python syntax | `parity_lab.py` and `parity_lab_tests.py` compile |
 | focused Python contracts | 20/20 pass, including READY binding, legacy action-status non-trust, trace-hash immutability, legacy unhashed downgrade, marker/health separation, trace independence, exact fragmented mapping, bounded deterministic symbols, and fail-closed apitrace cleanup/publication contracts |
-| existing TTD pipeline contracts | 12/12 pass with trace-hashed record/query schema v3 |
+| existing TTD pipeline contracts | 13/13 pass with trace-hashed record/query schema v3 |
 | workspace tools gate | `npm run test:tools` completed through the final byte-exact `worldheaders.dat` self-test; every preceding `&&`-gated suite passed |
 | static graph transaction | real v5 READY receipt validates 7,555 functions, 7,672 ranges, 14,142 edges, and 26,622 call sites; forced no-clobber rerun changed zero files |
 | real Replay re-diff | regenerated 21,781 stable bytes, 21,781 exact mappings, 476 candidates, and `exactly-one-active-for-window` policy |
@@ -2939,18 +2988,17 @@ any other client.
 | BSim query/export | current identity-bound script: 15 queries, 342 matches, 0 errors, stable output SHA, immutable read-only database hash |
 | BSim no-clobber | existing output identity preserved; 200/200 concurrent publication races admit exactly one writer |
 | PowerShell parsing | all eight relevant build/record/invoke scripts have zero parser errors |
-| Options TTD attempts | two symbol-bound queries passed known-answer/negative controls but produced no successful page-action receipt; results are `UNSCORED`, and the rejected 10,032,775,168 trace bytes were deleted |
+| Options TTD attempts | two unattended symbol-bound queries remain `UNSCORED` non-observations and their rejected 10,032,775,168 trace bytes were deleted; the later manual trace positively observed two Options transitions and closed the context-reuse/session-reset contract, with its missing producer receipt stated explicitly |
 | apitrace cleanup canary | owned `Kill($true)` terminated one parent and two observed children; zero survivors; source contract requires BEA ancestry and does not kill ambiguous same-path survivors |
 | apitrace recovery | raw partial and recovered traces yield 466/466 identical ordered snapshots; recovered trace is EOF-clean, raw EOF is expected |
 | mutation boundary | installed `BEA.exe` still matches the prior documented SHA-256 `E7881829…C918`; no local `d3d9.dll` or BEA/TTD/CDB process remains in either installed or copied-target lane |
-| Markdown links | 1,047 files scanned, 968 local links checked, pass |
-| documentation headers | 44 self-tests plus repository scan, zero violations |
+| Markdown links | 1,052 files scanned, 1,098 local links checked, pass |
+| documentation headers | 44 self-tests plus 1,034-document repository scope, zero violations; 471 recorded historical documents remain deferred |
 | whitespace | `git diff --check`, pass; unrelated pre-existing line-ending warnings remain outside this work |
 
-No broad app/rebuild test suite was run because this pass adds isolated RE/lab
-tooling and documentation, not AppCore, WinUI, or rebuild behavior. No
-maintainer Ghidra mutation, installed-game mutation, push, or publication
-occurred.
+The focused Client suite and Godot C# build were run after the bounded Options
+presentation correction; no unrelated broad matrix was added. No maintainer
+Ghidra mutation, installed-game mutation, push, or publication occurred.
 
 ## Primary technical references
 
@@ -2991,10 +3039,11 @@ The remaining function problem is now mechanically approachable:
   controls, with calibrated ambiguity retained;
 - CPU, D3D9, TTD, images, and receipts can live in one verified query layer.
 
-What remains is substantial but no longer shapeless. Finish the event-bounded
-Options adjudication with a maintainer-performed click during TTD recording;
-unattended input has produced no successful action receipt twice. Then apply the
-same finite loop to the 144 Mission natives, 26 definition selectors,
-Career/save paths, movement, damage, weapons, AI, loaders, rendering, and audio.
-Every wave has an explicit denominator, canary, artifact, failure state, and
-promotion gate.
+What remains is substantial but no longer shapeless. The maintainer-performed
+Options trace closed one frontend transition contract, the startup trace closed
+one DirectSound callback, and the Mission registry/runtime path closed the
+authored-used `Pause` native without mutating the live Ghidra database. Apply
+the same finite loop next to a player-visible open contract among the remaining
+Mission natives, definition selectors, Career/save paths, movement, damage,
+weapons, AI, loaders, rendering, and audio. Each wave should retain an explicit
+denominator, canary, artifact, failure state, and promotion gate.

@@ -16,7 +16,11 @@ Key retail evidence:
 
 The runtime event behavior remains unproven. This page records saved static Ghidra evidence only, not runtime dispatch behavior, concrete layout finality, BEA patching, or rebuild parity.
 
-2026-06-08 event/object-code lifecycle schema proof: `missionscript-event-object-code-lifecycle-proof.md` and `missionscript-event-object-code-lifecycle.v1.json` now preserve this owner file as the static callback bridge between `CScriptEventNB__PostEvent` and `CScriptObjectCode__CallEventDirect`. The schema anchors `CEventFunction__Execute`, its observed local 10-slot staging array, `0x005e4d50`, `IScript__ScheduleEvent`, `CScriptObjectCode__CallEvent`, `CScriptObjectCode__CallEventDirect`, descriptor dependency `0x0064ce50`, and `795` loose event-name counts as corpus context. This is static callback lifecycle accounting only, not runtime callback execution, exact event-parameter layout, live loose-MSL loading, patch, Godot, rebuild, or no-noticeable-difference proof.
+The current static contract places `CEventFunction__Execute` in the event path
+`IScript__ScheduleEvent` → `CScriptEventNB__PostEvent` →
+`CEventFunction__Execute` → `CScriptObjectCode__CallEventDirect`.
+Runtime callback execution and exact event-parameter layout remain separate
+proof.
 
 ## Wave577 static read-back
 

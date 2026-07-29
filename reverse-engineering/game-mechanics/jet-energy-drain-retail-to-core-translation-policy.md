@@ -1,7 +1,7 @@
 # Retail → Core translation policy (jet energy drain)
 
 Status: **accepted (2026-07-14) for the retail measurement; SUPERSEDED 2026-07-28
-for the Core mapping**  
+for the Core mapping**.
 Depends on: [jet-energy-drain-scalar-response-v1.md](jet-energy-drain-scalar-response-v1.md)
 
 > **SUPERSEDED 2026-07-28 — the Core mapping only.** The Status line above

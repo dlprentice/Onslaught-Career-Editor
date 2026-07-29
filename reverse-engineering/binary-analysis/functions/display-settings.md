@@ -199,7 +199,18 @@ Widescreen modes are gated by the `ALLOW_WIDESCREEN_MODES` configuration option,
 
 `0x00524830` is **not** the Video Options handler in this build; it is `Localization__GetStringById` (string lookup by id and `g_LanguageIndex`).
 
-The retail Video Options surface is now mapped through `CFEPOptions__ProcessInput`, `CFEPOptions__Update`, `CFEPOptions__SaveDefaultOptions`, `CFEPOptions__WriteDefaultOptionsFile`, and `CFEPOptions__EnsureOptionsContext`. Remaining uncertainty is limited to individual sub-item behavior below those mapped handlers.
+The retail Video Options surface is now mapped through
+`CFEPOptions__ProcessInput`, `CFEPOptions__Update`,
+`CFEPOptions__SaveDefaultOptions`,
+`CFEPOptions__WriteDefaultOptionsFile`, and
+`CFEPOptions__TransitionNotification @ 0x0051F7E0`.
+The last identity corrects the older `CFEPOptions__EnsureOptionsContext` label:
+two calls in the trace-hashed, replayable manual Options TTD trace receive the
+transition-from page id, return to `CFrontEnd__SetPage`, reuse the same frontend
+options context, and reset its session; this matches Stuart's timed
+`CFrontEnd::SetPage -> TransitionNotification(mTransitionFrom)` call. The
+missing producer receipt leaves the capture-time executable hash unbound.
+Individual sub-item behavior below those mapped handlers remains open.
 
 ## Known Issues
 

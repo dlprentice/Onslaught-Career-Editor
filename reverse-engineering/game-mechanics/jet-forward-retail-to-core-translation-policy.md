@@ -1,7 +1,7 @@
 # Retail → Core translation policy (jet-forward scalar)
 
 Status: **accepted (2026-07-14) for the retail measurement; SUPERSEDED 2026-07-28
-for the Core mapping** — identity scale \(s=1\)  
+for the Core mapping** — identity scale \(s=1\).
 Depends on: [jet-forward-scalar-response-v1.md](jet-forward-scalar-response-v1.md)
 
 > **SUPERSEDED 2026-07-28 — the Core mapping only.** The Status line above

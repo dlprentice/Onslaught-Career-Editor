@@ -36,7 +36,8 @@ particular is a live limit on what modding is proven to do.
 
 - **Enhanced Copy:** copied Level 100 runs at an exact 1600x900
   windowed baseline with the 28-region aspect/FOV correction; the copy writes
-  the retail 16:9 option and minimum mouse sensitivity, and WinUI owns guarded
+  the retail 16:9 option and AppCore's lowest mouse-sensitivity preset, and
+  WinUI owns guarded
   create, launch, stop, and restore boundaries without changing the install.
 - **Retail modding go/no-go:** AppCore makes two narrow,
   backup-guarded Level 100 changes in an app-owned copy: one fixed-size English

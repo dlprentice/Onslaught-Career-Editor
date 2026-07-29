@@ -251,7 +251,9 @@ ledger from being read as retracted.
 ## Scope
 
 Applies to **tracked** files only; the file list comes from `git ls-files`.
-1,028 of the 1,046 tracked `*.md` files are in scope.
+The live checker currently classifies 1,034 documents and defers 471
+pre-standard documents. Run it for exact current counts; this file does not
+freeze the total.
 
 **`local-lab/` is out of scope, deliberately.** It is gitignored, so it is
 structurally invisible to the checker, and it is additionally excluded by path so
@@ -262,9 +264,9 @@ standard starts applying — conforming to the header is part of what promotion
 means.
 
 Also excluded, each for a stated reason in the checker: `.github/` (templates,
-not documents), `lore/` and `lore-book/` (in-universe narrative, which makes no
-claim about the shipped game), `references/` (pinned third-party submodule),
-generated notices, and build output.
+not documents), `lore/` and `lore-book/` (narrative/archive material governed by
+their own source notes rather than the RE-finding header schema), `references/`
+(pinned third-party submodule), generated notices, and build output.
 
 ## The checker
 
@@ -273,8 +275,11 @@ py -3 tools\doc_header_check.py              # gate
 py -3 tools\doc_header_check.py --self-test  # 44 cases, no repository needed
 py -3 tools\doc_header_check.py --show-backlog
 npm run test:doc-headers                     # both of the above, wired
-npm run test:docs                            # links, reachability, headers
+npm run test:docs                            # links, headers, function-name drift
 ```
+
+Reachability is a separate diagnostic:
+`py -3 tools\md_reachability_check.py`. It is not part of `npm run test:docs`.
 
 | Exit | Meaning |
 | --- | --- |

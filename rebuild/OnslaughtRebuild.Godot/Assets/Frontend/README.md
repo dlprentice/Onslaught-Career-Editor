@@ -7,13 +7,13 @@ and reproduce these exact files. The payloads remain outside Git and
 release packages and remain copyright of their respective rights holders;
 `rebuild/LICENSE` covers reconstruction code only.
 
-The path intentionally begins at the released click-to-start page. Steam's
-`-skipfmv` path skips the startup movie but retains this page, so no startup,
-briefing, or outro video is copied or simulated. New Game, Options and Quit are
-the working main-menu actions. Continue, Load Game, Multiplayer and Goodies are
-visible and enter no page in this lane. Only Continue Game is drawn dim; the
-other four are drawn bright exactly like Quit. Level select exposes only
-`1.00 - Training Level` (world 100).
+Steam's `-skipfmv` path begins at the released click-to-start page. An ordinary
+launch first streams the startup movie from the ignored, locally materialized
+startup cache; briefing and outcome movies remain outside this bounded lane.
+New Game, Options and Quit are the working main-menu actions. Continue, Load
+Game, Multiplayer and Goodies are visible and enter no page in this lane. Only
+Continue Game is drawn dim; the other four are drawn bright exactly like Quit.
+Level select exposes only `1.00 - Training Level` (world 100).
 
 > **Corrected 2026-07-28 — both halves of this were false at HEAD.** The
 > paragraph above previously read "New Game and Quit are the only working

@@ -14,7 +14,6 @@ Update career progress from the current `END_LEVEL_DATA` snapshot.
 
 This is the “mission finished” entry point: it updates slots/kills, updates node completion + ranking, recalculates links, then recomputes goodies.
 
-2026-06-08 MissionScript Objective/Outcome Command-Effect static proof: `missionscript-objective-outcome-command-effect-static-proof.md` and `missionscript-objective-outcome-command-effect.v1.json` use this function as the Career bridge from CGame end-level snapshots and objective/outcome command state toward progression updates, with `CGame__FillOutEndLevelData`, `CGame__DeclareLevelWon`, `CGame__DeclareLevelLost`, and `CEndLevelData__IsAllSecondaryObjectivesComplete` as adjacent anchors. This is static bridge accounting only; runtime command effects, runtime level outcome behavior, runtime save/career behavior, exact layout, patching, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.
 
 ## Signature
 ```c

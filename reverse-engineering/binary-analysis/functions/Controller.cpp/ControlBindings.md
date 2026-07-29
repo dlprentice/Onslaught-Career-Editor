@@ -80,7 +80,7 @@ Notes:
 | 0x00456630 | `CControllerDefinition__GetFlag1C` | Reads the control-definition byte flag at `this+0x1c` |
 | 0x00456640 | `CControllerDefinition__ClearFlag1C` | Clears the control-definition byte flag at `this+0x1c` |
 | 0x004540c0 | *(code label)* | Remap write-callback (plate comment in Ghidra) |
-| 0x00456190 | *(code label)* | Remap capture state machine callback (plate comment in Ghidra) |
+| 0x00456190 | `Controls__RemapCaptureKeySink` *(descriptive identity; live Ghidra remains unchanged)* | Installed by `Controls__BeginRemapCapture`; handles remap events, duplicate clearing, and binding writes. A frontend Options trace observed 694 of 1,056 body bytes, so the exact callback ABI and unobserved branches remain open. |
 
 ## Wave 370 Saved-Ghidra Frontend Controls Corrections (2026-05-13)
 

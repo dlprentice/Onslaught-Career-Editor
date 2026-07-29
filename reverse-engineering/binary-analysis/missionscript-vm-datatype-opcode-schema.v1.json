@@ -417,9 +417,11 @@
   },
   "callDescriptorBridge": {
     "function": "0x0052ea40 CAsmInstruction__ExecuteCall",
-    "descriptorTable": "0x0064ce50",
+    "descriptorTable": "0x0064ce20",
+    "descriptorHandlerFieldBase": "0x0064ce50",
+    "descriptorHandlerOffset": "+0x30",
     "descriptorStrideBytes": 64,
-    "schemaDependency": "missionscript-command-descriptor-schema.v1.json",
+    "registryOwner": "GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry",
     "instructionFields": [
       "this+0x04 low byte indexes the descriptor table",
       "this+0x04 high bits participate in return-value expectation checks",
@@ -432,7 +434,7 @@
     "The saved opcode factory has 27 serialized opcode cases, 0x00 through 0x1a.",
     "The saved datatype factory has 6 serialized datatype cases, 1 through 6.",
     "The saved VM run loop dispatches instruction vtable slot 0 and observes opcode 0x17 as the stop candidate when call depth is not positive.",
-    "The saved CALL executor bridges opcode execution to the 0x0064ce50 command descriptor table and the 0x0089c300 scratch argument array."
+    "The saved CALL executor bridges opcode execution to the 0x0064ce20 command descriptor table, its handler field at +0x30, and the 0x0089c300 scratch argument array."
   ],
   "notClaimed": [
     "runtime MissionScript execution",

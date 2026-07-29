@@ -143,8 +143,9 @@ not find a custom Steam library, run
   copied-profile preset only; Host/Join remains unavailable.
 
 The tracked regression fixture
-`tests_shared/fixtures/gold_career_save.bin` is the reviewed narrow exception to
-the no-save-payload rule. See [`SECURITY.md`](SECURITY.md) and
+[`tests_shared/fixtures/gold_career_save.bin`](tests_shared/fixtures/README.md)
+is the reviewed narrow exception to the no-save-payload rule. See
+[`SECURITY.md`](SECURITY.md) and
 [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) for handling local inputs.
 
 ## Evidence and provenance

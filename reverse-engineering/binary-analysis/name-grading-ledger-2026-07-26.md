@@ -203,7 +203,7 @@ result.** The technique behind it (§ the rename-wave note) is accurate — 95.2
 measured — but nearly exhausted: it works through MSVC scalar deleting
 destructors, and destructor bodies in this image were already mostly named with a
 real class prefix. Only 12 residual rows were reachable by it at all. The
-remaining 1,865 will not fall to another vtable-shaped trick.
+remaining 1,866 will not fall to another vtable-shaped trick.
 
 **`IMAGE_TYPE_TOKEN` is not ownership.** It says the class exists in this build
 and the prefix spells it. A non-virtual member, a constructor and a static of

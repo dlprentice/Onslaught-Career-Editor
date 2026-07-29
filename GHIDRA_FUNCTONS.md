@@ -631,26 +631,34 @@ Twelve `FUN_*` rows have a uniquely resolved class owner:
 | `0x004f6540` | `CTree` |
 | `0x0050f5f0` | `CRelaxedSquad` |
 
-Forty-one additional unnamed vtable targets remain owner-ambiguous or
+Forty additional unnamed vtable targets remain owner-ambiguous or
 unresolved:
 
 ```text
 004098b0 0040ac30 00415a90 004164b0 00418410 00418eb0 00418ed0
 004198b0 0041b040 0041b060 00432af0 00432b00 00434120 0043ea50
-0044fd70 0048dbe0 004c4a40 004ceed0 004df500 004e8cd0 004ead60
+0044fd70 0048dbe0 004c4a40 004df500 004e8cd0 004ead60
 004f4820 0050e8b0 0050e8c0 0050e960 0050ea20 0050eaf0 0050ffc0
 0052d950 0052d990 0052da00 0052dac0 0052db10 0052dbf0 0052dc80
 0052dcd0 0052dd20 0052de00 0052de90 0052f410 0052f660
 ```
 
+`0x004CEED0` left this queue after a complete-body read and runtime observation.
+The supported owner-neutral identity is
+`OptionsDetailDropdown__GetLocalizedLabel`: it maps the detail index to
+`Localization__GetStringById(index + 0x10)` and returns that wide string. Two
+detail-dropdown vtables own the callback, so the invoking concrete class remains
+unresolved. The inventory metric below remains 41 until a reviewed Ghidra
+projection update replaces the literal `FUN_*` name.
+
 ### Highest-value large unnamed application bodies
 
 | Address | Bytes / instructions | Current evidence / next action |
 | --- | ---: | --- |
-| `0x00456190` | 1,056 / 357 | Remap-capture callback; already has a 661-character comment. Recover owner/name from frontend/control callsites. |
+| `0x00456190` | 1,056 / 357 | `Controls__RemapCaptureKeySink` is the supported descriptive identity: `Controls__BeginRemapCapture` installs it through `PLATFORM__SetKeySink`, and an Options trace observed 694 body bytes. Exact callback ABI remains open. |
 | `0x00470cc0` | 1,009 / 176 | No plate comment. Trace callers and dominant globals first. |
 | `0x0041a980` | 841 / 257 | RTTI owner `CControllableCamera`. Slot semantics and callsites should name it. |
-| `0x00516ed0` | 774 / 235 | External-parameter canary identified a DirectSound enumeration callback; promote only with a bounded manual prototype. |
+| `0x00516ed0` | 774 / 235 | `CPCSoundManager__DirectSoundEnumerateCallback` is closed: `CPCSoundManager__Init` registers it with `DirectSoundEnumerateA`; the startup trace records the primary and hardware-device callbacks from `DSOUND.dll`; `RET 0x10` and the SDK contract establish `BOOL CALLBACK (LPGUID, LPCSTR, LPCSTR, LPVOID)`. The live Ghidra database remains unchanged. |
 | `0x004254f0` | 621 / 194 | RTTI owner `CCockpit`. |
 | `0x004595b0` | 596 / 184 | Frontend region; no plate comment. |
 | `0x004060b0` | 531 / 168 | RTTI owner `CBattleEngine`. |

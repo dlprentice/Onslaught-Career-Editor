@@ -357,9 +357,12 @@ ShutdownVariable(TEXT_CONSTANT);
 // VARIABLE_TIME                    - Elapsed time display
 ```
 
-**BROKEN CITATION, recorded 2026-07-28 — both artefacts named in this note were WITHDRAWN 2026-07-16 in commit `ca9fe1c7` ("Reduce repository to active product and evidence") and no longer exist. The figures below are consequently UNSOURCED pending re-derivation; they are left in place rather than deleted. The surviving static backing for this document is [`../binary-analysis/missionscript-iscript-static-contract.md`](../binary-analysis/missionscript-iscript-static-contract.md). Same break as [`../quick-reference/msl-commands.md`](../quick-reference/msl-commands.md), annotated the same day.**
-
-Static proof note: `../binary-analysis/missionscript-hud-display-command-effect-static-proof.md` and `../binary-analysis/missionscript-hud-display-command-effect.v1.json` record the MissionScript HUD / Display Command-Effect descriptor/corpus bridge for `HighlightHudPart`, `UnHighlightHudPart`, `InitVariable`, `SetVariable`, and `ShutdownVariable`: descriptor rows `33/34/75/76/77`, raw entries `&LAB_00535d70` / `&LAB_00535e60` / `&LAB_00536210` / `&LAB_00536230` / `&LAB_00536260`, loose-MSL counts `13 / 13 / 77 / 146 / 26`, HUD anchors `CHud__SetHudComponent`, `CHud__RenderOverlayForViewpoint`, `CHudComponent__RenderPass`, and CWorld anchors `CWorld__PushWorldTextSlot`, `CWorld__UpdateWorldTextSlotTiming`, `CWorld__ClearWorldTextSlot`, and `CWorld__GetWorldTextSlotTimerValue`. This is static HUD/display command-effect schema proof complete, not runtime proof; runtime HUD behavior, visible HUD flashing, runtime variable display, exact descriptor/datatype/HUD layouts, patching, Godot, rebuild parity, and no-noticeable-difference parity remain separate proof.
+The exact current registry places `HighlightHudPart`, `UnHighlightHudPart`,
+`InitVariable`, `SetVariable`, and `ShutdownVariable` at rows 34, 35, 76, 77,
+and 78; see the
+[`144-entry native registry`](../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry).
+Those bindings and these authored examples do not by themselves prove visible
+HUD output or rebuild parity.
 
 ### Timing
 
@@ -872,9 +875,10 @@ for(n = 1; n <= 23; n = n + 1)
 
 ### Cutscene Camera System
 
-**BROKEN CITATION, recorded 2026-07-28 — both artefacts named in this note were WITHDRAWN 2026-07-16 in commit `ca9fe1c7` and no longer exist. The descriptor indices and addresses below are UNSOURCED pending re-derivation, and are kept rather than deleted. See the matching note under "Variables and UI Display" above, and [`../binary-analysis/missionscript-iscript-static-contract.md`](../binary-analysis/missionscript-iscript-static-contract.md), which is the one binary-analysis citation in this document that still resolves.**
-
-Static-to-proof note: `../binary-analysis/missionscript-cutscene-pan-camera-position-command-effect-static-proof.md` and `../binary-analysis/missionscript-cutscene-pan-camera-position-command-effect.v1.json` bind this public example to saved retail Ghidra evidence only. `CreatePosition` descriptor index `65` at `0x0064de90`, `Goto3PointPanCamera` descriptor index `113` at `0x0064ea90`, `CPositionDataType` vtable `0x005e4da4`, and Wave580 `0x00533b70 IScript__Create3PointPanCamera` / `0x00533eb0 IScript__Create4PointPanCamera` are static anchors; runtime camera switching and visible output remain separate proof.
+The current registry places `CreatePosition`, `Goto3PointPanCamera`, and
+`Goto4PointPanCamera` at rows 66, 114, and 115. The retained VM schema supports
+the `CPositionDataType` vtable at `0x005e4da4`; runtime camera switching and
+visible output remain separate proof.
 
 Death/victory cutscenes use a 3-point pan camera:
 

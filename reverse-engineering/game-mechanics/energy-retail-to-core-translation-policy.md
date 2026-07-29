@@ -1,8 +1,8 @@
 # Retail → Core translation policy (energy drain/regen)
 
 Status: **SUPERSEDED 2026-07-28 for both halves of the Core mapping** — the
-retail `energy-p02` measurement stands; walker regen is no longer provisional  
-Jet drain: see [jet-energy-drain-retail-to-core-translation-policy.md](jet-energy-drain-retail-to-core-translation-policy.md)  
+retail `energy-p02` measurement stands; walker regen is no longer provisional.
+Jet drain: see [jet-energy-drain-retail-to-core-translation-policy.md](jet-energy-drain-retail-to-core-translation-policy.md).
 Depends on: [jet-energy-drain-scalar-response-v1.md](jet-energy-drain-scalar-response-v1.md)
 
 > **SUPERSEDED 2026-07-28.** The Status line above previously read, in full:

@@ -1,7 +1,7 @@
 # MissionScript / IScript static contract
 
 Status: bounded static evidence; not runtime script proof
-Last updated: 2026-07-16
+Last updated: 2026-07-29
 
 This document is the implementation-facing owner for retail MissionScript and
 IScript static evidence. Historical fixture plans and command-effect rollups are
@@ -10,10 +10,11 @@ current sources.
 
 ## Evidence owners
 
-- [`missionscript-command-descriptor-schema.v1.json`](missionscript-command-descriptor-schema.v1.json)
-  records the finite command descriptor table: 144 declared slots and 143
-  observed name-field assignments, including the `FollowWaypointWait` /
-  `IsOverWater` boundary.
+- The exact
+  [`144-entry native registry`](../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry)
+  records the corrected `0x0064ce20` table base, `0x40` stride, name field at
+  `+0x00`, handler field at `+0x30`, and all 144 distinct
+  `FollowWaypoint`-through-`IsOverWater` names and handlers.
 - [`missionscript-vm-datatype-opcode-schema.v1.json`](missionscript-vm-datatype-opcode-schema.v1.json)
   records the bounded opcode, datatype, and VM inventory.
 - [`functions/IScript.cpp.md`](functions/IScript.cpp.md),
@@ -39,10 +40,9 @@ current sources.
 
 Representative descriptor families include slot operations, objective outcome,
 message/audio, Goodie state, camera/position, vector/range helpers, thing-value
-helpers, HUD/variable display, and player-state/score. Duplicate descriptor
-boundaries exist for `HighlightHudPart`, `UnHighlightHudPart`, `AddScore`, and
-`LevelLostString`; consumers must use the schema rather than assuming command
-names are unique handler identities.
+helpers, HUD/variable display, and player-state/score. The current exact
+registry contains 144 distinct names and handlers; older generated schema
+geometry that began at the first handler field is retained only in Git history.
 
 ## Corpus use
 
