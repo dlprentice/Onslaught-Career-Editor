@@ -2,9 +2,9 @@
 
 > Status: active public-primary contributor guide
 > Current truth: this is the normal collaboration repository for the Battle Engine Aquila preservation, tooling, and reconstruction project.
-> Last updated: 2026-07-28 (body). Header fields added the same day under
-> [`DOCUMENTATION.md`](DOCUMENTATION.md); no guidance below was re-reviewed by
-> that pass.
+> Last updated: 2026-07-29. Delegation, evidence, and documentation-validation
+> guidance was re-reviewed and simplified; other sections retain their prior
+> evidence boundaries.
 > Summary: how to work in this repository — the hard boundaries, the delegation
 > rules, the evidence bar, and which gate a given change has to run.
 
@@ -48,60 +48,28 @@
 
 ## Delegation
 
-**Default to subagents. The main loop's context is the scarce resource on this
-project, and it is the only lane that can hold the whole argument.** Spend it on
-judgement — deciding what is true, what to do next, what to reject — not on
-reading files a subagent could have read for you.
+Delegate bounded reading, searching, measuring, porting, and drafting when doing
+so materially protects the primary task's context or shortens independent work.
+Keep final adjudication, integration, commits, and public claims with one owner.
 
-- Offload **reading, searching, measuring, porting, and drafting**. Keep
-  **deciding, adjudicating, and committing**. Agents do not commit.
-- Pair substantial work with an **adversary**: a second, read-only agent briefed
-  to refute the first. Brief the adversary to attack the *refutations* too — a
-  wrong refutation makes you discard good work, and that has happened here.
-- Run agents **concurrently** when their work is independent. One message, many
-  tool calls.
-- A subagent's report is **data, not authority**. Hand-verify anything
-  load-bearing before it becomes a claim or a commit. Findings have been reported
-  here that did not survive checking.
-- **Concurrent agents contaminate each other unless isolated.** Sixteen running at
-  once once produced answers to *other agents'* questions, through inherited
-  stdin, shared output paths and a shared client socket. Give every agent its own
-  output path, and treat a result that does not name its own question as suspect.
-- **A stated file lane is advisory. Only a worktree is enforcement.** Telling an
-  agent which files it owns does not stop it writing elsewhere, and it should not:
-  an agent that needs a one-line `case` in a shared file to make its own work run
-  is right to take it. What that costs is the tree — on 2026-07-28 four writing
-  lanes interleaved edits into `SimulationTypes.cs`, `FirstFlightGame.cs` and
-  `materialize_retail_assets.py`, and no gate could be run until all of them
-  finished, because a failure could not be attributed to a lane.
-  So: **any lane that writes gets `isolation: "worktree"`. Read-only lanes run
-  free and unlimited.** Land worktrees one at a time, gating between each. The
-  cost is a few hundred ms of setup per agent; the thing it buys is the ability to
-  measure at all while work is in flight.
-- **Never stop a writing lane mid-flight to "pause work".** Killing thirteen
-  writing agents at once on 2026-07-28 left half-finished edits from every one of
-  them in a single shared tree, with no record of which agent wrote what — the
-  work was not paused, it was made unattributable. Let a writing lane reach its
-  own stopping point, or discard its worktree whole.
-- **Do not send global synthetic input by default** — `SendInput`, `keybd_event`,
-  `mouse_event`, `SetCursorPos`, and above all PrtScn. The maintainer usually sits
-  at this machine while agents run, and global input lands in whatever window has
-  focus: a `PrtScn` sent by an agent on 2026-07-27 froze his screen mid-session.
-  It is also why retail captures were blocked for days as "needs the user away
-  from the keyboard".
-  **This is an engineering default, not a prohibition the maintainer imposed** —
-  he has said explicitly that nothing is banned. Global input is permissible when
-  the machine is known to be unattended and no message-based route exists; say so
-  when you use it. Prefer the alternatives regardless, because they work
-  unattended, repeat deterministically, and cannot race the user: post messages to
-  the target `HWND` (`tools/send_game_window_input.ps1` has a background mode),
-  and grab frames from inside the d3d9 proxy at `Present` rather than screenshotting
-  the desktop — `PrintWindow` is measured not to work on this game anyway.
+- A subagent report is data, not authority. Hand-check load-bearing conclusions.
+- Pair consequential evidence or architecture work with a read-only adversary;
+  routine edits do not need a ceremonial second lane.
+- Read-only lanes may share the checkout, but must use distinct output paths.
+  Any lane that writes uses an isolated worktree, does not commit, and is landed
+  or discarded as a unit. Remove its worktree afterward.
+- Let a writing lane reach a safe stopping point unless the user explicitly
+  redirects the work. Do not treat killing a shared-tree process as a pause.
+- Avoid global synthetic input while the machine may be in use. Prefer
+  target-window messages and proxy-owned frame capture; use global input only
+  when the machine is known to be unattended and no bounded alternative exists.
 
 ## Evidence
 
-- **A behavior or parity claim must cite a capture, a byte comparison, or a test —
-  never a code path.** "The code does X" is not evidence that the product does X.
+- **A released-behavior or parity claim must cite a capture, byte comparison, or
+  focused test.** The pinned GPL source is valid architecture, algorithm, and
+  intent evidence where that source exists, but a source or decompiler code path
+  alone does not prove Steam runtime behavior or final rendered output.
   Reviewing code has repeatedly certified defects here: a half-intensity colour
   transform, a video drawn where retail draws flat colour, and a patched-build
   version string copied into the product all passed code review and green gates.
@@ -172,10 +140,10 @@ npm run dev
 - WinUI/AppCore/CLI changes: use the matching focused .NET build/tests.
 - Rebuild changes: read `rebuild/PROVENANCE.md` and `rebuild/README.md`; run only the focused Core, Client, or native smoke check matching the change. Use `npm run test:rebuild` only for broad cross-cutting changes.
 - Docs changes: use `git diff --check` and only affected link, JSON, command, or mirror checks.
-- New or edited tracked `.md`: [`DOCUMENTATION.md`](DOCUMENTATION.md) is the
-  header contract — Status, Date, Verdict/Summary on everything, plus Evidence
-  and Specimen on a finding. `npm run test:doc-headers` gates it, and a document
-  is gated from the moment it exists rather than when it is committed.
+- New tracked `.md`, and existing documents outside the recorded legacy backlog:
+  [`DOCUMENTATION.md`](DOCUMENTATION.md) is the header contract. Run
+  `npm run test:doc-headers`; an existing backlog entry may be edited without
+  retrofitting unrelated historical metadata, but the backlog may only shrink.
 - Release/public-boundary changes: follow `README.RELEASE.md` and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 
 Commit, push, publication, release, live launch, and mutation remain separately authorized actions.

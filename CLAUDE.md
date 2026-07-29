@@ -1,9 +1,8 @@
 # Onslaught Toolkit
 
-Status: active — rules and pointers, loaded into every session; never findings.
-Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); no rule below was changed or
-re-reviewed by that pass.
+Status: active — rules, routing, and state pointers; not the canonical evidence store.
+Last updated: 2026-07-29. Delegation and interrupted-work resumption routing
+were re-reviewed; other rules retain their prior evidence boundaries.
 Summary: the highest-stakes rules that bind every session, and the pointers to
 where the current state actually lives.
 
@@ -38,15 +37,9 @@ highest-stakes rules early and does not restate or override it.
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md).
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation
   is local.
-- **Delegate by default.** Offload reading, searching, measuring, porting and
-  drafting to subagents, run them concurrently, and pair substantial work with a
-  read-only adversary. Keep judgement and commits in the main loop; agents do not
-  commit. A subagent's report is data, not authority. See
-  [`AGENTS.md`](AGENTS.md#delegation).
-- **Scrutiny comes from our own subagents, paired adversarially.** No external
-  model is consulted, from the main loop or anywhere else. Brief the adversary to
-  attack the *refutations* too — a wrong refutation makes good work get discarded,
-  and that has happened here.
+- Delegate bounded independent work when it materially protects the primary
+  task's context. Keep judgement, integration, and commits with one owner; see
+  [`AGENTS.md`](AGENTS.md#delegation) for the isolation and review rules.
 
 ## The goal
 
@@ -55,18 +48,18 @@ highest-stakes rules early and does not restate or override it.
 constraints. It is the one document here that is **not** superseded by
 measurement, because it states what is wanted rather than what is true.
 
-## Resuming work — read this first
+## Resuming work
 
 **[`developer_state.json`](developer_state.json) is the pick-up-where-we-left-off
-file.** It carries the current HEAD, gate status, what is in flight, where every
-evidence store lives — including the two that are invisible to a fresh clone —
-and the honest state of the goal. Read it before anything else, especially after
-a compaction.
+file.** After the repository overview and contributor rules above, read it when
+resuming an interrupted task or after compaction. It carries current gate status,
+work in progress, and pointers to machine-local evidence stores.
 
-It is **pointers and state only, never findings**. That is deliberate: a claim
-written into a file everything trusts becomes an unfalsifiable premise, which is
-the failure this file's own "Editing this file" section describes. If
-`developer_state.json` disagrees with a measurement, the measurement wins.
+Keep current resumable state and exact evidence pointers there. Include a
+bounded finding only when it prevents costly re-derivation, and always include
+the evidence path that can overturn it. Measurements outrank the file; when
+current evidence supersedes an older account, mark or remove that account
+instead of preserving parallel truth.
 
 Keep it current as work lands. It is maintained from the main loop, not written
 at handoff time.
@@ -111,12 +104,10 @@ authority.
 This file is loaded into every session, so whatever it says is treated as
 settled — agents rarely re-litigate it, which is exactly what makes it dangerous.
 
-Keep it to **rules and pointers**. Do not put findings here. A finding belongs in
-a dated evidence document that can be superseded in place; a finding pasted here
-becomes an unfalsifiable premise that later work will quietly build on. This has
-already bitten the project: a correction published on 2026-07-26 was itself wrong
-later the same day, and was only caught because it lived in a document that could
-be withdrawn rather than in a file everything trusts by default.
+Keep it to **rules and pointers**. Durable current state belongs in
+`developer_state.json`; detailed findings belong in dated evidence documents
+that can be superseded in place. A bounded finding may be retained in the state
+file only with the exact evidence pointer that can overturn it.
 
 Before adding a line, ask whether it is still true if the measurement behind it
 turns out to be wrong. If the answer is no, it is a finding — link to it instead.

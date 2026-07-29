@@ -9,10 +9,10 @@
 > and one was demoted; see [Revision history](#revision-history) at the bottom
 > for what changed and what each change is a reaction to.
 >
-> Last updated: 2026-07-27 (body). Header fields added 2026-07-28 under
-> [`DOCUMENTATION.md`](DOCUMENTATION.md). **Nothing in this document was
-> reviewed, re-verified or altered by that pass** — it states what is wanted,
-> not what is true, and is not superseded by measurement.
+> Last updated: 2026-07-29. The objective and acceptance test are unchanged;
+> stale current-outcome prose was removed because measured status belongs in
+> [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
+> [`developer_state.json`](developer_state.json).
 > Summary: what "done" means here — the objective, the acceptance test that
 > stands in for it, the evidence partition, the evidence rule, and the standing
 > constraints.
@@ -109,15 +109,9 @@ must not be restated from memory — see
 [`developer_state.json`](developer_state.json) under `goal_status`, and
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md).
 
-Two things about that status are worth stating here because they have been
-mis-said before:
-
-1. "Driven to **Won**" is the acceptance test, and it currently passes only **as
-   a returning player**. On the cold first career — the only one the shipping
-   client can start — it ends `Lost`. Do not report the first without the second.
-2. "**Feels like** the original" is a higher bar than any percentage. A frame can
-   score well and still feel wrong — a silent menu, an unskippable pan, a dead
-   world. Pixel scores are necessary and are not the goal.
+"**Feels like** the original" is a higher bar than any percentage. A frame can
+score well and still feel wrong—a silent menu, an unskippable pan, or a dead
+world. Pixel scores can expose defects; they are not the goal.
 
 ---
 
