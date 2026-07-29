@@ -75,11 +75,37 @@ DEFAULT_TABLE = (
     / "ghidra-function-name-table-2026-07-27.tsv"
 )
 
+# These two files intentionally do not assert a current address/name identity:
+# one is a source-string cross-reference survey and one is a link-stability
+# alias. Every other function-note document must yield at least one assertion
+# under --strict so a newly unsupported Markdown form cannot pass unseen.
+ZERO_ASSERTION_ALLOWLIST = {
+    "Bomber.cpp.md",
+    "Career.cpp/CCareer__GetUnlockedGoodieCount.md",
+}
+
 SYMBOL = r"[A-Za-z_][A-Za-z0-9_@.]*"
 RE_HEADING = re.compile(r"^#\s+(" + SYMBOL + r")\s*$")
-RE_HEADER_ADDRESS = re.compile(r"Address[^\n]*?`?(0x[0-9A-Fa-f]{6,8})")
+RE_HEADER_ADDRESS = re.compile(r"\bAddress\s*:[^\n]*?`?(0x[0-9A-Fa-f]{6,8})")
+RE_EXPLICIT_HEADER_PAIR = re.compile(
+    r"`(0x[0-9A-Fa-f]{6,8})`\s*\(\s*`(" + SYMBOL + r")`\s*\)"
+)
+RE_CURRENT_HEADER_NAME = re.compile(
+    r"\b(?:Current\s+(?:saved\s+name|static\s+identity)|now\s+named)"
+    r"[^`\n]*`(" + SYMBOL + r")`",
+    re.IGNORECASE,
+)
+RE_NOW_NAMED_PAIR = re.compile(
+    r"`(0x[0-9A-Fa-f]{6,8})`[^\n]*\bnow\s+named[^`\n]*`(" + SYMBOL + r")`",
+    re.IGNORECASE,
+)
 RE_BARE_ADDRESS_CELL = re.compile(r"^`?(0x[0-9A-Fa-f]{6,8})`?$")
 RE_BARE_SYMBOL_CELL = re.compile(r"^`?(" + SYMBOL + r")`?$")
+RE_SIGNATURE_SYMBOL = re.compile(r"\b(" + SYMBOL + r")\s*\(")
+RE_SIGNATURE_COLUMN = re.compile(
+    r"\b(name|symbol|label|signature|saved\s+state|current)\b",
+    re.IGNORECASE,
+)
 RE_ADDRESS_NAME_PAIR = re.compile(r"`(0x[0-9A-Fa-f]{6,8})\s+(" + SYMBOL + r")`")
 RE_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
 RE_ACCEPTED = re.compile(
@@ -202,13 +228,55 @@ def extract(path: Path, text: str, include_prose: bool) -> list[Assertion]:
     found: list[Assertion] = []
 
     heading = RE_HEADING.match(lines[0]) if lines else None
+    head_blob = "\n".join(lines[:10])
     if heading:
-        head_blob = "\n".join(lines[:8])
         addr = RE_HEADER_ADDRESS.search(head_blob)
         if addr:
             found.append(
                 Assertion(rel, 1, "header", addr.group(1).lower(), heading.group(1))
             )
+
+    explicit_pairs = [
+        (number, pair)
+        for number, line in enumerate(lines[:12], start=1)
+        for pair in RE_EXPLICIT_HEADER_PAIR.finditer(line)
+    ]
+    for number, pair in explicit_pairs:
+        found.append(
+            Assertion(
+                rel,
+                number,
+                "header-pair",
+                pair.group(1).lower(),
+                pair.group(2),
+            )
+        )
+
+    for number, line in enumerate(lines[:12], start=1):
+        now_named = RE_NOW_NAMED_PAIR.search(line)
+        if now_named:
+            found.append(
+                Assertion(
+                    rel,
+                    number,
+                    "current-pair",
+                    now_named.group(1).lower(),
+                    now_named.group(2),
+                )
+            )
+
+    current_name = RE_CURRENT_HEADER_NAME.search(head_blob)
+    current_address = RE_HEADER_ADDRESS.search(head_blob)
+    if current_name and current_address:
+        found.append(
+            Assertion(
+                rel,
+                1,
+                "current-header",
+                current_address.group(1).lower(),
+                current_name.group(1),
+            )
+        )
 
     headings: list[str] = []
     previous_row: list[str] = []
@@ -224,13 +292,42 @@ def extract(path: Path, text: str, include_prose: bool) -> list[Assertion]:
             previous_row = []
             continue
 
+        # Some early per-function notes use a two-column identity table:
+        #   | Property | Value |
+        #   | Address  | `0x004f6430` |
+        # The document heading is the symbol assertion in that form.
+        if (
+            heading
+            and len(cells) >= 2
+            and cells[0].strip("` ").lower() == "address"
+            and RE_BARE_ADDRESS_CELL.match(cells[1])
+        ):
+            found.append(
+                Assertion(
+                    rel,
+                    number,
+                    "property",
+                    RE_BARE_ADDRESS_CELL.match(cells[1]).group(1).lower(),
+                    heading.group(1),
+                )
+            )
+
         name_column = _resolve_name_column(headings)
+        name_match = None
+        if cells and name_column is not None and name_column < len(cells):
+            name_match = RE_BARE_SYMBOL_CELL.match(cells[name_column])
+            if (
+                name_match is None
+                and name_column < len(headings)
+                and RE_SIGNATURE_COLUMN.search(headings[name_column])
+            ):
+                name_match = RE_SIGNATURE_SYMBOL.search(cells[name_column])
         if (
             cells
             and RE_BARE_ADDRESS_CELL.match(cells[0])
             and name_column is not None
             and name_column < len(cells)
-            and RE_BARE_SYMBOL_CELL.match(cells[name_column])
+            and name_match
         ):
             found.append(
                 Assertion(
@@ -238,7 +335,7 @@ def extract(path: Path, text: str, include_prose: bool) -> list[Assertion]:
                     number,
                     "table",
                     RE_BARE_ADDRESS_CELL.match(cells[0]).group(1).lower(),
-                    RE_BARE_SYMBOL_CELL.match(cells[name_column]).group(1),
+                    name_match.group(1),
                 )
             )
 
@@ -347,6 +444,7 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
     counts = {OK: 0, DRIFT: 0, UNRESOLVED: 0, ACCEPTED: 0, "SKIP": 0}
     drifts: list[tuple[Assertion, str, str]] = []
     unresolved: list[Assertion] = []
+    zero_assertion_docs: list[str] = []
     by_form: dict[str, dict[str, int]] = {}
 
     for doc in docs:
@@ -356,7 +454,14 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
             rel = doc.relative_to(REPO_ROOT)
         except ValueError:
             rel = doc
-        for assertion in extract(rel, text, include_prose):
+        assertions = extract(rel, text, include_prose)
+        try:
+            local_rel = doc.relative_to(doc_root).as_posix()
+        except ValueError:
+            local_rel = doc.name
+        if not assertions and local_rel not in ZERO_ASSERTION_ALLOWLIST:
+            zero_assertion_docs.append(rel.as_posix())
+        for assertion in assertions:
             verdict, current, note = judge(assertion, table, accepted)
             counts[verdict] += 1
             bucket = by_form.setdefault(assertion.form, dict.fromkeys(counts, 0))
@@ -377,6 +482,7 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
     lines.append(f"  DRIFTED              : {counts[DRIFT]}")
     lines.append(f"  UNRESOLVED (abstain) : {counts[UNRESOLVED]}")
     lines.append(f"  skipped (not .text)  : {counts['SKIP']}")
+    lines.append(f"  zero-assertion docs   : {len(zero_assertion_docs)}")
     for form in sorted(by_form):
         b = by_form[form]
         lines.append(
@@ -402,6 +508,10 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
                 f"  {assertion.path}:{assertion.line} [{assertion.form}] "
                 f"{assertion.address} {assertion.name}"
             )
+    if zero_assertion_docs:
+        lines.append("")
+        lines.append("ZERO-ASSERTION documents (unsupported identity form):")
+        lines.extend(f"  {path}" for path in zero_assertion_docs)
 
     report = "\n".join(lines)
     print(report)
@@ -420,6 +530,14 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
         print(
             f"\nFAIL (--strict): {counts[UNRESOLVED]} assertion(s) could not be "
             "resolved against the current table.",
+            file=sys.stderr,
+        )
+        return 1
+    if strict and zero_assertion_docs:
+        print(
+            f"\nFAIL (--strict): {len(zero_assertion_docs)} document(s) yielded "
+            "no current address/name assertion and are not explicit non-identity "
+            "exceptions.",
             file=sys.stderr,
         )
         return 1
@@ -501,6 +619,13 @@ _DOC_DATA = """# Thing.cpp Data
 | `0x00650f6c` | `g_SomeGlobal` |
 """
 
+_DOC_PROPERTY_VALUE = """# CThing__Alpha
+
+| Property | Value |
+| --- | --- |
+| Address | `0x00401000` |
+"""
+
 _DOC_SUPERSEDED_COLUMN = """# Thing.cpp Renames
 
 | Address | Superseded label | Current label |
@@ -529,6 +654,41 @@ _DOC_PAIR_IN_SUPERSEDED_COLUMN = """# Thing.cpp Renames
 | slot 0 | `0x00402000 CThing__Historic` |
 """
 
+_DOC_EXPLICIT_HEADER_PAIRS = """# CThing__Topic
+
+> Addresses: `0x00401000` (`CThing__Alpha`), `0x00402000` (`CThing__Beta`)
+"""
+
+_DOC_EXPLICIT_HEADER_PAIR_STALE = """# CThing__Topic
+
+> Addresses: `0x00401000` (`CThing__Alpha`), `0x00402000` (`CThing__Wrong`)
+"""
+
+_DOC_STALE_PRIMARY_WITH_VALID_RELATED_PAIR = """# CThing__Wrong
+
+> Address: `0x00402000`
+>
+> Related: `0x00401000` (`CThing__Alpha`)
+"""
+
+_DOC_DEPRECATED_CURRENT_HEADER = """# Deprecated: CThing__Historic
+
+- **Address:** `0x00402000`
+- **Current saved name:** `CThing__Beta`
+"""
+
+_DOC_CURRENT_SIGNATURE_TABLE = """# Thing.cpp Functions
+
+| Address | Saved state |
+| --- | --- |
+| `0x00402000` | `void __fastcall CThing__Beta(void * this)` |
+"""
+
+_DOC_NO_ASSERTIONS = """# Thing.cpp survey
+
+This page contains no current address/name identity.
+"""
+
 
 def _self_test() -> int:
     cases = [
@@ -544,6 +704,8 @@ def _self_test() -> int:
         ("orphan abstains by default", {"a.md": _DOC_ORPHAN}, False, False, 0),
         ("orphan fails under --strict", {"a.md": _DOC_ORPHAN}, False, True, 1),
         ("non-.text address skipped", {"a.md": _DOC_DATA}, False, False, 0),
+        ("property/value identity passes",
+         {"a.md": _DOC_PROPERTY_VALUE}, False, False, 0),
         ("superseded column is not read as a claim",
          {"a.md": _DOC_SUPERSEDED_COLUMN}, False, False, 0),
         ("a wrong 'Current label' column still fails",
@@ -552,6 +714,20 @@ def _self_test() -> int:
          {"a.md": _DOC_SUPERSEDED_ONLY}, False, False, 0),
         ("pair inside a superseded column is not read as a claim",
          {"a.md": _DOC_PAIR_IN_SUPERSEDED_COLUMN}, False, False, 0),
+        ("explicit plural header pairs pass",
+         {"a.md": _DOC_EXPLICIT_HEADER_PAIRS}, False, False, 0),
+        ("a stale explicit plural header pair fails",
+         {"a.md": _DOC_EXPLICIT_HEADER_PAIR_STALE}, False, False, 1),
+        ("a related pair cannot hide a stale primary header",
+         {"a.md": _DOC_STALE_PRIMARY_WITH_VALID_RELATED_PAIR}, False, False, 1),
+        ("deprecated page gates its current saved name",
+         {"a.md": _DOC_DEPRECATED_CURRENT_HEADER}, False, False, 0),
+        ("signature table gates the function identifier",
+         {"a.md": _DOC_CURRENT_SIGNATURE_TABLE}, False, False, 0),
+        ("zero-assertion document passes only outside strict mode",
+         {"a.md": _DOC_NO_ASSERTIONS}, False, False, 0),
+        ("zero-assertion document fails under strict mode",
+         {"a.md": _DOC_NO_ASSERTIONS}, False, True, 1),
         ("drift is found among many clean docs",
          {"a.md": _DOC_CURRENT, "b.md": _DOC_TABLE_STALE, "c.md": _DOC_PAIR_INTERIOR},
          False, False, 1),

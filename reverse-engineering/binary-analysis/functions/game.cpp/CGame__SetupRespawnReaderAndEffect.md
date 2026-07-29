@@ -12,4 +12,6 @@ Wave510 corrected this stale `CGame` owner label to `CStart__SpawnBattleEngine`.
 
 - Recovered and semantically renamed via headless decompile + batch-rename workflow (2026-02-25).
 - Superseded by Wave510 on 2026-05-17 after serialized dry/apply/read-back and focused probe verification.
-- Canonical current documentation lives in [`../SpawnPoint.cpp/_index.md`](../SpawnPoint.cpp/_index.md).
+- The current saved identity is recorded above and in the
+  [function-area index](../_index.md#the-name-corrections-of-2026-07-28);
+  there is no separate `SpawnPoint.cpp` document.

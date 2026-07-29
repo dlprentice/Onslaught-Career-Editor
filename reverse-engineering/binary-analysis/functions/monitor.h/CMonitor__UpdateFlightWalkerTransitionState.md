@@ -1,5 +1,7 @@
 # CMonitor__UpdateFlightWalkerTransitionState
 
+<!-- ghidra-name-drift-accepted: 0x0040a580 CBattleEngine__Morph (2026-07-28) -->
+
 > Address: `0x0040a580` | Historical alias; current saved Ghidra name: `CBattleEngine__Morph`
 
 ## Status

@@ -1,5 +1,7 @@
 # CUnit__FinishedPlayingCurrentAnimation
 
+<!-- ghidra-name-drift-accepted: 0x0040eeb0 CBattleEngine__FinishedPlayingCurrentAnimation (2026-07-28) -->
+
 > Address: `0x0040eeb0` | Source family: `Unit.cpp`
 
 ## Superseded

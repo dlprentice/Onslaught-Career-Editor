@@ -102,12 +102,17 @@ def iter_markdown_files(scope: str = "all") -> List[Path]:
     return iter_filesystem_markdown_files()
 
 
-def strip_code_regions(text: str) -> str:
-    # Remove fenced code blocks and inline code spans to avoid false positives like:
-    #   vtable[0](1)
-    text = re.sub(r"```.*?```", "", text, flags=re.S)
-    text = re.sub(r"`[^`]*`", "", text)
-    return text
+def strip_fenced_code(text: str) -> str:
+    return re.sub(r"```.*?```", "", text, flags=re.S)
+
+
+def inline_code_ranges(text: str) -> List[Tuple[int, int]]:
+    """Ranges whose apparent ``[label](target)`` syntax is literal code."""
+    return [(match.start(), match.end()) for match in re.finditer(r"`[^`\n]*`", text)]
+
+
+def inside_any_range(position: int, ranges: List[Tuple[int, int]]) -> bool:
+    return any(start <= position < end for start, end in ranges)
 
 
 def is_external_target(t: str) -> bool:
@@ -176,8 +181,14 @@ def main() -> int:
         except UnicodeDecodeError:
             text = p.read_text(encoding="latin-1")
 
-        scan = strip_code_regions(text)
+        scan = strip_fenced_code(text)
+        code_ranges = inline_code_ranges(scan)
         for m in LINK_RE.finditer(scan):
+            # Keep links whose *label* uses backticks, such as
+            # [`texture.cpp`](path), but ignore link-like text wholly inside a
+            # code span, such as `vtable[0](1)`.
+            if inside_any_range(m.start(), code_ranges):
+                continue
             raw_target = m.group(1).strip()
             if is_external_target(raw_target):
                 continue

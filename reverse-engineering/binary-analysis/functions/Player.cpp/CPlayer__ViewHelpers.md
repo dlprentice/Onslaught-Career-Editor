@@ -1,6 +1,9 @@
 # CPlayer View Helpers
 
-> Addresses: `0x004d28a0`, `0x004d28c0`, `0x004d29c0`, `0x004d2a50`
+> Addresses: `0x004d28a0` (`CPlayer__Init`),
+> `0x004d28c0` (`CPlayer__GotoFPView`),
+> `0x004d29c0` (`CPlayer__Goto3rdPersonView`), and
+> `0x004d2a50` (`CPlayer__GotoControlView`)
 >
 > Source: `references/Onslaught/Player.cpp` / `references/Onslaught/Player.h`
 

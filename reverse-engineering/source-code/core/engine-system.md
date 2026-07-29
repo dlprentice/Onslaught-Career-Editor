@@ -10,7 +10,10 @@ The Engine system is the core 3D rendering and world management framework. It ha
 
 ## Purpose
 
-`CEngine` provides the rendering pipeline, camera management, and platform abstraction layer. The PC/Xbox version uses `CDXEngine` (DirectX 8), while PS2 uses `CPS2Engine`.
+`CEngine` provides the rendering pipeline, camera management, and platform
+abstraction layer. The `_DIRECTX` arm selects `CDXEngine`. The PS2 arm declares
+an external `CPS2Engine`, but the absent `PS2Engine.h` means its implementation
+and base class are not established by this source drop.
 
 ---
 
@@ -19,8 +22,7 @@ The Engine system is the core 3D rendering and world management framework. It ha
 ```
 CEngine (base - abstract interface)
     ├── CDXEngine (DirectX 8 implementation - PC/Xbox)   -- DXEngine.h:22
-    ├── CPCEngine (parallel PC implementation)           -- PCEngine.h:19
-    └── CPS2Engine (PlayStation 2 implementation)        -- INFERRED, see note
+    └── CPCEngine (parallel PC implementation)           -- PCEngine.h:19
 ```
 
 **CORRECTED 2026-07-28.** This tree previously nested `CPCEngine (PC-specific

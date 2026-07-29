@@ -20,8 +20,7 @@ CMonitor (observer pattern)
 ```
 CEngine (abstract)
     ├── CDXEngine (DirectX 8)     -- DXEngine.h:22
-    ├── CPCEngine (PC)            -- PCEngine.h:19
-    └── CPS2Engine (PS2)          -- INFERRED, see note
+    └── CPCEngine (PC)            -- PCEngine.h:19
 ```
 
 **CORRECTED 2026-07-28 — CPCEngine is a sibling of CDXEngine, not its child.**
@@ -47,8 +46,7 @@ Two things the corrected tree deliberately does **not** say:
 ```
 CFrontEnd : IController          -- Frontend.h:100
     ├── CDXFrontEnd               -- DXFrontend.h:9
-    ├── CPCFrontEnd               -- PCFrontend.h:11
-    └── CPS2FrontEnd              -- INFERRED, see note
+    └── CPCFrontEnd               -- PCFrontend.h:11
 ```
 
 **CORRECTED 2026-07-28 — CPCFrontEnd is a sibling of CDXFrontEnd, not its child.**
@@ -68,8 +66,7 @@ and that header is not in the drop.
 ```
 CMemoryCard (abstract)            -- MemoryCard.h:27
     ├── CPCMemoryCard (STUB!)     -- PCMemoryCard.h:8
-    ├── CXBoxMemoryCard (full)    -- XBoxMemoryCard.h:15
-    └── CPS2MemoryCard            -- INFERRED, see note
+    └── CXBoxMemoryCard (full)    -- XBoxMemoryCard.h:15
 ```
 
 Note added 2026-07-28: `CPS2MemoryCard` is **INFERRED**, not SOURCE — the

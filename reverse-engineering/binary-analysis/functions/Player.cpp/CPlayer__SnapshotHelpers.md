@@ -4,7 +4,10 @@
 > **2026-07-13 live correction closeout:** `0x004d2b40` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
-> Addresses: `0x004d2a70`, `0x004d2ae0`, `0x004d2b40`, `0x004d2bb0`
+> Addresses: `0x004d2a70` (`CPlayer__GetCurrentViewPoint`),
+> `0x004d2ae0` (`CPlayer__GetCurrentViewOrientation`),
+> `0x004d2b40` (`CPlayer__GetOldCurrentViewPoint`), and
+> `0x004d2bb0` (`CPlayer__GetOldCurrentViewOrientation`)
 >
 > Source: `references/Onslaught/Player.cpp` / `references/Onslaught/Player.h`
 

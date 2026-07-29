@@ -31,7 +31,7 @@ DataType.cpp implements the **mission script data type system** - a polymorphic 
 
 Wave576 hardened the CStringDataType tail, CThingPtrDataType tail, shared CDataType scalar-deleting destructor wrapper, and CPositionDataType arithmetic slots with saved Ghidra signatures/comments/tags. This is static retail-binary evidence only; exact source identity, runtime MissionScript behavior, concrete layouts beyond observed fields, trailing CPosition dword semantics, and rebuild parity remain unproven.
 
-| Address | Saved signature | Evidence |
+| Address | Wave576 saved signature (historical) | Evidence |
 | --- | --- | --- |
 | `0x0052f2c0` | `void * __thiscall CStringDataType__Clone(void * this)` | Allocates an 8-byte CString object, installs vtable `0x005e4e4c`, allocates/copies a heap string from `this+0x04`, and null-terminates the clone buffer. |
 | `0x0052f360` | `bool __thiscall CStringDataType__Equals(void * this, void * rhs)` | Reads rhs through datatype vtable slot `+0x38` and compares the returned string against `this+0x04`. |

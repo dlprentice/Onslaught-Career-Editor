@@ -1,5 +1,7 @@
 # CFrontEnd__HasStandardSlidingTextBordersAndMask
 
+<!-- ghidra-name-drift-accepted: 0x004679a0 FrontEnd__HasStandardSlidingTextBordersAndMaskPage (2026-07-28) -->
+
 - Address: 0x004679a0
 - Status: Superseded alias (Wave 377 owner correction)
 - Source match: references/Onslaught/frontEnd.cpp:778 (static BOOL got_standard_SlidingTextBordersAndMask(EFrontEndPage dest))

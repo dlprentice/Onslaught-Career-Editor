@@ -249,7 +249,7 @@ Vertex count per patch: `(level + 1)^2`
 
 Wave613 saved nine CDXPatch/CDXPatchManager signatures, comments, and tags from fresh retail Ghidra read-back. The pass made no renames and did not recover any missing boundaries.
 
-| Address | Saved signature | Static evidence |
+| Address | Wave613 saved signature (historical) | Static evidence |
 | --- | --- | --- |
 | `0x00550380` | `void * __thiscall CDXPatch__Constructor(void * this)` | Vector-constructor callsites `0x005504ab`, `0x0055052a`, and `0x005505ad` pass this ECX-only constructor for each `0x50`-byte patch-pool entry. The body calls `CVBuffer__ctor_base`, installs vtable `0x005e5114`, and returns `this`. |
 | `0x005503a0` | `void __thiscall CDXPatch__Destructor_thunk(void * this)` | Vector-destructor callsites `0x005504a6`, `0x00550525`, and `0x005505a8` pass this thunk beside the constructor. The body tail-jumps to `CVBuffer__dtor_base`. |
@@ -269,7 +269,7 @@ CDXPatch vtable `0x005e5114` remains partial. Slot 0 points to `0x00550320`, whe
 
 Wave422 corrected three patch/vertex-buffer helpers and one adjacent texture invalidation helper from fresh saved Ghidra read-back:
 
-| Address | Saved signature | Static evidence |
+| Address | Wave422 saved signature (historical) | Static evidence |
 | --- | --- | --- |
 | `0x0048f1e0` | `void __thiscall CDXPatch__CreateGridVertexBuffer(void * this, int grid_step)` | `RET 0x4` proves one stack argument. The body stores `grid_step` at `+0x44`, computes `(grid_step+1)^2` at `+0x38`, clears patch fields, writes slot marker `+0x3c = 0xffff`, and calls `CVBuffer__Create` with `0x14`-byte vertices and flags `0x102`. |
 | `0x0048f210` | `void __thiscall CDXPatch__RebuildHeightGridVertexBuffer(void * this)` | Calls `CVBuffer__Lock`, walks a square grid from start X/Z fields `+0x2c/+0x30` with step `+0x34`, samples `CWorld__GetHeightSamplePacked16`, writes `0x14`-byte vertex rows, calls `CVBuffer__Unlock`, and marks `+0x40`. |

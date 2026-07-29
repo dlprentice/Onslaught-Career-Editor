@@ -23,6 +23,12 @@ withdrawn label can tell it was corrected and not lost.
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
 | `0x00426150` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
+| `0x0042f5f0` | `CWeaponStatement__Create` | `WeaponDefinition__CreateAndRegisterByName` | owner corrected from parser statement to created definition |
+| `0x0042ffa0` | `CRoundStatement__Create` | `CRoundData__CreateAndRegisterByName` | owner corrected from parser statement to created round data |
+| `0x004309e0` | `CExplosionStatement__Create` | `ExplosionDefinition__CreateAndRegisterByName` | owner corrected from parser statement to created definition |
+| `0x00430e60` | `CComponentStatement__CreateAndRegisterByName` | `CComponent__CreateAndRegisterByName` | owner corrected from parser statement to created component |
+| `0x0043c010` | `CFeatureTexture__ApplyToFeatureByName` | `CFeatureExplosion__ApplyToFeatureByName` | feature field semantic corrected; prior texture gloss withdrawn |
+| `0x0043d500` | `CComponentIndexedScalar164__ApplyToComponentByName` | `CComponentAttackPriority__ApplyToComponentByName` | component field semantic corrected; generic indexed-scalar gloss withdrawn |
 
 ---
 
@@ -34,7 +40,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0042f230` | `int __fastcall CUnitStatement__GetSerializedSize(void * this)` | Recovered top-level unit-statement serialized-size body; counts the statement name and first value-list payload before recursive value-list sizing. |
 | `0x0042f2b0` | `void __thiscall CUnitStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level unit-statement load body; reads the name, creates the first value-list node, dispatches type-2 child load helpers, or skips unknown payload bytes. |
 | `0x0042f5b0` | `void __fastcall CWeaponStatement__CreateWeaponAndRecurse(void * this)` | Corrected from stale vfunc label to top-level weapon create-and-recurse update body. |
-| `0x0042f5f0` | `void __cdecl CWeaponStatement__Create(char * name)` | Creates a `0x4c` weapon-like record by name, initializes defaults, and appends it to `DAT_008553e8`. |
+| `0x0042f5f0` | `void __cdecl WeaponDefinition__CreateAndRegisterByName(char * name)` | Creates a `0x4c` weapon-like record by name, initializes defaults, and appends it to `DAT_008553e8`. |
 | `0x0042f700` | `int __fastcall CWeaponStatement__GetSerializedSize(void * this)` | Recovered top-level weapon-statement serialized-size body; the previous top-level name at `0x0042f750` was a value-list helper. |
 | `0x0042f780` | `void __thiscall CWeaponStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level weapon-statement load body; dispatches type-3 child load helpers or skips unknown payload bytes. |
 | `0x0042fa40` | `void __fastcall CWeaponModeStatement__CreateWeaponModeAndRecurse(void * this)` | Corrected from stale vfunc label to top-level weapon-mode create-and-recurse update body. |
@@ -42,7 +48,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0042fc20` | `int __fastcall CWeaponModeStatement__GetSerializedSize(void * this)` | Recovered top-level weapon-mode-statement serialized-size body. |
 | `0x0042fca0` | `void __thiscall CWeaponModeStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level weapon-mode-statement load body; dispatches type-4 child load helpers or skips unknown payload bytes. |
 | `0x0042ff60` | `void __fastcall CRoundStatement__CreateRoundAndRecurse(void * this)` | Corrected from stale vfunc label to top-level round create-and-recurse update body. |
-| `0x0042ffa0` | `void __cdecl CRoundStatement__Create(char * name)` | Creates a `0xa8` round-like record, handles `Stream_Laser` / `Gill_M_Breath` special-case flags, and appends it to `DAT_008553f0`. |
+| `0x0042ffa0` | `void __cdecl CRoundData__CreateAndRegisterByName(char * name)` | Creates a `0xa8` round-like record, handles `Stream_Laser` / `Gill_M_Breath` special-case flags, and appends it to `DAT_008553f0`. |
 | `0x00430190` | `int __fastcall CRoundStatement__GetSerializedSize(void * this)` | Recovered top-level round-statement serialized-size body. |
 | `0x00430210` | `void __thiscall CRoundStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level round-statement load body; dispatches type-5 child load helpers or skips unknown payload bytes. Wave991 re-exported this row as part of the `0x00426150 CCollisionSeekingThing__Init` round config bridge context. |
 | `0x004304d0` | `void __fastcall CSpawnerStatement__CreateSpawnerAndRecurse(void * this)` | Corrected from stale vfunc label to top-level spawner create-and-recurse update body. |
@@ -50,11 +56,11 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00430660` | `int __fastcall CSpawnerStatement__GetSerializedSize(void * this)` | Recovered top-level spawner-statement serialized-size body. |
 | `0x004306e0` | `void __thiscall CSpawnerStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level spawner-statement load body; dispatches type-6 child load helpers or skips unknown payload bytes. |
 | `0x004309a0` | `void __fastcall CExplosionStatement__CreateExplosionAndRecurse(void * this)` | Corrected from stale vfunc label to top-level explosion create-and-recurse update body. |
-| `0x004309e0` | `void __cdecl CExplosionStatement__Create(char * name)` | Creates a `0x50` explosion-like record by name and appends it to `DAT_008553f8`. |
+| `0x004309e0` | `void __cdecl ExplosionDefinition__CreateAndRegisterByName(char * name)` | Creates a `0x50` explosion-like record by name and appends it to `DAT_008553f8`. |
 | `0x00430ae0` | `int __fastcall CExplosionStatement__GetSerializedSize(void * this)` | Recovered top-level explosion-statement serialized-size body. |
 | `0x00430b60` | `void __thiscall CExplosionStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level explosion-statement load body; dispatches type-7 child load helpers or skips unknown payload bytes. |
 | `0x00430e20` | `void __fastcall CComponentStatement__CreateComponentAndRecurse(void * this)` | Corrected from stale vfunc label to top-level component create-and-recurse update body. |
-| `0x00430e60` | `void __cdecl CComponentStatement__CreateAndRegisterByName(char * name)` | Creates a `0x1ac` component-like record by name and appends it to `DAT_00855400`. |
+| `0x00430e60` | `void __cdecl CComponent__CreateAndRegisterByName(char * name)` | Creates a `0x1ac` component-like record by name and appends it to `DAT_00855400`. |
 | `0x00430fa0` | `void __thiscall CStatementChain__InvokeVFunc04OnNodes(void * this, void * context)` | Adjacent chained-statement dispatcher that walks linked statement nodes and invokes vtable slot `+0x4`. |
 | `0x00430fd0` | `int __fastcall CComponentStatement__GetSerializedSize(void * this)` | Recovered top-level component-statement serialized-size body. |
 | `0x00431050` | `void __thiscall CComponentStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level component-statement load body; dispatches type-10 child load helpers or skips unknown payload bytes. |
@@ -230,7 +236,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0043bc80` / `0x0043bd40` | `CFeatureFlag10__ApplyToFeatureByName`, `CFeatureFlag14__ApplyToFeatureByName` | Recovered flag-style apply helpers for feature record fields `+0x10` and `+0x14`; they compare the value scalar with `0.0` before writing `1` or `0`. |
 | `0x0043be00` / `0x0043bbc0` / `0x0043bff0` | `CPhysicsFeatureValue__dtor_base`, `CPhysicsFeatureValue__scalar_deleting_dtor`, and `CPhysicsFeatureValueLeaf__shared_scalar_deleting_dtor` | Corrected stale constructor/vfunc labels to the feature-value destructor family; Wave1183 corrected the leaf wrapper optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
 | `0x0043be10` / `0x0043bf00` | `CFeatureMesh__ApplyToFeatureByName`, `CFeatureNoise__ApplyToFeatureByName` | Corrected stale vfunc labels to owned-string apply helpers against the feature record context. |
-| `0x0043c010` | `void __thiscall CFeatureTexture__ApplyToFeatureByName(void * this, char * featureName)` | Recovered texture apply boundary; resolves the feature record and calls the existing texture-name/index helper. |
+| `0x0043c010` | `void __thiscall CFeatureExplosion__ApplyToFeatureByName(void * this, char * featureName)` | Current saved identity is the feature explosion-link apply helper. The prior texture/name-index interpretation is withdrawn pending a fresh body-level semantic review. |
 
 ## Hazard Value Helpers
 
@@ -250,7 +256,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0043ce60` / `0x0043cf20` / `0x0043cfe0` / `0x0043d0a0` / `0x0043d160` / `0x0043d220` / `0x0043d2e0` / `0x0043d3a0` | component flag apply helpers | Recovered flag-style helpers for component record fields `+0x124`, `+0x128`, `+0x12c`, `+0x198`, `+0x114`, `+0x19c`, `+0x134`, and `+0x108`; Wave1039 corrected stale positive-only wording because the bodies compare `this+0x8` with zero constant `0x005d856c` and write `0` on the zero-comparison path and `1` otherwise, with field semantics still unproven. |
 | `0x0043d760` / `0x0043d8f0` / `0x0043da90` | `CComponentMesh__ApplyToComponentByName`, `CComponentVent__ApplyToComponentByName`, `CComponentNoise__ApplyToComponentByName` | Corrected stale vfunc labels to owned-string component apply helpers for record fields `+0x2c`, `+0x98`, and `+0xa8`. |
 | `0x0043db90` | `void __thiscall CComponentBasedOn__ApplyToComponentByName(void * this, char * componentName)` | Resolves the destination component, resolves the source name at `this+0x8`, and calls `CComponentBasedOn__CopyFrom(destination, source/null)`. |
-| `0x0043d500` | `void __thiscall CComponentIndexedScalar164__ApplyToComponentByName(void * this, char * componentName)` | Writes the scalar using component record field `+0x164` plus the dword index at `this+0xc`; exact array semantics remain unproven. |
+| `0x0043d500` | `void __thiscall CComponentAttackPriority__ApplyToComponentByName(void * this, char * componentName)` | Current saved identity is the component attack-priority apply helper. The prior generic indexed-scalar interpretation is withdrawn pending a fresh body-level semantic review. |
 | `0x004175b0` / `0x00433170` / `0x004331e0` / `0x00433220` | shared and compound load/size helpers | Hardened two-scalar serialized-size evidence plus conservative `CComponentValue02` and `CComponentValue13` load/size helpers. |
 | `0x0043d5c0` / `0x0043d670` / `0x0043d6b0` / `0x0043d850` / `0x0043d9f0` | conservative component value apply/size helpers | Hardened `CComponentValue02`, `CComponentValue13`, `CComponentValue04`, and `CComponentValue0E` apply/size labels where value ids are still conservative. |
 | `0x0043d5a0` / `0x0043dcc0` | `CPhysicsComponentValueLeaf__shared_scalar_deleting_dtor` and `CPhysicsComponentValue__dtor_base` | Recovered the shared leaf scalar-deleting destructor wrapper and base destructor body; the base destructor restores vtable `0x005daae8`, and Wave1183 corrected the leaf wrapper optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |

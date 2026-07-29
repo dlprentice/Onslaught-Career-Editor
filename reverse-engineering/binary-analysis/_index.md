@@ -41,13 +41,11 @@ the document it links.
 > ([07-27](name-grading-ledger-2026-07-27-demotion2.md)). The ledgers, not the
 > closeout, are the current record of which names are demoted.
 >
-> *Deliberately not stated as a single total.* A larger vtable-naming wave and a
-> higher live inventory figure are described only in the header comments of an
-> **untracked** export, `ghidra-function-name-table-2026-07-27.tsv`, which a
-> fresh clone does not have. Quoting a precise count with no tracked citation is
-> the unfalsifiable-premise failure [`CLAUDE.md`](../../CLAUDE.md) warns about,
-> so this index states only what tracked evidence supports. If that export is
-> landed, this paragraph should be replaced with its numbers and a link.
+> *Deliberately not restated as a single total here.* The tracked
+> [`ghidra-function-name-table-2026-07-27.tsv`](ghidra-function-name-table-2026-07-27.tsv)
+> is the dated current address-to-name export and the mechanical checker's
+> authority. Read that table rather than copying its moving inventory count into
+> another document.
 
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,

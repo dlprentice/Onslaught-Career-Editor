@@ -12,7 +12,7 @@
 | **File Size** | 2,506,752 bytes (~2.4 MB) |
 | **Loaded Memory** | ~6.1 MB (includes BSS/uninitialized data) |
 | **Architecture** | x86 32-bit |
-| **Functions** | **6,969** in the Ghidra inventory as of 2026-07-25. *This is a recovery count that moves, not a property of the binary.* Chain: 5,771 (the figure this row carried until 2026-07-28, undated) → **6,411** at the [2026-07-13 closeout](ghidra-full-reaudit-closeout-2026-07-13.md) → **6,969** after the R4 and gap-recovery waves ([re-coverage-baseline-2026-07-25.md](re-coverage-baseline-2026-07-25.md), line 144: "6,411 + 22 from R4 + 536 here"). A later, higher figure exists in the maintainer's live database but its only source is an **untracked** export, so it is not quoted here. |
+| **Functions** | **6,969** in the Ghidra inventory as of 2026-07-25. *This is a recovery count that moves, not a property of the binary.* Chain: 5,771 (the figure this row carried until 2026-07-28, undated) → **6,411** at the [2026-07-13 closeout](ghidra-full-reaudit-closeout-2026-07-13.md) → **6,969** after the R4 and gap-recovery waves ([re-coverage-baseline-2026-07-25.md](re-coverage-baseline-2026-07-25.md), line 144: "6,411 + 22 from R4 + 536 here"). The tracked [2026-07-27 name table](ghidra-function-name-table-2026-07-27.tsv) is the newer address-to-name authority; its moving total is intentionally not duplicated here. |
 | **Format** | PE / D3D9 |
 
 **Notes**: CompanyName says "Lost Toys" (retail build still branded Lost Toys). The Windows retail release was published by Encore; per Stuart (Discord, Dec 2025), the retail Windows work was done in-house at Lost Toys (Jan, ex-Mucky Foot, and possibly others). D3D9 confirms retail/Steam build (not Stuart's D3D8 internal dev build).

@@ -27,7 +27,6 @@ rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md
 rebuild/OnslaughtRebuild.Godot/Assets/PauseMenu/README.md
 release/readiness/PUBLIC_SIGNOFF_COMMANDS.md
 reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md
-reverse-engineering/binary-analysis/_index.md
 reverse-engineering/binary-analysis/audio-media-cutscene-static-review-2026-05-26.md
 reverse-engineering/binary-analysis/battleengine-morph-runtime-observer-design-2026-07-12.md
 reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md
@@ -46,11 +45,9 @@ reverse-engineering/binary-analysis/free-camera-aurore-gate-bypass-patch.md
 reverse-engineering/binary-analysis/frontend-clear-screen-color-patch.md
 reverse-engineering/binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md
 reverse-engineering/binary-analysis/functions/AirUnit.cpp/CAirUnit__Init.md
-reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__AddProjectile.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__FinishedPlayingCurrentAnimation.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GroundParticleEffect.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md
-reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__IsCurrentResolvedEntry.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Move.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SelectNearestForwardTargetFromGlobalSet.md
 reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__SwapPrimarySecondaryPartReadersForState.md
@@ -213,7 +210,6 @@ reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Init
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__RecomputeGridExtentsAndHeightRange.md
 reverse-engineering/binary-analysis/functions/IScript.cpp.md
-reverse-engineering/binary-analysis/functions/Infantry.cpp/CInfantry__Init.md
 reverse-engineering/binary-analysis/functions/MCMech.cpp.md
 reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitCockpit.md
@@ -263,7 +259,6 @@ reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Init.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__TriggerEffect.md
 reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md
 reverse-engineering/binary-analysis/functions/World.cpp/CWorld__LoadWorld.md
-reverse-engineering/binary-analysis/functions/_index.md
 reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md
 reverse-engineering/binary-analysis/functions/console.cpp/CConsole__AppendToStatusBufferV.md
 reverse-engineering/binary-analysis/functions/display-settings.md
@@ -293,7 +288,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__Init.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__InitRestartLoop.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsMultiplayer.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsRunningResources.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsWalkerGroundedOrCollision.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadResources.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclareGameDrawn.md
@@ -304,7 +298,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__PlayMusicForCurren
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__PostLoadProcess.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Render.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__ResetRenderStateForWorldRender.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RespawnPlayer.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__RollCredits.md
@@ -413,7 +406,6 @@ reverse-engineering/binary-analysis/widescreen-diff-unresolved.md
 reverse-engineering/binary-analysis/widescreen-patch-analysis.md
 reverse-engineering/binary-analysis/widescreen-regions-8-11-validation.md
 reverse-engineering/binary-analysis/windbg-cdb-runbook.md
-reverse-engineering/binary-analysis/windowed-mode-analysis.md
 reverse-engineering/game-assets/README.md
 reverse-engineering/game-assets/_index.md
 reverse-engineering/game-assets/aya-asset-format.md

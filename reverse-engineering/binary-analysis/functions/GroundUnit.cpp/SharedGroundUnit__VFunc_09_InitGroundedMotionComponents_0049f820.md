@@ -1,17 +1,24 @@
-# SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820
+# CMech__VFunc_09_InitGroundedMotionComponents_0049f820
 
 > Address: 0x0049f820 | Source: retail `BEA.exe` static Ghidra evidence
 
 ## Status
 
-- **Named in Ghidra:** Yes (Wave436)
+- **Named in Ghidra:** `CMech__VFunc_09_InitGroundedMotionComponents_0049f820`
+  (the earlier conservative label was `SharedGroundUnit__...`)
 - **Signature Set:** Yes (Wave436 headless apply/read-back, 2026-05-16)
-- **Owner Confidence:** Shared/conservative. Vtable tables `0x005e0684` and `0x005e3074` both point slot `9` here, so this page avoids assigning a single concrete class owner.
+- **Owner Confidence:** `CMech` is the base-most evidenced vtable owner. A
+  read-only MSVC RTTI walk of pristine
+  `BEA.exe.original.backup` (SHA-256
+  `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`)
+  identifies `0x005e0684` as `CWarspite`, `0x005e3074` as `CMech`, and
+  `CWarspite` as deriving from `CMech`. An exhaustive dword scan found
+  `0x0049f820` only in those two slot-9 entries.
 
 ## Signature
 
 ```c
-void __thiscall SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820(void * this, void * init_context);
+void __thiscall CMech__VFunc_09_InitGroundedMotionComponents_0049f820(void * this, void * init_context);
 ```
 
 `RET 0x4` confirms one stack argument after `this`.
@@ -36,8 +43,15 @@ void __thiscall SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820
 | `0x005e0684` | `119` | `CMech__InitTargeting` |
 | `0x005e3074` | `119` | `CMech__InitTargeting` |
 
-Vtable `0x005e0684` slot `118` points to `CWarspite__Create`, so the table is not treated as a pure `CMech` table.
+Vtable `0x005e0684` slot `118` points to `CWarspite__Create`. The earlier note
+stopped there and treated the hierarchy as unknown. The pristine RTTI base
+array now establishes `CWarspite -> CMech -> CGroundUnit -> CUnit`, so the
+shared slot is ordinary inheritance rather than evidence against `CMech`
+ownership.
 
 ## Not Proven
 
-Exact concrete owner, source virtual name, class layout, local variable names/types, runtime grounded-unit behavior, and rebuild parity remain unproven.
+Exact source virtual name, complete class layout, local variable names/types,
+runtime grounded-unit behavior, and rebuild parity remain unproven.
+
+The historical filename is retained for link stability.

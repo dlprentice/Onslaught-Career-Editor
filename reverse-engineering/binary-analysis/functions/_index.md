@@ -54,9 +54,8 @@ Naming authority, as a dated chain, newest last:
 | 2026-07-27 | `ghidra-function-name-table-2026-07-27.tsv` | **the current address → symbol resolution authority** |
 
 The mechanical check against that last row is
-`tools/re_function_doc_names_check.py`. Read its own limits before quoting its
-exit code: the table it resolves against is **not tracked in git**, so on any
-clone but the maintainer's the check abstains with exit 2 rather than passing.
+`tools/re_function_doc_names_check.py`. The table is tracked; the checker
+abstains with exit 2 only when its required repository inputs cannot be read.
 "I could not look" is not "I found no problem".
 
 ## The name corrections of 2026-07-28

@@ -132,7 +132,7 @@ Wave588 saved the CMissionScriptObjectCode async/field-block tranche from `0x005
 
 Saved signatures:
 
-| Address | Saved signature |
+| Address | Wave588 saved signature (historical) |
 | --- | --- |
 | `0x00539c80` | `void * __fastcall CMissionScriptObjectCode__CMissionScriptObjectCode(void * this)` |
 | `0x00539ca0` | `void __thiscall CMissionScriptObjectCode__LoadAsync(void * this)` |
@@ -161,7 +161,7 @@ Wave587 saved the CScriptObjectCode core VM tranche from `0x00538ea0` through `0
 
 Saved signatures:
 
-| Address | Saved signature |
+| Address | Wave587 saved signature (historical) |
 | --- | --- |
 | `0x00538ea0` | `void * __thiscall CScriptObjectCode__scalar_deleting_dtor(void * this, byte delete_flags)` |
 | `0x00538ec0` | `void * __thiscall CScriptObjectCode__CScriptObjectCode(void * this, void * bytecode_reader)` |
