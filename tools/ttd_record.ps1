@@ -139,6 +139,58 @@ $SUPPORTED_COPY_SHA256 = 'E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EF
 
 function Fail([string]$m) { throw $m }
 
+function ConvertTo-WindowsCommandLineArgument([AllowEmptyString()][string]$Argument) {
+    if ($Argument.Length -gt 0 -and $Argument -notmatch '[\s"]') {
+        return $Argument
+    }
+
+    # ProcessStartInfo.ArgumentList is unavailable in Windows PowerShell 5.1.
+    # Quote one argv element using the CommandLineToArgvW backslash rules so the
+    # compatibility path below remains lossless for spaces, quotes, and trailing
+    # backslashes.
+    $quoted = [Text.StringBuilder]::new()
+    $null = $quoted.Append('"')
+    $backslashes = 0
+    foreach ($character in $Argument.ToCharArray()) {
+        if ($character -eq '\') {
+            $backslashes++
+            continue
+        }
+        if ($character -eq '"') {
+            $null = $quoted.Append(('\' * (($backslashes * 2) + 1)))
+            $null = $quoted.Append('"')
+            $backslashes = 0
+            continue
+        }
+        if ($backslashes -gt 0) {
+            $null = $quoted.Append(('\' * $backslashes))
+            $backslashes = 0
+        }
+        $null = $quoted.Append($character)
+    }
+    if ($backslashes -gt 0) {
+        $null = $quoted.Append(('\' * ($backslashes * 2)))
+    }
+    $null = $quoted.Append('"')
+    return $quoted.ToString()
+}
+
+function Set-NativeProcessArguments(
+    [Diagnostics.ProcessStartInfo]$StartInfo,
+    [AllowEmptyCollection()][string[]]$Arguments
+) {
+    if ($null -ne $StartInfo.PSObject.Properties['ArgumentList']) {
+        foreach ($argument in $Arguments) {
+            $StartInfo.ArgumentList.Add([string]$argument)
+        }
+        return
+    }
+
+    $StartInfo.Arguments = (($Arguments | ForEach-Object {
+        ConvertTo-WindowsCommandLineArgument ([string]$_)
+    }) -join ' ')
+}
+
 # ---------------------------------------------------------------- interlock 1-3
 if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$') {
     Fail "-Name must be 1-64 ASCII letters, digits, dots, underscores, or hyphens, beginning with a letter or digit."
@@ -331,9 +383,7 @@ try {
     $startInfo.CreateNoWindow = $true
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
-    foreach ($argument in $ttdArgs) {
-        $startInfo.ArgumentList.Add([string]$argument)
-    }
+    Set-NativeProcessArguments -StartInfo $startInfo -Arguments $ttdArgs
     $recorder = [Diagnostics.Process]::new()
     $recorder.StartInfo = $startInfo
     if (-not $recorder.Start()) {
@@ -527,7 +577,25 @@ foreach ($candidate in @((Join-Path $outDir "$Name.out"), (Join-Path $outDir 'tt
     if (-not (Test-Path -LiteralPath $candidate)) { continue }
     $text = Get-Content -LiteralPath $candidate -Raw -ErrorAction SilentlyContinue
     if ($text -match 'exited with exit code\s+(-?\d+)') {
-        $guestExit = [int]$Matches[1]
+        # TTD uses both signed and unsigned spellings for the same 32-bit
+        # process exit value. Its summary prints -1 while the detailed .out
+        # file prints 4294967295. Parse the complete uint32 domain first, then
+        # reinterpret its upper half as the corresponding signed value.
+        $rawGuestExit = [int64]::Parse(
+            $Matches[1],
+            [Globalization.CultureInfo]::InvariantCulture)
+        if (
+            $rawGuestExit -lt [int]::MinValue -or
+            $rawGuestExit -gt [uint32]::MaxValue
+        ) {
+            Fail "TTD reported an out-of-range 32-bit guest exit code: $rawGuestExit"
+        }
+        $guestExit =
+            if ($rawGuestExit -gt [int]::MaxValue) {
+                $rawGuestExit - [int64]4294967296
+            } else {
+                $rawGuestExit
+            }
         $guestExitSource = $candidate
     }
 }

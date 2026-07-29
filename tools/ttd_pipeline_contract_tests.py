@@ -99,12 +99,122 @@ class TtdPipelineContractTests(unittest.TestCase):
         self.assertIn("$recorderEndedWhileTargetAlive", recorder)
         self.assertIn("'max-file-aborted'", recorder)
         self.assertIn("'recorder-ended-early'", recorder)
+        self.assertNotIn("$guestExit = [int]$Matches[1]", recorder)
+        self.assertIn("$rawGuestExit = [int64]::Parse(", recorder)
+        self.assertIn("$rawGuestExit - [int64]4294967296", recorder)
+        self.assertIn(
+            "$null -ne $StartInfo.PSObject.Properties['ArgumentList']",
+            recorder,
+        )
+        self.assertIn("ConvertTo-WindowsCommandLineArgument", recorder)
+        self.assertIn("Set-NativeProcessArguments", recorder)
+        self.assertIn("$StartInfo.Arguments =", recorder)
         self.assertIn("schemaVersion        = 'ttd-record-receipt.v3'", recorder)
         self.assertIn("traceSha256", recorder)
         self.assertIn("[IO.FileShare]::Read", recorder)
         self.assertIn("if ($UntilExit) { [datetime]::MaxValue }", recorder)
         self.assertIn("$recorderStarted -and -not $recorder.HasExited", recorder)
         self.assertTrue(recorder.rstrip().endswith("exit 0"))
+
+    def test_native_argument_bridge_round_trips_on_both_powershell_runtimes(
+        self,
+    ) -> None:
+        expected = [
+            "",
+            "plain",
+            "contains space",
+            "contains\ttab",
+            'embedded"quote',
+            r"backslash\before\"quote",
+            "trailing\\",
+            r"C:\path with spaces\trailing\\",
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            echo = root / "echo_args.py"
+            echo.write_text(
+                "import json, sys\nprint(json.dumps(sys.argv[1:]))\n",
+                encoding="utf-8",
+            )
+            expected_path = root / "expected.json"
+            expected_path.write_text(json.dumps(expected), encoding="utf-8")
+            harness = root / "round_trip.ps1"
+            harness.write_text(
+                "param($Recorder, $Python, $Echo, $Expected)\n"
+                "$ErrorActionPreference = 'Stop'\n"
+                "Set-StrictMode -Version Latest\n"
+                "$tokens = $null; $errors = $null\n"
+                "$ast = [System.Management.Automation.Language.Parser]::"
+                "ParseFile($Recorder, [ref]$tokens, [ref]$errors)\n"
+                "if ($errors.Count) { throw ($errors -join \"`n\") }\n"
+                "foreach ($name in @("
+                "'ConvertTo-WindowsCommandLineArgument',"
+                "'Set-NativeProcessArguments')) {\n"
+                "  $function = $ast.Find({"
+                "param($node) "
+                "$node -is "
+                "[System.Management.Automation.Language.FunctionDefinitionAst] "
+                "-and $node.Name -eq $name"
+                "}, $true)\n"
+                "  if ($null -eq $function) { throw \"Missing $name\" }\n"
+                "  Invoke-Expression $function.Extent.Text\n"
+                "}\n"
+                "$decoded = Get-Content -LiteralPath $Expected -Raw | "
+                "ConvertFrom-Json\n"
+                "$arguments = @($Echo)\n"
+                "foreach ($item in $decoded) { $arguments += [string]$item }\n"
+                "$startInfo = [Diagnostics.ProcessStartInfo]::new()\n"
+                "$startInfo.FileName = $Python\n"
+                "$startInfo.UseShellExecute = $false\n"
+                "$startInfo.RedirectStandardOutput = $true\n"
+                "$startInfo.RedirectStandardError = $true\n"
+                "Set-NativeProcessArguments "
+                "-StartInfo $startInfo -Arguments $arguments\n"
+                "$process = [Diagnostics.Process]::new()\n"
+                "$process.StartInfo = $startInfo\n"
+                "if (-not $process.Start()) { throw 'Process did not start' }\n"
+                "$stdout = $process.StandardOutput.ReadToEnd()\n"
+                "$stderr = $process.StandardError.ReadToEnd()\n"
+                "$process.WaitForExit()\n"
+                "if ($process.ExitCode -ne 0) { throw $stderr }\n"
+                "$stdout.Trim()\n",
+                encoding="utf-8",
+            )
+
+            for runtime in ("powershell.exe", "pwsh"):
+                with self.subTest(runtime=runtime):
+                    completed = subprocess.run(
+                        [
+                            runtime,
+                            "-NoLogo",
+                            "-NoProfile",
+                            "-ExecutionPolicy",
+                            "Bypass",
+                            "-File",
+                            str(harness),
+                            "-Recorder",
+                            str(RECORDER),
+                            "-Python",
+                            subprocess.check_output(
+                                ["py", "-3", "-c", "import sys;print(sys.executable)"],
+                                text=True,
+                            ).strip(),
+                            "-Echo",
+                            str(echo),
+                            "-Expected",
+                            str(expected_path),
+                        ],
+                        cwd=ROOT,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+                    self.assertEqual(
+                        0,
+                        completed.returncode,
+                        completed.stdout + completed.stderr,
+                    )
+                    self.assertEqual(expected, json.loads(completed.stdout))
 
     def test_query_fails_closed_and_never_reuses_output(self) -> None:
         query = read(QUERY)
