@@ -21,6 +21,46 @@ original bytes do not match is refused.
 These checks prove byte and filesystem behavior. They do not by themselves
 prove that a patch produces the advertised visible or gameplay effect.
 
+## Virtual address ↔ file offset
+
+**Restored 2026-07-29.** Commit `a777a4ea` (2026-07-17, "Refocus toolkit on active
+product and rebuild") removed 213 of this file's 247 lines. Most of that was
+product-scope prose and is deliberately not resurrected here. But it also carried
+the only statement in the tree of how a catalog row's `file_offset` relates to a
+virtual address, and three tracked documents plus the catalog's own
+`evidence_refs` still cite this file for exactly that. This section restores the
+relation, and nothing else.
+
+For this image the mapping is uniform across every section:
+
+```
+VA = file_offset + 0x400000
+```
+
+`patches/catalog/patches.v2.json` stores `file_offset` only, so a row cannot be
+checked against a disassembly or against `reverse-engineering/` addresses without
+this line. That gap has already cost real work: the force-windowed offset was
+written down as `0x12A6C4` on 2026-07-28 and corrected to `0x12A644` only after an
+adversarial pass caught it — the correct pairing had been in the table deleted
+here eleven days earlier.
+
+**Every row was re-verified on 2026-07-29** against the pristine specimen
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, which is also
+the hash each row already carries in `target_binary_hashes`, and whose size
+(2,506,752 bytes) matches every row's `target_binary_size`:
+
+**29 rows checked, 29 `expected_original_bytes` matched, 0 mismatched.**
+
+Reproduce it by reading `file_offset` from each row and comparing that many bytes
+of the specimen against `expected_original_bytes`. Do **not** read these bytes
+from the installed Steam `BEA.exe` — it is deliberately patched and is not a
+specimen.
+
+The catalog remains the single source of truth for offsets, bytes and eligibility.
+This section states the address relation and the verification result; it does not
+duplicate the rows.
+
 ## Retail evidence boundary
 
 Some rows have bounded copied-runtime observations documented under
