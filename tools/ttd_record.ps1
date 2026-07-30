@@ -644,6 +644,40 @@ $guestOutcome =
 
 $traceSha256 = $null
 if ($final -gt 0) {
+    # WAIT FOR TTD TO LET GO OF THE .run BEFORE HASHING IT.
+    #
+    # TTD prints "Trace dumped to ..." and the recorder returns, but the writer
+    # can still hold the file open for a moment while it finalises. Hashing in
+    # that window fails with "The process cannot access the file ... because it
+    # is being used by another process", and because the campaign wrapper treats
+    # a non-zero recorder exit as a failed level, ONE transient lock aborted a
+    # 66-level unattended run on its first trace - after the 3-minute recording
+    # had already completed successfully and written a valid 7.17 GB trace.
+    #
+    # This waits rather than retrying the hash directly, so a genuinely stuck
+    # writer is reported as such instead of being hidden behind N silent retries.
+    # It FAILS CLOSED: if the handle never frees we refuse the receipt rather
+    # than emit one with a null hash.
+    $unlockDeadline = (Get-Date).AddSeconds(180)
+    $traceUnlocked = $false
+    while (-not $traceUnlocked) {
+        try {
+            $probe = [IO.File]::Open(
+                $traceFile, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+            $probe.Dispose()
+            $traceUnlocked = $true
+        }
+        catch [IO.IOException] {
+            if ((Get-Date) -ge $unlockDeadline) {
+                Fail (
+                    'TTD trace file was still locked 180 s after tracing completed: ' +
+                    $traceFile + '. The recording itself may be valid - inspect the ' +
+                    '.out file for "Tracing completed" before discarding it.')
+            }
+            Start-Sleep -Milliseconds 500
+        }
+    }
+
     $traceBeforeHash = Get-Item -LiteralPath $traceFile
     $traceSha256 = (
         Get-FileHash -LiteralPath $traceFile -Algorithm SHA256
