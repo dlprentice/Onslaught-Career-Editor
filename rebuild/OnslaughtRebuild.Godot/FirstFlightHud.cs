@@ -959,19 +959,77 @@ public sealed partial class FirstFlightHud : CanvasLayer
     //
     // The two controls pin the method's error at about +-0.035 around the
     // additive answer s=1. The ring's 0.733 is eight times that away, i.e. retail
-    // retains only 73% of the background under the ring: alpha 0.267. The colour
-    // this file already carried for it was alpha 0.25, so only the BLEND changed
-    // - the constant did not.
+    // retains only 73% of the background under the ring: alpha 0.267.
     private const float CompassBaseRingInnerRadius = 95f;
     private const float CompassGaugeInnerRadius = 80f;
     private const float CompassGaugeOuterRadius = 92f;
     private const float CompassBaseRingOuterRadius = 101f;
 
+    // COLOUR: task #106's first defect, and it is no longer a fit. The ring's
+    // texel was READ OUT OF THE RUNNING GAME on 2026-07-28 and recovered on
+    // 2026-07-29; see local-lab/HUD-LANE-RECOVERED-2026-07-29.md sections 1-2.
+    //
+    // Retail's base ring is compass ring 1: 50 segments, radius percent 31,
+    // textured by CDXCompass__BuildByteSpriteOverlayTexture (0x0053c2e0) into a
+    // 512x32 A4R4G4B4 surface. All 32 rows of that surface were dumped whole at
+    // two positions of the Level 100 TTD trace, 16,384 texels each, read at the
+    // UnlockRect instruction through the pointer LockRect handed the program:
+    //
+    //   G:\bea-ttd\play-level100\q-texels\cdb.log
+    //   G:\bea-ttd\queries\34-ring-texels-fullrow.txt
+    //
+    // The ENTIRE ink is one value, 0x2444, on five rows, identical at !tt 45 and
+    // !tt 90. The pristine specimen agrees independently: the whole ring-1
+    // palette is written as four immediates at 0x0053c312..0x0053c327 -
+    // 0x0000, 0x2222, 0x2444, 0x2666 - and every one of them has R == G == B.
+    // (Specimen local-lab/safe-copy-bea-pristine/BEA.exe.original.backup,
+    // sha256 74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750.)
+    //
+    //   0x2444 -> A = 2/15 = 0.133333   R = G = B = 4/15 = 0.266667 = 68/255
+    //
+    // RETAIL'S BASE RING IS ACHROMATIC. It cannot be blue: the vertex buffers
+    // carry FVF 0x102 (XYZ|TEX1) with no D3DFVF_DIFFUSE, so D3D9 supplies opaque
+    // white; and at the ring-1 DrawPrimitive (0x0053d10a), walked back with g-,
+    // the stage is COLOROP=MODULATE, COLORARG1=D3DTA_TEXTURE,
+    // COLORARG2=D3DTA_DIFFUSE - not TFACTOR. Blend at that draw, measured:
+    // ALPHABLENDENABLE=1, SRCBLEND=ONE, DESTBLEND=INVSRCALPHA. So
+    //
+    //   out = texel.rgb + (1 - texel.a) * bg  =  4/15 + (13/15) * bg
+    //
+    // with no fitting and no free parameter. Godot's blend mode is per
+    // CanvasItem, so as with the gauge arcs the one premultiplied draw is
+    // realised as an alpha-blended half plus an additive half, and the paint is
+    // K = P / (1 + a) = (4/15) / (17/15) = 4/17. That identity is the same one
+    // the GaugeHealthPaint block derives and uses.
+    //
+    // This moves toward the independent pixel fit above as well as onto the
+    // bytes. The old constant emitted intercept (134, 185, 287) against a
+    // frame-fitted 93.1 and a byte-measured 68, at retention 0.75; the measured
+    // one emits exactly 68 at retention 0.867 against that fitted 0.733.
+    //
+    // NOT changed, deliberately: the 95/101 radii above. The measured ink rows
+    // (8..12) and the static memset's predicted texture rows (14..18) disagree
+    // by six rows. The band WIDTH agrees - five of ring 1's 32 rows is 6.09 px
+    // at the projection-derived 320 px/unit, against the frame-measured 6 px -
+    // but the offset does not, so no radius here is derived from a texel row.
+    // Section 1.3 of the note carries the open question and the cheapest probe.
+    //
+    // The emphasis pulse keeps its existing magnitudes and is now applied to all
+    // three channels, so an emphasised ring stays achromatic.
+    internal const float CompassBaseRingTexelAlpha = 2f / 15f;
+    internal const float CompassBaseRingTexelPremultipliedRgb = 4f / 15f;
+    internal const float CompassBaseRingPaint =
+        CompassBaseRingTexelPremultipliedRgb / (1f + CompassBaseRingTexelAlpha);
+
     private static Color CompassBaseColor(
         WorldSnapshot snapshot,
         Level100HudSnapshot hud,
         float compassHighlight) =>
-        new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
+        new(
+            CompassBaseRingPaint + compassHighlight,
+            CompassBaseRingPaint + compassHighlight,
+            CompassBaseRingPaint + compassHighlight,
+            CompassBaseRingTexelAlpha + (compassHighlight * 0.4f));
 
     private sealed class HudAssets
     {
@@ -2154,7 +2212,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // ring plus a gauge-only band.
             Vector2 center = DesignCenter;
             float compassHighlight = HighlightAlpha(snapshot, hud, Level100HudPart.Compass);
-            Color baseColor = new(0.42f + compassHighlight, 0.58f, 0.90f, 0.25f + (compassHighlight * 0.4f));
+            // The two halves of the one premultiplied draw MUST use the same
+            // paint, so this reads the shared constant rather than repeating a
+            // literal - the duplicate literal is how the two halves drifted
+            // apart before. See the CompassBaseColor block for the texel.
+            Color baseColor = CompassBaseColor(snapshot, hud, compassHighlight);
 
             // The gauge band radii now live on CompassGaugeInnerRadius /
             // CompassGaugeOuterRadius, because both halves of the arc need them.
@@ -2190,10 +2252,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
             // then the ONE/ONE state, then SRCALPHA/INVSRCALPHA.
             //
             // The attenuating half is RetailHudBaseLayer.DrawCompassBaseRing.
-            // This is the additive half, unchanged, and the dial north overlay
-            // rides the same additive pass it always did. Neither constant was
-            // retuned: the base layer reuses this layer's own ring colour, whose
-            // alpha was already 0.25 against retail's measured 0.267.
+            // This is the additive half, and the dial north overlay rides the
+            // same additive pass it always did. Both halves now read one shared
+            // CompassBaseColor, whose paint and alpha come from the ring's own
+            // texel rather than from this regression - see that block. The fit
+            // recorded here is retained because it is the independent check the
+            // texel now agrees with, not because anything is fitted to it.
             //
             // The gauge band carries no track of its own outside the two gauge
             // arcs, so none is drawn here.

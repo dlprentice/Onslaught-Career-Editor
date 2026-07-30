@@ -225,6 +225,84 @@ public sealed class Level100HudBlendEvidenceTests
     }
 
     /// <summary>
+    /// Pins the compass base ring to the texel that was read out of the running
+    /// game, so a later "the ring looks a bit flat, warm it up" pass has to argue
+    /// with a locked texture surface rather than with a taste judgement.
+    ///
+    /// Ring 1 - 50 segments, radius percent 31 - is textured by
+    /// CDXCompass__BuildByteSpriteOverlayTexture (0x0053c2e0) into a 512x32
+    /// A4R4G4B4 surface. All 32 rows were dumped whole at two positions of the
+    /// Level 100 TTD trace (G:\bea-ttd\play-level100\q-texels\cdb.log), read at
+    /// the UnlockRect instruction through LockRect's own pBits. The entire ink
+    /// is ONE value, 0x2444, on five rows, identical at both positions; and the
+    /// pristine specimen writes the whole four-entry palette as immediates at
+    /// 0x0053c312..0x0053c327 - 0x0000, 0x2222, 0x2444, 0x2666 - every one of
+    /// them achromatic. Two independent routes, one value.
+    ///
+    /// Nothing can tint it: FVF 0x102 has no D3DFVF_DIFFUSE so diffuse is opaque
+    /// white, and at the ring-1 DrawPrimitive the stage is
+    /// MODULATE(TEXTURE, DIFFUSE) under ONE/INVSRCALPHA. So the law is
+    /// out = texel.rgb + (1 - texel.a) * bg, and this test recomputes both sides
+    /// of it from the raw nibbles.
+    ///
+    /// Full recovery, including the six-row offset that is still open and is why
+    /// the 95/101 radii were NOT touched:
+    /// local-lab/HUD-LANE-RECOVERED-2026-07-29.md.
+    /// </summary>
+    [Fact]
+    public void TheCompassBaseRingIsTheAchromaticTapeTexelDrawnAsOneStrip()
+    {
+        // 0x2444 decoded from its nibbles, not from a transcribed decimal.
+        const int Texel = 0x2444;
+        double alpha = ((Texel >> 12) & 0xf) / 15.0;
+        double red = ((Texel >> 8) & 0xf) / 15.0;
+        double green = ((Texel >> 4) & 0xf) / 15.0;
+        double blue = (Texel & 0xf) / 15.0;
+
+        // The whole point: retail's base ring has no hue at all.
+        Assert.Equal(red, green);
+        Assert.Equal(green, blue);
+
+        // The file must carry the texel itself, so the two halves of the one
+        // premultiplied draw are derived rather than fitted.
+        Assert.Contains(
+            "CompassBaseRingTexelAlpha = 2f / 15f", HudSource, StringComparison.Ordinal);
+        Assert.Contains(
+            "CompassBaseRingTexelPremultipliedRgb = 4f / 15f",
+            HudSource,
+            StringComparison.Ordinal);
+        Assert.Equal(2.0 / 15.0, alpha, 6);
+        Assert.Equal(4.0 / 15.0, red, 6);
+
+        // Godot blends per CanvasItem, so the single premultiplied draw is an
+        // alpha-blended half plus an additive half: (1-a)bg + aK + K, which
+        // equals (1-a)bg + P exactly when K = P/(1+a). Same identity the gauge
+        // arcs already use.
+        Assert.Contains(
+            "CompassBaseRingTexelPremultipliedRgb / (1f + CompassBaseRingTexelAlpha)",
+            HudSource,
+            StringComparison.Ordinal);
+        double paint = red / (1.0 + alpha);
+        Assert.Equal((1.0 - alpha) + ((1.0 + alpha) * paint), (1.0 - alpha) + red, 6);
+
+        // The blue the ring used to carry must be gone from the file entirely -
+        // both from CompassBaseColor and from the additive half that duplicated
+        // its literal.
+        Assert.DoesNotContain(
+            "0.42f + compassHighlight, 0.58f, 0.90f", HudSource, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(HudSource, @"private static Color CompassBaseColor"));
+        Assert.Equal(
+            2,
+            Regex.Matches(HudSource, @"CompassBaseColor\(snapshot, hud, compassHighlight\)").Count);
+
+        // And the ring stays one primitive: retail issues 102 vertices as a
+        // single D3DPT_TRIANGLESTRIP, so the helper must not go back to emitting
+        // one antialiased DrawLine per segment.
+        Assert.Contains("DrawPolyline(points, color, width, true)", HudSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawLine(firstPoint, secondPoint", HudSource, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// message-noise is a DXT1 page with no coverage, so the sibling test above
     /// would normally put it on the ONE/ONE layer. Retail draws it
     /// SRCALPHA/INVSRCALPHA instead - device-confirmed - and gets away with it
