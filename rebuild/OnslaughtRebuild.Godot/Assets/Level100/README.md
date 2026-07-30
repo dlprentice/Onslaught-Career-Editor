@@ -517,12 +517,54 @@ slot returns `1`, the released HFLD sampler is called at `0x0047EB80`, and its
 At this X/Y, HFLD unit `-10485` produces terrain Z
 `-9.599889755249023`; water Z is `-8.84000015258789`, so the released initial
 transform is position `(252.5, 261.25, -9.599889755249023)` with identity
-orientation. The client therefore places every object whose definition is
-exactly `SAT Turret` with its pivot on that support (Godot Y
-`-0.40011024475097656`), preserving the authored lower skirt below terrain.
-The other static types retain their existing converted lower-bound clearance;
-their individual released grounding relationships are not generalized from
-this turret.
+orientation.
+
+**The seating law, recovered and applied uniformly.** `CThing::Init` seats a thing
+at `max(authored Z, terrain, water)` and reads **no mesh extent whatsoever**. Both
+clamps are bare `FSTP` stores of the compared value — the terrain clamp at
+`0x004F3529` (`fstp dword ptr [esp+0x14]`, fed by the sampler through
+`CALL [EAX+0x50]`) and the water clamp at `0x004F3559`
+(`fstp dword ptr [esi+0x24]`). Nothing between the sample and the store adjusts
+for geometry.
+
+So the reconstruction applies one rule to **all 33 authored statics and all 1,481
+pines**: seat at `max(PlayerStartElevation - retailZ, terrain, water)`, with no
+mesh-extent term. `Level100StaticWorldAsset.Load` implements it and
+`Level100PineRepresentationTests.NoMeshDerivedTermIsAddedToTheReleasedStaticClamp`
+pins it. `SAT Turret` is **not special-cased** — the authored skirt sits below
+terrain because the authored pivot does, which is what the released law produces
+for every static, turret or otherwise.
+
+Pines inherit the same law by direct evidence rather than by generalisation.
+`CTree::Init` at `0x004F6080` is RTTI-confirmed: the `CTree` vtable `0x005DD9D8`
+carries it in slot `+0x24`, and the complete object locator at `0x00615630` names
+`.?AVCTree@@`. It **overwrites the authored Z with the height sample** before
+seating — `LEA EDX,[EBX+4]` at `0x004F61C4`, `MOV ECX,0x006FADC8` at `0x004F61C7`,
+`CALL 0x0047EB80` at `0x004F61DD`, `FSTP DWORD PTR [EBX+0xC]` at `0x004F61F4` — and
+there is **no `FADD`, `FSUB` or `FMUL` between that call and that store**; the
+window holds only `lea`, `mov`, `mov`, `push`, so the sampled height reaches the
+field unmodified. It then calls `CThing::Init` at `0x004F6363`. Both gates are
+inherited and both fire: vtable `+0xB0` `ClipToGround` → `0x004014A0`
+(`MOV EAX,1; RET`) and `+0xC4` `CanGoUnderWater` → `0x00405930`
+(`XOR EAX,EAX; RET`), so the water clamp applies to pines too.
+
+> **Superseded 2026-07-29.** This paragraph previously read: *"The client therefore
+> places every object whose definition is exactly `SAT Turret` with its pivot on
+> that support (Godot Y `-0.40011024475097656`), preserving the authored lower
+> skirt below terrain. The other static types retain their existing converted
+> lower-bound clearance; their individual released grounding relationships are not
+> generalized from this turret."* Both sentences described behaviour the code no
+> longer has. The `-min(vertexZ)` lift was removed from all 33 statics when the
+> seating law was recovered, and has since been removed from the pines — the last
+> place it survived. The old caution against generalising from one turret is
+> overtaken: the law is now read directly from `CTree`'s own body.
+>
+> All byte evidence above is from the pristine specimen
+> `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
+> `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, and every
+> address was re-disassembled with `tools/disasm_va.py` when this correction was
+> written. Never read these bytes from the installed Steam `BEA.exe`, which is
+> deliberately patched.
 
 Level 100's `HFLD` selects water level `-8.84000015258789`, color `#21213D`,
 and texture index zero. The active Steam path renders a 25×25 camera-following
