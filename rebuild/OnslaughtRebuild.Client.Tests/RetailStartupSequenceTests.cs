@@ -331,8 +331,8 @@ public sealed class RetailStartupSequenceTests
 
     [Theory]
     [InlineData("[]")]
-    [InlineData("""{"schema":"onslaught-startup-media.v3","clips":[]}""")]
-    [InlineData("""{"schema":"onslaught-startup-media.v3","clips":{"LostToysLogo":{}}}""")]
+    [InlineData("""{"schema":"onslaught-startup-media.v4","clips":[]}""")]
+    [InlineData("""{"schema":"onslaught-startup-media.v4","clips":{"LostToysLogo":{}}}""")]
     public void MediaIndexTreatsWrongJsonShapesAsUnavailableRatherThanThrowing(string json)
     {
         string root = NewCacheDirectory();

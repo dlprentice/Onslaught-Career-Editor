@@ -270,6 +270,252 @@ public sealed class RetailLevel100CutsceneTests
     }
 
     /// <summary>
+    /// The cutscene's voice track, end to end through the index that gates it.
+    ///
+    /// <para>Three things are asserted, and each of them is a way the movie
+    /// could go silent or go wrong without anything else noticing:</para>
+    /// <list type="number">
+    /// <item>the receipted track loads and reports <b>Bink track 0</b> — English,
+    /// read out of the pristine specimen; see
+    /// <see cref="RetailStartupClipAudio"/> for the chain;</item>
+    /// <item>its length COVERS the video and overruns it by less than one
+    /// 2,048-sample binkaudio frame. Against the real numbers — 5,460,480 sample
+    /// frames at 44.1 kHz versus 3,095 video frames at 25 fps — the overhang is
+    /// 900 samples. A length mismatch is the cheapest possible falsification
+    /// that this track belongs to this clip at all;</item>
+    /// <item>a byte that changes after materialization drops the AUDIO and KEEPS
+    /// the video, because a silent movie is the state this shipped in and
+    /// substitutes nothing, whereas dropping the clip would cost 123.80 s of
+    /// narrative over a bad 21.8 MB file.</item>
+    /// </list>
+    /// </summary>
+    [Fact]
+    public void TheVoiceTrackIsBinkTrackZeroAndCoversTheWholeVideo()
+    {
+        const int SampleRate = 44_100;
+        const long SampleFrames = 5_460_480L;
+
+        string root = NewCacheDirectory();
+        string relative = "level100-intro-cutscene/voice-track00.wav";
+        string audioPath = Path.Combine(root, "level100-intro-cutscene", "voice-track00.wav");
+        Directory.CreateDirectory(Path.GetDirectoryName(audioPath)!);
+        // A short stand-in for the 21.8 MB decode: the index checks the WAV
+        // envelope and the receipt, and the declared sample-frame count is what
+        // carries the length. Writing 21.8 MB here would test the disk.
+        WritePcmWav(audioPath, SampleRate, channels: 2, sampleFrames: 64);
+        WriteCutsceneIndex(root, relative, audioPath, SampleRate, 2, sampleFrames: 64);
+
+        RetailStartupMediaIndex index = RetailStartupMediaIndex.Load(root, File.Exists);
+
+        RetailStartupClipAudio voice =
+            Assert.Contains(RetailStartupCue.Level100IntroCutscene, index.ClipAudio);
+        Assert.Equal(0, voice.Track);
+        Assert.Equal(SampleRate, voice.SampleRate);
+        Assert.Equal(2, voice.Channels);
+        Assert.Equal(
+            relative,
+            index.AudioRelativePath(RetailStartupCue.Level100IntroCutscene)
+                .Replace('\\', '/'));
+
+        // The length law, against the measured decode rather than the stand-in.
+        var measured = new RetailStartupClipAudio(0, SampleRate, 2, 16, SampleFrames);
+        long videoSampleFrames =
+            (long)Level100Intro.FrameCount * SampleRate / Level100Intro.FramesPerSecondNumerator;
+        long overhang = measured.SampleFrameCount - videoSampleFrames;
+        Assert.Equal(5_459_580L, videoSampleFrames);
+        Assert.Equal(900L, overhang);
+        Assert.InRange(overhang, 0L, BinkAudioFrameSamples - 1);
+        Assert.Equal(123.820408, measured.DurationSeconds, 6);
+        Assert.True(
+            measured.DurationSeconds >= Level100Intro.DurationSeconds,
+            "the voice track must cover the whole movie, never end early");
+
+        // A byte changes after materialization: audio out, video intact.
+        byte[] tampered = File.ReadAllBytes(audioPath);
+        tampered[^1] ^= 0x01;
+        File.WriteAllBytes(audioPath, tampered);
+
+        RetailStartupMediaIndex reloaded = RetailStartupMediaIndex.Load(root, File.Exists);
+
+        Assert.Empty(reloaded.ClipAudio);
+        Assert.Contains(RetailStartupCue.Level100IntroCutscene, reloaded.Clips);
+        Assert.Throws<InvalidOperationException>(
+            () => reloaded.AudioRelativePath(RetailStartupCue.Level100IntroCutscene));
+    }
+
+    /// <summary>
+    /// binkaudio's frame length at 44.1 kHz: ffmpeg's decoder uses
+    /// <c>frame_len_bits = 11</c> for rates at or above 44100
+    /// (<c>libavcodec/binkaudio.c</c>), so the last frame overruns the video by
+    /// whatever it takes to fill.
+    /// </summary>
+    private const long BinkAudioFrameSamples = 2048L;
+
+    private static string NewCacheDirectory()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(), "onslaught-cutscene-audio-tests", Guid.NewGuid().ToString("n"));
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    /// <summary>Writes the canonical 44-byte-header PCM WAV the materializer produces.</summary>
+    private static void WritePcmWav(string path, int sampleRate, int channels, int sampleFrames)
+    {
+        int blockAlign = channels * 2;
+        int dataSize = sampleFrames * blockAlign;
+        var wave = new byte[44 + dataSize];
+        Span<byte> header = wave.AsSpan(0, 44);
+        "RIFF"u8.CopyTo(header);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(
+            header[4..], (uint)(wave.Length - 8));
+        "WAVEfmt "u8.CopyTo(header[8..]);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(header[16..], 16u);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(header[20..], 1);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(header[22..], (ushort)channels);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(header[24..], (uint)sampleRate);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(
+            header[28..], (uint)(sampleRate * blockAlign));
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(header[32..], (ushort)blockAlign);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(header[34..], 16);
+        "data"u8.CopyTo(header[36..]);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(header[40..], (uint)dataSize);
+        for (int index = 0; index < dataSize; index++)
+        {
+            wave[44 + index] = (byte)(index * 7);
+        }
+        File.WriteAllBytes(path, wave);
+    }
+
+    private static void WriteCutsceneIndex(
+        string root,
+        string audioRelativePath,
+        string audioPath,
+        int sampleRate,
+        int channels,
+        int sampleFrames)
+    {
+        string folder = Path.Combine(root, "level100-intro-cutscene");
+        Directory.CreateDirectory(folder);
+        string[] frames = Enumerable.Range(1, 3)
+            .Select(frame => Path.Combine(folder, $"f{frame:D5}.png"))
+            .ToArray();
+        foreach (string frame in frames)
+        {
+            WriteMinimalRgbPng(frame, Level100Intro.Width, Level100Intro.Height);
+        }
+
+        var index = new
+        {
+            schema = RetailStartupMediaIndex.Schema,
+            clips = new Dictionary<string, object>
+            {
+                [nameof(RetailStartupCue.Level100IntroCutscene)] = new
+                {
+                    width = Level100Intro.Width,
+                    height = Level100Intro.Height,
+                    fpsNumerator = Level100Intro.FramesPerSecondNumerator,
+                    fpsDenominator = Level100Intro.FramesPerSecondDenominator,
+                    frameCount = frames.Length,
+                    framePathFormat = "level100-intro-cutscene/f{0:D5}.png",
+                    framesSha256 = FrameSetSha256(frames),
+                    audio = new
+                    {
+                        track = 0,
+                        path = audioRelativePath,
+                        sampleRate,
+                        channels,
+                        bitsPerSample = 16,
+                        sampleFrameCount = sampleFrames,
+                        outputSha256 = Convert.ToHexString(
+                            System.Security.Cryptography.SHA256.HashData(
+                                File.ReadAllBytes(audioPath))),
+                    },
+                },
+            },
+        };
+        File.WriteAllText(
+            Path.Combine(root, "startup-media.json"),
+            System.Text.Json.JsonSerializer.Serialize(index));
+    }
+
+    private static string FrameSetSha256(IReadOnlyList<string> paths)
+    {
+        using System.Security.Cryptography.IncrementalHash digest =
+            System.Security.Cryptography.IncrementalHash.CreateHash(
+                System.Security.Cryptography.HashAlgorithmName.SHA256);
+        digest.AppendData("onslaught-startup-frame-set.v1\0"u8);
+        foreach (string path in paths)
+        {
+            digest.AppendData(System.Text.Encoding.ASCII.GetBytes(Path.GetFileName(path)));
+            digest.AppendData([0]);
+            digest.AppendData(System.Text.Encoding.ASCII.GetBytes(
+                new FileInfo(path).Length.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture)));
+            digest.AppendData([0]);
+            digest.AppendData(File.ReadAllBytes(path));
+        }
+        return Convert.ToHexString(digest.GetHashAndReset());
+    }
+
+    private static void WriteMinimalRgbPng(string path, int width, int height)
+    {
+        List<byte> bytes = [0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A];
+        AppendPngChunk(
+            bytes,
+            "IHDR"u8,
+            [
+                (byte)(width >> 24), (byte)(width >> 16), (byte)(width >> 8), (byte)width,
+                (byte)(height >> 24), (byte)(height >> 16), (byte)(height >> 8), (byte)height,
+                8, 2, 0, 0, 0,
+            ]);
+        using var compressed = new MemoryStream();
+        using (var stream = new System.IO.Compression.ZLibStream(
+            compressed, System.IO.Compression.CompressionLevel.SmallestSize, leaveOpen: true))
+        {
+            stream.Write(new byte[((width * 3) + 1) * height]);
+        }
+        AppendPngChunk(bytes, "IDAT"u8, compressed.ToArray());
+        AppendPngChunk(bytes, "IEND"u8, []);
+        File.WriteAllBytes(path, [.. bytes]);
+    }
+
+    private static void AppendPngChunk(
+        List<byte> destination, ReadOnlySpan<byte> kind, ReadOnlySpan<byte> payload)
+    {
+        destination.Add((byte)(payload.Length >> 24));
+        destination.Add((byte)(payload.Length >> 16));
+        destination.Add((byte)(payload.Length >> 8));
+        destination.Add((byte)payload.Length);
+        destination.AddRange(kind.ToArray());
+        destination.AddRange(payload.ToArray());
+        uint crc = uint.MaxValue;
+        foreach (byte value in kind)
+        {
+            crc = UpdatePngCrc(crc, value);
+        }
+        foreach (byte value in payload)
+        {
+            crc = UpdatePngCrc(crc, value);
+        }
+        crc = ~crc;
+        destination.Add((byte)(crc >> 24));
+        destination.Add((byte)(crc >> 16));
+        destination.Add((byte)(crc >> 8));
+        destination.Add((byte)crc);
+    }
+
+    private static uint UpdatePngCrc(uint crc, byte value)
+    {
+        crc ^= value;
+        for (int bit = 0; bit < 8; bit++)
+        {
+            crc = (crc & 1) != 0 ? 0xEDB88320u ^ (crc >> 1) : crc >> 1;
+        }
+        return crc;
+    }
+
+    /// <summary>
     /// Click-to-start, FEP_MAIN (New Game), CHOOSE GAME NAME, SELECT LEVEL,
     /// MISSION BRIEFING, SELECT CONFIGURATION — six confirmations reach LOADING.
     /// </summary>

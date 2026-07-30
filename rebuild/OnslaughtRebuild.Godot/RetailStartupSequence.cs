@@ -50,11 +50,22 @@ public enum RetailStartupClockMode
 /// 2,054 textures at 480×300 for the montage and 3,095 for the Level 100
 /// cutscene, and is deliberately not done here.
 ///
+/// <para><b>Audio.</b></para>
+/// A clip that has a decoded Bink track plays it through one
+/// <see cref="AudioStreamPlayer"/> child, started on the same engine frame the
+/// beat's first video frame is selected and stopped in <see cref="Finish"/> and
+/// <see cref="_ExitTree"/> — so the track cannot outlive the movie on any path,
+/// including an abort or an early teardown. For the Level 100 cutscene that
+/// track is <b>Bink track 0, English</b>; see
+/// <see cref="RetailStartupClipAudio"/> for the byte evidence. A clip with no
+/// decoded track plays silent, which is not a defect.
+///
 /// <para><b>Nothing is imitated.</b></para>
 /// If a clip was not decoded, its beat does not exist and nothing is drawn in
 /// its place. If NO media at all is available the sequence reports that and
 /// hands straight over to the frontend; it never substitutes hand-made motion
-/// for retail footage.
+/// for retail footage, and it never substitutes generated sound for retail
+/// audio.
 /// </summary>
 public sealed partial class RetailStartupSequence : Control
 {
@@ -86,6 +97,8 @@ public sealed partial class RetailStartupSequence : Control
     private RetailStartupSchedule _schedule = null!;
     private RetailStartupClockMode _clock = RetailStartupClockMode.Wall;
     private Texture2D? _splashTexture;
+    private AudioStreamPlayer? _voice;
+    private RetailStartupCue? _voiceCue;
     private (RetailStartupCue Cue, int Index)? _residentFrame;
     private int _presentedBuffer;
     private double _elapsedSeconds;
@@ -206,6 +219,7 @@ public sealed partial class RetailStartupSequence : Control
             return;
         }
 
+        CreateVoicePlayer();
         QueueRedraw();
     }
 
@@ -226,7 +240,20 @@ public sealed partial class RetailStartupSequence : Control
             return;
         }
 
+        // Before the redraw, not after: the movie and its voice must begin on
+        // the same engine frame, and a deferred _Draw would put the first
+        // decoded frame ahead of the first sample.
+        UpdateVoiceTrack(_schedule.Sample(_elapsedSeconds));
         QueueRedraw();
+    }
+
+    public override void _ExitTree()
+    {
+        // A track that outlives its movie is worse than silence. Finish()
+        // already stops it on completion and on abort; this covers the paths
+        // that never reach Finish() at all — the flow freeing the node, the
+        // scene tree being torn down, the game quitting mid-cutscene.
+        StopVoiceTrack();
     }
 
     public override void _Input(InputEvent inputEvent)
@@ -371,6 +398,153 @@ public sealed partial class RetailStartupSequence : Control
         return true;
     }
 
+    /// <summary>
+    /// Adds the one <see cref="AudioStreamPlayer"/> this sequence ever owns, if
+    /// any beat in the schedule has a decoded track AND the clock is wall time.
+    ///
+    /// <para><b>Why the clock decides.</b> Audio playback is paced by the sound
+    /// device; <see cref="RetailStartupClockMode.FixedTick"/> deliberately
+    /// advances sequence time by <c>1/60 s</c> per <c>_Process</c> call
+    /// regardless of how long that call took, precisely so a capture is a pure
+    /// function of the tick index. Under that clock the two would desynchronise
+    /// by construction, and a sound device is exactly the kind of
+    /// nondeterminism a parity capture must not contain. So capture runs stay
+    /// silent — which is also what the harness needs.</para>
+    ///
+    /// <para><b>Unity gain on the master bus, and that is a CHOICE.</b> Retail's
+    /// Bink player owns its own audio and its level relative to
+    /// <c>MUS_*</c>/SFX has not been measured. Routing this through
+    /// <c>Level100Audio</c>'s mix would be inventing a relationship; playing it
+    /// at the level it was decoded at asserts nothing.</para>
+    /// </summary>
+    private void CreateVoicePlayer()
+    {
+        if (_clock != RetailStartupClockMode.Wall || _media.ClipAudio.Count == 0)
+        {
+            return;
+        }
+
+        _voice = new AudioStreamPlayer
+        {
+            Name = "RetailFmvVoice",
+            // The frontend suspends its own _Process while the movie owns the
+            // screen, but nothing pauses the tree here; Always keeps the two
+            // from diverging if that ever changes.
+            ProcessMode = ProcessModeEnum.Always,
+            VolumeDb = 0f,
+        };
+        AddChild(_voice);
+    }
+
+    /// <summary>
+    /// Starts the current beat's decoded track once, at the beat-local offset,
+    /// and stops it the moment the beat is no longer a clip that has one.
+    ///
+    /// <para>It is started ONCE and then left alone. Re-seeking every frame to
+    /// chase <see cref="RetailStartupFrame.BeatSeconds"/> would restart the
+    /// mixer's interpolation on each engine frame; instead the video follows the
+    /// wall clock and the audio follows the device clock, from a common start.
+    /// Over the cutscene's 123.80 s that is a drift of whatever those two clocks
+    /// differ by, and it is recorded rather than argued away. Retail's Bink
+    /// player instead presents video AGAINST the audio clock — reproducing that
+    /// would mean driving <c>_elapsedSeconds</c> from
+    /// <c>GetPlaybackPosition()</c>, whose per-buffer granularity would judder
+    /// the 25 fps frame selection. Neither behaviour is measured; the one that
+    /// does not visibly damage the measured presentation is the one built.</para>
+    /// </summary>
+    private void UpdateVoiceTrack(RetailStartupFrame frame)
+    {
+        if (_voice is null || !GodotObject.IsInstanceValid(_voice))
+        {
+            return;
+        }
+
+        if (frame.Kind != RetailStartupFrameKind.Video ||
+            frame.Cue is not { } cue ||
+            !_media.ClipAudio.ContainsKey(cue))
+        {
+            StopVoiceTrack();
+            return;
+        }
+
+        if (_voiceCue == cue)
+        {
+            return;
+        }
+
+        StopVoiceTrack();
+        if (!TryLoadVoiceTrack(cue, out AudioStreamWav? stream))
+        {
+            return;
+        }
+
+        _voice.Stream = stream;
+
+        // Seek to the beat-local offset rather than to zero. The node is added
+        // mid-frame and the frame that adds it is a long one — the world has
+        // just been built — so the first _Process the movie sees can already be
+        // a tenth of a second in. Observed: 0.1304 s and 0.1365 s on two runs.
+        // Starting the track at zero would put the voice permanently that far
+        // behind the picture; the video frame index is taken from the same
+        // number, so seeking is what makes them start together.
+        _voice.Play((float)frame.BeatSeconds);
+        _voiceCue = cue;
+    }
+
+    private bool TryLoadVoiceTrack(RetailStartupCue cue, out AudioStreamWav? stream)
+    {
+        stream = null;
+        RetailStartupClipAudio audio = _media.ClipAudio[cue];
+
+        byte[] wave;
+        try
+        {
+            wave = File.ReadAllBytes(Path.Combine(_media.Root, _media.AudioRelativePath(cue)));
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or
+                InvalidOperationException or ArgumentException)
+        {
+            // The index verified this file's bytes at load; a read failure now
+            // is a disappearing cache, not a wrong decode. The movie plays on,
+            // silent, exactly as it did before the track existed.
+            GD.PushWarning($"Startup media {cue} audio track unreadable: {exception.Message}");
+            return false;
+        }
+
+        // The index accepted only a canonical 44-byte-header PCM WAV whose
+        // declared format matches this record, so the payload is the interleaved
+        // little-endian s16 frames AudioStreamWav wants, with no conversion.
+        const int HeaderBytes = 44;
+        if (wave.Length <= HeaderBytes)
+        {
+            return false;
+        }
+
+        stream = new AudioStreamWav
+        {
+            Format = AudioStreamWav.FormatEnum.Format16Bits,
+            MixRate = audio.SampleRate,
+            Stereo = audio.Channels == 2,
+            Data = wave[HeaderBytes..],
+            LoopMode = AudioStreamWav.LoopModeEnum.Disabled,
+        };
+        return true;
+    }
+
+    private void StopVoiceTrack()
+    {
+        _voiceCue = null;
+        if (_voice is null || !GodotObject.IsInstanceValid(_voice))
+        {
+            return;
+        }
+
+        _voice.Stop();
+        // Releases the decoded track — 21.8 MB for the Level 100 cutscene.
+        _voice.Stream = null;
+    }
+
     private static Texture2D? LoadImageTexture(string path)
     {
         var image = new Image();
@@ -394,6 +568,10 @@ public sealed partial class RetailStartupSequence : Control
         Visible = false;
         SetProcess(false);
         SetProcessInput(false);
+        // Before Completed fires, not after. The handler hands the screen to
+        // gameplay and starts the tutorial bed; a voice track still running
+        // underneath it would be the exact defect this lane exists to avoid.
+        StopVoiceTrack();
         Array.Clear(_videoBuffers);
         _splashTexture = null;
         _residentFrame = null;

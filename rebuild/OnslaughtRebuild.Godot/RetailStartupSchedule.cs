@@ -229,12 +229,63 @@ public readonly record struct RetailStartupClip(
         FrameCount * FramesPerSecondDenominator / (double)FramesPerSecondNumerator;
 }
 
+/// <summary>
+/// One decoded Bink audio track belonging to a clip.
+///
+/// <para><b>Which track, and why there is no selector.</b></para>
+/// <c>cutscenes/01.vid</c> carries FIVE <c>binkaudio_rdft</c> 44.1 kHz stereo
+/// tracks, one per shipped language, and <b>English is track 0</b>. That is read
+/// out of the pristine specimen
+/// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c> (sha256
+/// <c>74154bfa…</c>), file offset = VA − <c>0x400000</c>: the five arms of
+/// <c>CText::Init</c>'s jump table at <c>0x004f2498</c> load, by case,
+/// <c>0x00632D74</c> "english", <c>0x00632D7C</c> "french", <c>0x00632D94</c>
+/// "german", <c>0x00632D84</c> "spanish", <c>0x00632D8C</c> "italian" — the arms
+/// load OUT of address order, so reading the string table in address order gives
+/// the wrong enum. <c>g_LanguageIndex</c> is <c>g_Text + 0x1c</c> =
+/// <c>0x0083d97c</c>; <c>CFMV::PlayFullscreenWithLoadingGate</c>
+/// (<c>0x00465640</c>) forwards <c>localise ? g_LanguageIndex : 0</c> into vtable
+/// slot <c>+0x2c</c>; and five hops later <c>CBinkOpenThread::VFunc_0</c>
+/// (<c>0x00541140</c>) passes it VERBATIM to <c>BINKW32::BinkSetSoundTrack</c> at
+/// <c>0x0054116d</c> — no <c>+1</c>, no remap. <c>localise = FALSE</c> forces 0,
+/// so 0 is also the fallback, and <c>CLIParams.cpp:64</c> defaults
+/// <c>mLanguage = LANG_ENGLISH</c>.
+///
+/// <para>Tracks 1-4 are identified and deliberately NOT exposed. Nothing in this
+/// reconstruction selects a language, so a selector would be a surface with no
+/// consumer and no measured wiring behind it.</para>
+/// </summary>
+public readonly record struct RetailStartupClipAudio(
+    int Track,
+    int SampleRate,
+    int Channels,
+    int BitsPerSample,
+    long SampleFrameCount)
+{
+    /// <summary>
+    /// Length of the decoded track in seconds.
+    ///
+    /// <para>This is expected to be slightly LONGER than the clip's video, never
+    /// shorter: binkaudio emits whole 2,048-sample frames at 44.1 kHz, so the
+    /// last one overruns. For <c>01.vid</c> the measured overhang is 900 sample
+    /// frames — 123.820408 s of audio against 123.80 s of video, 0.0204 s, half
+    /// of one 25 fps video frame.</para>
+    /// </summary>
+    public double DurationSeconds => SampleFrameCount / (double)SampleRate;
+}
+
 /// <summary>A sample of the startup sequence at one instant.</summary>
+/// <param name="BeatSeconds">
+/// Elapsed time WITHIN the current beat. The video frame index is quantised to
+/// the clip's 25 fps, so it cannot serve as an audio start offset without
+/// snapping the sound to a 40 ms grid; this is the unquantised value.
+/// </param>
 public readonly record struct RetailStartupFrame(
     RetailStartupFrameKind Kind,
     RetailStartupCue? Cue,
     int FrameIndex,
-    float Alpha);
+    float Alpha,
+    double BeatSeconds);
 
 /// <summary>
 /// The released cold-start media sequence, as a pure deterministic function of
@@ -483,7 +534,7 @@ public sealed class RetailStartupSchedule
         double time = Math.Max(0d, elapsedSeconds);
         if (time >= TotalSeconds)
         {
-            return new RetailStartupFrame(RetailStartupFrameKind.Finished, null, 0, 0f);
+            return new RetailStartupFrame(RetailStartupFrameKind.Finished, null, 0, 0f, 0d);
         }
 
         foreach (Beat beat in _beats)
@@ -504,22 +555,22 @@ public sealed class RetailStartupSchedule
                     int index = (int)Math.Floor(local * beat.FramesPerSecond);
                     index = Math.Clamp(index, 0, beat.FrameCount - 1);
                     return new RetailStartupFrame(
-                        RetailStartupFrameKind.Video, beat.Cue, index, 1f);
+                        RetailStartupFrameKind.Video, beat.Cue, index, 1f, local);
 
                 case RetailStartupFrameKind.Splash:
                     float alpha = beat.FadeIn
                         ? (float)Math.Clamp(local / beat.DurationSeconds, 0d, 1d)
                         : 1f;
                     return new RetailStartupFrame(
-                        RetailStartupFrameKind.Splash, beat.Cue, 0, alpha);
+                        RetailStartupFrameKind.Splash, beat.Cue, 0, alpha, local);
 
                 default:
                     return new RetailStartupFrame(
-                        RetailStartupFrameKind.Black, null, 0, 0f);
+                        RetailStartupFrameKind.Black, null, 0, 0f, local);
             }
         }
 
-        return new RetailStartupFrame(RetailStartupFrameKind.Finished, null, 0, 0f);
+        return new RetailStartupFrame(RetailStartupFrameKind.Finished, null, 0, 0f, 0d);
     }
 
     private double AppendVideo(

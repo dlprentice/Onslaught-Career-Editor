@@ -3939,7 +3939,40 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
 # (game.cpp:1166), and nothing in the reconstruction produces that signal yet.
 # Decoding 62 MB of frames nothing can play would be retention without a
 # consumer.
-STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v3"
+#
+# AUDIO, AND WHICH OF THE FIVE TRACKS IS ENGLISH.
+# cutscenes/01.vid carries FIVE binkaudio_rdft 44.1 kHz stereo tracks — one per
+# shipped language — and for two days nothing was decoded because guessing which
+# one is English was refused. It is now read out of the shipped binary. All file
+# offsets below are VA - 0x400000 in the pristine specimen
+# local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256 74154bfa….
+#
+#   1. CText::Init's jump table at 0x004f2498 selects the language string. Its
+#      five arms load, IN THIS ORDER BY CASE: 0 -> 0x00632D74 "english",
+#      1 -> 0x00632D7C "french", 2 -> 0x00632D94 "german",
+#      3 -> 0x00632D84 "spanish", 4 -> 0x00632D8C "italian". The arms load OUT
+#      of address order, so reading the string table in address order gives the
+#      WRONG enum; the arm targets are the evidence.
+#   2. g_LanguageIndex is g_Text + 0x1c = 0x0083d97c.
+#   3. CFMV::PlayFullscreenWithLoadingGate (0x00465640) forwards
+#      `localise ? g_LanguageIndex : 0` into vtable slot +0x2c.
+#   4. Five hops later CBinkOpenThread::VFunc_0 (0x00541140) passes that value
+#      VERBATIM to BINKW32::BinkSetSoundTrack at 0x0054116d — no +1, no remap.
+#   5. Corroboration: localise=FALSE forces 0, CLIParams.cpp:64 defaults
+#      mLanguage=LANG_ENGLISH, and the American-English path pins the index to 0
+#      as well, so American and English share track 0.
+#
+# So ENGLISH IS BINK TRACK 0. The one link that is a property of THIS FILE
+# rather than of the binary is that a Bink *track ID* and ffmpeg's `-map 0:a:N`
+# *ordinal* coincide, and _bink_audio_tracks() below checks exactly that against
+# the shipped header rather than assuming it.
+#
+# No language selector is built. Tracks 1-4 are identified but nothing in the
+# reconstruction selects a language, and shipping a surface with one consumer
+# and no evidence behind its wiring is how dead settings accumulate. LTLogo.vid
+# and OpeningFMV.vid each carry exactly ONE audio track, so the question does
+# not even arise for them; their audio is a separate, unimplemented item.
+STARTUP_MEDIA_SCHEMA = "onslaught-startup-media.v4"
 STARTUP_FRAME_SET_DOMAIN = b"onslaught-startup-frame-set.v1\0"
 STARTUP_MEDIA_CLIPS = (
     ("LostToysLogo", "data/video/LTLogo.vid", "lost-toys-logo", 480, 300, 25, 229),
@@ -3947,6 +3980,23 @@ STARTUP_MEDIA_CLIPS = (
     ("Level100IntroCutscene", "data/video/cutscenes/01.vid",
      "level100-intro-cutscene", 480, 300, 25, 3095),
 )
+
+# cue -> (bink track, output name, sample rate, channels, bits per sample).
+# The sample rate and channel count are read back off the shipped Bink header
+# before the decode runs, exactly as the video geometry is; they are stated here
+# so a mismatch is an error rather than a silently different output.
+STARTUP_MEDIA_AUDIO = {
+    "Level100IntroCutscene": (0, "voice-track00.wav", 44100, 2, 16),
+}
+
+# binkaudio's frame length at 44.1 kHz. ffmpeg's decoder uses
+# frame_len_bits = 11 for sample rates >= 44100 (libavcodec/binkaudio.c), so the
+# decoder emits whole 2048-sample frames and the last one overruns the video by
+# whatever it takes to fill. That overhang is the ONLY slack allowed between the
+# audio and the video length: anything larger means the two are not the same
+# clip, which is the cheapest possible falsification of the chain above.
+BINK_AUDIO_FRAME_SAMPLES = 2048
+
 STARTUP_MEDIA_SPLASH_SOURCE = "data/textures/splash.tga"
 
 
@@ -4032,6 +4082,88 @@ def _png_dimensions(path: Path) -> tuple[int, int] | None:
     return None
 
 
+def _bink_audio_tracks(source: Path) -> list[tuple[int, int]]:
+    """Read the shipped Bink header's audio table as [(track id, sample rate)].
+
+    This exists for ONE assertion. `BinkSetSoundTrack` takes a track ID and
+    `ffmpeg -map 0:a:N` takes an ordinal within the file; ffmpeg's bink demuxer
+    creates the streams in on-disk order and then assigns `st->id` from the
+    track-ID table, so the two coincide only while that table is the identity.
+    For cutscenes/01.vid it reads {0,1,2,3,4} and they do — but that is a
+    property of the file, so it is measured here rather than assumed.
+
+    Layout, from the header of the shipped files themselves:
+      0x00 'BIK' + revision      0x28 track count (u32)
+      0x08 frame count (u32)     0x2C track count x u32 max decoded size
+      0x14 width, 0x18 height    +    track count x (u16 rate, u16 flags)
+      0x1C fps num / 0x20 den    +    track count x u32 track id
+    """
+    with source.open("rb") as stream:
+        header = stream.read(0x2C)
+        if len(header) != 0x2C or header[:3] != b"BIK":
+            raise RuntimeError(f"{source} is not a Bink file")
+        (count,) = struct.unpack_from("<I", header, 0x28)
+        if count > 256:
+            raise RuntimeError(f"{source} declares an implausible {count} audio tracks")
+        if count == 0:
+            return []
+        stream.seek(0x2C + (count * 4))
+        rates = stream.read(count * 4)
+        ids = stream.read(count * 4)
+    if len(rates) != count * 4 or len(ids) != count * 4:
+        raise RuntimeError(f"{source} has a truncated Bink audio header")
+    return [
+        (
+            struct.unpack_from("<I", ids, index * 4)[0],
+            struct.unpack_from("<H", rates, index * 4)[0],
+        )
+        for index in range(count)
+    ]
+
+
+def _wav_pcm_format(path: Path) -> tuple[int, int, int, int] | None:
+    """Validate a canonical PCM WAV and return (rate, channels, bits, frames).
+
+    Deliberately strict about the 44-byte canonical header rather than walking
+    arbitrary chunks: the decode below runs ffmpeg with `-fflags +bitexact`
+    precisely so no LIST/INFO chunk carrying the encoder version lands in the
+    file. Accepting one here would let a build-dependent string into a receipt
+    that is supposed to identify retail bytes.
+    """
+    try:
+        size = path.stat().st_size
+        with path.open("rb") as stream:
+            header = stream.read(44)
+    except OSError:
+        return None
+    if len(header) != 44 or header[:4] != b"RIFF" or header[8:12] != b"WAVE":
+        return None
+    if header[12:16] != b"fmt " or header[36:40] != b"data":
+        return None
+    (riff_size,) = struct.unpack_from("<I", header, 4)
+    (format_size,) = struct.unpack_from("<I", header, 16)
+    audio_format, channels, rate, byte_rate, block_align, bits = struct.unpack_from(
+        "<HHIIHH", header, 20
+    )
+    (data_size,) = struct.unpack_from("<I", header, 40)
+    if (
+        format_size != 16
+        or audio_format != 1
+        or channels <= 0
+        or rate <= 0
+        or bits <= 0
+        or bits % 8 != 0
+        or block_align != channels * (bits // 8)
+        or byte_rate != rate * block_align
+        or riff_size != size - 8
+        or data_size != size - 44
+        or data_size == 0
+        or data_size % block_align != 0
+    ):
+        return None
+    return rate, channels, bits, data_size // block_align
+
+
 def _startup_frame_set_sha256(paths: list[Path]) -> str:
     """Hash one ordered frame set without inflating every PNG on each launch."""
     digest = hashlib.sha256()
@@ -4106,6 +4238,33 @@ def _startup_media_ready(game_root: Path, media_root: Path) -> bool:
             ):
                 return False
 
+            audio_spec = STARTUP_MEDIA_AUDIO.get(cue)
+            if audio_spec is not None:
+                track, name, rate, channels, bits = audio_spec
+                audio = entry.get("audio")
+                audio_path = destination / name
+                if not isinstance(audio, dict):
+                    return False
+                if (
+                    audio.get("track") != track
+                    or audio.get("path") != f"{folder}/{name}"
+                    or audio.get("sampleRate") != rate
+                    or audio.get("channels") != channels
+                    or audio.get("bitsPerSample") != bits
+                    or not audio_path.is_file()
+                    or audio.get("outputSha256") != _sha256(audio_path.read_bytes())
+                ):
+                    return False
+                measured = _wav_pcm_format(audio_path)
+                if measured is None:
+                    return False
+                if (rate, channels, bits) != measured[:3]:
+                    return False
+                if audio.get("sampleFrameCount") != measured[3]:
+                    return False
+            elif "audio" in entry:
+                return False
+
         splash = stills.get("Splash")
         splash_source = game_root / STARTUP_MEDIA_SPLASH_SOURCE
         splash_path = media_root / "splash.png"
@@ -4145,6 +4304,96 @@ def _ffprobe_stream(source: Path) -> dict[str, str]:
             key, _, value = line.partition("=")
             fields[key.strip()] = value.strip()
     return fields
+
+
+def _materialize_clip_audio(
+    source: Path,
+    relative: str,
+    folder: str,
+    destination: Path,
+    frames: int,
+    fps: int,
+    audio_spec: tuple[int, str, int, int, int],
+) -> dict[str, object]:
+    """Decode ONE Bink audio track to lossless PCM beside that clip's frames.
+
+    Lossless for the same reason the frames are PNG and not JPEG: this IS the
+    Bink decode, so it can serve as its own parity oracle. 123.80 s of 44.1 kHz
+    stereo s16 is 21.8 MB against 436.8 MB of frames for the same clip.
+    """
+    track, name, rate, channels, bits = audio_spec
+
+    # Prove the ordinal ffmpeg is about to be handed is the track ID the game
+    # hands BinkSetSoundTrack. Everything else about "English is track 0" is a
+    # property of BEA.exe; this is the one part that is a property of the .vid.
+    tracks = _bink_audio_tracks(source)
+    if track >= len(tracks):
+        raise RuntimeError(
+            f"{relative} carries {len(tracks)} audio tracks, so track {track} does not exist"
+        )
+    track_id, track_rate = tracks[track]
+    if track_id != track:
+        raise RuntimeError(
+            f"{relative} audio ordinal {track} has Bink track id {track_id}; the "
+            "track-ID table is not the identity, so `-map 0:a:N` no longer "
+            "selects the track BinkSetSoundTrack(N) would play"
+        )
+    if track_rate != rate:
+        raise RuntimeError(
+            f"{relative} audio track {track} is {track_rate} Hz, expected {rate} Hz"
+        )
+
+    output = destination / name
+    # -fflags +bitexact on BOTH sides so the wav muxer omits the LIST/INFO chunk
+    # naming the ffmpeg build. Without it the receipt hashes the encoder version
+    # as well as the retail audio.
+    subprocess.run(
+        [
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-fflags", "+bitexact",
+            "-i", str(source),
+            "-map", f"0:a:{track}",
+            "-vn",
+            "-acodec", "pcm_s16le",
+            "-flags", "+bitexact",
+            "-fflags", "+bitexact",
+            str(output),
+        ],
+        check=True,
+    )
+
+    measured = _wav_pcm_format(output)
+    if measured is None:
+        raise RuntimeError(f"{relative} audio track {track} produced an invalid PCM WAV")
+    measured_rate, measured_channels, measured_bits, sample_frames = measured
+    if (measured_rate, measured_channels, measured_bits) != (rate, channels, bits):
+        raise RuntimeError(
+            f"{relative} audio track {track} decoded to {measured_rate} Hz "
+            f"{measured_channels}ch {measured_bits}-bit, expected {rate} Hz "
+            f"{channels}ch {bits}-bit"
+        )
+
+    # THE LENGTH LAW. The audio must cover the whole video and overrun it by
+    # less than one binkaudio frame. A mismatch here is the cheapest possible
+    # falsification that this track belongs to this clip at all.
+    video_sample_frames = frames * rate // fps
+    overhang = sample_frames - video_sample_frames
+    if not 0 <= overhang < BINK_AUDIO_FRAME_SAMPLES:
+        raise RuntimeError(
+            f"{relative} audio track {track} is {sample_frames} sample frames "
+            f"against {video_sample_frames} for {frames} video frames at {fps} fps "
+            f"({overhang:+d}); expected 0..{BINK_AUDIO_FRAME_SAMPLES - 1}"
+        )
+
+    return {
+        "track": track,
+        "path": f"{folder}/{name}",
+        "sampleRate": rate,
+        "channels": channels,
+        "bitsPerSample": bits,
+        "sampleFrameCount": sample_frames,
+        "outputSha256": _sha256(output.read_bytes()),
+    }
 
 
 def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
@@ -4220,7 +4469,7 @@ def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
                 f"{relative} produced an invalid {width}x{height} PNG: {malformed}"
             )
 
-        index["clips"][cue] = {  # type: ignore[index]
+        entry: dict[str, object] = {
             "source": relative,
             "sourceSha256": _sha256(source.read_bytes()),
             "width": width,
@@ -4231,6 +4480,14 @@ def _materialize_startup_media(game_root: Path, media_root: Path) -> Path:
             "framePathFormat": f"{folder}/f{{0:D5}}.png",
             "framesSha256": _startup_frame_set_sha256(written),
         }
+
+        audio_spec = STARTUP_MEDIA_AUDIO.get(cue)
+        if audio_spec is not None:
+            entry["audio"] = _materialize_clip_audio(
+                source, relative, folder, destination, frames, fps, audio_spec
+            )
+
+        index["clips"][cue] = entry  # type: ignore[index]
 
     splash_source = game_root / STARTUP_MEDIA_SPLASH_SOURCE
     if not splash_source.is_file():
@@ -4285,8 +4542,8 @@ def main() -> int:
         action="store_true",
         help=(
             "decode the retail movies (LTLogo.vid, OpeningFMV.vid, splash.tga and "
-            "the Level 100 intro cutscene cutscenes/01.vid) into a cache OUTSIDE "
-            "res://, and do nothing else"
+            "the Level 100 intro cutscene cutscenes/01.vid, including its English "
+            "Bink audio track 0) into a cache OUTSIDE res://, and do nothing else"
         ),
     )
     parser.add_argument(

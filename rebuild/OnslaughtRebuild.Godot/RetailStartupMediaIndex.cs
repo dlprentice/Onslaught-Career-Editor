@@ -28,15 +28,24 @@ namespace OnslaughtRebuild.GodotClient;
 /// updates a single texture in place. The existing FEBack loader — which reads
 /// a whole strip and builds one <c>Texture2D</c> per frame — must not be
 /// applied at this scale.
+///
+/// <para><b>Audio is one lossless PCM file per clip, not per frame.</b></para>
+/// A clip may also carry one decoded Bink audio track — see
+/// <see cref="RetailStartupClipAudio"/> for which track and why. It is canonical
+/// 44-byte-header PCM WAV for the same reason the frames are PNG: it IS the Bink
+/// decode, so it can be its own parity oracle. At 21.8 MB for the 123.80 s
+/// cutscene it is 5 % of that clip's frame data.
 /// </summary>
 public sealed class RetailStartupMediaIndex
 {
-    public const string Schema = "onslaught-startup-media.v3";
+    public const string Schema = "onslaught-startup-media.v4";
     private static ReadOnlySpan<byte> FrameSetDomain =>
         "onslaught-startup-frame-set.v1\0"u8;
 
     private readonly Dictionary<RetailStartupCue, RetailStartupClip> _clips = [];
     private readonly Dictionary<RetailStartupCue, string> _frameFormats = [];
+    private readonly Dictionary<RetailStartupCue, RetailStartupClipAudio> _clipAudio = [];
+    private readonly Dictionary<RetailStartupCue, string> _audioPaths = [];
 
     private RetailStartupMediaIndex()
     {
@@ -47,6 +56,14 @@ public sealed class RetailStartupMediaIndex
 
     /// <summary>Decoded video clips, keyed by cue.</summary>
     public IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> Clips => _clips;
+
+    /// <summary>
+    /// Decoded audio tracks, keyed by cue. A cue in <see cref="Clips"/> but not
+    /// here has no decoded audio and plays SILENT — which is the pre-existing
+    /// behaviour and is never a defect on its own.
+    /// </summary>
+    public IReadOnlyDictionary<RetailStartupCue, RetailStartupClipAudio> ClipAudio =>
+        _clipAudio;
 
     /// <summary>Relative path of the splash still, or null if it was not materialized.</summary>
     public string? SplashRelativePath { get; private init; }
@@ -83,6 +100,22 @@ public sealed class RetailStartupMediaIndex
         // and any frame a human inspects with an image viewer.
         return string.Format(
             System.Globalization.CultureInfo.InvariantCulture, format, frameIndex + 1);
+    }
+
+    /// <summary>
+    /// Relative path of a clip's decoded audio track. Throws if the cue has no
+    /// receipted audio, so a caller cannot silently address a file that was
+    /// never decoded or that failed verification.
+    /// </summary>
+    public string AudioRelativePath(RetailStartupCue cue)
+    {
+        if (!_audioPaths.TryGetValue(cue, out string? relative))
+        {
+            throw new InvalidOperationException(
+                $"Startup media has no decoded audio track for {cue}.");
+        }
+
+        return relative;
     }
 
     /// <summary>
@@ -219,6 +252,7 @@ public sealed class RetailStartupMediaIndex
                         index._clips[cue] = new RetailStartupClip(
                             frameCount, numerator, denominator, width, height);
                         index._frameFormats[cue] = format;
+                        ReadClipAudio(index, cue, clip.Value, root, fileExists);
                     }
                     catch (InvalidOperationException)
                     {
@@ -250,6 +284,154 @@ public sealed class RetailStartupMediaIndex
             }
 
             return index;
+        }
+    }
+
+    /// <summary>
+    /// Attaches a clip's decoded audio track if — and only if — the manifest
+    /// declares one and the file on disk is still exactly the bytes the
+    /// materializer receipted.
+    ///
+    /// <para><b>A failure here drops the AUDIO, not the CLIP.</b> Everywhere
+    /// else in this index an unverifiable artefact drops its whole beat, because
+    /// a short or wrong-rate video would be a fabrication of retail footage. A
+    /// clip whose frames verify and whose audio does not is different: the
+    /// resulting silent movie is exactly the state this reconstruction shipped
+    /// before the track was decoded at all, so it substitutes nothing. Dropping
+    /// the clip instead would turn a bad 21.8 MB file into 123.80 s of missing
+    /// narrative.</para>
+    /// </summary>
+    private static void ReadClipAudio(
+        RetailStartupMediaIndex index,
+        RetailStartupCue cue,
+        JsonElement clip,
+        string root,
+        Func<string, bool> fileExists)
+    {
+        if (!clip.TryGetProperty("audio", out JsonElement audio) ||
+            audio.ValueKind != JsonValueKind.Object)
+        {
+            return;
+        }
+
+        int track;
+        int sampleRate;
+        int channels;
+        int bitsPerSample;
+        long sampleFrameCount;
+        string relative;
+        string expectedSha256;
+        try
+        {
+            track = audio.GetProperty("track").GetInt32();
+            sampleRate = audio.GetProperty("sampleRate").GetInt32();
+            channels = audio.GetProperty("channels").GetInt32();
+            bitsPerSample = audio.GetProperty("bitsPerSample").GetInt32();
+            sampleFrameCount = audio.GetProperty("sampleFrameCount").GetInt64();
+            relative = audio.GetProperty("path").GetString() ?? string.Empty;
+            expectedSha256 = audio.GetProperty("outputSha256").GetString() ?? string.Empty;
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or FormatException or
+                OverflowException or KeyNotFoundException)
+        {
+            return;
+        }
+
+        if (track < 0 || sampleRate <= 0 || channels <= 0 || bitsPerSample != 16 ||
+            sampleFrameCount <= 0 || relative.Length == 0 || expectedSha256.Length != 64)
+        {
+            return;
+        }
+
+        string path = Path.Combine(root, relative);
+        if (!fileExists(path) ||
+            ReadPcmWavFormat(path) != (sampleRate, channels, bitsPerSample, sampleFrameCount) ||
+            !HasSha256(path, expectedSha256))
+        {
+            return;
+        }
+
+        index._clipAudio[cue] = new RetailStartupClipAudio(
+            track, sampleRate, channels, bitsPerSample, sampleFrameCount);
+        index._audioPaths[cue] = relative;
+    }
+
+    /// <summary>
+    /// Reads the canonical 44-byte PCM WAV header the materializer writes and
+    /// returns <c>(rate, channels, bits, sample frames)</c>, or nulls on
+    /// anything else.
+    ///
+    /// <para>Deliberately strict rather than a general chunk walk: the decode
+    /// runs ffmpeg with <c>-fflags +bitexact</c> so that no LIST/INFO chunk
+    /// naming the encoder build reaches the file. Tolerating one here would mean
+    /// the receipt covers a build-dependent string as well as retail audio, and
+    /// the sample-frame count below is what <see cref="RetailStartupClipAudio"/>
+    /// uses as the track's length.</para>
+    /// </summary>
+    private static (int Rate, int Channels, int Bits, long SampleFrames)? ReadPcmWavFormat(
+        string path)
+    {
+        try
+        {
+            using FileStream stream = File.OpenRead(path);
+            Span<byte> header = stackalloc byte[44];
+            if (stream.Length < 44)
+            {
+                return null;
+            }
+            stream.ReadExactly(header);
+
+            if (!header[..4].SequenceEqual("RIFF"u8) ||
+                !header[8..12].SequenceEqual("WAVE"u8) ||
+                !header[12..16].SequenceEqual("fmt "u8) ||
+                !header[36..40].SequenceEqual("data"u8))
+            {
+                return null;
+            }
+
+            uint riffSize =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header[4..8]);
+            uint formatSize =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header[16..20]);
+            ushort audioFormat =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(header[20..22]);
+            ushort channels =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(header[22..24]);
+            uint rate =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header[24..28]);
+            uint byteRate =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header[28..32]);
+            ushort blockAlign =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(header[32..34]);
+            ushort bits =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(header[34..36]);
+            uint dataSize =
+                System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header[40..44]);
+
+            if (formatSize != 16 || audioFormat != 1 || channels == 0 || rate == 0 ||
+                bits == 0 || bits % 8 != 0 ||
+                blockAlign != channels * (bits / 8) ||
+                byteRate != rate * blockAlign ||
+                riffSize != stream.Length - 8 ||
+                dataSize != stream.Length - 44 ||
+                dataSize == 0 ||
+                dataSize % blockAlign != 0)
+            {
+                return null;
+            }
+
+            return ((int)rate, channels, bits, dataSize / blockAlign);
+        }
+        catch (IOException)
+        {
+            // EndOfStreamException included: a truncated receipt is a dropped
+            // track, never a repaired one.
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
         }
     }
 
