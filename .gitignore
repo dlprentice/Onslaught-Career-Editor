@@ -103,3 +103,12 @@ tmp*/
 # retail-derived runtime output that must never be tracked.
 setuphistory.txt
 cardid.txt
+
+# Agent worktrees and machine-local Claude Code settings. `.claude/worktrees/`
+# holds one FULL CHECKOUT per concurrent writing lane - the isolation mechanism
+# AGENTS.md ## Delegation requires - so a stray `git add -A` while lanes are
+# running would commit entire copies of the repository into itself. That is not
+# hypothetical: this repo has twice had unrelated work swept into a commit by a
+# broad add. `settings.local.json` is per-machine and not shared state.
+.claude/worktrees/
+.claude/settings.local.json
