@@ -333,13 +333,85 @@ internal sealed partial class Level100StaticWorldAsset
         // shader gates below are complementary about the same single value, so
         // every pine is covered at every distance and neither pass is ungated.
         PinePlacement[] placements = BuildPinePlacements(manifest.Pines, terrain);
-        AddClosePineMeshes(root, manifest, meshes, placements);
+        AddClosePineMeshes(root, meshes, placements);
 
         Texture2D atlas = textures[manifest.PineBillboards.Texture];
         AddFarPineImposters(root, manifest, terrain, atlas, placements);
         return placements.Length;
     }
 
+    /// <summary>
+    /// Seats a pine's PIVOT on the sampled support and adds nothing else.
+    ///
+    /// <para>Read from the pristine specimen
+    /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+    /// <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>
+    /// — never the installed <c>BEA.exe</c>, which is deliberately patched.
+    /// The authored pine record is (X, Y, variant) with no Z at all, so the
+    /// entire vertical datum is whatever the released code computes.</para>
+    ///
+    /// <para><c>CTree::Init</c> at <c>0x004F6080</c> (its single stack argument
+    /// is the <c>CTreeInitThing*</c>, loaded at <c>0x004F61B9</c>
+    /// <c>MOV EBX,[ESP+0x58C]</c>; the body ends <c>RET 4</c> at
+    /// <c>0x004F63AE</c>) computes the pine's Z in five instructions and stores
+    /// it back into the init record before seating:
+    /// <c>0x004F61C4 LEA EDX,[EBX+4]</c> (&amp;mPos) /
+    /// <c>0x004F61C7 MOV ECX,0x006FADC8</c> (the MAP singleton) /
+    /// <c>0x004F61DD CALL 0x0047EB80</c> (the height query — the same receiver
+    /// and callee <c>CThing::Init</c> uses at <c>0x004F34F6</c>/<c>0x004F34FB</c>)
+    /// / <c>0x004F61F4 FSTP DWORD PTR [EBX+0xC]</c>. <c>[EBX+0xC]</c> is
+    /// <c>mPos.Z</c>: <c>CThing::Init</c> copies <c>[EBX+4]</c>..<c>[EBX+0x10]</c>
+    /// into <c>this+0x1c</c>..<c>this+0x28</c> with Z at <c>+0x24</c>. There is
+    /// <b>no FADD, FSUB or FMUL between the CALL and the FSTP</b>, and no mesh
+    /// extent is read anywhere in the body — the sampled height becomes the
+    /// pivot verbatim. <c>0x004F6363 CALL 0x004F34A0</c> then runs
+    /// <c>CThing::Init</c>, whose terrain clamp is inert (Z already equals the
+    /// sample) and whose water clamp is the <c>Math.Max</c> below.</para>
+    ///
+    /// <para>Both draw paths inherit that pivot unchanged, and the mesh path
+    /// cannot perturb it even in principle: the matrix a tree hands the
+    /// renderer carries <b>no translation at all</b>.
+    /// <c>CRTTree::VFuncSlot02_BuildRenderOutputs</c> (<c>0x004DD960</c>) takes
+    /// the rotation from <c>CTree::GetMatrix</c> (<c>0x004F6560</c>, secondary
+    /// vtable <c>0x005DD960</c> slot <c>+0x04</c>), whose tail
+    /// <c>SHL ESI,4 / ADD ESI,0x008406B8 / REP MOVSD</c> at
+    /// <c>0x004F65F6</c>..<c>0x004F65FF</c> copies twelve dwords straight out of
+    /// the 32-entry Z-rotation table <c>CTree::Init</c> builds at
+    /// <c>0x008406B8</c>, and takes the position separately from
+    /// <c>CTree::GetPos</c> (<c>0x004040A0</c>, secondary vtable slot
+    /// <c>+0x00</c>), which is four verbatim dword copies out of
+    /// <c>this+0x1c</c>. <c>CDXEngine::RenderImposterBillboardSet</c>
+    /// (<c>0x00543300</c>) then forms <c>thingPos + M*centerOffset</c> —
+    /// <c>FADD</c> at <c>0x005434AB</c>, <c>0x005434C8</c> and
+    /// <c>0x005434D8</c> against the vector returned by
+    /// <c>CALL 0x00401EC0</c> — where <c>centerOffset</c> is
+    /// <c>mesh+0x150</c>, the bounding box CENTRE (already carried in the
+    /// imposter geometry below), not its minimum.</para>
+    ///
+    /// <para><c>CRTTree::Init</c> (<c>0x004DD7B0</c>) writes nothing to the
+    /// tree's position. It does cache two mesh scalars —
+    /// <c>FLD [EAX+0x164] / FSTP [ESI+0x24]</c> at <c>0x004DD80A</c> and
+    /// <c>FLD [EAX+0x168] / FSTP [ESI+4]</c> at <c>0x004DD813</c> — but neither
+    /// <c>CRTTree+0x24</c> nor <c>CRTTree+4</c> is read by either submit path,
+    /// and <c>mesh+0x164</c> is a scalar radius, not a Z extent.</para>
+    ///
+    /// <para>The decisive negative: retail HAS a per-class vertical
+    /// ground-clearance hook, at vtable slot <c>+0xC0</c>, used by the
+    /// ground-follow routine at <c>0x004017C0</c>. <c>CTree</c> does not
+    /// override it — both <c>CTree</c> (<c>0x005DD9D8+0xC0</c>) and
+    /// <c>CThing</c> (<c>0x005DF5C8+0xC0</c>) hold <c>0x004BFC60</c>, which is
+    /// <c>FLD DWORD PTR [0x005D856C] / RET</c> and <c>[0x005D856C]</c> is
+    /// <c>0.0f</c>. The engine has exactly the mechanism a base-clearance term
+    /// would need, trees return zero from it, and <c>CThing::Init</c> does not
+    /// call it at all.</para>
+    ///
+    /// <para>So a <c>-min(vertexZ)</c> "base clearance" lift, which used to be
+    /// added to both passes here, has no retail counterpart on any of those
+    /// paths. It is gone; a pine's lowest vertex is buried by exactly its own
+    /// mesh minimum, the same way <c>CThing::Init</c> buries the 56-69 vertex
+    /// collars the three turret meshes carry 0.222-0.228 below their own
+    /// origins.</para>
+    /// </summary>
     private static PinePlacement[] BuildPinePlacements(
         IReadOnlyList<double[]> pines,
         Level100HeightFieldAsset terrain)
@@ -364,7 +436,6 @@ internal sealed partial class Level100StaticWorldAsset
 
     private static void AddClosePineMeshes(
         Node3D root,
-        Manifest manifest,
         IReadOnlyDictionary<string, ArrayMesh> meshes,
         IReadOnlyList<PinePlacement> placements)
     {
@@ -374,7 +445,6 @@ internal sealed partial class Level100StaticWorldAsset
                 .Where(item => item.Variant == variant)
                 .ToArray();
             string meshKey = $"pinesnow{variant}";
-            float baseClearance = checked((float)manifest.Meshes[meshKey].BaseClearance);
             var multiMesh = new MultiMesh
             {
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
@@ -384,11 +454,13 @@ internal sealed partial class Level100StaticWorldAsset
             var meshBasis = new Basis(Vector3.Right, -Mathf.Pi / 2f);
             for (int index = 0; index < instances.Length; index++)
             {
+                // The pivot, not the lowest vertex. See BuildPinePlacements:
+                // CTree::Init @0x004F6080 stores the height query's result
+                // straight into mPos.Z (FSTP [EBX+0xC] @0x004F61F4) with no
+                // mesh extent read anywhere on the path.
                 multiMesh.SetInstanceTransform(
                     index,
-                    new Transform3D(
-                        meshBasis,
-                        instances[index].GroundOrigin + (Vector3.Up * baseClearance)));
+                    new Transform3D(meshBasis, instances[index].GroundOrigin));
             }
             root.AddChild(new MultiMeshInstance3D
             {
@@ -419,14 +491,14 @@ internal sealed partial class Level100StaticWorldAsset
                 material);
             // The stored VIEW half-extents are this variant's own mesh
             // bounding box scaled by 1.05, and `centerOffset` is that mesh
-            // bounding box centre. The box therefore only describes the tree
-            // when it sits on the same transform the mesh does, which
-            // AddClosePineMeshes places at GroundOrigin + Up * baseClearance.
-            // Omitting the clearance here put the box bottom 0.0804 below
-            // ground for pinesnow0 and stepped the tree vertically at the
-            // mesh-quality swap distance.
-            float baseClearance = checked(
-                (float)manifest.Meshes[$"pinesnow{variant}"].BaseClearance);
+            // bounding box centre, already applied inside the geometry below.
+            // The box therefore only describes the tree when it sits on the
+            // SAME transform the mesh does, so this must stay identical to
+            // AddClosePineMeshes or the tree steps vertically at the swap.
+            // Retail forms it the same way and for the same reason:
+            // CDXEngine::RenderImposterBillboardSet @0x00543300 adds the
+            // rotated centre to the owner's position (FADD @0x005434AB /
+            // 0x005434C8 / 0x005434D8) and adds nothing else.
             var multiMesh = new MultiMesh
             {
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
@@ -437,9 +509,7 @@ internal sealed partial class Level100StaticWorldAsset
             {
                 multiMesh.SetInstanceTransform(
                     index,
-                    new Transform3D(
-                        Basis.Identity,
-                        instances[index].GroundOrigin + (Vector3.Up * baseClearance)));
+                    new Transform3D(Basis.Identity, instances[index].GroundOrigin));
             }
             root.AddChild(new MultiMeshInstance3D
             {

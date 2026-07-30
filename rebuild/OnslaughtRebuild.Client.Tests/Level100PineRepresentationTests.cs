@@ -172,27 +172,125 @@ public sealed class Level100PineRepresentationTests
             names.Order(StringComparer.Ordinal));
     }
 
+    /// <summary>
+    /// The recovered pine seating law: the PIVOT lands on the sampled support
+    /// and nothing mesh-derived is added to it.
+    ///
+    /// <para>The authored pine record is (X, Y, variant) — twelve bytes, no Z —
+    /// so the released code owns the whole vertical datum, and
+    /// <c>CTree::Init</c> at <c>0x004F6080</c> supplies it in five instructions:
+    /// <c>0x004F61B9 MOV EBX,[ESP+0x58C]</c> (the single stack argument, the
+    /// <c>CTreeInitThing*</c>), <c>0x004F61C4 LEA EDX,[EBX+4]</c>
+    /// (&amp;<c>mPos</c>), <c>0x004F61C7 MOV ECX,0x006FADC8</c> (the MAP
+    /// singleton), <c>0x004F61DD CALL 0x0047EB80</c> (the height query — the
+    /// same receiver and callee <c>CThing::Init</c> uses at <c>0x004F34F6</c>
+    /// and <c>0x004F34FB</c>) and <c>0x004F61F4 FSTP DWORD PTR [EBX+0xC]</c>,
+    /// which writes the returned height straight into <c>mPos.Z</c>.
+    /// <c>[EBX+0xC]</c> is Z because <c>CThing::Init</c> copies
+    /// <c>[EBX+4]</c>..<c>[EBX+0x10]</c> into <c>this+0x1c</c>..<c>this+0x28</c>
+    /// with Z at <c>+0x24</c>. <b>No FADD, FSUB or FMUL sits between the CALL
+    /// and the FSTP, and no mesh extent is read anywhere in the body</b>, which
+    /// ends <c>RET 4</c> at <c>0x004F63AE</c> after
+    /// <c>0x004F6363 CALL 0x004F34A0</c> — <c>CThing::Init</c>, whose own two
+    /// clamps are equally bare.</para>
+    ///
+    /// <para>Both draw paths inherit that pivot unchanged, and the mesh path
+    /// cannot perturb it even in principle: the matrix a tree hands the
+    /// renderer carries <b>no translation at all</b>.
+    /// <c>CRTTree::VFuncSlot02_BuildRenderOutputs</c> (<c>0x004DD960</c>) takes
+    /// the rotation from <c>CTree::GetMatrix</c> (<c>0x004F6560</c>, secondary
+    /// vtable <c>0x005DD960</c> slot <c>+0x04</c>), whose tail
+    /// <c>SHL ESI,4 / ADD ESI,0x008406B8 / REP MOVSD</c>
+    /// (<c>0x004F65F6</c>..<c>0x004F65FF</c>) copies twelve dwords out of the
+    /// Z-rotation table <c>CTree::Init</c> builds at <c>0x008406B8</c>, and
+    /// takes the position separately from <c>CTree::GetPos</c>
+    /// (<c>0x004040A0</c>, secondary vtable slot <c>+0x00</c>) — four verbatim
+    /// dword copies out of <c>this+0x1c</c>.
+    /// <c>CDXEngine::RenderImposterBillboardSet</c> (<c>0x00543300</c>) forms
+    /// <c>thingPos + M*centerOffset</c> — <c>FADD</c> at <c>0x005434AB</c>,
+    /// <c>0x005434C8</c>, <c>0x005434D8</c> against the vector from
+    /// <c>CALL 0x00401EC0</c> — where <c>centerOffset</c> is <c>mesh+0x150</c>,
+    /// the bounding box CENTRE, already carried inside the imposter geometry,
+    /// not its minimum.</para>
+    ///
+    /// <para><c>CRTTree::Init</c> (<c>0x004DD7B0</c>) writes nothing to the
+    /// tree's position; the two mesh scalars it does cache
+    /// (<c>mesh+0x164</c> to <c>CRTTree+0x24</c> at <c>0x004DD80A</c>,
+    /// <c>mesh+0x168</c> to <c>CRTTree+4</c> at <c>0x004DD813</c>) are read by
+    /// neither submit path.</para>
+    ///
+    /// <para>The decisive negative: retail HAS a per-class vertical
+    /// ground-clearance hook at vtable slot <c>+0xC0</c>, used by the
+    /// ground-follow routine at <c>0x004017C0</c>, and <c>CTree</c> does not
+    /// override it — <c>CTree</c> (<c>0x005DD9D8+0xC0</c>) and <c>CThing</c>
+    /// (<c>0x005DF5C8+0xC0</c>) both hold <c>0x004BFC60</c>, which is
+    /// <c>FLD DWORD PTR [0x005D856C] / RET</c> with <c>[0x005D856C]</c> =
+    /// <c>0.0f</c>. The engine has the exact mechanism a base-clearance term
+    /// would need; trees return zero from it, and <c>CThing::Init</c> never
+    /// calls it.</para>
+    ///
+    /// <para><c>CTree</c> also inherits both seating gates unchanged —
+    /// <c>ClipToGround</c> (<c>+0xB0</c>) is <c>0x004014A0</c>
+    /// <c>MOV EAX,1 / RET</c> and <c>CanGoUnderWater</c> (<c>+0xC4</c>) is
+    /// <c>0x00405930</c> <c>XOR EAX,EAX / RET</c> — so the water clamp does run
+    /// for pines and <c>BuildPinePlacements</c>' <c>Math.Max</c> against the
+    /// water level is byte-confirmed, not merely measured inert.</para>
+    ///
+    /// <para>All addresses read from the pristine specimen
+    /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+    /// <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>
+    /// — never the installed <c>BEA.exe</c>, which is deliberately patched.</para>
+    ///
+    /// <para>A <c>-min(vertexZ)</c> lift used to be added to both pine passes.
+    /// It was the last surviving instance of the term
+    /// <c>NoMeshDerivedTermIsAddedToTheReleasedStaticClamp</c> removed from the
+    /// statics, and it was kept because pines are seated by a different owner
+    /// that had not been read. It has now been read, and it agrees. This test
+    /// exists so the lift cannot come back.</para>
+    /// </summary>
     [Fact]
-    public void TheFarBoxSitsOnTheSameTransformAsTheCloseMesh()
+    public void NoMeshDerivedTermIsAddedToThePineSeating()
     {
-        // The stored VIEW half-extents are the mesh bounding box scaled 1.05 and
-        // centerOffset is that bounding box centre, so the box only describes
-        // the tree when it shares the mesh's origin. Both passes must therefore
-        // apply the same baseClearance lift.
+        string pines = Between(
+            StaticWorldSource,
+            "private static void AddClosePineMeshes(",
+            "private static ArrayMesh CreateFarPineImposterMesh(");
+
+        // Exactly two placements, and both seat the bare sampled origin. The
+        // far box only describes the tree while it shares the mesh's transform,
+        // so a lift on one pass alone would also step the tree at the swap.
         Assert.Equal(
             2,
-            Regex.Matches(
-                StaticWorldSource,
-                @"GroundOrigin \+ \(Vector3\.Up \* baseClearance\)").Count);
+            Regex.Matches(pines, @"instances\[index\]\.GroundOrigin\)\);").Count);
+        Assert.DoesNotContain("GroundOrigin +", pines);
+        Assert.DoesNotContain("Vector3.Up", pines);
+        Assert.DoesNotContain("BaseClearance", pines);
     }
 
+    /// <summary>
+    /// What the removed lift was, and what burying it costs.
+    ///
+    /// <para><c>baseClearance</c> is a pure mesh-space quantity — the converted
+    /// OBJ's own <c>-min(vertexZ)</c> — so adding it to the world seating could
+    /// only move the tree off the height the released code computes. Under the
+    /// recovered law each variant buries 12 to 17 of its own vertices, against
+    /// the 56 to 69 turret-collar vertices <c>CThing::Init</c> already buries in
+    /// <c>EveryTurretSeatsItsPivotOnTheSampledGroundAndBuriesItsCollar</c>.</para>
+    ///
+    /// <para>The imposter shares that one transform and therefore dips a
+    /// further 5 % of the mesh's own half-height, because the authored VIEW
+    /// extents are that bounding box inflated by exactly 1.05. That identity is
+    /// the check that the shared transform still encloses the mesh.</para>
+    /// </summary>
     [Theory]
-    [InlineData(0, 0.04363)]
-    [InlineData(1, 0.02404)]
-    [InlineData(2, 0.03370)]
-    [InlineData(3, 0.03183)]
-    public void GroundingTheFarBoxRemovesTheSwapStepAndLeavesOnlyAuthoredInflation(
+    [InlineData(0, 674, 12, 0.04363361862488091)]
+    [InlineData(1, 411, 13, 0.024035155307501554)]
+    [InlineData(2, 586, 17, 0.033704003668390214)]
+    [InlineData(3, 598, 13, 0.031834605353651568)]
+    public void EveryPineBuriesExactlyItsOwnMeshMinimumAndTheBoxStillEnclosesIt(
         int variant,
+        int meshVertexCount,
+        int verticesBelowThePivot,
         double expectedBaseClearance)
     {
         JsonElement manifest = LoadManifest();
@@ -201,33 +299,40 @@ public sealed class Level100PineRepresentationTests
             .GetProperty($"pinesnow{variant}")
             .GetProperty("baseClearance")
             .GetDouble();
+        double[] vertexZ = MeshVertexZ($"pinesnow{variant}.obj");
+
+        // The removed term is a mesh-space datum and nothing else.
+        Assert.Equal(meshVertexCount, vertexZ.Length);
+        Assert.Equal(expectedBaseClearance, baseClearance, 12);
+        Assert.Equal(baseClearance, -vertexZ.Min(), 12);
+        Assert.Equal(
+            verticesBelowThePivot,
+            vertexZ.Count(value => value < -1e-9));
+
         JsonElement definition = manifest
             .GetProperty("pineBillboards")
             .GetProperty("variants")[variant];
-
-        // Godot Y for the BEA centre offset is -Z.
+        // Godot Y for the BEA centre offset is -Z. View 0 is the X-by-Z side
+        // elevation, so element 5 is the Z half-extent.
         double centerHeight = -definition.GetProperty("centerOffset")[2].GetDouble();
-        // View 0 is the X-by-Z side elevation, so element 5 is the Z half-extent.
         double halfHeight = definition.GetProperty("views")[0][5].GetDouble();
-
-        Assert.Equal(expectedBaseClearance, baseClearance, 5);
-
-        double bottomWithoutClearance = centerHeight - halfHeight;
-        double bottomWithClearance = bottomWithoutClearance + baseClearance;
-
-        // Before: the box hung well below the terrain and stepped at the
-        // mesh-quality swap distance.
-        Assert.True(
-            bottomWithoutClearance < -0.06,
-            $"variant {variant} ungrounded bottom {bottomWithoutClearance}");
-        // After: the only remaining dip is the authored 5 % inflation of the
-        // mesh's own bounding box, which is 0.05 * meshHalfHeight by
-        // construction and is identical in retail's data.
         double meshHalfHeight = halfHeight / 1.05;
-        Assert.Equal(-0.05 * meshHalfHeight, bottomWithClearance, 5);
+
+        // Seated at the sample, the mesh foot is its own minimum below ground
+        // and the box bottom is that plus the authored 5 % inflation, so the
+        // box encloses the mesh and neither representation floats.
+        // Tolerance, not decimal places: the VIEW extents are stored as float32,
+        // so the identity holds to ~7e-8 and one variant straddles the 6-place
+        // rounding boundary. The lift this replaced was 0.024 to 0.044 — four
+        // orders of magnitude outside this — so the check still catches it.
+        double boxBottom = centerHeight - halfHeight;
+        Assert.Equal(
+            -(baseClearance + (0.05 * meshHalfHeight)),
+            boxBottom,
+            tolerance: 1e-6);
         Assert.True(
-            bottomWithClearance > -0.05,
-            $"variant {variant} grounded bottom {bottomWithClearance}");
+            boxBottom < -baseClearance,
+            $"variant {variant} box bottom {boxBottom} does not enclose the mesh foot");
     }
 
     [Fact]
