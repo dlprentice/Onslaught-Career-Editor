@@ -135,14 +135,19 @@ tool's own documentation, not here.
   pixels. It modifies no executable: `d3d9` is not a `KnownDLL`, so a `d3d9.dll`
   beside the application wins the load.
   `Run-D3D9Capture.ps1` and `Run-FrontendPageCapture.ps1` drive it.
-- `ttd_record.ps1` / `ttd_query.ps1` / `Record-GameMoment.ps1` — Time Travel
-  Debugging. `ttd_record.ps1` records a bounded launch or attach interval until
-  the requested duration, guest exit, free-space stop, or configured file cap.
-  `ttd_query.ps1` answers later offline questions against the resulting trace.
-  `Record-GameMoment.ps1` attaches to an already-running copied target, records
-  the requested interval, and normally leaves the target running.
+- `ttd_record.ps1` / `ttd_query.ps1` / `Record-GameMoment.ps1` /
+  `Record-LevelOpeningCampaign.ps1` — Time Travel Debugging. `ttd_record.ps1`
+  records a bounded launch or attach interval until the requested duration,
+  guest exit, free-space stop, or configured file cap. `ttd_query.ps1` answers
+  later offline questions against the resulting trace. `Record-GameMoment.ps1`
+  attaches to an already-running copied target, records the requested interval,
+  and normally leaves the target running. `Record-LevelOpeningCampaign.ps1`
+  discovers the 66 shipped IDs that have a world header, mission scripts, and a
+  world archive, then records one resumable opening trace per level from a
+  single elevated shell.
   **Standing caveat: TTD recording requires an elevated token**, and this
-  machine has no `TTDService`, so each recording raises a UAC prompt.
+  machine has no `TTDService`. Start an unattended campaign from one elevated
+  shell; the manual attach helper raises UAC for an individual capture.
 
 See also [`../patches/README.md`](../patches/README.md) for the patch-catalog
 boundary that the copied-runtime helpers operate inside.
