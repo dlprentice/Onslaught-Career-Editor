@@ -501,10 +501,24 @@ public sealed class Level100DestructionState
     /// not independently proven; see
     /// reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
     /// section 6.2. Level 100 progression is insensitive to the ambiguity: a
-    /// 6.0-life Target Tank takes 75 bullets under both the sum (0.081) and
-    /// round-only (0.08) models, and a 3.0-life Target Truck takes 38 under
-    /// both. Only the explosion-only model (0.001) differs, and it is already
-    /// killed by the pulse measurements.
+    /// 6.0-life Target Tank takes 75 bullets under the sum model (0.081) and
+    /// 76 under round-only (0.08) — one bullet apart, which no tutorial beat
+    /// can distinguish. Only the explosion-only model (0.001) differs
+    /// materially, needing about six thousand, and it is already killed by the
+    /// pulse measurements.
+    ///
+    /// <para><b>Corrected 2026-07-29.</b> This comment previously read "takes
+    /// 75 bullets under both the sum (0.081) and round-only (0.08) models, and
+    /// a 3.0-life Target Truck takes 38 under both". The tank half was wrong
+    /// and its own test says so: <c>Level100TutorialProgressionTests</c>
+    /// <c>MechBullet_NeedsTheSameOrderOfHitsUnderBothSurvivingDamageModels</c>
+    /// is a Theory pinning <c>(MechBulletDamageBits, 75)</c> and
+    /// <c>(0x3DA3D70Au, 76)</c>, and that test's own summary says the models
+    /// "differ by a single bullet out of seventy-five". The conclusion the
+    /// paragraph draws is unaffected — one bullet is still indistinguishable —
+    /// but the stated number was not what the code computes. The truck figure
+    /// is left as written because nothing here measures it; treat it as
+    /// unverified rather than confirmed.</para>
     /// </summary>
     public const uint MechBulletDamageBits = 0x3DA5E354;
     public const int MaximumEventsPerHit = 8;

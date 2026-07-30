@@ -29,12 +29,32 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
         }
 
+        /// <summary>
+        /// Two SEPARATELY BUILT presets with identical content must compare equal.
+        ///
+        /// <para>Corrected 2026-07-29. This asserted
+        /// <c>ProfilePresetEquals(expected, expected)</c> — the same instance twice —
+        /// which any implementation satisfies by reference identity alone. It could
+        /// not fail, and it is in the default <c>npm test</c> gate, so it read as
+        /// coverage of the parity contract while proving nothing about it.</para>
+        ///
+        /// <para><c>MakePreset()</c> allocates fresh arrays on every call, so the two
+        /// operands here are reference-distinct all the way down. That forces the
+        /// comparison through structural equality, including sequence equality on
+        /// <c>PatchKeys</c>, <c>LaunchArguments</c>, <c>CopiedOptionsEdits</c>,
+        /// <c>EvidenceRefs</c> and <c>NonClaims</c> — the part that actually
+        /// carries risk, and the part the old form skipped entirely.</para>
+        /// </summary>
         [Fact]
         public void ProfileParityAcceptsAnExactPreset()
         {
             SafeCopyProfilePreset expected = MakePreset();
+            SafeCopyProfilePreset builtSeparately = MakePreset();
 
-            Assert.True(BinaryPatchPlanBuilder.ProfilePresetEquals(expected, expected));
+            Assert.False(
+                ReferenceEquals(expected, builtSeparately),
+                "the two operands must be distinct instances or this test proves nothing");
+            Assert.True(BinaryPatchPlanBuilder.ProfilePresetEquals(expected, builtSeparately));
         }
 
         private static SafeCopyProfilePreset MakePreset()

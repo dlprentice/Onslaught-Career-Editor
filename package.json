@@ -13,7 +13,7 @@
     "dev": "py -3 tools\\winui_lore_pack_builder.py --build && dotnet run --project .\\OnslaughtCareerEditor.WinUI\\OnslaughtCareerEditor.WinUI.csproj",
     "build": "dotnet build .\\OnslaughtCareerEditor.WinUI.slnx --nologo",
     "test:appcore": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo",
-    "test:ui": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName!~LegacyWpf\"",
+    "test:ui": "dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo",
     "test:safe-copy": "dotnet test .\\OnslaughtCareerEditor.AppCore.Tests\\OnslaughtCareerEditor.AppCore.Tests.csproj --nologo --filter \"FullyQualifiedName~GameProfile|FullyQualifiedName~BinaryPatchCatalogContractTests|FullyQualifiedName~SafeCopyProfileCatalogContractTests\" && dotnet test .\\OnslaughtCareerEditor.UiTests\\OnslaughtCareerEditor.UiTests.csproj --nologo --filter \"FullyQualifiedName~BinaryPatchRegressionTests\"",
     "test:cli": "dotnet run --project .\\OnslaughtCareerEditor.Cli\\OnslaughtCareerEditor.Cli.csproj -- --help",
     "test:docs": "py -3 tools\\md_link_check.py --check-only && npm run test:doc-headers && npm run test:re-function-doc-names",
