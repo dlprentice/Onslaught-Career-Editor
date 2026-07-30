@@ -27,6 +27,70 @@ internal interface ILevel100ChainHost
     WorldSnapshot Step(SimInput input);
 }
 
+/// <summary>
+/// One member of the twenty-point one-permille perturbation sweep this suite
+/// measures chain outcomes over.
+///
+/// <para><b>The shape is the one written down on
+/// <c>Level100ChainAutopilot</c>'s class remarks</b> (see
+/// <c>PrecisionStandOffMillimeters</c>): "twenty +-1 permille perturbations of
+/// every look command at or above thresholds of 100 to 1000 - the
+/// generalisation of the 'one permille shaved off every command &gt;= 500'
+/// control". Ten thresholds, two signs, twenty runs. It was described in prose
+/// and re-derived by hand every time somebody needed it; it is a type here so
+/// that a sweep result is reproducible rather than quoted.</para>
+///
+/// <para><b>The SCOPE is beat 9 and only beat 9</b>, which is the sweep
+/// <c>Level100FullChainTests</c> describes at "twenty separate one-permille
+/// perturbations of beat 9 ALONE". Applied to the whole run instead, the same
+/// twenty perturbations break beat 3 outright in eight of them - the driver
+/// loses <c>TutorialBroken</c> at t3776 and never reaches a flight leg at all,
+/// which makes it a useless instrument for a question about the last leg.
+/// Measured, and the reason the scope is stated here rather than left
+/// implied.</para>
+///
+/// <para><b>Why a permille and not something bigger.</b> One permille of stick
+/// is far below what the client's pointer path can even deliver - the reachable
+/// lattice starts at 30 - so this is not a model of a worse player. It is a
+/// determinism probe: the chain outcome is chaotic at this scale and always
+/// was, so a policy that only survives the unperturbed trajectory has not been
+/// shown to survive anything.</para>
+/// </summary>
+internal readonly record struct Level100LookPerturbation(
+    int ThresholdPermille,
+    int DeltaPermille)
+{
+    /// <summary>The twenty perturbations, in a fixed order.</summary>
+    internal static IReadOnlyList<Level100LookPerturbation> Sweep { get; } =
+        Enumerable.Range(1, 10)
+            .SelectMany(step => new[]
+            {
+                new Level100LookPerturbation(step * 100, -1),
+                new Level100LookPerturbation(step * 100, +1),
+            })
+            .ToArray();
+
+    /// <summary>
+    /// Nudges the MAGNITUDE of a look command by one permille, sign preserved,
+    /// when the command is at or above this perturbation's threshold. Commands
+    /// below the threshold, and the zero command, pass through untouched.
+    /// </summary>
+    internal short Apply(short requested)
+    {
+        int magnitude = Math.Abs((int)requested);
+        if (magnitude < ThresholdPermille)
+        {
+            return requested;
+        }
+
+        int perturbed = Math.Clamp(magnitude + DeltaPermille, 0, 1_000);
+        return (short)(requested < 0 ? -perturbed : perturbed);
+    }
+
+    public override string ToString() =>
+        $"|look|>={ThresholdPermille} {(DeltaPermille < 0 ? "-" : "+")}1";
+}
+
 /// <summary>The pre-existing route: straight into Core.</summary>
 internal sealed class Level100DirectChainHost : ILevel100ChainHost
 {

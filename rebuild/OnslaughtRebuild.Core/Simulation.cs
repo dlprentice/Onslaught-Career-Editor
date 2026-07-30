@@ -2217,12 +2217,40 @@ public sealed class Simulation
             verticalVelocity);
     }
 
+    /// <summary>
+    /// Retail's water kill test, as a predicate on the committed player
+    /// elevation.
+    ///
+    /// <para><c>references/Onslaught/BattleEngine.cpp:1249-1266</c>:</para>
+    /// <code>
+    /// float altitude = mPos.Z - MAP.GetWaterLevel();
+    /// if ((altitude > -0.2f) &amp;&amp; ((mVulnerable) || (!CLIPARAMS.mDeveloperMode)))
+    ///     StartDieProcess();
+    /// </code>
+    /// <para>Retail's Z axis points DOWN - proven inside the same family, at
+    /// <c>actor.cpp:120-125</c>, where the ground clamp fires on
+    /// <c>alt &lt;= mPos.Z</c> and then assigns <c>mPos.Z = alt</c> - so
+    /// <c>altitude &gt; -0.2f</c> in retail's frame is
+    /// <c>A &lt; waterAltitude + 0.2 m</c> in this one. The 0.2 m is
+    /// <see cref="SimulationConstants.WaterFailureClearanceMillimeters"/> = 200.
+    /// <c>mVulnerable || !developerMode</c> is unconditionally true in a retail
+    /// build and is therefore not a divergence.</para>
+    ///
+    /// <para>Extracted only so it can be named and pinned; the call site below
+    /// is unchanged. See <c>Level100FerryLandingTests</c> Gate C - loosening
+    /// this is how every previous attempt at the Target Zone 4 ferry went
+    /// wrong, and it is the one change that would fake every other gate in that
+    /// file.</para>
+    /// </summary>
+    internal static bool WaterFailureAtElevation(int playerElevationMillimeters) =>
+        playerElevationMillimeters <=
+            Level100Terrain.WaterElevationMillimeters +
+                SimulationConstants.WaterFailureClearanceMillimeters;
+
     private void UpdateWaterFailureState(int playerElevationMillimeters)
     {
         if (_playerWaterFailure ||
-            playerElevationMillimeters >
-                Level100Terrain.WaterElevationMillimeters +
-                    SimulationConstants.WaterFailureClearanceMillimeters)
+            !WaterFailureAtElevation(playerElevationMillimeters))
         {
             return;
         }

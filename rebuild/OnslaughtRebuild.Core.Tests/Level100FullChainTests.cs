@@ -360,11 +360,19 @@ public sealed class Level100FullChainTests
         //   wave-2 spawns damaged           1 to 3            4 to 6
         //   hull at the end                 0 to 7,900        3,900 to 12,800
         //
-        // Every one of this driver's three losses is `WaterLoss` on the flight
-        // to Target Zone 4 AFTER objective 4 completed - the fight was won and
-        // the trip home drowned. That is the NavigateToZone defect recorded on
-        // `Level100ChainAutopilot.MissileBreakRangeMillimeters`, and it is not
-        // fixed here because the fix is in a method shared with beats 1-8.
+        // Those figures were taken while `NavigateToZone` still handed off to
+        // the walker on horizontal distance alone, and every loss in that sweep
+        // was `WaterLoss` on the flight to Target Zone 4 AFTER objective 4
+        // completed - the fight was won and the trip home drowned. THAT DEFECT
+        // IS FIXED: see `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters`
+        // and the re-measured distribution in `Level100FerryLandingTests`, which
+        // asserts zero `WaterLoss` across the same twenty perturbations and
+        // carries an adverse control that reinstates the defect and drowns.
+        //
+        // This run is unchanged by that fix, tick for tick: the clearance term
+        // is a measured no-op on beats 6 and 8, and every milestone here -
+        // including beat 9's six kills - is identical before and after. Only
+        // the Target Zone 4 leg moves.
         Assert.Equal(
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives

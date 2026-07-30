@@ -150,14 +150,18 @@ public sealed class Level100ColdStartTests
     /// the honest current result.
     ///
     /// <para>The client/input-adapter path destroys all 22 targets, completes
-    /// primary objective 4, and never fires the released abort poll. It then
-    /// ends <see cref="Level100MissionOutcome.Lost"/> with
-    /// <see cref="Level100MissionFailureReason.WaterLoss"/> at tick 17,699 on
-    /// the ferry flight to Target Zone 4. A direct-Core run with the same
+    /// primary objective 4, never fires the released abort poll, and reaches
+    /// <see cref="Level100MissionOutcome.Won"/> through
+    /// <c>event("Reached Target Zone 4")</c>. A direct-Core run with the same
     /// pointer/integer-pixel quantisation has the same outcome, tick, state
-    /// hash, and pose trace. The <b>unquantised</b> direct-Core control for the
-    /// same cold career reaches
-    /// <see cref="Level100MissionOutcome.Won"/>.</para>
+    /// hash, and pose trace, and so does the <b>unquantised</b> direct-Core
+    /// control for the same cold career.</para>
+    ///
+    /// <para><b>This run used to end <see cref="Level100MissionOutcome.Lost"/>
+    /// with <see cref="Level100MissionFailureReason.WaterLoss"/> at tick
+    /// 17,699</b>, on the ferry flight home, with every target in the level
+    /// already destroyed. See the terminal-state comment in the body for what
+    /// that was and what changed.</para>
     ///
     /// <para>This is not a human or native-Godot playthrough. It pins the
     /// deterministic regression truth of this omniscient synthetic test driver.
@@ -274,35 +278,48 @@ public sealed class Level100ColdStartTests
         Assert.Equal(0, run.Host.UnreachableLookCommands);
         Assert.True(run.Host.LookCommands > 1_000);
 
-        // THE HONEST TERMINAL STATE, failing-forward in the style of the naive
-        // walker control.
+        // THE TERMINAL STATE, and it changed: this run used to end
+        // `Lost`/`WaterLoss` at t17699 and now reaches `Won`.
         //
-        // The fight is over and won: objective 4 is `Complete` above, and what
-        // is left FOR THIS SYNTHETIC DRIVER is the ferry flight to Target Zone
-        // 4. Its `NavigateToZone` policy drops out of jet mode inside 20 m of
-        // the volume whatever is underneath, and on this route that point is
-        // open water, so the run ends
-        // `Level100MissionFailureReason.WaterLoss` - a lost level at 10,700 of
-        // 20,000 hull with every target in the level destroyed. That defect is
-        // already recorded on `Level100ChainAutopilot.MissileBreakRangeMillimeters`
-        // as the cause of three of twenty perturbed losses on the returning
-        // player, and it is NOT fixed here because it was tried and measured
-        // worse: keeping the airframe in jet mode over water cost the
-        // returning-player run `ChainAutopilot_ReachesWonByInputAlone` outright
-        // and turned this control's `Won` into `WaterLoss` as well.
+        // What it used to do, because the reason matters more than the verdict:
+        // the fight was over and won - objective 4 is `Complete` above - and the
+        // ferry home drowned. `NavigateToZone` dropped out of jet mode as soon
+        // as the volume was inside 20 m HORIZONTALLY, with no altitude term at
+        // all, and on this route that happened 28.7 m up over open water. From
+        // that tick the airframe was an airborne walker, and
+        // `Simulation.UpdateAirborneWalkerMovement` takes no `SimInput`: the
+        // touchdown point was fixed at the morph and it came down 10.1 m past
+        // the zone, in the sea.
         //
-        // WHEN THAT FLIGHT LEG IS FIXED, replace `Lost`/`WaterLoss` here with
-        // `Won`/`None` and delete this paragraph. Nothing else needs to change.
-        Assert.Equal(Level100MissionOutcome.Lost, _coldStart.Outcome);
+        // What fixed it is an altitude term on the hand-off - see
+        // `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters`. It is NOT a
+        // change to the water rule, which is a byte-faithful port of
+        // `BattleEngine.cpp:1259-1262` and is now pinned two ways by
+        // `Level100FerryLandingTests`.
+        //
+        // THIS IS THE ACCEPTANCE TEST IN `GOAL.md`, WITH BOTH OF ITS
+        // QUALIFIERS. The career is the COLD first career - all four
+        // `SLOT_TUTORIAL_*` unsaved, which is the only career the shipping
+        // client can start - and the input travels through the client's own
+        // `InteractiveSession`, restricted to stick positions a whole retail
+        // mouse pixel can produce. It is still not a claim that a human can do
+        // this: what the driver READS is omniscient, and `GOAL.md` demotes the
+        // driven run to an acceptance test for exactly that reason.
+        Assert.Equal(Level100MissionOutcome.Won, _coldStart.Outcome);
         Assert.Equal(
-            Level100MissionFailureReason.WaterLoss,
+            Level100MissionFailureReason.None,
             final.Level100Mission.FailureReason);
+        Assert.True(
+            final.Level100Actors.Actors
+                .Single(actor => actor.Trigger == Level100MissionTrigger.TargetZone4)
+                .TriggerEventDispatched,
+            "Target Zone 4 never dispatched, so `Won` did not come from " +
+            "`event(\"Reached Target Zone 4\")`.");
 
-        // AND THE CONTROL IS THE POINT: the same cold first career driven
-        // unquantised straight into `Simulation.Step` REACHES `Won`. The
-        // pointer-quantised direct run instead matches the client run exactly;
-        // see the next test. The career premise is no longer what separates
-        // these drivers.
+        // AND THE CONTROL: the same cold first career driven unquantised
+        // straight into `Simulation.Step` also reaches `Won`. The
+        // pointer-quantised direct run matches the client run exactly; see the
+        // next test.
         Assert.Equal(Level100MissionOutcome.Won, _control.Outcome);
         Assert.Equal(
             Level100MissionFailureReason.None,

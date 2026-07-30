@@ -346,7 +346,9 @@ internal sealed class Level100ChainAutopilot
         Level100TutorialProgress progress,
         bool quantizeLookToClientPointerPath = false,
         uint seed = 1u,
-        bool quantizeLookToIntegerMousePixels = false)
+        bool quantizeLookToIntegerMousePixels = false,
+        Level100LookPerturbation? lookPerturbation = null,
+        bool horizontalOnlyZoneHandoff = false)
     {
         // The seed is snapshot and hash material only - the released gameplay
         // RNG is `ReleasedRandomSeed`, reseeded to 123456 at level start - but a
@@ -356,11 +358,14 @@ internal sealed class Level100ChainAutopilot
             seed,
             Level100TestActorDefinitions.Create(),
             progress);
-        return CreateOn(
+        Level100ChainAutopilot driver = CreateOn(
             new Level100DirectChainHost(
                 simulation,
                 quantizeLookToClientPointerPath,
                 quantizeLookToIntegerMousePixels));
+        driver._horizontalOnlyZoneHandoff = horizontalOnlyZoneHandoff;
+        driver._beatNinePerturbation = lookPerturbation;
+        return driver;
     }
 
     /// <summary>
@@ -690,6 +695,23 @@ internal sealed class Level100ChainAutopilot
             ((long)state.FacingYawMicroRad * 1_009L) +
             ((long)state.FacingPitchMicroRad * 10_007L) +
             state.Hull);
+        if (state.Mode == VehicleMode.Walker)
+        {
+            // The commanded morph has landed; re-arm the one-shot recorder for
+            // the next leg.
+            _morphCommanded = false;
+        }
+
+        if (WaterFailure is null && state.PlayerWaterFailure)
+        {
+            WaterFailure = (
+                state.Tick,
+                state.PlayerElevationMillimeters,
+                _elevationLastTick);
+        }
+
+        _elevationLastTick = state.PlayerElevationMillimeters;
+
         RecordPlayerWeaponFire(state);
         RecordArmamentEvidence(state);
         RecordBlasterBallistics(state);
@@ -699,6 +721,12 @@ internal sealed class Level100ChainAutopilot
             _lastDryGround = state.PlayerPosition;
         }
         string? navigation = state.Level100Mission.NavigationObjective;
+        if (FerryLegStartTick is null &&
+            string.Equals(navigation, "Target Zone 4", StringComparison.Ordinal))
+        {
+            FerryLegStartTick = state.Tick;
+        }
+
         if (!string.Equals(navigation, _lastNavigation, StringComparison.Ordinal))
         {
             _log.Add(
@@ -907,11 +935,421 @@ internal sealed class Level100ChainAutopilot
     // Navigation
     // ------------------------------------------------------------------
 
+    /// <summary>
+    /// The airframe's state on the tick this driver dropped out of jet mode on
+    /// an approach to a trigger volume.
+    ///
+    /// <para><b>It is recorded because it was not.</b> The Target Zone 4 ferry
+    /// drowning was diagnosed against a driver comment that said the morph
+    /// happens "28 m up"; the morph tick and its altitude, speed and surface
+    /// were in no trace anywhere, so the single number the whole diagnosis
+    /// turned on was uncorroborated. This makes it an observable.</para>
+    /// </summary>
+    internal readonly record struct ObservedFlightLegMorph(
+        int Tick,
+        Level100MissionTrigger? Trigger,
+        string Site,
+        double HorizontalMillimeters,
+        int GroundClearanceMillimeters,
+        int SurfaceClearanceMillimeters,
+        int SpeedMillimetersPerTick,
+        int VerticalVelocityMillimetersPerTick,
+        bool OverWater,
+        bool CommittedToLanding)
+    {
+        /// <summary>
+        /// The clearance this morph was allowed to happen at: the cruise
+        /// hand-off radius, or the tighter band a committed dive must reach.
+        /// </summary>
+        internal int PermittedClearanceMillimeters => CommittedToLanding
+            ? ZoneHandoffCommittedClearanceMillimeters
+            : ZoneHandoffClearanceMillimeters;
+
+        public override string ToString() =>
+            $"t{Tick} morph@{Site} {Trigger} d={HorizontalMillimeters:F0} " +
+            $"clearance={GroundClearanceMillimeters} " +
+            $"surface={SurfaceClearanceMillimeters} speed={SpeedMillimetersPerTick} " +
+            $"vy={VerticalVelocityMillimetersPerTick} overWater={OverWater} " +
+            $"committed={CommittedToLanding}";
+    }
+
+    /// <summary>
+    /// Horizontal range at which a zone approach stops flying and walks in.
+    ///
+    /// <para>Unchanged, and deliberately so. It was the whole of the hand-off
+    /// test and it is now one of two terms; swapping it for a smaller number
+    /// was proposed, measured and refuted, because moving the morph eight
+    /// metres closer does not change what the morph <em>is</em>.</para>
+    /// </summary>
+    private const int ZoneWalkInHorizontalMillimeters = 20_000;
+
+    /// <summary>
+    /// Clearance above whatever is underneath - terrain, or the sea surface -
+    /// at or below which an approach may leave jet mode.
+    ///
+    /// <para><b>Why the hand-off has to carry an altitude term at all, and why
+    /// this is retail-faithful rather than a number that passes a test.</b> The
+    /// morph exists for exactly one reason: <c>TargetZoneN.msl</c>'s
+    /// <c>hit()</c> tests <c>InJetMode() == FALSE</c>, and that released builtin
+    /// - <c>0x005380F0</c> negating <c>0x00408120</c> against the shipped 0.5 s
+    /// threshold at <c>_DAT_005D85EC</c>, recorded at
+    /// <see cref="Level100MissionTiming.JetModeState"/> - is FALSE <b>only for a
+    /// walker whose last ground contact is inside fifteen ticks</b>. A walker
+    /// that morphs tens of metres up is airborne for its whole fall and reads as
+    /// in jet mode for all of it. Morphing there is not merely early; it is
+    /// strictly incapable of doing the one thing it is for.</para>
+    ///
+    /// <para><b>And once it has morphed the driver has no say left.</b>
+    /// <c>Simulation.UpdateAirborneWalkerMovement</c> takes no
+    /// <see cref="SimInput"/> at all, so an airborne walker has no input-driven
+    /// movement authority; the only surviving control is
+    /// <c>ApplyWalkerLandingJets</c>, which is a pure brake this driver already
+    /// holds on every airborne tick. The touchdown point is therefore fixed at
+    /// the morph tick, and on the Target Zone 4 ferry it was fixed over open
+    /// sea.</para>
+    ///
+    /// <para><b>The value introduces no new number: it is
+    /// <see cref="ZoneWalkInHorizontalMillimeters"/>.</b> The hand-off radius
+    /// was always meant to say "close enough to walk in from"; it just measured
+    /// distance in two axes and ignored the third, while the volume it exists to
+    /// satisfy is a THREE-dimensional sphere test
+    /// (<c>Simulation.cs:2490-2494</c>) - which is itself a correction, made
+    /// after all three legs were found completing 11-13 m up in level flight
+    /// (see <c>Level100FlightLegTests</c>). This is the same correction applied
+    /// one level earlier, to the decision instead of the test.</para>
+    ///
+    /// <para><b>It is also, measurably, a no-op on every approach that was
+    /// already sound.</b> Both careers' beat-6 and beat-8 legs hand off at
+    /// 18,969 mm and 19,759 mm of surface clearance and land where they can walk
+    /// in from; only the beat-10 ferry hands off at 28,915 mm, and only it
+    /// drowns. Measured, at 20,000 every milestone tick of both the returning
+    /// player and the cold career is unchanged from before this fix through the
+    /// end of beat 9, including beat 9's six kills - the Target Zone 4 leg is
+    /// the only thing that moves.</para>
+    ///
+    /// <para><b>A single flat threshold this size is not enough on its own, and
+    /// that was measured too.</b> A 20 m hand-off still commits roughly 25 m of
+    /// ballistic drift - the fall is 258 ticks and the landing thrusters bottom
+    /// out at a 35 mm/tick integer floor they never get below - so whether it
+    /// lands on the dock is a property of the bearing, not of the policy. Under
+    /// the twenty perturbations it drowned twice. That is what
+    /// <see cref="ZoneHandoffCommittedClearanceMillimeters"/> is for.</para>
+    ///
+    /// <para><b>And a single flat threshold that small is not available.</b> 5 m,
+    /// 8 m and 12 m are all defensible physics and all of them move beats 6 and
+    /// 8, which re-rolls beat 9 - a beat this suite's own remarks describe as a
+    /// cliff with no gradient. Measured on the returning player: 12 m keeps six
+    /// kills but loses the cold career to <c>WaterLoss</c>; 8 m drops the
+    /// returning player to two kills and the abort branch; 5 m drops it to
+    /// three. Choosing between those by their beat-9 score would be fitting to a
+    /// chaotic objective, which is exactly what <c>AGENTS.md</c> forbids.</para>
+    /// </summary>
+    internal const int ZoneHandoffClearanceMillimeters =
+        ZoneWalkInHorizontalMillimeters;
+
+    /// <summary>
+    /// The clearance a leg that had to DIVE must reach before it may morph.
+    ///
+    /// <para><b>The rule in one sentence: hand off from the cruise, or from the
+    /// deck, never from a dive.</b> The 20 m cruise hand-off above is safe for
+    /// the two legs that use it, and measurably so - they touch down where they
+    /// can walk in from. It is not safe for a leg that arrived high and had to
+    /// come down to reach it, because such a leg still has 20 m of fall to spend
+    /// and the drift that fall buys is decided by the bearing rather than by the
+    /// driver. Measured: with 20 m as the only term, the twenty perturbations
+    /// still drowned twice.</para>
+    ///
+    /// <para>The value is
+    /// <see cref="SimulationConstants.JetGroundEffectHeightMillimeters"/> = 5 m,
+    /// which is <c>BattleEngineJetPart.cpp</c>'s own definition of "near the
+    /// surface" - the band in which the airframe is already being held up by
+    /// the ground rather than by flight, and the same constant
+    /// <c>Simulation.ApplyJetGroundEffect</c> tests against the same
+    /// <c>max(terrain, water)</c> support plane this clearance is measured
+    /// against.</para>
+    ///
+    /// <para><b>It is one of three terms and not sufficient on its own.</b> A
+    /// committed leg must be inside this band underfoot, inside it half a
+    /// second of travel ahead
+    /// (<see cref="SurfaceClearanceAheadMillimeters"/>), and the ballistic
+    /// landing it is about to commit to must come down on dry land
+    /// (<see cref="BallisticTouchdownIsDryLand"/>). Each of the three was added
+    /// because the sweep still drowned without it; the numbers are on those two
+    /// members.</para>
+    /// </summary>
+    internal const int ZoneHandoffCommittedClearanceMillimeters =
+        SimulationConstants.JetGroundEffectHeightMillimeters;
+
+    /// <summary>
+    /// Clearance below which the leg holds a shallow climb rather than a
+    /// descent, so the airframe is never asked to fly nose-down inside the
+    /// released ground-effect band. Unchanged from the measured
+    /// <c>Level100FlightLegDriver</c>; only the surface it is measured against
+    /// moved, from the terrain to <c>max(terrain, water)</c>.
+    /// </summary>
+    private const int FlightLegCruiseFloorMillimeters = 12_000;
+
+    /// <summary>
+    /// Range at which the leg stops cruising and starts putting the airframe on
+    /// the ground. Unchanged from <c>Level100FlightLegDriver</c>; what changed
+    /// is that reaching it is no longer sufficient to morph.
+    /// </summary>
+    private const int FlightLegFinalApproachMillimeters = 12_000;
+
+    /// <summary>
+    /// Reinstates the pre-fix hand-off - horizontal distance alone, no
+    /// clearance term - for the adverse control in
+    /// <c>Level100FerryLandingTests</c>. Nothing else in the driver changes.
+    /// </summary>
+    private bool _horizontalOnlyZoneHandoff;
+
+    /// <summary>
+    /// One member of <see cref="Level100LookPerturbation.Sweep"/>, applied to
+    /// the look commands this driver issues while it is engaging wave 2, or
+    /// null for the unperturbed run.
+    /// </summary>
+    private Level100LookPerturbation? _beatNinePerturbation;
+
+    /// <summary>
+    /// May this approach drop out of jet mode here?
+    ///
+    /// <para>Yes on the ground, and yes inside the released ground-effect band.
+    /// <b>This is a no-op wherever flight is off or the approach is already on
+    /// the ground</b>, which is every one of beats 1-8: they are walked, or
+    /// flown and landed by <see cref="FlyLeg"/>, and in both cases the airframe
+    /// is grounded when the walker branch is first asked for.</para>
+    /// </summary>
+    private bool ClearedToLeaveJetMode(WorldSnapshot state)
+    {
+        if (_horizontalOnlyZoneHandoff || state.PlayerOnGround)
+        {
+            return true;
+        }
+
+        if (!_flightLegCommittedToLanding)
+        {
+            return state.PlayerAltitudeAboveSurfaceMillimeters <=
+                ZoneHandoffClearanceMillimeters;
+        }
+
+        return state.PlayerAltitudeAboveSurfaceMillimeters <=
+                ZoneHandoffCommittedClearanceMillimeters &&
+            SurfaceClearanceAheadMillimeters(state) <=
+                ZoneHandoffCommittedClearanceMillimeters &&
+            BallisticTouchdownIsDryLand(state);
+    }
+
+    /// <summary>
+    /// Would the landing this morph commits to come down on dry land?
+    ///
+    /// <para><b>This is the diagnosis's own sentence turned into a decision.</b>
+    /// The whole failure is that "the touchdown point is fixed at the morph
+    /// tick" - <c>Simulation.UpdateAirborneWalkerMovement</c> takes no
+    /// <see cref="SimInput"/>, so once the morph is commanded the driver has no
+    /// say in where it lands. A driver that may not steer after the commit has
+    /// to know where the commit puts it, so it replays Core's own airborne-
+    /// walker recurrence forward: the landing-thruster retentions
+    /// (<c>0.983263</c> horizontal, <c>0.949353</c> descending past the 7 mm
+    /// minimum - retail's <c>0.975</c> / <c>0.925</c> per 20 Hz update,
+    /// <c>BattleEngineWalkerPart.cpp:330-344</c>), then
+    /// <see cref="SimulationConstants.WalkerGravityPerTick"/>, until the
+    /// height field catches it.</para>
+    ///
+    /// <para><b>It is NOT a change to the water rule, and it is not the guard
+    /// that measured inert.</b> The water rule
+    /// (<c>Simulation.WaterFailureAtElevation</c>) is untouched and pinned by
+    /// <c>Level100FerryLandingTests</c>. The guard that measured inert was
+    /// placed in <see cref="FlyLeg"/>, on a decision <c>FlyLeg</c> never made;
+    /// this one is on the decision itself. And it is not a substitute for the
+    /// clearance terms above - it is the last of three, and on its own it would
+    /// still be committing a thirty-metre ballistic drift.</para>
+    ///
+    /// <para><b>Why it is needed on top of the clearance, measured.</b> One
+    /// perturbation handed off 4,970 mm above dry ground 2.6 m from the volume
+    /// and drowned anyway: the dock shelves away faster than the walker
+    /// descends, so five metres of clearance underfoot was six metres of drift
+    /// and then open sea. Half a second of look-ahead does not see that either
+    /// - the fall lasts forty-odd ticks and the look-ahead is fifteen.</para>
+    /// </summary>
+    private bool BallisticTouchdownIsDryLand(WorldSnapshot state)
+    {
+        long x = state.PlayerPosition.X;
+        long z = state.PlayerPosition.Z;
+        long elevation = state.PlayerElevationMillimeters;
+        int velocityX = state.PlayerVelocity.X;
+        int velocityZ = state.PlayerVelocity.Z;
+        int verticalVelocity = state.PlayerVerticalVelocityMillimetersPerTick;
+
+        for (int tick = 0; tick < BallisticTouchdownBudgetTicks; tick++)
+        {
+            // The morph is not instant, and the transition is the worst part of
+            // the fall to leave out: `Simulation.UpdateTransitionMovement`
+            // damps nothing while it runs and applies only
+            // `MorphIntoWalkerGravityPerTick`, so the airframe coasts at full
+            // speed for the whole of
+            // `SimulationConstants.JetToWalkerTransitionTicks`.
+            if (tick < SimulationConstants.JetToWalkerTransitionTicks)
+            {
+                verticalVelocity -= SimulationConstants.MorphIntoWalkerGravityPerTick;
+                x += velocityX;
+                z += velocityZ;
+                elevation += verticalVelocity;
+                continue;
+            }
+
+            velocityX = RetainLandingJet(
+                velocityX,
+                SimulationConstants.WalkerLandingJetHorizontalRetentionNumerator);
+            velocityZ = RetainLandingJet(
+                velocityZ,
+                SimulationConstants.WalkerLandingJetHorizontalRetentionNumerator);
+            if (verticalVelocity <
+                -SimulationConstants.WalkerLandingJetMinimumDescentPerTick)
+            {
+                verticalVelocity = RetainLandingJet(
+                    verticalVelocity,
+                    SimulationConstants.WalkerLandingJetVerticalRetentionNumerator);
+            }
+
+            verticalVelocity -= SimulationConstants.WalkerGravityPerTick;
+            x += velocityX;
+            z += velocityZ;
+            elevation += verticalVelocity;
+
+            var here = new SimVector2((int)x, (int)z);
+            int ground = _terrain.SampleGroundElevationMillimeters(here);
+            if (elevation <=
+                ground + Level100Terrain.WalkerCenterOfGravityMillimeters)
+            {
+                return ground > Level100Terrain.WaterElevationMillimeters;
+            }
+        }
+
+        // It did not come down inside the budget, which for a fall bounded by
+        // the hand-off clearance cannot happen. Refuse rather than guess.
+        return false;
+    }
+
+    /// <summary>
+    /// Long enough for any fall the hand-off clearance permits: the terminal
+    /// descent under the released thrusters is 70 mm per tick, so five metres
+    /// is about seventy ticks.
+    /// </summary>
+    private const int BallisticTouchdownBudgetTicks = 600;
+
+    private static int RetainLandingJet(int value, int numerator) =>
+        (int)Math.Round(
+            (double)value * numerator /
+                SimulationConstants.WalkerLandingJetRetentionDenominator,
+            MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// Clearance above the support plane half a second of travel AHEAD, which
+    /// is where the airframe will be when the ballistic fall it is about to
+    /// commit to actually lands.
+    ///
+    /// <para><b>Why the clearance underfoot is not enough, measured.</b> A
+    /// Target Zone 4 approach handed off 4,992 mm above dry ground 2.5 m from
+    /// the volume, drifted 6 m south-east while it fell, and drowned - because
+    /// the dock shelves away faster than the walker descends, so five metres of
+    /// clearance underfoot was never five metres of fall. It also never
+    /// triggered on the way past: it was inside the 5.4 m sphere but had been
+    /// airborne longer than the released 0.5 s, so <c>InJetMode()</c> read TRUE.
+    /// </para>
+    ///
+    /// <para>The sample point and the support plane are the released
+    /// ones: <c>Simulation.ApplyJetGroundEffect</c> looks
+    /// <see cref="SimulationConstants.JetGroundEffectLookaheadTicks"/> of
+    /// velocity ahead - <c>BattleEngineJetPart.cpp:548</c>'s half a second - and
+    /// takes <c>max(terrain, water)</c> as the surface. Reading the terrain
+    /// ahead is the same class of observation this driver already makes for
+    /// line-of-sight before it fires; see the class remarks on what it reads.
+    /// </para>
+    /// </summary>
+    private int SurfaceClearanceAheadMillimeters(WorldSnapshot state)
+    {
+        var ahead = new SimVector2(
+            state.PlayerPosition.X +
+                (state.PlayerVelocity.X *
+                    SimulationConstants.JetGroundEffectLookaheadTicks),
+            state.PlayerPosition.Z +
+                (state.PlayerVelocity.Z *
+                    SimulationConstants.JetGroundEffectLookaheadTicks));
+        int support = Math.Max(
+            _terrain.SampleGroundElevationMillimeters(ahead),
+            Level100Terrain.WaterElevationMillimeters);
+        return state.PlayerElevationMillimeters - support;
+    }
+
+    private readonly List<ObservedFlightLegMorph> _flightLegMorphs = [];
+
+    /// <summary>Every jet-to-walker morph this run made on a zone approach.</summary>
+    internal IReadOnlyList<ObservedFlightLegMorph> FlightLegMorphs => _flightLegMorphs;
+
+    private bool _morphCommanded;
+
+    /// <summary>
+    /// The first tick on which <c>Target Zone 4</c> was the navigation
+    /// objective - the tick the ferry home begins. Everything before it is
+    /// beats 1 to 9.
+    /// </summary>
+    internal int? FerryLegStartTick { get; private set; }
+
+    private int _elevationLastTick = int.MaxValue;
+
+    /// <summary>
+    /// The tick <c>Simulation.UpdateWaterFailureState</c> first declared a
+    /// water loss on this run, with the committed elevation on that tick and on
+    /// the tick before it.
+    ///
+    /// <para>It is the crossing, not the verdict, and that is the point: it
+    /// lets a test assert that the released threshold fired on the FIRST tick
+    /// the airframe was at or below it and not one tick earlier. See
+    /// <c>Level100FerryLandingTests</c> Gate C.</para>
+    /// </summary>
+    internal (int Tick, int Elevation, int PreviousElevation)? WaterFailure
+    {
+        get;
+        private set;
+    }
+
+    private void RecordMorph(
+        WorldSnapshot state,
+        Level100ActorSnapshot zone,
+        double horizontal,
+        string site)
+    {
+        if (_morphCommanded)
+        {
+            return;
+        }
+
+        _morphCommanded = true;
+        var morph = new ObservedFlightLegMorph(
+            state.Tick,
+            zone.Trigger,
+            site,
+            horizontal,
+            state.PlayerAltitudeAboveGroundMillimeters,
+            state.PlayerAltitudeAboveSurfaceMillimeters,
+            (int)Math.Sqrt(
+                ((long)state.PlayerVelocity.X * state.PlayerVelocity.X) +
+                ((long)state.PlayerVelocity.Z * state.PlayerVelocity.Z)),
+            state.PlayerVerticalVelocityMillimetersPerTick,
+            state.PlayerGroundElevationMillimeters <
+                Level100Terrain.WaterElevationMillimeters,
+            _flightLegCommittedToLanding);
+        _flightLegMorphs.Add(morph);
+        _log.Add(morph.ToString());
+    }
+
     private SimInput NavigateToZone(WorldSnapshot state, Level100ActorSnapshot zone)
     {
         SimVector3 position = zone.Pose.PositionMillimeters;
         double horizontal = Horizontal(state, position);
-        if (state.Level100FlightEnabled && horizontal > 20_000)
+        if (state.Level100FlightEnabled &&
+            (horizontal > ZoneWalkInHorizontalMillimeters ||
+                !ClearedToLeaveJetMode(state)))
         {
             return FlyLeg(state, zone, horizontal);
         }
@@ -919,9 +1357,13 @@ internal sealed class Level100ChainAutopilot
         // Walk the last metres in, or the whole way before flight is taught.
         if (state.Mode != VehicleMode.Walker)
         {
-            return state.Transition == VehicleTransition.None
-                ? new SimInput(0, 0, SimActions.ToggleMode)
-                : SimInput.Idle;
+            if (state.Transition != VehicleTransition.None)
+            {
+                return SimInput.Idle;
+            }
+
+            RecordMorph(state, zone, horizontal, "NavigateToZone");
+            return new SimInput(0, 0, SimActions.ToggleMode);
         }
 
         if (state.Transition != VehicleTransition.None)
@@ -933,7 +1375,16 @@ internal sealed class Level100ChainAutopilot
         short lookX = LookAxis(yawError, 2_000);
         double pitchError = -(state.FacingPitchMicroRad / 1_000_000d);
         short lookY = LookAxis(pitchError, 4_000);
-        sbyte forward = horizontal > 1_500 ? (sbyte)1 : (sbyte)0;
+
+        // Walking input is gated on ground contact, as both sibling drivers
+        // already gate it (`FlyLeg` and `Level100FlightLegDriver`). It is
+        // PROVABLY inert rather than merely measured so: `Simulation.cs:945-952`
+        // reaches `UpdateWalkerMovement(input)` only when the same
+        // `_playerOnGround` this snapshot reports is set, and discards the input
+        // entirely otherwise.
+        sbyte forward = state.PlayerOnGround && horizontal > 1_500
+            ? (sbyte)1
+            : (sbyte)0;
         SimActions actions = state.PlayerOnGround ? SimActions.None : SimActions.LandingJets;
         return new SimInput(0, forward, actions, 0, 0, lookX, lookY);
     }
@@ -944,7 +1395,15 @@ internal sealed class Level100ChainAutopilot
     /// clear of the ground effect, fly the bearing, then drop out of jet mode
     /// and ride the landing thrusters down into the volume - because
     /// <c>TargetZoneN.msl</c> tests <c>InJetMode() == FALSE</c>.
-    /// </summary>
+    ///
+    /// <para><b>One addition, and it is the whole of the ferry fix.</b> Once
+    /// the leg is inside <see cref="FlightLegFinalApproachMillimeters"/> it is
+    /// committed to the landing, and a committed leg flies the airframe DOWN
+    /// onto <see cref="ZoneHandoffClearanceMillimeters"/> at the released
+    /// minimum throttle before it will morph. Until this existed the leg had no
+    /// descent authority at all - its pitch law climbed to 12 m and then held
+    /// whatever altitude it happened to arrive with, which after beat 9's
+    /// dogfight was 29 m.</para>
     private SimInput FlyLeg(
         WorldSnapshot state,
         Level100ActorSnapshot zone,
@@ -980,17 +1439,31 @@ internal sealed class Level100ChainAutopilot
 
         if (state.Mode == VehicleMode.Jet && state.Transition == VehicleTransition.None)
         {
-            int altitude = state.PlayerAltitudeAboveGroundMillimeters;
-            double targetPitch = altitude < 12_000 ? -0.20 : 0.0;
+            _flightLegCommittedToLanding |=
+                horizontal < FlightLegFinalApproachMillimeters;
+
+            // Cruise, unchanged: hold a shallow climb clear of the ground
+            // effect and then fly the bearing. Once committed to the landing:
+            // fly the airframe DOWN onto the hand-off band and let the throttle
+            // back to the released minimum, because everything that happens
+            // after the morph is ballistic and the only thing that bounds it is
+            // the speed and height it is committed at.
+            double targetPitch = _flightLegCommittedToLanding
+                ? (state.PlayerAltitudeAboveSurfaceMillimeters >
+                    ZoneHandoffCommittedClearanceMillimeters ? 0.20 : 0.0)
+                : (state.PlayerAltitudeAboveGroundMillimeters <
+                    FlightLegCruiseFloorMillimeters ? -0.20 : 0.0);
             double pitchError = targetPitch - (state.FacingPitchMicroRad / 1_000_000d);
             short lookY = LookAxis(pitchError, 4_000);
-            if (horizontal < 12_000)
+            if (_flightLegCommittedToLanding && ClearedToLeaveJetMode(state))
             {
-                _flightLegCommittedToLanding = true;
+                RecordMorph(state, zone, horizontal, "FlyLeg");
                 return new SimInput(0, -1, SimActions.ToggleMode, 0, 0, lookX, lookY);
             }
 
-            sbyte throttle = horizontal > 40_000 ? (sbyte)1 : (sbyte)0;
+            sbyte throttle = _flightLegCommittedToLanding
+                ? (sbyte)-1
+                : horizontal > 40_000 ? (sbyte)1 : (sbyte)0;
             return new SimInput(0, throttle, SimActions.None, 0, 0, lookX, lookY);
         }
 
@@ -1035,7 +1508,20 @@ internal sealed class Level100ChainAutopilot
         // Measured with a walker: 750 -> 0 hull, no wave-2 drone destroyed.
         if (target.TargetGroup == Level100MissionTargetGroup.AirborneTargets2)
         {
-            return EngageWaveTwo(state, target);
+            // The one-permille sweep is applied HERE and nowhere else, because
+            // the sweep this suite quotes is "twenty separate one-permille
+            // perturbations of beat 9 ALONE". See
+            // `Level100LookPerturbation` for why the scope matters.
+            SimInput beatNine = EngageWaveTwo(state, target);
+            return _beatNinePerturbation is { } perturbation
+                ? beatNine with
+                {
+                    LookXAnalogPermille =
+                        perturbation.Apply(beatNine.LookXAnalogPermille),
+                    LookYAnalogPermille =
+                        perturbation.Apply(beatNine.LookYAnalogPermille),
+                }
+                : beatNine;
         }
 
         if (airborneTarget)
@@ -1973,8 +2459,19 @@ internal sealed class Level100ChainAutopilot
     //     water: inert. The landing that drowns a six-kill run is not
     //     committed in FlyLeg at all - NavigateToZone toggles to walker as
     //     soon as the zone is inside 20 m, and on the Target Zone 4 approach
-    //     that happens 28 m up. It is a real defect and it is NOT fixed here,
-    //     because the fix is in a method shared with beats 1-8.
+    //     that happens 28 m up.
+    //     RESOLVED. That defect is fixed - see
+    //     `ZoneHandoffClearanceMillimeters`, which gives the hand-off the
+    //     altitude term it never had - and the water guard remains the wrong
+    //     shape: the fix is an ALTITUDE predicate, because the morph exists to
+    //     satisfy `InJetMode() == FALSE` and nothing airborne can satisfy it.
+    //     The measured worry in the sentence above - "the fix is in a method
+    //     shared with beats 1-8" - was real and is measured rather than
+    //     assumed: beats 6 and 8 hand off at 18,969 mm and 19,759 mm of surface
+    //     clearance, which is NOT "on the ground", so the diagnosis's claim
+    //     that an altitude term is automatically a no-op there is FALSE. It is
+    //     a no-op at 20,000 mm and only at 20,000 mm; the whole measurement is
+    //     on `ZoneHandoffClearanceMillimeters`.
     // ==================================================================
 
     /// <summary>
