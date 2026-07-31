@@ -148,6 +148,18 @@ tool's own documentation, not here.
   **Standing caveat: TTD recording requires an elevated token**, and this
   machine has no `TTDService`. Start an unattended campaign from one elevated
   shell; the manual attach helper raises UAC for an individual capture.
+- `Record-Level521Session.ps1` / `Test-Level521NativeCoverage.ps1` —
+  a played, attach-recorded session on level 521 and its verification.
+  Seventeen MissionScript natives are authored in level 521's shipped scripts
+  and were executed by none of the sixty-six recorded level openings; **none of
+  them fires from merely starting the level**, and twelve hang off a single
+  player action. The record helper launches the copied target at level 521,
+  waits for you, and records one bounded take; the test helper drives the
+  landed coverage collector and prints a per-native checklist, deciding from
+  each per-trace receipt rather than the runner's status labels (task #155).
+  **A human at the keyboard is required — start at
+  [`RUNBOOK-level521-native-capture.md`](RUNBOOK-level521-native-capture.md),
+  which needs no code reading.**
 
 See also [`../patches/README.md`](../patches/README.md) for the patch-catalog
 boundary that the copied-runtime helpers operate inside.
