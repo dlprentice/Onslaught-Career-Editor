@@ -140,6 +140,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private RetailAquilaWalkerAsset _jetAsset = null!;
     private RetailAquilaWalkerAsset _cockpitAsset = null!;
     private MeshInstance3D _level100Sky = null!;
+    private Level100SunAsset _level100Sun = null!;
     private Level100HeightFieldAsset _level100Terrain = null!;
     private Level100TerrainAppearanceAsset _level100TerrainAppearance = null!;
     private Level100StaticWorldAsset _level100StaticWorld = null!;
@@ -339,6 +340,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
         _level100Sky = Level100SkyAsset.Create(_level100Terrain.SkyCube);
         AddChild(_level100Sky);
+
+        // The sky cube paints its own soft sun disc. The flare is a separate
+        // particle the released engine adds every frame on top of it -
+        // references/Onslaught/DXEngine.cpp:968-1066 - so it is a separate node
+        // here too, and it follows the camera rather than the world.
+        _level100Sun = Level100SunAsset.Create(_level100Terrain);
+        AddChild(_level100Sun.Root);
     }
 
     private void BuildLevel100Terrain()
@@ -1315,6 +1323,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
 
         _level100Sky.Position = _camera.Position;
+        _level100Sun.Update(_camera.Position);
         UpdateRetailPixelCentreOffset();
     }
 

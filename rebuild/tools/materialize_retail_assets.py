@@ -404,6 +404,24 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
     (GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", "data/resources/meshes/m_f_truck_training.msh.aya", "3bd92ce93d0619b7c4b0dd158680641fbab6cd88580a68c6ef34e5f22f7596c5"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
+    # The authored particle sets. `ParticleSetFile` parses them and
+    # `ParticleEffectResolver` resolves named effects out of them, so descriptor
+    # values stop being hand-copied constants. `MainSet.par` is the one the game
+    # loads in-level and is pinned by rebuild/PROVENANCE.md; the client reads
+    # `Sun Sprite` out of it for the in-level sun.
+    #
+    # All three are retained rather than `MainSet.par` alone because the
+    # decoder's falsifiability check is a byte-identical re-emission of the
+    # WHOLE shipped corpus - 1,479 descriptors over three files. A decoder
+    # proven on one file is a decoder proven on one file.
+    (GODOT_ASSETS / "Level100/ParticleSets/MainSet.par", "data/ParticleSets/MainSet.par", "a51fe4419b55e1af132e31c6b3cd8133c937745d8f4ab691eb5a0d81017ded06"),
+    (GODOT_ASSETS / "Level100/ParticleSets/Frontend.par", "data/ParticleSets/Frontend.par", "01a4c73d7cfc666b4a367736fabd1d91bf3459ed1c538b6ca77f70c069cf8bc6"),
+    (GODOT_ASSETS / "Level100/ParticleSets/ModelViewer.par", "data/ParticleSets/ModelViewer.par", "32d85d1f0400f46a45078d49c695967cde60ed572053059fd6246227162115a9"),
+    # `Sun Sprite` authors `Blend_Mode 0`, which
+    # ParticleEffectResolver.BlendModeSelectsShippedTextureFormat measures as
+    # the alpha-less additive copy - and `(0)R5G6B5` is the only format
+    # `sun3.tga` ships in at all, so the selection is unambiguous here.
+    (GODOT_ASSETS / "Level100/Textures/particle-sun3-additive.texture.aya", "data/resources/dxtntextures/Particle%sun3.tga(0)R5G6B5.aya", "22a6b691ace6d6cc744d33cc10776e70fe08de5b8e6cb25fa4f4bcf61cbe922d"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-halo.texture.aya", "data/resources/dxtntextures/Particle%Halo.tga(0)R5G6B5.aya", "cde6efc90dc7958c5bda425a04486e277beb85a7f1c33fb9074f369e92d58edb"),

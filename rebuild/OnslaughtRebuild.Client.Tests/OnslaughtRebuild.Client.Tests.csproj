@@ -89,6 +89,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100WaterAsset.cs"
              Link="godot-water-source\Level100WaterAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
+             Link="godot-sun-source\Level100SunAsset.cs"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

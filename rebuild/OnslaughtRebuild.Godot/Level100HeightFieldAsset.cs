@@ -75,6 +75,7 @@ internal sealed class Level100HeightFieldAsset
             terrain.SunPositionX,
             terrain.SunPositionY,
             terrain.SunPositionZ);
+        SunPosition = beaSunPosition;
         Vector3 beaLightDirection = -beaSunPosition.Normalized();
         SunlightDirection = new Vector3(
             beaLightDirection.X,
@@ -145,6 +146,20 @@ internal sealed class Level100HeightFieldAsset
     public uint AmbientColorRgb24 { get; }
 
     public Vector3 SunlightDirection { get; }
+
+    /// <summary>
+    /// The level's authored sun vector in the engine's own basis, exactly as
+    /// <c>CHFD + 0x10A4</c> holds it and un-normalised.
+    ///
+    /// <para><see cref="SunlightDirection"/> is the negated, normalised, Godot-
+    /// basis form used for shading. The sun FLARE needs the raw vector instead,
+    /// because <c>references/Onslaught/DXEngine.cpp:1043-1046</c> scales
+    /// <c>FVector(hfp.SunPosX, hfp.SunPosY, hfp.SunPosZ)</c> by <c>SUN_SCALE</c>
+    /// without normalising it - so on a level whose sun vector is not unit
+    /// length the flare distance follows the authored magnitude. Level 100's is
+    /// unit length to within a float epsilon.</para>
+    /// </summary>
+    public Vector3 SunPosition { get; }
 
     public static Level100HeightFieldAsset Load() => new(Level100Terrain.Instance);
 
