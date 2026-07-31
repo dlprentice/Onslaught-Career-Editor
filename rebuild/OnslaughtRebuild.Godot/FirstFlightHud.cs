@@ -1411,7 +1411,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
             WorldSnapshot snapshot,
             Level100HudSnapshot hud,
             Color measured) =>
-            hud.Weapon.PulseCannonOverheated == true && (snapshot.Tick / 3) % 2 == 0
+            // A 0.2 s half-cycle overheat blink: TicksPerSecond/5 ticks on,
+            // the same off. This was a bare `/ 3` when Core ran at 30 Hz.
+            hud.Weapon.PulseCannonOverheated == true &&
+            (snapshot.Tick / (SimulationConstants.TicksPerSecond / 5)) % 2 == 0
                 ? new Color(1f, 0.15f, 0.05f, measured.A)
                 : measured;
 

@@ -80,9 +80,11 @@ public sealed class Level100FlightLegTests
     [Theory]
     // walker, just landed / still within the window
     [InlineData(VehicleMode.Walker, VehicleTransition.None, 0, false)]
-    [InlineData(VehicleMode.Walker, VehicleTransition.None, 14, false)]
-    // walker, airborne for 0.5 s or more: retail calls this in jet mode
-    [InlineData(VehicleMode.Walker, VehicleTransition.None, 15, true)]
+    [InlineData(VehicleMode.Walker, VehicleTransition.None, 9, false)]
+    // walker, airborne for 0.5 s or more: retail calls this in jet mode.
+    // 0.5 s is TEN ticks at 20 Hz where it was fifteen at 30 Hz; the
+    // threshold is the shipped _DAT_005d85ec = 0.5f either way.
+    [InlineData(VehicleMode.Walker, VehicleTransition.None, 10, true)]
     [InlineData(VehicleMode.Walker, VehicleTransition.None, 400, true)]
     // mid-morph is not the walker state, whichever way it is going
     [InlineData(VehicleMode.Walker, VehicleTransition.WalkerToJet, 0, true)]
@@ -95,7 +97,7 @@ public sealed class Level100FlightLegTests
         int ticksSinceGroundContact,
         bool expectedInJetMode)
     {
-        Assert.Equal(15, Level100MissionTiming.GroundContactRecencyTicks);
+        Assert.Equal(10, Level100MissionTiming.GroundContactRecencyTicks);
         Assert.Equal(
             expectedInJetMode
                 ? Level100MissionJetModeState.InJetMode

@@ -42,20 +42,19 @@ public sealed class Level100ActorMechanicsTests
             commands.Max(command => command.Sequence),
             mechanics.Snapshot.LastConsumedCommandSequence);
 
-        Assert.Empty(mechanics.AdvanceTick());
-        Assert.Equal(20,
-            mechanics.Snapshot.RetailBaseTickAccumulatorThirtieths);
-        Assert.Equal(emitterPose, actors.GetActor(target.ActorId).Pose);
-
+        // EVERY Core tick is a released base tick since the 20 Hz migration.
+        // This assertion used to interleave two skipped ticks - the 30 Hz Core
+        // ran the base frame on 20 ticks of every 30 and zeroed the reported
+        // velocity on the other 10 - and the skipped arms are gone with the
+        // accumulator. What remains, and is the real released cadence, is the
+        // ground guide's own `FullGuideBaseTicks` = 4 phase: the guide reaims
+        // on phase 0 and coasts on the other three.
         Assert.Empty(mechanics.AdvanceTick());
         Level100ActorPoseSnapshot fullUpdate =
             actors.GetActor(target.ActorId).Pose;
         Assert.NotEqual(
             emitterPose.PositionMillimeters,
             fullUpdate.PositionMillimeters);
-        Assert.Equal(
-            10,
-            mechanics.Snapshot.RetailBaseTickAccumulatorThirtieths);
         Assert.Equal(
             1,
             mechanics.Snapshot.Actors.Single(item =>
@@ -76,34 +75,37 @@ public sealed class Level100ActorMechanicsTests
                 .Points[0].PositionMillimeters.Y,
             fullUpdate.PositionMillimeters.Y);
 
-        Assert.Empty(mechanics.AdvanceTick());
-        Level100ActorPoseSnapshot lowFrequency =
-            actors.GetActor(target.ActorId).Pose;
-        Assert.NotEqual(
-            fullUpdate.PositionMillimeters,
-            lowFrequency.PositionMillimeters);
-        Assert.Equal(
-            SimVector3.Zero,
-            lowFrequency.AngularVelocityMicroRadiansPerTick);
+        // Phases 1, 2 and 3: the vehicle keeps moving but the guide does not
+        // reaim, so the angular velocity is zero on all three.
+        Level100ActorPoseSnapshot previous = fullUpdate;
+        for (int phase = 1; phase <= 3; phase++)
+        {
+            Assert.Empty(mechanics.AdvanceTick());
+            Level100ActorPoseSnapshot coasting =
+                actors.GetActor(target.ActorId).Pose;
+            Assert.NotEqual(
+                previous.PositionMillimeters,
+                coasting.PositionMillimeters);
+            Assert.NotEqual(
+                SimVector3.Zero,
+                coasting.LinearVelocityMillimetersPerTick);
+            Assert.Equal(
+                SimVector3.Zero,
+                coasting.AngularVelocityMicroRadiansPerTick);
+            Assert.Equal(
+                (phase + 1) % 4,
+                mechanics.Snapshot.Actors.Single(item =>
+                    item.ActorId == target.ActorId)
+                    .GroundFullGuideBaseTickPhase);
+            previous = coasting;
+        }
 
+        // Back to phase 0, and the guide reaims again.
         Assert.Empty(mechanics.AdvanceTick());
-        Level100ActorPoseSnapshot skipped =
-            actors.GetActor(target.ActorId).Pose;
-        Assert.Equal(
-            lowFrequency.PositionMillimeters,
-            skipped.PositionMillimeters);
-        Assert.Equal(
-            lowFrequency.BasisFloatBits,
-            skipped.BasisFloatBits);
-        Assert.Equal(
+        Assert.NotEqual(
             SimVector3.Zero,
-            skipped.LinearVelocityMillimetersPerTick);
-        Assert.Equal(
-            SimVector3.Zero,
-            skipped.AngularVelocityMicroRadiansPerTick);
-        Assert.Equal(
-            20,
-            mechanics.Snapshot.RetailBaseTickAccumulatorThirtieths);
+            actors.GetActor(target.ActorId).Pose
+                .AngularVelocityMicroRadiansPerTick);
     }
 
     [Fact]
@@ -160,24 +162,18 @@ public sealed class Level100ActorMechanicsTests
             Level100ActorScriptCommandKind.FollowWaypoint,
             argument: "Target Tank Path 1"));
 
+        // One released second. Every Core tick is a released base tick, so the
+        // vehicle moves on all of them; before the 20 Hz migration this loop
+        // had to predict which 20 of 30 ticks would move and assert that the
+        // reported velocity was zeroed on the other 10.
         int movingCoreTicks = 0;
         int totalZ = 0;
-        int accumulator = 0;
         for (int coreTick = 0;
              coreTick < SimulationConstants.TicksPerSecond;
              coreTick++)
         {
             Level100ActorPoseSnapshot before =
                 actors.GetActor(target).Pose;
-            accumulator +=
-                Level100ActorMechanics.RetailBaseTicksPerSecond;
-            bool retailBaseTick =
-                accumulator >= SimulationConstants.TicksPerSecond;
-            if (retailBaseTick)
-            {
-                accumulator -=
-                    SimulationConstants.TicksPerSecond;
-            }
 
             Assert.Empty(mechanics.AdvanceTick());
             Level100ActorPoseSnapshot after =
@@ -192,41 +188,25 @@ public sealed class Level100ActorMechanicsTests
             Assert.Equal(
                 displacement,
                 after.LinearVelocityMillimetersPerTick);
-            if (retailBaseTick)
-            {
-                movingCoreTicks++;
-                totalZ += displacement.Z;
-                Assert.Equal(0, displacement.X);
-                Assert.Equal(175, displacement.Z);
-                Assert.Equal(
-                    Level100Terrain.Instance
-                        .SampleGroundElevationMillimeters(
-                            new SimVector2(
-                                after.PositionMillimeters.X,
-                                after.PositionMillimeters.Z)) +
-                        100,
-                    after.PositionMillimeters.Y);
-            }
-            else
-            {
-                Assert.Equal(
-                    before.PositionMillimeters,
-                    after.PositionMillimeters);
-                Assert.Equal(
-                    SimVector3.Zero,
-                    after.LinearVelocityMillimetersPerTick);
-                Assert.Equal(
-                    SimVector3.Zero,
-                    after.AngularVelocityMicroRadiansPerTick);
-            }
+            movingCoreTicks++;
+            totalZ += displacement.Z;
+            Assert.Equal(0, displacement.X);
+            Assert.Equal(175, displacement.Z);
+            Assert.Equal(
+                Level100Terrain.Instance
+                    .SampleGroundElevationMillimeters(
+                        new SimVector2(
+                            after.PositionMillimeters.X,
+                            after.PositionMillimeters.Z)) +
+                    100,
+                after.PositionMillimeters.Y);
         }
 
+        // Unchanged where it counts: 20 moving updates in a released second,
+        // and 3.5 released units of ground covered. That total is the actual
+        // parity claim, and the migration must not move it.
         Assert.Equal(20, movingCoreTicks);
         Assert.Equal(3_500, totalZ);
-        Assert.Equal(
-            accumulator,
-            mechanics.Snapshot
-                .RetailBaseTickAccumulatorThirtieths);
     }
 
     [Fact]
@@ -389,9 +369,6 @@ public sealed class Level100ActorMechanicsTests
             snapshot.LastConsumedCommandSequence,
             restored.Snapshot.LastConsumedCommandSequence);
         Assert.Equal(
-            snapshot.RetailBaseTickAccumulatorThirtieths,
-            restored.Snapshot.RetailBaseTickAccumulatorThirtieths);
-        Assert.Equal(
             snapshot.Actors,
             restored.Snapshot.Actors);
     }
@@ -513,8 +490,20 @@ public sealed class Level100ActorMechanicsTests
         Assert.Equal(pose, actors.GetActor(transporter).Pose);
     }
 
+    /// <summary>
+    /// The canonical hash still covers the command cursor and the ground
+    /// guide's phase.
+    /// </summary>
+    /// <remarks>
+    /// This test used to cover a third field,
+    /// <c>RetailBaseTickAccumulatorThirtieths</c>. That field was the
+    /// 20-of-every-30 base-tick accumulator, and the 20 Hz migration deleted it
+    /// because a Core tick now IS a released base tick. Its removal is one of
+    /// the reasons every pinned hash moved in that change, independently of any
+    /// trajectory - see <c>StateHasher</c> version 33.
+    /// </remarks>
     [Fact]
-    public void CanonicalHash_RetainsCommandCursorBaseAccumulatorAndGuidePhase()
+    public void CanonicalHash_RetainsCommandCursorAndGuidePhase()
     {
         var simulation = new Simulation(
             0xA100u,
@@ -535,16 +524,6 @@ public sealed class Level100ActorMechanicsTests
                     LastConsumedCommandSequence =
                         snapshot.Level100ActorMechanics
                             .LastConsumedCommandSequence + 1,
-                },
-        };
-        WorldSnapshot changedAccumulator = snapshot with
-        {
-            Level100ActorMechanics =
-                snapshot.Level100ActorMechanics with
-                {
-                    RetailBaseTickAccumulatorThirtieths =
-                        snapshot.Level100ActorMechanics
-                            .RetailBaseTickAccumulatorThirtieths + 1,
                 },
         };
         WorldSnapshot changedPhase = snapshot with
@@ -572,9 +551,6 @@ public sealed class Level100ActorMechanicsTests
         Assert.NotEqual(
             canonical,
             StateHasher.ComputeHex(changedCursor));
-        Assert.NotEqual(
-            canonical,
-            StateHasher.ComputeHex(changedAccumulator));
         Assert.NotEqual(
             canonical,
             StateHasher.ComputeHex(changedPhase));

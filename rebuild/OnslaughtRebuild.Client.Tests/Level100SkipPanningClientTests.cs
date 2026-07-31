@@ -13,7 +13,7 @@ namespace OnslaughtRebuild.Client.Tests;
 public sealed class Level100SkipPanningClientTests
 {
     private const uint Seed = 0x4F4E534Cu;
-    private const long OneCoreStepTicks = 333_334;
+    private const long OneCoreStepTicks = 500_000;
 
     private static Level100ActorDefinitionSet ActorDefinitions =>
         Level100TestActorDefinitions.Create();

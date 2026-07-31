@@ -73,7 +73,7 @@ public sealed class Level100AirTrainerFlybyTests
             0, 1_065_353_216, 0,
             -1_279_541_970, 0, -1_082_130_432);
 
-    private const int FlightCoreTicks = 6_000;
+    private const int FlightCoreTicks = 200 * SimulationConstants.TicksPerSecond;
 
     /// <summary>
     /// COUNTABLE (a): the node visit order, observed from the aircraft's own

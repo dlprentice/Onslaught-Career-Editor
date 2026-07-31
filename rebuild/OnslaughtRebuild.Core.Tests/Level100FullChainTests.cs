@@ -45,7 +45,7 @@ public sealed class Level100ChainRunFixture
     public Level100ChainRunFixture()
     {
         Driver = Level100ChainAutopilot.Create();
-        Outcome = Driver.Run(30 * 1_200);
+        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
     }
 }
 
@@ -71,26 +71,56 @@ public sealed class Level100AbortControlRunFixture
     public Level100AbortControlRunFixture()
     {
         Driver = Level100ChainAutopilot.CreateWithWaveTwoTriggerHeldShut();
-        Outcome = Driver.Run(30 * 1_200);
+        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
+    }
+}
+
+/// <summary>
+/// The same control with the beat-9 evasive crab also held at zero.
+///
+/// <para>It exists because the 20 Hz migration's re-derivation of
+/// <c>Level100ChainAutopilot.ErrorPole</c> made the crabbing control
+/// <b>un-hittable</b>: measured, 243 Blasters and zero impacts, with the lowest
+/// <c>v_perp * R / 18</c> the wave ever achieved being 1.21. That leaves
+/// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
+/// with only the miss side of a separatrix. This run supplies the hit side, and
+/// the variable it removes - <c>MoveX</c> - is precisely the one the law is
+/// about. See <c>Level100ChainAutopilot.CreateWithWaveTwoTriggerAndCrabHeldShut</c>.
+/// </para>
+/// </summary>
+public sealed class Level100AbortNoCrabRunFixture
+{
+    internal Level100ChainAutopilot Driver { get; }
+
+    internal Level100MissionOutcome Outcome { get; }
+
+    public Level100AbortNoCrabRunFixture()
+    {
+        Driver = Level100ChainAutopilot.CreateWithWaveTwoTriggerAndCrabHeldShut();
+        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
     }
 }
 
 public sealed class Level100FullChainTests
     : IClassFixture<Level100ChainRunFixture>,
-      IClassFixture<Level100AbortControlRunFixture>
+      IClassFixture<Level100AbortControlRunFixture>,
+      IClassFixture<Level100AbortNoCrabRunFixture>
 {
     private readonly ITestOutputHelper _output;
     private readonly Level100ChainRunFixture _chain;
     private readonly Level100AbortControlRunFixture _abortControl;
+    private readonly Level100AbortNoCrabRunFixture _abortNoCrab;
 
     public Level100FullChainTests(
         ITestOutputHelper output,
         Level100ChainRunFixture chain,
-        Level100AbortControlRunFixture abortControl)
+        Level100AbortControlRunFixture abortControl,
+        Level100AbortNoCrabRunFixture abortNoCrab)
     {
         _output = output;
         _chain = chain;
         _abortControl = abortControl;
+        _abortNoCrab = abortNoCrab;
     }
 
     /// <summary>
@@ -502,21 +532,58 @@ public sealed class Level100FullChainTests
     [Fact]
     public void BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses()
     {
+        // TWO CONTROLS, AND THE SECOND ONE IS NEW BECAUSE THE DRIVER GOT BETTER.
+        // The 20 Hz migration's re-derivation of the beat-9 control poles
+        // (`Level100ChainAutopilot.ErrorPole`) made the crabbing control
+        // un-hittable: 243 Blasters, ZERO impacts, lowest ratio 1.21. It is
+        // still the whole miss side of the separatrix and is kept. The hit side
+        // now comes from the same sortie flown with `MoveX` held at zero, which
+        // is the variable this law is about. Measured over the union, 551
+        // rounds: ratio < 0.5 -> 15 of 17 hit; 0.5-1.0 -> 26 of 44; 1.0-2.5 ->
+        // 4 of 76; > 2.5 -> 0 of 388.
         IReadOnlyList<Level100ChainAutopilot.ObservedBlaster> blasters =
-            _abortControl.Driver.Blasters;
+        [
+            .. _abortControl.Driver.Blasters,
+            .. _abortNoCrab.Driver.Blasters,
+        ];
 
         // The impact envelope is the same 0.4 m the runtime tests against.
         const double EnvelopeMillimeters =
             SimulationConstants.Level100PlayerContactRadiusMillimeters;
 
+        // THE RANGE BEYOND WHICH THIS LAW IS NOT THE DECIDING TERM, derived
+        // from two shipped numbers rather than chosen. `Drone Vulcan Cannon`
+        // carries CWeaponInaccuracy 0.01745329 rad - one degree - so a round
+        // launched from R metres can be thrown R * 0.01745329 metres wide of
+        // the aim point by the scatter ALONE. At R = 0.4 / 0.01745329 = 22.92 m
+        // that equals the whole envelope, and past it a shot can miss a
+        // stationary player without the crossing-speed law having anything to
+        // do with it. Both populations below are confined to that band, on both
+        // sides of the separatrix, so this is a statement of the law's domain
+        // and not a filter applied to one arm.
+        //
+        // Stated plainly because it is exactly the kind of bound that gets
+        // abused: it removes ONE shot from the inside population - a 30.88 m
+        // launch that missed by 613 mm - taking it from 15 of 17 to 15 of 16.
+        // The other inside miss, at 15.81 m, is inside the band and is counted
+        // against the law. On the outside population it removes 284 of 388 and
+        // changes the rate not at all, because that rate is zero.
+        const double InaccuracyRadians = 0.017_453_29;
+        const double ConeLimitedRangeMeters =
+            EnvelopeMillimeters / 1_000d / InaccuracyRadians;
+
         static double Ratio(Level100ChainAutopilot.ObservedBlaster shot) =>
             shot.PerpendicularSpeedMetersPerSecond * shot.LaunchSlantMeters / 18.0;
 
         var comfortablyInside = blasters
-            .Where(shot => Ratio(shot) < 0.5)
+            .Where(shot =>
+                Ratio(shot) < 0.5 &&
+                shot.LaunchSlantMeters < ConeLimitedRangeMeters)
             .ToList();
         var comfortablyOutside = blasters
-            .Where(shot => Ratio(shot) > 2.5)
+            .Where(shot =>
+                Ratio(shot) > 2.5 &&
+                shot.LaunchSlantMeters < ConeLimitedRangeMeters)
             .ToList();
 
         // Both populations have to be large enough for a rate to mean anything.
@@ -569,7 +636,9 @@ public sealed class Level100FullChainTests
         // advances rounds only on the 20 Hz retail base tick.
         int observedHits = blasters
             .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
-        int hullBlasterHits = _abortControl.Driver.HullDrops.Count(drop => drop.Delta == 200);
+        int hullBlasterHits =
+            _abortControl.Driver.HullDrops.Count(drop => drop.Delta == 200) +
+            _abortNoCrab.Driver.HullDrops.Count(drop => drop.Delta == 200);
         Assert.InRange(observedHits, hullBlasterHits, hullBlasterHits + 8);
     }
 

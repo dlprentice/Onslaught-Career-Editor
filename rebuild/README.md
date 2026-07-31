@@ -16,8 +16,8 @@ of readiness tooling.
 
 ## Ownership
 
-- `OnslaughtRebuild.Core` owns deterministic simulation state and fixed 30 Hz
-  stepping. It has no presentation, filesystem, clock, process, network, or GPU
+- `OnslaughtRebuild.Core` owns deterministic simulation state and fixed 20 Hz
+  stepping - retail's own rate, `GAME_FR 20.0` / `CLOCK_TICK 0.05`. It has no presentation, filesystem, clock, process, network, or GPU
   dependency.
 - `OnslaughtRebuild.Client` adapts real-time input to exact Core steps and owns
   the presentation-only frontend lifecycle state.
@@ -224,8 +224,8 @@ mirrors the released playing-state
 camera boundary at 180 fixed ticks, then keeps movement/look gated until the
 mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
 deactivates the player, then re-enables it with the Pulse Cannon; flight remains
-disabled. Walker pitch uses the released 20 Hz `1/117`-radian input and `0.8`
-retention translated to 30 Hz, with the two repeated absolute limits measured
+disabled. Walker pitch uses the released `1/117`-radian input and `0.8`
+retention verbatim, with the two repeated absolute limits measured
 on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
 direction as the crosshair camera and begin at the measured cockpit `Gun`
 emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,

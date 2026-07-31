@@ -21,7 +21,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// </summary>
 public sealed class Level100AmbientAircraftTests
 {
-    private const long OneCoreStepTicks = 333_334;
+    private const long OneCoreStepTicks = 500_000;
     private const uint Seed = 0x4F4E534Cu;
 
     /// <summary>

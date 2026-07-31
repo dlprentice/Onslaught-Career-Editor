@@ -11,7 +11,7 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightGame : Node3D
 {
     private const uint SimulationSeed = 0x4F4E534Cu;
-    private const long SmokeFrameElapsedTicks = 333_334;
+    private const long SmokeFrameElapsedTicks = 500_000;
 
     private static readonly StringName MoveForwardAction = "first_flight_move_forward";
     private static readonly StringName MoveBackwardAction = "first_flight_move_backward";

@@ -118,9 +118,20 @@ public static class Level100MissionTiming
 
     /// <summary>
     /// One released 20 Hz event-manager frame, expressed in whole Core ticks.
-    /// 30/20 = 1.5, and a released <c>NEXT_FRAME</c> event cannot fire before
-    /// the frame boundary, so it rounds up.
+    /// Core now runs at the released rate, so this is <b>1</b>; it was 2 at
+    /// 30 Hz, where 30/20 = 1.5 and a released <c>NEXT_FRAME</c> event cannot
+    /// fire before the frame boundary, so it rounded up.
     /// </summary>
+    /// <remarks>
+    /// This is the highest-leverage single consequence of the 20 Hz migration.
+    /// It feeds <see cref="MessageBoxAllowedTick"/>, which drops from 182 to
+    /// 121, and with it the whole opening message timeline. Retail floors every
+    /// scheduled delay onto a whole 20 Hz boundary
+    /// (<c>references/Onslaught/eventmanager.cpp:210-212</c>), which a 30 Hz
+    /// Core could not land at all; the residual against the measured retail
+    /// boundaries is expected to SHRINK, and a failure to improve is evidence
+    /// the migration was done wrong.
+    /// </remarks>
     public const int ReleasedEventFrameTicks =
         (SimulationConstants.TicksPerSecond +
             Level100ActorMechanics.RetailBaseTicksPerSecond - 1) /
@@ -150,9 +161,12 @@ public static class Level100MissionTiming
     /// six-second pan (<c>SimulationConstants.Level100OpeningPanTicks</c> =
     /// 180, and <c>CPanCamera::GetShowHUD</c> is false for all of it), and
     /// <c>ALLOWED_TO_PLAY_MESSAGES</c> is one released event frame later.
-    /// 180 + 2 = <b>182</b>, which is exactly the tick two fresh uninterrupted
-    /// app-owned Steam runs measured for the first message boundary
-    /// (<c>rebuild/PROVENANCE.md</c>, "HUD introduction 182..351").
+    /// At 20 Hz that is 120 + 1 = <b>121</b>. At 30 Hz it was 180 + 2 = 182,
+    /// which is exactly the tick two fresh uninterrupted app-owned Steam runs
+    /// measured for the first message boundary
+    /// (<c>rebuild/PROVENANCE.md</c>, "HUD introduction 182..351") - those
+    /// measurements are recorded in 30 Hz Core ticks, and 121 x 1.5 = 181.5,
+    /// so 121 is the same instant to within the sampler.
     /// </para>
     /// <para>
     /// This is why the reconstruction showed no greeting at all: the script
@@ -208,51 +222,95 @@ public static class Level100MissionTiming
     /// </remarks>
     public const int MessageAdvanceDelayTicks = SimulationConstants.TicksPerSecond / 5;
 
+    /// <summary>
+    /// The on-screen duration of each catalogued Level 100 voice message, in
+    /// Core ticks.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Recomputed for the 20 Hz migration from the shipped Ogg granules, not
+    /// rescaled from the 30 Hz integers.</b> Each entry is
+    /// <c>round(oggGranuleSeconds * TicksPerSecond + offset)</c>, where the
+    /// offset is the message-box overhead either side of the voice: 18.03 ticks
+    /// at 30 Hz, and 18.03 * 20/30 = <b>12.02</b> here. The granule for every
+    /// one of the 43 messages was read from the end-of-stream page of its
+    /// shipped Ogg in
+    /// <c>Assets/Level100/TutorialAudio/</c> (all 44100 Hz mono, each file
+    /// SHA-256-pinned by <c>rebuild/tools/materialize_retail_assets.py</c>),
+    /// and the id-to-file mapping was cross-checked between
+    /// <c>Level100AudioCatalog</c> and the shipped
+    /// <c>level100-hud-events.json</c> manifest with zero conflicts.
+    /// </para>
+    /// <para>
+    /// <b>The measurement is self-checking:</b> the same granules and the same
+    /// formula at 30 Hz reproduce all 43 of the previous integers exactly, so
+    /// the table below is a re-derivation of a verified quantity rather than a
+    /// new fit.
+    /// </para>
+    /// <para>
+    /// <b>Rescaling would have been wrong on five entries.</b>
+    /// <c>round(T30 * 2/3)</c> double-rounds, and disagrees with the granule
+    /// on HUD_03, HUD_05, TUTORIAL_TECHNICIAN_01, TUTORIAL_01 and
+    /// TUTORIAL_STRAFE.
+    /// </para>
+    /// <para>
+    /// <b>The offset survives the rate change as evidence, not as arithmetic.</b>
+    /// Expressed in seconds the per-message offset is mean 0.6011 s, min
+    /// 0.5849, max 0.6141. Expressed in 20 Hz ticks it is mean 12.0217, min
+    /// 11.6984, max 12.2812 - <em>all 43 round to 12</em>, the exact analogue
+    /// of "all 43 round to 18" at 30 Hz. Two entries are decided by the third
+    /// decimal and are marked below; 12.02 is used because it is the same
+    /// number the 30 Hz table used, not a fresh fit. Note that 0.6011 s is
+    /// about 0.1 s more than the two cited constants explain
+    /// (<see cref="MessageAdvanceDelayTicks"/> 0.2 s plus the 0.3 s completion
+    /// hold), and that residual is still unidentified.
+    /// </para>
+    /// </remarks>
     internal static int MessagePlaybackTicks(int messageId) => messageId switch
     {
-        292562 => 169,       // HUD_01
-        293386 => 210,       // HUD_02
-        294210 => 265,       // HUD_03
-        295034 => 264,       // HUD_04
-        295858 => 260,       // HUD_05
-        296682 => 183,       // HUD_06
-        297506 => 235,       // HUD_07
-        -1575499396 => 163,  // TUTORIAL_MESSAGE_LOG
-        -257967449 => 65,    // TUTORIAL_TECHNICIAN_01
-        82987417 => 215,     // TUTORIAL_13_MOD
-        4422830 => 160,      // TUTORIAL_01
-        175347826 => 138,    // TUTORIAL_SCANNER
-        4458134 => 180,      // TUTORIAL_02
-        4493438 => 97,       // TUTORIAL_03
-        1339691000 => 221,   // TUTORIAL_PULSE_CANNON
-        669198996 => 112,    // TUTORIAL_OPEN_FIRE
-        -1715818922 => 243,  // TUTORIAL_PULSE_CANNON_2
-        -1616775312 => 239,  // TUTORIAL_VULCAN_CANNON
-        -1860407443 => 121,  // TUTORIAL_OPEN_FIRE_2
-        864965454 => 182,    // TUTORIAL_VULCAN_CANNON_2
-        4564046 => 281,      // TUTORIAL_05
-        22775962 => 190,     // TUTORIAL_ZOOM
-        667656903 => 201,    // TUTORIAL_DODGE_MOD
-        150647733 => 165,    // TUTORIAL_DODGE_2
-        151778876 => 244,    // TUTORIAL_DODGE_3
-        623538785 => 136,    // TUTORIAL_DODGE_BAD
-        1326027769 => 129,   // TUTORIAL_DODGE_GOOD
-        4528742 => 262,      // TUTORIAL_04
-        165861931 => 228,    // TUTORIAL_LANDING
-        4599350 => 226,      // TUTORIAL_06
-        1062059777 => 130,   // TUTORIAL_THROTTLE_MOD
-        4475837 => 133,      // TUTORIAL_12
-        4705262 => 213,      // TUTORIAL_09
-        4634654 => 168,      // TUTORIAL_07
-        80260569 => 197,     // TUTORIAL_STRAFE
-        4669958 => 227,      // TUTORIAL_08
-        4440532 => 225,      // TUTORIAL_11
-        162342028 => 168,    // TUTORIAL_ABORTED
-        150940633 => 109,    // TUTORIAL_BROKE_1
-        152071864 => 122,    // TUTORIAL_BROKE_2
-        153203095 => 127,    // TUTORIAL_BROKE_3
-        -1455850811 => 114,  // TUTORIAL_HELP_PLAYER
-        4405227 => 199,      // TUTORIAL_10
+        292562 => 113,       // HUD_01
+        293386 => 140,       // HUD_02
+        294210 => 176,       // HUD_03
+        295034 => 176,       // HUD_04
+        295858 => 174,       // HUD_05  (knife-edge: 12.00 would give 173)
+        296682 => 122,       // HUD_06
+        297506 => 157,       // HUD_07
+        -1575499396 => 109,  // TUTORIAL_MESSAGE_LOG
+        -257967449 => 44,    // TUTORIAL_TECHNICIAN_01 (knife-edge: 12.00 -> 43)
+        82987417 => 143,     // TUTORIAL_13_MOD
+        4422830 => 106,      // TUTORIAL_01
+        175347826 => 92,     // TUTORIAL_SCANNER
+        4458134 => 120,      // TUTORIAL_02
+        4493438 => 65,       // TUTORIAL_03
+        1339691000 => 147,   // TUTORIAL_PULSE_CANNON
+        669198996 => 75,     // TUTORIAL_OPEN_FIRE
+        -1715818922 => 162,  // TUTORIAL_PULSE_CANNON_2
+        -1616775312 => 159,  // TUTORIAL_VULCAN_CANNON
+        -1860407443 => 81,   // TUTORIAL_OPEN_FIRE_2
+        864965454 => 121,    // TUTORIAL_VULCAN_CANNON_2
+        4564046 => 187,      // TUTORIAL_05
+        22775962 => 127,     // TUTORIAL_ZOOM
+        667656903 => 134,    // TUTORIAL_DODGE_MOD
+        150647733 => 110,    // TUTORIAL_DODGE_2
+        151778876 => 163,    // TUTORIAL_DODGE_3
+        623538785 => 91,     // TUTORIAL_DODGE_BAD
+        1326027769 => 86,    // TUTORIAL_DODGE_GOOD
+        4528742 => 175,      // TUTORIAL_04
+        165861931 => 152,    // TUTORIAL_LANDING
+        4599350 => 151,      // TUTORIAL_06
+        1062059777 => 87,    // TUTORIAL_THROTTLE_MOD
+        4475837 => 89,       // TUTORIAL_12
+        4705262 => 142,      // TUTORIAL_09
+        4634654 => 112,      // TUTORIAL_07
+        80260569 => 132,     // TUTORIAL_STRAFE
+        4669958 => 151,      // TUTORIAL_08
+        4440532 => 150,      // TUTORIAL_11
+        162342028 => 112,    // TUTORIAL_ABORTED
+        150940633 => 73,     // TUTORIAL_BROKE_1
+        152071864 => 81,     // TUTORIAL_BROKE_2
+        153203095 => 85,     // TUTORIAL_BROKE_3
+        -1455850811 => 76,   // TUTORIAL_HELP_PLAYER
+        4405227 => 133,      // TUTORIAL_10
         _ => throw new InvalidOperationException(
             $"Released Level 100 message id {messageId} has no evidenced wait duration."),
     };

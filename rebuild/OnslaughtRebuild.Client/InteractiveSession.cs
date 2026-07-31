@@ -45,8 +45,9 @@ public sealed class InteractiveSession
 
     // Steam CController::DoMappings maps a centered mouse displacement by
     // g_MouseSensitivity and the scalar 0.004333333, then clamps the analogue
-    // axis. Input__UpdateCursorCenterWithWindowScale recenters by 10/17 at
-    // 20 Hz; 702049/1000000 is the time-equivalent retention at Core's 30 Hz.
+    // axis. Input__UpdateCursorCenterWithWindowScale recenters by 10/17 per
+    // 20 Hz update, and Core now RUNS at 20 Hz, so that ratio is used verbatim.
+    // It read 702049/1000000 - (10/17)^(2/3) - while Core ran at 30 Hz.
     //
     // The scalar is exactly 13/3000. Verified in the PRISTINE specimen
     // (local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
@@ -89,8 +90,8 @@ public sealed class InteractiveSession
     // initialiser at VA 0x006254f4 and nothing in this change is allowed to move
     // it: see SetMouseSensitivity.
     private const int PointerOffsetScale = 1_000;
-    private const int PointerOffsetRetentionNumerator = 702_049;
-    private const int PointerOffsetRetentionDenominator = 1_000_000;
+    private const int PointerOffsetRetentionNumerator = 10;
+    private const int PointerOffsetRetentionDenominator = 17;
     private const int DefaultPointerAxisNumerator = 91;
     private const int PointerAxisDenominator = 3_000;
 
@@ -648,8 +649,9 @@ public sealed class InteractiveSession
     /// whole-pixel cursor <see cref="WholePixelsOf"/> returns.
     ///
     /// <para>Retail eases the cached cursor toward the window centre by
-    /// VA 0x005D97C4 = 0.5882353186607361 = <b>10/17</b> per 20 Hz update;
-    /// <c>0.5882353^(20/30)</c> is the 702049/1000000 this runs at 30 Hz. The
+    /// VA 0x005D97C4 = 0.5882353186607361 = <b>10/17</b> per 20 Hz update, and
+    /// Core now runs at that rate, so the shipped ratio is used verbatim; it
+    /// read 702049/1000000, i.e. <c>0.5882353^(20/30)</c>, at 30 Hz. The
     /// ease is integer, so it stalls - and 0x0042DA00 carries its own anti-stall
     /// for exactly that: <c>if ((centre != cursor) &amp;&amp; (step == 0))
     /// step = ±1</c>, forcing one whole pixel toward the centre whenever the
@@ -657,7 +659,7 @@ public sealed class InteractiveSession
     ///
     /// <para><b>That rule is the proof the state is integer.</b> A float offset
     /// never needs it. Without it a one-pixel offset rounds back to itself
-    /// (round(1 × 0.702049) = 1) and the axis never returns to rest; with it,
+    /// (round(1 × 10/17) = 1) and the axis never returns to rest; with it,
     /// one pixel decays to zero on the next update, which is what the old
     /// half-pixel floor was standing in for.</para>
     /// </summary>

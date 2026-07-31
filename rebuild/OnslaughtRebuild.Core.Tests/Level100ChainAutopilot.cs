@@ -121,7 +121,10 @@ internal sealed class Level100ChainAutopilot
     /// </summary>
     private const int PrecisionFireMarginMillimeters = 500;
 
-    private const int StrafeSegmentTicks = 45;
+    // 1.5 s of strafing per segment, stated against the rate so the driver
+    // is not silently retuned by a Core tick-rate change.
+    private const int StrafeSegmentTicks =
+        3 * SimulationConstants.TicksPerSecond / 2;
 
     private readonly ILevel100ChainHost _host;
     private readonly List<string> _log = [];
@@ -425,6 +428,38 @@ internal sealed class Level100ChainAutopilot
 
     private bool _waveTwoTriggerHeldShut;
 
+    /// <summary>
+    /// The same control with the beat-9 <b>evasive crab</b> also held at zero:
+    /// a pilot who tracks the drones and shoots at nothing while flying
+    /// straight through the wave.
+    ///
+    /// <para><b>It exists because the driver got better and took an observable
+    /// with it.</b> Since the 20 Hz migration re-derived
+    /// <see cref="ErrorPole"/>, the crabbing control is never hit by a
+    /// <c>Blaster</c> at all: measured on the trigger-shut control, 243 rounds,
+    /// <b>zero</b> impacts, and the lowest <c>v_perp * R / 18</c> the wave ever
+    /// got was 1.21 - so
+    /// <see cref="Level100FullChainTests.BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses"/>
+    /// had a 217-round population above the law's requirement and an EMPTY one
+    /// below it. A separatrix needs both sides.</para>
+    ///
+    /// <para><b>And the variable it removes is the one the law is about.</b>
+    /// <see cref="EngageWaveTwo"/>'s own remarks say the held crab is what
+    /// defeats the Blaster, because <c>Simulation.JetAlignmentPermille</c>
+    /// returns 0 while <c>MoveX</c> is held and the flight path is never pulled
+    /// back onto the nose. Nothing tested that. This control does: it is the
+    /// same sortie with <c>MoveX</c> 0, and the difference between the two
+    /// populations is the crab's whole worth.</para>
+    /// </summary>
+    internal static Level100ChainAutopilot CreateWithWaveTwoTriggerAndCrabHeldShut()
+    {
+        Level100ChainAutopilot driver = CreateWithWaveTwoTriggerHeldShut();
+        driver._waveTwoCrabHeldStill = true;
+        return driver;
+    }
+
+    private bool _waveTwoCrabHeldStill;
+
     /// <summary>Runs until the mission leaves <c>Running</c> or the budget ends.</summary>
     internal Level100MissionOutcome Run(int maximumTicks)
     {
@@ -708,6 +743,12 @@ internal sealed class Level100ChainAutopilot
                 state.Tick,
                 state.PlayerElevationMillimeters,
                 _elevationLastTick);
+        }
+
+        if (state.PlayerElevationMillimeters < LowestElevationMillimeters)
+        {
+            LowestElevationMillimeters = state.PlayerElevationMillimeters;
+            LowestElevationTick = state.Tick;
         }
 
         _elevationLastTick = state.PlayerElevationMillimeters;
@@ -1019,13 +1060,35 @@ internal sealed class Level100ChainAutopilot
     /// one level earlier, to the decision instead of the test.</para>
     ///
     /// <para><b>It is also, measurably, a no-op on every approach that was
-    /// already sound.</b> Both careers' beat-6 and beat-8 legs hand off at
-    /// 18,969 mm and 19,759 mm of surface clearance and land where they can walk
-    /// in from; only the beat-10 ferry hands off at 28,915 mm, and only it
-    /// drowns. Measured, at 20,000 every milestone tick of both the returning
-    /// player and the cold career is unchanged from before this fix through the
-    /// end of beat 9, including beat 9's six kills - the Target Zone 4 leg is
-    /// the only thing that moves.</para>
+    /// already sound</b>, and that survived the 20 Hz migration. The value was
+    /// derived by one rule: it must sit ABOVE every airborne hand-off the
+    /// earlier beats make, so those beats do not move and beat 9 is not
+    /// re-rolled, and BELOW the ferry's own arrival, so it bites there. Both
+    /// bounds were re-measured at 20 Hz and both still hold:</para>
+    ///
+    /// <list type="table">
+    ///   <item><description>beat 6 <c>TargetZone2</c>: 18,969 mm of surface
+    ///   clearance at 30 Hz, <b>13,914</b> mm at 20 Hz (returning player);
+    ///   15,244 mm on the cold career.</description></item>
+    ///   <item><description>beat 8 <c>TargetZone3</c>: 19,759 mm at 30 Hz,
+    ///   <b>19,972</b> mm at 20 Hz; 19,750 mm on the cold career. This is the
+    ///   binding bound, and the margin is <b>28 mm</b> where it was 241.
+    ///   </description></item>
+    ///   <item><description>beat 10, the ferry, with the clearance term
+    ///   reinstated as horizontal distance alone: 28,915 mm at 30 Hz,
+    ///   <b>25,026</b> mm at 20 Hz; 24,438 mm on the cold career. The term
+    ///   refuses all of them.</description></item>
+    /// </list>
+    ///
+    /// <para><b>An intermediate 20 Hz measurement said the opposite and was
+    /// wrong, for a reason worth recording.</b> Taken before the driver's own
+    /// rate-denominated poles were converted (see <see cref="ErrorPole"/>),
+    /// beat 9 collapsed onto the released sub-40 % abort branch, the ferry
+    /// therefore started from a different state and arrived at 12,712 mm, and
+    /// the cruise tier looked INERT - fixed and adverse arms bit-identical, and
+    /// no tier at all could separate a 19,972 mm beat 8 from a 12,712 mm ferry.
+    /// The tier was not the broken thing. <b>Re-derive the beat before
+    /// re-deriving the threshold that reads its output.</b></para>
     ///
     /// <para><b>A single flat threshold this size is not enough on its own, and
     /// that was measured too.</b> A 20 m hand-off still commits roughly 25 m of
@@ -1148,10 +1211,12 @@ internal sealed class Level100ChainAutopilot
     /// <see cref="SimInput"/>, so once the morph is commanded the driver has no
     /// say in where it lands. A driver that may not steer after the commit has
     /// to know where the commit puts it, so it replays Core's own airborne-
-    /// walker recurrence forward: the landing-thruster retentions
-    /// (<c>0.983263</c> horizontal, <c>0.949353</c> descending past the 7 mm
-    /// minimum - retail's <c>0.975</c> / <c>0.925</c> per 20 Hz update,
-    /// <c>BattleEngineWalkerPart.cpp:330-344</c>), then
+    /// walker recurrence forward: the landing-thruster retentions - retail's
+    /// <c>0.975</c> horizontal and <c>0.925</c> descending past the 10 mm
+    /// minimum, per 20 Hz update, and since the 20 Hz migration those exact
+    /// shipped floats rather than the <c>0.983263</c> / <c>0.949353</c> the
+    /// 30 Hz Core had to carry
+    /// (<c>BattleEngineWalkerPart.cpp:330-344</c>), then
     /// <see cref="SimulationConstants.WalkerGravityPerTick"/>, until the
     /// height field catches it.</para>
     ///
@@ -1235,7 +1300,8 @@ internal sealed class Level100ChainAutopilot
     /// descent under the released thrusters is 70 mm per tick, so five metres
     /// is about seventy ticks.
     /// </summary>
-    private const int BallisticTouchdownBudgetTicks = 600;
+    private const int BallisticTouchdownBudgetTicks =
+        20 * SimulationConstants.TicksPerSecond;
 
     private static int RetainLandingJet(int value, int numerator) =>
         (int)Math.Round(
@@ -1312,6 +1378,24 @@ internal sealed class Level100ChainAutopilot
         get;
         private set;
     }
+
+    /// <summary>
+    /// The deepest committed player elevation this run ever reached, and the
+    /// tick it reached it on.
+    ///
+    /// <para>It is the other half of <see cref="WaterFailure"/> and it exists
+    /// because the drowning stopped happening. A run that never drowns still
+    /// carries a claim about the released water rule - that the rule did NOT
+    /// fire, on every tick, at the elevation the airframe actually held - and
+    /// without the low-water mark that claim is unfalsifiable. With it, the
+    /// verdict and the elevation can be checked against each other on real
+    /// runs whether or not any of them ends in the sea. See
+    /// <c>Level100FerryLandingTests</c> Gate C.</para>
+    /// </summary>
+    internal int LowestElevationMillimeters { get; private set; } = int.MaxValue;
+
+    /// <summary>The tick <see cref="LowestElevationMillimeters"/> was reached.</summary>
+    internal int LowestElevationTick { get; private set; } = -1;
 
     private void RecordMorph(
         WorldSnapshot state,
@@ -1802,7 +1886,8 @@ internal sealed class Level100ChainAutopilot
     }
 
     /// <summary>How long one crab is held before it is reversed.</summary>
-    private const int JetStrafeSegmentTicks = 150;
+    private const int JetStrafeSegmentTicks =
+        5 * SimulationConstants.TicksPerSecond;
 
     /// <summary>
     /// The altitude band the crabbed jet is flown in. The floor keeps the nose
@@ -2016,7 +2101,9 @@ internal sealed class Level100ChainAutopilot
         }
 
         double verticalCorrection = Math.Clamp(
-            bandBias + (state.PlayerVerticalVelocityMillimetersPerTick / 400d),
+            bandBias +
+                (state.PlayerVerticalVelocityMillimetersPerTick /
+                    WaveTwoVerticalRateDivisor),
             -0.35,
             0.35);
         double commandedPitch = aimPitch + verticalCorrection;
@@ -2133,6 +2220,11 @@ internal sealed class Level100ChainAutopilot
     /// </summary>
     private int WaveTwoCrab(WorldSnapshot state)
     {
+        if (_waveTwoCrabHeldStill)
+        {
+            return 0;
+        }
+
         if (state.Tick - _crabSinceTick >= JetStrafeSegmentTicks &&
             NearestWaveTwoSlant(state) > WaveTwoSafeReversalMillimeters)
         {
@@ -2234,18 +2326,22 @@ internal sealed class Level100ChainAutopilot
     /// <para>Swept against the whole chain at pitch lambda 0.30, wave-2 kills:
     /// 0.20 -&gt; 0, 0.30 -&gt; 1, 0.45 -&gt; 2, 0.60 -&gt; 2, 0.80 -&gt; 6,
     /// 0.85 -&gt; 6, 0.90 -&gt; 6, 0.95 -&gt; 3. A three-point plateau, not a
-    /// spike.</para>
+    /// spike. <b>That sweep was run on the 30 Hz Core</b>, which is why the
+    /// number it produced is handed to <see cref="ErrorPole"/> rather than
+    /// used as a stick position directly.</para>
     /// </summary>
-    private const double WaveTwoYawLambda = 0.90;
+    private static readonly double WaveTwoYawLambda = ErrorPole(0.90);
 
     /// <summary>
     /// The same pole on the pitch axis, and it is deliberately a third of the
     /// yaw one.
     ///
     /// <para>Two reasons, both measurable. The released pitch authority is
-    /// <c>WalkerPitchInputMicroRadPerTick</c> 3,938 against
-    /// <c>JetYawInputMicroRadPerTick</c> 9,805 - a ratio of 2.49 - so the same
-    /// pole asks the pitch axis for a rate it more often cannot deliver.
+    /// <c>WalkerPitchInputMicroRadPerTick</c> against
+    /// <c>JetYawInputMicroRadPerTick</c> - a ratio of 2.49, unchanged by the
+    /// 20 Hz migration, which moved the pair 3,938/9,805 to 8,547/21,277 - so
+    /// the same pole asks the pitch axis for a rate it more often cannot
+    /// deliver.
     /// And the pitch REFERENCE is not a clean bearing: it is the aim pitch
     /// plus <c>verticalCorrection</c>, which already carries a derivative term
     /// in the airframe's own vertical velocity. Closing a fast loop around a
@@ -2257,9 +2353,87 @@ internal sealed class Level100ChainAutopilot
     /// 0.40 -&gt; 0. Over twenty one-permille perturbations of beat 9, 0.20
     /// and 0.30 are indistinguishable (full clear on 10 and 11 of 20
     /// respectively, never fewer than three kills on either); 0.30 is kept
-    /// because it also holds the higher floor on wave-2 spawns damaged.</para>
+    /// because it also holds the higher floor on wave-2 spawns damaged. That
+    /// sweep, like the yaw one, was run on the 30 Hz Core.</para>
     /// </summary>
-    private const double WaveTwoPitchLambda = 0.30;
+    private static readonly double WaveTwoPitchLambda = ErrorPole(0.30);
+
+    /// <summary>
+    /// The rate at which the two poles above were swept: <b>30 Hz</b>, the Core
+    /// tick rate in force when <see cref="EngageWaveTwo"/> was tuned.
+    ///
+    /// <para>It is named rather than inlined because a closed-loop pole is a
+    /// property of the controller AND the rate it runs at, and the 20 Hz
+    /// migration proved that carrying one as a bare literal is silent: the
+    /// three constants on this page were the only rate-denominated numbers in
+    /// the whole driver that the migration did not move, and they are what took
+    /// beat 9 from six kills to nought.</para>
+    /// </summary>
+    private const double PoleSweepRateHertz = 30d;
+
+    /// <summary>
+    /// Re-expresses a closed-loop error pole swept at
+    /// <see cref="PoleSweepRateHertz"/> for whatever rate Core runs at now.
+    ///
+    /// <para><c>1 - lambda</c> is the fraction of the tracking error that
+    /// survives one tick - a RETENTION - so it converts by the 20 Hz
+    /// migration's <b>rule R2</b>, <c>r_new = r_old ^ (oldRate / newRate)</c>.
+    /// At 30 -&gt; 20 Hz that is the same <c>r^1.5</c> that took the landing
+    /// thruster from <c>0.983263</c> to retail's shipped <c>0.975</c>
+    /// (<see cref="SimulationConstants.WalkerLandingJetHorizontalRetentionNumerator"/>).
+    /// Yaw 0.90 becomes 0.968377 and pitch 0.30 becomes 0.414338.</para>
+    ///
+    /// <para><b>This is a conversion and not a re-tune, and the difference is
+    /// measurable.</b> Carrying the 30 Hz poles unchanged onto the 20 Hz plant
+    /// asks for a closed loop 1.5x slower in real time than the one that was
+    /// swept, while the airframe's authority in radians per SECOND is
+    /// unchanged - the migration preserved it exactly, 9,805/(1-0.861774) at
+    /// 30 Hz and 21,277/(1-0.8) at 20 Hz are both 2.128 rad/s. Measured on the
+    /// returning-player chain and the cold career together, with the vertical
+    /// rate term at <see cref="WaveTwoVerticalRateDivisor"/>:</para>
+    ///
+    /// <list type="table">
+    ///   <item><description>poles unconverted, divisor unconverted:
+    ///   returning player 5 kills on the abort branch, cold career <b>Lost /
+    ///   PlayerDeath</b> at t6877 with 1 kill.</description></item>
+    ///   <item><description>divisor converted only: returning player 6 kills,
+    ///   cold career 0 kills on the abort branch.</description></item>
+    ///   <item><description>poles converted only: cold career 6 kills,
+    ///   returning player 0 kills on the abort branch.</description></item>
+    ///   <item><description><b>both converted: six kills, objective 4
+    ///   Complete and no abort on BOTH careers</b>, at 19,800 and 9,200
+    ///   hull.</description></item>
+    /// </list>
+    ///
+    /// <para>Each single-term arm passes one career and fails the other, which
+    /// is what fitting a chaotic objective looks like; only the complete
+    /// conversion passes both, and it was not chosen by that score - it is the
+    /// arithmetic.</para>
+    /// </summary>
+    private static double ErrorPole(double lambdaAtSweepRate) =>
+        1d - Math.Pow(
+            1d - lambdaAtSweepRate,
+            PoleSweepRateHertz / SimulationConstants.TicksPerSecond);
+
+    /// <summary>
+    /// Divisor turning the airframe's own vertical rate into the pitch bias
+    /// that damps it, in <see cref="EngageWaveTwo"/>'s altitude band.
+    ///
+    /// <para><b>It divides a PER-TICK velocity, so it carries the tick rate.</b>
+    /// The numerator is
+    /// <see cref="WorldSnapshot.PlayerVerticalVelocityMillimetersPerTick"/>;
+    /// the same physical descent is 1.5x more millimetres per tick at 20 Hz
+    /// than at 30, so a fixed divisor makes the derivative term 1.5x stronger
+    /// for nothing. That is the migration's <b>rule R1</b> (velocity x1.5)
+    /// applied to a denominator, and 400 x 30/20 = 600 exactly.</para>
+    ///
+    /// <para>Left at 400 the term saturated its own +-0.35 rad clamp on any
+    /// ordinary sink rate - the released gravity is also 11 % stronger since
+    /// the migration recovered it from the shipped floats - so the pitch axis
+    /// spent beat 9 fighting its own altitude instead of tracking a drone.</para>
+    /// </summary>
+    private static readonly double WaveTwoVerticalRateDivisor =
+        400d * PoleSweepRateHertz / SimulationConstants.TicksPerSecond;
 
     /// <summary>
     /// The stick position that makes the NEXT tick's angular velocity equal

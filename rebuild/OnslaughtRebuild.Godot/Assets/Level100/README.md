@@ -795,7 +795,7 @@ of `0.4`; the last outside/first inside samples were `5.44/5.29` and
 `5.54/5.39` world units. Both runs then atomically cleared Target Zone 1,
 marked the Firing Range, and installed message ID `4458134` (`TUTORIAL_02`)
 after the same 11 released 20 Hz updates. Core maps that observed dispatch to
-16 ticks at 30 Hz. The client uses the exact 5.393900-second English voice,
+10 ticks at 20 Hz. The client uses the exact 5.393900-second English voice,
 subtitle, and shipped 16x16 objective marker with the released radar transform.
 One clean control and three fresh uninterrupted Firing Range runs then used a
 predeclared read-only observer over Steam's objective list, HUD weapon state,
@@ -836,7 +836,7 @@ life `6` and no shield; direct mesh hits repeated the exact
 target from Steam's objective set on shot four. One separate glancing mesh-part
 hit removed `1.0`. The released damage call receives a mesh-part index, so the
 differing multiplier is not generalized. Core represents only the demonstrated
-direct-hit path: speed `1167` millimetres per 30 Hz tick, `1.8` life per hit,
+direct-hit path: speed `1750` millimetres per 20 Hz tick, `1.8` life per hit,
 the retained mesh's rounded `1.45`-unit horizontal bound, and independent
 four-hit removal for the three tanks. A same-return capture of released
 `CBattleEngine::GetLaunchPosition` resolved cockpit emitter `Gun` index 1 to

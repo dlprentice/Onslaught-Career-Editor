@@ -450,9 +450,11 @@ response remain outside this proof.
 One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
 cap, `0.7` per-retail-update coast, yaw-velocity accumulation, and `0.8`
-retention. Core maps those 20 Hz responses into its fixed 30 Hz step. The same
-control/repeat discipline maps raw states `2 → 1 → 3` to the explicit
-16-tick walker-to-jet transition. Jet forward speed and energy drain retain
+retention. Core runs at that same 20 Hz, so those responses transfer without a
+rate conversion. The same control/repeat discipline maps raw states
+`2 → 1 → 3` to a walker-to-jet transition, which is now the shipped
+`BATTLE_ENGINE_TRANSFORM_TIME 0.5 f` × `GAME_FR 20` = 10 ticks rather than the
+16 the 30 Hz Core fitted to a measured 535–537 ms window. Jet forward speed and energy drain retain
 earlier bounded measurements.
 
 A later clean control and two fresh copies with only the proven Level 100
@@ -541,8 +543,9 @@ unit directions were `(-0.226261, 0.404663, -0.886032)` and
 `(-0.226194, 0.404543, -0.886105)` in Steam X/Y/Z axes. Their contemporaneous
 BattleEngine yaw/pitch values predict
 `(-sin(yaw)cos(pitch), cos(yaw)cos(pitch), sin(pitch))` with maximum component
-error `0.00119`. Core consumes the 30 Hz time-equivalent pitch input `0.003938`,
-retention `0.861774`, the bounded start-slope endpoints, and that three-axis
+error `0.00119`. Core consumes the shipped pitch input `1/117` rad and
+retention `0.8` verbatim (they were the 30 Hz time-equivalents `0.003938` and
+`0.861774` before the 20 Hz migration), the bounded start-slope endpoints, and that three-axis
 shot direction. Terrain-relative limits, mouse inversion, auto-aim, and vertical
 target collision remain unimplemented. The setup patch,
 copies, and raw samples were disposable.
@@ -560,7 +563,7 @@ through `defaultoptions.bea` repeated the same sensitivity-`1.5` pointer and
 movement sequence without focus loss; both active runs produced the same
 sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and checkpoint
 states. The Godot adapter consumes that bounded proportional mapping at its
-30 Hz fixed step. Other sensitivity values, inversion, and jet mouse response
+20 Hz fixed step. Other sensitivity values, inversion, and jet mouse response
 remain unproven.
 
 > **Amended 2026-07-28 — the measurement stands; `1.5` is not a released
@@ -743,7 +746,7 @@ objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
 `CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
 does not generalize the unmeasured part multiplier. It consumes only the
 three independently demonstrated direct-hit paths, the retained mesh bound,
-and the nearest 30 Hz integer speed.
+and the released per-update speed, which is now Core's per-tick speed.
 The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
 five-entry particle descriptor references four unique texture archives: Blue
 Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
@@ -887,7 +890,8 @@ The schema-13 Level 100 manifest retains the released class identities and
 arrival radii for the ground vehicle, plane, and dropship definitions, plus the
 exact Target Tank/Target Truck speed, turn, full-guide cadence, and converted
 Core ground-origin offset. Core consumes the released actor command stream,
-observes it at the exact 20 Hz base cadence inside the 30 Hz simulation, and
+observes it at the exact 20 Hz base cadence, which is now the simulation tick
+itself, and
 mutates only the canonical registry pose and current-tick velocity. Focused
 product-path checks establish Target Tank 1 naturally following its released
 unobstructed route and all three script-spawned Target Trucks entering their

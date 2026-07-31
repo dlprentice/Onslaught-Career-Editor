@@ -12,34 +12,46 @@ public sealed class InteractiveSessionTests
     // LevelScript reaches player.Activate() when TUTORIAL_TECHNICIAN_01
     // clears, and the released message box holds the opening five messages
     // to Level100MissionTiming.MessageBoxAllowedTick + the advance gaps:
-    // 182 +169 +6+210 +6+183 +6+163 +6+65 = 996. Two fresh app-owned Steam
+    // 121 +113 +4+140 +4+122 +4+109 +4+44 = 665. Two fresh app-owned Steam
     // runs measured the Battle Engine power flag at +0x580 changing 0 -> 1
-    // at tick 1000 (rebuild/PROVENANCE.md); the four-tick residual is the
-    // 50 ms sampler. The old value here was 790, which is the same sum with
-    // the gate and the gaps both absent.
-    private const int FirstRunControlTick = 996;
+    // at 30 Hz Core tick 1000 (rebuild/PROVENANCE.md), i.e. 33,333 ms; 665
+    // 20 Hz ticks is 33,250 ms, an 83 ms residual against the 50 ms sampler.
+    //
+    // THIS IS THE ACCEPTANCE SIGNAL THE 20 Hz MIGRATION WAS FOR, and it moved
+    // the right way. At 30 Hz the sum was 182 +169 +6+210 +6+183 +6+163 +6+65
+    // = 996 against the measured 1000, i.e. 33,200 ms against 33,333 ms - a
+    // 133 ms residual. Retail floors every scheduled delay onto a whole 20 Hz
+    // boundary (references/Onslaught/eventmanager.cpp:210-212), which a 30 Hz
+    // Core cannot land at all, so the residual SHOULD shrink; it did, from
+    // 133 ms to 83 ms. See Level100MissionTests
+    // .ReleasedMessageBox_ReproducesTheRetailOpeningDeliverySchedule for the
+    // same signal asserted across all eight measured boundaries.
+    //
+    // The value before either of those was 790, which is the same sum with the
+    // gate and the gaps both absent.
+    private const int FirstRunControlTick = 665;
     private static Level100ActorDefinitionSet ActorDefinitions =>
         Level100TestActorDefinitions.Create();
-    private const long OneCoreStepTicks = 333_334;
+    private const long OneCoreStepTicks = 500_000;
     private const uint Seed = 0x4F4E534Cu;
 
     [Fact]
-    public void RationalAccumulator_DoesNotTruncateThirtyHertzStep()
+    public void RationalAccumulator_DoesNotTruncateTheCoreStep()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
 
-        FrameAdvanceResult beforeBoundary = session.AdvanceFrameTicks(333_333);
+        FrameAdvanceResult beforeBoundary = session.AdvanceFrameTicks(499_999);
         FrameAdvanceResult afterBoundary = session.AdvanceFrameTicks(1);
 
         Assert.Equal(0, beforeBoundary.StepsAdvanced);
         Assert.Equal(1, afterBoundary.StepsAdvanced);
         Assert.Equal(1, afterBoundary.CurrentSnapshot.Tick);
-        Assert.Equal(20, afterBoundary.InterpolationPhase);
+        Assert.Equal(0, afterBoundary.InterpolationPhase);
         Assert.Equal(InteractiveSession.PhaseUnitsPerStep, afterBoundary.InterpolationPhaseScale);
     }
 
     [Fact]
-    public void FourQuarterSecondFrames_AdvanceExactlyThirtyTicks()
+    public void FourQuarterSecondFrames_AdvanceExactlyOneSecondOfTicks()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
 
@@ -50,8 +62,8 @@ public sealed class InteractiveSessionTests
             Assert.False(result.FrameTimeCapped);
         }
 
-        Assert.Equal(30, result.CurrentSnapshot.Tick);
-        Assert.Equal(30, session.Metrics.TotalSteps);
+        Assert.Equal(SimulationConstants.TicksPerSecond, result.CurrentSnapshot.Tick);
+        Assert.Equal(SimulationConstants.TicksPerSecond, session.Metrics.TotalSteps);
         Assert.Equal(0, session.Metrics.DroppedElapsedTicks);
     }
 
@@ -63,8 +75,13 @@ public sealed class InteractiveSessionTests
         FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromSeconds(1));
 
         Assert.True(result.FrameTimeCapped);
-        Assert.Equal(7, result.StepsAdvanced);
-        Assert.Equal(7, result.CurrentSnapshot.Tick);
+        // MaximumFrameElapsedTicks is 0.25 s of WALL CLOCK, and stays 0.25 s
+        // across the 20 Hz migration: it bounds how far behind real time one
+        // frame may catch up, which is a property of the host, not of the
+        // simulation rate. Five 20 Hz steps fit in it where seven 30 Hz steps
+        // did.
+        Assert.Equal(5, result.StepsAdvanced);
+        Assert.Equal(5, result.CurrentSnapshot.Tick);
         Assert.Equal(1, session.Metrics.CappedFrameCount);
         Assert.Equal(TimeSpan.FromMilliseconds(750).Ticks, session.Metrics.DroppedElapsedTicks);
     }
@@ -100,7 +117,7 @@ public sealed class InteractiveSessionTests
         session.ObserveInput(new InteractiveInput(0, 0, false, true, false));
         session.ObserveInput(InteractiveInput.Idle);
 
-        FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
 
         Assert.Equal(VehicleMode.Walker, result.CurrentSnapshot.Mode);
         Assert.Equal(VehicleTransition.None, result.CurrentSnapshot.Transition);
@@ -127,8 +144,8 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromMilliseconds(200));
 
-        Assert.Equal(6, result.StepsAdvanced);
-        Assert.Equal(6, session.Metrics.FireHeldTicksSampled);
+        Assert.Equal(4, result.StepsAdvanced);
+        Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
         Assert.Equal(SimulationConstants.MaximumEnergy, result.CurrentSnapshot.Energy);
         Assert.Empty(result.CurrentSnapshot.Projectiles);
     }
@@ -162,7 +179,7 @@ public sealed class InteractiveSessionTests
             false,
             LandingJetsHeld: true));
 
-        FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
 
         Assert.True(result.CurrentSnapshot.LandingJetsActive);
     }
@@ -175,7 +192,7 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
         session.AdvanceFrameTicks(100_000);
         FrameAdvanceResult firingTick = session.AdvanceFrameTicks(233_334);
-        FrameAdvanceResult followingTick = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult followingTick = session.AdvanceFrameTicks(500_000);
 
         Assert.Empty(firingTick.CurrentSnapshot.Projectiles);
         Assert.Empty(followingTick.CurrentSnapshot.Projectiles);
@@ -189,11 +206,22 @@ public sealed class InteractiveSessionTests
         InteractiveSession session = CreatePlayingSession();
 
         session.QueueMovementPulse(0, 1);
-        FrameAdvanceResult movementTick = session.AdvanceFrameTicks(333_334);
-        FrameAdvanceResult idleTick = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult movementTick = session.AdvanceFrameTicks(500_000);
+        FrameAdvanceResult idleTick = session.AdvanceFrameTicks(500_000);
 
-        Assert.Equal(new SimVector2(-16, 29), movementTick.CurrentSnapshot.PlayerPosition);
-        Assert.Equal(new SimVector2(-28, 51), idleTick.CurrentSnapshot.PlayerPosition);
+        // MOVED by the 20 Hz migration. The walker's first accelerating tick
+        // is WalkerAccelerationPerTick along the facing, and that constant is
+        // 70 where it was 33: a per-tick increment into a store damped by
+        // mWalkFriction, so it converts by (1-0.7)/(1-0.7884) * 1.5 = 2.126,
+        // not by the velocity rule. |(-34, 61)| is 70; |(-16, 29)| was 33.
+        // The walker's SPEED is unchanged - both rates cap at
+        // mMaxWalkVelocity 0.15 = 3,000 mm/s.
+        Assert.Equal(
+            new SimVector2(-34, 61),
+            movementTick.CurrentSnapshot.PlayerPosition);
+        Assert.Equal(
+            new SimVector2(-57, 103),
+            idleTick.CurrentSnapshot.PlayerPosition);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
     }
 
@@ -205,9 +233,16 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
         session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
 
-        FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
 
-        Assert.Equal(new SimVector2(-16, 29), result.CurrentSnapshot.PlayerPosition);
+        // MOVED by the 20 Hz migration. The walker's first accelerating tick
+        // is WalkerAccelerationPerTick along the facing, and that constant is
+        // 70 where it was 33: a per-tick increment into a store damped by
+        // mWalkFriction, so it converts by (1-0.7)/(1-0.7884) * 1.5 = 2.126,
+        // not by the velocity rule. |(-34, 61)| is 70; |(-16, 29)| was 33.
+        // The walker's SPEED is unchanged - both rates cap at
+        // mMaxWalkVelocity 0.15 = 3,000 mm/s.
+        Assert.Equal(new SimVector2(-34, 61), result.CurrentSnapshot.PlayerPosition);
         Assert.Empty(result.CurrentSnapshot.Projectiles);
         Assert.Equal(1, session.Metrics.MovementPulseEdgesConsumed);
         Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
@@ -220,8 +255,8 @@ public sealed class InteractiveSessionTests
         InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, true, false, true));
 
-        FrameAdvanceResult resetTick = session.AdvanceFrameTicks(333_334);
-        FrameAdvanceResult followingTick = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult resetTick = session.AdvanceFrameTicks(500_000);
+        FrameAdvanceResult followingTick = session.AdvanceFrameTicks(500_000);
 
         Assert.Empty(resetTick.CurrentSnapshot.Projectiles);
         Assert.Empty(followingTick.CurrentSnapshot.Projectiles);
@@ -264,8 +299,12 @@ public sealed class InteractiveSessionTests
             fine.AdvanceFrame(TimeSpan.FromMilliseconds(25));
         }
 
-        Assert.Equal(FirstRunControlTick + 30, coarse.CurrentSnapshot.Tick);
-        Assert.Equal(FirstRunControlTick + 30, fine.CurrentSnapshot.Tick);
+        Assert.Equal(
+            FirstRunControlTick + SimulationConstants.TicksPerSecond,
+            coarse.CurrentSnapshot.Tick);
+        Assert.Equal(
+            FirstRunControlTick + SimulationConstants.TicksPerSecond,
+            fine.CurrentSnapshot.Tick);
         Assert.Equal(StateHasher.ComputeHex(coarse.CurrentSnapshot), StateHasher.ComputeHex(fine.CurrentSnapshot));
     }
 
@@ -297,8 +336,13 @@ public sealed class InteractiveSessionTests
 
         session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(-3_938, session.CurrentSnapshot.FacingPitchMicroRad);
-        Assert.Equal(-3_938, session.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        // Retail's own 1/117 rad per update (BattleEngineWalkerPart.cpp:355),
+        // verbatim since the 20 Hz migration. This read -3,938 at 30 Hz, the
+        // time-equivalent of the same shipped divisor.
+        Assert.Equal(-8_547, session.CurrentSnapshot.FacingPitchMicroRad);
+        Assert.Equal(
+            -8_547,
+            session.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
     }
 
     [Fact]
@@ -313,14 +357,16 @@ public sealed class InteractiveSessionTests
         Assert.Equal(0, beforeTick.StepsAdvanced);
         Assert.True(session.HasHeldOrPendingInput);
 
-        FrameAdvanceResult lookTick = session.AdvanceFrameTicks(233_334);
+        FrameAdvanceResult lookTick = session.AdvanceFrameTicks(400_001);
 
         Assert.Equal(1, lookTick.StepsAdvanced);
         Assert.False(session.HasHeldOrPendingInput);
-        Assert.Equal(startingYaw + 10_444, lookTick.CurrentSnapshot.FacingYawMicroRad);
-        Assert.Equal(10_444, lookTick.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-3_938, lookTick.CurrentSnapshot.FacingPitchMicroRad);
-        Assert.Equal(-3_938, lookTick.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(startingYaw + 22_667, lookTick.CurrentSnapshot.FacingYawMicroRad);
+        Assert.Equal(22_667, lookTick.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-8_547, lookTick.CurrentSnapshot.FacingPitchMicroRad);
+        Assert.Equal(
+            -8_547,
+            lookTick.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
     }
 
     /// <summary>
@@ -349,8 +395,10 @@ public sealed class InteractiveSessionTests
         // pins for the untouched session, reproduced through the slider at 7.0.
         // MOVED 2026-07-30, from 1,640 and -299. See the accounting on that
         // test; both pins record the same 15 px / -7.5 px motion.
-        Assert.Equal(2_465, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-398, atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(5_349, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(
+            -863,
+            atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
 
         // The lowest reachable stop is 3.0, well under the shipped 7.0, so the
         // same hand motion must turn the walker measurably less far.
@@ -518,9 +566,27 @@ public sealed class InteractiveSessionTests
         // and those are delivered the same either way. These four goldens moved
         // precisely because they are the one place that exercises a motion that
         // is NOT already on retail's lattice.
-        Assert.Equal(2_465, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-398, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
-        Assert.Equal(startingYaw + 2_465, first.CurrentSnapshot.FacingYawMicroRad);
+        // MOVED AGAIN 2026-07-31 BY THE 20 Hz MIGRATION, and this is a pure
+        // R3 unit change with no behaviour in it. The pointer path, the
+        // sensitivity scalar and the response curve are all untouched; what
+        // moved is WalkerYawInputMicroRadPerTick 10,444 -> 22,667 and
+        // WalkerPitchInputMicroRadPerTick 3,938 -> 8,547, because a per-tick
+        // impulse into a store retained at retail's exact 0.8 converts by
+        // (1-0.8)/(1-0.861774) * 1.5 = 2.170337. Every pin below scales by
+        // that factor to within one micro-radian of integer rounding on the
+        // FIRST step. The second step also carries the pointer recentring ease,
+        // which is retail's own 10/17 per 20 Hz update and was itself running
+        // as (10/17)^(2/3) = 702049/1000000 at 30 Hz - so the two-step pins
+        // move by more than 2.170337. That ease is a THIRD verbatim retail
+        // value the migration recovers, and it lives in InteractiveSession
+        // rather than Core:
+        //     step 1 yaw   2,465 -> 5,349        step 1 pitch  -398 -> -863
+        //     step 2 yaw   3,847 -> 7,294        step 2 pitch  -626 -> -1,177
+        // The walker's turn is the same angular rate per SECOND at either
+        // Core rate; only the per-tick quantum changed.
+        Assert.Equal(5_349, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-863, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(startingYaw + 5_349, first.CurrentSnapshot.FacingYawMicroRad);
         Assert.True(session.HasHeldOrPendingInput);
 
         // The guard that makes the numbers above mean something. If a future
@@ -536,16 +602,18 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult second = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(3_847, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-626, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(7_294, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(
-            first.CurrentSnapshot.FacingYawMicroRad + 3_847,
+            -1_177,
+            second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(
+            first.CurrentSnapshot.FacingYawMicroRad + 7_294,
             second.CurrentSnapshot.FacingYawMicroRad);
     }
 
     // Yaw rate at full look deflection, from
     // WalkerAnalogLook_FollowsTheReleasedCurveAndUsesTheSameRetailCoast.
-    private const int FullDeflectionYawPerTick = 10_444;
+    private const int FullDeflectionYawPerTick = 22_667;
 
     [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
@@ -558,18 +626,18 @@ public sealed class InteractiveSessionTests
         }
         var held = new InteractiveInput(0, 1, true, false, false);
         session.ObserveInput(held);
-        session.AdvanceFrameTicks(1_000_000);
+        session.AdvanceFrameTicks(1_500_000);
         for (int tick = 0; tick < 3; tick++)
         {
             direct.Step(new SimInput(0, 1, SimActions.Fire));
         }
 
         session.ObserveInput(new InteractiveInput(0, 1, false, true, false));
-        session.AdvanceFrameTicks(333_334);
+        session.AdvanceFrameTicks(500_000);
         direct.Step(new SimInput(0, 1, SimActions.ToggleMode));
 
         session.ObserveInput(new InteractiveInput(0, 0, true, false, true));
-        session.AdvanceFrameTicks(333_334);
+        session.AdvanceFrameTicks(500_000);
         direct.Step(new SimInput(0, 0, SimActions.Fire | SimActions.Reset));
 
         Assert.Equal(StateHasher.ComputeHex(direct.Snapshot), StateHasher.ComputeHex(session.CurrentSnapshot));
@@ -586,7 +654,7 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
 
         session.ReleaseAllInput();
-        session.AdvanceFrameTicks(333_334);
+        session.AdvanceFrameTicks(500_000);
 
         Assert.Equal(SimVector2.Zero, session.CurrentSnapshot.PlayerPosition);
         Assert.Empty(session.CurrentSnapshot.Projectiles);
@@ -614,7 +682,7 @@ public sealed class InteractiveSessionTests
         session.QueueFirePulse();
         session.QueueToggleMode();
         session.QueueReset();
-        session.AdvanceFrameTicks(333_334);
+        session.AdvanceFrameTicks(500_000);
 
         Assert.True(session.InputSuspendedUntilReleased);
         Assert.False(session.HasHeldOrPendingInput);
@@ -629,9 +697,9 @@ public sealed class InteractiveSessionTests
 
         session.QueueMovementPulse(0, 1);
         session.QueueFirePulse();
-        session.AdvanceFrameTicks(333_334);
+        session.AdvanceFrameTicks(500_000);
 
-        Assert.Equal(new SimVector2(-16, 29), session.CurrentSnapshot.PlayerPosition);
+        Assert.Equal(new SimVector2(-34, 61), session.CurrentSnapshot.PlayerPosition);
         Assert.Empty(session.CurrentSnapshot.Projectiles);
     }
 
@@ -735,7 +803,7 @@ public sealed class InteractiveSessionTests
 
         int startingTick = session.CurrentSnapshot.Tick;
 
-        FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+        FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
 
         Assert.Equal(startingTick, result.PreviousSnapshot.Tick);
         Assert.Equal(startingTick + 1, result.CurrentSnapshot.Tick);
@@ -797,15 +865,15 @@ public sealed class InteractiveSessionTests
     public void FrameMissionEvents_AggregateEverySimulationStepInOrder()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
-        // HUD_02 becomes active at MessageBoxAllowedTick + HUD_01's 169 ticks +
-        // the released 6-tick advance gap = 357. Step to 355 so the two-step
+        // HUD_02 becomes active at MessageBoxAllowedTick + HUD_01's 113 ticks +
+        // the released 4-tick advance gap = 238. Step to 236 so the two-step
         // frame below straddles it.
-        for (int tick = 0; tick < 356; tick++)
+        for (int tick = 0; tick < 237; tick++)
         {
             session.AdvanceFrameTicks(OneCoreStepTicks);
         }
 
-        FrameAdvanceResult frame = session.AdvanceFrameTicks(666_667);
+        FrameAdvanceResult frame = session.AdvanceFrameTicks(1_000_000);
 
         Assert.Equal(2, frame.StepsAdvanced);
         Level100MessageRequested message = Assert.Single(
@@ -840,7 +908,7 @@ public sealed class InteractiveSessionTests
                 new Level100ActorPoseFact(target.ActorId, contactPose),
             ]);
 
-        Assert.Equal(7, frame.StepsAdvanced);
+        Assert.Equal(5, frame.StepsAdvanced);
         Level100DestructionEvent[] targetEvents = frame.Level100DestructionEvents
             .Where(item => item.ActorId == target.ActorId.Value)
             .ToArray();
@@ -1113,10 +1181,6 @@ public sealed class InteractiveSessionTests
         Assert.Equal("Target Tank Path 1", intent.WaypointPath);
         Assert.True(intent.WaitForWaypointCompletion);
         Assert.Equal(0, intent.GroundFullGuideBaseTickPhase);
-        Assert.Equal(
-            0,
-            snapshot.Level100ActorMechanics
-                .RetailBaseTickAccumulatorThirtieths);
         Assert.Contains(
             snapshot.Level100ActorScriptCommands,
             command =>
@@ -1422,13 +1486,13 @@ public sealed class InteractiveSessionTests
         InteractiveInput strafe = FirstFlightSmokeScenario.GetInputForTick(
             FirstFlightSmokeScenario.TargetZoneInputStartTick);
         InteractiveInput forward = FirstFlightSmokeScenario.GetInputForTick(
-            FirstFlightSmokeScenario.TargetZoneInputStartTick + 216);
+            FirstFlightSmokeScenario.TargetZoneInputStartTick + 144);
         InteractiveInput closeout = FirstFlightSmokeScenario.GetInputForTick(
             FirstFlightSmokeScenario.DurationTicks - 1);
-        InteractiveInput firingRangeTurn = FirstFlightSmokeScenario.GetInputForTick(1_995);
-        InteractiveInput firingRangeApproach = FirstFlightSmokeScenario.GetInputForTick(2_040);
-        InteractiveInput firingRangeAim = FirstFlightSmokeScenario.GetInputForTick(3_139);
-        InteractiveInput pulseCannonProof = FirstFlightSmokeScenario.GetInputForTick(3_156);
+        InteractiveInput firingRangeTurn = FirstFlightSmokeScenario.GetInputForTick(1_330);
+        InteractiveInput firingRangeApproach = FirstFlightSmokeScenario.GetInputForTick(1_360);
+        InteractiveInput firingRangeAim = FirstFlightSmokeScenario.GetInputForTick(2_093);
+        InteractiveInput pulseCannonProof = FirstFlightSmokeScenario.GetInputForTick(2_104);
 
         Assert.Equal(InteractiveInput.Idle, pan);
         Assert.Equal((sbyte)-1, strafe.MoveX);
@@ -1440,7 +1504,7 @@ public sealed class InteractiveSessionTests
         Assert.Equal((sbyte)-1, firingRangeAim.LookX);
         Assert.True(pulseCannonProof.FireHeld);
         Assert.Equal(InteractiveInput.Idle, closeout);
-        Assert.Equal(3_228, FirstFlightSmokeScenario.DurationTicks);
+        Assert.Equal(2_148, FirstFlightSmokeScenario.DurationTicks);
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstFlightSmokeScenario.GetInputForTick(-1));
 
         var session = new InteractiveSession(
@@ -1450,7 +1514,7 @@ public sealed class InteractiveSessionTests
         {
             session.ObserveInput(
                 FirstFlightSmokeScenario.GetInputForTick(session.CurrentSnapshot.Tick));
-            FrameAdvanceResult result = session.AdvanceFrameTicks(333_334);
+            FrameAdvanceResult result = session.AdvanceFrameTicks(500_000);
             Assert.Equal(1, result.StepsAdvanced);
         }
 
@@ -1618,8 +1682,37 @@ public sealed class InteractiveSessionTests
         // position (-66783, 68633), elevation 2500, yaw 282931, pitch 0, mode
         // Walker and hull 20000 are identical either side, as are the mission
         // outcome and the "Firing Range" navigation objective.
+        // MOVED 2026-07-31 BY THE 30 Hz -> 20 Hz CORE MIGRATION (WORKSTREAM 4).
+        // 8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1
+        // -> d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3.
+        //
+        // THIS ONE IS NOT ISOLABLE TO A SINGLE CAUSE AND IS NOT CLAIMED TO BE.
+        // Four things move it and each would suffice alone:
+        //   1. StateHasher's version literal, 32 -> 33.
+        //   2. The DELETION of the hashed field
+        //      Level100ActorMechanicsSnapshot.RetailBaseTickAccumulatorThirtieths -
+        //      the 20-of-every-30 base-tick accumulator, which is the identity
+        //      once Core runs at 20 Hz. Four bytes leave every hashed tick, so
+        //      this alone moves the hash with NO behaviour change at all.
+        //   3. state.Tick is hashed first and the tape's terminal tick is 2152
+        //      where it was 3228 - the same 107.6 s of simulated time.
+        //   4. Every trajectory is re-integrated against the reconverted
+        //      constants.
+        // Isolating them individually is not possible here, because (1) and (2)
+        // are prerequisites of the rate change rather than separable edits.
+        //
+        // WHAT DID NOT CHANGE is the evidence that the tape still proves what it
+        // proved, and it is asserted above rather than argued: Walker mode, zero
+        // targets destroyed, Target Tank 1 alive at its full 6,000 hull with no
+        // FollowWaypoint continuation and a Stopped intent, exactly four
+        // fire-held ticks, and the "Firing Range" navigation objective.
+        //
+        // Cross-checked against the native Godot host: the same value appears in
+        // rebuild/tools/FirstFlightSmokeValidation.psm1, produced by two
+        // byte-identical native smoke reports through a completely different
+        // host and frame clock.
         Assert.Equal(
-            "8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1",
+            "d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 
@@ -1630,9 +1723,9 @@ public sealed class InteractiveSessionTests
         [
             (100_000, new InteractiveInput(0, 1, false, false, false)),
             (250_000, new InteractiveInput(0, 1, true, false, false)),
-            (333_334, new InteractiveInput(0, 1, true, true, false)),
+            (500_000, new InteractiveInput(0, 1, true, true, false)),
             (1_100_000, new InteractiveInput(1, 0, true, false, false)),
-            (333_334, new InteractiveInput(0, 0, false, false, true)),
+            (500_000, new InteractiveInput(0, 0, false, false, true)),
             (700_000, InteractiveInput.Idle),
         ];
 

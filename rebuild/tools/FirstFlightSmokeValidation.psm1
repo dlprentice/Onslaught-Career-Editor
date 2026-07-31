@@ -156,18 +156,44 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v17' $report.schemaVersion
     Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
-    Assert-SmokeValue 'tick' 3228 $report.tick
-    # Measured 2026-07-28 after the reviewed Core changes landed: two independent
-    # native Godot runs produced byte-identical reports at tick 3228, and the
-    # hash also matches the in-process scenario pinned by InteractiveSessionTests.
-    # Repinned 2026-07-31 for #146 (waypoint traversal order): two byte-identical
-    # native reports at this value, reproduced independently in a second tree.
-    # Field-level accounting: InteractiveSessionTests.cs, the state-hash golden.
-    Assert-SmokeValue 'stateHash' '8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1' $report.stateHash
+    Assert-SmokeValue 'tick' 2148 $report.tick
+    # REPINNED 2026-07-31 BY THE 30 Hz -> 20 Hz CORE MIGRATION (WORKSTREAM 4).
+    # Two independent native Godot runs produced byte-identical reports at this
+    # value, and it also matches the in-process scenario pinned by
+    # InteractiveSessionTests, which is an independent implementation of the
+    # same tape through a different host.
+    #
+    # FIELD-LEVEL ACCOUNTING - which fields moved and why. FOUR independent
+    # causes, any one of which alone would move this hash, so do not attribute
+    # it to a single one:
+    #   1. StateHasher version 32 -> 33. A hashed literal.
+    #   2. Level100ActorMechanicsSnapshot.RetailBaseTickAccumulatorThirtieths
+    #      was DELETED. It was the 20-of-every-30 base-tick accumulator, which
+    #      is the identity at 20 Hz. Four bytes leave every hashed tick.
+    #   3. StateHasher hashes state.Tick first, and the tape's terminal tick is
+    #      2148 where it was 3228 - within 0.2 s of the same simulated time.
+    #   4. Every trajectory is re-integrated against the reconverted constants
+    #      (retentions now the shipped floats verbatim, gravity now the shipped
+    #      0.01/0.002/0.005, input impulses reconverted under the damped-input
+    #      rule).
+    #
+    # The report fields that MOVED with it, all re-derived rather than nudged:
+    #   tick / level100MissionTick / totalSteps  3228 -> 2148
+    #   retailLevel100TerrainVertexCount         34398 -> 34499
+    #   retailLevel100TerrainTriangleCount       33308 -> 33476
+    # The fields that did NOT move, and are the evidence the tape still proves
+    # what it proved: targetsDestroyed 0, mode Walker, outcome Running,
+    # terminal None, the six script-gate booleans, fireHeldTicksSampled 4, all
+    # five edge counters 0, cappedFrameCount 0, droppedElapsedTicks 0,
+    # level100DeliveredHelpCount 1, level100ObjectiveMarkerCount 4, the
+    # thirteen delivered message ids and their speakers,
+    # targetVisualCount 9, openingPanActive false, and the whole retail-geometry
+    # block.
+    Assert-SmokeValue 'stateHash' 'd4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
-    Assert-SmokeValue 'level100MissionTick' 3228 $report.level100MissionTick
+    Assert-SmokeValue 'level100MissionTick' 2148 $report.level100MissionTick
     Assert-SmokeValue 'level100MissionOutcome' 'Running' $report.level100MissionOutcome
     Assert-SmokeValue 'level100TerminalState' 'None' $report.level100TerminalState
     # The message sequence the released script has requested by this tick is a
@@ -175,9 +201,18 @@ function Test-FirstFlightSmokeEvidence {
     # Thirteen, not fourteen, since the released message-box gate
     # (Level100MissionTiming.MessageBoxAllowedTick / MessageAdvanceDelayTicks):
     # the script blocks on PlayCharMessageWait until the box may play, so the
-    # whole chain sits later and TUTORIAL_PULSE_CANNON_2 (-1715818922) now falls
+    # whole chain sits later and TUTORIAL_PULSE_CANNON_2 (-1715818922) falls
     # outside this scenario's fixed tick budget. The scenario was not extended
     # to keep the old count - that would be fitting the gate to the pin.
+    #
+    # STILL THIRTEEN AFTER THE 20 Hz MIGRATION, but by a much smaller margin
+    # than before and for a reason worth reading: at the faithful two-thirds
+    # duration of 2152 the fourteenth message IS delivered, on tick 2150. The
+    # scenario ends at 2148 instead, and FirstFlightSmokeScenario.DurationTicks
+    # carries the criterion that decided it - the report has to be sampled where
+    # the deterministic message schedule is quiet, or the three mixer-derived
+    # fields below couple into the implication assertions at the end of this
+    # gate. Read that comment before treating this thirteen as unchanged.
     $expectedMessageIds = @(
         292562, 293386, 296682, -1575499396, -257967449, 82987417, 4422830,
         175347826, 4458134, 4493438, 295858, 1339691000, 669198996)
@@ -201,7 +236,7 @@ function Test-FirstFlightSmokeEvidence {
     # -257967449 three times and 82987417 three times; this assertion was
     # previously pinned to 82987417 and failed whenever the host was loaded.
     # Bound it to the delivered sequence instead of pinning a run.
-    # Absent is also legal: RetailCharacterMessageHandoffSeconds is a 6/30s gap
+    # Absent is also legal: RetailCharacterMessageHandoffSeconds is a 4/20s gap
     # in which no message is active at all. A report captured in that gap made
     # this field null and failed parameter binding before the previous fix's own
     # null branch could run, so the v14 gate still flaked on host speed.
@@ -238,7 +273,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeImplies 'level100MessagePlaybackAvailable' `
         $report.level100MessagePlaybackAvailable `
         'level100PlayingMessageId' ($null -ne $report.level100PlayingMessageId)
-    Assert-SmokeValue 'totalSteps' 3228 $report.totalSteps
+    Assert-SmokeValue 'totalSteps' 2148 $report.totalSteps
     Assert-SmokeValue 'toggleEdgesConsumed' 0 $report.toggleEdgesConsumed
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
     Assert-SmokeValue 'resetGeneration' 0 $report.resetGeneration
@@ -282,8 +317,22 @@ function Test-FirstFlightSmokeEvidence {
     # Trucks (1 each). Nothing existing changed shape.
     Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 12 $report.retailLevel100TargetSurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 4 $report.level100ObjectiveMarkerCount
-    Assert-SmokeValue 'retailLevel100TerrainVertexCount' 34398 $report.retailLevel100TerrainVertexCount
-    Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 33308 $report.retailLevel100TerrainTriangleCount
+    # THESE TWO ARE NOT ASSET FACTS, and the 20 Hz migration is what made that
+    # visible. Level100HeightFieldAsset selects a per-tile geometry LOD from the
+    # squared distance between the tile centre and the SMOOTHED CAMERA
+    # (`SelectTiles`, the `projectedSize` band), so the vertex and triangle
+    # totals are a pure function of where the camera is on the frame the report
+    # is written. They sit in this file's retail-geometry block beside genuinely
+    # static counts (pine count, static-object surfaces, the water grid), which
+    # is why they were read as static; they are not.
+    #
+    # Repinned 2026-07-31: 34398 -> 34499 vertices, 33308 -> 33476 triangles.
+    # The cause is the re-flown smoke tape ending at a marginally different
+    # player pose, not any change to the height field, whose source asset digest
+    # is unchanged. Deterministic under --fixed-fps and proven so by the
+    # two byte-identical native reports this repin required.
+    Assert-SmokeValue 'retailLevel100TerrainVertexCount' 34499 $report.retailLevel100TerrainVertexCount
+    Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 33476 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount
     # MOVED 2026-07-31 with retailLevel100TargetSurfaceCount above, same cause:
     # the two ambient aircraft are now rendered world actors. See the comment

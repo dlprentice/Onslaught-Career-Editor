@@ -28,7 +28,6 @@ public sealed record Level100ActorCommandIntentSnapshot(
 
 public sealed record Level100ActorMechanicsSnapshot(
     long LastConsumedCommandSequence,
-    int RetailBaseTickAccumulatorThirtieths,
     IReadOnlyList<Level100ActorCommandIntentSnapshot> Actors,
     int ReleasedRandomSeed,
     int NextActorRoundId,
@@ -42,14 +41,33 @@ public sealed record Level100ActorMechanicsWaitCompletion(
 
 /// <summary>
 /// Canonical consumer for the released Level 100 actor-script mechanics
-/// commands. It observes the released 20 Hz base frame in the 30 Hz Core and
-/// implements only the evidenced CGroundVehicle guide cadence, normal speed,
-/// heading bound, and terrain grounding. Actor identity and the full physical
-/// pose remain exclusively in <see cref="Level100ActorRegistry"/>.
+/// commands. It implements only the evidenced CGroundVehicle guide cadence,
+/// normal speed, heading bound, and terrain grounding. Actor identity and the
+/// full physical pose remain exclusively in
+/// <see cref="Level100ActorRegistry"/>.
 /// </summary>
+/// <remarks>
+/// This class used to carry a 20-of-every-30 accumulator, because the released
+/// base frame is 20 Hz and Core ran at 30. Core now runs at 20 Hz, so every
+/// Core tick IS a released base tick, the accumulator was the identity, and it
+/// has been deleted along with its serialized-and-hashed snapshot field and the
+/// <c>ClearSkippedCoreTickVelocities</c> pass that only existed to zero the
+/// reported velocity on the Core ticks that were not base ticks. That pass made
+/// a plane's reported <c>LinearVelocityMillimetersPerTick</c> alternate between
+/// the base-tick step and zero, which any interpolating renderer saw as a
+/// stutter; the stutter is gone with it.
+/// </remarks>
 public sealed partial class Level100ActorMechanics
 {
-    public const int RetailBaseTicksPerSecond = 20;
+    /// <summary>
+    /// The released base-frame rate, <c>GAME_FR</c>
+    /// (<c>references/Onslaught/thing.h:28</c>). Core runs at this rate, so it
+    /// equals <see cref="SimulationConstants.TicksPerSecond"/> - but the two
+    /// are not the same fact, and the divisions that turn authored
+    /// per-second retail data into per-tick data are stated against this one.
+    /// </summary>
+    public const int RetailBaseTicksPerSecond =
+        SimulationConstants.RetailTicksPerSecond;
 
     private const int FixedTrigScale = 1 << 30;
     private const int HalfPiMicroRad = 1_570_796;
@@ -81,7 +99,6 @@ public sealed partial class Level100ActorMechanics
     private readonly Level100ActorDefinitionSet _definitions;
     private readonly SortedDictionary<int, ActorState> _states = [];
     private long _lastConsumedCommandSequence;
-    private int _retailBaseTickAccumulatorThirtieths;
 
     public Level100ActorMechanics(
         Level100ActorRegistry actors,
@@ -103,8 +120,6 @@ public sealed partial class Level100ActorMechanics
         ArgumentNullException.ThrowIfNull(snapshot.ActorWeapons);
         ArgumentNullException.ThrowIfNull(snapshot.ActorRounds);
         if (snapshot.LastConsumedCommandSequence < 0 ||
-            snapshot.RetailBaseTickAccumulatorThirtieths is < 0 or
-                >= SimulationConstants.TicksPerSecond ||
             snapshot.Actors.Any(item => item is null))
         {
             throw new ArgumentException(
@@ -113,8 +128,6 @@ public sealed partial class Level100ActorMechanics
         }
 
         _lastConsumedCommandSequence = snapshot.LastConsumedCommandSequence;
-        _retailBaseTickAccumulatorThirtieths =
-            snapshot.RetailBaseTickAccumulatorThirtieths;
         foreach (Level100ActorCommandIntentSnapshot source in snapshot.Actors)
         {
             ValidateSnapshotState(source, snapshot);
@@ -131,7 +144,6 @@ public sealed partial class Level100ActorMechanics
 
     public Level100ActorMechanicsSnapshot Snapshot => new(
         _lastConsumedCommandSequence,
-        _retailBaseTickAccumulatorThirtieths,
         Array.AsReadOnly(_states.Values.Select(SnapshotState).ToArray()),
         _releasedRandom.Seed,
         _nextActorRoundId,
@@ -161,20 +173,12 @@ public sealed partial class Level100ActorMechanics
     public void ApplyCommand(Level100ActorScriptCommand command) =>
         ConsumeCommand(command, requireOwned: true);
 
-    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick()
-    {
-        _retailBaseTickAccumulatorThirtieths += RetailBaseTicksPerSecond;
-        if (_retailBaseTickAccumulatorThirtieths <
-            SimulationConstants.TicksPerSecond)
-        {
-            ClearSkippedCoreTickVelocities();
-            return Array.Empty<Level100ActorMechanicsWaitCompletion>();
-        }
-
-        _retailBaseTickAccumulatorThirtieths -=
-            SimulationConstants.TicksPerSecond;
-        return AdvanceRetailBaseTick();
-    }
+    /// <summary>
+    /// One Core tick, which is one released base tick - see the class remarks
+    /// for the accumulator this replaced.
+    /// </summary>
+    public IReadOnlyList<Level100ActorMechanicsWaitCompletion> AdvanceTick() =>
+        AdvanceRetailBaseTick();
 
     private void ConsumeCommand(
         Level100ActorScriptCommand command,
@@ -301,24 +305,6 @@ public sealed partial class Level100ActorMechanics
         AdvanceActorWeapons();
 
         return Array.AsReadOnly(completions.ToArray());
-    }
-
-    private void ClearSkippedCoreTickVelocities()
-    {
-        foreach (ActorState state in _states.Values)
-        {
-            Level100ActorSnapshot actor =
-                _actors.GetActor(state.ActorId);
-            Level100ActorMotionDefinition? motion =
-                _definitions.FindMotionDefinition(
-                    actor.DefinitionName);
-            if (motion?.MotionClass is
-                Level100ActorMotionClass.GroundVehicle or
-                Level100ActorMotionClass.Plane)
-            {
-                ZeroActorVelocity(state.ActorId);
-            }
-        }
     }
 
     // ------------------------------------------------------------------

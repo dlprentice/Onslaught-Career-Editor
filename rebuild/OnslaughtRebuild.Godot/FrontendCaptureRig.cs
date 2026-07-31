@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Godot;
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -347,16 +348,17 @@ public sealed partial class FrontendCaptureRig : Node
     /// deliberately NOT the rate the schedule is expressed in:
     ///
     /// <list type="bullet">
-    /// <item><b>Simulation:</b> <c>SimulationConstants.TicksPerSecond = 30</c>, so
-    /// 2 engine frames per simulation tick, and
-    /// <c>simTicks = offsetMs * 30 / 1000 = offsetMs * 3 / 100</c>. A 500 ms
-    /// sample is 15 whole ticks; a 250 ms sample is 7.5 ticks, i.e. it lands
-    /// mid-tick and is rendered at interpolation alpha 0.5. That is a real
-    /// property of sampling a 30 Hz simulation every 250 ms, not an error, and
-    /// it is identical on every run.</item>
+    /// <item><b>Simulation:</b> <c>SimulationConstants.TicksPerSecond = 20</c>, so
+    /// 3 engine frames per simulation tick, and
+    /// <c>simTicks = offsetMs * 20 / 1000 = offsetMs * 2 / 100</c>. A 500 ms
+    /// sample is 10 whole ticks and a 250 ms sample is 5 whole ticks. Since the
+    /// 20 Hz migration EVERY offset in the default plan lands on a tick
+    /// boundary, so no default sample is rendered mid-tick. At 30 Hz a 250 ms
+    /// sample was 7.5 ticks and rendered at interpolation alpha 0.5.</item>
     /// <item><b>Retail base update:</b> 20 Hz
-    /// (<c>Level100ActorMechanics.RetailBaseTicksPerSecond</c>), which Core
-    /// drives from the 30 Hz tick by accumulating 20 thirtieths per tick — 2
+    /// (<c>Level100ActorMechanics.RetailBaseTicksPerSecond</c>), which is now
+    /// the simulation tick itself, where Core once drove it from the 30 Hz tick
+    /// by accumulating 20 thirtieths per tick — 2
     /// retail base updates per 3 simulation ticks. In offset terms
     /// <c>retailUpdates = offsetMs / 50</c>: 5 per 250 ms sample, 20 per 1 s
     /// sample. Both are whole numbers, so no gameplay sample straddles a retail
@@ -662,7 +664,7 @@ public sealed partial class FrontendCaptureRig : Node
             record["levelOffsetMs"] = offsetMs;
             record["phase"] = shot.Phase;
             record["widthxheight"] = $"{image.GetWidth()}x{image.GetHeight()}";
-            record["simulationTick"] = offsetMs * 3 / 100d;
+            record["simulationTick"] = offsetMs * 2 / 100d;
             record["engineFrameFromZero"] = FrameForOffsetMs(offsetMs);
             record["meanRGB"] = MeanRgb(image, error);
             record["sha256"] = error == Error.Ok ? Sha256Hex(path) : null;
@@ -757,8 +759,9 @@ public sealed partial class FrontendCaptureRig : Node
         if (_planName == "gameplay")
         {
             manifest["captureFramesPerSecond"] = CaptureFramesPerSecond;
-            manifest["simulationTicksPerSecond"] = 30;
-            manifest["retailBaseTicksPerSecond"] = 20;
+            manifest["simulationTicksPerSecond"] = SimulationConstants.TicksPerSecond;
+            manifest["retailBaseTicksPerSecond"] =
+                Level100ActorMechanics.RetailBaseTicksPerSecond;
             manifest["openingPanMs"] = OpeningPanMs;
             manifest["gameplayZeroFrame"] = _gameplayZeroFrame;
             manifest["offsetSource"] =

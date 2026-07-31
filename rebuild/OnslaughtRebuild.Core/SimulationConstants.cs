@@ -4,14 +4,27 @@ namespace OnslaughtRebuild.Core;
 
 public static class SimulationConstants
 {
-    public const int TicksPerSecond = 30;
-    // Retail's simulation tick is CLOCK_TICK 0.05 s
-    // (references/Onslaught/thing.h:29; eventmanager.cpp:296 advances
-    // mTime = mFrameCount * CLOCK_TICK). Constants recovered from shipped bytes
-    // are naturally expressed per RETAIL tick; this pair is the single place
-    // that converts one to a Core tick. When Core moves to 20 Hz the ratio
-    // becomes 1/1 and every "PerRetailTick" constant transfers unchanged, with
-    // no other edit. Do not reintroduce bare 30s anywhere.
+    // Core runs at RETAIL'S OWN RATE. Retail's simulation tick is
+    // CLOCK_TICK 0.05 s / GAME_FR 20.0 (references/Onslaught/thing.h:28-29;
+    // eventmanager.cpp:296 advances mTime = mFrameCount * CLOCK_TICK), and
+    // eventmanager.cpp:210-212 FLOORS every scheduled delay onto a whole 20 Hz
+    // boundary (`delay *= GAME_FR; delay = floorf(delay)`). A Core running at
+    // any other rate cannot land those boundaries at all.
+    //
+    // This was 30 until the 20 Hz migration. Every constant below that carries
+    // a per-tick magnitude moved with it, under four distinct rules, and the
+    // conversion recovered the verbatim shipped value for most of them - see
+    // the individual comments. The single clearest example is the landing
+    // thruster: 983_263/1_000_000 was 0.975^(2/3), an artefact of running at a
+    // rate the game did not; at 20 Hz it is retail's 0.975 exactly.
+    public const int TicksPerSecond = 20;
+    // Constants recovered from shipped bytes are naturally expressed per RETAIL
+    // tick; this pair is the single place that converts one to a Core tick.
+    // Core is now AT the retail rate, so the ratio is 1/1 and every
+    // "PerRetailTick" constant transfers unchanged. The pair is retained rather
+    // than deleted because it names the invariant: a constant read out of a
+    // shipped byte is per retail tick, and the day Core moves off 20 Hz again
+    // this is still the only place that has to change.
     public const int RetailTicksPerSecond = 20;
     public const int RetailTicksPerCoreTickNumerator = RetailTicksPerSecond;
     public const int RetailTicksPerCoreTickDenominator = TicksPerSecond;
@@ -44,15 +57,30 @@ public static class SimulationConstants
     public const int Level100ObjectiveTriggerRadius = 5_400;
     // Two fresh app-owned Steam Level 100 runs repeated a six-second opening
     // pan. Retail remains in GAME_STATE_PANNING until the full interval ends,
-    // so player actions are rejected for the first 180 Core ticks.
+    // so player actions are rejected for the first 120 Core ticks.
     public const int Level100OpeningPanTicks = 6 * TicksPerSecond;
     // Level 100 copied-retail runs repeated a 20 Hz walker response of
     // 0 -> 0.07 -> 0.119 -> 0.15 units/update, followed by exact 0.7 coast.
-    // The 30 Hz Core retains the measured time constant and 3.0 units/s cap.
-    public const int WalkerAccelerationPerTick = 33;
-    public const int WalkerVelocityRetentionNumerator = 7_884;
+    // Core is now at that same 20 Hz, so the measured sequence IS the
+    // recurrence: 70 mm added per tick into a store retained at
+    // mWalkFriction 0.7 (BattleEngineWalkerPart.cpp:412) gives
+    // 0 -> 70 -> 119 -> 153 -> ... -> 233 mm/tick, capped at
+    // mMaxWalkVelocity 0.15 = 150 mm/tick.
+    //
+    // CONVERSION RULE R3, not R1 or R4, and this row is why the distinction
+    // matters. 33 is an increment into a state that is damped by
+    // WalkerVelocityRetention on the same tick, so the factor is
+    // (1-r20)/(1-r30) * 1.5 = (0.3/0.2116) * 1.5 = 2.1264, giving 70.2.
+    // Scaling as a velocity (x1.5 -> 50) or as a free acceleration
+    // (x2.25 -> 74) would both give the wrong steady state.
+    public const int WalkerAccelerationPerTick = 70;
+    // mWalkFriction 0.7 verbatim (BattleEngineWalkerPart.cpp:412,
+    // `SetVelocity(GetVelocity()*mWalkFriction)`). This was 7_884/10_000,
+    // i.e. 0.7^(2/3), the 30 Hz time-equivalent.
+    public const int WalkerVelocityRetentionNumerator = 7_000;
     public const int WalkerVelocityRetentionDenominator = 10_000;
-    public const int WalkerMaximumSpeedPerTick = 100;
+    // mMaxWalkVelocity 0.15 verbatim (BattleEngineWalkerPart.cpp:417).
+    public const int WalkerMaximumSpeedPerTick = 150;
     // Canonical Steam CMCMech state at the authored Level 100 start supplies
     // these four body-local Footbase offsets in the released controller order:
     // front-left, front-right, rear-left, rear-right. Two uninterrupted slope
@@ -125,16 +153,42 @@ public static class SimulationConstants
     // 0.3/0.9 retail-unit target velocities per retail tick, mapped to Core.
     // These are the mMinAirVelocity / mMaxAirVelocity bytes and are identical
     // in five of the six shipped records, Aquila Prototype included.
-    public const int JetMinimumSpeedPerTick = 200;
-    public const int JetMaximumSpeedPerTick = 600;
-    public const int JetTargetCorrectionNumerator = 27_031;
+    public const int JetMinimumSpeedPerTick = 300;
+    public const int JetMaximumSpeedPerTick = 900;
+    // CBattleEngineJetPart::Move approaches the throttle's target speed by
+    // exactly one twenty-fifth of the shortfall per retail update
+    // (references/Onslaught/BattleEngineJetPart.cpp:379):
+    //
+    //     FVector move = mOrientation * FVector(0, (finalVel-velocity)/25.0f, 0);
+    //     mMainPart->AddVelocity(move);
+    //
+    // 1/25 = 0.04 exactly, so this is 40_000/1_000_000. The previous 27_031
+    // was NOT a conversion of that law - the exact 30 Hz form of 0.04 is
+    // 26_848, and 27_031 is 0.68 % away from it. It was fitted at 30 Hz. The
+    // shipped divisor wins.
+    public const int JetTargetCorrectionNumerator = 40_000;
     public const int JetTargetCorrectionDenominator = 1_000_000;
     // CBattleEngineJetPart::YawLeft/YawRight add body-local vx / 300 once per
-    // released 20 Hz update. Mapping that acceleration to the 30 Hz Core's
-    // milli-world-unit velocity gives 40/27 per full-input tick.
-    public const int JetStrafeAccelerationNumerator = 40;
-    public const int JetStrafeAccelerationDenominator = 27;
-    public const int JetYawInputMicroRadPerTick = 9_805;
+    // released 20 Hz update, and a Core tick is now that update, so the
+    // milli-world-unit acceleration is 1000/300 = 10/3 per full-input tick.
+    public const int JetStrafeAccelerationNumerator = 10;
+    public const int JetStrafeAccelerationDenominator = 3;
+    // CBattleEngineJetPart::Turn (BattleEngineJetPart.cpp:116) subtracts
+    //   yawRate = (vx * mAirTurnRate / 94.0f) * ZoomModifier(mZoom)
+    // from mYawvel once per retail update. `mAirTurnRate` is a shipped byte:
+    // record 3 "Aquila Prototype" @0x2F2 of data/battle engine
+    // configurations.dat (sha256
+    // 58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a,
+    // 1,514 bytes, decoded whole with CBattleEngineData::Load's field order,
+    // zero slack) reads 2.0 (0x40000000). ZoomModifier is the identity
+    // (BattleEngine.cpp:1913) and unzoomed mZoom is MAX_ZOOM_OUT 1.0.
+    // 2.0/94 = 0.0212766 rad = 21_277 micro-rad per retail tick.
+    //
+    // The previous 30 Hz value 9_805 converts (R3, x2.170337) to 21_280, three
+    // micro-radians from the byte - so this row was already correctly ported
+    // and only needed re-expressing. The shipped byte is used rather than the
+    // conversion.
+    public const int JetYawInputMicroRadPerTick = 21_277;
     public const int JetPitchInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
     public const int JetRollInputMicroRadPerTick = WalkerPitchInputMicroRadPerTick;
     // Written as seconds so the values are unchanged by a Core tick-rate move.
@@ -145,22 +199,53 @@ public static class SimulationConstants
     public const int JetTransformAlignmentTicks = 5 * TicksPerSecond / 2;
     public const int JetStrafeAlignmentTicks = 4 * TicksPerSecond;
     public const int JetPitchSoftLimitMicroRad = 1_170_000;
-    public const int JetRollAutoLevelNumerator = 979_899;
+    // Every retention below is now the SHIPPED FLOAT VERBATIM. Each was
+    // previously that float raised to the 2/3 power - the exact 30 Hz
+    // time-equivalent, and a pure tick-rate artefact. CONVERSION RULE R2
+    // (r20 = r30^1.5) recovers each one to six figures; the source value is
+    // used rather than the conversion.
+    //   BattleEngine.cpp:1220        mRoll *= 0.97f  (jet auto-level)
+    //   BattleEngineJetPart.cpp:622  return 0.99f    (altitude < 1)
+    //   BattleEngineJetPart.cpp:634  return 0.98f    (cruise)
+    //   BattleEngineJetPart.cpp:628  1.0f-(altitude*0.01f) floor, altitude < 3
+    public const int JetRollAutoLevelNumerator = 970_000;
     public const int JetRollAutoLevelDenominator = 1_000_000;
-    public const int JetNearSurfaceFrictionNumerator = 993_322;
-    public const int JetCruiseFrictionNumerator = 986_576;
-    public const int JetLowAltitudeFrictionNumerator = 979_899;
+    public const int JetNearSurfaceFrictionNumerator = 990_000;
+    public const int JetCruiseFrictionNumerator = 980_000;
+    public const int JetLowAltitudeFrictionNumerator = 970_000;
     public const int JetFrictionDenominator = 1_000_000;
-    public const int JetGroundedRetentionNumerator = 966_382;
-    public const int JetGroundedForwardCouplingNumerator = 31_951;
+    // The grounded jet, BattleEngineJetPart.cpp:413-419, is a COUPLED map and
+    // Core already implements it in the released order - retain, then add a
+    // fraction of the RETAINED magnitude along the nose:
+    //
+    //     FVector vel = mMainPart->GetVelocity()*0.95f;
+    //     mMainPart->SetVelocity(vel);
+    //     FVector new_vel_o = mOrientation * FVector(0, vel.Magnitude(), 0);
+    //     mMainPart->AddVelocity(new_vel_o*0.05f);
+    //
+    // At 20 Hz both halves are the shipped floats verbatim. Splitting a
+    // coupled map into two independently rate-converted factors was never
+    // exact, which is why the 30 Hz pair (966_382 / 31_951) was not simply
+    // 0.95^(2/3) and 0.05*(2/3). That approximation is now gone.
+    public const int JetGroundedRetentionNumerator = 950_000;
+    public const int JetGroundedForwardCouplingNumerator = 50_000;
     public const int JetGroundedResponseDenominator = 1_000_000;
-    public const int JetDescendingGroundEffectRetentionNumerator = 932_170;
+    // BattleEngineJetPart.cpp:573 `mMainPart->mVelocity.Z *= 0.90f`.
+    public const int JetDescendingGroundEffectRetentionNumerator = 900_000;
     public const int JetDescendingGroundEffectRetentionDenominator = 1_000_000;
-    public const int JetGroundFollowNumerator = 9_215;
+    // BattleEngineJetPart.cpp:596,602 pitch/roll follow the ground normal by
+    // `(desired - current) * 0.02f * (1 - altitude/5)` per retail update. The
+    // 0.02 is verbatim; it was 9_215 at 30 Hz (R3, x2.170337 -> 20_000.0).
+    public const int JetGroundFollowNumerator = 20_000;
     public const int JetGroundFollowDenominator = 1_000_000;
     public const int JetSkimRetentionNumerator = WalkerYawRetentionNumerator;
     public const int JetSkimRetentionDenominator = WalkerYawRetentionDenominator;
     public const int JetGroundEffectHeightMillimeters = 5_000;
+    // The divisor in BattleEngineJetPart.cpp:565's ground-effect lift,
+    // `(5-altitude)/400` per retail update. Named here because it used to be a
+    // bare 900 in a Simulation method body with nothing pointing at retail
+    // from the call site; 900 is 400 x 9/4, the 30 Hz free-acceleration factor.
+    public const int JetGroundEffectAccelerationDivisor = 400;
 
     // The ground-effect sample point is HALF A SECOND of travel ahead, not half
     // a tick. BattleEngineJetPart.cpp:548:
@@ -173,22 +258,26 @@ public static class SimulationConstants
     // quantity. So `mVelocity * GAME_FR` is units per SECOND and the 0.5f makes
     // the lookahead half a second of travel.
     //
-    // At 30 Hz that is 15 Core ticks of velocity. Core previously used
-    // `velocity / 2` - half a Core tick - which is 30x too near. Measured
-    // consequence at cruise (600 mm/tick): retail samples 9,000 mm ahead and
-    // Core sampled 300 mm. Flying level at a rising slope, the released Aquila
+    // At 20 Hz that is 10 Core ticks of velocity - and, Core now being at the
+    // retail rate, those ARE the ten retail updates the 0.5 f buys. Core once
+    // used `velocity / 2` - half a Core tick - which was 30x too near.
+    // Measured consequence at cruise: retail samples 9,000 mm ahead and Core
+    // sampled 300 mm. Flying level at a rising slope, the released Aquila
     // begins its lift and pitch-follow about fourteen ticks earlier; Core flew
     // into the hill because it could not see it yet.
     //
     // This is a lookahead DISTANCE, so it scales with velocity and carries no
-    // tick-rate factor of its own beyond the 15.
+    // tick-rate factor of its own beyond the half second.
     public const int JetGroundEffectLookaheadTicks = TicksPerSecond / 2;
     public const int JetSkimHeightMillimeters = 500;
-    public const int JetSkimMinimumHorizontalSpeedPerTick = 200;
+    public const int JetSkimMinimumHorizontalSpeedPerTick = 300;
     // BattleEngineJetPart.cpp:536 `float damage=(0.5f-altitude)*20.0f`. The
     // 20.0 is released life per released unit of depth below the 0.5 skim
     // ceiling, applied once per released 20 Hz update.
     public const int JetWaterSkimDamagePerReleasedUnit = 20;
+    // BattleEngineJetPart.cpp:533 `mPitchvel -= 0.01f*magnitudeXY` per retail
+    // update, with magnitudeXY in retail units.
+    public const int JetWaterSkimPitchKickMicroRadPerRetailUnit = 10_000;
 
     // Released AI states, from `data\MissionScripts\onsldef.msl` lines 2-6 -
     // authored developer text, shipped with the game, and #included as a header
@@ -200,11 +289,17 @@ public static class SimulationConstants
     // nothing distinguishes them yet.
     public const int ReleasedAiStateOn = 0;
     public const int ReleasedAiStateOff = 1;
-    // One retail world-unit per released 20 Hz update expressed as a 30 Hz
-    // Core speed. This conversion scale is independent of Blaster's 0.9 target.
-    public const int RetailVelocityUnitPerUpdateAsCoreSpeed = 667;
-    public const int JetGroundedSlowSpeedPerTick = 67;
-    public const int JetAutoLandSpeedPerTick = 17;
+    // One retail world unit in Core millimetres. Core once carried this as
+    // `RetailVelocityUnitPerUpdateAsCoreSpeed = 667` - one retail unit per
+    // released 20 Hz update expressed as a 30 Hz Core speed. Core is now AT
+    // the retail rate, so a retail unit per update is a Core millimetre count
+    // per tick with no rate factor at all, and the constant is just the length
+    // scale.
+    public const int MillimetersPerRetailUnit = 1_000;
+    // BattleEngineJetPart.cpp:418 `GetVelocity().MagnitudeSq() < 0.1f*0.1f`.
+    public const int JetGroundedSlowSpeedPerTick = 100;
+    // BattleEngineJetPart.cpp:432 `GetVelocity().MagnitudeSq() < 0.025f*0.025f`.
+    public const int JetAutoLandSpeedPerTick = 25;
     // CBattleEngineJetPart::Move arms the ground morph at
     // mOnGround = time + 2.5 s, only considers it once
     // mTransformStartTime + BATTLE_ENGINE_TRANSFORM_TIME * 2 has elapsed
@@ -213,49 +308,127 @@ public static class SimulationConstants
     // Core tick-rate move leaves them meaning the same thing.
     public const int JetAutoLandDelayTicks = 5 * TicksPerSecond / 2;
     public const int JetAutoLandEligibilityTicks = 1 * TicksPerSecond;
-    public const int JetStallSpeedPerTick = 100;
+    public const int JetStallSpeedPerTick = 150;
     public const int JetStallDelayTicks = 5 * TicksPerSecond / 2;
-    public const int JetGravityPerTick = 2;
-    public const int WalkerGravityPerTick = 4;
-    public const int MorphIntoWalkerGravityPerTick = 1;
-    // Grounded walk-to-fly injects 0.7 retail velocity once. Converting its
-    // released 20 Hz velocity unit to Core's 30 Hz step gives 467 mm/tick.
-    public const int WalkerToJetLiftImpulsePerTick = 467;
-    public const int WalkerVerticalRetentionNumerator = 788_374;
+    // GRAVITY. Recovered 2026-07-31 for the 20 Hz migration; these three had no
+    // provenance at all before, having arrived without a comment at 18ddfc49.
+    // They are `CThing::Gravity()` and its two BattleEngine overrides, added to
+    // the vertical velocity once per retail update at
+    // references/Onslaught/BattleEngine.cpp:1577
+    // (`mVelocity.Z += Gravity();`) and integrated into position by
+    // actor.cpp:114 (`mPos += mVelocity;`):
+    //
+    //   thing.h:187                  virtual float Gravity() { return 0.01f; }
+    //   BattleEngine.cpp:1078-1084   WALKER              -> 0.01
+    //                                MORPHING_INTO_JET   -> 0.01
+    //                                MORPHING_INTO_WALKER-> 0.01 * 0.2 = 0.002
+    //                                JET                 -> mJetPart->Gravity()
+    //   BattleEngineJetPart.cpp:507  0.005f iff mEnergy == 0, else 0.0f
+    //
+    // Confirmed in the pristine specimen local-lab/safe-copy-bea-pristine/
+    // BEA.exe.original.backup, sha256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab
+    // 334ed7a753040eda1e1e7750: CThing__GravityDefault @0x004014b0 loads
+    // .rdata 0x005d8574 = 0.01f; CBattleEngine__Gravity @0x004074d0 loads
+    // 0x005d8bac = 0.002f for MORPHING_INTO_WALKER (the compiler folded
+    // 0.01*0.2 into its own literal, an independent confirmation);
+    // CBattleEngineJetPart__Gravity @0x004114d0 loads 0x005d8cb0 = 0.005f.
+    //
+    // Retail Z points down and adds; Core Y points up and subtracts.
+    //
+    // NOTE THAT THESE ARE NOT A RESCALE OF THE OLD 2/4/1. Gravity is a free
+    // acceleration (CONVERSION RULE R4, x2.25), and x2.25 on the rounded 30 Hz
+    // integers gives 4.5 / 9 / 2.25 - all three wrong, because 4 was standing
+    // in for 10/2.25 = 4.44 and 1 for 2/2.25 = 0.89. Deriving from the retail
+    // literal removes the compounded rounding: at 20 Hz a Core tick IS a retail
+    // update, so the constants are the shipped floats times 1000 exactly.
+    // The walker consequently falls 11 % faster than it did at 30 Hz. That is
+    // the migration removing an error, not introducing one.
+    public const int JetGravityPerTick = 5;
+    public const int WalkerGravityPerTick = 10;
+    public const int MorphIntoWalkerGravityPerTick = 2;
+    // Grounded walk-to-fly injects 0.7 retail velocity once
+    // (BattleEngine.cpp:1511 `mVelocity.Z -= 0.7f`, retail Z down).
+    public const int WalkerToJetLiftImpulsePerTick = 700;
+    // The same mWalkFriction 0.7 as the horizontal store; was 788_374, i.e.
+    // 0.7^(2/3).
+    public const int WalkerVerticalRetentionNumerator = 700_000;
     public const int WalkerVerticalRetentionDenominator = 1_000_000;
-    // Held walker landing jets add -2.5% horizontal velocity and -7.5%
-    // downward velocity per released 20 Hz update. These are the equivalent
-    // 30 Hz retention factors; the action has no energy cost.
-    public const int WalkerLandingJetHorizontalRetentionNumerator = 983_263;
-    public const int WalkerLandingJetVerticalRetentionNumerator = 949_353;
+    // THE MIGRATION'S CLEAREST SINGLE PAYOFF. Held walker landing jets are
+    // references/Onslaught/BattleEngineWalkerPart.cpp:330-344:
+    //
+    //     vel.X = -vel.X*0.025f;   vel.Y = -vel.Y*0.025f;
+    //     if (vel.Z>0.01f) vel.Z = -vel.Z*0.075f; else vel.Z = 0;
+    //     mMainPart->AddVelocity(vel);
+    //
+    // i.e. retention 0.975 horizontal and 0.925 descending, per 20 Hz update.
+    // Core carried 983_263 and 949_353 because 0.983263^1.5 = 0.974999843 and
+    // 0.949353^1.5 = 0.924999697. The 843-nano and 303-nano residuals were not
+    // error in anyone's judgement - they were the price of running at a rate
+    // the game did not, and they are now gone. The action has no energy cost.
+    public const int WalkerLandingJetHorizontalRetentionNumerator = 975_000;
+    public const int WalkerLandingJetVerticalRetentionNumerator = 925_000;
     public const int WalkerLandingJetRetentionDenominator = 1_000_000;
-    public const int WalkerLandingJetMinimumDescentPerTick = 7;
-    public const int WalkerToJetPitchInputMicroRadPerTick = 6_911;
-    public const int WalkerToJetAirborneTransitionTicks = 3;
-    public const int RecentGroundContactTicks = 18;
+    // `if (vel.Z>0.01f)` - the descent below which the vertical arm is not
+    // applied at all. 7 was round(10 * 2/3) and carried a 4.8 % error.
+    public const int WalkerLandingJetMinimumDescentPerTick = 10;
+    // 0.015 rad per retail update (R3, x2.170337 on the old 6_911 -> 14_997.6).
+    public const int WalkerToJetPitchInputMicroRadPerTick = 15_000;
+    // 0.1 s. No cited byte; converted as a duration, unchanged in meaning.
+    public const int WalkerToJetAirborneTransitionTicks = 2;
+    // 0.6 s. UNKNOWN PROVENANCE - converted as a duration only, and NOT
+    // reconciled here with the shipped `_DAT_005d85ec = 0.5f` or the source's
+    // `GetTime() - mLastTimeOnGround < 0.3f`. That is DELTA D05, a pre-existing
+    // open question the tick change merely exposes; settling it is a separate
+    // measurement, not a unit conversion.
+    public const int RecentGroundContactTicks = 12;
     public const int Level100MaximumElevationMillimeters = 140_000;
     public const int Level100MapEdgeSlowdownMillimeters = 20_000;
     public const int Level100SteepSlopeGradientSquaredThreshold = 704_088;
     // CBattleEngine::DeclareOnGround uses 0.2 outside pure walker state and
-    // 0.4 in walker state. These are the corresponding 30 Hz velocities.
-    public const int JetGroundImpactThresholdPerTick = 133;
-    public const int WalkerGroundImpactThresholdPerTick = 267;
+    // 0.4 in walker state. Core is at the retail rate, so these are those two
+    // shipped floats verbatim.
+    public const int JetGroundImpactThresholdPerTick = 200;
+    public const int WalkerGroundImpactThresholdPerTick = 400;
     // DeclareInWater starts the failure path once the centre is within 0.2
     // retail units of the water plane.
     public const int WaterFailureClearanceMillimeters = 200;
-    public const int WalkerTerrainPitchCorrectionNumerator = 13_823;
+    // BattleEngine.cpp:1149,1165 correct pitch toward the ground pitch by
+    // `* 0.03f` per retail update. Verbatim; was 13_823
+    // (R3, x2.170337 -> 29_999.9).
+    public const int WalkerTerrainPitchCorrectionNumerator = 30_000;
     public const int WalkerTerrainPitchCorrectionDenominator = 1_000_000;
-    // Retail body yaw integrates its velocity and retains exactly 0.8 each
-    // 50 ms update. These are the time-equivalent 30 Hz coefficients; the
-    // velocity is kept in integer micro-radians to preserve the coast.
-    public const int WalkerYawInputMicroRadPerTick = 10_444;
-    public const int WalkerYawRetentionNumerator = 861_774;
+    // Retail body yaw integrates its velocity (BattleEngine.cpp:1196) and
+    // retains exactly 0.8 each 50 ms update (BattleEngine.cpp:1207). Core is
+    // at that rate, so the retention is the shipped 0.8 verbatim; it was
+    // 861_774, i.e. 0.8^(2/3).
+    //
+    // THE INPUT IS NOT A VERBATIM RETAIL VALUE AND IS FLAGGED AS SUCH.
+    // 22_667 is the behaviour-preserving R3 conversion of the previous 10_444
+    // (x2.170337 = 22_666.9). It corresponds to
+    // `vx * mGroundTurnRate / 75.0f` (BattleEngineWalkerPart.cpp:349) with
+    // mGroundTurnRate = 1.7. MEASURED 2026-07-31, that byte is 1.0, not 1.7:
+    // record 3 "Aquila Prototype" @0x2F6 of data/battle engine
+    // configurations.dat (sha256 58722b12a04cae97ad2163acb2cc2c1699f95a068831
+    // 8bd8a86696714d94454a, 1,514 bytes, decoded whole, zero slack, alignment
+    // proven against the seven already-cited fields of the same record) reads
+    // 1.0 / 0x3F800000. The shipped input is therefore 1.0/75 = 13_333
+    // micro-rad per retail tick and Core's walker turns 1.7x too fast.
+    //
+    // NOT CORRECTED HERE, deliberately. 1.7x on the yaw rate is a behaviour
+    // change of a different kind from a rate conversion, and folding it into
+    // the migration would make every moved golden unattributable. It is filed
+    // as a follow-up with the byte evidence above.
+    public const int WalkerYawInputMicroRadPerTick = 22_667;
+    public const int WalkerYawRetentionNumerator = 800_000;
     public const int WalkerYawRetentionDenominator = 1_000_000;
-    // Steam injects 1/117 rad at 20 Hz and retains exactly 0.8 after each
-    // update. This is the time-equivalent 30 Hz input; pitch uses the same
-    // measured retention as yaw. Source/static terrain-relative soft limits
-    // replace the earlier start-slope-only absolute clamps.
-    public const int WalkerPitchInputMicroRadPerTick = 3_938;
+    // Steam injects 1/117 rad per 20 Hz update
+    // (BattleEngineWalkerPart.cpp:355 `mPitchvel -= (vy/117.0f) * ZoomModifier`,
+    // and BattleEngineJetPart.cpp:117,157 for jet roll and pitch) and retains
+    // exactly 0.8 after each update. 1/117 = 0.0085470 rad = 8_547 micro-rad,
+    // verbatim; it was 3_938 (R3, x2.170337 -> 8_546.7). Source/static
+    // terrain-relative soft limits replace the earlier start-slope-only
+    // absolute clamps.
+    public const int WalkerPitchInputMicroRadPerTick = 8_547;
     public const int WalkerPitchRetentionNumerator = WalkerYawRetentionNumerator;
     public const int WalkerPitchRetentionDenominator = WalkerYawRetentionDenominator;
     // Two uninterrupted copied-retail repetitions at the authored Level 100
@@ -310,11 +483,30 @@ public static class SimulationConstants
     public const int MaximumHull = 20_000;
     // Morph itself does not spend energy, and jet-to-walker has no energy gate.
     public const int TransformEnergyThreshold = 1_000;
-    // Two fresh copied-retail Level 100 runs held raw BattleEngine state 1
-    // for 535.359-537.249 ms before state 3. Sixteen 30 Hz Core intervals
-    // are 533.333 ms and preserve those exact state-transition endpoints.
-    public const int WalkerToJetTransitionTicks = 16;
-    public const int JetToWalkerTransitionTicks = 15;
+    // DECIDED 2026-07-31, in the 20 Hz migration, and recorded as a DECISION
+    // rather than a conversion because it is one.
+    //
+    // Retail has a single macro for both directions:
+    // `BATTLE_ENGINE_TRANSFORM_TIME (0.5f)` (BattleEngine.h:43), scheduled
+    // through the event manager (BattleEngine.cpp:2058
+    // `AddEvent(BECOME_WALKER, this, GetTime() + BATTLE_ENGINE_TRANSFORM_TIME,
+    // START_OF_FRAME)`) which FLOORS every delay onto a whole GAME_FR 20
+    // boundary (eventmanager.cpp:210-212). 0.5 s x 20 Hz = exactly 10 ticks,
+    // both ways.
+    //
+    // Core's previous 16 / 15 came from two copied-retail runs that held raw
+    // BattleEngine state 1 for 535.359-537.249 ms. Those runs are not
+    // contradicted: a 500 ms transform whose start is not frame-aligned, polled
+    // on 50 ms boundaries, is observed as 500-550 ms, and 535-537 sits inside
+    // that window. The measurement resolves the shipped macro; it does not
+    // outrank it.
+    //
+    // JetToWalker converts to exactly 10 on its own (15 x 2/3), so only
+    // WalkerToJet is a real choice: the conversion gives 10.67 -> 11, the
+    // shipped macro gives 10. The macro wins, and the pair becomes symmetric
+    // as retail's single constant already implies.
+    public const int WalkerToJetTransitionTicks = 10;
+    public const int JetToWalkerTransitionTicks = 10;
     // CBattleEngineWalkerPart::Move recharges the store on the ground
     // (references/Onslaught/BattleEngineWalkerPart.cpp:374-388):
     //
@@ -331,10 +523,11 @@ public static class SimulationConstants
     // zero slack) carries mGroundEnergyIncrease 0.05 and mEnergy 8.0.
     //
     // MaximumEnergy is 8_000 Core against that released 8.0, so the store is
-    // milli-units: 0.05 released = 50 Core per RETAIL tick, and the 20 -> 30 Hz
-    // conversion is 50 * 20/30 = 33 per Core tick. The previous value of 4 was
-    // a placeholder and was eight times too slow, which cost the beat-9 sortie
-    // about 58 released seconds of standing still to recharge.
+    // milli-units: 0.05 released = 50 Core per RETAIL tick, and a Core tick is
+    // now that retail tick, so the shipped byte transfers verbatim. It was 33
+    // at 30 Hz (50 * 20/30). The value before that was 4, a placeholder eight
+    // times too slow, which cost the beat-9 sortie about 58 released seconds
+    // of standing still to recharge.
     //
     // The `/2` arm is DELIBERATELY NOT MODELLED. `Move` sets
     // mShieldsRecharging = TRUE at the end of every update
@@ -342,7 +535,7 @@ public static class SimulationConstants
     // the halved rate only occurs on an update following a shield drain. Core
     // has no shield-drain path to clear that flag, so modelling the halved arm
     // would mean inventing the condition that selects it.
-    public const int WalkerEnergyRegenerationPerTick = 33;
+    public const int WalkerEnergyRegenerationPerTick = 50;
     // CBattleEngineJetPart::Move spends
     //   cost = (mMaxAirEnergyCost - mMinAirEnergyCost) * mThrusterValue
     //          + mMinAirEnergyCost
@@ -379,14 +572,39 @@ public static class SimulationConstants
     // retail energy unit), so one Core energy unit is 1000 micro-retail.
     public const int MicroRetailEnergyPerCoreEnergyUnit = 1_000;
     public const int FireEnergyCost = 30;
-    public const int FireCooldownTicks = 6;
+    // 0.2 s, converted as a duration.
+    //
+    // UNKNOWN PROVENANCE, AND NOW CONTRADICTED BY A BYTE. Measured 2026-07-31:
+    // weapon `Pulse Cannon Pod` @0x17463 of data/default physics.dat (sha256
+    // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14,
+    // 175,603 bytes) resolves charge level 0 to weaponmode
+    // `Mech Pulse Cannon Charged` @0x134E3, whose CWeaponReloadTime is 0.1 s
+    // (0x3DCCCCCD @0x1351D) - half of Core's 0.2 s, i.e. 2 ticks not 4. The
+    // same decoder reproduces the already-cited Twin Vulcan 0.05 exactly.
+    //
+    // NOT ADOPTED HERE. Doubling the player's rate of fire is a behaviour
+    // change of a different kind from a rate conversion and would make the
+    // moved goldens unattributable. Filed as a follow-up with the evidence
+    // above.
+    public const int FireCooldownTicks = 4;
     // Fresh copied-Steam Level 100 runs independently repeated four
     // lowest-charge Pulse Cannon rounds against each of the three training
     // tanks. Every round carried definition speed 35 and moved exactly 1.75
-    // units per released 20 Hz update. Core's nearest 30 Hz integer
-    // translation is 1.167 units per tick.
-    public const int ProjectileSpeedPerTick = 1_167;
-    public const int ProjectileLifetimeTicks = 40;
+    // units per released 20 Hz update. Core is now at that rate, so 1.75 units
+    // per tick is the shipped figure verbatim; it was 1_167 at 30 Hz.
+    public const int ProjectileSpeedPerTick = 1_750;
+    // 1.333 s, converted as a duration.
+    //
+    // UNKNOWN PROVENANCE, AND NOW CONTRADICTED BY A BYTE. The round the above
+    // weaponmode fires is `Mech Pulse Bolt Medium` @0xAC16 of the same
+    // physics.dat, carrying CRoundVelocity 35.0 (0x420C0000 @0xAC3D - which is
+    // what identifies it, against the measured 1.75 x 20 Hz) and
+    // CRoundLifeSpan 6.0 (0x40C00000 @0xAC5D), i.e. 120 ticks, not 27.
+    //
+    // NOT ADOPTED HERE, for the same attribution reason as FireCooldownTicks.
+    // A 4.5x longer round life changes what a missed shot can still reach and
+    // adds live rounds to the hashed state. Filed as a follow-up.
+    public const int ProjectileLifetimeTicks = 27;
     // Mech Twin Vulcan Cannon, read out of data/default physics.dat
     // (sha256 e1fb3ded...b1a2321e1d6a9ba1542c74ada14, 175,603 bytes, 777
     // statements) with the value-id map established in
@@ -406,17 +624,21 @@ public static class SimulationConstants
     //                CExplosionRadius 0.2, CExplosionDamage 0.001
     // CRoundVelocity is units per second on the measured 20 Hz released tick
     // (the pulse's byte-read 35.0 divided by the measured 1.75 units per
-    // update is exactly 20), so 60.0 u/s is 2.0 units per 30 Hz Core tick and
-    // the 1.0 s lifespan is 30 Core ticks.
-    public const int MechBulletSpeedPerTick = 2_000;
+    // update is exactly 20), so 60.0 u/s is 3.0 units per released tick, which
+    // is now the Core tick, and the 1.0 s lifespan is 20 Core ticks.
+    public const int MechBulletSpeedPerTick = 3_000;
     public const int MechBulletLifetimeTicks = 1 * TicksPerSecond;
     public const int TwinVulcanVolleySize = 4;
-    // 0.05 s reload expressed exactly. One 30 Hz Core tick is 100/3 ms, so
-    // counting in thirds of a millisecond makes both the tick and the reload
-    // integral and keeps the released 20 volleys per second exact rather than
-    // rounding it to 15 or 30.
-    public const int FireCooldownThirdMillisecondsPerTick = 100;
-    public const int TwinVulcanReloadThirdMilliseconds = 150;
+    // CWeaponReloadTime 0.05 s. A 20 Hz Core tick IS 50 ms, so the reload is
+    // exactly one tick and the released 20 volleys per second fall out of the
+    // rate itself.
+    //
+    // This replaces a "thirds of a millisecond" counter that existed SOLELY
+    // because 1/30 s is not a whole number of milliseconds: at 30 Hz the
+    // reload was 150 thirds against 100 thirds per tick, firing on 2 ticks of
+    // every 3 to average the released 20 volleys per second rather than
+    // rounding it to 15 or 30. The unit has no reason to exist at 20 Hz.
+    public const int TwinVulcanReloadTicks = 1;
     // CWeaponConsumption is 2.0 for the Twin Vulcan against 4.0 for the Pulse
     // Cannon Pod. The absolute Core cost of a pulse shot (FireEnergyCost) is
     // not dual-accepted retail truth, so only the byte-read 2.0/4.0 ratio is
@@ -667,7 +889,7 @@ public static class SimulationConstants
     //   explosion `Mech Bullet Hit` CExplosionRadius 0.2, CExplosionDamage 0.001
     //
     // 60.0 units per second at the measured 20 Hz released tick is 3,000 mm
-    // per released tick, i.e. 2,000 mm per 30 Hz Core tick - the same figure
+    // per released tick, which is now the Core tick - the same figure
     // MechBulletSpeedPerTick already carries, because both rounds ship
     // CRoundVelocity 60.0. Damage is the same round+explosion sum the Mech
     // Bullet uses and which is recorded there as not independently proven:
@@ -681,9 +903,8 @@ public static class SimulationConstants
     public const int MechVulcanVolleySize = 2;
     public const uint MechAirBulletDamageBits = 0x3E1A9FBE;
     // CWeaponReloadTime 0.05 s, the same value and the same weapon-mode field
-    // as the walker Twin Vulcan, counted in the same thirds of a millisecond.
-    public const int MechVulcanReloadThirdMilliseconds =
-        TwinVulcanReloadThirdMilliseconds;
+    // as the walker Twin Vulcan, and now the same single Core tick.
+    public const int MechVulcanReloadTicks = TwinVulcanReloadTicks;
 
     // Player hull per released life point. `mLife` for Aquila Prototype is
     // 20.0 (data/battle engine configurations.dat @0x2d2), and Core defines a

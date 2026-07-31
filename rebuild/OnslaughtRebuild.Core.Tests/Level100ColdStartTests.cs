@@ -44,7 +44,7 @@ public sealed class Level100ColdCareerDirectRunFixture
     public Level100ColdCareerDirectRunFixture()
     {
         Driver = Level100ChainAutopilot.Create(default);
-        Outcome = Driver.Run(30 * 1_200);
+        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
     }
 }
 
@@ -72,7 +72,7 @@ public sealed class Level100ClientPointerQuantisedRunFixture
             quantizeLookToClientPointerPath: true,
             seed: Level100ColdStartRun.SimulationSeed,
             quantizeLookToIntegerMousePixels: true);
-        Outcome = Driver.Run(30 * 1_200);
+        Outcome = Driver.Run(1_200 * SimulationConstants.TicksPerSecond);
     }
 }
 
@@ -320,6 +320,19 @@ public sealed class Level100ColdStartTests
         // straight into `Simulation.Step` also reaches `Won`. The
         // pointer-quantised direct run matches the client run exactly; see the
         // next test.
+        //
+        // THE CONTROL IS WHERE THE 20 Hz MIGRATION SHOWED FIRST, and it was
+        // not a host defect. Immediately after the migration this arm ended
+        // `Lost` / `PlayerDeath` at t6877 with hull 0 while the client arm
+        // still reached `Won` at t7177 - which reads like a divergence between
+        // the two drivers, and is not one: QUANTISED matched CLIENT bit for
+        // bit, so both hosts were exact. Both arms were losing beat 9 onto the
+        // released sub-40 % abort with one kill between them, and the control
+        // simply ran out of hull first because the unquantised look axis puts
+        // it on a slightly different trajectory. The cause was three
+        // rate-denominated constants in the DRIVER that the migration did not
+        // move; see `Level100ChainAutopilot.ErrorPole` for the arithmetic and
+        // the four-way measurement that attributes it.
         Assert.Equal(Level100MissionOutcome.Won, _control.Outcome);
         Assert.Equal(
             Level100MissionFailureReason.None,

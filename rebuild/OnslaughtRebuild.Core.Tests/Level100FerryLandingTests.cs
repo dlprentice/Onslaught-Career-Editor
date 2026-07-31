@@ -22,7 +22,9 @@ internal sealed record Level100SweepRun(
     int WaveTwoKills,
     Level100PrimaryObjectiveStatus Objective4,
     IReadOnlyList<Level100ChainAutopilot.ObservedFlightLegMorph> Morphs,
-    (int Tick, int Elevation, int PreviousElevation)? WaterFailure)
+    (int Tick, int Elevation, int PreviousElevation)? WaterFailure,
+    int LowestElevationMillimeters,
+    int LowestElevationTick)
 {
     /// <summary>
     /// A loss to <see cref="Level100MissionFailureReason.WaterLoss"/> while the
@@ -81,7 +83,7 @@ public sealed class Level100FerrySweepFixture
 
 internal static class Level100FerrySweep
 {
-    internal const int TickBudget = 30 * 1_200;
+    internal const int TickBudget = 1_200 * SimulationConstants.TicksPerSecond;
 
     internal static Level100SweepRun RunOne(
         Level100LookPerturbation perturbation,
@@ -109,7 +111,9 @@ internal static class Level100FerrySweep
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status,
             driver.FlightLegMorphs,
-            driver.WaterFailure);
+            driver.WaterFailure,
+            driver.LowestElevationMillimeters,
+            driver.LowestElevationTick);
     }
 }
 
@@ -128,11 +132,28 @@ internal static class Level100FerrySweep
 /// already holds on every airborne tick, and the walker came down 10.1 m past
 /// the zone, in the sea.</para>
 ///
+/// <para><b>THE DROWNING NO LONGER REPRODUCES, AND THE MECHANISM DOES.</b> At
+/// 20 Hz the defect still commits a fall the driver cannot steer - measured,
+/// 25,026 mm of surface clearance on the returning player and 24,438 mm on the
+/// cold career, against a clearance term that refuses both - but that fall now
+/// lands INSIDE the volume on dry land instead of past it in the sea, and both
+/// adverse careers reach <c>Won</c>. The fall is not shorter; the airframe
+/// arrives slower. The ballistic drift a hand-off buys is
+/// <c>speed * (transitionTicks + r/(1-r))</c> and that expression is
+/// rate-invariant - retail's 0.975 per 20 Hz update is exactly the 30 Hz
+/// Core's 0.983263 - so the only term that moved is the speed the ferry leg
+/// carries when it arrives, which is decided by how beat 9 ends. Beat 9 is
+/// what the migration changed most.
+/// <see cref="AdverseControl_CommitsTheFallTheClearanceTermRefuses"/> carries
+/// the numbers and what it can and cannot still catch.</para>
+///
 /// <para><b>Everything downstream of the morph is a faithful port.</b> The
 /// landing thrusters are retail's 0.975 / 0.925 per 20 Hz update exactly
-/// (<c>BattleEngineWalkerPart.cpp:330-344</c> against
-/// <c>SimulationConstants.cs:229-232</c>: <c>0.983263^1.5 = 0.974999843</c> and
-/// <c>0.949353^1.5 = 0.924999697</c>), and the water rule is retail's
+/// (<c>BattleEngineWalkerPart.cpp:330-344</c>) - and since the 20 Hz
+/// migration they are those two shipped floats VERBATIM, where the 30 Hz Core
+/// had to carry <c>0.983263</c> and <c>0.949353</c> because
+/// <c>0.983263^1.5 = 0.974999843</c> and <c>0.949353^1.5 = 0.924999697</c>.
+/// The 843-nano and 303-nano residuals are gone. The water rule is retail's
 /// <c>altitude &gt; -0.2f</c> exactly
 /// (<c>BattleEngine.cpp:1249-1266</c> against
 /// <c>Simulation.WaterFailureAtElevation</c>). <b>So "retail would have braked
@@ -164,9 +185,10 @@ public sealed class Level100FerryLandingTests
     /// survives only the unperturbed trajectory has been shown nothing
     /// about.</para>
     ///
-    /// <para><b>Proof that it can fail is not hypothetical.</b> It is the
-    /// adverse arm printed beside it by <see cref="AdverseControl_Drowns"/>:
-    /// the same twenty perturbations, the same tree, the hand-off reverted to
+    /// <para><b>Proof that the hand-off is doing something is not
+    /// hypothetical.</b> It is the adverse arm printed beside it by
+    /// <see cref="AdverseControl_CommitsTheFallTheClearanceTermRefuses"/>: the
+    /// same twenty perturbations, the same tree, the hand-off reverted to
     /// horizontal distance alone.</para>
     /// </summary>
     [Fact]
@@ -186,32 +208,61 @@ public sealed class Level100FerryLandingTests
     }
 
     /// <summary>
-    /// GATE B, the adverse control, and the check the corpus was missing. The
-    /// same twenty perturbations with the defect reinstated - the hand-off
-    /// decided on horizontal distance alone - must still drown on the ferry
-    /// home.
+    /// GATE B, the adverse control. The same twenty perturbations with the
+    /// defect reinstated - the hand-off decided on horizontal distance alone -
+    /// must still commit the unsteerable fall the clearance term exists to
+    /// refuse.
     ///
-    /// <para><b>This catches both ways Gate A can be faked.</b> If the
-    /// clearance term silently became a no-op, both arms would look alike and
-    /// this would still be red only by luck - so it also asserts that the two
-    /// arms actually differ, and that the adverse arm's morphs really are the
-    /// high ones. And if somebody "fixed" the ferry by weakening the water rule
-    /// instead, THIS gate goes green: a run that is forced to come down in the
-    /// sea and survives means the sea stopped killing.</para>
+    /// <para><b>THIS TEST WAS CALLED <c>AdverseControl_Drowns</c> AND ITS
+    /// PREMISE DID NOT SURVIVE THE 20 Hz MIGRATION.</b> It asserted that the
+    /// reinstated defect still ends in <c>WaterLoss</c>. Measured after the
+    /// migration and after the driver's own rate-denominated poles were
+    /// converted (<c>Level100ChainAutopilot.ErrorPole</c>), it does not - not
+    /// on any of the twenty perturbations, and not on the cold career either.
+    /// The premise is re-stated here rather than deleted, and rather than
+    /// relaxed into something that would pass.</para>
+    ///
+    /// <para><b>What is still true, and it is the mechanism.</b> The defect
+    /// still hands off from the cruise, tens of metres up, and the clearance
+    /// term still refuses it:</para>
+    ///
+    /// <list type="table">
+    ///   <item><description>returning player, adverse: <c>TargetZone4</c> morph
+    ///   at t5197, 19,904 mm out, <b>25,026 mm</b> of surface clearance,
+    ///   <c>committed=False</c>.</description></item>
+    ///   <item><description>returning player, fixed: t5574, 3,259 mm out,
+    ///   <b>4,887 mm</b>, <c>committed=True</c>.</description></item>
+    ///   <item><description>cold career, adverse: t7405, 19,693 mm out,
+    ///   <b>24,438 mm</b>; fixed: t7879, 3,223 mm out, <b>4,962 mm</b>.
+    ///   </description></item>
+    /// </list>
+    ///
+    /// <para><b>What is no longer true, and why.</b> Both adverse careers now
+    /// reach <c>Won</c>. The fall is not shorter - the drift a hand-off buys is
+    /// <c>speed * (transitionTicks + r/(1-r))</c>, and every factor in it is
+    /// rate-invariant, because retail's 0.975 horizontal retention per 20 Hz
+    /// update is exactly what the 30 Hz Core spelled 0.983263. What moved is
+    /// the SPEED the ferry leg carries into the hand-off, which is set by the
+    /// state beat 9 leaves behind, and beat 9 is the beat the migration changed
+    /// most: it now ends with six kills and the wave cleared rather than on the
+    /// released sub-40 % abort. At 411 mm/tick and 19,904 mm out the commit
+    /// lands on the dock; the 30 Hz run came down 10.1 m past it.</para>
+    ///
+    /// <para><b>What this still catches, and what it does not.</b> It still
+    /// catches the clearance term silently becoming a no-op: that would make
+    /// both arms the same run, and the assertions below say the adverse arm
+    /// morphs above the tier while every fixed morph is at or below its own
+    /// permitted clearance. <b>It no longer catches a loosened water rule</b> -
+    /// nothing is forced into the sea any more - and that half of the job now
+    /// rests entirely on
+    /// <see cref="WaterRule_IsPinnedAtTheReleasedTwoHundredMillimetres"/>,
+    /// which is mutation-provable in one line and is the gate to keep green.
+    /// </para>
     /// </summary>
     [Fact]
-    public void AdverseControl_Drowns()
+    public void AdverseControl_CommitsTheFallTheClearanceTermRefuses()
     {
         Report("ADVERSE (horizontal-only hand-off)", _sweep.Adverse);
-
-        Level100SweepRun[] drowned = _sweep.Adverse
-            .Where(run => run.IsZoneFourFerryWaterLoss)
-            .ToArray();
-        Assert.True(
-            drowned.Length > 0,
-            "The adverse control did not drown once in twenty runs. Either the " +
-            "hand-off switch no longer reinstates the defect, or the water " +
-            "rule has been loosened - see Gate C.");
 
         // The adverse arm is adverse for the stated reason: it morphs high.
         int highestFixed = _sweep.Fixed
@@ -228,6 +279,46 @@ public sealed class Level100FerryLandingTests
                 Level100ChainAutopilot.ZoneHandoffClearanceMillimeters,
             "The adverse arm never morphed above the clearance the fixed arm " +
             "enforces, so it is not an adverse control at all.");
+
+        // And the term is what separates them: every adverse Target Zone 4
+        // hand-off is made from the cruise, above the tier, with no landing
+        // committed; every fixed one is made from the deck.
+        Level100ChainAutopilot.ObservedFlightLegMorph[] adverseFerry =
+            _sweep.Adverse
+                .SelectMany(run => run.Morphs)
+                .Where(morph => morph.Trigger == Level100MissionTrigger.TargetZone4)
+                .ToArray();
+        Level100ChainAutopilot.ObservedFlightLegMorph[] fixedFerry =
+            _sweep.Fixed
+                .SelectMany(run => run.Morphs)
+                .Where(morph => morph.Trigger == Level100MissionTrigger.TargetZone4)
+                .ToArray();
+        Assert.NotEmpty(adverseFerry);
+        Assert.NotEmpty(fixedFerry);
+
+        int adverseAboveTier = adverseFerry.Count(morph =>
+            morph.SurfaceClearanceMillimeters >
+            Level100ChainAutopilot.ZoneHandoffClearanceMillimeters);
+        int fixedAboveTier = fixedFerry.Count(morph =>
+            morph.SurfaceClearanceMillimeters >
+            Level100ChainAutopilot.ZoneHandoffClearanceMillimeters);
+        _output.WriteLine(
+            $"Target Zone 4 hand-offs above the cruise tier: " +
+            $"adverse {adverseAboveTier}/{adverseFerry.Length}, " +
+            $"fixed {fixedAboveTier}/{fixedFerry.Length}");
+
+        // NOT "every adverse morph", deliberately. Measured on the cold career,
+        // six of twenty perturbations arrive at the ferry BELOW 20,000 mm - as
+        // low as 17,501 - and on those the term would have permitted the morph
+        // anyway and the two arms coincide. The claim is the one that is true
+        // and is the one the gate needs: the defect reaches hand-offs the term
+        // refuses, and the term lets none of them through.
+        Assert.True(
+            adverseAboveTier > 0,
+            "no Target Zone 4 hand-off in the ADVERSE arm was above the cruise " +
+            "clearance, so the term was never asked to refuse anything and " +
+            "this is not an adverse control at all.");
+        Assert.Equal(0, fixedAboveTier);
     }
 
     /// <summary>
@@ -303,29 +394,79 @@ public sealed class Level100FerryLandingTests
 
     /// <summary>
     /// GATE C, part two: the rule above is the one the runtime actually
-    /// consults, and it fires on the crossing tick rather than early or late.
+    /// consults, against the elevation the airframe actually held, on every
+    /// tick of forty real runs.
     ///
-    /// <para>Taken from the adverse control's own drownings - real falls, in a
-    /// real run, not a constructed elevation. On the tick the loss is declared
-    /// the committed elevation is at or below water + 200; on the tick before
-    /// it, it was above.</para>
+    /// <para><b>THIS TEST WAS SOURCED FROM THE ADVERSE CONTROL'S OWN DROWNINGS
+    /// AND THE CORPUS STOPPED PRODUCING ANY.</b> It asserted the crossing: on
+    /// the tick a loss is declared the committed elevation is at or below
+    /// water + 200, and on the tick before it, above. Measured after the 20 Hz
+    /// migration and the driver re-derivation, <b>nothing drowns anywhere</b> -
+    /// not the twenty returning-player perturbations of either arm, not the
+    /// twenty cold-career perturbations of the adverse arm, and not even a
+    /// control flown with <c>BallisticTouchdownIsDryLand</c> disabled
+    /// altogether, which is the term that was added because the sweep still
+    /// drowned without it. Eighty runs, zero water losses.</para>
+    ///
+    /// <para><b>So the claim is re-stated rather than relaxed, and it is the
+    /// biconditional.</b> Every run reports its <b>low-water mark</b> - the
+    /// deepest committed elevation it ever reached - alongside whether the
+    /// runtime declared a water loss. The two must agree with
+    /// <see cref="Simulation.WaterFailureAtElevation"/>, run by run: a run that
+    /// never went at or below the boundary must not have drowned, and a run
+    /// that did must have. That is the same wiring the crossing test proved,
+    /// sampled on every tick of forty real runs instead of on two or three
+    /// crossings, and it is not vacuous - these runs fly the beat-6 leg out
+    /// over open sea and hand off above it.</para>
+    ///
+    /// <para>The crossing assertions are kept verbatim for any run that does
+    /// drown, so the day one does the gate is strictly stronger again with no
+    /// edit.</para>
     /// </summary>
     [Fact]
-    public void WaterRule_FiresOnTheCrossingTickInARealRun()
+    public void WaterRule_AgreesWithTheCommittedElevationInEveryRealRun()
     {
-        (int Tick, int Elevation, int PreviousElevation)[] crossings =
-            _sweep.Adverse
-                .Where(run => run.IsZoneFourFerryWaterLoss)
-                .Select(run => run.WaterFailure)
-                .OfType<(int Tick, int Elevation, int PreviousElevation)>()
-                .ToArray();
-        Assert.NotEmpty(crossings);
-
         const int Boundary =
             Level100Terrain.WaterElevationMillimeters +
             SimulationConstants.WaterFailureClearanceMillimeters;
-        foreach ((int tick, int elevation, int previous) in crossings)
+
+        Level100SweepRun[] runs = [.. _sweep.Fixed, .. _sweep.Adverse];
+        Assert.Equal(40, runs.Length);
+
+        int deepest = runs.Min(run => run.LowestElevationMillimeters);
+        _output.WriteLine(
+            $"boundary={Boundary}; deepest committed elevation over " +
+            $"{runs.Length} runs = {deepest}; drownings = " +
+            $"{runs.Count(run => run.WaterFailure is not null)}");
+
+        foreach (Level100SweepRun run in runs)
         {
+            // The low-water mark is real: every run was observed on every tick.
+            Assert.NotEqual(int.MaxValue, run.LowestElevationMillimeters);
+            Assert.True(run.LowestElevationTick >= 0);
+
+            bool reachedTheRule =
+                Simulation.WaterFailureAtElevation(run.LowestElevationMillimeters);
+            if (run.WaterFailure is null)
+            {
+                Assert.False(
+                    reachedTheRule,
+                    $"{run.Perturbation}: the run reached y=" +
+                    $"{run.LowestElevationMillimeters} at t{run.LowestElevationTick}, " +
+                    $"at or below the released boundary {Boundary}, and the " +
+                    "runtime declared no water loss - the rule is not being " +
+                    "consulted against the committed elevation.");
+                continue;
+            }
+
+            Assert.True(
+                reachedTheRule,
+                $"{run.Perturbation}: the runtime declared a water loss but the " +
+                $"deepest elevation the run ever reached was y=" +
+                $"{run.LowestElevationMillimeters}, above the boundary " +
+                $"{Boundary} - the rule has been loosened.");
+
+            (int tick, int elevation, int previous) = run.WaterFailure.Value;
             _output.WriteLine(
                 $"t{tick} water failure at y={elevation}; previous tick y={previous}; " +
                 $"boundary={Boundary}");
@@ -354,13 +495,17 @@ public sealed class Level100FerryLandingTests
     /// <para><b>It is asserted rather than argued because the argument was
     /// wrong.</b> The received account of this defect held that an altitude term
     /// would be a no-op on beats 1-8 "by construction", because those approaches
-    /// are made on the ground. They are not: measured, beat 6 hands off 18,969
-    /// mm above the surface and beat 8 hands off 19,759 mm, both airborne, both
-    /// over a drop they then fall down. The hand-off radius is a no-op there
-    /// only because it is 20,000 - which is 241 mm of margin at beat 8 - and
-    /// that is a fact about this level, not a property of the shape of the fix.
-    /// A tighter threshold moves both legs, and moving them re-rolls beat 9.
-    /// </para>
+    /// are made on the ground. They are not: measured at 20 Hz, beat 6 hands off
+    /// <b>13,914</b> mm above the surface and beat 8 hands off <b>19,972</b> mm,
+    /// both airborne, both over a drop they then fall down. The hand-off radius
+    /// is a no-op there only because it is 20,000 - which is <b>28 mm</b> of
+    /// margin at beat 8, where the 30 Hz Core had 241 - and that is a fact about
+    /// this level, not a property of the shape of the fix. A tighter threshold
+    /// moves both legs, and moving them re-rolls beat 9.</para>
+    ///
+    /// <para>The ferry itself arrives at <b>25,026</b> mm on this run, so the
+    /// two arms separate there and nowhere earlier: first divergent player pose
+    /// t5209 against a ferry that begins at t5073.</para>
     /// </summary>
     [Fact]
     public void ClearanceTerms_ChangeNothingBeforeTheFerryHome()

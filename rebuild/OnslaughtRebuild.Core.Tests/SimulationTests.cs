@@ -64,7 +64,11 @@ public sealed class SimulationTests
         Simulation repeat = CreatePlayingSimulation();
 
         Assert.Equal(211, first.Snapshot.PlayerGroundElevationMillimeters);
-        for (int tick = 0; tick < 40; tick++)
+        // 1.333 s, stated against the rate. This was a bare 40, which at 20 Hz
+        // would be half a second further down the slope.
+        for (int tick = 0;
+             tick < 4 * SimulationConstants.TicksPerSecond / 3;
+             tick++)
         {
             WorldSnapshot firstState = first.Step(new SimInput(-1, 1));
             WorldSnapshot repeatState = repeat.Step(new SimInput(-1, 1));
@@ -74,8 +78,11 @@ public sealed class SimulationTests
             Assert.Equal(StateHasher.ComputeHex(firstState), StateHasher.ComputeHex(repeatState));
         }
 
-        Assert.Equal(new SimVector2(-3_705, 1_007), first.Snapshot.PlayerPosition);
-        Assert.Equal(5, first.Snapshot.PlayerGroundElevationMillimeters);
+        // Within 92 mm of the 30 Hz pose over the same 1.333 s of held input:
+        // the walker model is preserved by the migration, and this is the
+        // measurement that says so rather than the argument.
+        Assert.Equal(new SimVector2(-3_613, 1_011), first.Snapshot.PlayerPosition);
+        Assert.Equal(30, first.Snapshot.PlayerGroundElevationMillimeters);
     }
 
     [Fact]
@@ -220,7 +227,7 @@ public sealed class SimulationTests
                 .OfType<Level100MessageRequested>()
                 .Select(message => message.MessageId)));
 
-        Assert.Equal(1_217, simulation.Snapshot.Level100Mission.Tick);
+        Assert.Equal(812, simulation.Snapshot.Level100Mission.Tick);
 
         // TUTORIAL_01 and TUTORIAL_SCANNER are both PlayCharMessage - the
         // script does not wait for them - so the objective is set before either
@@ -249,13 +256,20 @@ public sealed class SimulationTests
     {
         Simulation simulation = CreatePlayingSimulation();
 
+        // Every value below moved with the 20 Hz migration and none of them is
+        // a behaviour change: WalkerAccelerationPerTick is 70 where it was 33
+        // (a damped-input conversion, x2.126), and the cap is
+        // mMaxWalkVelocity 0.15 = 150 mm/tick where it was 100 - both of which
+        // are the SAME 3,000 mm/s. The measured retail sequence this pins,
+        // 0 -> 0.07 -> 0.119 -> 0.15 units per RELEASED update, is now
+        // reproduced tick for tick rather than through a time-equivalent.
         foreach (SimVector2 expected in new[]
                  {
-                     new SimVector2(-16, 29),
-                     new SimVector2(-28, 51),
-                     new SimVector2(-38, 69),
-                     new SimVector2(-45, 83),
-                     new SimVector2(-47, 87),
+                     new SimVector2(-34, 61),
+                     new SimVector2(-57, 103),
+                     new SimVector2(-72, 131),
+                     new SimVector2(-72, 131),
+                     new SimVector2(-72, 131),
                  })
         {
             WorldSnapshot state = simulation.Step(new SimInput(0, 1));
@@ -264,11 +278,11 @@ public sealed class SimulationTests
 
         foreach (SimVector2 expected in new[]
                  {
-                     new SimVector2(-37, 68),
-                     new SimVector2(-29, 53),
-                     new SimVector2(-22, 41),
-                     new SimVector2(-17, 32),
-                     new SimVector2(-13, 25),
+                     new SimVector2(-50, 91),
+                     new SimVector2(-35, 63),
+                     new SimVector2(-24, 44),
+                     new SimVector2(-16, 30),
+                     new SimVector2(-11, 21),
                  })
         {
             WorldSnapshot state = simulation.Step(SimInput.Idle);
@@ -283,11 +297,11 @@ public sealed class SimulationTests
 
         foreach (SimVector2 expected in new[]
                  {
-                     new SimVector2(29, 16),
-                     new SimVector2(51, 28),
-                     new SimVector2(69, 38),
-                     new SimVector2(83, 45),
-                     new SimVector2(87, 47),
+                     new SimVector2(61, 34),
+                     new SimVector2(103, 57),
+                     new SimVector2(131, 72),
+                     new SimVector2(131, 72),
+                     new SimVector2(131, 72),
                  })
         {
             WorldSnapshot state = simulation.Step(new SimInput(1, 0));
@@ -300,15 +314,16 @@ public sealed class SimulationTests
     {
         Simulation simulation = CreatePlayingSimulation();
 
-        foreach (int expected in new[] { 10_444, 19_444, 27_200, 33_884, 39_644 })
+        foreach (int expected in
+                 new[] { 22_667, 40_800, 55_307, 66_912, 76_196 })
         {
             WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
             Assert.Equal(expected, state.WalkerYawVelocityMicroRadPerTick);
         }
 
         WorldSnapshot coast = simulation.Step(SimInput.Idle);
-        Assert.Equal(34_164, coast.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(674_610, coast.FacingYawMicroRad);
+        Assert.Equal(60_956, coast.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(832_668, coast.FacingYawMicroRad);
     }
 
     /// <summary>
@@ -348,7 +363,8 @@ public sealed class SimulationTests
 
         // 30x is the measured size of the old error at the documented cruise
         // speed, recorded so the magnitude is not lost if the constant moves.
-        const int CruiseSpeedMillimetresPerTick = 600;
+        int CruiseSpeedMillimetresPerTick =
+            SimulationConstants.JetMaximumSpeedPerTick;
         Assert.Equal(
             9_000,
             CruiseSpeedMillimetresPerTick * SimulationConstants.JetGroundEffectLookaheadTicks);
@@ -413,7 +429,7 @@ public sealed class SimulationTests
         int ticksToDeath =
             (SimulationConstants.MaximumHull + (int)expectedPerCoreTick - 1) /
             (int)expectedPerCoreTick;
-        Assert.Equal(4, ticksToDeath);
+        Assert.Equal(2, ticksToDeath);
     }
 
     [Fact]
@@ -494,11 +510,11 @@ public sealed class SimulationTests
 
         (int Velocity, int Pitch)[] expected =
         [
-            (-3_938, -3_938),
-            (-7_331, -11_269),
-            (-10_255, -21_524),
-            (-12_775, -34_299),
-            (-14_947, -49_246),
+            (-8_547, -8_547),
+            (-15_384, -23_931),
+            (-20_854, -44_785),
+            (-25_230, -70_015),
+            (-28_731, -98_746),
         ];
         foreach ((int velocity, int pitch) in expected)
         {
@@ -508,8 +524,8 @@ public sealed class SimulationTests
         }
 
         WorldSnapshot coast = simulation.Step(SimInput.Idle);
-        Assert.Equal(-12_880, coast.WalkerPitchVelocityMicroRadPerTick);
-        Assert.Equal(-62_126, coast.FacingPitchMicroRad);
+        Assert.Equal(-22_984, coast.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(-121_730, coast.FacingPitchMicroRad);
 
         for (int tick = 0; tick < 100; tick++)
         {
@@ -566,7 +582,10 @@ public sealed class SimulationTests
     public void WalkerMovementUsesContinuousBodyYawWithoutResettingLookYaw()
     {
         Simulation simulation = CreatePlayingSimulation();
-        for (int tick = 0; tick < 20; tick++)
+        // 0.667 s of held look, stated against the rate.
+        for (int tick = 0;
+             tick < 2 * SimulationConstants.TicksPerSecond / 3;
+             tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: 1));
         }
@@ -574,8 +593,11 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Step(new SimInput(0, 1));
         Assert.Equal(1, state.FacingX);
         Assert.Equal(0, state.FacingZ);
-        Assert.Equal(1_635_706, state.FacingYawMicroRad);
-        Assert.Equal(new SimVector2(-33, -2), state.PlayerVelocity);
+        // 1,640,433 against the 30 Hz 1,635,706 - 4.7 milliradians over the same
+        // two-thirds of a second, which is the integer quantum of the reconverted
+        // impulse and not a change in the turn rate.
+        Assert.Equal(1_640_433, state.FacingYawMicroRad);
+        Assert.Equal(new SimVector2(-70, -5), state.PlayerVelocity);
     }
 
     [Fact]
@@ -704,7 +726,7 @@ public sealed class SimulationTests
         WorldSnapshot halfInput = half.Step(new SimInput(0, 0, LookXAnalogPermille: 500));
         WorldSnapshot fullInput = full.Step(new SimInput(0, 0, LookXAnalogPermille: 1_000));
 
-        Assert.Equal(10_444, fullInput.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(22_667, fullInput.WalkerYawVelocityMicroRadPerTick);
 
         // Asserted as the law rather than as a golden number: whatever full
         // deflection commands, half deflection commands the curve's fraction
@@ -742,14 +764,18 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
         Assert.Equal(0, state.FacingX);
         Assert.Equal(1, state.FacingZ);
-        Assert.Equal(520_274, state.FacingYawMicroRad);
+        Assert.Equal(532_497, state.FacingYawMicroRad);
     }
 
     [Fact]
     public void LookX_Negative_TurnsLeftFromTheAuthoredStartYaw()
     {
         Simulation simulation = CreatePlayingSimulation();
-        for (int tick = 0; tick < 20; tick++)
+        // 0.667 s of held look, stated against the rate. Held for 20 ticks at
+        // 20 Hz the walker turns half again as far and leaves this sector.
+        for (int tick = 0;
+             tick < 2 * SimulationConstants.TicksPerSecond / 3;
+             tick++)
         {
             simulation.Step(new SimInput(0, 0, LookX: -1));
         }
@@ -779,8 +805,8 @@ public sealed class SimulationTests
             12_000,
             SimulationConstants.JetMaximumEnergyDrainMicroPerRetailTick);
         Assert.Equal(20, SimulationConstants.RetailTicksPerSecond);
-        Assert.Equal(40, SimulationConstants.JetStrafeAccelerationNumerator);
-        Assert.Equal(27, SimulationConstants.JetStrafeAccelerationDenominator);
+        Assert.Equal(10, SimulationConstants.JetStrafeAccelerationNumerator);
+        Assert.Equal(3, SimulationConstants.JetStrafeAccelerationDenominator);
     }
 
     [Fact]
@@ -912,9 +938,10 @@ public sealed class SimulationTests
             BitConverter.SingleToInt32Bits(0.5f).ToString(
                 System.Globalization.CultureInfo.InvariantCulture),
             targetZonePause.WaitArgument);
-        Assert.Equal(15, targetZonePause.DueTick - simulation.Snapshot.Tick);
+        Assert.Equal(10, targetZonePause.DueTick - simulation.Snapshot.Tick);
 
-        for (int tick = 1; tick < 15; tick++)
+        // The released Pause is 0.5 s, which is ten ticks at 20 Hz.
+        for (int tick = 1; tick < 10; tick++)
         {
             Assert.False(Trigger(
                 simulation.Step(SimInput.Idle),
@@ -931,8 +958,8 @@ public sealed class SimulationTests
         Level100ActorScriptContinuationSnapshot firingRangePause =
             DriveUntilTriggerPause(simulation, Level100MissionTrigger.FiringRange);
         Assert.Equal(Level100ActorScriptWaitKind.Pause, firingRangePause.WaitKind);
-        Assert.Equal(15, firingRangePause.DueTick - simulation.Snapshot.Tick);
-        for (int tick = 0; tick < 15; tick++)
+        Assert.Equal(10, firingRangePause.DueTick - simulation.Snapshot.Tick);
+        for (int tick = 0; tick < 10; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
@@ -943,7 +970,7 @@ public sealed class SimulationTests
             simulation.Snapshot.Level100Mission.PrimaryObjectives[0].Status);
         Assert.True(simulation.Snapshot.Level100FiringRangeTargetsActive);
         Assert.False(simulation.Snapshot.Level100PulseCannonEnabled);
-        for (int tick = 0; tick < 30; tick++)
+        for (int tick = 0; tick < SimulationConstants.TicksPerSecond; tick++)
         {
             simulation.Step(SimInput.Idle);
         }
@@ -989,7 +1016,7 @@ public sealed class SimulationTests
             ((long)projectile.Velocity.Z * projectile.Velocity.Z) +
             ((long)projectile.VerticalVelocityMillimetersPerTick *
                 projectile.VerticalVelocityMillimetersPerTick);
-        Assert.InRange(speedSquared, (long)1_166 * 1_166, (long)1_168 * 1_168);
+        Assert.InRange(speedSquared, (long)1_749 * 1_749, (long)1_751 * 1_751);
         double yaw = fired.FacingYawMicroRad / 1_000_000d;
         double pitch = fired.FacingPitchMicroRad / 1_000_000d;
         double emitterForwardPlane =
@@ -1268,7 +1295,8 @@ public sealed class SimulationTests
                 target.Z - state.PlayerPosition.Z);
             double error = NormalizeRadians(desired - (state.FacingYawMicroRad / 1_000_000d));
             if (Math.Abs(error) < 0.035d &&
-                Math.Abs(state.WalkerYawVelocityMicroRadPerTick) < 7_000)
+                Math.Abs(state.WalkerYawVelocityMicroRadPerTick) <
+                    SimulationConstants.WalkerYawInputMicroRadPerTick * 2 / 3)
             {
                 return;
             }

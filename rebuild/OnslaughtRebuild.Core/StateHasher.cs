@@ -24,6 +24,20 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 33: the 30 Hz -> 20 Hz Core migration. This bump exists because
+            // the hashed BYTE LAYOUT changed, independently of any trajectory:
+            // Level100ActorMechanicsSnapshot.RetailBaseTickAccumulatorThirtieths
+            // was the 20-of-every-30 base-tick accumulator, and at 20 Hz the
+            // accumulator is the identity, so the field and its four bytes are
+            // gone from every hashed tick.
+            //
+            // THREE INDEPENDENT REASONS MOVE EVERY PINNED HASH HERE, and each
+            // one alone would be sufficient - do not attribute a moved hash to
+            // only one of them: (1) this version int; (2) the removed field;
+            // (3) state.Tick is hashed first and every tick count is now
+            // two-thirds of what it was; (4) every trajectory is re-integrated
+            // against the reconverted constants.
+            //
             // 32: added Level100Mission.MessageBoxAllowedTick. The released
             // message-box gate is StartPlayingState + NEXT_FRAME, and
             // BUTTON_SKIP_PANNING can move StartPlayingState to any tick of
@@ -36,7 +50,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(32);
+            writer.Write(33);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -231,7 +245,6 @@ public static class StateHasher
         ArgumentNullException.ThrowIfNull(mechanics);
         ArgumentNullException.ThrowIfNull(mechanics.Actors);
         writer.Write(mechanics.LastConsumedCommandSequence);
-        writer.Write(mechanics.RetailBaseTickAccumulatorThirtieths);
         Level100ActorCommandIntentSnapshot[] actors = mechanics.Actors
             .OrderBy(actor => actor.ActorId.Value)
             .ToArray();

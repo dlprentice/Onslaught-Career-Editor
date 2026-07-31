@@ -125,7 +125,7 @@ internal sealed class Level100ColdStartRun
     /// <c>player.Deactivate()</c> / <c>player.Activate()</c> gates all
     /// play.</para>
     /// </summary>
-    internal Level100MissionOutcome Run(int maximumLevelTicks = 30 * 1_200)
+    internal Level100MissionOutcome Run(int maximumLevelTicks = 1_200 * SimulationConstants.TicksPerSecond)
     {
         RunStartupMedia();
         RunFrontendToGameplay();

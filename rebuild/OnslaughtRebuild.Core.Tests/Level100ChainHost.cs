@@ -225,18 +225,19 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     /// one-step property on every frame rather than trusting the arithmetic.
     /// </para>
     /// </summary>
-    internal const long FrameElapsedTicks = 333_334;
+    internal const long FrameElapsedTicks = 500_000;
 
     // The inverse of InteractiveSession's two published pointer laws. Both
     // constants are transcribed from OnslaughtRebuild.Client/InteractiveSession.cs
     // (PointerAxisNumerator/Denominator and PointerOffsetRetention*), which
     // carries their retail provenance: 91/3000 is the shipped 13/3000 scalar at
     // pristine VA 0x005d97c8 times the image's untouched 7.0 sensitivity, and
-    // 702049/1000000 is the 30 Hz time-equivalent of retail's 10/17 recentring.
+    // and 10/17 is retail's own recentring, used verbatim since Core moved to
+    // retail's 20 Hz (it read 702049/1000000, the 30 Hz time-equivalent).
     private const int PointerAxisNumerator = 91;
     private const int PointerAxisDenominator = 3_000;
-    private const int PointerRetentionNumerator = 702_049;
-    private const int PointerRetentionDenominator = 1_000_000;
+    private const int PointerRetentionNumerator = 10;
+    private const int PointerRetentionDenominator = 17;
 
     /// <summary>
     /// Milli-pixels in one whole pixel - retail's cursor quantum, and since

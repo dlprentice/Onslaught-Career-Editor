@@ -117,7 +117,7 @@ public sealed class Level100JetGroundEffectTests
             {
                 double leadTicks = engagement.LeadTicks;
                 Assert.True(
-                    leadTicks is >= 13.0 and <= 16.5,
+                    leadTicks is >= 8.7 and <= 11.0,
                     $"Throttle {engagement.Throttle}: ground effect engaged " +
                     $"{engagement.LeadDistanceMillimeters} mm short of the slope at " +
                     $"{engagement.SpeedMillimetersPerTick:F1} mm/tick, which is {leadTicks:F2} ticks. " +
@@ -215,7 +215,7 @@ internal sealed class Level100LowFlightDriver
     /// <summary>Clearance required before an approach is considered settled.</summary>
     private const int SettledClearanceMillimeters = 8_000;
 
-    private const int MaximumApproachTicks = 900;
+    private const int MaximumApproachTicks = 30 * SimulationConstants.TicksPerSecond;
 
     private readonly List<string> _log = [];
 

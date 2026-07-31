@@ -2,11 +2,16 @@
 
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.TestSupport;
+using Xunit.Abstractions;
 
 namespace OnslaughtRebuild.Core.Tests;
 
 public sealed class Level100MissionTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public Level100MissionTests(ITestOutputHelper output) => _output = output;
+
     private static readonly Level100TutorialProgress CompletedTutorialSlots =
         new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
 
@@ -192,17 +197,36 @@ public sealed class Level100MissionTests
     /// <c>rebuild/PROVENANCE.md</c>: one clean control and two fresh
     /// uninterrupted app-owned Steam Level 100 runs repeated these eight
     /// boundaries within one 50 ms retail sample, with Core tick zero aligned
-    /// to Steam's game-time-3.0 pan start. 50 ms is 1.5 Core ticks, and each
-    /// span it reports differs from the shipped Ogg-derived table by at most
-    /// one tick, so the residual is allowed to accumulate to four ticks
-    /// (0.13 s) across the eight. The gap is asserted EXACTLY because every
-    /// one of the seven measured gaps is exactly six.
+    /// to Steam's game-time-3.0 pan start. The gap is asserted EXACTLY because
+    /// every one of the seven measured gaps is exactly six 30 Hz ticks, i.e.
+    /// 0.2 s.
+    /// </para>
+    /// <para>
+    /// <b>THE RETAIL COLUMN IS RECORDED IN 30 Hz CORE TICKS AND IS NOT
+    /// CONVERTED HERE.</b> That is deliberate: it is somebody's measurement,
+    /// and rewriting a measurement into the unit of the day is how a
+    /// measurement quietly acquires the assumptions of the code it is checking.
+    /// Both columns are instead compared in MILLISECONDS, which is the unit the
+    /// 50 ms sampler actually worked in and the only one that survives a Core
+    /// tick-rate change.
+    /// </para>
+    /// <para>
+    /// <b>This is the migration's headline acceptance signal.</b> Retail floors
+    /// every scheduled delay onto a whole 20 Hz boundary
+    /// (<c>references/Onslaught/eventmanager.cpp:210-212</c>), so a 30 Hz Core
+    /// could not land those boundaries even in principle. A correct 20 Hz Core
+    /// should land them BETTER - and the summed-residual assertion below is
+    /// there so that a failure to improve is a red test rather than a shrug.
+    /// The 30 Hz tree's summed absolute residual over these sixteen boundaries
+    /// was 766.7 ms; anything at or above that means the migration did not do
+    /// the thing it was for.
     /// </para>
     /// </remarks>
     [Fact]
     public void ReleasedMessageBox_ReproducesTheRetailOpeningDeliverySchedule()
     {
-        // (message id, retail measured start, retail measured end)
+        // (message id, retail measured start, retail measured end), both in
+        // the 30 Hz Core ticks the measurement was recorded in.
         (int Id, int Start, int End)[] retail =
         [
             (292562, 182, 351),          // HUD_01, the greeting
@@ -214,6 +238,22 @@ public sealed class Level100MissionTests
             (4422830, 1226, 1387),       // TUTORIAL_01
             (175347826, 1393, 1530),     // TUTORIAL_SCANNER
         ];
+
+        // The rate the retail column above is expressed in. It is a property of
+        // that recorded measurement, NOT of Core, and must not be replaced with
+        // SimulationConstants.TicksPerSecond.
+        const double RetailColumnTicksPerSecond = 30d;
+        static double RetailMs(int tick) =>
+            tick * 1_000d / RetailColumnTicksPerSecond;
+        static double CoreMs(int tick) =>
+            tick * 1_000d / SimulationConstants.TicksPerSecond;
+
+        // Three 50 ms retail samples. Stated in milliseconds so it cannot
+        // silently loosen when the Core rate moves: the old form was "4 Core
+        // ticks", which was 133 ms at 30 Hz and would have become 200 ms here.
+        const double ToleranceMs = 150d;
+        // The 30 Hz tree's own total over the same sixteen boundaries.
+        const double ThirtyHertzResidualMs = 766.7d;
 
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
         var actors = new Level100ActorRegistry(definitions);
@@ -252,6 +292,7 @@ public sealed class Level100MissionTests
             "the greeting must not be delivered behind the opening pan");
 
         int previousEnd = int.MinValue;
+        double totalResidualMs = 0;
         for (int index = 0; index < retail.Length; index++)
         {
             Level100MessageRequested actual = delivered[index];
@@ -272,13 +313,39 @@ public sealed class Level100MissionTests
                     actual.Tick - previousEnd);
             }
 
-            Assert.InRange(actual.Tick, start - 4, start + 4);
-            Assert.InRange(
-                actual.Tick + actual.ExpectedPlaybackTicks,
-                end - 4,
-                end + 4);
-            previousEnd = actual.Tick + actual.ExpectedPlaybackTicks;
+            int actualEnd = actual.Tick + actual.ExpectedPlaybackTicks;
+            double startResidualMs = CoreMs(actual.Tick) - RetailMs(start);
+            double endResidualMs = CoreMs(actualEnd) - RetailMs(end);
+            _output.WriteLine(
+                $"{id,12}  start core={actual.Tick,5} " +
+                $"({CoreMs(actual.Tick),9:F1} ms) retail={start,5} " +
+                $"({RetailMs(start),9:F1} ms) residual={startResidualMs,7:F1} ms" +
+                $"   end core={actualEnd,5} retail={end,5} " +
+                $"residual={endResidualMs,7:F1} ms");
+            totalResidualMs +=
+                Math.Abs(startResidualMs) + Math.Abs(endResidualMs);
+
+            Assert.InRange(startResidualMs, -ToleranceMs, ToleranceMs);
+            Assert.InRange(endResidualMs, -ToleranceMs, ToleranceMs);
+            previousEnd = actualEnd;
         }
+
+        // THE NEGATIVE ACCEPTANCE CRITERION. A 20 Hz Core that merely lands
+        // these boundaries DIFFERENTLY has not done the thing the migration was
+        // for; it has to land them BETTER, because retail's own scheduler
+        // floors to 20 Hz boundaries. Failing to improve is the signal that
+        // something in the conversion is wrong, and it would otherwise read as
+        // a pass.
+        _output.WriteLine(
+            $"total absolute residual = {totalResidualMs:F1} ms " +
+            $"(30 Hz tree: {ThirtyHertzResidualMs:F1} ms)");
+        Assert.True(
+            totalResidualMs < ThirtyHertzResidualMs,
+            $"the summed residual against the eight measured retail " +
+            $"boundaries is {totalResidualMs:F1} ms, which is no better than " +
+            $"the {ThirtyHertzResidualMs:F1} ms the 30 Hz Core achieved. " +
+            "Retail floors every event onto a 20 Hz boundary, so a correct " +
+            "20 Hz Core lands these closer, not merely elsewhere.");
     }
 
     /// <summary>
@@ -336,7 +403,7 @@ public sealed class Level100MissionTests
 
         // The longest released wait in one step is Pause(30) plus its adjacent
         // message waits, so 3000 ticks (100 s at 30 Hz) settles every step.
-        const int SettleTicks = 3_000;
+        const int SettleTicks = 100 * SimulationConstants.TicksPerSecond;
         void Settle()
         {
             for (int index = 0; index < SettleTicks; index++)

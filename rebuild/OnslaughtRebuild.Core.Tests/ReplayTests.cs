@@ -305,8 +305,8 @@ public sealed class ReplayTests
 
         Assert.Equal(idledResult.FinalState.FacingX, lookedResult.FinalState.FacingX);
         Assert.Equal(idledResult.FinalState.FacingZ, lookedResult.FinalState.FacingZ);
-        Assert.Equal(520_274, lookedResult.FinalState.FacingYawMicroRad);
-        Assert.Equal(10_444, lookedResult.FinalState.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(532_497, lookedResult.FinalState.FacingYawMicroRad);
+        Assert.Equal(22_667, lookedResult.FinalState.WalkerYawVelocityMicroRadPerTick);
         Assert.NotEqual(idledResult.FinalStateHash, lookedResult.FinalStateHash);
         Assert.NotEqual(idledResult.TraceHash, lookedResult.TraceHash);
     }

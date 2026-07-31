@@ -96,7 +96,12 @@ public static class Level100MessageSchedule
     /// TUTORIAL_TECHNICIAN_01's end (<c>t033071</c>) and 188 ms before HUD_01's
     /// (<c>t011511</c>/<c>t011512</c>, one frame in each of two independent
     /// runs), and already gone 135 ms before HUD_06's (<c>t025065</c>). That is
-    /// 4.05 &lt;= lead &lt; 5.64 Core ticks, and 5 is the only integer in it.
+    /// 4.05 &lt;= lead &lt; 5.64 Core ticks AT 30 Hz. Re-derived for the 20 Hz
+    /// migration from the same two-sided millisecond bound - 135 ms &lt;= lead
+    /// &lt; 188 ms - the window is 2.70 &lt;= lead &lt; 3.76 Core ticks, and 3
+    /// is the only integer in it. The bound is a wall-clock measurement, so it
+    /// re-derives rather than converts; note that 5 x 2/3 = 3.33 would have
+    /// rounded to 3 as well, but only by luck.
     /// The static lane does NOT corroborate the value: decomposing the shipped
     /// 0.2 s promote-to-voice, 0.2 s post-audio and 0.3 s completion hold
     /// against the catalogued 18.03-tick table offset leaves a 3-tick lead, and
@@ -106,7 +111,7 @@ public static class Level100MessageSchedule
     /// Treat 5 as bounded measurement, not as a recovered constant.
     /// </para>
     /// </remarks>
-    public const int MessageTextClearLeadTicks = 5;
+    public const int MessageTextClearLeadTicks = 3;
 
     /// <summary>
     /// How long a delivery's TEXT and PORTRAIT are on screen, in Core ticks.

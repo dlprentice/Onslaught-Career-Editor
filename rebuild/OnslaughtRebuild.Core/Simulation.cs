@@ -72,7 +72,7 @@ public sealed class Simulation
     private int _shield;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
-    private int _twinVulcanReloadThirdMillisecondsRemaining;
+    private int _twinVulcanReloadTicksRemaining;
     private int _level100OpeningTicksRemaining;
     private bool _level100FlightEnabled;
     private bool _level100PulseCannonEnabled;
@@ -210,10 +210,9 @@ public sealed class Simulation
             _fireCooldownTicksRemaining--;
         }
 
-        if (_twinVulcanReloadThirdMillisecondsRemaining > 0)
+        if (_twinVulcanReloadTicksRemaining > 0)
         {
-            _twinVulcanReloadThirdMillisecondsRemaining -=
-                SimulationConstants.FireCooldownThirdMillisecondsPerTick;
+            _twinVulcanReloadTicksRemaining--;
         }
 
         TryToggleMode(playerInput);
@@ -1255,9 +1254,17 @@ public sealed class Simulation
             return;
         }
 
+        // BattleEngineJetPart.cpp:565
+        //   FVector acceleration = mOrientation*FVector(0,(5-altitude)/400,0);
+        //   mMainPart->AddVelocity(acceleration);
+        // per retail update, with altitude in retail units. Core's altitude is
+        // in millimetres and 5 units is JetGroundEffectHeightMillimeters, so
+        // the divisor is the shipped 400 verbatim. It read 900 at 30 Hz -
+        // 400 x 9/4, the free-acceleration rate factor - and that factor is
+        // now 1.
         int forwardAcceleration = DivideRoundNearest(
             SimulationConstants.JetGroundEffectHeightMillimeters - altitude,
-            900);
+            SimulationConstants.JetGroundEffectAccelerationDivisor);
         AddDirection(
             ref velocityX,
             ref velocityY,
@@ -1316,10 +1323,19 @@ public sealed class Simulation
             return;
         }
 
+        // BattleEngineJetPart.cpp:532-534, per retail update:
+        //   mVelocity.Z -= magnitudeXY*0.3f;      (retail Z down, Core Y up)
+        //   mPitchvel   -= 0.01f*magnitudeXY;
+        // The 0.3 is a ratio between two velocities and carries no rate factor
+        // at all. The pitch kick is 0.01 rad per RETAIL UNIT of horizontal
+        // speed, so at 20 Hz it is 10_000 micro-rad per 1_000 mm. It read
+        // 4_608/667 at 30 Hz - 10_000 divided by the R3 damped-input factor
+        // 2.170337, over the old 667 mm retail-unit speed scale.
         velocityY += DivideRoundNearest((long)horizontalMagnitude * 3, 10);
         _walkerPitchVelocityMicroRadPerTick -= DivideRoundNearest(
-            (long)horizontalMagnitude * 4_608,
-            SimulationConstants.RetailVelocityUnitPerUpdateAsCoreSpeed);
+            (long)horizontalMagnitude *
+                SimulationConstants.JetWaterSkimPitchKickMicroRadPerRetailUnit,
+            SimulationConstants.MillimetersPerRetailUnit);
         velocityX = Retain(
             velocityX,
             SimulationConstants.JetSkimRetentionNumerator,
@@ -2740,15 +2756,15 @@ public sealed class Simulation
         // behaviour claim. The volley therefore leaves the one evidenced
         // BattleEngine emitter along the aim ray.
         if (!_level100VulcanCannonEnabled ||
-            _twinVulcanReloadThirdMillisecondsRemaining > 0 ||
+            _twinVulcanReloadTicksRemaining > 0 ||
             _energy < SimulationConstants.TwinVulcanFireEnergyCost)
         {
             return;
         }
 
         _energy -= SimulationConstants.TwinVulcanFireEnergyCost;
-        _twinVulcanReloadThirdMillisecondsRemaining +=
-            SimulationConstants.TwinVulcanReloadThirdMilliseconds;
+        _twinVulcanReloadTicksRemaining +=
+            SimulationConstants.TwinVulcanReloadTicks;
         EmitWeaponFireEvent(
             Level100PlayerWeapon.MechTwinVulcanCannon,
             SimulationConstants.TwinVulcanVolleySize);
@@ -2886,7 +2902,7 @@ public sealed class Simulation
         _shield = SimulationConstants.MaximumShield;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
-        _twinVulcanReloadThirdMillisecondsRemaining = 0;
+        _twinVulcanReloadTicksRemaining = 0;
         _level100OpeningTicksRemaining = SimulationConstants.Level100OpeningPanTicks;
         // A configured weapon starts ACTIVE.
         //
