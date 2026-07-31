@@ -22,7 +22,17 @@ param(
     # ranges are the product and were independently verified; the counters are
     # withheld from the summary and preserved only as poisoned evidence.  The
     # default remains fail-closed: no flag, no receipt.
-    [switch]$QuarantineCounters
+    [switch]$QuarantineCounters,
+
+    # Declare that this trace was recorded with the guest STILL ALIVE at the
+    # stop - a timer-stopped recording, guestOutcome 'alive-at-stop' in the
+    # trace's own ttd_record receipt.  Such a replay legitimately ends on a
+    # Thread event rather than a Process exit, so the collector's terminal-stop
+    # expectation (calibrated on run-to-completion traces) rejects it.  The
+    # caller must set this from the recorder receipt; it is never inferred from
+    # the stop reason itself, because a check that widens itself to fit what it
+    # observed has stopped being a check.
+    [switch]$ExpectAliveAtStop
 )
 
 Set-StrictMode -Version Latest
@@ -196,6 +206,169 @@ function Assert-CoverageCountersAreConsistent {
             'instruction is a step, so this receipt would be a lying ' +
             'instrument. Refusing to publish it.'
         )
+    }
+}
+
+function Assert-TerminalStopIsAcceptable {
+    # Adjudicate the collector's terminal-stop clause for THIS trace class.
+    #
+    # The collector requires the replay to end on a Process exit (or, when a
+    # --to window was requested, on a Position event).  That expectation was
+    # calibrated on run-to-completion traces.  The level-opening corpus was
+    # recorded by stopping the recorder on a timer with the guest still
+    # running, so its replays end on a Thread event instead; the pilot
+    # (local-lab/TTD-PILOT-2026-07-31.md) measured this on
+    # G:\bea-ttd\level-opening-3m-v1-level742, twice, byte-identically, with
+    # every other clause passing.  A control is only a control for the trace
+    # class it was designed for.
+    #
+    # So a Thread stop is accepted ONLY when the caller declared the class from
+    # the recorder receipt (-AliveAtStopExpected), and only when the position
+    # check and the marker assertions - which do the real work - still pass.
+    # Without the declaration the accepted set is exactly what it always was.
+    # Anything else (Kernel, Exception, StepCount, Invalid, ...) fails in both
+    # modes; widening is per-reason and opt-in, never a blanket amnesty.
+    param(
+        [Parameter(Mandatory = $true)]$Summary,
+        [Parameter(Mandatory = $true)]$Metadata,
+        [string]$BaseTerminalReason = 'Process',
+        [switch]$AliveAtStopExpected
+    )
+
+    function ConvertTo-TtdPosition {
+        param(
+            [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Text,
+            [Parameter(Mandatory = $true)][string]$Field
+        )
+
+        if ($Text -notmatch '^0x[0-9A-Fa-f]+:0x[0-9A-Fa-f]+$') {
+            throw "Coverage $Field is not a TTD position: '$Text'"
+        }
+        $parts = $Text.Split(':')
+        return [pscustomobject]@{
+            sequence = [uint64]::Parse(
+                $parts[0].Substring(2),
+                [System.Globalization.NumberStyles]::HexNumber)
+            steps = [uint64]::Parse(
+                $parts[1].Substring(2),
+                [System.Globalization.NumberStyles]::HexNumber)
+        }
+    }
+
+    function Get-RequiredText {
+        param($Owner, [string]$Name, [string]$Label)
+
+        $property = $Owner.PSObject.Properties[$Name]
+        if ($null -eq $property) {
+            throw "Coverage $Label is missing $Name."
+        }
+        return [string]$property.Value
+    }
+
+    function Get-RequiredBool {
+        param($Owner, [string]$Name, [string]$Label)
+
+        $property = $Owner.PSObject.Properties[$Name]
+        if ($null -eq $property -or $property.Value -isnot [bool]) {
+            throw "Coverage $Label field $Name must be a JSON boolean."
+        }
+        return [bool]$property.Value
+    }
+
+    if (@('Process', 'Position') -cnotcontains $BaseTerminalReason) {
+        throw (
+            'BaseTerminalReason must be Process or Position, not ' +
+            "'$BaseTerminalReason'."
+        )
+    }
+
+    $stopReason = Get-RequiredText -Owner $Summary -Name 'stop_reason' -Label 'summary'
+    if ([string]::IsNullOrWhiteSpace($stopReason)) {
+        throw 'Coverage summary stop_reason is empty; the terminal event is unknown.'
+    }
+    $finalPosition = ConvertTo-TtdPosition `
+        -Text (Get-RequiredText -Owner $Summary -Name 'final_position' -Label 'summary') `
+        -Field 'final_position'
+    $requestedTo = ConvertTo-TtdPosition `
+        -Text (Get-RequiredText -Owner $Metadata -Name 'requested_to' -Label 'metadata') `
+        -Field 'requested_to'
+    $markerAssertionsPassed = Get-RequiredBool `
+        -Owner $Summary -Name 'marker_assertions_passed' -Label 'summary'
+    $replayComplete = Get-RequiredBool `
+        -Owner $Summary -Name 'replay_complete' -Label 'summary'
+
+    $positionReached = (
+        $finalPosition.sequence -gt $requestedTo.sequence -or
+        ($finalPosition.sequence -eq $requestedTo.sequence -and
+            $finalPosition.steps -ge $requestedTo.steps)
+    )
+    $baseStopReasonMet = ($stopReason -ceq $BaseTerminalReason)
+
+    # Cross-check the collector's own conjunction against a position comparison
+    # computed here from the published strings.  If they disagree, one of the
+    # two is wrong and neither can be trusted to adjudicate anything.
+    if ($replayComplete -ne ($baseStopReasonMet -and $positionReached)) {
+        throw (
+            'Coverage summary replay_complete=' + $replayComplete +
+            " disagrees with its own published evidence (stop_reason=$stopReason" +
+            " expected=$BaseTerminalReason positionReached=$positionReached)."
+        )
+    }
+
+    $acceptedStopReasons = @($BaseTerminalReason)
+    if ($AliveAtStopExpected) {
+        $acceptedStopReasons += 'Thread'
+    }
+    $stopReasonAccepted = ($acceptedStopReasons -ccontains $stopReason)
+
+    return [ordered]@{
+        aliveAtStopExpected = [bool]$AliveAtStopExpected
+        baseTerminalReason = $BaseTerminalReason
+        acceptedStopReasons = @($acceptedStopReasons)
+        stopReason = $stopReason
+        stopReasonAccepted = $stopReasonAccepted
+        baseStopReasonMet = $baseStopReasonMet
+        finalPosition = Get-RequiredText -Owner $Summary -Name 'final_position' -Label 'summary'
+        requestedTo = Get-RequiredText -Owner $Metadata -Name 'requested_to' -Label 'metadata'
+        positionReached = $positionReached
+        markerAssertionsPassed = $markerAssertionsPassed
+        replayComplete = $replayComplete
+        terminalStopAccepted = (
+            $stopReasonAccepted -and $positionReached -and $markerAssertionsPassed
+        )
+    }
+}
+
+function Resolve-CoverageExitCode {
+    # Exit 10 is the collector refusing the run because a clause failed.  It is
+    # rewritten in exactly one case: the caller declared the alive-at-stop
+    # trace class, the collector's own terminal expectation is the clause that
+    # failed, and the adjudication above found every other clause sound.
+    #
+    # A quarantine survives adjudication - counters do not become trustworthy
+    # because the stop reason was explained - so the rewrite lands on 11, not
+    # 0, whenever the collector quarantined them.  Every other exit code
+    # (2 = refused, 3 = engine, 0 = clean) passes through untouched.
+    param(
+        [Parameter(Mandatory = $true)][int]$CollectorExitCode,
+        [Parameter(Mandatory = $true)]$TerminalStop,
+        [switch]$CountersQuarantined,
+        [switch]$AliveAtStopExpected
+    )
+
+    $adjudicated = (
+        $CollectorExitCode -eq 10 -and
+        $AliveAtStopExpected -and
+        -not $TerminalStop.baseStopReasonMet -and
+        $TerminalStop.terminalStopAccepted
+    )
+    $exitCode = $CollectorExitCode
+    if ($adjudicated) {
+        $exitCode = if ($CountersQuarantined) { 11 } else { 0 }
+    }
+    return [ordered]@{
+        stopReasonAdjudicated = $adjudicated
+        exitCode = $exitCode
     }
 }
 
@@ -462,6 +635,23 @@ $countersQuarantined = (
     $summary.counters_quarantined -eq $true
 )
 
+# The collector's own terminal expectation, reproduced exactly: a windowed run
+# ends on Position, a whole-lifetime run on Process.
+$baseTerminalReason = if ([string]::IsNullOrWhiteSpace($To)) { 'Process' } else { 'Position' }
+$terminalStop = Assert-TerminalStopIsAcceptable `
+    -Summary $summary `
+    -Metadata $metadata `
+    -BaseTerminalReason $baseTerminalReason `
+    -AliveAtStopExpected:$ExpectAliveAtStop
+
+$exitDecision = Resolve-CoverageExitCode `
+    -CollectorExitCode $collectorExitCode `
+    -TerminalStop $terminalStop `
+    -CountersQuarantined:$countersQuarantined `
+    -AliveAtStopExpected:$ExpectAliveAtStop
+$stopReasonAdjudicated = $exitDecision.stopReasonAdjudicated
+$effectiveExitCode = $exitDecision.exitCode
+
 $coverageFacts = Get-FileFacts -Path $coveragePath
 $receipt = [ordered]@{
     schemaVersion = 'bea-ttd-exec-coverage-receipt.v2'
@@ -470,10 +660,13 @@ $receipt = [ordered]@{
     finishedAtUtc = $finishedAt.ToString('o')
     elapsedSeconds = $stopwatch.Elapsed.TotalSeconds
     collectorExitCode = $collectorExitCode
+    exitCode = $effectiveExitCode
     replayComplete = $summary.replay_complete -eq $true
     markerAssertionsPassed = $summary.marker_assertions_passed -eq $true
     collectorChecksPassed = $summary.collector_checks_passed -eq $true
     countersQuarantined = $countersQuarantined
+    stopReasonAdjudicated = $stopReasonAdjudicated
+    terminalStop = $terminalStop
     trace = $traceBefore
     target = [ordered]@{
         path = $targetBefore.path
@@ -501,6 +694,7 @@ $receipt = [ordered]@{
         to = $To
         sequential = [bool]$Sequential
         quarantineCounters = [bool]$QuarantineCounters
+        expectAliveAtStop = [bool]$ExpectAliveAtStop
         mustHitRva = @($MustHitRva)
         mustMissRva = @($MustMissRva)
     }
@@ -525,6 +719,6 @@ $receiptJson = $receipt | ConvertTo-Json -Depth 20
 )
 
 $receipt
-if ($collectorExitCode -ne 0) {
-    exit $collectorExitCode
+if ($effectiveExitCode -ne 0) {
+    exit $effectiveExitCode
 }

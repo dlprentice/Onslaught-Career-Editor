@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import copy
 import pathlib
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -15,6 +17,7 @@ RECORDER = ROOT / "tools" / "ttd_record.ps1"
 WRAPPER = ROOT / "tools" / "Record-GameMoment.ps1"
 QUERY = ROOT / "tools" / "ttd_query.ps1"
 COVERAGE_WRAPPER = ROOT / "tools" / "Invoke-TtdExecCoverage.ps1"
+CAMPAIGN = ROOT / "tools" / "Invoke-TtdCoverageCampaign.ps1"
 COLLECTOR_SOURCE = (
     ROOT / "tools" / "ttd-exec-coverage" / "ttd_exec_coverage.cpp"
 )
@@ -65,8 +68,106 @@ QUARANTINED_SUMMARY_OPTIONS_OPEN = {
 }
 
 
+# The two-trace stage-1 pilot of 2026-07-31 (local-lab/TTD-PILOT-2026-07-31.md),
+# recorded verbatim from the receipts it wrote.  Both traces were replayed from
+# the pristine specimen local-lab/safe-copy-bea-pristine/BEA.exe, sha256
+# E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4.
+#
+#   G:\bea-ttd\q-pilot-cov-l742-20260731\receipt.json      exit 10, Thread stop
+#   G:\bea-ttd\q-pilot-cov-l700-20260731\receipt.json      exit  0, Process stop
+#
+# L742 is the falsification case for the terminal-stop clause: its replay
+# stopped on a Thread event, so the collector refused it - while the cursor had
+# walked PAST the requested end position and both marker assertions held.  A
+# second run reproduced all 6,815 ranges byte-identically.  Every one of the 66
+# level-opening traces was timer-stopped with the guest still alive
+# (guestOutcome 'alive-at-stop'), which is the class the Process-stop
+# expectation was never calibrated on.  Keep these values as they are; they are
+# the evidence the widened check has to be judged against.
+PILOT_L742_SUMMARY = {
+    "schema": "bea.ttd.exec-coverage.v1",
+    "kind": "summary",
+    "range_count": 6815,
+    "covered_bytes": "552196",
+    "counters_quarantined": False,
+    "callback_hits": "1530568011",
+    "instructions_executed": "3994296667",
+    "steps_executed": "3994296727",
+    "stop_reason": "Thread",
+    "replay_chunks": "4",
+    "replay_chunk_steps": "1000000000",
+    "final_position": "0x20DE13:0x0",
+    "replay_complete": False,
+    "marker_assertions_passed": True,
+    "collector_checks_passed": False,
+}
+PILOT_L742_METADATA = {
+    "schema": "bea.ttd.exec-coverage.v1",
+    "kind": "metadata",
+    "trace_bytes": "8455716864",
+    "lifetime_max": "0x20DE12:0x5B8",
+    "lifetime_min": "0x34:0x0",
+    "requested_from": "0x34:0x0",
+    "requested_to": "0x20DE12:0x5B8",
+}
+PILOT_L700_SUMMARY = {
+    "schema": "bea.ttd.exec-coverage.v1",
+    "kind": "summary",
+    "range_count": 6670,
+    "covered_bytes": "551245",
+    "counters_quarantined": False,
+    "callback_hits": "1691572440",
+    "instructions_executed": "4312902942",
+    "steps_executed": "4312903002",
+    "stop_reason": "Process",
+    "replay_chunks": "5",
+    "replay_chunk_steps": "1000000000",
+    "final_position": "0x1A63E9:0x0",
+    "replay_complete": True,
+    "marker_assertions_passed": True,
+    "collector_checks_passed": True,
+}
+PILOT_L700_METADATA = {
+    "schema": "bea.ttd.exec-coverage.v1",
+    "kind": "metadata",
+    "trace_bytes": "4592762880",
+    "lifetime_max": "0x1A63E8:0x270F",
+    "lifetime_min": "0x34:0x0",
+    "requested_from": "0x34:0x0",
+    "requested_to": "0x1A63E8:0x270F",
+}
+PILOT_L742_RECEIPT = pathlib.Path(
+    r"G:\bea-ttd\q-pilot-cov-l742-20260731\receipt.json"
+)
+PILOT_L700_RECEIPT = pathlib.Path(
+    r"G:\bea-ttd\q-pilot-cov-l700-20260731\receipt.json"
+)
+
+
 def read(path: pathlib.Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def lift_function(name: str, script: pathlib.Path) -> str:
+    """PowerShell that dot-sources one function straight out of a real script.
+
+    Lifting through the AST means these tests drive the shipped code rather
+    than a copy of it, and go red if the function is renamed or deleted.
+    """
+
+    literal = str(script).replace("'", "''")
+    return (
+        "$errors = @(); "
+        "$ast = [System.Management.Automation.Language.Parser]::ParseFile('"
+        + literal
+        + "', [ref]$null, [ref]$errors); "
+        "if ($errors.Count) { Write-Output 'script failed to parse'; exit 4 }; "
+        "$found = $ast.Find({ param($node) $node -is "
+        "[System.Management.Automation.Language.FunctionDefinitionAst] "
+        "-and $node.Name -eq '" + name + "' }, $true); "
+        "if ($null -eq $found) { Write-Output '" + name + " is missing'; exit 4 }; "
+        ". ([scriptblock]::Create($found.Extent.Text)); "
+    )
 
 
 class TtdPipelineContractTests(unittest.TestCase):
@@ -967,6 +1068,865 @@ class TtdCoverageCounterContractTests(unittest.TestCase):
         # Nullable so a consumer that wants a number gets nothing, not a lie.
         self.assertIn("callback_hits TEXT,", ingest)
         self.assertNotIn("callback_hits TEXT NOT NULL", ingest)
+
+
+class TtdTerminalStopContractTests(unittest.TestCase):
+    """A stop reason is only evidence for the trace class it was calibrated on.
+
+    The collector requires a Process exit to call a replay complete.  That was
+    calibrated on run-to-completion traces.  The 66 level-opening traces were
+    timer-stopped with the guest still alive and their replays end on a Thread
+    event, so the clause fails closed on sound coverage.  Widening it is only
+    safe if the widening is opt-in, per-reason, and driven by the trace's own
+    recorder receipt - never by the stop reason the replay happened to produce.
+    """
+
+    def run_terminal_stop_guard(
+        self,
+        summary: dict,
+        metadata: dict,
+        *,
+        alive_expected: bool = False,
+        base_reason: str = "Process",
+    ) -> subprocess.CompletedProcess:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            summary_path = root / "summary.json"
+            metadata_path = root / "metadata.json"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+            command = (
+                "$ErrorActionPreference = 'Stop'; "
+                + lift_function(
+                    "Assert-TerminalStopIsAcceptable", COVERAGE_WRAPPER
+                )
+                + "$summary = Get-Content -Raw -LiteralPath '"
+                + str(summary_path).replace("'", "''")
+                + "' | ConvertFrom-Json; "
+                "$metadata = Get-Content -Raw -LiteralPath '"
+                + str(metadata_path).replace("'", "''")
+                + "' | ConvertFrom-Json; "
+                "$alive = $"
+                + ("true" if alive_expected else "false")
+                + "; try { $result = Assert-TerminalStopIsAcceptable "
+                "-Summary $summary -Metadata $metadata -BaseTerminalReason '"
+                + base_reason
+                + "' -AliveAtStopExpected:$alive } "
+                "catch { Write-Output $_.Exception.Message; exit 3 }; "
+                "Write-Output ($result | ConvertTo-Json -Compress); exit 0"
+            )
+            return subprocess.run(
+                ["pwsh", "-NoLogo", "-NoProfile", "-Command", command],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+    def adjudicate(self, **kwargs) -> dict:
+        completed = self.run_terminal_stop_guard(**kwargs)
+        self.assertEqual(
+            0, completed.returncode, completed.stdout + completed.stderr
+        )
+        return json.loads(completed.stdout)
+
+    def test_the_pilot_thread_stop_is_refused_without_the_switch(self) -> None:
+        verdict = self.adjudicate(
+            summary=PILOT_L742_SUMMARY, metadata=PILOT_L742_METADATA
+        )
+        self.assertFalse(verdict["terminalStopAccepted"])
+        self.assertFalse(verdict["stopReasonAccepted"])
+        self.assertEqual("Thread", verdict["stopReason"])
+        self.assertEqual(["Process"], verdict["acceptedStopReasons"])
+        # The clause that failed is the ONLY one that failed - which is what
+        # makes L742 evidence about the check rather than about the trace.
+        self.assertTrue(verdict["positionReached"])
+        self.assertTrue(verdict["markerAssertionsPassed"])
+
+    def test_the_pilot_thread_stop_is_accepted_with_the_switch(self) -> None:
+        verdict = self.adjudicate(
+            summary=PILOT_L742_SUMMARY,
+            metadata=PILOT_L742_METADATA,
+            alive_expected=True,
+        )
+        self.assertTrue(verdict["terminalStopAccepted"])
+        self.assertTrue(verdict["stopReasonAccepted"])
+        self.assertFalse(verdict["baseStopReasonMet"])
+        self.assertEqual(["Process", "Thread"], verdict["acceptedStopReasons"])
+        self.assertTrue(verdict["aliveAtStopExpected"])
+
+    def test_a_clean_process_stop_needs_no_switch_and_is_unchanged_by_it(
+        self,
+    ) -> None:
+        for alive in (False, True):
+            with self.subTest(alive_expected=alive):
+                verdict = self.adjudicate(
+                    summary=PILOT_L700_SUMMARY,
+                    metadata=PILOT_L700_METADATA,
+                    alive_expected=alive,
+                )
+                self.assertTrue(verdict["terminalStopAccepted"])
+                self.assertTrue(verdict["baseStopReasonMet"])
+                self.assertEqual("Process", verdict["stopReason"])
+
+    def test_other_stop_reasons_still_fail_even_with_the_switch(self) -> None:
+        # The widening is per-reason.  Anything that is not the declared class's
+        # Thread stop keeps failing closed, with the switch or without it.
+        for reason in ("Kernel", "Exception", "StepCount", "Invalid", "thread"):
+            with self.subTest(stop_reason=reason):
+                summary = copy.deepcopy(PILOT_L742_SUMMARY)
+                summary["stop_reason"] = reason
+                verdict = self.adjudicate(
+                    summary=summary,
+                    metadata=PILOT_L742_METADATA,
+                    alive_expected=True,
+                )
+                self.assertFalse(verdict["stopReasonAccepted"])
+                self.assertFalse(verdict["terminalStopAccepted"])
+
+    def test_a_thread_stop_short_of_the_end_is_refused(self) -> None:
+        # The position check does the real work; the switch does not excuse a
+        # replay that never reached the requested end.
+        summary = copy.deepcopy(PILOT_L742_SUMMARY)
+        summary["final_position"] = "0x20DE11:0x0"
+        verdict = self.adjudicate(
+            summary=summary,
+            metadata=PILOT_L742_METADATA,
+            alive_expected=True,
+        )
+        self.assertTrue(verdict["stopReasonAccepted"])
+        self.assertFalse(verdict["positionReached"])
+        self.assertFalse(verdict["terminalStopAccepted"])
+
+    def test_a_thread_stop_with_a_failed_marker_is_refused(self) -> None:
+        summary = copy.deepcopy(PILOT_L742_SUMMARY)
+        summary["marker_assertions_passed"] = False
+        verdict = self.adjudicate(
+            summary=summary,
+            metadata=PILOT_L742_METADATA,
+            alive_expected=True,
+        )
+        self.assertFalse(verdict["terminalStopAccepted"])
+
+    def test_the_position_comparison_is_checked_against_the_collectors_own_verdict(
+        self,
+    ) -> None:
+        # If the collector's replay_complete and a position comparison computed
+        # here disagree, one of the two is wrong and neither may adjudicate.
+        summary = copy.deepcopy(PILOT_L742_SUMMARY)
+        summary["replay_complete"] = True
+        completed = self.run_terminal_stop_guard(
+            summary, PILOT_L742_METADATA, alive_expected=True
+        )
+        self.assertEqual(3, completed.returncode, completed.stdout)
+        self.assertIn("disagrees with its own published evidence", completed.stdout)
+
+    def test_malformed_or_missing_evidence_fails_closed(self) -> None:
+        no_stop = copy.deepcopy(PILOT_L742_SUMMARY)
+        del no_stop["stop_reason"]
+        blank_stop = copy.deepcopy(PILOT_L742_SUMMARY)
+        blank_stop["stop_reason"] = "  "
+        bad_position = copy.deepcopy(PILOT_L742_SUMMARY)
+        bad_position["final_position"] = "not-a-position"
+        bad_marker = copy.deepcopy(PILOT_L742_SUMMARY)
+        bad_marker["marker_assertions_passed"] = "true"
+        for name, summary in (
+            ("missing stop_reason", no_stop),
+            ("blank stop_reason", blank_stop),
+            ("malformed final_position", bad_position),
+            ("stringy marker flag", bad_marker),
+        ):
+            with self.subTest(summary=name):
+                completed = self.run_terminal_stop_guard(
+                    summary, PILOT_L742_METADATA, alive_expected=True
+                )
+                self.assertEqual(3, completed.returncode, completed.stdout)
+
+        bad_metadata = copy.deepcopy(PILOT_L742_METADATA)
+        del bad_metadata["requested_to"]
+        completed = self.run_terminal_stop_guard(
+            PILOT_L742_SUMMARY, bad_metadata, alive_expected=True
+        )
+        self.assertEqual(3, completed.returncode, completed.stdout)
+
+    def resolve_exit(
+        self,
+        *,
+        collector_exit: int,
+        terminal_stop: dict,
+        quarantined: bool = False,
+        alive_expected: bool = False,
+    ) -> dict:
+        with tempfile.TemporaryDirectory() as temporary:
+            stop_path = pathlib.Path(temporary) / "terminal-stop.json"
+            stop_path.write_text(json.dumps(terminal_stop), encoding="utf-8")
+            command = (
+                "$ErrorActionPreference = 'Stop'; "
+                + lift_function("Resolve-CoverageExitCode", COVERAGE_WRAPPER)
+                + "$stop = Get-Content -Raw -LiteralPath '"
+                + str(stop_path).replace("'", "''")
+                + "' | ConvertFrom-Json; "
+                "$result = Resolve-CoverageExitCode -CollectorExitCode "
+                + str(collector_exit)
+                + " -TerminalStop $stop -CountersQuarantined:$"
+                + ("true" if quarantined else "false")
+                + " -AliveAtStopExpected:$"
+                + ("true" if alive_expected else "false")
+                + "; Write-Output ($result | ConvertTo-Json -Compress); exit 0"
+            )
+            completed = subprocess.run(
+                ["pwsh", "-NoLogo", "-NoProfile", "-Command", command],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        self.assertEqual(
+            0, completed.returncode, completed.stdout + completed.stderr
+        )
+        return json.loads(completed.stdout)
+
+    def test_exit_ten_is_rewritten_only_for_the_declared_class(self) -> None:
+        accepted_thread = self.adjudicate(
+            summary=PILOT_L742_SUMMARY,
+            metadata=PILOT_L742_METADATA,
+            alive_expected=True,
+        )
+        refused_thread = self.adjudicate(
+            summary=PILOT_L742_SUMMARY, metadata=PILOT_L742_METADATA
+        )
+
+        # Declared class, sole failing clause: the run is published.
+        decision = self.resolve_exit(
+            collector_exit=10,
+            terminal_stop=accepted_thread,
+            alive_expected=True,
+        )
+        self.assertTrue(decision["stopReasonAdjudicated"])
+        self.assertEqual(0, decision["exitCode"])
+
+        # Same receipt, nobody declared the class: exit 10 stands.
+        undeclared = self.resolve_exit(
+            collector_exit=10, terminal_stop=refused_thread
+        )
+        self.assertFalse(undeclared["stopReasonAdjudicated"])
+        self.assertEqual(10, undeclared["exitCode"])
+
+        # And the declaration is checked HERE too, not merely upstream: an
+        # adjudication that says "accepted" must not rewrite an exit code when
+        # this call was not told the trace class.  Both halves of the pipeline
+        # have to be told, or a future caller that wires only one of them gets
+        # a silent widening.
+        smuggled = self.resolve_exit(
+            collector_exit=10, terminal_stop=accepted_thread
+        )
+        self.assertFalse(smuggled["stopReasonAdjudicated"])
+        self.assertEqual(10, smuggled["exitCode"])
+
+        # A quarantine is not laundered by explaining the stop reason.
+        quarantined = self.resolve_exit(
+            collector_exit=10,
+            terminal_stop=accepted_thread,
+            quarantined=True,
+            alive_expected=True,
+        )
+        self.assertTrue(quarantined["stopReasonAdjudicated"])
+        self.assertEqual(11, quarantined["exitCode"])
+
+        # Any other failure keeps its exit code, switch or no switch.
+        kernel_summary = copy.deepcopy(PILOT_L742_SUMMARY)
+        kernel_summary["stop_reason"] = "Kernel"
+        kernel_stop = self.adjudicate(
+            summary=kernel_summary,
+            metadata=PILOT_L742_METADATA,
+            alive_expected=True,
+        )
+        kernel = self.resolve_exit(
+            collector_exit=10, terminal_stop=kernel_stop, alive_expected=True
+        )
+        self.assertFalse(kernel["stopReasonAdjudicated"])
+        self.assertEqual(10, kernel["exitCode"])
+
+        for other in (2, 3, 11):
+            with self.subTest(collector_exit=other):
+                passthrough = self.resolve_exit(
+                    collector_exit=other,
+                    terminal_stop=accepted_thread,
+                    alive_expected=True,
+                )
+                self.assertFalse(passthrough["stopReasonAdjudicated"])
+                self.assertEqual(other, passthrough["exitCode"])
+
+    def test_the_pilot_fixtures_match_the_recorded_receipts(self) -> None:
+        # Guards the negative control itself: if these fixtures ever drift from
+        # the artifacts they were copied out of, the tests above would keep
+        # passing while proving nothing about the real measurement.
+        pairs = (
+            (PILOT_L742_RECEIPT, PILOT_L742_SUMMARY, PILOT_L742_METADATA),
+            (PILOT_L700_RECEIPT, PILOT_L700_SUMMARY, PILOT_L700_METADATA),
+        )
+        checked = 0
+        for path, summary, metadata in pairs:
+            if not path.exists():
+                continue
+            recorded = json.loads(path.read_text(encoding="utf-8-sig"))
+            with self.subTest(receipt=path.name, block="summary"):
+                for key, value in summary.items():
+                    self.assertEqual(value, recorded["summary"][key], key)
+            with self.subTest(receipt=path.name, block="metadata"):
+                for key, value in metadata.items():
+                    self.assertEqual(value, recorded["metadata"][key], key)
+            checked += 1
+        if checked == 0:
+            self.skipTest("pilot coverage receipts are not on this machine")
+
+    def test_coverage_wrapper_wires_the_terminal_stop_adjudication(self) -> None:
+        wrapper = read(COVERAGE_WRAPPER)
+
+        self.assertIn("[switch]$ExpectAliveAtStop", wrapper)
+        self.assertIn("function Assert-TerminalStopIsAcceptable {", wrapper)
+        self.assertIn("function Resolve-CoverageExitCode {", wrapper)
+        self.assertIn(
+            "-AliveAtStopExpected:$ExpectAliveAtStop",
+            wrapper,
+        )
+        # The expectation is declared by the caller and recorded in the receipt
+        # alongside the stop reason that was actually observed.
+        self.assertIn("expectAliveAtStop = [bool]$ExpectAliveAtStop", wrapper)
+        self.assertIn("terminalStop = $terminalStop", wrapper)
+        self.assertIn("stopReasonAdjudicated = $stopReasonAdjudicated", wrapper)
+        self.assertIn("exitCode = $effectiveExitCode", wrapper)
+        self.assertIn("if ($effectiveExitCode -ne 0) {", wrapper)
+        # The adjudication runs after the counter guard, so a quarantined run
+        # cannot skip it.
+        self.assertLess(
+            wrapper.index("Assert-CoverageCountersAreConsistent `"),
+            wrapper.index("$terminalStop = Assert-TerminalStopIsAcceptable"),
+        )
+        # The default is unchanged: Process only, and Position for a window.
+        self.assertIn(
+            "$baseTerminalReason = if ([string]::IsNullOrWhiteSpace($To)) "
+            "{ 'Process' } else { 'Position' }",
+            wrapper,
+        )
+
+
+FAKE_COVERAGE_WRAPPER = r"""
+param(
+    [Parameter(Mandatory = $true)][string]$TraceFile,
+    [Parameter(Mandatory = $true)][string]$TargetExe,
+    [Parameter(Mandatory = $true)][string]$OutputDirectory,
+    [string]$Collector = '',
+    [string]$ModuleName = 'BEA.exe',
+    [string]$ExpectedBase = '',
+    [string]$From = '',
+    [string]$To = '',
+    [string[]]$MustHitRva = @(),
+    [string[]]$MustMissRva = @(),
+    [switch]$Sequential,
+    [switch]$QuarantineCounters,
+    [switch]$ExpectAliveAtStop
+)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$utf8 = [System.Text.UTF8Encoding]::new($false)
+$level = Split-Path -Leaf $OutputDirectory
+$plan = Get-Content -Raw -LiteralPath $env:FAKE_PLAN | ConvertFrom-Json
+$planned = 0
+$entry = $plan.PSObject.Properties[$level]
+if ($null -ne $entry) { $planned = [int]$entry.Value }
+$invocation = [ordered]@{
+    level = $level
+    traceFile = $TraceFile
+    targetExe = $TargetExe
+    outputDirectory = $OutputDirectory
+    mustHitRva = @($MustHitRva)
+    mustMissRva = @($MustMissRva)
+    quarantineCounters = [bool]$QuarantineCounters
+    expectAliveAtStop = [bool]$ExpectAliveAtStop
+    sequential = [bool]$Sequential
+    plannedExit = $planned
+}
+[System.IO.File]::AppendAllText(
+    $env:FAKE_LOG,
+    ($invocation | ConvertTo-Json -Compress -Depth 6) + "`n",
+    $utf8)
+Write-Output "fake coverage run for $level"
+if ($env:FAKE_NO_RECEIPT -eq $level) { exit $planned }
+[System.IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
+$quarantined = ($planned -eq 11)
+$receipt = [ordered]@{
+    schemaVersion = 'bea-ttd-exec-coverage-receipt.v2'
+    collectorExitCode = $(if ($planned -eq 11) { 11 } elseif ($planned -eq 0) { 0 } else { 10 })
+    exitCode = $planned
+    replayComplete = ($planned -eq 0 -and -not $ExpectAliveAtStop)
+    markerAssertionsPassed = $true
+    collectorChecksPassed = ($planned -eq 0 -and -not $ExpectAliveAtStop)
+    countersQuarantined = $quarantined
+    stopReasonAdjudicated = ($ExpectAliveAtStop -and $planned -ne 10)
+    terminalStop = [ordered]@{
+        aliveAtStopExpected = [bool]$ExpectAliveAtStop
+        stopReason = $(if ($ExpectAliveAtStop) { 'Thread' } else { 'Process' })
+        positionReached = $true
+        terminalStopAccepted = ($planned -ne 10)
+    }
+    coverage = [ordered]@{
+        rangeCount = 6815
+        sha256 = 'FAKE0000000000000000000000000000000000000000000000000000000000'
+    }
+    summary = [ordered]@{ covered_bytes = '552196' }
+    metadata = [ordered]@{
+        trace_bytes = '8455716864'
+        lifetime_max = '0x20DE12:0x5B8'
+        requested_to = '0x20DE12:0x5B8'
+    }
+    gapSummary = [ordered]@{
+        total = '138351764'
+        kind_large = '25'
+        kind_unrecorded = '644135'
+        kind_context_switch = '535861'
+        event_KernelCall = '644098'
+        event_SyntheticFallback = '137000000'
+    }
+}
+[System.IO.File]::WriteAllText(
+    (Join-Path $OutputDirectory 'receipt.json'),
+    ($receipt | ConvertTo-Json -Depth 10) + "`n",
+    $utf8)
+if ($planned -ne 0) { exit $planned }
+"""
+
+
+class TtdCoverageCampaignContractTests(unittest.TestCase):
+    """The campaign runner's receipt gating, resume, and immutability rules.
+
+    Driven entirely against mock trace directories and a fake coverage wrapper:
+    no real trace is opened, and the 4.2-hour campaign is never a prerequisite
+    for proving that the runner reads the right receipt and refuses to retry.
+    """
+
+    LEVELS = ("level100", "level700", "level742")
+
+    def build_sandbox(
+        self,
+        root: pathlib.Path,
+        outcomes: dict[str, str] | None = None,
+        levels: tuple[str, ...] | None = None,
+        descending_sizes: bool = False,
+    ) -> dict[str, pathlib.Path]:
+        outcomes = outcomes or {}
+        levels = levels or self.LEVELS
+        traces = root / "traces"
+        traces.mkdir(parents=True)
+        for index, level in enumerate(levels):
+            name = f"level-opening-3m-v1-{level}"
+            directory = traces / name
+            directory.mkdir()
+            # Distinct sizes so -Order Size has something to sort by.  Reversed
+            # on request, so that size order and name order disagree and the
+            # test can tell which one the runner actually used.
+            span = len(levels) - 1 - index if descending_sizes else index
+            (directory / f"{name}.run").write_bytes(b"x" * (16 + span))
+            (directory / "receipt.json").write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": "ttd-record-receipt.v3",
+                        "name": name,
+                        "guestOutcome": outcomes.get(level, "alive-at-stop"),
+                        "guestRanCleanly": True,
+                        "traceSha256": f"FAKE{level.upper()}",
+                        "traceBytes": 16 + index,
+                    }
+                ),
+                encoding="utf-8",
+            )
+        target = root / "BEA.exe"
+        target.write_bytes(b"MZ fake target")
+        fake_wrapper = root / "fake-coverage.ps1"
+        fake_wrapper.write_text(FAKE_COVERAGE_WRAPPER, encoding="utf-8")
+        return {
+            "traces": traces,
+            "target": target,
+            "wrapper": fake_wrapper,
+            "output": root / "out",
+            "log": root / "invocations.jsonl",
+            "plan": root / "plan.json",
+        }
+
+    def run_campaign(
+        self,
+        paths: dict[str, pathlib.Path],
+        *,
+        plan: dict[str, int] | None = None,
+        max_traces: int | None = None,
+        output: pathlib.Path | None = None,
+        no_receipt_for: str = "",
+        extra: list[str] | None = None,
+    ) -> subprocess.CompletedProcess:
+        paths["plan"].write_text(json.dumps(plan or {}), encoding="utf-8")
+        environment = dict(os.environ)
+        environment["FAKE_LOG"] = str(paths["log"])
+        environment["FAKE_PLAN"] = str(paths["plan"])
+        environment["FAKE_NO_RECEIPT"] = no_receipt_for
+        arguments = [
+            "pwsh",
+            "-NoLogo",
+            "-NoProfile",
+            "-File",
+            str(CAMPAIGN),
+            "-TraceRoot",
+            str(paths["traces"]),
+            "-OutputRoot",
+            str(output or paths["output"]),
+            "-TargetExe",
+            str(paths["target"]),
+            "-CoverageWrapper",
+            str(paths["wrapper"]),
+        ]
+        if max_traces is not None:
+            arguments += ["-MaxTraces", str(max_traces)]
+        arguments += extra or []
+        return subprocess.run(
+            arguments,
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+
+    @staticmethod
+    def invocations(paths: dict[str, pathlib.Path]) -> list[dict]:
+        if not paths["log"].exists():
+            return []
+        return [
+            json.loads(line)
+            for line in paths["log"].read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    @staticmethod
+    def campaign_log(output: pathlib.Path) -> list[dict]:
+        path = output / "campaign-log.jsonl"
+        if not path.exists():
+            return []
+        return [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    @classmethod
+    def trace_records(cls, output: pathlib.Path) -> dict[str, dict]:
+        return {
+            row["level"]: row
+            for row in cls.campaign_log(output)
+            if row.get("kind") != "campaign-summary"
+        }
+
+    @staticmethod
+    def snapshot(directory: pathlib.Path) -> list[tuple]:
+        return sorted(
+            (
+                str(path.relative_to(directory)),
+                path.stat().st_size,
+                path.stat().st_mtime_ns,
+            )
+            for path in directory.rglob("*")
+            if path.is_file()
+        )
+
+    def test_the_expectation_comes_from_the_recorder_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(
+                pathlib.Path(temporary),
+                outcomes={"level100": "exited-clean"},
+            )
+            completed = self.run_campaign(paths)
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+
+            calls = {row["level"]: row for row in self.invocations(paths)}
+            self.assertEqual(3, len(calls))
+            # alive-at-stop declares the class; anything else does not.
+            self.assertFalse(
+                calls["level-opening-3m-v1-level100"]["expectAliveAtStop"]
+            )
+            self.assertTrue(
+                calls["level-opening-3m-v1-level700"]["expectAliveAtStop"]
+            )
+            self.assertTrue(
+                calls["level-opening-3m-v1-level742"]["expectAliveAtStop"]
+            )
+            # -QuarantineCounters is unconditional; the markers are passed.
+            for call in calls.values():
+                self.assertTrue(call["quarantineCounters"])
+                self.assertEqual(["0xF34A0"], call["mustHitRva"])
+                self.assertEqual(["0x2D150"], call["mustMissRva"])
+
+            records = self.trace_records(paths["output"])
+            self.assertEqual(3, len(records))
+            for level, record in records.items():
+                self.assertEqual("ok", record["status"], level)
+                self.assertEqual(0, record["exitCode"])
+                self.assertEqual(6815, record["rangeCount"])
+                self.assertEqual("552196", record["coveredBytes"])
+            self.assertEqual(
+                "exited-clean",
+                records["level-opening-3m-v1-level100"]["guestOutcome"],
+            )
+
+    def test_a_second_pass_resumes_and_re_runs_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            first = self.run_campaign(paths)
+            self.assertEqual(0, first.returncode, first.stdout + first.stderr)
+            self.assertEqual(3, len(self.invocations(paths)))
+
+            second = self.run_campaign(paths)
+            self.assertEqual(0, second.returncode, second.stdout + second.stderr)
+            # Not one extra invocation of the collector.
+            self.assertEqual(3, len(self.invocations(paths)))
+
+            log = self.campaign_log(paths["output"])
+            resumed = [
+                row
+                for row in log
+                if row.get("kind") != "campaign-summary"
+                and row["status"] == "skipped"
+            ]
+            self.assertEqual(3, len(resumed))
+            for row in resumed:
+                self.assertIn("already collected", row["reason"])
+            summaries = [
+                row for row in log if row.get("kind") == "campaign-summary"
+            ]
+            self.assertEqual(2, len(summaries))
+            self.assertEqual(3, summaries[1]["skipped"])
+            self.assertEqual(0, summaries[1]["ok"])
+
+    def test_a_quarantined_run_is_acceptable_and_recorded_as_such(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(
+                paths, plan={"level-opening-3m-v1-level742": 11}
+            )
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+            record = self.trace_records(paths["output"])[
+                "level-opening-3m-v1-level742"
+            ]
+            self.assertEqual("ok", record["status"])
+            self.assertEqual(11, record["exitCode"])
+            self.assertTrue(record["countersQuarantined"])
+
+            # And it resumes as done, not as something to try again.
+            self.run_campaign(paths, plan={"level-opening-3m-v1-level742": 11})
+            self.assertEqual(3, len(self.invocations(paths)))
+
+    def test_an_unacceptable_exit_is_recorded_once_and_never_retried(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            plan = {"level-opening-3m-v1-level700": 10}
+            first = self.run_campaign(paths, plan=plan)
+            self.assertEqual(1, first.returncode, first.stdout + first.stderr)
+            records = self.trace_records(paths["output"])
+            self.assertEqual(
+                "failed", records["level-opening-3m-v1-level700"]["status"]
+            )
+            self.assertEqual(
+                10, records["level-opening-3m-v1-level700"]["exitCode"]
+            )
+            # The other two traces still ran: one bad trace is not a campaign
+            # abort.
+            self.assertEqual(
+                "ok", records["level-opening-3m-v1-level742"]["status"]
+            )
+            self.assertEqual(3, len(self.invocations(paths)))
+
+            second = self.run_campaign(paths, plan=plan)
+            self.assertEqual(1, second.returncode)
+            self.assertEqual(3, len(self.invocations(paths)))
+            blocked = [
+                row
+                for row in self.campaign_log(paths["output"])
+                if row.get("kind") != "campaign-summary"
+                and row["status"] == "blocked"
+            ]
+            self.assertEqual(1, len(blocked))
+            self.assertIn("not retrying", blocked[0]["reason"])
+
+    def test_a_run_that_writes_no_receipt_is_a_failure_not_a_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(
+                paths, no_receipt_for="level-opening-3m-v1-level100"
+            )
+            self.assertEqual(1, completed.returncode, completed.stdout)
+            record = self.trace_records(paths["output"])[
+                "level-opening-3m-v1-level100"
+            ]
+            self.assertEqual("failed", record["status"])
+            self.assertIn("without writing a receipt", record["reason"])
+
+    def test_a_trace_without_a_usable_recorder_receipt_is_blocked(self) -> None:
+        for name, mutate in (
+            ("missing", lambda path: path.unlink()),
+            (
+                "wrong schema",
+                lambda path: path.write_text(
+                    json.dumps(
+                        {
+                            "schemaVersion": "ttd-record-receipt.v2",
+                            "guestOutcome": "alive-at-stop",
+                        }
+                    ),
+                    encoding="utf-8",
+                ),
+            ),
+            (
+                "no guestOutcome",
+                lambda path: path.write_text(
+                    json.dumps({"schemaVersion": "ttd-record-receipt.v3"}),
+                    encoding="utf-8",
+                ),
+            ),
+        ):
+            with self.subTest(receipt=name), tempfile.TemporaryDirectory() as t:
+                paths = self.build_sandbox(pathlib.Path(t))
+                mutate(
+                    paths["traces"]
+                    / "level-opening-3m-v1-level100"
+                    / "receipt.json"
+                )
+                completed = self.run_campaign(paths)
+                self.assertEqual(1, completed.returncode, completed.stdout)
+                records = self.trace_records(paths["output"])
+                self.assertEqual(
+                    "blocked", records["level-opening-3m-v1-level100"]["status"]
+                )
+                # Blocked, not aborted: the rest of the campaign still runs.
+                self.assertEqual(
+                    "ok", records["level-opening-3m-v1-level742"]["status"]
+                )
+                calls = [row["level"] for row in self.invocations(paths)]
+                self.assertNotIn("level-opening-3m-v1-level100", calls)
+                self.assertEqual(2, len(calls))
+
+    def test_max_traces_bounds_the_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(paths, max_traces=1)
+            self.assertEqual(0, completed.returncode, completed.stdout)
+            self.assertEqual(1, len(self.invocations(paths)))
+            self.assertEqual(1, len(self.trace_records(paths["output"])))
+            summary = [
+                row
+                for row in self.campaign_log(paths["output"])
+                if row.get("kind") == "campaign-summary"
+            ][0]
+            self.assertEqual(3, summary["matched"])
+            self.assertEqual(1, summary["selected"])
+
+    def test_the_schedule_order_is_deterministic_in_both_modes(self) -> None:
+        # Cost is linear in trace bytes (+/-1.7%), so -Order Size runs
+        # smallest-first and gets the most traces done per hour if the campaign
+        # is interrupted.  Sizes here descend with the name order, so a runner
+        # that ignored -Order would pick the other trace.
+        for order, expected in (
+            ("Name", "level-opening-3m-v1-level100"),
+            ("Size", "level-opening-3m-v1-level742"),
+        ):
+            with self.subTest(order=order), tempfile.TemporaryDirectory() as t:
+                paths = self.build_sandbox(
+                    pathlib.Path(t), descending_sizes=True
+                )
+                completed = self.run_campaign(
+                    paths, max_traces=1, extra=["-Order", order]
+                )
+                self.assertEqual(0, completed.returncode, completed.stdout)
+                self.assertEqual(
+                    [expected], list(self.trace_records(paths["output"]))
+                )
+
+    def test_the_log_carries_the_density_metrics_and_no_step_count(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            self.run_campaign(paths, max_traces=1)
+            record = list(self.trace_records(paths["output"]).values())[0]
+            density = record["density"]
+            self.assertEqual("8455716864", density["traceBytes"])
+            self.assertEqual("2154002", density["sequences"])
+            self.assertAlmostEqual(
+                8455716864 / 2154002, density["traceBytesPerSequence"], places=2
+            )
+            self.assertAlmostEqual(
+                138351764 / 2154002, density["gapEventsPerSequence"], places=2
+            )
+            self.assertEqual("25", density["kindLarge"])
+            self.assertEqual("535861", density["kindContextSwitch"])
+            # #149: this engine's step accounting is the thing under suspicion.
+            # It must not appear as a logged metric.
+            self.assertNotIn("steps", json.dumps(density).lower())
+
+    def test_nothing_is_ever_written_into_a_trace_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            before = self.snapshot(paths["traces"])
+            self.run_campaign(paths)
+            self.assertEqual(before, self.snapshot(paths["traces"]))
+
+    def test_an_output_root_inside_a_trace_directory_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            inside = (
+                paths["traces"] / "level-opening-3m-v1-level700" / "coverage"
+            )
+            completed = self.run_campaign(paths, output=inside)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn(
+                "Traces are immutable",
+                completed.stdout + completed.stderr,
+            )
+            self.assertFalse(inside.exists())
+            self.assertEqual([], self.invocations(paths))
+
+    def test_campaign_source_holds_its_stated_rules(self) -> None:
+        campaign = read(CAMPAIGN)
+
+        # Sequential is a measurement (0.96x for 2-way), not a preference.
+        self.assertIn("0.96x", campaign)
+        self.assertIn("$AcceptableExitCodes = @(0, 11)", campaign)
+        self.assertIn("ExpectAliveAtStop", campaign)
+        self.assertIn("QuarantineCounters = $true", campaign)
+        self.assertIn("guestOutcome", campaign)
+        self.assertIn("-ceq 'alive-at-stop'", campaign)
+        self.assertIn("ttd-record-receipt.v3", campaign)
+        self.assertIn("not retrying", campaign)
+        self.assertIn("Traces are immutable", campaign)
+        # No parallel scheduler.
+        self.assertNotIn("ForEach-Object -Parallel", campaign)
+        self.assertNotIn("Start-Job", campaign)
+
+        # And no step-count consumption.  Checked against the CODE, with the
+        # comments stripped, so that documenting the rule cannot satisfy it.
+        body = campaign.split("#>", 1)[1]
+        code = "\n".join(
+            line
+            for line in body.splitlines()
+            if not line.lstrip().startswith("#")
+        )
+        for banned in ("steps_executed", "instructions_executed", "callback_hits"):
+            self.assertTrue(
+                banned not in code,
+                f"the campaign runner must not consume {banned}: "
+                "TTD Replay 1.11.584.0 freezes those counters (#149)",
+            )
+        self.assertIn("steps_executed is not evidence", campaign)
 
 
 if __name__ == "__main__":
