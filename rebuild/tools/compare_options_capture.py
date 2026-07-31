@@ -3,11 +3,23 @@
 Why this is not `tools/compare_capture.py`
 ------------------------------------------
 It was tried first, and it cannot see this page. The Options pages sit on the
-FEBack128 underlay, a ~19-second video loop, so a single retail frame pins one
-phase and our capture is at another. That shows up as a near-uniform background
-lift - measured, every region of every page reads about +8 R/G and +18 B - which
-swamps every region statistic. `compare_capture.py` reported 65-95% "material"
-on regions that are in fact pixel-exact.
+FEBack128 underlay, a ~19-second video loop, and the retail frames this tool
+compares against were captured with `-skipfmv`, which SUPPRESSES that underlay
+entirely. That shows up as a near-uniform background lift - measured, every
+region of every page reads about +8 R/G and +18 B - which swamps every region
+statistic. `compare_capture.py` reported 65-95% "material" on regions that are
+in fact pixel-exact.
+
+CORRECTED 2026-07-31 (task #150). This paragraph used to attribute that lift to
+a PHASE mismatch between two running videos. It is not a phase difference; it is
+the whole video, present on our side and absent on retail's. Measured on
+options-root, full-frame mean RGB: retail `-skipfmv` (30.6, 31.8, 54.3), retail
+WITH the video (38.2, 41.0, 68.7), ours (36.8, 39.5, 68.4). The retail reference
+is the outlier, and our page sits within ~1.5 units of retail's video-on truth.
+The conclusion below is unaffected - an ink mask is opaque glyph core either way
+- but the reason mattered enough to get wrong twice, so it is stated correctly
+here. Video-on references now exist at
+local-lab/retail-reference-pristine/nofmv-options-2026-07-31/{run1,run2}.
 
 What discriminates instead is an INK MASK: the pixels bright enough to be glyph
 core rather than background or arc. Text either lands on retail's pixels or it
@@ -40,9 +52,13 @@ What is deliberately excluded, with reasons
 Both exclusions are boxes, stated below, not adaptive masks - an adaptive mask
 would be able to excuse a real defect.
 
-There is only ONE retail run of these pages, so there is no noise floor and
-`tools/score_frontend_capture.py` cannot gate them; it reports the options plan
-as UNSCORED, which is correct and must not be read as a pass.
+There is only one retail run of the `-skipfmv` frames THIS tool reads, so it has
+no noise floor of its own. Two video-on retail runs of the same pages do now
+exist (nofmv-options-2026-07-31/run1 and run2, task #150), but they are bursts
+and our options capture is one settled shot per page, so there is still nothing
+for `tools/score_frontend_capture.py` to pair; it reports the options plan as
+UNSCORED, which is correct and must not be read as a pass. See the FEP_OPTIONS
+entry in rebuild/tools/frontend-parity-plan.json for what would unblock it.
 
 Usage:
     py -3 rebuild/tools/compare_options_capture.py <capture-dir> [--min-iou N]
