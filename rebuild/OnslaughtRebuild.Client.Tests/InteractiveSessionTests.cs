@@ -347,8 +347,10 @@ public sealed class InteractiveSessionTests
 
         // The goldens PointerMotion_PreservesMagnitudeAndRetailRecenteringCoast
         // pins for the untouched session, reproduced through the slider at 7.0.
-        Assert.Equal(1_640, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-299, atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        // MOVED 2026-07-30, from 1,640 and -299. See the accounting on that
+        // test; both pins record the same 15 px / -7.5 px motion.
+        Assert.Equal(2_465, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-398, atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
 
         // The lowest reachable stop is 3.0, well under the shipped 7.0, so the
         // same hand motion must turn the walker measurably less far.
@@ -362,6 +364,110 @@ public sealed class InteractiveSessionTests
                 atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick,
             "the sensitivity slider did not reach the pointer axis");
         Assert.True(atThree.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick > 0);
+    }
+
+    /// <summary>
+    /// One whole mouse pixel is worth exactly the stick position the released
+    /// build gives it - the countable half of task #141.
+    ///
+    /// <para>Retail's look axis is
+    /// <c>g_MouseSensitivity * (cursor - centre) * 13/3000</c>
+    /// (<c>CController::DoMappings</c> 0x0042DB40, scalar at pristine
+    /// VA 0x005D97C8), read out of an INTEGER cursor position. So one pixel is
+    /// 91/3000 = <b>30 permille</b> at the image's untouched 7.0, and 39/3000 =
+    /// <b>13 permille</b> at the slider's lowest reachable stop of 3.0.</para>
+    ///
+    /// <para><b>Neither number was reachable before 2026-07-30.</b> This client
+    /// eased the offset BEFORE reading it, so one pixel was read as
+    /// round(1 px × 0.702049) and arrived as 21 permille at 7.0 and 9 at 3.0 -
+    /// 30 % short, and values the released build cannot produce at all. Retail
+    /// sets its recentre flag on the way OUT of the read
+    /// (<c>DAT_0066E94D = 1</c>) and eases afterwards in
+    /// <c>Input__UpdateCursorCenterWithWindowScale</c> 0x0042DA00.</para>
+    ///
+    /// <para>The 13 is the interesting one: it is below the 15-permille floor
+    /// the old half-pixel dead zone imposed, so it is a stop that was
+    /// unreachable at ANY sensitivity and is now delivered exactly.</para>
+    /// </summary>
+    [Fact]
+    public void PointerMotion_OneWholePixelIsWorthRetailsOwnStop()
+    {
+        foreach ((float sensitivity, short permille) in
+            new (float, short)[] { (7f, 30), (3f, 13) })
+        {
+            InteractiveSession session = CreatePlayingSession(1);
+            session.SetMouseSensitivity(sensitivity);
+            session.QueuePointerMotionMilliPixels(1_000, 0);
+            FrameAdvanceResult moved = session.AdvanceFrameTicks(OneCoreStepTicks);
+
+            // Stated as an EQUIVALENCE rather than a golden: one pixel of mouse
+            // has to be the same thing to Core as commanding that stick
+            // position outright. A golden here would survive the axis moving.
+            var direct = new Simulation(1, ActorDefinitions);
+            for (int tick = 0; tick < FirstRunControlTick; tick++)
+            {
+                direct.Step(SimInput.Idle);
+            }
+
+            WorldSnapshot commanded = direct.Step(
+                new SimInput(0, 0, SimActions.None, 0, 0, permille, 0));
+
+            Assert.Equal(
+                commanded.WalkerYawVelocityMicroRadPerTick,
+                moved.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+
+            // The guard that stops the equivalence being trivially true if both
+            // sides collapse to a motionless walker.
+            Assert.True(
+                moved.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick > 0,
+                $"one pixel at sensitivity {sensitivity} moved nothing");
+        }
+    }
+
+    /// <summary>
+    /// The offset returns to rest, and it does so because of 0x0042DA00's
+    /// one-pixel anti-stall rather than because a floor snapped it away.
+    ///
+    /// <para>Retail's ease is integer, so it stalls: round(1 px × 0.702049) is
+    /// 1 px again. 0x0042DA00 carries
+    /// <c>if ((centre != cursor) &amp;&amp; (step == 0)) step = ±1</c> for
+    /// exactly that case. Without the rule a one-pixel offset would coast
+    /// forever; with it, one pixel is spent in a single step.</para>
+    /// </summary>
+    [Fact]
+    public void PointerMotion_OffsetWalksBackToRestOnePixelAtATime()
+    {
+        InteractiveSession session = CreatePlayingSession(1);
+        int startingYaw = session.CurrentSnapshot.FacingYawMicroRad;
+        session.QueuePointerMotionMilliPixels(1_000, 0);
+
+        FrameAdvanceResult spent = session.AdvanceFrameTicks(OneCoreStepTicks);
+
+        // It was READ before it was eased - the pixel reached the simulation.
+        Assert.NotEqual(startingYaw, spent.CurrentSnapshot.FacingYawMicroRad);
+
+        // And then it was gone, in one step, with no floor to snap it away.
+        Assert.False(
+            session.HasHeldOrPendingInput,
+            "a one-pixel offset outlived its step - the anti-stall is missing");
+
+        // Three pixels take exactly three steps: 3 -> 2 -> 1 -> 0. The last of
+        // those only happens because of the ±1 forcing; round(1 × 0.702049) is
+        // 1, so without it the offset coasts at one pixel for ever.
+        InteractiveSession longer = CreatePlayingSession(1);
+        longer.QueuePointerMotionMilliPixels(3_000, 0);
+        for (int step = 1; step <= 2; step++)
+        {
+            longer.AdvanceFrameTicks(OneCoreStepTicks);
+            Assert.True(
+                longer.HasHeldOrPendingInput,
+                $"a three-pixel offset was already at rest after {step} step(s)");
+        }
+
+        longer.AdvanceFrameTicks(OneCoreStepTicks);
+        Assert.False(
+            longer.HasHeldOrPendingInput,
+            "a three-pixel offset never returned to rest");
     }
 
     [Fact]
@@ -381,9 +487,40 @@ public sealed class InteractiveSessionTests
         session.QueuePointerMotionMilliPixels(15_000, -7_500);
         FrameAdvanceResult first = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(1_640, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-299, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
-        Assert.Equal(startingYaw + 1_640, first.CurrentSnapshot.FacingYawMicroRad);
+        // THESE FOUR GOLDENS MOVED ON 2026-07-30, and the old values are kept
+        // here rather than replaced because the move is the whole point of the
+        // change that caused it. The pins were:
+        //
+        //     step 1 yaw   1,640 -> 2,465        step 1 pitch  -299 -> -398
+        //     step 2 yaw   2,531 -> 3,847        step 2 pitch  -466 -> -626
+        //
+        // THE ACCOUNTING. The motion is unchanged: 15 px right, 7.5 px up.
+        //   WAS: the offset was eased BEFORE it was read, so 15,000 milli-px
+        //        became round(15,000 x 0.702049) = 10,531 and the axis saw
+        //        319 permille; -7,500 became -5,265 and the axis saw -160.
+        //   NOW: retail's order - CController::DoMappings reads the cursor and
+        //        only then raises the recentre flag - so the axis sees the
+        //        whole-pixel cursor itself: 15 px = 455 permille and -7 px =
+        //        -212. 455/319 is 1.426, which is 1/0.702049: exactly the ease
+        //        that is no longer taken before the read.
+        //   The Y axis moves by slightly more than that ratio because 7.5 px is
+        //   not a whole cursor position. It reads as 7 px and the half pixel is
+        //   CARRIED, which is what Windows does with sub-pixel mouse counts;
+        //   retail's cursor globals (DAT_0089BDA8/DAT_0089BDA4) are ints and
+        //   never hold a fraction.
+        //
+        // Neither the sensitivity scalar (13/3000), the Player.cpp:334-355
+        // response curve, nor any Core constant moved: the whole change is
+        // confined to InteractiveSession's pointer path. The cold-career
+        // acceptance run is BIT-IDENTICAL across it - same Won, same terminal
+        // tick 12463, same hull 12100, same state hash ffe391e7... - because
+        // that run only ever asks for stick positions a whole pixel can produce,
+        // and those are delivered the same either way. These four goldens moved
+        // precisely because they are the one place that exercises a motion that
+        // is NOT already on retail's lattice.
+        Assert.Equal(2_465, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-398, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(startingYaw + 2_465, first.CurrentSnapshot.FacingYawMicroRad);
         Assert.True(session.HasHeldOrPendingInput);
 
         // The guard that makes the numbers above mean something. If a future
@@ -399,10 +536,10 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult second = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(2_531, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(-466, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
+        Assert.Equal(3_847, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(-626, second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
         Assert.Equal(
-            first.CurrentSnapshot.FacingYawMicroRad + 2_531,
+            first.CurrentSnapshot.FacingYawMicroRad + 3_847,
             second.CurrentSnapshot.FacingYawMicroRad);
     }
 

@@ -228,6 +228,23 @@ The source code uses numeric button indices that map to standard PC gamepad layo
 
 **Note**: The Xbox controllers required "really huge dead zones" (0.36) according to the source code comment.
 
+**These dead zones are a JOYSTICK rule and are NOT in the shipped PC image.**
+`Controller.cpp:227-233` applies `ANALOGUE_X_DEAD`/`ANALOGUE_Y_DEAD` to the four
+`GetJoyAnalogue*` axes only. The Steam build's look axis does not come from that
+path — it comes from the mouse case documented under "Steam mouse-axis mapping"
+above, whose only tests are the `±1.0` clamp and a sign gate at exactly `0.0`
+(VA `0x005D8BE0` = -1.0, `0x005D8568` = +1.0, `0x005D856C` = 0.0). Measured
+2026-07-30 in the pristine specimen
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`
+(sha256 `74154bfa…`, 2,506,752 bytes): the float32 `0.36` (`EC 51 B8 3E`) occurs
+**zero** times in the file.
+
+Consequence: **retail's look axis has no dead zone.** Its floor is a quantum —
+the cursor displacement is an integer pixel count (`DAT_0089BDA8`/`DAT_0089BDA4`
+are `int`, fed from `WM_MOUSEMOVE` in `ltshell.cpp:1058-1067`), so at the image's
+untouched sensitivity of `7.0` the reachable axis is the lattice
+`{0, ±30, ±61, ±91, …}` permille and nothing lies between zero and thirty.
+
 ### Input Recording/Playback System
 
 The controller includes a demo recording system for QA and attract modes:

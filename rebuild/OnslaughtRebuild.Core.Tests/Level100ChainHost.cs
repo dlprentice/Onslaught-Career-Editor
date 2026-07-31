@@ -105,9 +105,9 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
     /// <para>This is an INSTRUMENT CHECK, not a mode. If a run with this set
     /// produces the same pose trace as the same run through
     /// <see cref="Level100InteractiveChainHost"/>, then that host's inverse of
-    /// the pointer laws is exact and the dead zone is the ONLY thing the client
-    /// costs. Without it, "the client is lossy" and "this driver mistranslates"
-    /// are the same observation.</para>
+    /// the pointer laws is exact and the pixel quantum is the ONLY thing the
+    /// client costs. Without it, "the client is lossy" and "this driver
+    /// mistranslates" are the same observation.</para>
     /// </param>
     /// <param name="quantizeLookToIntegerMousePixels">
     /// Restrict the analogue look axis to the positions a hand on a mouse can
@@ -201,9 +201,12 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
 ///   (<c>FirstFlightGame.ConfigureInputMap</c>), so the only way to move the
 ///   analogue axis is mouse motion through
 ///   <see cref="InteractiveSession.QueuePointerMotionMilliPixels"/>. That path
-///   carries a released recentring retention and a half-pixel dead zone, and
-///   the two together mean <b>no stick position between 1 and 14 permille is
-///   reachable at all</b>. See <see cref="UnreachableLookCommands"/>.
+///   is quantised to the whole pixels retail's cursor is made of, so the
+///   reachable axis is the lattice <c>{0, ±30, ±61, ±91, …}</c> and
+///   <b>everything strictly between two lattice points is unreachable</b>. That
+///   is retail's own quantum, not an adapter defect: until 2026-07-30 this path
+///   also carried an invented half-pixel dead zone, which is gone. See
+///   <see cref="UnreachableLookCommands"/>.
 ///   </description></item>
 /// </list>
 /// </summary>
@@ -234,7 +237,18 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     private const int PointerAxisDenominator = 3_000;
     private const int PointerRetentionNumerator = 702_049;
     private const int PointerRetentionDenominator = 1_000_000;
-    private const int PointerDeadZoneMilliPixels = 500;
+
+    /// <summary>
+    /// Milli-pixels in one whole pixel - retail's cursor quantum, and since
+    /// 2026-07-30 the only thing standing between the driver and the axis.
+    ///
+    /// <para>This replaced a <c>PointerDeadZoneMilliPixels = 500</c> that
+    /// mirrored an invented half-pixel floor in the client. Retail has no dead
+    /// zone on this path at all; see <c>InteractiveSession.WholePixelsOf</c>
+    /// for the three constants and the absence of 0.36 from the shipped
+    /// image.</para>
+    /// </summary>
+    private const int PointerPixelMilliPixels = 1_000;
 
     private readonly InteractiveSession _session;
     private readonly bool _quantizeLookToIntegerMousePixels;
@@ -261,13 +275,13 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     /// (<see cref="PlayerPlausiblePermille"/>) BEFORE the pointer path is asked
     /// for them.
     ///
-    /// <para><b>With it set, this host is lossless.</b> The dead zone measured
-    /// by <see cref="UnreachableLookCommands"/> only ever eats magnitudes below
-    /// 15 permille, and the smallest position an integer pixel can produce is
-    /// 30. So the loss this class exists to expose is a loss of commands
-    /// <i>no player could issue in the first place</i>, and a driver that does
-    /// not issue them travels through <c>InteractiveSession</c> unchanged.
-    /// </para>
+    /// <para><b>With it set, this host is lossless</b>, and since 2026-07-30 it
+    /// is lossless for a stronger reason than before. The quantisation this
+    /// flag applies and the quantisation the client's pointer path applies are
+    /// now the SAME law - whole retail mouse pixels - so a driver held to the
+    /// lattice asks only for positions the pointer path can deliver exactly.
+    /// The loss this class exists to expose is a loss of commands <i>no player
+    /// could issue in the first place</i>.</para>
     /// </param>
     internal Level100InteractiveChainHost(
         InteractiveSession session,
@@ -281,8 +295,13 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
 
     /// <summary>
     /// How many analogue look commands this run asked for and could not get,
-    /// because the requested stick position falls inside the client's pointer
-    /// dead zone. Each one is delivered as zero.
+    /// because no whole retail mouse pixel lands on the requested stick
+    /// position. Each one is delivered as zero.
+    ///
+    /// <para>Before 2026-07-30 this also counted commands eaten by an invented
+    /// half-pixel dead zone in the client, which is the loss task #141
+    /// measured at 44.2 %. That rule is gone; what remains is retail's own
+    /// pixel quantum.</para>
     /// </summary>
     internal int UnreachableLookCommands => _unreachableLookCommands;
 
@@ -296,10 +315,11 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     /// INTEGER pixel displacement by <c>sensitivity * 13/3000</c>, and the
     /// image's untouched sensitivity is 7.0, so the smallest look input a hand
     /// on a mouse can produce is <c>91/3000</c> of full deflection - about
-    /// <b>30 permille</b>. This client is finer than retail there, because it
-    /// takes Godot's fractional <c>ScreenRelative</c> as milli-pixels; the count
-    /// is kept anyway, because a command below this threshold is one no player
-    /// could issue on the released build either.</para>
+    /// <b>30 permille</b>. This client used to be finer than retail there,
+    /// because it let Godot's fractional <c>ScreenRelative</c> reach the axis;
+    /// since 2026-07-30 the fraction is carried but only whole pixels are read,
+    /// so a command below this threshold is one neither surface can
+    /// issue.</para>
     /// </summary>
     internal int SubRetailPixelLookCommands => _subRetailPixelLookCommands;
 
@@ -321,11 +341,13 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     ///
     /// <para><b>Why it exists.</b> Measured over the joined cold-start run,
     /// 2,904 of this driver's 4,937 analogue look commands (58.8 %) are finer
-    /// than one mouse pixel and 2,184 (44.2 %) fall inside the client's own
-    /// pointer dead zone and arrive as zero. A run that needs those commands is
-    /// evidence about the MECHANISM of the level, not about whether a person
-    /// can play it. Driving through this function is the honest playability
-    /// question.</para>
+    /// than one mouse pixel; on the pre-2026-07-30 client 2,184 (44.2 %) also
+    /// fell inside an invented half-pixel dead zone and arrived as zero. A run
+    /// that needs those commands is evidence about the MECHANISM of the level,
+    /// not about whether a person can play it. Driving through this function is
+    /// the honest playability question - and now that the client quantises to
+    /// whole pixels itself, it is also the client's own law rather than a
+    /// stricter one bolted on in front of it.</para>
     /// </summary>
     internal static short PlayerPlausiblePermille(short requested)
     {
@@ -349,8 +371,10 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     internal static short DeliverablePermille(short requested)
     {
         int ignored = 0;
+        // No Retain here any more: the client reads the axis BEFORE the ease,
+        // which is the order 0x0042DB40 and 0x0042DA00 run in.
         int offset = PointerOffsetFor(requested, ref ignored, ref ignored);
-        return (short)ToPermille(Retain(offset));
+        return (short)ToPermille(offset);
     }
 
     public WorldSnapshot Step(SimInput input)
@@ -417,14 +441,28 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     }
 
     /// <summary>
-    /// The pointer offset that has to be standing before the step so that the
-    /// step's retention leaves an offset the client converts to
-    /// <paramref name="permille"/>.
+    /// The whole-pixel cursor offset that has to be standing when the step
+    /// reads the axis for the client to deliver <paramref name="permille"/>.
     ///
-    /// <para>Returns 0 and counts an unreachable command when no such offset
-    /// exists. That happens for every requested magnitude from 1 to 14: the
-    /// retention zeroes anything below half a pixel, and half a pixel is
-    /// already 15 permille.</para>
+    /// <para>The client reads BEFORE it eases (retail's own order - see
+    /// <c>InteractiveSession.RecenterPointerOffset</c>), so this no longer has
+    /// to pre-compensate for the ease: the offset that delivers a stick
+    /// position is simply the pixel count that maps onto it.</para>
+    ///
+    /// <para><b>It SNAPS; it does not refuse.</b> A hand on a mouse cannot
+    /// decline to land somewhere, so a request that falls between two lattice
+    /// points is delivered as the nearer one - that is quantisation error, not
+    /// loss. The only requests delivered as NOTHING are the ones that round to
+    /// zero pixels, which at the image's untouched sensitivity means
+    /// <c>|permille| &lt;= 15</c>; those are what
+    /// <paramref name="unreachable"/> counts.</para>
+    ///
+    /// <para>The distinction is the whole point of the 2026-07-30 change. The
+    /// half-pixel dead zone it replaced <i>did</i> refuse - it returned zero
+    /// for permille 1..14 and then delivered 15..1000 exactly - so "unreachable"
+    /// used to mean "swallowed by a rule retail does not have". It now means
+    /// "smaller than retail's own quantum", and the floor moved by one
+    /// permille.</para>
     /// </summary>
     private static int PointerOffsetFor(
         short permille,
@@ -438,40 +476,42 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
 
         commands++;
         int magnitude = Math.Abs((int)permille);
-        int retained = (int)Math.Round(
-            magnitude * (double)PointerAxisDenominator / PointerAxisNumerator,
+        int pixels = (int)Math.Round(
+            magnitude * (double)PointerAxisDenominator /
+                (PointerAxisNumerator * (double)PointerPixelMilliPixels),
             MidpointRounding.AwayFromZero);
-        retained = Math.Max(retained, PointerDeadZoneMilliPixels);
-        if (ToPermille(retained) != magnitude)
+        if (pixels == 0)
         {
             unreachable++;
             return 0;
         }
 
-        // The smallest pre-retention offset the retention maps onto `retained`.
-        int offset = (int)Math.Round(
-            retained * (double)PointerRetentionDenominator / PointerRetentionNumerator,
-            MidpointRounding.AwayFromZero);
-        while (Retain(offset) > retained)
-        {
-            offset--;
-        }
-
-        while (Retain(offset) < retained)
-        {
-            offset++;
-        }
-
+        int offset = pixels * PointerPixelMilliPixels;
         return permille < 0 ? -offset : offset;
     }
 
+    /// <summary>
+    /// <c>InteractiveSession.RecenterPointerOffset</c>, mirrored: the integer
+    /// ease with 0x0042DA00's one-pixel anti-stall.
+    /// </summary>
     private static int Retain(int value)
     {
-        long scaled = (long)value * PointerRetentionNumerator;
-        int retained = (int)(scaled >= 0
+        int pixels = value / PointerPixelMilliPixels;
+        if (pixels == 0)
+        {
+            return 0;
+        }
+
+        long scaled = (long)pixels * PointerRetentionNumerator;
+        int eased = (int)(scaled >= 0
             ? (scaled + (PointerRetentionDenominator / 2)) / PointerRetentionDenominator
             : (scaled - (PointerRetentionDenominator / 2)) / PointerRetentionDenominator);
-        return Math.Abs(retained) < PointerDeadZoneMilliPixels ? 0 : retained;
+        if (eased == pixels)
+        {
+            eased = pixels - Math.Sign(pixels);
+        }
+
+        return eased * PointerPixelMilliPixels;
     }
 
     private static int ToPermille(int offsetMilliPixels)

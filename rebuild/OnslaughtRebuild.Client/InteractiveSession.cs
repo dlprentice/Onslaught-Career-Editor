@@ -459,10 +459,22 @@ public sealed class InteractiveSession
             sbyte moveZ = _input.MoveZ;
             sbyte lookX = _input.LookX;
             sbyte lookY = _input.LookY;
-            _pointerOffsetXMilliPixels = RetainPointerOffset(_pointerOffsetXMilliPixels);
-            _pointerOffsetYMilliPixels = RetainPointerOffset(_pointerOffsetYMilliPixels);
-            short pointerLookX = ToPointerAxisPermille(_pointerOffsetXMilliPixels);
-            short pointerLookY = ToPointerAxisPermille(_pointerOffsetYMilliPixels);
+            // RETAIL'S ORDER, AND IT IS NOT THE ONE THIS USED TO HAVE.
+            // CController::DoMappings (0x0042DB40) READS the cursor offset and
+            // only raises the recentre flag (DAT_0066E94D = 1) on its way out;
+            // Input__UpdateCursorCenterWithWindowScale (0x0042DA00) does the
+            // easing afterwards. Easing BEFORE the read - which is what this
+            // did until 2026-07-30 - takes 29.8 % off a fresh motion before the
+            // simulation ever sees it, and that is what made a half-pixel floor
+            // look necessary. Quantise, read, then ease.
+            int cursorX = WholePixelsOf(_pointerOffsetXMilliPixels);
+            int cursorY = WholePixelsOf(_pointerOffsetYMilliPixels);
+            short pointerLookX = ToPointerAxisPermille(cursorX);
+            short pointerLookY = ToPointerAxisPermille(cursorY);
+            _pointerOffsetXMilliPixels = RecenterPointerOffset(cursorX) +
+                (_pointerOffsetXMilliPixels - cursorX);
+            _pointerOffsetYMilliPixels = RecenterPointerOffset(cursorY) +
+                (_pointerOffsetYMilliPixels - cursorY);
             if (firstStep)
             {
                 if (moveX == 0)
@@ -536,8 +548,9 @@ public sealed class InteractiveSession
             }
 
             PreviousSnapshot = CurrentSnapshot;
-            // Held digital look is level-sampled. Pointer motion enters as a
-            // magnitude-preserving analogue axis and recenters across steps.
+            // Held digital look is level-sampled. Pointer motion enters as the
+            // whole-pixel analogue axis retail reads out of the cursor, and
+            // recenters across steps.
             CurrentSnapshot = _simulation.Step(
                 new SimInput(
                     moveX,
@@ -586,15 +599,88 @@ public sealed class InteractiveSession
             MaximumPointerOffsetMilliPixels);
     }
 
-    private static int RetainPointerOffset(int value)
+    /// <summary>
+    /// The whole-pixel CURSOR inside the accumulated offset - the only part of
+    /// it retail's look axis is read from. This is what replaced the half-pixel
+    /// dead zone.
+    ///
+    /// <para><b>Retail has no look dead zone.</b> The shipped mouse case in
+    /// <c>CController::DoMappings</c> (0x0042DB40) is, in full:
+    /// <c>v = g_MouseSensitivity * (cursor - windowCentre) * 0.004333333</c>,
+    /// then <c>if (v &lt; -1) v = -1; else if (v &gt; 1) v = 1;</c>, then a SIGN
+    /// GATE - <c>ANALOGUE_PLUS</c> zeroes <c>v &lt; 0</c> and
+    /// <c>ANALOGUE_MINUS</c> zeroes <c>v &gt; 0</c>. The three constants are
+    /// read from the pristine specimen
+    /// (<c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+    /// <c>74154bfa…</c>): VA 0x005D8BE0 = -1.0, VA 0x005D8568 = +1.0, and the
+    /// gate's threshold VA 0x005D856C = <b>0.0</b>. There is no other
+    /// comparison on that path.</para>
+    ///
+    /// <para>The GPL drop's <c>ANALOGUE_X_DEAD</c>/<c>ANALOGUE_Y_DEAD</c> of
+    /// 0.36 (<c>Controller.h:11-12</c>, applied at
+    /// <c>Controller.cpp:227-233</c>) is a JOYSTICK rule - it guards
+    /// <c>GetJoyAnalogue*</c>, and its own comment says "the Xbox controllers
+    /// appear to need really huge dead zones". It is not in the shipped PC
+    /// image at all: the float32 0.36 (<c>EC 51 B8 3E</c>) occurs <b>zero</b>
+    /// times in that 2,506,752-byte specimen.</para>
+    ///
+    /// <para>So retail's floor is not a threshold, it is a QUANTUM. The
+    /// displacement comes from the cached cursor position
+    /// <c>DAT_0089BDA8</c>/<c>DAT_0089BDA4</c>, which are <b>ints</b> fed from
+    /// <c>WM_MOUSEMOVE</c>'s <c>LOWORD/HIWORD(lParam)</c>
+    /// (<c>ltshell.cpp:1058-1067</c>). One pixel is the smallest displacement
+    /// the released build can see.</para>
+    ///
+    /// <para>This client takes Godot's fractional <c>ScreenRelative</c> as
+    /// milli-pixels, so the fraction has to live somewhere. It stays in the
+    /// accumulator and is carried, never read: that is where retail keeps it
+    /// too, in the OS - Windows accumulates mouse counts and moves the cursor
+    /// by whole pixels, so a slow drag still eventually turns the walker. What
+    /// must NOT happen is the fraction reaching the axis, which is what made
+    /// this client able to aim finer than the released build.</para>
+    /// </summary>
+    private static int WholePixelsOf(int value) =>
+        value / PointerOffsetScale * PointerOffsetScale;
+
+    /// <summary>
+    /// Retail's recentring ease, from
+    /// <c>Input__UpdateCursorCenterWithWindowScale</c> (0x0042DA00), on the
+    /// whole-pixel cursor <see cref="WholePixelsOf"/> returns.
+    ///
+    /// <para>Retail eases the cached cursor toward the window centre by
+    /// VA 0x005D97C4 = 0.5882353186607361 = <b>10/17</b> per 20 Hz update;
+    /// <c>0.5882353^(20/30)</c> is the 702049/1000000 this runs at 30 Hz. The
+    /// ease is integer, so it stalls - and 0x0042DA00 carries its own anti-stall
+    /// for exactly that: <c>if ((centre != cursor) &amp;&amp; (step == 0))
+    /// step = ±1</c>, forcing one whole pixel toward the centre whenever the
+    /// eased step rounds to nothing.</para>
+    ///
+    /// <para><b>That rule is the proof the state is integer.</b> A float offset
+    /// never needs it. Without it a one-pixel offset rounds back to itself
+    /// (round(1 × 0.702049) = 1) and the axis never returns to rest; with it,
+    /// one pixel decays to zero on the next update, which is what the old
+    /// half-pixel floor was standing in for.</para>
+    /// </summary>
+    private static int RecenterPointerOffset(int wholePixelValue)
     {
-        long scaled = (long)value * PointerOffsetRetentionNumerator;
-        int retained = (int)(scaled >= 0
+        int pixels = wholePixelValue / PointerOffsetScale;
+        if (pixels == 0)
+        {
+            return 0;
+        }
+
+        long scaled = (long)pixels * PointerOffsetRetentionNumerator;
+        int eased = (int)(scaled >= 0
             ? (scaled + (PointerOffsetRetentionDenominator / 2)) /
                 PointerOffsetRetentionDenominator
             : (scaled - (PointerOffsetRetentionDenominator / 2)) /
                 PointerOffsetRetentionDenominator);
-        return Math.Abs(retained) < PointerOffsetScale / 2 ? 0 : retained;
+        if (eased == pixels)
+        {
+            eased = pixels - Math.Sign(pixels);
+        }
+
+        return eased * PointerOffsetScale;
     }
 
     /// <summary>

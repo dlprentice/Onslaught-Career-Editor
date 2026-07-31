@@ -27,7 +27,14 @@ namespace OnslaughtRebuild.Core;
 /// transcendentals are identical across runtimes, and the smoke state hash
 /// would inherit that. The table samples every 10 permille and interpolates
 /// linearly; LookAxisResponseTests asserts every one of the 1001 integer inputs
-/// against the double-precision law, worst case 0.55 permille.
+/// against the double-precision law to within ±1.0 permille.
+///
+/// The measured worst case is 0.944 permille, at input 985 (table 950, law
+/// 949.056); the next three are 0.931 at 994, 0.915 at 271 and 0.908 at 331.
+/// Re-measured 2026-07-30 — this comment previously said 0.55, which
+/// understated it by 1.7x and made the ±1.0 bound look far roomier than it is.
+/// There is 6 % of headroom, not 45 %: a table edit that costs a tenth of a
+/// permille breaches the gate.
 ///
 /// Retail has no digital look producer at all — PCController.cpp:91-95 maps all
 /// four look buttons to ANALOGUE_X2/Y2. Core's digital +-1 saturates the

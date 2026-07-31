@@ -190,11 +190,11 @@ internal sealed class Level100ColdStartRun
             _session = CreateSession();
             // The driver is held to what a hand on a mouse can issue. Retail's
             // CController::DoMappings maps an INTEGER pixel displacement, so
-            // the reachable axis is {0, +-30, +-61, +-91, ...} permille and the
-            // client's own dead zone - which only ever eats magnitudes below 15
-            // - cannot touch it. Without this the run is not a playthrough: it
-            // asks for 3,243 positions finer than one mouse pixel and 2,575 of
-            // them arrive as ZERO.
+            // the reachable axis is {0, +-30, +-61, +-91, ...} permille - and
+            // since 2026-07-30 that is the client's own law too, not a stricter
+            // one applied in front of it, so every position this asks for is
+            // delivered exactly. Without this the run is not a playthrough: it
+            // asks for 3,243 positions finer than one mouse pixel.
             _host = new Level100InteractiveChainHost(
                 _session,
                 quantizeLookToIntegerMousePixels: true);

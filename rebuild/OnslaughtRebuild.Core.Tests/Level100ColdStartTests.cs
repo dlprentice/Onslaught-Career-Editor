@@ -55,9 +55,9 @@ public sealed class Level100ColdCareerDirectRunFixture
 /// <c>Simulation.Step</c> — with ONLY the analogue-look quantisation the
 /// client's pointer path imposes applied on the way in. If this run's pose
 /// trace equals the client run's, the host's inverse of the pointer laws is
-/// exact and the dead zone is the whole of what the client costs. If it does
-/// not, the joined run's divergence is this driver's arithmetic and every
-/// number taken from it is suspect.</para>
+/// exact and the whole-pixel quantum is the whole of what the client costs. If
+/// it does not, the joined run's divergence is this driver's arithmetic and
+/// every number taken from it is suspect.</para>
 /// </summary>
 public sealed class Level100ClientPointerQuantisedRunFixture
 {
@@ -265,10 +265,10 @@ public sealed class Level100ColdStartTests
 
         // THE OUTPUT-CHANNEL CONTRACT, and it is the reason the joined run gets
         // this far at all. The driver is held to the stick positions an INTEGER
-        // mouse pixel can produce, so the client's pointer dead zone - which
-        // only ever eats magnitudes below 15 permille while one pixel is 30 -
-        // has nothing to eat. Before this run was quantised, 2,575 of its 5,439
-        // analogue look commands arrived as ZERO and it lost the level at t5277.
+        // mouse pixel can produce, which since 2026-07-30 is exactly what the
+        // client's own pointer path delivers, so nothing is lost between the
+        // two. Before this run was quantised, 2,575 of its 5,439 analogue look
+        // commands arrived as ZERO and it lost the level at t5277.
         //
         // This is HALF of player-plausibility, and the half that is cheap. What
         // the driver READS is still omniscient - exact Health, full 3D actor
@@ -383,44 +383,115 @@ public sealed class Level100ColdStartTests
     /// <para>The client leaves its look actions unbound on purpose
     /// (<c>FirstFlightGame.ConfigureInputMap</c>), so the only route to the
     /// analogue axis is mouse motion through
-    /// <c>InteractiveSession.QueuePointerMotionMilliPixels</c>. That path
-    /// recenters by the released 10/17-per-20 Hz retention and then discards
-    /// any residue below half a pixel - and half a pixel is already
-    /// <b>15 permille</b> of stick. So the first fourteen stops of the axis do
-    /// not exist through the client, and a driver asking for them gets
-    /// nothing.</para>
+    /// <c>InteractiveSession.QueuePointerMotionMilliPixels</c>. That path is
+    /// quantised to whole retail mouse pixels, so the axis it can deliver is
+    /// the LATTICE <c>{0, ±30, ±61, ±91, …}</c> and nothing in between.</para>
+    ///
+    /// <para><b>This test used to be called
+    /// <c>ClientPointerPath_CannotReachTheFirstFourteenLookStops</c>, and its
+    /// premise was half wrong.</b> The client did discard permille ±1..±14 -
+    /// an invented half-pixel dead zone, task #141, measured at 44.2 % of one
+    /// run's analogue look commands. But it then delivered ±15..±1000
+    /// <i>exactly</i>, which is finer than the released build can aim. Retail
+    /// has no dead zone on this path at all (the shipped mouse case at
+    /// 0x0042DB40 clamps to ±1.0 and sign-gates at 0.0, and the GPL drop's 0.36
+    /// <c>ANALOGUE_X_DEAD</c> is a joystick rule that does not occur once in
+    /// the shipped image); what it has is a QUANTUM, because the cursor
+    /// displacement is an integer pixel count. So the fourteen stops are still
+    /// zero and the floor moved by one permille, while everything ABOVE the
+    /// floor snapped onto retail's grid. The reconstruction lost a capability
+    /// the released build never had.</para>
     ///
     /// <para>This is a property of the reconstruction's input adapter, not of
     /// Core: <c>Simulation.Step</c> accepts every value from 1 to 1000 and
     /// <c>Level100ChainAutopilot</c> commands them. It is recorded here because
-    /// the joined run's trace diverges from its own control because of it,
-    /// while every isolated measurement in this suite drives
-    /// <c>SimInput</c> directly and cannot see it at all.</para>
+    /// every isolated measurement in this suite drives <c>SimInput</c> directly
+    /// and cannot see it at all.</para>
     /// </summary>
     [Fact]
-    public void ClientPointerPath_CannotReachTheFirstFourteenLookStops()
+    public void ClientPointerPath_DeliversExactlyRetailsWholePixelLattice()
     {
-        for (short requested = 1; requested <= 14; requested++)
+        // Derived from the released law rather than transcribed: n whole pixels
+        // are worth n * g_MouseSensitivity * 13/3000 of full deflection, and
+        // the image's untouched sensitivity is 7.0.
+        var lattice = new HashSet<short>();
+        for (int pixels = 1; pixels <= 1_000; pixels++)
         {
-            Assert.Equal(
-                (short)0,
-                Level100InteractiveChainHost.DeliverablePermille(requested));
-            Assert.Equal(
-                (short)0,
-                Level100InteractiveChainHost.DeliverablePermille((short)-requested));
+            int permille = (int)Math.Round(
+                pixels * 91_000 / 3_000d,
+                MidpointRounding.AwayFromZero);
+            lattice.Add((short)Math.Min(permille, 1_000));
         }
 
-        // From 15 up the axis is exact, in both directions, all the way to full
-        // deflection.
-        for (short requested = 15; requested <= 1_000; requested++)
+        int exact = 0;
+        int swallowed = 0;
+        for (short requested = 1; requested <= 1_000; requested++)
         {
+            short delivered =
+                Level100InteractiveChainHost.DeliverablePermille(requested);
+
+            // Odd symmetry, on every single stop and not just the sampled ones.
             Assert.Equal(
-                requested,
-                Level100InteractiveChainHost.DeliverablePermille(requested));
-            Assert.Equal(
-                (short)-requested,
+                (short)-delivered,
                 Level100InteractiveChainHost.DeliverablePermille((short)-requested));
+
+            if (delivered == 0)
+            {
+                // The ONLY thing delivered as nothing is a request that rounds
+                // to zero whole pixels - below half of one, which at this
+                // sensitivity is 15 permille.
+                Assert.True(
+                    requested <= 15,
+                    $"{requested} permille was swallowed; only <= 15 should be");
+                swallowed++;
+                continue;
+            }
+
+            // Everything else lands ON the lattice, at the NEAREST point to
+            // what was asked for. It snaps; it never refuses.
+            Assert.Contains(delivered, lattice);
+            Assert.True(
+                Math.Abs(delivered - requested) <= 16,
+                $"{requested} permille was delivered as {delivered}, which is " +
+                "not the nearest whole pixel");
+
+            if (delivered == requested)
+            {
+                exact++;
+            }
         }
+
+        // 32 whole pixels reach 971 permille and the 33rd saturates the axis.
+        Assert.Equal(33, exact);
+
+        // TASK #141'S FOURTEEN STOPS, STATED AS THE COUNT IT ASKED FOR - AND
+        // THE ANSWER IS NOT THE ONE THE TASK EXPECTED.
+        //
+        // Before: 1..14 were delivered as ZERO by a half-pixel dead zone, and
+        // 15..1000 were delivered EXACTLY - finer than the released build can
+        // aim anywhere above the floor.
+        // After:  1..15 are delivered as zero, because retail's first whole
+        // pixel is worth 30 permille and half a pixel is 15.17.
+        //
+        // So the floor moved by ONE permille, 14 -> 15, and the fourteen stops
+        // are still zero. What actually changed is everything above the floor:
+        // the client no longer aims between retail's pixels. Making 1..14
+        // reachable would need sub-pixel cursor state, which the released build
+        // does not have - #141 called that out as the outcome to preserve
+        // rather than fix, and this is that case.
+        Assert.Equal(15, swallowed);
+
+        // The stop immediately above the floor is no longer itself: it is the
+        // first pixel, which is where a hand would actually put it.
+        Assert.Equal(
+            (short)30,
+            Level100InteractiveChainHost.DeliverablePermille(16));
+        Assert.Equal(
+            (short)30,
+            Level100InteractiveChainHost.DeliverablePermille(30));
+        Assert.Equal(
+            (short)0,
+            Level100InteractiveChainHost.DeliverablePermille(15));
     }
 
     /// <summary>
