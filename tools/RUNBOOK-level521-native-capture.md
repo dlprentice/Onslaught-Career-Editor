@@ -1,5 +1,13 @@
 Status: runbook — follow it without reading code.
 Last updated: 2026-07-31.
+Evidence: MEASURED — the reachability table in the appendix is read from the
+shipped `data/MissionScripts/level521` scripts (`ResearchCentre.msl:28`,
+`LevelScript.msl:81`, `hive.msl:351`/`:474`, verified independently in the main
+loop), and the "opening fires none of the 17" claim is measured against the
+level-521 coverage index in `G:\bea-ttd\q-campaign-coverage-v1\`. INFERRED — the
+per-native timings after the cascade and the "13 of 17 in ten minutes" yield,
+which depend on whether `Pause(n)` is wall-clock or frame-driven under TTD; that
+is unmeasured and is why take 2 is sized at 300 s rather than tight.
 Summary: a roughly ten-minute recorded play session on level 521 that reaches
 MissionScript natives no recorded level opening ever executed, and the one
 command that tells you afterwards whether it worked.
