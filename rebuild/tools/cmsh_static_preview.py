@@ -189,6 +189,13 @@ _PART_ORDERS = {
         "PRNT NMIC BBOX VHFM HORI HPOS PBKT CPOS PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS PMVB",
+        # 2026-07-31, from the full-corpus mirror sweep: 11 shipped meshes carry
+        # this order - the CHLD variant of the CPOS REFR row below, and the
+        # CORI-less variant of the CHLD CPOS CORI REFR row. CORI is a derived
+        # verification cache (ASSET-EXTRACTION-COVERAGE-2026-07-25.md), so its
+        # absence is not a structural difference. Converts 10 of the 19
+        # previously-unsupported meshes; index G:\bea-asset-mirror\INDEX.jsonl.
+        "CHLD PRNT BBOX VHFM HORI HPOS CPOS REFR PMVB",
         "PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
         "PRNT BBOX VHFM HORI HPOS CPOS REFR PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
