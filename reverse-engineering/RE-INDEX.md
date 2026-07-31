@@ -1,13 +1,20 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
 waves, superseded plans, and generated accounting.
+
+**Every authority figure under "Current static authority" below is dated
+2026-07-27 and must be re-measured before it is used.** The residual, both
+denominators, and each per-ledger count are readings taken against a live
+maintainer database that has moved since. The section says so ledger by ledger;
+it is said once here so that nobody quotes a number off this page without
+re-running the grader that produced it.
 
 ## Evidence rules
 
@@ -41,6 +48,10 @@ waves, superseded plans, and generated accounting.
 | Assets and mission data | [Game-assets index](game-assets/_index.md) |
 | Compact lookups | [Quick-reference index](quick-reference/_index.md) |
 | Attribution and known limits | [Project metadata](project-meta/_index.md) |
+
+Further down this page, past the authority block: the patch recipes, the
+per-subsystem static contracts, the 2026-05-26 review cohort, the lane
+reference and runbooks, and the retail → Core translation policies.
 
 ## Current static authority
 
@@ -213,6 +224,161 @@ Host install paths, headless entry, and local project layout:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
 `local-lab/`; do not treat discovery notes as proof that the tracked snapshot
 or live DB was mutated.
+
+## Patch recipes — analysis documents, not a mutation workflow
+
+The closing line of this page says mutation of the installed game or original
+`BEA.exe` is never an RE workflow. That line and this section do not conflict,
+and the reconciliation is stated here rather than left to inference: **these are
+analysis documents.** They record where a byte lives, which function owns it,
+what the clean bytes are, and what was observed when an **app-owned copied**
+executable carried the change. Every recipe below applies only to a verified
+copied target — never the install, never the original, never
+`BEA.exe.original.backup`. The closing line governs **workflows**; it does not
+forbid documenting patch knowledge, and a front door that hid these notes would
+not make the installed game any safer, only the evidence harder to find.
+
+The normative authority for the byte definitions and for the copied-target
+boundary is the [patch catalog contract](../patches/CATALOG_CONTRACT.md), with
+[`patches/README.md`](../patches/README.md). The notes below explain why the
+rows exist and what was actually observed; where a note and the catalog
+disagree, the catalog wins.
+
+**Two documents in this family carry a withdrawn claim.** The 2026-07-28
+guard-byte correction struck a hex-edit recipe out of both
+`windowed-mode-analysis.md` and `widescreen-patch-analysis.md`. Both keep the
+withdrawn text visible and struck through rather than deleting it. Read the
+correction before acting on either.
+
+### The widescreen family — one external patch, fully accounted
+
+| Document | What it settles |
+| --- | --- |
+| [Widescreen patch analysis](binary-analysis/widescreen-patch-analysis.md) | The `BEA_Widescreen.exe` diff: **191 changed bytes across 28 regions**, file length unchanged, code-cave-plus-trampoline technique, both SHA-256s recorded. Historical **external** patch analysis — explicitly *not* the current WinUI/AppCore catalog patch contract. Its guard-byte normalization section is **withdrawn (2026-07-28)**. |
+| [28-region diff table](binary-analysis/widescreen-diff-regions-28.tsv) | The machine-readable canon: file offsets, VAs, before/after bytes, `owner_fn`, `evidence_refs`, behavior classification. A `.tsv`, not prose — read it when the exact region is what you need. |
+| [Unresolved-region tracker](binary-analysis/widescreen-diff-unresolved.md) | The queue, and it is **empty**: 14 `known-functional`, 14 `known-supporting`, **0 `unknown-needs-RE`**. The part worth reading is the three reopen criteria — this is a closed queue, not a solved subject. |
+| [Regions 8–11 validation](binary-analysis/widescreen-regions-8-11-validation.md) | How the last four uncertain regions were closed: hook sites and cave payloads disassembled from both binaries. |
+
+### Per-feature patch notes
+
+| Document | Anchor, and how far the claim reaches |
+| --- | --- |
+| [Windowed mode](binary-analysis/windowed-mode-analysis.md) | **Partially superseded 2026-07-28, and the withdrawn half is the half people used.** `-forcewindowed` is real and reachable, but its parser gate `DAT_00662f3e` is **BSS — zero at load** and is set only by `-testeur` appearing *earlier on the same command line*. The old "normalize the guard byte in a hex editor" recipe was false: there is no file byte to edit. The two-gate model and the startup-flow patch at file offset `0x12A644` stand. |
+| [Extra-graphics feature gate](binary-analysis/extra-graphics-feature-gate-patch.md) | `GEFORCE_FX_POWER` registers with default `0`; `0x004CDD40`, `6A 00` → `6A 01`. Carries the companion row that ignores `cardid.txt` vendor/device matching. |
+| [Version overlay](binary-analysis/version-overlay-patch.md) | The opt-in `V1.00 - PATCHED` marker as a **pair**: a visible pointer row plus a hidden cave-string payload row. One bounded copied-game title/menu run confirmed the marker; no broader overlay or parity claim. |
+| [Frontend clear-screen colour](binary-analysis/frontend-clear-screen-color-patch.md) | Three mutually exclusive immediates at `0x00540F88` in `CDXFrontEnd__RenderStart`; source anchor `references/Onslaught/DXFrontend.cpp`. |
+| [Goodies gallery display unlock](binary-analysis/goodies-gallery-display-unlock-patch.md) | Forces the existing display flag inside `CFEPGoodies__Process` (`0x0045D7F4`). **Display only — it does not alter save progression.** Also records the earlier candidate rejected for omitting the stack repair, before any behavior claim was made. |
+| [Free-camera Aurore-gate bypass](binary-analysis/free-camera-aurore-gate-bypass-patch.md) | NOPs the `IsCheatActive(4)` gate on `BUTTON_TOGGLE_FREE_CAMERA` in `CGame__ReceiveButtonAction`, plus eight mutually exclusive keyboard cave variants. **Experimental**: establishes the gate effect in one controlled comparison, not general camera safety. |
+| [Pause-key default row](binary-analysis/pause-key-default-row-patch.md) | One immediate in `OptionsEntries__InitDefaultSingleBindingsTable` (`0x005144CD`, `01` → `18`). **Experimental**, one bounded pause/resume observation. |
+
+## Static contracts — per subsystem
+
+Bounded static maps, one subsystem each. They establish addresses, call
+relationships, constants, and structures visible in the analyzed specimen, and
+nothing about runtime behavior, exact object layouts, source-body identity,
+patch safety, or rebuild parity.
+[`binary-analysis/mapped-systems.md`](binary-analysis/mapped-systems.md) is the
+routing table naming the **current** owner per system; the list below is the
+flat inventory.
+
+| Subsystem | Contract |
+| --- | --- |
+| MissionScript / IScript | [missionscript-iscript-static-contract.md](binary-analysis/missionscript-iscript-static-contract.md) |
+| PhysicsScript | [physics-script-static-contract.md](binary-analysis/physics-script-static-contract.md), with the [copied-corpus parser proof](binary-analysis/physics-script-copied-corpus-parser-proof.md) |
+| Meshes and resources | [mesh-resource-render-static-contract.md](binary-analysis/mesh-resource-render-static-contract.md) |
+| Render/resource bridge | [render-resource-bridge-static-contract.md](binary-analysis/render-resource-bridge-static-contract.md) |
+| Texture decode | [texture-resource-decode-static-contract.md](binary-analysis/texture-resource-decode-static-contract.md) |
+| HUD and frontend overlay | [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md) |
+| Destroyable segments | [destroyable-segments-static-contract.md](binary-analysis/destroyable-segments-static-contract.md) |
+| Units, movement, weapons | [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) |
+| Local multiplayer | [local-multiplayer-static-runtime-contract.md](binary-analysis/local-multiplayer-static-runtime-contract.md) |
+| Career progression bridge | [career-progression-static-bridge-contract.md](binary-analysis/career-progression-static-bridge-contract.md) |
+| CMSH `CPOS`/`CORI` identity | [cmsh-cpos-cori-identity-2026-07-25.md](binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) |
+
+Machine-readable siblings, for consumers that should not be parsing prose:
+
+- [MissionScript VM datatype/opcode schema](binary-analysis/missionscript-vm-datatype-opcode-schema.v1.json)
+- [First-flight camera/movement/morph contract](binary-analysis/first-flight-camera-movement-morph-contract-candidate.v1.json)
+  — a **candidate**, as its own filename says; not an accepted contract.
+- [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
+- [2026-07-27 function name table](binary-analysis/ghidra-function-name-table-2026-07-27.tsv)
+  — the newer address-to-name authority.
+
+The MissionScript **command-descriptor** schema that used to sit beside these
+was deleted in `981c3379`; the 144-entry native registry it duplicated now lives
+in [`../GHIDRA_FUNCTONS.md`](../GHIDRA_FUNCTONS.md). Most of the contracts above
+have no `.json` sibling at all. Do not go looking for one.
+
+## The 2026-05-26 static-review cohort — the oldest layer here
+
+Six system slices from the May 2026 wave era, all dated `2026-05-26`. **This is
+the oldest cohort in the store and the one most likely to mislead.** Read them
+for subsystem shape, not for numbers: their prose carries live-database
+accounting (`6113/6113`, `6411/6411`, wave and candidate counts) that was a
+reading of the maintainer's database at the time. For what a function count can
+mean today, use the
+[RE coverage baseline](binary-analysis/re-coverage-baseline-2026-07-25.md); for
+anything at function granularity,
+[`binary-analysis/functions/`](binary-analysis/functions/_index.md) supersedes
+these slices wherever a note exists.
+
+The standing column below is read off `mapped-systems.md`'s owner table, not
+asserted here — where that table still names the 05-26 document, so does this one.
+
+| Slice | Standing |
+| --- | --- |
+| [Save and options](binary-analysis/save-options-static-review-2026-05-26.md) | **Still current.** The cited owner for options and control bindings, and the contract behind the save/options persistence chains. |
+| [Audio, media, cutscene](binary-analysis/audio-media-cutscene-static-review-2026-05-26.md) | **Still the cited owner** for audio, media, cutscenes, and camera. The wave counts inside it are snapshots. |
+| [Frontend, input, game loop](binary-analysis/frontend-input-game-loop-static-review-2026-05-26.md) | Superseded for frontend/HUD by [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md). Its companion proof-plan file no longer exists in the tree; the 2026-07-28 correction inside it gives the `git show` needed to recover it. |
+| [Unit / BattleEngine gameplay](binary-analysis/unit-battleengine-gameplay-static-review-2026-05-26.md) | Superseded by [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) (2026-07-16). |
+| [Mesh, motion, world, particle](binary-analysis/mesh-motion-world-particle-static-review-2026-05-26.md) | Superseded for meshes and resources by [mesh-resource-render-static-contract.md](binary-analysis/mesh-resource-render-static-contract.md) and [render-resource-bridge-static-contract.md](binary-analysis/render-resource-bridge-static-contract.md). |
+| [Texture and render](binary-analysis/texture-render-static-review-2026-05-26.md) | Superseded for decode by [texture-resource-decode-static-contract.md](binary-analysis/texture-resource-decode-static-contract.md), and for render state by the 2026-07 terrain and D3D notes above. |
+
+## Operating the lane — reference, routing, and runbooks
+
+| Document | Use it for |
+| --- | --- |
+| [Ghidra workflow reference](binary-analysis/GHIDRA-REFERENCE.md) | The active workflow for the Steam `BEA.exe` database: record specimen and database identity, export the smallest slice that answers the question, keep observed bytes separate from inferred names. The reviewed snapshot under `ghidra/` and narrow metadata projections are the tracked exceptions; the maintainer's loaded database is not. |
+| [Mapped systems](binary-analysis/mapped-systems.md) | The routing table from a system to its current smallest evidence owner *and* to the code that consumes it. Start here when you know the subsystem but not the document. Not a function-completion ledger. |
+| [High-impact call chains](binary-analysis/high-impact-call-chain-appendix.md) | Static chains with the product consequence spelled out — that loading a retail save can rewrite the boot-time options snapshot, that resume/exit can persist both career and `defaultoptions.bea`. This is the appendix explaining *why* AppCore patches real baselines and preserves unknown bytes instead of synthesizing saves. |
+| [Executable analysis](binary-analysis/executable-analysis.md) | PE identity, hashes, size, DLL imports, the D3D9 confirmation, and the Lost Toys/Encore branding note. Its function-count row now carries the whole moving chain — 5,771 → 6,411 → **6,969** — and says plainly that this is a recovery count, not a property of the binary. |
+| [WinDbg/CDB runbook](binary-analysis/windbg-cdb-runbook.md) | The only sanctioned debugger workflow: a copied `BEA.exe` from an app-owned profile, specimen hashes confirmed first, attach by exact PID and identity, command files deliberately untracked. Never the installed directory. |
+
+## Retail → Core translation policies
+
+[`game-mechanics/_index.md`](game-mechanics/_index.md) lists the measurements.
+It does not list the **policies** that convert a measured retail quantity into a
+deterministic-Core constant — and those are the documents a Core edit is
+supposed to cite.
+
+**Four of the seven were superseded on 2026-07-28, and the supersession is
+partial in a way that is easy to misread.** In each case the *retail
+measurement* stands and the *Core mapping* does not: the authority for the Core
+value moved from copied-runtime measurement pairs to the shipped
+`data/battle engine configurations.dat` bytes, and flat scalars became
+two-ended envelopes. Citing one of these for its measurement is fine; citing it
+to authorise a Core constant is not.
+
+| Policy | Status, as the document itself now states it |
+| --- | --- |
+| [Jet forward scalar](game-mechanics/jet-forward-retail-to-core-translation-policy.md) | Accepted (2026-07-14) **for the retail measurement**; **superseded 2026-07-28 for the Core mapping.** `JetSpeedPerTick` no longer exists; Core carries a min/max envelope read from shipped data. |
+| [Jet energy drain](game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md) | Accepted (2026-07-14) **for the retail measurement**; **superseded 2026-07-28 for the Core mapping.** The flat scalar became a thruster-interpolated pair. |
+| [Energy drain/regen](game-mechanics/energy-retail-to-core-translation-policy.md) | **Superseded 2026-07-28 for both halves.** The `energy-p02` measurement stands; walker regen is no longer provisional — and the old "provisional" label had become actively misleading. |
+| [Projectile speed](game-mechanics/projectile-speed-retail-to-core-translation-policy.md) | **Draft — but a Core constant shipped anyway; superseded in part 2026-07-28.** Whether the measurement clears the dual-accept bar is recorded as an explicit `UNKNOWN` maintainer decision. |
+| [Walker ↔ jet transform/morph](game-mechanics/walker-transform-morph-retail-to-core-translation-policy.md) | **Accepted bounded mapping.** Unchanged. |
+| [Shield](game-mechanics/shield-retail-to-core-translation-policy.md) | **Ownership source-backed; the rate remains blocked.** Unchanged. |
+| [Fire cooldown](game-mechanics/fire-cooldown-retail-to-core-translation-policy.md) | **Draft — blocked on a dual-accept that has not landed.** Authorization for nothing. |
+
+Three of the seven have a machine-readable measurement behind them. The other
+four do not, and the policy `.md` is the whole record — there is no
+`*-translation-policy.json`:
+
+- [jet-forward-scalar-response-v1](game-mechanics/jet-forward-scalar-response-v1.md)
+  / [`.json`](game-mechanics/jet-forward-scalar-response-v1.json)
+- [jet-energy-drain-scalar-response-v1](game-mechanics/jet-energy-drain-scalar-response-v1.md)
+  / [`.json`](game-mechanics/jet-energy-drain-scalar-response-v1.json)
+- [walker-transform-morph-timing-v1](game-mechanics/walker-transform-morph-timing-v1.md)
+  / [`.json`](game-mechanics/walker-transform-morph-timing-v1.json)
 
 ## Product-facing summaries
 
