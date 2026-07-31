@@ -218,6 +218,31 @@ _PART_ORDERS = {
         # two the CORI-less one (m_Sentinel Arm Big, m_Sentinel Arm Small).
         "CHLD PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS CORI PMVB",
         "PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB",
+        # 2026-07-31, from the two-corpus chunk-order census (all 367 CMSH
+        # streams: 213 loose + 15 loose-nested + 139 embedded in the 66 level
+        # archives). 36 parts carry this order - 33 embedded, 3 loose-nested;
+        # example `m_f_dtroop.msh.aya` post-body `PMS2` sibling. It is the
+        # missing fourth corner of a 2x2 that is already 3/4 accepted twice
+        # over: it is the row above minus `CORI`, and the row below it plus
+        # `CHLD`. `CORI` is a derived model-space cache that
+        # `build_rigid_transform_tracks` recomposes from `HORI`/`HPOS` and
+        # hard-rejects on disagreement; `CHLD` is already cross-checked against
+        # `CMSP.childCount` in `_parse_part`. Same class of hand-enumeration gap
+        # as the one landed at `4df87b6b`. All 36 are skinned (`BONE` present).
+        "CHLD PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB",
+        # 2026-07-31, same census: 1 part, the whole of
+        # `m_Boss_gill-m-Node.msh.aya`'s post-body `PMS2` sibling stream. The
+        # minimal parentless root - the five mandatory tags plus the
+        # `CPOS`/`CORI` cache. It is accepted
+        # `BBOX VHFM HORI HPOS PBKT CPOS CORI PMVB` minus `PBKT`, accepted
+        # `CHLD BBOX VHFM HORI HPOS CPOS CORI PMVB` minus `CHLD`, and accepted
+        # `PRNT BBOX VHFM HORI HPOS CPOS CORI PMVB` minus `PRNT` - three
+        # single-optional-tag neighbours, and the missing fourth corner of the
+        # 3/4-accepted {+/-CHLD} x {+/-PBKT} square. The part is a geometry-less
+        # placeholder node (zero vertices, zero groups), which is why nothing is
+        # there for `PBKT` or `CHLD` to describe; it parses and, by `emit_obj`'s
+        # empty-geometry contract, emits no OBJ.
+        "BBOX VHFM HORI HPOS CPOS CORI PMVB",
     )
 }
 
@@ -262,6 +287,23 @@ _SIBLING_ORDERS = {
     (b"CAMD", b"BBOX", b"CEMT"),
     (b"BBOX", b"PMS2"),
     (b"CAMD", b"BBOX", b"CEMT", b"PMS2"),
+    # 2026-07-31, from the two-corpus chunk-order census: the trailing submesh
+    # slot is spelled `PMS2` in the loose corpus and `PMSH` in the level
+    # archives, because the archives keep their own `MESH -> PMSH -> PMS2`
+    # nesting that the loose lane omits. These two rows are the `PMS2` rows
+    # directly above with that slot re-spelled - 48 streams and 38 streams
+    # respectively, embedded corpus only; examples
+    # `500_res_PC.aya::MESH/PMSH/PMS2@0+309` and
+    # `100_res_PC.aya::MESH/PMSH/PMS2@0+309`.
+    #
+    # Falsified rather than assumed, at full corpus scale: all 86 post-body
+    # `PMSH` siblings hold exactly one `PMS2` child, and all 86 of those `PMS2`
+    # payloads carry a complete CMSH stream at `+309`. Admitting `PMSH` widens
+    # tag acceptance only - `parse_cmsh_stream` validates nothing inside a
+    # post-body sibling, so this adds no parsing surface and does not trust the
+    # contained stream, which is decoded (and checked) separately.
+    (b"BBOX", b"PMSH"),
+    (b"CAMD", b"BBOX", b"CEMT", b"PMSH"),
 }
 
 

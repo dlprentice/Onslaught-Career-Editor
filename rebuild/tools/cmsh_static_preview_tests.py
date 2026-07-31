@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 import itertools
 import json
 import math
@@ -424,6 +425,11 @@ def build_fixture_aya() -> bytes:
     return b"".join(struct.pack("<I", len(member)) + member for member in members)
 
 
+# The subset of `_PART_ORDERS` that `build_order_stream` can synthesise as a
+# valid single-part stream. `REFR` orders need a second part to point at and
+# `BONE` orders need a populated bone array, so those rows are exercised against
+# the retail corpus instead (see `NestedAndEmbeddedCorpusCensus`). The full
+# allow-list is pinned literally by `REVIEWED_PART_ORDERS` below.
 ACCEPTED_PART_ORDERS = tuple(
     tuple(value.split())
     for value in (
@@ -443,6 +449,22 @@ ACCEPTED_PART_ORDERS = tuple(
         "PRNT NMIC BBOX VHFM HORI HPOS PBKT CPOS PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS PMVB",
+        "BBOX VHFM HORI HPOS CPOS CORI PMVB",
+    )
+)
+# Every row of `_PART_ORDERS`, restated by hand. Pinned equal to the module by
+# `test_the_module_allowlists_are_exactly_the_reviewed_set`, so widening the
+# allow-list is always a deliberate edit in two places and never silent.
+REVIEWED_PART_ORDERS = ACCEPTED_PART_ORDERS + tuple(
+    tuple(value.split())
+    for value in (
+        "CHLD PRNT BBOX VHFM HORI HPOS CPOS REFR PMVB",
+        "PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
+        "PRNT BBOX VHFM HORI HPOS CPOS REFR PMVB",
+        "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
+        "CHLD PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS CORI PMVB",
+        "PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB",
+        "CHLD PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB",
     )
 )
 ACCEPTED_SIBLING_ORDERS = (
@@ -453,6 +475,8 @@ ACCEPTED_SIBLING_ORDERS = (
     ("CAMD", "BBOX", "CEMT"),
     ("BBOX", "PMS2"),
     ("CAMD", "BBOX", "CEMT", "PMS2"),
+    ("BBOX", "PMSH"),
+    ("CAMD", "BBOX", "CEMT", "PMSH"),
 )
 
 
@@ -1330,6 +1354,25 @@ class CmshStaticPreviewTests(unittest.TestCase):
         self.assertNotIn("\\", message)
         self.assertNotIn(":/", message)
 
+    def test_the_module_allowlists_are_exactly_the_reviewed_set(self) -> None:
+        """Both allow-lists must equal the hand-reviewed restatement above.
+
+        Fail-closed order acceptance is only as good as the review of what was
+        let in, so widening either list has to be a deliberate edit in two
+        places. Before 2026-07-31 the mirror had drifted six rows behind the
+        module, which is what let the deletion sweep below compare mutations
+        against an out-of-date set.
+        """
+        self.assertEqual({tuple(order) for order in REVIEWED_PART_ORDERS}, set(preview._PART_ORDERS))
+        self.assertEqual(24, len(preview._PART_ORDERS))
+        mirror = {
+            tuple(tag.encode("ascii") for tag in siblings)
+            for siblings in ACCEPTED_SIBLING_ORDERS
+            if siblings
+        }
+        self.assertEqual(mirror, set(preview._SIBLING_ORDERS))
+        self.assertEqual(8, len(preview._SIBLING_ORDERS))
+
     def test_all_exact_part_and_sibling_orders_are_accepted(self) -> None:
         for order in ACCEPTED_PART_ORDERS:
             with self.subTest(order=order):
@@ -1346,7 +1389,11 @@ class CmshStaticPreviewTests(unittest.TestCase):
             mutations.extend(order[:index] + (order[index + 1], order[index]) + order[index + 2 :] for index in range(len(order) - 1))
             mutations.extend(order[:index] + ("ZZZZ",) + order[index:] for index in range(len(order) + 1))
             for mutation in mutations:
-                if mutation in ACCEPTED_PART_ORDERS:
+                # A mutation that lands on another accepted order is not a
+                # violation. Checked against the module's own allow-list, not
+                # the mirror above, so a stale mirror can never turn a genuine
+                # acceptance into a spurious failure.
+                if mutation in preview._PART_ORDERS:
                     continue
                 with self.subTest(order=order, mutation=mutation):
                     with self.assertRaises(preview.CmshProfileError):
@@ -1523,7 +1570,10 @@ class CmshStaticPreviewTests(unittest.TestCase):
 
     def test_every_short_sibling_transition_is_exactly_allowlisted(self) -> None:
         allowed = set(ACCEPTED_SIBLING_ORDERS)
-        tags = ("CAMD", "BBOX", "CEMT", "PMS2")
+        # `PMSH` joined the sweep on 2026-07-31: it is the level archives'
+        # spelling of the trailing submesh slot, so every PMSH permutation has
+        # to be shown to fail closed except the two that were admitted.
+        tags = ("CAMD", "BBOX", "CEMT", "PMS2", "PMSH")
         for length in range(1, 5):
             for siblings in itertools.product(tags, repeat=length):
                 if siblings in allowed:
@@ -1797,6 +1847,311 @@ class ShippedMeshCorpusCensus(unittest.TestCase):
                         references = line[2:].split()
                         self.assertEqual(1, len({"//" in item for item in references}), line)
                         self.assertEqual(1, len({item.count("/") for item in references}), line)
+
+
+_CMSH_HEADER = 380
+_PMS2_HEADER = 309
+_CONTAINER_TAGS = (b"MESH", b"PMSH", b"IMPS", b"SURF", b"LNDS", b"OBJS", b"BLDS")
+
+
+def _walk_chunks(buf: memoryview):
+    """Sequential tag/length walk. Stops at the first record that overruns."""
+    position = 0
+    while position + 8 <= len(buf):
+        tag = bytes(buf[position : position + 4])
+        length = struct.unpack_from("<I", buf, position + 4)[0]
+        if position + 8 + length > len(buf):
+            return
+        yield tag, buf[position + 8 : position + 8 + length], position
+        position += 8 + length
+
+
+def _is_chunk_stream(payload: memoryview) -> bool:
+    position = 0
+    seen = 0
+    if len(payload) < 8:
+        return False
+    while position < len(payload):
+        if position + 8 > len(payload):
+            return False
+        if not all(0x20 <= byte < 0x7F for byte in payload[position : position + 4]):
+            return False
+        length = struct.unpack_from("<I", payload, position + 4)[0]
+        if position + 8 + length > len(payload):
+            return False
+        position += 8 + length
+        seen += 1
+    return seen > 0
+
+
+def _is_cmsh(buf, offset: int = 0) -> bool:
+    return (
+        len(buf) - offset >= _CMSH_HEADER
+        and bytes(buf[offset : offset + 4]) == b"CMSH"
+        and struct.unpack_from("<I", buf, offset + 4)[0] == 372
+    )
+
+
+def _scan_cmsh(data: bytes) -> list[int]:
+    """Byte-signature sweep, used only as a completeness oracle for the walk."""
+    hits = []
+    index = data.find(b"CMSH")
+    while index != -1:
+        if _is_cmsh(data, index):
+            hits.append(index)
+        index = data.find(b"CMSH", index + 1)
+    return hits
+
+
+def _post_body_siblings(data: bytes):
+    """Structurally walk a CMSH stream to its post-body sibling list.
+
+    Deliberately independent of `parse_cmsh_stream`, which refuses the stream
+    outright on an unknown order and so cannot be used to census one.
+    """
+    buf = memoryview(data)
+    texture_count = struct.unpack_from("<I", buf, 0x0C)[0]
+    part_count = struct.unpack_from("<I", buf, 0x164)[0]
+
+    def read(position):
+        if position + 8 > len(buf):
+            return None
+        tag = bytes(buf[position : position + 4])
+        length = struct.unpack_from("<I", buf, position + 4)[0]
+        if position + 8 + length > len(buf):
+            return None
+        return tag, buf[position + 8 : position + 8 + length], position + 8 + length
+
+    position = _CMSH_HEADER
+    for expected, repeat in ((b"CMST", 1), (b"MSHT", texture_count), (b"MESP", part_count)):
+        for _ in range(repeat):
+            record = read(position)
+            if record is None or record[0] != expected:
+                return None
+            position = record[2]
+    siblings = []
+    while position < len(buf):
+        record = read(position)
+        if record is None:
+            return None
+        siblings.append((record[0], record[1]))
+        position = record[2]
+    return siblings
+
+
+def _nested_streams(data: bytes, locus: str, out: list, shapes: collections.Counter) -> None:
+    """Every further CMSH stream reachable through a post-body sibling."""
+    siblings = _post_body_siblings(data)
+    if siblings is None:
+        return
+    for tag, payload in siblings:
+        if tag == b"PMSH":
+            children = list(_walk_chunks(payload)) if _is_chunk_stream(payload) else []
+            shapes["PMSH shape " + "+".join(bytes(t).decode("ascii", "replace") for t, _, _ in children)] += 1
+            for child_tag, child_payload, offset in children:
+                if child_tag != b"PMS2":
+                    continue
+                if len(child_payload) > _PMS2_HEADER and _is_cmsh(child_payload, _PMS2_HEADER):
+                    shapes["PMSH/PMS2 body CMSH at +309"] += 1
+                    nested = bytes(child_payload[_PMS2_HEADER:])
+                    where = f"{locus}/sibPMSH/PMS2@{offset}+309"
+                    out.append((where, nested))
+                    _nested_streams(nested, where, out, shapes)
+                else:
+                    shapes["PMSH/PMS2 body not CMSH at +309"] += 1
+        elif tag == b"PMS2":
+            if len(payload) > _PMS2_HEADER and _is_cmsh(payload, _PMS2_HEADER):
+                shapes["PMS2 sibling body CMSH at +309"] += 1
+                nested = bytes(payload[_PMS2_HEADER:])
+            elif _is_cmsh(payload, 0):
+                shapes["PMS2 sibling body bare CMSH at +0"] += 1
+                nested = bytes(payload)
+            else:
+                shapes["PMS2 sibling body carries no CMSH"] += 1
+                continue
+            where = f"{locus}/sibPMS2"
+            out.append((where, nested))
+            _nested_streams(nested, where, out, shapes)
+
+
+SHIPPED_RESOURCES = SHIPPED_MESHES.parent
+
+
+@unittest.skipUnless(
+    SHIPPED_MESHES.is_dir() and (SHIPPED_RESOURCES / "500_res_PC.aya").is_file(),
+    "the retail corpora are materialised locally and are not part of a clone",
+)
+class NestedAndEmbeddedCorpusCensus(unittest.TestCase):
+    """Every CMSH stream in both retail corpora, not just the top-level meshes.
+
+    Pins the measured conversion rate so a widening or narrowing of the order
+    allow-lists cannot move it silently. Read-only; nothing is written.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.streams: dict[str, list[tuple[str, str, bytes]]] = {
+            "loose": [],
+            "loose-nested": [],
+            "embedded": [],
+        }
+        cls.shapes: collections.Counter = collections.Counter()
+        cls.locate: collections.Counter = collections.Counter()
+
+        for path in sorted(SHIPPED_MESHES.glob("*.msh.aya")):
+            data = preview.inflate_aya(path.read_bytes())
+            cls.locate["loose signature hits"] += len(_scan_cmsh(data))
+            cls.streams["loose"].append((path.name, "file", data))
+            nested: list = []
+            _nested_streams(data, "file", nested, cls.shapes)
+            for where, stream in nested:
+                cls.streams["loose-nested"].append((path.name, where, stream))
+
+        archives = sorted(
+            candidate
+            for candidate in SHIPPED_RESOURCES.glob("*_res_PC.aya")
+            if candidate.stem.split("_")[0].isdigit()
+        )
+        cls.locate["level archives"] = len(archives)
+        for path in archives:
+            buf = memoryview(preview.inflate_aya(path.read_bytes()))
+            cls.locate["embedded signature hits"] += len(_scan_cmsh(bytes(buf)))
+            found: list = []
+            containers: list = []
+
+            def descend(payload, where, depth=0):
+                if depth > 10 or not _is_chunk_stream(payload):
+                    return
+                for tag, child, offset in _walk_chunks(payload):
+                    if tag == b"PMS2":
+                        containers.append((child, f"{where}/PMS2@{offset}"))
+                    elif tag in _CONTAINER_TAGS:
+                        descend(child, f"{where}/{tag.decode('ascii', 'replace')}", depth + 1)
+
+            for tag, payload, offset in _walk_chunks(buf):
+                if tag == b"PMS2":
+                    containers.append((payload, f"PMS2@{offset}"))
+                else:
+                    descend(payload, tag.decode("ascii", "replace"))
+            cls.locate["embedded PMS2 chunks"] += len(containers)
+            for payload, where in containers:
+                if len(payload) <= _PMS2_HEADER:
+                    continue
+                cls.locate["embedded PMS2 with a body"] += 1
+                if not _is_cmsh(payload, _PMS2_HEADER):
+                    cls.locate["embedded PMS2 body not CMSH"] += 1
+                    continue
+                cls.locate["embedded CMSH at PMS2 +309"] += 1
+                stream = bytes(payload[_PMS2_HEADER:])
+                nested_where = f"{where}+309"
+                found.append((nested_where, stream))
+                before = len(found)
+                _nested_streams(stream, nested_where, found, cls.shapes)
+                cls.locate["embedded CMSH nested deeper"] += len(found) - before
+            for where, stream in found:
+                cls.streams["embedded"].append((path.name, where, stream))
+
+    def test_the_structural_walk_finds_every_cmsh_signature_in_both_corpora(self) -> None:
+        """No stream is reached by byte-scanning alone, so none is a coincidence."""
+        self.assertEqual(213, len(self.streams["loose"]))
+        self.assertEqual(15, len(self.streams["loose-nested"]))
+        self.assertEqual(139, len(self.streams["embedded"]))
+        self.assertEqual(228, self.locate["loose signature hits"])
+        self.assertEqual(
+            self.locate["loose signature hits"],
+            len(self.streams["loose"]) + len(self.streams["loose-nested"]),
+        )
+        self.assertEqual(139, self.locate["embedded signature hits"])
+        self.assertEqual(self.locate["embedded signature hits"], len(self.streams["embedded"]))
+        self.assertEqual(66, self.locate["level archives"])
+        self.assertEqual(3485, self.locate["embedded PMS2 chunks"])
+        self.assertEqual(225, self.locate["embedded PMS2 with a body"])
+        self.assertEqual(53, self.locate["embedded CMSH at PMS2 +309"])
+        self.assertEqual(86, self.locate["embedded CMSH nested deeper"])
+
+    def test_pmsh_is_the_archives_spelling_of_the_pms2_submesh_slot(self) -> None:
+        """The evidence that admitted `BBOX PMSH` and `CAMD BBOX CEMT PMSH`.
+
+        Every post-body `PMSH` sibling in the corpus holds exactly one `PMS2`,
+        and every one of those carries a complete CMSH stream at `+309`. If a
+        single counterexample ever ships, this fails rather than quietly
+        accepting a tag that means something else.
+        """
+        self.assertEqual(86, self.shapes["PMSH shape PMS2"])
+        self.assertEqual(
+            86, sum(count for shape, count in self.shapes.items() if shape.startswith("PMSH shape "))
+        )
+        self.assertEqual(86, self.shapes["PMSH/PMS2 body CMSH at +309"])
+        self.assertEqual(0, self.shapes["PMSH/PMS2 body not CMSH at +309"])
+        # The loose lane omits the wrapper and puts a bare, header-less CMSH
+        # directly in the `PMS2` sibling payload - which is why those `+309`
+        # bytes read as zeros and the nested loose streams went uncounted.
+        self.assertEqual(15, self.shapes["PMS2 sibling body bare CMSH at +0"])
+        self.assertEqual(0, self.shapes["PMS2 sibling body CMSH at +309"])
+        self.assertEqual(0, self.shapes["PMS2 sibling body carries no CMSH"])
+
+    def test_the_measured_conversion_rate_is_pinned(self) -> None:
+        """367 streams parse; 366 emit an OBJ.
+
+        Measured 2026-07-31 against the shipped allow-lists. Baseline before the
+        four legitimate orders were admitted was loose 213/213, loose-nested
+        11/15, embedded 35/139 - the embedded lane was 25.2%. A regression in
+        the loose lane is the hard failure to watch: those 213 are the meshes
+        this tool has always converted.
+        """
+        parsed: collections.Counter = collections.Counter()
+        emitted: collections.Counter = collections.Counter()
+        rejections: dict[str, str] = {}
+        for corpus, entries in self.streams.items():
+            for source, where, data in entries:
+                try:
+                    mesh = preview.parse_cmsh_stream(data)
+                except preview.CmshProfileError as error:
+                    rejections[f"{corpus} parse {source}::{where}"] = str(error)
+                    continue
+                parsed[corpus] += 1
+                try:
+                    preview.emit_obj(
+                        mesh,
+                        include_vertex_attributes=True,
+                        include_material_layer_groups=True,
+                        include_vertex_colors=True,
+                    )
+                except preview.CmshProfileError as error:
+                    rejections[f"{corpus} obj {source}::{where}"] = str(error)
+                    continue
+                emitted[corpus] += 1
+
+        self.assertEqual(213, parsed["loose"], "the loose corpus must never regress")
+        self.assertEqual(213, emitted["loose"], "the loose corpus must never regress")
+        self.assertEqual(15, parsed["loose-nested"])
+        self.assertEqual(14, emitted["loose-nested"])
+        self.assertEqual(139, parsed["embedded"])
+        self.assertEqual(139, emitted["embedded"])
+        self.assertEqual(367, sum(parsed.values()))
+        self.assertEqual(366, sum(emitted.values()))
+
+        # The single stream that parses but emits nothing is a geometry-less
+        # placeholder node, which `emit_obj` refuses by contract. That is a
+        # property of the shipped asset, not a gap in the decode - so it is
+        # named here rather than counted as a rejection class.
+        self.assertEqual(1, len(rejections), rejections)
+        [(where, message)] = rejections.items()
+        self.assertIn("m_Boss_gill-m-Node.msh.aya", where)
+        self.assertIn("empty geometry", message)
+
+    def test_no_part_or_sibling_order_in_either_corpus_is_rejected(self) -> None:
+        """Order acceptance, isolated from every other profile check.
+
+        The rate test above could be held up by a bounds or index check even if
+        an order were rejected, so the order gap is pinned to zero on its own.
+        """
+        for corpus, entries in self.streams.items():
+            for source, where, data in entries:
+                try:
+                    preview.parse_cmsh_stream(data)
+                except preview.CmshProfileError as error:
+                    self.fail(f"{corpus} {source}::{where}: {error}")
 
 
 if __name__ == "__main__":
