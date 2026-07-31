@@ -160,7 +160,10 @@ function Test-FirstFlightSmokeEvidence {
     # Measured 2026-07-28 after the reviewed Core changes landed: two independent
     # native Godot runs produced byte-identical reports at tick 3228, and the
     # hash also matches the in-process scenario pinned by InteractiveSessionTests.
-    Assert-SmokeValue 'stateHash' '0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba' $report.stateHash
+    # Repinned 2026-07-31 for #146 (waypoint traversal order): two byte-identical
+    # native reports at this value, reproduced independently in a second tree.
+    # Field-level accounting: InteractiveSessionTests.cs, the state-hash golden.
+    Assert-SmokeValue 'stateHash' '8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

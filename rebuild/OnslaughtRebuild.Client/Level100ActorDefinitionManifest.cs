@@ -194,7 +194,18 @@ public static class Level100ActorDefinitionManifest
                         point.RetailComponentsFloatBits[2],
                         point.RetailComponentsFloatBits[3]));
             }
-            waypointPaths[pathIndex] = new Level100WaypointPathDefinition(source.Name, points);
+            if (source.TargetChainNodeIndices.Length != points.Length)
+            {
+                throw new InvalidDataException(
+                    $"Level 100 waypoint path '{source.Name}' has " +
+                    $"{source.TargetChainNodeIndices.Length} chain entries for " +
+                    $"{points.Length} nodes.");
+            }
+            waypointPaths[pathIndex] = new Level100WaypointPathDefinition(
+                source.Name,
+                points,
+                Array.AsReadOnly(source.TargetChainNodeIndices.ToArray()),
+                source.IsClosed);
         }
 
         var motionDefinitions =
@@ -388,6 +399,15 @@ public static class Level100ActorDefinitionManifest
     {
         public string Name { get; init; } = string.Empty;
         public WaypointPoint[] Points { get; init; } = [];
+
+        // Schema v14 shipped these two on 2026-07-27 and nothing read them for
+        // three days, so the product walked `Points` - the SERIALIZED order -
+        // and the ambient Air Trainer flew `Flyby Path` backwards, from the
+        // chain's tail. They are consumed now; see
+        // Level100WaypointPathDefinition for the bytes that settle which order
+        // retail walks.
+        public int[] TargetChainNodeIndices { get; init; } = [];
+        public bool IsClosed { get; init; }
     }
 
     private sealed record WaypointPoint

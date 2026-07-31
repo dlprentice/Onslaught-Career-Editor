@@ -17,6 +17,10 @@ public sealed record Level100ActorCommandIntentSnapshot(
     Level100ActorCommandIntent Intent,
     Level100ActorId? TargetActorId,
     string? WaypointPath,
+    // How far along the path's AUTHORED TRAVERSAL CHAIN the follower is - an
+    // index into Level100WaypointPathDefinition.TargetChainNodeIndices, NOT
+    // into Points. The two orders differ on six of the eight Level 100 paths.
+    // Resolve it with Level100WaypointPathDefinition.ChainPoint.
     int WaypointPointIndex,
     int WaypointCommandScalar,
     bool WaitForWaypointCompletion,
@@ -471,7 +475,7 @@ public sealed partial class Level100ActorMechanics
                 Level100WaypointPathDefinition path =
                     _definitions.GetWaypointPath(state.WaypointPath);
                 Level100WaypointPointDefinition point =
-                    path.Points[state.WaypointPointIndex];
+                    path.ChainPoint(state.WaypointPointIndex);
                 target = new SimVector2(
                     point.PositionMillimeters.X,
                     point.PositionMillimeters.Z);
@@ -729,7 +733,7 @@ public sealed partial class Level100ActorMechanics
         Level100WaypointPathDefinition path =
             _definitions.GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.Points[state.WaypointPointIndex];
+            path.ChainPoint(state.WaypointPointIndex);
         long deltaX =
             (long)point.PositionMillimeters.X -
             pose.PositionMillimeters.X;
@@ -781,7 +785,7 @@ public sealed partial class Level100ActorMechanics
         Level100WaypointPathDefinition path =
             _definitions.GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.Points[state.WaypointPointIndex];
+            path.ChainPoint(state.WaypointPointIndex);
         long deltaX =
             (long)point.PositionMillimeters.X -
             pose.PositionMillimeters.X;
@@ -826,7 +830,7 @@ public sealed partial class Level100ActorMechanics
         Level100WaypointPathDefinition path =
             _definitions.GetWaypointPath(state.WaypointPath!);
         Level100WaypointPointDefinition point =
-            path.Points[state.WaypointPointIndex];
+            path.ChainPoint(state.WaypointPointIndex);
         long deltaX =
             (long)point.PositionMillimeters.X -
             actor.Pose.PositionMillimeters.X;
@@ -840,8 +844,22 @@ public sealed partial class Level100ActorMechanics
             return;
         }
 
-        if (++state.WaypointPointIndex < path.Points.Count)
+        if (++state.WaypointPointIndex < path.TargetChainNodeIndices.Count)
         {
+            return;
+        }
+
+        // A closed chain has no end. Retail's cursor is a pointer that it
+        // replaces with the current waypoint's own successor
+        // (CScriptEventNB::UpdateWaypointFollowing 0x00538470,
+        // `mov ecx,[eax+0x3c]` / `mov [esi+0x14],ecx`), and it stops only when
+        // that successor is NULL. When the tail points back at the head there
+        // is no NULL to reach, so the walk restarts at the head and the
+        // FollowWaypointWait completion below never fires - which is the
+        // shipped behaviour of the two Level 100 paths whose chains close.
+        if (path.IsClosed)
+        {
+            state.WaypointPointIndex = 0;
             return;
         }
 
@@ -1013,7 +1031,7 @@ public sealed partial class Level100ActorMechanics
             }
             Level100WaypointPathDefinition path =
                 _definitions.GetWaypointPath(source.WaypointPath);
-            if (source.WaypointPointIndex >= path.Points.Count)
+            if (source.WaypointPointIndex >= path.TargetChainNodeIndices.Count)
             {
                 throw new ArgumentException(
                     "Level 100 actor mechanics snapshot has invalid waypoint progress.",

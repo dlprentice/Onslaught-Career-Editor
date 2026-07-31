@@ -100,9 +100,95 @@ public sealed record Level100WaypointPointDefinition(
         new(PositionMillimeters.X, PositionMillimeters.Z);
 }
 
+/// <summary>
+/// One named released waypoint path: the nodes it owns, in the order the level
+/// file SERIALIZES them, plus the order retail actually WALKS them.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The two differ, and the difference is the whole point of this type carrying
+/// both. <c>Flyby Path</c> serializes <c>[43, 42, 41]</c> and is walked
+/// <c>[41, 42, 43]</c>.
+/// </para>
+/// <para>
+/// <b>Retail does not walk the serialized list at all.</b> Read from the
+/// pristine specimen
+/// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+/// <c>74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750</c>:
+/// </para>
+/// <list type="number">
+///   <item><c>CWaypoint::InitAndLink</c> (<c>0x005057b0</c>) binds each
+///   waypoint's <c>this+0x3c</c> from its own spawn record's <c>+0xa4</c> —
+///   <c>mov eax,[ebx+0xa4]</c> / <c>lea ecx,[esi+0x3c]</c> at
+///   <c>0x005057fc</c>..<c>0x00505802</c>. That is the marker's successor
+///   pointer, and the shipped source of it is the marker record's own
+///   <c>target</c> ordinal.</item>
+///   <item><c>CScriptEventNB::UpdateWaypointFollowing</c> (<c>0x00538470</c>)
+///   advances with <c>mov eax,[esi+0x14]</c> / <c>mov ecx,[eax+0x3c]</c> at
+///   <c>0x005384dc</c>, then <c>mov [esi+0x14],ecx</c> at <c>0x005384fd</c>.
+///   The cursor is a POINTER to the current waypoint and the next one comes
+///   from that waypoint itself. The serialized index list is never consulted
+///   after the first node.</item>
+///   <item>The self-reference guard three instructions later pushes the
+///   developer-authored string at <c>0x0064fe50</c> — <c>"ERROR: Waypoint
+///   points to previous"</c> — which only makes sense for waypoints that point
+///   at each other.</item>
+///   <item>Both script natives seed that cursor with the SINGLE pointer the
+///   shared path lookup at <c>0x00505c30</c> returns — no array, so there is
+///   nowhere for a serialized order to enter. <c>FollowWaypointWait</c>
+///   (<c>0x00537e40</c>) stores it with <c>mov [ebx+0x14],eax</c> at
+///   <c>0x00537e73</c> immediately after the call at <c>0x00537e6b</c>;
+///   <c>FollowWaypoint</c> (<c>0x00537d70</c>) does the same at
+///   <c>0x00537dfe</c> after the call at <c>0x00537d8c</c>, having first
+///   pushed the node's <c>+0x1c..+0x28</c> to the unit guide through vtable
+///   <c>+0xf4</c>. The wait variant is the one Level 100 actually uses: in the
+///   TTD recording of a real Level 100 opening
+///   (<c>G:\bea-ttd\play-level100\play-level100.run</c>) <c>0x00537e40</c>
+///   executes 3 times and <c>0x00537d70</c> 0 times.</item>
+/// </list>
+/// <para>
+/// A NULL successor ends the walk, which is the shipped <c>target == -1</c>
+/// terminator. A chain that closes on its own head therefore never ends;
+/// <see cref="IsClosed"/> is that fact, and two of the eight Level 100 paths
+/// carry it.
+/// </para>
+/// </remarks>
+/// <param name="Name">The authored path name scripts call it by.</param>
+/// <param name="Points">
+/// The nodes in SERIALIZED order. Deliberately not re-sorted: this is what the
+/// level file holds, and re-sorting it here would destroy the ability to see
+/// that the two orders differ.
+/// </param>
+/// <param name="TargetChainNodeIndices">
+/// The same node indices in <c>target</c>-chain order — the traversal order.
+/// A permutation of <see cref="Points"/>' node indices.
+/// </param>
+/// <param name="IsClosed">Whether the chain closes back on its head.</param>
 public sealed record Level100WaypointPathDefinition(
     string Name,
-    IReadOnlyList<Level100WaypointPointDefinition> Points);
+    IReadOnlyList<Level100WaypointPointDefinition> Points,
+    IReadOnlyList<int> TargetChainNodeIndices,
+    bool IsClosed)
+{
+    /// <summary>
+    /// The node visited at step <paramref name="chainIndex"/> of the authored
+    /// traversal. This — not <c>Points[i]</c> — is what a follower steers at.
+    /// </summary>
+    public Level100WaypointPointDefinition ChainPoint(int chainIndex)
+    {
+        int nodeIndex = TargetChainNodeIndices[chainIndex];
+        foreach (Level100WaypointPointDefinition point in Points)
+        {
+            if (point.NodeIndex == nodeIndex)
+            {
+                return point;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Level 100 waypoint path '{Name}' has no node {nodeIndex}.");
+    }
+}
 
 public enum Level100ActorMotionClass
 {
@@ -231,12 +317,26 @@ public sealed class Level100ActorDefinitionSet
             }
 
             Level100WaypointPointDefinition[] points = path.Points.ToArray();
+            // The traversal chain must be a permutation of the path's own
+            // serialized nodes. Retail cannot express anything else: the
+            // successor pointer each marker carries is a pointer to another
+            // marker of the same path, and a path lookup returns one head. A
+            // chain that named a node the path does not own, repeated one, or
+            // dropped one would be a decode defect, and this is where it stops.
+            int[] chain = (path.TargetChainNodeIndices ?? []).ToArray();
             if (points.Any(point =>
                     point.NodeIndex < 0 ||
                     !HasFiniteWaypointComponents(point.RetailComponentsFloatBits)) ||
+                chain.Length != points.Length ||
+                chain.Distinct().Count() != chain.Length ||
+                chain.Any(node => !points.Any(point => point.NodeIndex == node)) ||
                 !_waypointPathsByName.TryAdd(
                     path.Name,
-                    new Level100WaypointPathDefinition(path.Name, Array.AsReadOnly(points))))
+                    new Level100WaypointPathDefinition(
+                        path.Name,
+                        Array.AsReadOnly(points),
+                        Array.AsReadOnly(chain),
+                        path.IsClosed)))
             {
                 throw new ArgumentException(
                     $"Invalid or duplicate Level 100 waypoint path '{path.Name}'.",
@@ -493,7 +593,7 @@ public sealed class Level100ActorDefinitionSet
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_identityMagic);
-            writer.Write(5);
+            writer.Write(6);
             writer.Write(actors.Count);
             foreach (Level100ActorDefinition actor in actors)
             {
@@ -557,6 +657,20 @@ public sealed class Level100ActorDefinitionSet
                     writer.Write(point.RetailComponentsFloatBits.Z);
                     writer.Write(point.RetailComponentsFloatBits.W);
                 }
+
+                // Version 6. The traversal chain and the loop flag are hashed
+                // because they DECIDE MOTION: two definition sets with the same
+                // 30 node positions and different chains produce different
+                // routes. Leaving them out would let exactly the class of
+                // defect this pair was added to fix - a route silently walked
+                // in the wrong order - carry an unchanged definition identity.
+                writer.Write(path.TargetChainNodeIndices.Count);
+                foreach (int nodeIndex in path.TargetChainNodeIndices)
+                {
+                    writer.Write(nodeIndex);
+                }
+
+                writer.Write(path.IsClosed);
             }
 
             writer.Write(motionDefinitions.Count);

@@ -115,6 +115,67 @@ public sealed class Level100ActorRegistryTests
         Assert.Equal(before.PendingFacts, after.PendingFacts);
     }
 
+    /// <summary>
+    /// Two definition sets with identical node coordinates but different
+    /// TRAVERSAL ORDERS are different definition sets.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The chain decides which node a follower steers at, so a set that walks
+    /// <c>Flyby Path</c> as <c>[41, 42, 43]</c> and one that walks it as
+    /// <c>[43, 42, 41]</c> produce different simulations from the same
+    /// geometry. If <c>ComputeIdentity</c> ignored the chain, those two would
+    /// share a digest, a snapshot taken under one would restore cleanly under
+    /// the other, and a replay would silently diverge.
+    /// </para>
+    /// <para>
+    /// This is the exact hole that let the previous waypoint defect live: the
+    /// aliased coordinate table and the corrected one were distinguishable only
+    /// because positions happened to be hashed. Order was not, until #146.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void DefinitionIdentity_SeparatesRoutesThatDifferOnlyInTraversalOrder()
+    {
+        Level100ActorDefinitionSet original = Level100TestActorDefinitions.Create();
+        var reordered = new Level100ActorDefinitionSet(
+            original.Actors,
+            original.Spawns,
+            original.WaypointPaths
+                .Select(path => new Level100WaypointPathDefinition(
+                    path.Name,
+                    path.Points,
+                    path.Points.Select(point => point.NodeIndex).ToArray(),
+                    path.IsClosed))
+                .ToArray(),
+            original.MotionDefinitions);
+
+        // Same geometry, node for node, on every path.
+        foreach (Level100WaypointPathDefinition path in original.WaypointPaths)
+        {
+            Assert.Equal(
+                path.Points,
+                reordered.GetWaypointPath(path.Name).Points);
+        }
+
+        Assert.NotEqual(original.IdentitySha256, reordered.IdentitySha256);
+
+        // And the closure flag is hashed too, on its own.
+        var unlooped = new Level100ActorDefinitionSet(
+            original.Actors,
+            original.Spawns,
+            original.WaypointPaths
+                .Select(path => new Level100WaypointPathDefinition(
+                    path.Name,
+                    path.Points,
+                    path.TargetChainNodeIndices,
+                    IsClosed: false))
+                .ToArray(),
+            original.MotionDefinitions);
+        Assert.Contains(original.WaypointPaths, path => path.IsClosed);
+        Assert.NotEqual(original.IdentitySha256, unlooped.IdentitySha256);
+    }
+
     [Fact]
     public void DefinitionIdentity_OwnsAuthoredDataAndRejectsCrossSetRestore()
     {
@@ -145,7 +206,9 @@ public sealed class Level100ActorRegistryTests
                             1,
                             new SimVector3(10, 30, 20),
                             new Level100FloatVector4Bits(1, 2, 3, 4)),
-                    ]),
+                    ],
+                    [1],
+                    false),
             ],
             original.MotionDefinitions);
 

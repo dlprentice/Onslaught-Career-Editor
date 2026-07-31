@@ -12,8 +12,9 @@ namespace OnslaughtRebuild.Core.Tests;
 /// weapons.
 ///
 /// <para><see cref="ChainAutopilot_ReachesWonByInputAlone"/> reaches
-/// <c>Won</c>. <see cref="NaiveWalkerAutopilot_StallsOnBeatThreeAndNeverFinishes"/>
-/// never leaves beat 3, and the difference between them is entirely firing
+/// <c>Won</c>.
+/// <see cref="NaiveWalkerAutopilot_ClearsTheFiringRangeAndStillNeverFinishes"/>
+/// never finishes, and the difference between them is entirely firing
 /// discipline.</para>
 ///
 /// <para><b>What `Won` here means, and this changed.</b> All eleven named
@@ -96,8 +97,19 @@ public sealed class Level100FullChainTests
     /// The naive walker autopilot - fixed 18 m stand-off, fire whenever the
     /// reticle is on the objective, never check what is in between.
     ///
-    /// <para>It stalls on beat 3's fourth target, putting thousands of
-    /// consecutive rounds into the ridge in front of it.</para>
+    /// <para>It clears the firing range and then stalls, with more rounds in
+    /// the terrain than in every target combined.</para>
+    ///
+    /// <para><b>It used to stall a beat earlier, and #146 is why.</b> Beat 3's
+    /// fourth target, <c>Target Tank #23</c>, follows <c>Target Tank Path 1</c>.
+    /// Walked in the level file's SERIALIZED order that route opens at node 18,
+    /// (-68688, 80000), which took the tank away from the firing range and out
+    /// of this driver's fixed 18 m stand-off forever. Walked in the order the
+    /// markers' own <c>target</c> pointers chain them - [6, 7, 18] - it opens at
+    /// node 6, (-25438, 20500), which brings it into range on its first leg. The
+    /// tank now dies, beat 3 completes, and the stall moves to
+    /// <c>Target Zone 2</c>. The assertions below were re-derived from the
+    /// driver's own report rather than adjusted to fit.</para>
     ///
     /// <para><b>This assertion was weakened, deliberately, and the reason is a
     /// correction.</b> It previously asserted <c>Lost</c> through
@@ -122,7 +134,7 @@ public sealed class Level100FullChainTests
     /// level - it does not finish it at all.</para>
     /// </summary>
     [Fact]
-    public void NaiveWalkerAutopilot_StallsOnBeatThreeAndNeverFinishes()
+    public void NaiveWalkerAutopilot_ClearsTheFiringRangeAndStillNeverFinishes()
     {
         var driver = Level100PlayerDriver.Create();
         driver.Run(30 * 900);
@@ -142,8 +154,13 @@ public sealed class Level100FullChainTests
             $"player={final.PlayerPosition} y={final.PlayerElevationMillimeters}");
         _output.WriteLine(
             $"FINAL outcome={final.Level100Mission.Outcome} " +
+            $"reason={final.Level100Mission.FailureReason} " +
+            $"textId={final.Level100Mission.FailureTextId} " +
             $"nav={final.Level100Mission.NavigationObjective} " +
-            $"mode={final.Mode} hull={final.Hull}");
+            $"mode={final.Mode} hull={final.Hull} " +
+            $"destroyed={string.Join(",", final.Level100Actors.Actors
+                .Where(actor => actor.Lifecycle == Level100ActorLifecycle.Destroyed)
+                .Select(actor => actor.Name))}");
 
         // Beat 3, three of four.
         foreach (string name in
@@ -157,20 +174,76 @@ public sealed class Level100FullChainTests
 
         // The released path is now followed to its end, which the synthetic
         // fixture path could never do.
+        //
+        // Asserted against the route DATA rather than against a coordinate.
+        // This used to be `Z > 60_000`, a number lifted from where the tank
+        // happened to stop under the pre-`58d9ce57` waypoint table - which
+        // resolved node indices against the wrong RLWD structure, so the route
+        // it described was not the released one at all. A magic number cannot
+        // tell "followed the route to its end" from "the route moved", and when
+        // the route was corrected this assertion failed while the behaviour it
+        // was written to check was still exactly right.
         Assert.Equal(Level100ActorCommandIntent.Stopped, intent?.Intent);
-        Assert.True(tank.Pose.PositionMillimeters.Z > 60_000);
-
-        // The honest negative: shooting without looking does not finish this
-        // level. The driver never leaves beat 3 - Target Tank #23 is still
-        // alive and still the objective after 900 released seconds, and the
-        // rounds are going into the ridge in front of it rather than into it.
-        Assert.NotEqual(Level100MissionOutcome.Won, final.Level100Mission.Outcome);
-        Assert.Equal("Firing Range", final.Level100Mission.NavigationObjective);
-        Assert.Equal(Level100ActorLifecycle.Alive, tank.Lifecycle);
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        // The last node of the AUTHORED TRAVERSAL, not of the serialized list.
+        // `Target Tank Path 1` serializes [18, 6, 7] and is walked [6, 7, 18],
+        // so its final node is 18 and its serialized last entry, 7, is the
+        // route's middle. Reading `Points[^1]` here would assert the tank
+        // stopped at a node it drives straight past.
+        Level100WaypointPathDefinition tankPath =
+            definitions.GetWaypointPath("Target Tank Path 1");
+        Level100WaypointPointDefinition lastNode =
+            tankPath.ChainPoint(tankPath.TargetChainNodeIndices.Count - 1);
+        long arrivalRadius = definitions
+            .GetMotionDefinition("Target Tank").ArrivalRadiusMillimeters;
+        long deltaX = tank.Pose.PositionMillimeters.X - (long)lastNode.PositionMillimeters.X;
+        long deltaZ = tank.Pose.PositionMillimeters.Z - (long)lastNode.PositionMillimeters.Z;
         Assert.True(
-            driver.ImpactsByActor.TryGetValue(0, out int terrainImpacts) &&
-                terrainImpacts > 1_000,
-            "the naive driver's failure mode is thousands of rounds into terrain");
+            (deltaX * deltaX) + (deltaZ * deltaZ) < arrivalRadius * arrivalRadius,
+            $"Target Tank #23 stopped at {tank.Pose.PositionMillimeters}, which is not " +
+            $"inside the {arrivalRadius} mm arrival radius of its route's final node " +
+            $"{lastNode.PositionMillimeters}.");
+
+        // THE HONEST NEGATIVE, AND IT IS THE ONLY THING HERE THAT DID NOT MOVE:
+        // shooting without looking does not finish this level. After 900
+        // released seconds the mission is still Running.
+        //
+        // Everything around it moved under #146, and the move is real rather
+        // than cosmetic, so the old assertions are re-derived from the driver's
+        // own report rather than nudged. This test used to be called
+        // `…StallsOnBeatThreeAndNeverFinishes` and asserted that Target Tank #23
+        // was still ALIVE and the objective still "Firing Range". Both were
+        // consequences of walking `Target Tank Path 1` in SERIALIZED order
+        // [18, 6, 7]: node 18 is at (-68688, 80000), so the tank's first move
+        // was away from the firing range and out of the naive driver's reach.
+        // The authored `target` chain is [6, 7, 18] and node 6 is at
+        // (-25438, 20500) - toward the player - so the tank now drives into
+        // range on its first leg and dies there.
+        //
+        // Measured on this tree (driver report above): 13 actors destroyed,
+        // navigation reaching "Target Zone 2" at t13221, outcome still Running
+        // at t27180. The driver clears the whole firing range and then stalls
+        // one beat later than it used to.
+        Assert.NotEqual(Level100MissionOutcome.Won, final.Level100Mission.Outcome);
+        Assert.Equal("Target Zone 2", final.Level100Mission.NavigationObjective);
+        Assert.Equal(Level100ActorLifecycle.Destroyed, tank.Lifecycle);
+
+        // The waste is still the point, restated as what is now measurable.
+        // 292 rounds went into the terrain against 182 into every target
+        // combined, so more than half of everything fired still hits nothing -
+        // which is the same claim the old `> 1_000` bound was making before the
+        // corrected routes let the driver connect at all.
+        Assert.True(
+            driver.ImpactsByActor.TryGetValue(0, out int terrainImpacts),
+            "the naive driver must still be recording terrain impacts");
+        int targetImpacts = driver.ImpactsByActor
+            .Where(pair => pair.Key != 0)
+            .Sum(pair => pair.Value);
+        Assert.True(
+            terrainImpacts > targetImpacts,
+            $"the naive driver put {terrainImpacts} rounds into terrain against " +
+            $"{targetImpacts} into all targets combined; its failure mode is " +
+            "supposed to be that most rounds hit nothing.");
     }
 
     /// <summary>
@@ -467,6 +540,15 @@ public sealed class Level100FullChainTests
         _output.WriteLine(
             $"inside n={comfortablyInside.Count} rate={insideHitRate:F3}; " +
             $"outside n={comfortablyOutside.Count} rate={outsideHitRate:F3}");
+        foreach (Level100ChainAutopilot.ObservedBlaster shot in comfortablyOutside
+                     .Where(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters))
+        {
+            _output.WriteLine(
+                $"  outside HIT ratio={Ratio(shot):F2} " +
+                $"slant={shot.LaunchSlantMeters:F2} " +
+                $"crossing={shot.PerpendicularSpeedMetersPerSecond:F2} " +
+                $"closest={shot.ClosestApproachMillimeters}");
+        }
 
         // A player moving at less than half the required crossing speed is hit.
         Assert.True(

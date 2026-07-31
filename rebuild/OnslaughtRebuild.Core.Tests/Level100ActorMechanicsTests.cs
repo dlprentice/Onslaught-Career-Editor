@@ -123,9 +123,16 @@ public sealed class Level100ActorMechanicsTests
                 "SpawnerA",
                 1,
                 "TargetTank1"));
-        Level100WaypointPointDefinition destination =
-            definitions.GetWaypointPath("Target Tank Path 1")
-                .Points[0];
+        // The first node of the TRAVERSAL, not of the serialized list. The tank
+        // is parked on that node's X and pointed down +Z so the leg is a
+        // straight run with no lateral component, which is what makes the
+        // `displacement.X == 0` assertion below a speed measurement rather than
+        // a turn measurement. `Target Tank Path 1` serializes [18, 6, 7] and is
+        // walked [6, 7, 18], so aligning on `Points[0]` (node 18) would aim the
+        // tank at a node it visits LAST and the run would curve.
+        Level100WaypointPathDefinition route =
+            definitions.GetWaypointPath("Target Tank Path 1");
+        Level100WaypointPointDefinition destination = route.ChainPoint(0);
         int initialZ = 0;
         int initialY =
             Level100Terrain.Instance.SampleGroundElevationMillimeters(
@@ -389,8 +396,31 @@ public sealed class Level100ActorMechanicsTests
             restored.Snapshot.Actors);
     }
 
+    /// <summary>
+    /// The released dropship arrival radius, and the fact that the comparison
+    /// is strict.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This test used to be called
+    /// <c>…UsesStrictClassRadiusAndRetainsDuplicateNodes</c> and asserted a
+    /// DEFECT as retail truth.</b> It opened by asserting that
+    /// <c>Transporter Path</c>'s first two nodes hold the same position, and the
+    /// fixture comment called that "its released duplicate leading node". There
+    /// is no duplicate. It was an aliasing artefact of the materializer
+    /// resolving waypoint node indices against the 121-entry navigation graph
+    /// instead of the 30 RLWD thingType-18 marker records, which collapsed all
+    /// 30 nodes onto 11 positions (<c>58d9ce57</c>). Nodes 44 and 22 are
+    /// 116.26 m apart horizontally.
+    /// </para>
+    /// <para>
+    /// The half that was real is kept: <c>ObserveWaypointArrival</c> requires
+    /// <c>distance &lt; radius</c>, not <c>&lt;=</c>, so a dropship sitting at
+    /// exactly 8,000 mm has not arrived.
+    /// </para>
+    /// </remarks>
     [Fact]
-    public void TransporterArrival_UsesStrictClassRadiusAndRetainsDuplicateNodes()
+    public void TransporterArrival_UsesTheStrictReleasedClassRadius()
     {
         Level100ActorDefinitionSet definitions =
             Level100TestActorDefinitions.Create();
@@ -401,9 +431,15 @@ public sealed class Level100ActorMechanicsTests
             actors.GetThingRef("Transporter")!.Value;
         Level100WaypointPathDefinition path =
             definitions.GetWaypointPath("Transporter Path");
-        Assert.Equal(
+        Assert.NotEqual(
             path.Points[0].PositionMillimeters,
             path.Points[1].PositionMillimeters);
+        // The cursor walks the authored `target` chain, so step 0 of the
+        // traversal is node 22 - the chain head - not node 44, which the level
+        // file happens to serialize first and the chain visits LAST.
+        Assert.Equal([44, 22, 23], path.Points.Select(point => point.NodeIndex));
+        Assert.Equal([22, 23, 44], path.TargetChainNodeIndices);
+        Assert.Equal(22, path.ChainPoint(0).NodeIndex);
         Assert.Equal(
             8_000,
             definitions
@@ -419,10 +455,10 @@ public sealed class Level100ActorMechanicsTests
             actors.GetActor(transporter).Pose with
             {
                 PositionMillimeters = new SimVector3(
-                    path.Points[0].PositionMillimeters.X +
+                    path.ChainPoint(0).PositionMillimeters.X +
                         8_000,
                     -12_345,
-                    path.Points[0].PositionMillimeters.Z),
+                    path.ChainPoint(0).PositionMillimeters.Z),
             };
         actors.SetPose(transporter, pose);
 
@@ -444,7 +480,7 @@ public sealed class Level100ActorMechanicsTests
                 pose.PositionMillimeters with
                 {
                     X =
-                        path.Points[0].PositionMillimeters.X +
+                        path.ChainPoint(0).PositionMillimeters.X +
                         7_999,
                 },
         };
@@ -455,6 +491,11 @@ public sealed class Level100ActorMechanicsTests
             Assert.Single(mechanics.Snapshot.Actors)
                 .WaypointPointIndex);
 
+        // ...and it stops there. Under the aliased table both of the base ticks
+        // below advanced the cursor again, because node 22 held node 44's
+        // coordinates and the dropship was therefore already "at" it. On the
+        // corrected route node 22 is 116.26 m away, so one arrival advances the
+        // cursor exactly one node.
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
             1,
@@ -462,9 +503,13 @@ public sealed class Level100ActorMechanicsTests
                 .WaypointPointIndex);
         Assert.Empty(mechanics.AdvanceTick());
         Assert.Equal(
-            2,
+            1,
             Assert.Single(mechanics.Snapshot.Actors)
                 .WaypointPointIndex);
+
+        // Dropship movement is not implemented - the class identity and radius
+        // are retained evidence only - so the pose is still exactly where the
+        // test put it.
         Assert.Equal(pose, actors.GetActor(transporter).Pose);
     }
 

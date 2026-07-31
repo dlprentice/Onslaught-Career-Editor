@@ -890,6 +890,18 @@ public sealed class InteractiveSessionTests
             [0, -15_000, -15_000],
             definitions.GetWaypointPath("Flyby Path").Points
                 .Select(point => point.PositionMillimeters.Y));
+        // The decoder reads the schema v14 traversal fields. They shipped on
+        // 2026-07-27 and were dropped on the floor here until #146, which is
+        // why the Air Trainer flew this route from its far end: `Points` is the
+        // SERIALIZED order and the chain is the order retail walks.
+        Assert.Equal(
+            [41, 42, 43],
+            definitions.GetWaypointPath("Flyby Path").TargetChainNodeIndices);
+        Assert.False(definitions.GetWaypointPath("Flyby Path").IsClosed);
+        Assert.True(definitions.GetWaypointPath("Drone Path 1").IsClosed);
+        Assert.Equal(
+            41,
+            definitions.GetWaypointPath("Flyby Path").ChainPoint(0).NodeIndex);
         Level100SpawnDefinition[] trainingTrucks = definitions.Spawns
             .Where(spawn => spawn.ScriptName is
                 "TargetTruck1" or "TargetTruck2" or "TargetTruck3")
@@ -1018,9 +1030,14 @@ public sealed class InteractiveSessionTests
         Level100ActorSnapshot target =
             snapshot.Level100Actors.Actors.Single(actor =>
                 actor.ActorId == targetId);
+        // The end of the AUTHORED TRAVERSAL, which is the last entry of the
+        // `target` chain and not of the serialized list. `Target Tank Path 1`
+        // serializes [18, 6, 7] and is walked [6, 7, 18]; `Points[^1]` is node
+        // 7, the route's MIDDLE, which the tank drives straight through.
+        Level100WaypointPathDefinition route =
+            definitions.GetWaypointPath("Target Tank Path 1");
         Level100WaypointPointDefinition destination =
-            definitions.GetWaypointPath("Target Tank Path 1")
-                .Points[^1];
+            route.ChainPoint(route.TargetChainNodeIndices.Count - 1);
         long deltaX =
             (long)destination.PositionMillimeters.X -
             target.Pose.PositionMillimeters.X;
@@ -1417,8 +1434,55 @@ public sealed class InteractiveSessionTests
         // identical. All 39 static and base-world actor poses are identical,
         // including the Transporter, whose Dropship motion class is still
         // unimplemented so it stays frozen at its authored pose.
+        //
+        // #146 MOVED THIS, AND THE MOVE WAS ADJUDICATED AND ACCEPTED 2026-07-31
+        // by the integrating owner: the traversal-order law is byte-proven from
+        // the pristine specimen (74154bfa, CScriptEventNB::UpdateWaypointFollowing
+        // 0x00538470 advances by the waypoint's own successor pointer) and
+        // runtime-confirmed in the play-level100 trace; the repin followed the
+        // two-byte-identical-native-reports protocol, and the measured value
+        // reproduced independently in two separate trees. The waypoint
+        // TRAVERSAL-ORDER correction:
+        // 0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba
+        // -> 8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1.
+        // The route COORDINATES did not change; the order the followers walk
+        // them in did. Six of the eight paths serialize their nodes in an order
+        // that is not the order the markers' own `target` pointers chain them,
+        // and until now the product indexed the serialized list.
+        //
+        // Two independent causes, isolated rather than argued. Re-running this
+        // scenario against a definition set that differs from the shipped one
+        // ONLY in having each path's chain overwritten with its own serialized
+        // order - i.e. the pre-#146 behaviour under the post-#146 hasher -
+        // gives 46d69bd0359ebf0898bd960e5b1bdb1024d7ad08cb849cc68368d0482eccc997
+        // and definition identity f2e664a301d670a1d036942f9c86955c156c6f5faa32
+        // 492a02dbf345efa5c04f, against the shipped 005d10fa0e247e97f71b5ddcaf5
+        // 159d64505b66d539ed6d426f235a999dcdf64. So:
+        //   1. STRUCTURAL. Level100ActorRegistry.ComputeIdentity went to
+        //      version 6 and now hashes TargetChainNodeIndices and IsClosed.
+        //      Those fields decide motion, so leaving them out of the
+        //      definition identity would let a route silently change order
+        //      without the identity moving. No behaviour rides on this half.
+        //   2. BEHAVIOURAL. Four of the 48 actors end the scenario somewhere
+        //      else, all four of them waypoint followers, measured either side:
+        //        Air Trainer      (31445, 23906, -96389) was (78086, 27136, 51089)
+        //        Target Tank #45  (-68781,  700,  78107) was (-68648, 1100, 50244)
+        //        Target Truck #47 (-52537,  700,  91659) was (-51373, 1012, 39939)
+        //        Target Truck #48 (-47665,  500,  84727) was (-53921, 1100, 41995)
+        //      The Air Trainer now finishes its pass at node 43, the chain's
+        //      tail, having started at node 41; before, it started at 43 and
+        //      was still short of 41. Trucks #47 and #48 reach Stopped inside
+        //      the scenario where before they were still FollowingWaypoint at
+        //      chain index 3 - the corrected order is SHORTER for them, not
+        //      merely different.
+        //
+        // The other 44 actor poses are identical, including the Transporter,
+        // still frozen because Dropship motion remains unimplemented. Player
+        // position (-66783, 68633), elevation 2500, yaw 282931, pitch 0, mode
+        // Walker and hull 20000 are identical either side, as are the mission
+        // outcome and the "Firing Range" navigation objective.
         Assert.Equal(
-            "0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba",
+            "8a89e33dc3cd689786a2e4b18e3e40992b8bc1a29f9f7c2917d7d4ea4ce08ec1",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

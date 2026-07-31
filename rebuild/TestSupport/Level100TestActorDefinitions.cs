@@ -206,61 +206,94 @@ internal static class Level100TestActorDefinitions
     // defect that `Target Tank Path 1` carried until it was corrected on
     // 2026-07-26, and nothing pins the synthetic values.
     //
-    // `Transporter Path` keeps its released duplicate leading node, which is
-    // what `TransporterArrival_UsesStrictClassRadiusAndRetainsDuplicateNodes`
-    // asserts: the retail route repeats (-95688, -42250).
-    //
     // Every field is the manifest's, including the retail `nodeIndex` and the
     // retail `retailComponentsFloatBits`. The previous corrections renumbered
     // nodes 0..N-1 and rebuilt the float bits from the rounded millimetres,
     // which produces *different bits* - harmless today because nothing in the
     // movement path reads either field, and wrong tomorrow because both are
     // part of the hashed definition set.
+    //
+    // RE-TRANSCRIBED 2026-07-27 from schema v14, after `58d9ce57` found the
+    // materializer had been resolving these node indices against the 121-entry
+    // navigation graph instead of the 30 RLWD thingType-18 marker records. The
+    // values below were the WRONG TABLE's coordinates: 30 nodes collapsed onto
+    // 11 distinct positions with 19 aliased pairs, and every altitude read
+    // +10000. The corrected table has 30 distinct positions, no aliasing, and
+    // splits the altitudes {0: 26, -15000: 2, -20000: 2} - the two non-zero
+    // pairs landing exactly on the two ambient AIRCRAFT routes, which is the
+    // corroboration that this is the right table rather than another plausible
+    // one.
+    //
+    // `Transporter Path` no longer repeats its leading node. That "released
+    // duplicate" was the aliasing artefact: nodes 44 and 22 are 116.26 m apart
+    // horizontally and 117.97 m apart in three dimensions, and node 44 is the
+    // one that also carried the +178.7 m error the correction commit measured.
+    // `TransporterArrival_UsesTheStrictReleasedClassRadius` used to assert the
+    // duplicate AS RETAIL TRUTH and no longer does.
+    //
+    // `Level100WaypointFixtureTests` cross-checks every row below against the
+    // materialized manifest, which is what would have caught this drift the day
+    // it appeared.
+    // The second argument of each row is the manifest's
+    // `targetChainNodeIndices` and the third its `isClosed`. Both were shipped
+    // by schema v14 on 2026-07-27 and consumed by nobody until #146: the
+    // product walked the serialized `points` order, so six of these eight
+    // routes ran backwards or rotated. `Flyby Path` is the visible one - its
+    // serialized head, node 43, is the chain's TAIL and the only node of that
+    // path at ground level, so the ambient Air Trainer left its 15 m cruise and
+    // dived for the deck as its FIRST move.
     private static IReadOnlyList<Level100WaypointPathDefinition> WaypointPaths() =>
     [
-        ExactPath("Flyby Path",
-            (43, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
-            (42, 33_813, 10_000, 21_250, 1_134_641_152, 1_132_740_608, 1_092_616_192, 0),
-            (41, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0)),
-        ExactPath("Target Truck Path 3",
-            (36, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
-            (35, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0),
-            (34, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0),
-            (33, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0)),
-        ExactPath("Target Truck Path 2",
-            (32, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
-            (31, 33_813, 10_000, 21_250, 1_134_641_152, 1_132_740_608, 1_092_616_192, 0),
-            (30, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0),
-            (29, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0)),
-        ExactPath("Target Truck Path 1",
-            (25, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
-            (26, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0),
-            (27, -43_688, 10_000, 57_750, 1_131_741_184, 1_133_936_640, 1_092_616_192, 0),
-            (28, -11_688, 10_000, 91_750, 1_133_150_208, 1_135_050_752, 1_092_616_192, 0)),
-        ExactPath("Transporter Path",
-            (44, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0),
-            (22, -95_688, 10_000, -42_250, 1_128_333_312, 1_128_857_600, 1_092_616_192, 0),
-            (23, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0)),
-        ExactPath("Target Tank Path 2",
-            (38, -43_688, 10_000, 57_750, 1_131_741_184, 1_133_936_640, 1_092_616_192, 0),
-            (37, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0),
-            (8, -688, 10_000, 48_750, 1_133_510_656, 1_133_641_728, 1_092_616_192, 0),
-            (10, -13_188, 10_000, 12_250, 1_133_101_056, 1_132_429_312, 1_092_616_192, 0),
-            (24, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0)),
-        // `Target Tank Path 1` was the synthetic triple (610000, 610000)..
-        // (612000, 612000) - 610 m away at exactly 45 degrees - so
-        // `Target Tank #23`, the fourth beat-3 static target, drove away from
-        // the firing range forever and beat 3 could never complete. That is the
-        // G2 gap recorded in LEVEL100-TUTORIAL-BEATS-2026-07-26.md.
-        ExactPath("Target Tank Path 1",
-            (18, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0),
-            (6, -11_688, 10_000, 91_750, 1_133_150_208, 1_135_050_752, 1_092_616_192, 0),
-            (7, 33_313, 10_000, 69_750, 1_134_624_768, 1_134_329_856, 1_092_616_192, 0)),
-        ExactPath("Drone Path 1",
-            (1, -99_688, 10_000, -3_250, 1_128_071_168, 1_131_413_504, 1_092_616_192, 0),
-            (2, -108_688, 10_000, 37_750, 1_127_481_344, 1_133_281_280, 1_092_616_192, 0),
-            (3, -66_688, 10_000, 16_750, 1_130_233_856, 1_132_593_152, 1_092_616_192, 0),
-            (4, -77_688, 10_000, 84_750, 1_129_512_960, 1_134_821_376, 1_092_616_192, 0)),
+        ExactPath("Flyby Path", [41, 42, 43], false,
+            (43, 34_813, 0, -99_750, 1_134_673_920, 1_125_089_280, -2_147_483_648, 0),
+            (42, -24_313, -15_000, 47_125, 1_132_736_512, 1_133_588_480, -1_049_624_576, 0),
+            (41, 82_813, -15_000, 49_500, 1_136_246_784, 1_133_666_304, -1_049_624_576, 0)),
+        ExactPath("Target Truck Path 3", [33, 34, 35, 36], false,
+            (36, -45_938, 0, 85_500, 1_131_593_728, 1_134_845_952, -2_147_483_648, 0),
+            (35, -65_938, 0, 76_000, 1_130_283_008, 1_134_534_656, -2_147_483_648, 0),
+            (34, -68_688, 0, 53_000, 1_130_102_784, 1_133_780_992, -2_147_483_648, 0),
+            (33, -23_438, 0, 20_500, 1_132_765_184, 1_132_716_032, -2_147_483_648, 0)),
+        ExactPath("Target Truck Path 2", [29, 30, 31, 32], false,
+            (32, -51_438, 0, 93_250, 1_131_233_280, 1_135_099_904, -2_147_483_648, 0),
+            (31, -64_688, 0, 74_500, 1_130_364_928, 1_134_485_504, -2_147_483_648, 0),
+            (30, -69_188, 0, 52_750, 1_130_070_016, 1_133_772_800, -2_147_483_648, 0),
+            (29, -34_938, 0, 29_000, 1_132_314_624, 1_132_994_560, -2_147_483_648, 0)),
+        // One of the two paths whose serialized order and chain agree.
+        ExactPath("Target Truck Path 1", [25, 26, 27, 28], false,
+            (25, -39_938, 0, 31_750, 1_131_986_944, 1_133_084_672, -2_147_483_648, 0),
+            (26, -66_938, 0, 53_500, 1_130_217_472, 1_133_797_376, -2_147_483_648, 0),
+            (27, -63_438, 0, 75_250, 1_130_446_848, 1_134_510_080, -2_147_483_648, 0),
+            (28, -41_688, 0, 96_250, 1_131_872_256, 1_135_198_208, -2_147_483_648, 0)),
+        ExactPath("Transporter Path", [22, 23, 44], false,
+            (44, 68_313, 0, 28_750, 1_135_771_648, 1_132_986_368, 0, 0),
+            (22, -47_688, -20_000, 36_500, 1_131_479_040, 1_133_240_320, -1_046_478_848, 0),
+            (23, -20_188, -20_000, 23_250, 1_132_871_680, 1_132_806_144, -1_046_478_848, 0)),
+        // One of the two chains that closes on its own head - and note the
+        // chain is not a rotation of the serialized list, it is a different
+        // order entirely.
+        ExactPath("Target Tank Path 2", [38, 37, 10, 24, 8], true,
+            (38, -43_438, 0, 39_625, 1_131_757_568, 1_133_342_720, -2_147_483_648, 0),
+            (37, -30_813, 0, 29_375, 1_132_523_520, 1_133_006_848, -2_147_483_648, 0),
+            (8, -49_375, 0, 30_000, 1_131_368_448, 1_133_027_328, -2_147_483_648, 0),
+            (10, -18_563, 0, 26_375, 1_132_924_928, 1_132_908_544, -2_147_483_648, 0),
+            (24, -23_563, 0, 18_125, 1_132_761_088, 1_132_638_208, 0, 0)),
+        // `Target Tank Path 1` was ALSO the synthetic triple (610000, 610000)..
+        // (612000, 612000) before 2026-07-26 - 610 m away at exactly 45 degrees
+        // - so `Target Tank #23`, the fourth beat-3 static target, drove away
+        // from the firing range forever and beat 3 could never complete. That is
+        // the G2 gap recorded in LEVEL100-TUTORIAL-BEATS-2026-07-26.md. It is
+        // the same class of defect as the aliasing above: a fixture that was
+        // never checked against the manifest.
+        ExactPath("Target Tank Path 1", [6, 7, 18], false,
+            (18, -68_688, 0, 80_000, 1_130_102_784, 1_134_665_728, 0, 0),
+            (6, -25_438, 0, 20_500, 1_132_699_648, 1_132_716_032, -2_147_483_648, 0),
+            (7, -70_125, 0, 51_563, 1_130_008_576, 1_133_733_888, -2_147_483_648, 0)),
+        // The other agreeing path, and the other closed one.
+        ExactPath("Drone Path 1", [1, 2, 3, 4], true,
+            (1, -23_438, 0, -84_750, 1_132_765_184, 1_126_072_320, -2_147_483_648, 0),
+            (2, -82_438, 0, -81_500, 1_129_201_664, 1_126_285_312, -2_147_483_648, 0),
+            (3, -73_188, 0, -43_750, 1_129_807_872, 1_128_759_296, -2_147_483_648, 0),
+            (4, -20_688, 0, -54_250, 1_132_855_296, 1_128_071_168, -2_147_483_648, 0)),
     ];
 
     private static IReadOnlyList<Level100ActorMotionDefinition>
@@ -326,8 +359,16 @@ internal static class Level100TestActorDefinitions
     /// materialized manifest: node index, millimetre position, and the retail
     /// float components. Nothing here is reconstructed or renumbered.
     /// </summary>
+    /// <param name="chain">
+    /// The manifest's <c>targetChainNodeIndices</c> - the order retail walks -
+    /// which is NOT the serialized order of <paramref name="points"/> on six of
+    /// these eight paths.
+    /// </param>
+    /// <param name="isClosed">The manifest's <c>isClosed</c>.</param>
     private static Level100WaypointPathDefinition ExactPath(
         string name,
+        int[] chain,
+        bool isClosed,
         params (int Node, int X, int Y, int Z, int B0, int B1, int B2, int B3)[] points) => new(
         name,
         Array.AsReadOnly(points
@@ -335,5 +376,7 @@ internal static class Level100TestActorDefinitions
                 point.Node,
                 new SimVector3(point.X, point.Y, point.Z),
                 new Level100FloatVector4Bits(point.B0, point.B1, point.B2, point.B3)))
-            .ToArray()));
+            .ToArray()),
+        Array.AsReadOnly(chain),
+        isClosed);
 }
