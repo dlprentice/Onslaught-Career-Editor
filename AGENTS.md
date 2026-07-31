@@ -146,4 +146,4 @@ npm run dev
   retrofitting unrelated historical metadata, but the backlog may only shrink.
 - Release/public-boundary changes: follow `README.RELEASE.md` and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 
-Commit, push, publication, release, live launch, and mutation remain separately authorized actions.
+Commit, push, publication, and release are standing-authorized by the maintainer (2026-07-30; recorded in `developer_state.json` under `_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after that, pushing is routine. Mutation of installed game directories and pristine binaries remains forbidden by the boundaries above.

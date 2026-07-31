@@ -115,5 +115,9 @@ turns out to be wrong. If the answer is no, it is a finding — link to it inste
 Keep this file short. It competes with the actual task for context, and length
 here is paid on every single session.
 
-Commit, push, publication, release, live launch, and mutation remain separately
-authorized actions.
+Commit, push, publication, and release are standing-authorized by the
+maintainer (2026-07-30; recorded in `developer_state.json` under
+`_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean
+public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after
+that, pushing is routine. Mutation of installed game directories and pristine
+binaries remains forbidden by the rules above.
