@@ -47,6 +47,59 @@ public static class Level100TargetPresentation
     public static Level100TargetVisualBinding WarehouseBinding { get; } =
         new("Warehouse", "m_m_warehouse.msh.aya");
 
+    /// <summary>
+    /// The ambient U-17 Highside Transporter authored into the level world at
+    /// RLWD ordinal 21 with script <c>Transporter</c>. MEASURED, retail
+    /// <c>default physics.dat</c> record #636: its <c>CUnitMesh</c> is
+    /// <c>f_lifter.msh</c>, shipped as
+    /// <c>data/resources/meshes/m_f_lifter.msh.aya</c> (26,211 bytes, sha256
+    /// <c>ced8fdd2…3df3</c>).
+    /// </summary>
+    public static Level100TargetVisualBinding TransporterBinding { get; } =
+        new("U-17 Highside Transporter", "m_f_lifter.msh.aya");
+
+    /// <summary>
+    /// The Air Trainer. Two instances carry this definition: the ambient one
+    /// authored at RLWD ordinal 40 with script <c>Flyby</c>, and the one the
+    /// Airfield spawns for the dodge exercise with script <c>AirTrainer</c>.
+    /// MEASURED, <c>default physics.dat</c> record #601: <c>CUnitMesh</c>
+    /// <c>fa_f24_training.msh</c>, shipped as
+    /// <c>data/resources/meshes/m_FA_F24_training.msh.aya</c> (26,677 bytes,
+    /// sha256 <c>48876552…6ec5</c>).
+    /// </summary>
+    public static Level100TargetVisualBinding AirTrainerBinding { get; } =
+        new("Air Trainer", "m_FA_F24_training.msh.aya");
+
+    /// <summary>
+    /// The nine airborne Target Drones. MEASURED, <c>default physics.dat</c>
+    /// record #660: its <c>CUnitMesh</c> is the SAME
+    /// <c>fa_f24_training.msh</c> the Air Trainer carries, so one retention and
+    /// one conversion serve both definitions. The binding is still distinct
+    /// because the definition name is what Core projects.
+    /// </summary>
+    public static Level100TargetVisualBinding TargetDroneBinding { get; } =
+        new("Target Drone", "m_FA_F24_training.msh.aya");
+
+    /// <summary>
+    /// Every <c>(definitionName, meshBinding)</c> pair a Level 100 world actor
+    /// can carry into the renderer. The renderer <em>throws</em> on a binding it
+    /// has no mesh for rather than skipping it, so an actor reaching
+    /// <see cref="Project"/> with a pair missing here kills the client on the
+    /// first frame that admits it. Keeping the set here, next to the six
+    /// constants, is what lets a test derive the eligible set from the pinned
+    /// manifest and compare against it in both directions.
+    /// </summary>
+    public static IReadOnlyList<Level100TargetVisualBinding> RenderedBindings
+    { get; } =
+    [
+        TargetTankBinding,
+        TargetTruckBinding,
+        WarehouseBinding,
+        TransporterBinding,
+        AirTrainerBinding,
+        TargetDroneBinding,
+    ];
+
     public static Level100TargetVisualDescriptor Project(
         TargetSnapshot target)
     {

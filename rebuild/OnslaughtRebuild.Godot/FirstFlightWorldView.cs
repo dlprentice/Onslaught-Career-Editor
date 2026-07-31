@@ -447,6 +447,55 @@ public sealed partial class FirstFlightWorldView : Node3D
                     warehouseM002Overlay,
             });
 
+        // Task #114, the airborne units. `m_FA_F24_training.msh.aya` serves the
+        // Air Trainer and all nine Target Drones, and its material table is the
+        // Target Tank's verbatim: MEASURED from the mesh's own MSHT/TEXB
+        // records, both meshes name (meshtex\f_pulsetank_training.tga,
+        // meshtex\Chrome3.tga) with the Chrome3 record carrying strength
+        // 0x3E4CCCCC = 0.19999998807907104, zero offset and unit scale, and
+        // both emit the single material group
+        // layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff. So the
+        // aircraft reuses `tankMaterial` rather than rebuilding an equal one.
+        Mesh airTrainerMesh = CuratedObjMeshLoader.Load(
+            "res://Assets/Level100/level100-air-trainer.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    tankMaterial,
+            });
+
+        // The U-17 Highside Transporter is the one actor here that needs its
+        // own textures. Its table is (f_lifter02, Chrome3, f_lifter01, Chrome3)
+        // and its two material groups take base slot 0 and base slot 2 against
+        // the same Chrome3 reflection at the same 0.19999998807907104 strength.
+        // WATCH THE INVERSION: group `...-00000000-...` is f_lifter02 and group
+        // `...-00000002-...` is f_lifter01.
+        Texture2D transporterLifter01Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/transporter-lifter01.texture.aya",
+            512,
+            512);
+        Texture2D transporterLifter02Texture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/transporter-lifter02.texture.aya",
+            512,
+            512);
+        Mesh transporterMesh = CuratedObjMeshLoader.Load(
+            "res://Assets/Level100/level100-transporter.obj",
+            new Dictionary<string, Material>(StringComparer.Ordinal)
+            {
+                ["layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(
+                        transporterLifter02Texture,
+                        reflection: RetailLayer(
+                            _retailChrome3Texture,
+                            0.199999988f)),
+                ["layers-00000002-ffffffff-00000001-ffffffff-ffffffff-ffffffff"] =
+                    CreateRetailMaterial(
+                        transporterLifter01Texture,
+                        reflection: RetailLayer(
+                            _retailChrome3Texture,
+                            0.199999988f)),
+            });
+
         _level100TargetAssets.Add(
             Level100TargetPresentation.TargetTankBinding,
             tankMesh);
@@ -456,6 +505,15 @@ public sealed partial class FirstFlightWorldView : Node3D
         _level100TargetAssets.Add(
             Level100TargetPresentation.WarehouseBinding,
             warehouseMesh);
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.AirTrainerBinding,
+            airTrainerMesh);
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.TargetDroneBinding,
+            airTrainerMesh);
+        _level100TargetAssets.Add(
+            Level100TargetPresentation.TransporterBinding,
+            transporterMesh);
 
         UpdateLevel100Targets(snapshot, snapshot, 0f);
     }

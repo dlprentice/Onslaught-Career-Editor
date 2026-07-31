@@ -264,12 +264,31 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'retailLevel100WaterGridVertexCount' 625 $report.retailLevel100WaterGridVertexCount
     Assert-SmokeValue 'retailLevel100WaterGridTriangleCount' 1152 $report.retailLevel100WaterGridTriangleCount
     Assert-SmokeValue 'retailLevel100ShorelineTriangleCount' 2056 $report.retailLevel100ShorelineTriangleCount
-    Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 9 $report.retailLevel100TargetSurfaceCount
+    # MOVED 2026-07-31 by task #114, the two ambient aircraft. This is the
+    # countable evidence that they are now DRAWN, so it has to move: the
+    # WorldSnapshot.Targets projection admitted only StaticTargets and
+    # TargetTrucks and now also carries the two ungrouped world actors, and
+    # FirstFlightWorldView registers their meshes.
+    #
+    # Both numbers are arithmetic over shipped material groups, not observations
+    # accepted on trust:
+    #   visuals   7 -> 9   + U-17 Highside Transporter, + ambient Air Trainer
+    #   surfaces  9 -> 12  the transporter's `m_f_lifter.msh.aya` emits TWO
+    #                      material groups (base slots 0 and 2 against the same
+    #                      Chrome3 reflection) and the Air Trainer's
+    #                      `m_FA_F24_training.msh.aya` emits ONE, the Target
+    #                      Tank's group verbatim.
+    # The 9 before was 3 Target Tanks (1 group each) + Warehouse (3) + 3 Target
+    # Trucks (1 each). Nothing existing changed shape.
+    Assert-SmokeValue 'retailLevel100TargetSurfaceCount' 12 $report.retailLevel100TargetSurfaceCount
     Assert-SmokeValue 'level100ObjectiveMarkerCount' 4 $report.level100ObjectiveMarkerCount
     Assert-SmokeValue 'retailLevel100TerrainVertexCount' 34398 $report.retailLevel100TerrainVertexCount
     Assert-SmokeValue 'retailLevel100TerrainTriangleCount' 33308 $report.retailLevel100TerrainTriangleCount
     Assert-SmokeValue 'retailLevel100SkySurfaceCount' 5 $report.retailLevel100SkySurfaceCount
-    Assert-SmokeValue 'targetVisualCount' 7 $report.targetVisualCount
+    # MOVED 2026-07-31 with retailLevel100TargetSurfaceCount above, same cause:
+    # the two ambient aircraft are now rendered world actors. See the comment
+    # there for the arithmetic.
+    Assert-SmokeValue 'targetVisualCount' 9 $report.targetVisualCount
     Assert-SmokeValue 'openingPanActive' $false $report.openingPanActive
     Assert-SmokeValue 'hudVisible' $true $report.hudVisible
     Assert-SmokeValue 'hudReady' $true $report.hudReady

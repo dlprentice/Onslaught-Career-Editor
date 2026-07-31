@@ -559,17 +559,73 @@ public sealed record WorldSnapshot(
         actor.TargetGroup == Level100MissionTargetGroup.StaticTargets &&
         actor.Lifecycle == Level100ActorLifecycle.Destroyed);
 
+    /// <summary>
+    /// The Level 100 world actors the RENDERER draws. This is a presentation
+    /// projection: nothing in it is hashed into simulation state, and no
+    /// mission, HUD or targeting decision reads it except
+    /// <see cref="Level100FiringRangeTargetsActive"/>, which tests ids 1..4.
+    ///
+    /// <para>It is NOT a targetability list. Retail already distinguishes the
+    /// two: the ambient U-17 Highside Transporter and the ambient Air Trainer
+    /// are authored with mission target group <c>None</c> and no ordinal, and
+    /// they stay that way here. The scanner reaches actors through
+    /// <c>Level100Actors.Actors</c> directly, so widening this projection adds
+    /// nothing to the HUD.</para>
+    /// </summary>
     public IReadOnlyList<TargetSnapshot> Targets =>
         Array.AsReadOnly(Level100Actors.Actors
-            .Where(actor =>
-                (actor.TargetGroup is
-                    Level100MissionTargetGroup.StaticTargets or
-                    Level100MissionTargetGroup.TargetTrucks) &&
-                actor.Pose is not null)
+            .Where(IsRenderedWorldActor)
             .OrderBy(actor => actor.TargetGroup)
             .ThenBy(actor => actor.TargetOrdinal)
+            // The two ambient aircraft share TargetOrdinal 0, so the canonical
+            // actor id is what keeps this projection totally ordered.
+            .ThenBy(actor => actor.ActorId.Value)
             .Select(CreateTargetSnapshot)
             .ToArray());
+
+    /// <summary>
+    /// Every Level 100 world actor the renderer draws. This was a two-group
+    /// whitelist admitting only <see cref="Level100MissionTargetGroup.StaticTargets"/>
+    /// and <see cref="Level100MissionTargetGroup.TargetTrucks"/>, which silently
+    /// dropped 18 of the level's 26 dynamic actors: both ambient aircraft, the
+    /// six Vulcan-exercise moving targets, the dodge-exercise Air Trainer and
+    /// all nine airborne Target Drones.
+    ///
+    /// <para>The two ambient aircraft carry NO mission target group, so
+    /// <see cref="Level100MissionTargetGroup.None"/> has to be admitted, and it
+    /// is admitted narrowly. Widening on "has a mesh binding" alone does not
+    /// work: of the 44 authored actor definitions 41 carry group
+    /// <c>None</c> and 36 of those carry a non-null mesh binding - the 33
+    /// base-world structures are drawn by the static-world asset and the player
+    /// carries <c>m_f_be1.msh.aya</c> and is drawn by the Aquila walker/jet
+    /// asset. <c>IsStatic</c> excludes the structures and the five General
+    /// Volume trigger spheres; "Player 1" is the same canonical name the
+    /// simulation itself resolves the player by.</para>
+    ///
+    /// <para>MEASURED, 2026-07-28 TTD trace of the pristine specimen: retail
+    /// constructs both ambient aircraft at level load out of
+    /// <c>CWorld__LoadWorld</c> - <c>CreateThingByType</c> creation 28
+    /// (<c>CDropship</c>) and creation 29 (<c>CPlane</c>) - and attaches their
+    /// <c>Transporter</c> and <c>Flyby</c> scripts before the player has
+    /// control. Neither motion nor rendering nor audio is shown by that trace;
+    /// it stops at the briefing.</para>
+    /// </summary>
+    private static bool IsRenderedWorldActor(Level100ActorSnapshot actor) =>
+        actor.Pose is not null &&
+        actor.MeshBinding is not null &&
+        actor.TargetGroup switch
+        {
+            Level100MissionTargetGroup.StaticTargets or
+            Level100MissionTargetGroup.TargetTrucks or
+            Level100MissionTargetGroup.MovingTargets or
+            Level100MissionTargetGroup.AirborneTargets1 or
+            Level100MissionTargetGroup.AirborneTargets2 or
+            Level100MissionTargetGroup.AirTrainer => true,
+            Level100MissionTargetGroup.None =>
+                !actor.IsStatic &&
+                !StringComparer.Ordinal.Equals(actor.Name, "Player 1"),
+            _ => false,
+        };
 
     private static TargetSnapshot CreateTargetSnapshot(
         Level100ActorSnapshot actor)
@@ -583,12 +639,31 @@ public sealed record WorldSnapshot(
         Level100ActorPoseSnapshot pose = actor.Pose ??
             throw new InvalidDataException(
                 $"Level 100 target actor {actor.ActorId.Value} has no pose.");
+        // Presentation ids, one disjoint band per authored group. Ordinals run
+        // 1..MaximumGroupActors inside a group (Level100ActorRegistry
+        // .AllocateMissionOrdinal counts per GROUP, not per spawn definition),
+        // so the bands below cannot overlap. StaticTargets 1-4 and TargetTrucks
+        // 5-7 are unchanged and load-bearing: Level100FiringRangeTargetsActive
+        // tests ids 1..4.
         int id = actor.TargetGroup switch
         {
             Level100MissionTargetGroup.StaticTargets =>
-                actor.TargetOrdinal,
+                actor.TargetOrdinal,                     // 1-4
             Level100MissionTargetGroup.TargetTrucks =>
-                4 + actor.TargetOrdinal,
+                4 + actor.TargetOrdinal,                 // 5-7
+            Level100MissionTargetGroup.MovingTargets =>
+                7 + actor.TargetOrdinal,                 // 8-13
+            Level100MissionTargetGroup.AirborneTargets1 =>
+                13 + actor.TargetOrdinal,                // 14-16
+            Level100MissionTargetGroup.AirborneTargets2 =>
+                16 + actor.TargetOrdinal,                // 17-22
+            Level100MissionTargetGroup.AirTrainer =>
+                22 + actor.TargetOrdinal,                // 23
+            // The two ambient aircraft are authored with no group and no
+            // ordinal, so their id comes from the canonical actor id, which is
+            // unique and stable across the run.
+            Level100MissionTargetGroup.None =>
+                100 + actor.ActorId.Value,
             _ => throw new InvalidDataException(
                 $"Level 100 actor {actor.ActorId.Value} is not a rendered target."),
         };

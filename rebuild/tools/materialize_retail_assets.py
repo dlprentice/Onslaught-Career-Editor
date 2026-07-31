@@ -205,16 +205,11 @@ LEVEL100_CONTACT_ASSET_SHA256 = (
 LEVEL100_CONTACT_SOURCE_AGGREGATE_SHA256 = (
     "8d85c9bfbe366c815e00d3900d8d29b71a33bef7a60cddfce9ed6ac558e06b4c"
 )
-# `Target Drone` and `Air Trainer` both carry CUnitMesh `fa_f24_training.msh`.
-# The mesh is read and hash-verified in place rather than retained through
-# `DIRECT_ASSETS`, because Core needs only its contact parts and retaining it
-# would move the exact-file count off 320 without a renderer that draws it. The
-# renderer will need the retention when drones become visible; that is a
-# separate change in a tree this tool's owner does not own.
-LEVEL100_DRONE_MESH_SOURCE = "m_FA_F24_training.msh.aya"
-LEVEL100_DRONE_MESH_SHA256 = (
-    "48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5"
-)
+# `Target Drone` and `Air Trainer` both carry CUnitMesh `fa_f24_training.msh`,
+# so one retention and one conversion serve both. It used to be read and
+# hash-verified in place instead of retained, because nothing drew it; task #114
+# gives it a renderer, so it is now an ordinary `DIRECT_ASSETS` row below and
+# the in-place special case that stood in for it is gone.
 PINE_IMPOSTER_TEXTURE = (
     "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya",
     "7368ba0c586221ff1b1572cee8f84de2bf6db426c005a73a10bad54a938ad882",
@@ -404,6 +399,15 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", "data/resources/meshes/m_f_pulsetank_training.msh.aya", "9b2cfdceb86ed700ed924051fbff13c32dc30bd8f8b948ea1cf8aa9fbfe8b97b"),
     (GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", "data/resources/meshes/m_f_truck_training.msh.aya", "3bd92ce93d0619b7c4b0dd158680641fbab6cd88580a68c6ef34e5f22f7596c5"),
     (GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", "data/resources/meshes/m_m_warehouse.msh.aya", "61fe5465bd7affedf749ad784209be02b2e4dd28631e70386c3810302b5f6f15"),
+    # Task #114, the two ambient aircraft. `m_FA_F24_training.msh.aya` is the
+    # Air Trainer AND the nine Target Drones: `default physics.dat` records #601
+    # and #660 both name `fa_f24_training.msh`, so this single retention serves
+    # every airborne unit in the level. `m_f_lifter.msh.aya` is the U-17
+    # Highside Transporter (record #636). Retail constructs both aircraft at
+    # level load from the level world - MEASURED, `CreateThingByType` creations
+    # 28 and 29 out of `CWorld__LoadWorld` in the 2026-07-28 TTD trace.
+    (GODOT_ASSETS / "Level100/Source/m_FA_F24_training.msh.aya", "data/resources/meshes/m_FA_F24_training.msh.aya", "48876552ae836750221241719f333fb9b5221f78f1ab8bc03d5950cdbf4e6ec5"),
+    (GODOT_ASSETS / "Level100/Source/m_f_lifter.msh.aya", "data/resources/meshes/m_f_lifter.msh.aya", "ced8fdd223e6592b37586395197d86843afec68456efde4c8211b8cd75593df3"),
     # The authored particle sets. `ParticleSetFile` parses them and
     # `ParticleEffectResolver` resolves named effects out of them, so descriptor
     # values stop being hand-copied constants. `MainSet.par` is the one the game
@@ -435,6 +439,17 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Textures/target-truck.texture.aya", "data/resources/dxtntextures/meshtex%f_truck_training.tga(0)A1R5G5B5.aya", "ab4125242321de4963c51c9b22f63c951a33c22e874d8f039fa2c61a109f5e81"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m001.texture.aya", "data/resources/dxtntextures/meshtex%M_001.tga(0)A1R5G5B5.aya", "689b184ab8a5d03f33b69e5c35edcfdfdec12aa9b4b31f7c74ce5209f6236a49"),
     (GODOT_ASSETS / "Level100/Textures/target-warehouse-m002.texture.aya", "data/resources/dxtntextures/meshtex%M_002.tga(0)A1R5G5B5.aya", "8fabadbe1c5af067a740cf05debd1c952c628fd5fa3ea92b8202094704b8a20d"),
+    # The U-17 Highside Transporter's two base textures, the only NEW texture
+    # retentions task #114 needs. MEASURED from the mesh's own MSHT/TEXB table:
+    # `m_f_lifter.msh.aya` names four texture records - f_lifter02, Chrome3,
+    # f_lifter01, Chrome3 - and its two material groups reference base slots 0
+    # and 2 with reflection slot 1. `meshtex\Chrome3.tga` is already
+    # materialized by the static-world pass as
+    # StaticWorld/Textures/meshtex-chrome3.texture.aya, and the Air Trainer /
+    # Target Drone mesh needs no new texture at all: its table is
+    # (f_pulsetank_training, Chrome3), byte-identical to the Target Tank's.
+    (GODOT_ASSETS / "Level100/Textures/transporter-lifter01.texture.aya", "data/resources/dxtntextures/meshtex%f_lifter01.tga(0)A1R5G5B5.aya", "556f8fab2e9d708412d085c81f07dbfe800a9ee415c4e7ccf1aaad56bd2135e6"),
+    (GODOT_ASSETS / "Level100/Textures/transporter-lifter02.texture.aya", "data/resources/dxtntextures/meshtex%f_lifter02.tga(0)A1R5G5B5.aya", "fa03f88a6132819fd0ac33266cdfb2b7423bf20f7b6c9aba05d370807efba21e"),
     (GODOT_ASSETS / "Level100/Textures/material-overlay-a8trust5.texture.aya", "data/resources/dxtntextures/meshtex%a8trust5.tga(0)A8R8G8B8.aya", "4ccde973f9741c110a82f350e102f1a12c566ff3d3b1b4f5426f2bbf536be843"),
     (GODOT_ASSETS / "Level100/Textures/terrain-cloud-shadow.texture.aya", "data/resources/dxtntextures/clouds%shadow.tga(0)A8R8G8B8.aya", "fc7441887e494e4b18f2b16179ed42c17801b128d71e29d653a4e8b792869519"),
     (GODOT_ASSETS / "Level100/Textures/terrain-detail-00.texture.aya", "data/resources/dxtntextures/mixers%detail00.tga(0)R5G6B5.aya", "7c9c22169d13ed8b7d6ad69286bdb59cc88f9ae3bfb6a9d3a0503d320386bfef"),
@@ -582,6 +597,14 @@ MESHES = (
     (GODOT_ASSETS / "Level100/level100-target-tank.obj", GODOT_ASSETS / "Level100/Source/m_f_pulsetank_training.msh.aya", None, "88bae82b7d5080e307cbe49aa39c06c21efbcc7de806e236b5cb663aa7d5ba63"),
     (GODOT_ASSETS / "Level100/level100-target-truck.obj", GODOT_ASSETS / "Level100/Source/m_f_truck_training.msh.aya", None, "39eb4f7723725422ee348ca6052c437be2e59aac38ddac0ca4559213fc4e0113"),
     (GODOT_ASSETS / "Level100/level100-target-warehouse.obj", GODOT_ASSETS / "Level100/Source/m_m_warehouse.msh.aya", None, "dd605f3778d465a5e25a99b43c7721dec37d509732e65db3e6c71534f6b4a9ac"),
+    # Task #114. Rest pose, no hierarchy frame, exactly as the three rows above.
+    # `level100-air-trainer.obj` is drawn for BOTH the Air Trainer and the
+    # Target Drone; it emits a single material group,
+    # `layers-00000000-ffffffff-00000001-ffffffff-ffffffff-ffffffff`, which is
+    # the Target Tank's group verbatim. The transporter emits two groups,
+    # `...-00000000-...` and `...-00000002-...`.
+    (GODOT_ASSETS / "Level100/level100-air-trainer.obj", GODOT_ASSETS / "Level100/Source/m_FA_F24_training.msh.aya", None, "1d8ee300e9349df27a889af85e597778a2422634d73ced5d284c7140dd9b885f"),
+    (GODOT_ASSETS / "Level100/level100-transporter.obj", GODOT_ASSETS / "Level100/Source/m_f_lifter.msh.aya", None, "a6a39ea17e811b4d6f18fcc02b8eb753e6fd29643e8359ed068bb26fd76de787"),
 )
 
 
@@ -2602,6 +2625,16 @@ def _level100_contact_asset(
         Path(source_name).name.casefold(): expected_hash
         for _, source_name, expected_hash in DIRECT_ASSETS
     }
+    # The RETAINED file name is authoritative for the `mesh` field emitted
+    # below, because `default physics.dat` and the archive disagree on case:
+    # record #660 spells `fa_f24_training.msh` while the shipped file is
+    # `m_FA_F24_training.msh.aya`. Resolving through this map keeps
+    # level100-contact-owners.json byte-identical now that the drone mesh is an
+    # ordinary retention rather than the removed in-place special case.
+    direct_names = {
+        Path(source_name).name.casefold(): Path(source_name).name
+        for _, source_name, _ in DIRECT_ASSETS
+    }
     target_definitions: list[dict[str, object]] = []
     target_source_hashes: dict[str, str] = {}
     # Every Level 100 definition a released script can destroy needs contact
@@ -2633,11 +2666,8 @@ def _level100_contact_asset(
             mesh_name += ".msh"
         source_name = f"m_{mesh_name}.aya"
         expected_hash = direct_hashes.get(source_name.casefold())
-        if expected_hash is None and (
-            source_name.casefold() == LEVEL100_DRONE_MESH_SOURCE.casefold()
-        ):
-            source_name = LEVEL100_DRONE_MESH_SOURCE
-            expected_hash = LEVEL100_DRONE_MESH_SHA256
+        if expected_hash is not None:
+            source_name = direct_names[source_name.casefold()]
         if expected_hash is None:
             raise RuntimeError(
                 f"Level 100 target definition has no retained mesh: {definition}"

@@ -2,7 +2,8 @@
 
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
-three training target meshes, nine Pulse Cannon/target-destruction
+three training target meshes, the two ambient aircraft meshes,
+nine Pulse Cannon/target-destruction
 effect textures, 26 exact mission effects, the tutorial music selection, and all
 51 English character messages in the accepted Level 100 mission table. The
 three shared front-end effects retain the startup lane's `Assets/Frontend` paths. Run
@@ -46,10 +47,16 @@ bit-identical retail collision geometry.
 | `level100-target-truck.obj` | Target Truck geometry and exact material group consumed by Godot *(hash corrected 2026-07-28 — see below)* | `39EB4F7723725422EE348CA6052C437BE2E59AAC38DDAC0CA4559213FC4E0113` |
 | `Source/m_m_warehouse.msh.aya` | Released Firing Range Warehouse CMSH archive | `61FE5465BD7AFFEDF749AD784209BE02B2E4DD28631E70386C3810302B5F6F15` |
 | `level100-target-warehouse.obj` | Static intact Warehouse geometry and exact material groups consumed by Godot *(hash corrected 2026-07-28 — see below)* | `DD605F3778D465A5E25A99B43C7721DEC37D509732E65DB3E6C71534F6B4A9AC` |
+| `Source/m_FA_F24_training.msh.aya` | Released Air Trainer / Target Drone CMSH archive — one retention serves both definitions *(row added 2026-07-31, task #114 — see below)* | `48876552AE836750221241719F333FB9B5221F78F1AB8BC03D5950CDBF4E6EC5` |
+| `level100-air-trainer.obj` | Air Trainer and Target Drone geometry and its single material group, the Target Tank's verbatim *(row added 2026-07-31)* | `1D8EE300E9349DF27A889AF85E597778A2422634D73CED5D284C7140DD9B885F` |
+| `Source/m_f_lifter.msh.aya` | Released U-17 Highside Transporter CMSH archive *(row added 2026-07-31)* | `CED8FDD223E6592B37586395197D86843AFEC68456EFDE4C8211B8CD75593DF3` |
+| `level100-transporter.obj` | U-17 Highside Transporter geometry and its two material groups *(row added 2026-07-31)* | `A6A39EA17E811B4D6F18FCC02B8EB753E6FD29643E8359ED068BB26FD76DE787` |
 | `Textures/target-tank.texture.aya` | Released 512×512 DXT2 Target Tank base texture | `97DDD1E18E45B19E249E91E881D773D80D36768A2CD48F6549A769C2559A7B7E` |
 | `Textures/target-truck.texture.aya` | Released 512×512 DXT2 Target Truck base texture | `AB4125242321DE4963C51C9B22F63C951A33C22E874D8F039FA2C61A109F5E81` |
 | `Textures/target-warehouse-m001.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material groups 0 and 1 | `689B184AB8A5D03F33B69E5C35EDCFDFDEC12AA9B4B31F7C74CE5209F6236A49` |
 | `Textures/target-warehouse-m002.texture.aya` | Released 512×512 DXT2 Warehouse base texture used by material group 3 | `8FABADBE1C5AF067A740CF05DEBD1C952C628FD5FA3EA92B8202094704B8A20D` |
+| `Textures/transporter-lifter01.texture.aya` | Released 512×512 DXT2 U-17 base texture, mesh texture slot 2 *(row added 2026-07-31)* | `556F8FAB2E9D708412D085C81F07DBFE800A9EE415C4E7CCF1AAAD56BD2135E6` |
+| `Textures/transporter-lifter02.texture.aya` | Released 512×512 DXT2 U-17 base texture, mesh texture slot 0 *(row added 2026-07-31)* | `FA03F88A6132819FD0AC33266CDFB2B7423BF20F7B6C9ABA05D370807EFBA21E` |
 | `Textures/material-overlay-a8trust5.texture.aya` | Released 128×128 `meshtex%a8trust5.tga(0)A8R8G8B8.aya` Warehouse material overlay stage *(row added 2026-07-28 — see below)* | `4CCDE973F9741C110A82F350E102F1A12C566FF3D3B1B4F5426F2BBF536BE843` |
 | `Textures/pulse-bolt-blue-spark.texture.aya` | Exact released 64×64 DXT2 `Particle%Blue Spark 2.tga(0)A4R4G4B4.aya` Pulse Bolt sprite | `B3730B1E9D7713910E0DE4BD0CB0DCFEFCB9CEB8F6402D50681A524ADC0DCB08` |
 | `Textures/pulse-bolt-blue-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Blue Trail.tga(0)R5G6B5.aya` Pulse Bolt trail | `2B4BC5CF8902D7EA8452F1068AC8F11514C8238A733CA33AAD7D6D0667688A63` |
@@ -178,6 +185,32 @@ the "25 exact mission effects" count in the opening paragraph was corrected to
 26 in the same pass. MEASURED: differencing this table's rows against the
 `GODOT_ASSETS` entries for `Level100/SoundEffects/` and `Level100/Textures/`
 returns exactly these two and nothing else, in both directions.
+
+### Rows added 2026-07-31 — the two ambient aircraft (task #114)
+
+Six rows: `Source/m_FA_F24_training.msh.aya`, `Source/m_f_lifter.msh.aya`, their
+two converted OBJs, and `Textures/transporter-lifter0{1,2}.texture.aya`.
+
+The Air Trainer mesh was previously read and hash-verified **in place** rather
+than retained, because Core needed only its contact parts and nothing drew it.
+It is now an ordinary `DIRECT_ASSETS` retention, and the in-place special case
+is gone. MEASURED, and the reason the special case existed: `default
+physics.dat` record #660 spells the mesh `fa_f24_training.msh` in lower case
+while the shipped archive file is `m_FA_F24_training.msh.aya`, and that string
+is emitted verbatim as the `mesh` field of the hash-pinned
+`level100-contact-owners.json`. The producer now resolves through the retained
+file name, so both pinned generated payloads are byte-unchanged:
+`level100-static-world.json` = `2DFAD0DC…8568` and `level100-contact-owners.json`
+= `C45E89D1…D524F2`, exactly their pins.
+
+MEASURED from each mesh's own `MSHT`/`TEXB` records: `m_FA_F24_training.msh.aya`
+names `meshtex\f_pulsetank_training.tga` and `meshtex\Chrome3.tga` with TEXB
+metadata byte-identical to the Target Tank's (Chrome3 strength `0x3E4CCCCC`,
+zero offset, unit scale) and emits the Target Tank's single material group
+verbatim, so it needs **no new texture**. `m_f_lifter.msh.aya` names
+(`f_lifter02`, `Chrome3`, `f_lifter01`, `Chrome3`) — note the inversion, slot 0
+is `lifter02` — and emits two groups against the same Chrome3 reflection, which
+is already materialized as `StaticWorld/Textures/meshtex-chrome3.texture.aya`.
 
 Two further texture files present on disk — `particle-alparticle5-additive` and
 `particle-fireball-additive` — are deliberately **not** added here. They exist
