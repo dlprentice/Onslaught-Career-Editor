@@ -1711,6 +1711,198 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 preview._validate_no_reparse_descendant(path, root, checkout, must_exist=False)
 
 
+def _mutate_part(mesh: preview.ParsedMesh, index: int, **changes: object) -> preview.ParsedMesh:
+    """Replace one field of one part in both the file view and the geometry view."""
+    parts = list(mesh.file_parts())
+    parts[index] = replace(parts[index], **changes)
+    return replace(mesh, source_parts=tuple(parts), parts=tuple(parts))
+
+
+class CmshReEmitterTests(unittest.TestCase):
+    """`emit_cmsh_stream` is the inverse of `parse_cmsh_stream`, byte for byte."""
+
+    def _round_trip(self, source: bytes) -> preview.ByteAccounting:
+        identical, account = preview.round_trip_cmsh_stream(source)
+        self.assertTrue(identical)
+        # Every byte of the stream lands in exactly one accounting column.
+        self.assertEqual(len(source), account.total)
+        return account
+
+    def test_the_fixture_stream_re_emits_byte_identically(self) -> None:
+        self._round_trip(build_fixture_stream())
+
+    def test_the_reference_fixture_stream_re_emits_byte_identically(self) -> None:
+        """`REFR` expansion rewrites the geometry view, never the file view."""
+        source = build_reference_fixture_stream()
+        mesh = preview.parse_cmsh_stream(source)
+        referring = [part for part in mesh.parts if part.reference is not None]
+        self.assertTrue(referring)
+        self.assertTrue(any(part.vertices for part in referring))
+        self.assertFalse(any(part.vertices for part in mesh.file_parts() if part.reference is not None))
+        self._round_trip(source)
+
+    def test_the_skinned_fixture_stream_re_emits_byte_identically(self) -> None:
+        """The bone slots the parser divided by three are multiplied back."""
+        source = build_skinned_fixture_stream()
+        mesh = preview.parse_cmsh_stream(source)
+        self.assertTrue(any(part.bones for part in mesh.file_parts()))
+        self._round_trip(source)
+
+    def test_the_hierarchy_frame_and_material_fixtures_re_emit_byte_identically(self) -> None:
+        self._round_trip(build_hierarchy_frame_fixture_stream())
+        self._round_trip(build_material_fixture_stream())
+
+    def test_every_synthesisable_part_and_sibling_order_re_emits_byte_identically(self) -> None:
+        for order in ACCEPTED_PART_ORDERS:
+            for siblings in ACCEPTED_SIBLING_ORDERS:
+                with self.subTest(order=order, siblings=siblings):
+                    self._round_trip(build_order_stream(order, siblings))
+
+    def test_re_emission_reads_the_model_and_not_a_replayed_copy(self) -> None:
+        """The check is proven able to fail: perturb the model, the bytes move.
+
+        Each field below is rebuilt from typed state with no raw fallback, so a
+        change to it must change the emitted stream. If any of these ever came
+        back identical the round-trip would be replaying bytes rather than
+        proving the model, and the corpus result would mean nothing.
+        """
+        source = build_fixture_stream()
+        mesh = preview.parse_cmsh_stream(source)
+        geometry = next(index for index, part in enumerate(mesh.file_parts()) if part.vertices)
+        part = mesh.file_parts()[geometry]
+        first = part.vertices[0]
+        group = part.groups[0]
+        perturbations = {
+            "vertex position": {"vertices": (replace(first, position=(first.position[0] + 1.0, *first.position[1:])), *part.vertices[1:])},
+            "vertex normal": {"vertices": (replace(first, normal=(0.0, 0.0, -1.0)), *part.vertices[1:])},
+            "vertex colour": {"vertices": (replace(first, raw_color_u32=0xFF00FF00), *part.vertices[1:])},
+            "vertex UV": {"vertices": (replace(first, uv=(0.125, 0.375)), *part.vertices[1:])},
+            "strip indices": {"groups": (replace(group, indices=group.indices[:-1]), *part.groups[1:])},
+            "TEXR slots": {"groups": (replace(group, raw_texr_u32=(9, 9, 9, 9, 9, 9)), *part.groups[1:])},
+            "bounding box": {"bounding_box": replace(part.bounding_box, radius=part.bounding_box.radius + 1.0)},
+            "bounding box pad word": {"bounding_box": replace(part.bounding_box, pad_words=(0xDEADBEEF, 0))},
+            "hierarchy frame map": {"track": replace(part.track, frame_map=(0,) * len(part.track.frame_map))},
+            "hierarchy pose": {
+                "track": replace(
+                    part.track,
+                    hierarchy=(replace(part.track.hierarchy[0], position=(1.5, 2.5, 3.5)), *part.track.hierarchy[1:]),
+                )
+            },
+            "hierarchy pose pad word": {
+                "track": replace(
+                    part.track,
+                    hierarchy=(replace(part.track.hierarchy[0], position_pad_word=0x0BADF00D), *part.track.hierarchy[1:]),
+                )
+            },
+            "carried CPOS payload": {"track": replace(part.track, cached_position_bytes=b"\x09\x09")},
+        }
+        for label, changes in perturbations.items():
+            with self.subTest(field=label):
+                emitted, _ = preview.emit_cmsh_stream(_mutate_part(mesh, geometry, **changes))
+                self.assertNotEqual(source, emitted, f"{label} left the stream unchanged")
+        # The carried blocks go back out unaltered, so a change to one still has
+        # to move the stream - on the part that actually carries the record.
+        carrier = next(index for index, item in enumerate(mesh.file_parts()) if item.raw_pbkt)
+        emitted, _ = preview.emit_cmsh_stream(_mutate_part(mesh, carrier, raw_pbkt=b"OPAQUE"))
+        self.assertNotEqual(source, emitted)
+
+    def test_a_derived_field_that_contradicts_its_carried_block_is_a_hard_failure(self) -> None:
+        """A model that disagrees with the bytes is a defect, never a rounding.
+
+        Every field written into a carried block is proved against it first, so
+        a contradiction stops the emission rather than quietly preferring one
+        side. Without this, carrying `CMSP` whole would hide the whole identity
+        and count model behind a memcpy.
+        """
+        source = build_fixture_stream()
+        mesh = preview.parse_cmsh_stream(source)
+        geometry = next(index for index, part in enumerate(mesh.file_parts()) if part.vertices)
+        contradictions = (
+            ("part type", 0, {"part_type": 6}),
+            ("animation frame count", 0, {"anim_frames": 2}),
+            (
+                "CMSP base position",
+                0,
+                {
+                    "cmsp_transforms": (
+                        mesh.file_parts()[0].cmsp_transforms[0],
+                        replace(mesh.file_parts()[0].cmsp_transforms[1], position=(9.0, 9.0, 9.0)),
+                    )
+                },
+            ),
+            ("retained CMSP payload", 0, {"raw_cmsp": bytes(316)}),
+            ("CMVB group count", geometry, {"raw_cmvb": bytes(296)}),
+        )
+        for label, index, changes in contradictions:
+            with self.subTest(field=label):
+                with self.assertRaisesRegex(preview.CmshProfileError, "round-trip mismatch"):
+                    preview.emit_cmsh_stream(_mutate_part(mesh, index, **changes))
+
+    def test_a_truncated_retained_block_is_refused_rather_than_padded(self) -> None:
+        mesh = preview.parse_cmsh_stream(build_fixture_stream())
+        for label, changes in (
+            ("CMSP", {"raw_cmsp": b""}),
+            ("CMVB", {"raw_cmvb": b"\x00" * 295}),
+            ("HFOV", {"record_tags": ("HFOV",), "raw_hfov": None}),
+        ):
+            with self.subTest(block=label):
+                with self.assertRaisesRegex(preview.CmshProfileError, "round-trip mismatch"):
+                    preview.emit_cmsh_stream(_mutate_part(mesh, 0, **changes))
+        with self.assertRaisesRegex(preview.CmshProfileError, "round-trip mismatch"):
+            preview.emit_cmsh_stream(replace(mesh, raw_header=b""))
+
+    def test_a_conditionally_derived_name_buffer_degrades_to_carried_and_says_so(self) -> None:
+        """A name that no longer re-encodes is carried, and the count shows it.
+
+        This is the honest failure mode of every field that is derived only
+        where the bytes prove it: the stream still comes back identical, but the
+        derived column drops by exactly the buffer that stopped being claimed.
+        Byte identity alone would not have shown it; the accounting does.
+        """
+        source = build_material_fixture_stream()
+        mesh = preview.parse_cmsh_stream(source)
+        _, before = preview.emit_cmsh_stream(mesh)
+        renamed = replace(
+            mesh,
+            textures=(replace(mesh.textures[0], name="not the stored name"), *mesh.textures[1:]),
+        )
+        emitted, after = preview.emit_cmsh_stream(renamed)
+        self.assertEqual(source, emitted)
+        self.assertEqual(
+            len(mesh.textures[0].raw_name_field),
+            before.regions[preview.REGION_TEXB_NAME][0] - after.regions[preview.REGION_TEXB_NAME][0],
+        )
+
+    def test_the_wholly_carried_regions_are_declared(self) -> None:
+        """The disclosure list cannot shrink without a deliberate edit here."""
+        self.assertEqual(
+            {
+                preview.REGION_CMST,
+                preview.REGION_TEXB_METADATA,
+                preview.REGION_PBKT,
+                preview.REGION_CPOS,
+                preview.REGION_CORI,
+                preview.REGION_SIBLING,
+            },
+            set(preview.WHOLLY_CARRIED_REGIONS),
+        )
+        account = self._round_trip(build_fixture_stream())
+        for region in preview.WHOLLY_CARRIED_REGIONS:
+            if region in account.regions:
+                self.assertEqual(0, account.regions[region][0], region)
+
+    def test_the_accounting_never_folds_carried_bytes_into_derived(self) -> None:
+        account = self._round_trip(build_fixture_stream())
+        self.assertEqual(account.derived + account.carried, account.total)
+        self.assertGreater(account.carried, 0)
+        self.assertGreater(account.derived, 0)
+        merged = preview.ByteAccounting()
+        merged.merge(account)
+        merged.merge(account)
+        self.assertEqual(2 * account.derived, merged.derived)
+        self.assertEqual(2 * account.carried, merged.carried)
+
+
 def _shipped_mesh_directory() -> Path:
     """Where the released meshes are materialised on this machine.
 
@@ -1814,6 +2006,23 @@ class ShippedMeshCorpusCensus(unittest.TestCase):
                 if part.reference is not None and not part.vertices:
                     empty.setdefault(name, []).append(index)
         self.assertEqual({"m_Building 5 Top.msh": [2, 3]}, empty)
+
+    def test_the_header_names_the_mesh_after_its_own_file(self) -> None:
+        """`CMSH+0x2C` is the mesh's own name - found by writing the re-emitter.
+
+        The parser read two words of the 372-byte header and skimmed the rest,
+        so this field was invisible until an encoder had to reproduce it. It
+        matches the source file's stem without the `m_` prefix on 213/213 loose
+        shipped meshes, case-insensitively; 20 of them disagree on case alone,
+        the same authoring hazard as `meshtex\\FB_biodome.tga`.
+        """
+        exact = insensitive = 0
+        for name, mesh in self.meshes.items():
+            stem = name[2:]
+            exact += mesh.name == stem
+            insensitive += mesh.name.casefold() == stem.casefold()
+        self.assertEqual(213, insensitive)
+        self.assertEqual(193, exact)
 
     def test_the_nine_formerly_unsupported_meshes_emit_obj(self) -> None:
         formerly_unsupported = (
@@ -2139,6 +2348,80 @@ class NestedAndEmbeddedCorpusCensus(unittest.TestCase):
         [(where, message)] = rejections.items()
         self.assertIn("m_Boss_gill-m-Node.msh.aya", where)
         self.assertIn("empty geometry", message)
+
+    def test_every_shipped_cmsh_stream_re_emits_byte_identically(self) -> None:
+        """367/367 streams round-trip, and the honest split is pinned with them.
+
+        Measured 2026-07-31 over both retail corpora. Byte identity alone would
+        be a misleading headline, so the derived/carried split is pinned beside
+        it: 32.05% of the 100,813,615 stream bytes are rebuilt from typed model
+        state and proved against the source, and 67.95% are copied through
+        because nothing in the model describes them. A change that moves bytes
+        from the derived column to the carried one keeps the streams identical
+        and fails here instead.
+        """
+        identical: collections.Counter = collections.Counter()
+        total = preview.ByteAccounting()
+        for corpus, entries in self.streams.items():
+            for source, where, data in entries:
+                mesh = preview.parse_cmsh_stream(data)
+                emitted, account = preview.emit_cmsh_stream(mesh)
+                total.merge(account)
+                self.assertEqual(data, emitted, f"{corpus} {source}::{where}")
+                self.assertEqual(len(data), account.total, f"{corpus} {source}::{where}")
+                identical[corpus] += 1
+
+        self.assertEqual(213, identical["loose"], "the loose corpus must never regress")
+        self.assertEqual(15, identical["loose-nested"])
+        self.assertEqual(139, identical["embedded"])
+        self.assertEqual(367, sum(identical.values()))
+
+        self.assertEqual(100_813_615, total.total)
+        self.assertEqual(32_313_656, total.derived)
+        self.assertEqual(68_499_959, total.carried)
+        # The six regions no byte is ever derived from, with their measured
+        # weight. `post-body sibling` holds the nested CMSH streams, which are
+        # round-tripped as streams in their own right elsewhere in this count;
+        # `PBKT` at 15 MB is the largest block nothing in the tree interprets.
+        self.assertEqual(
+            {
+                preview.REGION_SIBLING: 23_446_373,
+                preview.REGION_CORI: 20_585_088,
+                preview.REGION_PBKT: 15_003_828,
+                preview.REGION_CPOS: 6_907_456,
+                preview.REGION_CMST: 63_324,
+                preview.REGION_TEXB_METADATA: 35_180,
+            },
+            {region: total.regions[region][1] for region in preview.WHOLLY_CARRIED_REGIONS},
+        )
+        for region in preview.WHOLLY_CARRIED_REGIONS:
+            self.assertEqual(0, total.regions[region][0], region)
+        # The geometry, the transform tracks and every count and length are
+        # rebuilt outright, with no retained payload to fall back on.
+        for region in (
+            preview.REGION_VBUF,
+            preview.REGION_IBUF,
+            preview.REGION_MMPT,
+            preview.REGION_TEXR,
+            preview.REGION_HORI,
+            preview.REGION_HPOS,
+            preview.REGION_VHFM,
+            preview.REGION_BBOX,
+            preview.REGION_LINKS,
+            preview.REGION_FRAMING,
+            preview.REGION_TEXB_NAME,
+        ):
+            self.assertEqual(0, total.regions[region][1], region)
+
+    def test_the_corpus_round_trip_is_able_to_fail(self) -> None:
+        """One perturbed byte must go red, or the count above proves nothing."""
+        _, where, data = self.streams["loose"][0]
+        emitted, _ = preview.emit_cmsh_stream(preview.parse_cmsh_stream(data))
+        self.assertEqual(data, emitted, where)
+        for offset in (0, len(data) // 2, len(data) - 1):
+            perturbed = bytearray(emitted)
+            perturbed[offset] ^= 0x01
+            self.assertNotEqual(data, bytes(perturbed))
 
     def test_no_part_or_sibling_order_in_either_corpus_is_rejected(self) -> None:
         """Order acceptance, isolated from every other profile check.

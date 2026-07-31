@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 import math
 import os
@@ -100,6 +100,19 @@ class _Reader:
 class _Transform:
     rows: tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]
     position: tuple[float, float, float]
+    # A released 48-byte orientation is three rows of three floats, each row
+    # followed by a fourth word that is not part of the basis; a released
+    # 16-byte position is three floats followed by a fourth word. Those words
+    # are STALE AUTHOR DATA, not padding: measured over all 367 shipped CMSH
+    # streams, 5,986 of 5,986 parts carry a non-zero one in the `CMSP+0x30`
+    # orientation and 174,873 `HORI` rows carry one in row 2. The same hazard as
+    # `CMCL`'s unused layer-id slots - a zero-tail assumption fails on shipped
+    # data - so they are retained raw and never assumed.
+    #
+    # They are zero on a transform that was selected for presentation rather
+    # than read from a record (`_Part.transform`), which is why they default.
+    orientation_pad_words: tuple[int, int, int] = (0, 0, 0)
+    position_pad_word: int = 0
 
 
 @dataclass(frozen=True)
@@ -108,6 +121,23 @@ class _BoundingBox:
     half_extents: tuple[float, float, float]
     valid: int
     radius: float
+    # The two dwords at inner-`BBOX` word 3 and word 7, non-zero on 2,323 of
+    # 5,986 shipped parts. Same rule as `_Transform.orientation_pad_words`.
+    pad_words: tuple[int, int] = (0, 0)
+
+
+@dataclass(frozen=True)
+class MeshSibling:
+    """One post-body sibling chunk, kept whole because nothing parses inside it.
+
+    `parse_cmsh_stream` validates only the sibling *order*; the payload is
+    opaque to it. A `PMS2`/`PMSH` payload holds a further complete CMSH stream,
+    which the corpus census decodes as a stream in its own right - but at this
+    level the bytes are carried, not interpreted.
+    """
+
+    tag: bytes
+    raw_payload: bytes
 
 
 @dataclass(frozen=True)
@@ -171,6 +201,51 @@ class _Part:
     # The released `BONE` array: one part index per bone, in slot order. Empty
     # for every part that declares `numBones == 0`.
     bones: tuple[int, ...] = ()
+    # --- fields below exist so `emit_cmsh_stream` can rebuild the exact bytes ---
+    # The `MESP` child tags in released order. `_PART_ORDERS` already validates
+    # this tuple; retaining it is what lets the record sequence be replayed.
+    record_tags: tuple[str, ...] = ()
+    # `NMIC`'s single part index. Read and bounds-checked by `_parse_part` in
+    # both shipped occurrences, but not otherwise used.
+    nmic: int | None = None
+    # `CMSP+0xB4` (`aFrames`), bounds-checked but not otherwise used.
+    anim_frames: int = 0
+    # The two `CMSP` orientation blocks (`+0x00`, `+0x30`) and the two position
+    # blocks (`+0x60`, `+0x70`), in released layout order. They are paired into
+    # `_Transform` only to reuse that container: the emitter writes each block
+    # at its own offset and no relationship between an orientation and a
+    # position block is claimed here.
+    cmsp_transforms: tuple[_Transform, _Transform] = ()
+    # `HFOV`, one word per hierarchy pose. `hfov` holds them as float32 when
+    # they re-pack to the stored bytes exactly, and is `None` when they do not
+    # (in which case only `raw_hfov` describes the record).
+    hfov: tuple[float, ...] | None = None
+    raw_hfov: bytes | None = None
+    # NOT INTERPRETED, and the largest such block in the format: 15,003,828
+    # bytes over 1,971 shipped records in 934 distinct lengths (484 to 853,342),
+    # of which `_parse_part` reads nothing but the length bound. Writing the
+    # re-emitter surfaced the first structural handholds, measured over all
+    # 1,971 records and recorded here rather than acted on: the payload opens
+    # with the ASCII tag `CPBT`, then a constant `0x000000B8`, then a run of
+    # slots that read as stale heap pointers, and every record carries a second
+    # ASCII tag `SIZS` at exactly `+192`. 528 of the 1,971 have a length that is
+    # not a multiple of four, so it is not a flat dword array. Carried whole.
+    raw_pbkt: bytes | None = None
+    # NOT INTERPRETED beyond 13 bytes. `_parse_pm_vb` reads the group count at
+    # `+264` and the stride/FVF/topology triple at `+276`. The other 283 bytes
+    # of the 296-byte `CMVB` payload are read by nothing, and 5,986/5,986
+    # shipped parts carry non-zero data in them: `+0x00` is a constant
+    # `0x006214F4`, `+0x04` and `+0x10C` are both `0x0000DEAD`, and `+0x08..0x38`
+    # holds up to twelve slots that read as stale heap pointers (`0x0A4D1098`,
+    # `0x1119F6B8`, ...) rather than as coordinates. Carried whole.
+    raw_cmvb: bytes = b""
+    # NOT INTERPRETED beyond 200 bytes. The four transform blocks, the identity
+    # and count words and the name buffer are modelled; `+0x80..0x88`,
+    # `+0x94..0xA8`, `+0xC4..0xDC` and `+0xFC..0x13C` (116 bytes) are read by
+    # nothing. Every shipped part carries non-zero data there: the first, third
+    # and fourth blocks on 5,986/5,986 parts and `+0x94..0xA8` on 5,864 of them.
+    # Carried whole.
+    raw_cmsp: bytes = b""
 
 
 @dataclass(frozen=True)
@@ -180,6 +255,26 @@ class ParsedMesh:
     # How many released vertices stored a non-finite texture coordinate. This is
     # a property of the shipped asset, not of the decode; see `_parse_pm_vb`.
     non_finite_uv_count: int = 0
+    # The parts exactly as the file states them, before `_resolve_references`
+    # copies a `REFR` target's geometry onto the referring part. `parts` is the
+    # presentation view; this is the file view, and it is the one that can be
+    # re-emitted.
+    source_parts: tuple[_Part, ...] = ()
+    # NOT INTERPRETED beyond the name buffer and two counts. The 372-byte `CMSH`
+    # payload, of which the texture count (`+0x04`), the part count (`+0x15C`)
+    # and the name buffer are read. The other 60 bytes are read by nothing and
+    # 367/367 shipped streams carry non-zero data in them, starting with a
+    # `0x0000DEAD` guard word at `+0x00`.
+    raw_header: bytes = b""
+    siblings: tuple[MeshSibling, ...] = ()
+    # The mesh's own name, stated by the header at `+0x24`. It equals the source
+    # file's stem on 213/213 loose shipped meshes; the streams reached through a
+    # `PMS2`/`PMSH` sibling mostly leave it empty (153 of 367).
+    name: str = ""
+
+    def file_parts(self) -> tuple[_Part, ...]:
+        """The parts as the file states them, before `REFR` geometry expansion."""
+        return self.source_parts or self.parts
 
 
 _PART_ORDERS = {
@@ -341,11 +436,31 @@ def _rows(
     )
 
 
+def _orientation_pad_words(data: bytes | memoryview, offset: int) -> tuple[int, int, int]:
+    """The fourth word of each orientation row - stale author data, kept raw."""
+    return struct.unpack_from("<I", data, offset + 12)[0], struct.unpack_from("<I", data, offset + 28)[0], struct.unpack_from("<I", data, offset + 44)[0]
+
+
 def _position(data: bytes | memoryview, offset: int, role: str, origin: int) -> tuple[float, float, float]:
     values = struct.unpack_from("<4f", data, offset)
     if not all(math.isfinite(value) for value in values[:3]):
         raise CmshProfileError("non-finite numeric value", origin + offset, role)
     return values[:3]
+
+
+def _position_pad_word(data: bytes | memoryview, offset: int) -> int:
+    """The fourth word of a position record - stale author data, kept raw."""
+    return struct.unpack_from("<I", data, offset + 12)[0]
+
+
+def _record_transform(data: bytes | memoryview, orientation_offset: int, position_offset: int, role: str, origin: int) -> _Transform:
+    """One orientation record plus one position record, pad words retained."""
+    return _Transform(
+        _rows(_orientation(data, orientation_offset, role, origin)),
+        _position(data, position_offset, role, origin),
+        _orientation_pad_words(data, orientation_offset),
+        _position_pad_word(data, position_offset),
+    )
 
 
 @dataclass
@@ -443,13 +558,14 @@ def _parse_rigid_vertex(data: memoryview, offset: int, origin: int) -> tuple[Mes
 
 def _parse_pm_vb(
     payload: memoryview, origin: int, budget: _Budget, bone_count: int = 0
-) -> tuple[tuple[MeshVertex, ...], tuple[MeshGroup, ...], int]:
+) -> tuple[tuple[MeshVertex, ...], tuple[MeshGroup, ...], int, bytes]:
     reader = _Reader(payload, origin=origin, limit_role="PMVB")
     cmvb = reader.expected(b"CMVB", "CMVB", length=296)
+    raw_cmvb = bytes(cmvb.payload)
     group_count = cmvb.payload[264]
     if group_count == 0:
         reader.require_end()
-        return (), (), 0
+        return (), (), 0, raw_cmvb
     if not 1 <= group_count <= 12:
         raise CmshProfileError("limit exceeded", cmvb.offset, "MMPT group count")
     stride, fvf, topology = struct.unpack_from("<III", cmvb.payload, 276)
@@ -520,10 +636,10 @@ def _parse_pm_vb(
         raw_texr_u32 = struct.unpack("<6I", texr.payload)
         groups.append(MeshGroup(tuple(indices), raw_texr_u32))
     reader.require_end()
-    return owned, tuple(groups), non_finite_uv
+    return owned, tuple(groups), non_finite_uv, raw_cmvb
 
 
-def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
+def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> bytes:
     reader = _Reader(payload, origin=origin, limit_role="REFR source PMVB")
     cmvb = reader.expected(b"CMVB", "CMVB", length=296)
     if cmvb.payload[264] != 0:
@@ -532,6 +648,7 @@ def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
     # otherwise-unused stride/FVF/topology words populated with non-semantic
     # data, so framing and the zero group count are the complete contract here.
     reader.require_end()
+    return bytes(cmvb.payload)
 
 
 def _parse_part(
@@ -548,6 +665,10 @@ def _parse_part(
     _orientation(payload, 0x00, "current orientation", cmsp.offset + 8)
     _position(payload, 0x60, "offset position", cmsp.offset + 8)
     position = _position(payload, 0x70, "base position", cmsp.offset + 8)
+    cmsp_transforms = (
+        _record_transform(payload, 0x00, 0x60, "current orientation/offset position", cmsp.offset + 8),
+        _record_transform(payload, 0x30, 0x70, "base orientation/base position", cmsp.offset + 8),
+    )
     number, part_type, child_count = struct.unpack_from("<III", payload, 0x88)
     dvert, pvert, tris, aframes, vframes, hframes, bones = struct.unpack_from("<7I", payload, 0xA8)
     if number != part_index or not 1 <= part_type <= 6 or dvert or pvert or tris:
@@ -572,13 +693,20 @@ def _parse_part(
     non_finite_uv = 0
     children: tuple[int, ...] = ()
     parent: int | None = None
+    nmic: int | None = None
     reference: int | None = None
+    hfov: tuple[float, ...] | None = None
+    raw_hfov: bytes | None = None
+    raw_pbkt: bytes | None = None
+    raw_cmvb = b""
     bounding_box: _BoundingBox | None = None
     hierarchy_orientation: tuple[float, ...] | None = None
     hierarchy_position: tuple[float, float, float] | None = None
     frame_map: tuple[int, ...] | None = None
     track_orientations: list[tuple[float, ...]] = []
     track_positions: list[tuple[float, float, float]] = []
+    track_orientation_pads: list[tuple[int, int, int]] = []
+    track_position_pads: list[int] = []
     cached_orientation_bytes = b""
     cached_position_bytes = b""
     selected_frame = min(hierarchy_frame, hframes - 1) if hierarchy_frame is not None else None
@@ -614,6 +742,8 @@ def _parse_part(
                 raise CmshProfileError("index out of bounds", record.offset, tag)
             if record.tag == b"PRNT":
                 parent = target
+            else:
+                nmic = target
         elif record.tag == b"REFR":
             if len(record.payload) != 4:
                 raise CmshProfileError("invalid declared length/count", record.offset, "REFR")
@@ -631,7 +761,7 @@ def _parse_part(
             half_extents = values[4:7]
             valid = values[8]
             radius = values[9]
-            bounding_box = _BoundingBox(center, half_extents, valid, radius)
+            bounding_box = _BoundingBox(center, half_extents, valid, radius, (values[3], values[7]))
         elif record.tag == b"VHFM":
             if len(record.payload) != vframes:
                 raise CmshProfileError("invalid declared length/count", record.offset, "VHFM")
@@ -642,6 +772,9 @@ def _parse_part(
             track_orientations = [
                 _orientation(record.payload, frame * 48, "hierarchy orientation", record.offset + 8)
                 for frame in range(hframes)
+            ]
+            track_orientation_pads = [
+                _orientation_pad_words(record.payload, frame * 48) for frame in range(hframes)
             ]
             if selected_frame is not None:
                 hierarchy_orientation = _orientation(
@@ -657,6 +790,9 @@ def _parse_part(
                 _position(record.payload, frame * 16, "hierarchy position", record.offset + 8)
                 for frame in range(hframes)
             ]
+            track_position_pads = [
+                _position_pad_word(record.payload, frame * 16) for frame in range(hframes)
+            ]
             if selected_frame is not None:
                 hierarchy_position = _position(
                     record.payload,
@@ -667,9 +803,18 @@ def _parse_part(
         elif record.tag == b"HFOV":
             if len(record.payload) != hframes * 4:
                 raise CmshProfileError("invalid declared length/count", record.offset, "HFOV")
+            # One word per hierarchy pose. All 17 shipped words are finite
+            # float32 that re-pack exactly, so they are modelled as floats - but
+            # only when the re-pack proves it, so a NaN payload would be kept
+            # raw rather than normalised away.
+            raw_hfov = bytes(record.payload)
+            candidate = struct.unpack(f"<{hframes}f", record.payload)
+            hfov = candidate if struct.pack(f"<{hframes}f", *candidate) == raw_hfov else None
         elif record.tag in {b"PBKT", b"CPOS", b"CORI"}:
             if len(record.payload) > MAX_OPAQUE:
                 raise CmshProfileError("limit exceeded", record.offset, tag)
+            if record.tag == b"PBKT":
+                raw_pbkt = bytes(record.payload)
             # CPOS/CORI are the derived model-space composition cache, one
             # record per *virtual* frame (not per hierarchy frame). Released
             # meshes collapse them to a single record when the part and its
@@ -680,12 +825,12 @@ def _parse_part(
                 cached_orientation_bytes = bytes(record.payload)
         elif record.tag == b"PMVB":
             if reference is None:
-                vertices, groups, non_finite_uv = _parse_pm_vb(
+                vertices, groups, non_finite_uv, raw_cmvb = _parse_pm_vb(
                     record.payload, record.offset + 8, budget, bones
                 )
             else:
                 try:
-                    _validate_reference_source_pm_vb(record.payload, record.offset + 8)
+                    raw_cmvb = _validate_reference_source_pm_vb(record.payload, record.offset + 8)
                 except CmshProfileError as error:
                     raise CmshProfileError("unsupported bones/reference graph", record.offset, "REFR source PMVB") from error
         else:
@@ -710,7 +855,12 @@ def _parse_part(
     track = _RigidTrack(
         frame_map,
         tuple(
-            _Transform(_rows(track_orientations[frame]), track_positions[frame])
+            _Transform(
+                _rows(track_orientations[frame]),
+                track_positions[frame],
+                track_orientation_pads[frame],
+                track_position_pads[frame],
+            )
             for frame in range(hframes)
         ),
         cached_orientation_bytes,
@@ -718,17 +868,26 @@ def _parse_part(
     )
     return (
         _Part(
-            part_name,
-            part_type,
-            _Transform(rows, selected_position),
-            bounding_box,
-            vertices,
-            groups,
-            children,
-            parent,
-            reference,
-            track,
-            bone_parts,
+            name=part_name,
+            part_type=part_type,
+            transform=_Transform(rows, selected_position),
+            bounding_box=bounding_box,
+            vertices=vertices,
+            groups=groups,
+            children=children,
+            parent=parent,
+            reference=reference,
+            track=track,
+            bones=bone_parts,
+            record_tags=tuple(tags),
+            nmic=nmic,
+            anim_frames=aframes,
+            cmsp_transforms=cmsp_transforms,
+            hfov=hfov,
+            raw_hfov=raw_hfov,
+            raw_pbkt=raw_pbkt,
+            raw_cmvb=raw_cmvb,
+            raw_cmsp=bytes(payload),
         ),
         non_finite_uv,
     )
@@ -790,19 +949,14 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
             # (parts 2 and 3 -> part 1); the other 386 target real geometry.
             resolved.append(part)
             continue
+        # Only the geometry view changes. Every re-emission field stays the
+        # referring part's own, so `ParsedMesh.source_parts` remains the file.
         resolved.append(
-            _Part(
-                part.name,
-                part.part_type,
-                part.transform,
-                target.bounding_box,
-                target.vertices,
-                target.groups,
-                part.children,
-                part.parent,
-                part.reference,
-                part.track,
-                part.bones,
+            replace(
+                part,
+                bounding_box=target.bounding_box,
+                vertices=target.vertices,
+                groups=target.groups,
             )
         )
 
@@ -816,6 +970,15 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
             surviving = sum(len({indices[k], indices[k + 1], indices[k + 2]}) == 3 for k in range(len(indices) - 2))
             expanded_triangles = _checked_add(expanded_triangles, surviving, MAX_TRIANGLES, "expanded triangle count")
     return tuple(resolved)
+
+
+# The `CMSH` header's own name buffer. It starts at payload `+0x24` and the
+# zero run after its terminator reaches `+0x154` on 367/367 shipped streams,
+# which is the first populated word after it - so that bound is measured, not
+# assumed. The decoded name equals the source file's stem on 213/213 loose
+# shipped meshes.
+_CMSH_NAME_OFFSET = 0x24
+_CMSH_NAME_LIMIT = 0x154
 
 
 def parse_cmsh_stream(data: bytes, *, hierarchy_frame: int | None = None) -> ParsedMesh:
@@ -859,17 +1022,449 @@ def parse_cmsh_stream(data: bytes, *, hierarchy_frame: int | None = None) -> Par
         for index, chunk in enumerate(part_chunks)
     ]
     non_finite_uv = sum(count for _, count in decoded)
-    parts = _resolve_references(tuple(part for part, _ in decoded))
+    source_parts = tuple(part for part, _ in decoded)
+    parts = _resolve_references(source_parts)
     reader.absolute_limit = None
-    siblings: list[bytes] = []
+    siblings: list[MeshSibling] = []
     while reader.pos < len(reader.data):
         sibling = reader.chunk("post-body sibling")
         if len(sibling.payload) > MAX_OPAQUE:
             raise CmshProfileError("limit exceeded", sibling.offset, "post-body sibling")
-        siblings.append(sibling.tag)
-    if siblings and tuple(siblings) not in _SIBLING_ORDERS:
+        siblings.append(MeshSibling(sibling.tag, bytes(sibling.payload)))
+    if siblings and tuple(sibling.tag for sibling in siblings) not in _SIBLING_ORDERS:
         raise CmshProfileError("unexpected tag/order", reader.origin, "post-body sibling order")
-    return ParsedMesh(parts, tuple(textures), non_finite_uv)
+    raw_header = bytes(data[8:380])
+    return ParsedMesh(
+        parts=parts,
+        textures=tuple(textures),
+        non_finite_uv_count=non_finite_uv,
+        source_parts=source_parts,
+        raw_header=raw_header,
+        siblings=tuple(siblings),
+        name=raw_header[_CMSH_NAME_OFFSET:_CMSH_NAME_LIMIT]
+        .split(b"\0", 1)[0]
+        .decode("utf-8", errors="replace"),
+    )
+
+
+# --------------------------------------------------------------------------
+# Re-emission: the exact inverse of `parse_cmsh_stream`.
+#
+# `emit_cmsh_stream` rebuilds the original chunk stream byte for byte. It is
+# the only thing that can raise the mesh corpus above STRUCTURE PARSED, and it
+# is deliberately built so that a byte-identical result cannot be mistaken for
+# a fully interpreted one:
+#
+#   DERIVED bytes are rebuilt from typed model state - counts and lengths from
+#   the parsed collections, coordinates from the parsed floats, indices from the
+#   parsed index arrays - and then PROVED equal to the source bytes. A
+#   disagreement raises `round-trip mismatch`; it is never reconciled, rounded
+#   or tolerated, because a disagreement is a defect in the model.
+#
+#   CARRIED bytes are copied because nothing in the parsed model describes them.
+#   Re-emitting them proves nothing about their meaning. They are counted in
+#   their own column by `ByteAccounting` and are never folded into the derived
+#   total, so the honest evidence level stays visible in the result rather than
+#   being laundered into "round-trip verified".
+# --------------------------------------------------------------------------
+
+_CMSH_PAYLOAD_BYTES = 372
+_CMSH_TEXTURE_COUNT_OFFSET = 0x04
+_CMSH_PART_COUNT_OFFSET = 0x15C
+_CMSP_BYTES = 316
+_CMSP_CURRENT_ORIENTATION = 0x00
+_CMSP_BASE_ORIENTATION = 0x30
+_CMSP_OFFSET_POSITION = 0x60
+_CMSP_BASE_POSITION = 0x70
+_CMSP_IDENTITY = 0x88
+_CMSP_COUNTS = 0xA8
+_CMSP_NAME = 0xDC
+_CMSP_NAME_BYTES = 32
+_CMVB_BYTES = 296
+_CMVB_GROUP_COUNT = 264
+_CMVB_STRIDE = 276
+_PM_TOPOLOGY = 4
+
+REGION_FRAMING = "chunk framing"
+REGION_HEADER = "CMSH header"
+REGION_CMST = "CMST"
+REGION_TEXB_METADATA = "TEXB metadata"
+REGION_TEXB_NAME = "TEXB name"
+REGION_CMSP = "CMSP"
+REGION_LINKS = "CHLD/PRNT/NMIC/REFR/BONE"
+REGION_BBOX = "BBOX"
+REGION_VHFM = "VHFM"
+REGION_HORI = "HORI"
+REGION_HPOS = "HPOS"
+REGION_HFOV = "HFOV"
+REGION_PBKT = "PBKT"
+REGION_CPOS = "CPOS"
+REGION_CORI = "CORI"
+REGION_CMVB = "CMVB"
+REGION_MMPT = "MMPT"
+REGION_IBUF = "IBUF"
+REGION_VBUF = "VBUF"
+REGION_TEXR = "TEXR"
+REGION_SIBLING = "post-body sibling"
+
+# The regions from which no byte is ever derived, and why. Pinned by the tests
+# so that this disclosure cannot shrink without a deliberate edit.
+WHOLLY_CARRIED_REGIONS: dict[str, str] = {
+    REGION_CMST: "the 36-byte per-texture CMST entry is retained, never read",
+    REGION_TEXB_METADATA: "the 20 bytes before the TEXB name buffer are never read",
+    REGION_PBKT: "PBKT is opaque to the parser; only its length is bounded",
+    # Recomposing these bit-exactly was tried and refuted. On a parentless part
+    # the model-space pose is the local pose, so the cache should be a copy of
+    # the `VHFM`-selected `HORI`/`HPOS` record - and it is not. Measured over
+    # the 750 cached records that the 367 parentless shipped parts carry:
+    # `CORI` agrees on all nine basis floats 750/750 times but its
+    # fourth-word-per-row differs 750/750, and `CPOS` disagrees with the
+    # selected `HPOS` position on 151 of 750 even before the pad word.
+    REGION_CPOS: "the derived model-space position cache, checked to 1e-4 but not bit-exactly recomposed",
+    REGION_CORI: "the derived model-space orientation cache, checked to 1e-5 but not bit-exactly recomposed",
+    REGION_SIBLING: "post-body sibling payloads are never entered; a PMS2/PMSH body is round-tripped as its own stream",
+}
+
+
+@dataclass
+class ByteAccounting:
+    """How an emitted stream splits into proved-derived and copied-through bytes."""
+
+    regions: dict[str, list[int]] = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if self.regions is None:
+            self.regions = {}
+
+    def _slot(self, region: str) -> list[int]:
+        return self.regions.setdefault(region, [0, 0])
+
+    def derive(self, region: str, count: int) -> None:
+        self._slot(region)[0] += count
+
+    def carry(self, region: str, count: int) -> None:
+        self._slot(region)[1] += count
+
+    def merge(self, other: "ByteAccounting") -> None:
+        for region, (derived, carried) in other.regions.items():
+            slot = self._slot(region)
+            slot[0] += derived
+            slot[1] += carried
+
+    @property
+    def derived(self) -> int:
+        return sum(slot[0] for slot in self.regions.values())
+
+    @property
+    def carried(self) -> int:
+        return sum(slot[1] for slot in self.regions.values())
+
+    @property
+    def total(self) -> int:
+        return self.derived + self.carried
+
+
+def _emit_chunk(tag: bytes, payload: bytes, account: ByteAccounting) -> bytes:
+    """A tag plus the length the payload actually has - never a stored length."""
+    account.derive(REGION_FRAMING, 8)
+    return tag + struct.pack("<I", len(payload)) + payload
+
+
+def _overlay(
+    raw: bytes,
+    spans: list[tuple[int, bytes]],
+    role: str,
+    account: ByteAccounting,
+    region: str,
+) -> bytes:
+    """Write every derived span into a copy of `raw`, proving each one first."""
+    buffer = bytearray(raw)
+    derived = 0
+    for offset, value in spans:
+        if bytes(buffer[offset : offset + len(value)]) != value:
+            raise CmshProfileError("round-trip mismatch", offset, role)
+        buffer[offset : offset + len(value)] = value
+        derived += len(value)
+    account.derive(region, derived)
+    account.carry(region, len(raw) - derived)
+    return bytes(buffer)
+
+
+def _name_field_spans(raw: bytes, offset: int, width: int, text: str) -> list[tuple[int, bytes]]:
+    """The derived span for a fixed-width, NUL-terminated, zero-padded name buffer.
+
+    Claims the whole buffer only where the bytes prove it is exactly the name, a
+    terminator and zeros; falls back to the terminated name alone when the tail
+    carries stale author data, and to nothing when even that disagrees (a part
+    whose stored name is empty gets a synthetic display name, so its buffer
+    cannot be rebuilt from the model). Nothing is assumed: "the name buffer is
+    zero-padded" is precisely the assertion that fails on 66/66 levels for
+    `CTEX`, so here it is tested per record and never generalised.
+    """
+    stored = raw[offset : offset + width]
+    encoded = text.encode("utf-8") + b"\0"
+    if len(encoded) > width:
+        return []
+    padded = encoded + bytes(width - len(encoded))
+    if stored == padded:
+        return [(offset, padded)]
+    if stored.startswith(encoded):
+        return [(offset, encoded)]
+    return []
+
+
+def _orientation_bytes(transform: _Transform) -> bytes:
+    pads = transform.orientation_pad_words
+    return b"".join(struct.pack("<3fI", *transform.rows[row], pads[row]) for row in range(3))
+
+
+def _position_bytes(transform: _Transform) -> bytes:
+    return struct.pack("<3fI", *transform.position, transform.position_pad_word)
+
+
+def _emit_vertex(vertex: MeshVertex, skinned: bool) -> bytes:
+    if vertex.normal is None:
+        raise CmshProfileError("round-trip mismatch", 0, "vertex normal")
+    if vertex.uv is None:
+        # The five non-finite texture coordinates in `m_M_Prison` are an
+        # artefact of the shipped asset that retail loads. They go back out as
+        # the exact dwords the file stored; no substitute is ever invented.
+        if vertex.raw_uv_u32 is None:
+            raise CmshProfileError("round-trip mismatch", 0, "vertex UV")
+        texture_coordinate = struct.pack("<2I", *vertex.raw_uv_u32)
+    else:
+        texture_coordinate = struct.pack("<2f", *vertex.uv)
+    if not skinned:
+        return (
+            struct.pack("<3f", *vertex.position)
+            + struct.pack("<3f", *vertex.normal)
+            + struct.pack("<I", vertex.raw_color_u32)
+            + texture_coordinate
+        )
+    if vertex.bone_slots is None:
+        raise CmshProfileError("round-trip mismatch", 0, "vertex bone slots")
+    # `_parse_skinned_vertex` divided each stored word by the palette stride to
+    # expose a BONE array index, so the encoder multiplies it back.
+    return (
+        struct.pack("<3f", *vertex.position)
+        + struct.pack("<3f", *(slot * _BONE_SLOT_STRIDE for slot in vertex.bone_slots))
+        + struct.pack("<3f", *vertex.normal)
+        + struct.pack("<I", vertex.raw_color_u32)
+        + texture_coordinate
+    )
+
+
+def _emit_pm_vb(part: _Part, account: ByteAccounting) -> bytes:
+    if len(part.raw_cmvb) != _CMVB_BYTES:
+        raise CmshProfileError("round-trip mismatch", 0, "CMVB payload retained")
+    skinned = bool(part.bones)
+    spans: list[tuple[int, bytes]] = [(_CMVB_GROUP_COUNT, bytes((len(part.groups),)))]
+    if part.groups:
+        # A zero-group CMVB leaves these three words populated with data the
+        # parser deliberately never reads, so they are only derived when the
+        # parser actually read them.
+        spans.append(
+            (
+                _CMVB_STRIDE,
+                struct.pack(
+                    "<III",
+                    _SKINNED_VERTEX_STRIDE if skinned else _RIGID_VERTEX_STRIDE,
+                    0 if skinned else _RIGID_VERTEX_FVF,
+                    _PM_TOPOLOGY,
+                ),
+            )
+        )
+    body = _emit_chunk(b"CMVB", _overlay(part.raw_cmvb, spans, "CMVB", account, REGION_CMVB), account)
+    if not part.groups:
+        return body
+    vertex_payload = b"".join(_emit_vertex(vertex, skinned) for vertex in part.vertices)
+    account.derive(REGION_VBUF, len(vertex_payload))
+    for ordinal, group in enumerate(part.groups):
+        index_count = len(group.indices)
+        account.derive(REGION_MMPT, 24)
+        body += _emit_chunk(
+            b"MMPT",
+            struct.pack(
+                "<6I",
+                len(vertex_payload),
+                index_count * 2,
+                index_count,
+                len(part.vertices),
+                index_count - 2,
+                1,
+            ),
+            account,
+        )
+        index_payload = struct.pack(f"<{index_count}H", *group.indices)
+        account.derive(REGION_IBUF, len(index_payload))
+        body += _emit_chunk(b"IBUF", index_payload, account)
+        # Only the first group owns the vertex stream; the rest declare the same
+        # buffer and ship an empty VBUF.
+        body += _emit_chunk(b"VBUF", vertex_payload if ordinal == 0 else b"", account)
+        account.derive(REGION_TEXR, 24)
+        body += _emit_chunk(b"TEXR", struct.pack("<6I", *group.raw_texr_u32), account)
+    return body
+
+
+def _emit_cmsp(part: _Part, part_index: int, account: ByteAccounting) -> bytes:
+    if len(part.raw_cmsp) != _CMSP_BYTES or len(part.cmsp_transforms) != 2 or part.track is None:
+        raise CmshProfileError("round-trip mismatch", 0, "CMSP payload retained")
+    current, base = part.cmsp_transforms
+    spans: list[tuple[int, bytes]] = [
+        (_CMSP_CURRENT_ORIENTATION, _orientation_bytes(current)),
+        (_CMSP_BASE_ORIENTATION, _orientation_bytes(base)),
+        (_CMSP_OFFSET_POSITION, _position_bytes(current)),
+        (_CMSP_BASE_POSITION, _position_bytes(base)),
+        (_CMSP_IDENTITY, struct.pack("<III", part_index, part.part_type, len(part.children))),
+        (
+            _CMSP_COUNTS,
+            struct.pack(
+                "<7I",
+                0,
+                0,
+                0,
+                part.anim_frames,
+                len(part.track.frame_map),
+                len(part.track.hierarchy),
+                len(part.bones),
+            ),
+        ),
+    ]
+    spans.extend(_name_field_spans(part.raw_cmsp, _CMSP_NAME, _CMSP_NAME_BYTES, part.name))
+    return _overlay(part.raw_cmsp, spans, "CMSP", account, REGION_CMSP)
+
+
+def _emit_mesp_record(part: _Part, tag: str, account: ByteAccounting) -> bytes:
+    track = part.track
+    if track is None:
+        raise CmshProfileError("round-trip mismatch", 0, "missing rigid transform track")
+    if tag == "PMVB":
+        return _emit_pm_vb(part, account)
+    if tag == "BBOX":
+        box = part.bounding_box
+        inner = struct.pack(
+            "<3fI3fIIf",
+            *box.center,
+            box.pad_words[0],
+            *box.half_extents,
+            box.pad_words[1],
+            box.valid,
+            box.radius,
+        )
+        account.derive(REGION_BBOX, len(inner))
+        return _emit_chunk(b"BBOX", inner, account)
+    if tag in {"CHLD", "PRNT", "NMIC", "REFR", "BONE"}:
+        values = {
+            "CHLD": part.children,
+            "PRNT": () if part.parent is None else (part.parent,),
+            "NMIC": () if part.nmic is None else (part.nmic,),
+            "REFR": () if part.reference is None else (part.reference,),
+            "BONE": part.bones,
+        }[tag]
+        payload = struct.pack(f"<{len(values)}I", *values)
+        account.derive(REGION_LINKS, len(payload))
+        return payload
+    if tag == "VHFM":
+        payload = bytes(track.frame_map)
+        account.derive(REGION_VHFM, len(payload))
+        return payload
+    if tag == "HORI":
+        payload = b"".join(_orientation_bytes(pose) for pose in track.hierarchy)
+        account.derive(REGION_HORI, len(payload))
+        return payload
+    if tag == "HPOS":
+        payload = b"".join(_position_bytes(pose) for pose in track.hierarchy)
+        account.derive(REGION_HPOS, len(payload))
+        return payload
+    if tag == "HFOV":
+        if part.raw_hfov is None:
+            raise CmshProfileError("round-trip mismatch", 0, "HFOV payload retained")
+        if part.hfov is None:
+            account.carry(REGION_HFOV, len(part.raw_hfov))
+            return part.raw_hfov
+        payload = struct.pack(f"<{len(part.hfov)}f", *part.hfov)
+        account.derive(REGION_HFOV, len(payload))
+        return payload
+    if tag == "PBKT":
+        if part.raw_pbkt is None:
+            raise CmshProfileError("round-trip mismatch", 0, "PBKT payload retained")
+        account.carry(REGION_PBKT, len(part.raw_pbkt))
+        return part.raw_pbkt
+    if tag == "CPOS":
+        account.carry(REGION_CPOS, len(track.cached_position_bytes))
+        return track.cached_position_bytes
+    if tag == "CORI":
+        account.carry(REGION_CORI, len(track.cached_orientation_bytes))
+        return track.cached_orientation_bytes
+    raise CmshProfileError("unexpected tag/order", 0, f"re-emit {tag}")
+
+
+def _emit_part(part: _Part, part_index: int, account: ByteAccounting) -> bytes:
+    body = _emit_chunk(b"CMSP", _emit_cmsp(part, part_index, account), account)
+    for tag in part.record_tags:
+        body += _emit_chunk(tag.encode("ascii"), _emit_mesp_record(part, tag, account), account)
+    return body
+
+
+def emit_cmsh_stream(mesh: ParsedMesh) -> tuple[bytes, ByteAccounting]:
+    """Re-emit the exact bytes `parse_cmsh_stream` was given, plus the accounting.
+
+    Every count and length is rebuilt from the parsed collections rather than
+    replayed, so a stream that comes back byte-identical has proved the model's
+    counts, lengths, coordinates, indices and orders against the released bytes.
+    The returned `ByteAccounting` states, per region, how much of the stream that
+    covers - and how much was copied through because nothing models it.
+    """
+    account = ByteAccounting()
+    parts = mesh.file_parts()
+    if len(mesh.raw_header) != _CMSH_PAYLOAD_BYTES:
+        raise CmshProfileError("round-trip mismatch", 0, "CMSH header retained")
+    header = _overlay(
+        mesh.raw_header,
+        [
+            (_CMSH_TEXTURE_COUNT_OFFSET, struct.pack("<I", len(mesh.textures))),
+            (_CMSH_PART_COUNT_OFFSET, struct.pack("<I", len(parts))),
+        ]
+        + _name_field_spans(
+            mesh.raw_header,
+            _CMSH_NAME_OFFSET,
+            _CMSH_NAME_LIMIT - _CMSH_NAME_OFFSET,
+            mesh.name,
+        ),
+        "CMSH header",
+        account,
+        REGION_HEADER,
+    )
+    stream = bytearray(_emit_chunk(b"CMSH", header, account))
+    entries = b"".join(texture.raw_cmst_entry for texture in mesh.textures)
+    account.carry(REGION_CMST, len(entries))
+    stream += _emit_chunk(b"CMST", entries, account)
+    for texture in mesh.textures:
+        account.carry(REGION_TEXB_METADATA, len(texture.raw_texb_metadata))
+        name_field = _overlay(
+            texture.raw_name_field,
+            _name_field_spans(texture.raw_name_field, 0, len(texture.raw_name_field), texture.name),
+            "TEXB name",
+            account,
+            REGION_TEXB_NAME,
+        )
+        stream += _emit_chunk(
+            b"MSHT",
+            _emit_chunk(b"TEXB", texture.raw_texb_metadata + name_field, account),
+            account,
+        )
+    for part_index, part in enumerate(parts):
+        stream += _emit_chunk(b"MESP", _emit_part(part, part_index, account), account)
+    for sibling in mesh.siblings:
+        account.carry(REGION_SIBLING, len(sibling.raw_payload))
+        stream += _emit_chunk(sibling.tag, sibling.raw_payload, account)
+    return bytes(stream), account
+
+
+def round_trip_cmsh_stream(data: bytes) -> tuple[bool, ByteAccounting]:
+    """Parse then re-emit `data`; report whether the bytes came back identical."""
+    emitted, account = emit_cmsh_stream(parse_cmsh_stream(data))
+    return emitted == data, account
 
 
 def _number(value: float) -> str:
