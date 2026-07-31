@@ -39,6 +39,25 @@ param(
     # whose written extent was inferred from a Lock(off, 0, ...) rather than
     # measured. See README.md, "What the coverage check actually guarantees".
     [switch]$StrictCov,
+    # Vertex-dump gating. The dump is the expensive record -- an in-level frame
+    # is ~1,200 draws and the largest carry ~6,000 vertices -- so these narrow
+    # WHICH draws get one. Every excluded draw is still refused by the name of
+    # the predicate that excluded it, and the settings are restated in the log
+    # header, so a narrow capture can never be misread as an empty frame.
+    [int]$VDrawFirst = 0,
+    [int]$VDrawLast = -1,
+    [int]$VMinVerts = 0,
+    [string]$VFvf = '0',
+    [int]$VBudget = 0,
+    [switch]$VDedup,
+    # The per-draw geometry digest: identity, hash and position bounds of the
+    # bytes each draw reads. Cheap, and it is what answers whether a mesh is
+    # re-written per frame (CPU skinning) or merely re-transformed.
+    [switch]$NoDigest,
+    # Hash level 0 of each bound texture once, to attribute a draw to a named
+    # asset. This is the only setting that reads a Direct3D resource back; it
+    # locks READONLY and only where the texture's own descriptor allows it.
+    [switch]$TexHash,
     [switch]$NoLog,
     [string]$CaptureRoot = 'G:\bea-d3d9-capture'
 )
@@ -104,9 +123,20 @@ try {
         $env:BEA_D3D9_MAXVERTS = "$MaxVerts"
         $env:BEA_D3D9_NOVERTS = if ($NoVerts) { '1' } else { '0' }
         $env:BEA_D3D9_STRICTCOV = if ($StrictCov) { '1' } else { '0' }
+        $env:BEA_D3D9_VDRAWFIRST = "$VDrawFirst"
+        $env:BEA_D3D9_VDRAWLAST = if ($VDrawLast -lt 0) { '4294967295' } else { "$VDrawLast" }
+        $env:BEA_D3D9_VMINVERTS = "$VMinVerts"
+        $env:BEA_D3D9_VFVF = $VFvf
+        $env:BEA_D3D9_VBUDGET = "$VBudget"
+        $env:BEA_D3D9_VDEDUP = if ($VDedup) { '1' } else { '0' }
+        $env:BEA_D3D9_DIGEST = if ($NoDigest) { '0' } else { '1' }
+        $env:BEA_D3D9_TEXHASH = if ($TexHash) { '1' } else { '0' }
         # Never inherited from the caller: a capture must not be a test artefact.
         $env:BEA_D3D9_FAULT_NOCLEARBIND = '0'
         Write-Host "logging to: $Log (frames $FirstFrame..$($FirstFrame + $MaxFrames - 1), maxverts $MaxVerts, strictcov $([int][bool]$StrictCov))"
+        Write-Host ("  vertex gate: draws [{0},{1}] minverts {2} fvf {3} budget {4} dedup {5}; digest {6}; texhash {7}" -f
+            $VDrawFirst, $(if ($VDrawLast -lt 0) { 'end' } else { $VDrawLast }), $VMinVerts, $VFvf, $VBudget,
+            [int][bool]$VDedup, [int](-not $NoDigest), [int][bool]$TexHash)
     }
 
     Write-Host ("launching: {0} {1}" -f $exe, ($GameArgs -join ' '))
@@ -136,7 +166,10 @@ try {
 finally {
     Remove-Item Env:BEA_D3D9_LOG, Env:BEA_D3D9_CAPTURE, Env:BEA_D3D9_MAXFRAMES,
                 Env:BEA_D3D9_FIRSTFRAME, Env:BEA_D3D9_MAXVERTS, Env:BEA_D3D9_NOVERTS,
-                Env:BEA_D3D9_STRICTCOV, Env:BEA_D3D9_FAULT_NOCLEARBIND `
+                Env:BEA_D3D9_STRICTCOV, Env:BEA_D3D9_FAULT_NOCLEARBIND,
+                Env:BEA_D3D9_VDRAWFIRST, Env:BEA_D3D9_VDRAWLAST,
+                Env:BEA_D3D9_VMINVERTS, Env:BEA_D3D9_VFVF, Env:BEA_D3D9_VBUDGET,
+                Env:BEA_D3D9_VDEDUP, Env:BEA_D3D9_DIGEST, Env:BEA_D3D9_TEXHASH `
                 -ErrorAction SilentlyContinue
 
     # The proxy must never be left behind. Retry briefly in case the loader has
@@ -167,6 +200,9 @@ if ($Log -and (Test-Path $Log)) {
     Write-Host ("     {0:N0} bytes, {1:N0} lines" -f $fi.Length, $lines)
     Write-Host ("     frames presented: {0}" -f (Select-String -Path $Log -Pattern '^P ' | Measure-Object).Count)
     Write-Host ("     draws recorded:   {0}" -f (Select-String -Path $Log -Pattern '^D ' | Measure-Object).Count)
+    Write-Host ("     transforms (M):   {0}" -f (Select-String -Path $Log -Pattern '^M ' | Measure-Object).Count)
+    Write-Host ("     digests (G):      {0}" -f (Select-String -Path $Log -Pattern '^G ' | Measure-Object).Count)
+    Write-Host ("     textures (T):     {0}" -f (Select-String -Path $Log -Pattern '^T create ' | Measure-Object).Count)
 
     # What was NOT recorded matters as much as what was. The proxy tallies this
     # itself; surface it here so an incomplete capture is visible at the console

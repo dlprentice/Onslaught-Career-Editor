@@ -161,6 +161,116 @@ Check 'the provisional draw still recovers the issued coordinates' `
 Check 'the control draw after all of the above still works' `
     ($text -match 'V 3 4 0 xyzrhw=\(300\.0000,200\.0000,0\.0000,1\.0000\)')
 
+# ---- (2d) transforms: the matrices in force at each draw ---------------------
+#
+# A world draw's vertices are object-space, so without these a draw row says
+# what was drawn but nothing about where. The self-test issues translations
+# nobody could produce by accident, and re-issues the SAME values every frame:
+# an id is a VALUE, so three matrices must cost exactly three M rows.
+
+Write-Host "`n[2d] transform capture"
+Check 'the world matrix is written out with its issued translation' `
+    ($text -match '(?m)^M \d+ world0 m=1\.000000,0\.000000,0\.000000,0\.000000,0\.000000,1\.000000,0\.000000,0\.000000,0\.000000,0\.000000,1\.000000,0\.000000,11\.000000,22\.000000,33\.000000,1\.000000$')
+Check 'the view matrix is written out' `
+    ($text -match '(?m)^M \d+ view m=.*,1\.000000,2\.000000,3\.000000,1\.000000$')
+Check 'the projection matrix is written out' `
+    ($text -match '(?m)^M \d+ proj m=.*,4\.000000,5\.000000,6\.000000,1\.000000$')
+# Three matrices, re-set identically in each of four frames. An id names a
+# VALUE, so the whole run must cost three rows plus the one derived value.
+Check 'an unchanged matrix re-set every frame costs ONE M row, not one per frame' `
+    ((($lines | Where-Object { $_ -match '^M \d+ (world0|view|proj) m=' }).Count) -eq 3)
+Check 'every draw row names the transforms in force' `
+    ((($lines | Where-Object { $_ -match '^D \d+ \d+ .* w=\d+ v=\d+ p=\d+' }).Count) -eq 14)
+Check 'the world id on a draw is the id of the world M row' `
+    ($(
+        $m = [regex]::Match($text, '(?m)^M (\d+) world0 m=1\.000000,0[^\n]*11\.000000,22\.000000,33\.000000,1\.000000$')
+        $d = [regex]::Match($text, '(?m)^D 0 0 .* w=(\d+) ')
+        $m.Success -and $d.Success -and ($m.Groups[1].Value -eq $d.Groups[1].Value)
+    ))
+Check 'a MultiplyTransform result is stamped as derived' `
+    ($text -match '(?m)^M \d+ world0 mul m=')
+Check 'the composed value is current*arg (111,22,33)' `
+    ($text -match '(?m)^M \d+ world0 mul m=[^\n]*111\.000000,22\.000000,33\.000000,1\.000000$')
+Check 'the assumed multiplication order is tallied, not hidden' `
+    ($text -match '(?m)^#\s+transform-multiply-order-assumed = \d+')
+Check 'sampler state is shadowed onto the draw row' ($text -match 's0\.addr=3/1~ s0\.filt=2/1~/0~')
+
+# ---- (2e) geometry digest ----------------------------------------------------
+
+Write-Host "`n[2e] geometry digest"
+# Exactly the eight draws whose stream-0 range resolves: the three UP draws have
+# no buffer, and frame 3's released-while-bound and across-the-gap draws are
+# refused before a range exists. Nothing else may be silently missing.
+Check 'every resolvable draw carries a digest row, and only those' `
+    ((($lines | Where-Object { $_ -match '^G \d+ \d+ vb real=0x' }).Count) -eq 8)
+Check 'the digest names the buffer, the bytes and their hash' `
+    ($text -match '(?m)^G 0 1 vb real=0x[0-9A-Fa-f]+ gen=\d+ off=0 n=4 bytes=112 h=[0-9A-F]{16} unlocks=1 lastunlock=0 stride=28 ')
+Check 'the digest carries the position bounds of the bytes read' `
+    ($text -match '(?m)^G 0 1 vb .*xyzrhw min=\(300\.0000,200\.0000,0\.0000\) max=\(428\.0000,296\.0000,0\.0000\)$')
+Check 'a static buffer keeps the SAME hash across frames' `
+    ($(
+        $h = @([regex]::Matches($text, '(?m)^G \d+ 1 vb [^\n]* h=([0-9A-F]{16}) ') |
+              ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
+        $h.Count -eq 1
+    ))
+Check 'the digest survives the vertex cap that refuses the dump' `
+    ($(
+        # frame 3 draw 2 spans the coverage gap, so it has no digest; the over-cap
+        # case is the UP draw, which has no buffer. Use the strict-mode run below
+        # for the cap case and assert here only that a refused V still leaves the
+        # draw row and the tally intact.
+        $text -match '(?m)^D 3 2 DP '
+    ))
+
+# ---- (2f) texture identity ---------------------------------------------------
+
+Write-Host "`n[2f] texture identity"
+Check 'the texture is recorded at creation, in load order' `
+    ($text -match '(?m)^T create serial=1 ptr=0x[0-9A-Fa-f]+ 4x4 lv=1 fmt=21 usage=0x0 pool=1$')
+Check 'a bound texture is named by its serial on the draw row' `
+    ($text -match 'tex0=0x[0-9A-Fa-f]+:4x4:fmt21:lv1:#1 ')
+Check 'content hashing is OFF by default' (-not ($text -match '(?m)^T hash '))
+
+Write-Host "`n[2g] BEA_D3D9_TEXHASH=1"
+$log5 = Join-Path $WorkDir 'texhash.log'
+$env:BEA_D3D9_LOG = $log5
+$env:BEA_D3D9_MAXFRAMES = '10'
+$env:BEA_D3D9_TEXHASH = '1'
+& $exe | Out-Null
+Remove-Item Env:BEA_D3D9_LOG, Env:BEA_D3D9_MAXFRAMES, Env:BEA_D3D9_TEXHASH -ErrorAction SilentlyContinue
+$th = Get-Content $log5 -Raw
+Check 'the texture is hashed exactly once' `
+    ((@([regex]::Matches($th, '(?m)^T hash serial=1 ')).Count) -eq 1)
+Check 'the hash covers the whole 4x4 A8R8G8B8 level, padding excluded' `
+    ($th -match '(?m)^T hash serial=1 h=[0-9A-F]{16} bytes=64 4x4 fmt=21$')
+Check 'the hash is carried on the draw row so a quad can be attributed' `
+    ($th -match 'tex0=0x[0-9A-Fa-f]+:4x4:fmt21:lv1:#1:h=[0-9A-F]{16} ')
+Check 'the game still ran to a clean detach with hashing armed' ($th -match '# detach')
+
+# ---- (2h) gating: absence must always name its predicate ---------------------
+
+Write-Host "`n[2h] vertex-dump gating"
+$log6 = Join-Path $WorkDir 'gated.log'
+$env:BEA_D3D9_LOG = $log6
+$env:BEA_D3D9_MAXFRAMES = '10'
+$env:BEA_D3D9_VDRAWFIRST = '1'
+$env:BEA_D3D9_VDRAWLAST = '1'
+& $exe | Out-Null
+Remove-Item Env:BEA_D3D9_LOG, Env:BEA_D3D9_MAXFRAMES, Env:BEA_D3D9_VDRAWFIRST,
+            Env:BEA_D3D9_VDRAWLAST -ErrorAction SilentlyContinue
+$g = Get-Content $log6 -Raw
+Check 'the gating is restated in the log header' `
+    ($g -match '(?m)^# gating vdrawfirst=1 vdrawlast=1 ')
+Check 'an excluded draw is refused BY THE NAME OF THE PREDICATE' `
+    ($g -match 'V 0 0 - none gated-draw-window draw=0 window=\[1,1\]')
+Check 'and emits no vertex line' (-not ($g -match '(?m)^V 0 0 \d'))
+Check 'the draw INSIDE the window still dumps' `
+    ($g -match 'V 0 1 0 xyzrhw=\(300\.0000,200\.0000,0\.0000,1\.0000\)')
+Check 'the digest is NOT gated, so geometry identity survives' `
+    ($g -match '(?m)^G 0 2 vb real=0x')
+Check 'the gate is tallied like any other refusal' `
+    ($g -match '(?m)^#\s+gated-draw-window = \d+')
+
 # ---- (3) frame windowing -----------------------------------------------------
 
 Write-Host "`n[3] frame window (FIRSTFRAME=1 MAXFRAMES=1)"

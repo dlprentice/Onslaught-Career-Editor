@@ -57,6 +57,31 @@ forwards every call and wraps nothing.
 | `BEA_D3D9_NOVERTS` | `0` | Record draws and state but no vertex data. Each draw still gets a `noverts-configured` refusal line. |
 | `BEA_D3D9_STRICTCOV` | `0` | `1` turns a provisional-coverage warning into a refusal, so nothing whose written extent was inferred is ever decoded. |
 | `BEA_D3D9_FAULT_NOCLEARBIND` | `0` | **Fault injection, self-test only.** Stops a dying buffer wrapper retracting itself from the devices holding it, to prove the generation check refuses a dangling binding. Any log produced with it set is stamped `# FAULT-INJECTION`. |
+| `BEA_D3D9_DIGEST` | `1` | One `G` row per draw: identity, hash and position bounds of the bytes it reads. Cheap; leave it on. |
+| `BEA_D3D9_TEXHASH` | `0` | Hash level 0 of each bound texture once, so a draw can be attributed to a named asset. The **only** setting that reads a Direct3D resource back — see below. |
+| `BEA_D3D9_VDRAWFIRST` | `0` | Lowest draw index in a frame eligible for a full `V` dump. |
+| `BEA_D3D9_VDRAWLAST` | `4294967295` | Highest draw index eligible. |
+| `BEA_D3D9_VMINVERTS` | `0` | Skip the `V` dump for draws with fewer vertices than this — isolates meshes from the HUD quads. |
+| `BEA_D3D9_VFVF` | `0` | If non-zero, dump vertices only for draws with exactly this FVF. |
+| `BEA_D3D9_VBUDGET` | `0` | Max `V` lines per frame; `0` is unlimited. |
+| `BEA_D3D9_VDEDUP` | `0` | `1` replaces a repeat of byte-identical vertices with a one-line `ref=<hash>`. Collapses a static mesh drawn hundreds of times; changes the log grammar, so it is opt-in. |
+
+### Gating is not absence
+
+The `V` dump is the expensive record: an in-level frame issues ~1,200 draws and
+the largest carry ~6,000 vertices, so an ungated dump is hundreds of megabytes
+per frame. The five `V*` predicates above narrow which draws get one.
+
+Two things make that safe to read later. Every excluded draw still emits a
+refusal naming **the predicate that excluded it** (`gated-draw-window`,
+`gated-min-verts`, `gated-fvf`, `gated-frame-budget`), tallied like any other.
+And every setting is restated in the log's own header on a `# gating` line. A
+narrow capture therefore cannot be mistaken for a sparse frame by someone who
+never saw the command line.
+
+The `G` digest is **not** gated by any of them, and survives `BEA_D3D9_MAXVERTS`
+as well: a 6,000-vertex mesh whose full dump is refused still gets an identity,
+a hash and a bounding box.
 
 If the log cannot be opened the proxy falls back silently to pure pass-through.
 It never creates a window, dialog, console, thread or socket, and never takes
@@ -73,8 +98,14 @@ D <frame> <draw> <kind> prim=… primc=… verts=… fvf=… s0=(vb=…,off=…,
 V <frame> <draw> <i> xyzrhw=(x,y,z,rhw) diff=0xAARRGGBB t0=(u,v)
 V <frame> <draw> - none <reason> [detail]   nothing recorded, and exactly why
 V <frame> <draw> - warn <reason> [detail]   recorded, but qualified
-I <frame> <draw> idx=…                 index run for an indexed draw
+V <frame> <draw> ref=<hash> n=<n>      identical bytes already dumped above (VDEDUP)
+I <frame> <draw> from=<i> idx=…        index run, in chunks of 512 from element i
 I <frame> <draw> - none <reason> …     same refusal grammar for the index run
+M <id> <slot>[ mul] m=<16 floats>      a transform value, at its first use
+G <frame> <draw> vb|ib real=… gen=… off=… n=… bytes=… h=… unlocks=… lastunlock=…
+          [stride=…|esz=…] [PROVISIONAL] [<pos> min=(…) max=(…)]
+T create serial=<n> ptr=… WxH lv=… fmt=… usage=… pool=…   texture, in load order
+T hash serial=<n> h=… bytes=… WxH fmt=…                   level-0 content hash
 L VB|IB wrap=… off=… size=… mapped=… flags=0x…   Lock
 U VB|IB wrap=… cov=[lo,hi),[lo,hi)?    Unlock, and the resulting range list
 VB|IB create <real> wrap=… gen=… …     buffer created through the proxy
@@ -97,6 +128,75 @@ wrapper it was recorded against. Neither is ever decoded.
 
 For `D3DFVF_XYZRHW` — which is every draw this title issues in the front end —
 the `x` and `y` in a `V` line **are** back-buffer pixel coordinates.
+
+### Transforms: `M` rows and `w=`/`v=`/`p=`
+
+A world draw's vertices are **object-space** (`D3DFVF_XYZ`, no `RHW`), so the
+draw row alone says what was drawn and nothing about where it is or which way it
+faces. Every `D` row therefore carries `w=`, `v=` and `p=`: the ids of the world,
+view and projection matrices in force. `tm0=` and `tmflags=` appear too, but only
+when stage 0 has a texture transform enabled.
+
+An **id names a value, not an event**. It is minted only when the matrix content
+changes, so a game that re-sets the same matrix every frame costs one `M` row for
+the whole capture, and two draws naming the same id genuinely used the same
+matrix. `id=0` is reserved for the identity the device starts with and is never
+written out. `w=?` means a state-block `Apply` made the value unknowable — a
+different claim from `w=0`, and the two must not be conflated.
+
+`MultiplyTransform` is composed in the proxy as `new = current * arg`. That order
+is the one thing here that cannot be measured from the call itself, so the
+resulting row is stamped `mul` and the assumption is tallied as
+`transform-multiply-order-assumed`. Values that rest on it are identifiable;
+nothing folds it in silently.
+
+`mtxuntracked=<n>` on a draw row means the game set a transform outside the
+tracked table — `D3DTS_WORLDMATRIX(4..255)`, which would mean indexed vertex
+blending and would change what the vertex data means. It is counted rather than
+dropped precisely because silence there would be the dangerous outcome.
+
+### `G` rows: is this mesh re-written, or merely re-transformed?
+
+One digest row per draw, holding the FNV-1a-64 hash of the exact bytes the draw
+reads, the buffer's identity, how many times that buffer has been re-written
+(`unlocks=`, counted from process start, not from the capture window) and the
+frame of the most recent rewrite (`lastunlock=`). For a recognised position
+layout it also carries the bounding box of the positions actually read.
+
+That is enough to settle CPU skinning without dumping a vertex:
+
+- `h=` identical frame after frame while the object moves on screen → the motion
+  is in the transforms, and the `M` rows have it.
+- `h=` different every frame with `unlocks=` advancing in step → the vertices
+  themselves are being re-written on the CPU, and only then is a full `V` dump
+  worth its volume. `min=`/`max=` then say where to point the gate.
+
+`PROVISIONAL` on a `G` row carries the same meaning it does on a `V` line: the
+byte range is covered only by an extent inferred from a `Lock(off, 0, …)`.
+
+### `T` rows: naming a texture
+
+Textures are **registered, not wrapped**. The game hands the real pointer back at
+`SetTexture`, so a creation-order registry is enough to name one, and staying out
+of the object's lifetime means the proxy can never be the reason a texture
+survives a `Reset`. Draw rows then carry `#<serial>` beside the pointer.
+
+The registry does not shrink, because without wrapping there is no `Release` to
+observe. If the allocator hands a destroyed texture's address back to a new
+`CreateTexture`, the entry is re-registered under a **new** serial and the line
+is stamped `RECYCLED-PTR prev=<n>` — inheriting the dead texture's name would
+attribute a draw to the wrong asset.
+
+`BEA_D3D9_TEXHASH=1` additionally hashes level 0 once, at the texture's first use
+in a logged draw, so a quad can be matched to a named asset rather than to a
+pointer. This is the only place in the proxy that reads a Direct3D resource back,
+which is why it is off by default. It refuses unless the texture's **own**
+descriptor says the read is legal and side-effect free: `D3DPOOL_MANAGED` or
+`SYSTEMMEM`, no `RENDERTARGET`/`DEPTHSTENCIL`/`DYNAMIC` usage, and a format whose
+row extent is known. The lock is `D3DLOCK_READONLY`, so the managed copy is not
+marked dirty and nothing is re-uploaded. Only content bytes are hashed, row by
+row — the driver-chosen pitch padding is not part of the asset. Every refusal is
+named (`texhash-pool-not-readable`, `texhash-format-unknown`, …) and tallied.
 
 ### How the state values are obtained, and how to read them
 
@@ -207,8 +307,17 @@ tallied by reason in the `# refusals` block at the end of the log.
   silently recording nothing.
 - `QueryInterface` to an interface other than the one wrapped returns the real
   object unwrapped, and logs `qi-unwrapped`.
-- Textures are not wrapped, so texture *contents* are not recorded — only
-  identity, dimensions, format and level count.
+- Textures are not wrapped. Identity, dimensions, format, level count and
+  creation order are recorded; contents only under `BEA_D3D9_TEXHASH=1`, and
+  only as a level-0 hash, only for textures whose descriptor permits the read.
+  Mip levels above 0 are never read.
+- Only `D3DTS_VIEW`, `D3DTS_PROJECTION`, `D3DTS_TEXTURE0..7` and
+  `D3DTS_WORLDMATRIX(0..3)` are shadowed. Anything else is counted as
+  `mtxuntracked=` on the draw row rather than recorded.
+- Streams 1..3 are shadowed and named on the draw row, but only stream 0 is
+  decoded and digested. This title's draws all read stream 0.
+- `Clear` records still carry no viewport, so what scopes a partial clear is
+  still unestablished.
 
 ## Back-buffer grab
 

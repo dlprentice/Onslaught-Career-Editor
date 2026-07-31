@@ -44,6 +44,15 @@ typedef struct {
 
 #define VFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
+/* A translation matrix, so the value that comes back out of the log is one
+ * nobody could produce by accident. */
+static void set_translate(D3DMATRIX *m, float tx, float ty, float tz)
+{
+    memset(m, 0, sizeof(*m));
+    m->_11 = m->_22 = m->_33 = m->_44 = 1.0f;
+    m->_41 = tx; m->_42 = ty; m->_43 = tz;
+}
+
 static void fill_quad(Vtx *v, float x0, float y0, float x1, float y1, DWORD c)
 {
     v[0].x = x0; v[0].y = y0; v[1].x = x1; v[1].y = y0;
@@ -67,6 +76,8 @@ int main(void)
     IDirect3D9 *d3d;
     IDirect3DDevice9 *dev = NULL;
     IDirect3DVertexBuffer9 *vbRead = NULL, *vbWrite = NULL;
+    IDirect3DTexture9 *tex = NULL;
+    D3DMATRIX mWorld, mView, mProj, mStep;
     D3DPRESENT_PARAMETERS pp;
     WNDCLASSW wc;
     HWND hwnd;
@@ -167,6 +178,32 @@ int main(void)
         vbWrite->lpVtbl->Unlock(vbWrite);
     }
 
+    /* A 4x4 A8R8G8B8 MANAGED texture with a known payload, so the content hash
+     * the proxy reports is a value this file can be checked against. MANAGED +
+     * no dynamic usage is exactly the case the hash path is allowed to read. */
+    hr = dev->lpVtbl->CreateTexture(dev, 4, 4, 1, 0, D3DFMT_A8R8G8B8,
+                                    D3DPOOL_MANAGED, &tex, NULL);
+    if (FAILED(hr) || !tex) {
+        printf("FAIL: CreateTexture -> 0x%08lX\n", (unsigned long)hr);
+        return 2;
+    }
+    {
+        D3DLOCKED_RECT lr;
+        if (SUCCEEDED(tex->lpVtbl->LockRect(tex, 0, &lr, NULL, 0))) {
+            int y, x;
+            for (y = 0; y < 4; ++y) {
+                DWORD *row = (DWORD *)((unsigned char *)lr.pBits + y * lr.Pitch);
+                for (x = 0; x < 4; ++x)
+                    row[x] = 0xFF000000u | (DWORD)(y * 16 + x);
+            }
+            tex->lpVtbl->UnlockRect(tex, 0);
+        }
+    }
+
+    set_translate(&mWorld, 11.0f, 22.0f, 33.0f);
+    set_translate(&mView, 1.0f, 2.0f, 3.0f);
+    set_translate(&mProj, 4.0f, 5.0f, 6.0f);
+
     for (frame = 0; frame < 3; ++frame) {
         dev->lpVtbl->Clear(dev, 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
                            0xFF102030, 1.0f, 0);
@@ -179,7 +216,15 @@ int main(void)
         dev->lpVtbl->SetRenderState(dev, D3DRS_ZENABLE, D3DZB_FALSE);
         dev->lpVtbl->SetRenderState(dev, D3DRS_CULLMODE, D3DCULL_NONE);
         dev->lpVtbl->SetTextureStageState(dev, 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-        dev->lpVtbl->SetTexture(dev, 0, NULL);
+        dev->lpVtbl->SetSamplerState(dev, 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+        dev->lpVtbl->SetSamplerState(dev, 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+        dev->lpVtbl->SetTexture(dev, 0, (IDirect3DBaseTexture9 *)tex);
+
+        /* Re-set every frame with the SAME values: the proxy must mint an id
+         * once and reuse it, not emit a matrix per frame. */
+        dev->lpVtbl->SetTransform(dev, D3DTS_WORLD, &mWorld);
+        dev->lpVtbl->SetTransform(dev, D3DTS_VIEW, &mView);
+        dev->lpVtbl->SetTransform(dev, D3DTS_PROJECTION, &mProj);
 
         fill_quad(quad, 100.0f, 50.0f, 228.0f, 146.0f, 0x80FF8040);
         dev->lpVtbl->DrawPrimitiveUP(dev, D3DPT_TRIANGLEFAN, 2, quad, sizeof(Vtx));
@@ -205,6 +250,12 @@ int main(void)
                            0xFF102030, 1.0f, 0);
         dev->lpVtbl->BeginScene(dev);
         dev->lpVtbl->SetFVF(dev, VFVF);
+
+        /* A DERIVED transform: the proxy has to compose it itself, and must
+         * stamp the result so a reader can see which values rest on the
+         * assumed multiplication order. */
+        set_translate(&mStep, 100.0f, 0.0f, 0.0f);
+        dev->lpVtbl->MultiplyTransform(dev, D3DTS_WORLD, &mStep);
 
         /* draw 0 -- over the vertex cap. Must be refused BY NAME, not dropped. */
         for (i = 0; i < 100; ++i) {
@@ -287,6 +338,8 @@ int main(void)
         vbRecycled->lpVtbl->Release(vbRecycled);
     }
 
+    dev->lpVtbl->SetTexture(dev, 0, NULL);
+    tex->lpVtbl->Release(tex);
     vbWrite->lpVtbl->Release(vbWrite);
     vbRead->lpVtbl->Release(vbRead);
     dev->lpVtbl->Release(dev);

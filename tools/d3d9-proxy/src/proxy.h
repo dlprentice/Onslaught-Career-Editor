@@ -30,6 +30,37 @@ extern unsigned bea_cfg_maxverts;
 extern int bea_cfg_noverts;
 extern int bea_cfg_strictcov;    /* 1 => refuse provisional coverage instead of flagging it */
 
+/* ---- volume gating for the per-draw vertex dump --------------------------
+ *
+ * The full `V` dump is the expensive record: an in-level frame issues ~1,200
+ * draws and the largest carry ~6,000 vertices, so an ungated dump is hundreds
+ * of megabytes per frame. These predicates narrow WHICH draws get one. Every
+ * draw the gate excludes still emits a refusal naming the gate, and every
+ * setting is restated in the log header, so a gated absence can never be read
+ * as "the game drew nothing there". */
+extern unsigned bea_cfg_vdraw_first;   /* lowest draw index eligible for a V dump */
+extern unsigned bea_cfg_vdraw_last;    /* highest draw index eligible */
+extern unsigned bea_cfg_vminverts;     /* skip draws with fewer vertices than this */
+extern unsigned bea_cfg_vfvf;          /* if nonzero, dump only this exact FVF */
+extern unsigned bea_cfg_vbudget;       /* max V lines per frame, 0 = unlimited */
+extern int bea_cfg_vdedup;             /* 1 => a repeated byte-range is a `ref=` line */
+
+/* ---- geometry digest ------------------------------------------------------
+ *
+ * One line per draw carrying the identity, hash and position bounding box of
+ * the exact bytes the draw reads, plus how many times that buffer has been
+ * rewritten. Cheap enough to leave on for a whole level, and it is what
+ * answers "is this mesh re-written per frame (CPU skinning) or static". */
+extern int bea_cfg_digest;
+
+/* ---- texture content hashing ---------------------------------------------
+ *
+ * OFF by default, because it is the one thing in this proxy that reads back a
+ * Direct3D resource rather than only observing calls. When on, a texture is
+ * locked READONLY exactly once, at its first use in a logged draw, and only if
+ * its own descriptor says the read is legal and side-effect free. */
+extern int bea_cfg_texhash;
+
 /* FAULT INJECTION, for the self-test only. 1 => a dying buffer wrapper does NOT
  * retract itself from the devices that have it bound, leaving exactly the
  * dangling binding this proxy exists to avoid. It is here so the SECOND line of

@@ -14,7 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BEA_PROXY_VERSION "1"
+/* 2: adds the transform shadow (`M` rows, w=/v=/p= on every draw), the
+ *    per-draw geometry digest (`G` rows), texture creation identity (`T` rows)
+ *    and the vertex-dump gating predicates. Version 1 readers see only new
+ *    record letters and new trailing fields; no existing field changed. */
+#define BEA_PROXY_VERSION "2"
 
 HMODULE bea_real_dll = NULL;
 int bea_enabled = 0;
@@ -24,6 +28,17 @@ unsigned bea_cfg_maxverts = 64;
 int bea_cfg_noverts = 0;
 int bea_cfg_strictcov = 0;
 int bea_cfg_fault_noclearbind = 0;
+unsigned bea_cfg_vdraw_first = 0;
+unsigned bea_cfg_vdraw_last = 0xFFFFFFFFu;
+unsigned bea_cfg_vminverts = 0;
+unsigned bea_cfg_vfvf = 0;
+unsigned bea_cfg_vbudget = 0;
+/* OFF by default: with it on, the SECOND draw of identical bytes is a one-line
+ * back-reference rather than a dump, which is a different log grammar from
+ * version 1. It is a volume tool for a deliberate mass dump, not a default. */
+int bea_cfg_vdedup = 0;
+int bea_cfg_digest = 1;
+int bea_cfg_texhash = 0;
 
 /* ------------------------------------------------------------------ exports */
 
@@ -251,6 +266,27 @@ static void bea_open_log(void)
     bea_logf("# cfg firstframe=%u maxframes=%u maxverts=%u noverts=%d strictcov=%d\n",
              bea_cfg_firstframe, bea_cfg_maxframes, bea_cfg_maxverts,
              bea_cfg_noverts, bea_cfg_strictcov);
+    /* GATING IS NOT ABSENCE. Every predicate that can suppress a record is
+     * restated here, in the file itself, so a reader who never saw the command
+     * line cannot mistake a narrow capture for a sparse frame. */
+    bea_logf("# gating vdrawfirst=%u vdrawlast=%u vminverts=%u vfvf=0x%X"
+             " vbudget=%u vdedup=%d digest=%d texhash=%d\n",
+             bea_cfg_vdraw_first, bea_cfg_vdraw_last, bea_cfg_vminverts,
+             bea_cfg_vfvf, bea_cfg_vbudget, bea_cfg_vdedup, bea_cfg_digest,
+             bea_cfg_texhash);
+    bea_logf("# 'M <id> <slot> m=<16 floats>' = a transform, row-major as D3D"
+             " stores it, emitted once per distinct value at its first use."
+             " id=0 is the identity the device starts with. Every 'D' row"
+             " carries w=/v=/p= naming the ids in force for that draw; 'mul'"
+             " on an M row means the value came from MultiplyTransform and"
+             " ASSUMES the order new=current*arg.\n");
+    bea_logf("# 'G <f> <d> vb|ib ...' = geometry digest: identity, FNV-1a-64"
+             " hash and position bounds of the exact bytes that draw reads,"
+             " with unlocks= (how many times the buffer has been rewritten)"
+             " and lastunlock= (the frame of the most recent rewrite). A mesh"
+             " whose h= changes every frame is being re-written on the CPU.\n");
+    bea_logf("# 'T create serial=<n> ...' = a texture, at creation, in load"
+             " order. Draw rows name a bound texture by that serial.\n");
     bea_logf("# render-state and stage-state values are shadowed from Set* calls:"
              " '~' = D3D default never set by the game, '?' = unknown\n");
     bea_logf("# 'V f d - none <reason>' = no vertices recorded, and why;"
@@ -290,6 +326,14 @@ static BOOL CALLBACK bea_init_once(PINIT_ONCE once, PVOID param, PVOID *ctx)
     bea_cfg_strictcov = (int)bea_env_uint(L"BEA_D3D9_STRICTCOV", 0);
     bea_cfg_fault_noclearbind =
         (int)bea_env_uint(L"BEA_D3D9_FAULT_NOCLEARBIND", 0);
+    bea_cfg_vdraw_first = bea_env_uint(L"BEA_D3D9_VDRAWFIRST", 0);
+    bea_cfg_vdraw_last = bea_env_uint(L"BEA_D3D9_VDRAWLAST", 0xFFFFFFFFu);
+    bea_cfg_vminverts = bea_env_uint(L"BEA_D3D9_VMINVERTS", 0);
+    bea_cfg_vfvf = bea_env_uint(L"BEA_D3D9_VFVF", 0);
+    bea_cfg_vbudget = bea_env_uint(L"BEA_D3D9_VBUDGET", 0);
+    bea_cfg_vdedup = (int)bea_env_uint(L"BEA_D3D9_VDEDUP", 0);
+    bea_cfg_digest = (int)bea_env_uint(L"BEA_D3D9_DIGEST", 1);
+    bea_cfg_texhash = (int)bea_env_uint(L"BEA_D3D9_TEXHASH", 0);
 
     bea_open_log();
 
