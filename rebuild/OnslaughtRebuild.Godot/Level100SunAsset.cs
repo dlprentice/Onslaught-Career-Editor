@@ -198,11 +198,15 @@ internal sealed class Level100SunAsset
         {
             Name = "RetailLevel100SunSprite",
             // MEASURED: the authored `Radius` is the billboard's HALF extent, so
-            // the quad is 2*Radius on a side. See Level100SunTests for the
-            // retail-frame measurement and for the two readings it refutes.
+            // the quad is 2*Radius on a side. The conversion has one owner -
+            // see ParticleEffectResolver.AuthoredRadiusIsHalfTheQuadSide for the
+            // retail draw-call geometry that establishes it and the readings it
+            // refutes.
             Mesh = new QuadMesh
             {
-                Size = new Vector2(layer.StartRadius * 2f, layer.StartRadius * 2f),
+                Size = new Vector2(
+                    ParticleEffectResolver.BillboardQuadSide(layer.StartRadius),
+                    ParticleEffectResolver.BillboardQuadSide(layer.StartRadius)),
             },
             MaterialOverride = CreateSunMaterial(texture, layer),
             // The released engine draws the sun before the particle pass and

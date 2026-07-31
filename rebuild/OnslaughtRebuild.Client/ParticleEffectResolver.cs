@@ -68,6 +68,67 @@ public static class ParticleEffectResolver
     public const int MaximumInstancesPerEffect = 256;
 
     /// <summary>
+    /// The factor taking an authored <c>Radius</c> to the side of the billboard
+    /// quad the engine draws for it. <b>The authored <c>Radius</c> is the HALF
+    /// extent</b>, so the quad is <c>2 * Radius</c> on a side.
+    ///
+    /// <para><b>MEASURED 2026-07-31 from retail draw-call geometry</b>
+    /// (task #151), which needs no camera parameters and no pixel fitting. The
+    /// d3d9 proxy records raw vertex positions, and the sun sprite is
+    /// identifiable in every logged in-level frame without ambiguity: it is the
+    /// only single-quad <c>fvf=0x142</c> draw, additive <c>ONE/ONE</c>, over a
+    /// 128x128 DXT1 texture, with vertex diffuse <c>0x00808080</c> - the flat
+    /// 128/255 its <c>Sun Colour</c> record authors.</para>
+    ///
+    /// <para>Its quad measures <b>0.20009 x 0.19998</b> world units, all four
+    /// edges within 0.0001 of 0.2000 and the diagonal consistent with a square,
+    /// and it is bit-identical across nine logged frames from three independent
+    /// launches (<c>G:\bea-d3d9-capture\B{1,2,3}-level100-*\d3d9-draws.log</c>,
+    /// draws 1130/1123/1123). <c>Sun Sprite</c> authors
+    /// <c>Radius 0.100000</c>. So the quad is 2.000x the authored radius, and
+    /// the competing reading - <c>Radius</c> as the full extent - is out by
+    /// exactly a factor of two.</para>
+    ///
+    /// <para><b>Why that draw is certainly the sun, and the buffer certainly
+    /// world space at unit scale.</b> Retail places the sprite at
+    /// <c>camera + SunPos * 0.6</c>
+    /// (<c>references/Onslaught/DXEngine.cpp:1043-1064</c>). Running that law
+    /// backwards from the measured quad centre with Level 100's authored unit
+    /// <c>SunPos</c> puts the eye at <c>(288.6875, 243.2500)</c>, which is the
+    /// level's own coordinate origin to five decimals -
+    /// <see cref="Core.Level100Terrain.MinimumRelativeXMillimeters"/> and
+    /// <see cref="Core.Level100Terrain.MinimumRelativeZMillimeters"/> are
+    /// -288688 and -243250. Two coordinates from three independent sources
+    /// landing together also rules out a scaled world matrix, which would have
+    /// moved the derived eye off the origin.</para>
+    ///
+    /// <para>Independently corroborated by task #148's frame measurement, which
+    /// fitted the flare's on-screen half extent at 65-69 px against the 69.0 px
+    /// this factor predicts, and refuted the full-extent reading at 34.5 px
+    /// (fit error 6.10 against 6.98 for drawing no flare at all).</para>
+    ///
+    /// <para>The particle system is absent from the GPL drop - there is no
+    /// <c>Particle.cpp</c>, no <c>ParticleManager.h</c> and no sprite-renderer
+    /// implementation, only call sites - so this cannot be ported and had to be
+    /// measured.</para>
+    /// </summary>
+    public const float AuthoredRadiusIsHalfTheQuadSide = 2f;
+
+    /// <summary>
+    /// The side of the billboard quad the engine draws for an authored
+    /// <c>Radius</c>. <b>This is the one owner of that conversion</b>; sprite
+    /// sizes must not be hard-coded already-doubled, because a literal cannot be
+    /// traced back to the record it came from.
+    /// </summary>
+    /// <param name="authoredRadius">
+    /// A <c>Radius</c> or <c>Final_Radius</c> exactly as the <c>.par</c> record
+    /// spells it.
+    /// </param>
+    /// <seealso cref="AuthoredRadiusIsHalfTheQuadSide"/>
+    public static float BillboardQuadSide(float authoredRadius) =>
+        authoredRadius * AuthoredRadiusIsHalfTheQuadSide;
+
+    /// <summary>
     /// The atlas grid a sprite's <c>Texture_Size</c> selects.
     ///
     /// <para><b>MEASURED 2026-07-28 from pixels, not from consistency alone.</b>

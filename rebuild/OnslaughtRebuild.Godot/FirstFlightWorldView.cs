@@ -995,20 +995,26 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
     {
         Node3D root = CreateTimedEffect($"PulseImpact{targetId}-{tick}", position, 1.05d);
+        // `Blue Anim Blob Large Sprite`: Radius 0.7, Final_Radius 0.75,
+        // Life 20 turns = 1.0 s, End_Frame 14 (15 cells), Random_Start_Frame 1,
+        // Texture_Size 2 (a 4x4 grid) - every one of which the animation below
+        // already reproduces.
         MeshInstance3D animatedBlob = CreateEffectSprite(
             "BlueAnimatedBlob",
             _pulseImpactAnimatedTexture,
-            1.4f,
+            0.7f,
             columns: 4,
             rows: 4);
         root.AddChild(animatedBlob);
         AnimatePulseImpactBlob(root, animatedBlob);
         AnimateScale(animatedBlob, 1f, 1.07f, 1d);
 
+        // `Flash Medium`: Radius 1.5, Life 6 turns = 0.3 s, Texture_Size 4 (a
+        // single cell), sun2.tga.
         MeshInstance3D flash = CreateEffectSprite(
             "FlashMedium",
             _effectFlashMediumTexture,
-            3f);
+            1.5f);
         root.AddChild(flash);
         AnimateScale(flash, 1f, 0f, 0.3d);
 
@@ -1025,20 +1031,26 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
     {
         Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.55d);
+        // `Explosion Anim Sprite Medium`: Radius 1.5, Final_Radius 1.3,
+        // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2.
         MeshInstance3D animatedExplosion = CreateEffectSprite(
             "ExplosionAnimatedSprite",
             _targetTankExplosionAnimatedTexture,
-            3f,
+            1.5f,
             columns: 4,
             rows: 4);
         root.AddChild(animatedExplosion);
         AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 4, 0.5d);
         AnimateScale(animatedExplosion, 1f, 1.3f / 1.5f, 0.5d);
 
+        // `Fire Sprite Damped 2`: Radius 1.0, Final_Radius 0.5,
+        // Life 30 turns = 1.5 s, Texture_Size 2, fireball.tga. NOT settled: the
+        // 16 frames below overrun the record's End_Frame 11 (12 cells). That is
+        // an animation-range question, not a size one, and is left as found.
         MeshInstance3D fireball = CreateEffectSprite(
             "ExplosionFireball",
             _targetTankExplosionFireballTexture,
-            2f,
+            1.0f,
             columns: 4,
             rows: 4);
         root.AddChild(fireball);
@@ -1066,19 +1078,32 @@ public sealed partial class FirstFlightWorldView : Node3D
         return root;
     }
 
+    /// <summary>
+    /// Builds one billboard for a sprite descriptor.
+    /// </summary>
+    /// <param name="authoredRadius">
+    /// The descriptor's <c>Radius</c>, exactly as its <c>MainSet.par</c> record
+    /// spells it. It is a HALF extent; the quad side is derived by the one
+    /// owner of that law,
+    /// <see cref="ParticleEffectResolver.BillboardQuadSide(float)"/>. Pass the
+    /// authored number, never a pre-doubled one - a bare literal cannot be
+    /// traced back to the record it came from, which is exactly how this
+    /// convention came to look inconsistent (task #151).
+    /// </param>
     private static MeshInstance3D CreateEffectSprite(
         string name,
         Texture2D texture,
-        float size,
+        float authoredRadius,
         int columns = 1,
         int rows = 1)
     {
         StandardMaterial3D material = CreateEffectMaterial(texture, billboard: true);
         material.Uv1Scale = new Vector3(1f / columns, 1f / rows, 1f);
+        float side = ParticleEffectResolver.BillboardQuadSide(authoredRadius);
         return new MeshInstance3D
         {
             Name = name,
-            Mesh = new QuadMesh { Size = new Vector2(size, size) },
+            Mesh = new QuadMesh { Size = new Vector2(side, side) },
             MaterialOverride = material,
         };
     }

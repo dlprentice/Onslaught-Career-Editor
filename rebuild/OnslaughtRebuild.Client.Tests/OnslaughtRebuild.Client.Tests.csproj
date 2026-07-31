@@ -92,6 +92,12 @@
     <Content Include="..\OnslaughtRebuild.Godot\Level100SunAsset.cs"
              Link="godot-sun-source\Level100SunAsset.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <!-- ParticleQuadSizeConventionTests reads the effect construction sites to
+         check every sprite size is an authored Radius taken through the one
+         owner. It cannot instantiate the Godot type, so it asserts on source. -->
+    <Content Include="..\OnslaughtRebuild.Godot\FirstFlightWorldView.cs"
+             Link="godot-effects-source\FirstFlightWorldView.cs"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

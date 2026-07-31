@@ -240,8 +240,13 @@ public sealed class Level100SunTests
         Assert.Contains("ParticleEffectResolver.Resolve", source, StringComparison.Ordinal);
         Assert.Contains("\"Sun Sprite\"", source, StringComparison.Ordinal);
 
-        // Size, colour and placement all read from decoded values.
-        Assert.Contains("layer.StartRadius * 2f", source, StringComparison.Ordinal);
+        // Size, colour and placement all read from decoded values. The quad side
+        // must come from the one owner of the half-extent law, not from a
+        // hand-doubled literal - see ParticleQuadSizeConventionTests.
+        Assert.Contains(
+            "ParticleEffectResolver.BillboardQuadSide(layer.StartRadius)",
+            source,
+            StringComparison.Ordinal);
         Assert.Contains("range.Start.R, range.Start.G, range.Start.B", source, StringComparison.Ordinal);
         Assert.Contains("terrain.SunPosition", source, StringComparison.Ordinal);
         Assert.Contains("RetailSunScale = 0.6f", source, StringComparison.Ordinal);
