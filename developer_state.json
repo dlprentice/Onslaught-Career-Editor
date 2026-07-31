@@ -83,6 +83,21 @@
     "corrections_this_window": "#146's 'dive into the ground' half is a SEPARATE defect (the already-indexed _actor_pose vertical-datum issue), not the waypoint order. #147's and #151's premises were both corrected by measurement - the window's pattern is that the task descriptions were honest but their references or assumed conventions were not."
   },
 
+  "_IN_FLIGHT_2026_07_31_FIVE_WORKSTREAM_CAMPAIGN": {
+    "_what_this_is": "Live as of 2026-07-31 midday. The maintainer set five workstreams and stepped away for 2-3 h. DELETE OR SUPERSEDE THIS BLOCK WHEN THE LANES LAND - a stale in-flight list caused a real failure on 2026-07-28.",
+    "landed_and_pushed_today": "4df87b6b MESP part order (+10 meshes); 4bf71203+68dbe332 level-521 capture workflow (runbook + helper + analyzer); 2f3944dd the last 9 meshes - 213/213 convert with the skinning structure recovered.",
+    "running": [
+      "WORKFLOW asset-format-closure (8 Opus): full chunk-order census -> PMS2 embedded-mesh permutation closure (worktree), CTEX, RLWD/BSWD, each adversarially verified, then the final honest Workstream-2 tally.",
+      "WORKTREE 20 Hz migration (Opus): executing from local-lab/TICK-RATE-INVENTORY-2026-07-31.md (127 rows). Four conversion rules, NOT one. Gravity triple first (no provenance, feeds the beat-8 margin). May repin goldens in its worktree WITH the two-byte-identical-native-reports protocol; coordinator re-verifies.",
+      "WORKTREE tan-curve table (Opus): three options measured, smallest with real headroom chosen; must NOT repin goldens.",
+      "WORKFLOW ttd-deep-mining (7 Opus): #154 datum + euler orientation from play-level100; native naming sweep -> STAGED proposals only; the FMV and Options manual traces.",
+      "WORKFLOW hard-puzzles-fable (3 Fable, high effort, homogeneous per the maintainer's constraint): skin-weight law, billboard orientation law, authored-basis representation. THEIR OUTPUT IS HYPOTHESIS ONLY - each must carry a falsifiable test with its result predicted in advance, and nothing lands on their word.",
+      "WORKFLOW live-instrument-campaign (Opus): scout -> EXTEND THE D3D9 PROXY (SetTransform matrices, vertex-buffer contents, effect identity - its 'blind spots' are gaps in OUR source, not facts) -> controlled-pair captures (L100 vs L742 for authored-basis; a skinned-character level for posed vertices vs the decoded bind pose; mixed Axis_Aligned effects in one frame) -> answer the three puzzles from running-game evidence."
+    ],
+    "authorization_widened_2026_07_31": "The maintainer explicitly widened scope: patch/launch/drive/capture COPIED targets freely, build and extend our own tools, force values and branches to manufacture the delta you need. He was right that the prior caution was self-imposed. TWO THINGS STAY UNTOUCHED FOR CORRECTNESS, NOT LAW: the installed Steam game, and local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (74154bfa) - that backup is the byte-truth reference every finding is cited against. Patched experiments get fresh copies. TTD RECORDING still needs his elevation; querying never does.",
+    "new_tasks_filed_today": "#155 campaign-runner mislabels adjudicated Thread-stops (receipts are the truth); #156 the last mesh gaps (now CLOSED by 2f3944dd - update it); #157 generalize terrain to all 66 levels (the second level becomes buildable); #158 start_cdb_server_test.py is LOAD-FLAKY and its runner's && chaining silently skips six suites after a failure."
+  },
+
   "_AUTHORIZATION_2026_07_30": "The maintainer granted standing authorization to commit, push, and release: 'You are authorized to commit, and push, and release at all times' (2026-07-30, in-session, in response to an explicit question about the 65 held commits). CLAUDE.md and AGENTS.md were updated the same day; their former 'separately authorized' closing lines are superseded. Discipline retained, not waived: the first push of the held backlog follows a clean public-boundary pass per release/readiness/PUBLIC_SIGNOFF_COMMANDS.md; after that, pushing is routine. Mutation of installed game directories and pristine binaries remains forbidden by the standing rules.",
 
   "read_first": [
