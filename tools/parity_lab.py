@@ -543,7 +543,11 @@ def open_database(path: pathlib.Path) -> sqlite3.Connection:
             requested_to TEXT NOT NULL,
             range_count INTEGER NOT NULL,
             covered_bytes TEXT NOT NULL,
-            callback_hits TEXT NOT NULL,
+            -- NULL when the producer quarantined its replay counters.  The
+            -- column is deliberately nullable so a consumer that wants a
+            -- number gets nothing rather than a wrong one.
+            callback_hits TEXT,
+            counters_quarantined INTEGER NOT NULL,
             stop_reason TEXT NOT NULL,
             replay_complete INTEGER NOT NULL,
             marker_assertions_passed INTEGER NOT NULL,
@@ -4694,16 +4698,58 @@ def ingest_ttd_exec_coverage(
     if type(range_count) is not int or range_count != len(ranges):
         raise ParityLabError(f"TTD summary range count mismatch: {path}")
     covered_bytes_text, covered_bytes = decimal_string(summary, "covered_bytes")
-    callback_hits_text, callback_hits = decimal_string(summary, "callback_hits")
-    steps_executed = decimal_string(summary, "steps_executed")[1]
-    instructions_executed = decimal_string(summary, "instructions_executed")[1]
-    if (
-        covered_bytes != covered_from_ranges
-        or callback_hits < len(ranges)
-        or callback_hits > instructions_executed
-        or instructions_executed > steps_executed
-    ):
+    if covered_bytes != covered_from_ranges:
         raise ParityLabError(f"TTD coverage summary accounting mismatch: {path}")
+
+    # A producer may quarantine its replay counters when the replay engine's
+    # own accounting is impossible (TTD Replay 1.11.584.0 stops advancing its
+    # step counter on some traces).  Such a receipt stays fully valid for
+    # ranges - they are collected by our own bitmap and were independently
+    # recomputed - and is simply unscored for anything counter-derived.
+    counters_quarantined = summary.get("counters_quarantined", False)
+    if type(counters_quarantined) is not bool:
+        raise ParityLabError(
+            f"TTD coverage counters_quarantined must be a boolean: {path}"
+        )
+    counter_keys = ("callback_hits", "instructions_executed", "steps_executed")
+    callback_hits_text: str | None = None
+    callback_hits: int | None = None
+    quarantined_counters: dict[str, Any] | None = None
+    if counters_quarantined:
+        leaked = [key for key in counter_keys if key in summary]
+        if leaked:
+            raise ParityLabError(
+                "TTD coverage summary is quarantined but still carries "
+                f"top-level counters {sorted(leaked)}: {path}"
+            )
+        quarantined_counters = summary.get("quarantined_counters")
+        if not isinstance(quarantined_counters, dict):
+            raise ParityLabError(
+                f"TTD quarantined coverage lacks quarantined_counters: {path}"
+            )
+        for key in counter_keys:
+            decimal_string(quarantined_counters, key)
+        reason = quarantined_counters.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ParityLabError(
+                f"TTD quarantined counters lack a reason: {path}"
+            )
+    else:
+        callback_hits_text, callback_hits = decimal_string(
+            summary, "callback_hits"
+        )
+        steps_executed = decimal_string(summary, "steps_executed")[1]
+        instructions_executed = decimal_string(
+            summary, "instructions_executed"
+        )[1]
+        if (
+            callback_hits < len(ranges)
+            or callback_hits > instructions_executed
+            or instructions_executed > steps_executed
+        ):
+            raise ParityLabError(
+                f"TTD coverage summary accounting mismatch: {path}"
+            )
     replay_complete = typed_bool(summary, "replay_complete")
     marker_assertions_passed = typed_bool(summary, "marker_assertions_passed")
     collector_checks_passed = typed_bool(summary, "collector_checks_passed")
@@ -4747,10 +4793,12 @@ def ingest_ttd_exec_coverage(
             artifact_id, trace_path, trace_bytes, module_name, module_base,
             module_size, module_timestamp, module_checksum, replay_mode,
             requested_from, requested_to, range_count, covered_bytes,
-            callback_hits, stop_reason, replay_complete,
+            callback_hits, counters_quarantined, stop_reason, replay_complete,
             marker_assertions_passed, collector_checks_passed,
             metadata_json, gap_json, summary_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
         """,
         (
             artifact_id,
@@ -4767,6 +4815,7 @@ def ingest_ttd_exec_coverage(
             range_count,
             covered_bytes_text,
             callback_hits_text,
+            int(counters_quarantined),
             stop_reason,
             int(replay_complete),
             int(marker_assertions_passed),
@@ -4839,6 +4888,9 @@ def ingest_ttd_exec_coverage(
             "rangeCount": range_count,
             "coveredBytes": covered_bytes,
             "callbackHits": callback_hits,
+            "countersQuarantined": counters_quarantined,
+            "quarantinedCounters": quarantined_counters,
+            "counterScoring": "unscored" if counters_quarantined else "scored",
             "assertionCount": len(assertions),
             "gapCount": gap_total,
             "stopReason": stop_reason,

@@ -1896,6 +1896,118 @@ class ParityLabTests(unittest.TestCase):
                     connection, unknown_stop_coverage
                 )
 
+        # The recorded impossible accounting, un-quarantined, must still be
+        # rejected outright: options-open-manual-01 published 131111 steps
+        # against 1137340343 callback hits.
+        impossible_rows = json.loads(json.dumps(rows))
+        impossible_summary = next(
+            row for row in impossible_rows if row["kind"] == "summary"
+        )
+        impossible_summary["callback_hits"] = "1137340343"
+        impossible_summary["instructions_executed"] = "131110"
+        impossible_summary["steps_executed"] = "131111"
+        impossible_coverage = self.root / "coverage-impossible-counters.jsonl"
+        parity_lab.write_jsonl(impossible_coverage, impossible_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            with self.assertRaisesRegex(
+                parity_lab.ParityLabError, "accounting mismatch"
+            ):
+                parity_lab.ingest_ttd_exec_coverage(
+                    connection, impossible_coverage
+                )
+
+        # Quarantined: valid for ranges, unscored for counters.
+        quarantined_rows = json.loads(json.dumps(rows))
+        quarantined_summary = next(
+            row for row in quarantined_rows if row["kind"] == "summary"
+        )
+        for key in (
+            "callback_hits",
+            "instructions_executed",
+            "steps_executed",
+        ):
+            del quarantined_summary[key]
+        quarantined_summary["counters_quarantined"] = True
+        quarantined_summary["quarantined_counters"] = {
+            "callback_hits": "1137340343",
+            "instructions_executed": "131110",
+            "steps_executed": "131111",
+            "gap_events": "158054070",
+            "reason": "ttd-replay-accounting-stopped-advancing",
+        }
+        quarantined_coverage = self.root / "coverage-quarantined.jsonl"
+        parity_lab.write_jsonl(quarantined_coverage, quarantined_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            quarantined_result, _ = parity_lab.ingest_ttd_exec_coverage(
+                connection, quarantined_coverage
+            )
+            self.assertEqual(
+                2,
+                connection.execute(
+                    "SELECT COUNT(*) FROM ttd_exec_range"
+                ).fetchone()[0],
+            )
+            stored = connection.execute(
+                "SELECT callback_hits, counters_quarantined "
+                "FROM ttd_exec_coverage"
+            ).fetchone()
+            self.assertIsNone(stored[0])
+            self.assertEqual(1, stored[1])
+        self.assertEqual("COMPLETE", quarantined_result["health"])
+        self.assertTrue(quarantined_result["acceptancePassed"])
+        self.assertTrue(quarantined_result["countersQuarantined"])
+        self.assertEqual("unscored", quarantined_result["counterScoring"])
+        self.assertIsNone(quarantined_result["callbackHits"])
+        self.assertEqual(2, quarantined_result["rangeCount"])
+        self.assertEqual(4, quarantined_result["coveredBytes"])
+        self.assertEqual(
+            "ttd-replay-accounting-stopped-advancing",
+            quarantined_result["quarantinedCounters"]["reason"],
+        )
+
+        # A receipt does not get it both ways.
+        both_ways_rows = json.loads(json.dumps(quarantined_rows))
+        next(row for row in both_ways_rows if row["kind"] == "summary")[
+            "callback_hits"
+        ] = "2"
+        both_ways_coverage = self.root / "coverage-quarantined-both-ways.jsonl"
+        parity_lab.write_jsonl(both_ways_coverage, both_ways_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            with self.assertRaisesRegex(
+                parity_lab.ParityLabError, "quarantined but still carries"
+            ):
+                parity_lab.ingest_ttd_exec_coverage(
+                    connection, both_ways_coverage
+                )
+
+        no_reason_rows = json.loads(json.dumps(quarantined_rows))
+        del next(row for row in no_reason_rows if row["kind"] == "summary")[
+            "quarantined_counters"
+        ]["reason"]
+        no_reason_coverage = self.root / "coverage-quarantined-no-reason.jsonl"
+        parity_lab.write_jsonl(no_reason_coverage, no_reason_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            with self.assertRaisesRegex(
+                parity_lab.ParityLabError, "lack a reason"
+            ):
+                parity_lab.ingest_ttd_exec_coverage(
+                    connection, no_reason_coverage
+                )
+
+        no_evidence_rows = json.loads(json.dumps(quarantined_rows))
+        del next(row for row in no_evidence_rows if row["kind"] == "summary")[
+            "quarantined_counters"
+        ]
+        no_evidence_coverage = self.root / "coverage-quarantined-bare.jsonl"
+        parity_lab.write_jsonl(no_evidence_coverage, no_evidence_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            with self.assertRaisesRegex(
+                parity_lab.ParityLabError, "lacks quarantined_counters"
+            ):
+                parity_lab.ingest_ttd_exec_coverage(
+                    connection, no_evidence_coverage
+                )
+
         invalid_rows = json.loads(json.dumps(rows))
         invalid_rows[0]["requested_from"] = "0x1:0x0"
         invalid_coverage = self.root / "coverage-outside-instance.jsonl"

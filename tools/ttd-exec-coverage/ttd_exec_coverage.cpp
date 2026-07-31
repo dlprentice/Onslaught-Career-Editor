@@ -40,6 +40,235 @@ namespace fs = std::filesystem;
 constexpr char const* kSchema = "bea.ttd.exec-coverage.v1";
 constexpr uint64_t kDefaultMaxModuleBytes = 1ull << 30;
 
+// Measured on TTD Replay 1.11.584.0 (x64), 2026-07-31, against
+// G:\bea-ttd\options-open-manual-01\options-open-manual-01.run:
+// ICursorView::ReplayResult::StepsExecuted and ::InstructionsExecuted are not
+// trustworthy totals on every trace.  That trace's whole-trace replay reported
+// 131111 steps against 1137340343 accepted execute-watchpoint callbacks, and
+// reported the same 131111 for a 0.2% prefix window - while the single
+// sub-window [0x400:0x0, 0x800:0x0) of the same trace reported 3592972 steps.
+// A total smaller than one of its own parts is not a wrapped total: the
+// engine's step accounting stops advancing in some regions, identically under
+// parallel and sequential replay.  Two things follow, and both are done here.
+//
+//   * Accumulate in 64 bits across step-limited chunks so that nothing this
+//     collector controls can wrap.  Verified exact on
+//     startup-to-main-menu-20260729-173124: two chunks summing to
+//     1860375400, the same value the single unbounded call reported while it
+//     was still below 2^32, with byte-identical coverage ranges.
+//   * Refuse to publish when the counters that would be written are mutually
+//     impossible, instead of emitting another receipt that lies quietly.
+//
+// The guard is necessary but not sufficient: a frozen counter whose value
+// still exceeds callback_hits cannot be detected from the receipt alone.
+constexpr uint64_t kReplayChunkSteps = 1'000'000'000;
+
+// Belt and braces against a chunk loop that never reaches a terminal stop
+// reason.  At the chunk size above this bounds a run at 10^15 steps.
+constexpr uint64_t kMaxReplayChunks = 1'000'000;
+
+struct ReplayAccounting
+{
+    uint64_t StepsExecuted = 0;
+    uint64_t InstructionsExecuted = 0;
+    uint64_t ChunkCount = 0;
+    EventType StopReason = EventType::Invalid;
+};
+
+// Accumulates step-limited replay chunks into 64-bit totals.  NextChunk must
+// return an ICursorView::ReplayResult for a replay bounded by
+// kReplayChunkSteps steps; it is invoked until a terminal stop reason is
+// reported.
+template <typename NextChunk>
+ReplayAccounting AccumulateReplayChunks(NextChunk&& nextChunk)
+{
+    ReplayAccounting accounting;
+    for (;;)
+    {
+        ICursorView::ReplayResult const chunk = nextChunk();
+        uint64_t const chunkSteps = static_cast<uint64_t>(chunk.StepsExecuted);
+        uint64_t const chunkInstructions =
+            static_cast<uint64_t>(chunk.InstructionsExecuted);
+        if (chunkSteps > kReplayChunkSteps || chunkInstructions > chunkSteps)
+        {
+            throw std::runtime_error(
+                "replay chunk reported more steps than it was allowed to "
+                "execute, or more instructions than steps: steps=" +
+                std::to_string(chunkSteps) +
+                " instructions=" + std::to_string(chunkInstructions));
+        }
+        accounting.StepsExecuted += chunkSteps;
+        accounting.InstructionsExecuted += chunkInstructions;
+        accounting.ChunkCount += 1;
+        accounting.StopReason = chunk.StopReason;
+        if (chunk.StopReason != EventType::StepCount)
+        {
+            return accounting;
+        }
+        if (chunkSteps == 0 || accounting.ChunkCount >= kMaxReplayChunks)
+        {
+            throw std::runtime_error(
+                "chunked replay stopped on its step budget without advancing "
+                "toward a terminal stop reason after " +
+                std::to_string(accounting.ChunkCount) + " chunk(s)");
+        }
+    }
+}
+
+// Written into the receipt beside the withheld counters so a reader learns why
+// they are absent without having to reconstruct this investigation.
+constexpr char const* kQuarantineReason =
+    "ttd-replay-accounting-stopped-advancing";
+
+// A memory-watchpoint execute hit requires an executed instruction, and an
+// instruction is a step.  Necessary, not sufficient: a stalled counter whose
+// value still exceeds the callback count cannot be caught from the receipt.
+bool CountersAreConsistent(
+    uint64_t callbackHits,
+    uint64_t instructionsExecuted,
+    uint64_t stepsExecuted) noexcept
+{
+    return instructionsExecuted <= stepsExecuted &&
+           callbackHits <= instructionsExecuted;
+}
+
+bool RunReplayAccountingTests()
+{
+    auto fail =
+        [](char const* group)
+        {
+            std::cerr << "replay accounting self-test failed: " << group << "\n";
+            return false;
+        };
+
+    auto makeChunk =
+        [](uint64_t steps, uint64_t instructions, EventType stopReason)
+        {
+            ICursorView::ReplayResult chunk;
+            chunk.StepsExecuted =
+                static_cast<decltype(chunk.StepsExecuted)>(steps);
+            chunk.InstructionsExecuted =
+                static_cast<decltype(chunk.InstructionsExecuted)>(instructions);
+            chunk.StopReason = stopReason;
+            return chunk;
+        };
+
+    auto replayScript =
+        [&](std::vector<ICursorView::ReplayResult> script)
+        {
+            size_t index = 0;
+            return AccumulateReplayChunks(
+                [&]()
+                {
+                    if (index >= script.size())
+                    {
+                        throw std::runtime_error("self-test script exhausted");
+                    }
+                    return script[index++];
+                });
+        };
+
+    {
+        ReplayAccounting const accounting = replayScript(
+            {makeChunk(131'111, 131'110, EventType::Process)});
+        if (accounting.StepsExecuted != 131'111 ||
+            accounting.InstructionsExecuted != 131'110 ||
+            accounting.ChunkCount != 1 ||
+            accounting.StopReason != EventType::Process)
+        {
+            return fail("single terminal chunk");
+        }
+    }
+    {
+        // Chosen so that a 32-bit accumulator would land on exactly 131111 -
+        // the number options-open-manual-01 published against 1137340343
+        // callback hits.  A 64-bit accumulator must land on 2^32 + 131111 and
+        // must never be able to produce that receipt's value.
+        std::vector<ICursorView::ReplayResult> script;
+        for (size_t index = 0; index < 4; ++index)
+        {
+            script.push_back(
+                makeChunk(
+                    kReplayChunkSteps,
+                    kReplayChunkSteps,
+                    EventType::StepCount));
+        }
+        script.push_back(makeChunk(295'098'407, 295'098'406, EventType::Process));
+        ReplayAccounting const accounting = replayScript(std::move(script));
+        if (accounting.StepsExecuted != (uint64_t{1} << 32) + 131'111 ||
+            accounting.StepsExecuted == 131'111 ||
+            accounting.InstructionsExecuted != (uint64_t{1} << 32) + 131'110 ||
+            accounting.ChunkCount != 5 ||
+            accounting.StopReason != EventType::Process ||
+            accounting.StepsExecuted <= 1'137'340'343)
+        {
+            return fail("64-bit accumulation across the 2^32 boundary");
+        }
+    }
+    {
+        bool threw = false;
+        try
+        {
+            replayScript(
+                {makeChunk(kReplayChunkSteps, 0, EventType::StepCount),
+                 makeChunk(0, 0, EventType::StepCount)});
+        }
+        catch (std::runtime_error const&)
+        {
+            threw = true;
+        }
+        if (!threw)
+        {
+            return fail("non-advancing chunk must fail closed");
+        }
+    }
+    {
+        bool threw = false;
+        try
+        {
+            replayScript(
+                {makeChunk(kReplayChunkSteps + 1, 0, EventType::Process)});
+        }
+        catch (std::runtime_error const&)
+        {
+            threw = true;
+        }
+        if (!threw)
+        {
+            return fail("over-budget chunk must fail closed");
+        }
+    }
+    {
+        bool threw = false;
+        try
+        {
+            replayScript({makeChunk(10, 11, EventType::Process)});
+        }
+        catch (std::runtime_error const&)
+        {
+            threw = true;
+        }
+        if (!threw)
+        {
+            return fail("instructions above steps must fail closed");
+        }
+    }
+    {
+        // The two recorded receipts that this guard exists to reject, and the
+        // healthy startup receipt it must keep accepting.
+        if (CountersAreConsistent(1'137'340'343, 131'110, 131'111) ||
+            CountersAreConsistent(245'245'503, 137'022, 137'023) ||
+            !CountersAreConsistent(715'094'340, 1'860'375'340, 1'860'375'400) ||
+            !CountersAreConsistent(0, 0, 0) ||
+            !CountersAreConsistent(5, 5, 5) ||
+            CountersAreConsistent(0, 6, 5))
+        {
+            return fail("recorded impossible and healthy counter triples");
+        }
+    }
+    return true;
+}
+
 struct Range
 {
     uint64_t Min;
@@ -114,10 +343,19 @@ bool RunSelfTests()
         return false;
     }
 
+    if (!RunReplayAccountingTests())
+    {
+        return false;
+    }
+
     std::cout
         << "self-test: 9/9 coalescing and 6/6 bitmap groups passed; "
         << "containment, clipping, boundaries, randomized parity, and "
-        << "concurrent atomic OR are preserved\n";
+        << "concurrent atomic OR are preserved\n"
+        << "self-test: 6/6 replay-accounting groups passed; chunked totals "
+        << "cross 2^32 in 64 bits, non-advancing or impossible chunks fail "
+        << "closed, and both recorded impossible counter triples are "
+        << "rejected while the healthy one is accepted\n";
     return true;
 }
 
@@ -288,6 +526,7 @@ struct Options
 {
     bool SelfTest = false;
     bool Sequential = false;
+    bool QuarantineCounters = false;
     fs::path Trace;
     fs::path Output;
     std::wstring ModuleName;
@@ -315,6 +554,11 @@ void PrintUsage()
         << "  --from SEQUENCE:STEPS\n"
         << "  --to SEQUENCE:STEPS\n"
         << "  --sequential\n"
+        << "  --quarantine-counters      publish coverage with the step and\n"
+        << "                             callback counters withheld when the\n"
+        << "                             replay engine's accounting is\n"
+        << "                             impossible, instead of refusing to\n"
+        << "                             publish (exit 11)\n"
         << "  --max-module-bytes NUMBER\n"
         << "  --must-hit-rva NUMBER      (repeatable)\n"
         << "  --must-miss-rva NUMBER     (repeatable)\n";
@@ -349,6 +593,15 @@ Options ParseOptions(int argc, wchar_t* argv[])
                 throw std::runtime_error("duplicate option: --sequential");
             }
             options.Sequential = true;
+        }
+        else if (option == L"--quarantine-counters")
+        {
+            if (options.QuarantineCounters)
+            {
+                throw std::runtime_error(
+                    "duplicate option: --quarantine-counters");
+            }
+            options.QuarantineCounters = true;
         }
         else if (option == L"--trace")
         {
@@ -874,14 +1127,15 @@ void WriteJsonl(
     IReplayEngineView const& engine,
     Position const& requestedFrom,
     Position const& requestedTo,
-    ICursorView::ReplayResult const& replayResult,
+    ReplayAccounting const& replayAccounting,
     Position const& finalPosition,
     AtomicCoverage const& coverage,
     GapStatistics const& gapStatistics,
     std::vector<Range> const& ranges,
     bool replayComplete,
     bool markerAssertionsPassed,
-    bool collectorChecksPassed)
+    bool collectorChecksPassed,
+    bool countersQuarantined)
 {
     if (fs::exists(options.Output))
     {
@@ -937,6 +1191,7 @@ void WriteJsonl(
         << ",\"collector\":\"parallel-safe-atomic-byte-bitmap\""
         << ",\"replay_mode\":\""
         << (options.Sequential ? "sequential" : "parallel") << "\""
+        << ",\"step_accounting\":\"chunked-64-bit-accumulation\""
         << ",\"uint64_encoding\":\"decimal-string\""
         << "}\n";
 
@@ -997,18 +1252,46 @@ void WriteJsonl(
     }
     output << "}\n";
 
-    char const* const stopReason = GetEventTypeName(replayResult.StopReason);
+    char const* const stopReason =
+        GetEventTypeName(replayAccounting.StopReason);
     output
         << "{\"schema\":\"" << kSchema << "\",\"kind\":\"summary\""
         << ",\"range_count\":" << ranges.size()
-        << ",\"covered_bytes\":\"" << coveredBytes << "\""
-        << ",\"callback_hits\":\"" << coverage.CallbackHits() << "\""
+        << ",\"covered_bytes\":\"" << coveredBytes << "\"";
+
+    // A quarantined summary withholds every counter the engine mis-reported.
+    // Absent, not zero and not the broken value: a reader that wants a step
+    // count must fail to find one rather than silently read a wrong number.
+    // The raw values survive under quarantined_counters as evidence.
+    if (countersQuarantined)
+    {
+        output
+            << ",\"counters_quarantined\":true"
+            << ",\"quarantined_counters\":{"
+            << "\"callback_hits\":\"" << coverage.CallbackHits() << "\""
+            << ",\"instructions_executed\":\""
+            << replayAccounting.InstructionsExecuted << "\""
+            << ",\"steps_executed\":\"" << replayAccounting.StepsExecuted << "\""
+            << ",\"gap_events\":\"" << gapStatistics.Total() << "\""
+            << ",\"reason\":\"" << JsonEscape(kQuarantineReason) << "\""
+            << "}";
+    }
+    else
+    {
+        output
+            << ",\"counters_quarantined\":false"
+            << ",\"callback_hits\":\"" << coverage.CallbackHits() << "\""
+            << ",\"instructions_executed\":\""
+            << replayAccounting.InstructionsExecuted << "\""
+            << ",\"steps_executed\":\"" << replayAccounting.StepsExecuted
+            << "\"";
+    }
+
+    output
         << ",\"stop_reason\":\""
         << JsonEscape(stopReason == nullptr ? "" : stopReason) << "\""
-        << ",\"steps_executed\":\""
-        << static_cast<uint64_t>(replayResult.StepsExecuted) << "\""
-        << ",\"instructions_executed\":\""
-        << static_cast<uint64_t>(replayResult.InstructionsExecuted) << "\""
+        << ",\"replay_chunks\":\"" << replayAccounting.ChunkCount << "\""
+        << ",\"replay_chunk_steps\":\"" << kReplayChunkSteps << "\""
         << ",\"final_position\":\"" << PositionString(finalPosition) << "\""
         << ",\"replay_complete\":" << (replayComplete ? "true" : "false")
         << ",\"marker_assertions_passed\":"
@@ -1149,8 +1432,13 @@ int Analyze(Options const& options)
         << " from=" << PositionString(requestedFrom)
         << " to=" << PositionString(requestedTo)
         << "\n";
-    ICursorView::ReplayResult const replayResult =
-        cursor->ReplayForward(replayLimit);
+    ReplayAccounting const replayAccounting = AccumulateReplayChunks(
+        [&cursor, &replayLimit]()
+        {
+            return cursor->ReplayForward(
+                replayLimit,
+                static_cast<StepCount>(kReplayChunkSteps));
+        });
     Position const finalPosition = cursor->GetPosition();
     std::vector<Range> const ranges = coverage.Ranges();
 
@@ -1163,8 +1451,8 @@ int Analyze(Options const& options)
 
     bool const terminalReasonPassed =
         !options.To
-            ? replayResult.StopReason == EventType::Process
-            : replayResult.StopReason == EventType::Position;
+            ? replayAccounting.StopReason == EventType::Process
+            : replayAccounting.StopReason == EventType::Position;
     bool const replayComplete =
         terminalReasonPassed &&
         finalPosition >= requestedTo;
@@ -1182,6 +1470,44 @@ int Analyze(Options const& options)
     bool const collectorChecksPassed =
         replayComplete && markerAssertionsPassed;
 
+    // A watchpoint hit requires an executed instruction, and an instruction is
+    // a step, so callback_hits <= instructions_executed <= steps_executed is a
+    // hard invariant.  It is exactly the invariant the pre-fix collector broke
+    // by publishing a truncated step count, so refuse to publish rather than
+    // emit another receipt that lies quietly.
+    uint64_t const callbackHits = coverage.CallbackHits();
+    bool const countersQuarantined =
+        !CountersAreConsistent(
+            callbackHits,
+            replayAccounting.InstructionsExecuted,
+            replayAccounting.StepsExecuted);
+    if (countersQuarantined)
+    {
+        char const* const failedStopReason =
+            GetEventTypeName(replayAccounting.StopReason);
+        std::string const detail =
+            "callback_hits=" + std::to_string(callbackHits) +
+            " instructions_executed=" +
+            std::to_string(replayAccounting.InstructionsExecuted) +
+            " steps_executed=" +
+            std::to_string(replayAccounting.StepsExecuted) +
+            " gap_events=" + std::to_string(gapStatistics.Total()) +
+            " chunks=" + std::to_string(replayAccounting.ChunkCount) +
+            " stop_reason=" +
+            (failedStopReason == nullptr ? "" : failedStopReason) +
+            " final_position=" + PositionString(finalPosition);
+        if (!options.QuarantineCounters)
+        {
+            throw std::runtime_error(
+                "replay accounting is impossible; refusing to publish "
+                "coverage: " + detail);
+        }
+        std::cerr
+            << "replay accounting is impossible; publishing coverage with the "
+               "counters quarantined (--quarantine-counters): "
+            << detail << "\n";
+    }
+
     WriteJsonl(
         options,
         traceBytesBefore,
@@ -1189,18 +1515,25 @@ int Analyze(Options const& options)
         *ownedEngine,
         requestedFrom,
         requestedTo,
-        replayResult,
+        replayAccounting,
         finalPosition,
         coverage,
         gapStatistics,
         ranges,
         replayComplete,
         markerAssertionsPassed,
-        collectorChecksPassed);
+        collectorChecksPassed,
+        countersQuarantined);
 
-    char const* const stopReason = GetEventTypeName(replayResult.StopReason);
+    char const* const stopReason =
+        GetEventTypeName(replayAccounting.StopReason);
     std::cerr << "complete; ranges=" << ranges.size()
-              << " callbacks=" << coverage.CallbackHits()
+              << " callbacks=" << callbackHits
+              << " steps=" << replayAccounting.StepsExecuted
+              << " instructions=" << replayAccounting.InstructionsExecuted
+              << " chunks=" << replayAccounting.ChunkCount
+              << " countersQuarantined="
+              << (countersQuarantined ? "true" : "false")
               << " stop=" << (stopReason == nullptr ? "" : stopReason)
               << " replayComplete=" << (replayComplete ? "true" : "false")
               << " markerAssertions="
@@ -1208,7 +1541,13 @@ int Analyze(Options const& options)
               << " collectorChecks="
               << (collectorChecksPassed ? "pass" : "fail")
               << "\n";
-    return collectorChecksPassed ? 0 : 10;
+    if (!collectorChecksPassed)
+    {
+        return 10;
+    }
+    // Publishing with quarantined counters is not a clean pass.  The caller
+    // gets the ranges and a distinct, loud exit code.
+    return countersQuarantined ? 11 : 0;
 }
 } // namespace
 

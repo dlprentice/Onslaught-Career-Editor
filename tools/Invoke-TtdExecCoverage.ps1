@@ -16,7 +16,13 @@ param(
     [string]$To = '',
     [string[]]$MustHitRva = @(),
     [string[]]$MustMissRva = @(),
-    [switch]$Sequential
+    [switch]$Sequential,
+
+    # Opt in to publishing coverage whose replay counters are impossible.  The
+    # ranges are the product and were independently verified; the counters are
+    # withheld from the summary and preserved only as poisoned evidence.  The
+    # default remains fail-closed: no flag, no receipt.
+    [switch]$QuarantineCounters
 )
 
 Set-StrictMode -Version Latest
@@ -94,6 +100,102 @@ function Get-FileFacts {
         bytes = $item.Length
         sha256 = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash
         lastWriteUtc = $item.LastWriteTimeUtc.ToString('o')
+    }
+}
+
+function Assert-CoverageCountersAreConsistent {
+    # A memory-watchpoint execute hit requires an executed instruction, and an
+    # instruction is a step, so
+    #   callback_hits <= instructions_executed <= steps_executed
+    # is a hard invariant of any honest coverage summary.  Two recorded receipts
+    # violate it by four orders of magnitude - options-open-manual-01 published
+    # 131111 steps against 1137340343 callback hits, frontend-manual-02 137023
+    # against 245245503 - because TTD Replay 1.11.584.0 stops advancing its step
+    # accounting in some regions of those traces.  A receipt like that is a lying
+    # instrument, not a surprising measurement.  Fail closed rather than write a
+    # receipt around it.
+    param(
+        [Parameter(Mandatory = $true)]$Summary,
+        [switch]$QuarantineAllowed
+    )
+
+    $counterFields = @(
+        'callback_hits',
+        'instructions_executed',
+        'steps_executed'
+    )
+    $quarantined = $false
+    $quarantineProperty = $Summary.PSObject.Properties['counters_quarantined']
+    if ($null -ne $quarantineProperty) {
+        if ($quarantineProperty.Value -isnot [bool]) {
+            throw 'Coverage summary counters_quarantined must be a JSON boolean.'
+        }
+        $quarantined = [bool]$quarantineProperty.Value
+    }
+
+    if ($quarantined) {
+        if (-not $QuarantineAllowed) {
+            throw (
+                'Coverage summary declares counters_quarantined but this run ' +
+                'did not request -QuarantineCounters. Refusing a receipt ' +
+                'nobody asked to quarantine.'
+            )
+        }
+        # A receipt does not get it both ways: quarantined counters are absent,
+        # never absent-and-also-present.
+        $leaked = @($counterFields | Where-Object {
+            $null -ne $Summary.PSObject.Properties[$_]
+        })
+        if ($leaked.Count -gt 0) {
+            throw (
+                'Coverage summary is quarantined but still carries top-level ' +
+                "counters ($($leaked -join ', ')). Refusing a receipt that " +
+                'claims both.'
+            )
+        }
+        $evidence = $Summary.PSObject.Properties['quarantined_counters']
+        if ($null -eq $evidence -or $null -eq $evidence.Value) {
+            throw 'Quarantined coverage summary lacks quarantined_counters evidence.'
+        }
+        foreach ($field in $counterFields) {
+            $property = $evidence.Value.PSObject.Properties[$field]
+            if ($null -eq $property -or
+                ([string]$property.Value) -notmatch '^[0-9]+$') {
+                throw "Quarantined counter evidence lacks a decimal $field."
+            }
+        }
+        $reason = $evidence.Value.PSObject.Properties['reason']
+        if ($null -eq $reason -or [string]::IsNullOrWhiteSpace(
+                [string]$reason.Value)) {
+            throw 'Quarantined counter evidence lacks a reason.'
+        }
+        return
+    }
+
+    $values = @{}
+    foreach ($field in $counterFields) {
+        $property = $Summary.PSObject.Properties[$field]
+        if ($null -eq $property) {
+            throw "Coverage summary is missing $field."
+        }
+        $text = [string]$property.Value
+        if ($text -notmatch '^[0-9]+$') {
+            throw "Coverage summary field $field is not a decimal string: '$text'"
+        }
+        $values[$field] = [uint64]::Parse($text)
+    }
+
+    if ($values['instructions_executed'] -gt $values['steps_executed'] -or
+        $values['callback_hits'] -gt $values['instructions_executed']) {
+        throw (
+            'Coverage summary counters are mutually impossible ' +
+            "(callback_hits=$($values['callback_hits']) " +
+            "instructions_executed=$($values['instructions_executed']) " +
+            "steps_executed=$($values['steps_executed'])). " +
+            'A watchpoint hit requires an executed instruction and an ' +
+            'instruction is a step, so this receipt would be a lying ' +
+            'instrument. Refusing to publish it.'
+        )
     }
 }
 
@@ -258,6 +360,9 @@ if (-not [string]::IsNullOrWhiteSpace($To)) {
 if ($Sequential) {
     $collectorArguments.Add('--sequential')
 }
+if ($QuarantineCounters) {
+    $collectorArguments.Add('--quarantine-counters')
+}
 foreach ($rva in $MustHitRva) {
     $collectorArguments.Add('--must-hit-rva')
     $collectorArguments.Add($rva)
@@ -349,6 +454,14 @@ if ([string]$metadata.module_size -cne
     throw 'Coverage module size does not match the target PE.'
 }
 
+Assert-CoverageCountersAreConsistent `
+    -Summary $summary `
+    -QuarantineAllowed:$QuarantineCounters
+$countersQuarantined = (
+    $null -ne $summary.PSObject.Properties['counters_quarantined'] -and
+    $summary.counters_quarantined -eq $true
+)
+
 $coverageFacts = Get-FileFacts -Path $coveragePath
 $receipt = [ordered]@{
     schemaVersion = 'bea-ttd-exec-coverage-receipt.v2'
@@ -360,6 +473,7 @@ $receipt = [ordered]@{
     replayComplete = $summary.replay_complete -eq $true
     markerAssertionsPassed = $summary.marker_assertions_passed -eq $true
     collectorChecksPassed = $summary.collector_checks_passed -eq $true
+    countersQuarantined = $countersQuarantined
     trace = $traceBefore
     target = [ordered]@{
         path = $targetBefore.path
@@ -386,6 +500,7 @@ $receipt = [ordered]@{
         from = $From
         to = $To
         sequential = [bool]$Sequential
+        quarantineCounters = [bool]$QuarantineCounters
         mustHitRva = @($MustHitRva)
         mustMissRva = @($MustMissRva)
     }
