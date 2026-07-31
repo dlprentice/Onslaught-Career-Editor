@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 import json
 import math
+import os
 from dataclasses import replace
 from pathlib import Path
 import struct
@@ -28,6 +29,7 @@ def _cmsp(
     base_position: tuple[float, float, float],
     rotated: bool,
     hierarchy_frames: int = 1,
+    bones: int = 0,
 ) -> bytes:
     payload = bytearray(316)
     identity = (1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
@@ -42,7 +44,7 @@ def _cmsp(
     struct.pack_into("<4f", payload, 0x70, *base_position, 1.0)
     struct.pack_into("<III", payload, 0x88, part, 1, children)
     struct.pack_into("<IIIIII", payload, 0xA8, 0, 0, 0, 0, 1, hierarchy_frames)
-    struct.pack_into("<I", payload, 0xC0, 0)
+    struct.pack_into("<I", payload, 0xC0, bones)
     return _chunk(b"CMSP", bytes(payload))
 
 
@@ -190,6 +192,107 @@ def build_reference_fixture_stream(parts: list[bytes] | None = None) -> bytes:
     struct.pack_into("<I", header, 4, 372)
     struct.pack_into("<I", header, 0x164, len(selected))
     return bytes(header) + _chunk(b"CMST", b"") + b"".join(selected)
+
+
+# --- skinned (stride-48) fixtures -------------------------------------------
+# A skinned part streams 48-byte vertices and leaves the FVF word zero. The four
+# rows below carry the same positions/normals/UVs as `_vertices`, so the emitted
+# OBJ geometry is directly comparable with the rigid path.
+_SKINNED_ROWS = (
+    ((1.0, 2.0, 3.0), (0.0, 1.0, 0.0), (0.0, 0.0)),
+    ((4.0, 5.0, 6.0), (1.0, 0.0, 0.0), (0.25, 0.5)),
+    ((7.0, 8.0, 9.0), (0.0, 0.0, 1.0), (1.0, 0.5)),
+    ((2.0, 2.0, 3.0), (0.0, -1.0, 0.0), (0.75, 1.0)),
+)
+_SKINNED_SLOTS = ((0, 0, 0), (0, 0, 1), (1, 0, 1), (1, 1, 1))
+
+
+def _skinned_cmvb(group_count: int) -> bytes:
+    payload = bytearray(296)
+    payload[264] = group_count
+    struct.pack_into("<III", payload, 276, 48, 0, 4)
+    return _chunk(b"CMVB", bytes(payload))
+
+
+def _skinned_vertices(slots: tuple[tuple[int, int, int], ...] | None = None) -> bytes:
+    selected = slots or _SKINNED_SLOTS
+    return b"".join(
+        struct.pack(
+            "<3f3f3fI2f",
+            *position,
+            # each slot is the BONE index scaled by the matrix-palette stride
+            *(float(index * 3) for index in slot),
+            *normal,
+            0xFFFFFFFF,
+            *uv,
+        )
+        for (position, normal, uv), slot in zip(_SKINNED_ROWS, selected, strict=True)
+    )
+
+
+def _skinned_geometry(
+    slots: tuple[tuple[int, int, int], ...] | None = None,
+    *,
+    vertices: bytes | None = None,
+) -> bytes:
+    indices = (0, 1, 2, 3)
+    index_payload = struct.pack(f"<{len(indices)}H", *indices)
+    vertex_payload = _skinned_vertices(slots) if vertices is None else vertices
+    group = (
+        _chunk(b"MMPT", struct.pack("<6I", 4 * 48, len(index_payload), len(indices), 4, len(indices) - 2, 1))
+        + _chunk(b"IBUF", index_payload)
+        + _chunk(b"VBUF", vertex_payload)
+        + _chunk(b"TEXR", bytes(24))
+    )
+    return _chunk(b"PMVB", _skinned_cmvb(1) + group)
+
+
+def _skinned_part(
+    part: int,
+    *,
+    parent: int,
+    bone_parts: tuple[int, ...] = (0, 2),
+    declared_bones: int | None = None,
+    bone_record: bytes | None = None,
+    geometry: bytes | None = None,
+) -> bytes:
+    """A part in the released `PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB` order."""
+    records = (
+        _chunk(b"PRNT", struct.pack("<I", parent))
+        + _bbox()
+        + _chunk(b"VHFM", b"\x01")
+        + _chunk(b"HORI", bytes(48))
+        + _chunk(b"HPOS", bytes(16))
+    )
+    if bone_record is not None:
+        records += bone_record
+    else:
+        records += _chunk(b"BONE", struct.pack(f"<{len(bone_parts)}I", *bone_parts))
+    records += _chunk(b"PBKT", b"opaque") + _chunk(b"CPOS", b"")
+    records += geometry if geometry is not None else _skinned_geometry()
+    return _chunk(
+        b"MESP",
+        _cmsp(
+            part=part,
+            children=0,
+            base_position=(0.0, 0.0, 0.0),
+            rotated=False,
+            bones=len(bone_parts) if declared_bones is None else declared_bones,
+        )
+        + records,
+    )
+
+
+def skinned_fixture_parts(**kwargs: object) -> list[bytes]:
+    return [
+        _multipart_part(0, parent=None, children=(1, 2)),
+        _skinned_part(1, parent=0, **kwargs),  # type: ignore[arg-type]
+        _multipart_part(2, parent=0),
+    ]
+
+
+def build_skinned_fixture_stream(parts: list[bytes] | None = None) -> bytes:
+    return build_reference_fixture_stream(skinned_fixture_parts() if parts is None else parts)
 
 
 def _part(
@@ -776,13 +879,64 @@ class CmshStaticPreviewTests(unittest.TestCase):
         with self.assertRaisesRegex(preview.CmshProfileError, "truncation: .*MESP 1 payload"):
             preview.parse_cmsh_stream(bytes(truncated))
 
-        for role, vertex_offset in (("normal", 12), ("uv", 28)):
+        for role, vertex_offset in (("position", 0), ("normal", 12)):
             malformed = bytearray(stream)
             vbuf = malformed.find(b"VBUF")
             struct.pack_into("<f", malformed, vbuf + 8 + vertex_offset, float("nan"))
             with self.subTest(role=role):
                 with self.assertRaisesRegex(preview.CmshProfileError, "non-finite numeric value"):
                     preview.parse_cmsh_stream(bytes(malformed))
+
+    def test_non_finite_uv_is_retained_not_rejected_and_never_substituted(self) -> None:
+        """A non-finite texture coordinate degrades that vertex, not the mesh.
+
+        `M_Prison.msh` ships five of them and is loaded by name from four retail
+        level archives, so rejecting the mesh would diverge from the released
+        loader. The coordinate is dropped from OBJ output rather than replaced.
+        """
+        stream = build_material_fixture_stream()
+        baseline = preview.parse_cmsh_stream(stream)
+        self.assertEqual(0, baseline.non_finite_uv_count)
+
+        for pattern in (float("nan"), float("inf"), float("-inf")):
+            malformed = bytearray(stream)
+            vbuf = malformed.find(b"VBUF")
+            struct.pack_into("<f", malformed, vbuf + 8 + 28, pattern)
+            raw_words = struct.unpack_from("<2I", malformed, vbuf + 8 + 28)
+            with self.subTest(pattern=pattern):
+                mesh = preview.parse_cmsh_stream(bytes(malformed))
+                self.assertEqual(1, mesh.non_finite_uv_count)
+                degraded = [
+                    vertex
+                    for part in mesh.parts
+                    for vertex in part.vertices
+                    if vertex.uv is None
+                ]
+                self.assertEqual(1, len(degraded))
+                # Nothing is invented: the raw dwords are carried through.
+                self.assertEqual(raw_words, degraded[0].raw_uv_u32)
+                # Every other vertex keeps a real coordinate.
+                self.assertTrue(
+                    all(
+                        vertex.uv is not None
+                        for part in mesh.parts
+                        for vertex in part.vertices
+                        if vertex is not degraded[0]
+                    )
+                )
+                obj = preview.emit_obj(mesh, include_vertex_attributes=True)
+                text = obj.decode("utf-8")
+                # No substitute coordinate was emitted for the degraded vertex,
+                # and no face mixes reference forms.
+                self.assertNotIn("nan", text.lower())
+                self.assertNotIn("inf", text.lower())
+                for line in text.splitlines():
+                    if not line.startswith("f "):
+                        continue
+                    forms = {reference.count("/") for reference in line[2:].split()}
+                    self.assertEqual(1, len(forms), line)
+                    slashes = {"//" in reference for reference in line[2:].split()}
+                    self.assertEqual(1, len(slashes), line)
 
     def test_reference_zero_sentinel_source_metadata_preserves_reference_output(self) -> None:
         parts = reference_fixture_parts()
@@ -874,7 +1028,6 @@ class CmshStaticPreviewTests(unittest.TestCase):
             "self": 2,
             "forward_last_index": 4,
             "out_of_range": 5,
-            "empty_target": 0,
         }
         for case, target in target_cases.items():
             parts = reference_fixture_parts()
@@ -883,6 +1036,18 @@ class CmshStaticPreviewTests(unittest.TestCase):
             with self.subTest(case=case):
                 with self.assertRaisesRegex(preview.CmshProfileError, pattern):
                     preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        # A reference whose target is itself empty resolves to no geometry
+        # instead of rejecting the mesh. Exactly two shipped references do this,
+        # both in `m_Building 5 Top.msh`; the other 386 target real geometry.
+        parts = reference_fixture_parts()
+        parts[2] = _multipart_part(2, parent=0, reference_payload=struct.pack("<I", 0))
+        with self.subTest(case="empty_target"):
+            mesh = preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+            self.assertEqual((), mesh.parts[0].vertices)
+            self.assertEqual((), mesh.parts[2].vertices)
+            self.assertEqual((), mesh.parts[2].groups)
+            self.assertEqual(0, mesh.parts[2].reference)
 
         for case, geometry in (
             ("populated", _reference_geometry()),
@@ -975,7 +1140,9 @@ class CmshStaticPreviewTests(unittest.TestCase):
             reference_payload=struct.pack("<I", 1),
             after_reference=_chunk(b"BONE", b""),
         )
-        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported bones/reference graph"):
+        # A BONE record on a part whose CMSP declares numBones == 0 is malformed:
+        # the two must agree, and no shipped mesh disagrees.
+        with self.assertRaisesRegex(preview.CmshProfileError, "invalid declared length/count"):
             preview.parse_cmsh_stream(build_reference_fixture_stream(bone_parts))
 
         stride48 = bytearray(_reference_geometry())
@@ -1001,6 +1168,127 @@ class CmshStaticPreviewTests(unittest.TestCase):
             EXPECTED_REFERENCE_OBJ,
             preview.emit_obj(preview.parse_cmsh_stream(build_reference_fixture_stream(source_stride_parts))),
         )
+
+    def test_skinned_part_profile_and_bone_slot_contract(self) -> None:
+        """The released skinning records decode to a bind-pose part.
+
+        `BONE` is `numBones` part indices; the stride-48 vertex is
+        position / three bone slots / normal / diffuse / UV, and each slot holds
+        its BONE index multiplied by three.
+        """
+        mesh = preview.parse_cmsh_stream(build_skinned_fixture_stream())
+        skinned = mesh.parts[1]
+        self.assertEqual((0, 2), skinned.bones)
+        self.assertEqual((), mesh.parts[0].bones)
+        self.assertEqual(4, len(skinned.vertices))
+        self.assertEqual(
+            [row[0] for row in _SKINNED_ROWS], [vertex.position for vertex in skinned.vertices]
+        )
+        self.assertEqual(
+            [row[1] for row in _SKINNED_ROWS], [vertex.normal for vertex in skinned.vertices]
+        )
+        self.assertEqual(
+            [row[2] for row in _SKINNED_ROWS], [vertex.uv for vertex in skinned.vertices]
+        )
+        self.assertEqual(
+            list(_SKINNED_SLOTS), [vertex.bone_slots for vertex in skinned.vertices]
+        )
+        self.assertEqual([0xFFFFFFFF] * 4, [vertex.raw_color_u32 for vertex in skinned.vertices])
+        # A rigid part in the same mesh keeps no bone slots at all.
+        self.assertTrue(all(vertex.bone_slots is None for vertex in mesh.parts[0].vertices))
+        # The bind pose is emitted exactly like any rigid part: no bone
+        # transform is applied, because the stored positions are part-local.
+        obj = preview.emit_obj(mesh, include_vertex_attributes=True).decode("utf-8")
+        self.assertIn("v 1.0 2.0 -3.0", obj)
+        self.assertIn("vt 0.25 0.5", obj)
+        self.assertEqual(2, sum(1 for line in obj.splitlines() if line.startswith("f ")))
+
+    def test_skinned_profile_rejects_malformed_bone_records_and_slots(self) -> None:
+        good_slot = float(1 * 3)
+        cases: list[tuple[str, list[bytes], str]] = [
+            (
+                "bone_length_mismatch",
+                skinned_fixture_parts(bone_record=_chunk(b"BONE", struct.pack("<3I", 0, 2, 0))),
+                "invalid declared length/count",
+            ),
+            (
+                "bone_target_out_of_range",
+                skinned_fixture_parts(bone_parts=(0, 9)),
+                "index out of bounds",
+            ),
+            (
+                "declared_bones_exceed_part_count",
+                skinned_fixture_parts(declared_bones=99),
+                "limit exceeded",
+            ),
+        ]
+        for name, parts, pattern in cases:
+            with self.subTest(case=name):
+                with self.assertRaisesRegex(preview.CmshProfileError, pattern):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        # numBones and the BONE record must agree in both directions.
+        zero_bones = skinned_fixture_parts(declared_bones=0)
+        with self.subTest(case="bone_record_without_declared_bones"):
+            with self.assertRaisesRegex(preview.CmshProfileError, "invalid declared length/count"):
+                preview.parse_cmsh_stream(build_reference_fixture_stream(zero_bones))
+
+        # Omitting BONE leaves the accepted PRNT BBOX VHFM HORI HPOS PBKT CPOS
+        # PMVB order, so only the presence check can catch it.
+        missing_record = skinned_fixture_parts(bone_record=b"")
+        with self.subTest(case="declared_bones_without_bone_record"):
+            with self.assertRaisesRegex(preview.CmshProfileError, "BONE presence"):
+                preview.parse_cmsh_stream(build_reference_fixture_stream(missing_record))
+
+        # Per-vertex slot words must be exact non-negative multiples of three
+        # whose quotient indexes the BONE array.
+        slot_cases = (
+            ("slot_not_a_multiple_of_three", 4.0, "invalid declared length/count"),
+            ("slot_negative", -3.0, "invalid declared length/count"),
+            ("slot_fractional", 1.5, "invalid declared length/count"),
+            ("slot_beyond_bone_count", 6.0, "index out of bounds"),
+            ("slot_non_finite", float("nan"), "non-finite numeric value"),
+        )
+        for name, value, pattern in slot_cases:
+            vertices = bytearray(_skinned_vertices())
+            struct.pack_into("<f", vertices, 12, value)
+            parts = skinned_fixture_parts(geometry=_skinned_geometry(vertices=bytes(vertices)))
+            with self.subTest(case=name):
+                with self.assertRaisesRegex(preview.CmshProfileError, pattern):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        # The unchanged control must still parse, so the mutations above are
+        # what the rejections are reacting to.
+        control = bytearray(_skinned_vertices())
+        struct.pack_into("<f", control, 12, good_slot)
+        preview.parse_cmsh_stream(
+            build_reference_fixture_stream(
+                skinned_fixture_parts(geometry=_skinned_geometry(vertices=bytes(control)))
+            )
+        )
+
+    def test_skinned_part_requires_the_wide_stride_and_zero_fvf(self) -> None:
+        for name, stride, fvf in (
+            ("rigid_stride", 36, 0),
+            ("rigid_fvf", 48, 0x152),
+            ("wrong_stride", 44, 0),
+        ):
+            geometry = bytearray(_skinned_geometry())
+            cmvb = geometry.find(b"CMVB")
+            struct.pack_into("<II", geometry, cmvb + 8 + 276, stride, fvf)
+            parts = skinned_fixture_parts(geometry=bytes(geometry))
+            with self.subTest(case=name):
+                with self.assertRaisesRegex(preview.CmshProfileError, "unsupported profile"):
+                    preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
+
+        # A rigid part may not present the skinned stride either.
+        rigid = bytearray(_reference_geometry())
+        cmvb = rigid.find(b"CMVB")
+        struct.pack_into("<II", rigid, cmvb + 8 + 276, 48, 0)
+        parts = reference_fixture_parts()
+        parts[1] = _multipart_part(1, parent=0, geometry=bytes(rigid))
+        with self.assertRaisesRegex(preview.CmshProfileError, "unsupported profile"):
+            preview.parse_cmsh_stream(build_reference_fixture_stream(parts))
 
     def test_parser_rejects_every_truncation_without_partial_output(self) -> None:
         stream = build_fixture_stream()
@@ -1159,8 +1447,12 @@ class CmshStaticPreviewTests(unittest.TestCase):
         cases = (
             ("stride", cmvb + 8 + 276, struct.pack("<I", 48), "unsupported profile"),
             ("FVF", cmvb + 8 + 280, struct.pack("<I", 0), "unsupported profile"),
-            ("bones", cmsp + 8 + 0xC0, struct.pack("<I", 1), "unsupported bones/reference graph"),
-            ("UV infinity", vbuf + 8 + 28, struct.pack("<f", float("inf")), "non-finite numeric value"),
+            # Declaring bones on a part that still streams the rigid stride-36
+            # FVF-0x152 vertex is rejected: numBones selects the vertex layout,
+            # so the two can never disagree. BONE-record presence itself is
+            # covered by test_skinned_part_profile_and_bone_slot_contract.
+            ("bones", cmsp + 8 + 0xC0, struct.pack("<I", 1), "unsupported profile"),
+            ("position infinity", vbuf + 8 + 0, struct.pack("<f", float("inf")), "non-finite numeric value"),
         )
         for name, offset, value, category in cases:
             stream = bytearray(original)
@@ -1367,6 +1659,144 @@ class CmshStaticPreviewTests(unittest.TestCase):
         with mock.patch.object(preview.os.path, "lexists", lexical_exists), mock.patch.object(preview, "_has_reparse_point", reparse):
             with self.assertRaisesRegex(preview.CmshProfileError, "reparse component"):
                 preview._validate_no_reparse_descendant(path, root, checkout, must_exist=False)
+
+
+def _shipped_mesh_directory() -> Path:
+    """Where the released meshes are materialised on this machine.
+
+    `local-lab/` is gitignored and exists only in the checkout it was populated
+    in, so a linked worktree has to be told where it is. The census skips
+    entirely when neither location is present, which is the case in a clone.
+    """
+    override = os.environ.get("ONSLAUGHT_MESH_CORPUS")
+    if override:
+        return Path(override)
+    return (
+        Path(__file__).resolve().parents[2]
+        / "local-lab"
+        / "safe-copy-bea-pristine"
+        / "data"
+        / "resources"
+        / "meshes"
+    )
+
+
+SHIPPED_MESHES = _shipped_mesh_directory()
+
+
+@unittest.skipUnless(
+    SHIPPED_MESHES.is_dir(),
+    "the retail mesh corpus is materialised locally and is not part of a clone",
+)
+class ShippedMeshCorpusCensus(unittest.TestCase):
+    """Census of the released mesh corpus. Nothing retail-derived is written."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.meshes = {}
+        for path in sorted(SHIPPED_MESHES.glob("*.msh.aya")):
+            cls.meshes[path.stem] = preview.parse_cmsh_stream(
+                preview.inflate_aya(path.read_bytes())
+            )
+
+    def test_every_shipped_mesh_parses(self) -> None:
+        self.assertEqual(213, len(self.meshes))
+
+    def test_bone_records_appear_in_exactly_the_seven_skinned_meshes(self) -> None:
+        skinned = {
+            name: tuple(len(part.bones) for part in mesh.parts if part.bones)
+            for name, mesh in self.meshes.items()
+            if any(part.bones for part in mesh.parts)
+        }
+        self.assertEqual(
+            {
+                "m_Sentinel Arm Big.msh": (14,),
+                "m_Sentinel Arm Small.msh": (14,),
+                "m_f_dtroop.msh": (18,),
+                "m_ftrooper.msh": (18,),
+                "m_mcommando.msh": (18,),
+                "m_mfiredude.msh": (19,),
+                "m_mgrunt.msh": (19,),
+            },
+            skinned,
+        )
+        # Exactly one part per skinned mesh carries bones, and it is part 1 in
+        # every case; every bone names a part of the same mesh.
+        for name, mesh in self.meshes.items():
+            carriers = [index for index, part in enumerate(mesh.parts) if part.bones]
+            if not carriers:
+                continue
+            self.assertEqual([1], carriers, name)
+            for bone in mesh.parts[1].bones:
+                self.assertLess(bone, len(mesh.parts), name)
+            # Every skinned vertex carries three in-range slots.
+            for vertex in mesh.parts[1].vertices:
+                self.assertIsNotNone(vertex.bone_slots, name)
+                self.assertEqual(3, len(vertex.bone_slots), name)
+                for slot in vertex.bone_slots:
+                    self.assertLess(slot, len(mesh.parts[1].bones), name)
+
+    def test_non_finite_uvs_are_confined_to_the_five_in_m_m_prison(self) -> None:
+        degraded = {
+            name: mesh.non_finite_uv_count
+            for name, mesh in self.meshes.items()
+            if mesh.non_finite_uv_count
+        }
+        self.assertEqual({"m_M_Prison.msh": 5}, degraded)
+        # Their raw dwords are retained, and each is two 16-bit halves of a fill
+        # pattern rather than an authored coordinate.
+        halves = set()
+        for part in self.meshes["m_M_Prison.msh"].parts:
+            for vertex in part.vertices:
+                if vertex.uv is None:
+                    self.assertIsNotNone(vertex.raw_uv_u32)
+                    for word in vertex.raw_uv_u32:
+                        halves.add(word & 0xFFFF)
+                        halves.add(word >> 16)
+        self.assertTrue(
+            halves <= {0xFFFF, 0x7FFF, 0x2AAA, 0x3333, 0x9999, 0xCCCC, 0xD555}, sorted(halves)
+        )
+
+    def test_only_m_building_5_top_references_an_empty_part(self) -> None:
+        empty = {}
+        for name, mesh in self.meshes.items():
+            for index, part in enumerate(mesh.parts):
+                if part.reference is not None and not part.vertices:
+                    empty.setdefault(name, []).append(index)
+        self.assertEqual({"m_Building 5 Top.msh": [2, 3]}, empty)
+
+    def test_the_nine_formerly_unsupported_meshes_emit_obj(self) -> None:
+        formerly_unsupported = (
+            "m_Building 5 Top.msh",
+            "m_M_Prison.msh",
+            "m_Sentinel Arm Big.msh",
+            "m_Sentinel Arm Small.msh",
+            "m_f_dtroop.msh",
+            "m_ftrooper.msh",
+            "m_mcommando.msh",
+            "m_mfiredude.msh",
+            "m_mgrunt.msh",
+        )
+        for name in formerly_unsupported:
+            with self.subTest(mesh=name):
+                obj = preview.emit_obj(
+                    self.meshes[name],
+                    include_vertex_attributes=True,
+                    include_material_layer_groups=True,
+                    include_vertex_colors=True,
+                )
+                text = obj.decode("utf-8")
+                self.assertTrue(any(line.startswith("v ") for line in text.splitlines()))
+                self.assertTrue(any(line.startswith("f ") for line in text.splitlines()))
+                # No invented coordinate ever reaches the output.
+                self.assertNotIn("nan", text.lower())
+                self.assertNotIn("inf", text.lower())
+                # Every face element uses one reference form throughout.
+                for line in text.splitlines():
+                    if line.startswith("f "):
+                        references = line[2:].split()
+                        self.assertEqual(1, len({"//" in item for item in references}), line)
+                        self.assertEqual(1, len({item.count("/") for item in references}), line)
 
 
 if __name__ == "__main__":

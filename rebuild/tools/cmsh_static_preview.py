@@ -124,6 +124,12 @@ class MeshVertex:
     normal: tuple[float, float, float] | None
     uv: tuple[float, float] | None
     raw_color_u32: int
+    # Set only when `uv` is None because the released asset stored a non-finite
+    # texture coordinate: the two raw dwords, so nothing the file said is lost.
+    raw_uv_u32: tuple[int, int] | None = None
+    # Skinned (stride-48) vertices only: the three bone slots, already divided
+    # back down to `BONE` array indices. See `_SKINNED_VERTEX_STRIDE`.
+    bone_slots: tuple[int, int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -162,12 +168,18 @@ class _Part:
     parent: int | None = None
     reference: int | None = None
     track: _RigidTrack | None = None
+    # The released `BONE` array: one part index per bone, in slot order. Empty
+    # for every part that declares `numBones == 0`.
+    bones: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
 class ParsedMesh:
     parts: tuple[_Part, ...]
     textures: tuple[MeshTexture, ...] = ()
+    # How many released vertices stored a non-finite texture coordinate. This is
+    # a property of the shipped asset, not of the decode; see `_parse_pm_vb`.
+    non_finite_uv_count: int = 0
 
 
 _PART_ORDERS = {
@@ -199,8 +211,50 @@ _PART_ORDERS = {
         "PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
         "PRNT BBOX VHFM HORI HPOS CPOS REFR PMVB",
         "CHLD PRNT BBOX VHFM HORI HPOS CPOS CORI REFR PMVB",
+        # 2026-07-31: the two skinned orders. `BONE` occurs in exactly 7 shipped
+        # meshes and in 0 of the other 206, once per mesh, always on the single
+        # part whose CMSP declares numBones != 0. Five meshes present the CORI
+        # variant (m_f_dtroop, m_ftrooper, m_mcommando, m_mfiredude, m_mgrunt),
+        # two the CORI-less one (m_Sentinel Arm Big, m_Sentinel Arm Small).
+        "CHLD PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS CORI PMVB",
+        "PRNT BBOX VHFM HORI HPOS BONE PBKT CPOS PMVB",
     )
 }
+
+# A skinned part streams a 48-byte vertex and leaves the FVF word zero, because
+# the released engine does not describe it with a D3D fixed-function FVF. The
+# layout is a rigid stride-36 vertex with three bone slots spliced in after the
+# position:
+#
+#   0x00 float3  position          (part-local, exactly as a rigid vertex)
+#   0x0c float3  bone slots        (each = BONE array index * 3)
+#   0x18 float3  normal
+#   0x24 dword   diffuse
+#   0x28 float2  texture coordinate
+#
+# Measured over all 3,203 shipped skinned vertices: the normal at 0x18 is unit
+# length to 1.5e-8 and no other offset is; the diffuse dword at 0x24 is
+# 0xffffffff in every one; the coordinate at 0x28 follows the same V-sign
+# convention as the rigid path; and every one of the 9,609 slot words is an
+# exact non-negative multiple of three whose quotient is a valid BONE index.
+#
+# WHAT IS NOT RECOVERED: how the three slots are combined. The vertex is fully
+# accounted for by the fields above, so it carries no per-vertex blend weight,
+# yet the released renderer allocates "Bone slots" and "Bone weights" as
+# separate per-part buffers (allocation labels beside
+# `C:\dev\ONSLAUGHT2\MeshRenderer.cpp` in the pristine specimen
+# `BEA.exe.original.backup`, sha256 74154bfa..., at file offset 0x230077).
+# The weighting rule is therefore a runtime property that the asset does not
+# state, and nothing here infers one. It does not affect this decoder: the
+# stored positions are the bind pose in part-local space, so a static preview
+# places a skinned part exactly as it places a rigid one.
+_SKINNED_VERTEX_STRIDE = 48
+_RIGID_VERTEX_STRIDE = 36
+_RIGID_VERTEX_FVF = 0x152
+# Each slot holds the bone's base offset in a three-register matrix palette, so
+# the stored float is the BONE array index multiplied by three.
+_BONE_SLOT_STRIDE = 3
+_BONE_SLOTS_PER_VERTEX = 3
 _SIBLING_ORDERS = {
     (b"BBOX",),
     (b"BBOX", b"CEMT"),
@@ -295,21 +349,81 @@ def inflate_aya(source: bytes) -> bytes:
     return bytes(output)
 
 
-def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tuple[MeshVertex, ...], tuple[MeshGroup, ...]]:
+def _vertex_uv(
+    data: bytes | memoryview, offset: int, origin: int
+) -> tuple[tuple[float, float] | None, tuple[int, int] | None]:
+    """A vertex texture coordinate, or `None` plus its raw dwords if non-finite.
+
+    Rejecting the mesh here would diverge from the released loader. `M_Prison.msh`
+    stores five non-finite texture coordinates and is loaded by name from four
+    shipped level archives (`710_res_PC`, `720_res_PC`, `731_res_PC`,
+    `732_res_PC`), so retail demonstrably accepts them. The raw dwords are kept
+    and the count is reported; no substitute value is ever invented.
+    """
+    if offset + 8 > len(data):
+        raise CmshProfileError("truncation", origin + offset, "vertex UV")
+    values = struct.unpack_from("<2f", data, offset)
+    if all(math.isfinite(value) for value in values):
+        return values, None
+    return None, struct.unpack_from("<2I", data, offset)
+
+
+def _parse_skinned_vertex(
+    data: memoryview, offset: int, origin: int, bone_count: int
+) -> tuple[MeshVertex, int]:
+    """One stride-48 skinned vertex. Returns it plus 1 if its UV was non-finite."""
+    values = _finite_floats(data, offset, 3, "vertex position", origin)
+    normal = _finite_floats(data, offset + 0x18, 3, "vertex normal", origin)
+    raw_slots = _finite_floats(data, offset + 0x0C, _BONE_SLOTS_PER_VERTEX, "vertex bone slots", origin)
+    slots: list[int] = []
+    for slot in raw_slots:
+        index, remainder = divmod(slot, _BONE_SLOT_STRIDE)
+        if remainder or index < 0 or index != int(index):
+            raise CmshProfileError("invalid declared length/count", origin + offset, "vertex bone slot")
+        if not 0 <= int(index) < bone_count:
+            raise CmshProfileError("index out of bounds", origin + offset, "vertex bone slot")
+        slots.append(int(index))
+    uv, raw_uv = _vertex_uv(data, offset + 0x28, origin)
+    raw_color_u32 = struct.unpack_from("<I", data, offset + 0x24)[0]
+    return (
+        MeshVertex(values, normal, uv, raw_color_u32, raw_uv, (slots[0], slots[1], slots[2])),
+        1 if uv is None else 0,
+    )
+
+
+def _parse_rigid_vertex(data: memoryview, offset: int, origin: int) -> tuple[MeshVertex, int]:
+    """One stride-36 rigid vertex. Returns it plus 1 if its UV was non-finite."""
+    values = _finite_floats(data, offset, 6, "vertex position/normal", origin)
+    uv, raw_uv = _vertex_uv(data, offset + 28, origin)
+    raw_color_u32 = struct.unpack_from("<I", data, offset + 24)[0]
+    return MeshVertex(values[:3], values[3:6], uv, raw_color_u32, raw_uv), 1 if uv is None else 0
+
+
+def _parse_pm_vb(
+    payload: memoryview, origin: int, budget: _Budget, bone_count: int = 0
+) -> tuple[tuple[MeshVertex, ...], tuple[MeshGroup, ...], int]:
     reader = _Reader(payload, origin=origin, limit_role="PMVB")
     cmvb = reader.expected(b"CMVB", "CMVB", length=296)
     group_count = cmvb.payload[264]
     if group_count == 0:
         reader.require_end()
-        return (), ()
+        return (), (), 0
     if not 1 <= group_count <= 12:
         raise CmshProfileError("limit exceeded", cmvb.offset, "MMPT group count")
     stride, fvf, topology = struct.unpack_from("<III", cmvb.payload, 276)
-    if stride != 36 or fvf != 0x152:
+    # A skinned part streams the wider vertex and leaves the FVF word zero; a
+    # rigid one streams the D3D fixed-function vertex. The part's declared
+    # numBones selects which, so the two never have to be guessed apart.
+    if bone_count:
+        expected_stride, expected_fvf = _SKINNED_VERTEX_STRIDE, 0
+    else:
+        expected_stride, expected_fvf = _RIGID_VERTEX_STRIDE, _RIGID_VERTEX_FVF
+    if stride != expected_stride or fvf != expected_fvf:
         raise CmshProfileError("unsupported profile", cmvb.offset, "stride/FVF")
     if topology != 4:
         raise CmshProfileError("unsupported topology", cmvb.offset, "topology field")
 
+    non_finite_uv = 0
     owned: tuple[MeshVertex, ...] = ()
     groups: list[MeshGroup] = []
     declared_vertex_bytes = vertex_count = None
@@ -327,7 +441,7 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
                 raise CmshProfileError("limit exceeded", mmpt.offset, "owned vertex count")
             if budget.vertices + vcount > MAX_VERTICES:
                 raise CmshProfileError("limit exceeded", mmpt.offset, "aggregate owned vertex count")
-            if vbytes != vcount * 36:
+            if vbytes != vcount * expected_stride:
                 raise CmshProfileError("invalid declared length/count", mmpt.offset, "owned VBUF declaration")
             declared_vertex_bytes, vertex_count = vbytes, vcount
         elif vbytes != declared_vertex_bytes or vcount != vertex_count:
@@ -344,11 +458,15 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
                 raise CmshProfileError("invalid declared length/count", vbuf.offset, "owned VBUF")
             rows: list[MeshVertex] = []
             for vertex in range(vcount):
-                offset = vertex * 36
-                values = _finite_floats(vbuf.payload, offset, 6, "vertex position/normal", vbuf.offset + 8)
-                uv = _finite_floats(vbuf.payload, offset + 28, 2, "vertex UV", vbuf.offset + 8)
-                raw_color_u32 = struct.unpack_from("<I", vbuf.payload, offset + 24)[0]
-                rows.append(MeshVertex(values[:3], values[3:6], uv, raw_color_u32))
+                offset = vertex * expected_stride
+                if bone_count:
+                    row, degraded = _parse_skinned_vertex(
+                        vbuf.payload, offset, vbuf.offset + 8, bone_count
+                    )
+                else:
+                    row, degraded = _parse_rigid_vertex(vbuf.payload, offset, vbuf.offset + 8)
+                non_finite_uv += degraded
+                rows.append(row)
             owned = tuple(rows)
         elif len(vbuf.payload) != 0:
             raise CmshProfileError("invalid declared length/count", vbuf.offset, "secondary VBUF reuse")
@@ -360,7 +478,7 @@ def _parse_pm_vb(payload: memoryview, origin: int, budget: _Budget) -> tuple[tup
         raw_texr_u32 = struct.unpack("<6I", texr.payload)
         groups.append(MeshGroup(tuple(indices), raw_texr_u32))
     reader.require_end()
-    return owned, tuple(groups)
+    return owned, tuple(groups), non_finite_uv
 
 
 def _validate_reference_source_pm_vb(payload: memoryview, origin: int) -> None:
@@ -380,7 +498,7 @@ def _parse_part(
     part_count: int,
     budget: _Budget,
     hierarchy_frame: int | None,
-) -> _Part:
+) -> tuple[_Part, int]:
     reader = _Reader(chunk.payload, origin=chunk.offset + 8, limit_role="MESP")
     cmsp = reader.expected(b"CMSP", "CMSP", length=316)
     payload = cmsp.payload
@@ -392,8 +510,8 @@ def _parse_part(
     dvert, pvert, tris, aframes, vframes, hframes, bones = struct.unpack_from("<7I", payload, 0xA8)
     if number != part_index or not 1 <= part_type <= 6 or dvert or pvert or tris:
         raise CmshProfileError("invalid declared length/count", cmsp.offset, "CMSP identity/counts")
-    if bones:
-        raise CmshProfileError("unsupported bones/reference graph", cmsp.offset, "CMSP numBones")
+    if bones > part_count:
+        raise CmshProfileError("limit exceeded", cmsp.offset, "CMSP numBones")
     if child_count > 256 or aframes > 2 or not 1 <= vframes <= 512 or not 1 <= hframes <= 256:
         raise CmshProfileError("limit exceeded", cmsp.offset, "CMSP frame/hierarchy counts")
     raw_name = bytes(payload[0xDC:0xFC])
@@ -408,6 +526,8 @@ def _parse_part(
     tags: list[str] = []
     vertices: tuple[MeshVertex, ...] = ()
     groups: tuple[MeshGroup, ...] = ()
+    bone_parts: tuple[int, ...] = ()
+    non_finite_uv = 0
     children: tuple[int, ...] = ()
     parent: int | None = None
     reference: int | None = None
@@ -427,9 +547,18 @@ def _parse_part(
         except UnicodeDecodeError as error:
             raise CmshProfileError("unexpected tag/order", record.offset, "non-ASCII MESP tag") from error
         tags.append(tag)
-        if record.tag in {b"BONE", b"BONW", b"BONS"}:
+        if record.tag in {b"BONW", b"BONS"}:
             raise CmshProfileError("unsupported bones/reference graph", record.offset, tag)
-        if record.tag == b"CHLD":
+        if record.tag == b"BONE":
+            # One u32 per bone, each a part index in this same mesh: the skeleton
+            # is drawn from the part hierarchy rather than stored separately.
+            # Length is exactly numBones * 4 in all 7 shipped skinned meshes.
+            if bones == 0 or len(record.payload) != bones * 4:
+                raise CmshProfileError("invalid declared length/count", record.offset, "BONE")
+            bone_parts = struct.unpack(f"<{bones}I", record.payload)
+            if any(bone >= part_count for bone in bone_parts):
+                raise CmshProfileError("index out of bounds", record.offset, "BONE")
+        elif record.tag == b"CHLD":
             if len(record.payload) != child_count * 4 or child_count == 0:
                 raise CmshProfileError("invalid declared length/count", record.offset, "CHLD")
             children = struct.unpack(f"<{child_count}I", record.payload)
@@ -509,7 +638,9 @@ def _parse_part(
                 cached_orientation_bytes = bytes(record.payload)
         elif record.tag == b"PMVB":
             if reference is None:
-                vertices, groups = _parse_pm_vb(record.payload, record.offset + 8, budget)
+                vertices, groups, non_finite_uv = _parse_pm_vb(
+                    record.payload, record.offset + 8, budget, bones
+                )
             else:
                 try:
                     _validate_reference_source_pm_vb(record.payload, record.offset + 8)
@@ -521,6 +652,8 @@ def _parse_part(
         raise CmshProfileError("unexpected tag/order", chunk.offset, "complete MESP record order")
     if ("CHLD" in tags) != (child_count > 0):
         raise CmshProfileError("invalid declared length/count", chunk.offset, "CHLD presence")
+    if ("BONE" in tags) != (bones > 0):
+        raise CmshProfileError("invalid declared length/count", chunk.offset, "BONE presence")
     selected_orientation = hierarchy_orientation if hierarchy_orientation is not None else base
     selected_position = hierarchy_position if hierarchy_position is not None else position
     rows = _rows(selected_orientation)
@@ -541,17 +674,21 @@ def _parse_part(
         cached_orientation_bytes,
         cached_position_bytes,
     )
-    return _Part(
-        part_name,
-        part_type,
-        _Transform(rows, selected_position),
-        bounding_box,
-        vertices,
-        groups,
-        children,
-        parent,
-        reference,
-        track,
+    return (
+        _Part(
+            part_name,
+            part_type,
+            _Transform(rows, selected_position),
+            bounding_box,
+            vertices,
+            groups,
+            children,
+            parent,
+            reference,
+            track,
+            bone_parts,
+        ),
+        non_finite_uv,
     )
 
 
@@ -600,10 +737,17 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
         if target_index >= index:
             raise CmshProfileError("unsupported bones/reference graph", 0, "REFR must target earlier part")
         target = parts[target_index]
-        if target.reference is not None or not target.vertices or not target.groups:
-            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR direct geometry target")
+        if target.reference is not None:
+            raise CmshProfileError("unsupported bones/reference graph", 0, "REFR chained reference")
         if part.vertices or part.groups:
             raise CmshProfileError("unsupported bones/reference graph", 0, "REFR ambiguous geometry source")
+        if not target.vertices or not target.groups:
+            # The target part is itself empty, so the reference resolves to no
+            # geometry and the referring part keeps its own (empty) state. Two
+            # shipped references do this, both in `m_Building 5 Top.msh`
+            # (parts 2 and 3 -> part 1); the other 386 target real geometry.
+            resolved.append(part)
+            continue
         resolved.append(
             _Part(
                 part.name,
@@ -616,6 +760,7 @@ def _resolve_references(parts: tuple[_Part, ...]) -> tuple[_Part, ...]:
                 part.parent,
                 part.reference,
                 part.track,
+                part.bones,
             )
         )
 
@@ -667,12 +812,12 @@ def parse_cmsh_stream(data: bytes, *, hierarchy_frame: int | None = None) -> Par
         )
     part_chunks = [reader.expected(b"MESP", f"MESP {index}") for index in range(part_count)]
     budget = _Budget()
-    parts = _resolve_references(
-        tuple(
-            _parse_part(chunk, index, part_count, budget, hierarchy_frame)
-            for index, chunk in enumerate(part_chunks)
-        )
-    )
+    decoded = [
+        _parse_part(chunk, index, part_count, budget, hierarchy_frame)
+        for index, chunk in enumerate(part_chunks)
+    ]
+    non_finite_uv = sum(count for _, count in decoded)
+    parts = _resolve_references(tuple(part for part, _ in decoded))
     reader.absolute_limit = None
     siblings: list[bytes] = []
     while reader.pos < len(reader.data):
@@ -682,7 +827,7 @@ def parse_cmsh_stream(data: bytes, *, hierarchy_frame: int | None = None) -> Par
         siblings.append(sibling.tag)
     if siblings and tuple(siblings) not in _SIBLING_ORDERS:
         raise CmshProfileError("unexpected tag/order", reader.origin, "post-body sibling order")
-    return ParsedMesh(parts, tuple(textures))
+    return ParsedMesh(parts, tuple(textures), non_finite_uv)
 
 
 def _number(value: float) -> str:
@@ -854,9 +999,9 @@ def emit_obj(
         ):
             raise CmshProfileError("invalid declared length/count", 0, "OBJ vertex attributes")
 
-        def face_reference(index: int) -> str:
+        def face_reference(index: int, *, with_uv: bool = True) -> str:
             vertex_index = index + base
-            uv_index = part_uvs[index] if part_uvs is not None else None
+            uv_index = (part_uvs[index] if part_uvs is not None else None) if with_uv else None
             normal_index = part_normals[index] if part_normals is not None else None
             if uv_index is not None and normal_index is not None:
                 return f"{vertex_index}/{uv_index}/{normal_index}"
@@ -887,8 +1032,19 @@ def emit_obj(
                 if not (1 <= a <= emitted_vertices and 1 <= b <= emitted_vertices and 1 <= c <= emitted_vertices):
                     raise CmshProfileError("OBJ rejection", 0, "face index")
                 local_a, local_b, local_c = a - base, b - base, c - base
+                # OBJ requires one reference form per face element. A released
+                # vertex whose texture coordinate was non-finite has no `vt`, so
+                # the whole face drops its texture-coordinate component rather
+                # than mixing forms or inventing a substitute coordinate.
+                with_uv = part_uvs is None or all(
+                    part_uvs[local] is not None for local in (local_a, local_b, local_c)
+                )
                 append_line(
-                    f"f {face_reference(local_a)} {face_reference(local_b)} {face_reference(local_c)}"
+                    "f "
+                    + " ".join(
+                        face_reference(local, with_uv=with_uv)
+                        for local in (local_a, local_b, local_c)
+                    )
                 )
                 faces = _checked_add(faces, 1, MAX_TRIANGLES, "OBJ faces")
     if emitted_vertices == 0 or faces == 0:
