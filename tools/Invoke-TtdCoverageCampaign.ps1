@@ -29,6 +29,10 @@
       its own step accounting on some traces (task #149), so the per-trace
       density metrics logged here are derived from trace bytes, sequence
       counts, and gap events - never from a step count.
+    * The receipt is the truth and this log is derived from it.  Status comes
+      from the receipt's resolved exitCode, never from $LASTEXITCODE (see the
+      cross-check below), and -RebuildLogFromReceipts regenerates the whole log
+      from the receipts already on disk rather than editing a line in place.
 
 .NOTES
     Run this yourself; it is unattended, needs no elevation, and the pilot
@@ -59,6 +63,12 @@ param(
     [string[]]$MustMissRva = @('0x2D150'),
 
     [switch]$Sequential,
+
+    # Regenerate campaign-log.jsonl from the coverage receipts already on disk
+    # and collect nothing.  The log is derived data; when its status labels are
+    # wrong the fix is to re-derive every line from the receipts, not to edit
+    # the lines that look wrong.  The superseded log is kept beside the new one.
+    [switch]$RebuildLogFromReceipts,
 
     # Smoke-test lever: process at most N traces this pass.  0 means all.
     [int]$MaxTraces = 0,
@@ -148,6 +158,101 @@ function Get-UInt64Field {
     return [uint64]::Parse($text)
 }
 
+function Get-ReceiptExitCode {
+    # The wrapper's RESOLVED exit code: what the run actually amounts to after
+    # the terminal-stop adjudication.  Falls back to the collector's raw code
+    # only for a receipt that predates the resolved field.
+    param($Receipt)
+
+    $value = Get-Field -Owner $Receipt -Name 'exitCode'
+    if ($null -eq $value) {
+        $value = Get-Field -Owner $Receipt -Name 'collectorExitCode'
+    }
+    if ($null -eq $value) { return $null }
+    return [int]$value
+}
+
+function Get-ExpectedProcessExit {
+    # What $LASTEXITCODE must hold after an IN-PROCESS `& $wrapper` call.
+    #
+    # THIS IS THE #155 BUG.  An in-process script only sets $LASTEXITCODE by
+    # calling `exit`; the wrapper calls `exit` only for a non-zero resolved
+    # code.  On a clean run it falls off the end and leaves behind whatever the
+    # last NATIVE command set - the collector EXE's raw exit, which is 10 on an
+    # adjudicated alive-at-stop trace.  Comparing that raw 10 against the
+    # receipt's resolved 0 labelled 8 of 66 sound traces 'failed' in the first
+    # full campaign.  Raw-vs-resolved was never the pair that must agree.
+    param([Parameter(Mandatory = $true)][int]$ReceiptExit, $ReceiptCollectorExit)
+
+    if ($ReceiptExit -ne 0) { return $ReceiptExit }
+    if ($null -eq $ReceiptCollectorExit) { return 0 }
+    return [int]$ReceiptCollectorExit
+}
+
+function Add-ReceiptDerivedField {
+    # Every field of a campaign line that the coverage receipt already knows.
+    # One projection, used by the live pass and by -RebuildLogFromReceipts, so
+    # a regenerated log cannot drift in shape from a collected one.
+    param(
+        [Parameter(Mandatory = $true)][System.Collections.IDictionary]$Record,
+        [Parameter(Mandatory = $true)]$Receipt
+    )
+
+    $coverageBlock = Get-Field -Owner $Receipt -Name 'coverage'
+    $summaryBlock = Get-Field -Owner $Receipt -Name 'summary'
+    $metadataBlock = Get-Field -Owner $Receipt -Name 'metadata'
+    $gapBlock = Get-Field -Owner $Receipt -Name 'gapSummary'
+    $terminalStopBlock = Get-Field -Owner $Receipt -Name 'terminalStop'
+
+    $Record['exitCode'] = Get-ReceiptExitCode -Receipt $Receipt
+    $collectorExit = Get-Field -Owner $Receipt -Name 'collectorExitCode'
+    $Record['collectorExitCode'] =
+        if ($null -ne $collectorExit) { [int]$collectorExit } else { $null }
+    $Record['rangeCount'] = [int](Get-Field -Owner $coverageBlock -Name 'rangeCount')
+    $Record['coveredBytes'] =
+        [string](Get-Field -Owner $summaryBlock -Name 'covered_bytes')
+    $Record['countersQuarantined'] =
+        [bool](Get-Field -Owner $Receipt -Name 'countersQuarantined')
+    $Record['stopReason'] =
+        [string](Get-Field -Owner $terminalStopBlock -Name 'stopReason')
+    $Record['stopReasonAdjudicated'] =
+        [bool](Get-Field -Owner $Receipt -Name 'stopReasonAdjudicated')
+    $Record['terminalStopAccepted'] =
+        [bool](Get-Field -Owner $terminalStopBlock -Name 'terminalStopAccepted')
+    $Record['replayComplete'] = [bool](Get-Field -Owner $Receipt -Name 'replayComplete')
+    $Record['markerAssertionsPassed'] =
+        [bool](Get-Field -Owner $Receipt -Name 'markerAssertionsPassed')
+    $Record['coverageSha256'] = [string](Get-Field -Owner $coverageBlock -Name 'sha256')
+
+    # Density, the #149 stop predictor.  Derived from trace bytes, sequence
+    # counts, and gap events only: this engine's step accounting is the thing
+    # under suspicion, so it is never an input here.
+    $traceBytes = Get-UInt64Field -Owner $metadataBlock -Name 'trace_bytes'
+    $sequences = ConvertTo-PositionSequence `
+        -Text ([string](Get-Field -Owner $metadataBlock -Name 'lifetime_max')) `
+        -Field 'lifetime_max'
+    $gapEvents = Get-UInt64Field -Owner $gapBlock -Name 'total'
+    $Record['density'] = [ordered]@{
+        traceBytes = if ($null -ne $traceBytes) { [string]$traceBytes } else { $null }
+        sequences = [string]$sequences
+        traceBytesPerSequence =
+            if ($null -ne $traceBytes) {
+                Get-RatioOrNull -Numerator $traceBytes -Denominator $sequences
+            } else { $null }
+        gapEvents = if ($null -ne $gapEvents) { [string]$gapEvents } else { $null }
+        gapEventsPerSequence =
+            if ($null -ne $gapEvents) {
+                Get-RatioOrNull -Numerator $gapEvents -Denominator $sequences
+            } else { $null }
+        kindLarge = Get-Field -Owner $gapBlock -Name 'kind_large'
+        kindUnrecorded = Get-Field -Owner $gapBlock -Name 'kind_unrecorded'
+        kindContextSwitch = Get-Field -Owner $gapBlock -Name 'kind_context_switch'
+        eventKernelCall = Get-Field -Owner $gapBlock -Name 'event_KernelCall'
+        eventSyntheticFallback =
+            Get-Field -Owner $gapBlock -Name 'event_SyntheticFallback'
+    }
+}
+
 function New-UniqueLogPath {
     # Never overwrite the console transcript of an earlier attempt.
     param([string]$Directory, [string]$Stem)
@@ -165,17 +270,24 @@ $traceRootPath = (Resolve-Path -LiteralPath $TraceRoot).Path
 if (-not (Test-Path -LiteralPath $traceRootPath -PathType Container)) {
     throw "Trace root is not a directory: $traceRootPath"
 }
-$wrapperPath = (Resolve-Path -LiteralPath $CoverageWrapper).Path
-if (-not (Test-Path -LiteralPath $wrapperPath -PathType Leaf)) {
-    throw "Coverage wrapper was not found: $wrapperPath"
-}
-$targetPath = (Resolve-Path -LiteralPath $TargetExe).Path
-if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
-    throw "Target executable was not found: $targetPath"
-}
+# A rebuild pass opens no trace, starts no replay, and touches no binary: it
+# reads receipts.  Demanding a wrapper, a target, or a collector would make the
+# log un-rebuildable on any machine that no longer has them.
+$wrapperPath = ''
+$targetPath = ''
 $collectorPath = ''
-if (-not [string]::IsNullOrWhiteSpace($Collector)) {
-    $collectorPath = (Resolve-Path -LiteralPath $Collector).Path
+if (-not $RebuildLogFromReceipts) {
+    $wrapperPath = (Resolve-Path -LiteralPath $CoverageWrapper).Path
+    if (-not (Test-Path -LiteralPath $wrapperPath -PathType Leaf)) {
+        throw "Coverage wrapper was not found: $wrapperPath"
+    }
+    $targetPath = (Resolve-Path -LiteralPath $TargetExe).Path
+    if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
+        throw "Target executable was not found: $targetPath"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($Collector)) {
+        $collectorPath = (Resolve-Path -LiteralPath $Collector).Path
+    }
 }
 
 $outputRootPath = [System.IO.Path]::GetFullPath($OutputRoot)
@@ -235,6 +347,32 @@ function Write-CampaignLine {
     $json = ([pscustomobject]$Record | ConvertTo-Json -Depth 8 -Compress)
     [System.IO.File]::AppendAllText($campaignLogPath, $json + "`n", $utf8)
     return $json
+}
+
+# A rebuild replaces the log wholesale.  The superseded file is moved aside,
+# never deleted and never edited in place: if the re-derivation is itself wrong,
+# the original labels are still on disk to prove it.
+$carriedForward = @{}
+if ($RebuildLogFromReceipts) {
+    if (Test-Path -LiteralPath $campaignLogPath -PathType Leaf) {
+        foreach ($line in [System.IO.File]::ReadLines($campaignLogPath)) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            $row = $line | ConvertFrom-Json -Depth 20
+            if ($null -ne $row.PSObject.Properties['kind']) { continue }
+            $rowLevel = [string](Get-Field -Owner $row -Name 'level')
+            if ([string]::IsNullOrWhiteSpace($rowLevel)) { continue }
+            # Last line wins: a resumed campaign appends, so the newest entry
+            # for a level is the one that described the run that stands.
+            $carriedForward[$rowLevel] = $row
+        }
+        $supersededPath = Join-Path $outputRootPath (
+            'campaign-log.superseded-{0}.jsonl' -f
+            (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))
+        [System.IO.File]::Move($campaignLogPath, $supersededPath)
+        Write-Host ("campaign: superseded log moved to {0}" -f $supersededPath)
+    }
+    Write-Host ("campaign: rebuilding {0} from receipts under {1}" -f
+        $campaignLogPath, $outputRootPath)
 }
 
 Write-Host ("campaign: {0} trace directories selected of {1} matched; output {2}" -f
@@ -322,16 +460,40 @@ foreach ($directory in $selected) {
             if (Test-Path -LiteralPath $existingReceiptPath -PathType Leaf) {
                 $existing = Get-Content -Raw -LiteralPath $existingReceiptPath |
                     ConvertFrom-Json -Depth 30
-                $existingExit = $null
-                foreach ($field in @('exitCode', 'collectorExitCode')) {
-                    $property = $existing.PSObject.Properties[$field]
-                    if ($null -ne $property -and $null -ne $property.Value) {
-                        $existingExit = [int]$property.Value
-                        break
-                    }
-                }
+                $existingExit = Get-ReceiptExitCode -Receipt $existing
                 $record['exitCode'] = $existingExit
-                if ($null -ne $existingExit -and
+                if ($RebuildLogFromReceipts) {
+                    # Re-derive the whole line.  The receipt decides the status
+                    # exactly as it does on a live pass; the three fields only
+                    # the runner ever observed are carried across from the
+                    # superseded log so the rebuild loses no evidence.
+                    Add-ReceiptDerivedField -Record $record -Receipt $existing
+                    $prior = $carriedForward[$level]
+                    foreach ($field in @('startedAtUtc', 'wallSeconds', 'consoleLog')) {
+                        $value = Get-Field -Owner $prior -Name $field
+                        if ($null -ne $value) { $record[$field] = $value }
+                    }
+                    if ($null -eq (Get-Field -Owner $prior -Name 'consoleLog')) {
+                        $consoleCandidate =
+                            Join-Path $logDirectory "$level-console.txt"
+                        if (Test-Path -LiteralPath $consoleCandidate -PathType Leaf) {
+                            $record['consoleLog'] = $consoleCandidate
+                        }
+                    }
+                    $record['rebuiltFromReceipt'] = $true
+                    $record['rebuiltAtUtc'] =
+                        (Get-Date).ToUniversalTime().ToString('o')
+                    if ($null -ne $existingExit -and
+                        $AcceptableExitCodes -contains $existingExit) {
+                        $record['status'] = 'ok'
+                        $record['reason'] = ''
+                        $counts['ok']++
+                    } else {
+                        $record['status'] = 'failed'
+                        $record['reason'] = "coverage run exited $existingExit"
+                        $counts['failed']++
+                    }
+                } elseif ($null -ne $existingExit -and
                     $AcceptableExitCodes -contains $existingExit) {
                     $record['status'] = 'skipped'
                     $record['reason'] = "already collected with exit $existingExit"
@@ -351,6 +513,17 @@ foreach ($directory in $selected) {
             Write-CampaignLine -Record $record | Out-Null
             Write-Host ("  {0}: {1} - {2}" -f
                 $level, $record['status'].ToUpperInvariant(), $record['reason'])
+            continue
+        }
+
+        if ($RebuildLogFromReceipts) {
+            # Nothing was ever collected for this level.  A rebuild reports
+            # that; it does not go and collect it.
+            $record['status'] = 'blocked'
+            $record['reason'] = 'no coverage output directory to rebuild from'
+            $counts['blocked']++
+            Write-CampaignLine -Record $record | Out-Null
+            Write-Host ("  {0}: BLOCKED - {1}" -f $level, $record['reason'])
             continue
         }
 
@@ -411,75 +584,30 @@ foreach ($directory in $selected) {
 
         $receipt = Get-Content -Raw -LiteralPath $existingReceiptPath |
             ConvertFrom-Json -Depth 30
-        $receiptExitValue = Get-Field -Owner $receipt -Name 'exitCode'
-        if ($null -eq $receiptExitValue) {
-            $receiptExitValue = Get-Field -Owner $receipt -Name 'collectorExitCode'
-        }
-        if ($null -eq $receiptExitValue) {
+        $receiptExit = Get-ReceiptExitCode -Receipt $receipt
+        if ($null -eq $receiptExit) {
             throw 'coverage receipt carries neither exitCode nor collectorExitCode'
         }
-        $receiptExit = [int]$receiptExitValue
-        if ($receiptExit -ne $observedExit) {
+
+        # THE RECEIPT DECIDES THE STATUS.  $LASTEXITCODE is only cross-checked
+        # against the code that can actually reach it - see
+        # Get-ExpectedProcessExit.  A disagreement still fails the trace,
+        # because it means the wrapper did something neither branch explains.
+        $record['observedProcessExit'] = $observedExit
+        Add-ReceiptDerivedField -Record $record -Receipt $receipt
+        $expectedObservedExit = Get-ExpectedProcessExit `
+            -ReceiptExit $receiptExit `
+            -ReceiptCollectorExit $record['collectorExitCode']
+        if ($observedExit -ne $expectedObservedExit) {
             $record['status'] = 'failed'
-            $record['exitCode'] = $observedExit
             $record['reason'] = (
-                "receipt exitCode $receiptExit disagrees with the observed " +
-                "process exit $observedExit")
+                "observed process exit $observedExit is neither the receipt's " +
+                "resolved exit $receiptExit nor, on a clean run, its collector " +
+                "exit $($record['collectorExitCode'])")
             $counts['failed']++
             Write-CampaignLine -Record $record | Out-Null
             Write-Host ("  {0}: FAILED - {1}" -f $level, $record['reason'])
             continue
-        }
-
-        $coverageBlock = Get-Field -Owner $receipt -Name 'coverage'
-        $summaryBlock = Get-Field -Owner $receipt -Name 'summary'
-        $metadataBlock = Get-Field -Owner $receipt -Name 'metadata'
-        $gapBlock = Get-Field -Owner $receipt -Name 'gapSummary'
-        $terminalStopBlock = Get-Field -Owner $receipt -Name 'terminalStop'
-
-        $record['exitCode'] = $receiptExit
-        $record['collectorExitCode'] =
-            [int](Get-Field -Owner $receipt -Name 'collectorExitCode')
-        $record['rangeCount'] = [int](Get-Field -Owner $coverageBlock -Name 'rangeCount')
-        $record['coveredBytes'] =
-            [string](Get-Field -Owner $summaryBlock -Name 'covered_bytes')
-        $record['countersQuarantined'] =
-            [bool](Get-Field -Owner $receipt -Name 'countersQuarantined')
-        $record['stopReason'] =
-            [string](Get-Field -Owner $terminalStopBlock -Name 'stopReason')
-        $record['stopReasonAdjudicated'] =
-            [bool](Get-Field -Owner $receipt -Name 'stopReasonAdjudicated')
-        $record['replayComplete'] = [bool](Get-Field -Owner $receipt -Name 'replayComplete')
-        $record['markerAssertionsPassed'] =
-            [bool](Get-Field -Owner $receipt -Name 'markerAssertionsPassed')
-        $record['coverageSha256'] = [string](Get-Field -Owner $coverageBlock -Name 'sha256')
-
-        # Density, the #149 stop predictor.  Derived from trace bytes, sequence
-        # counts, and gap events only: this engine's step accounting is the
-        # thing under suspicion, so it is never an input here.
-        $traceBytes = Get-UInt64Field -Owner $metadataBlock -Name 'trace_bytes'
-        $sequences = ConvertTo-PositionSequence `
-            -Text ([string](Get-Field -Owner $metadataBlock -Name 'lifetime_max')) `
-            -Field 'lifetime_max'
-        $gapEvents = Get-UInt64Field -Owner $gapBlock -Name 'total'
-        $record['density'] = [ordered]@{
-            traceBytes = if ($null -ne $traceBytes) { [string]$traceBytes } else { $null }
-            sequences = [string]$sequences
-            traceBytesPerSequence =
-                if ($null -ne $traceBytes) {
-                    Get-RatioOrNull -Numerator $traceBytes -Denominator $sequences
-                } else { $null }
-            gapEvents = if ($null -ne $gapEvents) { [string]$gapEvents } else { $null }
-            gapEventsPerSequence =
-                if ($null -ne $gapEvents) {
-                    Get-RatioOrNull -Numerator $gapEvents -Denominator $sequences
-                } else { $null }
-            kindLarge = Get-Field -Owner $gapBlock -Name 'kind_large'
-            kindUnrecorded = Get-Field -Owner $gapBlock -Name 'kind_unrecorded'
-            kindContextSwitch = Get-Field -Owner $gapBlock -Name 'kind_context_switch'
-            eventKernelCall = Get-Field -Owner $gapBlock -Name 'event_KernelCall'
-            eventSyntheticFallback =
-                Get-Field -Owner $gapBlock -Name 'event_SyntheticFallback'
         }
 
         if ($AcceptableExitCodes -contains $receiptExit) {
@@ -512,6 +640,7 @@ $campaignStopwatch.Stop()
 $summary = [ordered]@{
     schema = $CampaignSchema
     kind = 'campaign-summary'
+    mode = if ($RebuildLogFromReceipts) { 'rebuild-from-receipts' } else { 'collect' }
     finishedAtUtc = (Get-Date).ToUniversalTime().ToString('o')
     outputRoot = $outputRootPath
     campaignLog = $campaignLogPath

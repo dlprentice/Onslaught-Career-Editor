@@ -1410,6 +1410,33 @@ class TtdTerminalStopContractTests(unittest.TestCase):
             wrapper,
         )
 
+    def test_parity_lab_ingest_honours_the_adjudication_the_way_it_honours_quarantine(
+        self,
+    ) -> None:
+        # #153.  Ingest reads the wrapper's verdict, surfaces it in its own
+        # column, and refuses a claim that is absent, undeclared, or
+        # self-contradictory - the same shape as the #149 quarantine.
+        ingest = read(ROOT / "tools" / "parity_lab.py")
+
+        self.assertIn("stop_reason_adjudicated INTEGER NOT NULL", ingest)
+        self.assertIn(
+            'TTD_ADJUDICABLE_STOP_REASONS = frozenset({"Thread"})', ingest
+        )
+        self.assertIn("no wrapper adjudication receipt", ingest)
+        self.assertIn("was not declared from a recorder ", ingest)
+        self.assertIn("contradicts its own coverage", ingest)
+        self.assertIn("contradicts its own receipt", ingest)
+        # Consumers read the adjudication, never replayComplete - which stays
+        # honestly false on an alive-at-stop trace.
+        self.assertIn(
+            'health = "COMPLETE" if (replay_complete or stop_reason_adjudicated)'
+            ' else "ERROR"',
+            ingest,
+        )
+        # The collector's own verdict survives beside the resolved one.
+        self.assertIn('"collectorChecksPassed": collector_checks_passed', ingest)
+        self.assertIn('"collectorExitCode": payload["collectorExitCode"]', ingest)
+
 
 FAKE_COVERAGE_WRAPPER = r"""
 param(
@@ -1429,12 +1456,19 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $level = Split-Path -Leaf $OutputDirectory
 $plan = Get-Content -Raw -LiteralPath $env:FAKE_PLAN | ConvertFrom-Json
 $planned = 0
 $entry = $plan.PSObject.Properties[$level]
 if ($null -ne $entry) { $planned = [int]$entry.Value }
+# FAKE_ADJUDICATED names the levels whose collector REFUSED the run (raw 10)
+# and whose terminal-stop adjudication then resolved it to $planned.
+$adjudicated = $false
+if (-not [string]::IsNullOrWhiteSpace($env:FAKE_ADJUDICATED)) {
+    $adjudicated = (@($env:FAKE_ADJUDICATED -split ',') -ccontains $level)
+}
 $invocation = [ordered]@{
     level = $level
     traceFile = $TraceFile
@@ -1453,11 +1487,20 @@ $invocation = [ordered]@{
     $utf8)
 Write-Output "fake coverage run for $level"
 if ($env:FAKE_NO_RECEIPT -eq $level) { exit $planned }
+$collectorExit = $(
+    if ($adjudicated) { 10 }
+    elseif ($planned -eq 11) { 11 }
+    elseif ($planned -eq 0) { 0 }
+    else { 10 })
+# THE COLLECTOR RUN.  A real native command, so $LASTEXITCODE is left the way
+# the real wrapper leaves it - and nothing after this point touches it.
+$comSpec = if ([string]::IsNullOrWhiteSpace($env:ComSpec)) { 'cmd.exe' } else { $env:ComSpec }
+& $comSpec /c "exit $collectorExit"
 [System.IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
 $quarantined = ($planned -eq 11)
 $receipt = [ordered]@{
     schemaVersion = 'bea-ttd-exec-coverage-receipt.v2'
-    collectorExitCode = $(if ($planned -eq 11) { 11 } elseif ($planned -eq 0) { 0 } else { 10 })
+    collectorExitCode = $collectorExit
     exitCode = $planned
     replayComplete = ($planned -eq 0 -and -not $ExpectAliveAtStop)
     markerAssertionsPassed = $true
@@ -1493,6 +1536,9 @@ $receipt = [ordered]@{
     (Join-Path $OutputDirectory 'receipt.json'),
     ($receipt | ConvertTo-Json -Depth 10) + "`n",
     $utf8)
+# A code no branch of the wrapper can explain, for proving the cross-check
+# still bites once the receipt - not $LASTEXITCODE - decides the status.
+if ($env:FAKE_STRAY_EXIT -eq $level) { & $comSpec /c "exit 3" }
 if ($planned -ne 0) { exit $planned }
 """
 
@@ -1561,6 +1607,8 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
         max_traces: int | None = None,
         output: pathlib.Path | None = None,
         no_receipt_for: str = "",
+        adjudicated: list[str] | None = None,
+        stray_exit_for: str = "",
         extra: list[str] | None = None,
     ) -> subprocess.CompletedProcess:
         paths["plan"].write_text(json.dumps(plan or {}), encoding="utf-8")
@@ -1568,6 +1616,8 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
         environment["FAKE_LOG"] = str(paths["log"])
         environment["FAKE_PLAN"] = str(paths["plan"])
         environment["FAKE_NO_RECEIPT"] = no_receipt_for
+        environment["FAKE_ADJUDICATED"] = ",".join(adjudicated or [])
+        environment["FAKE_STRAY_EXIT"] = stray_exit_for
         arguments = [
             "pwsh",
             "-NoLogo",
@@ -1726,6 +1776,84 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
             self.run_campaign(paths, plan={"level-opening-3m-v1-level742": 11})
             self.assertEqual(3, len(self.invocations(paths)))
 
+    def test_an_adjudicated_thread_stop_is_ok_not_a_failed_trace(self) -> None:
+        """#155.  The receipt's resolved exit decides; $LASTEXITCODE cannot.
+
+        The wrapper is invoked IN-PROCESS, and an in-process script only sets
+        $LASTEXITCODE by calling `exit`.  On a clean adjudicated run it falls
+        off the end, leaving the collector EXE's RAW 10 behind while the
+        receipt carries the resolved 0.  The first full campaign labelled 8 of
+        66 sound traces 'failed' on exactly that disagreement.
+        """
+        adjudicated = "level-opening-3m-v1-level742"
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(paths, adjudicated=[adjudicated])
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+
+            record = self.trace_records(paths["output"])[adjudicated]
+            self.assertEqual("ok", record["status"], record["reason"])
+            self.assertEqual("", record["reason"])
+            # The pair that disagrees, recorded rather than hidden.
+            self.assertEqual(0, record["exitCode"])
+            self.assertEqual(10, record["collectorExitCode"])
+            self.assertEqual(10, record["observedProcessExit"])
+            # And the trace's evidence is logged in full, not truncated to a
+            # failure line: the run really did produce ranges.
+            self.assertTrue(record["stopReasonAdjudicated"])
+            self.assertTrue(record["terminalStopAccepted"])
+            self.assertTrue(record["markerAssertionsPassed"])
+            self.assertFalse(record["replayComplete"])
+            self.assertEqual("Thread", record["stopReason"])
+            self.assertEqual(6815, record["rangeCount"])
+            self.assertEqual("552196", record["coveredBytes"])
+
+    def test_an_adjudicated_quarantine_still_agrees_on_the_resolved_code(
+        self,
+    ) -> None:
+        # Collector 10, adjudicated, counters quarantined -> resolved 11, and
+        # the wrapper DOES call exit for a non-zero resolved code, so the
+        # observed value is 11 rather than the raw 10.  Both halves of
+        # Get-ExpectedProcessExit are exercised.
+        adjudicated = "level-opening-3m-v1-level742"
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(
+                paths, plan={adjudicated: 11}, adjudicated=[adjudicated]
+            )
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+            record = self.trace_records(paths["output"])[adjudicated]
+            self.assertEqual("ok", record["status"], record["reason"])
+            self.assertEqual(11, record["exitCode"])
+            self.assertEqual(10, record["collectorExitCode"])
+            self.assertEqual(11, record["observedProcessExit"])
+            self.assertTrue(record["countersQuarantined"])
+
+    def test_a_process_exit_no_branch_explains_still_fails_the_trace(
+        self,
+    ) -> None:
+        # The cross-check was loosened, not removed.  Here the wrapper leaves 3
+        # behind while its receipt claims a clean 0 from a collector that also
+        # exited 0 - a value neither branch can produce - and the trace fails.
+        stray = "level-opening-3m-v1-level700"
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(paths, stray_exit_for=stray)
+            self.assertEqual(1, completed.returncode, completed.stdout)
+            records = self.trace_records(paths["output"])
+            record = records[stray]
+            self.assertEqual("failed", record["status"])
+            self.assertEqual(3, record["observedProcessExit"])
+            self.assertIn("observed process exit 3", record["reason"])
+            # One bad trace is still not a campaign abort.
+            self.assertEqual(
+                "ok", records["level-opening-3m-v1-level742"]["status"]
+            )
+
     def test_an_unacceptable_exit_is_recorded_once_and_never_retried(
         self,
     ) -> None:
@@ -1873,6 +2001,97 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
             # It must not appear as a logged metric.
             self.assertNotIn("steps", json.dumps(density).lower())
 
+    def test_rebuilding_the_log_re_derives_every_line_from_the_receipts(
+        self,
+    ) -> None:
+        # The log is derived data.  When its labels are wrong the fix is to
+        # re-derive all of them from the receipts, which is why the rebuild
+        # needs neither the wrapper nor the target: it opens no trace.
+        adjudicated = "level-opening-3m-v1-level742"
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            first = self.run_campaign(paths, adjudicated=[adjudicated])
+            self.assertEqual(0, first.returncode, first.stdout + first.stderr)
+            collected = len(self.invocations(paths))
+
+            # Put the #155 mislabel back into the log by hand, so the rebuild
+            # has something wrong to correct.
+            rows = self.campaign_log(paths["output"])
+            for row in rows:
+                if row.get("level") == adjudicated:
+                    row["status"] = "failed"
+                    row["exitCode"] = 10
+                    row["reason"] = (
+                        "receipt exitCode 0 disagrees with the observed "
+                        "process exit 10"
+                    )
+            (paths["output"] / "campaign-log.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows),
+                encoding="utf-8",
+            )
+            paths["wrapper"].unlink()
+            paths["target"].unlink()
+
+            rebuilt = self.run_campaign(
+                paths, extra=["-RebuildLogFromReceipts"]
+            )
+            self.assertEqual(
+                0, rebuilt.returncode, rebuilt.stdout + rebuilt.stderr
+            )
+            # Not one trace was replayed again.
+            self.assertEqual(collected, len(self.invocations(paths)))
+
+            records = self.trace_records(paths["output"])
+            self.assertEqual(3, len(records))
+            for level, row in records.items():
+                self.assertEqual("ok", row["status"], level)
+                self.assertEqual("", row["reason"])
+                self.assertTrue(row["rebuiltFromReceipt"])
+                self.assertEqual(6815, row["rangeCount"])
+                # The runner's own observations survive the re-derivation.
+                self.assertIsNotNone(row["wallSeconds"])
+                self.assertIn("density", row)
+            self.assertEqual(0, records[adjudicated]["exitCode"])
+            self.assertEqual(10, records[adjudicated]["collectorExitCode"])
+
+            summary = [
+                row
+                for row in self.campaign_log(paths["output"])
+                if row.get("kind") == "campaign-summary"
+            ]
+            self.assertEqual(1, len(summary))
+            self.assertEqual("rebuild-from-receipts", summary[0]["mode"])
+            self.assertEqual(3, summary[0]["ok"])
+            self.assertEqual(0, summary[0]["failed"])
+
+            # The superseded log is moved aside, never edited away: if the
+            # re-derivation is itself wrong, the old labels still prove it.
+            superseded = sorted(
+                paths["output"].glob("campaign-log.superseded-*.jsonl")
+            )
+            self.assertEqual(1, len(superseded))
+            self.assertIn(
+                "disagrees with the observed",
+                superseded[0].read_text(encoding="utf-8"),
+            )
+
+    def test_a_rebuild_reports_a_level_that_was_never_collected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            self.run_campaign(paths, max_traces=1)
+            rebuilt = self.run_campaign(
+                paths, extra=["-RebuildLogFromReceipts"]
+            )
+            self.assertEqual(1, rebuilt.returncode, rebuilt.stdout)
+            records = self.trace_records(paths["output"])
+            self.assertEqual(1, len(self.invocations(paths)))
+            blocked = [
+                row for row in records.values() if row["status"] == "blocked"
+            ]
+            self.assertEqual(2, len(blocked))
+            for row in blocked:
+                self.assertIn("no coverage output directory", row["reason"])
+
     def test_nothing_is_ever_written_into_a_trace_directory(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             paths = self.build_sandbox(pathlib.Path(temporary))
@@ -1908,6 +2127,17 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
         self.assertIn("ttd-record-receipt.v3", campaign)
         self.assertIn("not retrying", campaign)
         self.assertIn("Traces are immutable", campaign)
+
+        # #155: the receipt decides the status, and $LASTEXITCODE is only
+        # cross-checked against the code that can actually reach it.  The raw
+        # collector exit and the wrapper's resolved exit are not that pair.
+        self.assertIn("function Get-ExpectedProcessExit {", campaign)
+        self.assertIn("THE RECEIPT DECIDES THE STATUS", campaign)
+        self.assertNotIn("if ($receiptExit -ne $observedExit) {", campaign)
+        # And the log is regenerated from receipts rather than edited.
+        self.assertIn("[switch]$RebuildLogFromReceipts", campaign)
+        self.assertIn("campaign-log.superseded-", campaign)
+
         # No parallel scheduler.
         self.assertNotIn("ForEach-Object -Parallel", campaign)
         self.assertNotIn("Start-Job", campaign)

@@ -23,6 +23,53 @@ CMD_EXE = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "cmd.
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 TEST_CDB_ARM = "ALLOW TEST-ONLY CDB EXECUTABLE"
 
+# DEADLINES, NOT SLEEPS.
+#
+# This project runs several lanes at once by design, and these tests spawn
+# PowerShell, compile-once .NET executables, and a debugger stand-in.  A wait
+# tuned to an idle machine measures the host's spare CPU rather than the
+# contract under test: the suite passed 24/24 solo and failed 8 assertions
+# under concurrent load, which cost a lane real time proving its innocence and
+# trains everyone to read red as noise (task #158).
+#
+# The waits below are therefore generous deadlines polled for the event, not
+# fixed durations.  A generous budget is free on the path where the event does
+# happen, because both the script's own marker loop and the helpers here return
+# the instant it does.  Only ABSENT_MARKER_TIMEOUT_MS is paid in full, and only
+# by the one test whose marker is SUPPOSED never to appear - so it stays as
+# small as a cold fake-CDB start allows.
+MARKER_TIMEOUT_MS = 30000
+ABSENT_MARKER_TIMEOUT_MS = 8000
+PROCESS_START_TIMEOUT = 30.0
+# The synthetic attach target must outlive every deadline above.  It used to
+# live ~29 s, which is shorter than a loaded host takes to get through one
+# canary run - the target then exited mid-test and the script correctly
+# reported a receipt process that was no longer running.  Matches the
+# long-lived target in runtime_process_identity_test.py.
+TARGET_LIFETIME_ARGUMENTS = ["/c", "ping -n 180 127.0.0.1 > nul"]
+PROCESS_EXIT_TIMEOUT = 20.0
+FILE_READY_TIMEOUT = 20.0
+POLL_INTERVAL = 0.05
+
+
+def wait_until(predicate, *, timeout: float, interval: float = POLL_INTERVAL):
+    """Poll until the predicate returns something truthy, or the deadline passes.
+
+    Returns the truthy value, or None on expiry.  Callers assert on the result:
+    a timeout here is evidence for a real assertion, never a substitute for one.
+    """
+
+    deadline = time.monotonic() + timeout
+    while True:
+        value = predicate()
+        if value:
+            return value
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(interval, remaining))
+
+
 FAKE_CDB_SOURCE = r'''
 using System;
 using System.Collections.Generic;
@@ -98,7 +145,10 @@ public static class FakeCdb {
             File.WriteAllText(logPath, "  " + marker + "  " + Environment.NewLine);
         }
 
-        Thread.Sleep(30000);
+        // Outlive the marker deadline by a wide margin.  If the stand-in
+        // exits first, a slow host is reported as "CDB exited before
+        // readiness" instead of the contract that actually failed.
+        Thread.Sleep(180000);
         return 0;
     }
 }
@@ -189,6 +239,66 @@ class StartCdbServerTests(unittest.TestCase):
     def write_malformed_profile_manifest(self, profile_root: Path) -> None:
         (profile_root / "onslaught-profile-manifest.json").write_text("{not-json", encoding="utf-8")
 
+    def wait_for(self, predicate, *, timeout: float, description: str):
+        """Wait for an event and assert it actually happened.
+
+        The assertion is on the EVENT, not on how fast it arrived: a slow host
+        is not a broken contract, but a host where the event never arrives is.
+        """
+
+        value = wait_until(predicate, timeout=timeout)
+        self.assertTrue(
+            value, f"{description} within {timeout:.0f}s"
+        )
+        return value
+
+    def query_process_identity(self, process_id: int) -> dict[str, object] | None:
+        """The process identity the runtime receipt needs, or None if not yet."""
+
+        result = self.run_powershell(
+            f"$p = Get-Process -Id {process_id} -ErrorAction Stop; $p.Refresh(); "
+            "[PSCustomObject]@{ "
+            "startedAtUtc = $p.StartTime.ToUniversalTime().ToString('o'); "
+            "modulePath = [System.IO.Path]::GetFullPath($p.MainModule.FileName); "
+            "moduleBaseAddressHex = ('0x{0:X}' -f $p.MainModule.BaseAddress.ToInt64()); "
+            "moduleSize = [int64]$p.MainModule.ModuleMemorySize "
+            "} | ConvertTo-Json -Compress"
+        )
+        if result.returncode != 0:
+            return None
+        try:
+            return json.loads(result.stdout)
+        except ValueError:
+            return None
+
+    def read_pid_when_written(self, pid_file: Path) -> int:
+        """The fake CDB's own startup record, waited for rather than assumed."""
+
+        def written() -> str | None:
+            if not pid_file.is_file():
+                return None
+            text = pid_file.read_text(encoding="utf-8").strip()
+            return text or None
+
+        return int(
+            self.wait_for(
+                written,
+                timeout=FILE_READY_TIMEOUT,
+                description=(
+                    f"the fake CDB never recorded its pid in {pid_file.name}"
+                ),
+            )
+        )
+
+    def assert_process_is_cleaned_up(self, process_id: int, description: str) -> None:
+        """Cleanup is a contract; how promptly the OS reaps it is not."""
+
+        self.wait_for(
+            lambda: not self.process_is_running(process_id),
+            timeout=PROCESS_EXIT_TIMEOUT,
+            description=f"{description} (pid {process_id} was still running)",
+        )
+
     def start_fake_copied_bea(self, profile_root: Path, *, manifest: bool = True) -> subprocess.Popen[bytes]:
         profile_root.mkdir(parents=True)
         shutil.copy2(CMD_EXE, profile_root / "BEA.exe")
@@ -196,13 +306,19 @@ class StartCdbServerTests(unittest.TestCase):
             self.write_profile_manifest(profile_root)
 
         process = subprocess.Popen(
-            [str(profile_root / "BEA.exe"), "/c", "ping -n 30 127.0.0.1 > nul"],
+            [str(profile_root / "BEA.exe"), *TARGET_LIFETIME_ARGUMENTS],
             cwd=profile_root,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=CREATE_NO_WINDOW,
         )
-        time.sleep(0.25)
+        # Wait for the thing that actually has to be true - the process is up
+        # and its main module is queryable - instead of sleeping and hoping.
+        self.wait_for(
+            lambda: self.query_process_identity(process.pid),
+            timeout=PROCESS_START_TIMEOUT,
+            description="the fake copied BEA.exe never became queryable",
+        )
         return process
 
     def stop_process(self, process: subprocess.Popen[bytes]) -> None:
@@ -325,17 +441,11 @@ class StartCdbServerTests(unittest.TestCase):
         *,
         started_at: str | None = None,
     ) -> tuple[Path, str, str]:
-        identity_result = self.run_powershell(
-            f"$p = Get-Process -Id {process.pid} -ErrorAction Stop; $p.Refresh(); "
-            "[PSCustomObject]@{ "
-            "startedAtUtc = $p.StartTime.ToUniversalTime().ToString('o'); "
-            "modulePath = [System.IO.Path]::GetFullPath($p.MainModule.FileName); "
-            "moduleBaseAddressHex = ('0x{0:X}' -f $p.MainModule.BaseAddress.ToInt64()); "
-            "moduleSize = [int64]$p.MainModule.ModuleMemorySize "
-            "} | ConvertTo-Json -Compress"
+        identity = self.wait_for(
+            lambda: self.query_process_identity(process.pid),
+            timeout=PROCESS_START_TIMEOUT,
+            description="the target process identity never became readable",
         )
-        self.assertEqual(identity_result.returncode, 0, identity_result.stderr)
-        identity = json.loads(identity_result.stdout)
         executable = profile_root / "BEA.exe"
         manifest = profile_root / "onslaught-profile-manifest.json"
         executable_hash = hashlib.sha256(executable.read_bytes()).hexdigest()
@@ -352,7 +462,7 @@ class StartCdbServerTests(unittest.TestCase):
                     "size": executable.stat().st_size,
                 },
                 "workingDirectory": str(profile_root.resolve()),
-                "launchArguments": ["/c", "ping -n 30 127.0.0.1 > nul"],
+                "launchArguments": list(TARGET_LIFETIME_ARGUMENTS),
             },
             "profileManifest": {
                 "path": str(manifest.resolve()),
@@ -418,7 +528,7 @@ class StartCdbServerTests(unittest.TestCase):
         *,
         stale_log: bool = False,
         mutate_path: Path | None = None,
-        timeout_milliseconds: int = 1200,
+        timeout_milliseconds: int = MARKER_TIMEOUT_MS,
     ) -> tuple[subprocess.CompletedProcess[str], subprocess.Popen[bytes], Path, Path, Path]:
         profile = root / "profiles" / "safe-profile"
         command_file = root / "commands" / "canary.cdb.txt"
@@ -871,15 +981,19 @@ class StartCdbServerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="bea-cdb-fake-marker-") as temp:
             root = Path(temp)
             echo_result, echo_target, _, echo_log, echo_pid_file = self.run_fake_canary(
-                root / "echo", "ECHO_ONLY", timeout_milliseconds=700
+                root / "echo",
+                "ECHO_ONLY",
+                timeout_milliseconds=ABSENT_MARKER_TIMEOUT_MS,
             )
             echo_pid: int | None = None
             try:
-                echo_pid = int(echo_pid_file.read_text(encoding="utf-8"))
+                echo_pid = self.read_pid_when_written(echo_pid_file)
                 self.assertNotEqual(echo_result.returncode, 0)
                 self.assertIn("required log marker", echo_result.stderr.lower())
                 self.assertIn(".echo MORPH_CANARY_READY", echo_log.read_text(encoding="utf-8"))
-                self.assertFalse(self.process_is_running(echo_pid), "failed fake CDB must be cleaned up")
+                self.assert_process_is_cleaned_up(
+                    echo_pid, "the failed fake CDB was never cleaned up"
+                )
             finally:
                 self.stop_process(echo_target)
                 if echo_pid is not None and self.process_is_running(echo_pid):
@@ -890,7 +1004,7 @@ class StartCdbServerTests(unittest.TestCase):
             )
             exact_pid: int | None = None
             try:
-                exact_pid = int(exact_pid_file.read_text(encoding="utf-8"))
+                exact_pid = self.read_pid_when_written(exact_pid_file)
                 self.assertEqual(exact_result.returncode, 0, exact_result.stderr)
                 payload = self.parse_result_json(exact_result)
                 self.assertEqual(payload["status"], "marker-ready")
@@ -929,7 +1043,7 @@ class StartCdbServerTests(unittest.TestCase):
             )
             fake_pid: int | None = None
             try:
-                fake_pid = int(pid_file.read_text(encoding="utf-8"))
+                fake_pid = self.read_pid_when_written(pid_file)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(command_file.exists())
                 lines = {line.strip() for line in log_path.read_text(encoding="utf-8").splitlines()}
@@ -948,11 +1062,13 @@ class StartCdbServerTests(unittest.TestCase):
             )
             fake_pid: int | None = None
             try:
-                fake_pid = int(pid_file.read_text(encoding="utf-8"))
+                fake_pid = self.read_pid_when_written(pid_file)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("16 mib", result.stderr.lower())
                 self.assertGreater(log_path.stat().st_size, 16 * 1024 * 1024)
-                self.assertFalse(self.process_is_running(fake_pid), "oversize-log fake CDB must be cleaned up")
+                self.assert_process_is_cleaned_up(
+                    fake_pid, "the oversize-log fake CDB was never cleaned up"
+                )
             finally:
                 self.stop_process(target)
                 if fake_pid is not None and self.process_is_running(fake_pid):
@@ -967,10 +1083,13 @@ class StartCdbServerTests(unittest.TestCase):
             )
             fake_pid: int | None = None
             try:
-                fake_pid = int(pid_file.read_text(encoding="utf-8"))
+                fake_pid = self.read_pid_when_written(pid_file)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("identity changed", result.stderr.lower())
-                self.assertFalse(self.process_is_running(fake_pid), "post-marker failure must clean exact fake CDB")
+                self.assert_process_is_cleaned_up(
+                    fake_pid,
+                    "the post-marker-failure fake CDB was never cleaned up",
+                )
             finally:
                 self.stop_process(target)
                 if fake_pid is not None and self.process_is_running(fake_pid):

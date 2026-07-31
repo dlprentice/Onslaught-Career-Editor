@@ -6,7 +6,7 @@ calibrated Stuart/BSim matching, verification, and query tooling are implemented
 the first retail canaries passed, while repeated action campaigns and reviewed
 semantic promotion remain open
 
-Last updated: 2026-07-29
+Last updated: 2026-07-31
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 7,555 isolated
 decompiler functions. A specimen-bound pipeline can now ask one controlled
@@ -1308,6 +1308,20 @@ acceptance. A fully replayed trace with a false marker remains capture-health
 `COMPLETE`, but has `acceptancePassed=false`, is `UNSCORED`, and is refused by
 `ttd-coverage-diff`. Import rehashes live trace content, not only its size, and
 rehashes coverage/receipt files against the bundle-embedded artifact facts.
+
+A trace recorded by stopping the recorder on a timer, with the guest still
+running, ends its replay on a `Thread` event rather than a `Process` exit, so
+`replay_complete` is honestly `false` on sound coverage. Such a stop is accepted
+for **ranges** only on the wrapper's adjudication, surfaced as
+`stop_reason_adjudicated` beside `counters_quarantined`. The importer refuses a
+`Thread` stop whose adjudication is absent, whose alive-at-stop expectation was
+not declared by the caller from the trace's own recorder receipt, or whose
+adjudication contradicts the coverage it describes — including a claimed
+adjudication whose collector exit is not the `10` it purports to resolve. The
+collector's own verdict is preserved beside the resolved one
+(`collectorChecksPassed`, `collectorExitCode`), and consumers read the
+adjudication and the resolved exit code, never `replayComplete`. Every other
+stop reason is refused outright; widening is per-reason and opt-in.
 
 It creates three direct query tables:
 
@@ -2978,7 +2992,7 @@ any other client.
 | Python syntax | `parity_lab.py` and `parity_lab_tests.py` compile |
 | focused Python contracts | 20/20 pass, including READY binding, legacy action-status non-trust, trace-hash immutability, legacy unhashed downgrade, marker/health separation, trace independence, exact fragmented mapping, bounded deterministic symbols, and fail-closed apitrace cleanup/publication contracts |
 | existing TTD pipeline contracts | 13/13 pass with trace-hashed record/query schema v3 |
-| workspace tools gate | `npm run test:tools` completed through the final byte-exact `worldheaders.dat` self-test; every preceding `&&`-gated suite passed |
+| workspace tools gate | `npm run test:tools` ran all thirteen suites and reported them; the gate no longer stops at the first failure, so a red suite cannot hide the state of the ones behind it |
 | static graph transaction | real v5 READY receipt validates 7,555 functions, 7,672 ranges, 14,142 edges, and 26,622 call sites; forced no-clobber rerun changed zero files |
 | real Replay re-diff | regenerated 21,781 stable bytes, 21,781 exact mappings, 476 candidates, and `exactly-one-active-for-window` policy |
 | native Replay self-tests | both isolated builds pass 9/9 coalescing and 6/6 bitmap groups |

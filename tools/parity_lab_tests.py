@@ -1622,17 +1622,10 @@ class ParityLabTests(unittest.TestCase):
         self.assertFalse(manifest["ttdReceipts"][0]["traceHashDeclared"])
         self.assertFalse(manifest["ttdResults"][0]["traceHashDeclared"])
 
-    def test_ttd_exec_coverage_receipt_is_identity_linked_and_queryable(self) -> None:
-        trace = self.root / "coverage.run"
-        trace.write_bytes(b"T" * 64)
-        collector = self.root / "ttd_exec_coverage.exe"
-        collector.write_bytes(b"collector")
-        replay = self.root / "TTDReplay.dll"
-        replay.write_bytes(b"replay")
-        replay_cpu = self.root / "TTDReplayCPU.dll"
-        replay_cpu.write_bytes(b"replay-cpu")
-        coverage = self.root / "coverage.jsonl"
-        rows = [
+    def ttd_coverage_rows(self, trace: pathlib.Path) -> list[dict]:
+        """The standard collector output: whole lifetime, Process stop, clean."""
+
+        return [
             {
                 "schema": "bea.ttd.exec-coverage.v1",
                 "kind": "metadata",
@@ -1716,6 +1709,255 @@ class ParityLabTests(unittest.TestCase):
                 "collector_checks_passed": True,
             },
         ]
+
+    def write_adjudicated_thread_stop(
+        self,
+        name: str,
+        *,
+        summary_changes: dict | None = None,
+        receipt_changes: dict | None = None,
+        terminal_changes: dict | None = None,
+        invocation_changes: dict | None = None,
+        write_receipt: bool = True,
+    ) -> pathlib.Path:
+        """An alive-at-stop coverage file plus the wrapper receipt beside it.
+
+        The corpus this models: 66 level-opening traces recorded by stopping
+        the recorder on a timer with the guest still running, so every replay
+        ends on a Thread event and replay_complete is honestly false.
+        """
+
+        directory = self.root / name
+        directory.mkdir()
+        trace = directory / "coverage.run"
+        trace.write_bytes(b"T" * 64)
+        rows = self.ttd_coverage_rows(trace)
+        summary = next(row for row in rows if row["kind"] == "summary")
+        summary.update(
+            {
+                "stop_reason": "Thread",
+                "replay_complete": False,
+                "collector_checks_passed": False,
+            }
+        )
+        for key, value in (summary_changes or {}).items():
+            # None removes the field, which is how a quarantined summary drops
+            # the counters it refuses to publish.
+            if value is None:
+                summary.pop(key, None)
+            else:
+                summary[key] = value
+        coverage = directory / "coverage.jsonl"
+        parity_lab.write_jsonl(coverage, rows)
+        if not write_receipt:
+            return coverage
+
+        metadata = next(row for row in rows if row["kind"] == "metadata")
+        terminal = {
+            "aliveAtStopExpected": True,
+            "baseTerminalReason": "Process",
+            "acceptedStopReasons": ["Process", "Thread"],
+            "stopReason": summary["stop_reason"],
+            "stopReasonAccepted": True,
+            "baseStopReasonMet": False,
+            "finalPosition": summary["final_position"],
+            "requestedTo": metadata["requested_to"],
+            "positionReached": True,
+            "markerAssertionsPassed": summary["marker_assertions_passed"],
+            "replayComplete": summary["replay_complete"],
+            "terminalStopAccepted": True,
+        }
+        terminal.update(terminal_changes or {})
+        invocation = {
+            "moduleName": "BEA.exe",
+            "quarantineCounters": True,
+            "expectAliveAtStop": True,
+        }
+        invocation.update(invocation_changes or {})
+        receipt = {
+            "schemaVersion": "bea-ttd-exec-coverage-receipt.v2",
+            # The collector's own verdict, preserved: it refused the run.
+            "collectorExitCode": 10,
+            # The wrapper's, after adjudication.
+            "exitCode": 0,
+            "replayComplete": summary["replay_complete"],
+            "markerAssertionsPassed": summary["marker_assertions_passed"],
+            "collectorChecksPassed": False,
+            "countersQuarantined": summary.get("counters_quarantined", False),
+            "stopReasonAdjudicated": True,
+            "terminalStop": terminal,
+            "invocation": invocation,
+            "coverage": parity_lab.artifact_facts(coverage, "coverage"),
+        }
+        receipt.update(receipt_changes or {})
+        (directory / "receipt.json").write_text(
+            json.dumps(receipt), encoding="utf-8"
+        )
+        return coverage
+
+    def test_ttd_thread_stop_is_valid_for_ranges_on_the_wrapper_adjudication(
+        self,
+    ) -> None:
+        """#153, mirroring the #149 quarantine.
+
+        A Thread stop is sound coverage for a timer-stopped trace, and poison
+        for anything else.  The difference is not in the stop reason - it is in
+        whether the wrapper adjudicated it for a class the caller declared from
+        the recorder receipt, and whether that adjudication agrees with the
+        coverage it claims to explain.
+        """
+
+        coverage = self.write_adjudicated_thread_stop("adjudicated-ok")
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            result, _ = parity_lab.ingest_ttd_exec_coverage(connection, coverage)
+            stored = connection.execute(
+                "SELECT stop_reason, stop_reason_adjudicated, replay_complete "
+                "FROM ttd_exec_coverage"
+            ).fetchone()
+            self.assertEqual(("Thread", 1, 0), tuple(stored))
+            # Valid for RANGES: they were collected by our own bitmap and
+            # independently recomputed, exactly as under quarantine.
+            self.assertEqual(
+                2,
+                connection.execute(
+                    "SELECT COUNT(*) FROM ttd_exec_range"
+                ).fetchone()[0],
+            )
+        self.assertEqual("COMPLETE", result["health"])
+        self.assertTrue(result["acceptancePassed"])
+        self.assertTrue(result["stopReasonAdjudicated"])
+        self.assertEqual("Thread", result["stopReason"])
+        # replayComplete stays honestly false; consumers read the adjudication.
+        self.assertFalse(result["replayComplete"])
+        self.assertFalse(result["collectorChecksPassed"])
+        self.assertEqual(0, result["stopReasonAdjudication"]["exitCode"])
+        self.assertEqual(10, result["stopReasonAdjudication"]["collectorExitCode"])
+        self.assertEqual(4, result["coveredBytes"])
+
+        # A quarantine survives adjudication: counters do not become
+        # trustworthy because the stop reason was explained, so the resolved
+        # code is 11 rather than 0.
+        quarantined = self.write_adjudicated_thread_stop(
+            "adjudicated-quarantined",
+            summary_changes={
+                "counters_quarantined": True,
+                "callback_hits": None,
+                "instructions_executed": None,
+                "steps_executed": None,
+                "quarantined_counters": {
+                    "callback_hits": "1137340343",
+                    "instructions_executed": "131110",
+                    "steps_executed": "131111",
+                    "reason": "ttd-replay-accounting-stopped-advancing",
+                },
+            },
+            receipt_changes={"countersQuarantined": True, "exitCode": 11},
+        )
+        payload = json.loads(quarantined.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertTrue(payload["counters_quarantined"])
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            quarantined_result, _ = parity_lab.ingest_ttd_exec_coverage(
+                connection, quarantined
+            )
+        self.assertEqual("COMPLETE", quarantined_result["health"])
+        self.assertTrue(quarantined_result["stopReasonAdjudicated"])
+        self.assertTrue(quarantined_result["countersQuarantined"])
+        self.assertEqual("unscored", quarantined_result["counterScoring"])
+        self.assertIsNone(quarantined_result["callbackHits"])
+
+    def test_ttd_thread_stop_without_a_sound_adjudication_is_refused(
+        self,
+    ) -> None:
+        for name, expected, kwargs in (
+            (
+                "no-receipt",
+                "no wrapper adjudication receipt",
+                {"write_receipt": False},
+            ),
+            (
+                "no-claim",
+                "no wrapper adjudication receipt",
+                {"receipt_changes": {"stopReasonAdjudicated": False}},
+            ),
+            (
+                "no-terminal-block",
+                "no wrapper adjudication receipt",
+                {"receipt_changes": {"terminalStop": None}},
+            ),
+            (
+                "other-coverage",
+                "no wrapper adjudication receipt",
+                {
+                    "receipt_changes": {
+                        "coverage": {"sha256": "0" * 64, "bytes": 1}
+                    }
+                },
+            ),
+            (
+                "undeclared-class",
+                "not declared from a recorder receipt",
+                {"invocation_changes": {"expectAliveAtStop": False}},
+            ),
+            (
+                "undeclared-in-terminal-block",
+                "not declared from a recorder receipt",
+                {"terminal_changes": {"aliveAtStopExpected": False}},
+            ),
+            (
+                "stop-not-accepted",
+                r"contradicts its own coverage \(terminalStopAccepted\)",
+                {"terminal_changes": {"terminalStopAccepted": False}},
+            ),
+            (
+                "position-not-reached",
+                r"contradicts its own coverage \(positionReached\)",
+                {"terminal_changes": {"positionReached": False}},
+            ),
+            (
+                "base-reason-claimed-met",
+                r"contradicts its own coverage \(baseStopReasonMet\)",
+                {"terminal_changes": {"baseStopReasonMet": True}},
+            ),
+            (
+                "marker-disagreement",
+                r"contradicts its own coverage \(markerAssertionsPassed\)",
+                {"terminal_changes": {"markerAssertionsPassed": False}},
+            ),
+            (
+                "final-position-disagreement",
+                r"contradicts its own coverage \(finalPosition\)",
+                {"terminal_changes": {"finalPosition": "0x99:0x0"}},
+            ),
+            (
+                "nothing-was-refused",
+                r"contradicts its own coverage \(collectorExitCode\)",
+                {"receipt_changes": {"collectorExitCode": 0}},
+            ),
+            (
+                "unresolved-exit",
+                r"contradicts its own coverage \(exitCode\)",
+                {"receipt_changes": {"exitCode": 10}},
+            ),
+        ):
+            with self.subTest(case=name):
+                coverage = self.write_adjudicated_thread_stop(name, **kwargs)
+                with closing(parity_lab.open_database(":memory:")) as connection:
+                    with self.assertRaisesRegex(
+                        parity_lab.ParityLabError, expected
+                    ):
+                        parity_lab.ingest_ttd_exec_coverage(connection, coverage)
+
+    def test_ttd_exec_coverage_receipt_is_identity_linked_and_queryable(self) -> None:
+        trace = self.root / "coverage.run"
+        trace.write_bytes(b"T" * 64)
+        collector = self.root / "ttd_exec_coverage.exe"
+        collector.write_bytes(b"collector")
+        replay = self.root / "TTDReplay.dll"
+        replay.write_bytes(b"replay")
+        replay_cpu = self.root / "TTDReplayCPU.dll"
+        replay_cpu.write_bytes(b"replay-cpu")
+        coverage = self.root / "coverage.jsonl"
+        rows = self.ttd_coverage_rows(trace)
         parity_lab.write_jsonl(coverage, rows)
         target_facts = parity_lab.artifact_facts(self.target_exe, "target")
         coverage_facts = parity_lab.artifact_facts(coverage, "coverage")
@@ -1882,10 +2124,12 @@ class ParityLabTests(unittest.TestCase):
                     connection, assertion_mismatch_coverage
                 )
 
+        # Widening is per-reason.  Kernel, Exception, StepCount and the rest
+        # are refused outright and are not adjudicable by anybody.
         unknown_stop_rows = json.loads(json.dumps(rows))
         next(
             row for row in unknown_stop_rows if row["kind"] == "summary"
-        )["stop_reason"] = "Thread"
+        )["stop_reason"] = "Kernel"
         unknown_stop_coverage = self.root / "coverage-unknown-stop.jsonl"
         parity_lab.write_jsonl(unknown_stop_coverage, unknown_stop_rows)
         with closing(parity_lab.open_database(":memory:")) as connection:
@@ -1894,6 +2138,22 @@ class ParityLabTests(unittest.TestCase):
             ):
                 parity_lab.ingest_ttd_exec_coverage(
                     connection, unknown_stop_coverage
+                )
+
+        # A Thread stop is adjudicable, but not on its own say-so: with no
+        # wrapper receipt beside it, it is still refused.
+        bare_thread_rows = json.loads(json.dumps(rows))
+        next(
+            row for row in bare_thread_rows if row["kind"] == "summary"
+        )["stop_reason"] = "Thread"
+        bare_thread_coverage = self.root / "coverage-bare-thread-stop.jsonl"
+        parity_lab.write_jsonl(bare_thread_coverage, bare_thread_rows)
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            with self.assertRaisesRegex(
+                parity_lab.ParityLabError, "no wrapper adjudication receipt"
+            ):
+                parity_lab.ingest_ttd_exec_coverage(
+                    connection, bare_thread_coverage
                 )
 
         # The recorded impossible accounting, un-quarantined, must still be
@@ -2018,6 +2278,88 @@ class ParityLabTests(unittest.TestCase):
                 "outside trace lifetime|outside selected module-instance lifetime",
             ):
                 parity_lab.ingest_ttd_exec_coverage(connection, invalid_coverage)
+
+        # #153 on the receipt side.  The wrapper's adjudication makes the pair
+        # usable, and the collector's own verdict is preserved right beside it:
+        # collectorExitCode stays 10 and collectorChecksPassed stays false.
+        adjudicated_terminal = {
+            "aliveAtStopExpected": True,
+            "baseTerminalReason": "Process",
+            "acceptedStopReasons": ["Process", "Thread"],
+            "stopReason": "Thread",
+            "stopReasonAccepted": True,
+            "baseStopReasonMet": False,
+            "positionReached": True,
+            "markerAssertionsPassed": True,
+            "replayComplete": False,
+            "terminalStopAccepted": True,
+        }
+        adjudicated_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        adjudicated_payload.update(
+            {
+                "collectorExitCode": 10,
+                "exitCode": 0,
+                "replayComplete": False,
+                "collectorChecksPassed": False,
+                "countersQuarantined": False,
+                "stopReasonAdjudicated": True,
+                "invocation": {"expectAliveAtStop": True},
+                "terminalStop": adjudicated_terminal,
+            }
+        )
+        adjudicated_receipt = self.root / "coverage-receipt-adjudicated.json"
+        adjudicated_receipt.write_text(
+            json.dumps(adjudicated_payload), encoding="utf-8"
+        )
+        with closing(parity_lab.open_database(":memory:")) as connection:
+            adjudicated_result, _ = parity_lab.ingest_ttd_exec_receipt(
+                connection, adjudicated_receipt
+            )
+        self.assertEqual("COMPLETE", adjudicated_result["health"])
+        self.assertTrue(adjudicated_result["acceptancePassed"])
+        self.assertTrue(adjudicated_result["stopReasonAdjudicated"])
+        self.assertEqual("Thread", adjudicated_result["stopReason"])
+        self.assertFalse(adjudicated_result["collectorChecksPassed"])
+        self.assertFalse(adjudicated_result["replayComplete"])
+        self.assertEqual(0, adjudicated_result["exitCode"])
+        self.assertEqual(10, adjudicated_result["collectorExitCode"])
+
+        for label, change, expected in (
+            (
+                "undeclared class",
+                {"invocation": {"expectAliveAtStop": False}},
+                "not declared from a recorder receipt",
+            ),
+            (
+                "no terminal block",
+                {"terminalStop": None},
+                "not declared from a recorder receipt",
+            ),
+            (
+                "stop not accepted",
+                {
+                    "terminalStop": {
+                        **adjudicated_terminal,
+                        "terminalStopAccepted": False,
+                    }
+                },
+                r"contradicts its own receipt \(terminalStopAccepted\)",
+            ),
+            (
+                "unresolved exit",
+                {"exitCode": 10},
+                r"contradicts its own receipt \(exitCode\)",
+            ),
+        ):
+            with self.subTest(receipt=label):
+                broken_payload = {**adjudicated_payload, **change}
+                broken = self.root / f"coverage-receipt-{label.replace(' ', '-')}.json"
+                broken.write_text(json.dumps(broken_payload), encoding="utf-8")
+                with closing(parity_lab.open_database(":memory:")) as connection:
+                    with self.assertRaisesRegex(
+                        parity_lab.ParityLabError, expected
+                    ):
+                        parity_lab.ingest_ttd_exec_receipt(connection, broken)
 
         trace.write_bytes(b"X" * trace.stat().st_size)
         with closing(parity_lab.open_database(":memory:")) as connection:

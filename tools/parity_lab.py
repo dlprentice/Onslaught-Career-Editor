@@ -549,6 +549,11 @@ def open_database(path: pathlib.Path) -> sqlite3.Connection:
             callback_hits TEXT,
             counters_quarantined INTEGER NOT NULL,
             stop_reason TEXT NOT NULL,
+            -- 1 when the wrapper adjudicated a non-base terminal stop for the
+            -- trace class the caller declared (#153).  Mirrors
+            -- counters_quarantined: the ranges stay valid and the reason the
+            -- collector's own clause was overruled stays queryable.
+            stop_reason_adjudicated INTEGER NOT NULL,
             replay_complete INTEGER NOT NULL,
             marker_assertions_passed INTEGER NOT NULL,
             collector_checks_passed INTEGER NOT NULL,
@@ -4459,6 +4464,159 @@ def ingest_ttd_result(
     )
 
 
+# A terminal event the collector's own acceptance clause refuses, but which the
+# wrapper may adjudicate for a declared trace class.  The level-opening corpus
+# was recorded by stopping the recorder on a timer with the guest still alive,
+# so its replays end on a Thread event rather than a Process exit.  Widening is
+# per-reason and opt-in: nothing else joins this set without its own evidence.
+TTD_ADJUDICABLE_STOP_REASONS = frozenset({"Thread"})
+
+TTD_ADJUDICATING_RECEIPT_SCHEMA = "bea-ttd-exec-coverage-receipt.v2"
+
+
+def _load_stop_reason_adjudication(
+    path: pathlib.Path, coverage_sha256: str
+) -> dict[str, Any] | None:
+    """Find the wrapper receipt that adjudicated THIS coverage file's stop.
+
+    The collector never knows the trace class; it only reports the terminal
+    event it saw.  The adjudication is the wrapper's, written to the receipt
+    beside the coverage file, and it is bound to that file by the coverage
+    hash - a receipt describing some other run cannot vouch for this one.
+    """
+
+    directory = path.parent
+    candidates = [directory / "receipt.json", directory / f"{path.stem}-receipt.json"]
+    candidates += sorted(
+        candidate
+        for candidate in directory.glob("*receipt*.json")
+        if candidate not in candidates
+    )
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        try:
+            payload = json.loads(candidate.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if payload.get("schemaVersion") != TTD_ADJUDICATING_RECEIPT_SCHEMA:
+            continue
+        coverage = payload.get("coverage")
+        if not isinstance(coverage, dict):
+            continue
+        if str(coverage.get("sha256", "")).upper() != coverage_sha256.upper():
+            continue
+        return {"path": candidate, "payload": payload}
+    return None
+
+
+def _adjudicated_stop_evidence(
+    path: pathlib.Path,
+    coverage_sha256: str,
+    stop_reason: str,
+    summary: dict[str, Any],
+    metadata: dict[str, Any],
+    *,
+    counters_quarantined: bool,
+    replay_complete: bool,
+    marker_assertions_passed: bool,
+) -> dict[str, Any]:
+    """Accept a non-base terminal stop only on the wrapper's own adjudication.
+
+    Mirrors the #149 quarantine: the ranges stay valid because they were
+    collected by our bitmap and independently recomputed, and the thing the
+    collector refused is surfaced rather than smoothed over.  Three ways to
+    fail: no adjudication at all, an adjudication whose expectation was never
+    declared, and an adjudication that contradicts the summary it describes.
+    """
+
+    if stop_reason not in TTD_ADJUDICABLE_STOP_REASONS:
+        raise ParityLabError(f"TTD summary has unsupported stop reason: {path}")
+
+    found = _load_stop_reason_adjudication(path, coverage_sha256)
+    if found is None:
+        raise ParityLabError(
+            f"TTD {stop_reason} stop has no wrapper adjudication receipt "
+            f"bound to this coverage: {path}"
+        )
+    payload = found["payload"]
+    terminal = payload.get("terminalStop")
+    if payload.get("stopReasonAdjudicated") is not True or not isinstance(
+        terminal, dict
+    ):
+        raise ParityLabError(
+            f"TTD {stop_reason} stop has no wrapper adjudication receipt "
+            f"bound to this coverage: {path}"
+        )
+
+    invocation = payload.get("invocation")
+    declared = isinstance(invocation, dict) and invocation.get(
+        "expectAliveAtStop"
+    ) is True
+    if not declared or terminal.get("aliveAtStopExpected") is not True:
+        raise ParityLabError(
+            "TTD stop-reason adjudication was not declared from a recorder "
+            f"receipt: {path}"
+        )
+
+    # An adjudication that disagrees with the summary it claims to explain is
+    # worth less than no adjudication: one of the two is wrong and neither can
+    # be trusted.  The resolved exit code is checked against the same rule the
+    # wrapper applies (Resolve-CoverageExitCode): a quarantine survives
+    # adjudication, so it lands on 11 rather than 0.
+    accepted = terminal.get("acceptedStopReasons")
+    contradictions = (
+        (terminal.get("stopReason") != stop_reason, "stop reason"),
+        (terminal.get("baseStopReasonMet") is not False, "baseStopReasonMet"),
+        (terminal.get("stopReasonAccepted") is not True, "stopReasonAccepted"),
+        (terminal.get("terminalStopAccepted") is not True, "terminalStopAccepted"),
+        (terminal.get("positionReached") is not True, "positionReached"),
+        (
+            not isinstance(accepted, list) or stop_reason not in accepted,
+            "acceptedStopReasons",
+        ),
+        (
+            terminal.get("markerAssertionsPassed") != marker_assertions_passed,
+            "markerAssertionsPassed",
+        ),
+        (terminal.get("replayComplete") != replay_complete, "replayComplete"),
+        (
+            terminal.get("finalPosition") != summary.get("final_position"),
+            "finalPosition",
+        ),
+        (
+            terminal.get("requestedTo") != metadata.get("requested_to"),
+            "requestedTo",
+        ),
+        (payload.get("collectorExitCode") != 10, "collectorExitCode"),
+        (
+            payload.get("countersQuarantined") != counters_quarantined,
+            "countersQuarantined",
+        ),
+        (
+            payload.get("exitCode") != (11 if counters_quarantined else 0),
+            "exitCode",
+        ),
+    )
+    for contradicted, field in contradictions:
+        if contradicted:
+            raise ParityLabError(
+                "TTD stop-reason adjudication contradicts its own coverage "
+                f"({field}): {path}"
+            )
+
+    return {
+        "receiptPath": str(found["path"]),
+        "stopReason": stop_reason,
+        "baseTerminalReason": terminal.get("baseTerminalReason"),
+        "acceptedStopReasons": list(accepted),
+        "exitCode": payload.get("exitCode"),
+        "collectorExitCode": payload.get("collectorExitCode"),
+    }
+
+
 def ingest_ttd_exec_coverage(
     connection: sqlite3.Connection, path: pathlib.Path
 ) -> tuple[dict[str, Any], int]:
@@ -4760,27 +4918,51 @@ def ingest_ttd_exec_coverage(
     ):
         raise ParityLabError(f"TTD collector-check summary is inconsistent: {path}")
     stop_reason = summary.get("stop_reason")
+    stop_reason_adjudication: dict[str, Any] | None = None
     if stop_reason not in {"Position", "Process"}:
-        raise ParityLabError(f"TTD summary has unsupported stop reason: {path}")
+        # #153: an alive-at-stop trace ends on a Thread event, and the wrapper
+        # adjudicates that for the trace class its caller declared.  Accepted
+        # here on the wrapper's evidence, never on the stop reason alone.
+        stop_reason_adjudication = _adjudicated_stop_evidence(
+            path,
+            facts["sha256"],
+            str(stop_reason),
+            summary,
+            metadata,
+            counters_quarantined=counters_quarantined,
+            replay_complete=replay_complete,
+            marker_assertions_passed=marker_assertions_passed,
+        )
+    stop_reason_adjudicated = stop_reason_adjudication is not None
     final_position = parse_ttd_position(
         summary.get("final_position"), field="final_position"
     )
+    # An adjudicated stop is held to the whole-lifetime rule the Process branch
+    # applies: the run was asked for everything and reached everything it was
+    # asked for.  Only the terminal EVENT was ever in dispute.
+    whole_lifetime_reached = (
+        requested_to_position == lifetime_max
+        and final_position >= requested_to_position
+    )
     if (
         (stop_reason == "Position" and final_position != requested_to_position)
-        or (
-            stop_reason == "Process"
-            and (
-                requested_to_position != lifetime_max
-                or final_position < requested_to_position
-            )
-        )
+        or (stop_reason == "Process" and not whole_lifetime_reached)
+        or (stop_reason_adjudicated and not whole_lifetime_reached)
     ):
         raise ParityLabError(f"TTD final position disagrees with stop reason: {path}")
 
     # Capture completeness and scenario-marker truth are independent.  The
     # producer's legacy collector_checks_passed field is an acceptance
     # conjunction (replay complete AND markers pass), not a health signal.
-    health = "COMPLETE" if replay_complete else "ERROR"
+    #
+    # replay_complete stays honestly false on an adjudicated trace - the guest
+    # really was still running - so completeness is read from the pair the
+    # wrapper resolved, not from that flag.  For every other trace the two
+    # expressions below are identical to what they have always been.
+    health = "COMPLETE" if (replay_complete or stop_reason_adjudicated) else "ERROR"
+    acceptance_passed = marker_assertions_passed and (
+        replay_complete or stop_reason_adjudicated
+    )
     artifact_id = add_artifact(
         connection,
         facts,
@@ -4793,11 +4975,12 @@ def ingest_ttd_exec_coverage(
             artifact_id, trace_path, trace_bytes, module_name, module_base,
             module_size, module_timestamp, module_checksum, replay_mode,
             requested_from, requested_to, range_count, covered_bytes,
-            callback_hits, counters_quarantined, stop_reason, replay_complete,
+            callback_hits, counters_quarantined, stop_reason,
+            stop_reason_adjudicated, replay_complete,
             marker_assertions_passed, collector_checks_passed,
             metadata_json, gap_json, summary_json
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """,
         (
@@ -4817,6 +5000,7 @@ def ingest_ttd_exec_coverage(
             callback_hits_text,
             int(counters_quarantined),
             stop_reason,
+            int(stop_reason_adjudicated),
             int(replay_complete),
             int(marker_assertions_passed),
             int(collector_checks_passed),
@@ -4894,10 +5078,12 @@ def ingest_ttd_exec_coverage(
             "assertionCount": len(assertions),
             "gapCount": gap_total,
             "stopReason": stop_reason,
+            "stopReasonAdjudicated": stop_reason_adjudicated,
+            "stopReasonAdjudication": stop_reason_adjudication,
             "replayComplete": replay_complete,
             "markerAssertionsPassed": marker_assertions_passed,
             "collectorChecksPassed": collector_checks_passed,
-            "acceptancePassed": collector_checks_passed,
+            "acceptancePassed": acceptance_passed,
         },
         artifact_id,
     )
@@ -5097,10 +5283,62 @@ def ingest_ttd_exec_receipt(
     expected_exit_code = 0 if acceptance_passed else 10
     if payload.get("collectorExitCode") != expected_exit_code:
         raise ParityLabError(f"TTD execute receipt exit code is inconsistent: {path}")
+
+    # #153: the wrapper may adjudicate a terminal stop the collector refused,
+    # for the trace class its caller declared from the recorder receipt.  The
+    # collector's own verdict is preserved beside it - collectorExitCode stays
+    # 10 and collectorChecksPassed stays false - so the claim is only honoured
+    # when the receipt's adjudication agrees with the rest of the receipt.
+    stop_reason_adjudicated = payload.get("stopReasonAdjudicated", False)
+    if type(stop_reason_adjudicated) is not bool:
+        raise ParityLabError(
+            f"TTD execute receipt stopReasonAdjudicated is not a boolean: {path}"
+        )
+    terminal_stop = payload.get("terminalStop")
+    counters_quarantined = payload.get("countersQuarantined", False)
+    if stop_reason_adjudicated:
+        invocation = payload.get("invocation")
+        declared = isinstance(invocation, dict) and invocation.get(
+            "expectAliveAtStop"
+        ) is True
+        if not isinstance(terminal_stop, dict) or not declared:
+            raise ParityLabError(
+                "TTD stop-reason adjudication was not declared from a recorder "
+                f"receipt: {path}"
+            )
+        for contradicted, field in (
+            (terminal_stop.get("aliveAtStopExpected") is not True, "aliveAtStopExpected"),
+            (terminal_stop.get("baseStopReasonMet") is not False, "baseStopReasonMet"),
+            (terminal_stop.get("stopReasonAccepted") is not True, "stopReasonAccepted"),
+            (
+                terminal_stop.get("terminalStopAccepted") is not True,
+                "terminalStopAccepted",
+            ),
+            (terminal_stop.get("positionReached") is not True, "positionReached"),
+            (terminal_stop.get("replayComplete") != replay_complete, "replayComplete"),
+            (
+                terminal_stop.get("markerAssertionsPassed") != markers_passed,
+                "markerAssertionsPassed",
+            ),
+            (
+                terminal_stop.get("stopReason")
+                not in TTD_ADJUDICABLE_STOP_REASONS,
+                "stopReason",
+            ),
+            (
+                payload.get("exitCode") != (11 if counters_quarantined else 0),
+                "exitCode",
+            ),
+        ):
+            if contradicted:
+                raise ParityLabError(
+                    "TTD stop-reason adjudication contradicts its own receipt "
+                    f"({field}): {path}"
+                )
     health = (
         "COMPLETE"
         if (
-            replay_complete
+            (replay_complete or stop_reason_adjudicated)
             and trace_size_matches
             and trace_hash_matches
             and target_matches
@@ -5150,7 +5388,19 @@ def ingest_ttd_exec_receipt(
             "replayComplete": payload["replayComplete"],
             "markerAssertionsPassed": payload["markerAssertionsPassed"],
             "collectorChecksPassed": payload["collectorChecksPassed"],
-            "acceptancePassed": payload["collectorChecksPassed"],
+            # The collector's raw verdict stays above, untouched.  Acceptance
+            # is the resolved one: markers passed, and the replay either ran to
+            # the end or its terminal stop was adjudicated for this class.
+            "acceptancePassed": markers_passed
+            and (replay_complete or stop_reason_adjudicated),
+            "stopReasonAdjudicated": stop_reason_adjudicated,
+            "stopReason": (
+                terminal_stop.get("stopReason")
+                if isinstance(terminal_stop, dict)
+                else None
+            ),
+            "collectorExitCode": payload["collectorExitCode"],
+            "exitCode": payload.get("exitCode", payload["collectorExitCode"]),
         },
         artifact_id,
     )
