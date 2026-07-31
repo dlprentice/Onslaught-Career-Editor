@@ -71,6 +71,12 @@
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.cs"
              Link="godot-pause-source\RetailFrontendFlow.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <!-- FEP_OPTIONS lives in a partial. RetailFrontendPageFillEvidenceTests has
+         to see its page renderer too, because the "the frontend is showing the
+         raw D3D clear colour" reading of #147 named the options root by name. -->
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Options.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Options.cs"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
              Link="godot-pause-source\FirstFlightPauseMenu.cs"
              CopyToOutputDirectory="PreserveNewest" />
