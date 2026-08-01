@@ -362,7 +362,7 @@ public class WinUiAccessibilityAuditTests
         string pagesRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages");
         List<string> missing = [];
 
-        foreach (string filePath in Directory.GetFiles(pagesRoot, "*.xaml"))
+        foreach (string filePath in Directory.GetFiles(pagesRoot, "*.xaml", SearchOption.AllDirectories))
         {
             string source = File.ReadAllText(filePath);
             foreach (Match match in Regex.Matches(source, "<Button\\b[\\s\\S]*?(?:/>|>)"))
@@ -392,7 +392,7 @@ public class WinUiAccessibilityAuditTests
         Regex interactiveControl = new("<(?:\\w+:)?(?:TextBox|ComboBox|ToggleSwitch|CheckBox|TreeView|ListView|ListBox|Slider|RadioButton|NumberBox)\\b[\\s\\S]*?(?:/>|>)");
         List<string> missing = [];
 
-        foreach (string filePath in Directory.GetFiles(pagesRoot, "*.xaml"))
+        foreach (string filePath in Directory.GetFiles(pagesRoot, "*.xaml", SearchOption.AllDirectories))
         {
             string source = File.ReadAllText(filePath);
             foreach (Match match in interactiveControl.Matches(source))
