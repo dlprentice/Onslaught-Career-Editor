@@ -161,7 +161,7 @@ namespace Onslaught___Career_Editor.Cli
 
             ctx.Warn(
                 "The game rewrites these fields about 20 times a second, so a single write is usually "
-                    + "overwritten almost immediately. Holding a value needs the app's Cheats page.");
+                    + "overwritten almost immediately. To make one stick: trainer hold --life 100 --for 30");
             if (shields is not null)
             {
                 ctx.Warn(
@@ -203,6 +203,157 @@ namespace Onslaught___Career_Editor.Cli
             return allSucceeded
                 ? ctx.Ok(command, payload)
                 : ctx.Verdict(command, "At least one write did not go through.", payload);
+        }
+
+        /// <summary>
+        /// Hold vitals at a value for a while.
+        ///
+        /// A single write is almost a no-op - the game rewrites these fields about twenty times a
+        /// second - so the GUI has always had per-vital hold toggles and the CLI has not. That gap
+        /// meant the headless twin could not do the one thing a trainer is actually for, and
+        /// <c>trainer set</c> had to end by telling people to go and use the app instead.
+        ///
+        /// The loop, the 10 Hz rate, the self-stop when the mission ends and the release-everything
+        /// on the way out are all <see cref="LiveTrainerHold"/> - the same code the GUI drives. Only
+        /// the timer belongs to this verb.
+        /// </summary>
+        public static int TrainerHold(
+            CliContext ctx,
+            int? processId,
+            float? life,
+            float? energy,
+            float? shields,
+            double seconds)
+        {
+            const string command = "trainer.hold";
+
+            var requested = new List<(LiveTrainerVital Vital, float Value)>();
+            if (life is not null)
+                requested.Add((LiveTrainerVital.Life, life.Value));
+            if (energy is not null)
+                requested.Add((LiveTrainerVital.Energy, energy.Value));
+            if (shields is not null)
+                requested.Add((LiveTrainerVital.Shields, shields.Value));
+
+            if (requested.Count == 0)
+            {
+                return ctx.Usage(
+                    command,
+                    "Nothing to hold. Pass at least one of --life, --energy, --shields.",
+                    "Read the current values first: trainer read");
+            }
+
+            if (seconds is <= 0 or > 3600)
+            {
+                return ctx.Usage(
+                    command,
+                    "--for must be between 1 and 3600 seconds.",
+                    "This verb holds for a stated time and then lets go; it is not a daemon.");
+            }
+
+            GameProfileManagedProcessRegistry registry = OpenRegistry();
+            registry.PruneDeadLeases();
+
+            if (!TryResolveTarget(ctx, command, registry, processId, out GameProfileManagedProcess target, out int failure))
+                return failure;
+
+            LiveTrainerAttachOutcome attach = LiveTrainerSession.Attach(target, registry);
+            if (!attach.Success || attach.Session is null)
+                return ctx.Usage(command, attach.Message);
+
+            using LiveTrainerSession session = attach.Session;
+
+            LiveTrainerReadResult before = session.Read();
+            if (!before.WritingCanBeOffered)
+            {
+                return ctx.Verdict(
+                    command,
+                    before.HasVitals
+                        ? "The values read back do not look like vitals, so nothing was held."
+                        : before.Message,
+                    BuildReadPayload(target, before));
+            }
+
+            var hold = new LiveTrainerHold(session);
+            foreach ((LiveTrainerVital vital, float value) in requested)
+            {
+                if (!hold.TryHold(vital, value, out string refusal))
+                {
+                    hold.ReleaseAll();
+                    return ctx.Usage(command, $"{LiveTrainerAddresses.NameOf(vital)}: {refusal}");
+                }
+            }
+
+            if (shields is not null)
+            {
+                ctx.Warn(
+                    "In walker mode the game copies energy into shields on every update, so holding "
+                        + "shields on its own will not stick - hold energy as well.");
+            }
+
+            TimeSpan interval = LiveTrainerHold.ClampInterval(LiveTrainerHold.DefaultInterval);
+            ctx.Line($"Holding {string.Join(", ", requested.Select(entry => $"{LiveTrainerAddresses.NameOf(entry.Vital)}={entry.Value:0.###}"))} " +
+                     $"for {seconds:0.#}s at {1000 / interval.TotalMilliseconds:0.#} Hz. Ctrl+C stops it.");
+
+            int ticks = 0;
+            int attempted = 0;
+            int succeeded = 0;
+            string stopReason = "The time ran out.";
+            bool stoppedItself = false;
+
+            DateTime deadline = DateTime.UtcNow.AddSeconds(seconds);
+            while (DateTime.UtcNow < deadline)
+            {
+                LiveTrainerHoldTick tick = hold.Tick();
+                ticks++;
+                attempted += tick.Attempted;
+                succeeded += tick.Succeeded;
+
+                if (tick.StoppedItself)
+                {
+                    stoppedItself = true;
+                    stopReason = tick.Message;
+                    break;
+                }
+
+                Thread.Sleep(interval);
+            }
+
+            // Whatever happened, let go. A CLI that exits still holding would leave the game being
+            // written to by a process that is no longer there to stop.
+            hold.ReleaseAll();
+
+            LiveTrainerReadResult after = session.Read();
+            object payload = new
+            {
+                processId = target.ProcessId,
+                copyId = Path.GetFileName(Path.TrimEndingDirectorySeparator(target.WorkingDirectory)),
+                held = requested.Select(entry => new
+                {
+                    vital = LiveTrainerAddresses.NameOf(entry.Vital),
+                    value = entry.Value,
+                }).ToArray(),
+                seconds,
+                intervalMilliseconds = interval.TotalMilliseconds,
+                ticks,
+                writesAttempted = attempted,
+                writesSucceeded = succeeded,
+                stoppedItself,
+                stopReason,
+                reading = BuildReadPayload(target, after),
+                vitalOffsetsConfirmedAgainstALiveProcess = true,
+            };
+
+            if (!ctx.Json)
+            {
+                ctx.Line();
+                ctx.Line($"{succeeded} of {attempted} writes landed over {ticks} passes. {stopReason}");
+                ctx.Line("Released. The game owns those fields again.");
+            }
+
+            return stoppedItself && succeeded == 0
+                ? ctx.Verdict(command, stopReason, payload)
+                : ctx.Ok(command, payload);
         }
 
         // ================================================================ helpers

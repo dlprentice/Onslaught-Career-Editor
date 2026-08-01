@@ -679,6 +679,24 @@ namespace Onslaught___Career_Editor
                 c.ParseResult.GetValueForOption(shieldsOption)));
             trainer.AddCommand(set);
 
+            var holdPid = PidOption();
+            var holdLife = new Option<float?>("--life", "Life value to hold.");
+            var holdEnergy = new Option<float?>("--energy", "Energy value to hold.");
+            var holdShields = new Option<float?>("--shields", "Shields value to hold.");
+            var holdFor = new Option<double>("--for", () => 30d, "How many seconds to hold for (1-3600).");
+            var hold = new Command(
+                "hold",
+                "Hold vitals at a value by rewriting them ten times a second, then let go. The game overwrites a single write almost immediately.")
+            { holdPid, holdLife, holdEnergy, holdShields, holdFor };
+            hold.SetHandler((InvocationContext c) => c.ExitCode = TrainerVerbs.TrainerHold(
+                factory(json(c)),
+                c.ParseResult.GetValueForOption(holdPid),
+                c.ParseResult.GetValueForOption(holdLife),
+                c.ParseResult.GetValueForOption(holdEnergy),
+                c.ParseResult.GetValueForOption(holdShields),
+                c.ParseResult.GetValueForOption(holdFor)));
+            trainer.AddCommand(hold);
+
             return trainer;
         }
 
