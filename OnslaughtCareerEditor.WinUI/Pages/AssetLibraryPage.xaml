@@ -20,7 +20,8 @@
                        AutomationProperties.AutomationId="AssetLibraryPageTitle"
                        AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Open a generated local asset catalog to browse extracted textures and meshes."
+            <TextBlock Text="Browse the game's textures and models - once you have exported them. This page is a viewer, and the export tool is not part of the app yet, so most people will find nothing to open here. Media and Lore work straight away and need no setup."
+                       AutomationProperties.AutomationId="AssetLibraryPagePurpose"
                        Style="{StaticResource SectionBodyTextStyle}" />
         </StackPanel>
 
@@ -53,18 +54,16 @@
                             CornerRadius="8"
                             Padding="12">
                         <StackPanel AutomationProperties.AutomationId="AssetCatalogFirstRunGuide"
-                                    AutomationProperties.Name="Catalog viewer. Asset Library opens an existing export catalog; it does not run extraction. Choose the export folder that contains asset_catalog/catalog.json, not the game install. AYA inventory can read a game install directly, while PNG and FBX export currently requires the legacy extractor's local runtime dependencies. Current app packages do not include an asset catalog or original asset set."
+                                    AutomationProperties.Name="Catalog viewer. Asset Library opens an existing export catalog. Point it at the folder containing asset_catalog/catalog.json."
                                     Spacing="4">
                             <TextBlock Text="Catalog viewer"
                                        FontWeight="SemiBold" />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Asset Library opens an existing export catalog; it does not run extraction." />
+                                       Text="Asset Library opens an existing export catalog. It does not create one, and the app does not ship one." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Choose the export folder that contains asset_catalog/catalog.json, not the game install." />
+                                       Text="If you have exported assets before, choose the folder containing asset_catalog/catalog.json - not your game folder." />
                             <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="AYA inventory can read a game install directly. PNG and FBX export currently requires the legacy extractor's local runtime dependencies." />
-                            <TextBlock Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="Current app packages do not include an asset catalog or original asset set." />
+                                       Text="If you have not, there is nothing to open here yet. Exporting textures and models still needs tools that are not part of the app." />
                         </StackPanel>
                     </Border>
                 </StackPanel>
