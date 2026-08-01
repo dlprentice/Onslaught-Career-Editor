@@ -57,6 +57,7 @@ namespace OnslaughtCareerEditor.WinUI
             {
                 ["home"] = HomeNavigationItem,
                 ["saves"] = SavesNavigationItem,
+                ["cheats"] = CheatsNavigationItem,
                 ["media"] = MediaNavigationItem,
                 ["assets"] = AssetLibraryNavigationItem,
                 ["lore"] = LoreNavigationItem,
@@ -69,6 +70,7 @@ namespace OnslaughtCareerEditor.WinUI
             {
                 ["home"] = typeof(HomePage),
                 ["saves"] = typeof(SavesPage),
+                ["cheats"] = typeof(CheatsPage),
                 ["media"] = typeof(MediaPage),
                 ["assets"] = typeof(AssetLibraryPage),
                 ["lore"] = typeof(LorePage),
@@ -186,6 +188,7 @@ namespace OnslaughtCareerEditor.WinUI
                 4 => "settings",
                 5 => "about",
                 6 => "assets",
+                7 => "cheats",
                 _ => "home",
             };
         }
@@ -255,6 +258,7 @@ namespace OnslaughtCareerEditor.WinUI
                     "binary" => 3,
                     "settings" => 4,
                     "about" => 5,
+                    "cheats" => 7,
                     _ => 0,
                 };
                 config.Save();
@@ -737,6 +741,7 @@ namespace OnslaughtCareerEditor.WinUI
             {
                 "home" => "Home: choose a task",
                 "saves" => "Save Lab: page ready",
+                "cheats" => "Cheats: page ready",
                 "media" => "Media: page ready",
                 "assets" => "Asset Library: page ready",
                 "lore" => "Lore: page ready",
@@ -766,6 +771,11 @@ namespace OnslaughtCareerEditor.WinUI
                 status.StartsWith("Game Options:", StringComparison.OrdinalIgnoreCase))
             {
                 return "saves";
+            }
+
+            if (status.StartsWith("Cheats:", StringComparison.OrdinalIgnoreCase))
+            {
+                return "cheats";
             }
 
             if (status.StartsWith("Media:", StringComparison.OrdinalIgnoreCase))

@@ -1,0 +1,260 @@
+<Page
+    x:Class="OnslaughtCareerEditor.WinUI.Pages.CheatsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    AutomationProperties.AutomationId="CheatsPageRoot"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <ScrollViewer AutomationProperties.AutomationId="CheatsPageScrollViewer"
+                  AutomationProperties.Name="Cheats page content">
+        <StackPanel Padding="20,18,20,24">
+            <TextBlock Text="Cheats"
+                       AutomationProperties.AutomationId="CheatsPageTitle"
+                       AutomationProperties.HeadingLevel="Level1"
+                       Style="{StaticResource SectionTitleTextStyle}" />
+            <TextBlock Margin="0,6,0,14"
+                       AutomationProperties.AutomationId="CheatsPageSummary"
+                       Text="Battle Engine Aquila has always had cheats built in. It switches them on when your save game's name contains a particular word. Pick the ones you want here and the app writes you a new save with the right name."
+                       Style="{StaticResource SectionBodyTextStyle}" />
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Three things worth knowing"
+                               AutomationProperties.AutomationId="CheatsBoundaryTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock AutomationProperties.AutomationId="CheatsBoundarySafeCopyNote"
+                               Text="Cheats go into your safe copy, not your installed game. Make one in Windowed &amp; Mods if you have not already."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock AutomationProperties.AutomationId="CheatsBoundaryNewFileNote"
+                               Text="Nothing here changes a save you already have. It copies one, byte for byte, under a new name."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock AutomationProperties.AutomationId="CheatsBoundaryReversibleNote"
+                               Text="Because all of this is just the name of a file, it undoes itself: delete the new save and the cheats are gone. Nothing in the game is modified."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="1. Start from one of your saves"
+                               AutomationProperties.AutomationId="CheatsSourceTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Pick a career save you already have. Its contents are copied across exactly as they are, so you keep your progress."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="10">
+                        <Button x:Name="ChooseSourceSaveButton"
+                                AutomationProperties.AutomationId="CheatsChooseSourceSaveButton"
+                                Content="Choose a save..."
+                                Click="ChooseSourceSaveButton_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="SourceSaveTextBlock"
+                               AutomationProperties.AutomationId="CheatsSourceSaveStatus"
+                               Text="No save chosen yet."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="2. Choose your cheats"
+                               AutomationProperties.AutomationId="CheatsSelectionTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="You can turn on as many as you like at once - the game looks for each word separately, so one name can carry all of them."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="AllGoodiesCheckBox"
+                                  AutomationProperties.AutomationId="CheatsAllGoodiesCheckBox"
+                                  Content="All goodies"
+                                  Checked="CheatSelectionChanged"
+                                  Unchecked="CheatSelectionChanged" />
+                        <TextBlock x:Name="AllGoodiesEffectTextBlock"
+                                   AutomationProperties.AutomationId="CheatsAllGoodiesEffect"
+                                   Margin="30,0,0,0"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="AllGoodiesEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="CheatsAllGoodiesEvidence"
+                                   Margin="30,0,0,0"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="AllLevelsCheckBox"
+                                  AutomationProperties.AutomationId="CheatsAllLevelsCheckBox"
+                                  Content="All levels"
+                                  Checked="CheatSelectionChanged"
+                                  Unchecked="CheatSelectionChanged" />
+                        <TextBlock x:Name="AllLevelsEffectTextBlock"
+                                   AutomationProperties.AutomationId="CheatsAllLevelsEffect"
+                                   Margin="30,0,0,0"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="AllLevelsEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="CheatsAllLevelsEvidence"
+                                   Margin="30,0,0,0"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="GodModeCheckBox"
+                                  AutomationProperties.AutomationId="CheatsGodModeCheckBox"
+                                  Content="God mode"
+                                  Checked="CheatSelectionChanged"
+                                  Unchecked="CheatSelectionChanged" />
+                        <TextBlock x:Name="GodModeEffectTextBlock"
+                                   AutomationProperties.AutomationId="CheatsGodModeEffect"
+                                   Margin="30,0,0,0"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="GodModeEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="CheatsGodModeEvidence"
+                                   Margin="30,0,0,0"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="FreeCameraCheckBox"
+                                  AutomationProperties.AutomationId="CheatsFreeCameraCheckBox"
+                                  Content="Free camera"
+                                  Checked="CheatSelectionChanged"
+                                  Unchecked="CheatSelectionChanged" />
+                        <TextBlock x:Name="FreeCameraEffectTextBlock"
+                                   AutomationProperties.AutomationId="CheatsFreeCameraEffect"
+                                   Margin="30,0,0,0"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="FreeCameraEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="CheatsFreeCameraEvidence"
+                                   Margin="30,0,0,0"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="GoodieGatingBypassCheckBox"
+                                  AutomationProperties.AutomationId="CheatsGoodieGatingBypassCheckBox"
+                                  Content="Goodie gating bypass"
+                                  Checked="CheatSelectionChanged"
+                                  Unchecked="CheatSelectionChanged" />
+                        <TextBlock x:Name="GoodieGatingBypassEffectTextBlock"
+                                   AutomationProperties.AutomationId="CheatsGoodieGatingBypassEffect"
+                                   Margin="30,0,0,0"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="GoodieGatingBypassEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="CheatsGoodieGatingBypassEvidence"
+                                   Margin="30,0,0,0"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="3. Check the name"
+                               AutomationProperties.AutomationId="CheatsNameTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="The cheat words go on the end of the file name. Add something of your own first if you want to tell your saves apart."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBox x:Name="BaseNameTextBox"
+                             AutomationProperties.AutomationId="CheatsBaseNameTextBox"
+                             Header="Your part of the name (optional)"
+                             PlaceholderText="MyCareer"
+                             MaxWidth="360"
+                             HorizontalAlignment="Left"
+                             TextChanged="BaseNameTextBox_TextChanged" />
+                    <TextBlock x:Name="ComposedNameTextBlock"
+                               AutomationProperties.AutomationId="CheatsComposedName"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               TextWrapping="WrapWholeWords"
+                               Text="Pick a cheat to see the file name." />
+                    <TextBlock x:Name="ComposedNameExplanationTextBlock"
+                               AutomationProperties.AutomationId="CheatsComposedNameExplanation"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="4. Where it goes"
+                               AutomationProperties.AutomationId="CheatsDestinationTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Safe copies you have made appear here. The new save drops straight into that copy's savegames folder, ready to load."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <ComboBox x:Name="DestinationComboBox"
+                              AutomationProperties.AutomationId="CheatsDestinationComboBox"
+                              AutomationProperties.Name="Where the new save goes"
+                              Header="Safe copy"
+                              MinWidth="320"
+                              HorizontalAlignment="Left"
+                              SelectionChanged="DestinationComboBox_SelectionChanged" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="10">
+                        <Button x:Name="ChooseDestinationFolderButton"
+                                AutomationProperties.AutomationId="CheatsChooseDestinationFolderButton"
+                                Content="Choose a folder instead..."
+                                Click="ChooseDestinationFolderButton_Click" />
+                        <Button x:Name="RefreshSafeCopiesButton"
+                                AutomationProperties.AutomationId="CheatsRefreshSafeCopiesButton"
+                                Content="Look again for safe copies"
+                                Click="RefreshSafeCopiesButton_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="DestinationTextBlock"
+                               AutomationProperties.AutomationId="CheatsDestinationStatus"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="12">
+                <Button x:Name="WriteCheatSaveButton"
+                        AutomationProperties.AutomationId="CheatsWriteCheatSaveButton"
+                        Content="Write the cheat save"
+                        IsEnabled="False"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource PrimaryActionButtonStyle}"
+                        Click="WriteCheatSaveButton_Click" />
+                <controls:InfoBar x:Name="CheatsInfoBar"
+                                  AutomationProperties.AutomationId="CheatsStatusInfo"
+                                  Visibility="Visible"
+                                  IsOpen="True"
+                                  IsClosable="False"
+                                  Severity="Informational"
+                                  Title="Ready"
+                                  Message="Choose a save, tick the cheats you want, and pick where the new save goes." />
+            </StackPanel>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Free camera: moving it around"
+                               AutomationProperties.AutomationId="CheatsFreeCameraExtraTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock AutomationProperties.AutomationId="CheatsFreeCameraExtraNote"
+                               Text="The Free camera cheat above unlocks the developers' camera toggle the way the game intended, with nothing modified. Steering it is a separate, experimental matter: Windowed &amp; Mods has a Debug Camera Preview safe copy that adds one keyboard direction to the camera, and that one does change the copied game. It is not a full flying camera, and it may be unstable."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Button x:Name="OpenDebugCameraPreviewButton"
+                            AutomationProperties.AutomationId="CheatsOpenDebugCameraPreviewButton"
+                            Content="Open Windowed &amp; Mods"
+                            HorizontalAlignment="Left"
+                            Click="OpenDebugCameraPreviewButton_Click" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

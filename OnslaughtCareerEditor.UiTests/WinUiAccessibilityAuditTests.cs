@@ -19,6 +19,7 @@ public class WinUiAccessibilityAuditTests
                 "ReviewSetupButton",
                 "HomeNavigationItem",
                 "SavesNavigationItem",
+                "CheatsNavigationItem",
                 "MediaNavigationItem",
                 "AssetLibraryNavigationItem",
                 "LoreNavigationItem",
@@ -43,6 +44,32 @@ public class WinUiAccessibilityAuditTests
                 "HomeOpenPatchBenchButton",
                 "HomeOpenAssetLibraryButton",
                 "HomeOpenAboutButton"
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/CheatsPage.xaml"] =
+            [
+                "CheatsPageTitle",
+                "CheatsPageSummary",
+                "CheatsBoundarySafeCopyNote",
+                "CheatsBoundaryNewFileNote",
+                "CheatsBoundaryReversibleNote",
+                "CheatsChooseSourceSaveButton",
+                "CheatsSourceSaveStatus",
+                "CheatsAllGoodiesCheckBox",
+                "CheatsAllLevelsCheckBox",
+                "CheatsGodModeCheckBox",
+                "CheatsFreeCameraCheckBox",
+                "CheatsGoodieGatingBypassCheckBox",
+                "CheatsBaseNameTextBox",
+                "CheatsComposedName",
+                "CheatsComposedNameExplanation",
+                "CheatsDestinationComboBox",
+                "CheatsChooseDestinationFolderButton",
+                "CheatsRefreshSafeCopiesButton",
+                "CheatsDestinationStatus",
+                "CheatsWriteCheatSaveButton",
+                "CheatsStatusInfo",
+                "CheatsFreeCameraExtraNote",
+                "CheatsOpenDebugCameraPreviewButton"
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/SavesPage.xaml"] =
             [
@@ -252,6 +279,10 @@ public class WinUiAccessibilityAuditTests
             ["OnslaughtCareerEditor.WinUI/Pages/AboutPage.xaml"] =
             [
                 "AboutPageScrollViewer"
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/CheatsPage.xaml"] =
+            [
+                "CheatsPageScrollViewer"
             ]
         };
 
@@ -324,6 +355,16 @@ public class WinUiAccessibilityAuditTests
             ["OnslaughtCareerEditor.WinUI/Pages/SettingsPage.xaml"] =
             [
                 ("SettingsPageTitle", "Level1")
+            ],
+            ["OnslaughtCareerEditor.WinUI/Pages/CheatsPage.xaml"] =
+            [
+                ("CheatsPageTitle", "Level1"),
+                ("CheatsBoundaryTitle", "Level2"),
+                ("CheatsSourceTitle", "Level2"),
+                ("CheatsSelectionTitle", "Level2"),
+                ("CheatsNameTitle", "Level2"),
+                ("CheatsDestinationTitle", "Level2"),
+                ("CheatsFreeCameraExtraTitle", "Level2")
             ]
         };
 
@@ -586,6 +627,7 @@ public class WinUiAccessibilityAuditTests
             ["ReviewSetupButton"] = "R",
             ["HomeNavigationItem"] = "H",
             ["SavesNavigationItem"] = "S",
+            ["CheatsNavigationItem"] = "C",
             ["MediaNavigationItem"] = "M",
             ["AssetLibraryNavigationItem"] = "A",
             ["LoreNavigationItem"] = "L",

@@ -77,6 +77,11 @@
                                     AccessKey="S"
                                     Content="Save Lab"
                                     Tag="saves" />
+                <NavigationViewItem x:Name="CheatsNavigationItem"
+                                    AutomationProperties.AutomationId="CheatsNavigationItem"
+                                    AccessKey="C"
+                                    Content="Cheats"
+                                    Tag="cheats" />
                 <NavigationViewItem x:Name="MediaNavigationItem"
                                     AutomationProperties.AutomationId="MediaNavigationItem"
                                     AccessKey="M"
