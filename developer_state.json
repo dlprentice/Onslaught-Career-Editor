@@ -27,9 +27,10 @@
       "0b0ae241 icon PNG kept out of the shipped build (would have failed the release ZIP probe)",
       "81b613c9 Asset Library states up front that it needs assets the app cannot produce",
       "1bbb9755 resolution presets - the widescreen fix derives aspect from screen width, so 1600x900 was only the MEASURED size",
-      "6867512b live trainer - attaches to app-launched copies, reads vitals before offering to write; ammo/timescale REFUSED (no address evidence)"
+      "6867512b live trainer - attaches to app-launched copies, reads vitals before offering to write; ammo/timescale REFUSED (no address evidence)",
+      "271ab1cf Home quick-start card (fresh install -> running game in two clicks) AND the Cheats evidence-to-fine-print pass; the commit message only describes the first - see local-lab/APP-UX-BACKLOG-2026-08-01.md"
     ],
-    "gate_now": "npm test = 1172 AppCore + 357 UiTests + 93 CLI tests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 with no CLI gate at all on the morning of 2026-08-01.",
+    "gate_now": "npm test = 1172 AppCore + 375 UiTests + 93 CLI tests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 with no CLI gate at all on the morning of 2026-08-01.",
     "bounded_findings": {
       "lore_was_a_composition_failure_not_a_content_failure": "MEASURED 2026-08-01: RenderDocument wrote valid HTML, WebView2 reported NavigationCompleted success, and a live 80 MB renderer process held the page - nothing painted, and a full window resize did not fix it. Overturn by making WebView2 composite in this shell; the native reader is the better answer regardless.",
       "theme_brushes_must_use_ThemeResource": "StaticResource resolves a theme-dictionary key once at page load. Ten shell brushes were bound that way and froze the Lore reader dark after switching to Light. Overturn/guard: ThemeContrastAuditTests.ShellThemeBrushes_AreBoundWithThemeResource_SoTheyFollowTheAppearanceChoice.",
