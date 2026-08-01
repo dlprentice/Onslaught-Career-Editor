@@ -408,7 +408,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Report workspace"
+                                <TextBlock Text="Every detail, as text"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
                                 <StackPanel Grid.Column="1"
@@ -429,7 +429,7 @@
                                      Grid.Row="1"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
-                                     PlaceholderText="Analysis report appears here after you choose a save or options file."
+                                     PlaceholderText="Choose a save above and the full breakdown appears here."
                                      TextWrapping="NoWrap"
                                      FontFamily="Consolas"
                                      FontSize="12"

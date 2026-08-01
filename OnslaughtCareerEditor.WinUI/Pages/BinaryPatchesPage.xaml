@@ -112,26 +112,26 @@
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="PatchBenchOnlinePrepTitle"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepTitle"
-                               Text="Local split-screen safe copy"
+                               Text="Two players on one screen"
                                FontSize="14"
                                FontWeight="SemiBold" />
                     <TextBlock x:Name="PatchBenchOnlinePrepSummary"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepSummary"
-                               Text="Local split-screen launch preset is available for testing in a safe copy."
+                               Text="Starts your copy on the split-screen level, so two people can play on one PC."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock x:Name="PatchBenchOnlinePrepBoundary"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepBoundary"
-                               Text="Prepare the known local split-screen level in a safe copy. This does not add online play."
+                               Text="Same machine only - this does not add online play."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <Button x:Name="PatchBenchOnlinePrepLocalProbeButton"
                             AutomationProperties.AutomationId="PatchBenchOnlinePrepLocalProbeButton"
-                            AutomationProperties.Name="Use local split-screen launch preset for the safe copy"
-                            Content="Use local split-screen launch preset"
+                            AutomationProperties.Name="Turn on split screen for the next copy"
+                            Content="Turn on split screen"
                             HorizontalAlignment="Left"
                             Click="LocalMultiplayerProbeButton_Click" />
                     <TextBlock x:Name="PatchBenchOnlinePrepActionStatus"
                                AutomationProperties.AutomationId="PatchBenchOnlinePrepActionStatus"
-                               Text="Select the local split-screen launch preset, then create and play a safe copy. This is not Host/Join."
+                               Text="Turn it on, then create and play your copy."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
