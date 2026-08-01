@@ -1,16 +1,43 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-07-29. The rebuild entry path and its current media boundary
-were re-reviewed; nothing else was re-reviewed.
-Summary: what this project is, which surfaces are active, and where each lane's
-authoritative document lives.
+Last updated: 2026-08-01. A player-facing quick start was added at the top,
+including the SmartScreen warning a stranger meets before anything else; the
+lane sections below it were not re-reviewed and keep their 2026-07-29 boundary.
+Summary: what this project is, how to play, which surfaces are active, and where
+each lane's authoritative document lives.
 
 Onslaught Toolkit is a preservation, tooling, and original-code reconstruction
 project for *Battle Engine Aquila* (2003). The primary product is a WinUI 3
 Windows app for inspecting and safely editing real save/options files, preparing
 copied game profiles, applying evidence-backed patches to copied executables,
 and browsing locally supplied media, catalogs, and project lore.
+
+## Playing Battle Engine Aquila on a modern PC
+
+If you own the game and just want to play it, you do not need anything below
+this section — no .NET, no Node, no Python, no build.
+
+1. Download the portable ZIP from
+   [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases).
+   **Create an empty folder and extract into that** — the ZIP has no top-level
+   folder of its own, so extracting into Downloads scatters its contents.
+2. Right-click the ZIP → Properties → tick **Unblock** before you extract. That
+   is the easiest way to avoid the next step.
+3. Run `Launch Onslaught Toolkit.cmd`. The build is unsigned, so if you skipped
+   the Unblock step Windows shows *"Windows protected your PC"* — choose
+   **More info → Run anyway**.
+4. The app looks for your Steam install on its own. If it cannot find it, point
+   it at your game folder once in Settings.
+5. Open **Windowed & Mods**, choose **Create safe copy**, then **Launch**.
+
+That copy runs windowed at 1600x900 with the widescreen correction applied. Your
+installed game is never modified — the app only ever reads it and works in a
+separate folder it owns. Optional extras (a subtitle mod, early flight, a local
+split-screen preset) stay off until you turn them on.
+
+You can also edit a career save, browse the soundtrack, voice lines, cutscenes
+and briefings, and read the lore library — all from the same app.
 
 This is an unofficial community project. It is not affiliated with or endorsed
 by the game's publishers or rights holders. Repository licenses cover their
@@ -63,6 +90,9 @@ lanes. [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) describes what the
 current product does and what remains unproven.
 
 ## Build and run
+
+Everything from here down is for contributors. Players need only the section
+above.
 
 Requirements:
 
