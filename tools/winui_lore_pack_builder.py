@@ -116,6 +116,56 @@ def sanitize_pack_content(content: str) -> str:
     return sanitized
 
 
+def strip_maintainer_header_block(content: str) -> str:
+    """Drop the repository's Status/Last updated/Summary bullets for readers.
+
+    Every tracked document opens with a maintainer header block that
+    ``tools/doc_header_check.py`` requires and that carries repository
+    bookkeeping - which tree a file belongs in, when a header was added, which
+    paths are ignored in a clone. That is exactly right for contributors and
+    exactly wrong as the first thing a player reads in the offline reader, so
+    it is removed from the packaged copy only. The source files keep it.
+
+    Only a block that sits directly beneath the title and starts with
+    ``- **Status:**`` is removed, so a document without one is untouched.
+    """
+    lines = content.splitlines()
+    index = 0
+
+    # Keep the title and any blank lines above the block.
+    while index < len(lines) and not lines[index].startswith("- **Status:**"):
+        stripped = lines[index].strip()
+        if stripped and not stripped.startswith("#"):
+            return content
+        index += 1
+
+    if index >= len(lines):
+        return content
+
+    # Consume the bullet block, including its wrapped continuation lines.
+    index += 1
+    while index < len(lines):
+        line = lines[index]
+        if line.startswith("- ") or (line.startswith(" ") and line.strip()):
+            index += 1
+            continue
+        break
+
+    remainder = "\n".join(lines[index:]).lstrip("\n")
+    head = "\n".join(lines[: index - 1]).rstrip("\n") if index else ""
+    # Re-find where the block began so the title survives intact.
+    title_lines = []
+    for line in lines:
+        if line.startswith("- **Status:**"):
+            break
+        title_lines.append(line)
+    head = "\n".join(title_lines).rstrip("\n")
+
+    if not remainder:
+        return f"{head}\n" if head else content
+    return f"{head}\n\n{remainder}\n" if head else f"{remainder}\n"
+
+
 def split_link_target(target: str) -> tuple[str, str]:
     path_part, separator, anchor = target.partition("#")
     return unquote(path_part), f"#{anchor}" if separator else ""
@@ -309,6 +359,7 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
         raw_content = sanitize_pack_content(source.read_text(encoding="utf-8", errors="replace"))
         if source.suffix.lower() in MARKDOWN_SUFFIXES:
             raw_content = rewrite_pack_links(root, lore_root, relative_path, raw_content, packable_relative_paths)
+            raw_content = strip_maintainer_header_block(raw_content)
         content = pack_content_for_path(relative_path, source, raw_content)
         digest = sha256_text(content)
         doc_id = f"doc-{order + 1:06d}"
@@ -470,6 +521,34 @@ def normalize_pack_link_path(value: str) -> str | None:
 
 
 class LorePackBuilderTests(unittest.TestCase):
+    def test_maintainer_header_block_is_removed_for_readers(self) -> None:
+        source = (
+            "# Characters\n\n"
+            "- **Status:** live preservation record - in-universe fiction, drawn\n"
+            "  from the game's own bios. The `media/portraits/*.gif` paths cited\n"
+            "  are maintainer-local ignored paths and are not present in a clone.\n"
+            "- **Last updated:** 2026-03-12\n"
+            "- **Summary:** profiles of Hawk Winter and Tatiana Kiralova.\n\n"
+            "#### Hawk Winter\n\nBorn 1174, Forseti Minor.\n"
+        )
+
+        stripped = strip_maintainer_header_block(source)
+
+        self.assertNotIn("**Status:**", stripped)
+        self.assertNotIn("**Last updated:**", stripped)
+        self.assertNotIn("maintainer-local ignored paths", stripped)
+        self.assertTrue(stripped.startswith("# Characters\n"))
+        self.assertIn("#### Hawk Winter", stripped)
+        self.assertIn("Born 1174, Forseti Minor.", stripped)
+
+    def test_documents_without_a_header_block_are_untouched(self) -> None:
+        source = "# Plain\n\n- a bullet that is not a header block\n\nBody text.\n"
+        self.assertEqual(strip_maintainer_header_block(source), source)
+
+    def test_a_bullet_list_after_prose_is_not_mistaken_for_a_header_block(self) -> None:
+        source = "# Guide\n\nIntro paragraph.\n\n- **Status:** not a header here\n"
+        self.assertEqual(strip_maintainer_header_block(source), source)
+
     def test_build_and_check_lore_pack(self) -> None:
         with tempfile.TemporaryDirectory() as temp_root:
             root = Path(temp_root)
