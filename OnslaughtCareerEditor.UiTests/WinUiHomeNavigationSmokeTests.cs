@@ -184,7 +184,7 @@ public class WinUiHomeNavigationSmokeTests
 
         using HomeNavigationSession session = LaunchHomeSession(invalidGameDirectory, "invalid");
         Window window = session.Window;
-        WaitForText(window, "Review your game folder", TimeSpan.FromSeconds(20));
+        WaitForText(window, "Game folder needs a look", TimeSpan.FromSeconds(20));
 
         Assert.That(FindByAutomationId(window, "HomeSetupActionButton").Name, Is.EqualTo("Review game folder"));
         Assert.That(FindByAutomationId(window, "HomeOpenSaveLabButton").IsEnabled, Is.True);
@@ -208,7 +208,7 @@ public class WinUiHomeNavigationSmokeTests
 
         using HomeNavigationSession session = LaunchHomeSession(missingGameDirectory, "missing-configured-folder");
         Window window = session.Window;
-        WaitForText(window, "Review your game folder", TimeSpan.FromSeconds(20));
+        WaitForText(window, "Game folder needs a look", TimeSpan.FromSeconds(20));
 
         AutomationElement reviewAction = FindByAutomationId(window, "HomeSetupActionButton");
         Assert.That(

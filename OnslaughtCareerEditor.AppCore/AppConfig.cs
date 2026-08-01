@@ -249,7 +249,12 @@ namespace Onslaught___Career_Editor
                 return null;
             }
 
-            if (persistDetection)
+            // Only fill an EMPTY setting. GetGameDir() returns null for a folder that is configured
+            // but currently unreachable - an unplugged drive, a disconnected share, a renamed
+            // folder - and persisting detection there would quietly repoint someone's install at a
+            // different copy of the game they never chose. Auto-detection is for people who have
+            // not chosen yet; it is not a correction service for people who have.
+            if (persistDetection && string.IsNullOrWhiteSpace(GameDirectory))
             {
                 GameDirectory = detected;
                 Save();
