@@ -21,6 +21,12 @@ namespace OnslaughtCareerEditor.UiTests;
 /// say out loud that nobody has read them from a running game. And no control that writes may be
 /// enabled in the shipped markup - the only route to enabling one is a read that came back
 /// looking like real numbers.
+///
+/// Since the progressive-disclosure pass the second of those has a shape as well as a wording: one
+/// short sentence stays on screen, the paragraph behind it collapses into a panel labelled
+/// "How we know", and the per-field provenance goes with it. Two things are exempt because they
+/// change what a player should do rather than saying where a number came from - the shields hold
+/// warning, and the hold explanation - and this suite fails if either is hidden.
 /// </summary>
 public class LiveTrainerPageHonestyTests
 {
@@ -78,6 +84,18 @@ public class LiveTrainerPageHonestyTests
         element.Attributes().Any(attribute =>
             attribute.Name.LocalName == "AutomationProperties.AutomationId" && attribute.Value == automationId);
 
+    private static XElement TrainerElement(string automationId)
+    {
+        XElement? element = TrainerSectionElements()
+            .SingleOrDefault(candidate => HasAutomationId(candidate, automationId));
+        Assert.That(element, Is.Not.Null, $"Expected exactly one trainer element with automation id {automationId}.");
+        return element!;
+    }
+
+    /// <summary>True when a player has to open a disclosure before this line exists on screen.</summary>
+    private static bool IsBehindADisclosure(XElement element) =>
+        element.Ancestors().Any(ancestor => ancestor.Name.LocalName == "Expander");
+
     [Test]
     public void NothingInTheTrainerClaimsTheVitalsAreVerified()
     {
@@ -96,13 +114,42 @@ public class LiveTrainerPageHonestyTests
     [Test]
     public void TheTrainerSaysPlainlyThatNobodyHasReadTheseFromARunningGame()
     {
-        Assert.That(LiveTrainerPageText.EvidenceNote, Does.Contain("running game"));
-        Assert.That(LiveTrainerPageText.EvidenceNote, Does.Contain("Nobody has read"));
+        // This is the one sentence that may not be behind anything. A player who never opens a
+        // disclosure still has to meet it, so it is short, plain, and on screen.
+        Assert.That(LiveTrainerPageText.EvidenceHeadline, Does.Contain("running game"));
+        Assert.That(LiveTrainerPageText.EvidenceHeadline, Does.Contain("Nobody has read"));
+        Assert.That(
+            LiveTrainerPageText.EvidenceHeadline.Count(character => character == '.'),
+            Is.EqualTo(1),
+            "The visible caveat is one sentence. The rest of it belongs behind the disclosure.");
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerEvidenceHeadline")),
+            Is.False,
+            "A player must meet this sentence without opening anything.");
+    }
+
+    [Test]
+    public void TheRestOfTheCaveatIsStillOnThePage_OneClickAway()
+    {
+        // Moving it is allowed. Losing it is not: where the positions came from, and what a wrong
+        // one looks like, are the whole safety argument.
+        Assert.That(
+            LiveTrainerPageText.EvidenceNote,
+            Does.Contain("no evidence at all"),
+            "The section must still say the positions are evidence about where, not about what you will see.");
         Assert.That(
             LiveTrainerPageText.EvidenceNote,
             Does.Contain("nonsense"),
             "The failure mode has to be described, because seeing it is the whole safety argument.");
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerEvidence")),
+            Is.True,
+            "The paragraph is fine print, so it collapses.");
+    }
 
+    [Test]
+    public void EveryFieldStillCarriesItsOwnEvidenceLine_BehindItsOwnDisclosure()
+    {
         foreach (string perControl in new[]
                  {
                      LiveTrainerPageText.LifeEvidenceNote,
@@ -115,6 +162,44 @@ public class LiveTrainerPageHonestyTests
                 Does.Contain("Read from a running game: never"),
                 "Each write control carries its own evidence line, not just the section heading.");
         }
+
+        foreach (string automationId in new[]
+                 {
+                     "LiveTrainerLifeEvidence",
+                     "LiveTrainerEnergyEvidence",
+                     "LiveTrainerShieldsEvidence",
+                     "LiveTrainerStateEvidence",
+                 })
+        {
+            Assert.That(
+                IsBehindADisclosure(TrainerElement(automationId)),
+                Is.True,
+                $"{automationId} is provenance and belongs behind the disclosure.");
+        }
+    }
+
+    [Test]
+    public void TheDisclosuresInTheTrainerCarryTheSameLabelAsTheRestOfThePage()
+    {
+        XElement[] disclosures = TrainerSectionElements()
+            .Where(element => element.Name.LocalName == "Expander")
+            .ToArray();
+
+        Assert.That(disclosures, Is.Not.Empty, "The trainer collapses its provenance like the rest of the page.");
+        foreach (XElement disclosure in disclosures)
+        {
+            Assert.That(
+                (string?)disclosure.Attribute("Header"),
+                Is.EqualTo(LiveTrainerPageText.EvidenceDisclosureLabel));
+            Assert.That(
+                (string?)disclosure.Attribute("AutomationProperties.Name"),
+                Does.StartWith(LiveTrainerPageText.EvidenceDisclosureLabel),
+                "Identical labels need distinct accessible names, and the name must contain the label.");
+        }
+
+        Assert.That(
+            disclosures.Select(disclosure => (string?)disclosure.Attribute("AutomationProperties.Name")),
+            Is.Unique);
     }
 
     [Test]
@@ -122,6 +207,10 @@ public class LiveTrainerPageHonestyTests
     {
         Assert.That(LiveTrainerPageText.SafeCopyOnlyNote, Does.Contain("installed game is never opened"));
         Assert.That(LiveTrainerPageText.SafeCopyOnlyNote, Does.Contain("Windowed & Mods"));
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerSafeCopyNote")),
+            Is.False,
+            "What this feature will and will not touch is a boundary, not fine print.");
     }
 
     [Test]
@@ -132,14 +221,46 @@ public class LiveTrainerPageHonestyTests
             LiveTrainerPageText.MissionRunningNote,
             Does.Contain("zero").IgnoreCase,
             "The frontend reads as zeroes, and the page promises to say so rather than show them.");
+        Assert.That(IsBehindADisclosure(TrainerElement("LiveTrainerMissionNote")), Is.False);
+    }
+
+    [Test]
+    public void WithNothingRunning_TheTrainerSaysWhatToDoNextInOneSentence()
+    {
+        string nothingRunning = LiveTrainerPageText.BuildAttachSummary(false, null, null);
+
+        Assert.That(nothingRunning, Is.EqualTo(LiveTrainerPageText.NothingRunningNote));
+        Assert.That(
+            nothingRunning.Count(character => character == '.'),
+            Is.EqualTo(1),
+            $"An empty state is one sentence: '{nothingRunning}'");
+        Assert.That(nothingRunning, Does.Contain("Windowed & Mods"));
+        Assert.That(
+            nothingRunning,
+            Does.Contain("Watch the running copy"),
+            "Name the button, so the sentence works for somebody driving by voice as well.");
+        Assert.That(
+            PageXaml,
+            Does.Contain("start a mission, then press Watch the running copy"),
+            "The status bar's opening message must be the same instruction, not a stale one.");
+
+        Assert.That(
+            LiveTrainerPageText.BuildReadingSummary(null),
+            Is.Empty,
+            "Before the first read there is nothing to report; a line saying so only describes the emptiness.");
     }
 
     [Test]
     public void AmmunitionAndGameSpeedAreNotOffered_BecauseNeitherHasAnAddress()
     {
-        Assert.That(LiveTrainerPageText.NothingOfferedNote, Does.Contain("Ammunition"));
-        Assert.That(LiveTrainerPageText.NothingOfferedNote, Does.Contain("game speed"));
-        Assert.That(LiveTrainerPageText.NothingOfferedNote, Does.Contain("no address"));
+        Assert.That(LiveTrainerPageText.NothingOfferedHeadline, Does.Contain("Ammunition"));
+        Assert.That(LiveTrainerPageText.NothingOfferedHeadline, Does.Contain("game speed"));
+        Assert.That(
+            LiveTrainerPageText.NothingOfferedNote,
+            Does.Contain("no address"),
+            "The reason stays on the page, behind the disclosure; only the absence is stated up front.");
+        Assert.That(IsBehindADisclosure(TrainerElement("LiveTrainerNothingOffered")), Is.True);
+        Assert.That(IsBehindADisclosure(TrainerElement("LiveTrainerNothingOfferedHeadline")), Is.False);
 
         string xaml = PageXaml;
         foreach (string absent in new[] { "AmmoNumberBox", "SetAmmoButton", "TimescaleNumberBox", "SetSpeedButton" })
@@ -244,14 +365,32 @@ public class LiveTrainerPageHonestyTests
     }
 
     [Test]
-    public void TheShieldsNoteWarnsThatTheGameOverwritesShieldsFromEnergy()
+    public void TheShieldsWarningStaysOnScreen_BecauseItChangesWhatThePlayerShouldDo()
     {
-        Assert.That(LiveTrainerPageText.ShieldsEvidenceNote, Does.Contain("walker mode"));
-        Assert.That(LiveTrainerPageText.ShieldsEvidenceNote, Does.Contain("will not stick"));
+        Assert.That(LiveTrainerPageText.ShieldsHoldWarning, Does.Contain("walker mode"));
+        Assert.That(LiveTrainerPageText.ShieldsHoldWarning, Does.Contain("will not stick"));
         Assert.That(
-            LiveTrainerPageText.ShieldsEvidenceNote,
+            LiveTrainerPageText.ShieldsHoldWarning,
             Does.Contain("hold energy as well").IgnoreCase,
             "Telling a player the control is futile without telling them the fix is not honesty, it is a shrug.");
+        Assert.That(
+            LiveTrainerPageText.ShieldsHoldWarning,
+            Does.Contain("jet mode"),
+            "The jet-mode behaviour is the other half of why the switch will not hold.");
+
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerShieldsHoldWarning")),
+            Is.False,
+            "This is an instruction, not provenance. A warning a player has to open is a warning they will miss.");
+    }
+
+    [Test]
+    public void TheHoldControlsExplanationStaysOnScreen_BecauseItIsHowTheControlWorks()
+    {
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerHoldExplanation")),
+            Is.False,
+            "Why Hold repeats and when it stops is how the control behaves, not where a number came from.");
     }
 
     [Test]

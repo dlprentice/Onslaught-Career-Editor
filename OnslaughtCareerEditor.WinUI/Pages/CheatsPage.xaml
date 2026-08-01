@@ -8,6 +8,40 @@
     mc:Ignorable="d"
     AutomationProperties.AutomationId="CheatsPageRoot"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <!--
+            Progressive disclosure, in three pieces.
+
+            Every control on this page says what it does in plain words and carries its evidence
+            behind one collapsed panel labelled "How we know". The evidence is never removed and
+            never softened; it just stops being the first thing a player reads. Two things are
+            deliberately exempt because they change what a player should do rather than describing
+            where a number came from: the shields hold warning, and the short tag beside a cheat
+            nobody has watched work.
+        -->
+        <Style x:Key="EvidenceDisclosureStyle" TargetType="Expander">
+            <Setter Property="Margin" Value="30,0,0,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="MaxWidth" Value="720" />
+        </Style>
+
+        <Style x:Key="EvidenceTagBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource ShellMutedSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ShellBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+
+        <Style x:Key="EvidenceTagTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{ThemeResource ShellMutedTextBrush}" />
+        </Style>
+    </Page.Resources>
     <ScrollViewer AutomationProperties.AutomationId="CheatsPageScrollViewer"
                   AutomationProperties.Name="Cheats page content">
         <StackPanel Padding="20,18,20,24">
@@ -57,7 +91,7 @@
                     </StackPanel>
                     <TextBlock x:Name="SourceSaveTextBlock"
                                AutomationProperties.AutomationId="CheatsSourceSaveStatus"
-                               Text="No save chosen yet."
+                               Text="Press Choose a save and pick the career save you want to start from."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
@@ -72,89 +106,159 @@
                     <TextBlock Text="You can turn on as many as you like at once - the game looks for each word separately, so one name can carry all of them."
                                Style="{StaticResource SectionBodyTextStyle}" />
 
-                    <StackPanel Spacing="4">
-                        <CheckBox x:Name="AllGoodiesCheckBox"
-                                  AutomationProperties.AutomationId="CheatsAllGoodiesCheckBox"
-                                  Content="All goodies"
-                                  Checked="CheatSelectionChanged"
-                                  Unchecked="CheatSelectionChanged" />
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <CheckBox x:Name="AllGoodiesCheckBox"
+                                      AutomationProperties.AutomationId="CheatsAllGoodiesCheckBox"
+                                      Content="All goodies"
+                                      MinWidth="0"
+                                      VerticalAlignment="Center"
+                                      Checked="CheatSelectionChanged"
+                                      Unchecked="CheatSelectionChanged" />
+                            <Border x:Name="AllGoodiesEvidenceTagBorder"
+                                    Style="{StaticResource EvidenceTagBorderStyle}">
+                                <TextBlock x:Name="AllGoodiesEvidenceTagTextBlock"
+                                           AutomationProperties.AutomationId="CheatsAllGoodiesEvidenceTag"
+                                           Style="{StaticResource EvidenceTagTextStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="AllGoodiesEffectTextBlock"
                                    AutomationProperties.AutomationId="CheatsAllGoodiesEffect"
                                    Margin="30,0,0,0"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="AllGoodiesEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="CheatsAllGoodiesEvidence"
-                                   Margin="30,0,0,0"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="AllGoodiesEvidenceExpander"
+                                  AutomationProperties.AutomationId="CheatsAllGoodiesEvidenceExpander"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}">
+                            <TextBlock x:Name="AllGoodiesEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="CheatsAllGoodiesEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <CheckBox x:Name="AllLevelsCheckBox"
-                                  AutomationProperties.AutomationId="CheatsAllLevelsCheckBox"
-                                  Content="All levels"
-                                  Checked="CheatSelectionChanged"
-                                  Unchecked="CheatSelectionChanged" />
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <CheckBox x:Name="AllLevelsCheckBox"
+                                      AutomationProperties.AutomationId="CheatsAllLevelsCheckBox"
+                                      Content="All levels"
+                                      MinWidth="0"
+                                      VerticalAlignment="Center"
+                                      Checked="CheatSelectionChanged"
+                                      Unchecked="CheatSelectionChanged" />
+                            <Border x:Name="AllLevelsEvidenceTagBorder"
+                                    Style="{StaticResource EvidenceTagBorderStyle}">
+                                <TextBlock x:Name="AllLevelsEvidenceTagTextBlock"
+                                           AutomationProperties.AutomationId="CheatsAllLevelsEvidenceTag"
+                                           Style="{StaticResource EvidenceTagTextStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="AllLevelsEffectTextBlock"
                                    AutomationProperties.AutomationId="CheatsAllLevelsEffect"
                                    Margin="30,0,0,0"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="AllLevelsEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="CheatsAllLevelsEvidence"
-                                   Margin="30,0,0,0"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="AllLevelsEvidenceExpander"
+                                  AutomationProperties.AutomationId="CheatsAllLevelsEvidenceExpander"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}">
+                            <TextBlock x:Name="AllLevelsEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="CheatsAllLevelsEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <CheckBox x:Name="GodModeCheckBox"
-                                  AutomationProperties.AutomationId="CheatsGodModeCheckBox"
-                                  Content="God mode"
-                                  Checked="CheatSelectionChanged"
-                                  Unchecked="CheatSelectionChanged" />
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <CheckBox x:Name="GodModeCheckBox"
+                                      AutomationProperties.AutomationId="CheatsGodModeCheckBox"
+                                      Content="God mode"
+                                      MinWidth="0"
+                                      VerticalAlignment="Center"
+                                      Checked="CheatSelectionChanged"
+                                      Unchecked="CheatSelectionChanged" />
+                            <Border x:Name="GodModeEvidenceTagBorder"
+                                    Style="{StaticResource EvidenceTagBorderStyle}">
+                                <TextBlock x:Name="GodModeEvidenceTagTextBlock"
+                                           AutomationProperties.AutomationId="CheatsGodModeEvidenceTag"
+                                           Style="{StaticResource EvidenceTagTextStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="GodModeEffectTextBlock"
                                    AutomationProperties.AutomationId="CheatsGodModeEffect"
                                    Margin="30,0,0,0"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="GodModeEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="CheatsGodModeEvidence"
-                                   Margin="30,0,0,0"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="GodModeEvidenceExpander"
+                                  AutomationProperties.AutomationId="CheatsGodModeEvidenceExpander"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}">
+                            <TextBlock x:Name="GodModeEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="CheatsGodModeEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <CheckBox x:Name="FreeCameraCheckBox"
-                                  AutomationProperties.AutomationId="CheatsFreeCameraCheckBox"
-                                  Content="Free camera"
-                                  Checked="CheatSelectionChanged"
-                                  Unchecked="CheatSelectionChanged" />
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <CheckBox x:Name="FreeCameraCheckBox"
+                                      AutomationProperties.AutomationId="CheatsFreeCameraCheckBox"
+                                      Content="Free camera"
+                                      MinWidth="0"
+                                      VerticalAlignment="Center"
+                                      Checked="CheatSelectionChanged"
+                                      Unchecked="CheatSelectionChanged" />
+                            <Border x:Name="FreeCameraEvidenceTagBorder"
+                                    Style="{StaticResource EvidenceTagBorderStyle}">
+                                <TextBlock x:Name="FreeCameraEvidenceTagTextBlock"
+                                           AutomationProperties.AutomationId="CheatsFreeCameraEvidenceTag"
+                                           Style="{StaticResource EvidenceTagTextStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="FreeCameraEffectTextBlock"
                                    AutomationProperties.AutomationId="CheatsFreeCameraEffect"
                                    Margin="30,0,0,0"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="FreeCameraEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="CheatsFreeCameraEvidence"
-                                   Margin="30,0,0,0"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="FreeCameraEvidenceExpander"
+                                  AutomationProperties.AutomationId="CheatsFreeCameraEvidenceExpander"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}">
+                            <TextBlock x:Name="FreeCameraEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="CheatsFreeCameraEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <CheckBox x:Name="GoodieGatingBypassCheckBox"
-                                  AutomationProperties.AutomationId="CheatsGoodieGatingBypassCheckBox"
-                                  Content="Goodie gating bypass"
-                                  Checked="CheatSelectionChanged"
-                                  Unchecked="CheatSelectionChanged" />
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8">
+                            <CheckBox x:Name="GoodieGatingBypassCheckBox"
+                                      AutomationProperties.AutomationId="CheatsGoodieGatingBypassCheckBox"
+                                      Content="Goodie gating bypass"
+                                      MinWidth="0"
+                                      VerticalAlignment="Center"
+                                      Checked="CheatSelectionChanged"
+                                      Unchecked="CheatSelectionChanged" />
+                            <Border x:Name="GoodieGatingBypassEvidenceTagBorder"
+                                    Style="{StaticResource EvidenceTagBorderStyle}">
+                                <TextBlock x:Name="GoodieGatingBypassEvidenceTagTextBlock"
+                                           AutomationProperties.AutomationId="CheatsGoodieGatingBypassEvidenceTag"
+                                           Style="{StaticResource EvidenceTagTextStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock x:Name="GoodieGatingBypassEffectTextBlock"
                                    AutomationProperties.AutomationId="CheatsGoodieGatingBypassEffect"
                                    Margin="30,0,0,0"
                                    Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="GoodieGatingBypassEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="CheatsGoodieGatingBypassEvidence"
-                                   Margin="30,0,0,0"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="GoodieGatingBypassEvidenceExpander"
+                                  AutomationProperties.AutomationId="CheatsGoodieGatingBypassEvidenceExpander"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}">
+                            <TextBlock x:Name="GoodieGatingBypassEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="CheatsGoodieGatingBypassEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -256,10 +360,19 @@
                     <TextBlock x:Name="LiveTrainerMissionNoteTextBlock"
                                AutomationProperties.AutomationId="LiveTrainerMissionNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock x:Name="LiveTrainerEvidenceTextBlock"
-                               AutomationProperties.AutomationId="LiveTrainerEvidence"
-                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                    <TextBlock x:Name="LiveTrainerEvidenceHeadlineTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerEvidenceHeadline"
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <Expander x:Name="LiveTrainerEvidenceExpander"
+                              AutomationProperties.AutomationId="LiveTrainerEvidenceExpander"
+                              AutomationProperties.Name="How we know about the live trainer"
+                              Header="How we know"
+                              Style="{StaticResource EvidenceDisclosureStyle}"
+                              Margin="0">
+                        <TextBlock x:Name="LiveTrainerEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerEvidence"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </Expander>
 
                     <StackPanel Orientation="Horizontal"
                                 Spacing="10">
@@ -318,10 +431,16 @@
                                    FontFamily="Consolas"
                                    Text="-" />
                     </Grid>
-                    <TextBlock x:Name="LiveTrainerStateEvidenceTextBlock"
-                               AutomationProperties.AutomationId="LiveTrainerStateEvidence"
-                               Foreground="{ThemeResource ShellMutedTextBrush}"
-                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <Expander x:Name="LiveTrainerStateEvidenceExpander"
+                              AutomationProperties.AutomationId="LiveTrainerStateEvidenceExpander"
+                              AutomationProperties.Name="How we know about Mode"
+                              Header="How we know"
+                              Style="{StaticResource EvidenceDisclosureStyle}"
+                              Margin="0">
+                        <TextBlock x:Name="LiveTrainerStateEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerStateEvidence"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </Expander>
 
                     <TextBlock x:Name="LiveTrainerHoldExplanationTextBlock"
                                AutomationProperties.AutomationId="LiveTrainerHoldExplanation"
@@ -355,10 +474,16 @@
                                           IsEnabled="False"
                                           Toggled="LiveTrainerHoldLifeToggle_Toggled" />
                         </StackPanel>
-                        <TextBlock x:Name="LiveTrainerLifeEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="LiveTrainerLifeEvidence"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="LiveTrainerLifeEvidenceExpander"
+                                  AutomationProperties.AutomationId="LiveTrainerLifeEvidenceExpander"
+                                  AutomationProperties.Name="How we know about Life"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}"
+                                  Margin="0">
+                            <TextBlock x:Name="LiveTrainerLifeEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="LiveTrainerLifeEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
                     <StackPanel Spacing="4">
@@ -386,10 +511,16 @@
                                           IsEnabled="False"
                                           Toggled="LiveTrainerHoldEnergyToggle_Toggled" />
                         </StackPanel>
-                        <TextBlock x:Name="LiveTrainerEnergyEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="LiveTrainerEnergyEvidence"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
-                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="LiveTrainerEnergyEvidenceExpander"
+                                  AutomationProperties.AutomationId="LiveTrainerEnergyEvidenceExpander"
+                                  AutomationProperties.Name="How we know about Energy"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}"
+                                  Margin="0">
+                            <TextBlock x:Name="LiveTrainerEnergyEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="LiveTrainerEnergyEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
                     <StackPanel Spacing="4">
@@ -417,16 +548,41 @@
                                           IsEnabled="False"
                                           Toggled="LiveTrainerHoldShieldsToggle_Toggled" />
                         </StackPanel>
-                        <TextBlock x:Name="LiveTrainerShieldsEvidenceTextBlock"
-                                   AutomationProperties.AutomationId="LiveTrainerShieldsEvidence"
-                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                        <!--
+                            Stays visible on purpose. This is not where a number came from, it is
+                            what a player has to do differently, and hiding an instruction behind a
+                            disclosure is how somebody ends up holding a switch that cannot hold.
+                        -->
+                        <TextBlock x:Name="LiveTrainerShieldsHoldWarningTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerShieldsHoldWarning"
                                    Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="LiveTrainerShieldsEvidenceExpander"
+                                  AutomationProperties.AutomationId="LiveTrainerShieldsEvidenceExpander"
+                                  AutomationProperties.Name="How we know about Shields"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}"
+                                  Margin="0">
+                            <TextBlock x:Name="LiveTrainerShieldsEvidenceTextBlock"
+                                       AutomationProperties.AutomationId="LiveTrainerShieldsEvidence"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
                     </StackPanel>
 
-                    <TextBlock x:Name="LiveTrainerNothingOfferedTextBlock"
-                               AutomationProperties.AutomationId="LiveTrainerNothingOffered"
-                               Foreground="{ThemeResource ShellMutedTextBrush}"
-                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="LiveTrainerNothingOfferedHeadlineTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerNothingOfferedHeadline"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <Expander x:Name="LiveTrainerNothingOfferedExpander"
+                                  AutomationProperties.AutomationId="LiveTrainerNothingOfferedExpander"
+                                  AutomationProperties.Name="How we know about ammunition and game speed"
+                                  Header="How we know"
+                                  Style="{StaticResource EvidenceDisclosureStyle}"
+                                  Margin="0">
+                            <TextBlock x:Name="LiveTrainerNothingOfferedTextBlock"
+                                       AutomationProperties.AutomationId="LiveTrainerNothingOffered"
+                                       Style="{StaticResource SectionBodyTextStyle}" />
+                        </Expander>
+                    </StackPanel>
 
                     <controls:InfoBar x:Name="LiveTrainerInfoBar"
                                       AutomationProperties.AutomationId="LiveTrainerStatusInfo"
@@ -435,7 +591,7 @@
                                       IsClosable="False"
                                       Severity="Informational"
                                       Title="Not watching"
-                                      Message="Launch a copy from Windowed &amp; Mods, start a mission, then press Watch." />
+                                      Message="Launch a copy from Windowed &amp; Mods, start a mission, then press Watch the running copy." />
                 </StackPanel>
             </Border>
 

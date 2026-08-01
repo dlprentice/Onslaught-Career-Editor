@@ -17,6 +17,47 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
     /// </summary>
     internal static class CheatsPageText
     {
+        /// <summary>
+        /// The one label every collapsed evidence disclosure on this page carries, trainer section
+        /// included. It is a constant because "pick one label and use it everywhere" is only worth
+        /// anything if a second label cannot quietly appear next to it.
+        /// </summary>
+        public const string EvidenceDisclosureLabel = "How we know";
+
+        /// <summary>
+        /// What to do when no safe copy has been found. It is the same sentence whether the list
+        /// came back empty on load or after the player pressed the refresh button.
+        /// </summary>
+        public const string NoSafeCopiesFoundNote =
+            "Make a safe copy in Windowed & Mods, or press Choose a folder instead.";
+
+        /// <summary>
+        /// The short marker shown beside a cheat nobody has watched work, or null for one somebody
+        /// has. This is the visible half of the evidence: the full sentence moves behind the
+        /// disclosure, but a player must not have to open anything to learn that a switch has
+        /// never been seen doing what it says.
+        /// </summary>
+        public static string? DescribeEvidenceTag(CheatCode? cheat)
+        {
+            if (cheat is null)
+            {
+                return null;
+            }
+
+            return cheat.Evidence == CheatEvidenceLevel.FoundInGameCodeOnly ? "Untested" : null;
+        }
+
+        /// <summary>
+        /// The accessible name for one cheat's disclosure. Every one of them shows the same words,
+        /// so the label alone would give a screen reader eight identical controls.
+        /// </summary>
+        public static string BuildEvidenceDisclosureName(CheatCode? cheat)
+        {
+            return cheat is null
+                ? EvidenceDisclosureLabel
+                : $"{EvidenceDisclosureLabel} about {cheat.DisplayName}";
+        }
+
         /// <summary>The big line: exactly what the file will be called.</summary>
         public static string BuildNameHeadline(CheatSaveName? composition)
         {
@@ -78,7 +119,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
-                return "No save chosen yet.";
+                return "Press Choose a save and pick the career save you want to start from.";
             }
 
             return $"Starting from {Path.GetFileName(sourcePath)}. It is copied, not changed.";
@@ -97,7 +138,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     + "Copy it into a safe copy's savegames folder when you want to play it.";
             }
 
-            return "Nowhere chosen yet. Make a safe copy in Windowed & Mods, or pick a folder.";
+            return NoSafeCopiesFoundNote;
         }
 
         /// <summary>

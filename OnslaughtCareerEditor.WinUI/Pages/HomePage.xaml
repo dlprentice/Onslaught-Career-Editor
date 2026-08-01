@@ -99,6 +99,51 @@
                     </InfoBar.ActionButton>
                 </InfoBar>
 
+                <Border x:Name="HomeQuickStartBorder"
+                        Style="{StaticResource SectionCardStyle}"
+                        Background="{ThemeResource ShellMetricSurfaceBrush}"
+                        BorderBrush="{ThemeResource ShellAccentBrush}"
+                        Margin="0">
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Name="HomeQuickStartTitleTextBlock"
+                                   AutomationProperties.AutomationId="HomeQuickStartTitle"
+                                   AutomationProperties.HeadingLevel="Level2"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="WrapWholeWords" />
+                        <TextBlock x:Name="HomeQuickStartBodyTextBlock"
+                                   AutomationProperties.AutomationId="HomeQuickStartBody"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="10">
+                            <Button x:Name="HomeQuickStartPrimaryButton"
+                                    AutomationProperties.AutomationId="HomeQuickStartPrimaryButton"
+                                    AutomationProperties.Name="Find my game"
+                                    Content="Find my game"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                    Click="HomeQuickStartPrimaryButton_Click" />
+                            <Button x:Name="HomeQuickStartChooseFolderButton"
+                                    AutomationProperties.AutomationId="HomeQuickStartChooseFolderButton"
+                                    AutomationProperties.Name="Choose it myself, and pick the game folder in Settings"
+                                    Content="Choose it myself"
+                                    Visibility="Collapsed"
+                                    Click="HomeQuickStartChooseFolderButton_Click" />
+                            <ProgressRing x:Name="HomeQuickStartProgressRing"
+                                          AutomationProperties.AutomationId="HomeQuickStartProgress"
+                                          IsActive="False"
+                                          Width="22"
+                                          Height="22"
+                                          VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock x:Name="HomeQuickStartNoteTextBlock"
+                                   AutomationProperties.AutomationId="HomeQuickStartNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   Visibility="Collapsed"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </Border>
+
                 <Border x:Name="HomeSnapshotBorder"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0">

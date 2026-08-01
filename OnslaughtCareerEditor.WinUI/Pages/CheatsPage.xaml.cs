@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Onslaught___Career_Editor;
 using OnslaughtCareerEditor.WinUI.Helpers;
@@ -64,22 +65,62 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         }
 
         /// <summary>
-        /// Fills the effect and evidence lines from the catalog. The tick-box labels stay in XAML
-        /// so they carry stable automation ids; a test pins them against the catalog names.
+        /// Fills the effect line, the collapsed evidence line, and the short marker from the
+        /// catalog. The tick-box labels stay in XAML so they carry stable automation ids; a test
+        /// pins them against the catalog names.
         /// </summary>
         private void ApplyCatalogCopy()
         {
-            SetCheatCopy(CheatCodeCatalog.AllGoodiesId, AllGoodiesEffectTextBlock, AllGoodiesEvidenceTextBlock);
-            SetCheatCopy(CheatCodeCatalog.AllLevelsId, AllLevelsEffectTextBlock, AllLevelsEvidenceTextBlock);
-            SetCheatCopy(CheatCodeCatalog.GodModeId, GodModeEffectTextBlock, GodModeEvidenceTextBlock);
-            SetCheatCopy(CheatCodeCatalog.FreeCameraId, FreeCameraEffectTextBlock, FreeCameraEvidenceTextBlock);
+            SetCheatCopy(
+                CheatCodeCatalog.AllGoodiesId,
+                AllGoodiesEffectTextBlock,
+                AllGoodiesEvidenceTextBlock,
+                AllGoodiesEvidenceExpander,
+                AllGoodiesEvidenceTagTextBlock,
+                AllGoodiesEvidenceTagBorder);
+            SetCheatCopy(
+                CheatCodeCatalog.AllLevelsId,
+                AllLevelsEffectTextBlock,
+                AllLevelsEvidenceTextBlock,
+                AllLevelsEvidenceExpander,
+                AllLevelsEvidenceTagTextBlock,
+                AllLevelsEvidenceTagBorder);
+            SetCheatCopy(
+                CheatCodeCatalog.GodModeId,
+                GodModeEffectTextBlock,
+                GodModeEvidenceTextBlock,
+                GodModeEvidenceExpander,
+                GodModeEvidenceTagTextBlock,
+                GodModeEvidenceTagBorder);
+            SetCheatCopy(
+                CheatCodeCatalog.FreeCameraId,
+                FreeCameraEffectTextBlock,
+                FreeCameraEvidenceTextBlock,
+                FreeCameraEvidenceExpander,
+                FreeCameraEvidenceTagTextBlock,
+                FreeCameraEvidenceTagBorder);
             SetCheatCopy(
                 CheatCodeCatalog.GoodieGatingBypassId,
                 GoodieGatingBypassEffectTextBlock,
-                GoodieGatingBypassEvidenceTextBlock);
+                GoodieGatingBypassEvidenceTextBlock,
+                GoodieGatingBypassEvidenceExpander,
+                GoodieGatingBypassEvidenceTagTextBlock,
+                GoodieGatingBypassEvidenceTagBorder);
         }
 
-        private void SetCheatCopy(string cheatId, TextBlock effect, TextBlock evidence)
+        /// <summary>
+        /// One cheat's copy, in the two places it now lives. The effect sentence and the tag stay
+        /// on screen; the evidence sentence goes behind the disclosure. The tag is derived from the
+        /// catalog rather than written into the markup, so a cheat that is downgraded to
+        /// code-reading-only later starts carrying its marker without anyone editing this page.
+        /// </summary>
+        private void SetCheatCopy(
+            string cheatId,
+            TextBlock effect,
+            TextBlock evidence,
+            Expander disclosure,
+            TextBlock tag,
+            FrameworkElement tagHost)
         {
             CheatCode? cheat = CheatCodeCatalog.FindById(cheatId);
             if (cheat is null)
@@ -89,6 +130,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             effect.Text = cheat.WhatItDoes;
             evidence.Text = cheat.WhatWeKnow;
+            AutomationProperties.SetName(disclosure, CheatsPageText.BuildEvidenceDisclosureName(cheat));
+
+            string? marker = CheatsPageText.DescribeEvidenceTag(cheat);
+            tag.Text = marker ?? string.Empty;
+            tagHost.Visibility = marker is null ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private IReadOnlyList<string> GetSelectedCheatIds()
@@ -223,9 +269,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshComposition();
             SetStatus(
                 InfoBarSeverity.Informational,
-                "Ready",
+                _safeCopyTargets.Count == 0 ? "No safe copies yet" : "Ready",
                 _safeCopyTargets.Count == 0
-                    ? "No safe copies found yet. Make one in Windowed & Mods, or pick a folder to write into."
+                    ? CheatsPageText.NoSafeCopiesFoundNote
                     : $"Found {_safeCopyTargets.Count} safe {(_safeCopyTargets.Count == 1 ? "copy" : "copies")}.");
         }
 
@@ -370,12 +416,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerIntroTextBlock.Text = LiveTrainerPageText.Introduction;
             LiveTrainerSafeCopyNoteTextBlock.Text = LiveTrainerPageText.SafeCopyOnlyNote;
             LiveTrainerMissionNoteTextBlock.Text = LiveTrainerPageText.MissionRunningNote;
+            LiveTrainerEvidenceHeadlineTextBlock.Text = LiveTrainerPageText.EvidenceHeadline;
             LiveTrainerEvidenceTextBlock.Text = LiveTrainerPageText.EvidenceNote;
             LiveTrainerHoldExplanationTextBlock.Text = LiveTrainerPageText.HoldExplanation;
             LiveTrainerLifeEvidenceTextBlock.Text = LiveTrainerPageText.LifeEvidenceNote;
             LiveTrainerEnergyEvidenceTextBlock.Text = LiveTrainerPageText.EnergyEvidenceNote;
+            LiveTrainerShieldsHoldWarningTextBlock.Text = LiveTrainerPageText.ShieldsHoldWarning;
             LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
             LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
+            LiveTrainerNothingOfferedHeadlineTextBlock.Text = LiveTrainerPageText.NothingOfferedHeadline;
             LiveTrainerNothingOfferedTextBlock.Text = LiveTrainerPageText.NothingOfferedNote;
         }
 
@@ -396,7 +445,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 SetLiveTrainerStatus(
                     InfoBarSeverity.Informational,
                     "Nothing to watch",
-                    "No copy launched by this app is running. Start one in Windowed & Mods first.");
+                    LiveTrainerPageText.NothingRunningNote);
                 RefreshLiveTrainerControls();
                 return;
             }
@@ -423,7 +472,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
             LiveTrainerTick();
-            SetLiveTrainerStatus(InfoBarSeverity.Informational, "Watching", LiveTrainerPageText.EvidenceNote);
+            SetLiveTrainerStatus(InfoBarSeverity.Informational, "Watching", LiveTrainerPageText.EvidenceHeadline);
             AppStatusService.SetStatus("Cheats: watching a running copy");
         }
 
@@ -540,14 +589,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LivePlayerVitals? vitals = _lastTrainerReading?.Vitals;
 
             LiveTrainerStopWatchingButton.IsEnabled = attached;
-            LiveTrainerReadingStatusTextBlock.Text = LiveTrainerPageText.BuildReadingSummary(_lastTrainerReading);
+            SetLineText(
+                LiveTrainerReadingStatusTextBlock,
+                LiveTrainerPageText.BuildReadingSummary(_lastTrainerReading));
             LiveTrainerLifeValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Life);
             LiveTrainerEnergyValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Energy);
             LiveTrainerShieldsValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Shields);
             LiveTrainerStateValueTextBlock.Text = LiveTrainerPageText.FormatState(vitals);
 
             string? blocked = LiveTrainerPageText.DescribeWhyWritingIsBlocked(attached, _lastTrainerReading);
-            LiveTrainerWritingBlockedTextBlock.Text = blocked ?? string.Empty;
+            SetLineText(LiveTrainerWritingBlockedTextBlock, blocked ?? string.Empty);
 
             bool canWrite = blocked is null;
             SetLiveTrainerWriteControlsEnabled(
@@ -565,6 +616,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 LiveTrainerShieldsNumberBox,
                 LiveTrainerSetShieldsButton,
                 LiveTrainerHoldShieldsToggle);
+        }
+
+        /// <summary>
+        /// A status line that takes up no room when it has nothing to say. An empty line still
+        /// reserves its height, and a page whose empty state is a column of blank gaps reads as
+        /// broken rather than as ready.
+        /// </summary>
+        private static void SetLineText(TextBlock line, string text)
+        {
+            line.Text = text;
+            line.Visibility = string.IsNullOrWhiteSpace(text) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private static void SetLiveTrainerWriteControlsEnabled(
