@@ -137,8 +137,9 @@ namespace Onslaught___Career_Editor
     /// One four-byte field, kept as the bits that were actually read rather than as a number
     /// somebody already decided how to interpret.
     ///
-    /// The vital offsets have never been read from a running game, so their type is unconfirmed
-    /// too. Both readings are carried: <see cref="AsSingle"/> is what the source correspondence
+    /// The vitals were read out of a running mission on 2026-08-01 and read as floats there
+    /// (0x41A00000 is exactly 20.0f), but both readings are still carried, because a wrong pointer
+    /// hop returns plausible small floats - that is how the original brief was caught. Both: <see cref="AsSingle"/> is what the source correspondence
     /// says the field is - CUnit's health getter returns a float from +0xf8 - and is what the UI
     /// shows first; <see cref="AsInt32"/> and <see cref="RawHex"/> sit beside it so a player can
     /// see for themselves whether the float reading is nonsense.

@@ -21,10 +21,11 @@ namespace Onslaught___Career_Editor.Cli
     ///     Windows recycles process ids;
     ///   - a write only happens on an address that was just read and came back believable.
     ///
-    /// There is no freeze verb. Holding a value means writing it ten times a second for as long as
-    /// the user wants it held, which needs a process that stays alive; a one-shot CLI invocation is
-    /// the wrong shape for that and pretending otherwise would ship a control that silently does
-    /// nothing. <see cref="TrainerSet"/> says so out loud instead.
+    /// Holding a value means writing it ten times a second for as long as it is wanted, which needs
+    /// a process that stays alive. This lane used to argue that made it the wrong shape for a CLI
+    /// and left the feature to the GUI - which meant the headless twin could read a trainer's
+    /// numbers and not act on them. <see cref="TrainerHold"/> settles it the honest way instead: it
+    /// holds for a stated time, says so, and always lets go.
     /// </summary>
     public static class TrainerVerbs
     {
@@ -74,7 +75,9 @@ namespace Onslaught___Career_Editor.Cli
                 ctx.Line($"  Started: {target.StartedAt:yyyy-MM-dd HH:mm:ss}");
                 ctx.Line($"  Attach:  allowed");
                 ctx.Line();
-                ctx.Line("The life/energy/shields offsets have never been read from a running game.");
+                ctx.Line("Life, energy and shields were read out of a running mission on 1 August 2026,");
+                ctx.Line("and setting life took. Read them before writing anything - the app refuses the");
+                ctx.Line("write if what comes back does not look like vitals.");
             }
 
             return ctx.Ok(command, payload);
@@ -414,8 +417,8 @@ namespace Onslaught___Career_Editor.Cli
 
             ctx.Line($"{"state",-10} {vitals.State.AsInt32.ToString(CultureInfo.InvariantCulture),-16} {vitals.State.RawHex,-12} {vitals.StateName ?? "(unknown value)"}");
             ctx.Line();
-            ctx.Line("These offsets have never been read from a running game before. If the numbers above");
-            ctx.Line("look like nonsense, they are - do not write to them.");
+            ctx.Line("These three were read out of a running mission on 1 August 2026, and changing life");
+            ctx.Line("took. If the numbers above look like nonsense, they are - and writing is refused.");
         }
 
         /// <summary>

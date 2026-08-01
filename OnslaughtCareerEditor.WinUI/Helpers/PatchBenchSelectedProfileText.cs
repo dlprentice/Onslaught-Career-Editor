@@ -196,7 +196,13 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
             AddLimitIfMissing(limits, "No Host/Join or online multiplayer.");
-            AddLimitIfMissing(limits, "No installed-game mutation.");
+
+            // Superseded 2026-08-01: this appended "No installed-game mutation." to the limits a
+            // player reads in the preset details - on the same page that now offers to patch the
+            // installed game, built from the same selection that button consumes. It described what
+            // creating a safe copy does, which is still true, so it now says that instead of making
+            // a claim about the whole app that the page next to it disproves.
+            AddLimitIfMissing(limits, "Creating a safe copy changes nothing outside the copy.");
 
             return $"Limits: {string.Join(" ", limits.Take(8))}";
         }
