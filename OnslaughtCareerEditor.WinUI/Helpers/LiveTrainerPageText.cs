@@ -61,10 +61,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// <see cref="EvidenceHeadline"/>.
         /// </summary>
         public const string EvidenceNote =
-            "Their positions come from the game's own damage code lining up with the developers' "
-            + "source, which is good evidence about where they should be and no evidence at all about "
-            + "what you will see. If the numbers below look like nonsense, they are - and the controls "
-            + "that change them stay switched off.";
+            "Their positions were read straight out of the game's own damage routine, which loads all "
+            + "three together and treats life as a decimal number - so where they sit, and what shape "
+            + "they are, is not in doubt. What nobody has done is follow the trail to them while a "
+            + "mission is running, and that trail is the part that could be wrong. If the numbers below "
+            + "look like nonsense, they are - and the controls that change them stay switched off.";
 
         public const string LifeEvidenceNote =
             "Life sits where the game's damage routine reads it, and where the health readout on the HUD "

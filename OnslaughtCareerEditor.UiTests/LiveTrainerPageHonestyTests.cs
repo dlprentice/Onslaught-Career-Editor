@@ -133,10 +133,23 @@ public class LiveTrainerPageHonestyTests
     {
         // Moving it is allowed. Losing it is not: where the positions came from, and what a wrong
         // one looks like, are the whole safety argument.
+        // Superseded 2026-08-01. This used to require the phrase "no evidence at all", which was
+        // true when the offsets rested only on source correspondence. They were since read straight
+        // out of CBattleEngine::Damage in the pristine specimen - three consecutive loads off the
+        // this-pointer, with life fetched by an x87 fld, so the positions and the float type are
+        // settled (local-lab/VITALS-LAYOUT-STATIC-CONFIRMATION-2026-08-01.md). Keeping the old
+        // wording would now understate what is known, which is its own kind of dishonesty.
+        //
+        // The property that must survive any rewording is the DISTINCTION: the fields are located,
+        // the runtime route to them is not.
         Assert.That(
-            LiveTrainerPageText.EvidenceNote,
-            Does.Contain("no evidence at all"),
-            "The section must still say the positions are evidence about where, not about what you will see.");
+            LiveTrainerPageText.EvidenceNote.ToLowerInvariant(),
+            Does.Contain("mission is running"),
+            "The note must still name the part nobody has done - reaching these while a mission runs.");
+        Assert.That(
+            LiveTrainerPageText.EvidenceNote.ToLowerInvariant(),
+            Does.Contain("could be wrong"),
+            "The note must still say which part could be wrong, not leave it implied.");
         Assert.That(
             LiveTrainerPageText.EvidenceNote,
             Does.Contain("nonsense"),
