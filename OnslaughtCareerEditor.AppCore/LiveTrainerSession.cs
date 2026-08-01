@@ -328,7 +328,28 @@ namespace Onslaught___Career_Editor
                     "The copied game is no longer readable. It has probably closed.");
             }
 
-            uint playerPointer = LivePlayerVitalsDecoder.ReadSlotPointer(table, LiveTrainerAddresses.PrimaryPlayerSlot);
+            // Which slot holds player one is not settled. IScript::GetPlayerBattleEngine indexes
+            // this table from a getter and the literal on the path that reaches the table load is
+            // 1, not 0, with a dec eax before it that suggests a 1-based index being converted
+            // (local-lab/PLAYER-CHAIN-STATIC-CONFIRMATION-2026-08-01.md). Rather than guess, take
+            // the first slot that actually holds something: an empty slot is the documented state
+            // the game itself null-checks for, so scanning costs nothing and being wrong by one
+            // index would otherwise make this look broken while it sat next to the answer.
+            // Only EMPTY slots are skipped. A slot holding something unusable is reported rather
+            // than scanned past: "that is not a player" and "there is no player" are different
+            // answers, and collapsing them would hide exactly the case where these addresses have
+            // gone stale.
+            uint playerPointer = 0;
+            for (int slot = 0; slot < LiveTrainerAddresses.PlayerSlotCount; slot++)
+            {
+                uint candidate = LivePlayerVitalsDecoder.ReadSlotPointer(table, slot);
+                if (candidate != 0)
+                {
+                    playerPointer = candidate;
+                    break;
+                }
+            }
+
             if (playerPointer == 0)
             {
                 return new LiveTrainerReadResult(
