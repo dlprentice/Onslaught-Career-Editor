@@ -73,6 +73,21 @@
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game directory. Audio and video now play inline on the page."
                        Style="{StaticResource SectionBodyTextStyle}" />
+            <InfoBar x:Name="MediaStatusInfoBar"
+                     AutomationProperties.AutomationId="MediaStatusInfoBar"
+                     IsClosable="False"
+                     IsOpen="False"
+                     Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button x:Name="MediaStatusActionButton"
+                            AutomationProperties.AutomationId="MediaStatusActionButton"
+                            AutomationProperties.Name="Choose game folder"
+                            Content="Choose game folder"
+                            Visibility="Collapsed"
+                            Click="MediaStatusActionButton_Click" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
             <StackPanel Visibility="Collapsed">
                 <TextBlock x:Name="MediaSummaryTextBlock"
                            Text="Loading media library..." />

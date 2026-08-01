@@ -34,6 +34,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
 
+            SelectThemeChoice(AppThemePreference.Normalize(config.AppTheme));
             AllowBackgroundAudioToggle.IsOn = config.AllowBackgroundAudio;
             AllowBackgroundVideoToggle.IsOn = config.AllowBackgroundVideo;
             PreventOverlapToggle.IsOn = config.PreventAudioVideoOverlap;
@@ -168,6 +169,47 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     : "Settings: folder saved but the full game install is still required");
         }
 
+        private void SelectThemeChoice(string preference)
+        {
+            foreach (object item in AppThemeComboBox.Items)
+            {
+                if (item is ComboBoxItem { Tag: string tag } &&
+                    string.Equals(tag, preference, StringComparison.OrdinalIgnoreCase))
+                {
+                    AppThemeComboBox.SelectedItem = item;
+                    return;
+                }
+            }
+
+            AppThemeComboBox.SelectedIndex = 0;
+        }
+
+        private void AppThemeChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isLoadingSettings)
+            {
+                return;
+            }
+
+            string preference = AppThemeComboBox.SelectedItem is ComboBoxItem { Tag: string tag }
+                ? AppThemePreference.Normalize(tag)
+                : AppThemePreference.Default;
+
+            // Apply first so the change is visible immediately, then persist.
+            App.MainWindowInstance?.ApplyThemePreference(preference);
+
+            AppConfig config = AppConfig.Load();
+            config.AppTheme = preference;
+            if (!config.Save())
+            {
+                AppStatusService.SetStatus("Settings: failed to save the appearance choice");
+                return;
+            }
+
+            AppConfigChangedService.NotifyChanged(config);
+            AppStatusService.SetStatus($"Settings: appearance set to {AppThemePreference.DescribeChoice(preference)}");
+        }
+
         private void MediaPreferenceChanged(object sender, RoutedEventArgs e)
         {
             if (_isLoadingSettings)
@@ -175,8 +217,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            // Changing a media preference must only write media preferences.
+            // This used to also rewrite config.GameDirectory from the
+            // read-only display textbox, so an unrelated toggle could push a
+            // stale path back over the configured one - or clear it outright
+            // whenever the textbox happened to be blank. The loaded config
+            // already carries the persisted folder; leave it alone.
             AppConfig config = AppConfig.Load();
-            config.GameDirectory = string.IsNullOrWhiteSpace(GameDirectoryTextBox.Text) ? null : GameDirectoryTextBox.Text;
             config.AllowBackgroundAudio = AllowBackgroundAudioToggle.IsOn;
             config.AllowBackgroundVideo = AllowBackgroundVideoToggle.IsOn;
             config.PreventAudioVideoOverlap = PreventOverlapToggle.IsOn;

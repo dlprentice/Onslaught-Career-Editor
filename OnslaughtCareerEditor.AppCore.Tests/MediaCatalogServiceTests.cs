@@ -86,17 +86,53 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
 
             Assert.Contains(snapshot.VideoItems, item => item.Name == "Opening Cinematic" && item.SectionName == "Main Videos");
-            Assert.Contains(snapshot.VideoItems, item => item.Name == "02 - Mission Briefing 1" && item.SectionName == "Cutscenes");
-            Assert.Contains(snapshot.VideoItems, item => item.Name == "03 - Battle Aftermath" && item.SectionName == "Cutscenes");
+            Assert.Contains(snapshot.VideoItems, item => item.Name == "Cutscene 02" && item.SectionName == "Cutscenes");
+            Assert.Contains(snapshot.VideoItems, item => item.Name == "Cutscene 03" && item.SectionName == "Cutscenes");
 
             MediaVideoItem briefing = Assert.Single(snapshot.VideoItems, item => item.Name == "Mission 101");
             Assert.Equal("Mission Briefings / Episode 1", briefing.SectionName);
         }
 
         [Fact]
-        public void GetMainVideoDisplayName_UsesHumanCatalogNames()
+        public void Cutscenes_AreNamedByNumberOnly_BecauseTheGameShipsNoTitlesForThem()
         {
+            // Regression guard for a real honesty defect: this service used to
+            // carry 33 invented story titles ("Tatiana Introduction",
+            // "Boss Battle", "Plot Twist", ...) that exist nowhere in the game,
+            // the lore library, or the evidence store, and presented them to
+            // users as fact. A cutscene may only be labelled by its number
+            // until a real title is demonstrated.
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            foreach (string number in new[] { "01", "04", "15", "17", "33" })
+            {
+                temp.WriteFile($@"data\video\cutscenes\{number}.vid");
+            }
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+            IReadOnlyList<MediaVideoItem> cutscenes = snapshot.VideoItems
+                .Where(item => item.SectionName == "Cutscenes")
+                .ToList();
+
+            Assert.Equal(5, cutscenes.Count);
+            Assert.All(cutscenes, item => Assert.Matches(@"^Cutscene \d{2}$", item.Name));
+        }
+
+        [Fact]
+        public void GetMainVideoDisplayName_ExpandsOnlyAbbreviationsCarriedByTheFileName()
+        {
+            // Each mapped name expands an abbreviation the file itself carries,
+            // so the file name is the evidence: LT = Lost Toys, FE = front end,
+            // TWIMTBP = NVIDIA's "The Way It's Meant To Be Played".
+            Assert.Equal("Lost Toys Logo", MediaCatalogService.GetMainVideoDisplayName("LTLogo"));
+            Assert.Equal("NVIDIA Logo", MediaCatalogService.GetMainVideoDisplayName("TWIMTBP_GefFX_640x480_Audio"));
+
+            // "UsTheMovie" -> "Credits Video" is the one mapping that reads a
+            // ROLE into the file rather than expanding its name. It is retained
+            // for now because it is wired into receipt-bound evidence
+            // acceptance; confirm it by watching the video before relying on it.
             Assert.Equal("Credits Video", MediaCatalogService.GetMainVideoDisplayName("UsTheMovie"));
+
+            // Anything unmapped falls back to the raw stem rather than a guess.
             Assert.Equal("UnknownCutscene", MediaCatalogService.GetMainVideoDisplayName("UnknownCutscene"));
         }
 

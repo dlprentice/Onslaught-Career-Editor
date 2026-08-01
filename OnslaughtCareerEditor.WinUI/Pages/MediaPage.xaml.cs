@@ -204,6 +204,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             _isLoading = true;
             MediaSummaryTextBlock.Text = "Loading media library...";
+            HideMediaStatus();
             AppStatusService.SetStatus("Media: loading library");
 
             try
@@ -219,6 +220,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     MediaSummaryTextBlock.Text = "Game directory not set";
                     MediaGameDirectoryTextBlock.Text = "Set the game directory in Settings or browse here.";
                     SetMediaDirectoryDisplay(gameDirectory, "Set the game directory in Settings or browse here before loading media.");
+                    ShowMediaStatus(
+                        InfoBarSeverity.Informational,
+                        "Point the app at your game folder",
+                        "Media comes straight from your Battle Engine Aquila install. Choose that folder and the soundtrack, voice lines, cutscenes, and briefings appear here.",
+                        showAction: true);
                     AppStatusService.SetStatus("Media: game directory not configured");
                     return;
                 }
@@ -247,12 +253,42 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 MediaSummaryTextBlock.Text = "Media load failed";
                 MediaGameDirectoryTextBlock.Text = ex.Message;
                 SetMediaDirectoryDisplay(null, "Media loading failed. Check the selected install folder and try again.");
+                ShowMediaStatus(
+                    InfoBarSeverity.Error,
+                    "Couldn't load your media",
+                    $"Nothing was changed. Check that the game folder is reachable, then choose Reload Library. Details: {ex.Message}",
+                    showAction: false);
                 AppStatusService.SetStatus("Media: load failed");
             }
             finally
             {
                 _isLoading = false;
             }
+        }
+
+        /// <summary>
+        /// Surfaces a media load problem where the user can actually see it.
+        /// The failure detail previously went only into a Collapsed panel, so
+        /// nobody ever learned why their library was empty.
+        /// </summary>
+        private void ShowMediaStatus(InfoBarSeverity severity, string title, string message, bool showAction)
+        {
+            MediaStatusInfoBar.Severity = severity;
+            MediaStatusInfoBar.Title = title;
+            MediaStatusInfoBar.Message = message;
+            MediaStatusActionButton.Visibility = showAction ? Visibility.Visible : Visibility.Collapsed;
+            MediaStatusInfoBar.IsOpen = true;
+        }
+
+        private void HideMediaStatus()
+        {
+            MediaStatusInfoBar.IsOpen = false;
+            MediaStatusActionButton.Visibility = Visibility.Collapsed;
+        }
+
+        private void MediaStatusActionButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.MainWindowInstance?.NavigateToTag("settings");
         }
 
         private void ResetLibraryState()

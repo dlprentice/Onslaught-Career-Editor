@@ -5,43 +5,17 @@ namespace Onslaught___Career_Editor
 {
     public sealed class MediaCatalogService
     {
-        private static readonly Dictionary<string, string> CutsceneNames = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["01"] = "Intro - Forseti Invasion",
-            ["02"] = "Mission Briefing 1",
-            ["03"] = "Battle Aftermath",
-            ["04"] = "Tatiana Introduction",
-            ["05"] = "Muspell Attack",
-            ["06"] = "Base Defense",
-            ["07"] = "Rescue Mission",
-            ["08"] = "Enemy Revealed",
-            ["09"] = "Counter Attack",
-            ["10"] = "Naval Battle",
-            ["11"] = "Air Support",
-            ["12"] = "Ground Assault",
-            ["13"] = "Enemy Base",
-            ["14"] = "Infiltration",
-            ["15"] = "Boss Battle",
-            ["16"] = "Victory",
-            ["17"] = "Plot Twist",
-            ["18"] = "New Orders",
-            ["19"] = "Allied Forces",
-            ["20"] = "Major Offensive",
-            ["21"] = "Desperate Times",
-            ["22"] = "Last Stand",
-            ["23"] = "Final Push",
-            ["24"] = "Enemy HQ",
-            ["25"] = "Confrontation",
-            ["26"] = "Sacrifice",
-            ["27"] = "Turning Point",
-            ["28"] = "Rally",
-            ["29"] = "Final Battle Prep",
-            ["30"] = "The End Begins",
-            ["31"] = "Ultimate Weapon",
-            ["32"] = "Climax",
-            ["33"] = "Ending/Credits",
-        };
-
+        // Cutscene files are named only by number (01.vid .. 33.vid); the game
+        // ships no titles for them. A previous table here invented 33 story
+        // titles ("Tatiana Introduction", "Boss Battle", "Plot Twist", ...) that
+        // appear nowhere in the game, the lore library, or the evidence store,
+        // and showed them to users as fact. They are removed: a cutscene is
+        // presented by its number until a real title is demonstrated.
+        //
+        // The names below are different in kind — each is an expansion of an
+        // abbreviation carried in the file's own name (LT = Lost Toys,
+        // FE = front end, TWIMTBP = NVIDIA's "The Way It's Meant To Be Played"),
+        // so the file itself is the evidence.
         private static readonly Dictionary<string, string> MainVideoDescriptions = new(StringComparer.OrdinalIgnoreCase)
         {
             ["OpeningFMV"] = "Opening Cinematic",
@@ -250,8 +224,7 @@ namespace Onslaught___Career_Editor
                 return;
             }
 
-            string displayName = CutsceneNames.GetValueOrDefault(number, $"Cutscene {number}");
-            items.Add(CreateVideoItem(file, $"{number} - {displayName}", "Cutscenes", 1000));
+            items.Add(CreateVideoItem(file, $"Cutscene {number}", "Cutscenes", 1000));
         }
 
         private static string NormalizeMusicName(string filePath)
