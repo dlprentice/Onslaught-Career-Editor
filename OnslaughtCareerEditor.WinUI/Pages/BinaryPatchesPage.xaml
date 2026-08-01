@@ -163,13 +163,13 @@
                                 <TextBlock Text="Choose player mods"
                                            FontSize="16"
                                            FontWeight="SemiBold" />
-                                  <TextBlock Text="Every safe game copy includes the complete 28-region 16:9 aspect/FOV correction, the retail 16:9 option, and the tested 1600x900 windowed launch baseline."
+                                  <TextBlock Text="Every safe copy comes widescreen-corrected and windowed at 1600x900, so the game fills a modern screen properly instead of stretching."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Copied Level 100 gameplay was verified at 1600x900: live dimensions were 1600x900 and the runtime aspect term was 1.777778. Other resolutions, machines, and drivers are not guaranteed. The installed game stays unchanged."
+                                <TextBlock Text="That combination is the one we have actually played and measured. Other resolutions and graphics drivers may behave differently."
                                             Margin="0,6,0,0"
                                             Style="{StaticResource SectionBodyTextStyle}" />
-                                <TextBlock Text="Add only the player mods you want below. Open Lab only for legacy recipes, experiments, and diagnostics."
+                                <TextBlock Text="Everything below is optional and starts switched off. Lab, at the bottom of the page, holds older recipes and diagnostics you will not normally need."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
@@ -304,7 +304,7 @@
                                               Content="Level 100 subtitle marker (English)"
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <TextBlock Text="Replaces only TUTORIAL_01 with a TOOLKIT MOD ACTIVE objective line in the safe copy. Live retail proof covers this one rendered subtitle; this is not a general language importer, mission-script override, texture replacement, or AYA repacker."
+                                    <TextBlock Text="Changes the tutorial's first objective line to read TOOLKIT MOD ACTIVE, so you can see at a glance that you are playing the modded copy. One line of text, in the copy only."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <CheckBox x:Name="PatchBenchLevel100EarlyFlightModOption"
                                               AutomationProperties.AutomationId="PatchBenchLevel100EarlyFlightModOption"
@@ -312,7 +312,7 @@
                                               Content="Level 100 early flight"
                                               Checked="LaunchOptionCheckBox_Changed"
                                               Unchecked="LaunchOptionCheckBox_Changed" />
-                                    <TextBlock Text="Bypasses the tutorial's initial transformation gate in the safe copy. One verified compiled command changes from DisableFlightMode to EnableFlightMode; this is not normal Level 100 progression, loose-script loading, or a general mission editor or AYA repacker."
+                                    <TextBlock Text="Lets you transform into jet mode from the start of the tutorial, instead of waiting for the mission to unlock it. Skips a scripted step, so the tutorial will not play out as designed."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                 </StackPanel>
                             </Border>
