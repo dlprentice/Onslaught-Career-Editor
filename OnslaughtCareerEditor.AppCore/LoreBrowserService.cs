@@ -23,6 +23,11 @@ namespace Onslaught___Career_Editor
         private const string DuplicateLorePackDocumentPathMessage = "Lore content pack contains duplicate document paths.";
         private const string LorePackContentHashMismatchMessage = "Lore content pack content hash mismatch.";
         private const string LorePackSchema = "onslaught-lore-pack.v1";
+        private const string HtmlDocumentReaderNotice =
+            "This document is stored as HTML, which the native reader does not render. Use Open in browser to read it.";
+        private static readonly TimeSpan RenderFileRetention = TimeSpan.FromDays(1);
+        private static readonly object RenderCleanupGate = new();
+        private static bool _renderCleanupCompleted;
 
         private static readonly Regex BookEntryRegex = new(@"^(?<indent>\s*)-\s+(?<content>.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex MarkdownLinkRegex = new(@"\[(?<title>[^\]]+)\]\((?<path>[^)]+)\)", RegexOptions.Compiled);
@@ -144,6 +149,52 @@ namespace Onslaught___Career_Editor
             return Path.GetFullPath(withoutAnchor);
         }
 
+        /// <summary>
+        /// Loads a document as a presentation-neutral reader model. This is the
+        /// path the in-app reader uses; nothing is written to disk and no HTML is
+        /// produced.
+        /// </summary>
+        public LoreDocumentContent LoadDocumentContent(string sourcePath)
+        {
+            string normalizedSource = NormalizeDocumentKey(sourcePath);
+            if (TryGetPackedDocument(normalizedSource, out LorePackDocument? packedDocument))
+            {
+                string packedMarkdown = RewritePackedMarkdownLinks(packedDocument!);
+                return new LoreDocumentContent(
+                    packedDocument!.Title,
+                    normalizedSource,
+                    LoreDocumentParser.Parse(packedMarkdown, packedDocument.Title, _pipeline),
+                    true);
+            }
+
+            string extension = Path.GetExtension(normalizedSource);
+            if (extension.Equals(".html", StringComparison.OrdinalIgnoreCase) ||
+                extension.Equals(".htm", StringComparison.OrdinalIgnoreCase))
+            {
+                string htmlTitle = Path.GetFileNameWithoutExtension(normalizedSource);
+                LoreDocumentModel htmlModel = new(
+                    htmlTitle,
+                    new LoreBlock[]
+                    {
+                        new LoreParagraphBlock(new LoreInline[] { new LoreTextInline(HtmlDocumentReaderNotice) })
+                    });
+                return new LoreDocumentContent(htmlTitle, normalizedSource, htmlModel, false);
+            }
+
+            string markdown = File.ReadAllText(normalizedSource);
+            string title = ResolveMarkdownTitle(markdown, normalizedSource);
+            return new LoreDocumentContent(
+                title,
+                normalizedSource,
+                LoreDocumentParser.Parse(markdown, title, _pipeline),
+                true);
+        }
+
+        /// <summary>
+        /// Writes the document as a standalone styled HTML file and returns its
+        /// file URI. Only the "open in browser" action needs this; the in-app
+        /// reader renders <see cref="LoadDocumentContent"/> natively.
+        /// </summary>
         public RenderedLoreDocument RenderDocument(string sourcePath, string? anchor = null)
         {
             string normalizedSource = NormalizeDocumentKey(sourcePath);
@@ -155,7 +206,7 @@ namespace Onslaught___Career_Editor
                 string renderPath = GetRenderPathForDocument(normalizedSource);
                 string wrappedHtml = WrapHtmlDocument(packedDocument!.Title, contentHtml, renderPath);
 
-                Directory.CreateDirectory(Path.GetDirectoryName(renderPath)!);
+                PrepareRenderDirectory(renderPath);
                 File.WriteAllText(renderPath, wrappedHtml, Encoding.UTF8);
 
                 string renderUri = AppendAnchor(new Uri(renderPath).AbsoluteUri, anchor);
@@ -181,7 +232,7 @@ namespace Onslaught___Career_Editor
             string fileRenderPath = GetRenderPathForDocument(normalizedSource);
             string fileWrappedHtml = WrapHtmlDocument(title, fileContentHtml, normalizedSource);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(fileRenderPath)!);
+            PrepareRenderDirectory(fileRenderPath);
             File.WriteAllText(fileRenderPath, fileWrappedHtml, Encoding.UTF8);
 
             string fileRenderUri = AppendAnchor(new Uri(fileRenderPath).AbsoluteUri, anchor);
@@ -1299,7 +1350,78 @@ namespace Onslaught___Career_Editor
                 : Path.GetFileNameWithoutExtension(sourcePath) ?? "document";
             string safeName = Regex.Replace(fileName, @"[^a-zA-Z0-9_-]", "_");
             string hash = ComputeShortHash(sourcePath);
-            return Path.Combine(Path.GetTempPath(), "OnslaughtCareerEditor", "LoreRender", $"{safeName}-{hash}.html");
+            return Path.Combine(GetRenderDirectory(), $"{safeName}-{hash}.html");
+        }
+
+        private static string GetRenderDirectory()
+        {
+            return Path.Combine(Path.GetTempPath(), "OnslaughtCareerEditor", "LoreRender");
+        }
+
+        private static void PrepareRenderDirectory(string renderPath)
+        {
+            string directory = Path.GetDirectoryName(renderPath)!;
+            Directory.CreateDirectory(directory);
+            CleanupStaleRenderFilesOnce(directory);
+        }
+
+        /// <summary>
+        /// Deletes browser-export files older than a day, once per process. The
+        /// export path is stable per document, so this only sweeps files left by
+        /// documents (or test fixtures) that no longer exist. It refuses to touch
+        /// anything outside the toolkit's own temp render directory.
+        /// </summary>
+        private static void CleanupStaleRenderFilesOnce(string directory)
+        {
+            lock (RenderCleanupGate)
+            {
+                if (_renderCleanupCompleted)
+                {
+                    return;
+                }
+
+                _renderCleanupCompleted = true;
+            }
+
+            string expected;
+            string actual;
+            try
+            {
+                expected = Path.GetFullPath(GetRenderDirectory());
+                actual = Path.GetFullPath(directory);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!actual.Equals(expected, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            try
+            {
+                DateTime cutoff = DateTime.UtcNow - RenderFileRetention;
+                foreach (string file in Directory.EnumerateFiles(actual, "*.html", SearchOption.TopDirectoryOnly))
+                {
+                    try
+                    {
+                        if (File.GetLastWriteTimeUtc(file) < cutoff)
+                        {
+                            File.Delete(file);
+                        }
+                    }
+                    catch
+                    {
+                        // A locked or already-removed export is not worth failing a render over.
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
         }
 
         private static string ComputeShortHash(string value)
@@ -1516,4 +1638,17 @@ namespace Onslaught___Career_Editor
         string DisplayUri,
         bool IsMarkdown,
         string? Anchor);
+
+    /// <summary>
+    /// A lore document prepared for the native reader: its resolved title, the
+    /// key it was loaded from, and the presentation-neutral block model.
+    /// <paramref name="IsMarkdown"/> is false for documents the reader cannot
+    /// render natively (stored HTML), which the page surfaces as an
+    /// open-in-browser affordance.
+    /// </summary>
+    public sealed record LoreDocumentContent(
+        string Title,
+        string SourcePath,
+        LoreDocumentModel Document,
+        bool IsMarkdown);
 }

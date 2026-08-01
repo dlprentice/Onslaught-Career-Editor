@@ -1,13 +1,14 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.Web.WebView2.Core;
+using Microsoft.UI.Xaml.Media;
 using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.WinUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.System;
 
 namespace OnslaughtCareerEditor.WinUI.Pages
@@ -19,6 +20,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private const string LoreNavigationFailureMessage = "The selected Lore link could not be opened. Refresh the library and try again.";
         private const string LoreHistoryFailureMessage = "That Lore history entry could not be reopened. Refresh the library and try again.";
         private const string LoreHomeFailureMessage = "The Lore home document could not be opened. Refresh the library and try again.";
+        private const string LoreExternalOpenFailureMessage = "That Lore document could not be handed to your browser. Try again once the library has finished loading.";
         private const string LoreDocumentTooltipFallback = "Offline Lore document";
 
         private readonly LoreBrowserService _service = new();
@@ -29,13 +31,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private readonly Stack<LoreHistoryEntry> _forwardStack = new();
 
         private LoreIndex? _index;
+        private IReadOnlyDictionary<string, FrameworkElement> _anchorTargets =
+            new Dictionary<string, FrameworkElement>(StringComparer.OrdinalIgnoreCase);
         private string? _currentSourcePath;
-        private string? _currentDisplayUri;
         private string? _currentAnchor;
         private bool _hasLoaded;
         private bool _isLoading;
         private bool _isDocumentLoading;
-        private bool _isWebViewReady;
         private bool _suppressHistory;
         private bool _suppressTreeSelection;
         private CancellationTokenSource? _searchFilterCancellation;
@@ -48,7 +50,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateLibraryToggleButton();
             ShowReaderPlaceholder(
                 "Loading lore library...",
-                "The embedded reader will appear here once the library is ready.");
+                "The reader will appear here once the library is ready.");
         }
 
         private async void LorePage_Loaded(object sender, RoutedEventArgs e)
@@ -59,26 +61,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             _hasLoaded = true;
-            await EnsureWebViewReadyAsync();
-            await LoadLoreIndexAsync(preserveCurrentDocument: false);
-        }
 
-        private async Task EnsureWebViewReadyAsync()
-        {
-            if (_isWebViewReady)
+            // Page load runs on an async void handler, so an escaping exception
+            // would take the process down rather than the page. Everything below
+            // degrades to the placeholder instead.
+            try
             {
-                return;
+                await LoadLoreIndexAsync(preserveCurrentDocument: false);
             }
-
-            await ContentWebView.EnsureCoreWebView2Async();
-            if (ContentWebView.CoreWebView2 != null)
+            catch
             {
-                ContentWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                ContentWebView.CoreWebView2.Settings.IsScriptEnabled = false;
-                ContentWebView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+                ShowReaderPlaceholder("Lore library unavailable", LoreLibraryLoadFailureMessage);
+                AppStatusService.SetStatus("Lore: load failed");
             }
-
-            _isWebViewReady = true;
         }
 
         private async Task LoadLoreIndexAsync(bool preserveCurrentDocument)
@@ -92,7 +87,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CancelPendingSearchFilter();
             ShowReaderPlaceholder(
                 "Loading lore library...",
-                "Refreshing the offline document tree and embedded reader.");
+                "Refreshing the offline document tree and reader.");
             LibrarySummaryTextBlock.Text = "Loading lore library...";
             LibraryCountTextBlock.Text = "Indexing included documents...";
             PaneStateTextBlock.Text = "Indexing included documents...";
@@ -154,7 +149,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 CurrentDocumentTextBlock.Text = "Lore library unavailable";
                 CurrentPathTextBlock.Text = LoreLibraryLoadFailureMessage;
                 LibrarySummaryTextBlock.Text = "Lore load failed";
-                LibraryCountTextBlock.Text = "Embedded reader unavailable.";
+                LibraryCountTextBlock.Text = "Reader unavailable.";
                 PaneStateTextBlock.Text = LoreLibraryLoadFailureMessage;
                 ShowReaderPlaceholder("Lore library unavailable", LoreLibraryLoadFailureMessage);
                 AppStatusService.SetStatus("Lore: load failed");
@@ -162,6 +157,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             finally
             {
                 _isLoading = false;
+                _suppressHistory = false;
             }
         }
 
@@ -301,8 +297,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 throw new FileNotFoundException("The selected lore document was not found.", documentKey);
             }
 
-            await EnsureWebViewReadyAsync();
-
             if (addToHistory && !_suppressHistory && !string.IsNullOrWhiteSpace(_currentSourcePath))
             {
                 if (!PathsEqual(_currentSourcePath, documentKey) || !string.Equals(_currentAnchor, anchor, StringComparison.Ordinal))
@@ -312,23 +306,138 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
             }
 
-            RenderedLoreDocument rendered = await Task.Run(() => _service.RenderDocument(documentKey, anchor));
+            LoreDocumentContent content = await Task.Run(() => _service.LoadDocumentContent(documentKey));
 
-            _currentSourcePath = rendered.SourcePath;
-            _currentDisplayUri = rendered.DisplayUri;
+            _currentSourcePath = content.SourcePath;
             _currentAnchor = anchor;
 
-            CurrentDocumentTextBlock.Text = ResolveDocumentTitle(rendered.SourcePath, rendered.Title);
-            CurrentPathTextBlock.Text = ResolveDisplayPath(rendered.SourcePath);
-            ToolTipService.SetToolTip(CurrentPathTextBlock, ResolveToolTipPath(rendered.SourcePath));
+            CurrentDocumentTextBlock.Text = ResolveDocumentTitle(content.SourcePath, content.Title);
+            CurrentPathTextBlock.Text = ResolveDisplayPath(content.SourcePath);
+            ToolTipService.SetToolTip(CurrentPathTextBlock, ResolveToolTipPath(content.SourcePath));
 
-            ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
-            ContentWebView.Visibility = Visibility.Visible;
-            ContentWebView.Source = new Uri(rendered.DisplayUri);
+            RenderCurrentDocument(content);
+            ScrollToAnchor(anchor);
 
-            SyncTreeSelection(rendered.SourcePath);
+            SyncTreeSelection(content.SourcePath);
             UpdateNavButtons();
             AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
+        }
+
+        private void RenderCurrentDocument(LoreDocumentContent content)
+        {
+            LoreRenderedDocument rendered = LoreDocumentRenderer.Render(
+                content.Document,
+                ResolveImageBaseDirectory(content.SourcePath),
+                OnLoreLinkActivated);
+
+            _anchorTargets = rendered.Anchors;
+            ContentReader.Content = rendered.Root;
+
+            if (content.Document.Blocks.Count == 0)
+            {
+                // A blank reader panel is exactly the failure this page was
+                // rebuilt to eliminate; say so rather than painting nothing.
+                ShowReaderPlaceholder(
+                    "Nothing to read here",
+                    "This Lore document loaded successfully but contains no readable content.");
+                return;
+            }
+
+            ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
+            ReaderScrollViewer.Visibility = Visibility.Visible;
+        }
+
+        private static string? ResolveImageBaseDirectory(string sourcePath)
+        {
+            if (IsLorePackSourcePath(sourcePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                return Path.GetDirectoryName(sourcePath);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void ScrollToAnchor(string? anchor)
+        {
+            if (string.IsNullOrWhiteSpace(anchor))
+            {
+                ReaderScrollViewer.ChangeView(null, 0, null, true);
+                return;
+            }
+
+            ApplyAnchorScroll(anchor);
+
+            // A freshly swapped document has not necessarily finished arranging,
+            // so retry once the layout pass has run.
+            DispatcherQueue.TryEnqueue(
+                Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+                () => ApplyAnchorScroll(anchor));
+        }
+
+        private void ApplyAnchorScroll(string anchor)
+        {
+            if (!_anchorTargets.TryGetValue(anchor, out FrameworkElement? target))
+            {
+                return;
+            }
+
+            try
+            {
+                ReaderScrollViewer.UpdateLayout();
+                GeneralTransform transform = target.TransformToVisual(ContentReader);
+                Point offset = transform.TransformPoint(new Point(0, 0));
+                ReaderScrollViewer.ChangeView(null, Math.Max(0, offset.Y), null, true);
+            }
+            catch
+            {
+                // A transform can fail while the element is detached; leaving the
+                // reader where it is beats tearing the page down.
+            }
+        }
+
+        private async void OnLoreLinkActivated(string target)
+        {
+            try
+            {
+                await HandleLinkActivationAsync(target);
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not navigate link", LoreNavigationFailureMessage);
+                AppStatusService.SetStatus("Lore: navigation failed");
+            }
+        }
+
+        private async Task HandleLinkActivationAsync(string target)
+        {
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                AppStatusService.SetStatus("Lore: unresolved internal link");
+                return;
+            }
+
+            LoreLinkKind kind = LoreDocumentParser.ClassifyLink(target);
+            if (kind is LoreLinkKind.External or LoreLinkKind.Source)
+            {
+                await Launcher.LaunchUriAsync(new Uri(target.Trim()));
+                AppStatusService.SetStatus(kind == LoreLinkKind.Source
+                    ? "Lore: opened source link in browser"
+                    : "Lore: opened external link in browser");
+                return;
+            }
+
+            bool handled = await TryHandleInternalNavigationAsync(target);
+            if (!handled)
+            {
+                AppStatusService.SetStatus("Lore: unresolved internal link");
+            }
         }
 
         private async Task<bool> TryHandleInternalNavigationAsync(string uri)
@@ -339,8 +448,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             string? anchor = LoreBrowserService.ExtractAnchor(uri);
-            string? localPath = TryGetLocalPath(uri);
+            if (uri.TrimStart().StartsWith("#", StringComparison.Ordinal))
+            {
+                NavigateToCurrentAnchor(anchor);
+                return true;
+            }
 
+            string? localPath = TryGetLocalPath(uri);
             if (!string.IsNullOrWhiteSpace(localPath) && PathsEqual(localPath, _currentSourcePath))
             {
                 NavigateToCurrentAnchor(anchor);
@@ -382,13 +496,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void NavigateToCurrentAnchor(string? anchor)
         {
-            if (string.IsNullOrWhiteSpace(_currentDisplayUri))
-            {
-                return;
-            }
-
             _currentAnchor = anchor;
-            ContentWebView.Source = new Uri(AppendAnchor(RemoveAnchor(_currentDisplayUri), anchor));
+            ScrollToAnchor(anchor);
+
+            if (!string.IsNullOrWhiteSpace(_currentSourcePath))
+            {
+                AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
+            }
         }
 
         private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -581,104 +695,26 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private async void OpenExternalButton_Click(object sender, RoutedEventArgs e)
         {
-            string? launchTarget = _currentDisplayUri;
-            if (string.IsNullOrWhiteSpace(launchTarget) && !string.IsNullOrWhiteSpace(_currentSourcePath))
-            {
-                launchTarget = new Uri(_currentSourcePath).AbsoluteUri;
-            }
-
-            if (string.IsNullOrWhiteSpace(launchTarget))
+            string? sourcePath = _currentSourcePath;
+            if (string.IsNullOrWhiteSpace(sourcePath))
             {
                 return;
             }
 
-            await Launcher.LaunchUriAsync(new Uri(launchTarget));
-            AppStatusService.SetStatus("Lore: opened current document externally");
-        }
-
-        private async void ContentWebView_NavigationStarting(WebView2 sender, CoreWebView2NavigationStartingEventArgs args)
-        {
-            string uri = args.Uri ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(uri) ||
-                uri.StartsWith("about:", StringComparison.OrdinalIgnoreCase) ||
-                NavigationTargetsMatch(uri, _currentDisplayUri))
-            {
-                return;
-            }
-
-            if (IsExternalUri(uri))
-            {
-                args.Cancel = true;
-                await Launcher.LaunchUriAsync(new Uri(uri));
-                AppStatusService.SetStatus(DescribeExternalLinkStatus(uri));
-                return;
-            }
-
-            args.Cancel = true;
+            string? anchor = _currentAnchor;
 
             try
             {
-                bool handled = await TryHandleInternalNavigationAsync(uri);
-                if (!handled)
-                {
-                    AppStatusService.SetStatus("Lore: unresolved internal link");
-                }
+                // The reader itself is native now; the HTML export exists only so
+                // the shell has a file to hand to the user's browser.
+                RenderedLoreDocument rendered = await Task.Run(() => _service.RenderDocument(sourcePath!, anchor));
+                await Launcher.LaunchUriAsync(new Uri(rendered.DisplayUri));
+                AppStatusService.SetStatus("Lore: opened current document externally");
             }
             catch
             {
-                ShowReaderPlaceholder("Could not navigate link", LoreNavigationFailureMessage);
-                AppStatusService.SetStatus("Lore: navigation failed");
-            }
-        }
-
-        private void ContentWebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
-        {
-            if (!args.IsSuccess)
-            {
-                ShowReaderPlaceholder(
-                    "Document failed to render",
-                    $"The embedded reader could not finish navigation (WebErrorStatus {(int)args.WebErrorStatus}).");
-                AppStatusService.SetStatus("Lore: reader navigation failed");
-                return;
-            }
-
-            ReaderPlaceholderBorder.Visibility = Visibility.Collapsed;
-            ContentWebView.Visibility = Visibility.Visible;
-            if (!string.IsNullOrWhiteSpace(_currentSourcePath))
-            {
-                AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
-            }
-        }
-
-        private async void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
-        {
-            if (string.IsNullOrWhiteSpace(args.Uri))
-            {
-                args.Handled = true;
-                return;
-            }
-
-            args.Handled = true;
-
-            if (IsExternalUri(args.Uri))
-            {
-                await Launcher.LaunchUriAsync(new Uri(args.Uri));
-                AppStatusService.SetStatus(DescribeExternalLinkStatus(args.Uri));
-                return;
-            }
-
-            try
-            {
-                bool handled = await TryHandleInternalNavigationAsync(args.Uri);
-                if (!handled)
-                {
-                    AppStatusService.SetStatus("Lore: unresolved internal link");
-                }
-            }
-            catch
-            {
-                ShowReaderPlaceholder("Could not open requested document", LoreNavigationFailureMessage);
-                AppStatusService.SetStatus("Lore: link open failed");
+                CurrentPathTextBlock.Text = LoreExternalOpenFailureMessage;
+                AppStatusService.SetStatus("Lore: external open failed");
             }
         }
 
@@ -687,14 +723,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ReaderPlaceholderTitleTextBlock.Text = title;
             ReaderPlaceholderBodyTextBlock.Text = body;
             ReaderPlaceholderBorder.Visibility = Visibility.Visible;
-            ContentWebView.Visibility = Visibility.Collapsed;
+            ReaderScrollViewer.Visibility = Visibility.Collapsed;
         }
 
         private void UpdateCounts()
         {
             if (_index == null)
             {
-                LibraryCountTextBlock.Text = "Embedded reader unavailable.";
+                LibraryCountTextBlock.Text = "Reader unavailable.";
                 PaneStateTextBlock.Text = "Library unavailable.";
                 return;
             }
@@ -738,7 +774,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             BackButton.IsEnabled = _backStack.Count > 0;
             ForwardButton.IsEnabled = _forwardStack.Count > 0;
             HomeButton.IsEnabled = _index?.HomeDocument != null;
-            OpenExternalButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentDisplayUri) || !string.IsNullOrWhiteSpace(_currentSourcePath);
+            OpenExternalButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentSourcePath);
         }
 
         private void UpdateLibraryToggleButton()
@@ -821,29 +857,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return $"group:{parentPart}/{index}:{item.Title}";
         }
 
-        private static bool IsExternalUri(string value)
-        {
-            return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                   value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                   value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string DescribeExternalLinkStatus(string value)
-        {
-            return IsProjectSourceUri(value)
-                ? "Lore: opened source link in browser"
-                : "Lore: opened external link in browser";
-        }
-
-        private static bool IsProjectSourceUri(string value)
-        {
-            return Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) &&
-                   (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) ||
-                    uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase)) &&
-                   uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) &&
-                   uri.AbsolutePath.StartsWith("/dlprentice/Onslaught-Career-Editor/", StringComparison.OrdinalIgnoreCase);
-        }
-
         private static bool PathsEqual(string? left, string? right)
         {
             if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
@@ -876,56 +889,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (Path.IsPathRooted(value))
             {
-                return value;
+                return RemoveAnchor(value);
             }
 
             return null;
-        }
-
-        private static bool NavigationTargetsMatch(string? left, string? right)
-        {
-            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
-            {
-                return false;
-            }
-
-            string normalizedLeft = NormalizeNavigationTarget(left);
-            string normalizedRight = NormalizeNavigationTarget(right);
-            return string.Equals(normalizedLeft, normalizedRight, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string NormalizeNavigationTarget(string value)
-        {
-            string withoutAnchor = RemoveAnchor(value);
-            if (IsLorePackSourcePath(withoutAnchor))
-            {
-                return withoutAnchor;
-            }
-
-            if (Uri.TryCreate(withoutAnchor, UriKind.Absolute, out Uri? uri))
-            {
-                return uri.IsFile
-                    ? Path.GetFullPath(uri.LocalPath)
-                    : uri.GetLeftPart(UriPartial.Path);
-            }
-
-            return Path.GetFullPath(withoutAnchor);
         }
 
         private static string RemoveAnchor(string value)
         {
             int anchorIndex = value.IndexOf('#');
             return anchorIndex >= 0 ? value[..anchorIndex] : value;
-        }
-
-        private static string AppendAnchor(string value, string? anchor)
-        {
-            if (string.IsNullOrWhiteSpace(anchor))
-            {
-                return value;
-            }
-
-            return $"{RemoveAnchor(value)}#{Uri.EscapeDataString(anchor)}";
         }
 
         private static bool IsLorePackSourcePath(string? value)

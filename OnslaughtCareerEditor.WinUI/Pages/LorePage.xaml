@@ -179,20 +179,29 @@
                 <Border Grid.Row="2"
                         AutomationProperties.AutomationId="LoreReaderPanel"
                         AutomationProperties.Name="Lore document reader"
-                        Background="{StaticResource ShellSurfaceBrush}"
-                        BorderBrush="{StaticResource ShellBorderBrush}"
+                        Background="{ThemeResource ShellSurfaceBrush}"
+                        BorderBrush="{ThemeResource ShellBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="16">
                     <Grid>
-                        <controls:WebView2 x:Name="ContentWebView"
-                                           AutomationProperties.AutomationId="LoreContentWebView"
-                                           AutomationProperties.Name="Rendered lore document"
-                                           NavigationStarting="ContentWebView_NavigationStarting"
-                                           NavigationCompleted="ContentWebView_NavigationCompleted" />
+                        <ScrollViewer x:Name="ReaderScrollViewer"
+                                      AutomationProperties.AutomationId="LoreReaderScrollViewer"
+                                      AutomationProperties.Name="Lore document scroll area"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      HorizontalScrollMode="Disabled"
+                                      VerticalScrollBarVisibility="Auto"
+                                      Padding="28,24,28,28">
+                            <ContentControl x:Name="ContentReader"
+                                            AutomationProperties.AutomationId="LoreContentReader"
+                                            AutomationProperties.Name="Rendered lore document"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            IsTabStop="False" />
+                        </ScrollViewer>
 
                         <Border x:Name="ReaderPlaceholderBorder"
                                 AutomationProperties.AutomationId="LoreReaderPlaceholder"
-                                Background="{StaticResource ShellSurfaceBrush}"
+                                Background="{ThemeResource ShellSurfaceBrush}"
                                 CornerRadius="16">
                             <StackPanel Width="420"
                                         HorizontalAlignment="Center"
