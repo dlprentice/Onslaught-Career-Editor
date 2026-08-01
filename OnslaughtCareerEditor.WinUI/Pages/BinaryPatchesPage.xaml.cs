@@ -102,7 +102,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string? _lastCopiedProfileRoot;
         private string? _lastCopiedProfileContentSignature;
         private string? _lastCopiedProfileCreateMusicSwapPresetId;
-        private GameProfileMusicReplacementResult? _lastMusicReplacementResult;        private GameProfileManagedProcess? _managedCopiedProfileProcess;
+        private GameProfileMusicReplacementResult? _lastMusicReplacementResult;
+        private GameProfileManagedProcess? _managedCopiedProfileProcess;
         private readonly DispatcherTimer _copiedGameLivenessTimer;
         private bool _isPopulatingResolutionChoices;
         private bool _isCheckingCopiedGameLiveness;
@@ -141,8 +142,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ApplyProfileControlDefaults(BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId));
 
             OperationLogTextBox.Text =
-                "Windowed & Mods safely patches and plays a copy of your game. Your original Steam installation is left untouched.\n" +
-                "Ready.";            LoadSourcePathFromConfig();
+                "Windowed & Mods patches and plays a copy of your game. Your installed game is left alone unless you choose to patch it, and that backs up your original first.\n" +
+                "Ready.";
+            LoadSourcePathFromConfig();
             RestoreTrackedSafeGameCopyProcess();
             UpdateControlState();
 
@@ -354,6 +356,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchInvertFlightYOption.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
             PatchBenchCreateMusicSwapPresetComboBox.IsEnabled = PatchBenchPrepareCopiedProfileButton.IsEnabled;
 
+            UpdateInstalledGameState();
             PatchBenchLaunchCopiedProfileButton.IsEnabled = hasLaunchableCopiedProfile;
             PatchBenchTopPlaySafeCopyButton.IsEnabled = PatchBenchLaunchCopiedProfileButton.IsEnabled;
             PatchBenchStopCopiedProfileButton.IsEnabled = _managedCopiedProfileProcess is not null && !_isStoppingCopiedProfile;
@@ -2642,6 +2645,170 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
 
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        }
+
+        // ------------------------------------------ patching the game you installed
+
+        /// <summary>
+        /// The installed game's BEA.exe, if there is one configured or detected.
+        ///
+        /// Note this deliberately does NOT use <c>ResolveGameExecutablePath</c>, which prefers
+        /// <c>BEA.exe.original.backup</c> when it exists. That preference is right for "give me
+        /// clean bytes to copy from"; here the subject is the executable the player actually runs.
+        /// </summary>
+        private static string? GetInstalledGameExecutablePath()
+        {
+            try
+            {
+                string? gameDir = AppConfig.Load().GetGameDir() ?? AppConfig.DetectGameDirectory();
+                if (string.IsNullOrWhiteSpace(gameDir))
+                    return null;
+
+                string exePath = Path.Combine(gameDir, "BEA.exe");
+                return File.Exists(exePath) ? exePath : null;
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                return null;
+            }
+        }
+
+        private void UpdateInstalledGameState()
+        {
+            string? exePath = GetInstalledGameExecutablePath();
+            InstalledGamePatchReadiness readiness = InstalledGamePatchText.DescribeReadiness(exePath);
+
+            string status = InstalledGamePatchText.BuildStatusLine(readiness, exePath);
+            PatchBenchInstalledGameStatus.Text = status;
+
+            // The status line IS the accessible name here. Leaving the XAML placeholder in place
+            // would announce "Installed game backup state" and tell a screen reader user nothing
+            // about which state. Same treatment the safe-copy readiness line gets.
+            AutomationProperties.SetName(PatchBenchInstalledGameStatus, status);
+            PatchBenchInstalledGameBackupButton.IsEnabled = InstalledGamePatchText.CanBackUp(readiness);
+            PatchBenchInstalledGamePatchButton.IsEnabled = InstalledGamePatchText.CanPatch(readiness);
+            PatchBenchInstalledGameRestoreButton.IsEnabled = InstalledGamePatchText.CanRestore(readiness);
+        }
+
+        private void ShowInstalledGameNote(bool success, string message)
+        {
+            PatchBenchInstalledGameNote.Text = InstalledGamePatchText.BuildOutcomeNote(success, message);
+            PatchBenchInstalledGameNote.Visibility = Visibility.Visible;
+        }
+
+        private void InstalledGameBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+            string? exePath = GetInstalledGameExecutablePath();
+            if (exePath is null)
+                return;
+
+            var (success, message, _) = BinaryPatchEngine.AuthorizeInstalledGameWrite(exePath);
+            ShowInstalledGameNote(success, message);
+            AppStatusService.SetStatus(success
+                ? "Windowed & Mods: your original executable is backed up"
+                : "Windowed & Mods: could not back up your game");
+            UpdateInstalledGameState();
+        }
+
+        /// <summary>
+        /// Patch the real install.
+        ///
+        /// Deliberately a separate handler from the safe-copy create rather than a branch inside
+        /// it. The two ask different questions of the person pressing them, and the ordering
+        /// contract the create handler is held to (revalidate, return, confirm, only then mutate)
+        /// is easier to keep true when it is not sharing a body with this.
+        /// </summary>
+        private async void InstalledGamePatchButton_Click(object sender, RoutedEventArgs e)
+        {
+            string? exePath = GetInstalledGameExecutablePath();
+            if (exePath is null)
+                return;
+
+            string[] selectedKeys = GetVisibleSelectedKeys().ToArray();
+            IReadOnlyList<BinaryPatchSpec> selected = BinaryPatchEngine.PatchSpecs
+                .Where(spec => selectedKeys.Contains(spec.Key, StringComparer.OrdinalIgnoreCase))
+                .ToArray();
+            if (selected.Count == 0)
+            {
+                ShowInstalledGameNote(false, "Choose at least one change first.");
+                return;
+            }
+
+            if (!await ConfirmAsync(
+                    InstalledGamePatchText.ConfirmPatchTitle,
+                    InstalledGamePatchText.BuildPatchConfirmation(
+                        exePath,
+                        string.Join(", ", BuildPatchDisplayList(selectedKeys))),
+                    InstalledGamePatchText.ConfirmPatchPrimaryButton,
+                    InstalledGamePatchText.ConfirmCloseButton))
+            {
+                ShowInstalledGameNote(true, "Left your game alone.");
+                return;
+            }
+
+            var (authorized, authorizationMessage, authorization) =
+                BinaryPatchEngine.AuthorizeInstalledGameWrite(exePath);
+            if (!authorized || authorization is null)
+            {
+                ShowInstalledGameNote(false, authorizationMessage);
+                AppStatusService.SetStatus("Windowed & Mods: could not back up your game");
+                UpdateInstalledGameState();
+                return;
+            }
+
+            var target = new BinaryPatchTargetOptions(
+                exePath,
+                AllowedRoot: string.Empty,
+                InstalledGame: authorization);
+
+            (bool applied, string applyMessage) = await Task.Run(() =>
+                BinaryPatchEngine.ApplyPatchesToFile(target, selected));
+
+            OperationLogTextBox.Text = FormatPatchLogForUi(applyMessage, exePath);
+            ShowInstalledGameNote(applied, applied ? $"{authorizationMessage} Your game is patched." : applyMessage);
+            AppStatusService.SetStatus(applied
+                ? "Windowed & Mods: your installed game is patched"
+                : "Windowed & Mods: patching your game did not complete");
+            UpdateInstalledGameState();
+        }
+
+        private async void InstalledGameRestoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            string? exePath = GetInstalledGameExecutablePath();
+            if (exePath is null)
+                return;
+
+            if (!await ConfirmAsync(
+                    InstalledGamePatchText.ConfirmRestoreTitle,
+                    InstalledGamePatchText.BuildRestoreConfirmation(exePath),
+                    InstalledGamePatchText.ConfirmRestorePrimaryButton,
+                    InstalledGamePatchText.ConfirmCloseButton))
+            {
+                ShowInstalledGameNote(true, "Left your game as it is.");
+                return;
+            }
+
+            var (authorized, authorizationMessage, authorization) =
+                BinaryPatchEngine.AuthorizeInstalledGameWrite(exePath);
+            if (!authorized || authorization is null)
+            {
+                ShowInstalledGameNote(false, authorizationMessage);
+                UpdateInstalledGameState();
+                return;
+            }
+
+            (bool success, string message) = await Task.Run(() =>
+                BinaryPatchEngine.RestoreFromBackup(new BinaryPatchTargetOptions(
+                    exePath,
+                    AllowedRoot: string.Empty,
+                    InstalledGame: authorization)));
+
+            OperationLogTextBox.Text = FormatPatchLogForUi(message, exePath);
+            ShowInstalledGameNote(success, success ? "Your game is back the way it was." : message);
+            AppStatusService.SetStatus(success
+                ? "Windowed & Mods: your game is back the way it was"
+                : "Windowed & Mods: could not put your game back");
+            UpdateInstalledGameState();
         }
     }
 }

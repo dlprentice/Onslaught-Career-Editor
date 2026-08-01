@@ -36,7 +36,7 @@
                        AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
-                       Text="A safe game copy is a separate folder this app creates from your installed game. Mods, patches, launch options, and music swaps happen there only. Your Steam install is never changed."
+                       Text="A safe game copy is a separate folder this app creates from your installed game. Mods, patches, launch options, and music swaps happen there. Your Steam install is not changed unless you choose to patch it below, and that copies your original executable first."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <Border BorderBrush="{ThemeResource ShellBorderBrush}"
                     BorderThickness="1"
@@ -48,7 +48,7 @@
                     <TextBlock Text="What Gets Touched"
                                FontSize="14"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Steam/game install: read-only source. Used only to copy files; the installed game and original BEA.exe are not changed."
+                    <TextBlock Text="Steam/game install: read-only source for everything on this page except one thing. Patch my installed game, at the bottom, changes it on purpose - and copies your original BEA.exe first so you can put it back."
                                 Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Safe game copy: app-owned folder. This is what Play runs."
                                 Style="{StaticResource SectionBodyTextStyle}" />
@@ -485,6 +485,59 @@
                         </StackPanel>
                     </Border>
 
+                    <Border AutomationProperties.AutomationId="PatchBenchInstalledGameCard"
+                            Background="{ThemeResource ShellMutedSurfaceBrush}"
+                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="16"
+                            Margin="0,12,0,0">
+                        <StackPanel Spacing="10">
+                            <TextBlock AutomationProperties.AutomationId="PatchBenchInstalledGameTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
+                                       Text="Or change the game you installed"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <TextBlock AutomationProperties.AutomationId="PatchBenchInstalledGameIntro"
+                                       Text="A safe copy is the sandbox. If you would rather just play your own install patched, this does that - and it copies your original executable first, so you can put it back."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Name="PatchBenchInstalledGameStatus"
+                                       AutomationProperties.AutomationId="PatchBenchInstalledGameStatus"
+                                       AutomationProperties.Name="Installed game backup state"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="PatchBenchInstalledGameBackupButton"
+                                        AutomationProperties.AutomationId="PatchBenchInstalledGameBackupButton"
+                                        AutomationProperties.Name="Back up my game, copying the original executable so it can be put back later"
+                                        Content="Back up my game"
+                                        Click="InstalledGameBackupButton_Click"
+                                        IsEnabled="False" />
+                                <Button x:Name="PatchBenchInstalledGamePatchButton"
+                                        AutomationProperties.AutomationId="PatchBenchInstalledGamePatchButton"
+                                        AutomationProperties.Name="Patch my installed game, after copying and verifying the original executable"
+                                        Content="Patch my installed game"
+                                        Click="InstalledGamePatchButton_Click"
+                                        IsEnabled="False" />
+                                <Button x:Name="PatchBenchInstalledGameRestoreButton"
+                                        AutomationProperties.AutomationId="PatchBenchInstalledGameRestoreButton"
+                                        AutomationProperties.Name="Put my game back to the original executable that was copied before patching"
+                                        Content="Put my game back"
+                                        Click="InstalledGameRestoreButton_Click"
+                                        IsEnabled="False" />
+                            </StackPanel>
+                            <TextBlock AutomationProperties.AutomationId="PatchBenchInstalledGameRestoreScope"
+                                       Text="Put my game back restores the whole executable as it was before the first patch. It undoes every patch at once, not the last one, and it does not touch your saves, options or anything else in the folder."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Name="PatchBenchInstalledGameNote"
+                                       AutomationProperties.AutomationId="PatchBenchInstalledGameNote"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Visibility="Collapsed"
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </Border>
 
                 </StackPanel>
 

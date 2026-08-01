@@ -1777,6 +1777,30 @@ namespace Onslaught___Career_Editor
             }
         }
 
+        /// <summary>
+        /// Whether a file on disk is byte-for-byte the clean retail build. Reads only, writes
+        /// nothing, and is safe to call while drawing a page - which is the point: a UI needs to
+        /// know what it may offer without taking a backup as a side effect of asking.
+        /// </summary>
+        public static bool LooksLikeCleanRetailExecutable(string exePath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+                    return false;
+
+                if (new FileInfo(exePath).Length != KnownRetailSteamSize)
+                    return false;
+
+                byte[] bytes = File.ReadAllBytes(exePath);
+                return IsKnownCleanRetailSpecimen(bytes, ComputeSha256Hex(bytes));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return false;
+            }
+        }
+
         private static bool IsKnownCleanRetailSpecimen(byte[] bytes, string hash)
         {
             return bytes.LongLength == KnownRetailSteamSize &&

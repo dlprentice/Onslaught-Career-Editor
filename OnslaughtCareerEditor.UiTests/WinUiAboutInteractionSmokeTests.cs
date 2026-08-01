@@ -45,10 +45,18 @@ public class WinUiAboutInteractionSmokeTests
 
             Assert.That(TryGetName(FindByAutomationId(window, "AboutPageTitle")), Is.EqualTo("About Onslaught Toolkit"));
             // The summary now leads with what a player gets rather than with a
-            // product-lane description, but it must still say plainly that the
-            // installed game is not touched - that is the load-bearing claim.
+            // product-lane description, and it must still be straight about what
+            // the app does to the game on disk - that is the load-bearing claim.
+            //
+            // Superseded 2026-08-01: this asserted "without ever touching your
+            // installed copy", which stopped being true the day the app started
+            // offering to patch an installed game on request. The claim did not
+            // weaken - it moved. Working in a copy is still the default, and the
+            // opt-in takes a verified backup first, so the sentence now has to
+            // carry both halves rather than the absolute it used to.
             Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("Battle Engine Aquila"));
-            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("without ever touching your installed copy"));
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("working in a copy unless you choose otherwise"));
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("backing up your original first"));
             Assert.That(TryGetName(FindByAutomationId(window, "AboutProvenanceTitle")), Is.EqualTo("Where this comes from"));
             // Superseded 2026-08-01. This line used to describe the app as the
             // "primary user-facing Windows product lane" with "historical app

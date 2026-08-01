@@ -16,7 +16,7 @@
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
                        AutomationProperties.AutomationId="AboutProductSummary"
-                       Text="A Windows app that keeps Battle Engine Aquila playable. It gets the 2003 game running windowed and widescreen on a modern PC, lets you edit a career save, and opens up its music, cutscenes, and story - without ever touching your installed copy."
+                       Text="A Windows app that keeps Battle Engine Aquila playable. It gets the 2003 game running windowed and widescreen on a modern PC, lets you edit a career save, and opens up its music, cutscenes, and story - working in a copy unless you choose otherwise, and backing up your original first when you do."
                        Style="{StaticResource SectionBodyTextStyle}" />
 
             <Border Style="{StaticResource SectionCardStyle}">

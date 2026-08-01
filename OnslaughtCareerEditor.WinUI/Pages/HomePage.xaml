@@ -76,7 +76,7 @@
                                AutomationProperties.AutomationId="HomePageTitle"
                                AutomationProperties.HeadingLevel="Level1"
                                Style="{StaticResource SectionTitleTextStyle}" />
-                    <TextBlock Text="Play Battle Engine Aquila windowed and widescreen on a modern PC, edit your career, and browse its music, cutscenes, and lore. Your installed game is only ever read - every change lands in a separate copy."
+                    <TextBlock Text="Play Battle Engine Aquila windowed and widescreen on a modern PC, edit your career, and browse its music, cutscenes, and lore. By default your installed game is only read and every change lands in a separate copy; you can choose to patch it instead, and the app backs it up first."
                                AutomationProperties.AutomationId="HomePagePurpose"
                                Style="{StaticResource SectionBodyTextStyle}"
                                TextWrapping="WrapWholeWords" />
@@ -453,12 +453,12 @@
                             Style="{StaticResource SectionCardStyle}"
                             Margin="0">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="What stays unchanged"
+                            <TextBlock Text="What this touches"
                                        AutomationProperties.AutomationId="HomeSafetyPostureTitle"
                                        AutomationProperties.HeadingLevel="Level3"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="The installed game and original BEA.exe stay unchanged. Use copied-game workflows for patching and local split-screen testing; online play is not available in this release."
+                            <TextBlock Text="Nothing changes your installed game unless you ask for it in Windowed &amp; Mods, and that copies your original BEA.exe first so you can put it back. Everything else works in a separate copy; online play is not available in this release."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                         </StackPanel>
                     </Border>
