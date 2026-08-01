@@ -453,7 +453,16 @@ namespace Onslaught___Career_Editor
                 yield break;
             }
 
-            foreach ((RegistryHive hive, string subKey, string valueName) in SteamRegistryLocations)
+            // Built inside the guard: RegistryHive itself is Windows-only, so a
+            // static initializer would sit outside any platform check.
+            (RegistryHive Hive, string SubKey, string ValueName)[] locations =
+            {
+                (RegistryHive.CurrentUser, @"Software\Valve\Steam", "SteamPath"),
+                (RegistryHive.LocalMachine, @"SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath"),
+                (RegistryHive.LocalMachine, @"SOFTWARE\Valve\Steam", "InstallPath"),
+            };
+
+            foreach ((RegistryHive hive, string subKey, string valueName) in locations)
             {
                 string? value = TryReadRegistryString(hive, subKey, valueName);
                 if (string.IsNullOrWhiteSpace(value))
@@ -469,13 +478,6 @@ namespace Onslaught___Career_Editor
                 }
             }
         }
-
-        private static readonly (RegistryHive Hive, string SubKey, string ValueName)[] SteamRegistryLocations =
-        {
-            (RegistryHive.CurrentUser, @"Software\Valve\Steam", "SteamPath"),
-            (RegistryHive.LocalMachine, @"SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath"),
-            (RegistryHive.LocalMachine, @"SOFTWARE\Valve\Steam", "InstallPath"),
-        };
 
         [System.Runtime.Versioning.SupportedOSPlatform("windows")]
         private static string? TryReadRegistryString(RegistryHive hive, string subKey, string valueName)
