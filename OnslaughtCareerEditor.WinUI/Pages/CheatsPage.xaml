@@ -238,6 +238,207 @@
                                   Message="Choose a save, tick the cheats you want, and pick where the new save goes." />
             </StackPanel>
 
+            <Border x:Name="LiveTrainerSection"
+                    AutomationProperties.AutomationId="LiveTrainerSection"
+                    Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Live trainer"
+                               AutomationProperties.AutomationId="LiveTrainerTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock x:Name="LiveTrainerIntroTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerIntro"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerSafeCopyNoteTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerSafeCopyNote"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerMissionNoteTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerMissionNote"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerEvidenceTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerEvidence"
+                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="10">
+                        <Button x:Name="LiveTrainerWatchButton"
+                                AutomationProperties.AutomationId="LiveTrainerWatchButton"
+                                Content="Watch the running copy"
+                                Click="LiveTrainerWatchButton_Click" />
+                        <Button x:Name="LiveTrainerStopWatchingButton"
+                                AutomationProperties.AutomationId="LiveTrainerStopWatchingButton"
+                                Content="Stop watching"
+                                IsEnabled="False"
+                                Click="LiveTrainerStopWatchingButton_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="LiveTrainerAttachStatusTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerAttachStatus"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerReadingStatusTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerReadingStatus"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <Grid ColumnSpacing="12"
+                          RowSpacing="6"
+                          AutomationProperties.AutomationId="LiveTrainerValuesGrid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Life" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   x:Name="LiveTrainerLifeValueTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerLifeValue"
+                                   FontFamily="Consolas"
+                                   Text="-" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Energy" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   x:Name="LiveTrainerEnergyValueTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerEnergyValue"
+                                   FontFamily="Consolas"
+                                   Text="-" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Shields" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                   x:Name="LiveTrainerShieldsValueTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerShieldsValue"
+                                   FontFamily="Consolas"
+                                   Text="-" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Mode" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   x:Name="LiveTrainerStateValueTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerStateValue"
+                                   FontFamily="Consolas"
+                                   Text="-" />
+                    </Grid>
+                    <TextBlock x:Name="LiveTrainerStateEvidenceTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerStateEvidence"
+                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <TextBlock x:Name="LiveTrainerHoldExplanationTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerHoldExplanation"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerWritingBlockedTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerWritingBlocked"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="10">
+                            <NumberBox x:Name="LiveTrainerLifeNumberBox"
+                                       AutomationProperties.AutomationId="LiveTrainerLifeNumberBox"
+                                       AutomationProperties.Name="Life value to set"
+                                       Header="Life"
+                                       Minimum="0"
+                                       Maximum="10000"
+                                       Value="100"
+                                       MinWidth="150"
+                                       IsEnabled="False" />
+                            <Button x:Name="LiveTrainerSetLifeButton"
+                                    AutomationProperties.AutomationId="LiveTrainerSetLifeButton"
+                                    Content="Set life"
+                                    VerticalAlignment="Bottom"
+                                    IsEnabled="False"
+                                    Click="LiveTrainerSetLifeButton_Click" />
+                            <ToggleSwitch x:Name="LiveTrainerHoldLifeToggle"
+                                          AutomationProperties.AutomationId="LiveTrainerHoldLifeToggle"
+                                          AutomationProperties.Name="Hold life"
+                                          Header="Hold life"
+                                          IsEnabled="False"
+                                          Toggled="LiveTrainerHoldLifeToggle_Toggled" />
+                        </StackPanel>
+                        <TextBlock x:Name="LiveTrainerLifeEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerLifeEvidence"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="10">
+                            <NumberBox x:Name="LiveTrainerEnergyNumberBox"
+                                       AutomationProperties.AutomationId="LiveTrainerEnergyNumberBox"
+                                       AutomationProperties.Name="Energy value to set"
+                                       Header="Energy"
+                                       Minimum="0"
+                                       Maximum="10000"
+                                       Value="100"
+                                       MinWidth="150"
+                                       IsEnabled="False" />
+                            <Button x:Name="LiveTrainerSetEnergyButton"
+                                    AutomationProperties.AutomationId="LiveTrainerSetEnergyButton"
+                                    Content="Set energy"
+                                    VerticalAlignment="Bottom"
+                                    IsEnabled="False"
+                                    Click="LiveTrainerSetEnergyButton_Click" />
+                            <ToggleSwitch x:Name="LiveTrainerHoldEnergyToggle"
+                                          AutomationProperties.AutomationId="LiveTrainerHoldEnergyToggle"
+                                          AutomationProperties.Name="Hold energy"
+                                          Header="Hold energy"
+                                          IsEnabled="False"
+                                          Toggled="LiveTrainerHoldEnergyToggle_Toggled" />
+                        </StackPanel>
+                        <TextBlock x:Name="LiveTrainerEnergyEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerEnergyEvidence"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="10">
+                            <NumberBox x:Name="LiveTrainerShieldsNumberBox"
+                                       AutomationProperties.AutomationId="LiveTrainerShieldsNumberBox"
+                                       AutomationProperties.Name="Shields value to set"
+                                       Header="Shields"
+                                       Minimum="0"
+                                       Maximum="10000"
+                                       Value="100"
+                                       MinWidth="150"
+                                       IsEnabled="False" />
+                            <Button x:Name="LiveTrainerSetShieldsButton"
+                                    AutomationProperties.AutomationId="LiveTrainerSetShieldsButton"
+                                    Content="Set shields"
+                                    VerticalAlignment="Bottom"
+                                    IsEnabled="False"
+                                    Click="LiveTrainerSetShieldsButton_Click" />
+                            <ToggleSwitch x:Name="LiveTrainerHoldShieldsToggle"
+                                          AutomationProperties.AutomationId="LiveTrainerHoldShieldsToggle"
+                                          AutomationProperties.Name="Hold shields"
+                                          Header="Hold shields"
+                                          IsEnabled="False"
+                                          Toggled="LiveTrainerHoldShieldsToggle_Toggled" />
+                        </StackPanel>
+                        <TextBlock x:Name="LiveTrainerShieldsEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerShieldsEvidence"
+                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="LiveTrainerNothingOfferedTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerNothingOffered"
+                               Foreground="{ThemeResource ShellMutedTextBrush}"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <controls:InfoBar x:Name="LiveTrainerInfoBar"
+                                      AutomationProperties.AutomationId="LiveTrainerStatusInfo"
+                                      Visibility="Visible"
+                                      IsOpen="True"
+                                      IsClosable="False"
+                                      Severity="Informational"
+                                      Title="Not watching"
+                                      Message="Launch a copy from Windowed &amp; Mods, start a mission, then press Watch." />
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Free camera: moving it around"

@@ -31,6 +31,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _isRefreshingDestinations;
         private bool _isWriting;
 
+        private LiveTrainerSession? _trainerSession;
+        private LiveTrainerHold? _trainerHold;
+        private DispatcherTimer? _trainerTimer;
+        private LiveTrainerReadResult? _lastTrainerReading;
+        private bool _suppressHoldToggleEvents;
+
         public CheatsPage()
         {
             InitializeComponent();
@@ -47,6 +53,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ApplyCatalogCopy();
             RefreshSafeCopyTargets();
             RefreshComposition();
+            ApplyLiveTrainerCopy();
+            RefreshLiveTrainerControls();
+
+            // Leaving the page must end the attachment. A handle on another process's memory that
+            // outlives the screen offering it is exactly the thing this feature must not become.
+            Unloaded += (_, _) => DetachLiveTrainer("You left the page, so the app stopped watching.");
+
             AppStatusService.SetStatus("Cheats: page ready");
         }
 
@@ -348,6 +361,307 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _isWriting = false;
                 RefreshComposition();
             }
+        }
+
+        // ================================================================ live trainer
+
+        private void ApplyLiveTrainerCopy()
+        {
+            LiveTrainerIntroTextBlock.Text = LiveTrainerPageText.Introduction;
+            LiveTrainerSafeCopyNoteTextBlock.Text = LiveTrainerPageText.SafeCopyOnlyNote;
+            LiveTrainerMissionNoteTextBlock.Text = LiveTrainerPageText.MissionRunningNote;
+            LiveTrainerEvidenceTextBlock.Text = LiveTrainerPageText.EvidenceNote;
+            LiveTrainerHoldExplanationTextBlock.Text = LiveTrainerPageText.HoldExplanation;
+            LiveTrainerLifeEvidenceTextBlock.Text = LiveTrainerPageText.LifeEvidenceNote;
+            LiveTrainerEnergyEvidenceTextBlock.Text = LiveTrainerPageText.EnergyEvidenceNote;
+            LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
+            LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
+            LiveTrainerNothingOfferedTextBlock.Text = LiveTrainerPageText.NothingOfferedNote;
+        }
+
+        /// <summary>
+        /// Attaches to the newest copy this app launched that is genuinely still running. The
+        /// registry decides what "genuinely" means, and AppCore's attach gate refuses anything
+        /// that is not a process this app started and can still prove the identity of.
+        /// </summary>
+        private void LiveTrainerWatchButton_Click(object sender, RoutedEventArgs e)
+        {
+            DetachLiveTrainer(null);
+
+            App.SafeGameCopyProcesses.PruneDeadLeases();
+            if (!App.SafeGameCopyProcesses.TryResolveLiveManagedProcess(out GameProfileRegisteredProcess registered))
+            {
+                _lastTrainerReading = null;
+                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, null);
+                SetLiveTrainerStatus(
+                    InfoBarSeverity.Informational,
+                    "Nothing to watch",
+                    "No copy launched by this app is running. Start one in Windowed & Mods first.");
+                RefreshLiveTrainerControls();
+                return;
+            }
+
+            LiveTrainerAttachOutcome outcome = LiveTrainerSession.Attach(
+                registered.Process,
+                App.SafeGameCopyProcesses);
+
+            if (!outcome.Success || outcome.Session is null)
+            {
+                _lastTrainerReading = null;
+                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, outcome.Message);
+                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Not watching", outcome.Message);
+                RefreshLiveTrainerControls();
+                return;
+            }
+
+            _trainerSession = outcome.Session;
+            _trainerHold = new LiveTrainerHold(_trainerSession);
+            LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(
+                true,
+                LiveTrainerPageText.DescribeCopyName(registered.Process),
+                outcome.Message);
+
+            StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
+            LiveTrainerTick();
+            SetLiveTrainerStatus(InfoBarSeverity.Informational, "Watching", LiveTrainerPageText.EvidenceNote);
+            AppStatusService.SetStatus("Cheats: watching a running copy");
+        }
+
+        private void LiveTrainerStopWatchingButton_Click(object sender, RoutedEventArgs e)
+        {
+            DetachLiveTrainer("Stopped watching. Nothing is being read or written.");
+        }
+
+        /// <summary>
+        /// Ends the attachment, clears every hold, and closes the handles. Called from the Stop
+        /// button, when the page unloads, and whenever a read says the game has gone.
+        /// </summary>
+        private void DetachLiveTrainer(string? message)
+        {
+            _trainerTimer?.Stop();
+            _trainerTimer = null;
+
+            _trainerHold?.ReleaseAll();
+            _trainerHold = null;
+
+            _trainerSession?.Dispose();
+            _trainerSession = null;
+            _lastTrainerReading = null;
+
+            _suppressHoldToggleEvents = true;
+            try
+            {
+                LiveTrainerHoldLifeToggle.IsOn = false;
+                LiveTrainerHoldEnergyToggle.IsOn = false;
+                LiveTrainerHoldShieldsToggle.IsOn = false;
+            }
+            finally
+            {
+                _suppressHoldToggleEvents = false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, message);
+                SetLiveTrainerStatus(InfoBarSeverity.Informational, "Not watching", message);
+            }
+
+            RefreshLiveTrainerControls();
+        }
+
+        /// <summary>
+        /// Two rates, both slow. Watching runs at 2 Hz; holding runs at 10 Hz, half the game's own
+        /// update rate, which is the lowest that visibly holds a value.
+        /// </summary>
+        private void StartLiveTrainerTimer(TimeSpan interval)
+        {
+            TimeSpan clamped = LiveTrainerHold.ClampInterval(interval);
+            if (_trainerTimer is null)
+            {
+                _trainerTimer = new DispatcherTimer();
+                _trainerTimer.Tick += (_, _) => LiveTrainerTick();
+            }
+
+            if (_trainerTimer.Interval != clamped)
+            {
+                _trainerTimer.Stop();
+                _trainerTimer.Interval = clamped;
+            }
+
+            _trainerTimer.Start();
+        }
+
+        private void LiveTrainerTick()
+        {
+            if (_trainerSession is null || _trainerHold is null)
+            {
+                return;
+            }
+
+            LiveTrainerHoldTick tick = _trainerHold.Tick();
+            _lastTrainerReading = tick.Reading;
+
+            if (tick.Reading.Status == LiveTrainerReadStatus.ProcessGone)
+            {
+                DetachLiveTrainer("The copied game closed, so the app stopped watching.");
+                return;
+            }
+
+            if (tick.StoppedItself)
+            {
+                _suppressHoldToggleEvents = true;
+                try
+                {
+                    LiveTrainerHoldLifeToggle.IsOn = false;
+                    LiveTrainerHoldEnergyToggle.IsOn = false;
+                    LiveTrainerHoldShieldsToggle.IsOn = false;
+                }
+                finally
+                {
+                    _suppressHoldToggleEvents = false;
+                }
+
+                SetLiveTrainerStatus(InfoBarSeverity.Informational, "Holding stopped", tick.Message);
+            }
+
+            StartLiveTrainerTimer(_trainerHold.IsHolding ? LiveTrainerHold.DefaultInterval : LiveTrainerHold.IdleInterval);
+            RefreshLiveTrainerControls();
+        }
+
+        /// <summary>
+        /// The one place that decides what the trainer half of the page shows and which of its
+        /// controls are live. Every write control is gated on
+        /// <see cref="LiveTrainerPageText.DescribeWhyWritingIsBlocked"/> returning null, which in
+        /// turn needs a read that came back looking like real numbers.
+        /// </summary>
+        private void RefreshLiveTrainerControls()
+        {
+            bool attached = _trainerSession is not null;
+            LivePlayerVitals? vitals = _lastTrainerReading?.Vitals;
+
+            LiveTrainerStopWatchingButton.IsEnabled = attached;
+            LiveTrainerReadingStatusTextBlock.Text = LiveTrainerPageText.BuildReadingSummary(_lastTrainerReading);
+            LiveTrainerLifeValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Life);
+            LiveTrainerEnergyValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Energy);
+            LiveTrainerShieldsValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Shields);
+            LiveTrainerStateValueTextBlock.Text = LiveTrainerPageText.FormatState(vitals);
+
+            string? blocked = LiveTrainerPageText.DescribeWhyWritingIsBlocked(attached, _lastTrainerReading);
+            LiveTrainerWritingBlockedTextBlock.Text = blocked ?? string.Empty;
+
+            bool canWrite = blocked is null;
+            SetLiveTrainerWriteControlsEnabled(
+                canWrite && vitals is not null && vitals.Life.LooksLikeAVital,
+                LiveTrainerLifeNumberBox,
+                LiveTrainerSetLifeButton,
+                LiveTrainerHoldLifeToggle);
+            SetLiveTrainerWriteControlsEnabled(
+                canWrite && vitals is not null && vitals.Energy.LooksLikeAVital,
+                LiveTrainerEnergyNumberBox,
+                LiveTrainerSetEnergyButton,
+                LiveTrainerHoldEnergyToggle);
+            SetLiveTrainerWriteControlsEnabled(
+                canWrite && vitals is not null && vitals.Shields.LooksLikeAVital,
+                LiveTrainerShieldsNumberBox,
+                LiveTrainerSetShieldsButton,
+                LiveTrainerHoldShieldsToggle);
+        }
+
+        private static void SetLiveTrainerWriteControlsEnabled(
+            bool enabled,
+            NumberBox valueBox,
+            Button setButton,
+            ToggleSwitch holdToggle)
+        {
+            valueBox.IsEnabled = enabled;
+            setButton.IsEnabled = enabled;
+            holdToggle.IsEnabled = enabled;
+        }
+
+        private void LiveTrainerSetLifeButton_Click(object sender, RoutedEventArgs e) =>
+            WriteLiveTrainerVital(LiveTrainerVital.Life, LiveTrainerLifeNumberBox.Value);
+
+        private void LiveTrainerSetEnergyButton_Click(object sender, RoutedEventArgs e) =>
+            WriteLiveTrainerVital(LiveTrainerVital.Energy, LiveTrainerEnergyNumberBox.Value);
+
+        private void LiveTrainerSetShieldsButton_Click(object sender, RoutedEventArgs e) =>
+            WriteLiveTrainerVital(LiveTrainerVital.Shields, LiveTrainerShieldsNumberBox.Value);
+
+        private void WriteLiveTrainerVital(LiveTrainerVital vital, double requested)
+        {
+            if (_trainerSession is null)
+            {
+                return;
+            }
+
+            if (double.IsNaN(requested))
+            {
+                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Nothing written", "Type a number first.");
+                return;
+            }
+
+            LiveTrainerWriteOutcome outcome = _trainerSession.Write(vital, (float)requested);
+            SetLiveTrainerStatus(
+                outcome.Success ? InfoBarSeverity.Success : InfoBarSeverity.Warning,
+                outcome.Success ? "Set" : "Nothing written",
+                outcome.Message);
+            LiveTrainerTick();
+        }
+
+        private void LiveTrainerHoldLifeToggle_Toggled(object sender, RoutedEventArgs e) =>
+            ToggleLiveTrainerHold(LiveTrainerVital.Life, LiveTrainerHoldLifeToggle, LiveTrainerLifeNumberBox);
+
+        private void LiveTrainerHoldEnergyToggle_Toggled(object sender, RoutedEventArgs e) =>
+            ToggleLiveTrainerHold(LiveTrainerVital.Energy, LiveTrainerHoldEnergyToggle, LiveTrainerEnergyNumberBox);
+
+        private void LiveTrainerHoldShieldsToggle_Toggled(object sender, RoutedEventArgs e) =>
+            ToggleLiveTrainerHold(LiveTrainerVital.Shields, LiveTrainerHoldShieldsToggle, LiveTrainerShieldsNumberBox);
+
+        private void ToggleLiveTrainerHold(LiveTrainerVital vital, ToggleSwitch toggle, NumberBox valueBox)
+        {
+            if (_suppressHoldToggleEvents || _trainerHold is null)
+            {
+                return;
+            }
+
+            if (!toggle.IsOn)
+            {
+                _trainerHold.Release(vital);
+                StartLiveTrainerTimer(_trainerHold.IsHolding ? LiveTrainerHold.DefaultInterval : LiveTrainerHold.IdleInterval);
+                return;
+            }
+
+            string refusal = "Type a number first.";
+            bool held = !double.IsNaN(valueBox.Value) &&
+                _trainerHold.TryHold(vital, (float)valueBox.Value, out refusal);
+            if (!held)
+            {
+                _suppressHoldToggleEvents = true;
+                try
+                {
+                    toggle.IsOn = false;
+                }
+                finally
+                {
+                    _suppressHoldToggleEvents = false;
+                }
+
+                SetLiveTrainerStatus(
+                    InfoBarSeverity.Warning,
+                    "Not holding",
+                    string.IsNullOrWhiteSpace(refusal) ? "Type a number first." : refusal);
+                return;
+            }
+
+            StartLiveTrainerTimer(LiveTrainerHold.DefaultInterval);
+        }
+
+        private void SetLiveTrainerStatus(InfoBarSeverity severity, string title, string message)
+        {
+            LiveTrainerInfoBar.Severity = severity;
+            LiveTrainerInfoBar.Title = title;
+            LiveTrainerInfoBar.Message = message;
+            LiveTrainerInfoBar.IsOpen = true;
         }
 
         private void SetStatus(InfoBarSeverity severity, string title, string message)

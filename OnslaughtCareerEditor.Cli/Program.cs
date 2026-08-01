@@ -30,7 +30,7 @@ namespace Onslaught___Career_Editor
 
         private static readonly HashSet<string> VerbNames = new(StringComparer.OrdinalIgnoreCase)
         {
-            "config", "saves", "goodies", "options", "copy", "patch", "process", "version",
+            "config", "saves", "goodies", "options", "copy", "patch", "process", "trainer", "version",
         };
 
         [STAThread]
@@ -108,6 +108,7 @@ namespace Onslaught___Career_Editor
             root.AddCommand(BuildCopyCommand(contextFactory, Json));
             root.AddCommand(BuildPatchCommand(contextFactory, Json));
             root.AddCommand(BuildProcessCommand(contextFactory, Json));
+            root.AddCommand(BuildTrainerCommand(contextFactory, Json));
 
             var version = new Command("version", "Show the tool version and catalog identities.");
             version.SetHandler((InvocationContext c) =>
@@ -536,6 +537,55 @@ namespace Onslaught___Career_Editor
             process.AddCommand(stop);
 
             return process;
+        }
+
+        // ------------------------------------------------------------------ trainer
+
+        private static Command BuildTrainerCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var trainer = new Command(
+                "trainer",
+                "Read and set player vitals in a running safe copy. Attaches only to a process this app launched.");
+
+            Option<int?> PidOption() => new(
+                "--pid",
+                "Managed process id to work on. Defaults to the newest safe copy that is still running.");
+
+            var statusPid = PidOption();
+            var status = new Command(
+                "status",
+                "Report whether a managed copy is running and whether attaching to it is allowed. Reads no vitals.")
+            { statusPid };
+            status.SetHandler((InvocationContext c) => c.ExitCode = TrainerVerbs.TrainerStatus(
+                factory(json(c)), c.ParseResult.GetValueForOption(statusPid)));
+            trainer.AddCommand(status);
+
+            var readPid = PidOption();
+            var read = new Command(
+                "read",
+                "Read player one's life, energy, shields and state. Exit 2 when no mission is running.")
+            { readPid };
+            read.SetHandler((InvocationContext c) => c.ExitCode = TrainerVerbs.TrainerRead(
+                factory(json(c)), c.ParseResult.GetValueForOption(readPid)));
+            trainer.AddCommand(read);
+
+            var setPid = PidOption();
+            var lifeOption = new Option<float?>("--life", "Life value to write.");
+            var energyOption = new Option<float?>("--energy", "Energy value to write.");
+            var shieldsOption = new Option<float?>("--shields", "Shields value to write.");
+            var set = new Command(
+                "set",
+                "Write a vital, after re-reading it. Refuses unless that read comes back believable.")
+            { setPid, lifeOption, energyOption, shieldsOption };
+            set.SetHandler((InvocationContext c) => c.ExitCode = TrainerVerbs.TrainerSet(
+                factory(json(c)),
+                c.ParseResult.GetValueForOption(setPid),
+                c.ParseResult.GetValueForOption(lifeOption),
+                c.ParseResult.GetValueForOption(energyOption),
+                c.ParseResult.GetValueForOption(shieldsOption)));
+            trainer.AddCommand(set);
+
+            return trainer;
         }
 
         /// <summary>
