@@ -28,9 +28,17 @@
       "81b613c9 Asset Library states up front that it needs assets the app cannot produce",
       "1bbb9755 resolution presets - the widescreen fix derives aspect from screen width, so 1600x900 was only the MEASURED size",
       "6867512b live trainer - attaches to app-launched copies, reads vitals before offering to write; ammo/timescale REFUSED (no address evidence)",
-      "271ab1cf Home quick-start card (fresh install -> running game in two clicks) AND the Cheats evidence-to-fine-print pass; the commit message only describes the first - see local-lab/APP-UX-BACKLOG-2026-08-01.md"
+      "271ab1cf Home quick-start card (fresh install -> running game in two clicks) AND the Cheats evidence-to-fine-print pass; the commit message only describes the first - see local-lab/APP-UX-BACKLOG-2026-08-01.md",
+      "bd81fe99 auto-detection stops overwriting a game folder the user already chose",
+      "dcabf10c save rescue - deleting a safe copy no longer takes the careers inside it",
+      "4acc88ba the rescue pickers proven to fill by driving the real app"
     ],
-    "gate_now": "npm test = 1172 AppCore + 375 UiTests + 93 CLI tests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 with no CLI gate at all on the morning of 2026-08-01.",
+    "_goal_2026_08_01_afternoon": {
+      "_what": "The maintainer replaced the safe-copy-only policy with three principles: nothing irreversible without an explicit informed choice AND a verified backup made first; the user's saves are theirs and are never destroyed as a side effect; the pristine specimen (74154bfa) stays untouchable. Scope, in order: (1) save rescue, (2) backup-gated direct patching of the installed game, (3) a safe-copy manager in the GUI, (4) rewrite CLAUDE.md and AGENTS.md to those principles.",
+      "_status": "Item 1 LANDED 2026-08-01. Items 2-4 open.",
+      "_why_save_rescue_went_first": "The maintainer asked for direct patching. Reading the delete path found something he had not asked about and that is strictly worse: DeleteGeneratedProfile did Directory.Delete(recursive) on a copy whose savegames folder holds careers, with no warning and no rescue, reachable from the CLI today. Direct patching is recoverable the moment a verified backup exists. That was not."
+    },
+    "gate_now": "npm test = 1222 AppCore + 385 UiTests + 106 CLI tests, green, plus release:winui-zip green end to end. It was 977 + 15 with no CLI gate at all on the morning of 2026-08-01. GameProfilePreflightServiceTests (32) had never run in npm test until 2026-08-01 - the gate filter guards that every token matches a class, not that every class has a token, so a whole suite can sit outside the gate silently.",
     "bounded_findings": {
       "lore_was_a_composition_failure_not_a_content_failure": "MEASURED 2026-08-01: RenderDocument wrote valid HTML, WebView2 reported NavigationCompleted success, and a live 80 MB renderer process held the page - nothing painted, and a full window resize did not fix it. Overturn by making WebView2 composite in this shell; the native reader is the better answer regardless.",
       "theme_brushes_must_use_ThemeResource": "StaticResource resolves a theme-dictionary key once at page load. Ten shell brushes were bound that way and froze the Lore reader dark after switching to Light. Overturn/guard: ThemeContrastAuditTests.ShellThemeBrushes_AreBoundWithThemeResource_SoTheyFollowTheAppearanceChoice.",
