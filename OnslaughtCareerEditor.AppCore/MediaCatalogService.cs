@@ -34,10 +34,75 @@ namespace Onslaught___Career_Editor
             }
 
             string fullGameDirectory = Path.GetFullPath(gameDirectory);
+
+            // The game knows what its own missions are called. Read that once here rather than in
+            // the two builders, so a single unreadable language file degrades to filename labels
+            // everywhere at once instead of half the page.
+            MissionNames missionNames = MissionNames.Load(fullGameDirectory);
+
             return new MediaCatalogSnapshot(
                 fullGameDirectory,
-                BuildAudioItems(fullGameDirectory),
-                BuildVideoItems(fullGameDirectory));
+                BuildAudioItems(fullGameDirectory, missionNames),
+                BuildVideoItems(fullGameDirectory, missionNames));
+        }
+
+        /// <summary>
+        /// The mission names the game itself shows, keyed by the three-digit number its filenames
+        /// use.
+        ///
+        /// Everything is optional. A player with no installation, a corrupt language file, or a
+        /// build whose names this cannot parse gets exactly what the app showed before - "Mission
+        /// 211" - because a label that says less is better than a page that fails to draw.
+        /// </summary>
+        private sealed class MissionNames
+        {
+            private static readonly MissionNames None = new(new Dictionary<string, GameLevelName>(StringComparer.Ordinal));
+
+            private readonly Dictionary<string, GameLevelName> _byCode;
+
+            private MissionNames(Dictionary<string, GameLevelName> byCode)
+            {
+                _byCode = byCode;
+            }
+
+            public static MissionNames Load(string gameDirectory)
+            {
+                try
+                {
+                    GameTextCatalog? catalog = GameTextCatalogService.TryLoadFromGameDirectory(gameDirectory);
+                    IReadOnlyList<GameLevelName> names = GameTextCatalogService.GetLevelNames(catalog);
+                    if (names.Count == 0)
+                    {
+                        return None;
+                    }
+
+                    Dictionary<string, GameLevelName> byCode = new(StringComparer.Ordinal);
+                    foreach (GameLevelName name in names)
+                    {
+                        // The (Evo) rows share nothing with a voice-line filename, and the plain
+                        // row is the one a player recognises, so first write wins.
+                        byCode.TryAdd(name.Code, name);
+                    }
+
+                    return new MissionNames(byCode);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    return None;
+                }
+            }
+
+            /// <summary>The game's own label for a mission number, or null to fall back.</summary>
+            public string? TryGetDisplay(int missionNumber)
+            {
+                string? code = GameTextCatalogService.TryGetLevelCodeForMissionNumber(missionNumber);
+                if (code is null)
+                {
+                    return null;
+                }
+
+                return _byCode.TryGetValue(code, out GameLevelName? name) ? name.Display : null;
+            }
         }
 
         public static bool LooksLikeGameDirectory(string? gameDirectory)
@@ -50,7 +115,7 @@ namespace Onslaught___Career_Editor
             return MainVideoDescriptions.GetValueOrDefault(videoStem, videoStem);
         }
 
-        private static IReadOnlyList<MediaAudioItem> BuildAudioItems(string gameDirectory)
+        private static IReadOnlyList<MediaAudioItem> BuildAudioItems(string gameDirectory, MissionNames missionNames)
         {
             List<MediaAudioItem> items = new();
 
@@ -74,12 +139,12 @@ namespace Onslaught___Career_Editor
                 foreach (string file in Directory.GetFiles(voiceDirectory, "*.ogg").OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
                 {
                     string baseName = Path.GetFileNameWithoutExtension(file);
-                    string groupName = GetVoiceGroupName(baseName);
+                    (string groupName, int groupSortOrder) = GetVoiceGroup(baseName, missionNames);
                     items.Add(new MediaAudioItem(
                         baseName,
                         file,
                         groupName,
-                        GetVoiceGroupSortOrder(groupName),
+                        groupSortOrder,
                         TryGetOggDurationLabel(file)));
                 }
             }
@@ -91,7 +156,7 @@ namespace Onslaught___Career_Editor
                 .ToList();
         }
 
-        private static IReadOnlyList<MediaVideoItem> BuildVideoItems(string gameDirectory)
+        private static IReadOnlyList<MediaVideoItem> BuildVideoItems(string gameDirectory, MissionNames missionNames)
         {
             List<MediaVideoItem> items = new();
             HashSet<string> addedPaths = new(StringComparer.OrdinalIgnoreCase);
@@ -191,9 +256,13 @@ namespace Onslaught___Career_Editor
             {
                 foreach ((string filePath, string mission) in files.OrderBy(static entry => entry.Mission, StringComparer.OrdinalIgnoreCase))
                 {
+                    string briefingName = int.TryParse(mission, out int missionNumber)
+                        ? missionNames.TryGetDisplay(missionNumber) ?? $"Mission {mission}"
+                        : $"Mission {mission}";
+
                     items.Add(CreateVideoItem(
                         filePath,
-                        $"Mission {mission}",
+                        briefingName,
                         $"Mission Briefings / Episode {episode}",
                         2000 + int.Parse(episode)));
                 }
@@ -234,17 +303,25 @@ namespace Onslaught___Career_Editor
                 .Replace("_", " ", StringComparison.Ordinal);
         }
 
-        private static string GetVoiceGroupName(string fileName)
+        /// <summary>
+        /// Which heading a voice line sits under, and where that heading sorts.
+        ///
+        /// The two used to be derived separately, with the sort order recovered by parsing the
+        /// digits back out of "Mission 211". That worked only while the heading was a number in
+        /// disguise; now that a heading can read "2.11 - Assault On Apollo", the order travels with
+        /// the name instead of being reconstructed from it.
+        /// </summary>
+        private static (string Name, int SortOrder) GetVoiceGroup(string fileName, MissionNames missionNames)
         {
             string upper = fileName.ToUpperInvariant();
             if (upper.StartsWith("TUTORIAL", StringComparison.Ordinal))
             {
-                return "Tutorial";
+                return ("Tutorial", 10000);
             }
 
             if (upper.StartsWith("RACING", StringComparison.Ordinal))
             {
-                return "Racing";
+                return ("Racing", 10001);
             }
 
             if (upper.StartsWith("HEALTH_", StringComparison.Ordinal) ||
@@ -252,34 +329,18 @@ namespace Onslaught___Career_Editor
                 upper.StartsWith("BASE_", StringComparison.Ordinal) ||
                 upper.StartsWith("NEED_", StringComparison.Ordinal))
             {
-                return "Status Messages";
+                return ("Status Messages", 10002);
             }
 
             string prefix = fileName.Split('_')[0];
             if (int.TryParse(prefix, out int missionNumber))
             {
-                return $"Mission {missionNumber}";
+                // Sorting stays on the number either way, so the missions keep their story order
+                // whether or not the game's own names were readable.
+                return (missionNames.TryGetDisplay(missionNumber) ?? $"Mission {missionNumber}", missionNumber);
             }
 
-            return "Other";
-        }
-
-        private static int GetVoiceGroupSortOrder(string groupName)
-        {
-            if (groupName.StartsWith("Mission ", StringComparison.OrdinalIgnoreCase) &&
-                int.TryParse(groupName.Replace("Mission ", string.Empty, StringComparison.OrdinalIgnoreCase), out int missionNumber))
-            {
-                return missionNumber;
-            }
-
-            return groupName switch
-            {
-                "Tutorial" => 10000,
-                "Racing" => 10001,
-                "Status Messages" => 10002,
-                "Other" => 99999,
-                _ => 50000
-            };
+            return ("Other", 99999);
         }
 
         private static string TryGetOggDurationLabel(string filePath)

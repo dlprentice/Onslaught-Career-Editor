@@ -56,6 +56,128 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains(snapshot.AudioItems, item => item.Name == "HEALTH_low" && item.GroupName == "Status Messages");
         }
 
+        /// <summary>
+        /// With the game's own text alongside it, a mission stops being a number.
+        ///
+        /// "Mission 110" was never a name the game uses - it was the app reading a filename out
+        /// loud. The real one is in `data/language/&lt;language&gt;.dat`, which every installation
+        /// carries in six languages, so the app can call a mission what the player's own game calls
+        /// it rather than shipping an English table.
+        /// </summary>
+        [Fact]
+        public void Load_UsesTheGamesOwnMissionNamesWhenTheLanguageFileIsThere()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\110_arrival.ogg");
+            temp.WriteFile(@"data\sounds\english\MessageBox\211_go.ogg");
+            WriteLanguageFile(temp, ("1.10 - Blackout", null), ("2.11 - Assault On Apollo", null));
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            Assert.Contains(snapshot.AudioItems, item => item.GroupName == "1.10 - Blackout");
+            Assert.Contains(snapshot.AudioItems, item => item.GroupName == "2.11 - Assault On Apollo");
+            Assert.DoesNotContain(snapshot.AudioItems, item => item.GroupName.StartsWith("Mission ", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Story order is what makes the list readable, and it used to be recovered by parsing the
+        /// digits back out of "Mission 211". Now that the heading is a name, the order has to come
+        /// from the number directly - so 1.10 must still sort above 2.11 even though "2" &lt; "B".
+        /// </summary>
+        [Fact]
+        public void Load_KeepsMissionsInStoryOrderOnceTheyHaveNames()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\211_go.ogg");
+            temp.WriteFile(@"data\sounds\english\MessageBox\110_arrival.ogg");
+            WriteLanguageFile(temp, ("1.10 - Blackout", null), ("2.11 - Assault On Apollo", null));
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            MediaAudioItem first = snapshot.AudioItems.First();
+            Assert.Equal("1.10 - Blackout", first.GroupName);
+            Assert.True(
+                snapshot.AudioItems.First(item => item.GroupName.StartsWith("1.10", StringComparison.Ordinal)).GroupSortOrder <
+                snapshot.AudioItems.First(item => item.GroupName.StartsWith("2.11", StringComparison.Ordinal)).GroupSortOrder);
+        }
+
+        /// <summary>
+        /// A language file the app cannot read is an ordinary outcome - a different build, a
+        /// different region, a partial install - and it must cost the player nothing but the nicer
+        /// label.
+        /// </summary>
+        [Fact]
+        public void Load_FallsBackToFilenameLabelsWhenTheLanguageFileIsUnreadable()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\110_arrival.ogg");
+            string unreadable = Path.Combine(temp.RootPath, "data", "language", "english.dat");
+            Directory.CreateDirectory(Path.GetDirectoryName(unreadable)!);
+            File.WriteAllText(unreadable, "this is not a language table");
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            Assert.Contains(snapshot.AudioItems, item => item.GroupName == "Mission 110");
+        }
+
+        /// <summary>
+        /// A mission the language file has no name for keeps its number rather than losing its
+        /// heading. Retail has 43 named levels; the voice folder has lines that do not all map.
+        /// </summary>
+        [Fact]
+        public void Load_KeepsTheNumberForAMissionTheGameDoesNotName()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\110_arrival.ogg");
+            temp.WriteFile(@"data\sounds\english\MessageBox\999_unknown.ogg");
+            WriteLanguageFile(temp, ("1.10 - Blackout", null));
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            Assert.Contains(snapshot.AudioItems, item => item.GroupName == "1.10 - Blackout");
+            Assert.Contains(snapshot.AudioItems, item => item.GroupName == "Mission 999");
+        }
+
+        /// <summary>
+        /// The whole point, against a real installation: the voice lines group under the names the
+        /// game itself uses.
+        ///
+        /// Returns early on a machine with no game, like the other retail-dependent cases. Where
+        /// there is one, this is the test that would catch the join breaking - the decoder can be
+        /// perfect and the Media page still show numbers if the mission-number mapping drifts.
+        /// </summary>
+        [Fact]
+        public void Load_GroupsRealVoiceLinesUnderTheGamesOwnMissionNames()
+        {
+            string? gameDirectory = AppConfig.Load().GetGameDir() ?? AppConfig.DetectGameDirectory();
+            if (gameDirectory is null || !MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
+            {
+                return;
+            }
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(gameDirectory);
+            if (snapshot.AudioItems.Count == 0)
+            {
+                return;
+            }
+
+            string[] groups = snapshot.AudioItems
+                .Select(item => item.GroupName)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+
+            Assert.Contains(groups, group => group.Contains(" - ", StringComparison.Ordinal) &&
+                                             char.IsAsciiDigit(group[0]));
+            Assert.DoesNotContain(groups, group => group.StartsWith("Mission 1", StringComparison.Ordinal));
+        }
+
+        private static void WriteLanguageFile(TempGameDirectory temp, params (string Text, string? Audio)[] entries)
+        {
+            string path = Path.Combine(temp.RootPath, "data", "language", "english.dat");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllBytes(path, TestLanguageFile.Build(entries));
+        }
+
         [Fact]
         public void Load_InvalidOgg_ReleasesTheCatalogFileHandle()
         {
