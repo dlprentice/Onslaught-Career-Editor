@@ -1,9 +1,10 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-07-29. Current cold-career, pine-detail, and frontend-gate
-claims were re-reviewed. Other sections retain their narrower
-dated evidence boundaries.
+Last updated: 2026-08-01. The WinUI shell, appearance, Lore, and Media sections
+were rewritten to match what the app now does, and one block of fabricated
+content was withdrawn. The rebuild, RE, and save/patch claims were NOT
+re-reviewed by that pass and retain their 2026-07-29 boundary.
 Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
 re-measure before relying on one.
@@ -15,8 +16,57 @@ the longer reconstruction effort; they are not parallel app lanes.
 
 ## WinUI toolkit
 
-The primary navigation is Home, Save Lab, Media, Asset Library, Lore, Windowed
-& Mods, Settings, and About.
+The primary navigation is Home, Windowed & Mods, Save Lab, Media, Lore, Asset
+Library, Settings, and About.
+
+> **Updated 2026-08-01.** The order previously read Home, Save Lab, Media, Asset
+> Library, Lore, Windowed & Mods, Settings, About — which put the step the Home
+> page calls first in sixth position, behind three browse-only pages. Only the
+> order changed; no page was added or removed by that pass.
+
+### Shell and appearance
+
+The app carries its own icon (project-authored; see
+[`tools/generate_app_icon.py`](tools/generate_app_icon.py)) on the window,
+taskbar, and alt-tab.
+
+Appearance follows Windows by default and can be set to Light or Dark in
+Settings; the change applies immediately rather than at next launch. Both
+palettes are gated for contrast by `ThemeContrastAuditTests`, and a companion
+audit fails the build if a theme brush is bound with `StaticResource`, which
+resolves once at page load and silently freezes a surface in the theme that was
+active when it first appeared.
+
+Home reports what the app has found on the machine — the configured install, the
+number of detected save/options files, and whether media is ready to browse —
+rather than describing those capabilities in the abstract.
+
+Game-install detection reads Steam's own recorded location from the registry
+(`HKCU\Software\Valve\Steam` `SteamPath`, and the `Valve\Steam` `InstallPath`
+values under `HKLM`) before falling back to the previously hardcoded
+`C:`/`D:`/`E:` candidate list, then scans `libraryfolders.vdf` as before. The
+test-only `ONSLAUGHT_GAME_DIR_CANDIDATES` and `ONSLAUGHT_STEAM_ROOT_CANDIDATES`
+overrides still short-circuit every built-in candidate, including the registry.
+
+### Lore
+
+The Lore reader renders documents as native WinUI content parsed from Markdig's
+AST, not in an embedded browser. Text is selectable and exposed to assistive
+technology, headings carry their semantic level, tables render as real tables,
+and the reader follows the app theme.
+
+> **Superseded 2026-08-01 — a defect, not a capability change.** The reader
+> previously hosted a `WebView2`. It displayed **nothing** for any document: the
+> HTML was written correctly, navigation reported success, and a live renderer
+> process held the page, but no pixels reached the WinUI surface and a full
+> window resize did not recover it. The native reader replaced it. `WebView2`
+> remains an indirect dependency of the Windows App SDK; the app no longer
+> references or uses it.
+
+Packaged lore documents have the repository's maintainer header block
+(`Status` / `Last updated` / `Summary`) removed at pack-build time, so a reader
+opens on the article rather than on repository bookkeeping. The tracked source
+files keep the block.
 
 ### Save Lab and Game Options
 
@@ -139,7 +189,23 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 
 ### Media, assets, and Lore
 
-- Media reads supported audio/video from a selected local game path.
+- Media reads supported audio/video from a selected local game path. A load
+  failure now states its cause where the user can see it; the reason previously
+  went only into a permanently collapsed panel.
+- Cutscenes are listed by number (`Cutscene 01`..`Cutscene 33`). The game ships
+  no titles for them.
+
+> **Withdrawn 2026-08-01 — fabricated content removed.** The catalog carried 33
+> invented story titles ("Tatiana Introduction", "Boss Battle", "Plot Twist", …)
+> and presented them to users as fact. They appear nowhere in the game, the lore
+> library, or the evidence store; they existed only in `MediaCatalogService` and
+> its own test. A regression test now refuses any cutscene label other than the
+> numbered form until a real title is demonstrated. The five retained
+> main-video names each expand an abbreviation the file itself carries
+> (`LT` = Lost Toys, `FE` = front end, `TWIMTBP` = NVIDIA's campaign). The sixth,
+> `UsTheMovie` → "Credits Video", asserts a role rather than expanding a name and
+> is retained only because it is wired into receipt-bound evidence acceptance;
+> it is recorded as unconfirmed.
 - Asset Library opens an existing generated catalog and previews supported
   PNG/FBX metadata, linked textures, and bounded wireframes. It has no asset
   importer, repacker, animation/bone pipeline, or material-package workflow.
