@@ -53,6 +53,90 @@ namespace Onslaught___Career_Editor
             }
         }
 
+        /// <summary>
+        /// The newest registered safe copy that is genuinely still running, verified with
+        /// the same identity check the stop path uses. Unlike <see cref="TryGetLatest"/>
+        /// this never reports a lease whose process has already gone, so a lease that
+        /// outlived its process - or outlived the whole app session, since leases are
+        /// written to disk - cannot be mistaken for a running game.
+        ///
+        /// This is a read-only query. It never closes a process and never deletes a safe
+        /// copy folder.
+        /// </summary>
+        public bool TryResolveLiveManagedProcess(
+            out GameProfileRegisteredProcess registered,
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] candidates;
+            lock (_gate)
+            {
+                candidates = _processes.Values
+                    .OrderByDescending(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            foreach (GameProfileRegisteredProcess candidate in candidates)
+            {
+                if (GameProfileRuntimeService.IsManagedProcessLive(candidate.Process, probe))
+                {
+                    registered = candidate;
+                    return true;
+                }
+            }
+
+            registered = null!;
+            return false;
+        }
+
+        /// <summary>
+        /// Drops every lease whose process is no longer the one that was registered, and
+        /// returns those dropped leases so a caller can report exactly which copied game
+        /// ended. Leases survive on disk across app restarts, so without this the app's
+        /// idea of "a safe copy is running" silently rots.
+        ///
+        /// Pruning forgets a record and rewrites the lease file. It never closes a
+        /// process, and it never touches or deletes the safe copy folder itself.
+        /// </summary>
+        public IReadOnlyList<GameProfileRegisteredProcess> PruneDeadLeases(
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] snapshot;
+            lock (_gate)
+            {
+                snapshot = _processes.Values
+                    .OrderBy(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            var dead = new List<GameProfileRegisteredProcess>();
+            foreach (GameProfileRegisteredProcess registered in snapshot)
+            {
+                if (!GameProfileRuntimeService.IsManagedProcessLive(registered.Process, probe))
+                {
+                    dead.Add(registered);
+                }
+            }
+
+            if (dead.Count == 0)
+                return Array.Empty<GameProfileRegisteredProcess>();
+
+            lock (_gate)
+            {
+                foreach (GameProfileRegisteredProcess registered in dead)
+                {
+                    if (_processes.TryGetValue(registered.Process.ProcessId, out GameProfileRegisteredProcess? current) &&
+                        current.Process.StartedAt.ToUniversalTime().Ticks == registered.Process.StartedAt.ToUniversalTime().Ticks)
+                    {
+                        _processes.Remove(registered.Process.ProcessId);
+                    }
+                }
+
+                PersistLeasesNoThrow();
+            }
+
+            return dead;
+        }
+
         public void Register(GameProfileManagedProcess process, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))

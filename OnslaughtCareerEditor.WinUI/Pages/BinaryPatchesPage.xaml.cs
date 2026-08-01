@@ -36,6 +36,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             "free_camera_keyboard_pitch_down_q_hook",
         };
         private const string LocalMultiplayerProbeLevelId = "850";
+        private const int CopiedGameLivenessPollSeconds = 3;
+        private const string CopiedGameEndedLaunchStatus =
+            "The copied game is no longer running. It was closed from the game itself, not from here.";
+        private const string CopiedGameEndedOperationLog =
+            "The copied game closed on its own, so this page is ready again.\n" +
+            "Your safe copy folder is untouched and still there. You can launch it again whenever you like.";
         private const int DefaultMouseSensitivityPresetIndex = 0;
         private const uint EnhancedCopyScreenShape = 1;
         private const int NoCreateMusicSwapPresetIndex = 0;
@@ -97,6 +103,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string? _lastCopiedProfileContentSignature;
         private string? _lastCopiedProfileCreateMusicSwapPresetId;
         private GameProfileMusicReplacementResult? _lastMusicReplacementResult;        private GameProfileManagedProcess? _managedCopiedProfileProcess;
+        private readonly DispatcherTimer _copiedGameLivenessTimer;
+        private bool _isCheckingCopiedGameLiveness;
         private bool _isLoadingSourcePath;
         private bool _isAwaitingCopiedProfileConfirmation;
         private bool _isPreparingCopiedProfile;
@@ -135,6 +143,82 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 "Ready.";            LoadSourcePathFromConfig();
             RestoreTrackedSafeGameCopyProcess();
             UpdateControlState();
+
+            // The copied game can end on its own - the player quits from the game's own
+            // menu, or it crashes - and nothing tells this page about it. Poll instead, so
+            // the page stops believing a copy is running the moment it is not.
+            _copiedGameLivenessTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(CopiedGameLivenessPollSeconds),
+            };
+            _copiedGameLivenessTimer.Tick += CopiedGameLivenessTimer_Tick;
+            Loaded += BinaryPatchesPage_Loaded;
+            Unloaded += BinaryPatchesPage_Unloaded;
+        }
+
+        private void BinaryPatchesPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Coming back to the page is the other moment a stale record shows up: the
+            // copied game may have ended while the user was somewhere else in the app.
+            RefreshCopiedGameLiveness();
+            _copiedGameLivenessTimer.Start();
+        }
+
+        private void BinaryPatchesPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _copiedGameLivenessTimer.Stop();
+        }
+
+        private void CopiedGameLivenessTimer_Tick(object? sender, object e)
+        {
+            RefreshCopiedGameLiveness();
+        }
+
+        /// <summary>
+        /// Forgets any tracked safe-copy process that is no longer running, and puts the
+        /// page back into a usable state when the one this page launched has ended.
+        ///
+        /// Liveness itself is decided in AppCore, which requires the process id, its start
+        /// time, and its main module path to all still match the managed record; a process
+        /// id on its own is never enough because Windows recycles them. Nothing here closes
+        /// a process, and the safe copy folder is never deleted.
+        /// </summary>
+        private void RefreshCopiedGameLiveness()
+        {
+            // A launch or stop already owns the record while it is in flight; let it finish.
+            if (_isCheckingCopiedGameLiveness || _isLaunchingCopiedProfile || _isStoppingCopiedProfile)
+            {
+                return;
+            }
+
+            _isCheckingCopiedGameLiveness = true;
+            try
+            {
+                IReadOnlyList<GameProfileRegisteredProcess> ended = App.SafeGameCopyProcesses.PruneDeadLeases();
+                if (_managedCopiedProfileProcess is null ||
+                    !ended.Any(row => row.Process.ProcessId == _managedCopiedProfileProcess.ProcessId))
+                {
+                    return;
+                }
+
+                _managedCopiedProfileProcess = null;
+
+                // Re-enable the workflow and refresh the Launch/Stop buttons first:
+                // UpdateControlState rewrites the launch status line itself, so the message
+                // about the copied game ending has to be written after it, not before.
+                UpdateControlState();
+                PatchBenchCopiedProfileLaunchStatus.Text = CopiedGameEndedLaunchStatus;
+                OperationLogTextBox.Text = CopiedGameEndedOperationLog;
+                AppStatusService.SetStatus("Windowed & Mods: copied game is no longer running");
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                OperationLogTextBox.Text = $"Could not check whether the copied game is still running: {ex.Message}";
+            }
+            finally
+            {
+                _isCheckingCopiedGameLiveness = false;
+            }
         }
 
         private IEnumerable<BinaryPatchItemModel> AllItems => _allPatchItems;
@@ -946,11 +1030,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             ApplyLaunchPreset(preset);
             _selectedLaunchPresetChoice = ResolveMatchingLaunchPresetChoice();
+            UpdateLaunchPresetVisualState();
+
+            // Every caller is a plain Click handler, so an escaping exception here would
+            // take the whole app down over a preset button. Report the mismatch instead:
+            // the controls are already whatever they are, and the highlighted preset above
+            // now reflects that honestly.
             if (_selectedLaunchPresetChoice != selectedChoice)
             {
-                throw new InvalidOperationException("Applied launch preset does not match its effective controls.");
+                OperationLogTextBox.Text =
+                    "That launch preset did not fully apply, so no preset is shown as selected.\n" +
+                    "The launch options below are still the ones that will be used. Set them yourself, or pick the preset again.";
+                AppStatusService.SetStatus("Windowed & Mods: launch preset did not fully apply");
             }
-            UpdateLaunchPresetVisualState();
         }
 
         private void ApplyLaunchPreset(LaunchPresetSelection preset)
@@ -2169,7 +2261,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RestoreTrackedSafeGameCopyProcess()
         {
-            if (!App.SafeGameCopyProcesses.TryGetLatest(out GameProfileRegisteredProcess registered))
+            // Leases are written to disk and survive app restarts, so the only honest
+            // question is whether that process is still the one running right now.
+            App.SafeGameCopyProcesses.PruneDeadLeases();
+            if (!App.SafeGameCopyProcesses.TryResolveLiveManagedProcess(out GameProfileRegisteredProcess registered))
             {
                 return;
             }

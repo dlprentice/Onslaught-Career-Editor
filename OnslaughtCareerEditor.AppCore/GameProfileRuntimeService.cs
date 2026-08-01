@@ -48,9 +48,88 @@ namespace Onslaught___Career_Editor
         GameProfileStopResult Stop(GameProfileManagedProcess process, TimeSpan gracefulTimeout);
     }
 
+    /// <summary>
+    /// What a read-only look at one process id found. <see cref="StartedAt"/> and
+    /// <see cref="MainModulePath"/> are the two identity facts a managed record is
+    /// checked against; either being unreadable means the identity cannot be proven,
+    /// which is never treated as "still running".
+    /// </summary>
+    public sealed record GameProfileProcessLivenessProbeResult(
+        bool IsRunning,
+        DateTimeOffset? StartedAt,
+        string? MainModulePath);
+
+    /// <summary>
+    /// Reads process facts without changing anything. Implementations must never close,
+    /// kill, or signal the process; this exists so liveness stays unit-testable without a
+    /// real process and without any presentation or UI-thread dependency.
+    /// </summary>
+    public interface IGameProfileProcessLivenessProbe
+    {
+        GameProfileProcessLivenessProbeResult Probe(GameProfileManagedProcess process);
+    }
+
     public static class GameProfileRuntimeService
     {
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
+
+        /// <summary>
+        /// Read-only answer to "is the copied game from this record still running?". This
+        /// never closes, kills, or signals anything.
+        ///
+        /// A process id on its own is never enough, because Windows recycles process ids.
+        /// A record counts as live only when a process with that id exists AND its start
+        /// time and main module path still match the record - the same identity check the
+        /// stop path must pass before it is allowed to close anything. Anything the probe
+        /// cannot read counts as not live, which only ever makes the app forget a copy it
+        /// was tracking; it can never point a stop at an unrelated process.
+        /// </summary>
+        public static bool IsManagedProcessLive(
+            GameProfileManagedProcess process,
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            ArgumentNullException.ThrowIfNull(process);
+
+            if (process.ProcessId <= 0 || string.IsNullOrWhiteSpace(process.ExecutablePath))
+                return false;
+
+            GameProfileProcessLivenessProbeResult probed =
+                (probe ?? DefaultGameProfileProcessLivenessProbe.Instance).Probe(process);
+
+            if (!probed.IsRunning || probed.StartedAt is null)
+                return false;
+
+            return MatchesManagedProcessIdentity(probed.StartedAt.Value, probed.MainModulePath, process);
+        }
+
+        /// <summary>
+        /// The one identity comparison shared by the stop path and the liveness query, so
+        /// the two can never drift apart. Start time is compared to the exact tick: it is
+        /// what makes a recycled process id fail to match.
+        /// </summary>
+        internal static bool MatchesManagedProcessIdentity(
+            DateTimeOffset runningStartedAt,
+            string? modulePath,
+            GameProfileManagedProcess expected)
+        {
+            if (runningStartedAt.ToUniversalTime().Ticks != expected.StartedAt.ToUniversalTime().Ticks)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(modulePath))
+                return false;
+
+            try
+            {
+                return string.Equals(
+                    Path.GetFullPath(modulePath),
+                    Path.GetFullPath(expected.ExecutablePath),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or IOException)
+            {
+                return false;
+            }
+        }
 
         public static GameProfileManagedProcess LaunchCopiedProfile(
             GameProfileLaunchOptions options,
@@ -358,16 +437,7 @@ namespace Onslaught___Career_Editor
             string? modulePath,
             GameProfileManagedProcess expected)
         {
-            if (runningStartedAt.ToUniversalTime().Ticks != expected.StartedAt.ToUniversalTime().Ticks)
-                return false;
-
-            if (string.IsNullOrWhiteSpace(modulePath))
-                return false;
-
-            return string.Equals(
-                Path.GetFullPath(modulePath),
-                Path.GetFullPath(expected.ExecutablePath),
-                StringComparison.OrdinalIgnoreCase);
+            return GameProfileRuntimeService.MatchesManagedProcessIdentity(runningStartedAt, modulePath, expected);
         }
 
         private static bool TryGetExactExitTime(Process process, out DateTimeOffset exitTime)
@@ -388,6 +458,61 @@ namespace Onslaught___Career_Editor
             {
                 exitTime = default;
                 return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Looks at a process id and reports only what it can read. It opens the process for
+    /// reading and pins the handle while it reads, so the id cannot be recycled underneath
+    /// the two identity facts it collects. It never closes, kills, or signals anything.
+    /// </summary>
+    internal sealed class DefaultGameProfileProcessLivenessProbe : IGameProfileProcessLivenessProbe
+    {
+        private static readonly GameProfileProcessLivenessProbeResult s_notRunning = new(false, null, null);
+
+        public static DefaultGameProfileProcessLivenessProbe Instance { get; } = new();
+
+        public GameProfileProcessLivenessProbeResult Probe(GameProfileManagedProcess process)
+        {
+            ArgumentNullException.ThrowIfNull(process);
+
+            Process running;
+            try
+            {
+                running = Process.GetProcessById(process.ProcessId);
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                return s_notRunning;
+            }
+
+            using (running)
+            {
+                bool exactProcessHandlePinned = false;
+                System.Runtime.InteropServices.SafeHandle? exactProcessHandle = null;
+                try
+                {
+                    exactProcessHandle = running.SafeHandle;
+                    exactProcessHandle.DangerousAddRef(ref exactProcessHandlePinned);
+
+                    if (running.HasExited)
+                        return s_notRunning;
+
+                    return new GameProfileProcessLivenessProbeResult(
+                        true,
+                        new DateTimeOffset(running.StartTime),
+                        running.MainModule?.FileName);
+                }
+                catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or ObjectDisposedException or System.ComponentModel.Win32Exception)
+                {
+                    return s_notRunning;
+                }
+                finally
+                {
+                    if (exactProcessHandlePinned)
+                        exactProcessHandle!.DangerousRelease();
+                }
             }
         }
     }

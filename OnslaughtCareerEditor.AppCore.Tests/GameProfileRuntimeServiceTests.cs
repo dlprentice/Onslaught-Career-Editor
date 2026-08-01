@@ -803,6 +803,121 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void ManagedProcessRegistry_PruneDeadLeasesDropsEndedSafeCopiesFromDiskWithoutStoppingAnything()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-runtime-prune-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string leasePath = Path.Combine(outputRoot, GameProfileManagedProcessRegistry.LeaseFileName);
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+            var runner = new FakeGameProfileProcessRunner();
+
+            try
+            {
+                GameProfilePrepareResult prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "registry-prune",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false,
+                        AllowByteLayoutOnlyTarget: true));
+
+                GameProfileManagedProcess launched = GameProfileRuntimeService.LaunchCopiedProfile(
+                    new GameProfileLaunchOptions(
+                        ProfileRoot: prepared.TargetGameRoot,
+                        AppOwnedProfilesRoot: outputRoot,
+                        LaunchArguments: Array.Empty<string>()),
+                    runner);
+
+                var registry = new GameProfileManagedProcessRegistry(leasePath);
+                registry.Register(launched, outputRoot);
+
+                var stillRunning = new FakeGameProfileProcessLivenessProbe(launched.StartedAt, launched.ExecutablePath);
+                Assert.Empty(registry.PruneDeadLeases(stillRunning));
+                Assert.Single(registry.Snapshot());
+                Assert.True(registry.TryResolveLiveManagedProcess(out GameProfileRegisteredProcess live, stillRunning));
+                Assert.Equal(launched.ProcessId, live.Process.ProcessId);
+
+                var gone = new FakeGameProfileProcessLivenessProbe();
+                IReadOnlyList<GameProfileRegisteredProcess> pruned = registry.PruneDeadLeases(gone);
+
+                Assert.Single(pruned);
+                Assert.Equal(launched.ProcessId, pruned[0].Process.ProcessId);
+                Assert.Empty(registry.Snapshot());
+                Assert.False(registry.TryResolveLiveManagedProcess(out _, gone));
+
+                // The dead lease is gone from disk too, so a later app session cannot
+                // resurrect it, and nothing was stopped or deleted along the way.
+                Assert.Empty(new GameProfileManagedProcessRegistry(leasePath).Snapshot());
+                Assert.Empty(runner.Stops);
+                Assert.True(Directory.Exists(prepared.TargetGameRoot));
+                Assert.True(File.Exists(prepared.ExecutablePath));
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void ManagedProcessRegistry_TreatsARecycledProcessIdAsDeadAndKeepsTheStillLiveLease()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-runtime-recycled-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string leasePath = Path.Combine(outputRoot, GameProfileManagedProcessRegistry.LeaseFileName);
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+            var runner = new FakeGameProfileProcessRunner();
+
+            try
+            {
+                GameProfilePrepareResult prepared = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "registry-recycled",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false,
+                        AllowByteLayoutOnlyTarget: true));
+
+                GameProfileManagedProcess launched = GameProfileRuntimeService.LaunchCopiedProfile(
+                    new GameProfileLaunchOptions(
+                        ProfileRoot: prepared.TargetGameRoot,
+                        AppOwnedProfilesRoot: outputRoot,
+                        LaunchArguments: Array.Empty<string>()),
+                    runner);
+
+                var registry = new GameProfileManagedProcessRegistry(leasePath);
+                registry.Register(launched, outputRoot);
+
+                // Same process id, same executable on disk, but a different process: it
+                // started later. Only the start-time comparison can tell these apart.
+                var recycled = new FakeGameProfileProcessLivenessProbe(
+                    launched.StartedAt.AddSeconds(30),
+                    launched.ExecutablePath);
+
+                IReadOnlyList<GameProfileRegisteredProcess> pruned = registry.PruneDeadLeases(recycled);
+
+                Assert.Single(pruned);
+                Assert.Equal(launched.ProcessId, pruned[0].Process.ProcessId);
+                Assert.Empty(registry.Snapshot());
+                Assert.False(registry.TryResolveLiveManagedProcess(out _, recycled));
+                Assert.Empty(runner.Stops);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public void DefaultRunnerIdentityRequiresExactStartTimeForPidReuseSafety()
         {
             DateTimeOffset startedAt = DateTimeOffset.UtcNow;
@@ -996,6 +1111,28 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Stops.Add(process);
         return new GameProfileStopResult(true, process.ProcessId, "Stopped managed playable copied game folder.");
             }
+        }
+
+        /// <summary>
+        /// Reports whatever a caller decides a running process looks like, so liveness can
+        /// be exercised without starting a real game. Constructed with no arguments it
+        /// reports "no process with that id".
+        /// </summary>
+        private sealed class FakeGameProfileProcessLivenessProbe : IGameProfileProcessLivenessProbe
+        {
+            private readonly GameProfileProcessLivenessProbeResult _result;
+
+            public FakeGameProfileProcessLivenessProbe()
+            {
+                _result = new GameProfileProcessLivenessProbeResult(false, null, null);
+            }
+
+            public FakeGameProfileProcessLivenessProbe(DateTimeOffset startedAt, string? mainModulePath)
+            {
+                _result = new GameProfileProcessLivenessProbeResult(true, startedAt, mainModulePath);
+            }
+
+            public GameProfileProcessLivenessProbeResult Probe(GameProfileManagedProcess process) => _result;
         }
 
         private static bool InvokeDefaultRunnerIdentityMatch(
