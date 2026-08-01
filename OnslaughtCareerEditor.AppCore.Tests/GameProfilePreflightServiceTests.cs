@@ -1369,7 +1369,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ExecutableOverridePath: sourceExe,
                             ApplyWindowedCompatibilityPatch: true)));
 
-                Assert.Contains("known clean Steam retail BEA.exe", ex.Message, StringComparison.OrdinalIgnoreCase);
+                // Superseded 2026-08-01: this pinned "known clean Steam retail BEA.exe", which was
+                // the old refusal's wording. The refusal is unchanged - what moved is that the
+                // message no longer tells the owner of a legitimate disc pressing that their game
+                // "has been modified". What must survive is that it refuses, and that it says
+                // plainly nothing was written.
+                Assert.Contains("byte evidence", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("Nothing was changed", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "already-patched")));
             }
             finally
@@ -1400,7 +1406,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ExecutableOverridePath: sourceExe,
                             ApplyWindowedCompatibilityPatch: true)));
 
-                Assert.Contains("known clean Steam retail BEA.exe", ex.Message);
+                // Superseded 2026-08-01, with the refusal intact - see the note on the
+                // already-patched case above.
+                Assert.Contains("byte evidence", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("Nothing was changed", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "identity-reject")));
             }
             finally

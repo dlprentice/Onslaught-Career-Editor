@@ -116,7 +116,7 @@
 
   "as_of": {
     "_date_means": "The date of the NEWEST content in this file, not the date it was last read, and NOT a review claim - see _audited for what has actually been checked. Corrected 2026-07-28: this field read '2026-07-27' while the file already carried a _HANDOFF_2026_07_28_READ_THIS_FIRST block, an in_flight._as_of of '2026-07-28 ~11:00', and four 2026-07-28 findings. A reader who trusted the stamp would have concluded the whole file predated a day of work it actually contains. Move this whenever content lands, per _maintenance above.",
-    "date": "2026-07-30",
+    "date": "2026-08-01",
     "head": null,
     "_why_head_is_null": "A HEAD recorded here is wrong the instant it is committed, because the commit that writes it moves HEAD. The first version of this file claimed b9e1ae50 and was already two commits behind on arrival. Run `git log --oneline -8` instead; the commit messages carry the reasoning and are the real record.",
     "branch": "main",

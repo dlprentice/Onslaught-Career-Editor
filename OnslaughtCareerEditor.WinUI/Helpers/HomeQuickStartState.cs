@@ -50,7 +50,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return new HomeQuickStartState(
                     HomeQuickStartStage.Running,
                     "Your game is running",
-                    "Battle Engine Aquila is open in a copy this app made. Your installed game is untouched, as always.",
+                    "Battle Engine Aquila is open in a copy this app made, so your installed game is not the one running.",
                     "Stop the game",
                     ShowsSecondaryChooseFolder: false);
             }
@@ -60,7 +60,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return new HomeQuickStartState(
                     HomeQuickStartStage.FindGame,
                     "Let's get Battle Engine Aquila running",
-                    "First the app needs to know where the game is installed. It only ever reads that folder - everything it changes happens in a separate copy.",
+                    "First the app needs to know where the game is installed. It reads that folder and works in a separate copy, unless you later choose to patch the game itself.",
                     "Find my game",
                     ShowsSecondaryChooseFolder: true);
             }

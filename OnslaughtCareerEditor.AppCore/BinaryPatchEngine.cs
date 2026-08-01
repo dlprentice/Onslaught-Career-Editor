@@ -1615,9 +1615,18 @@ namespace Onslaught___Career_Editor
                 // The old wording named an internal lane and left the user with
                 // nothing to do; the original backup sitting beside a modified
                 // executable is the usual answer, so say that.
+                // Superseded 2026-08-01: this said the file "has been modified", which conflates
+                // two different things. The app knows the byte layout of exactly one build - the
+                // Steam release it was measured against. A disc pressing, a localised release or a
+                // patched-by-something-else executable all land here identically, and telling the
+                // owner of an untouched retail disc that their game has been tampered with is both
+                // wrong and aimed at the audience a preservation project can least afford to
+                // insult. Say what is actually known: this is not a build with byte evidence behind
+                // it.
                 return (false,
-                    "This file is not a known clean Steam retail BEA.exe - it has been modified, so the app cannot tell where its patches belong and will not guess. " +
-                    "Look next to it for BEA.exe.original.backup and choose that instead - a fresh copy of the game also works. " +
+                    "This BEA.exe is not the build the app has byte evidence for, so it cannot tell where the patches belong and will not guess. " +
+                    "That means it has been changed, or it is a different release - a disc version or another language - and the app cannot tell which from the bytes alone. " +
+                    "Look next to it for BEA.exe.original.backup and choose that instead, or point the app at a Steam copy. " +
                     "Nothing was changed.",
                     null);
             }

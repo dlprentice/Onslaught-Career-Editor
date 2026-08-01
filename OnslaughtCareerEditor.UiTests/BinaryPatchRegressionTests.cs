@@ -171,7 +171,12 @@ public class BinaryPatchRegressionTests
                 selected);
 
             Assert.That(verify.Success, Is.False);
-            Assert.That(verify.Message, Does.Contain("known clean Steam retail BEA.exe"));
+            // Superseded 2026-08-01: the refusal is unchanged, its wording is not. It used to
+            // say an unrecognised BEA.exe "has been modified", which is one of two possibilities -
+            // the other being a disc pressing or another language release - and the app cannot
+            // tell which from the bytes. What must survive is that it refuses and says why.
+            Assert.That(verify.Message, Does.Contain("byte evidence"));
+            Assert.That(verify.Message, Does.Contain("Nothing was changed"));
             Assert.That(verify.Rows, Is.Empty);
         }
         finally
@@ -698,7 +703,9 @@ public class BinaryPatchRegressionTests
                 selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("known clean Steam retail BEA.exe"));
+            // Superseded 2026-08-01 - see the note on the verify gate above.
+            Assert.That(apply.message, Does.Contain("byte evidence"));
+            Assert.That(apply.message, Does.Contain("Nothing was changed"));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
         }
         finally
@@ -734,7 +741,9 @@ public class BinaryPatchRegressionTests
                 selected);
 
             Assert.That(secondApply.success, Is.False, secondApply.message);
-            Assert.That(secondApply.message, Does.Contain("known clean Steam retail BEA.exe"));
+            // Superseded 2026-08-01 - see the note on the verify gate above.
+            Assert.That(secondApply.message, Does.Contain("byte evidence"));
+            Assert.That(secondApply.message, Does.Contain("Nothing was changed"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(afterFirstApply), "Rejected no-op apply must not rewrite the copied executable.");
         }
         finally

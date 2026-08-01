@@ -107,13 +107,24 @@ public class HomeQuickStartStateTests
     [Test]
     public void TheSafetyPromiseIsMadeWhereItMatters()
     {
-        // Before the app copies gigabytes or starts a game, it should say the
-        // installed game is left alone - that is the project's central promise
-        // and the moment a new player most needs to hear it.
+        // Before the app copies gigabytes or starts a game, it should say what
+        // happens to the installed game - that is the moment a new player most
+        // needs to hear it.
         HomeQuickStartState makeCopy = HomeQuickStartState.Resolve(true, true, false, false);
         Assert.That(makeCopy.Body.ToLowerInvariant(), Does.Contain("installed game"));
 
+        // Superseded 2026-08-01: this asserted "only ever reads", which stopped
+        // being true the day the app started offering to patch an installed game
+        // on request. The promise did not weaken, it acquired a condition - and a
+        // standing "only ever" is exactly the kind of absolute that quietly turns
+        // into a lie. What has to survive is that the sentence still tells a new
+        // player what happens to their game AND that the exception exists.
         HomeQuickStartState findGame = HomeQuickStartState.Resolve(false, false, false, false);
-        Assert.That(findGame.Body.ToLowerInvariant(), Does.Contain("only ever reads"));
+        Assert.That(findGame.Body.ToLowerInvariant(), Does.Contain("separate copy"));
+        Assert.That(findGame.Body.ToLowerInvariant(), Does.Contain("unless you"));
+        Assert.That(
+            findGame.Body.ToLowerInvariant(),
+            Does.Not.Contain("only ever"),
+            "No standing absolute about the installed game survives the opt-in.");
     }
 }
