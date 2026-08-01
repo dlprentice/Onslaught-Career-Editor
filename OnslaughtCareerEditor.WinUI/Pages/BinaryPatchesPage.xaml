@@ -172,6 +172,17 @@
                                 <TextBlock Text="Everything below is optional and starts switched off. Lab, at the bottom of the page, holds older recipes and diagnostics you will not normally need."
                                            Margin="0,6,0,0"
                                            Style="{StaticResource SectionBodyTextStyle}" />
+                                <ComboBox x:Name="PatchBenchResolutionComboBox"
+                                          AutomationProperties.AutomationId="PatchBenchResolutionComboBox"
+                                          AutomationProperties.Name="Screen size for the safe copy"
+                                          Header="Screen size"
+                                          Margin="0,10,0,0"
+                                          MinWidth="260"
+                                          SelectionChanged="ResolutionComboBox_SelectionChanged" />
+                                <TextBlock x:Name="PatchBenchResolutionNoteTextBlock"
+                                           AutomationProperties.AutomationId="PatchBenchResolutionNote"
+                                           Margin="0,4,0,0"
+                                           Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
 
                             <Border BorderBrush="{ThemeResource ShellBorderBrush}"

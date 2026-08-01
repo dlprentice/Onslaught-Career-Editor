@@ -104,6 +104,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string? _lastCopiedProfileCreateMusicSwapPresetId;
         private GameProfileMusicReplacementResult? _lastMusicReplacementResult;        private GameProfileManagedProcess? _managedCopiedProfileProcess;
         private readonly DispatcherTimer _copiedGameLivenessTimer;
+        private bool _isPopulatingResolutionChoices;
         private bool _isCheckingCopiedGameLiveness;
         private bool _isLoadingSourcePath;
         private bool _isAwaitingCopiedProfileConfirmation;
@@ -136,6 +137,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
             PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             PatchGroupsItemsControl.ItemsSource = _patchGroups;
+            InitializeResolutionChoices();
             ApplyProfileControlDefaults(BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId));
 
             OperationLogTextBox.Text =
@@ -2407,6 +2409,58 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return count;
         }
 
+        /// <summary>
+        /// Fills the screen-size picker. The measured size leads; the rest are
+        /// offerable because the widescreen correction derives its aspect from
+        /// the live screen rather than assuming 16:9, and each says plainly
+        /// that nobody has played at it.
+        /// </summary>
+        private void InitializeResolutionChoices()
+        {
+            _isPopulatingResolutionChoices = true;
+            try
+            {
+                PatchBenchResolutionComboBox.Items.Clear();
+                foreach (DisplayResolutionPreset preset in DisplayResolutionPreset.Offered)
+                {
+                    PatchBenchResolutionComboBox.Items.Add(new ComboBoxItem
+                    {
+                        Content = preset.IsMeasured ? $"{preset.Label} (tested)" : preset.Label,
+                        Tag = preset,
+                    });
+                }
+
+                PatchBenchResolutionComboBox.SelectedIndex = 0;
+            }
+            finally
+            {
+                _isPopulatingResolutionChoices = false;
+            }
+
+            UpdateResolutionNote();
+        }
+
+        private DisplayResolutionPreset SelectedResolution =>
+            PatchBenchResolutionComboBox?.SelectedItem is ComboBoxItem { Tag: DisplayResolutionPreset preset }
+                ? preset
+                : DisplayResolutionPreset.Measured;
+
+        private void UpdateResolutionNote()
+        {
+            PatchBenchResolutionNoteTextBlock.Text = SelectedResolution.Describe();
+        }
+
+        private void ResolutionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isPopulatingResolutionChoices)
+            {
+                return;
+            }
+
+            UpdateResolutionNote();
+            AppStatusService.SetStatus($"Windowed & Mods: next safe copy runs at {SelectedResolution.Label}");
+        }
+
         private IReadOnlyList<string> BuildSelectedLaunchArguments()
         {
             var args = BinaryPatchPlanBuilder
@@ -2441,7 +2495,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 args.Add(levelId);
             }
 
-            return args;
+            // Substitution, not an append: the compatibility profile always
+            // contributes -res 1600 900, and two triples would leave the copied
+            // game reading whichever its parser reached last.
+            return SelectedResolution.ApplyTo(args);
         }
 
         private uint? GetSelectedControllerConfigurationPreset()

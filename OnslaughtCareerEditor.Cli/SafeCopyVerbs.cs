@@ -151,6 +151,7 @@ namespace Onslaught___Career_Editor.Cli
             string? presetId,
             IReadOnlyList<string>? patchKeys,
             IReadOnlyList<string>? launchArguments,
+            string? resolution,
             bool includeSavegames,
             string? musicSwapPresetId,
             bool level100TextMod,
@@ -181,6 +182,33 @@ namespace Onslaught___Career_Editor.Cli
                 ? $"safe-game-copy-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid().ToString("N")[..8]}"
                 : profileName.Trim();
 
+            // The GUI seeds a new copy with the compatibility profile's own
+            // launch arguments; the CLI used to pass none, so a copy made
+            // headlessly launched without the -res the profile expects. Match
+            // the GUI unless the caller supplied their own arguments.
+            IReadOnlyList<string> resolvedLaunchArguments =
+                launchArguments is { Count: > 0 }
+                    ? launchArguments
+                    : BinaryPatchPlanBuilder
+                        .GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId)
+                        .Modules
+                        .SelectMany(module => module.LaunchArguments)
+                        .ToArray();
+
+            if (!string.IsNullOrWhiteSpace(resolution))
+            {
+                if (!DisplayResolutionPreset.TryParse(resolution, out DisplayResolutionPreset preset, out string? problem))
+                {
+                    return ctx.Usage(command, problem ?? "That resolution cannot be used.");
+                }
+
+                resolvedLaunchArguments = preset.ApplyTo(resolvedLaunchArguments);
+                if (!preset.IsMeasured)
+                {
+                    ctx.Warn($"{preset.Label} has not been played and measured; 1600x900 is the size that has.");
+                }
+            }
+
             Directory.CreateDirectory(SafeCopyRoot);
 
             var options = new GameProfilePrepareOptions(
@@ -192,7 +220,7 @@ namespace Onslaught___Career_Editor.Cli
                 AllowByteLayoutOnlyTarget: false,
                 IncludeSavegames: includeSavegames,
                 PatchKeys: patchKeys?.ToArray() ?? Array.Empty<string>(),
-                LaunchArguments: launchArguments?.ToArray() ?? Array.Empty<string>(),
+                LaunchArguments: resolvedLaunchArguments.ToArray(),
                 ProfilePresetId: string.IsNullOrWhiteSpace(presetId) ? null : presetId,
                 MusicSwapPresetId: string.IsNullOrWhiteSpace(musicSwapPresetId) ? null : musicSwapPresetId,
                 ApplyLevel100TutorialTextMod: level100TextMod,

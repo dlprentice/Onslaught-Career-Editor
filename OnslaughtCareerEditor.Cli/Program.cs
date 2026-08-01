@@ -384,6 +384,7 @@ namespace Onslaught___Career_Editor
             var presetOption = new Option<string?>("--profile", "Safe copy profile preset id. See 'patch list'.");
             var patchKeyOption = new Option<string[]>("--patch", "Extra patch key to apply, repeatable.") { AllowMultipleArgumentsPerToken = true };
             var launchArgOption = new Option<string[]>("--launch-arg", "Launch argument for the copied game, repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var resolutionOption = new Option<string?>("--resolution", "Gameplay resolution as WIDTHxHEIGHT. Defaults to 1600x900, the size that was played and measured.");
             var savegamesOption = new Option<bool>("--include-savegames", "Copy the source savegames folder into the copy.");
             var musicOption = new Option<string?>("--music-swap", "Music swap preset id to stage.");
             var textModOption = new Option<bool>("--level100-text-mod", "Apply the Level 100 tutorial text mod.");
@@ -394,7 +395,7 @@ namespace Onslaught___Career_Editor
                 "Create a playable copied game folder. Copies several GB; never touches the installed game.")
             {
                 sourceOption, exeOption, nameOption, presetOption, patchKeyOption, launchArgOption,
-                savegamesOption, musicOption, textModOption, flightModOption,
+                resolutionOption, savegamesOption, musicOption, textModOption, flightModOption,
             };
             create.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyCreate(
                 factory(json(c)),
@@ -404,6 +405,7 @@ namespace Onslaught___Career_Editor
                 c.ParseResult.GetValueForOption(presetOption),
                 c.ParseResult.GetValueForOption(patchKeyOption),
                 c.ParseResult.GetValueForOption(launchArgOption),
+                c.ParseResult.GetValueForOption(resolutionOption),
                 c.ParseResult.GetValueForOption(savegamesOption),
                 c.ParseResult.GetValueForOption(musicOption),
                 c.ParseResult.GetValueForOption(textModOption),
