@@ -912,6 +912,64 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+
+                        <Border AutomationProperties.AutomationId="SaveRescueCard"
+                                Style="{StaticResource SavesSectionCardStyle}">
+                            <StackPanel Spacing="12">
+                                <TextBlock AutomationProperties.AutomationId="SaveRescueHeading"
+                                           AutomationProperties.HeadingLevel="Level2"
+                                           Text="Bring a career out of a copy"
+                                           FontSize="18"
+                                           FontWeight="SemiBold" />
+                                <TextBlock AutomationProperties.AutomationId="SaveRescueIntro"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           Text="Careers you play inside a safe copy are kept inside that copy. This puts one in a folder of your own, so it is still there when the copy is not."
+                                           TextWrapping="WrapWholeWords" />
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="SaveRescueCopyComboBox"
+                                              AutomationProperties.AutomationId="SaveRescueCopyComboBox"
+                                              AutomationProperties.Name="Safe copy to take a career out of"
+                                              Header="Safe copy"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="SaveRescueCopyComboBox_SelectionChanged" />
+                                    <ComboBox Grid.Column="1"
+                                              x:Name="SaveRescueSaveComboBox"
+                                              AutomationProperties.AutomationId="SaveRescueSaveComboBox"
+                                              AutomationProperties.Name="Career to bring out"
+                                              Header="Career"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="SaveRescueSaveComboBox_SelectionChanged" />
+                                </Grid>
+                                <TextBlock x:Name="SaveRescueSelectionTextBlock"
+                                           AutomationProperties.AutomationId="SaveRescueSelection"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="SaveRescueButton"
+                                            AutomationProperties.AutomationId="SaveRescueButton"
+                                            AutomationProperties.Name="Keep it somewhere else, by choosing a folder to copy the career into"
+                                            Content="Keep it somewhere else"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"
+                                            Click="SaveRescueButton_Click"
+                                            IsEnabled="False"
+                                            MinWidth="180" />
+                                    <Button x:Name="SaveRescueRefreshButton"
+                                            AutomationProperties.AutomationId="SaveRescueRefreshButton"
+                                            Content="Look again for copies"
+                                            Click="SaveRescueRefreshButton_Click" />
+                                </StackPanel>
+                                <TextBlock x:Name="SaveRescueNoteTextBlock"
+                                           AutomationProperties.AutomationId="SaveRescueNote"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           Visibility="Collapsed"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

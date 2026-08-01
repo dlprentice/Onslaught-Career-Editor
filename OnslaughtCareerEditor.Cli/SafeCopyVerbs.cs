@@ -384,7 +384,12 @@ namespace Onslaught___Career_Editor.Cli
         /// manifest-carrying folder strictly under the app-owned root - so a wrong path fails even if
         /// this check were bypassed.
         /// </summary>
-        public static int CopyDelete(CliContext ctx, string? id, bool force)
+        public static int CopyDelete(
+            CliContext ctx,
+            string? id,
+            bool force,
+            string? keepSavesIn = null,
+            bool discardSaves = false)
         {
             const string command = "copy.delete";
             if (!TryResolveProfileRoot(ctx, command, id, out string profileRoot, out int failure, requireManifest: false))
@@ -415,10 +420,65 @@ namespace Onslaught___Career_Editor.Cli
                     $"Folder: {profileRoot}");
             }
 
-            string deleted;
+            if (!string.IsNullOrWhiteSpace(keepSavesIn) && discardSaves)
+            {
+                return ctx.Usage(
+                    command,
+                    "--keep-saves-in and --discard-saves ask for opposite things; pass one.");
+            }
+
+            // The careers inside the copy are the only thing here the game cannot make again, so
+            // the delete is gated on them and not on --force. --force says "yes, remove several
+            // gigabytes of copied game"; it was never an answer to "and lose the save named
+            // Maladim". Those are different questions and they get asked separately.
+            SafeCopySaveInventory inventory;
             try
             {
-                deleted = GameProfilePreflightService.DeleteGeneratedProfile(profileRoot, SafeCopyRoot);
+                inventory = SafeCopySaveRescueService.Inventory(profileRoot, SafeCopyRoot);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or DirectoryNotFoundException
+                                        or IOException or UnauthorizedAccessException)
+            {
+                return ctx.Usage(command, ex.Message);
+            }
+
+            string? atRisk = SafeCopySaveRescueService.DescribeSavesAtRisk(inventory);
+            if (atRisk is not null && !discardSaves && string.IsNullOrWhiteSpace(keepSavesIn))
+            {
+                string copyId = Path.GetFileName(Path.TrimEndingDirectorySeparator(profileRoot));
+                return ctx.Usage(
+                    command,
+                    atRisk,
+                    $"Keep them: copy delete {copyId} --force --keep-saves-in <folder>",
+                    $"Or lose them on purpose: copy delete {copyId} --force --discard-saves",
+                    $"See them first: copy saves {copyId}");
+            }
+
+            string deleted;
+            SafeCopySaveRescueResult? rescued = null;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(keepSavesIn))
+                {
+                    SafeCopyRemovalResult removal = SafeCopySaveRescueService.RescueThenDelete(
+                        profileRoot,
+                        SafeCopyRoot,
+                        keepSavesIn!,
+                        allowOverwrite: false);
+
+                    if (!removal.Success || removal.DeletedProfileRoot is null)
+                        return ctx.Usage(command, removal.Message);
+
+                    rescued = removal.Rescue;
+                    deleted = removal.DeletedProfileRoot;
+                }
+                else
+                {
+                    deleted = GameProfilePreflightService.DeleteGeneratedProfile(
+                        profileRoot,
+                        SafeCopyRoot,
+                        SafeCopySaveDisposition.DiscardSaves);
+                }
             }
             catch (Exception ex) when (ex is InvalidOperationException or DirectoryNotFoundException
                                         or IOException or UnauthorizedAccessException)
@@ -429,11 +489,155 @@ namespace Onslaught___Career_Editor.Cli
             if (lease is not null)
                 registry.Forget(lease.Process);
 
+            string summary = rescued is null
+                ? $"Deleted safe copy: {deleted}"
+                : $"{rescued.Message} Deleted safe copy: {deleted}";
+
             return ctx.Ok(
                 command,
-                new { id = Path.GetFileName(Path.TrimEndingDirectorySeparator(deleted)), path = deleted, deleted = true },
-                $"Deleted safe copy: {deleted}");
+                new
+                {
+                    id = Path.GetFileName(Path.TrimEndingDirectorySeparator(deleted)),
+                    path = deleted,
+                    deleted = true,
+                    savesKept = rescued?.RescuedCount ?? 0,
+                    savesKeptIn = rescued is null ? null : rescued.DestinationDirectory,
+                    savesDiscarded = rescued is null ? inventory.Saves.Count : 0,
+                },
+                summary);
         }
+
+        // ========================================================== copy saves / rescue
+
+        /// <summary>
+        /// What one copy - or every copy - is holding, so nobody has to find out by deleting it.
+        /// </summary>
+        public static int CopySaves(CliContext ctx, string? id)
+        {
+            const string command = "copy.saves";
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                IReadOnlyList<SafeCopySaveInventory> all = SafeCopySaveRescueService.InventoryAll(SafeCopyRoot);
+                if (ctx.Json)
+                {
+                    return ctx.Ok(command, new
+                    {
+                        root = SafeCopyRoot,
+                        copies = all.Select(DescribeInventory).ToArray(),
+                    });
+                }
+
+                if (all.Count == 0)
+                    return ctx.Ok(command, new { root = SafeCopyRoot, copies = Array.Empty<object>() }, "No safe copies.");
+
+                foreach (SafeCopySaveInventory row in all)
+                {
+                    ctx.Line($"{row.DisplayName}: {(row.HasSaves ? $"{row.Saves.Count} career save(s)" : "no career saves")}");
+                    foreach (SafeCopySaveFile save in row.Saves)
+                        ctx.Line($"    {save.FileName,-40} {save.Length,10:N0} bytes  {save.LastWriteUtc:yyyy-MM-dd HH:mm} UTC");
+                }
+
+                return CliExit.Success;
+            }
+
+            if (!TryResolveProfileRoot(ctx, command, id, out string profileRoot, out int failure, requireManifest: false))
+                return failure;
+
+            SafeCopySaveInventory inventory;
+            try
+            {
+                inventory = SafeCopySaveRescueService.Inventory(profileRoot, SafeCopyRoot);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or DirectoryNotFoundException
+                                        or IOException or UnauthorizedAccessException)
+            {
+                return ctx.Usage(command, ex.Message);
+            }
+
+            if (ctx.Json)
+                return ctx.Ok(command, DescribeInventory(inventory));
+
+            if (!inventory.HasSaves)
+                return ctx.Ok(command, DescribeInventory(inventory), $"{inventory.DisplayName} has no career saves in it.");
+
+            ctx.Line($"Career saves in {inventory.DisplayName}:");
+            ctx.Line();
+            foreach (SafeCopySaveFile save in inventory.Saves)
+                ctx.Line($"{save.FileName,-40} {save.Length,10:N0} bytes  {save.LastWriteUtc:yyyy-MM-dd HH:mm} UTC");
+            ctx.Line();
+            ctx.Line($"Bring them out: copy rescue {inventory.DisplayName} --to <folder>");
+            return CliExit.Success;
+        }
+
+        /// <summary>
+        /// Copy career saves out of a copy. This never deletes anything - the copy is still
+        /// playable afterwards - so it is safe to run before deciding what to do with the copy.
+        /// </summary>
+        public static int CopyRescue(
+            CliContext ctx,
+            string? id,
+            string? destination,
+            IReadOnlyList<string>? saveNames,
+            bool overwrite)
+        {
+            const string command = "copy.rescue";
+            if (!TryResolveProfileRoot(ctx, command, id, out string profileRoot, out int failure, requireManifest: false))
+                return failure;
+
+            if (string.IsNullOrWhiteSpace(destination))
+                return ctx.Usage(command, "Say where the saves should go: --to <folder>.");
+
+            SafeCopySaveRescueResult result = SafeCopySaveRescueService.Rescue(
+                new SafeCopySaveRescueRequest
+                {
+                    ProfileRoot = profileRoot,
+                    DestinationDirectory = destination!,
+                    FileNames = saveNames is { Count: > 0 } ? saveNames : null,
+                    AllowOverwrite = overwrite,
+                },
+                SafeCopyRoot);
+
+            object payload = new
+            {
+                id = Path.GetFileName(Path.TrimEndingDirectorySeparator(profileRoot)),
+                destination = result.DestinationDirectory,
+                rescued = result.RescuedCount,
+                needsOverwriteConfirmation = result.NeedsOverwriteConfirmation,
+                files = result.Files.Select(file => new
+                {
+                    fileName = file.FileName,
+                    rescued = file.Rescued,
+                    outputPath = file.OutputPath,
+                    message = file.Message,
+                }).ToArray(),
+            };
+
+            if (!result.Success)
+            {
+                return result.NeedsOverwriteConfirmation
+                    ? ctx.Usage(command, result.Message, "Replace them on purpose: add --overwrite.")
+                    : ctx.Usage(command, result.Message);
+            }
+
+            return ctx.Ok(command, payload, $"{result.Message} They are in {result.DestinationDirectory}.");
+        }
+
+        private static object DescribeInventory(SafeCopySaveInventory inventory) => new
+        {
+            id = inventory.DisplayName,
+            path = inventory.ProfileRoot,
+            count = inventory.Saves.Count,
+            totalBytes = inventory.TotalBytes,
+            saves = inventory.Saves.Select(save => new
+            {
+                fileName = save.FileName,
+                fullPath = save.FullPath,
+                folder = save.RelativeDirectory,
+                length = save.Length,
+                lastWriteUtc = save.LastWriteUtc,
+            }).ToArray(),
+        };
 
         // ================================================================ process
 

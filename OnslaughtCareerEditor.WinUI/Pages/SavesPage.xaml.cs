@@ -50,6 +50,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             InitializeConfigurationSurface();
             LoadConfigurationDetectedFiles();
             SelectSavesTab(GetInitialSaveTabIndex(), persistSelection: false);
+            RefreshSaveRescueCopies();
             AppConfigChangedService.ConfigChanged += HandleConfigChanged;
         }
 
@@ -950,6 +951,199 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             SaveEditorInstallNoteTextBlock.Text = note;
             SaveEditorInstallNoteTextBlock.Visibility = Visibility.Visible;
+        }
+
+        // ------------------------------------------------ bring a career back out
+
+        private IReadOnlyList<SafeCopySaveInventory> _saveRescueCopies = Array.Empty<SafeCopySaveInventory>();
+        private bool _refreshingSaveRescue;
+
+        /// <summary>
+        /// The other half of "Put it in my safe copy". A career played inside a copy lives only in
+        /// that copy, and deleting the copy takes it - so there has to be a way out that does not
+        /// involve knowing where Roaming AppData is.
+        /// </summary>
+        private void RefreshSaveRescueCopies()
+        {
+            _refreshingSaveRescue = true;
+            try
+            {
+                string? previous = (SaveRescueCopyComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
+                _saveRescueCopies = SafeCopySaveRescueService.InventoryAll();
+                SaveRescueCopyComboBox.Items.Clear();
+
+                foreach (SafeCopySaveInventory copy in _saveRescueCopies)
+                {
+                    SaveRescueCopyComboBox.Items.Add(new ComboBoxItem
+                    {
+                        Content = copy.DisplayName,
+                        Tag = copy.ProfileRoot,
+                    });
+                }
+
+                SaveRescueCopyComboBox.IsEnabled = SaveRescueCopyComboBox.Items.Count > 0;
+                if (SaveRescueCopyComboBox.Items.Count > 0)
+                {
+                    int restored = -1;
+                    for (int index = 0; index < SaveRescueCopyComboBox.Items.Count && previous is not null; index++)
+                    {
+                        if (SaveRescueCopyComboBox.Items[index] is ComboBoxItem { Tag: string tag } &&
+                            string.Equals(tag, previous, StringComparison.OrdinalIgnoreCase))
+                        {
+                            restored = index;
+                            break;
+                        }
+                    }
+
+                    SaveRescueCopyComboBox.SelectedIndex = restored >= 0 ? restored : 0;
+                }
+            }
+            finally
+            {
+                _refreshingSaveRescue = false;
+            }
+
+            RefreshSaveRescueSaves();
+        }
+
+        private void RefreshSaveRescueSaves()
+        {
+            SafeCopySaveInventory? copy = GetSelectedSaveRescueCopy();
+
+            _refreshingSaveRescue = true;
+            try
+            {
+                SaveRescueSaveComboBox.Items.Clear();
+                foreach (SafeCopySaveFile save in copy?.Saves ?? Array.Empty<SafeCopySaveFile>())
+                {
+                    SaveRescueSaveComboBox.Items.Add(new ComboBoxItem
+                    {
+                        Content = SaveRescuePageText.DescribeSave(save),
+                        Tag = save.FileName,
+                    });
+                }
+
+                SaveRescueSaveComboBox.IsEnabled = SaveRescueSaveComboBox.Items.Count > 0;
+                if (SaveRescueSaveComboBox.Items.Count > 0)
+                    SaveRescueSaveComboBox.SelectedIndex = 0;
+            }
+            finally
+            {
+                _refreshingSaveRescue = false;
+            }
+
+            UpdateSaveRescueState();
+        }
+
+        private void UpdateSaveRescueState()
+        {
+            SafeCopySaveInventory? copy = GetSelectedSaveRescueCopy();
+            SafeCopySaveFile? save = GetSelectedSaveRescueSave();
+            SaveRescueSelectionTextBlock.Text = SaveRescuePageText.BuildSelectionSummary(copy, save);
+            SaveRescueButton.IsEnabled = copy is not null && save is not null;
+        }
+
+        private SafeCopySaveInventory? GetSelectedSaveRescueCopy()
+        {
+            if ((SaveRescueCopyComboBox.SelectedItem as ComboBoxItem)?.Tag is not string root)
+                return null;
+
+            return _saveRescueCopies.FirstOrDefault(copy =>
+                string.Equals(copy.ProfileRoot, root, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private SafeCopySaveFile? GetSelectedSaveRescueSave()
+        {
+            if ((SaveRescueSaveComboBox.SelectedItem as ComboBoxItem)?.Tag is not string fileName)
+                return null;
+
+            return GetSelectedSaveRescueCopy()?.Saves.FirstOrDefault(save =>
+                string.Equals(save.FileName, fileName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void SaveRescueCopyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_refreshingSaveRescue)
+                return;
+
+            RefreshSaveRescueSaves();
+        }
+
+        private void SaveRescueSaveComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_refreshingSaveRescue)
+                return;
+
+            UpdateSaveRescueState();
+        }
+
+        private void SaveRescueRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshSaveRescueCopies();
+            ShowSaveRescueNote(_saveRescueCopies.Count == 0
+                ? SaveRescuePageText.NoCopiesNote
+                : SaveRescuePageText.BuildSelectionSummary(GetSelectedSaveRescueCopy(), GetSelectedSaveRescueSave()));
+        }
+
+        private async void SaveRescueButton_Click(object sender, RoutedEventArgs e)
+        {
+            SafeCopySaveInventory? copy = GetSelectedSaveRescueCopy();
+            SafeCopySaveFile? save = GetSelectedSaveRescueSave();
+            if (copy is null || save is null || App.MainWindowInstance is null)
+                return;
+
+            string? folder = await PickerInterop.PickFolderAsync(App.MainWindowInstance);
+            if (string.IsNullOrWhiteSpace(folder))
+                return;
+
+            SafeCopySaveRescueResult result = RunSaveRescue(copy, save, folder!, allowOverwrite: false);
+
+            if (result.NeedsOverwriteConfirmation)
+            {
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = XamlRoot,
+                    Title = "Replace the career that is already there?",
+                    Content = $"{save.FileName} already exists in that folder. Replacing it cannot be undone.",
+                    PrimaryButtonText = "Replace it",
+                    CloseButtonText = "Keep it",
+                    DefaultButton = ContentDialogButton.Close,
+                };
+
+                if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                {
+                    ShowSaveRescueNote("Left the file that was already there alone.");
+                    return;
+                }
+
+                result = RunSaveRescue(copy, save, folder!, allowOverwrite: true);
+            }
+
+            ShowSaveRescueNote(SaveRescuePageText.BuildOutcomeNote(result));
+            AppStatusService.SetStatus(result.Success
+                ? "Save Lab: brought a career out of a safe copy"
+                : "Save Lab: could not bring that career out");
+        }
+
+        private static SafeCopySaveRescueResult RunSaveRescue(
+            SafeCopySaveInventory copy,
+            SafeCopySaveFile save,
+            string destination,
+            bool allowOverwrite)
+        {
+            return SafeCopySaveRescueService.Rescue(new SafeCopySaveRescueRequest
+            {
+                ProfileRoot = copy.ProfileRoot,
+                DestinationDirectory = destination,
+                FileNames = new[] { save.FileName },
+                AllowOverwrite = allowOverwrite,
+            });
+        }
+
+        private void ShowSaveRescueNote(string note)
+        {
+            SaveRescueNoteTextBlock.Text = note;
+            SaveRescueNoteTextBlock.Visibility = Visibility.Visible;
         }
 
         private void SaveEditorShowWrittenSaveButton_Click(object sender, RoutedEventArgs e)

@@ -429,16 +429,50 @@ namespace Onslaught___Career_Editor
                 factory(json(c)), c.ParseResult.GetValueForArgument(stopIdArg)));
             copy.AddCommand(stop);
 
+            var savesIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path. Omit to sweep every copy.");
+            var saves = new Command(
+                "saves",
+                "List the career saves inside a safe copy - what a delete would take with it.")
+            { savesIdArg };
+            saves.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopySaves(
+                factory(json(c)), c.ParseResult.GetValueForArgument(savesIdArg)));
+            copy.AddCommand(saves);
+
+            var rescueIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path.");
+            var rescueToOption = new Option<string?>("--to", "Folder to keep the saves in. Must be outside the copy.");
+            var rescueNameOption = new Option<string[]>("--save", "Save to bring out, repeatable. Default: all of them.")
+            { AllowMultipleArgumentsPerToken = true };
+            var rescueOverwriteOption = new Option<bool>("--overwrite", "Replace saves of the same name already in the destination.");
+            var rescue = new Command(
+                "rescue",
+                "Copy career saves out of a safe copy into an ordinary folder. The copy is left untouched.")
+            { rescueIdArg, rescueToOption, rescueNameOption, rescueOverwriteOption };
+            rescue.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyRescue(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(rescueIdArg),
+                c.ParseResult.GetValueForOption(rescueToOption),
+                c.ParseResult.GetValueForOption(rescueNameOption),
+                c.ParseResult.GetValueForOption(rescueOverwriteOption)));
+            copy.AddCommand(rescue);
+
             var deleteIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path.");
             var forceOption = new Option<bool>("--force", "Confirm the irreversible delete.");
+            var keepSavesOption = new Option<string?>(
+                "--keep-saves-in",
+                "Copy the career saves into this folder first, and delete only once every one of them is verified there.");
+            var discardSavesOption = new Option<bool>(
+                "--discard-saves",
+                "Delete the career saves along with the copy. Only after you have looked at 'copy saves'.");
             var delete = new Command(
                 "delete",
-                "Delete an app-owned safe copy. Refuses anything outside the app-owned root, anything without a generated manifest, and anything still running.")
-            { deleteIdArg, forceOption };
+                "Delete an app-owned safe copy. Refuses anything outside the app-owned root, anything without a generated manifest, anything still running, and anything holding career saves you have not dealt with.")
+            { deleteIdArg, forceOption, keepSavesOption, discardSavesOption };
             delete.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyDelete(
                 factory(json(c)),
                 c.ParseResult.GetValueForArgument(deleteIdArg),
-                c.ParseResult.GetValueForOption(forceOption)));
+                c.ParseResult.GetValueForOption(forceOption),
+                c.ParseResult.GetValueForOption(keepSavesOption),
+                c.ParseResult.GetValueForOption(discardSavesOption)));
             copy.AddCommand(delete);
 
             return copy;

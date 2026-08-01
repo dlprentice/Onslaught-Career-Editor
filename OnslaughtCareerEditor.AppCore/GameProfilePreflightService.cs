@@ -2067,9 +2067,36 @@ namespace Onslaught___Career_Editor
         ///
         /// It is the caller's job to ensure nothing is still running out of the folder; this routine does
         /// not inspect processes.
+        ///
+        /// Career saves are the one exception to "the caller's job". Everything else in a copy came
+        /// from the installed game and can be copied again; a career the player built inside the copy
+        /// cannot. So this overload refuses while any save is still in there - see
+        /// <see cref="SafeCopySaveRescueService.RescueThenDelete"/> for the route that takes them out
+        /// first, and the three-argument overload for a caller that has actually asked a person.
         /// </summary>
         /// <returns>The normalized path that was deleted.</returns>
         public static string DeleteGeneratedProfile(string profileRoot, string appOwnedProfilesRoot)
+        {
+            return DeleteGeneratedProfile(
+                profileRoot,
+                appOwnedProfilesRoot,
+                SafeCopySaveDisposition.RefuseWhileSavesArePresent);
+        }
+
+        /// <summary>
+        /// Delete one app-generated playable copied game folder, saying what should happen to the
+        /// career saves inside it.
+        ///
+        /// <see cref="SafeCopySaveDisposition.DiscardSaves"/> is not a convenience. It is the caller
+        /// stating that the saves have already been copied somewhere else, or that a person has been
+        /// shown what they are about to lose and said yes. Passing it to skip a prompt is how this
+        /// guard stops meaning anything.
+        /// </summary>
+        /// <inheritdoc cref="DeleteGeneratedProfile(string, string)" path="/returns"/>
+        public static string DeleteGeneratedProfile(
+            string profileRoot,
+            string appOwnedProfilesRoot,
+            SafeCopySaveDisposition saveDisposition)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
                 throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
@@ -2101,6 +2128,20 @@ namespace Onslaught___Career_Editor
             }
 
             RejectReparsePoint(manifestPath, "playable copied game folder manifest");
+
+            if (saveDisposition != SafeCopySaveDisposition.DiscardSaves)
+            {
+                SafeCopySaveInventory inventory = SafeCopySaveRescueService.Inventory(
+                    normalizedProfile,
+                    normalizedRoot);
+                string? atRisk = SafeCopySaveRescueService.DescribeSavesAtRisk(inventory);
+                if (atRisk is not null)
+                {
+                    throw new InvalidOperationException(
+                        $"{atRisk} Keep them somewhere else first, or say explicitly that they can go.");
+                }
+            }
+
             Directory.Delete(normalizedProfile, recursive: true);
             return normalizedProfile;
         }
