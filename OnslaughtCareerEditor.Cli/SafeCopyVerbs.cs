@@ -99,12 +99,16 @@ namespace Onslaught___Career_Editor.Cli
                                GameProfileRuntimeService.IsManagedProcessLive(runningLease.Process);
 
                 ManifestSummary manifest = ReadManifestSummary(manifestPath);
+                long sizeBytes = SafeCopyCatalogService.MeasureDirectoryBytes(directory);
+                int careerSaveCount = CountCareerSaves(directory, root);
                 rows.Add(new
                 {
                     id,
                     path = directory,
                     managed,
                     running,
+                    sizeBytes,
+                    careerSaveCount,
                     processId = running ? runningLease!.Process.ProcessId : (int?)null,
                     startedAt = running ? runningLease!.Process.StartedAt : (DateTimeOffset?)null,
                     schemaVersion = manifest.SchemaVersion,
@@ -128,8 +132,9 @@ namespace Onslaught___Career_Editor.Cli
                 return CliExit.Success;
             }
 
-            ctx.Line($"{"Id",-44} {"Managed",-8} {"Running",-8} {"Preset",-24}");
-            ctx.Line(new string('-', 90));
+            ctx.Line($"{"Id",-36} {"Size",-9} {"Careers",-8} {"Managed",-8} {"Running",-8} {"Preset",-20}");
+            ctx.Line(new string('-', 94));
+            long totalBytes = 0;
             foreach (string directory in directories)
             {
                 string id = Path.GetFileName(directory);
@@ -142,12 +147,37 @@ namespace Onslaught___Career_Editor.Cli
                         StringComparison.OrdinalIgnoreCase));
                 bool running = lease is not null && GameProfileRuntimeService.IsManagedProcessLive(lease.Process);
                 ManifestSummary manifest = ReadManifestSummary(manifestPath);
-                ctx.Line($"{Truncate(id, 44),-44} {(managed ? "yes" : "NO"),-8} {(running ? "yes" : "no"),-8} {Truncate(manifest.PresetId ?? "(custom)", 24),-24}");
+                long sizeBytes = SafeCopyCatalogService.MeasureDirectoryBytes(directory);
+                totalBytes += sizeBytes;
+                ctx.Line(
+                    $"{Truncate(id, 36),-36} {SafeCopyCatalogService.DescribeSize(sizeBytes),-9} " +
+                    $"{CountCareerSaves(directory, root),-8} {(managed ? "yes" : "NO"),-8} {(running ? "yes" : "no"),-8} " +
+                    $"{Truncate(manifest.PresetId ?? "(custom)", 20),-20}");
             }
 
             ctx.Line();
-            ctx.Line($"{rows.Count} folder(s). 'Managed: NO' means no generated manifest; those cannot be launched or deleted.");
+            ctx.Line($"{rows.Count} folder(s), {SafeCopyCatalogService.DescribeSize(totalBytes)} total. 'Managed: NO' means no generated manifest; those cannot be launched or deleted.");
+            ctx.Line("Careers is what a delete would take with it. See them: copy saves <id>");
             return CliExit.Success;
+        }
+
+        /// <summary>
+        /// How many careers a delete would take with it, or 0 for a folder this app cannot vouch
+        /// for. Reported beside the size because those are the two numbers that decide whether a
+        /// copy is disposable.
+        /// </summary>
+        private static int CountCareerSaves(string profileRoot, string appOwnedProfilesRoot)
+        {
+            try
+            {
+                return SafeCopySaveRescueService.Inventory(profileRoot, appOwnedProfilesRoot).Saves.Count;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or IOException
+                                        or UnauthorizedAccessException or ArgumentException
+                                        or DirectoryNotFoundException)
+            {
+                return 0;
+            }
         }
 
         public static int CopyCreate(

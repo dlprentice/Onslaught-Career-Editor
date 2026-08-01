@@ -38,6 +38,8 @@
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorJourneyStateMachine.cs" Link="WinUI\Helpers\SaveEditorJourneyStateMachine.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorPlanFingerprint.cs" Link="WinUI\Helpers\SaveEditorPlanFingerprint.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveRescuePageText.cs" Link="WinUI\Helpers\SaveRescuePageText.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SafeCopyManagerText.cs" Link="WinUI\Helpers\SafeCopyManagerText.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SafeCopyManagerItem.cs" Link="WinUI\Models\SafeCopyManagerItem.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SaveEditorFirstSaveJourneyState.cs" Link="WinUI\Models\SaveEditorFirstSaveJourneyState.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SaveEditorJourneyState.cs" Link="WinUI\Models\SaveEditorJourneyState.cs" />
   </ItemGroup>

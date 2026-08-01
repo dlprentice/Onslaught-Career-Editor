@@ -539,6 +539,80 @@
                         </StackPanel>
                     </Border>
 
+                    <Border AutomationProperties.AutomationId="SafeCopyManagerCard"
+                            Background="{ThemeResource ShellMutedSurfaceBrush}"
+                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="16"
+                            Margin="0,12,0,0">
+                        <StackPanel Spacing="10">
+                            <TextBlock AutomationProperties.AutomationId="SafeCopyManagerTitle"
+                                       AutomationProperties.HeadingLevel="Level2"
+                                       Text="Your safe copies"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <TextBlock AutomationProperties.AutomationId="SafeCopyManagerIntro"
+                                       Text="Each copy is most of a game install. They stay on disk until you remove them, so this is where you can see what they cost and clear out the ones you are done with."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Name="SafeCopyManagerTotal"
+                                       AutomationProperties.AutomationId="SafeCopyManagerTotal"
+                                       AutomationProperties.Name="Safe copies on disk"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <ItemsControl x:Name="SafeCopyManagerList"
+                                          AutomationProperties.AutomationId="SafeCopyManagerList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SafeCopyManagerItem">
+                                        <Border AutomationProperties.AutomationId="{Binding SafeCopyRowAutomationId}"
+                                                BorderBrush="{ThemeResource ShellBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="12,10"
+                                                Margin="0,0,0,8">
+                                            <StackPanel Spacing="6">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           FontWeight="SemiBold"
+                                                           TextWrapping="WrapWholeWords" />
+                                                <TextBlock Text="{Binding SizeText}"
+                                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                                <TextBlock Text="{Binding DetailText}"
+                                                           Style="{StaticResource SectionBodyTextStyle}"
+                                                           TextWrapping="WrapWholeWords" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Button AutomationProperties.AutomationId="{Binding LaunchAutomationId}"
+                                                            AutomationProperties.Name="{Binding LaunchAccessibleName}"
+                                                            Content="Launch"
+                                                            IsEnabled="{Binding CanLaunch}"
+                                                            Click="SafeCopyManagerLaunchButton_Click" />
+                                                    <Button AutomationProperties.AutomationId="{Binding OpenFolderAutomationId}"
+                                                            AutomationProperties.Name="{Binding OpenFolderAccessibleName}"
+                                                            Content="Open folder"
+                                                            Click="SafeCopyManagerOpenFolderButton_Click" />
+                                                    <Button AutomationProperties.AutomationId="{Binding DeleteAutomationId}"
+                                                            AutomationProperties.Name="{Binding DeleteAccessibleName}"
+                                                            Content="Delete"
+                                                            Click="SafeCopyManagerDeleteButton_Click" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button x:Name="SafeCopyManagerRefreshButton"
+                                    AutomationProperties.AutomationId="SafeCopyManagerRefreshButton"
+                                    Content="Look again"
+                                    HorizontalAlignment="Left"
+                                    Click="SafeCopyManagerRefreshButton_Click" />
+                            <TextBlock x:Name="SafeCopyManagerNote"
+                                       AutomationProperties.AutomationId="SafeCopyManagerNote"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Visibility="Collapsed"
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </Border>
+
                 </StackPanel>
 
                 <Expander x:Name="PatchBenchLabExpander"

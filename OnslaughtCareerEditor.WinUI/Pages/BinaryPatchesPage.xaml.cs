@@ -160,12 +160,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             Unloaded += BinaryPatchesPage_Unloaded;
         }
 
-        private void BinaryPatchesPage_Loaded(object sender, RoutedEventArgs e)
+        private async void BinaryPatchesPage_Loaded(object sender, RoutedEventArgs e)
         {
             // Coming back to the page is the other moment a stale record shows up: the
             // copied game may have ended while the user was somewhere else in the app.
             RefreshCopiedGameLiveness();
             _copiedGameLivenessTimer.Start();
+
+            // The set of copies can change from the CLI, from Explorer, or from another
+            // window, so it is read on arrival rather than only after this page makes one.
+            await RefreshSafeCopyManagerAsync();
         }
 
         private void BinaryPatchesPage_Unloaded(object sender, RoutedEventArgs e)
@@ -1458,9 +1462,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ApplyLevel100TutorialTextMod: applyLevel100TextMod,
                     ApplyLevel100EarlyFlightMod: applyLevel100EarlyFlightMod);
 
+                // Reading free space is not a gate and deliberately does not short-circuit the
+                // confirmation: it goes into the dialog so the answer stays one decision. A drive
+                // that will not report its free space says nothing here rather than blocking.
+                string? spaceProblem = SafeCopyManagerText.DescribeSpaceProblem(
+                    SafeCopyCatalogService.GetFreeSpaceBytesForNewCopy(),
+                    SafeCopyCatalogService.MeasureDirectoryBytes(sourceGameRoot));
+                string spaceSection = spaceProblem is null ? string.Empty : $"\n\n{spaceProblem}";
+
                 if (!await ConfirmAsync(
                         "Create safe copy?",
-                        $"The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged."))
+                        $"The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged.{spaceSection}"))
                 {
                     PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
                     OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
@@ -1536,6 +1548,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildPreparedOperationLog(outcomeText);
 
                 AppStatusService.SetStatus("Windowed & Mods: safe copy ready");
+                await RefreshSafeCopyManagerAsync();
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
@@ -2645,6 +2658,217 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
 
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        }
+
+        // ------------------------------------------------------- your safe copies
+
+        private IReadOnlyList<SafeCopyOverview> _safeCopyManagerRows = Array.Empty<SafeCopyOverview>();
+
+        /// <summary>
+        /// Rebuild the list of copies on disk.
+        ///
+        /// Measuring a copy walks a whole game folder, so this runs off the UI thread. It is called
+        /// on arrival and after anything that could have changed the set - never from
+        /// <c>UpdateControlState</c>, which runs on every checkbox.
+        /// </summary>
+        private async System.Threading.Tasks.Task RefreshSafeCopyManagerAsync()
+        {
+            IReadOnlyList<SafeCopyOverview> copies;
+            try
+            {
+                copies = await Task.Run(() => SafeCopyCatalogService.List());
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                copies = Array.Empty<SafeCopyOverview>();
+            }
+
+            _safeCopyManagerRows = copies;
+            SafeCopyManagerList.ItemsSource = copies.Select(copy => new Models.SafeCopyManagerItem(copy)).ToArray();
+
+            string total = SafeCopyManagerText.BuildTotalLine(copies);
+            SafeCopyManagerTotal.Text = total;
+            AutomationProperties.SetName(SafeCopyManagerTotal, total);
+        }
+
+        private void ShowSafeCopyManagerNote(string note)
+        {
+            SafeCopyManagerNote.Text = note;
+            SafeCopyManagerNote.Visibility = Visibility.Visible;
+        }
+
+        private async void SafeCopyManagerRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            await RefreshSafeCopyManagerAsync();
+        }
+
+        private static Models.SafeCopyManagerItem? GetRowFor(object sender)
+        {
+            return (sender as FrameworkElement)?.DataContext as Models.SafeCopyManagerItem;
+        }
+
+        private void SafeCopyManagerOpenFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            Models.SafeCopyManagerItem? row = GetRowFor(sender);
+            if (row is null)
+                return;
+
+            // Reveal the executable rather than the folder: Explorer's /select opens the parent with
+            // the item highlighted, which lands somebody inside the copy rather than beside it.
+            ExplorerRevealService.TryReveal(Path.Combine(row.ProfileRoot, "BEA.exe"));
+        }
+
+        private void SafeCopyManagerLaunchButton_Click(object sender, RoutedEventArgs e)
+        {
+            Models.SafeCopyManagerItem? row = GetRowFor(sender);
+            if (row is null)
+                return;
+
+            try
+            {
+                GameProfileManagedProcess process = GameProfileRuntimeService.LaunchCopiedProfile(
+                    new GameProfileLaunchOptions(
+                        ProfileRoot: row.ProfileRoot,
+                        AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
+                        LaunchArguments: BuildSelectedLaunchArguments()));
+
+                App.SafeGameCopyProcesses.Register(process, GetCopiedProfileWorkspaceRoot());
+                _managedCopiedProfileProcess = process;
+                _lastCopiedProfileRoot = row.ProfileRoot;
+                ShowSafeCopyManagerNote($"{row.DisplayName} is starting.");
+                AppStatusService.SetStatus("Windowed & Mods: launched a safe copy");
+                UpdateControlState();
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                ShowSafeCopyManagerNote($"Could not launch {row.DisplayName}: {ex.Message}");
+                AppStatusService.SetStatus("Windowed & Mods: could not launch that copy");
+            }
+        }
+
+        /// <summary>
+        /// Delete one copy, and never take a career with it without asking.
+        ///
+        /// When careers are inside, this is deliberately not a yes/no question. Keeping them is the
+        /// first and default answer, losing them is the second, and cancelling is the escape - a
+        /// single "are you sure" with careers on the line would be a trap wearing a confirmation's
+        /// clothes.
+        /// </summary>
+        private async void SafeCopyManagerDeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Models.SafeCopyManagerItem? row = GetRowFor(sender);
+            if (row is null || App.MainWindowInstance is null)
+                return;
+
+            SafeCopyOverview? overview = _safeCopyManagerRows.FirstOrDefault(copy =>
+                string.Equals(copy.ProfileRoot, row.ProfileRoot, StringComparison.OrdinalIgnoreCase));
+            if (overview is null)
+                return;
+
+            string profilesRoot = GetCopiedProfileWorkspaceRoot();
+            SafeCopySaveInventory inventory;
+            try
+            {
+                inventory = SafeCopySaveRescueService.Inventory(row.ProfileRoot, profilesRoot);
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                ShowSafeCopyManagerNote(ex.Message);
+                return;
+            }
+
+            if (!inventory.HasSaves)
+            {
+                if (!await ConfirmAsync(
+                        SafeCopyManagerText.DeleteDialogTitle,
+                        SafeCopyManagerText.BuildDeleteBody(row.DisplayName, row.SizeText),
+                        SafeCopyManagerText.DeleteEverythingButtonText,
+                        SafeCopyManagerText.CancelButtonText))
+                {
+                    return;
+                }
+
+                await DeleteSafeCopyAsync(row, profilesRoot, keepCareersIn: null);
+                return;
+            }
+
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = SafeCopyManagerText.DeleteDialogTitle,
+                Content = new TextBlock
+                {
+                    Text = SafeCopyManagerText.BuildDeleteWithCareersBody(inventory, row.SizeText),
+                    TextWrapping = TextWrapping.WrapWholeWords,
+                },
+                PrimaryButtonText = SafeCopyManagerText.KeepCareersButtonText,
+                SecondaryButtonText = SafeCopyManagerText.DeleteEverythingButtonText,
+                CloseButtonText = SafeCopyManagerText.CancelButtonText,
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            ContentDialogResult answer = await dialog.ShowAsync();
+            if (answer == ContentDialogResult.None)
+                return;
+
+            string? keepIn = null;
+            if (answer == ContentDialogResult.Primary)
+            {
+                keepIn = await PickerInterop.PickFolderAsync(App.MainWindowInstance);
+                if (string.IsNullOrWhiteSpace(keepIn))
+                {
+                    ShowSafeCopyManagerNote("Left the copy alone - no folder was chosen for the careers.");
+                    return;
+                }
+            }
+
+            await DeleteSafeCopyAsync(row, profilesRoot, keepIn);
+        }
+
+        private async System.Threading.Tasks.Task DeleteSafeCopyAsync(
+            Models.SafeCopyManagerItem row,
+            string profilesRoot,
+            string? keepCareersIn)
+        {
+            try
+            {
+                if (keepCareersIn is not null)
+                {
+                    SafeCopyRemovalResult removal = await Task.Run(() =>
+                        SafeCopySaveRescueService.RescueThenDelete(row.ProfileRoot, profilesRoot, keepCareersIn));
+
+                    ShowSafeCopyManagerNote(removal.Success
+                        ? $"{removal.Message} Freed {row.SizeText}."
+                        : removal.Message);
+                    AppStatusService.SetStatus(removal.Success
+                        ? "Windowed & Mods: kept the careers and deleted the copy"
+                        : "Windowed & Mods: the copy was not deleted");
+                }
+                else
+                {
+                    await Task.Run(() => GameProfilePreflightService.DeleteGeneratedProfile(
+                        row.ProfileRoot,
+                        profilesRoot,
+                        SafeCopySaveDisposition.DiscardSaves));
+
+                    ShowSafeCopyManagerNote(SafeCopyManagerText.BuildDeletedNote(row.DisplayName, row.SizeText));
+                    AppStatusService.SetStatus("Windowed & Mods: deleted a safe copy");
+                }
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                ShowSafeCopyManagerNote($"Could not delete {row.DisplayName}: {ex.Message}");
+                AppStatusService.SetStatus("Windowed & Mods: the copy was not deleted");
+            }
+
+            if (string.Equals(_lastCopiedProfileRoot, row.ProfileRoot, StringComparison.OrdinalIgnoreCase) &&
+                !Directory.Exists(row.ProfileRoot))
+            {
+                _lastCopiedProfileRoot = null;
+            }
+
+            await RefreshSafeCopyManagerAsync();
+            UpdateControlState();
         }
 
         // ------------------------------------------ patching the game you installed
