@@ -697,6 +697,18 @@ namespace Onslaught___Career_Editor
                 c.ParseResult.GetValueForOption(holdFor)));
             trainer.AddCommand(hold);
 
+            var musicTrack = new Option<string?>("--track", () => "ascent", "Which tune: ascent or drift.");
+            var musicOut = new Option<string?>("--out", "Write the WAV here. Without it, just reports what the tune is.");
+            var music = new Command(
+                "music",
+                "Render the trainer's music. It is generated rather than shipped, and is original to this project.")
+            { musicTrack, musicOut };
+            music.SetHandler((InvocationContext c) => c.ExitCode = TrainerVerbs.TrainerMusic(
+                factory(json(c)),
+                c.ParseResult.GetValueForOption(musicTrack),
+                c.ParseResult.GetValueForOption(musicOut)));
+            trainer.AddCommand(music);
+
             return trainer;
         }
 

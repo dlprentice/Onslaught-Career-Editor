@@ -55,11 +55,18 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshSafeCopyTargets();
             RefreshComposition();
             ApplyLiveTrainerCopy();
+            InitializeTrainerMusic();
             RefreshLiveTrainerControls();
 
             // Leaving the page must end the attachment. A handle on another process's memory that
             // outlives the screen offering it is exactly the thing this feature must not become.
-            Unloaded += (_, _) => DetachLiveTrainer("You left the page, so the app stopped watching.");
+            // The music goes with it, and its device handle is released rather than left open.
+            Unloaded += (_, _) =>
+            {
+                DetachLiveTrainer("You left the page, so the app stopped watching.");
+                _trainerMusic?.Dispose();
+                _trainerMusic = null;
+            };
 
             AppStatusService.SetStatus("Cheats: page ready");
         }
@@ -503,11 +510,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 LiveTrainerHoldLifeToggle.IsOn = false;
                 LiveTrainerHoldEnergyToggle.IsOn = false;
                 LiveTrainerHoldShieldsToggle.IsOn = false;
+
+                // The music belongs to the attachment, not to the page. Leaving it playing after
+                // the game has gone would be the app performing enthusiasm at nothing.
+                TrainerMusicToggle.IsOn = false;
             }
             finally
             {
                 _suppressHoldToggleEvents = false;
             }
+
+            _trainerMusic?.Stop();
 
             if (!string.IsNullOrWhiteSpace(message))
             {
@@ -668,6 +681,89 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 outcome.Success ? "Set" : "Nothing written",
                 outcome.Message);
             LiveTrainerTick();
+        }
+
+        // ------------------------------------------------------------ trainer music
+
+        private TrainerMusicPlayer? _trainerMusic;
+
+        /// <summary>
+        /// Fills the tune picker once. The names come from AppCore so the CLI and the page cannot
+        /// end up calling the same track different things.
+        /// </summary>
+        private void InitializeTrainerMusic()
+        {
+            foreach (TrainerMusicTrack track in Enum.GetValues<TrainerMusicTrack>())
+            {
+                TrainerMusicTrackComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = TrainerMusicSynth.GetDisplayName(track),
+                    Tag = track,
+                });
+            }
+
+            TrainerMusicTrackComboBox.SelectedIndex = 0;
+        }
+
+        private TrainerMusicTrack GetSelectedTrainerMusicTrack()
+        {
+            return (TrainerMusicTrackComboBox.SelectedItem as ComboBoxItem)?.Tag is TrainerMusicTrack track
+                ? track
+                : TrainerMusicTrack.Ascent;
+        }
+
+        private void ShowTrainerMusicStatus(string? note)
+        {
+            if (string.IsNullOrWhiteSpace(note))
+            {
+                TrainerMusicStatusTextBlock.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            TrainerMusicStatusTextBlock.Text = note;
+            TrainerMusicStatusTextBlock.Visibility = Visibility.Visible;
+        }
+
+        private void TrainerMusicToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_suppressHoldToggleEvents)
+                return;
+
+            if (!TrainerMusicToggle.IsOn)
+            {
+                _trainerMusic?.Stop();
+                ShowTrainerMusicStatus(null);
+                return;
+            }
+
+            _trainerMusic ??= new TrainerMusicPlayer();
+            _trainerMusic.Volume = (float)(TrainerMusicVolumeSlider.Value / 100.0);
+
+            if (!_trainerMusic.Play(GetSelectedTrainerMusicTrack()))
+            {
+                // No output device, or one that will not take this format. Not worth an error
+                // dialog over a tune - say it and put the switch back.
+                TrainerMusicToggle.IsOn = false;
+                ShowTrainerMusicStatus("Could not open an audio device, so there is no music. Everything else still works.");
+            }
+        }
+
+        private void TrainerMusicTrackComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_trainerMusic is null || !_trainerMusic.IsPlaying)
+                return;
+
+            _trainerMusic.Play(GetSelectedTrainerMusicTrack());
+        }
+
+        private void TrainerMusicVolumeSlider_ValueChanged(
+            object sender,
+            Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (_trainerMusic is not null)
+            {
+                _trainerMusic.Volume = (float)(e.NewValue / 100.0);
+            }
         }
 
         private void LiveTrainerHoldLifeToggle_Toggled(object sender, RoutedEventArgs e) =>

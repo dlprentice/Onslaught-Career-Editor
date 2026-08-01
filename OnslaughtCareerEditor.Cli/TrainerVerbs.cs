@@ -359,6 +359,76 @@ namespace Onslaught___Career_Editor.Cli
                 : ctx.Ok(command, payload);
         }
 
+        /// <summary>
+        /// Render the trainer's music to a file.
+        ///
+        /// The tune is generated, not shipped, so there is no file to go and listen to - which
+        /// makes it exactly the sort of thing that rots unheard. This writes it out so it can be
+        /// played, diffed, or checked by something that is not a person with speakers.
+        /// </summary>
+        public static int TrainerMusic(CliContext ctx, string? track, string? outputPath)
+        {
+            const string command = "trainer.music";
+
+            TrainerMusicTrack selected = TrainerMusicTrack.Ascent;
+            if (!string.IsNullOrWhiteSpace(track) &&
+                !Enum.TryParse(track, ignoreCase: true, out selected))
+            {
+                return ctx.Usage(
+                    command,
+                    $"Unknown track '{track}'.",
+                    "Tracks: " + string.Join(", ", Enum.GetNames<TrainerMusicTrack>()).ToLowerInvariant());
+            }
+
+            byte[] wav = TrainerMusicSynth.Render(selected);
+            TimeSpan duration = TrainerMusicSynth.GetDuration(selected);
+
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                return ctx.Ok(
+                    command,
+                    DescribeMusic(selected, wav, duration, writtenTo: null),
+                    $"{TrainerMusicSynth.GetDisplayName(selected)}: {duration.TotalSeconds:0.#}s, " +
+                        $"{wav.Length / 1024.0:0} KB. Pass --out to write it somewhere.");
+            }
+
+            string resolved;
+            try
+            {
+                resolved = Path.GetFullPath(outputPath.Trim());
+                string? directory = Path.GetDirectoryName(resolved);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+
+                File.WriteAllBytes(resolved, wav);
+            }
+            catch (Exception ex) when (SaveVerbs.IsFileAccessFailure(ex))
+            {
+                return ctx.Usage(command, $"Could not write that file: {ex.Message}");
+            }
+
+            return ctx.Ok(
+                command,
+                DescribeMusic(selected, wav, duration, resolved),
+                $"Wrote {TrainerMusicSynth.GetDisplayName(selected)} to {resolved} ({duration.TotalSeconds:0.#}s).");
+        }
+
+        private static object DescribeMusic(
+            TrainerMusicTrack track,
+            byte[] wav,
+            TimeSpan duration,
+            string? writtenTo) => new
+            {
+                track = track.ToString().ToLowerInvariant(),
+                displayName = TrainerMusicSynth.GetDisplayName(track),
+                seconds = Math.Round(duration.TotalSeconds, 2),
+                bytes = wav.Length,
+                sampleRate = TrainerMusicSynth.SampleRate,
+                channels = 1,
+                writtenTo,
+                originalToThisProject = true,
+            };
+
         // ================================================================ helpers
 
         private static object BuildReadPayload(GameProfileManagedProcess target, LiveTrainerReadResult reading) => new

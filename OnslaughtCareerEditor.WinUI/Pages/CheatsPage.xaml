@@ -449,6 +449,49 @@
                                AutomationProperties.AutomationId="LiveTrainerWritingBlocked"
                                Style="{StaticResource SectionBodyTextStyle}" />
 
+                    <Border AutomationProperties.AutomationId="TrainerMusicRow"
+                            Background="{ThemeResource ShellMutedSurfaceBrush}"
+                            BorderBrush="{ThemeResource ShellBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,10">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <ToggleSwitch x:Name="TrainerMusicToggle"
+                                              AutomationProperties.AutomationId="TrainerMusicToggle"
+                                              AutomationProperties.Name="Trainer music"
+                                              Header="Trainer music"
+                                              Toggled="TrainerMusicToggle_Toggled" />
+                                <ComboBox x:Name="TrainerMusicTrackComboBox"
+                                          AutomationProperties.AutomationId="TrainerMusicTrackComboBox"
+                                          AutomationProperties.Name="Which tune"
+                                          Header="Tune"
+                                          MinWidth="140"
+                                          VerticalAlignment="Bottom"
+                                          SelectionChanged="TrainerMusicTrackComboBox_SelectionChanged" />
+                                <Slider x:Name="TrainerMusicVolumeSlider"
+                                        AutomationProperties.AutomationId="TrainerMusicVolumeSlider"
+                                        AutomationProperties.Name="Trainer music volume"
+                                        Header="Volume"
+                                        Minimum="0"
+                                        Maximum="100"
+                                        Value="50"
+                                        MinWidth="160"
+                                        VerticalAlignment="Bottom"
+                                        ValueChanged="TrainerMusicVolumeSlider_ValueChanged" />
+                            </StackPanel>
+                            <TextBlock AutomationProperties.AutomationId="TrainerMusicNote"
+                                       Text="Trainers have had music since the people who wrote them were the people tracking demoscene tunes. This one is the app's own, generated as it plays rather than shipped - so it borrows nothing from anybody, including the game's own soundtrack, which is over in Media."
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Name="TrainerMusicStatusTextBlock"
+                                       AutomationProperties.AutomationId="TrainerMusicStatus"
+                                       Style="{StaticResource SectionBodyTextStyle}"
+                                       Visibility="Collapsed"
+                                       TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel Spacing="4">
                         <StackPanel Orientation="Horizontal"
                                     Spacing="10">
