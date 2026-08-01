@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LibVLCSharp.Shared;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -224,7 +225,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                         InfoBarSeverity.Informational,
                         "Point the app at your game folder",
                         "Media comes straight from your Battle Engine Aquila install. Choose that folder and the soundtrack, voice lines, cutscenes, and briefings appear here.",
-                        showAction: true);
+                        showAction: true,
+                        actionLabel: ChooseFolderActionLabel);
                     AppStatusService.SetStatus("Media: game directory not configured");
                     return;
                 }
@@ -256,8 +258,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ShowMediaStatus(
                     InfoBarSeverity.Error,
                     "Couldn't load your media",
-                    $"Nothing was changed. Check that the game folder is reachable, then choose Reload Library. Details: {ex.Message}",
-                    showAction: false);
+                    $"Nothing was changed. Check the game folder is reachable, then try again. Details: {ex.Message}",
+                    showAction: true,
+                    actionLabel: RetryActionLabel);
                 AppStatusService.SetStatus("Media: load failed");
             }
             finally
@@ -266,17 +269,43 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
         }
 
+        /// <summary>The two things this bar can offer to do about a problem.</summary>
+        private const string ChooseFolderActionLabel = "Choose game folder";
+
+        private const string RetryActionLabel = "Try again";
+
         /// <summary>
         /// Surfaces a media load problem where the user can actually see it.
         /// The failure detail previously went only into a Collapsed panel, so
         /// nobody ever learned why their library was empty.
+        ///
+        /// The action lives on the bar rather than being described in prose,
+        /// because the obvious place to point - Reload Library, in the Source
+        /// folder card - is collapsed below 900px wide. Telling someone to press
+        /// a button that is not on screen is worse than saying nothing.
         /// </summary>
-        private void ShowMediaStatus(InfoBarSeverity severity, string title, string message, bool showAction)
+        private void ShowMediaStatus(
+            InfoBarSeverity severity,
+            string title,
+            string message,
+            bool showAction,
+            string? actionLabel = null)
         {
             MediaStatusInfoBar.Severity = severity;
             MediaStatusInfoBar.Title = title;
             MediaStatusInfoBar.Message = message;
-            MediaStatusActionButton.Visibility = showAction ? Visibility.Visible : Visibility.Collapsed;
+
+            if (showAction && !string.IsNullOrWhiteSpace(actionLabel))
+            {
+                MediaStatusActionButton.Content = actionLabel;
+                AutomationProperties.SetName(MediaStatusActionButton, actionLabel);
+                MediaStatusActionButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                MediaStatusActionButton.Visibility = Visibility.Collapsed;
+            }
+
             MediaStatusInfoBar.IsOpen = true;
         }
 
@@ -286,8 +315,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             MediaStatusActionButton.Visibility = Visibility.Collapsed;
         }
 
-        private void MediaStatusActionButton_Click(object sender, RoutedEventArgs e)
+        private async void MediaStatusActionButton_Click(object sender, RoutedEventArgs e)
         {
+            if (Equals(MediaStatusActionButton.Content, RetryActionLabel))
+            {
+                await LoadMediaCatalogAsync();
+                return;
+            }
+
             App.MainWindowInstance?.NavigateToTag("settings");
         }
 
