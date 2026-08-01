@@ -551,7 +551,67 @@ namespace Onslaught___Career_Editor
                 factory(json(c)), c.ParseResult.GetValueForArgument(restoreTarget)));
             patch.AddCommand(restore);
 
+            patch.AddCommand(BuildPatchInstallCommand(factory, json));
             return patch;
+        }
+
+        /// <summary>
+        /// The verbs that touch the game the user actually installed.
+        ///
+        /// Kept as its own group rather than as a flag on <c>patch apply</c>, because "which target"
+        /// is not a detail. Everything under <c>patch</c> proper is confined to the app-owned
+        /// workspace and that containment is worth keeping legible; a caller reaching for these has
+        /// to type the word install.
+        /// </summary>
+        private static Command BuildPatchInstallCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var install = new Command(
+                "install",
+                "Work on the game you have installed, not a copy. Every write is preceded by a verified backup.");
+
+            Argument<string?> ExeArg() => new(
+                "exe",
+                () => null,
+                "Path to the installed BEA.exe, or its folder. Defaults to the configured/detected install.");
+
+            var statusExe = ExeArg();
+            var status = new Command("status", "What state the installed game is in and whether it can be put back.") { statusExe };
+            status.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchInstallStatus(
+                factory(json(c)), c.ParseResult.GetValueForArgument(statusExe)));
+            install.AddCommand(status);
+
+            var backupExe = ExeArg();
+            var backup = new Command(
+                "backup",
+                "Make and verify BEA.exe.original.backup and its .sha256 beside the game. Writes no patches.")
+            { backupExe };
+            backup.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchInstallBackup(
+                factory(json(c)), c.ParseResult.GetValueForArgument(backupExe)));
+            install.AddCommand(backup);
+
+            var applyExe = ExeArg();
+            var applyProfile = new Option<string?>("--profile", "Safe copy profile preset id. See 'patch list'.");
+            var applyKeys = new Option<string[]>("--patch", "Patch key to apply, repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var applyYes = new Option<bool>("--yes", "Confirm that this changes your installed game, not a copy.");
+            var apply = new Command(
+                "apply",
+                "Patch the installed game. Makes and verifies the backup first, and refuses if it cannot.")
+            { applyExe, applyProfile, applyKeys, applyYes };
+            apply.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchInstallApply(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(applyExe),
+                c.ParseResult.GetValueForOption(applyProfile),
+                c.ParseResult.GetValueForOption(applyKeys),
+                c.ParseResult.GetValueForOption(applyYes)));
+            install.AddCommand(apply);
+
+            var restoreExe = ExeArg();
+            var restore = new Command("restore", "Put the installed game back from its verified original.") { restoreExe };
+            restore.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchInstallRestore(
+                factory(json(c)), c.ParseResult.GetValueForArgument(restoreExe)));
+            install.AddCommand(restore);
+
+            return install;
         }
 
         // ------------------------------------------------------------------ process

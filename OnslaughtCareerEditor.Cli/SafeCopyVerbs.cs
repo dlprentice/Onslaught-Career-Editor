@@ -18,8 +18,15 @@ namespace Onslaught___Career_Editor.Cli
     ///   - <see cref="SafeCopyRoot"/> (GameProfiles) holds whole playable copied game folders.
     ///   - <see cref="PatchBenchRoot"/> (PatchBench) holds BEA.exe-only working copies for the patch
     ///     engine.
-    /// The installed game is never a target of either. <see cref="BinaryPatchEngine"/> independently
-    /// refuses Program Files and steamapps shapes, so a mistake here is caught twice.
+    /// The installed game is never a target of either, and cannot be reached by any verb under
+    /// <c>copy</c> or by <c>patch plan/verify/apply/restore</c>: <see cref="BinaryPatchEngine"/>
+    /// independently refuses Program Files and steamapps shapes for those, so a mistake is caught
+    /// twice.
+    ///
+    /// The one way to reach it is the <c>patch install</c> group, where saying so is the point. Those
+    /// verbs still cannot write until <c>AuthorizeInstalledGameWrite</c> has put a verified original
+    /// beside the executable, so "the installed game is off limits" became "the installed game costs
+    /// a backup" rather than becoming nothing.
     /// </summary>
     public static class SafeCopyVerbs
     {
@@ -1137,10 +1144,11 @@ namespace Onslaught___Career_Editor.Cli
             {
                 exitCode = ctx.Usage(
                     command,
-                    "Patch targets must live inside the app-owned Patch Bench workspace. The installed game is never a target.",
+                    "These patch verbs only work inside the app-owned Patch Bench workspace.",
                     $"Patch Bench root: {benchRoot}",
                     $"Given: {resolved}",
-                    "Stage a working copy first: patch stage <path-to-BEA.exe>");
+                    "Stage a working copy first: patch stage <path-to-BEA.exe>",
+                    "Or work on the game you installed, backup first: patch install apply");
                 return false;
             }
 
@@ -1151,6 +1159,237 @@ namespace Onslaught___Career_Editor.Cli
             }
 
             exePath = resolved;
+            return true;
+        }
+
+        // ================================================== patch install (the real game)
+
+        /// <summary>
+        /// The installed game, and what the app would be able to put back.
+        ///
+        /// Read-only. It exists so nobody has to find out what state their install is in by
+        /// running the thing that changes it.
+        /// </summary>
+        public static int PatchInstallStatus(CliContext ctx, string? exePath)
+        {
+            const string command = "patch.install.status";
+            if (!TryResolveInstalledExecutable(ctx, command, exePath, out string resolved, out int failure))
+                return failure;
+
+            string backupPath = BinaryPatchEngine.BuildBackupPath(resolved);
+            string backupHashPath = BinaryPatchEngine.BuildBackupHashPath(resolved);
+            bool hasBackup = File.Exists(backupPath);
+            bool hasSidecar = File.Exists(backupHashPath);
+
+            BinaryPatchTargetVerifyResult verify = BinaryPatchEngine.VerifyPatchTargetFile(
+                new BinaryPatchTargetOptions(resolved, AllowedRoot: Path.GetDirectoryName(resolved) ?? string.Empty),
+                BinaryPatchEngine.PatchSpecs);
+
+            var payload = new
+            {
+                exePath = resolved,
+                backupPath,
+                backupHashPath,
+                hasBackup,
+                hasHashSidecar = hasSidecar,
+                canBeRestored = hasBackup && hasSidecar,
+                identity = verify.IdentityLabel,
+            };
+
+            if (ctx.Json)
+                return ctx.Ok(command, payload);
+
+            ctx.Line($"Installed game: {resolved}");
+            ctx.Line($"Original backup: {(hasBackup ? backupPath : "none")}");
+            ctx.Line($"Recorded hash:   {(hasSidecar ? backupHashPath : "none")}");
+            ctx.Line();
+            ctx.Line(hasBackup && hasSidecar
+                ? "This install can be put back the way it was."
+                : hasBackup
+                    ? "There is a backup but no recorded hash. 'patch install backup' will write one if the backup is a clean retail BEA.exe."
+                    : "There is no backup yet. 'patch install backup' will make one if the executable is still a clean retail BEA.exe.");
+            return CliExit.Success;
+        }
+
+        /// <summary>
+        /// Make sure there is something to go back to, and say what happened. Never touches the
+        /// executable itself.
+        /// </summary>
+        public static int PatchInstallBackup(CliContext ctx, string? exePath)
+        {
+            const string command = "patch.install.backup";
+            if (!TryResolveInstalledExecutable(ctx, command, exePath, out string resolved, out int failure))
+                return failure;
+
+            var (success, message, authorization) = BinaryPatchEngine.AuthorizeInstalledGameWrite(resolved);
+            if (!success || authorization is null)
+                return ctx.Usage(command, message);
+
+            return ctx.Ok(command, DescribeAuthorization(authorization), message);
+        }
+
+        /// <summary>
+        /// Patch the installed game, after making and verifying the backup.
+        ///
+        /// The backup is not a flag here. <c>AuthorizeInstalledGameWrite</c> is what produces the
+        /// permission the engine requires, and it will not produce one until a verified original is
+        /// beside the executable - so there is no ordering of these lines that writes first.
+        /// </summary>
+        public static int PatchInstallApply(
+            CliContext ctx,
+            string? exePath,
+            string? profileId,
+            IReadOnlyList<string>? patchKeys,
+            bool confirmed)
+        {
+            const string command = "patch.install.apply";
+            if (!TryResolveInstalledExecutable(ctx, command, exePath, out string resolved, out int failure))
+                return failure;
+
+            if (!confirmed)
+            {
+                return ctx.Usage(
+                    command,
+                    "This changes the game you have installed, not a copy. Pass --yes once you mean it.",
+                    $"Target: {resolved}",
+                    "A verified backup is made first, and 'patch install restore' puts it back.",
+                    "Prefer a sandbox? copy create");
+            }
+
+            if (!TryResolveSelection(ctx, command, profileId, patchKeys, out var selected, out failure))
+                return failure;
+
+            var (authorized, authorizationMessage, authorization) =
+                BinaryPatchEngine.AuthorizeInstalledGameWrite(resolved);
+            if (!authorized || authorization is null)
+                return ctx.Usage(command, authorizationMessage);
+
+            var target = new BinaryPatchTargetOptions(
+                resolved,
+                AllowedRoot: string.Empty,
+                InstalledGame: authorization);
+
+            BinaryPatchTargetVerifyResult verify = BinaryPatchEngine.VerifyPatchTargetFile(target, selected);
+            if (!verify.Success)
+            {
+                return ctx.Usage(
+                    command,
+                    $"Refusing to apply: verification did not pass. {verify.Message}",
+                    "Your game was not changed.");
+            }
+
+            var (applied, applyMessage) = BinaryPatchEngine.ApplyPatchesToFile(target, selected);
+            if (!applied)
+                return ctx.Usage(command, applyMessage);
+
+            return ctx.Ok(
+                command,
+                new
+                {
+                    exePath = resolved,
+                    backupPath = authorization.BackupPath,
+                    backupSha256 = authorization.BackupSha256,
+                    backupCreatedNow = authorization.BackupWasCreatedNow,
+                    patchKeys = selected.Select(spec => spec.Key).ToArray(),
+                },
+                $"{authorizationMessage}\n{applyMessage}");
+        }
+
+        /// <summary>Put the installed game back from its verified original.</summary>
+        public static int PatchInstallRestore(CliContext ctx, string? exePath)
+        {
+            const string command = "patch.install.restore";
+            if (!TryResolveInstalledExecutable(ctx, command, exePath, out string resolved, out int failure))
+                return failure;
+
+            if (!File.Exists(BinaryPatchEngine.BuildBackupPath(resolved)))
+            {
+                return ctx.Usage(
+                    command,
+                    "There is no BEA.exe.original.backup beside that game, so there is nothing to put back.",
+                    $"Target: {resolved}");
+            }
+
+            var (authorized, authorizationMessage, authorization) =
+                BinaryPatchEngine.AuthorizeInstalledGameWrite(resolved);
+            if (!authorized || authorization is null)
+                return ctx.Usage(command, authorizationMessage);
+
+            var (success, message) = BinaryPatchEngine.RestoreFromBackup(new BinaryPatchTargetOptions(
+                resolved,
+                AllowedRoot: string.Empty,
+                InstalledGame: authorization));
+
+            return success
+                ? ctx.Ok(command, DescribeAuthorization(authorization), message)
+                : ctx.Usage(command, message);
+        }
+
+        private static object DescribeAuthorization(InstalledGameWriteAuthorization authorization) => new
+        {
+            exePath = authorization.ExePath,
+            gameRoot = authorization.GameRoot,
+            backupPath = authorization.BackupPath,
+            backupHashPath = authorization.BackupHashPath,
+            backupSha256 = authorization.BackupSha256,
+            backupCreatedNow = authorization.BackupWasCreatedNow,
+            hashSidecarCreatedNow = authorization.HashSidecarWasCreatedNow,
+        };
+
+        /// <summary>
+        /// The BEA.exe of the installed game - the one given, or the configured/detected install.
+        ///
+        /// Unlike <see cref="TryResolvePatchTarget"/> this deliberately does NOT confine the path to
+        /// the app-owned workspace. That is the whole point of this verb group, and the engine still
+        /// refuses everything else: the file has to be named BEA.exe, it has to sit beside a data
+        /// folder, and nothing is written until a verified original exists.
+        /// </summary>
+        private static bool TryResolveInstalledExecutable(
+            CliContext ctx,
+            string command,
+            string? exePath,
+            out string resolved,
+            out int exitCode)
+        {
+            resolved = string.Empty;
+            exitCode = CliExit.Success;
+
+            string? candidate = exePath?.Trim();
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                string? gameDir = AppConfig.Load().GetGameDir() ?? AppConfig.DetectGameDirectory();
+                if (string.IsNullOrWhiteSpace(gameDir))
+                {
+                    exitCode = ctx.Usage(
+                        command,
+                        "No installed game folder is configured and none was found.",
+                        "Give the path: patch install status <path-to-BEA.exe>");
+                    return false;
+                }
+
+                candidate = Path.Combine(gameDir, "BEA.exe");
+            }
+
+            try
+            {
+                resolved = Path.GetFullPath(candidate);
+                if (Directory.Exists(resolved))
+                    resolved = Path.Combine(resolved, "BEA.exe");
+
+                resolved = Path.GetFullPath(resolved);
+            }
+            catch (Exception ex) when (SaveVerbs.IsFileAccessFailure(ex))
+            {
+                exitCode = ctx.Usage(command, $"Path could not be normalized: {ex.Message}");
+                return false;
+            }
+
+            if (!File.Exists(resolved))
+            {
+                exitCode = ctx.Usage(command, $"No BEA.exe there: {resolved}");
+                return false;
+            }
+
             return true;
         }
 

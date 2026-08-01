@@ -102,8 +102,15 @@ namespace Onslaught___Career_Editor
 
         /// <summary>
         /// Whether a path looks like a real Battle Engine Aquila installation rather than an
-        /// app-owned copy. Mirrors the shapes <see cref="BinaryPatchEngine"/> refuses, so the
+        /// app-owned copy. Uses the same shapes <see cref="BinaryPatchEngine"/> recognises, so the
         /// trainer and the patch engine agree about what "the installed game" means.
+        ///
+        /// They no longer agree about what to DO with one, and that is deliberate. Since
+        /// <see cref="BinaryPatchEngine.AuthorizeInstalledGameWrite"/> the patch engine will write
+        /// to an installed game once a verified original is sitting beside it, because a byte
+        /// change to a file on disk has something to put back. The trainer has no equivalent: it
+        /// writes into the memory of a live process, there is nothing to snapshot and nothing to
+        /// restore, and the refusal below is not a placeholder waiting for the same treatment.
         /// </summary>
         public static bool LooksLikeAnInstalledGameDirectory(string? path)
         {

@@ -44,11 +44,79 @@ namespace Onslaught___Career_Editor
 
     public sealed record BinaryPatchVerifyRow(BinaryPatchSpec Spec, BinaryPatchState State);
 
+    /// <summary>
+    /// Permission to write to the executable of an installed game, which every other path here
+    /// refuses outright.
+    ///
+    /// It cannot be constructed by asking. The only way to get one is
+    /// <see cref="BinaryPatchEngine.AuthorizeInstalledGameWrite"/>, which will not return one until
+    /// a full-file backup of the original executable exists beside it, carries a hash sidecar, and
+    /// has been verified against a clean retail specimen. So "there is a verified backup" is not a
+    /// rule the calling code has to remember - it is the reason this object exists at all, and a
+    /// caller that skips the backup has nothing to pass.
+    ///
+    /// This is deliberately the same shape as
+    /// <c>FileMutationSafety.AuthorizeAppOwnedProfileRoot</c>: a normally-forbidden write, made
+    /// possible by a token that could only be obtained by satisfying the condition first.
+    /// </summary>
+    public sealed class InstalledGameWriteAuthorization
+    {
+        internal InstalledGameWriteAuthorization(
+            string exePath,
+            string gameRoot,
+            string backupPath,
+            string backupHashPath,
+            string backupSha256,
+            bool backupWasCreatedNow,
+            bool hashSidecarWasCreatedNow,
+            string summary)
+        {
+            ExePath = exePath;
+            GameRoot = gameRoot;
+            BackupPath = backupPath;
+            BackupHashPath = backupHashPath;
+            BackupSha256 = backupSha256;
+            BackupWasCreatedNow = backupWasCreatedNow;
+            HashSidecarWasCreatedNow = hashSidecarWasCreatedNow;
+            Summary = summary;
+        }
+
+        /// <summary>The one executable this authorization covers. Anything else is refused.</summary>
+        public string ExePath { get; }
+
+        public string GameRoot { get; }
+
+        /// <summary>The verified full-file backup. Restore reads from here.</summary>
+        public string BackupPath { get; }
+
+        public string BackupHashPath { get; }
+
+        /// <summary>The backup's SHA-256, lowercase hex - the same text the sidecar holds.</summary>
+        public string BackupSha256 { get; }
+
+        /// <summary>True when this call is what made the backup, rather than finding one.</summary>
+        public bool BackupWasCreatedNow { get; }
+
+        /// <summary>
+        /// True when a backup was already there but had no hash sidecar, and this call wrote one.
+        /// That is the state a hand-patched install is usually in.
+        /// </summary>
+        public bool HashSidecarWasCreatedNow { get; }
+
+        /// <summary>What happened, in one or two sentences a person can read.</summary>
+        public string Summary { get; }
+    }
+
+    /// <param name="InstalledGame">
+    /// Non-null only for a write to an installed game the user has opted into. Obtaining one
+    /// requires a verified backup to already exist, so this is also the proof that it does.
+    /// </param>
     public sealed record BinaryPatchTargetOptions(
         string ExePath,
         string AllowedRoot,
         bool AllowFallbackCatalogForTests = false,
-        bool AllowByteLayoutOnlyTarget = false);
+        bool AllowByteLayoutOnlyTarget = false,
+        InstalledGameWriteAuthorization? InstalledGame = null);
 
     public sealed record BinaryPatchTargetVerifyResult(
         bool Success,
@@ -1455,7 +1523,10 @@ namespace Onslaught___Career_Editor
             if (!string.Equals(Path.GetFileName(target.ExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
                 return (false, "Patch target must be a BEA.exe-only copy.", null);
 
-            if (string.IsNullOrWhiteSpace(target.AllowedRoot))
+            // An installed-game permission carries its own root - the game folder it was granted
+            // for - so a caller patching an install does not have to invent a workspace root it
+            // does not have.
+            if (string.IsNullOrWhiteSpace(target.AllowedRoot) && target.InstalledGame is null)
                 return (false, "Patch target requires an app-owned workspace root.", null);
 
             string fullExePath;
@@ -1463,18 +1534,52 @@ namespace Onslaught___Career_Editor
             try
             {
                 fullExePath = Path.GetFullPath(target.ExePath);
-                fullRoot = NormalizeDirectoryRoot(target.AllowedRoot);
+                fullRoot = NormalizeDirectoryRoot(
+                    string.IsNullOrWhiteSpace(target.AllowedRoot)
+                        ? target.InstalledGame!.GameRoot
+                        : target.AllowedRoot);
             }
             catch (Exception ex)
             {
                 return (false, $"Patch target path could not be normalized: {ex.Message}", null);
             }
 
-            if (IsPathUnderProtectedInstallRoot(fullExePath) || IsPathUnderProtectedInstallRoot(fullRoot))
-                return (false, "Patch target refuses Program Files or another protected install root; create an app-owned copied game folder first.", null);
+            // An installed game is a legitimate target only when the caller is holding permission
+            // for this exact executable - and permission cannot exist unless a verified original
+            // is already sitting beside it. See AuthorizeInstalledGameWrite.
+            bool installedGameAuthorized = false;
+            if (target.InstalledGame is not null)
+            {
+                if (!string.Equals(
+                        Path.GetFullPath(target.InstalledGame.ExePath),
+                        fullExePath,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return (false,
+                        "The installed-game permission was granted for a different executable than the one being patched. Nothing was changed.",
+                        null);
+                }
 
-            if (HasKnownSteamInstallShape(fullExePath) || HasKnownSteamInstallShape(fullRoot))
-                return (false, "Patch target refuses a steamapps/common/Battle Engine Aquila install root; create an app-owned copied game folder first.", null);
+                if (!File.Exists(target.InstalledGame.BackupPath) ||
+                    !File.Exists(target.InstalledGame.BackupHashPath))
+                {
+                    return (false,
+                        "The verified backup that this permission was granted for is no longer beside the game. Nothing was changed.",
+                        null);
+                }
+
+                installedGameAuthorized = true;
+                fullRoot = NormalizeDirectoryRoot(target.InstalledGame.GameRoot);
+            }
+
+            if (!installedGameAuthorized)
+            {
+                if (IsPathUnderProtectedInstallRoot(fullExePath) || IsPathUnderProtectedInstallRoot(fullRoot))
+                    return (false, "Patch target is under Program Files or another protected install root. Work in a copy, or choose to patch your installed game - which takes a verified backup first.", null);
+
+                if (HasKnownSteamInstallShape(fullExePath) || HasKnownSteamInstallShape(fullRoot))
+                    return (false, "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.", null);
+            }
 
             if (!IsPathUnderRoot(fullExePath, fullRoot))
                 return (false, "Patch target must be inside the app-owned Patch Bench workspace.", null);
@@ -1518,6 +1623,164 @@ namespace Onslaught___Career_Editor
             }
 
             return (true, string.Empty, new PatchTargetValidationInfo(fullExePath, backupPath, backupHashPath, data, identityLabel));
+        }
+
+        /// <summary>
+        /// Take responsibility for an installed game's executable, and hand back the permission to
+        /// write to it - but only once there is a verified original to put back.
+        ///
+        /// This is the whole of the "backup first, no opt-out" rule, expressed as a constructor
+        /// precondition rather than as a step somebody has to remember. Three states, and only the
+        /// first two end with permission:
+        ///
+        /// 1. A backup is already there with a matching hash sidecar, and the backup is a clean
+        ///    retail specimen. Nothing is written; permission is granted.
+        /// 2. A backup is already there with no sidecar. If the backup is a clean retail specimen
+        ///    the sidecar is written from it and permission is granted. **This is the state a
+        ///    hand-patched install is usually in** - somebody kept the original by hand and no tool
+        ///    ever recorded its hash.
+        /// 3. No backup at all. The executable on disk must itself be a clean retail specimen,
+        ///    because that is the only case where a snapshot taken now is genuinely the original. A
+        ///    snapshot of an already-modified executable would be named <c>.original.backup</c> and
+        ///    be nothing of the sort, and every later restore would put the modification back.
+        ///
+        /// The refusal in case 3 is the important one. It is not conservatism: manufacturing an
+        /// "original" from a file that is not one destroys the only route back.
+        /// </summary>
+        public static (bool success, string message, InstalledGameWriteAuthorization? authorization)
+            AuthorizeInstalledGameWrite(string exePath)
+        {
+            if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+                return (false, "Choose the BEA.exe inside your installed game folder.", null);
+
+            string fullExePath;
+            string gameRoot;
+            try
+            {
+                fullExePath = Path.GetFullPath(exePath);
+                gameRoot = Path.GetDirectoryName(fullExePath) ?? string.Empty;
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException)
+            {
+                return (false, $"That path could not be read: {ex.Message}", null);
+            }
+
+            if (!string.Equals(Path.GetFileName(fullExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
+                return (false, $"Choose {TargetFileName} itself, not another file in the folder.", null);
+
+            if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(Path.Combine(gameRoot, "data")))
+            {
+                return (false,
+                    "That does not look like an installed Battle Engine Aquila folder - there is no data folder beside the executable.",
+                    null);
+            }
+
+            string backupPath = BuildBackupPath(fullExePath);
+            string backupHashPath = BuildBackupHashPath(fullExePath);
+
+            var filesystemSafety = ValidatePatchFilesystemSafety(fullExePath, backupPath, backupHashPath, gameRoot);
+            if (!filesystemSafety.success)
+                return (false, filesystemSafety.message, null);
+
+            try
+            {
+                byte[] currentBytes = File.ReadAllBytes(fullExePath);
+
+                if (File.Exists(backupPath))
+                {
+                    byte[] backupBytes = File.ReadAllBytes(backupPath);
+                    string backupHash = ComputeSha256Hex(backupBytes);
+
+                    if (!IsKnownCleanRetailSpecimen(backupBytes, backupHash))
+                    {
+                        return (false,
+                            $"The {Path.GetFileName(backupPath)} sitting beside your game is not a clean retail BEA.exe, so it is not something the app can promise to put back. " +
+                            "Nothing was changed. Move that file aside and reinstall the game if you want a backup this app can stand behind.",
+                            null);
+                    }
+
+                    bool sidecarWritten = false;
+                    if (File.Exists(backupHashPath))
+                    {
+                        string recorded = File.ReadAllText(backupHashPath).Trim();
+                        if (!string.Equals(recorded, backupHash, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return (false,
+                                $"The recorded hash beside {Path.GetFileName(backupPath)} does not match the file it describes. " +
+                                "Nothing was changed. Delete the .sha256 file and try again, and the app will write a fresh one.",
+                                null);
+                        }
+                    }
+                    else
+                    {
+                        // The hand-kept-backup case. The bytes are a clean retail specimen, so
+                        // recording their hash states something already true rather than
+                        // laundering an unknown file into a trusted one.
+                        WriteBackupHash(backupHashPath, backupBytes);
+                        sidecarWritten = true;
+                    }
+
+                    string found = sidecarWritten
+                        ? $"Found {Path.GetFileName(backupPath)} beside your game and recognised it as a clean retail BEA.exe, so the app recorded its hash in {Path.GetFileName(backupHashPath)}. That is the file Restore puts back."
+                        : $"Your original executable is already backed up as {Path.GetFileName(backupPath)}, and its recorded hash still matches. That is the file Restore puts back.";
+
+                    return (true, found, new InstalledGameWriteAuthorization(
+                        fullExePath,
+                        gameRoot,
+                        backupPath,
+                        backupHashPath,
+                        backupHash,
+                        backupWasCreatedNow: false,
+                        hashSidecarWasCreatedNow: sidecarWritten,
+                        summary: found));
+                }
+
+                string currentHash = ComputeSha256Hex(currentBytes);
+                if (!IsKnownCleanRetailSpecimen(currentBytes, currentHash))
+                {
+                    return (false,
+                        "Your BEA.exe has already been changed by something, and there is no BEA.exe.original.backup beside it to go back to. " +
+                        "The app will not copy a modified executable and call it the original, because every later restore would put the modification back. " +
+                        "Nothing was changed. Reinstall or verify the game files first, and then this will work.",
+                        null);
+                }
+
+                PublishFileAtomically(backupPath, currentBytes, overwrite: false, "installed-game backup snapshot");
+                WriteBackupHash(backupHashPath, currentBytes);
+
+                byte[] writtenBackup = File.ReadAllBytes(backupPath);
+                if (!writtenBackup.SequenceEqual(currentBytes))
+                {
+                    return (false,
+                        "The backup was written but did not read back the same, so nothing was patched. Your game is untouched.",
+                        null);
+                }
+
+                string made =
+                    $"Your original executable has been copied to {Path.GetFileName(backupPath)} beside it, and verified byte for byte. That is the file Restore puts back.";
+
+                return (true, made, new InstalledGameWriteAuthorization(
+                    fullExePath,
+                    gameRoot,
+                    backupPath,
+                    backupHashPath,
+                    currentHash,
+                    backupWasCreatedNow: true,
+                    hashSidecarWasCreatedNow: true,
+                    summary: made));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return (false,
+                    $"The backup could not be made, so nothing was patched and your game is untouched: {ex.Message}",
+                    null);
+            }
+        }
+
+        private static bool IsKnownCleanRetailSpecimen(byte[] bytes, string hash)
+        {
+            return bytes.LongLength == KnownRetailSteamSize &&
+                   s_knownRetailSteamHashes.Contains(hash, StringComparer.OrdinalIgnoreCase);
         }
 
         private static void WriteBackupHash(string backupHashPath, byte[] backupBytes)
