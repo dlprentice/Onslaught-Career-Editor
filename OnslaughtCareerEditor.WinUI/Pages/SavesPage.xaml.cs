@@ -50,6 +50,24 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             InitializeConfigurationSurface();
             LoadConfigurationDetectedFiles();
             SelectSavesTab(GetInitialSaveTabIndex(), persistSelection: false);
+            AppConfigChangedService.ConfigChanged += HandleConfigChanged;
+        }
+
+        /// <summary>
+        /// Pages are cached, so a Save Lab built before the game folder changed
+        /// kept listing files discovered under the old one until the user
+        /// happened to press Refresh. The detected lists are read-only
+        /// discovery, so re-running them is safe; nothing the user has typed or
+        /// selected is touched.
+        /// </summary>
+        private void HandleConfigChanged(AppConfig config)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                LoadDetectedFiles();
+                LoadEditorDetectedFiles();
+                LoadConfigurationDetectedFiles();
+            });
         }
 
         private void SaveAnalyzerTabButton_Click(object sender, RoutedEventArgs e) => SelectSavesTab(SaveAnalyzerTabIndex);
