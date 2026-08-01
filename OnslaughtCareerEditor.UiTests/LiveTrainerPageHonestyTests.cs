@@ -103,21 +103,35 @@ public class LiveTrainerPageHonestyTests
         {
             foreach (string word in OverclaimingWords)
             {
+                // The ban survives the 2026-08-01 live read on purpose. These fields have now been
+                // seen in a running mission, but a verdict word still invites the reader to stop
+                // thinking; naming what was observed ("read 20", "20 became 100") carries the same
+                // confidence and stays checkable.
                 Assert.That(
                     text,
                     Does.Not.Contain(word).IgnoreCase,
-                    $"{where} says '{word}'. Nobody has read these fields out of a running game.");
+                    $"{where} says '{word}'. State what was observed rather than pronouncing a verdict.");
             }
         }
     }
 
     [Test]
-    public void TheTrainerSaysPlainlyThatNobodyHasReadTheseFromARunningGame()
+    public void TheTrainerSaysPlainlyWhereTheseNumbersStand()
     {
-        // This is the one sentence that may not be behind anything. A player who never opens a
-        // disclosure still has to meet it, so it is short, plain, and on screen.
-        Assert.That(LiveTrainerPageText.EvidenceHeadline, Does.Contain("running game"));
-        Assert.That(LiveTrainerPageText.EvidenceHeadline, Does.Contain("Nobody has read"));
+        // Superseded 2026-08-01. This used to require the headline to say "Nobody has read" these
+        // from a running game. On that date they WERE read from one: life 20, energy and shields 8,
+        // life set to 100, HUD ring filled to match
+        // (local-lab/LIVE-TRAINER-RUNTIME-CONFIRMATION-2026-08-01.md). Keeping the old sentence
+        // would now be an understatement rather than a caution, and understating evidence is its
+        // own dishonesty.
+        //
+        // What must survive: the headline still states the standing of these numbers in one plain
+        // on-screen sentence, and still names the running mission rather than leaving it vague.
+        Assert.That(LiveTrainerPageText.EvidenceHeadline, Does.Contain("running mission"));
+        Assert.That(
+            LiveTrainerPageText.EvidenceHeadline.ToLowerInvariant(),
+            Does.Not.Contain("nobody has read"),
+            "That claim is no longer true; the vitals were read from a live mission on 2026-08-01.");
         Assert.That(
             LiveTrainerPageText.EvidenceHeadline.Count(character => character == '.'),
             Is.EqualTo(1),
@@ -140,16 +154,21 @@ public class LiveTrainerPageHonestyTests
         // settled (local-lab/VITALS-LAYOUT-STATIC-CONFIRMATION-2026-08-01.md). Keeping the old
         // wording would now understate what is known, which is its own kind of dishonesty.
         //
-        // The property that must survive any rewording is the DISTINCTION: the fields are located,
-        // the runtime route to them is not.
+        // Superseded again the same day: the runtime route WAS walked. Player slot 0 resolved to
+        // a battle engine at +0x1c, the three fields read 20 / 8 / 8, life was set to 100 and the
+        // HUD ring filled to match (local-lab/LIVE-TRAINER-RUNTIME-CONFIRMATION-2026-08-01.md).
+        // The distinction the earlier version protected has collapsed in the good direction.
+        //
+        // What must survive: the note is grounded in a specific observation with real numbers
+        // rather than an assurance, and it still describes the failure mode.
         Assert.That(
             LiveTrainerPageText.EvidenceNote.ToLowerInvariant(),
-            Does.Contain("mission is running"),
-            "The note must still name the part nobody has done - reaching these while a mission runs.");
+            Does.Contain("mission"),
+            "The note must name the running mission the numbers came from.");
         Assert.That(
-            LiveTrainerPageText.EvidenceNote.ToLowerInvariant(),
-            Does.Contain("could be wrong"),
-            "The note must still say which part could be wrong, not leave it implied.");
+            LiveTrainerPageText.EvidenceNote,
+            Does.Match(@"\d"),
+            "The note must carry the observed values, so the claim stays checkable.");
         Assert.That(
             LiveTrainerPageText.EvidenceNote,
             Does.Contain("nonsense"),
@@ -170,10 +189,19 @@ public class LiveTrainerPageHonestyTests
                      LiveTrainerPageText.ShieldsEvidenceNote,
                  })
         {
+            // Superseded 2026-08-01. This used to require the exact phrase
+            // "Read from a running game: never" on each field. All three were read from a live
+            // mission that day, so the phrase became false. What the test is really for is that
+            // each control carries its OWN standing rather than inheriting the section heading -
+            // so it now requires each line to say what that field did in a running mission.
+            Assert.That(
+                perControl.ToLowerInvariant(),
+                Does.Contain("running mission"),
+                "Each write control carries its own evidence line, not just the section heading.");
             Assert.That(
                 perControl,
-                Does.Contain("Read from a running game: never"),
-                "Each write control carries its own evidence line, not just the section heading.");
+                Does.Match(@"\d"),
+                "Each line names the value that was actually observed, not a bare assurance.");
         }
 
         foreach (string automationId in new[]

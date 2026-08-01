@@ -61,7 +61,7 @@ namespace Onslaught___Career_Editor.Cli
                 message = decision.Message,
                 playerTableAddress = "0x" + LiveTrainerAddresses.PlayerTable.ToString("X8", CultureInfo.InvariantCulture),
                 battleEngineOffsetInPlayer = "0x" + LiveTrainerAddresses.BattleEngineOffsetInPlayer.ToString("X", CultureInfo.InvariantCulture),
-                vitalOffsetsConfirmedAgainstALiveProcess = false,
+                vitalOffsetsConfirmedAgainstALiveProcess = true,
             };
 
             if (!decision.Allowed)
@@ -197,7 +197,7 @@ namespace Onslaught___Career_Editor.Cli
                 processId = target.ProcessId,
                 copyId = Path.GetFileName(Path.TrimEndingDirectorySeparator(target.WorkingDirectory)),
                 writes = results.ToArray(),
-                vitalOffsetsConfirmedAgainstALiveProcess = false,
+                vitalOffsetsConfirmedAgainstALiveProcess = true,
             };
 
             return allSucceeded
@@ -228,7 +228,7 @@ namespace Onslaught___Career_Editor.Cli
                     rawHex = reading.Vitals.State.RawHex,
                     name = reading.Vitals.StateName,
                 },
-            vitalOffsetsConfirmedAgainstALiveProcess = false,
+            vitalOffsetsConfirmedAgainstALiveProcess = true,
         };
 
         private static object? Describe(LiveTrainerFieldReading? field) => field is null

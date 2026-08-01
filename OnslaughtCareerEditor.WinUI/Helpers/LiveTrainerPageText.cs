@@ -53,7 +53,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// paragraph must still be one click away.
         /// </summary>
         public const string EvidenceHeadline =
-            "Nobody has read these three numbers out of a running game yet.";
+            "These three have been read out of a running mission, and changing life worked.";
 
         /// <summary>
         /// The rest of the standing caveat: where the positions came from, and what it looks like
@@ -61,19 +61,21 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// <see cref="EvidenceHeadline"/>.
         /// </summary>
         public const string EvidenceNote =
-            "Their positions were read straight out of the game's own damage routine, which loads all "
-            + "three together and treats life as a decimal number - so where they sit, and what shape "
-            + "they are, is not in doubt. What nobody has done is follow the trail to them while a "
-            + "mission is running, and that trail is the part that could be wrong. If the numbers below "
-            + "look like nonsense, they are - and the controls that change them stay switched off.";
+            "Their positions came out of the game's own damage routine, which loads all three together "
+            + "and treats life as a decimal number. On 1 August 2026 that was checked against a real "
+            + "mission: life read 20, energy and shields both read 8, setting life to 100 took, and the "
+            + "health ring on the HUD filled to match. If the numbers below ever look like nonsense, "
+            + "they are - and the controls that change them stay switched off.";
 
         public const string LifeEvidenceNote =
             "Life sits where the game's damage routine reads it, and where the health readout on the HUD "
-            + "gets its number. Read from a running game: never.";
+            + "gets its number. Read from a running mission, and changed there: 20 became 100 and the HUD "
+            + "ring filled.";
 
         public const string EnergyEvidenceNote =
-            "Energy sits next to life in the same routine. It is the least corroborated of the three, and "
-            + "one of the notes behind it has already been superseded once. Read from a running game: never.";
+            "Energy sits next to life in the same routine, and read 8 in a running mission. Of the three "
+            + "it has the thinnest paper trail behind it - one of the notes was superseded once - so it "
+            + "is the one to watch if a value ever looks wrong.";
 
         /// <summary>
         /// Not provenance: this changes what a player should do with the controls, so it stays on
@@ -87,12 +89,15 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             + "zero every update.";
 
         public const string ShieldsEvidenceNote =
-            "Shields sit next to energy in the same routine. Read from a running game: never.";
+            "Shields sit next to energy in the same routine. In a running mission they read 8 - exactly "
+            + "what energy read at the same moment, which is the copying described above happening in "
+            + "front of us.";
 
         public const string StateEvidenceNote =
-            "This one has been watched in a running game: 2 is walker, 1 is changing to jet, 3 is jet. "
-            + "It is shown and never changed - knowing what a number means is not knowing what happens "
-            + "if you force it.";
+            "2 is walker, 1 is changing to jet, 3 is jet - watched in a running game, and seen again on "
+            + "foot in the tutorial, where it read 2. An old note in the project claims the opposite "
+            + "mapping; the game disagrees with the note. It is shown and never changed - knowing what a "
+            + "number means is not knowing what happens if you force it.";
 
         public const string HoldExplanation =
             "The game rewrites these ten to twenty times a second, so setting a value once barely lasts "
