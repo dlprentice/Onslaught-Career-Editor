@@ -1504,8 +1504,16 @@ namespace Onslaught___Career_Editor
 
             if (identityLabel.Length == 0)
             {
+                // Reached whenever the chosen BEA.exe is not a build this
+                // catalog has byte evidence for - most often because the
+                // installed game has already been modified by something else.
+                // The old wording named an internal lane and left the user with
+                // nothing to do; the original backup sitting beside a modified
+                // executable is the usual answer, so say that.
                 return (false,
-                    "Patch target identity is not a known clean Steam retail BEA.exe. Re-select a clean source or use a byte-layout-only test/proof lane explicitly.",
+                    "This file is not a known clean Steam retail BEA.exe - it has been modified, so the app cannot tell where its patches belong and will not guess. " +
+                    "Look next to it for BEA.exe.original.backup and choose that instead - a fresh copy of the game also works. " +
+                    "Nothing was changed.",
                     null);
             }
 
