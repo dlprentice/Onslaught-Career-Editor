@@ -20,9 +20,14 @@
       "e0fcef8b lore reader opens on prose, not repository bookkeeping",
       "74a8f126 direct WebView2 reference dropped (still transitive via WindowsAppSDK)",
       "0ffc4418 player-first README with the SmartScreen warning",
-      "3b531070 Save Lab refreshes when the game folder changes"
+      "3b531070 Save Lab refreshes when the game folder changes",
+      "b9fcf337 Cheats page - phase-1 trainer needing ZERO memory access (save-name cheat codes)",
+      "d26753a3 CLI v2 - verbs, --json, exit codes 0/1/2, 80 tests now inside npm test",
+      "861555e1 CURRENT_CAPABILITIES matches reality; 33 invented cutscene titles withdrawn",
+      "0b0ae241 icon PNG kept out of the shipped build (would have failed the release ZIP probe)",
+      "81b613c9 Asset Library states up front that it needs assets the app cannot produce"
     ],
-    "gate_now": "npm test = 1103 AppCore + 302 UiTests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 on the morning of 2026-08-01.",
+    "gate_now": "npm test = 1115 AppCore + 342 UiTests + 80 CLI tests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 with no CLI gate at all on the morning of 2026-08-01.",
     "bounded_findings": {
       "lore_was_a_composition_failure_not_a_content_failure": "MEASURED 2026-08-01: RenderDocument wrote valid HTML, WebView2 reported NavigationCompleted success, and a live 80 MB renderer process held the page - nothing painted, and a full window resize did not fix it. Overturn by making WebView2 composite in this shell; the native reader is the better answer regardless.",
       "theme_brushes_must_use_ThemeResource": "StaticResource resolves a theme-dictionary key once at page load. Ten shell brushes were bound that way and froze the Lore reader dark after switching to Light. Overturn/guard: ThemeContrastAuditTests.ShellThemeBrushes_AreBoundWithThemeResource_SoTheyFollowTheAppearanceChoice.",
