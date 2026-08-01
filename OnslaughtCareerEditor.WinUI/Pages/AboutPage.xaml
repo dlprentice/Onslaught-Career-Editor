@@ -16,24 +16,54 @@
                        Style="{StaticResource SectionTitleTextStyle}" />
             <TextBlock Margin="0,6,0,14"
                        AutomationProperties.AutomationId="AboutProductSummary"
-                       Text="Primary Windows app for Battle Engine Aquila save editing, global options, media/lore browsing, and playable copied-game patching."
+                       Text="A Windows app that keeps Battle Engine Aquila playable. It gets the 2003 game running windowed and widescreen on a modern PC, lets you edit a career save, and opens up its music, cutscenes, and story - without ever touching your installed copy."
                        Style="{StaticResource SectionBodyTextStyle}" />
 
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Core capabilities"
+                    <TextBlock Text="What you can do here"
                                AutomationProperties.AutomationId="AboutCoreCapabilitiesTitle"
                                AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="- Save Lab: inspect .bes career saves, patch copied outputs, and preserve unknown regions."
+                    <TextBlock Text="Play it properly. Windowed &amp; Mods makes a separate copy of your game, applies a widescreen correction across 28 regions of the executable, and launches it windowed at 1600x900. Optional extras - a subtitle mod, early flight, a local split-screen preset - stay off until you turn them on."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Game Options: patch defaultoptions.bea for startup settings and keybind state."
+                    <TextBlock Text="Edit your career. Save Lab reads a .bes save, shows you what is in it, and writes your changes to a new file - keeping the original size and every byte it does not understand exactly as it found them."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Windowed &amp; Mods: create a playable copied game folder, patch only that copy, launch that copy, and keep advanced BEA.exe-only patching separate."
+                    <TextBlock Text="Hear and read everything. Media plays the soundtrack, voice lines, briefings, and cutscenes straight from your install. Lore is a curated library covering the world, the characters, and how the game was made."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="- Media + Asset Library + Lore: installed audio/video playback, local generated asset catalog browsing, and curated preservation notes."
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Where this comes from"
+                               AutomationProperties.AutomationId="AboutProvenanceTitle"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Battle Engine Aquila was made by Lost Toys and released in 2003. This app is a fan preservation project and has no connection to them."
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Every change it offers was worked out by studying the game itself - reading the original executable, tracing what it does while it runs, and checking each result byte by byte before it ships as an option here. That is why the list of mods is short and why each one says exactly what it does."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="4">
+                        <HyperlinkButton x:Name="AboutProjectLinkButton"
+                                         AutomationProperties.AutomationId="AboutProjectLinkButton"
+                                         AutomationProperties.Name="Open the project page"
+                                         Content="Project page"
+                                         NavigateUri="https://github.com/dlprentice/Onslaught-Career-Editor" />
+                        <HyperlinkButton x:Name="AboutReleasesLinkButton"
+                                         AutomationProperties.AutomationId="AboutReleasesLinkButton"
+                                         AutomationProperties.Name="Open the releases page"
+                                         Content="Releases"
+                                         NavigateUri="https://github.com/dlprentice/Onslaught-Career-Editor/releases" />
+                        <HyperlinkButton x:Name="AboutIssuesLinkButton"
+                                         AutomationProperties.AutomationId="AboutIssuesLinkButton"
+                                         AutomationProperties.Name="Report a problem"
+                                         Content="Report a problem"
+                                         NavigateUri="https://github.com/dlprentice/Onslaught-Career-Editor/issues" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
@@ -50,28 +80,24 @@
                     <TextBlock Text="Onslaught Toolkit is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights holders, and its licenses grant no rights in the retail game or its assets."
                                AutomationProperties.AutomationId="AboutAffiliationBoundaryNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="This app is for retail Battle Engine Aquila saves, options, media, and copied-game workflows. It reads existing files and writes copied outputs; patching a copied game does not modify your installed game."
-                               Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="This WinUI app is the primary user-facing Windows product lane. Maintainer infrastructure and historical app references remain separate from this user app."
+                    <TextBlock Text="Onslaught Toolkit is free and open source. The source, the technical notes behind every mod, and the contributor setup all live on the project page - and you need none of it to use the app."
                                AutomationProperties.AutomationId="AboutProductLaneNote"
-                               Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Contributor setup and technical notes are documented with the source project, not required for normal app use."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Retail behavior notes"
+                    <TextBlock Text="How your files are handled"
                                AutomationProperties.AutomationId="AboutRetailBehaviorTitle"
                                AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="The retail executable and retail-generated save/options files remain authoritative. The app is designed to patch existing files carefully instead of inventing new ones."
+                    <TextBlock Text="Nothing is ever created from scratch. The app edits copies of the files your game already wrote, keeps them the same size, and leaves every byte it does not understand exactly as it found it."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="defaultoptions.bea is the boot-time source for keybinds and most global settings, while .bes remains the career-progress file the Save Editor targets."
+                    <TextBlock Text="Your career progress lives in .bes save files; your controls and startup settings live in defaultoptions.bea. Save Lab handles the first, Game Options the second."
                                Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Executable patch flows stay catalog-driven, verified, and backup-guarded. Normal launchable work uses a playable copied game folder; advanced BEA.exe-only patching remains separate."
+                    <TextBlock Text="Before any change to a game copy is applied, the app checks the bytes it is about to replace are the ones it expected, and keeps a backup so it can put them back."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
             </Border>

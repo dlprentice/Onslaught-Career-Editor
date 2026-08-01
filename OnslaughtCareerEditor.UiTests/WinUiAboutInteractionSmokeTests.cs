@@ -44,10 +44,17 @@ public class WinUiAboutInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             Assert.That(TryGetName(FindByAutomationId(window, "AboutPageTitle")), Is.EqualTo("About Onslaught Toolkit"));
-            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("Primary Windows app"));
-            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("playable copied-game patching"));
-            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductLaneNote")), Does.Contain("primary user-facing Windows product lane"));
-            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductLaneNote")), Does.Contain("historical app references remain separate"));
+            // The summary now leads with what a player gets rather than with a
+            // product-lane description, but it must still say plainly that the
+            // installed game is not touched - that is the load-bearing claim.
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("Battle Engine Aquila"));
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductSummary")), Does.Contain("without ever touching your installed copy"));
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProvenanceTitle")), Is.EqualTo("Where this comes from"));
+            // Superseded 2026-08-01. This line used to describe the app as the
+            // "primary user-facing Windows product lane" with "historical app
+            // references remain separate" - internal vocabulary that told a
+            // player nothing. It now says the thing a player might act on.
+            Assert.That(TryGetName(FindByAutomationId(window, "AboutProductLaneNote")), Does.Contain("free and open source"));
             Assert.That(TryGetName(FindByAutomationId(window, "AboutVersionText")), Does.StartWith("Version:"));
 
             Assert.That(WindowContainsName(window, "Electron"), Is.False, "About should not present Electron as a primary product lane.");
