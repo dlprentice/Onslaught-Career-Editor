@@ -235,9 +235,39 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshSetupStatus();
         }
 
-        private void HomeQuickStartChooseFolderButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Opens a folder picker in place. This used to hand the player off to
+        /// the Settings page, which is a detour on the one screen that is
+        /// supposed to get them playing without going anywhere.
+        /// </summary>
+        private async void HomeQuickStartChooseFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            App.MainWindowInstance?.NavigateToTag("settings");
+            if (App.MainWindowInstance is null)
+            {
+                return;
+            }
+
+            string? path = await PickerInterop.PickFolderAsync(App.MainWindowInstance);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            GameDirectoryInspection picked = AppConfig.InspectGameDirectory(path);
+            AppConfig config = AppConfig.Load();
+            if (!config.SetGameDir(path))
+            {
+                ShowQuickStartNote("That folder could not be saved. Try another one.");
+                return;
+            }
+
+            AppConfigChangedService.NotifyChanged(config);
+            App.MainWindowInstance.RefreshFooter();
+            ShowQuickStartNote(picked.Status == GameDirectoryStatus.FullInstall
+                ? null
+                : "That folder does not have both BEA.exe and the data folder in it. Playable copies need the full install.");
+            AppStatusService.SetStatus("Home: game folder chosen");
+            RefreshSetupStatus();
         }
 
         /// <summary>
