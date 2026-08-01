@@ -88,7 +88,7 @@
                                 Content="Create safe copy"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
-                                Style="{StaticResource AccentButtonStyle}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
                                 Click="PrepareCopiedProfileButton_Click" />
                         <Button x:Name="PatchBenchTopPlaySafeCopyButton"
                                 AutomationProperties.AutomationId="PatchBenchTopPlaySafeCopyButton"
@@ -139,8 +139,13 @@
             <Grid Margin="0,0,0,16"
                   ColumnSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="360" />
+                    <!-- Both columns share the width proportionally. A fixed narrow right
+                         column made the "Safe game copy" text wrap into a far taller stack
+                         than the wide left card, and this row is Auto height, so the
+                         difference showed up as a large empty region under the left card
+                         before the Lab expander in the next row. -->
+                    <ColumnDefinition Width="3*" MinWidth="320" />
+                    <ColumnDefinition Width="2*" MinWidth="320" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -150,6 +155,7 @@
                 <Border x:Name="PatchSetBorder"
                         Grid.Row="0"
                         Grid.Column="0"
+                        VerticalAlignment="Top"
                         Style="{StaticResource SectionCardStyle}"
                         Margin="0">
                         <StackPanel Spacing="16">
@@ -316,6 +322,7 @@
 
                 <StackPanel Grid.Column="1"
                             Grid.Row="0"
+                            VerticalAlignment="Top"
                             Spacing="16">
                     <Border Style="{StaticResource SectionCardStyle}"
                             Margin="0">
@@ -380,7 +387,7 @@
                                     AutomationProperties.AutomationId="PatchBenchPrepareCopiedProfileButton"
                                     AutomationProperties.Name="Create safe copy of the game"
                                     Content="Create safe copy"
-                                    Style="{StaticResource AccentButtonStyle}"
+                                    Style="{StaticResource PrimaryActionButtonStyle}"
                                     Click="PrepareCopiedProfileButton_Click" />
                             <StackPanel x:Name="PatchBenchSafeCopyBusyPanel"
                                         Orientation="Horizontal"
@@ -425,7 +432,7 @@
                                         AutomationProperties.AutomationId="PatchBenchLaunchCopiedProfileButton"
                                         AutomationProperties.Name="Launch safe game copy"
                                         Content="Launch safe game copy"
-                                        Style="{StaticResource AccentButtonStyle}"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
                                         Click="LaunchCopiedProfileButton_Click" />
                                 <Button x:Name="PatchBenchStopCopiedProfileButton"
                                         AutomationProperties.AutomationId="PatchBenchStopCopiedProfileButton"
@@ -750,7 +757,7 @@
                                                                             <TextBlock Text="{Binding UserFacingStatus}"
                                                                                        FontSize="12"
                                                                                        TextWrapping="WrapWholeWords"
-                                                                                       Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                       Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                             <TextBlock Text="{Binding TrackLabel}"
                                                                                        FontSize="11"
                                                                                        FontWeight="SemiBold"
@@ -771,7 +778,7 @@
                                                                                     <TextBlock Text="{Binding ExpectedVisibleResult}"
                                                                                                FontSize="12"
                                                                                                TextWrapping="WrapWholeWords"
-                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                               Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                                 </StackPanel>
                                                                                 <StackPanel Spacing="2">
                                                                                     <TextBlock Text="What was checked"
@@ -780,7 +787,7 @@
                                                                                     <TextBlock Text="{Binding VerifiedProof}"
                                                                                                FontSize="12"
                                                                                                TextWrapping="WrapWholeWords"
-                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                               Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                                 </StackPanel>
                                                                                 <StackPanel Spacing="2">
                                                                                     <TextBlock Text="Not proven yet"
@@ -789,7 +796,7 @@
                                                                                     <TextBlock Text="{Binding StillUnproven}"
                                                                                                FontSize="12"
                                                                                                TextWrapping="WrapWholeWords"
-                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                               Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                                 </StackPanel>
                                                                                 <StackPanel Spacing="2">
                                                                                     <TextBlock Text="Proof note"
@@ -798,14 +805,14 @@
                                                                                     <TextBlock Text="{Binding ProofReference}"
                                                                                                FontSize="12"
                                                                                                TextWrapping="WrapWholeWords"
-                                                                                               Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                               Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                                 </StackPanel>
                                                                                  <TextBlock Text="{Binding OffsetText}"
                                                                                             FontSize="12"
-                                                                                            Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                            Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                                 <TextBlock Text="{Binding Spec.Key}"
                                                                                            FontSize="12"
-                                                                                           Foreground="{StaticResource ShellMutedTextBrush}" />
+                                                                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
                                                                         </StackPanel>
                                                                     </Expander>
                                                                 </StackPanel>
@@ -1131,7 +1138,7 @@
                                             AutomationProperties.AutomationId="PatchBenchStageCopiedTrackSwapButton"
                                             AutomationProperties.Name="Swap safe-copy tracks in the copied Music folder"
                                             Content="Swap safe-copy tracks"
-                                            Style="{StaticResource AccentButtonStyle}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"
                                             Click="StageCopiedTrackSwapButton_Click" />
                                     <TextBlock Text="Advanced replacement target"
                                                Style="{StaticResource SectionBodyTextStyle}" />
@@ -1154,7 +1161,7 @@
                                                 AutomationProperties.AutomationId="PatchBenchStageMusicReplacementButton"
                                                 AutomationProperties.Name="Stage track in safe copy as a music replacement"
                                                 Content="Stage track in safe copy"
-                                                Style="{StaticResource AccentButtonStyle}"
+                                                Style="{StaticResource PrimaryActionButtonStyle}"
                                                 Click="StageMusicReplacementButton_Click" />
                                         <Button x:Name="PatchBenchRestoreMusicReplacementButton"
                                                 AutomationProperties.AutomationId="PatchBenchRestoreMusicReplacementButton"
@@ -1243,7 +1250,7 @@
                                                 <Button x:Name="CreateWorkingCopyButton"
                                                         AutomationProperties.AutomationId="PatchBenchCreateWorkingCopyButton"
                                                         Content="Create BEA.exe-only copy"
-                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Style="{StaticResource PrimaryActionButtonStyle}"
                                                         Click="CreateWorkingCopyButton_Click" />
                                                 <StackPanel Spacing="6">
                                                     <TextBlock Text="BEA.exe-only copy"
@@ -1283,7 +1290,7 @@
                                                 <Button x:Name="VerifyButton"
                                                         AutomationProperties.AutomationId="PatchBenchVerifyButton"
                                                         Content="Verify BEA.exe-only copy"
-                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Style="{StaticResource PrimaryActionButtonStyle}"
                                                         Click="VerifyButton_Click" />
                                                 <Button x:Name="ApplyButton"
                                                         AutomationProperties.AutomationId="PatchBenchApplyButton"

@@ -24,15 +24,68 @@ public class ThemeContrastAuditTests
     }
 
     [Test]
-    public void WinUiApp_DefaultsToLightThemeForPrimaryProductLaunch()
+    public void WinUiApp_DoesNotHardcodeATheme_SoItCanFollowWindows()
     {
+        // Superseded 2026-08-01. This previously required RequestedTheme="Light"
+        // on the Application element. That pin meant the app ignored the user's
+        // Windows setting and made the complete dark palette below unreachable
+        // by anyone. The shell now applies the stored appearance choice
+        // (AppThemePreference: system/light/dark) to its root element, which is
+        // also what lets the switch take effect without a restart. Both
+        // palettes stay contrast-gated by the audits in this file.
         XDocument document = XDocument.Load(WinUiAppXamlPath);
         string? requestedTheme = document.Root?.Attribute("RequestedTheme")?.Value;
 
         Assert.That(
             requestedTheme,
-            Is.EqualTo("Light"),
-            "The primary WinUI product should launch in the calmer light theme by default; dark resources may remain available, but forced dark launch chrome made broad visual QA read heavier than intended.");
+            Is.Null,
+            "App.xaml must not pin RequestedTheme; the shell root applies the user's stored appearance choice instead.");
+    }
+
+    [Test]
+    public void ShellThemeBrushes_AreBoundWithThemeResource_SoTheyFollowTheAppearanceChoice()
+    {
+        // Regression guard for a real, visible defect: the Lore reader kept a
+        // dark panel with dark text after switching to Light, because
+        // StaticResource resolves a theme-dictionary key exactly once when the
+        // page loads and never re-resolves. Any brush that lives in a theme
+        // dictionary must be bound with ThemeResource.
+        string winUiRoot = Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI");
+        Regex staticThemeBrush = new(@"\{StaticResource\s+(Shell|Media|Texture)\w*Brush\}");
+        List<string> offenders = [];
+
+        foreach (string xamlPath in Directory.GetFiles(winUiRoot, "*.xaml", SearchOption.AllDirectories)
+                     .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                    !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")))
+        {
+            string source = File.ReadAllText(xamlPath);
+            foreach (Match match in staticThemeBrush.Matches(source))
+            {
+                int line = source[..match.Index].Count(c => c == '\n') + 1;
+                offenders.Add($"{Path.GetRelativePath(TestFixturePaths.RepoRoot, xamlPath)}:{line}: {match.Value}");
+            }
+        }
+
+        Assert.That(
+            offenders,
+            Is.Empty,
+            "Theme-dictionary brushes must use ThemeResource, not StaticResource, or they freeze at the theme that was active when the page first loaded.");
+    }
+
+    [Test]
+    public void WinUiShell_AppliesTheStoredAppearanceChoiceToItsRoot()
+    {
+        string mainWindowCodeBehind = File.ReadAllText(
+            Path.Combine(TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "MainWindow.xaml.cs"));
+
+        Assert.That(
+            mainWindowCodeBehind,
+            Does.Contain("RootShellGrid.RequestedTheme"),
+            "The shell root must carry the theme so the appearance choice applies immediately.");
+        Assert.That(
+            mainWindowCodeBehind,
+            Does.Contain("AppThemePreference.Normalize"),
+            "The stored value must be normalized, so a hand-edited config cannot stop the app from starting.");
     }
 
     [Test]

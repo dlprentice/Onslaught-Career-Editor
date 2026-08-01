@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -86,6 +87,14 @@ namespace Onslaught___Career_Editor
 
         [JsonPropertyName("preventAudioVideoOverlap")]
         public bool PreventAudioVideoOverlap { get; set; } = true;
+
+        /// <summary>
+        /// Appearance preference: "system", "light", or "dark". Unrecognized
+        /// values fall back to the shipped default rather than throwing, so a
+        /// hand-edited config can never stop the app from starting.
+        /// </summary>
+        [JsonPropertyName("appTheme")]
+        public string AppTheme { get; set; } = AppThemePreference.Default;
 
 
         /// <summary>
@@ -398,15 +407,22 @@ namespace Onslaught___Career_Editor
                 yield break;
             }
 
-            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            // Ask Windows where Steam actually is before guessing. The guesses
+            // below only ever covered C:, D:, and E:, so an install on any
+            // other drive - or in a non-default folder - was undiscoverable and
+            // the user had to go find it by hand.
+            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string registryRoot in GetRegistrySteamRoots())
             {
-                @"C:\Program Files (x86)\Steam",
-                @"C:\Program Files\Steam",
-                @"D:\Steam",
-                @"D:\SteamLibrary",
-                @"E:\Steam",
-                @"E:\SteamLibrary",
-            };
+                candidates.Add(registryRoot);
+            }
+
+            candidates.Add(@"C:\Program Files (x86)\Steam");
+            candidates.Add(@"C:\Program Files\Steam");
+            candidates.Add(@"D:\Steam");
+            candidates.Add(@"D:\SteamLibrary");
+            candidates.Add(@"E:\Steam");
+            candidates.Add(@"E:\SteamLibrary");
 
             foreach (string defaultGamePath in DefaultSteamPaths)
             {
@@ -422,6 +438,58 @@ namespace Onslaught___Career_Editor
             foreach (string path in candidates)
             {
                 yield return path;
+            }
+        }
+
+        /// <summary>
+        /// Steam's own record of where it is installed. Returns nothing on a
+        /// non-Windows host or if the keys are absent; every failure is a quiet
+        /// fall-through to the guessed paths, never an error the user sees.
+        /// </summary>
+        internal static IEnumerable<string> GetRegistrySteamRoots()
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                yield break;
+            }
+
+            foreach ((RegistryHive hive, string subKey, string valueName) in SteamRegistryLocations)
+            {
+                string? value = TryReadRegistryString(hive, subKey, valueName);
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                // Steam writes forward slashes ("c:/program files (x86)/steam").
+                string normalized = value.Replace('/', Path.DirectorySeparatorChar).Trim();
+                if (normalized.Length > 0)
+                {
+                    yield return normalized;
+                }
+            }
+        }
+
+        private static readonly (RegistryHive Hive, string SubKey, string ValueName)[] SteamRegistryLocations =
+        {
+            (RegistryHive.CurrentUser, @"Software\Valve\Steam", "SteamPath"),
+            (RegistryHive.LocalMachine, @"SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath"),
+            (RegistryHive.LocalMachine, @"SOFTWARE\Valve\Steam", "InstallPath"),
+        };
+
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        private static string? TryReadRegistryString(RegistryHive hive, string subKey, string valueName)
+        {
+            try
+            {
+                using RegistryKey baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+                using RegistryKey? key = baseKey.OpenSubKey(subKey);
+                return key?.GetValue(valueName) as string;
+            }
+            catch (Exception)
+            {
+                // Security, IO, and permission failures are all "not found".
+                return null;
             }
         }
 

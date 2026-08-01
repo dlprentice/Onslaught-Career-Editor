@@ -76,7 +76,7 @@
                                AutomationProperties.AutomationId="HomePageTitle"
                                AutomationProperties.HeadingLevel="Level1"
                                Style="{StaticResource SectionTitleTextStyle}" />
-                    <TextBlock Text="Home opens the workflow you choose; it does not change files by itself. The configured game install is treated as source material. Start with a safe game copy or a separate save/options copy."
+                    <TextBlock Text="Play Battle Engine Aquila windowed and widescreen on a modern PC, edit your career, and browse its music, cutscenes, and lore. Your installed game is only ever read - every change lands in a separate copy."
                                AutomationProperties.AutomationId="HomePagePurpose"
                                Style="{StaticResource SectionBodyTextStyle}"
                                TextWrapping="WrapWholeWords" />
@@ -98,6 +98,62 @@
                                 Click="NavigateButton_Click" />
                     </InfoBar.ActionButton>
                 </InfoBar>
+
+                <Border x:Name="HomeSnapshotBorder"
+                        Style="{StaticResource SectionCardStyle}"
+                        Margin="0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Your setup"
+                                   AutomationProperties.AutomationId="HomeSnapshotTitle"
+                                   AutomationProperties.HeadingLevel="Level2"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+                        <Grid ColumnSpacing="16"
+                              RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Game"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                <TextBlock x:Name="HomeSnapshotGameTextBlock"
+                                           AutomationProperties.AutomationId="HomeSnapshotGame"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="Saves found"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                <TextBlock x:Name="HomeSnapshotSavesTextBlock"
+                                           AutomationProperties.AutomationId="HomeSnapshotSaves"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="2">
+                                <TextBlock Text="Media"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                <TextBlock x:Name="HomeSnapshotMediaTextBlock"
+                                           AutomationProperties.AutomationId="HomeSnapshotMedia"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
                 <TextBlock Text="Recommended first steps"
                            AutomationProperties.AutomationId="HomePrimaryTasksTitle"

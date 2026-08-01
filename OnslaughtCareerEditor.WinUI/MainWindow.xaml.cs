@@ -85,8 +85,26 @@ namespace OnslaughtCareerEditor.WinUI
 
             Closed += MainWindow_Closed;
             RegisterHomeArrivalFocusTracking();
+            ApplyWindowIcon();
+            ApplyThemePreference(AppConfig.Load().AppTheme);
             RefreshFooter();
             NavigateToTagCore(GetInitialTag(), saveSubTab: null, NavigationEntrySource.Programmatic);
+        }
+
+        /// <summary>
+        /// Applies the stored appearance choice to the shell root, which is
+        /// what makes the switch take effect immediately instead of only at
+        /// the next launch. The app used to pin Light in App.xaml and ship a
+        /// complete dark palette no user could reach.
+        /// </summary>
+        public void ApplyThemePreference(string? preference)
+        {
+            RootShellGrid.RequestedTheme = AppThemePreference.Normalize(preference) switch
+            {
+                AppThemePreference.Light => ElementTheme.Light,
+                AppThemePreference.Dark => ElementTheme.Dark,
+                _ => ElementTheme.Default,
+            };
         }
 
         public void RefreshFooter()
@@ -801,6 +819,33 @@ namespace OnslaughtCareerEditor.WinUI
             catch
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Puts the project's own icon on the window, taskbar, and alt-tab.
+        /// Without this the app shows the generic .NET executable icon, which
+        /// reads as an unfinished dev build. Best effort: a missing or
+        /// unreadable icon must never stop the app from opening.
+        /// </summary>
+        private void ApplyWindowIcon()
+        {
+            if (_appWindow is null)
+            {
+                return;
+            }
+
+            try
+            {
+                string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+                if (File.Exists(iconPath))
+                {
+                    _appWindow.SetIcon(iconPath);
+                }
+            }
+            catch
+            {
+                // Cosmetic only.
             }
         }
 

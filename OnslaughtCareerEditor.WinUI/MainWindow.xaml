@@ -6,7 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="Onslaught Toolkit - Battle Engine Aquila">
-    <Grid Background="{ThemeResource ShellPageBrush}">
+    <Grid x:Name="RootShellGrid"
+          Background="{ThemeResource ShellPageBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -27,7 +28,7 @@
                                FontSize="22"
                                FontWeight="Bold"
                                Foreground="{ThemeResource ShellHeroTextBrush}" />
-                    <TextBlock Text="Your toolkit for safe save editing, game settings, media, lore, and copied-game mods."
+                    <TextBlock Text="Play it windowed and widescreen, edit your career, and explore everything inside the game."
                                Margin="0,4,0,0"
                                FontSize="12"
                                Foreground="{ThemeResource ShellHeroTextBrush}"
@@ -62,6 +63,15 @@
                                     AccessKey="H"
                                     Content="Home"
                                     Tag="home" />
+                <!-- Order follows the Home page's own numbered first steps:
+                     make a safe copy to play, then edit a save. It previously
+                     ran Saves/Media/Assets/Lore first, so the recommended
+                     starting point sat sixth, after three browse-only pages. -->
+                <NavigationViewItem x:Name="BinaryNavigationItem"
+                                    AutomationProperties.AutomationId="BinaryNavigationItem"
+                                    AccessKey="W"
+                                    Content="Windowed &amp; Mods"
+                                    Tag="binary" />
                 <NavigationViewItem x:Name="SavesNavigationItem"
                                     AutomationProperties.AutomationId="SavesNavigationItem"
                                     AccessKey="S"
@@ -72,21 +82,16 @@
                                     AccessKey="M"
                                     Content="Media"
                                     Tag="media" />
-                <NavigationViewItem x:Name="AssetLibraryNavigationItem"
-                                    AutomationProperties.AutomationId="AssetLibraryNavigationItem"
-                                    AccessKey="A"
-                                    Content="Asset Library"
-                                    Tag="assets" />
                 <NavigationViewItem x:Name="LoreNavigationItem"
                                     AutomationProperties.AutomationId="LoreNavigationItem"
                                     AccessKey="L"
                                     Content="Lore"
                                     Tag="lore" />
-                <NavigationViewItem x:Name="BinaryNavigationItem"
-                                    AutomationProperties.AutomationId="BinaryNavigationItem"
-                                    AccessKey="W"
-                                    Content="Windowed &amp; Mods"
-                                    Tag="binary" />
+                <NavigationViewItem x:Name="AssetLibraryNavigationItem"
+                                    AutomationProperties.AutomationId="AssetLibraryNavigationItem"
+                                    AccessKey="A"
+                                    Content="Asset Library"
+                                    Tag="assets" />
                 <NavigationViewItem x:Name="SettingsNavigationItem"
                                     AutomationProperties.AutomationId="SettingsNavigationItem"
                                     AccessKey="T"

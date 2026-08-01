@@ -70,7 +70,7 @@
                             AutomationProperties.AutomationId="AnalyzeTaskButton"
                             Content="Analyze a save"
                             HorizontalAlignment="Left"
-                            Style="{StaticResource AccentButtonStyle}"
+                            Style="{StaticResource PrimaryActionButtonStyle}"
                             Click="AnalyzeTaskButton_Click" />
                 </StackPanel>
 
@@ -195,7 +195,7 @@
                                                 AutomationProperties.AutomationId="SaveAnalyzerAnalyzeButton"
                                                 Grid.Column="1"
                                                 Content="Analyze / Reload"
-                                                Style="{StaticResource AccentButtonStyle}"
+                                                Style="{StaticResource PrimaryActionButtonStyle}"
                                                 Click="AnalyzeButton_Click" />
                                     </Grid>
                                 </StackPanel>
@@ -627,7 +627,7 @@
                                 <Button x:Name="EditorPatchFocusedGoodieButton"
                                         AutomationProperties.AutomationId="SaveEditorPatchFocusedGoodieButton"
                                         Content="Write focused Goodie copy"
-                                        Style="{StaticResource AccentButtonStyle}"
+                                        Style="{StaticResource PrimaryActionButtonStyle}"
                                         Click="EditorPatchFocusedGoodieButton_Click"
                                         HorizontalAlignment="Left"
                                         MinWidth="210" />
@@ -857,7 +857,7 @@
                                     <Button x:Name="EditorPatchButton"
                                             AutomationProperties.AutomationId="SaveEditorPatchButton"
                                             Content="Write patched save copy"
-                                            Style="{StaticResource AccentButtonStyle}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"
                                             Click="EditorPatchButton_Click"
                                             HorizontalAlignment="Left"
                                             MinWidth="180" />
@@ -1296,7 +1296,7 @@
                                     <Button x:Name="ConfigurationPatchButton"
                                             AutomationProperties.AutomationId="ConfigurationPatchButton"
                                             Content="Write options copy"
-                                            Style="{StaticResource AccentButtonStyle}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}"
                                             Click="ConfigurationPatchButton_Click"
                                             HorizontalAlignment="Left"
                                             MinWidth="200" />

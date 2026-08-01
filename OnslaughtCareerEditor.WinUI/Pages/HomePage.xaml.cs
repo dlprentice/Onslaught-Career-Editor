@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -27,12 +28,51 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshSetupStatus();
         }
 
+        /// <summary>
+        /// Shows what the app already knows about this machine. Home used to be
+        /// a static brochure even though the install path, save count, and
+        /// media readiness were all computed elsewhere on every launch.
+        /// </summary>
+        private void RefreshSnapshot(string? gameDir, GameDirectoryInspection inspection)
+        {
+            bool ready = inspection.Status == GameDirectoryStatus.FullInstall;
+
+            HomeSnapshotGameTextBlock.Text = ready && !string.IsNullOrWhiteSpace(gameDir)
+                ? Path.GetFileName(gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                : "Not set yet";
+
+            if (string.IsNullOrWhiteSpace(gameDir))
+            {
+                HomeSnapshotSavesTextBlock.Text = "—";
+                HomeSnapshotMediaTextBlock.Text = "—";
+                return;
+            }
+
+            try
+            {
+                int saveCount = AppConfig.FindSaveFiles(gameDir).Count;
+                HomeSnapshotSavesTextBlock.Text = saveCount switch
+                {
+                    0 => "None yet",
+                    1 => "1 file",
+                    _ => $"{saveCount} files",
+                };
+            }
+            catch (Exception)
+            {
+                HomeSnapshotSavesTextBlock.Text = "Unavailable";
+            }
+
+            HomeSnapshotMediaTextBlock.Text = ready ? "Ready to browse" : "Needs the full install";
+        }
+
         private void RefreshSetupStatus()
         {
             AppConfig config = AppConfig.Load();
             string? configuredPath = config.GameDirectory;
             string? gameDir = config.GetGameDirOrDetect(persistDetection: true);
             GameDirectoryInspection inspection = AppConfig.InspectGameDirectory(gameDir);
+            RefreshSnapshot(gameDir, inspection);
             HomeGameFolderState state = inspection.Status == GameDirectoryStatus.FullInstall
                 ? HomeGameFolderState.Ready
                 : string.IsNullOrWhiteSpace(configuredPath)

@@ -96,7 +96,29 @@
 
             <Border Style="{StaticResource SectionCardStyle}">
                 <StackPanel Spacing="10">
+                    <TextBlock Text="Appearance"
+                               AutomationProperties.HeadingLevel="Level2"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Choose how the app looks. Match Windows follows your system light or dark setting."
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <ComboBox x:Name="AppThemeComboBox"
+                              AutomationProperties.AutomationId="SettingsAppThemeComboBox"
+                              AutomationProperties.Name="App theme"
+                              Header="App theme"
+                              MinWidth="220"
+                              SelectionChanged="AppThemeChanged">
+                        <ComboBoxItem Content="Match Windows" Tag="system" />
+                        <ComboBoxItem Content="Light" Tag="light" />
+                        <ComboBoxItem Content="Dark" Tag="dark" />
+                    </ComboBox>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SectionCardStyle}">
+                <StackPanel Spacing="10">
                     <TextBlock Text="Media Playback"
+                               AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
                     <TextBlock Text="Control whether audio or video continues playing when you switch pages."
