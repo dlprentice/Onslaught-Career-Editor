@@ -2,9 +2,9 @@
 
 > Status: active public-primary contributor guide
 > Current truth: this is the normal collaboration repository for the Battle Engine Aquila preservation, tooling, and reconstruction project.
-> Last updated: 2026-07-29. Delegation, evidence, and documentation-validation
-> guidance was re-reviewed and simplified; other sections retain their prior
-> evidence boundaries.
+> Last updated: 2026-08-01. The blanket "never touch an installed game" rule was
+> replaced by three principles about backups, saves, and the pristine specimen;
+> other sections retain their prior evidence boundaries.
 > Summary: how to work in this repository — the hard boundaries, the delegation
 > rules, the evidence bar, and which gate a given change has to run.
 
@@ -29,7 +29,27 @@
   or bulky runtime captures. The canonical distributable Ghidra project lives
   only under `reverse-engineering/ghidra/`. The tracked regression fixture
   `tests_shared/fixtures/gold_career_save.bin` is the narrow save exception.
-- Never patch or mutate an installed Battle Engine Aquila directory or original `BEA.exe`; operate on copied targets only.
+- **Three principles govern anything that writes to a user's files.** They
+  replaced a blanket "never touch an installed game" prohibition on 2026-08-01,
+  because a rule that forbids the thing people want produces workarounds rather
+  than safety. Permissive where it costs nothing; strict where data can be lost.
+  1. **Nothing irreversible without an explicit informed choice AND a verified
+     backup made before the write.** The backup has no opt-out. Express it as a
+     precondition the calling code cannot skip rather than a step it must
+     remember — see `BinaryPatchEngine.AuthorizeInstalledGameWrite`, which
+     cannot return permission until a verified original exists beside the target.
+     Refuse rather than manufacture: a backup taken from an already-modified file
+     and named "original" destroys the only route back.
+  2. **The user's saves are theirs.** Nothing may destroy save data as a side
+     effect of doing something else. A delete that happens to remove careers is
+     the failure this principle exists for; detect them, name them, and offer to
+     keep them before proceeding.
+  3. **The pristine specimen stays untouchable.** `74154bfa…` is the measurement
+     baseline for every byte finding in the RE lane. Read from it, never write to
+     it. This one is absolute and is not a safety blanket for anything else.
+- The maintainer's own installed `BEA.exe` is deliberately patched for personal
+  testing. That is not drift and is not to be flagged. Read byte evidence from a
+  pristine specimen and name the specimen file and hash in every byte finding.
 - Do not synthesize `.bes` saves from scratch. Start from a real baseline and preserve unknown bytes.
 - Keep public claims bounded to demonstrated source, static evidence, controlled copied-runtime evidence, or focused tests. Separate proven behavior from plans and reconstruction aspirations.
 - Do not add hosted CI, release automation, or workflow scaffolding. Validation is local.
@@ -146,4 +166,4 @@ npm run dev
   retrofitting unrelated historical metadata, but the backlog may only shrink.
 - Release/public-boundary changes: follow `README.RELEASE.md` and `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`.
 
-Commit, push, publication, and release are standing-authorized by the maintainer (2026-07-30; recorded in `developer_state.json` under `_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after that, pushing is routine. Mutation of installed game directories and pristine binaries remains forbidden by the boundaries above.
+Commit, push, publication, and release are standing-authorized by the maintainer (2026-07-30; recorded in `developer_state.json` under `_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after that, pushing is routine. The pristine specimen remains untouchable, and anything that writes to a user's files still owes them the backup and the choice, per the principles above.

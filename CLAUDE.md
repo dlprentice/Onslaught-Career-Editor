@@ -1,8 +1,9 @@
 # Onslaught Toolkit
 
 Status: active — rules, routing, and state pointers; not the canonical evidence store.
-Last updated: 2026-07-29. Delegation and interrupted-work resumption routing
-were re-reviewed; other rules retain their prior evidence boundaries.
+Last updated: 2026-08-01. The blanket "never touch an installed game" rule was
+replaced by three principles about backups, saves, and the pristine specimen;
+other rules retain their prior evidence boundaries.
 Summary: the highest-stakes rules that bind every session, and the pointers to
 where the current state actually lives.
 
@@ -12,8 +13,25 @@ highest-stakes rules early and does not restate or override it.
 
 ## Rules that must not be violated
 
-- Never patch or mutate an installed Battle Engine Aquila directory or the
-  original `BEA.exe`. Operate on verified copied targets only.
+**Three principles govern anything that writes to a user's files.** They
+replaced a blanket "never touch an installed game" prohibition on 2026-08-01: a
+rule that forbids the thing people want produces workarounds, not safety. Be
+permissive where it costs nothing and strict where data can be lost.
+
+1. **Nothing irreversible without an explicit informed choice AND a verified
+   backup made before the write.** The backup has no opt-out. Make it a
+   precondition the calling code cannot skip, not a step it must remember —
+   `BinaryPatchEngine.AuthorizeInstalledGameWrite` will not hand back permission
+   until a verified original sits beside the target, so a caller that skipped the
+   backup has nothing to pass. Refuse rather than manufacture: snapshotting an
+   already-modified file and naming it "original" destroys the only route back.
+2. **The user's saves are theirs.** Nothing may destroy save data as a side
+   effect of doing something else. Detect, name, and offer to keep — see
+   `SafeCopySaveRescueService`.
+3. **The pristine specimen (`74154bfa…`) stays untouchable.** It is the
+   measurement baseline for every byte finding in the RE lane, not a safety
+   blanket. Read from it, never write to it. This one is absolute.
+
 - **The maintainer's own Steam `BEA.exe` is already patched, deliberately, for
   his personal testing — this is not drift and is not to be flagged.** The
   pristine original sits beside it as `BEA.exe.original.backup` (`74154bfa…`),
@@ -119,5 +137,6 @@ Commit, push, publication, and release are standing-authorized by the
 maintainer (2026-07-30; recorded in `developer_state.json` under
 `_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean
 public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after
-that, pushing is routine. Mutation of installed game directories and pristine
-binaries remains forbidden by the rules above.
+that, pushing is routine. The pristine specimen remains untouchable, and
+anything that writes to a user's files still owes them the backup and the
+choice, per the principles above.
