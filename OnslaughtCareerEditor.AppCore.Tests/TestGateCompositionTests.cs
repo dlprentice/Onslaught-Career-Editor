@@ -17,6 +17,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         {
             "OnslaughtCareerEditor.AppCore.Tests",
             "OnslaughtCareerEditor.UiTests",
+            "OnslaughtCareerEditor.Cli.Tests",
             Path.Combine("rebuild", "OnslaughtRebuild.Core.Tests"),
             Path.Combine("rebuild", "OnslaughtRebuild.Client.Tests"),
         };

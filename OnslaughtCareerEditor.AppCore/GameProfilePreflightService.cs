@@ -111,6 +111,14 @@ namespace Onslaught___Career_Editor
     public static class GameProfilePreflightService
     {
         public const string SchemaVersion = "winui-copied-game-profile.v1";
+
+        /// <summary>
+        /// The manifest every generated playable copied game folder carries. Its presence is what
+        /// distinguishes a folder this app generated from any other directory under the app-owned root,
+        /// which is why <see cref="DeleteGeneratedProfile"/> requires it and the runtime service checks
+        /// for it before it will launch or stop anything.
+        /// </summary>
+        public const string ProfileManifestFileName = "onslaught-profile-manifest.json";
         public const string Level100TextModSchemaVersion = "winui-level100-english-text-mod.v1";
         public const string Level100EarlyFlightModSchemaVersion = "winui-level100-early-flight-mod.v1";
 
@@ -2038,6 +2046,63 @@ namespace Onslaught___Career_Editor
 
                 current = parent;
             }
+        }
+
+        /// <summary>
+        /// Delete one app-generated playable copied game folder, and refuse anything else.
+        ///
+        /// This exists because the destructive half of the safe-copy lane had no callable API at all:
+        /// the only deletion in the codebase was <see cref="DeleteGeneratedTarget"/>, which is private
+        /// and only runs as rollback when prepare throws. A headless caller that wants to clean up its
+        /// own copies would otherwise have to call <c>Directory.Delete</c> itself, reimplementing - and
+        /// eventually mis-implementing - the containment guards. Handing out the guarded routine is the
+        /// safer of the two options.
+        ///
+        /// Every refusal below is deliberate. In order: the folder must resolve under the app-owned root
+        /// and must not BE the root (so a caller cannot empty the whole workspace with one call); no
+        /// component of either path may be a reparse point (so a junction cannot redirect the recursive
+        /// delete out of the workspace); and the folder must carry the manifest this service writes, so
+        /// only folders this app generated can be deleted - never an arbitrary directory that happens to
+        /// sit under the root.
+        ///
+        /// It is the caller's job to ensure nothing is still running out of the folder; this routine does
+        /// not inspect processes.
+        /// </summary>
+        /// <returns>The normalized path that was deleted.</returns>
+        public static string DeleteGeneratedProfile(string profileRoot, string appOwnedProfilesRoot)
+        {
+            if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
+                throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
+
+            if (string.IsNullOrWhiteSpace(profileRoot))
+                throw new InvalidOperationException("A playable copied game folder is required.");
+
+            string normalizedRoot = NormalizeDirectoryForCreation(appOwnedProfilesRoot);
+            if (!Directory.Exists(profileRoot))
+                throw new DirectoryNotFoundException($"Playable copied game folder does not exist: {profileRoot}");
+
+            string normalizedProfile = NormalizeExistingDirectory(profileRoot);
+            RejectExistingReparseAncestors(normalizedRoot, "app-owned playable copied game folder root");
+            RejectExistingReparseAncestors(normalizedProfile, "playable copied game folder target");
+            RejectReparsePoint(normalizedProfile, "playable copied game folder target");
+
+            if (!IsSameOrUnderRoot(normalizedProfile, normalizedRoot) ||
+                string.Equals(normalizedProfile, normalizedRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Refusing to delete a playable copied game folder outside the app-owned playable copied game folder root.");
+            }
+
+            string manifestPath = Path.Combine(normalizedProfile, ProfileManifestFileName);
+            if (!File.Exists(manifestPath))
+            {
+                throw new InvalidOperationException(
+                    $"Refusing to delete a folder that is not an app-generated playable copied game folder: {ProfileManifestFileName} is missing.");
+            }
+
+            RejectReparsePoint(manifestPath, "playable copied game folder manifest");
+            Directory.Delete(normalizedProfile, recursive: true);
+            return normalizedProfile;
         }
 
         private static void DeleteGeneratedTarget(string targetRoot, string outputRoot)

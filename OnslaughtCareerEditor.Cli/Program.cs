@@ -1,1657 +1,571 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.IO;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
+using Onslaught___Career_Editor.Cli;
 
 namespace Onslaught___Career_Editor
 {
     /// <summary>
-    /// Dedicated CLI host for retail-backed save/config/binary patch workflows.
+    /// Headless host for the toolkit's save, options, safe-copy, binary-patch, and process lanes.
+    ///
+    /// Two parsers live here on purpose. The verb tree is the interface going forward; the legacy
+    /// flag-style command is kept intact behind a first-argument check so existing invocations and
+    /// scripts keep working byte for byte. Dispatch is by first token rather than by trying to make one
+    /// grammar serve both, because a root command carrying both a positional input file and a set of
+    /// subcommands makes "is <c>saves</c> a verb or a filename?" a question the parser has to guess at.
     /// </summary>
     public static class Program
     {
-        private const string AppCliName = "onslaught-career-editor";
-        // Win32 console attachment for CLI output
+        public const string AppCliName = "onslaught-career-editor";
+
         [DllImport("kernel32.dll")]
         private static extern bool AttachConsole(int dwProcessId);
 
-        [DllImport("kernel32.dll")]
-        private static extern bool FreeConsole();
-
-        [DllImport("kernel32.dll")]
-        private static extern bool AllocConsole();
-
         private const int ATTACH_PARENT_PROCESS = -1;
+
+        private static readonly HashSet<string> VerbNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "config", "saves", "goodies", "options", "copy", "patch", "process", "version",
+        };
 
         [STAThread]
         public static int Main(string[] args)
         {
             AttachConsole(ATTACH_PARENT_PROCESS);
-            return BuildRootCommand().Invoke(args);
+            return Run(args, Console.Out, Console.Error);
         }
 
         /// <summary>
-        /// Build the System.CommandLine root command with all options.
+        /// The whole CLI, with its output injected. Tests drive this directly rather than spawning a
+        /// process, which is what makes it affordable to pin verb routing, envelope shape, and the
+        /// exit-code split.
         /// </summary>
-        private static RootCommand BuildRootCommand()
+        public static int Run(string[] args, TextWriter output, TextWriter error)
         {
-            // Positional arguments
-            var inputArg = new Argument<FileInfo?>(
-                "input",
-                description: "Input .bes/.bea file",
-                getDefaultValue: () => null);
+            ArgumentNullException.ThrowIfNull(args);
 
-            var outputArg = new Argument<FileInfo?>(
-                "output",
-                description: "Output .bes/.bea file (required for patching)",
-                getDefaultValue: () => null);
+            var console = new TextWriterConsole(output, error);
+            CliContext MakeContext(bool json) => new(output, error, json);
 
-            // Options (matching patcher.py)
-            var analyzeOption = new Option<bool>(
-                "--analyze",
-                "Analyze the input file without patching");
-
-            var verboseOption = new Option<bool>(
-                new[] { "--verbose", "-v" },
-                "Verbose output (hex dumps in analyze mode)");
-
-            var dumpMysteryOption = new Option<bool>(
-                "--dump-mystery",
-                "Show hex dump of reserved/unmapped byte regions (use with --analyze)");
-
-            var compareOption = new Option<FileInfo?>(
-                "--compare",
-                "Compare input with another .bes/.bea file");
-
-            var listGoodiesOption = new Option<bool>(
-                "--list-goodies",
-                "List per-slot goodie states (read-only; requires input file).");
-
-            var showReservedGoodiesOption = new Option<bool>(
-                "--show-reserved-goodies",
-                "With --list-goodies: include reserved slots (233-299).");
-
-            var setGoodieStateOption = new Option<string[]>(
-                "--set-goodie-state",
-                "Targeted Goodie state override for copied-save proof setup (format: INDEX:STATE; state 0/1/2/3 or locked/instructions/new/old).")
-            { AllowMultipleArgumentsPerToken = true };
-
-            var newOption = new Option<bool>(
-                "--new",
-                "Mark goodies as NEW (gold) instead of OLD (blue)");
-
-            var killsOption = new Option<int?>(
-                "--kills",
-                "Global kill count for all categories (default: 100)");
-
-            var rankOption = new Option<string?>(
-                "--rank",
-                "Rank written to every completed mission: S, A, B, C, D, E, or NONE. Omit it alongside --level-rank to change only the listed missions. Defaults to S when mission patching is on and no --level-rank was given.");
-
-            var killsOnlyOption = new Option<bool>(
-                "--kills-only",
-                "Only patch kill counts (preserve nodes, links, goodies)");
-
-            var noNodesOption = new Option<bool>(
-                "--no-nodes",
-                "Skip patching mission nodes");
-
-            var noLinksOption = new Option<bool>(
-                "--no-links",
-                "Skip patching mission links");
-
-            var noGoodiesOption = new Option<bool>(
-                "--no-goodies",
-                "Skip patching goodies");
-
-            var noKillsOption = new Option<bool>(
-                "--no-kills",
-                "Skip patching kill counts");
-
-            var allowCareerSectionsOnOptionsFileOption = new Option<bool>(
-                "--allow-career-sections-on-options-file",
-                "Allow patching career sections when input/output is .bea/defaultoptions.bea (advanced; off by default).");
-
-            // Per-level rank (repeatable): --level-rank N:GRADE
-            var levelRankOption = new Option<string[]>(
-                "--level-rank",
-                "Per-level rank override (format: NODE_INDEX:GRADE, repeatable; node index 1-43). Sets only the listed missions; every other mission keeps its current grade unless --rank is also supplied.")
-            { AllowMultipleArgumentsPerToken = true };
-
-            // Per-category kill count options
-            var aircraftKillsOption = new Option<int?>(
-                "--aircraft-kills",
-                "Override aircraft kill count (thresholds: 25/50/75/100). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
-
-            var vehicleKillsOption = new Option<int?>(
-                "--vehicle-kills",
-                "Override vehicle kill count (thresholds: 100/200/300/400). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
-
-            var emplacementKillsOption = new Option<int?>(
-                "--emplacement-kills",
-                "Override emplacement kill count (thresholds: 25/50; 75 appears only in combined unlocks). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
-
-            var infantryKillsOption = new Option<int?>(
-                "--infantry-kills",
-                "Override infantry kill count (thresholds: 40/80/160). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
-
-            var mechKillsOption = new Option<int?>(
-                "--mech-kills",
-                "Override mech kill count (thresholds: 20/40/80; 40 unlocks two goodies). Sets only this category; the other four keep their current counts unless --kills is also supplied.");
-
-            // Optional CCareer settings overrides (true dword view; omit to preserve existing save values)
-            var soundVolumeOption = new Option<double?>(
-                "--sound-volume",
-                "Override sound volume (0.0-1.0). Omit to preserve.");
-
-            var musicVolumeOption = new Option<double?>(
-                "--music-volume",
-                "Override music volume (0.0-1.0). Omit to preserve.");
-
-            var invertWalkerP1Option = new Option<string?>(
-                new[] { "--invert-walker-p1", "--invert-y-p1" },
-                "Override invert-Y (Walker mode) for player 1: on/off/true/false/1/0 (omit to preserve).");
-
-            var invertWalkerP2Option = new Option<string?>(
-                new[] { "--invert-walker-p2", "--invert-y-p2" },
-                "Override invert-Y (Walker mode) for player 2: on/off/true/false/1/0 (omit to preserve).");
-
-            var invertFlightP1Option = new Option<string?>(
-                "--invert-flight-p1",
-                "Override invert-Y (Flight/Jet mode) for player 1: on/off/true/false/1/0 (omit to preserve).");
-
-            var invertFlightP2Option = new Option<string?>(
-                "--invert-flight-p2",
-                "Override invert-Y (Flight/Jet mode) for player 2: on/off/true/false/1/0 (omit to preserve).");
-
-            var vibrationP1Option = new Option<string?>(
-                "--vibration-p1",
-                "Override controller vibration for player 1: on/off/true/false/1/0 (omit to preserve).");
-
-            var vibrationP2Option = new Option<string?>(
-                "--vibration-p2",
-                "Override controller vibration for player 2: on/off/true/false/1/0 (omit to preserve).");
-
-            var controllerConfigP1Option = new Option<uint?>(
-                "--controller-config-p1",
-                "Override controller configuration index for player 1 (omit to preserve).");
-
-            var controllerConfigP2Option = new Option<uint?>(
-                "--controller-config-p2",
-                "Override controller configuration index for player 2 (omit to preserve).");
-
-            var experimentalPendingExtraGoodiesOption = new Option<int?>(
-                "--experimental-pending-extra-goodies",
-                "Experimental only: pending-extra-goodies override (currently ignored on retail Steam until persistence is re-verified).");
-
-            // Options entries + tail snapshot copy (raw byte copy for keybinds + global options snapshot)
-            var copyOptionsFromOption = new Option<FileInfo?>(
-                "--copy-options-from",
-                "Copy the options entries + tail snapshot from another .bes/.bea file (same size/layout).");
-
-            var noCopyOptionsEntriesOption = new Option<bool>(
-                "--no-copy-options-entries",
-                "With --copy-options-from: do not copy the options entries region (`0x20*N`, typically `0x200` in Steam saves).");
-
-            var noCopyOptionsTailOption = new Option<bool>(
-                "--no-copy-options-tail",
-                "With --copy-options-from: do not copy the fixed 0x56-byte options tail snapshot (globals).");
-
-            // Keybind overrides (options entries). Each takes exactly 2 values: P1 P2.
-            // Use "keep" to preserve that side. Examples: A, Num7, Up, Mouse, MouseX+, MouseY-, MouseWheelUp, MouseLeft, MouseRight.
-            var bindMoveForwardOption = new Option<string[]>(
-                "--bind-move-forward",
-                "Override Movement: Forward bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindMoveBackwardOption = new Option<string[]>(
-                "--bind-move-backward",
-                "Override Movement: Backward bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindMoveLeftOption = new Option<string[]>(
-                "--bind-move-left",
-                "Override Movement: Left bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindMoveRightOption = new Option<string[]>(
-                "--bind-move-right",
-                "Override Movement: Right bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-
-            var bindLookUpOption = new Option<string[]>(
-                "--bind-look-up",
-                "Override Look: Up bindings (P1 P2). Use Mouse / MouseX+ / MouseY- to bind to mouse axis.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindLookDownOption = new Option<string[]>(
-                "--bind-look-down",
-                "Override Look: Down bindings (P1 P2). Use Mouse / MouseX+ / MouseY- to bind to mouse axis.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindLookLeftOption = new Option<string[]>(
-                "--bind-look-left",
-                "Override Look: Left bindings (P1 P2). Use Mouse / MouseX+ / MouseY- to bind to mouse axis.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindLookRightOption = new Option<string[]>(
-                "--bind-look-right",
-                "Override Look: Right bindings (P1 P2). Use Mouse / MouseX+ / MouseY- to bind to mouse axis.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-
-            var bindZoomInOption = new Option<string[]>(
-                "--bind-zoom-in",
-                "Override Zoom: In bindings (P1 P2). Use MouseWheelUp/MouseWheelDown for wheel.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindZoomOutOption = new Option<string[]>(
-                "--bind-zoom-out",
-                "Override Zoom: Out bindings (P1 P2). Use MouseWheelUp/MouseWheelDown for wheel.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-
-            var bindFireWeaponOption = new Option<string[]>(
-                "--bind-fire-weapon",
-                "Override Others: Fire weapon bindings (P1 P2). Use MouseLeft to bind to LMB.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindSelectWeaponOption = new Option<string[]>(
-                "--bind-select-weapon",
-                "Override Others: Select weapon bindings (P1 P2). Use MouseRight to bind to RMB.")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindTransformOption = new Option<string[]>(
-                "--bind-transform",
-                "Override Others: Transform bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindAirBrakeOption = new Option<string[]>(
-                "--bind-air-brake",
-                "Override Others: Air brake bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-            var bindSpecialOption = new Option<string[]>(
-                "--bind-special",
-                "Override Others: Special function bindings (P1 P2).")
-            { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
-
-            // Config management options
-            var listSavesOption = new Option<bool>(
-                "--list-saves",
-                "List save files found in the game directory");
-
-            var setGameDirOption = new Option<string?>(
-                "--set-game-dir",
-                "Set the game directory path for save file discovery");
-
-            var showConfigOption = new Option<bool>(
-                "--show-config",
-                "Show current configuration");
-
-            // Build root command
-            var rootCommand = new RootCommand("Onslaught Toolkit - Battle Engine Aquila save/options editor")
+            if (args.Length == 0)
             {
-                inputArg,
-                outputArg,
-                analyzeOption,
-                verboseOption,
-                dumpMysteryOption,
-                compareOption,
-                listGoodiesOption,
-                showReservedGoodiesOption,
-                setGoodieStateOption,
-                newOption,
-                killsOption,
-                rankOption,
-                killsOnlyOption,
-                noNodesOption,
-                noLinksOption,
-                noGoodiesOption,
-                noKillsOption,
-                allowCareerSectionsOnOptionsFileOption,
-                levelRankOption,
-                aircraftKillsOption,
-                vehicleKillsOption,
-                emplacementKillsOption,
-                infantryKillsOption,
-                mechKillsOption,
-                soundVolumeOption,
-                musicVolumeOption,
-                invertWalkerP1Option,
-                invertWalkerP2Option,
-                invertFlightP1Option,
-                invertFlightP2Option,
-                vibrationP1Option,
-                vibrationP2Option,
-                controllerConfigP1Option,
-                controllerConfigP2Option,
-                experimentalPendingExtraGoodiesOption,
-                copyOptionsFromOption,
-                noCopyOptionsEntriesOption,
-                noCopyOptionsTailOption,
-                bindMoveForwardOption,
-                bindMoveBackwardOption,
-                bindMoveLeftOption,
-                bindMoveRightOption,
-                bindLookUpOption,
-                bindLookDownOption,
-                bindLookLeftOption,
-                bindLookRightOption,
-                bindZoomInOption,
-                bindZoomOutOption,
-                bindFireWeaponOption,
-                bindSelectWeaponOption,
-                bindTransformOption,
-                bindAirBrakeOption,
-                bindSpecialOption,
-                listSavesOption,
-                setGameDirOption,
-                showConfigOption
-            };
-            rootCommand.Name = AppCliName;
+                BuildVerbRoot(MakeContext).Invoke(new[] { "--help" }, console);
+                return CliExit.UsageOrToolError;
+            }
 
-            rootCommand.SetHandler((InvocationContext context) =>
-            {
-                // Extract all values
-                var input = context.ParseResult.GetValueForArgument(inputArg);
-                var output = context.ParseResult.GetValueForArgument(outputArg);
-                var analyze = context.ParseResult.GetValueForOption(analyzeOption);
-                var verbose = context.ParseResult.GetValueForOption(verboseOption);
-                var dumpMystery = context.ParseResult.GetValueForOption(dumpMysteryOption);
-                var compare = context.ParseResult.GetValueForOption(compareOption);
-                var listGoodies = context.ParseResult.GetValueForOption(listGoodiesOption);
-                var showReservedGoodies = context.ParseResult.GetValueForOption(showReservedGoodiesOption);
-                var setGoodieStates = context.ParseResult.GetValueForOption(setGoodieStateOption);
-                // `--new` is a boolean flag, so its value alone cannot distinguish "the user asked for
-                // OLD" from "the user said nothing about goodies". FindResultFor is non-null only when
-                // the token actually appeared, which is what lets `--new --no-goodies` be refused
-                // instead of silently dropped.
-                var useNew = context.ParseResult.FindResultFor(newOption) is null
-                    ? (bool?)null
-                    : context.ParseResult.GetValueForOption(newOption);
-                var kills = context.ParseResult.GetValueForOption(killsOption);
-                var rank = context.ParseResult.GetValueForOption(rankOption);
-                var killsOnly = context.ParseResult.GetValueForOption(killsOnlyOption);
-                var noNodes = context.ParseResult.GetValueForOption(noNodesOption);
-                var noLinks = context.ParseResult.GetValueForOption(noLinksOption);
-                var noGoodies = context.ParseResult.GetValueForOption(noGoodiesOption);
-                var noKills = context.ParseResult.GetValueForOption(noKillsOption);
-                var allowCareerSectionsOnOptionsFile = context.ParseResult.GetValueForOption(allowCareerSectionsOnOptionsFileOption);
-                var levelRanks = context.ParseResult.GetValueForOption(levelRankOption);
-                var aircraftKills = context.ParseResult.GetValueForOption(aircraftKillsOption);
-                var vehicleKills = context.ParseResult.GetValueForOption(vehicleKillsOption);
-                var emplacementKills = context.ParseResult.GetValueForOption(emplacementKillsOption);
-                var infantryKills = context.ParseResult.GetValueForOption(infantryKillsOption);
-                var mechKills = context.ParseResult.GetValueForOption(mechKillsOption);
-                var soundVolume = context.ParseResult.GetValueForOption(soundVolumeOption);
-                var musicVolume = context.ParseResult.GetValueForOption(musicVolumeOption);
-                var invertWalkerP1 = context.ParseResult.GetValueForOption(invertWalkerP1Option);
-                var invertWalkerP2 = context.ParseResult.GetValueForOption(invertWalkerP2Option);
-                var invertFlightP1 = context.ParseResult.GetValueForOption(invertFlightP1Option);
-                var invertFlightP2 = context.ParseResult.GetValueForOption(invertFlightP2Option);
-                var vibrationP1 = context.ParseResult.GetValueForOption(vibrationP1Option);
-                var vibrationP2 = context.ParseResult.GetValueForOption(vibrationP2Option);
-                var controllerConfigP1 = context.ParseResult.GetValueForOption(controllerConfigP1Option);
-                var controllerConfigP2 = context.ParseResult.GetValueForOption(controllerConfigP2Option);
-                var experimentalPendingExtraGoodies = context.ParseResult.GetValueForOption(experimentalPendingExtraGoodiesOption);
-                var copyOptionsFrom = context.ParseResult.GetValueForOption(copyOptionsFromOption);
-                var noCopyOptionsEntries = context.ParseResult.GetValueForOption(noCopyOptionsEntriesOption);
-                var noCopyOptionsTail = context.ParseResult.GetValueForOption(noCopyOptionsTailOption);
-                var bindMoveForward = context.ParseResult.GetValueForOption(bindMoveForwardOption);
-                var bindMoveBackward = context.ParseResult.GetValueForOption(bindMoveBackwardOption);
-                var bindMoveLeft = context.ParseResult.GetValueForOption(bindMoveLeftOption);
-                var bindMoveRight = context.ParseResult.GetValueForOption(bindMoveRightOption);
-                var bindLookUp = context.ParseResult.GetValueForOption(bindLookUpOption);
-                var bindLookDown = context.ParseResult.GetValueForOption(bindLookDownOption);
-                var bindLookLeft = context.ParseResult.GetValueForOption(bindLookLeftOption);
-                var bindLookRight = context.ParseResult.GetValueForOption(bindLookRightOption);
-                var bindZoomIn = context.ParseResult.GetValueForOption(bindZoomInOption);
-                var bindZoomOut = context.ParseResult.GetValueForOption(bindZoomOutOption);
-                var bindFireWeapon = context.ParseResult.GetValueForOption(bindFireWeaponOption);
-                var bindSelectWeapon = context.ParseResult.GetValueForOption(bindSelectWeaponOption);
-                var bindTransform = context.ParseResult.GetValueForOption(bindTransformOption);
-                var bindAirBrake = context.ParseResult.GetValueForOption(bindAirBrakeOption);
-                var bindSpecial = context.ParseResult.GetValueForOption(bindSpecialOption);
-                var listSaves = context.ParseResult.GetValueForOption(listSavesOption);
-                var setGameDir = context.ParseResult.GetValueForOption(setGameDirOption);
-                var showConfig = context.ParseResult.GetValueForOption(showConfigOption);
+            string first = args[0];
+            bool verbForm =
+                VerbNames.Contains(first) ||
+                first is "--help" or "-h" or "-?" or "/?" or "--version";
 
-                // Handle config commands first (don't require input file)
-                if (listSaves || setGameDir != null || showConfig)
-                {
-                    context.ExitCode = HandleConfigCommands(listSaves, setGameDir, showConfig);
-                    return;
-                }
-
-                    Dictionary<int, BesFilePatcher.OptionsEntryOverride>? keybindOverrides = null;
-                    try
-                    {
-                        // Keybind overrides (options entries)
-                        keybindOverrides = ParseKeybindOverridesFromCli(
-                            bindMoveForward, bindMoveBackward, bindMoveLeft, bindMoveRight,
-                            bindLookUp, bindLookDown, bindLookLeft, bindLookRight,
-                            bindZoomIn, bindZoomOut,
-                            bindFireWeapon, bindSelectWeapon, bindTransform, bindAirBrake, bindSpecial);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        Console.Error.WriteLine(ex.Message);
-                        context.ExitCode = 1;
-                        return;
-                    }
-
-	                // Execute CLI logic
-		                int exitCode = ExecuteCli(
-		                    input, output, analyze, verbose, dumpMystery, compare, listGoodies, showReservedGoodies, setGoodieStates, useNew,
-                    kills, rank, killsOnly,
-                    noNodes, noLinks, noGoodies, noKills,
-                    allowCareerSectionsOnOptionsFile,
-                    levelRanks,
-	                    aircraftKills, vehicleKills, emplacementKills, infantryKills, mechKills,
-	                    soundVolume, musicVolume,
-		                    invertWalkerP1, invertWalkerP2,
-		                    invertFlightP1, invertFlightP2,
-		                    vibrationP1, vibrationP2,
-		                    controllerConfigP1, controllerConfigP2,
-		                    experimentalPendingExtraGoodies,
-                        copyOptionsFrom, noCopyOptionsEntries, noCopyOptionsTail,
-                        keybindOverrides);
-	
-	                context.ExitCode = exitCode;
-	            });
-
-            return rootCommand;
+            return verbForm
+                ? BuildVerbRoot(MakeContext).Invoke(args, console)
+                : LegacyCli.Build(MakeContext).Invoke(args, console);
         }
 
-        /// <summary>
-        /// Execute CLI commands based on parsed options.
-        /// </summary>
-	        private static int ExecuteCli(
-	            FileInfo? input,
-	            FileInfo? output,
-	            bool analyze,
-	            bool verbose,
-	            bool dumpMystery,
-	            FileInfo? compare,
-	            bool listGoodies,
-	            bool showReservedGoodies,
-                string[]? setGoodieStates,
-	            bool? useNew,
-	            int? kills,
-	            string? rank,
-                    bool killsOnly,
-                    bool noNodes,
-                    bool noLinks,
-                    bool noGoodies,
-                    bool noKills,
-                    bool allowCareerSectionsOnOptionsFile,
-                    string[]? levelRanks,
-	            int? aircraftKills,
-	            int? vehicleKills,
-	            int? emplacementKills,
-	            int? infantryKills,
-		            int? mechKills,
-		            double? soundVolume,
-		            double? musicVolume,
-		            string? invertWalkerP1,
-		            string? invertWalkerP2,
-		            string? invertFlightP1,
-		            string? invertFlightP2,
-		            string? vibrationP1,
-		            string? vibrationP2,
-		            uint? controllerConfigP1,
-		            uint? controllerConfigP2,
-		            int? experimentalPendingExtraGoodies,
-	                FileInfo? copyOptionsFrom,
-                bool noCopyOptionsEntries,
-                bool noCopyOptionsTail,
-                Dictionary<int, BesFilePatcher.OptionsEntryOverride>? keybindOverrides)
-	        {
-            // Validate input file is provided for all operations
-            if (input == null)
+        private static RootCommand BuildVerbRoot(Func<bool, CliContext> contextFactory)
+        {
+            var jsonOption = new Option<bool>(
+                "--json",
+                "Emit a machine-readable JSON envelope on stdout and print nothing else.");
+
+            var root = new RootCommand(
+                """
+                Onslaught Toolkit - Battle Engine Aquila save, options, safe-copy and patch tooling.
+
+                Exit codes:
+                  0  the operation ran and the answer is yes
+                  1  usage or tool error - the operation could not be attempted (bad flags, missing
+                     file, safety refusal). Nothing was measured.
+                  2  the operation ran to completion and the data says no (invalid save, patch target
+                     in an unexpected state, no game install detected). Re-running with different
+                     flags will not change this.
+
+                Every verb accepts --json. The envelope is
+                  {"ok":bool,"command":string,"exitCode":int,"warnings":[string],"data":{...},"error":{...}}
+                and is emitted on both success and failure, so a caller can parse first and branch second.
+
+                The original flag-style invocation still works:
+                  onslaught-career-editor <input.bes> [output.bes] [flags]
+                Run it with any non-verb first argument to reach it.
+                """)
             {
-                Console.Error.WriteLine("Error: Input file is required.");
-                Console.Error.WriteLine($"Usage: {AppCliName} <input.bes|input.bea> [output.bes|output.bea] [options]");
-                Console.Error.WriteLine($"       {AppCliName} --help");
-                return 1;
-            }
-
-            if (!input.Exists)
-            {
-                Console.Error.WriteLine($"Error: Input file not found: {input.FullName}");
-                return 1;
-            }
-
-            if (showReservedGoodies && !listGoodies)
-            {
-                Console.Error.WriteLine("Warning: --show-reserved-goodies is only used with --list-goodies.");
-            }
-
-            // Compare mode
-            if (compare != null)
-            {
-                if (!compare.Exists)
-                {
-                    Console.Error.WriteLine($"Error: Compare file not found: {compare.FullName}");
-                    return 1;
-                }
-
-                try
-                {
-                    var result = BesFilePatcher.CompareFiles(input.FullName, compare.FullName);
-                    string report = BesFilePatcher.FormatCompareReport(result, input.FullName, compare.FullName);
-                    Console.WriteLine(report);
-                    return 0;
-                }
-                catch (IOException ex)
-                {
-                    Console.Error.WriteLine($"Error: Failed to access file: {ex.Message}");
-                    return 1;
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Console.Error.WriteLine($"Error: Access denied: {ex.Message}");
-                    return 1;
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error: {ex.Message}");
-                    return 1;
-                }
-            }
-
-            // Analyze mode
-            if (analyze)
-            {
-                try
-                {
-                    var analysis = BesFilePatcher.AnalyzeSave(input.FullName);
-                    string report = BesFilePatcher.FormatAnalysisReport(analysis, verbose, dumpMystery);
-                    Console.WriteLine(report);
-                    return analysis.IsValid ? 0 : 1;
-                }
-                catch (IOException ex)
-                {
-                    Console.Error.WriteLine($"Error: Failed to access file: {ex.Message}");
-                    return 1;
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Console.Error.WriteLine($"Error: Access denied: {ex.Message}");
-                    return 1;
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error: {ex.Message}");
-                    return 1;
-                }
-            }
-
-            // Goodie list mode
-            if (listGoodies)
-            {
-                return PrintGoodieList(input.FullName, showReservedGoodies);
-            }
-
-            bool hasTargetedGoodieStates = setGoodieStates != null && setGoodieStates.Length > 0;
-
-            // Patch mode - requires output file
-            if (output == null)
-            {
-                Console.Error.WriteLine("Error: Output file is required for patching.");
-                Console.Error.WriteLine("Use --analyze for read-only analysis, or specify an output file.");
-                return 1;
-            }
-
-
-            try
-            {
-                string inCanon = Path.GetFullPath(input.FullName);
-                string outCanon = Path.GetFullPath(output.FullName);
-                if (string.Equals(inCanon, outCanon, StringComparison.OrdinalIgnoreCase))
-                {
-                    Console.Error.WriteLine("Error: Output file must be different from input file. In-place patching is blocked.");
-                    return 1;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: Unable to canonicalize input/output paths: {ex.Message}");
-                return 1;
-            }
-
-            if (hasTargetedGoodieStates)
-            {
-                if (HasBroadPatchOptions(
-                    useNew,
-                    kills,
-                    rank,
-                    killsOnly,
-                    noNodes,
-                    noLinks,
-                    noGoodies,
-                    noKills,
-                    allowCareerSectionsOnOptionsFile,
-                    levelRanks,
-                    aircraftKills,
-                    vehicleKills,
-                    emplacementKills,
-                    infantryKills,
-                    mechKills,
-                    soundVolume,
-                    musicVolume,
-                    invertWalkerP1,
-                    invertWalkerP2,
-                    invertFlightP1,
-                    invertFlightP2,
-                    vibrationP1,
-                    vibrationP2,
-                    controllerConfigP1,
-                    controllerConfigP2,
-                    experimentalPendingExtraGoodies,
-                    copyOptionsFrom,
-                    noCopyOptionsEntries,
-                    noCopyOptionsTail,
-                    keybindOverrides))
-                {
-                    Console.Error.WriteLine("Error: --set-goodie-state is a narrow copied-save proof setup mode. Do not combine it with broad patch, settings, options, kill, rank, or keybind overrides.");
-                    return 1;
-                }
-
-                if (!TryParseGoodieStateOverrides(setGoodieStates, out Dictionary<int, uint> overrides, out string error))
-                {
-                    Console.Error.WriteLine($"Error: {error}");
-                    return 1;
-                }
-
-                PatchResult result = BesFilePatcher.PatchGoodieStates(input.FullName, output.FullName, overrides);
-                Console.WriteLine(result.Message);
-                if (result.Success)
-                {
-                    Console.WriteLine("Targeted Goodie state setup used true-view offsets and wrote only requested Goodie slots.");
-                }
-
-                return result.Success ? 0 : 1;
-            }
-
-            // Validate rank if specified. `null` now means "the user did not pass --rank" and is carried
-            // through as such; the CLI re-applies its own documented unlock default further down, where
-            // it is also printed. Coercing null to "S" here is what made `--rank A --no-nodes` and the
-            // per-mission overwrite (D1/D2/D3) undetectable.
-            string? effectiveRank = rank?.ToUpperInvariant();
-            var validRanks = new HashSet<string> { "S", "A", "B", "C", "D", "E", "NONE" };
-            if (effectiveRank is not null && !validRanks.Contains(effectiveRank))
-            {
-                Console.Error.WriteLine($"Error: Invalid rank '{rank}'. Valid values: S, A, B, C, D, E, NONE");
-                return 1;
-            }
-
-            // Parse per-level ranks
-            Dictionary<int, string>? parsedLevelRanks = null;
-            if (levelRanks != null && levelRanks.Length > 0)
-            {
-                parsedLevelRanks = new Dictionary<int, string>();
-                var levelRankErrors = new List<string>();
-                foreach (var entry in levelRanks)
-                {
-                    var parts = entry.Split(':');
-                    if (parts.Length == 2 &&
-                        int.TryParse(parts[0], out int level) &&
-                        level >= 1 && level <= 43)
-                    {
-                        string levelRank = parts[1].ToUpper();
-                        if (validRanks.Contains(levelRank))
-                        {
-                            // CLI contract is 1-based (1..43). Internally we patch zero-based node indexes.
-                            parsedLevelRanks[level - 1] = levelRank;
-                        }
-                        else
-                        {
-                            levelRankErrors.Add($"Error: Invalid rank '{parts[1]}' for node index {level}. Valid values: S, A, B, C, D, E, NONE.");
-                        }
-                    }
-                    else
-                    {
-                        levelRankErrors.Add($"Error: Invalid --level-rank entry '{entry}', expected NODE_INDEX:GRADE (e.g., 1:S).");
-                    }
-                }
-
-                if (levelRankErrors.Count > 0)
-                {
-                    foreach (var err in levelRankErrors)
-                        Console.Error.WriteLine(err);
-                    return 1;
-                }
-            }
-
-            // Build per-category kills dictionary
-            Dictionary<int, int>? perCategoryKills = null;
-            if (aircraftKills.HasValue || vehicleKills.HasValue || emplacementKills.HasValue ||
-                infantryKills.HasValue || mechKills.HasValue)
-            {
-                perCategoryKills = new Dictionary<int, int>();
-                if (aircraftKills.HasValue) perCategoryKills[BesFilePatcher.KILL_AIRCRAFT] = aircraftKills.Value;
-                if (vehicleKills.HasValue) perCategoryKills[BesFilePatcher.KILL_VEHICLES] = vehicleKills.Value;
-                if (emplacementKills.HasValue) perCategoryKills[BesFilePatcher.KILL_EMPLACEMENTS] = emplacementKills.Value;
-                if (infantryKills.HasValue) perCategoryKills[BesFilePatcher.KILL_INFANTRY] = infantryKills.Value;
-                if (mechKills.HasValue) perCategoryKills[BesFilePatcher.KILL_MECHS] = mechKills.Value;
-            }
-
-            // Configure patcher
-            var patcher = new BesFilePatcher
-            {
-                // Carry exactly what the user configured, and nothing else. `--new` is a flag, so its
-                // "false" is indistinguishable from silence unless we look at whether the token appeared.
-                UseNewGoodiesInstead = useNew,
-                GlobalKillCount = kills,
-                Rank = effectiveRank,
-                LevelRanks = parsedLevelRanks,
-                PerCategoryKills = perCategoryKills,
-                OptionsEntryOverrides = keybindOverrides
+                Name = AppCliName,
             };
 
-            // Optional settings overrides (only written when explicitly set)
-            try
-            {
-                patcher.SoundVolumeOverride = soundVolume.HasValue ? (float)soundVolume.Value : null;
-                patcher.MusicVolumeOverride = musicVolume.HasValue ? (float)musicVolume.Value : null;
-                patcher.InvertYAxisP1Override = ParseTriBool(invertWalkerP1, "--invert-walker-p1");
-                patcher.InvertYAxisP2Override = ParseTriBool(invertWalkerP2, "--invert-walker-p2");
-                patcher.InvertFlightP1Override = ParseTriBool(invertFlightP1, "--invert-flight-p1");
-                patcher.InvertFlightP2Override = ParseTriBool(invertFlightP2, "--invert-flight-p2");
-                patcher.VibrationP1Override = ParseTriBool(vibrationP1, "--vibration-p1");
-                patcher.VibrationP2Override = ParseTriBool(vibrationP2, "--vibration-p2");
-                patcher.ControllerConfigP1Override = controllerConfigP1;
-                patcher.ControllerConfigP2Override = controllerConfigP2;
-                if (experimentalPendingExtraGoodies.HasValue)
-                {
-                    Console.Error.WriteLine(
-                        "Warning: --experimental-pending-extra-goodies is currently ignored for retail Steam until persistence semantics are re-verified.");
-                }
+            root.AddGlobalOption(jsonOption);
+            bool Json(InvocationContext c) => c.ParseResult.GetValueForOption(jsonOption);
 
-                if (copyOptionsFrom != null)
+            root.AddCommand(BuildConfigCommand(contextFactory, Json));
+            root.AddCommand(BuildSavesCommand(contextFactory, Json));
+            root.AddCommand(BuildGoodiesCommand(contextFactory, Json));
+            root.AddCommand(BuildOptionsCommand(contextFactory, Json));
+            root.AddCommand(BuildCopyCommand(contextFactory, Json));
+            root.AddCommand(BuildPatchCommand(contextFactory, Json));
+            root.AddCommand(BuildProcessCommand(contextFactory, Json));
+
+            var version = new Command("version", "Show the tool version and catalog identities.");
+            version.SetHandler((InvocationContext c) =>
+            {
+                CliContext ctx = contextFactory(Json(c));
+                string assemblyVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown";
+                c.ExitCode = ctx.Ok("version", new
                 {
-                    if (!copyOptionsFrom.Exists)
+                    version = assemblyVersion,
+                    patchCatalogStatus = BinaryPatchEngine.CatalogStatus,
+                    usingFallbackPatchCatalog = BinaryPatchEngine.UsingFallbackCatalog,
+                    safeCopyProfileCatalogVersion = BinaryPatchPlanBuilder.SafeCopyProfileCatalogVersion,
+                    safeCopyProfileCatalogSha256 = BinaryPatchPlanBuilder.SafeCopyProfileCatalogSha256,
+                    safeCopyRoot = SafeCopyVerbs.SafeCopyRoot,
+                    patchBenchRoot = SafeCopyVerbs.PatchBenchRoot,
+                }, $"{AppCliName} {assemblyVersion}");
+            });
+            root.AddCommand(version);
+
+            return root;
+        }
+
+        // ------------------------------------------------------------------ config
+
+        private static Command BuildConfigCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var config = new Command("config", "Inspect and set tool configuration.");
+
+            var show = new Command("show", "Show the current configuration and resolved paths.");
+            show.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.ConfigShow(factory(json(c))));
+            config.AddCommand(show);
+
+            var pathArg = new Argument<string?>("path", () => null, "Game installation folder.");
+            var setGameDir = new Command("set-game-dir", "Set the game directory used for save discovery.") { pathArg };
+            setGameDir.SetHandler((InvocationContext c) =>
+                c.ExitCode = SaveVerbs.ConfigSetGameDir(factory(json(c)), c.ParseResult.GetValueForArgument(pathArg)));
+            config.AddCommand(setGameDir);
+
+            var detect = new Command("detect", "Auto-detect a Battle Engine Aquila installation. Exit 2 when none is found.");
+            detect.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.ConfigDetect(factory(json(c))));
+            config.AddCommand(detect);
+
+            return config;
+        }
+
+        // ------------------------------------------------------------------ saves
+
+        private static Command BuildSavesCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var saves = new Command("saves", "Read and patch .bes career saves.");
+
+            var list = new Command("list", "List save files discovered in the game directory.");
+            list.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.SavesList(factory(json(c))));
+            saves.AddCommand(list);
+
+            var analyzeFile = new Argument<FileInfo?>("file", () => null, "Input .bes/.bea file.");
+            var verboseOption = new Option<bool>(new[] { "--verbose", "-v" }, "Include hex dumps.");
+            var dumpMysteryOption = new Option<bool>("--dump-mystery", "Hex dump reserved/unmapped regions.");
+            var analyze = new Command("analyze", "Analyze a save. Exit 2 when the file is not a valid save.")
+            { analyzeFile, verboseOption, dumpMysteryOption };
+            analyze.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.SavesAnalyze(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(analyzeFile),
+                c.ParseResult.GetValueForOption(verboseOption),
+                c.ParseResult.GetValueForOption(dumpMysteryOption)));
+            saves.AddCommand(analyze);
+
+            var leftArg = new Argument<FileInfo?>("left", () => null, "First file.");
+            var rightArg = new Argument<FileInfo?>("right", () => null, "Second file.");
+            var compare = new Command("compare", "Compare two save/options files byte by byte.") { leftArg, rightArg };
+            compare.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.SavesCompare(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(leftArg),
+                c.ParseResult.GetValueForArgument(rightArg)));
+            saves.AddCommand(compare);
+
+            var inArg = new Argument<FileInfo?>("input", () => null, "Input .bes career save.");
+            var outArg = new Argument<FileInfo?>("output", () => null, "Output .bes career save (must differ from input).");
+            var rankOption = new Option<string?>("--rank", "Baseline mission grade: S, A, B, C, D, E, NONE. Omit alongside --level-rank to change only the listed missions.");
+            var levelRankOption = new Option<string[]>("--level-rank", "Per-mission grade override, NODE_INDEX:GRADE (1-43), repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var killsOption = new Option<int?>("--kills", "Baseline kill count for every category.");
+            var aircraftOption = new Option<int?>("--aircraft-kills", "Aircraft kill count override.");
+            var vehicleOption = new Option<int?>("--vehicle-kills", "Vehicle kill count override.");
+            var emplacementOption = new Option<int?>("--emplacement-kills", "Emplacement kill count override.");
+            var infantryOption = new Option<int?>("--infantry-kills", "Infantry kill count override.");
+            var mechOption = new Option<int?>("--mech-kills", "Mech kill count override.");
+            var newOption = new Option<bool>("--new", "Mark goodies NEW (gold) instead of OLD (blue).");
+            var noNodesOption = new Option<bool>("--no-nodes", "Skip the mission node pass.");
+            var noLinksOption = new Option<bool>("--no-links", "Skip the mission link pass.");
+            var noGoodiesOption = new Option<bool>("--no-goodies", "Skip the goodie pass.");
+            var noKillsOption = new Option<bool>("--no-kills", "Skip the kill pass.");
+            var killsOnlyOption = new Option<bool>("--kills-only", "Patch kills only (nodes, links and goodies untouched).");
+
+            var patch = new Command(
+                "patch",
+                "Patch career sections through SaveEditorService. Refuses .bea options files.")
+            {
+                inArg, outArg, rankOption, levelRankOption, killsOption,
+                aircraftOption, vehicleOption, emplacementOption, infantryOption, mechOption,
+                newOption, noNodesOption, noLinksOption, noGoodiesOption, noKillsOption, killsOnlyOption,
+            };
+            patch.SetHandler((InvocationContext c) =>
+            {
+                // The flag's presence, not its value, is what separates "asked for OLD" from silence.
+                bool? useNew = c.ParseResult.FindResultFor(newOption) is null
+                    ? null
+                    : c.ParseResult.GetValueForOption(newOption);
+
+                c.ExitCode = WriteVerbs.SavesPatch(
+                    factory(json(c)),
+                    c.ParseResult.GetValueForArgument(inArg),
+                    c.ParseResult.GetValueForArgument(outArg),
+                    new CareerPatchOptions
                     {
-                        Console.Error.WriteLine($"Error: --copy-options-from file not found: {copyOptionsFrom.FullName}");
-                        return 1;
-                    }
+                        UseNew = useNew,
+                        Kills = c.ParseResult.GetValueForOption(killsOption),
+                        Rank = c.ParseResult.GetValueForOption(rankOption),
+                        KillsOnly = c.ParseResult.GetValueForOption(killsOnlyOption),
+                        NoNodes = c.ParseResult.GetValueForOption(noNodesOption),
+                        NoLinks = c.ParseResult.GetValueForOption(noLinksOption),
+                        NoGoodies = c.ParseResult.GetValueForOption(noGoodiesOption),
+                        NoKills = c.ParseResult.GetValueForOption(noKillsOption),
+                        LevelRanks = c.ParseResult.GetValueForOption(levelRankOption),
+                        AircraftKills = c.ParseResult.GetValueForOption(aircraftOption),
+                        VehicleKills = c.ParseResult.GetValueForOption(vehicleOption),
+                        EmplacementKills = c.ParseResult.GetValueForOption(emplacementOption),
+                        InfantryKills = c.ParseResult.GetValueForOption(infantryOption),
+                        MechKills = c.ParseResult.GetValueForOption(mechOption),
+                    });
+            });
+            saves.AddCommand(patch);
 
-                    patcher.CopyOptionsFromPath = copyOptionsFrom.FullName;
-                    patcher.CopyOptionsEntries = !noCopyOptionsEntries;
-                    patcher.CopyOptionsTail = !noCopyOptionsTail;
-                    if (!patcher.CopyOptionsEntries && !patcher.CopyOptionsTail)
+            return saves;
+        }
+
+        // ------------------------------------------------------------------ goodies
+
+        private static Command BuildGoodiesCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var goodies = new Command("goodies", "Read and write per-slot Goodie states.");
+
+            var fileArg = new Argument<FileInfo?>("file", () => null, "Input .bes/.bea file.");
+            var showReservedOption = new Option<bool>("--show-reserved", "Include reserved slots 233-299.");
+            var list = new Command("list", "List per-slot Goodie states. Exit 2 when the file is not a valid save.")
+            { fileArg, showReservedOption };
+            list.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.GoodiesList(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(fileArg),
+                c.ParseResult.GetValueForOption(showReservedOption)));
+            goodies.AddCommand(list);
+
+            var inArg = new Argument<FileInfo?>("input", () => null, "Input .bes file.");
+            var outArg = new Argument<FileInfo?>("output", () => null, "Output .bes file (must differ from input).");
+            var goodieOption = new Option<string[]>("--goodie", "Goodie override INDEX:STATE (state 0/1/2/3 or locked/instructions/new/old), repeatable.")
+            { AllowMultipleArgumentsPerToken = true };
+            var set = new Command(
+                "set",
+                "Write targeted Goodie states. A single slot goes through SaveEditorService's focused write.")
+            { inArg, outArg, goodieOption };
+            set.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.GoodiesSet(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(inArg),
+                c.ParseResult.GetValueForArgument(outArg),
+                c.ParseResult.GetValueForOption(goodieOption)));
+            goodies.AddCommand(set);
+
+            return goodies;
+        }
+
+        // ------------------------------------------------------------------ options
+
+        private static Command BuildOptionsCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var options = new Command("options", "Read and edit .bea game options files.");
+
+            var showFileArg = new Argument<FileInfo?>("file", () => null, "Input .bea options file.");
+            var show = new Command("show", "Show settings and keybinds from an options file.") { showFileArg };
+            show.SetHandler((InvocationContext c) => c.ExitCode = SaveVerbs.OptionsShow(
+                factory(json(c)), c.ParseResult.GetValueForArgument(showFileArg)));
+            options.AddCommand(show);
+
+            var inArg = new Argument<FileInfo?>("input", () => null, "Input options/save file.");
+            var outArg = new Argument<FileInfo?>("output", () => null, "Output file (must differ from input).");
+            var soundOption = new Option<double?>("--sound-volume", "Sound volume 0.0-1.0.");
+            var musicOption = new Option<double?>("--music-volume", "Music volume 0.0-1.0.");
+            var invertWalkerP1Option = new Option<string?>("--invert-walker-p1", "Invert Y (Walker) P1: on/off.");
+            var invertWalkerP2Option = new Option<string?>("--invert-walker-p2", "Invert Y (Walker) P2: on/off.");
+            var invertFlightP1Option = new Option<string?>("--invert-flight-p1", "Invert Y (Flight) P1: on/off.");
+            var invertFlightP2Option = new Option<string?>("--invert-flight-p2", "Invert Y (Flight) P2: on/off.");
+            var vibrationP1Option = new Option<string?>("--vibration-p1", "Controller vibration P1: on/off.");
+            var vibrationP2Option = new Option<string?>("--vibration-p2", "Controller vibration P2: on/off.");
+            var controllerP1Option = new Option<uint?>("--controller-config-p1", "Controller configuration index P1.");
+            var controllerP2Option = new Option<uint?>("--controller-config-p2", "Controller configuration index P2.");
+            var mouseSensOption = new Option<double?>("--mouse-sensitivity", "Mouse look sensitivity.");
+            var screenShapeOption = new Option<uint?>("--screen-shape", "Screen shape: 0=4:3, 1=16:9, 2=1:1.");
+            var copyFromOption = new Option<FileInfo?>("--copy-options-from", "Copy options entries + tail snapshot from another file.");
+            var noCopyEntriesOption = new Option<bool>("--no-copy-options-entries", "With --copy-options-from: skip the entries region.");
+            var noCopyTailOption = new Option<bool>("--no-copy-options-tail", "With --copy-options-from: skip the 0x56-byte tail snapshot.");
+
+            var bindOptions = new Dictionary<string, Option<string[]>>(StringComparer.OrdinalIgnoreCase);
+            foreach (string binding in KeybindTokens.BindingEntryIds.Keys)
+            {
+                var option = new Option<string[]>(
+                    $"--bind-{binding}",
+                    $"Override the {binding} binding (P1 P2). Use 'keep' to leave a side alone.")
+                { Arity = new ArgumentArity(2, 2), AllowMultipleArgumentsPerToken = true };
+                bindOptions[binding] = option;
+            }
+
+            var edit = new Command(
+                "edit",
+                "Edit options. A .bea target goes through ConfigurationEditorService; a .bes target uses the settings-only patcher.")
+            {
+                inArg, outArg, soundOption, musicOption,
+                invertWalkerP1Option, invertWalkerP2Option, invertFlightP1Option, invertFlightP2Option,
+                vibrationP1Option, vibrationP2Option, controllerP1Option, controllerP2Option,
+                mouseSensOption, screenShapeOption, copyFromOption, noCopyEntriesOption, noCopyTailOption,
+            };
+            foreach (Option<string[]> option in bindOptions.Values)
+                edit.AddOption(option);
+
+            edit.SetHandler((InvocationContext c) =>
+            {
+                var bindings = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                foreach (KeyValuePair<string, Option<string[]>> pair in bindOptions)
+                {
+                    string[]? value = c.ParseResult.GetValueForOption(pair.Value);
+                    if (value is { Length: 2 })
+                        bindings[pair.Key] = value;
+                }
+
+                c.ExitCode = WriteVerbs.OptionsEdit(
+                    factory(json(c)),
+                    c.ParseResult.GetValueForArgument(inArg),
+                    c.ParseResult.GetValueForArgument(outArg),
+                    new WriteVerbs.OptionsEditRequest
                     {
-                        Console.Error.WriteLine("Error: --copy-options-from was provided, but both --no-copy-options-entries and --no-copy-options-tail were set (nothing to copy).");
-                        return 1;
-                    }
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                Console.Error.WriteLine(ex.Message);
-                return 1;
-            }
+                        SoundVolume = c.ParseResult.GetValueForOption(soundOption),
+                        MusicVolume = c.ParseResult.GetValueForOption(musicOption),
+                        InvertWalkerP1 = c.ParseResult.GetValueForOption(invertWalkerP1Option),
+                        InvertWalkerP2 = c.ParseResult.GetValueForOption(invertWalkerP2Option),
+                        InvertFlightP1 = c.ParseResult.GetValueForOption(invertFlightP1Option),
+                        InvertFlightP2 = c.ParseResult.GetValueForOption(invertFlightP2Option),
+                        VibrationP1 = c.ParseResult.GetValueForOption(vibrationP1Option),
+                        VibrationP2 = c.ParseResult.GetValueForOption(vibrationP2Option),
+                        ControllerConfigP1 = c.ParseResult.GetValueForOption(controllerP1Option),
+                        ControllerConfigP2 = c.ParseResult.GetValueForOption(controllerP2Option),
+                        MouseSensitivity = c.ParseResult.GetValueForOption(mouseSensOption),
+                        ScreenShape = c.ParseResult.GetValueForOption(screenShapeOption),
+                        CopyOptionsFrom = c.ParseResult.GetValueForOption(copyFromOption),
+                        NoCopyOptionsEntries = c.ParseResult.GetValueForOption(noCopyEntriesOption),
+                        NoCopyOptionsTail = c.ParseResult.GetValueForOption(noCopyTailOption),
+                        Bindings = bindings,
+                    });
+            });
+            options.AddCommand(edit);
 
-            // Handle selective patching flags
-            if (killsOnly)
-            {
-                patcher.KillsOnly = true;
-            }
-            else
-            {
-                patcher.PatchNodes = !noNodes;
-                patcher.PatchLinks = !noLinks;
-                patcher.PatchGoodies = !noGoodies;
-                patcher.PatchKills = !noKills;
-            }
+            return options;
+        }
 
-            // The CLI's documented "unlock everything" defaults live here, in the presentation layer that
-            // also prints them, rather than in AppCore where a default is indistinguishable from silence.
-            //
-            // Each default applies only when its section is ENABLED and the user configured neither a
-            // baseline nor any targeted override for it. That keeps a bare `Cli in.bes out.bes` writing
-            // exactly what it always wrote (S / 100 / OLD), while `--mech-kills 2000` on its own no longer
-            // drags the other four categories to 100 and `--level-rank 1:A` on its own no longer drags the
-            // other 42 missions to S. It cannot mask a discarded value either: these only fire when the
-            // owning section is on, and the discard check only fires when it is off.
-            if (patcher.PatchNodes && patcher.Rank is null && parsedLevelRanks is null or { Count: 0 })
-            {
-                patcher.Rank = "S";
-            }
+        // ------------------------------------------------------------------ copy
 
-            if (patcher.PatchKills && patcher.GlobalKillCount is null && perCategoryKills is null or { Count: 0 })
-            {
-                patcher.GlobalKillCount = 100;
-            }
+        private static Command BuildCopyCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var copy = new Command("copy", "Create, list, launch, stop and delete app-owned playable game copies.");
 
-            if (patcher.PatchGoodies && patcher.UseNewGoodiesInstead is null)
-            {
-                patcher.UseNewGoodiesInstead = false;
-            }
+            var list = new Command("list", "List safe copies under the app-owned root.");
+            list.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyList(factory(json(c))));
+            copy.AddCommand(list);
 
-            // Reject override requests that the section passes would silently discard.
-            if (parsedLevelRanks is { Count: > 0 } && !patcher.PatchNodes)
-            {
-                Console.Error.WriteLine(
-                    "Error: --level-rank was provided, but node patching is disabled (--no-nodes / --kills-only).");
-                Console.Error.WriteLine(
-                    "Per-mission ranks are applied through the node pass and would be discarded. Remove --no-nodes/--kills-only or drop --level-rank.");
-                return 1;
-            }
+            var sourceOption = new Option<string?>("--source", "Source game root. Defaults to the configured or detected install.");
+            var exeOption = new Option<string?>("--executable", "Explicit BEA.exe (or BEA.exe.original.backup) source.");
+            var nameOption = new Option<string?>("--name", "Profile folder name. Letters, digits, dot, underscore, dash; max 64.");
+            var presetOption = new Option<string?>("--profile", "Safe copy profile preset id. See 'patch list'.");
+            var patchKeyOption = new Option<string[]>("--patch", "Extra patch key to apply, repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var launchArgOption = new Option<string[]>("--launch-arg", "Launch argument for the copied game, repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var savegamesOption = new Option<bool>("--include-savegames", "Copy the source savegames folder into the copy.");
+            var musicOption = new Option<string?>("--music-swap", "Music swap preset id to stage.");
+            var textModOption = new Option<bool>("--level100-text-mod", "Apply the Level 100 tutorial text mod.");
+            var flightModOption = new Option<bool>("--level100-early-flight", "Apply the Level 100 early flight mod.");
 
-            if (perCategoryKills is { Count: > 0 } && !patcher.PatchKills)
+            var create = new Command(
+                "create",
+                "Create a playable copied game folder. Copies several GB; never touches the installed game.")
             {
-                Console.Error.WriteLine(
-                    "Error: per-category kill options were provided, but kill patching is disabled (--no-kills).");
-                Console.Error.WriteLine(
-                    "Per-category kill values are applied through the kill pass and would be discarded. Remove --no-kills or drop the per-category kill options.");
-                return 1;
-            }
+                sourceOption, exeOption, nameOption, presetOption, patchKeyOption, launchArgOption,
+                savegamesOption, musicOption, textModOption, flightModOption,
+            };
+            create.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyCreate(
+                factory(json(c)),
+                c.ParseResult.GetValueForOption(sourceOption),
+                c.ParseResult.GetValueForOption(exeOption),
+                c.ParseResult.GetValueForOption(nameOption),
+                c.ParseResult.GetValueForOption(presetOption),
+                c.ParseResult.GetValueForOption(patchKeyOption),
+                c.ParseResult.GetValueForOption(launchArgOption),
+                c.ParseResult.GetValueForOption(savegamesOption),
+                c.ParseResult.GetValueForOption(musicOption),
+                c.ParseResult.GetValueForOption(textModOption),
+                c.ParseResult.GetValueForOption(flightModOption)));
+            copy.AddCommand(create);
 
-            bool inputOptionsLike = IsOptionsLikePath(input.FullName);
-            bool outputOptionsLike = IsOptionsLikePath(output.FullName);
-            bool careerSectionsEnabled = patcher.KillsOnly ||
-                                         patcher.PatchNodes ||
-                                         patcher.PatchLinks ||
-                                         patcher.PatchGoodies ||
-                                         patcher.PatchKills;
+            var launchIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path.");
+            var launchArgsOption = new Option<string[]>("--launch-arg", "Launch argument, repeatable.") { AllowMultipleArgumentsPerToken = true };
+            var launch = new Command("launch", "Launch a safe copy and register it as a managed process.")
+            { launchIdArg, launchArgsOption };
+            launch.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyLaunch(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(launchIdArg),
+                c.ParseResult.GetValueForOption(launchArgsOption)));
+            copy.AddCommand(launch);
 
-            if ((inputOptionsLike || outputOptionsLike) && careerSectionsEnabled)
-            {
-                if (!allowCareerSectionsOnOptionsFile)
-                {
-                    Console.Error.WriteLine(
-                        "Error: Career section patching is blocked for .bea/defaultoptions files by default.");
-                    Console.Error.WriteLine(
-                        "Use settings-only mode (--no-nodes --no-links --no-goodies --no-kills),");
-                    Console.Error.WriteLine(
-                        "or pass --allow-career-sections-on-options-file to override intentionally.");
-                    return 1;
-                }
+            var stopIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path.");
+            var stop = new Command("stop", "Stop the managed process running from a safe copy.") { stopIdArg };
+            stop.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyStop(
+                factory(json(c)), c.ParseResult.GetValueForArgument(stopIdArg)));
+            copy.AddCommand(stop);
 
-                Console.Error.WriteLine(
-                    "Warning: Applying career section patching to an options-style file (.bea/defaultoptions).");
-            }
+            var deleteIdArg = new Argument<string?>("id", () => null, "Safe copy id (folder name) or path.");
+            var forceOption = new Option<bool>("--force", "Confirm the irreversible delete.");
+            var delete = new Command(
+                "delete",
+                "Delete an app-owned safe copy. Refuses anything outside the app-owned root, anything without a generated manifest, and anything still running.")
+            { deleteIdArg, forceOption };
+            delete.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.CopyDelete(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(deleteIdArg),
+                c.ParseResult.GetValueForOption(forceOption)));
+            copy.AddCommand(delete);
 
-            // Show configuration
-            Console.WriteLine("Onslaught Career Editor - CLI Mode");
-            Console.WriteLine("===================================");
-            Console.WriteLine($"Input:  {input.FullName}");
-            Console.WriteLine($"Output: {output.FullName}");
-            Console.WriteLine();
-            Console.WriteLine("Configuration:");
-            Console.WriteLine($"  Rank:           {(!patcher.PatchNodes ? "(missions not patched)" : patcher.Rank ?? "Keep (only the missions listed below are written)")}");
-            Console.WriteLine($"  Kill count:     {(!patcher.PatchKills ? "(kills not patched)" : patcher.GlobalKillCount?.ToString() ?? "Keep (only the categories listed below are written)")}");
-            Console.WriteLine($"  Goodies style:  {(!patcher.PatchGoodies ? "(goodies not patched)" : patcher.UseNewGoodiesInstead == true ? "NEW (gold)" : "OLD (blue)")}");
-            Console.WriteLine($"  Patch nodes:    {(patcher.PatchNodes ? "Yes" : "No")}");
-            Console.WriteLine($"  Patch links:    {(patcher.PatchLinks ? "Yes" : "No")}");
-            Console.WriteLine($"  Patch goodies:  {(patcher.PatchGoodies ? "Yes" : "No")}");
-            Console.WriteLine($"  Patch kills:    {(patcher.PatchKills ? "Yes" : "No")}");
+            return copy;
+        }
 
-            if (patcher.SoundVolumeOverride.HasValue)
-                Console.WriteLine($"  Sound volume:   {patcher.SoundVolumeOverride.Value:0.###}");
-            if (patcher.MusicVolumeOverride.HasValue)
-                Console.WriteLine($"  Music volume:   {patcher.MusicVolumeOverride.Value:0.###}");
-            if (patcher.InvertYAxisP1Override.HasValue)
-                Console.WriteLine($"  Invert Y (Walker) (P1): {(patcher.InvertYAxisP1Override.Value ? "On" : "Off")}");
-            if (patcher.InvertYAxisP2Override.HasValue)
-                Console.WriteLine($"  Invert Y (Walker) (P2): {(patcher.InvertYAxisP2Override.Value ? "On" : "Off")}");
-            if (patcher.InvertFlightP1Override.HasValue)
-                Console.WriteLine($"  Invert Y (Flight) (P1): {(patcher.InvertFlightP1Override.Value ? "On" : "Off")}");
-            if (patcher.InvertFlightP2Override.HasValue)
-                Console.WriteLine($"  Invert Y (Flight) (P2): {(patcher.InvertFlightP2Override.Value ? "On" : "Off")}");
-            if (patcher.VibrationP1Override.HasValue)
-                Console.WriteLine($"  Vibration (P1): {(patcher.VibrationP1Override.Value ? "On" : "Off")}");
-            if (patcher.VibrationP2Override.HasValue)
-                Console.WriteLine($"  Vibration (P2): {(patcher.VibrationP2Override.Value ? "On" : "Off")}");
-            if (patcher.ControllerConfigP1Override.HasValue)
-                Console.WriteLine($"  Ctrl cfg (P1):  {patcher.ControllerConfigP1Override.Value}");
-            if (patcher.ControllerConfigP2Override.HasValue)
-                Console.WriteLine($"  Ctrl cfg (P2):  {patcher.ControllerConfigP2Override.Value}");
-            if (!string.IsNullOrWhiteSpace(patcher.CopyOptionsFromPath))
-            {
-                Console.WriteLine($"  Copy options from: {patcher.CopyOptionsFromPath}");
-                Console.WriteLine($"    - entries: {(patcher.CopyOptionsEntries ? "Yes" : "No")}");
-                Console.WriteLine($"    - tail:    {(patcher.CopyOptionsTail ? "Yes" : "No")}");
-            }
-            if (patcher.OptionsEntryOverrides != null && patcher.OptionsEntryOverrides.Count > 0)
-            {
-                Console.WriteLine($"  Keybind overrides: {patcher.OptionsEntryOverrides.Count} entries");
-                Console.WriteLine("    NOTE: ControlSchemeIndex is forced to 0 (Custom) when applying keybind overrides.");
-            }
+        // ------------------------------------------------------------------ patch
 
-            if (parsedLevelRanks != null && parsedLevelRanks.Count > 0)
-            {
-                Console.WriteLine($"  Level overrides: {parsedLevelRanks.Count} levels");
-            }
+        private static Command BuildPatchCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var patch = new Command("patch", "Inspect and apply binary patches to an app-owned BEA.exe working copy.");
 
-            if (perCategoryKills != null && perCategoryKills.Count > 0)
-            {
-                Console.WriteLine("  Per-category kills:");
-                if (perCategoryKills.TryGetValue(BesFilePatcher.KILL_AIRCRAFT, out int ac))
-                    Console.WriteLine($"    Aircraft:     {ac}");
-                if (perCategoryKills.TryGetValue(BesFilePatcher.KILL_VEHICLES, out int vc))
-                    Console.WriteLine($"    Vehicles:     {vc}");
-                if (perCategoryKills.TryGetValue(BesFilePatcher.KILL_EMPLACEMENTS, out int ec))
-                    Console.WriteLine($"    Emplacements: {ec}");
-                if (perCategoryKills.TryGetValue(BesFilePatcher.KILL_INFANTRY, out int ic))
-                    Console.WriteLine($"    Infantry:     {ic}");
-                if (perCategoryKills.TryGetValue(BesFilePatcher.KILL_MECHS, out int mc))
-                    Console.WriteLine($"    Mechs:        {mc}");
-            }
+            var list = new Command("list", "List the patch catalog and the safe copy profile presets.");
+            list.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchList(factory(json(c))));
+            patch.AddCommand(list);
 
-            Console.WriteLine();
+            var stageSourceArg = new Argument<string?>("source", () => null, "Source BEA.exe or BEA.exe.original.backup.");
+            var stage = new Command("stage", "Copy a BEA.exe into a fresh app-owned Patch Bench workspace.") { stageSourceArg };
+            stage.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchStage(
+                factory(json(c)), c.ParseResult.GetValueForArgument(stageSourceArg)));
+            patch.AddCommand(stage);
 
-            // Perform patching
-            try
+            Argument<string?> TargetArg() =>
+                new("target", () => null, "Patch Bench workspace id, workspace folder, or path to BEA.exe.");
+            Option<string?> ProfileOption() => new("--profile", "Select every patch key in this profile preset.");
+            Option<string[]> KeysOption() =>
+                new("--patch", "Select an individual patch key, repeatable.") { AllowMultipleArgumentsPerToken = true };
+
+            var planTarget = TargetArg();
+            var planProfile = ProfileOption();
+            var planKeys = KeysOption();
+            var plan = new Command("plan", "Show what an apply would change and the current state of each region. Read-only.")
+            { planTarget, planProfile, planKeys };
+            plan.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchPlan(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(planTarget),
+                c.ParseResult.GetValueForOption(planProfile),
+                c.ParseResult.GetValueForOption(planKeys)));
+            patch.AddCommand(plan);
+
+            var verifyTarget = TargetArg();
+            var verifyProfile = ProfileOption();
+            var verifyKeys = KeysOption();
+            var verify = new Command("verify", "Verify the selected patches against the target. Exit 2 when verification fails.")
+            { verifyTarget, verifyProfile, verifyKeys };
+            verify.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchVerify(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(verifyTarget),
+                c.ParseResult.GetValueForOption(verifyProfile),
+                c.ParseResult.GetValueForOption(verifyKeys)));
+            patch.AddCommand(verify);
+
+            var applyTarget = TargetArg();
+            var applyIds = new Argument<string[]>("ids", () => Array.Empty<string>(), "Patch keys to apply.");
+            var applyProfile = ProfileOption();
+            var applyKeys = KeysOption();
+            var apply = new Command("apply", "Apply the selected patches. Verifies first and refuses if verification fails.")
+            { applyTarget, applyIds, applyProfile, applyKeys };
+            apply.SetHandler((InvocationContext c) =>
             {
-                var patchResult = patcher.PatchFile(input.FullName, output.FullName);
-                Console.WriteLine(patchResult.Message);
-                if (patchResult.Success)
-                {
-                    PrintPatchSummary(patcher, output.FullName, parsedLevelRanks, perCategoryKills);
-                }
-                return patchResult.Success ? 0 : 1;
-            }
-            catch (IOException ex)
-            {
-                Console.Error.WriteLine($"Error: Failed to access file: {ex.Message}");
-                return 1;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                Console.Error.WriteLine($"Error: Access denied: {ex.Message}");
-                return 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                return 1;
-            }
+                var keys = new List<string>(c.ParseResult.GetValueForArgument(applyIds));
+                string[]? viaOption = c.ParseResult.GetValueForOption(applyKeys);
+                if (viaOption is { Length: > 0 })
+                    keys.AddRange(viaOption);
+
+                c.ExitCode = SafeCopyVerbs.PatchApply(
+                    factory(json(c)),
+                    c.ParseResult.GetValueForArgument(applyTarget),
+                    c.ParseResult.GetValueForOption(applyProfile),
+                    keys);
+            });
+            patch.AddCommand(apply);
+
+            var restoreTarget = TargetArg();
+            var restore = new Command("restore", "Restore the target from its verified full-file backup snapshot.") { restoreTarget };
+            restore.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.PatchRestore(
+                factory(json(c)), c.ParseResult.GetValueForArgument(restoreTarget)));
+            patch.AddCommand(restore);
+
+            return patch;
+        }
+
+        // ------------------------------------------------------------------ process
+
+        private static Command BuildProcessCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var process = new Command("process", "Inspect and stop managed safe-copy game processes.");
+
+            var list = new Command("list", "List registered managed processes, with verified liveness.");
+            list.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.ProcessList(factory(json(c))));
+            process.AddCommand(list);
+
+            var pidArg = new Argument<int>("pid", "Process id.");
+            var stop = new Command("stop", "Stop a registered managed process by id.") { pidArg };
+            stop.SetHandler((InvocationContext c) => c.ExitCode = SafeCopyVerbs.ProcessStop(
+                factory(json(c)), c.ParseResult.GetValueForArgument(pidArg)));
+            process.AddCommand(stop);
+
+            return process;
         }
 
         /// <summary>
-        /// Handle configuration management commands.
+        /// Routes System.CommandLine's own output (help, parse errors) through the injected writers, so
+        /// an in-process caller sees everything the process would have printed.
         /// </summary>
-        private static int HandleConfigCommands(bool listSaves, string? setGameDir, bool showConfig)
+        private sealed class TextWriterConsole : IConsole
         {
-            var config = AppConfig.Load();
-
-            // Set game directory
-            if (setGameDir != null)
+            public TextWriterConsole(TextWriter output, TextWriter error)
             {
-                if (Directory.Exists(setGameDir))
-                {
-                    if (!config.SetGameDir(setGameDir))
-                    {
-                        Console.Error.WriteLine($"Error: Failed to persist game directory: {setGameDir}");
-                        return 1;
-                    }
-                    Console.WriteLine($"Game directory set to: {setGameDir}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"Error: Directory not found: {setGameDir}");
-                    return 1;
-                }
+                Out = new Writer(output);
+                Error = new Writer(error);
             }
 
-            // Show configuration
-            if (showConfig)
+            public IStandardStreamWriter Out { get; }
+
+            public IStandardStreamWriter Error { get; }
+
+            public bool IsOutputRedirected => true;
+
+            public bool IsErrorRedirected => true;
+
+            public bool IsInputRedirected => false;
+
+            private sealed class Writer : IStandardStreamWriter
             {
-                Console.WriteLine("Onslaught Career Editor - Configuration");
-                Console.WriteLine("=======================================");
-                Console.WriteLine($"Config file: {AppConfig.GetConfigPath()}");
-                Console.WriteLine();
+                private readonly TextWriter _writer;
 
-                string? gameDir = config.GetGameDir();
-                string? detectedDir = AppConfig.DetectGameDirectory();
+                public Writer(TextWriter writer) => _writer = writer;
 
-                Console.WriteLine($"Game directory:     {gameDir ?? "(not set)"}");
-                Console.WriteLine($"Auto-detected:      {detectedDir ?? "(not found)"}");
-                Console.WriteLine($"Max recent files:   {config.MaxRecentFiles}");
-                Console.WriteLine($"Window size:        {config.WindowWidth}x{config.WindowHeight}");
-                Console.WriteLine($"Last tab:           {config.LastTab}");
-
-                if (config.RecentFiles.Count > 0)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"Recent files ({config.RecentFiles.Count}):");
-                    foreach (var file in config.RecentFiles)
-                    {
-                        bool exists = File.Exists(file);
-                        Console.WriteLine($"  {(exists ? "[OK]" : "[X]")} {file}");
-                    }
-                }
-            }
-
-            // List save files
-            if (listSaves)
-            {
-                string? effectiveDir = config.GetGameDir() ?? AppConfig.DetectGameDirectory();
-
-                Console.WriteLine("Onslaught Career Editor - Save Files");
-                Console.WriteLine("====================================");
-
-                if (effectiveDir == null)
-                {
-                    Console.WriteLine("Game directory not configured and could not be auto-detected.");
-                    Console.WriteLine("Use --set-game-dir <path> to specify the game installation folder.");
-                    return 1;
-                }
-
-                Console.WriteLine($"Searching in: {effectiveDir}");
-                Console.WriteLine();
-
-                var saves = AppConfig.FindSaveFiles(effectiveDir);
-
-                if (saves.Count == 0)
-                {
-                    Console.WriteLine("No .bes/.bea save/options files found.");
-            return 0;
-        }
-
-                Console.WriteLine($"Found {saves.Count} save file(s):");
-                Console.WriteLine();
-                Console.WriteLine($"{"Name",-30} {"Size",-12} {"Modified",-20} {"Valid"}");
-                Console.WriteLine(new string('-', 70));
-
-                foreach (var save in saves)
-                {
-                    string sizeStr = save.Size == 10004 ? "10,004 B" : $"{save.Size:N0} B";
-                    string validStr = save.IsValid ? "Yes" : "No*";
-                    Console.WriteLine($"{save.Name,-30} {sizeStr,-12} {save.Modified:yyyy-MM-dd HH:mm,-20} {validStr}");
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("Paths:");
-                foreach (var save in saves)
-                {
-                    Console.WriteLine($"  {save.Path}");
-                }
-                Console.WriteLine();
-                Console.WriteLine($"* Invalid format: expected {BesFilePatcher.EXPECTED_FILE_SIZE:N0} bytes and version word 0x{BesFilePatcher.VERSION_WORD:X4}");
-            }
-
-	            return 0;
-	        }
-
-
-	        private static int PrintGoodieList(string inputPath, bool showReservedGoodies)
-	        {
-	            const int careerBase = 0x0002;
-	            const int ccareerGoodieBase = 0x1F44;
-	            const int goodieBase = careerBase + ccareerGoodieBase; // 0x1F46 in file space
-	            const int goodieCount = 300;
-	            const int displayableCount = 233;
-
-	            const uint GOODIE_UNKNOWN = 0;
-	            const uint GOODIE_INSTRUCTIONS = 1;
-	            const uint GOODIE_NEW = 2;
-	            const uint GOODIE_OLD = 3;
-
-	            static string classify(int index, uint raw)
-	            {
-	                if (index >= displayableCount) return "RESERVED";
-	                if (raw == GOODIE_NEW) return "NEW";
-	                if (raw == GOODIE_OLD) return "OLD";
-	                if (raw == GOODIE_UNKNOWN) return "LOCKED";
-	                if (raw == GOODIE_INSTRUCTIONS) return "INSTRUCTIONS";
-	                return "OTHER";
-	            }
-
-	            try
-	            {
-	                var buf = File.ReadAllBytes(inputPath);
-	                if (buf.Length != BesFilePatcher.EXPECTED_FILE_SIZE)
-	                {
-	                    Console.Error.WriteLine(
-	                        $"Error: Invalid file size {buf.Length:N0} bytes (expected {BesFilePatcher.EXPECTED_FILE_SIZE:N0}).");
-	                    return 1;
-	                }
-
-	                ushort versionWord = BinaryPrimitives.ReadUInt16LittleEndian(buf.AsSpan(0, 2));
-	                if (versionWord != BesFilePatcher.VERSION_WORD)
-	                {
-	                    Console.Error.WriteLine(
-	                        $"Error: Invalid version word 0x{versionWord:X4} (expected 0x{BesFilePatcher.VERSION_WORD:X4}).");
-	                    return 1;
-	                }
-
-	                int countNew = 0, countOld = 0, countLocked = 0, countInstructions = 0, countOther = 0, countReserved = 0;
-
-	                Console.WriteLine("Onslaught Career Editor - Goodie List");
-	                Console.WriteLine("=====================================");
-	                Console.WriteLine($"File: {inputPath}");
-	                Console.WriteLine($"Version: 0x{versionWord:X4}");
-	                Console.WriteLine($"Display mode: {(showReservedGoodies ? "all 300 slots" : "displayable slots (0-232)")}");
-	                Console.WriteLine();
-	                Console.WriteLine($"{"Idx",4} {"Offset",8} {"State",-13} {"Raw",-10} {"Scope",-11}");
-	                Console.WriteLine(new string('-', 52));
-
-	                for (int i = 0; i < goodieCount; i++)
-	                {
-	                    int off = goodieBase + i * 4;
-	                    uint raw = BinaryPrimitives.ReadUInt32LittleEndian(buf.AsSpan(off, 4));
-	                    string state = classify(i, raw);
-	                    bool reserved = i >= displayableCount;
-	                    string scope = reserved ? "Reserved" : "Displayable";
-
-	                    switch (state)
-	                    {
-	                        case "NEW": countNew++; break;
-	                        case "OLD": countOld++; break;
-	                        case "LOCKED": countLocked++; break;
-	                        case "LOCKED WITH HINT": countInstructions++; break;
-	                        case "OTHER": countOther++; break;
-	                        case "RESERVED": countReserved++; break;
-	                    }
-
-	                    if (!showReservedGoodies && reserved)
-	                        continue;
-
-	                    Console.WriteLine($"{i,4} 0x{off:X4} {state,-13} 0x{raw:X8} {scope,-11}");
-	                }
-
-	                int unlocked = countNew + countOld;
-	                Console.WriteLine();
-	                Console.WriteLine("Summary (displayable slots 0-232):");
-	                Console.WriteLine($"  Unlocked: {unlocked}/{displayableCount} (NEW {countNew}, OLD {countOld})");
-	                Console.WriteLine($"  Locked: {countLocked}");
-	                Console.WriteLine($"  Locked with hint: {countInstructions}");
-	                if (countOther > 0)
-	                    Console.WriteLine($"  Other: {countOther}");
-	                Console.WriteLine($"  Reserved slots: {countReserved}");
-	                if (!showReservedGoodies)
-	                    Console.WriteLine("  Note: Reserved rows hidden; use --show-reserved-goodies to include them.");
-
-	                return 0;
-	            }
-	            catch (IOException ex)
-	            {
-	                Console.Error.WriteLine($"Error: Failed to access file: {ex.Message}");
-	                return 1;
-	            }
-	            catch (UnauthorizedAccessException ex)
-	            {
-	                Console.Error.WriteLine($"Error: Access denied: {ex.Message}");
-	                return 1;
-	            }
-	            catch (Exception ex)
-	            {
-	                Console.Error.WriteLine($"Error: {ex.Message}");
-	                return 1;
+                public void Write(string? value) => _writer.Write(value);
             }
         }
-
-        private static bool HasBroadPatchOptions(
-            bool? useNew,
-            int? kills,
-            string? rank,
-            bool killsOnly,
-            bool noNodes,
-            bool noLinks,
-            bool noGoodies,
-            bool noKills,
-            bool allowCareerSectionsOnOptionsFile,
-            string[]? levelRanks,
-            int? aircraftKills,
-            int? vehicleKills,
-            int? emplacementKills,
-            int? infantryKills,
-            int? mechKills,
-            double? soundVolume,
-            double? musicVolume,
-            string? invertWalkerP1,
-            string? invertWalkerP2,
-            string? invertFlightP1,
-            string? invertFlightP2,
-            string? vibrationP1,
-            string? vibrationP2,
-            uint? controllerConfigP1,
-            uint? controllerConfigP2,
-            int? experimentalPendingExtraGoodies,
-            FileInfo? copyOptionsFrom,
-            bool noCopyOptionsEntries,
-            bool noCopyOptionsTail,
-            Dictionary<int, BesFilePatcher.OptionsEntryOverride>? keybindOverrides)
-        {
-            return useNew is not null ||
-                   kills.HasValue ||
-                   !string.IsNullOrWhiteSpace(rank) ||
-                   killsOnly ||
-                   noNodes ||
-                   noLinks ||
-                   noGoodies ||
-                   noKills ||
-                   allowCareerSectionsOnOptionsFile ||
-                   (levelRanks != null && levelRanks.Length > 0) ||
-                   aircraftKills.HasValue ||
-                   vehicleKills.HasValue ||
-                   emplacementKills.HasValue ||
-                   infantryKills.HasValue ||
-                   mechKills.HasValue ||
-                   soundVolume.HasValue ||
-                   musicVolume.HasValue ||
-                   !string.IsNullOrWhiteSpace(invertWalkerP1) ||
-                   !string.IsNullOrWhiteSpace(invertWalkerP2) ||
-                   !string.IsNullOrWhiteSpace(invertFlightP1) ||
-                   !string.IsNullOrWhiteSpace(invertFlightP2) ||
-                   !string.IsNullOrWhiteSpace(vibrationP1) ||
-                   !string.IsNullOrWhiteSpace(vibrationP2) ||
-                   controllerConfigP1.HasValue ||
-                   controllerConfigP2.HasValue ||
-                   experimentalPendingExtraGoodies.HasValue ||
-                   copyOptionsFrom != null ||
-                   noCopyOptionsEntries ||
-                   noCopyOptionsTail ||
-                   (keybindOverrides != null && keybindOverrides.Count > 0);
-        }
-
-        private static bool TryParseGoodieStateOverrides(
-            string[]? entries,
-            out Dictionary<int, uint> overrides,
-            out string error)
-        {
-            overrides = new Dictionary<int, uint>();
-            error = string.Empty;
-
-            if (entries == null || entries.Length == 0)
-            {
-                error = "Choose at least one --set-goodie-state INDEX:STATE override.";
-                return false;
-            }
-
-            foreach (string rawEntry in entries)
-            {
-                string entry = rawEntry.Trim();
-                string[] parts = entry.Split(':', 2, StringSplitOptions.TrimEntries);
-                if (parts.Length != 2 ||
-                    !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
-                {
-                    error = $"Invalid --set-goodie-state entry '{entry}'. Expected INDEX:STATE, for example 71:new.";
-                    return false;
-                }
-
-                if (!TryParseGoodieState(parts[1], out uint state))
-                {
-                    error = $"Invalid Goodie state '{parts[1]}' for index {index}. Use 0, 1, 2, 3, locked, instructions, new, or old.";
-                    return false;
-                }
-
-                overrides[index] = state;
-            }
-
-            return true;
-        }
-
-        private static bool TryParseGoodieState(string rawState, out uint state)
-        {
-            string normalized = rawState.Trim().ToLowerInvariant();
-            switch (normalized)
-            {
-                case "0":
-                case "locked":
-                case "none":
-                    state = 0;
-                    return true;
-                case "1":
-                case "instructions":
-                case "instruction":
-                    state = 1;
-                    return true;
-                case "2":
-                case "new":
-                    state = 2;
-                    return true;
-                case "3":
-                case "old":
-                case "viewed":
-                    state = 3;
-                    return true;
-                default:
-                    state = 0;
-                    return false;
-            }
-        }
-
-        private static bool? ParseTriBool(string? value, string optionName)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return null;
-
-            string v = value.Trim().ToLowerInvariant();
-            if (v is "keep" or "preserve" or "unchanged")
-                return null;
-            if (v is "1" or "true" or "on" or "yes" or "y")
-                return true;
-            if (v is "0" or "false" or "off" or "no" or "n")
-                return false;
-
-            throw new ArgumentException(
-                $"Error: Invalid value '{value}' for {optionName}. " +
-                "Use on/off/true/false/1/0/yes/no/y/n, or omit to preserve the existing save value."
-            );
-        }
-
-        private static bool IsOptionsLikePath(string? filePath)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-                return false;
-
-            string trimmed = filePath.Trim();
-            string fileNameOnly = Path.GetFileName(trimmed);
-            return string.Equals(Path.GetExtension(trimmed), ".bea", StringComparison.OrdinalIgnoreCase) ||
-                   fileNameOnly.StartsWith("defaultoptions.bea", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static Dictionary<int, BesFilePatcher.OptionsEntryOverride>? ParseKeybindOverridesFromCli(
-            string[]? moveForward,
-            string[]? moveBackward,
-            string[]? moveLeft,
-            string[]? moveRight,
-            string[]? lookUp,
-            string[]? lookDown,
-            string[]? lookLeft,
-            string[]? lookRight,
-            string[]? zoomIn,
-            string[]? zoomOut,
-            string[]? fireWeapon,
-            string[]? selectWeapon,
-            string[]? transform,
-            string[]? airBrake,
-            string[]? special)
-        {
-            static bool isKeep(string? s)
-            {
-                if (string.IsNullOrWhiteSpace(s))
-                    return true;
-                string t = s.Trim();
-                return t.Equals("keep", StringComparison.OrdinalIgnoreCase) ||
-                       t.Equals("preserve", StringComparison.OrdinalIgnoreCase) ||
-                       t.Equals("unchanged", StringComparison.OrdinalIgnoreCase);
-            }
-
-            var dict = new Dictionary<int, BesFilePatcher.OptionsEntryOverride>();
-
-            void setSlot(int entryId, int slotIndex, uint deviceCode, uint packedKey)
-            {
-                if (!dict.TryGetValue(entryId, out var ov))
-                {
-                    ov = new BesFilePatcher.OptionsEntryOverride();
-                    dict[entryId] = ov;
-                }
-
-                var slot = slotIndex == 0 ? ov.Slot0 : ov.Slot1;
-                slot.DeviceCode = deviceCode;
-                slot.PackedKey = packedKey;
-            }
-
-            static (uint Dev, uint Key) parseLookMouse(int entryId)
-            {
-                // Steam preset uses:
-                // - device 11: positive direction, device 12: negative direction
-                // - packed_key scan: 0 => X axis, 1 => Y axis
-                return entryId switch
-                {
-                    0x1B => (11u, 0u), // Look Right  (MouseX+)
-                    0x19 => (12u, 0u), // Look Left   (MouseX-)
-                    0x1A => (11u, 1u), // Look Up     (MouseY+)
-                    0x1C => (12u, 1u), // Look Down   (MouseY-)
-                    _ => throw new ArgumentException($"Internal error: entry_id 0x{entryId:X} is not a Look entry."),
-                };
-            }
-
-            static (uint Dev, uint Key) parseLookToken(int entryId, string token)
-            {
-                // Accept the simple UI token ("Mouse") and the more explicit verbose tokens ("MouseX+/MouseY-")
-                // that show up in analyzer output.
-                string t = token.Trim();
-                string tl = t.ToLowerInvariant();
-                if (tl is "mouse" or "mousex" or "mousey")
-                    return parseLookMouse(entryId);
-
-                if (tl.StartsWith("mousex", StringComparison.Ordinal))
-                {
-                    // X axis: scan=0
-                    uint key = 0u;
-                    if (tl.EndsWith("-", StringComparison.Ordinal))
-                        return (12u, key);
-                    if (tl.EndsWith("+", StringComparison.Ordinal))
-                        return (11u, key);
-                    return parseLookMouse(entryId);
-                }
-
-                if (tl.StartsWith("mousey", StringComparison.Ordinal))
-                {
-                    // Y axis: scan=1
-                    uint key = 1u;
-                    if (tl.EndsWith("-", StringComparison.Ordinal))
-                        return (12u, key);
-                    if (tl.EndsWith("+", StringComparison.Ordinal))
-                        return (11u, key);
-                    return parseLookMouse(entryId);
-                }
-
-                if (tl.StartsWith("mouse(", StringComparison.Ordinal) && tl.EndsWith(")", StringComparison.Ordinal))
-                {
-                    string inner = tl["mouse(".Length..^1];
-                    if (int.TryParse(inner, NumberStyles.Integer, CultureInfo.InvariantCulture, out int scanSigned))
-                    {
-                        var (devDefault, _) = parseLookMouse(entryId);
-                        return (devDefault, unchecked((uint)scanSigned));
-                    }
-                }
-
-                throw new ArgumentException($"Invalid look binding '{token}'. Use Mouse, MouseX+/MouseX-, MouseY+/MouseY-, or a keyboard key.");
-            }
-
-            static (uint Dev, uint Key) parseZoomMouseWheel(string t)
-            {
-                if (t.Equals("MouseWheelUp", StringComparison.OrdinalIgnoreCase))
-                    return (16u, 3u);
-                if (t.Equals("MouseWheelDown", StringComparison.OrdinalIgnoreCase))
-                    return (16u, 4u);
-                throw new ArgumentException($"Invalid zoom binding '{t}'. Use MouseWheelUp/MouseWheelDown or a keyboard key.");
-            }
-
-            static (uint Dev, uint Key) parseMouseButton(int entryId, string t)
-            {
-                if (t.Equals("MouseLeft", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Steam build uses these device codes for Fire weapon:
-                    // - entry 0x12: dev 17, key 0
-                    // - entry 0x13: dev 15, key 0
-                    return entryId switch
-                    {
-                        0x12 => (17u, 0u),
-                        0x13 => (15u, 0u),
-                        _ => throw new ArgumentException("MouseLeft is only supported for Fire weapon (entry 0x12/0x13)."),
-                    };
-                }
-
-                if (t.Equals("MouseRight", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Steam build uses device 16 scan 2 for Select weapon.
-                    return entryId switch
-                    {
-                        0x14 => (16u, 2u),
-                        _ => throw new ArgumentException("MouseRight is only supported for Select weapon (entry 0x14)."),
-                    };
-                }
-
-                throw new ArgumentException($"Invalid mouse button binding '{t}'. Use MouseLeft/MouseRight.");
-            }
-
-            static uint parseKeyboardPacked(string t, string label)
-            {
-                if (!BesFilePatcher.TryParseKeyboardPackedKey(t, out uint packed, out string? err))
-                    throw new ArgumentException($"Invalid {label}: {err}");
-                return packed;
-            }
-
-            void parseRow(
-                int entryId,
-                uint keyboardDeviceCode,
-                bool allowLookMouse,
-                bool allowZoomWheel,
-                bool allowMouseButtons,
-                string[]? values,
-                string label)
-            {
-                if (values == null || values.Length != 2)
-                    return;
-
-                void parseOne(int slotIndex, string tokenLabel, string? raw)
-                {
-                    if (isKeep(raw))
-                        return;
-
-                    string t = raw!.Trim();
-                    if (allowLookMouse && t.StartsWith("Mouse", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var (dev, key) = parseLookToken(entryId, t);
-                        setSlot(entryId, slotIndex, dev, key);
-                        return;
-                    }
-
-                    if (allowZoomWheel && (t.Equals("MouseWheelUp", StringComparison.OrdinalIgnoreCase) || t.Equals("MouseWheelDown", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        var (dev, key) = parseZoomMouseWheel(t);
-                        setSlot(entryId, slotIndex, dev, key);
-                        return;
-                    }
-
-                    if (allowMouseButtons && (t.Equals("MouseLeft", StringComparison.OrdinalIgnoreCase) || t.Equals("MouseRight", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        var (dev, key) = parseMouseButton(entryId, t);
-                        setSlot(entryId, slotIndex, dev, key);
-                        return;
-                    }
-
-                    uint packed = parseKeyboardPacked(t, tokenLabel);
-                    setSlot(entryId, slotIndex, keyboardDeviceCode, packed);
-                }
-
-                parseOne(0, $"{label} (P1)", values[0]);
-                parseOne(1, $"{label} (P2)", values[1]);
-            }
-
-            // Movement (action_code 0x3B..0x3E => entry_id 0x1D..0x20, binding_type 9)
-            parseRow(0x1F, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, moveForward, "Movement: Forward");
-            parseRow(0x20, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, moveBackward, "Movement: Backward");
-            parseRow(0x1D, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, moveLeft, "Movement: Left");
-            parseRow(0x1E, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, moveRight, "Movement: Right");
-
-            // Look (action_code 0x40..0x43 => entry_id 0x19..0x1C, binding_type 9)
-            // Preset uses Mouse look via device_code 11/12 + packed_key 0/1.
-            parseRow(0x1A, 9, allowLookMouse: true, allowZoomWheel: false, allowMouseButtons: false, lookUp, "Look: Up");
-            parseRow(0x1C, 9, allowLookMouse: true, allowZoomWheel: false, allowMouseButtons: false, lookDown, "Look: Down");
-            parseRow(0x19, 9, allowLookMouse: true, allowZoomWheel: false, allowMouseButtons: false, lookLeft, "Look: Left");
-            parseRow(0x1B, 9, allowLookMouse: true, allowZoomWheel: false, allowMouseButtons: false, lookRight, "Look: Right");
-
-            // Zoom (action_code 0x45/0x46 => entry_id 0x10/0x11, binding_type 9)
-            parseRow(0x10, 9, allowLookMouse: false, allowZoomWheel: true, allowMouseButtons: false, zoomIn, "Zoom: In");
-            parseRow(0x11, 9, allowLookMouse: false, allowZoomWheel: true, allowMouseButtons: false, zoomOut, "Zoom: Out");
-
-            // Others:
-            // - Fire weapon action_code 0x48 remaps both entry_id 0x12 (binding_type 10) and 0x13 (binding_type 9)
-            // - Remaining entries are single (see ControlBindings.md)
-            if (fireWeapon != null && fireWeapon.Length == 2)
-            {
-                parseRow(0x12, 10, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: true, fireWeapon, "Others: Fire weapon");
-                parseRow(0x13, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: true, fireWeapon, "Others: Fire weapon");
-            }
-
-            parseRow(0x14, 10, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: true, selectWeapon, "Others: Select weapon");
-            parseRow(0x21, 8, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, transform, "Others: Transform");
-            parseRow(0x15, 9, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, airBrake, "Others: Air brake");
-            parseRow(0x3B, 8, allowLookMouse: false, allowZoomWheel: false, allowMouseButtons: false, special, "Others: Special function");
-
-            return dict.Count == 0 ? null : dict;
-        }
-
-        private static void PrintPatchSummary(BesFilePatcher patcher, string outputPath,
-            Dictionary<int, string>? levelRanks, Dictionary<int, int>? perCategoryKills)
-        {
-            Console.WriteLine($"Patched: {outputPath}");
-
-            var patched = new List<string>();
-            if (patcher.PatchNodes)
-            {
-                if (levelRanks != null && levelRanks.Count > 0)
-                    patched.Add(patcher.Rank is null
-                        ? $"Nodes ({levelRanks.Count} overrides only; every other mission untouched)"
-                        : $"Nodes ({patcher.Rank} + {levelRanks.Count} overrides)");
-                else
-                    patched.Add($"Nodes ({patcher.Rank}-rank)");
-            }
-            if (patcher.PatchLinks) patched.Add("Links");
-            if (patcher.PatchGoodies) patched.Add($"Goodies ({(patcher.UseNewGoodiesInstead == true ? "NEW" : "OLD")})");
-            if (patcher.PatchKills)
-            {
-                if (perCategoryKills != null && perCategoryKills.Count > 0)
-                    patched.Add(patcher.GlobalKillCount is null
-                        ? $"Kills ({perCategoryKills.Count} categories only; every other category untouched)"
-                        : "Kills (custom per-category)");
-                else
-                    patched.Add($"Kills ({patcher.GlobalKillCount} each)");
-            }
-
-            bool hasCareerSettings =
-                patcher.SoundVolumeOverride.HasValue ||
-                patcher.MusicVolumeOverride.HasValue ||
-                patcher.InvertYAxisP1Override.HasValue ||
-                patcher.InvertYAxisP2Override.HasValue ||
-                patcher.InvertFlightP1Override.HasValue ||
-                patcher.InvertFlightP2Override.HasValue ||
-                patcher.VibrationP1Override.HasValue ||
-                patcher.VibrationP2Override.HasValue ||
-                patcher.ControllerConfigP1Override.HasValue ||
-                patcher.ControllerConfigP2Override.HasValue;
-            if (hasCareerSettings)
-                patched.Add("Career settings");
-
-            if (!string.IsNullOrWhiteSpace(patcher.CopyOptionsFromPath))
-            {
-                var parts = new List<string>();
-                if (patcher.CopyOptionsEntries) parts.Add("entries");
-                if (patcher.CopyOptionsTail) parts.Add("tail");
-                if (parts.Count > 0)
-                    patched.Add($"Options copy ({string.Join("+", parts)})");
-            }
-
-            if (patcher.OptionsEntryOverrides != null && patcher.OptionsEntryOverrides.Count > 0)
-            {
-                patched.Add($"Keybind overrides ({patcher.OptionsEntryOverrides.Count} entries)");
-            }
-
-            if (patched.Count > 0)
-            {
-                Console.WriteLine($"  Patched: {string.Join(", ", patched)}");
-            }
-            else
-            {
-                Console.WriteLine("  WARNING: No sections selected for patching!");
-            }
-
-            var skipped = new List<string>();
-            if (!patcher.PatchNodes) skipped.Add("Nodes");
-            if (!patcher.PatchLinks) skipped.Add("Links");
-            if (!patcher.PatchGoodies) skipped.Add("Goodies");
-            if (!patcher.PatchKills) skipped.Add("Kills");
-            if (skipped.Count > 0)
-            {
-                Console.WriteLine($"  Skipped: {string.Join(", ", skipped)}");
-            }
-
-            if (patcher.PatchKills && perCategoryKills != null && perCategoryKills.Count > 0)
-            {
-                Console.WriteLine($"  Kill counts (default: {patcher.GlobalKillCount?.ToString() ?? "keep current"}):");
-                string[] categories = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
-                for (int i = 0; i < categories.Length; i++)
-                {
-                    string value = perCategoryKills.TryGetValue(i, out int overrideKills)
-                        ? overrideKills.ToString()
-                        : patcher.GlobalKillCount?.ToString() ?? "kept unchanged";
-                    string marker = perCategoryKills.ContainsKey(i) ? " *" : "";
-                    Console.WriteLine($"    {categories[i]}: {value}{marker}");
-                }
-            }
-        }
-
     }
 }
