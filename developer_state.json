@@ -4,6 +4,39 @@
   "_maintenance": "Update current fields as work lands. Remove or explicitly label superseded accounts rather than appending parallel truth. Keep detailed evidence in its owning tracked or ignored note.",
   "_audited": "The 2026-07-27 form was audited by a read-only pass. On 2026-07-28 a separate read-only state-truth audit reviewed the recovery block, goal evidence, task-store pointers, TTD eras, and named documentation claims. On 2026-07-29 a fresh primary and read-only adversarial audit reconciled the recovery commits, research masters, parity-lab work, and four distinct Level 100 deterministic runs. Historical blocks remain records rather than current assertions; current state belongs in _CODEX_CURRENT_2026_07_29.",
 
+  "_APP_UX_CAMPAIGN_2026_08_01": {
+    "_what_this_is": "A separate forked session opened a campaign on the WinUI 3 app itself: end-user experience first, with a CLI twin for anything developer-useful. This block is the pickup pointer for that lane. It supersedes nothing in the RE or rebuild lanes.",
+    "evidence": {
+      "audit": "local-lab/APP-UX-AUDIT-2026-08-01.md - 242 findings from 12 read-only auditors over pages, AppCore, CLI, tests, copy, patch candidates, trainer groundwork, distribution.",
+      "walkthrough": "local-lab/APP-UX-WALKTHROUGH-2026-08-01.md - the coordinator's own hands-on pass over every page, holding the defects that only appear on screen.",
+      "plan": "local-lab/APP-UX-BACKLOG-2026-08-01.md - ranked slices S0..S7, with what landed marked in place. READ THIS FIRST when resuming the app lane."
+    },
+    "landed_2026_08_01": [
+      "8816baf4 default gate 13 -> 285 static UI tests, test:ui-runtime added, gate composition guarded",
+      "2880028d Lore renders again - native WinUI reader, WebView2 dropped from the page",
+      "d718f343 safe-copy liveness - the mods page no longer wedges when the game exits on its own",
+      "7c2d7e5f 33 invented cutscene titles removed; media failures made visible",
+      "c541b2ad app icon, both themes reachable, live Home strip, nav order, Steam registry detection",
+      "e0fcef8b lore reader opens on prose, not repository bookkeeping",
+      "74a8f126 direct WebView2 reference dropped (still transitive via WindowsAppSDK)",
+      "0ffc4418 player-first README with the SmartScreen warning",
+      "3b531070 Save Lab refreshes when the game folder changes"
+    ],
+    "gate_now": "npm test = 1103 AppCore + 302 UiTests, green, plus test:safety, test:docs and test:notices. It was 977 + 15 on the morning of 2026-08-01.",
+    "bounded_findings": {
+      "lore_was_a_composition_failure_not_a_content_failure": "MEASURED 2026-08-01: RenderDocument wrote valid HTML, WebView2 reported NavigationCompleted success, and a live 80 MB renderer process held the page - nothing painted, and a full window resize did not fix it. Overturn by making WebView2 composite in this shell; the native reader is the better answer regardless.",
+      "theme_brushes_must_use_ThemeResource": "StaticResource resolves a theme-dictionary key once at page load. Ten shell brushes were bound that way and froze the Lore reader dark after switching to Light. Overturn/guard: ThemeContrastAuditTests.ShellThemeBrushes_AreBoundWithThemeResource_SoTheyFollowTheAppearanceChoice.",
+      "webview2_is_still_transitive": "Dropping the direct PackageReference did NOT remove the runtime dependency: WindowsAppSDK brings WebView2 in at 1.0.3719.77. Evidence: release/readiness/THIRD_PARTY_NOTICES.winui.md, row moved from 'WinUI product' to 'transitive'.",
+      "cutscene_titles_were_invented": "33 story titles presented to users as fact existed only in MediaCatalogService and its own test - nowhere in the game, the lore library, or the evidence store. Removed; see the live task 'Source real cutscene titles'."
+    },
+    "biggest_open_items": [
+      "S2 copy overhaul - the app still speaks in an evidence-boundary register (87 negation constructions in XAML alone); ~330 exact-string assertions must move with it.",
+      "S5 CLI - adapts 2 of 31 AppCore services; the whole patch/safe-copy/launch lane is unreachable headlessly, which also blocks the trainer's CLI twin.",
+      "S6 trainer - phase 1 needs NO memory writes (invulnerability, all-levels, all-goodies and free camera are retail cheats and shipped patch rows; level select is save-side). Phase 2 health/energy has a triple-corroborated layout but needs one live probe first. Ammo and timescale have ZERO address evidence - do not fake them.",
+      "First-run experience still absent; the saved window size is still written on close and never applied."
+    ]
+  },
+
   "_TTD_CORPUS_2026_07_30": {
     "_what_this_is": "The complete surviving TTD corpus, re-enumerated 2026-07-30 from G:\\bea-ttd itself rather than from any summary: 76 directories, 487,306,338,916 bytes (~453.8 GiB) total, G: retains 466 GB free. QUERYING NEEDS NO ELEVATION - only RECORDING does. Every .run is IMMUTABLE: do not re-record, copy, move or delete one.",
 
