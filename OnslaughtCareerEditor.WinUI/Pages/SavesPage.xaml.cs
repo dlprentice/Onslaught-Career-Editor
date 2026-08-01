@@ -220,28 +220,62 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RestoreAnalyzerDetectedFileSelection(string? selectedPath)
         {
-            if (string.IsNullOrWhiteSpace(selectedPath))
-            {
-                return;
-            }
+            SaveAnalyzerFileItem? match = string.IsNullOrWhiteSpace(selectedPath)
+                ? null
+                : _detectedFiles.FirstOrDefault(item =>
+                    string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
 
-            SaveAnalyzerFileItem? match = _detectedFiles.FirstOrDefault(item =>
-                string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            // Nothing chosen yet: pick the save the player touched last. The page
+            // used to report "9 detected career save(s) available" beside an
+            // empty picker, which is a list of work rather than a starting point.
+            match ??= MostRecentlyWritten(_detectedFiles);
+
             if (match is not null)
             {
                 DetectedFilesComboBox.SelectedItem = match;
             }
         }
 
-        private void RestoreEditorDetectedFileSelection(string? selectedPath)
+        /// <summary>
+        /// The most recently written file, which is almost always the one the
+        /// player means. Unreadable timestamps sort last rather than throwing.
+        /// </summary>
+        private static SaveAnalyzerFileItem? MostRecentlyWritten(IReadOnlyList<SaveAnalyzerFileItem> items)
         {
-            if (string.IsNullOrWhiteSpace(selectedPath))
+            SaveAnalyzerFileItem? best = null;
+            DateTime bestWritten = DateTime.MinValue;
+
+            foreach (SaveAnalyzerFileItem item in items)
             {
-                return;
+                DateTime written;
+                try
+                {
+                    written = File.GetLastWriteTimeUtc(item.Path);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (best is null || written > bestWritten)
+                {
+                    best = item;
+                    bestWritten = written;
+                }
             }
 
-            SaveAnalyzerFileItem? match = _editorDetectedFiles.FirstOrDefault(item =>
-                string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            return best;
+        }
+
+        private void RestoreEditorDetectedFileSelection(string? selectedPath)
+        {
+            SaveAnalyzerFileItem? match = string.IsNullOrWhiteSpace(selectedPath)
+                ? null
+                : _editorDetectedFiles.FirstOrDefault(item =>
+                    string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+
+            match ??= MostRecentlyWritten(_editorDetectedFiles);
+
             if (match is not null)
             {
                 EditorDetectedFilesComboBox.SelectedItem = match;

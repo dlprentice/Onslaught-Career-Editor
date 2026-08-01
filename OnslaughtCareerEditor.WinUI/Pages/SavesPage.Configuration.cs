@@ -58,13 +58,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void RestoreConfigurationDetectedFileSelection(string? selectedPath)
         {
-            if (string.IsNullOrWhiteSpace(selectedPath))
-            {
-                return;
-            }
+            SaveAnalyzerFileItem? match = string.IsNullOrWhiteSpace(selectedPath)
+                ? null
+                : _configurationDetectedFiles.FirstOrDefault(item =>
+                    string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
 
-            SaveAnalyzerFileItem? match = _configurationDetectedFiles.FirstOrDefault(item =>
-                string.Equals(item.Path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            match ??= MostRecentlyWritten(_configurationDetectedFiles);
+
             if (match is not null)
             {
                 ConfigurationDetectedFilesComboBox.SelectedItem = match;
