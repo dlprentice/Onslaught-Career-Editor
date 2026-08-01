@@ -364,8 +364,22 @@ public class SaveEditorFirstSaveJourneyTests
             Assert.That(revealHandler, Does.Contain("clearCompletion: true"));
             Assert.That(revealHandler, Does.Contain("clearCompletion: false"));
             Assert.That(code, Does.Contain("Close the copied game"));
-            Assert.That(code, Does.Contain("back up any save you replace"));
-            Assert.That(code, Does.Contain("does not install"));
+
+            // Superseded 2026-08-01. This used to require the copy to say
+            // "does not install" and "back up any save you replace", which
+            // pinned a dead end: the editor wrote a file and then told the
+            // player to move it into a safe copy's savegames folder by hand,
+            // when the app knew where that folder was the whole time. The
+            // install now exists, so those assertions would pin the defect.
+            // What replaces them is the guard that makes installing safe.
+            Assert.That(code, Does.Contain("SaveEditorInstallToSafeCopyButton_Click"),
+                "The written save must have a way into the safe copy.");
+            Assert.That(code, Does.Contain("CheatSaveWriterService.Write"),
+                "Installing must reuse the guarded writer rather than a bare file copy.");
+            Assert.That(code, Does.Contain("NeedsOverwriteConfirmation"),
+                "Replacing an existing save must be confirmed, never silent.");
+            Assert.That(code, Does.Contain("cannot be undone"),
+                "The overwrite confirmation must say what it costs.");
         });
     }
 

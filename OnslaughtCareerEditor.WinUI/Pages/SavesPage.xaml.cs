@@ -875,6 +875,83 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             UpdateEditorActionState();
         }
 
+        /// <summary>
+        /// Closes the journey. The editor writes a separate file and then used
+        /// to tell the player to copy it into a safe copy's savegames folder by
+        /// hand - the app knew where that folder was the whole time.
+        ///
+        /// Reuses the cheat page's writer, which is the same guarded
+        /// transaction: it stages, verifies length and hash on both sides,
+        /// refuses in-place writes, symlinks and hardlinked aliases, and refuses
+        /// any destination inside an installed game.
+        /// </summary>
+        private async void SaveEditorInstallToSafeCopyButton_Click(object sender, RoutedEventArgs e)
+        {
+            string? writtenPath = _lastWrittenCompletion?.OutputPath;
+            if (string.IsNullOrWhiteSpace(writtenPath) || !File.Exists(writtenPath))
+            {
+                ShowInstallNote("Write the copy first, then this can put it in place.");
+                return;
+            }
+
+            IReadOnlyList<CheatSaveTarget> targets = CheatSaveWriterService.FindSafeCopyTargets();
+            if (targets.Count == 0)
+            {
+                ShowInstallNote("There is no safe copy yet. Make one in Windowed & Mods, then come back.");
+                return;
+            }
+
+            CheatSaveTarget target = targets[0];
+            string name = Path.GetFileNameWithoutExtension(writtenPath);
+
+            CheatSaveWriteOutcome outcome = CheatSaveWriterService.Write(new CheatSaveWriteRequest
+            {
+                InputPath = writtenPath,
+                OutputDirectory = target.SavegamesDirectory,
+                Name = name,
+            });
+
+            if (outcome.NeedsOverwriteConfirmation)
+            {
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = XamlRoot,
+                    Title = "Replace the save that is already there?",
+                    Content = $"{name}.bes already exists in {target.DisplayName}. Replacing it cannot be undone.",
+                    PrimaryButtonText = "Replace it",
+                    CloseButtonText = "Keep it",
+                    DefaultButton = ContentDialogButton.Close,
+                };
+
+                if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                {
+                    ShowInstallNote("Left the existing save alone.");
+                    return;
+                }
+
+                outcome = CheatSaveWriterService.Write(new CheatSaveWriteRequest
+                {
+                    InputPath = writtenPath,
+                    OutputDirectory = target.SavegamesDirectory,
+                    Name = name,
+                    AllowOverwrite = true,
+                });
+            }
+
+            ShowInstallNote(outcome.Success
+                ? $"Done. {name}.bes is in {target.DisplayName} - close the copied game before loading it."
+                : outcome.Message);
+            AppStatusService.SetStatus(outcome.Success
+                ? "Save Lab: put the save into your safe copy"
+                : "Save Lab: could not install the save");
+        }
+
+        private void ShowInstallNote(string note)
+        {
+            SaveEditorInstallNoteTextBlock.Text = note;
+            SaveEditorInstallNoteTextBlock.Visibility = Visibility.Visible;
+        }
+
         private void SaveEditorShowWrittenSaveButton_Click(object sender, RoutedEventArgs e)
         {
             SavePatchRequest request = BuildEditorRequest(out string? advancedError);
@@ -950,7 +1027,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (result.Success)
             {
                 string outputName = BuildFileNameSummary(request.OutputPath, "chosen output file");
-                return $"Successfully patched copied save to selected output file.\nOutput file: {outputName}\nThe source save was not modified. Close the copied game first and back up any save you replace. The Toolkit does not install this file; to try it, manually copy it into a Safe Game Copy's savegames folder.";
+                return $"Done - your changes are in a new save.\nFile: {outputName}\nThe save you started from was not touched. Close the copied game, then choose Put it in my safe copy to play it.";
             }
 
             return RedactEditorPatchPaths(result.Message, request);
@@ -1277,6 +1354,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             bool hasCompletedCurrentPlan = completion.IsCurrent;
             bool canRevealWrittenCopy = completion.CanReveal;
             SaveEditorShowWrittenSaveButton.IsEnabled = canRevealWrittenCopy;
+            SaveEditorInstallToSafeCopyButton.IsEnabled = canRevealWrittenCopy;
 
             var journeyState = new Models.SaveEditorFirstSaveJourneyState(
                 HasValidInput: _editorInputValid,

@@ -467,7 +467,7 @@
                                 <TextBlock Text="1. Choose an existing .bes career save.  2. Keep the separate suggested output.  3. Choose at least one change and review Pending changes.  4. Write the copied save."
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords" />
-                                <TextBlock Text="The Toolkit writes a separate file and does not install it. After a successful write, close the copied game, back up any save you replace, then manually copy the new file into a Safe Game Copy's savegames folder."
+                                <TextBlock Text="Your original save is never touched - the changes go into a new file. Once it is written, Put it in my safe copy moves it into place for you. Close the copied game first."
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords" />
                                 <TextBlock x:Name="SaveEditorFirstSaveStatus"
@@ -861,6 +861,18 @@
                                             Click="EditorPatchButton_Click"
                                             HorizontalAlignment="Left"
                                             MinWidth="180" />
+                                    <Button x:Name="SaveEditorInstallToSafeCopyButton"
+                                            AutomationProperties.AutomationId="SaveEditorInstallToSafeCopyButton"
+                                            AutomationProperties.Name="Put it in my safe copy, into its savegames folder"
+                                            Content="Put it in my safe copy"
+                                            Click="SaveEditorInstallToSafeCopyButton_Click"
+                                            IsEnabled="False"
+                                            HorizontalAlignment="Left" />
+                                    <TextBlock x:Name="SaveEditorInstallNoteTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorInstallNote"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               Visibility="Collapsed"
+                                               TextWrapping="WrapWholeWords" />
                                     <Button x:Name="SaveEditorShowWrittenSaveButton"
                                             AutomationProperties.AutomationId="SaveEditorShowWrittenSaveButton"
                                             AutomationProperties.Name="Show written save in File Explorer"
