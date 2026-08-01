@@ -32,6 +32,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      The WinUI targets glob Assets\** as Content, which would ship the icon's
+      PNG preview. The release package's payload-safety check denies .png
+      outside two SDK-owned prefixes, so shipping it would fail the ZIP probe.
+      The preview is a convenience for humans reading the repo; only the .ico
+      belongs in the build.
+    -->
+    <Content Remove="Assets\**\*.png" />
+    <None Include="Assets\**\*.png" />
     <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\patches\catalog\patches.v2.json" Link="patches\catalog\patches.v2.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\patches\catalog\safe-copy-profiles.v1.json" Link="patches\catalog\safe-copy-profiles.v1.json" CopyToOutputDirectory="PreserveNewest" />
