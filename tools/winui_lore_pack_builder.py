@@ -316,6 +316,49 @@ def filesystem_lore_files(lore_root: Path) -> list[Path]:
     return sorted(candidates)
 
 
+def derive_reading_order(book_text: str) -> dict[str, int]:
+    """Map each document to its position in BOOK.md's own reading order.
+
+    The builder used to sort alphabetically, which is why the fiction shipped fifteenth
+    of fifteen and a citation ledger landed mid-list. BOOK.md has always carried a
+    curated order in its nested link list; nothing read it.
+
+    Ordering here rather than by renaming files is deliberate: every lore filename is an
+    inbound citation anchor from the RE corpus, so numeric prefixes would cost every one
+    of those links.
+    """
+    order: dict[str, int] = {}
+    for match in re.finditer(r"\]\(([^)]+)\)", book_text):
+        target = match.group(1).split("#", 1)[0].strip()
+        if not target or "://" in target:
+            continue
+        normalized = PurePosixPath(target.replace("\\", "/")).as_posix()
+        while normalized.startswith("../"):
+            normalized = normalized[3:]
+        normalized = normalized.lower()
+        if normalized not in order:
+            order[normalized] = len(order)
+    return order
+
+
+def sort_documents_for_pack(documents: list[Path], lore_root: Path, book_order: dict[str, int]) -> list[Path]:
+    """BOOK.md's order first, then anything it does not list, alphabetically.
+
+    An unlisted document still ships - dropping it silently would be worse than putting
+    it at the end - but it sorts after everything curated, which is a visible nudge to
+    add it to the front door.
+    """
+    def key(path: Path) -> tuple[int, int, str]:
+        relative = path.relative_to(lore_root).as_posix().lower()
+        if relative == f"{LORE_BOOK_DIR}/book.md":
+            return (0, 0, relative)
+        if relative in book_order:
+            return (1, book_order[relative], relative)
+        return (2, 0, relative)
+
+    return sorted(documents, key=key)
+
+
 def collect_lore_documents(root: Path, lore_root: Path, *, use_git: bool) -> list[Path]:
     candidates = git_lore_files(root, lore_root) if use_git else filesystem_lore_files(lore_root)
     documents: list[Path] = []
@@ -345,6 +388,14 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
     documents = collect_lore_documents(root, lore_root, use_git=use_git)
     if not documents:
         raise RuntimeError("no Lore text documents found")
+
+    # The reader meets these in this order, so it comes from the curated list in BOOK.md
+    # rather than from the alphabet.
+    documents = sort_documents_for_pack(
+        documents,
+        lore_root,
+        derive_reading_order((root / LORE_BOOK_DIR / "BOOK.md").read_text(encoding="utf-8", errors="replace")),
+    )
     packable_relative_paths = {
         validate_lore_pack_relative_path(normalize_lore_relative(path.relative_to(lore_root))).lower()
         for path in documents
@@ -631,6 +682,50 @@ class LorePackBuilderTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 build_lore_pack(root, root / LORE_PACK_DIR, use_git=False)
+
+    def test_reading_order_comes_from_the_book_not_the_alphabet(self) -> None:
+        """The fiction used to ship fifteenth of fifteen because the builder sorted by name.
+
+        BOOK.md has always carried a curated order; nothing read it. This pins that it is
+        read, and that a document BOOK.md does not mention still ships - at the end, which
+        is a visible nudge rather than a silent drop.
+        """
+        book = """# Book
+
+- [World](../lore/world-lore.md)
+- [Overview](../lore/game-overview.md)
+- [Deep dive](../lore/technical-deep-dive.md#anchor-is-ignored)
+- [Offsite](https://example.invalid/x.md)
+"""
+        order = derive_reading_order(book)
+
+        self.assertEqual(order["lore/world-lore.md"], 0)
+        self.assertEqual(order["lore/game-overview.md"], 1)
+        self.assertEqual(order["lore/technical-deep-dive.md"], 2)
+        self.assertNotIn("https://example.invalid/x.md", order)
+
+        lore_root = Path("/lore-root")
+        documents = [
+            lore_root / "lore" / "zzz-unlisted.md",
+            lore_root / "lore" / "game-overview.md",
+            lore_root / "lore-book" / "BOOK.md",
+            lore_root / "lore" / "world-lore.md",
+        ]
+
+        sorted_names = [
+            path.relative_to(lore_root).as_posix()
+            for path in sort_documents_for_pack(documents, lore_root, order)
+        ]
+
+        self.assertEqual(
+            sorted_names,
+            [
+                "lore-book/BOOK.md",
+                "lore/world-lore.md",
+                "lore/game-overview.md",
+                "lore/zzz-unlisted.md",
+            ],
+        )
 
     def test_rejects_unsafe_lore_pack_relative_paths(self) -> None:
         unsafe_paths = (
