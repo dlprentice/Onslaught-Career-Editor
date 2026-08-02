@@ -71,33 +71,7 @@ After the console versions were complete, the core team moved onto other project
 
 | Name | Role | Notes |
 |------|------|-------|
-| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes. See the lead recorded below. |
-
-**Lead on Jan's surname — INFERRED, NOT CONFIRMED (recorded 2026-07-28).**
-"Surname unknown" above is still accurate: nothing establishes who this Jan was.
-It is recorded here only so the strongest available lead is visible rather than
-buried in the RE corpus.
-
-`cardid.txt`, a PC-retail-only GPU-tweak file loaded by
-`CD3DApplication__LoadCardIdAndApplyVendorTweaks`, is credited to **Jan
-Svarovsky and Tom Forsyth**, "originally from StarTopia at Mucky Foot" —
-[modding-reference.md](../reverse-engineering/game-assets/modding-reference.md)
-and
-[game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md).
-First name, former studio and named title all match this row.
-
-**Why that is weaker than it looks, and must not be written in as fact:**
-
-- The credit names **two** people, and "originally from StarTopia at Mucky Foot"
-  most naturally describes the **file's** lineage, not either author's employment
-  at Lost Toys. A file carried over from Startopia can reach Battle Engine Aquila
-  without either author working on this game.
-- The file's own header comment carries the same credit, so reading it does
-  **not** settle the question; it only restates the lead.
-
-**What would settle it:** a direct confirmation from Stuart Gillam, who sat next
-to this Jan, or a surname in the retail PC credits or printed manual. Until one
-of those exists, do not merge the two names.
+| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes. Surname unknown — an unconfirmed lead is recorded in the project's [attribution notes](../reverse-engineering/project-meta/attribution.md). |
 
 **Note**: Encore Software was only the **publisher** for the PC version. The actual port work was done in-house at Lost Toys by Jan and possibly others. Stuart confirmed this on Discord (Dec 2025): *"The PC version was done inhouse at LT though. When the original console versions were complete the team moved onto other work and LT got a person or persons to convert our already 'inhouse' development version into something releasable."*
 

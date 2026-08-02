@@ -78,3 +78,36 @@
 - `references/Onslaught/` is tracked as a reference submodule in this public
   repo. Its contents keep their own provenance/licensing and are not bundled
   into the portable WinUI app ZIP.
+
+## Lead on the PC port developer's surname
+
+Moved here 2026-08-01 from `lore/team-roster.md`, where it sat in a document a
+player reads. The discipline in it is exemplary and the audience is not: a reader
+wants to know who made the game, and a contributor needs to know why one plausible
+name must not be written in as fact.
+
+**Lead on Jan's surname — INFERRED, NOT CONFIRMED (recorded 2026-07-28).**
+"Surname unknown" above is still accurate: nothing establishes who this Jan was.
+It is recorded here only so the strongest available lead is visible rather than
+buried in the RE corpus.
+
+`cardid.txt`, a PC-retail-only GPU-tweak file loaded by
+`CD3DApplication__LoadCardIdAndApplyVendorTweaks`, is credited to **Jan
+Svarovsky and Tom Forsyth**, "originally from StarTopia at Mucky Foot" —
+[modding-reference.md](../game-assets/modding-reference.md)
+and
+[game-folder-analysis.md](../game-assets/game-folder-analysis.md).
+First name, former studio and named title all match this row.
+
+**Why that is weaker than it looks, and must not be written in as fact:**
+
+- The credit names **two** people, and "originally from StarTopia at Mucky Foot"
+  most naturally describes the **file's** lineage, not either author's employment
+  at Lost Toys. A file carried over from Startopia can reach Battle Engine Aquila
+  without either author working on this game.
+- The file's own header comment carries the same credit, so reading it does
+  **not** settle the question; it only restates the lead.
+
+**What would settle it:** a direct confirmation from Stuart Gillam, who sat next
+to this Jan, or a surname in the retail PC credits or printed manual. Until one
+of those exists, do not merge the two names.

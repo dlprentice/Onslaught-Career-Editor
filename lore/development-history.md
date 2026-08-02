@@ -328,9 +328,9 @@ PC Development Build (Stuart's code)
 **Jan** (surname unknown) was the primary PC port developer. He previously worked at **Mucky Foot** (UK studio known for Startopia, Urban Chaos, Blade II). Jan changed the cheat codes from the original Lost Toys codes (B4K42, !EVAH!, 105770Y2) to new ones (MALLOY, TURKEY, Maladim, etc.).
 
 *A lead on Jan's surname exists and is deliberately **not** merged into the name
-above; it is INFERRED, not confirmed. It is recorded once, with its weaknesses
-and what would settle it, in [team-roster.md](team-roster.md) under "PC Port
-Team". (Note added 2026-07-28; nothing above was changed by it.)*
+above; it is INFERRED, not confirmed. It is recorded once, with its weaknesses and
+what would settle it, in the project's
+[attribution notes](../reverse-engineering/project-meta/attribution.md).*
 
 Source retention note (from preserved Discord archive extracts): ex-team recollection indicates no one retained the full finished retail PC source tree, which aligns with the current partial-source preservation reality.
 
