@@ -42,6 +42,23 @@
                                AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
+                    <!--
+                        The game's own title screen. Decorative, so it is raw to
+                        the accessibility tree - the sentence beneath it says
+                        everything the picture says. A registered screenshot,
+                        not an extracted asset; see AGENTS.md and
+                        attribution.md.
+                    -->
+                    <Border x:Name="AboutTitleScreenBorder"
+                            AutomationProperties.AutomationId="AboutTitleScreenBorder"
+                            CornerRadius="6"
+                            HorizontalAlignment="Left"
+                            MaxWidth="320"
+                            Margin="0,2,0,6">
+                        <Image Source="ms-appx:///Assets/Screenshots/title-screen.jpg"
+                               AutomationProperties.AccessibilityView="Raw"
+                               Stretch="Uniform" />
+                    </Border>
                     <TextBlock Text="Battle Engine Aquila was made by Lost Toys and released in 2003. This app is a fan preservation project and has no connection to them."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Every change it offers was worked out by studying the game itself - reading the original executable, tracing what it does while it runs, and checking each result byte by byte before it ships as an option here. That is why the list of mods is short and why each one says exactly what it does."

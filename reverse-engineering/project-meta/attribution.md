@@ -70,7 +70,8 @@
   with or endorsed by a publisher or rights holder of *Battle Engine Aquila*.
 - Users provide their own lawfully obtained retail game data. The current source
   tree and release packages do not include retail game assets or converted
-  copies. Repository licenses grant no rights in the game executable,
+  copies, with the single narrow exception of the screenshots registered below.
+  Repository licenses grant no rights in the game executable,
   assets, source code, names, trademarks, or third-party components.
 - Preserve the original game's credits and notices and all file-level,
   source-code, and third-party terms. Developer-provided reference materials
@@ -78,6 +79,27 @@
 - `references/Onslaught/` is tracked as a reference submodule in this public
   repo. Its contents keep their own provenance/licensing and are not bundled
   into the portable WinUI app ZIP.
+
+## Registered screenshots
+
+Every picture of the game tracked in this repository is listed here, per the
+screenshot allowance in [`AGENTS.md`](../../AGENTS.md). The register exists so a
+later reader can tell a deliberate choice from a mistake, and so the count stays
+visibly small. Bulk capture directories are not eligible and stay in the ignored
+local overlay.
+
+The distinction the allowance rests on: these are new works made by running the
+game, not files copied out of it. No extracted texture, model, audio or video
+may be registered here — photographing an asset through a viewer does not
+launder it.
+
+| Path | Source | Captured | Why it is tracked |
+|---|---|---|---|
+| `OnslaughtCareerEditor.WinUI/Assets/Screenshots/title-screen.jpg` | Pristine retail `BEA.exe` (`74154bfa…`), title screen | 2026-07-26 | The app's About page. The game's own identity card. |
+| `OnslaughtCareerEditor.WinUI/Assets/Screenshots/mission-vista.jpg` | Pristine retail `BEA.exe` (`74154bfa…`), level 1.00 | 2026-07-26 | The Home page hero, so the app looks like it belongs to the game. |
+
+Both were re-encoded from PNG captures taken during the 2026-07-26
+pristine-verification run. The originals stay under `local-lab/`.
 
 ## Lead on the PC port developer's surname
 

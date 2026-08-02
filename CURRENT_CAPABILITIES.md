@@ -626,7 +626,12 @@ assertions.
 > `GOAL.md` and `developer_state.json` carry the same two-halves phrasing.
 
 The current source tree and release packages do not include retail game assets
-or their conversions. The rebuild materializes the exact currently consumed slice
+or their conversions, other than two registered screenshots used for the app's
+own Home and About surfaces — pictures of the game running rather than files
+copied out of it. They are listed in
+[`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md)
+and the allowance is stated in [`AGENTS.md`](AGENTS.md).
+The rebuild materializes the exact currently consumed slice
 from a user-provided supported retail installation into ignored local paths.
 The remaining asset gap is technical integration and format fidelity.
 Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.

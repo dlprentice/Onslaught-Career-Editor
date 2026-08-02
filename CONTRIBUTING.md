@@ -67,6 +67,13 @@ package retail game assets or derived copies. Contribute the smallest exact
 recipe a current product or rebuild path consumes, with credits, provenance,
 and third-party terms intact.
 
+Screenshots are treated separately, because a picture of the game running is a
+new work rather than one of the game's files. A few chosen ones may be tracked
+and shipped for this project's own surfaces; bulk capture directories may not.
+[`AGENTS.md`](AGENTS.md) carries the conditions, and anything tracked under that
+allowance is listed in
+[`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md).
+
 File extensions are not provenance. Small project-authored or specifically
 developer-provided assets may be committed in their owning source path when
 their origin, license, and attribution are clear. The rebuild materialization

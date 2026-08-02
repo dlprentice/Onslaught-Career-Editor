@@ -43,7 +43,11 @@ permissive where it costs nothing and strict where data can be lost.
 - Do not track retail game assets, converted copies, game binaries, arbitrary
   save payloads, raw debugger logs, Ghidra backups, credentials, `.env*`, or
   bulky runtime captures. Retail inputs are materialized to ignored local paths
-  from the user's own installation.
+  from the user's own installation. **This is about the game's own shipped
+  files, not pictures of the game** — a few deliberately chosen screenshots may
+  be tracked for the app's own surfaces. See
+  [`AGENTS.md`](AGENTS.md) ("A screenshot is not an asset") for the line and
+  the conditions; bulk capture directories stay local.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation,
   filesystem, clock, process, network, and GPU APIs.
 - Keep public claims bounded to demonstrated evidence. Separate proven behavior

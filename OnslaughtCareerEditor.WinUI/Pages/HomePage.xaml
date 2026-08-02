@@ -71,16 +71,49 @@
                       VerticalScrollBarVisibility="Auto">
             <StackPanel Padding="20,18,20,24"
                         Spacing="14">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Start Here"
-                               AutomationProperties.AutomationId="HomePageTitle"
-                               AutomationProperties.HeadingLevel="Level1"
-                               Style="{StaticResource SectionTitleTextStyle}" />
-                    <TextBlock Text="Play Battle Engine Aquila windowed and widescreen on a modern PC, edit your career, and browse its music, cutscenes, and lore. By default your installed game is only read and every change lands in a separate copy; you can choose to patch it instead, and the app backs it up first."
-                               AutomationProperties.AutomationId="HomePagePurpose"
-                               Style="{StaticResource SectionBodyTextStyle}"
-                               TextWrapping="WrapWholeWords" />
-                </StackPanel>
+                <!--
+                    The game, beside the sentence that says what this app is for.
+
+                    Shown at close to its native 640x480 rather than stretched
+                    across a full-width banner: the game renders at that size, and
+                    a 3x upscale turns a sunset into a smear. The width is capped
+                    and the column is Auto, so on a narrow window the text keeps
+                    the space and the picture gives it up.
+
+                    A registered screenshot rather than an extracted asset - see
+                    AGENTS.md and attribution.md. It is decorative, so it is raw
+                    to the accessibility tree: the heading beside it already says
+                    what this page is, and a screen reader describing a sunset
+                    would be noise between the user and the buttons they came for.
+                -->
+                <Grid ColumnSpacing="18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="Start Here"
+                                   AutomationProperties.AutomationId="HomePageTitle"
+                                   AutomationProperties.HeadingLevel="Level1"
+                                   Style="{StaticResource SectionTitleTextStyle}" />
+                        <TextBlock Text="Play Battle Engine Aquila windowed and widescreen on a modern PC, edit your career, and browse its music, cutscenes, and lore. By default your installed game is only read and every change lands in a separate copy; you can choose to patch it instead, and the app backs it up first."
+                                   AutomationProperties.AutomationId="HomePagePurpose"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                    <Border x:Name="HomeHeroBorder"
+                            Grid.Column="1"
+                            AutomationProperties.AutomationId="HomeHeroBorder"
+                            CornerRadius="8"
+                            MaxWidth="300"
+                            VerticalAlignment="Center">
+                        <Image Source="ms-appx:///Assets/Screenshots/mission-vista.jpg"
+                               AutomationProperties.AccessibilityView="Raw"
+                               Stretch="Uniform" />
+                    </Border>
+                </Grid>
 
                 <InfoBar x:Name="HomeSetupInfoBar"
                          AutomationProperties.AutomationId="HomeSetupInfoBar"

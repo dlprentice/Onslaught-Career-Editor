@@ -182,6 +182,18 @@ ZIP_PACKAGE_ALLOWED_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 ZIP_PACKAGE_ALLOWED_IMAGE_PREFIXES = (
     f"{APP_DIR}/microsoft.ui.xaml/assets/",
     f"{APP_DIR}/libvlc/",
+    # The app's own chrome. Two registered screenshots of the game running, used
+    # for the Home hero and the About page - pictures of the game rather than
+    # files copied out of it. The allowance, its conditions, and the register are
+    # in AGENTS.md ("A screenshot is not an asset") and
+    # reverse-engineering/project-meta/attribution.md. The prefix is deliberately
+    # this narrow: extracted textures and frame dumps stay denied by the suffix
+    # rule below, which is what keeps the line where the rule puts it.
+    #
+    # Not named Assets/Game - "game" is a denied path segment, and correctly so:
+    # a folder called that in the payload reads as bundled game content whatever
+    # is really in it. Screenshots is what the folder holds.
+    f"{APP_DIR}/assets/screenshots/",
 )
 ZIP_PAYLOAD_DENY_FILENAMES = {
     "bea.exe",

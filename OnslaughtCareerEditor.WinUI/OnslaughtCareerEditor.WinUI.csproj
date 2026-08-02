@@ -42,6 +42,15 @@
     <Content Remove="Assets\**\*.png" />
     <None Include="Assets\**\*.png" />
     <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!--
+      The two registered screenshots of the game, which the Home hero and the
+      About page show. They ship: the ZIP probe allows images under
+      app/assets/screenshots/ and denies them everywhere else, so this prefix is
+      the whole allowance. AGENTS.md ("A screenshot is not an asset") states the
+      rule; attribution.md registers these two files. Not Assets\Game - "game"
+      is a denied path segment in the package probe, and rightly so.
+    -->
+    <Content Include="Assets\Screenshots\*.jpg" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\patches\catalog\patches.v2.json" Link="patches\catalog\patches.v2.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\patches\catalog\safe-copy-profiles.v1.json" Link="patches\catalog\safe-copy-profiles.v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

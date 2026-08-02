@@ -60,6 +60,31 @@
   preserved. File extensions are not provenance: project-authored or
   specifically developer-provided assets may be tracked outside those reserved
   local owners when their file-level provenance and terms are clear.
+- **A screenshot is not an asset.** The rule above is about the game's own
+  shipped files — textures, models, audio, video, level data, executables,
+  saves — and conversions of them. It is not a ban on pictures *of* the game.
+  A screenshot is a new work made by running the software, the way a review or
+  a wiki page carries one; a `.tex` lifted out of `data/` is the product's own
+  content copied verbatim. That is the line.
+
+  Screenshots and short capture stills **may** be tracked and shipped when all
+  of these hold:
+
+  - they are captures of the game running, not files extracted from it;
+  - they are for this project's own surfaces — the app's UI, the README, an
+    evidence document — and are individually chosen for that purpose;
+  - the count stays small enough that nobody could use the repository as a
+    substitute for owning the game.
+
+  That last one is the one that bites. Enough stills *become* the asset: a
+  cutscene dumped frame by frame is the cutscene, and a texture photographed
+  through the asset viewer is still the texture. Bulk capture directories stay
+  in the ignored local overlay, where they already live.
+
+  Anything tracked under this allowance is listed in
+  [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md)
+  with its capture date and source, so a later reader can tell a deliberate
+  choice from a mistake.
 - The GPL-licensed `rebuild/` lane may adapt the pinned GPL reference source and
   consume locally materialized retail data. Keep retail executables, decompiler
   output, and separately licensed third-party material outside it; retain any

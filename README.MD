@@ -165,7 +165,10 @@ not find a custom Steam library, run
   exception under `reverse-engineering/ghidra/`.
 - Do not commit retail assets or their converted copies. Keep them in ignored
   local owners and retain credits/provenance when a deterministic recipe uses
-  them. Parser success establishes format support, not visual fidelity.
+  them. Parser success establishes format support, not visual fidelity. A
+  screenshot of the game running is not one of these — a few chosen ones may be
+  tracked for the app's own surfaces, under the conditions in
+  [`AGENTS.md`](AGENTS.md).
 - File extension alone does not establish provenance. Project-authored or
   specifically developer-provided assets may be tracked outside the reserved
   retail-materialization owners when their file-level provenance, license, and

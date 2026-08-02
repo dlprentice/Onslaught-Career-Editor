@@ -41,9 +41,9 @@ Confirm whether this request needs any of the following:
 If yes, explain the boundary without including private material.
 
 Keep the request public-safe: redact local user paths and machine identifiers.
-Do not include or attach game binaries, extracted assets, saves, screenshots,
-frame captures, copied executables, raw runtime proof bundles, secrets, or
-unredacted private paths.
+Do not include or attach game binaries, extracted assets, saves, copied
+executables, raw runtime proof bundles, secrets, or unredacted private paths. A
+screenshot of the app or the game running is fine - redact local paths first.
 
 - [ ] No prohibited payload, proof bundle, secret, or unredacted private path is
       included in this request.

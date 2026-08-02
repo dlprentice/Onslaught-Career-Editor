@@ -90,7 +90,9 @@ particular is a live limit on what modding is proven to do.
   credits, provenance, and third-party terms.
 - Do not track or package retail game assets or converted copies. Keep exact
   materialized inputs, bulk exports, and raw lab evidence local; source owns the
-  bounded recipe, provenance, and code that consume them.
+  bounded recipe, provenance, and code that consume them. A few registered
+  screenshots of the game running are the one exception, for the app's own
+  surfaces; see [`AGENTS.md`](../AGENTS.md).
 - A parser, patch write, state hash, or render smoke proves only its own
   contract. Player-visible and retail-behavior claims require direct automated
   observation.

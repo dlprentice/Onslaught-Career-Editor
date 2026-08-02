@@ -34,15 +34,20 @@ identifiers, and any proprietary payload details.
 
 If available, include the exact local validation command and its result.
 
-Do not include or attach game binaries, extracted assets, saves, screenshots,
-frame captures, copied executables, raw runtime proof bundles, secrets, or
-unredacted private paths.
+Do not include or attach game binaries, extracted assets, saves, copied
+executables, raw runtime proof bundles, secrets, or unredacted private paths.
+
+**A screenshot of the app is welcome and often the fastest way to show a bug.**
+Crop or redact your local paths first. What we cannot take is the game's own
+content — extracted textures, models or audio, or a bulk frame dump — because
+that is the game's material rather than a picture of a problem.
 
 ## Safety Check
 
-- [ ] No game binaries, extracted assets, saves, screenshots, frame captures,
-      copied executables, raw runtime proof bundles, secrets, or unredacted
-      private paths are included.
+- [ ] No game binaries, extracted assets, saves, copied executables, raw runtime
+      proof bundles, secrets, or unredacted private paths are included.
+- [ ] Any screenshot shows the app or the game running, with local paths
+      redacted - not extracted game content.
 - [ ] The installed game folder and original `BEA.exe` were not mutated.
 
 For private-data, proprietary-content, security, or online-session concerns,

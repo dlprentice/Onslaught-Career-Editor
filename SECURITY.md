@@ -66,7 +66,9 @@ The root MIT license covers the toolkit code and documentation. `rebuild/` and
 notices remain applicable.
 
 Retail game files and converted copies remain user-supplied local inputs and
-must not be committed, attached to reports, or included in packages. The
+must not be committed, attached to reports, or included in packages. A
+screenshot of the app or of the game running is not a retail game file and may
+be attached to a report — redact local paths first. The
 repository licenses grant no rights in the retail executable, game assets,
 trademarks, or third-party components. The canonical reviewed Ghidra project,
 pinned reference submodules, and narrow documented save fixture are explicit
