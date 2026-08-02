@@ -115,10 +115,7 @@ On VR: *"I've been fascinated by VR. In fact, I added support for three differen
 - Experiments with Unity game engine
 - Active on Discord as "desimbr" / "desiado"
 - **GitHub**: [stuart73](https://github.com/stuart73) - Preserving game history:
-  - **Onslaught** - Original BEA source code (GPL-3.0). **CORRECTED 2026-07-28**;
-    this previously read "(GPL-3.0, April 2025)". The drop is **staged**, and
-    dating it to April 2025 understated it by roughly 3.4x and misdated the
-    gameplay code this project ports from. MEASURED from the pinned repository's
+  - **Onslaught** - Original BEA source code (GPL-3.0). The drop is **staged**. MEASURED from the pinned repository's
     own git history: `2025-04-10` published LICENSE and README plus 30 platform,
     memory and controller files (`0fa6b19` +2, `f4ca46d` +30); `2025-12-12` added
     76 more including the `BattleEngine*` gameplay code (`24939a6` +72,

@@ -262,34 +262,7 @@ Trees were originally added as standard "things," handled like units and troops 
 
 > "[...] Unfortunately, **we realized a few weeks later that some levels now had in excess of 6,000 individual trees on them (which accounted for nearly 2MB of RAM at one stage)**, and re-engineering the code to handle this efficiently without breaking the now-established behavior took a great deal of thought and effort."
 
-**CORRECTED 2026-07-28 — a spliced sentence was removed from the front of this
-quotation.** The block above previously opened with:
-
-> "While the programming team was attempting to figure out how to achieve this,
-> the level designers implemented the mission without it by misusing some of the
-> scripting functionality in a clever way..."
-
-**MEASURED (internal to this repository, before this correction was applied):**
-that sentence was byte-identical to the quotation under [What Went Right → 1.
-Flexible Core Technologies](#1-flexible-core-technologies), in the "Scrolling
-World Example" paragraph earlier in this same file. A repository-wide
-`grep -rn "misusing some of the scripting" --include=*.md` returned exactly two
-hits — that quotation and this block — and nothing anywhere else. In the
-Scrolling World passage, "how to achieve this" has an antecedent (making the
-normally static world map scroll). Here it had none: the paragraph it followed is
-about trees being shot at, knocked over and blocking line-of-sight.
-
-**INFERRED, not measured:** that the sentence *originates* in the Scrolling World
-passage and was copied here in error, rather than Ben Carter having used closely
-similar words in two places. That is reasoned from the internal structure above;
-it was not checked against the source.
-
-**UNKNOWN — the tree passage's true opening sentence.** What would settle it: a
-read of the Game Developer Magazine April 2003 post-mortem.
-`media/publications/GDM_April_2003.pdf` is a maintainer-local ignored path and is
-absent from this machine; an Internet Archive copy is listed in
-[reference-materials.md](reference-materials.md). Until someone reads it, the
-quotation above is left deliberately truncated rather than reconstructed.
+*The opening sentence of this quotation is omitted as unverifiable: it was found to be byte-identical to a quotation elsewhere in this file, where it has an antecedent and here it had none. It is left truncated rather than reconstructed until someone reads the archived post-mortem. The full reasoning, and what would settle it, is in the project's [lore errata](../reverse-engineering/project-meta/lore-errata.md).*
 
 ---
 
@@ -321,7 +294,7 @@ PC Development Build (Stuart's code)
 
 ### The PC Retail Port (Lost Toys In-House)
 
-**CORRECTED (Dec 2025):** Stuart confirmed on Discord that Encore Software was only the **publisher**. The actual port work was done in-house at Lost Toys:
+Stuart confirmed on Discord (Dec 2025) that Encore Software was only the **publisher**. The actual port work was done in-house at Lost Toys:
 
 > *"The PC version was done inhouse at LT though. When the original console versions were complete the team moved onto other work and LT got a person or persons to convert our already 'inhouse' development version into something releasable. I remember someone called Jan worked on this. He was sat next to me in the office and did ask me questions about the code. I believe previously he worked at mucky foot, which makes sense."* — Stuart Gillam (Dec 2025)
 
@@ -341,7 +314,7 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 | **Base version** | Xbox (explains split-screen multiplayer) |
 | **Graphics** | Console textures ported directly without enhancement |
 | **Multiplayer** | Only split-screen 2-player (no online/LAN) |
-| **Config file** | **CORRECTED 2026-07-28** — this cell previously read "Main configuration file is **encrypted**". Nothing shipped is encrypted. MEASURED: `defaultoptions.bea` is a plain 10,004-byte options snapshot written through `fopen`/`fwrite`/`fclose` with no crypt step, and `cardid.txt` is 18 KB of plain text. See [game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md) and [modding-reference.md](../reverse-engineering/game-assets/modding-reference.md). |
+| **Config file** | Nothing shipped is encrypted. MEASURED: `defaultoptions.bea` is a plain 10,004-byte options snapshot written through `fopen`/`fwrite`/`fclose` with no crypt step, and `cardid.txt` is 18 KB of plain text. See [game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md) and [modding-reference.md](../reverse-engineering/game-assets/modding-reference.md). |
 | **Data encoding** | Retail `.bes` values are raw little-endian dwords; many only *look* “shift-16” in 4-byte-aligned hex dumps because CCareer bytes are copied at `file + 2` |
 | **Cheat codes** | Changed from original Lost Toys codes by Jan |
 
@@ -351,24 +324,7 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 - The retail `.bes` on-disk layout differs (CCareer blob begins at `file + 2`), which made many values appear “shift-16” in naive hex dumps
 - This explains many of the encoding/offset discrepancies documented in `reverse-engineering/`
 
-**Save-format documentation status** — **CORRECTED 2026-07-28.** This line
-previously read, in full:
-
-> **First Public RE Documentation**: This project represents the first public
-> documentation of the .bes save file format. No prior hex editing or modding
-> discussions exist online.
-
-The second sentence is **withdrawn outright**. It was an unbounded universal
-negative about the entire internet, and it is contradicted by this same corpus:
-[community-preservation.md](community-preservation.md) lists a 2007 +4 trainer on
-GameCopyWorld, a 2018 widescreen fix, a 2024 Cheat Engine table and a
-PCGamingWiki page — all of them prior public memory- or binary-editing work on
-this title. The widescreen fix's aspect constant and hooks are documented at
-[widescreen-patch-analysis.md](../reverse-engineering/binary-analysis/widescreen-patch-analysis.md).
-
-The first sentence is **bounded, not restated**: no prior public description of
-the `.bes` on-disk layout is known to this project. **This repository holds no
-search record**, so treat that as absence of evidence, not a proven first.
+**Save-format documentation status.** No prior public description of the `.bes` on-disk layout is known to this project - but **this repository holds no search record**, so treat that as absence of evidence rather than a proven first. An earlier version of this line claimed more than that; what it claimed, and why it was withdrawn, is in the project's [lore errata](../reverse-engineering/project-meta/lore-errata.md).
 
 **What would settle it:** a dated search of the venues where such work is
 published, with its results written down and cited here. Until that record

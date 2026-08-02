@@ -87,10 +87,4 @@ and are not tracked in this repository or included in app releases.
 
 *This document preserves development history that would otherwise be lost. Battle Engine Aquila remains an underappreciated gem from a talented team that deserved better commercial success.*
 
-**Date footer CORRECTED 2026-07-28.** A footer here previously read
-`Last updated: December 2025`. That was false about its own file: `git log` shows
-this file's last content change was **2026-07-11** (`5a7bacec`), which renamed a
-section and added a scope paragraph — seven months after the date the footer
-claimed. The authoritative date is now the `Last updated:` field in the header
-block at the top of this file. This footer is not maintained and carries no
-date.
+

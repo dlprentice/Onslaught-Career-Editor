@@ -94,7 +94,7 @@ Steam/retail PC codes (entered as save/player name substring):
 |------|--------|-------|
 | `MALLOY` | All goodies unlocked | Runtime-only cheat path; patcher can replicate save-state result |
 | `TURKEY` | All missions unlocked | Runtime-only cheat path; patcher can replicate save-state result |
-| `Maladim` | God mode toggle | **CORRECTED 2026-07-28**; this cell previously read "Cheat-gated runtime behavior; visible gameplay effect is inconsistent in testing". Live-confirmed: with `Maladim` in the save/player name, start a mission, pause, open `Controller Options`, and the cheat-gated line appears as `God OFF` / `God ON`. While on, normal combat damage stops sticking. Already-lost hull is **not** restored by toggling it back on. See [cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md). |
+| `Maladim` | God mode toggle | Live-confirmed: with `Maladim` in the save/player name, start a mission, pause, open `Controller Options`, and the cheat-gated line appears as `God OFF` / `God ON`. While on, normal combat damage stops sticking. Already-lost hull is **not** restored by toggling it back on. See [cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md). |
 
 **This table is not the whole cheat table.** Three further strings decode out of
 the retail table — `V3R5IOF`, `Aurore` and `lat\xEAte` — and are documented with
