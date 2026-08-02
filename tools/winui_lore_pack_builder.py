@@ -391,10 +391,16 @@ def build_lore_pack(root: Path = ROOT, output_dir: Path | None = None, *, use_gi
 
     # The reader meets these in this order, so it comes from the curated list in BOOK.md
     # rather than from the alphabet.
+    # Order comes from the curated list a reader sees, so the header block is stripped first:
+    # its links are provenance for contributors and must not set the reading order.
     documents = sort_documents_for_pack(
         documents,
         lore_root,
-        derive_reading_order((root / LORE_BOOK_DIR / "BOOK.md").read_text(encoding="utf-8", errors="replace")),
+        derive_reading_order(
+            strip_maintainer_header_block(
+                (root / LORE_BOOK_DIR / "BOOK.md").read_text(encoding="utf-8", errors="replace")
+            )
+        ),
     )
     packable_relative_paths = {
         validate_lore_pack_relative_path(normalize_lore_relative(path.relative_to(lore_root))).lower()
