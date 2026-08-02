@@ -1,0 +1,253 @@
+{
+  "_comment": [
+    "Campaign 01: the within-arm spread, measured. Predictions were registered",
+    "in advance in local-lab/CAMPAIGN-01-PREDICTIONS-2026-08-02.md; do not run",
+    "this without reading them, because a prediction written after a result is",
+    "not a prediction.",
+    "",
+    "Ten runs, three arms. baseline and poison-noop differ by exactly one line:",
+    "the poison arm is not a different experiment, it is the same experiment",
+    "with the cause removed. If it passes, the oracle is being satisfied by a",
+    "file this run did not write, and every result the harness has ever",
+    "produced is void.",
+    "",
+    "Replicate suffixes -r1..-rN are what tools/probe/compare.py groups on.",
+    "No arm here is judged by coverage: coverage needs TTD, TTD needs an",
+    "elevated window, and this manifest is built to run unattended without one.",
+    "",
+    "PREDICTIONS, REGISTERED IN ADVANCE. The commit that adds this file is the",
+    "timestamp, and it precedes the first launch. refute.py R03 refuses a",
+    "finding whose predictions were written after its results, and it is right",
+    "to: on 2026-07-31 five predictions came back MATCH on a law that was",
+    "wrong, and they were true under the rival law too.",
+    "",
+    "P1  poison-noop reports FAIL 3/3, on the fileAppears arm.",
+    "    FALSIFIED BY: any poison-noop PASS. That would mean the oracle is",
+    "    satisfied by a file the run did not write -- a scratch tree that",
+    "    inherited data/Memory/baseline.txt, or a teardown that left the",
+    "    previous tree standing. Either voids every result this harness has",
+    "    ever produced, not just this campaign's.",
+    "",
+    "P2  baseline reports PASS 4/4.",
+    "    FALSIFIED BY: any FAIL. A mixed baseline means the instrument is",
+    "    unreliable at the launch itself and nothing can be compared yet.",
+    "",
+    "P3  Lose prevents the console command after it from running:",
+    "    lose_after.txt does NOT appear, lose_before.txt does, and the lose arm",
+    "    reports FAIL for a different reason than the poison arm does.",
+    "    REASONING: Lose is a mission-outcome command; if it transitions the",
+    "    game out of the level, the console queue is unlikely to survive it.",
+    "    FALSIFIED BY: lose_after.txt appearing at >= 1024 bytes.",
+    "    SCOPE: this is about the console queue, NOT about what Lose does to",
+    "    life, shields, the augment chain or the death path. None of those are",
+    "    measured here.",
+    "",
+    "P4  baseline lifetime spread (max - min) is under 10 s.",
+    "    This is the number the campaign exists to produce: compare.py will not",
+    "    call any cross-arm difference real unless it exceeds this.",
+    "    FALSIFIED BY: a spread of 10 s or more, which would mean short-lifetime",
+    "    probes are useless as instruments."
+  ],
+  "probes": [
+    {
+      "name": "baseline-r1",
+      "note": "Control. Echo, MemStats, Quit -- the console path proven on 2026-08-02.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-BASELINE", "MemStats baseline.txt", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+    {
+      "name": "baseline-r2",
+      "note": "Identical to baseline-r1. The point is that it is identical.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-BASELINE", "MemStats baseline.txt", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+    {
+      "name": "baseline-r3",
+      "note": "Identical to baseline-r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-BASELINE", "MemStats baseline.txt", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+    {
+      "name": "baseline-r4",
+      "note": "Identical to baseline-r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-BASELINE", "MemStats baseline.txt", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+
+    {
+      "name": "poison-noop-r1",
+      "note": "POISON. Same launch, same oracle, MemStats line removed. Must FAIL. A PASS here means the oracle is reading a file this run did not write.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-POISON", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+    {
+      "name": "poison-noop-r2",
+      "note": "POISON, identical to r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-POISON", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+    {
+      "name": "poison-noop-r3",
+      "note": "POISON, identical to r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": ["Echo CAMPAIGN-01-POISON", "Quit"],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/baseline.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/baseline.txt"]
+    },
+
+    {
+      "name": "lose-r1",
+      "note": "Does a console command after Lose still run? Prediction P3 says no. Both MemStats outputs are collected so 'Lose stopped the queue' and 'MemStats never ran at all' can be told apart.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": [
+        "Echo CAMPAIGN-01-LOSE",
+        "MemStats lose_before.txt",
+        "Lose",
+        "MemStats lose_after.txt",
+        "Quit"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/lose_after.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/lose_before.txt", "data/Memory/lose_after.txt"]
+    },
+    {
+      "name": "lose-r2",
+      "note": "Identical to lose-r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": [
+        "Echo CAMPAIGN-01-LOSE",
+        "MemStats lose_before.txt",
+        "Lose",
+        "MemStats lose_after.txt",
+        "Quit"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/lose_after.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/lose_before.txt", "data/Memory/lose_after.txt"]
+    },
+    {
+      "name": "lose-r3",
+      "note": "Identical to lose-r1.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory"],
+      "autoexec": [
+        "Echo CAMPAIGN-01-LOSE",
+        "MemStats lose_before.txt",
+        "Lose",
+        "MemStats lose_after.txt",
+        "Quit"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 120,
+        "settleSeconds": 5,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/lose_after.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/lose_before.txt", "data/Memory/lose_after.txt"]
+    }
+  ]
+}
