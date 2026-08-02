@@ -1230,38 +1230,89 @@ public sealed class Level100ActorRegistry
                 _nextFactSequence++, kind, actorId, otherActorId, otherThingTypeMask));
 
     /// <summary>
-    /// Released <c>CThing::Init</c> (<c>0x004F34A0</c>) does not use the
-    /// authored elevation directly: it samples the one global height field
-    /// (<c>MOV ECX, 0x006FADC8</c> / <c>CALL 0x0047EB80</c>), compares the
-    /// sample against the authored Z-down position (<c>FCOM [ESI+0x24]</c>)
-    /// and writes the sample into the position when the authored value is
-    /// below the ground (<c>FSTP [ESP+0x14]</c> at <c>0x004F3529</c>, then
-    /// <c>CALL [EAX+0x50]</c>). Level 100 authors every Target Tank and
-    /// Target Truck at Y = 0 while the firing-range ground is at Y = 600, so
-    /// without this clamp those actors are buried and their contact meshes
-    /// are unreachable. The seat height reuses the same
-    /// ground + <c>CoreGroundOriginOffsetMillimeters</c> expression that
-    /// <see cref="Level100ActorMechanics"/> already applies on every base tick
-    /// once the same actor starts following a waypoint, so an actor does not
-    /// jump the moment it is first commanded to move.
+    /// The released <c>CThing::Init</c> support clamp, applied to every actor
+    /// rather than to one motion class.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Read from the pristine specimen
+    /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>, sha256
+    /// <c>74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750</c>.
+    /// <c>CThing::Init</c> (<c>0x004F34A0</c>) copies the authored position
+    /// into <c>this+0x1c..+0x28</c> and then does exactly two things to the
+    /// vertical and nothing else:
+    /// </para>
+    /// <list type="number">
+    ///   <item>it samples the one global height field
+    ///   (<c>MOV ECX, 0x006FADC8</c> / <c>CALL 0x0047EB80</c>), compares the
+    ///   sample against the authored Z-down position
+    ///   (<c>FCOM [ESI+0x24]</c>) and writes the sample in when the authored
+    ///   value is below the ground (<c>FSTP [ESP+0x14]</c> at
+    ///   <c>0x004F3529</c>, then <c>CALL [EAX+0x50]</c>) — guarded by
+    ///   <c>vtable[+0xB0]() != 0</c>;</item>
+    ///   <item>it loads the water level (<c>FLD [0x006FBDFC]</c> at
+    ///   <c>0x004F3549</c>), compares (<c>FCOM [ESI+0x24]</c>) and writes it in
+    ///   the same way (<c>FSTP [ESI+0x24]</c>) — guarded by
+    ///   <c>vtable[+0xC4]() == 0</c>.</item>
+    /// </list>
+    /// <para>
+    /// The authored value is ABSOLUTE. It is only ever pulled toward a surface
+    /// — never offset, never terrain-relative, and there is no per-class
+    /// additive term at <c>Init</c>. Z is down-positive in that space, so both
+    /// <c>min</c>s are <c>Math.Max</c> here.
+    /// </para>
+    /// <para>
+    /// <b>Why the clamps are unconditional for Level 100.</b> Measured from
+    /// vtable slots 44/49 across all 24 concrete classes: 19 take both clamps
+    /// unconditionally; <c>CDropship</c>, <c>CSimpleBuilding</c> and
+    /// <c>CBoat</c> gate on <c>+0x2C</c> bit 2; <c>CSubmarine</c> takes
+    /// neither. That bit is never set anywhere in the <c>play-level100</c>
+    /// trace, and Level 100 instantiates no <c>CSubmarine</c>, so every actor
+    /// in this level takes both clamps and no runtime flag is modelled. The
+    /// <c>CDropship</c> is the check on that: it takes both and NEITHER MOVES
+    /// IT — authored equals seated at retail −15.0 for both ambient aircraft —
+    /// while a positive control in the same trace shows the terrain clamp
+    /// firing on another object (−15.0 -> −18.10016), so the instrument can see
+    /// one fire.
+    /// </para>
+    /// <para>
+    /// <b>The one term retail does not have.</b> A <c>GroundVehicle</c> keeps
+    /// <c>ground + CoreGroundOriginOffsetMillimeters</c> as its terrain
+    /// support, which is the same expression
+    /// <see cref="Level100ActorMechanics"/> applies on every base tick once
+    /// the actor starts following a waypoint, so it does not jump the moment
+    /// it is first commanded to move. That offset is a Core pivot convention,
+    /// not a retail placement rule, and it is deliberately NOT applied to the
+    /// water support or to any other class — the renderer's own seat at
+    /// <c>Level100StaticWorldAsset.Load</c> spells the unoffset
+    /// <c>max(authored, terrain, water)</c>, and Core and the renderer must
+    /// agree about where an object is.
+    /// </para>
+    /// <para>
+    /// Level 100 authors every Target Tank and Target Truck at retail Z = 0
+    /// while the firing-range ground is at Core Y = 600, and every retail-Z-0
+    /// static at a Core Y of −10,000; without this clamp all of them are buried
+    /// and their contact meshes are unreachable.
+    /// </para>
+    /// </remarks>
     private Level100ActorPoseSnapshot SeatOnGround(
         string? definitionName,
         Level100ActorPoseSnapshot pose)
     {
         Level100ActorMotionDefinition? motion =
             _definitions.FindMotionDefinition(definitionName);
-        if (motion?.MotionClass != Level100ActorMotionClass.GroundVehicle)
-        {
-            return pose;
-        }
-
-        int seated = checked(
-            Level100Terrain.Instance.SampleGroundElevationMillimeters(
-                new SimVector2(
-                    pose.PositionMillimeters.X,
-                    pose.PositionMillimeters.Z)) +
-            motion.CoreGroundOriginOffsetMillimeters!.Value);
+        int groundOriginOffset =
+            motion?.MotionClass == Level100ActorMotionClass.GroundVehicle
+                ? motion.CoreGroundOriginOffsetMillimeters!.Value
+                : 0;
+        int seated = Math.Max(
+            checked(
+                Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                    new SimVector2(
+                        pose.PositionMillimeters.X,
+                        pose.PositionMillimeters.Z)) +
+                groundOriginOffset),
+            Level100Terrain.WaterElevationMillimeters);
         return pose.PositionMillimeters.Y >= seated
             ? pose
             : pose with

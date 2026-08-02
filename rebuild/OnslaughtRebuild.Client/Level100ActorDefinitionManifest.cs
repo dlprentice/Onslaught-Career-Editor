@@ -33,8 +33,32 @@ public static class Level100ActorDefinitionManifest
     // Level100ActorRegistry.ComputeIdentity, whose digest StateHasher writes;
     // and the ground actors now drive along different, much longer routes. Both
     // are intended. See the golden in InteractiveSessionTests.
+    //
+    // MOVED AGAIN 2026-08-01 from
+    // 2DFAD0DC536B2CDF5E01B26F04CF81C4185975D85357C16498ADBACDBB8B8568 by the
+    // VERTICAL DATUM correction in materialize_retail_assets.py `_actor_pose`.
+    // The authored vertical was being written raw - a DOWN-POSITIVE retail Z -
+    // into a Core Y every consumer reads as up; it now goes through
+    // `_core_elevation_millimeters`, the same `-10.0 - retailZ` conversion the
+    // renderer and `authoredElevationMillimeters` already spelled.
+    //
+    // Verified against the previous manifest, 9,723 leaves either side:
+    //   changed 54 - actorDefinitions[].initialPose.positionMillimeters[1] (44)
+    //                and spawnDefinitions[].initialPose.positionMillimeters[1]
+    //                (10)
+    //   added     0
+    //   removed   0
+    // NOTHING outside those two vertical components moved - not
+    // authoredTransform, not objects, not waypointPaths, not one source hash.
+    // Transporter and Air Trainer -15000 -> +5000, Player 1 -10000 -> 0,
+    // Forseti Docks -8871 -> -1129, every retail-Z-0 static 0 -> -10000.
+    //
+    // It reaches the decoder and moves the simulation state hash. The -10000
+    // statics are NOT left buried: this landed together with the general
+    // CThing::Init support clamp in Level100ActorRegistry.SeatOnGround, which
+    // is what puts them back on the terrain. Neither half is correct alone.
     public const string ExpectedManifestSha256 =
-        "2DFAD0DC536B2CDF5E01B26F04CF81C4185975D85357C16498ADBACDBB8B8568";
+        "97E3B3BF3399D9D3DE5D85605EFB97A849455AC3B2220981D20FDAF3608F0C27";
 
     private const string ExpectedSchema = "onslaught.level100-static-world.v14";
     private const string ExpectedSourceArchiveSha256 =

@@ -149,13 +149,28 @@ public sealed class Level100ColdStartTests
     /// Startup through the tutorial as one deterministic in-process run, and
     /// the honest current result.
     ///
-    /// <para>The client/input-adapter path destroys all 22 targets, completes
-    /// primary objective 4, never fires the released abort poll, and reaches
-    /// <see cref="Level100MissionOutcome.Won"/> through
-    /// <c>event("Reached Target Zone 4")</c>. A direct-Core run with the same
-    /// pointer/integer-pixel quantisation has the same outcome, tick, state
-    /// hash, and pose trace, and so does the <b>unquantised</b> direct-Core
-    /// control for the same cold career.</para>
+    /// <para>The client/input-adapter path destroys <b>18 of the 22</b>
+    /// targets, reaches <see cref="Level100MissionOutcome.Won"/> through
+    /// <c>event("Reached Target Zone 4")</c>, and gets there on the released
+    /// sub-40 % hull ABORT branch: it takes 2 of the six wave-2 drones, trips
+    /// <c>event("Abort Airborne Drones")</c> at t6732 with 5,700 of 20,000
+    /// hull, and leaves primary objective 4 <c>Failed</c>. A direct-Core run
+    /// with the same pointer/integer-pixel quantisation has the same outcome,
+    /// tick, state hash, and pose trace.</para>
+    ///
+    /// <para><b>The UNQUANTISED direct-Core control for the same cold career
+    /// still does the whole thing</b> - all 22 destroyed, all six wave-2
+    /// drones, no abort, objective 4 <c>Complete</c>, <c>Won</c> at t7876 with
+    /// 8,100 hull. So the four the client arm loses are lost to the
+    /// whole-retail-pixel look quantum, on a beat that is chaotic at finer than
+    /// that quantum, and not to anything in <c>InteractiveSession</c>.</para>
+    ///
+    /// <para><b>The client arm used to destroy all 22 and clear wave 2
+    /// outright.</b> It stopped on 2026-08-01, when task #154 (the vertical
+    /// datum) and task #161 (the look-response table) both moved the world this
+    /// driver flies through - each of them TOWARD the released build. The
+    /// counts here are re-derived from the run, not tuned back; see the beat-9
+    /// comment in the body.</para>
     ///
     /// <para><b>This run used to end <see cref="Level100MissionOutcome.Lost"/>
     /// with <see cref="Level100MissionFailureReason.WaterLoss"/> at tick
@@ -245,22 +260,103 @@ public sealed class Level100ColdStartTests
                     .Single(actor => actor.Name == name).Lifecycle);
         }
 
+        // Reported before it is asserted, so a beat-9 move prints its numbers
+        // instead of only its first tripped assertion. That ordering cost a
+        // re-run during the 2026-08-01 re-derivation.
+        _output.WriteLine(
+            "CLIENT beats: trucks={0} moving={1} air1={2} air2={3} aborted={4} " +
+            "objective4={5}",
+            Destroyed(final, Level100MissionTargetGroup.TargetTrucks),
+            Destroyed(final, Level100MissionTargetGroup.MovingTargets),
+            Destroyed(final, Level100MissionTargetGroup.AirborneTargets1),
+            Destroyed(final, Level100MissionTargetGroup.AirborneTargets2),
+            final.Level100Mission.Aborted,
+            final.Level100Mission.PrimaryObjectives
+                .Single(objective => objective.Objective == 4).Status);
+        _output.WriteLine(
+            "CONTROL beats: air2={0} aborted={1} objective4={2}",
+            controlFinal.Level100Actors.Actors.Count(actor =>
+                actor.TargetGroup == Level100MissionTargetGroup.AirborneTargets2 &&
+                actor.Lifecycle == Level100ActorLifecycle.Destroyed),
+            controlFinal.Level100Mission.Aborted,
+            controlFinal.Level100Mission.PrimaryObjectives
+                .Single(objective => objective.Objective == 4).Status);
+
         // Beats 4, 5, 7 and 9, every one of them shot with the weapon the
         // script hands over in the order it hands it over.
+        //
+        // BEAT 9 MOVED ON 2026-08-01 and it is a REGRESSION IN THE DRIVER'S
+        // RESULT on this arm, recorded as one rather than absorbed. The client
+        // arm now takes 2 of the six wave-2 drones instead of six and wins on
+        // the released sub-40 % hull abort branch instead of by clearing the
+        // wave.
+        //
+        // ISOLATED CAUSALLY, NOT ARGUED. Two changes landed together - #154
+        // (the vertical datum, so every static and every air spawn now seats
+        // where released `CThing::Init` puts it) and #161 (the look-response
+        // table, now the nearest integer permille to the released law at all
+        // 1,001 inputs). Re-running this fixture with ONLY #154 applied and the
+        // released look table restored gives the SAME two kills on this arm -
+        // CLIENT Won t7216 hull 6800, abort at t6666 - so the client arm's move
+        // is #154's alone and #161 adds nothing to it.
+        //
+        // #161's contribution here is the OPPOSITE SIGN, on the other arm: with
+        // #154 alone the unquantised control ALSO drops onto the abort branch
+        // (control Won t7399 hull 3000, abort at t6718); adding #161 puts it
+        // back to a full clear of all 22 with no abort. That is the same
+        // single-term-flips-one-career pattern the measurement table on
+        // `Level100ChainAutopilot.ErrorPole` already records, and it is why
+        // neither number here is evidence about either change's correctness.
+        //
+        // NEITHER CHANGE IS A DEFECT AND NEITHER IS BEING BACKED OUT: each
+        // moves the reconstruction TOWARD the released build, and the beat-9
+        // kill count is a property of this synthetic driver, not of the game.
+        // The counts are RE-DERIVED from the run rather than recovered by
+        // tuning the driver, which would be fitting a chaotic objective.
+        //
+        // WHAT DID NOT MOVE, and it is the reason this is a re-derivation
+        // rather than a failure: beats 4, 5 and 7 are unchanged at 3, 6 and 3,
+        // the run still reaches `Won` through `Reached Target Zone 4` (asserted
+        // below), and the UNQUANTISED control still destroys all 22 and clears
+        // wave 2 outright (asserted below, and printed above).
         Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.TargetTrucks));
         Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.MovingTargets));
         Assert.Equal(3, Destroyed(final, Level100MissionTargetGroup.AirborneTargets1));
-        Assert.Equal(6, Destroyed(final, Level100MissionTargetGroup.AirborneTargets2));
+        Assert.Equal(2, Destroyed(final, Level100MissionTargetGroup.AirborneTargets2));
 
-        // Beat 9 was cleared by KILLS, not by the released sub-40 % hull poll:
-        // `aborted` is the LevelScript's own local and `Assert.False` on it is
-        // the claim that the poll never fired at all.
-        Assert.False(
+        // Beat 9 is now cleared by the released sub-40 % hull poll rather than
+        // by kills: `aborted` is the LevelScript's own local, set by
+        // `event("Abort Airborne Drones")`, which fired at t6732 with the hull
+        // at 5,700 of 20,000. This is an exact assertion on the branch taken,
+        // not a relaxed one - it says the poll fired, where it used to say the
+        // poll never fired.
+        Assert.True(
             final.Level100Mission.Aborted,
-            "this run is expected to clear wave 2 outright");
+            "this run is expected to reach `Reached Target Zone 4` through the " +
+            "LevelScript's sub-40 % hull abort poll. If it has stopped firing, " +
+            "the driver is clearing wave 2 again - that is a BETTER run and " +
+            "this assertion, the wave-2 count and objective 4 below should all " +
+            "be re-derived back up rather than left passing by accident.");
+        Assert.Equal(
+            Level100PrimaryObjectiveStatus.Failed,
+            final.Level100Mission.PrimaryObjectives
+                .Single(objective => objective.Objective == 4).Status);
+
+        // THE CONTROL STILL CLEARS THE WAVE, and this is what separates "the
+        // world moved" from "the reconstruction got worse". The unquantised
+        // cold career destroys all six wave-2 drones, never trips the abort
+        // poll, and completes objective 4. The whole of the regression above is
+        // therefore carried by the client path's whole-retail-pixel look
+        // quantisation, on a beat that is chaotic at finer than that quantum.
+        Assert.Equal(
+            6,
+            controlFinal.Level100Actors.Actors.Count(actor =>
+                actor.TargetGroup == Level100MissionTargetGroup.AirborneTargets2 &&
+                actor.Lifecycle == Level100ActorLifecycle.Destroyed));
+        Assert.False(controlFinal.Level100Mission.Aborted);
         Assert.Equal(
             Level100PrimaryObjectiveStatus.Complete,
-            final.Level100Mission.PrimaryObjectives
+            controlFinal.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
 
         // THE OUTPUT-CHANNEL CONTRACT, and it is the reason the joined run gets

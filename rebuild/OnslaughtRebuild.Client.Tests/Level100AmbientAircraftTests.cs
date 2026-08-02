@@ -28,17 +28,26 @@ public sealed class Level100AmbientAircraftTests
     /// The ambient U-17 Highside Transporter, MEASURED from the shipped level
     /// world: RLWD initial-actor ordinal 21, thingType 8, authored retail
     /// position (218.5, 297.5, -15.0) which is Core millimetres
-    /// (-70188, -15000, 54250).
+    /// (-70188, +5000, 54250).
     /// </summary>
+    /// <remarks>
+    /// The vertical was -15000 until 2026-08-01, when task #154 corrected the
+    /// producer to convert the authored retail Z into Core's datum instead of
+    /// writing the down-positive number into an up-positive field:
+    /// <c>(-10.0 - (-15.0)) * 1000 = +5000</c>. THIS IS THE PAYOFF OF #114 -
+    /// the aircraft was being drawn 15,997 mm under the terrain at its own pad,
+    /// which is the whole reason the second ambient aircraft was never seen.
+    /// </remarks>
     private static readonly SimVector3 s_authoredTransporterPosition =
-        new(-70_188, -15_000, 54_250);
+        new(-70_188, 5_000, 54_250);
 
     /// <summary>
     /// The ambient Air Trainer, RLWD ordinal 40, authored retail position
-    /// (265.5, 392.5, -15.0) = Core (-23188, -15000, 149250).
+    /// (265.5, 392.5, -15.0) = Core (-23188, +5000, 149250). Same datum
+    /// correction as above.
     /// </summary>
     private static readonly SimVector3 s_authoredAirTrainerPosition =
-        new(-23_188, -15_000, 149_250);
+        new(-23_188, 5_000, 149_250);
 
     /// <summary>
     /// The render projection carries EXACTLY the two ambient aircraft out of
@@ -104,9 +113,14 @@ public sealed class Level100AmbientAircraftTests
             Level100TargetPresentation.Project(airTrainer).Binding);
 
         // Seated on their measured authored poses, drawn exactly as Core
-        // reports them. The vertical datum itself is a SEPARATE defect
-        // (TARGET-CONTACT-GEOMETRY-2026-07-26.md section 4.2); nothing here
-        // clamps or corrects it.
+        // reports them. Since 2026-08-01 those poses are in Core's own vertical
+        // datum (task #154), and the released CThing::Init support clamp that
+        // Level100ActorRegistry now applies to every class LEAVES BOTH OF THEM
+        // WHERE THEY ARE: +5000 is above the terrain sample at each aircraft's
+        // own X/Z (+997 under the Transporter, -11160 under the Air Trainer)
+        // and above the -1160 water plane, so max(authored, terrain, water) is
+        // the authored value. That is the measured behaviour of the released
+        // CDropship too - it takes both clamps and neither moves it.
         Assert.Equal(
             s_authoredTransporterPosition,
             transporter.Pose.PositionMillimeters);

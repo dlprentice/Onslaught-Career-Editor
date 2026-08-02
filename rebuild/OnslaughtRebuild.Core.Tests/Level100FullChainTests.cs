@@ -53,14 +53,22 @@ public sealed class Level100ChainRunFixture
 /// The same chain flown by the same controller with the trigger held shut for
 /// the whole of beat 9.
 ///
-/// <para>It exists because the main run now CLEARS wave 2, and two of the
-/// measurements in this file are about what happens to a player who does not:
-/// the released sub-40 % <c>Abort Airborne Drones</c> poll, and Blasters
-/// launched at a player whose crossing speed is below what the
+/// <para>It exists because the main run CLEARED wave 2 when it was written,
+/// and two of the measurements in this file are about what happens to a player
+/// who does not: the released sub-40 % <c>Abort Airborne Drones</c> poll, and
+/// Blasters launched at a player whose crossing speed is below what the
 /// <c>18 / slant</c> law needs. See
 /// <c>Level100ChainAutopilot.CreateWithWaveTwoTriggerHeldShut</c>. No
 /// assertion in either test was altered to accommodate the new run; they were
 /// pointed at a run that still reaches the state they were written about.</para>
+///
+/// <para><b>The main run stopped clearing wave 2 on 2026-08-01</b>, by the
+/// vertical-datum and look-table changes recorded on
+/// <see cref="Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone"/>.
+/// This fixture is KEPT anyway: it holds the wave-2 trigger shut on purpose, so
+/// it isolates the abort branch by construction rather than by happening to
+/// land on it, and that isolation is exactly what the two measurements need.
+/// If the main run drifts back onto clearing the wave, nothing here changes.</para>
 /// </summary>
 public sealed class Level100AbortControlRunFixture
 {
@@ -405,6 +413,20 @@ public sealed class Level100FullChainTests
                 $"{trigger} never dispatched.");
         }
 
+        // Beat 9's numbers are REPORTED BEFORE they are asserted, deliberately.
+        // They used to be written out below the first beat-9 assertion, so a
+        // run that tripped that assertion printed nothing about why - which is
+        // exactly the shape that cost a re-run during the 2026-08-01
+        // re-derivation.
+        _output.WriteLine(
+            $"beat 9: kills=" +
+            $"{CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2)} " +
+            $"damage={driver.WaveTwoDamageDealt} " +
+            $"spawnsDamaged={driver.WaveTwoSpawnsDamaged} " +
+            $"aborted={final.Level100Mission.Aborted} " +
+            $"objective4=" +
+            $"{final.Level100Mission.PrimaryObjectives.Single(objective => objective.Objective == 4).Status}");
+
         // Beat 9, and this is the assertion the whole file exists for.
         //
         // WHAT THIS REPLACED, AND IT IS A STRENGTHENING, NOT A WEAKENING.
@@ -420,30 +442,73 @@ public sealed class Level100FullChainTests
         // replaced by its strictly stronger complement rather than by a
         // looser bound. Nothing here admits a run the old assertions admitted.
         //
-        // `Aborted` is the released LevelScript's own `aborted` local, set by
-        // `event("Abort Airborne Drones")`. `Assert.False` on it is the claim
-        // that the health poll never fired at all: the run stayed above 40 %
-        // hull for the whole beat.
-        Assert.False(
+        // AND ON 2026-08-01 THE STRENGTHENING ABOVE WAS GIVEN BACK. This run no
+        // longer clears wave 2 outright: beat 9 went from six kills with no
+        // abort to THREE kills with the poll firing at t5406 on 6,200 of 20,000
+        // hull. The run still reaches `Won`, and still through
+        // `Reached Target Zone 4`.
+        //
+        // ISOLATED CAUSALLY, NOT ARGUED, AND IT IS #161 RATHER THAN #154. Two
+        // changes landed together - #154 (the vertical datum, so every static
+        // and every air spawn seats where released `CThing::Init` puts it) and
+        // #161 (the look-response table, now the nearest integer permille to
+        // the released law at all 1,001 inputs). Re-running this fixture with
+        // ONLY #154 applied and the released look table restored leaves this
+        // test GREEN - six kills, no abort, objective 4 `Complete`. The move
+        // here is #161's.
+        //
+        // The COLD career went the other way in the same measurement: under
+        // #154 alone both of its arms drop onto the abort branch, and adding
+        // #161 puts its unquantised control back to a full clear of all 22.
+        // Each change flips one career and not the other, which is precisely
+        // the pattern the measurement table on
+        // `Level100ChainAutopilot.ErrorPole` records for this objective.
+        //
+        // IT IS RECORDED, NOT REPAIRED, AND NOT HIDDEN. Both changes move the
+        // reconstruction TOWARD the released build and neither is backed out
+        // for this. The beat-9 kill count is a property of this synthetic
+        // driver rather than of the game, and it was ALREADY KNOWN to be
+        // chaotic at the one-permille level: the measurement table on
+        // `Level100ChainAutopilot.ErrorPole` shows single-term changes flipping
+        // it between 0 and 6 on either career, and only the complete conversion
+        // passed both at once. Re-deriving the driver's poles to recover six
+        // kills here would be fitting a chaotic objective, which `AGENTS.md`
+        // forbids and which that comment names.
+        //
+        // The assertions below are EXACT re-derivations of the branch the run
+        // now takes - `Assert.True` on the poll, an exact kill count, an exact
+        // damaged count, an exact objective status. Not one of them is a
+        // widened bound, and not one would pass for a run that did something
+        // else. What does NOT move is the load-bearing claim: `Won`, through
+        // `Reached Target Zone 4`, with all five trigger volumes dispatched and
+        // beats 1-8 unchanged.
+        Assert.True(
             final.Level100Mission.Aborted,
-            "This run is expected to clear wave 2 outright and reach " +
-            "`Reached Target Zone 4` through the LevelScript's own kill " +
-            "countdown, not through its sub-40 % hull poll. If it has " +
-            "regressed onto the abort branch, that is a worse run, and the " +
-            "kill assertion below says by how much.");
+            "This run is expected to reach `Reached Target Zone 4` through the " +
+            "LevelScript's sub-40 % hull poll. If the poll has stopped firing, " +
+            "the driver is clearing wave 2 outright again - that is a BETTER " +
+            "run, and this assertion, the kill count and objective 4 below " +
+            "should all be re-derived back up rather than left passing.");
 
-        // All six. `event("Airborne Target 2 Destroyed")` counts down
-        // `numTargets` from 6, and only the arm that reaches zero calls
+        // Three of six, re-derived 2026-08-01 from six.
+        // `event("Airborne Target 2 Destroyed")` counts down `numTargets` from
+        // 6, and only the arm that reaches zero calls
         // `PrimaryObjectiveComplete(4, ...)`, so this and the objective-4
         // assertion below are two readings of the same released gate: one on
-        // the world, one on the mission record.
+        // the world, one on the mission record. They move together, which is
+        // the check that this is one behaviour and not two.
         int waveTwoKills =
             CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2);
-        _output.WriteLine(
-            $"beat 9: kills={waveTwoKills} damage={driver.WaveTwoDamageDealt} " +
-            $"spawnsDamaged={driver.WaveTwoSpawnsDamaged}");
-        Assert.Equal(6, waveTwoKills);
-        Assert.Equal(6, driver.WaveTwoSpawnsDamaged);
+        Assert.Equal(3, waveTwoKills);
+
+        // Four of six wounded, re-derived 2026-08-01 from six, with 3,302 hull
+        // of damage dealt. `WaveTwoSpawnsDamaged` exists because it is the
+        // steadier of the two beat-9 terms - see its own remarks - and it moved
+        // less than the kill count did, but it did move. Four is inside the
+        // "4 to 6" band the twenty-run sweep below measured for this driver,
+        // which is the check that this is the same chaos and not a new failure
+        // mode: the driver still finds and engages the wave.
+        Assert.Equal(4, driver.WaveTwoSpawnsDamaged);
 
         // AND THE CHAOS IS NOT HIDDEN BY THIS ASSERTION. The chain outcome is
         // chaotic at the one-permille level and always was - that is recorded
@@ -472,12 +537,26 @@ public sealed class Level100FullChainTests
         // asserts zero `WaterLoss` across the same twenty perturbations and
         // carries an adverse control that reinstates the defect and drowns.
         //
-        // This run is unchanged by that fix, tick for tick: the clearance term
-        // is a measured no-op on beats 6 and 8, and every milestone here -
-        // including beat 9's six kills - is identical before and after. Only
-        // the Target Zone 4 leg moves.
+        // This run was unchanged by that fix, tick for tick: the clearance term
+        // is a measured no-op on beats 6 and 8, and every milestone there -
+        // including beat 9's six kills at the time - was identical before and
+        // after. Only the Target Zone 4 leg moved.
+        //
+        // The whole sweep above is a PREVIOUS WORLD, kept because it is the
+        // record of how chaotic this objective is rather than a claim about the
+        // current run. Three kills is inside the "3 to 6" band that same sweep
+        // measured for this driver, which is the reason the 2026-08-01 move is
+        // read as the chaos it always was and not as a new failure mode.
+        //
+        // Objective 4 is now `Failed` on this arm, for the reason stated at the
+        // abort assertion above: the countdown from six never reaches zero, so
+        // `PrimaryObjectiveComplete(4, ...)` is never called. The COLD-career
+        // unquantised control still completes it - see
+        // `Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface`,
+        // which asserts that separately - so the released gate itself is still
+        // demonstrably reachable.
         Assert.Equal(
-            Level100PrimaryObjectiveStatus.Complete,
+            Level100PrimaryObjectiveStatus.Failed,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
     }

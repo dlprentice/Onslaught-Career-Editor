@@ -190,7 +190,24 @@ STATIC_WORLD_ANIMATED_MESHES = {
 # that is a check rather than a coincidence: the navigation graph's w was 0.0
 # for all 121 entries, and the marker records have no fourth component, so both
 # readings emit the float bits of 0.0f there.
-STATIC_WORLD_MANIFEST_SHA256 = "2dfad0dc536b2cdf5e01b26f04cf81c4185975d85357c16498adbacdbb8b8568"
+#
+# MOVED AGAIN 2026-08-01 from
+# 2dfad0dc536b2cdf5e01b26f04cf81c4185975d85357c16498adbacdbb8b8568 by the
+# VERTICAL DATUM correction at `_actor_pose`: the authored vertical now goes
+# through `_core_elevation_millimeters` instead of being written raw. Schema
+# unchanged - this moves values, not shape.
+#
+# MEASURED leaf diff against the previous manifest, 9,723 leaves either side:
+#   changed 54 - `actorDefinitions[].initialPose.positionMillimeters[1]` (44)
+#                and `spawnDefinitions[].initialPose.positionMillimeters[1]`
+#                (10)
+#   added     0
+#   removed   0
+# NOTHING outside those two vertical components moved. `authoredTransform`,
+# `objects`, `waypointPaths`, meshes, textures, pines, motion definitions,
+# water and every source hash are leaf-for-leaf identical - which is the check
+# that this was a datum conversion and not a re-decode.
+STATIC_WORLD_MANIFEST_SHA256 = "97e3b3bf3399d9d3de5d85605efb97a849455ac3b2220981d20fdaf3608f0c27"
 STATIC_WORLD_SOURCE_AGGREGATE_SHA256 = (
     "67015b3f37422e18116b84b6245958509e847f09d27f696145ae88fb88fb3f2c"
 )
@@ -2110,31 +2127,33 @@ def _actor_pose(
         "linearVelocityMillimetersPerTick": [0, 0, 0],
         "positionMillimeters": [
             _round_away_from_zero((retail_position[0] - LEVEL100_PLAYER_START_X) * 1_000.0),
-            # KNOWN DEFECT, deliberately NOT repaired here. This writes the raw
-            # authored Z-down value into a Core Y that every consumer reads as
-            # up, so it is wrong for every actor whose authored Z is non-zero
-            # (14 of 44 today: Forseti Docks -8871, Forseti City Building 2
-            # -8904, Control Tower -760, Player 1 -10000, Transporter and Air
-            # Trainer -15000, and eight more).
+            # THE AUTHORED VERTICAL, in Core's own datum. This used to write
+            # the raw authored Z-down value into a Core Y that every consumer
+            # reads as up, which was wrong for every actor whose authored Z is
+            # non-zero (14 of the 44).
             #
-            # It is NOT repaired by negation and NOT repaired by
-            # `_core_elevation_millimeters` alone. `_core_elevation_millimeters`
-            # gives the correct *authored* Core Y - Forseti Docks -1129, Player
-            # 1 exactly 0 - but retail's `CThing::Init` (0x004F34A0) then clamps
-            # a static to `max(authored, terrainSupport, waterSupport)`, water
-            # at -1160 mm. `Level100ActorRegistry.SeatOnGround` applies that
-            # clamp only to the `GroundVehicle` motion class, so correcting the
-            # producer alone moves every retail-Z-0 static from an accidentally
-            # near-ground Core Y of 0 to a genuinely-authored but unclamped
-            # -10000, i.e. 10 m under the terrain, and leaves 32 of the 33
-            # static instances still disagreeing with the elevation the
-            # renderer draws them at.
+            # `_core_elevation_millimeters` is the whole producer half. Retail's
+            # `CThing::Init` (0x004F34A0), read from the pristine specimen
+            # local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256
+            # 74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750,
+            # copies the authored position in and then applies two clamps and
+            # nothing else - `pos[2] = min(pos[2], SampleGroundHeight(x, y))`
+            # and `pos[2] = min(pos[2], *(float*)0x006FBDFC)`, the water level.
+            # The authored value is ABSOLUTE: only ever pulled toward a surface,
+            # never offset, never terrain-relative, and there is no per-class
+            # additive term at Init. Z is down-positive there, so both minima
+            # are MAXIMA in Core's up-positive space.
             #
-            # The two halves therefore have to land together, and the second
-            # half is the general `CThing::Init` support clamp in
-            # `Level100ActorRegistry`. See
-            # local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md section 4.
-            _round_away_from_zero(retail_position[2] * 1_000.0),
+            # THE SECOND HALF IS NOT OPTIONAL AND LANDED WITH THIS ONE:
+            # `Level100ActorRegistry.SeatOnGround` applies that support clamp.
+            # It used to apply it only to the `GroundVehicle` motion class, so
+            # this line alone would move every retail-Z-0 static from an
+            # accidentally near-ground Core Y of 0 to a genuinely-authored but
+            # unclamped -10000 - 10 m under the terrain - and leave 32 of the 33
+            # static instances disagreeing with the elevation the renderer draws
+            # them at. See local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md
+            # section 4 and local-lab/TTD-DATUM-ORIENTATION-2026-07-31.md.
+            _core_elevation_millimeters(retail_position[2]),
             _round_away_from_zero((retail_position[1] - LEVEL100_PLAYER_START_Y) * 1_000.0),
         ],
     }

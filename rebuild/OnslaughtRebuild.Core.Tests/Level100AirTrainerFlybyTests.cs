@@ -51,15 +51,22 @@ public sealed class Level100AirTrainerFlybyTests
     /// <summary>
     /// The Air Trainer's authored initial pose, from the hash-pinned manifest
     /// <c>level100-static-world.json</c> (sha256
-    /// <c>2DFAD0DC…8568</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
+    /// <c>97E3B3BF…0C27</c>, schema v14), actor <c>wres:rlwd:0040</c>. The Core
     /// fixture parks every non-static actor at the origin, which is fine for
     /// the tests that only need an actor to exist and useless for a test about
     /// a flight path, so this one is stated here and cross-checked against the
     /// manifest by
     /// <see cref="Level100WaypointFixtureTests.ManifestAirTrainer_IsAuthoredWhereTheseTestsPutIt"/>.
     /// </summary>
+    /// <remarks>
+    /// Re-derived 2026-08-01 from <c>-15000</c> by the vertical-datum
+    /// correction (task #154). The retail authored Z is unchanged at
+    /// <c>-15.0</c>; what changed is that the producer now converts it into
+    /// Core's datum, <c>(-10.0 - (-15.0)) * 1000 = +5000</c>, instead of
+    /// writing the down-positive number into an up-positive field.
+    /// </remarks>
     internal static readonly SimVector3 AuthoredAirTrainerPosition =
-        new(-23_188, -15_000, 149_250);
+        new(-23_188, 5_000, 149_250);
 
     /// <summary>
     /// The authored basis, same source. Its third column is
@@ -113,30 +120,31 @@ public sealed class Level100AirTrainerFlybyTests
     /// wrong order does not produce a dive.
     /// </para>
     /// <para>
-    /// <b>What the measurement did turn up.</b> The aircraft starts BELOW the
-    /// terrain, by 3,840 mm, in both orders — its authored Y of −15,000 mm sits
-    /// under a terrain sample of −11,160 mm at its own authored X/Z. That is a
-    /// separate, pre-existing vertical-datum defect: the manifest carries
-    /// retail's z-DOWN altitude verbatim into Core's y-UP frame, so the two
-    /// ambient aircraft (and only they, being the only actors with a non-zero
-    /// authored altitude) are placed underground. It is identical either side
-    /// of the traversal fix, so it is emphatically not the ordering bug, and it
-    /// is deliberately NOT papered over here with a clamp: the authored data is
-    /// the authority, and hiding a datum error inside this lane would put a
-    /// second wrong answer on top of a first one.
+    /// <b>What the measurement did turn up, and it is now FIXED.</b> The
+    /// aircraft used to start BELOW the terrain, by 3,840 mm, in both orders —
+    /// its Core Y of −15,000 mm sat under a terrain sample of −11,160 mm at its
+    /// own authored X/Z. That was the vertical-datum defect: the producer
+    /// carried retail's z-DOWN altitude verbatim into Core's y-UP frame, so the
+    /// two ambient aircraft (the only actors with a non-zero authored altitude)
+    /// were placed underground. It was never the ordering bug — it was
+    /// identical either side of the traversal fix — and it was deliberately not
+    /// papered over here with a clamp.
     /// </para>
     /// <para>
-    /// That defect is already on the books - it is the <c>_actor_pose</c>
-    /// vertical datum item owned by
-    /// <c>local-lab/TARGET-CONTACT-GEOMETRY-2026-07-26.md</c>, recorded there as
-    /// bigger than first reported and not repairable by the fix specified for
-    /// it. The same underground-then-climb-out shape was measured for the
+    /// Task #154 repaired it at the producer on 2026-08-01. The authored retail
+    /// Z is unchanged at −15.0; it is now converted into Core's datum,
+    /// <c>(-10.0 - (-15.0)) * 1000 = +5000</c>, so the aircraft starts
+    /// <b>16,160 mm ABOVE</b> the same −11,160 mm terrain sample and is inside
+    /// the released clearance band from its first tick. The clearance at spawn
+    /// is still pinned below, at its new value, for the same reason it was
+    /// pinned at the old one: so that a datum move is visible here rather than
+    /// silent. The same underground-then-climb-out shape was measured for the
     /// SPAWNED Air Trainer on 2026-07-26
     /// (<c>local-lab/PLANE-MOTION-AND-ACTOR-WEAPONS-2026-07-26.md</c> §2.3: spawn
-    /// clearance −6,133 mm, climbing out by t150), so this is a known pattern
-    /// rather than a new symptom. The same section is why the "dive" reading
-    /// above cannot be right: <i>"There is no altitude hold and no setpoint"</i>
-    /// - the clearance band is the only altitude authority a plane has.
+    /// clearance −6,133 mm, climbing out by t150) and has the same cause. That
+    /// section is also why the "dive" reading above cannot be right:
+    /// <i>"There is no altitude hold and no setpoint"</i> - the clearance band
+    /// is the only altitude authority a plane has.
     /// </para>
     /// <para>
     /// What is asserted, therefore, is the part that is about flight: after the
@@ -166,10 +174,13 @@ public sealed class Level100AirTrainerFlybyTests
             SimulationConstants.Level100PlaneClimbClearanceMillimeters,
             SimulationConstants.Level100PlaneDiveClearanceMillimeters);
 
-        // The datum defect named in the remarks, pinned so that fixing it is
-        // visible here rather than silent, and so that this test cannot be read
-        // as evidence that it does not exist.
-        Assert.Equal(-3_840, authored.ClearanceAtSpawn);
+        // The datum, pinned so that a move in it is visible here rather than
+        // silent. Re-derived 2026-08-01 from -3840 - the aircraft used to be
+        // authored 3,840 mm UNDER the terrain - by the #154 producer
+        // correction. Core Y +5000 against the same terrain sample of -11,160
+        // is +16,160 mm of clearance, and it is inside the released band from
+        // the first tick rather than climbing out of the ground into it.
+        Assert.Equal(16_160, authored.ClearanceAtSpawn);
         Assert.Equal(
             authored.ClearanceAtSpawn,
             FlyTheAuthoredRoute(SerializedOrderAsChain).ClearanceAtSpawn);

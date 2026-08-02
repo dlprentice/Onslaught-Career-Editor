@@ -294,8 +294,25 @@ public sealed class Level100ActorRegistryTests
 
         Assert.Equal(3, actors.Distinct().Count());
         Assert.Null(registry.GetThingRef("AirborneDrone1"));
+
+        // Re-derived 2026-08-01, when SeatOnGround stopped being ground-vehicle
+        // only and became the general CThing::Init support clamp. The authored
+        // spawn vertical is -6133; the terrain sample at the emitter's own
+        // (46216, 14450) is 0, which is above both it and the water plane at
+        // -1160, so Init seats it at 0. EVERYTHING ELSE about the pose is still
+        // the authored pose verbatim, and that is asserted separately rather
+        // than folded into one comparison, so a basis or velocity that moved
+        // could not hide behind the vertical.
+        Level100ActorPoseSnapshot seated = authored.InitialPose with
+        {
+            PositionMillimeters = authored.InitialPose.PositionMillimeters with
+            {
+                Y = 0,
+            },
+        };
+        Assert.Equal(-6_133, authored.InitialPose.PositionMillimeters.Y);
         Assert.All(actors, actorId =>
-            Assert.Equal(authored.InitialPose, registry.GetActor(actorId).Pose));
+            Assert.Equal(seated, registry.GetActor(actorId).Pose));
         Assert.DoesNotContain(registry.Snapshot.Actors, actor => actor.Pose is null);
     }
 

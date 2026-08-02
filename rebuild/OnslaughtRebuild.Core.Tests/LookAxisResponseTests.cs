@@ -16,6 +16,10 @@ namespace OnslaughtRebuild.Core.Tests;
 /// <para>The direction of this curve was recorded backwards once. The first
 /// test below is the guard against that: retail's response near centre is
 /// LOWER than linear, not higher.</para>
+///
+/// <para>The bound is ±0.5 permille, not the ±1.0 it was while the table was
+/// interpolated. See the comment on
+/// <see cref="TableMatchesTheReleasedExpression_AtEveryRepresentableInput"/>.</para>
 /// </summary>
 public sealed class LookAxisResponseTests
 {
@@ -63,10 +67,34 @@ public sealed class LookAxisResponseTests
     [Fact]
     public void TableMatchesTheReleasedExpression_AtEveryRepresentableInput()
     {
+        // Tightened from ±1.0 to ±0.5 on 2026-07-31, when the table went to one
+        // entry per representable input. ±1.0 was the bound while the table was
+        // sampled every 10 permille and interpolated, and it sat at 94 % of that
+        // budget (0.944 at input 985), so an unrelated edit could breach it.
+        // 0.5 is the floor for any response that is an integer permille, and the
+        // table is now at that floor everywhere; the worst case is 0.4997, at
+        // input 348, where the law is 172.5003 and no integer can be closer.
         for (int input = 0; input <= 1_000; input++)
         {
             double truth = ReleasedLaw(input / 1_000.0) * 1_000.0;
-            Assert.InRange(LookAxisResponse.Apply(input), truth - 1.0, truth + 1.0);
+            Assert.InRange(LookAxisResponse.Apply(input), truth - 0.5, truth + 0.5);
+        }
+    }
+
+    /// <summary>
+    /// The bound above states the headroom; this states why it cannot erode.
+    /// Every response is the nearest integer to the law, so no entry can be
+    /// edited by even one permille without failing — the margin between the
+    /// worst case (0.4997) and the next reachable value (0.5003, an entry one
+    /// permille out at input 348) is what the ±0.5 bound is cutting between.
+    /// </summary>
+    [Fact]
+    public void EveryResponseIsTheNearestIntegerToTheLaw_SoNoEntryCanDriftSilently()
+    {
+        for (int input = 0; input <= 1_000; input++)
+        {
+            double truth = ReleasedLaw(input / 1_000.0) * 1_000.0;
+            Assert.Equal((int)Math.Floor(truth + 0.5), LookAxisResponse.Apply(input));
         }
     }
 

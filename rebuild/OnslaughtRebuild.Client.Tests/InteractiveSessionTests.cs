@@ -602,12 +602,29 @@ public sealed class InteractiveSessionTests
 
         FrameAdvanceResult second = session.AdvanceFrameTicks(oneCoreStepTicks);
 
-        Assert.Equal(7_294, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        // STEP 2's YAW MOVED 7,294 -> 7,271 ON 2026-08-01, by the look-response
+        // table going to one entry per representable input (task #161). The
+        // move is EXACTLY ONE PERMILLE OF THE YAW SCALE and that is the whole
+        // of it: WalkerYawInputMicroRadPerTick is 22,667, the difference is 23,
+        // and 22,667 / 1,000 = 22.667. So a single table entry changed by one
+        // permille at the magnitude the recentring ease leaves on the axis at
+        // this step, and nothing else did - which is why STEP 1 above did not
+        // move at all, its magnitude landing on an entry the new table agrees
+        // with the old one about.
+        //
+        // The new value is the more faithful one. Retail computes
+        // tan(1.2v)/tan(1.2) live per sample (Player.cpp:346,350) with no table
+        // at all; ours exists only because .NET does not guarantee bit-identical
+        // transcendentals. Every one of the 187 entries that moved is strictly
+        // closer to that law - worst case 0.4997 permille against the old
+        // table's 0.9436 - so this pin is nearer retail than the one it
+        // replaces, not merely different.
+        Assert.Equal(7_271, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(
             -1_177,
             second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
         Assert.Equal(
-            first.CurrentSnapshot.FacingYawMicroRad + 7_294,
+            first.CurrentSnapshot.FacingYawMicroRad + 7_271,
             second.CurrentSnapshot.FacingYawMicroRad);
     }
 
@@ -1154,7 +1171,22 @@ public sealed class InteractiveSessionTests
             "SpawnerB",
             1,
             "AirTrainer"));
-        Assert.Equal(trainer.InitialPose, registry.GetActor(trainerId).Pose);
+        // Re-derived 2026-08-01 by task #154. The manifest's authored spawn
+        // vertical moved -6133 -> -3867 with the datum correction, and
+        // Level100ActorRegistry.SeatOnGround now applies the general
+        // CThing::Init support clamp instead of the ground-vehicle-only one, so
+        // the spawn is seated on the terrain sample at the emitter's own
+        // (46216, 14450), which is 0. Everything else about the pose is still
+        // the authored pose verbatim; the two are asserted separately so a
+        // basis or velocity that moved could not hide behind the vertical.
+        Assert.Equal(-3_867, trainer.InitialPose.PositionMillimeters.Y);
+        Assert.Equal(
+            trainer.InitialPose with
+            {
+                PositionMillimeters =
+                    trainer.InitialPose.PositionMillimeters with { Y = 0 },
+            },
+            registry.GetActor(trainerId).Pose);
         Assert.DoesNotContain(registry.Snapshot.Actors, actor => actor.Pose is null);
     }
 
@@ -1711,8 +1743,41 @@ public sealed class InteractiveSessionTests
         // rebuild/tools/FirstFlightSmokeValidation.psm1, produced by two
         // byte-identical native smoke reports through a completely different
         // host and frame clock.
+        // MOVED 2026-08-01 BY THE VERTICAL DATUM (#154) AND THE LOOK-RESPONSE
+        // TABLE (#161).
+        // d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3
+        // -> e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16.
+        //
+        // Repinned under the two-byte-identical-native-reports protocol: two
+        // runs of the native Godot smoke produced identical report files
+        // (sha256 a71fd60ad692e695abe42250135d2cf90b3838bc02d3c1ff35739e27a4b5
+        // 9a24, 3,859 bytes, all 86 fields equal) at exactly this value, so the
+        // in-process tape here and a completely different host with a different
+        // frame clock agree. The same value is pinned in
+        // rebuild/tools/FirstFlightSmokeValidation.psm1, which also carries the
+        // field-level accounting.
+        //
+        // TWO CAUSES, and they are not a sum:
+        //   1. #154 moved it. StateHasher hashes every actor pose and the
+        //      definition-set identity; the datum correction moved the vertical
+        //      of all 44 authored actors and all 10 spawn definitions, and
+        //      Level100ActorRegistry.SeatOnGround now applies the general
+        //      CThing::Init support clamp to every class instead of to ground
+        //      vehicles alone.
+        //   2. #161 did NOT move it on its own - measured 2026-07-31, the
+        //      1,001-entry look table left this hash at d4967b12 exactly,
+        //      because every probe point this tape touches is on an entry the
+        //      old and new tables agree about.
+        //
+        // NOTHING THE TAPE PROVES CHANGED, and that is asserted above rather
+        // than argued: Walker mode, zero targets destroyed, Target Tank 1 alive
+        // at its full 6,000 hull with no FollowWaypoint continuation and a
+        // Stopped intent, exactly four fire-held ticks, and the "Firing Range"
+        // navigation objective. The native report agrees field for field:
+        // tick 2148, thirteen delivered messages, four objective markers, nine
+        // target visuals, and the whole retail-geometry block are all unchanged.
         Assert.Equal(
-            "d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3",
+            "e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

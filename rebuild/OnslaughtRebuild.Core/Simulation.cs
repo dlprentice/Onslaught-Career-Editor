@@ -2541,15 +2541,20 @@ public sealed class Simulation
     // released landing lesson (HELP_RETRO) decorative: measured, all three of
     // beats 6, 8 and 10 completed at 11-13 m up in level flight, never landing.
     //
-    // The authored elevation of all five Level 100 trigger volumes is 0, and
+    // All five Level 100 trigger volumes are authored at retail Z = 0, and
     // released CThing::Init (0x004F34A0) raises an authored thing to the height
-    // field sample -- see local-lab/STATIC-OBJECT-SEATING-2026-07-26.md, and
-    // Level100ActorRegistry.SeatOnGround which already applies exactly this to
-    // the ground-vehicle class. Core does not yet own the general seating pass
-    // for volumes (their poses feed the rendering layer), so the clamp is
-    // applied here, at the point of use. Without it the test would be stricter
-    // than retail by the terrain height under each volume: 898 mm at Target
-    // Zone 2, which costs 434 mm of horizontal tolerance.
+    // field sample -- see local-lab/STATIC-OBJECT-SEATING-2026-07-26.md.
+    // Without that the test would be stricter than retail by the terrain height
+    // under each volume: 898 mm at Target Zone 2, which costs 434 mm of
+    // horizontal tolerance.
+    //
+    // Level100ActorRegistry.SeatOnGround now owns that seating for EVERY actor
+    // class rather than for ground vehicles alone, so a volume arrives here
+    // already seated and this line is idempotent on it -- the registry's seat
+    // is max(authored, ground, water), and max(that, ground) is that. It is
+    // kept because a pose can also arrive from a restored snapshot or from
+    // SetPose, neither of which re-runs Init, and the containment test must not
+    // depend on which of those produced the pose.
     private bool IsWithinLevel100Trigger(
         SimVector2 position,
         int elevationMillimeters,

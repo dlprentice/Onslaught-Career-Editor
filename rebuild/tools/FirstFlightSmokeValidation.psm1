@@ -189,7 +189,42 @@ function Test-FirstFlightSmokeEvidence {
     # thirteen delivered message ids and their speakers,
     # targetVisualCount 9, openingPanActive false, and the whole retail-geometry
     # block.
-    Assert-SmokeValue 'stateHash' 'd4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3' $report.stateHash
+    # REPINNED AGAIN 2026-08-01 by the VERTICAL DATUM (#154) and the
+    # LOOK-RESPONSE TABLE (#161).
+    # d4967b1206f851a27ef2bb998ffaae2575fb898f15dec67cdbead987b0737ed3
+    # -> e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16.
+    #
+    # PROTOCOL SATISFIED BEFORE PINNING: two native Godot runs produced
+    # BYTE-IDENTICAL reports - sha256
+    # a71fd60ad692e695abe42250135d2cf90b3838bc02d3c1ff35739e27a4b59a24,
+    # 3,859 bytes, all 86 fields equal - and the value also matches the
+    # in-process scenario pinned by InteractiveSessionTests, which is an
+    # independent implementation of the same tape through a different host.
+    #
+    # FIELD-LEVEL ACCOUNTING: stateHash is the ONLY field that moved. Every
+    # other field this gate pins is unchanged and re-asserted below - tick /
+    # level100MissionTick / totalSteps 2148, targetsDestroyed 0, mode Walker,
+    # outcome Running, terminal None, targetVisualCount 9, the thirteen
+    # delivered message ids and their speakers, level100DeliveredHelpCount 1,
+    # level100ObjectiveMarkerCount 4, fireHeldTicksSampled 4, all five edge
+    # counters 0, cappedFrameCount 0, droppedElapsedTicks 0, openingPanActive
+    # false, and the whole retail-geometry block including
+    # retailLevel100TerrainVertexCount 34499 and TriangleCount 33476.
+    #
+    # WHY IT MOVED, and it is two causes rather than one:
+    #   1. #154. StateHasher hashes every actor pose and the definition-set
+    #      identity. The datum correction moved 54 manifest leaves - the
+    #      vertical of all 44 actors and all 10 spawns - and the general
+    #      CThing::Init support clamp in Level100ActorRegistry.SeatOnGround now
+    #      seats every class rather than ground vehicles alone. The tape's own
+    #      behaviour did not change: it is walker-only, destroys nothing, and
+    #      every pinned schedule field above is identical.
+    #   2. #161. The look table is now one entry per representable input, which
+    #      changes 187 of the 1,001 responses by one permille each. Measured
+    #      alone on 2026-07-31 it did NOT move this hash - the tape's probe
+    #      points are all on entries the two tables agree about - so this is
+    #      #154's move with #161 riding along, not a sum of two.
+    Assert-SmokeValue 'stateHash' 'e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

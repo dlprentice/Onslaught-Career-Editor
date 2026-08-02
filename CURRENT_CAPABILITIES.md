@@ -3,8 +3,10 @@
 Status: active — what is demonstrated today, and what is not
 Last updated: 2026-08-01. The WinUI shell, appearance, Lore, and Media sections
 were rewritten to match what the app now does, and one block of fabricated
-content was withdrawn. The rebuild, RE, and save/patch claims were NOT
-re-reviewed by that pass and retain their 2026-07-29 boundary.
+content was withdrawn. The four-run Level 100 result was then re-derived against
+the vertical-datum (#154) and look-table (#161) changes: the ferry `WaterLoss`
+is gone and the wave-2 counts moved. The rest of the rebuild, RE, and save/patch
+claims were NOT re-reviewed by either pass and retain their 2026-07-29 boundary.
 Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
 re-measure before relying on one.
@@ -517,42 +519,66 @@ them would claim a client or human path that does not exist.**
 The cold-start client/Core harness visits startup, logo, montage, splash,
 click-to-start, main menu, New Game, level select, briefing, configuration
 select, loading, and gameplay in released order. Driven through the client input
-adapter, that same cold first career clears every beat and then loses on the way
-home: outcome `Lost` with failure reason **`WaterLoss`**, primary objective 4
-`Complete`, the LevelScript's sub-40% hull abort poll never fired, and **all 22
-targets destroyed**—three Target Trucks, six Moving Targets, three and six
-Airborne Targets, plus `Target Tank 2`, `Target Tank 3`, `Target Warehouse`, and
-`Target Tank #23`.
+adapter, that same cold first career **reaches `Won`**, through
+`event("Reached Target Zone 4")` and with failure reason `None`. It gets there
+on the released **sub-40% hull abort branch**: it destroys **18 of the 22**
+targets — three Target Trucks, six Moving Targets, three Airborne Targets 1, two
+of six Airborne Targets 2, plus `Target Tank 2`, `Target Tank 3`,
+`Target Warehouse` and `Target Tank #23` — trips `Abort Airborne Drones` at
+t6732 with 5,700 of 20,000 hull, and leaves primary objective 4 `Failed`.
 
 A second, direct-Core cold run applies the same pointer/integer-pixel
 quantisation as the client path. It has the same terminal outcome and tick,
-state hash, and pose trace as the client/input-adapter run: `WaterLoss` is
-therefore not evidence of an additional frontend or `InteractiveSession`
-defect. A third, **unquantised** direct-Core cold-career control reaches
-**`Won`**. All three results are asserted by
+state hash, and pose trace as the client/input-adapter run, so nothing in that
+result is evidence of an additional frontend or `InteractiveSession` defect. A
+third, **unquantised** direct-Core cold-career control also reaches **`Won`**
+and does the whole job: **all 22 destroyed**, all six wave-2 drones, the abort
+poll never fired, objective 4 `Complete`. The four targets the client arm loses
+are therefore lost to the whole-retail-pixel look quantum, on a beat that is
+chaotic at finer than that quantum. All three results are asserted by
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
 
 A fourth, returning-player direct-Core run reaches `Won` with the four
 `SLOT_TUTORIAL_*` values already saved; it does not traverse the frontend or
-client adapter. That evidence is
+client adapter. It also wins on the abort branch, with three of the six wave-2
+drones down. That evidence is
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs).
 None of these is a human or automated native-Godot end-to-end proof.
 
-For this omniscient synthetic test driver, the remaining loss occurs on the
-flight home. Its `NavigateToZone` policy leaves jet mode within 20 m of the
-target volume regardless of what is underneath, and on the ferry to Target Zone
-4 that point is open water, so the run ditches. A naive water-landing guard was
-**tried and measured worse**—it broke the returning-player `Won` test and turned
-the unquantised cold control's `Won` into `WaterLoss`—so it is deliberately not
-restored. This does not establish a product navigation defect or the released
-behavior; the next correction needs low-over-water retail evidence rather than
-another fit to this driver.
+**Beat 9's kill count is chaotic and these figures are the 2026-08-01 values.**
+The `WaterLoss` that used to end the cold runs was fixed by the ferry
+hand-off clearance term; the wave-2 counts then moved again when the vertical
+datum (#154) and the look-response table (#161) landed, each of which flipped
+one career and not the other. `Level100ChainAutopilot.ErrorPole` carries the
+measurement showing single-term changes moving this count between 0 and 6. Read
+the counts as the value at the commit that wrote them, and the `Won` outcomes
+and the Target Zone 4 dispatch as the stable claims.
+
+**There is no remaining ferry loss.** `NavigateToZone` used to leave jet mode
+within 20 m of the target volume regardless of what was underneath, and on the
+ferry to Target Zone 4 that point is open water, so the run ditched. An altitude
+term on the hand-off — `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters` —
+fixed it, and [`Level100FerryLandingTests`](rebuild/OnslaughtRebuild.Core.Tests/Level100FerryLandingTests.cs)
+now asserts zero `WaterLoss` across a twenty-run one-permille sweep and carries
+an adverse control that reinstates the defect and drowns. **The water rule
+itself was not touched**: it is a byte-faithful port of `BattleEngine.cpp`
+:1259-1262, pinned at water + 200 mm two independent ways in the same file. A
+naive water-landing *guard* remains **tried and measured worse** and is
+deliberately not restored.
 
 The terminal **tick and hull are recorded but not gated**. The test writes them
-to its log rather than asserting them; `developer_state.json` records `t17699`
-and the test's own comment says roughly 10,700 of 20,000 hull. Treat both as
-re-measurable, not as pinned facts. The test summary now states the same four-run
-boundary as its assertions.
+to its log rather than asserting them. Treat both as re-measurable, not as
+pinned facts. The test summary states the same four-run boundary as its
+assertions.
+
+> **Superseded 2026-08-01.** The two paragraphs above previously said the cold
+> runs still ended `Lost` / `WaterLoss` on the flight home at `t17699` with
+> roughly 10,700 of 20,000 hull, and that the client arm destroyed all 22
+> targets with objective 4 `Complete` and the abort poll never firing. The
+> ferry loss was fixed on 2026-07-31 by the hand-off clearance term; the
+> wave-2 counts moved on 2026-08-01 with the vertical datum and the
+> look-response table. Both are asserted at their current values in the two
+> test files named above.
 
 > **Superseded 2026-07-28 — every load-bearing clause of the paragraph these
 > three replaced is now false.** It read: "on a cold career the same sequence ends **`Lost` /
