@@ -42,6 +42,46 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return null;
         }
 
+        /// <summary>The video after the one that just finished, on the same rules.</summary>
+        public static MediaVideoItem? FindNextVideo(
+            IReadOnlyList<MediaVideoItem>? order,
+            MediaVideoItem? finished)
+        {
+            if (order is null || order.Count == 0 || finished is null)
+                return null;
+
+            for (int index = 0; index < order.Count; index++)
+            {
+                if (!string.Equals(order[index].FilePath, finished.FilePath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                return index + 1 < order.Count ? order[index + 1] : null;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Where the story starts: the first item in the Cutscenes section.
+        ///
+        /// The section is the join rather than the filename, because the catalog is what decides
+        /// which videos are cutscenes and which are logos, briefings or the menu background - and
+        /// it already orders them by number.
+        /// </summary>
+        public static MediaVideoItem? FirstCutscene(IReadOnlyList<MediaVideoItem>? order)
+        {
+            if (order is null)
+                return null;
+
+            foreach (MediaVideoItem item in order)
+            {
+                if (string.Equals(item.SectionName, "Cutscenes", StringComparison.OrdinalIgnoreCase))
+                    return item;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Identity is the file path. The same track can appear under more than one heading, and
         /// two different tracks can share a display name.

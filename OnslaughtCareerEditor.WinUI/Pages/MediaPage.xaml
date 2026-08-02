@@ -653,7 +653,17 @@
                                                 Content="Stop"
                                                 Click="VideoStopButton_Click"
                                                 IsEnabled="False" />
+                                        <Button x:Name="WatchTheStoryButton"
+                                                AutomationProperties.AutomationId="MediaWatchTheStoryButton"
+                                                AutomationProperties.Name="Watch the story, playing every cutscene in order"
+                                                Content="Watch the story"
+                                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                                Click="WatchTheStoryButton_Click" />
                                     </StackPanel>
+                                    <TextBlock AutomationProperties.AutomationId="MediaWatchTheStoryNote"
+                                               Text="Plays every cutscene back to back, in order. The game never let you do this without replaying the campaign."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="10"
                                                 VerticalAlignment="Center">

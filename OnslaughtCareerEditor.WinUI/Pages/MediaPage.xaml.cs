@@ -58,6 +58,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private readonly List<MediaAudioItem> _audioPlayOrder = new();
         private MediaAudioItem? _currentAudioItem;
         private MediaVideoItem? _selectedVideo;
+
+        /// <summary>The videos in the order the tree is showing them, for the theater.</summary>
+        private readonly List<MediaVideoItem> _videoPlayOrder = new();
         private WaveOutEvent? _waveOut;
         private VorbisWaveReader? _vorbisReader;
         private SampleChannel? _sampleChannel;
@@ -897,9 +900,74 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             DispatcherQueue.TryEnqueue(() =>
             {
+                MediaVideoItem? finished = _selectedVideo;
                 ResetVideoPlaybackState(stopPlayer: false);
+
+                MediaVideoItem? next = MediaKeepPlaying.FindNextVideo(_videoPlayOrder, finished);
+                if (_watchingTheStory && next is not null)
+                {
+                    SetSelectedVideo(next);
+                    SelectVideoTreeNode(next);
+                    try
+                    {
+                        StartVideoPlayback(next);
+                        AppStatusService.SetStatus($"Media: {next.Name}");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _watchingTheStory = false;
+                        AppStatusService.SetStatus($"Media: stopped - {ex.Message}");
+                        return;
+                    }
+                }
+
+                if (_watchingTheStory)
+                {
+                    _watchingTheStory = false;
+                    AppStatusService.SetStatus("Media: that is the whole story");
+                    return;
+                }
+
                 AppStatusService.SetStatus("Media: video playback finished");
             });
+        }
+
+        /// <summary>
+        /// True while the theater is rolling. It is not a setting - it ends when the last video
+        /// ends, when anything fails, and when the player is stopped by hand.
+        /// </summary>
+        private bool _watchingTheStory;
+
+        /// <summary>
+        /// Play the cutscenes end to end, in the order they are numbered.
+        ///
+        /// The game never let anyone re-watch its story without replaying the campaign, and the
+        /// titles for these were never recovered - so this deliberately offers them as what they
+        /// are, a numbered sequence, rather than waiting for names that may not exist.
+        /// </summary>
+        private void WatchTheStoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            MediaVideoItem? first = MediaKeepPlaying.FirstCutscene(_videoPlayOrder);
+            if (first is null)
+            {
+                AppStatusService.SetStatus("Media: no cutscenes found in this install");
+                return;
+            }
+
+            try
+            {
+                SetSelectedVideo(first);
+                SelectVideoTreeNode(first);
+                StartVideoPlayback(first);
+                _watchingTheStory = true;
+                AppStatusService.SetStatus($"Media: {first.Name}");
+            }
+            catch (Exception ex)
+            {
+                _watchingTheStory = false;
+                AppStatusService.SetStatus($"Media: could not start - {ex.Message}");
+            }
         }
 
         private void VideoPlayer_EncounteredError(object? sender, EventArgs e)
@@ -1008,6 +1076,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             List<MediaVideoItem> filtered = items.ToList();
             _videoItemsByPath.Clear();
+            _videoPlayOrder.Clear();
             VideoTreeView.RootNodes.Clear();
 
             if (filtered.Count == 0)
@@ -1040,6 +1109,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     string normalizedPath = NormalizeMediaPath(item.FilePath);
                     _videoItemsByPath[normalizedPath] = item;
+                    _videoPlayOrder.Add(item);
                     TreeViewNode itemNode = new()
                     {
                         Content = new MediaTreeNodeTag(BuildVideoLeafLabel(item), normalizedPath),
