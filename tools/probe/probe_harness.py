@@ -95,6 +95,42 @@ AUTOEXEC = "autoexec.con"
 # Directory names never walked when scanning for a stale autoexec.con.
 _SCAN_SKIP = {".git", ".vs", "node_modules", "bin", "obj", "__pycache__"}
 
+# NTSTATUS codes a process exits with when it died rather than finished.  Named
+# individually because a receipt that says "exited 3221225477" is a number a
+# reader has to go look up, and one that says STATUS_ACCESS_VIOLATION is not.
+_KNOWN_FAULT_STATUS = {
+    0x80000003: "STATUS_BREAKPOINT",
+    0x80000004: "STATUS_SINGLE_STEP",
+    0xC0000005: "STATUS_ACCESS_VIOLATION",
+    0xC0000006: "STATUS_IN_PAGE_ERROR",
+    0xC000001D: "STATUS_ILLEGAL_INSTRUCTION",
+    0xC0000025: "STATUS_NONCONTINUABLE_EXCEPTION",
+    0xC000008C: "STATUS_ARRAY_BOUNDS_EXCEEDED",
+    0xC000008E: "STATUS_FLOAT_DIVIDE_BY_ZERO",
+    0xC000008F: "STATUS_FLOAT_INEXACT_RESULT",
+    0xC0000090: "STATUS_FLOAT_INVALID_OPERATION",
+    0xC0000091: "STATUS_FLOAT_OVERFLOW",
+    0xC0000093: "STATUS_FLOAT_UNDERFLOW",
+    0xC0000094: "STATUS_INTEGER_DIVIDE_BY_ZERO",
+    0xC0000095: "STATUS_INTEGER_OVERFLOW",
+    0xC0000096: "STATUS_PRIVILEGED_INSTRUCTION",
+    0xC00000FD: "STATUS_STACK_OVERFLOW",
+    0xC0000135: "STATUS_DLL_NOT_FOUND",
+    0xC0000142: "STATUS_DLL_INIT_FAILED",
+    0xC0000374: "STATUS_HEAP_CORRUPTION",
+    0xC0000409: "STATUS_STACK_BUFFER_OVERRUN",
+    0xC000041D: "STATUS_FATAL_USER_CALLBACK_EXCEPTION",
+    0xE06D7363: "MSVC C++ exception (0xE06D7363)",
+}
+
+# The band of Microsoft-defined NTSTATUS values whose severity field is ERROR.
+# Anything in it is a death even when this file has no name for it.  The band is
+# bounded deliberately: 0xFFFFFFFF also has ERROR severity, and it is what a
+# POSIX-style -1 becomes under 32-bit normalisation, so a blanket
+# "severity == ERROR" rule would classify the harness's own kill as an engine
+# fault.  See classify_exit_code.
+_NTSTATUS_ERROR_BAND = (0xC0000000, 0xD0000000)
+
 # Path fragments that mean "this is the user's installed game, not a scratch
 # copy".  Matched case-insensitively against the resolved path.
 _FORBIDDEN_FRAGMENTS = ("program files", "steamapps", "steam\\steamapps")
@@ -102,6 +138,185 @@ _FORBIDDEN_FRAGMENTS = ("program files", "steamapps", "steam\\steamapps")
 
 class ProbeError(Exception):
     """A fail-closed stop.  Every one of these carries the reason verbatim."""
+
+
+# ---------------------------------------------------------------------------
+# Did it finish, or did it die?
+# ---------------------------------------------------------------------------
+
+
+def classify_exit_code(code: Optional[int]) -> dict[str, Any]:
+    """Say whether a process exit was a finish or a death.
+
+    WHY THIS EXISTS.  Until 2026-08-01 the ``processExit`` oracle read
+    ``state.exited`` and nothing else, so a probe that declared
+    ``{"kind": "processExit"}`` reported PASS when the game took an access
+    violation eight seconds in.  At one probe that is a bad afternoon; at a
+    hundred it manufactures false accepts wholesale, and the campaign this
+    harness exists to run is a hundred.
+
+    THE NORMALISATION MATTERS.  CPython reports a Windows exit code as the raw
+    unsigned DWORD, but the same field carries a negative value on POSIX and
+    from any fake or wrapper that follows the POSIX convention.  Both are folded
+    to 32-bit unsigned before classification so 0xC0000005 and -1073741819 are
+    one code, not two.
+
+    THE BAND IS BOUNDED ON PURPOSE.  ``severity == ERROR`` alone would be
+    wrong: 0xFFFFFFFF has ERROR severity and is what -1 normalises to, and -1 is
+    what this harness's own kill path produces.  Classifying our own termination
+    as an engine fault would be a false accusation in the other direction, and a
+    fault gate that cries wolf gets switched off.  Only the Microsoft-defined
+    0xC0000000-0xCFFFFFFF band, plus the named codes above it, count.
+    """
+
+    if code is None:
+        return {
+            "code": None,
+            "unsigned": None,
+            "hex": None,
+            "isFault": False,
+            "status": None,
+            "detail": "the process had not exited",
+        }
+
+    unsigned = int(code) & 0xFFFFFFFF
+    known = _KNOWN_FAULT_STATUS.get(unsigned)
+    low, high = _NTSTATUS_ERROR_BAND
+    in_band = low <= unsigned < high
+    is_fault = known is not None or in_band
+    if known is not None:
+        status = known
+    elif in_band:
+        status = "unnamed NTSTATUS error-severity status"
+    else:
+        status = None
+
+    if is_fault:
+        detail = (
+            f"exit code 0x{unsigned:08X} is {status} -- the process DIED, it "
+            "did not finish"
+        )
+    elif unsigned == 0:
+        detail = "exit code 0 -- a clean finish"
+    else:
+        detail = (
+            f"exit code {unsigned} (0x{unsigned:08X}) -- a non-zero finish, not "
+            "a recognised fault"
+        )
+
+    return {
+        "code": int(code),
+        "unsigned": unsigned,
+        "hex": f"0x{unsigned:08X}",
+        "isFault": is_fault,
+        "status": status,
+        "detail": detail,
+    }
+
+
+def oracle_expects_a_fault(oracle: dict[str, Any], exit_code: Optional[int]) -> bool:
+    """True when this oracle tree asked for the death it got.
+
+    Two ways to ask, and no third: declare the ``fatalFault`` kind, which is an
+    oracle *about* a crash, or name the exact code in ``expectExitCode``.  A
+    bare ``processExit`` is not asking for a crash and never has been.
+    """
+
+    kind = oracle.get("kind")
+    if kind == "fatalFault":
+        return True
+    if kind == "processExit":
+        expected = oracle.get("expectExitCode")
+        if expected is not None and exit_code is not None:
+            return (int(expected) & 0xFFFFFFFF) == (int(exit_code) & 0xFFFFFFFF)
+        return False
+    if kind in ("all", "any"):
+        return any(oracle_expects_a_fault(sub, exit_code) for sub in oracle["of"])
+    return False
+
+
+def apply_fault_gate(
+    probe: "Probe",
+    oracle_result: dict[str, Any],
+    diagnosis: dict[str, Any],
+    classification: dict[str, Any],
+) -> dict[str, Any]:
+    """Veto a satisfied oracle when the run it came from was a crash.
+
+    THE GATE IS ABOVE THE ORACLE, NOT INSIDE IT.  Fixing only ``processExit``
+    would leave ``fileAppears`` and ``setupHistoryContains`` able to launder the
+    same crash: the console writes its file, the engine faults two seconds
+    later, and the oracle -- which only ever looked at the file -- says PASS.
+    Every oracle kind passes through here.
+
+    TWO INDEPENDENT TRIGGERS, because there are two ways to die:
+
+      1. The process exits with an NTSTATUS fault code.
+      2. ``OnslaughtException.txt`` appears.  This one is not redundant: BEA
+         installs its own handler, and a handler that logs and then exits
+         cleanly produces a crash with exit code 0.  The code alone cannot see
+         that run.
+
+    Either trigger vetoes unless the probe opted in -- ``allowFaultExit``, a
+    ``fatalFault`` oracle, or an ``expectExitCode`` naming the exact status.
+    """
+
+    triggers: list[str] = []
+    if classification.get("isFault"):
+        triggers.append(classification["detail"])
+    if diagnosis.get("fatalFaultLogPresent"):
+        triggers.append(
+            f"{EXCEPTION_LOG} was written -- the engine's own handler recorded a "
+            "fatal fault, whatever the exit code says"
+        )
+
+    # ``vetoed`` means "this run may not be a PASS", not "the gate is the only
+    # thing standing between it and one".  Those come apart when the oracle
+    # already caught the fault itself -- a settle window that saw the crash
+    # reports satisfied-then-faulted, and the gate agreeing with it is not the
+    # gate doing nothing.  ``wasDecisive`` is the narrower fact, and it is the
+    # one a campaign summary counts.
+    if not triggers:
+        return {
+            "triggered": False,
+            "vetoed": False,
+            "wasDecisive": False,
+            "optedIn": bool(probe.allow_fault_exit),
+            "triggers": [],
+            "detail": "the run did not fault",
+        }
+
+    opted_in = bool(probe.allow_fault_exit) or oracle_expects_a_fault(
+        probe.oracle, classification.get("code")
+    )
+    if opted_in:
+        return {
+            "triggered": True,
+            "vetoed": False,
+            "wasDecisive": False,
+            "optedIn": True,
+            "triggers": triggers,
+            "detail": (
+                "the run faulted and the probe asked for it: "
+                + "; ".join(triggers)
+            ),
+        }
+
+    return {
+        "triggered": True,
+        "vetoed": True,
+        "wasDecisive": oracle_result.get("outcome") == "satisfied",
+        "optedIn": False,
+        "triggers": triggers,
+        "detail": (
+            "THIS RUN CRASHED and the probe did not declare that it expected to: "
+            + "; ".join(triggers)
+            + ". A crashed run is not evidence for a claim about what the engine "
+            "does; whatever the oracle saw before the fault, it saw on the way "
+            "down. Declare 'allowFaultExit': true, or a 'fatalFault' oracle, if "
+            "the crash IS the measurement."
+        ),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -199,6 +414,9 @@ class Probe:
     record: bool = False
     record_seconds: int = 45
     note: str = ""
+    # Opt out of the fault gate.  Only for a probe whose measurement IS the
+    # crash; see apply_fault_gate for why the default cannot be permissive.
+    allow_fault_exit: bool = False
 
     @property
     def argv(self) -> tuple[str, ...]:
@@ -222,6 +440,7 @@ _PROBE_KEYS = {
     "record",
     "recordSeconds",
     "note",
+    "allowFaultExit",
 }
 
 ORACLE_KINDS = {
@@ -291,6 +510,7 @@ def parse_probe(raw: dict[str, Any]) -> Probe:
         record=bool(raw.get("record", False)),
         record_seconds=int(raw.get("recordSeconds", 45)),
         note=str(raw.get("note", "")),
+        allow_fault_exit=bool(raw.get("allowFaultExit", False)),
     )
     if "-level" in probe.game_arguments:
         raise ProbeError(
@@ -321,9 +541,22 @@ def validate_oracle(oracle: Any, probe_name: str) -> None:
         raise ProbeError(f"{probe_name}: 'fileAppears' oracle needs a 'path'")
     if kind == "setupHistoryContains" and not oracle.get("text"):
         raise ProbeError(f"{probe_name}: 'setupHistoryContains' oracle needs 'text'")
+    if kind == "processExit":
+        expected = oracle.get("expectExitCode")
+        if expected is not None and not isinstance(expected, int):
+            raise ProbeError(
+                f"{probe_name}: expectExitCode must be an integer, got "
+                f"{type(expected).__name__}. A string here would never compare "
+                "equal to a real exit code and the oracle would never pass."
+            )
     timeout = oracle.get("timeoutSeconds", 90)
     if not isinstance(timeout, (int, float)) or timeout <= 0:
         raise ProbeError(f"{probe_name}: timeoutSeconds must be a positive number")
+    settle = oracle.get("settleSeconds", 0)
+    if not isinstance(settle, (int, float)) or settle < 0:
+        raise ProbeError(
+            f"{probe_name}: settleSeconds must be zero or a positive number"
+        )
 
 
 def load_manifest(path: pathlib.Path) -> list[Probe]:
@@ -496,6 +729,10 @@ class RunState:
     exit_code: Optional[int]
     elapsed: float
     deadline_reached: bool
+    # Set from the probe.  An oracle cannot see the probe, and the fault refusal
+    # inside processExit has to honour the same opt-out the gate does or a probe
+    # that declared allowFaultExit would still be failed one layer lower down.
+    allow_fault_exit: bool = False
 
     def file_size(self, relative: str) -> Optional[int]:
         candidate = self.scratch_root / relative
@@ -523,11 +760,19 @@ def check_oracle(oracle: dict[str, Any], state: RunState) -> tuple[bool, str]:
         if not state.exited:
             return False, "process still running"
         expected = oracle.get("expectExitCode")
-        if expected is not None and state.exit_code != expected:
-            return (
-                False,
-                f"process exited {state.exit_code}, probe expected {expected}",
-            )
+        classification = classify_exit_code(state.exit_code)
+        if expected is not None:
+            if (int(expected) & 0xFFFFFFFF) != (state.exit_code or 0) & 0xFFFFFFFF:
+                return (
+                    False,
+                    f"process exited {state.exit_code}, probe expected {expected}",
+                )
+            return True, f"process exited with the expected code {state.exit_code}"
+        # NO expectExitCode.  "It exited" is not "it finished": an access
+        # violation exits too.  A bare processExit means a clean finish, and a
+        # death has to be asked for by name.
+        if classification["isFault"] and not state.allow_fault_exit:
+            return False, classification["detail"]
         return True, f"process exited on its own with code {state.exit_code}"
 
     if kind == "fileAppears":
@@ -595,48 +840,136 @@ def wait_for_oracle(
     handle: ProcessHandle,
     clock: Clock,
     poll_seconds: float = 0.25,
+    allow_fault_exit: bool = False,
 ) -> dict[str, Any]:
-    """Poll until the oracle is decided, the process dies, or time runs out."""
+    """Poll until the oracle is decided, the process dies, or time runs out.
+
+    THE SETTLE WINDOW.  ``fileAppears`` is satisfied the instant the file is
+    there, and without ``settleSeconds`` the harness stops looking right then --
+    so a game that writes the file and takes an access violation a second later
+    is recorded as a clean PASS, and nothing in the receipt ever knew.  The
+    oracle was not wrong; it simply stopped watching before the interesting
+    part.
+
+    ``settleSeconds`` keeps polling after satisfaction and reports what it saw.
+    It defaults to 0 because a silent change to every probe's timing is its own
+    kind of surprise, and because a probe whose whole question is "did the file
+    appear" is entitled to say so.  What is NOT optional is that the receipt
+    records which of the two happened: ``processAliveAtDecision`` true means the
+    survival question was never asked, and per this project's own evidence rule
+    a non-observation is not an absence.
+    """
 
     timeout = float(oracle.get("timeoutSeconds", 90))
+    settle = float(oracle.get("settleSeconds", 0))
     started = clock.now()
     needs_deadline = oracle_needs_deadline(oracle)
 
-    while True:
-        exit_code = handle.poll()
-        elapsed = clock.now() - started
-        deadline_reached = elapsed >= timeout
-        state = RunState(
+    def sample(elapsed: float, exit_code: Optional[int]) -> RunState:
+        return RunState(
             scratch_root=scratch_root,
             exited=exit_code is not None,
             exit_code=exit_code,
             elapsed=elapsed,
-            deadline_reached=deadline_reached,
+            deadline_reached=elapsed >= timeout,
+            allow_fault_exit=allow_fault_exit,
         )
+
+    def result(
+        outcome: str, detail: str, elapsed: float, exit_code: Optional[int], **extra
+    ) -> dict[str, Any]:
+        return {
+            "outcome": outcome,
+            "detail": detail,
+            "elapsedSeconds": round(elapsed, 3),
+            "exitCode": exit_code,
+            "processAliveAtDecision": exit_code is None,
+            "settleSeconds": settle,
+            **extra,
+        }
+
+    while True:
+        exit_code = handle.poll()
+        elapsed = clock.now() - started
+        state = sample(elapsed, exit_code)
         satisfied, detail = check_oracle(oracle, state)
 
-        if satisfied and not (needs_deadline and not deadline_reached):
-            return {
-                "outcome": "satisfied",
-                "detail": detail,
-                "elapsedSeconds": round(elapsed, 3),
-                "exitCode": exit_code,
-            }
+        if satisfied and not (needs_deadline and not state.deadline_reached):
+            if settle > 0 and exit_code is None:
+                return _settle(
+                    oracle, scratch_root, handle, clock, poll_seconds,
+                    allow_fault_exit, started, settle, detail, sample, result,
+                )
+            return result("satisfied", detail, elapsed, exit_code)
         if state.exited:
             # A dead process cannot produce new evidence.  Decide now.
-            return {
-                "outcome": "unsatisfied-process-exited",
-                "detail": detail,
-                "elapsedSeconds": round(elapsed, 3),
-                "exitCode": exit_code,
-            }
-        if deadline_reached:
-            return {
-                "outcome": "satisfied" if satisfied else "unsatisfied-timeout",
-                "detail": detail,
-                "elapsedSeconds": round(elapsed, 3),
-                "exitCode": exit_code,
-            }
+            return result(
+                "unsatisfied-process-exited", detail, elapsed, exit_code
+            )
+        if state.deadline_reached:
+            return result(
+                "satisfied" if satisfied else "unsatisfied-timeout",
+                detail,
+                elapsed,
+                exit_code,
+            )
+        clock.sleep(poll_seconds)
+
+
+def _settle(
+    oracle: dict[str, Any],
+    scratch_root: pathlib.Path,
+    handle: ProcessHandle,
+    clock: Clock,
+    poll_seconds: float,
+    allow_fault_exit: bool,
+    started: float,
+    settle: float,
+    detail: str,
+    sample: Callable[[float, Optional[int]], RunState],
+    result: Callable[..., dict[str, Any]],
+) -> dict[str, Any]:
+    """Keep watching for ``settle`` seconds after the oracle said yes.
+
+    The oracle's verdict is NOT revisited here -- what it saw, it saw.  What
+    this window buys is the fault evidence that arrives afterwards, which the
+    gate above then acts on.  A run that satisfies its oracle and dies four
+    seconds later is a run whose answer came out of a process that was already
+    falling over.
+    """
+
+    settle_started = clock.now()
+    while True:
+        exit_code = handle.poll()
+        elapsed = clock.now() - started
+        settled = clock.now() - settle_started
+        state = sample(elapsed, exit_code)
+        fault_log = state.file_size(EXCEPTION_LOG) is not None
+        classification = classify_exit_code(exit_code)
+
+        if fault_log or (classification["isFault"] and not allow_fault_exit):
+            return result(
+                "satisfied-then-faulted",
+                f"{detail}; then, {settled:.1f}s later, "
+                + (
+                    f"{EXCEPTION_LOG} appeared"
+                    if fault_log
+                    else classification["detail"]
+                ),
+                elapsed,
+                exit_code,
+                settleObserved=round(settled, 3),
+            )
+        if exit_code is not None:
+            return result(
+                "satisfied", detail, elapsed, exit_code,
+                settleObserved=round(settled, 3),
+            )
+        if settled >= settle:
+            return result(
+                "satisfied", detail, elapsed, exit_code,
+                settleObserved=round(settled, 3),
+            )
         clock.sleep(poll_seconds)
 
 
@@ -949,6 +1282,24 @@ def render_receipt(receipt: dict[str, Any]) -> str:
         add(f"- process exit code: {oracle['exitCode']}")
     add("")
 
+    gate = receipt.get("faultGate")
+    classification = receipt.get("exitClassification")
+    if gate is not None:
+        add("## Fault gate — did it finish, or did it die?")
+        add("")
+        if classification and classification.get("hex"):
+            add(f"- exit code {classification['hex']}: {classification['detail']}")
+        for trigger in gate.get("triggers", ()):
+            add(f"- trigger: {trigger}")
+        if gate["vetoed"]:
+            add("")
+            add(f"**VETOED — {gate['detail']}**")
+        elif gate["triggered"]:
+            add(f"- {gate['detail']}")
+        else:
+            add(f"- {gate['detail']}")
+        add("")
+
     diagnosis = receipt.get("diagnosis")
     if diagnosis:
         add("## Diagnosis — was this even a valid measurement?")
@@ -1151,15 +1502,30 @@ def run_probe(
             )
 
         receipt["oracle"] = wait_for_oracle(
-            probe.oracle, scratch_root, handle, clock, poll_seconds
+            probe.oracle,
+            scratch_root,
+            handle,
+            clock,
+            poll_seconds,
+            allow_fault_exit=probe.allow_fault_exit,
         )
         receipt["diagnosis"] = diagnose(scratch_root, probe.level)
         receipt["artefacts"] = collect_artefacts(
             probe, scratch_root, run_dir / "artefacts"
         )
-        receipt["verdict"] = (
-            "PASS" if receipt["oracle"]["outcome"] == "satisfied" else "FAIL"
+        receipt["exitClassification"] = classify_exit_code(
+            receipt["oracle"].get("exitCode")
         )
+        receipt["faultGate"] = apply_fault_gate(
+            probe,
+            receipt["oracle"],
+            receipt["diagnosis"],
+            receipt["exitClassification"],
+        )
+        satisfied = receipt["oracle"]["outcome"] == "satisfied"
+        if receipt["faultGate"]["vetoed"]:
+            satisfied = False
+        receipt["verdict"] = "PASS" if satisfied else "FAIL"
         receipt["status"] = "complete"
 
     except ProbeError as exc:

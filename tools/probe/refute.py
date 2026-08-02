@@ -541,6 +541,56 @@ def r13_overturn(finding: dict, cfg: dict) -> list[tuple[str, str]]:
     return []
 
 
+@rule("R16_NO_UNFILLED_PLACEHOLDERS", INADMISSIBLE,
+      "no judgement-bearing field is still an unedited placeholder")
+def r16_placeholders(finding: dict, cfg: dict) -> list[tuple[str, str]]:
+    """A half-edited skeleton must not be scored as a finding.
+
+    ``tools/probe/compare.py`` emits a finding pre-filled with everything the
+    receipts measure and leaves the rivals, the discriminator and the
+    predictions as explicit TODO text. Measured 2026-08-01: R05_RIVALS_STATED
+    and R06_DISCRIMINATOR_DISTINGUISHES both PASS on that template, because a
+    rival whose statement reads 'TODO: name a competing explanation' is a
+    non-empty string, and two different TODO sentences are two different
+    strings. The record was still caught -- by R07 and R14, which need an
+    observation nobody can fake -- but two of the rules that exist to demand a
+    real rival were agreeing with a placeholder.
+
+    An author who fills in the predictions and leaves the rivals would slip
+    exactly through that gap. This rule closes it: the marker is mechanical, so
+    the check is mechanical.
+    """
+
+    hits: list[tuple[str, str]] = []
+
+    def scan(node, path: str) -> None:
+        if isinstance(node, str):
+            if "TODO" in node:
+                hits.append(
+                    (INADMISSIBLE,
+                     f"{path} is still a placeholder: {node[:70]!r}")
+                )
+        elif isinstance(node, dict):
+            for key, value in node.items():
+                scan(value, f"{path}.{key}")
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                scan(value, f"{path}[{index}]")
+
+    # The residual that SAYS the record is an unedited skeleton is allowed to
+    # say so -- it is the skeleton being honest about itself, and deleting the
+    # word from it would make the record less true, not more.
+    for key, value in finding.items():
+        if key == "residuals":
+            for index, residual in enumerate(value or ()):
+                if residual.get("id") == "skeleton-not-edited":
+                    continue
+                scan(residual, f"$.residuals[{index}]")
+            continue
+        scan(value, f"${'.' + key}")
+    return hits[:12]
+
+
 @rule("R14_PREDICTIONS_RESOLVED", REFUTED,
       "every prediction has a recorded result, and none came back mismatch")
 def r14_results(finding: dict, cfg: dict) -> list[tuple[str, str]]:
@@ -589,10 +639,25 @@ def r15_rival_outcome(finding: dict, cfg: dict) -> list[tuple[str, str]]:
     return problems
 
 
+# REGISTERING A RULE IS NOT RUNNING IT.  The @rule decorator only adds an entry
+# to RULES, which is what the ledger and the audit read; a rule missing from
+# THIS list is listed everywhere, reported as "never fired", and silently never
+# evaluated. Measured 2026-08-01, when R16 was added and the adjudicator went on
+# reporting "11/15 rules" without it. The count assertion below is the guard.
 CHECKS = [r01_schema, r02_prediction_present, r03_in_advance, r04_could_fail,
           r05_rivals, r06_discriminates, r07_observed, r08_residual, r09_grade,
-          r10_scope, r11_specimen, r12_control, r13_overturn, r14_results,
-          r15_rival_outcome]
+          r10_scope, r11_specimen, r12_control, r13_overturn,
+          r16_placeholders, r14_results, r15_rival_outcome]
+
+_registered = {entry["id"] for entry in RULES}
+_dispatched = {check.rule_id for check in CHECKS}
+if _registered != _dispatched:  # pragma: no cover - import-time structural guard
+    raise SystemExit(
+        "refute.py is misconfigured: rules registered but never dispatched: "
+        f"{sorted(_registered - _dispatched)}; dispatched but not registered: "
+        f"{sorted(_dispatched - _registered)}. A rule in RULES and not in "
+        "CHECKS is reported to the reader and never evaluated."
+    )
 
 
 # ---------------------------------------------------------------------------

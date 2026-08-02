@@ -318,6 +318,21 @@ def _rival_won(f: dict) -> None:
     f["rivals"][0]["discriminator"]["outcome"] = "rival"
 
 
+def _rival_is_still_a_placeholder(f: dict) -> None:
+    """A half-edited skeleton from tools/probe/compare.py.
+
+    The author filled in the predictions and left the rival alone. R05 and R06
+    both PASS on this -- a TODO sentence is a non-empty string, and two
+    different TODO sentences are two different strings -- so without R16 the
+    record is judged on rules that agreed with a template.
+    """
+
+    f["rivals"][0]["statement"] = (
+        "TODO: name a competing explanation that the same evidence would also "
+        "produce."
+    )
+
+
 # One mutation per rule. The value is (mutator, expected verdict).
 MUTATIONS: dict[str, tuple] = {
     "R01_SCHEMA": (_drop_claim, refute.INADMISSIBLE),
@@ -337,6 +352,8 @@ MUTATIONS: dict[str, tuple] = {
     "R13_OVERTURN_TEST": (_nothing_could_overturn_it, refute.INADMISSIBLE),
     "R14_PREDICTIONS_RESOLVED": (_prediction_mismatched, refute.REFUTED),
     "R15_RIVAL_ELIMINATED": (_rival_won, refute.REFUTED),
+    "R16_NO_UNFILLED_PLACEHOLDERS": (_rival_is_still_a_placeholder,
+                                     refute.INADMISSIBLE),
 }
 
 

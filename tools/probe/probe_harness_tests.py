@@ -518,6 +518,229 @@ class OracleTests(HarnessCase):
 
 
 # ---------------------------------------------------------------------------
+# The fault gate — did it finish, or did it die?
+# ---------------------------------------------------------------------------
+
+
+class ExitClassificationTests(unittest.TestCase):
+    """The pure classifier, away from any run.
+
+    Both directions matter.  A gate that misses a crash manufactures false
+    accepts; a gate that calls an ordinary exit a crash gets switched off by the
+    third person it inconveniences, and then misses every crash after that.
+    """
+
+    def test_access_violation_is_a_fault(self) -> None:
+        found = ph.classify_exit_code(0xC0000005)
+        self.assertTrue(found["isFault"])
+        self.assertEqual(found["status"], "STATUS_ACCESS_VIOLATION")
+
+    def test_the_posix_style_negative_form_is_the_same_code(self) -> None:
+        """CPython reports the raw DWORD on Windows and a negative elsewhere.
+
+        -1073741819 and 3221225477 are one access violation, not two, and a
+        classifier that only knew the unsigned spelling would pass every fake,
+        every wrapper and every POSIX run straight through.
+        """
+
+        self.assertEqual(
+            ph.classify_exit_code(-1073741819)["status"],
+            ph.classify_exit_code(0xC0000005)["status"],
+        )
+
+    def test_stack_overflow_and_heap_corruption_are_faults(self) -> None:
+        self.assertTrue(ph.classify_exit_code(0xC00000FD)["isFault"])
+        self.assertTrue(ph.classify_exit_code(0xC0000374)["isFault"])
+
+    def test_an_unnamed_code_in_the_error_band_is_still_a_fault(self) -> None:
+        found = ph.classify_exit_code(0xC0009999)
+        self.assertTrue(found["isFault"])
+        self.assertIn("unnamed", found["status"])
+
+    def test_zero_is_a_clean_finish(self) -> None:
+        self.assertFalse(ph.classify_exit_code(0)["isFault"])
+
+    def test_a_small_nonzero_exit_is_not_a_fault(self) -> None:
+        """The game exiting 1 or 3 is a refusal, not a crash.
+
+        Treating it as a crash would veto every legitimate early-exit probe.
+        """
+
+        for code in (1, 2, 3, 255):
+            self.assertFalse(ph.classify_exit_code(code)["isFault"], code)
+
+    def test_the_harness_own_kill_is_not_called_an_engine_fault(self) -> None:
+        """-1 normalises to 0xFFFFFFFF, which has NTSTATUS ERROR severity.
+
+        A blanket 'severity == ERROR' rule would therefore report the harness's
+        own timeout kill as an engine crash -- a false accusation that would
+        make every hung-game receipt read like a segfault.
+        """
+
+        self.assertFalse(ph.classify_exit_code(-1)["isFault"])
+        self.assertFalse(ph.classify_exit_code(0xFFFFFFFF)["isFault"])
+
+
+class FaultGateTests(HarnessCase):
+    def test_bare_process_exit_refuses_an_access_violation(self) -> None:
+        """THE GAP THIS CLOSES.
+
+        Before 2026-08-01 this exact run reported PASS: the oracle asked only
+        'did it exit', and a process that takes an access violation exits.
+        """
+
+        receipt, _ = self.run_probe(self.probe(), [(8.0, ("exit", 0xC0000005))])
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertTrue(receipt["exitClassification"]["isFault"])
+        self.assertEqual(
+            receipt["exitClassification"]["status"], "STATUS_ACCESS_VIOLATION"
+        )
+
+    def test_bare_process_exit_refuses_the_negative_spelling_too(self) -> None:
+        receipt, _ = self.run_probe(self.probe(), [(8.0, ("exit", -1073741819))])
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertTrue(receipt["exitClassification"]["isFault"])
+
+    def test_a_clean_exit_still_passes(self) -> None:
+        """The gate must not break the ordinary case it sits in front of."""
+
+        receipt, _ = self.run_probe(self.probe(), [(3.0, ("exit", 0))])
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertFalse(receipt["faultGate"]["triggered"])
+
+    def test_a_probe_may_ask_for_the_crash_by_exact_code(self) -> None:
+        probe = self.probe(
+            oracle={
+                "kind": "processExit",
+                "expectExitCode": 0xC0000005,
+                "timeoutSeconds": 30,
+            }
+        )
+        receipt, _ = self.run_probe(probe, [(8.0, ("exit", 0xC0000005))])
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertTrue(receipt["faultGate"]["triggered"])
+        self.assertTrue(receipt["faultGate"]["optedIn"])
+        self.assertFalse(receipt["faultGate"]["vetoed"])
+
+    def test_allow_fault_exit_opts_out_of_the_gate(self) -> None:
+        probe = self.probe(allowFaultExit=True)
+        receipt, _ = self.run_probe(probe, [(8.0, ("exit", 0xC0000005))])
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertTrue(receipt["faultGate"]["optedIn"])
+
+    def test_the_gate_vetoes_a_file_appears_pass_on_a_crashed_run(self) -> None:
+        """The laundering case, and the reason the gate is above the oracle.
+
+        The console writes its file, the oracle is satisfied by that file, and
+        the engine faults a second later.  Fixing only ``processExit`` would
+        leave this run reporting PASS with a fault log sitting next to it.
+        """
+
+        probe = self.probe(
+            oracle={
+                "kind": "fileAppears",
+                "path": "data/Memory/probe_ok.txt",
+                "timeoutSeconds": 30,
+                "settleSeconds": 5,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (4.0, writes("data/Memory/probe_ok.txt", "heap report")),
+                (5.0, writes(ph.EXCEPTION_LOG, "0xC0000005 in CThing::Update\n")),
+                (6.0, ("exit", 0)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertEqual(receipt["oracle"]["outcome"], "satisfied-then-faulted")
+        self.assertTrue(receipt["faultGate"]["vetoed"])
+        self.assertIn("CRASHED", receipt["faultGate"]["detail"])
+
+    def test_without_a_settle_window_the_late_crash_is_not_observed(self) -> None:
+        """THE HONEST LIMIT, recorded on purpose rather than papered over.
+
+        Same run, no ``settleSeconds``: the oracle is satisfied the instant the
+        file appears and the harness stops looking, so the fault one second
+        later is never seen.  That is a NON-OBSERVATION, not an absence, and the
+        receipt has to say which -- ``processAliveAtDecision`` is the field that
+        stops a reader mistaking the second for the first.
+        """
+
+        probe = self.probe(
+            oracle={
+                "kind": "fileAppears",
+                "path": "data/Memory/probe_ok.txt",
+                "timeoutSeconds": 30,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (4.0, writes("data/Memory/probe_ok.txt", "heap report")),
+                (5.0, writes(ph.EXCEPTION_LOG, "0xC0000005 in CThing::Update\n")),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertTrue(receipt["oracle"]["processAliveAtDecision"])
+        self.assertEqual(receipt["oracle"]["settleSeconds"], 0)
+
+    def test_a_settle_window_that_stays_clean_still_passes(self) -> None:
+        probe = self.probe(
+            oracle={
+                "kind": "fileAppears",
+                "path": "data/Memory/probe_ok.txt",
+                "timeoutSeconds": 30,
+                "settleSeconds": 5,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe, [(4.0, writes("data/Memory/probe_ok.txt", "heap report"))]
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertEqual(receipt["oracle"]["outcome"], "satisfied")
+        self.assertGreaterEqual(receipt["oracle"]["settleObserved"], 5.0)
+
+    def test_the_exception_log_vetoes_even_on_a_zero_exit(self) -> None:
+        """BEA installs its own handler.  A handler that logs and then exits
+        cleanly produces a crash whose exit code is 0, which the code-based
+        trigger cannot see at all."""
+
+        receipt, _ = self.run_probe(
+            self.probe(),
+            [
+                (5.0, writes(ph.EXCEPTION_LOG, "fatal\n")),
+                (6.0, ("exit", 0)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertFalse(receipt["exitClassification"]["isFault"])
+        self.assertTrue(receipt["faultGate"]["vetoed"])
+
+    def test_the_fatal_fault_oracle_is_not_vetoed_by_its_own_subject(self) -> None:
+        """The poison control asks for the crash; the gate must not eat it."""
+
+        probe = self.probe(
+            oracle={"kind": "fatalFault", "timeoutSeconds": 30}, level=905
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (13.0, writes(ph.EXCEPTION_LOG, "0xC0000005 access violation\n")),
+                (14.0, ("exit", 0xC0000005)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertTrue(receipt["faultGate"]["optedIn"])
+
+    def test_the_receipt_says_the_run_crashed_in_words(self) -> None:
+        receipt, _ = self.run_probe(self.probe(), [(8.0, ("exit", 0xC0000005))])
+        rendered = ph.render_receipt(receipt)
+        self.assertIn("Fault gate", rendered)
+        self.assertIn("STATUS_ACCESS_VIOLATION", rendered)
+
+
+# ---------------------------------------------------------------------------
 # Staging, diagnosis, teardown, receipts
 # ---------------------------------------------------------------------------
 
@@ -988,6 +1211,90 @@ def _break_cwd() -> Callable[[], None]:
 
     def undo() -> None:
         ph.Probe.argv = original
+
+    return undo
+
+
+@_mutation(
+    "a fault exit code is classified as an ordinary finish",
+    [
+        "ExitClassificationTests.test_access_violation_is_a_fault",
+        "ExitClassificationTests.test_stack_overflow_and_heap_corruption_are_faults",
+        "FaultGateTests.test_bare_process_exit_refuses_an_access_violation",
+        "FaultGateTests.test_bare_process_exit_refuses_the_negative_spelling_too",
+    ],
+)
+def _break_fault_classification() -> Callable[[], None]:
+    """The pre-2026-08-01 behaviour, restored on purpose.
+
+    ``processExit`` asked 'did it exit' and nothing else, so an access violation
+    satisfied it.  If the suite stays green with this applied, nothing in it
+    actually tests the thing the campaign depends on.
+    """
+
+    original = ph.classify_exit_code
+
+    def never_a_fault(code):  # noqa: ANN001
+        found = dict(original(code))
+        found["isFault"] = False
+        found["status"] = None
+        return found
+
+    ph.classify_exit_code = never_a_fault
+
+    def undo() -> None:
+        ph.classify_exit_code = original
+
+    return undo
+
+
+@_mutation(
+    "the fault gate never vetoes a satisfied oracle",
+    [
+        "FaultGateTests.test_the_gate_vetoes_a_file_appears_pass_on_a_crashed_run",
+        "FaultGateTests.test_the_exception_log_vetoes_even_on_a_zero_exit",
+    ],
+)
+def _break_fault_gate() -> Callable[[], None]:
+    """Fix only ``processExit`` and leave every other oracle able to launder a
+    crash into a PASS.  This is the half-fix, and it must not look like the
+    whole one."""
+
+    original = ph.apply_fault_gate
+
+    def never_veto(probe, oracle_result, diagnosis, classification):  # noqa: ANN001
+        gate = dict(original(probe, oracle_result, diagnosis, classification))
+        gate["vetoed"] = False
+        return gate
+
+    ph.apply_fault_gate = never_veto
+
+    def undo() -> None:
+        ph.apply_fault_gate = original
+
+    return undo
+
+
+@_mutation(
+    "the NTSTATUS error band is unbounded, so -1 reads as a crash",
+    [
+        "ExitClassificationTests."
+        "test_the_harness_own_kill_is_not_called_an_engine_fault",
+    ],
+)
+def _break_fault_band() -> Callable[[], None]:
+    """The obvious wrong rule: severity == ERROR and nothing else.
+
+    It catches every real crash, which is why it is tempting, and it also
+    reports the harness's own timeout kill as an engine fault. A gate that
+    accuses the innocent is a gate somebody turns off.
+    """
+
+    original = ph._NTSTATUS_ERROR_BAND
+    ph._NTSTATUS_ERROR_BAND = (0xC0000000, 0x100000000)
+
+    def undo() -> None:
+        ph._NTSTATUS_ERROR_BAND = original
 
     return undo
 
