@@ -19,6 +19,47 @@ Quick start
 4. Keep the files together; do not move the executable away from the
    app folder and its support files.
 
+
+Windows will warn you about this app. Here is why, and how to check it.
+-----------------------------------------------------------------------
+
+You will probably see a blue "Windows protected your PC" box, or Windows will
+say the download is not commonly downloaded and might be dangerous.
+
+That warning is correct and expected. It does not mean anything was detected in
+this app. It means the app is not code-signed. A signing certificate costs money
+every year and has to be tied to a verified legal identity, and this is a free
+community preservation project with neither. SmartScreen also builds
+"reputation" from download counts, so a small project sits at zero regardless.
+
+You do not have to take that on faith. Check the file against the hash the
+project publishes:
+
+  1. Download the .zip and the matching .zip.sha256 file from the release page.
+  2. Open PowerShell in the folder where you saved them and run:
+
+       Get-FileHash .\<the-zip-file>.zip -Algorithm SHA256
+
+  3. Compare the Hash it prints with the value inside the .sha256 file. They
+     are the same 64 characters if the download is intact and unmodified.
+
+  A hash match proves the file is exactly what the project published. It is not
+  a promise the project is trustworthy - nothing you can compute on your own
+  machine is. It rules out the download being corrupted or tampered with in
+  transit, which is the part a hash can actually settle.
+
+To run it past the warning:
+
+  - On the blue "Windows protected your PC" box, click "More info", then
+    "Run anyway".
+  - If the ZIP itself is marked, right-click the .zip BEFORE extracting, choose
+    Properties, tick "Unblock" at the bottom, then Apply. Doing this before
+    extraction saves unblocking the files one at a time.
+
+If you would rather not do any of that, that is a completely reasonable
+decision. The source is on GitHub and it builds with the .NET SDK; the exact
+commands the project uses to build and check this package are in the repository.
+
 Licenses
 --------
 
@@ -56,9 +97,16 @@ First run
 Safety notes
 ------------
 
-- The app is designed to work on copied saves, copied options files, and
-  copied game executables for mutating workflows.
-- Do not patch an installed Steam/Program Files BEA.exe in place.
+- By default the app works on copies: copied saves, copied options files, and
+  copied game executables. Your installed game is only read.
+- You can choose to have it patch your installed game instead. When you do, it
+  copies your original BEA.exe next to it as BEA.exe.original.backup and checks
+  that copy byte for byte BEFORE it writes anything. If the backup cannot be
+  made and verified, the patch does not happen. The app can also put the
+  original back.
+- Nothing deletes your career saves as a side effect. If you remove a game copy
+  that has saves inside it, the app finds them, tells you, and offers to keep
+  them somewhere first.
 - Full game assets, raw saves, private screenshots, raw/private proof JSON,
   generated media caches, and local test outputs are not included in this ZIP
   lane.
@@ -85,6 +133,9 @@ What this package shape does not prove
 - MSIX/AppInstaller packaging.
 - Certificate signing or trust.
 - Start menu shortcuts, uninstall entries, or installer UX.
-- SmartScreen, Microsoft Store, reputation, or malware-scanner posture.
+- SmartScreen, Microsoft Store, reputation, or malware-scanner posture. The
+  section above explains what the warning means and how to check the download;
+  it does not make the warning go away, and nothing short of a signing
+  certificate would.
 - Legal/compliance approval for public binary redistribution.
 - Row-by-row media playback coverage.

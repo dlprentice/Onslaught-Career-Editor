@@ -66,6 +66,11 @@ PACKAGE_COPYRIGHT_OVERRIDES = {
 }
 PACKAGE_LICENSE_FILE_REGEX = re.compile(r"^(?:license|licence|copying|notice)(?:\..*)?$", re.IGNORECASE)
 ZIP_README_SOURCE = ROOT / "release" / "readiness" / "WINUI-ZIP-README.txt"
+# Everything in the ZIP lives under this one folder, so extracting cannot spill seven
+# entries into whatever directory the user happened to be in. Explorer's "Extract All"
+# already makes a folder; "Extract Here" in 7-Zip and dragging the contents out do not,
+# and those are the cases that leave someone with a stray app\ next to their downloads.
+PACKAGE_ROOT_DIR = "Onslaught-Toolkit"
 ROOT_LAUNCHER = "Launch Onslaught Toolkit.cmd"
 ROOT_README = "README.MD"
 ROOT_LICENSE = "LICENSE"
@@ -911,7 +916,8 @@ def create_zip(source_dir: Path, zip_path: Path) -> tuple[int, str]:
         with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as package:
             for path in sorted(source_dir.rglob("*")):
                 if path.is_file():
-                    package.write(path, path.relative_to(source_dir).as_posix())
+                    inside = path.relative_to(source_dir).as_posix()
+                    package.write(path, f"{PACKAGE_ROOT_DIR}/{inside}")
     except Exception as exc:  # pragma: no cover - defensive filesystem report
         return 1, str(exc)
     return 0, f"Created {relative(zip_path)} ({zip_path.stat().st_size} bytes)."
@@ -935,7 +941,7 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
         return [CheckResult("zip_file", "FAIL", f"{relative(zip_path)} was not created.")]
     checks.append(CheckResult("zip_file", "PASS", f"{relative(zip_path)} exists and is non-empty."))
     with zipfile.ZipFile(zip_path) as package:
-        names = set(package.namelist())
+        names = {strip_package_root(name) for name in package.namelist()}
         lore_texts = read_zip_lore_texts(package)
         lore_pack_texts = read_zip_lore_pack_texts(package)
     for filename in REQUIRED_PAYLOAD_FILES:
@@ -968,10 +974,26 @@ def inspect_zip(zip_path: Path) -> list[CheckResult]:
     return checks
 
 
+def strip_package_root(name: str) -> str:
+    """
+    A ZIP entry name as the layout checks expect it: without the wrapping folder.
+
+    Every check in this file was written against a flat root and reads far better that
+    way - `app/assets/screenshots/x.jpg`, not `Onslaught-Toolkit/app/...`. Rather than
+    teach each one about the folder, names are normalised on the way in at the few places
+    they are read. An entry that is not under the folder comes back unchanged, so a
+    malformed archive still fails the checks it should fail rather than silently passing
+    a stripped-to-nothing name.
+    """
+    normalized = name.replace("\\", "/")
+    prefix = f"{PACKAGE_ROOT_DIR}/"
+    return normalized[len(prefix):] if normalized.startswith(prefix) else normalized
+
+
 def read_zip_lore_texts(package: zipfile.ZipFile) -> dict[str, str]:
     texts: dict[str, str] = {}
     for name in package.namelist():
-        normalized = name.replace("\\", "/")
+        normalized = strip_package_root(name)
         if not normalized.startswith(f"{LORE_BOOK_DIR}/") or normalized.endswith("/"):
             continue
         suffix = Path(normalized).suffix.lower()
@@ -987,7 +1009,7 @@ def read_zip_lore_texts(package: zipfile.ZipFile) -> dict[str, str]:
 def read_zip_lore_pack_texts(package: zipfile.ZipFile) -> dict[str, str]:
     texts: dict[str, str] = {}
     for name in package.namelist():
-        normalized = name.replace("\\", "/")
+        normalized = strip_package_root(name)
         if normalized not in {LORE_PACK_INDEX_FILE, LORE_PACK_CONTENT_FILE}:
             continue
         try:
@@ -1593,8 +1615,13 @@ def main() -> int:
                 )
             )
             if extract_exit == 0:
-                checks.extend(inspect_folder(extract_dir, "extract"))
-                extracted_exe = extract_dir / APP_DIR / APP_EXE
+                # The archive wraps everything in one folder, so the tree the checks
+                # care about starts one level down. This is also the shape a user ends
+                # up with, which is the point of checking it here rather than the
+                # staging directory.
+                extracted_root = extract_dir / PACKAGE_ROOT_DIR
+                checks.extend(inspect_folder(extracted_root, "extract"))
+                extracted_exe = extracted_root / APP_DIR / APP_EXE
                 if extracted_exe.is_file():
                     launch_exit, launch_output = run_ui_test("FullyQualifiedName~WinUiLaunchSmokeTests.MainWindow_LaunchesAndShowsWinUiProductChrome", extracted_exe)
                     checks.append(

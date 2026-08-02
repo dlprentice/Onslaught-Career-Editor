@@ -157,8 +157,12 @@ not find a custom Steam library, run
 
 - Never synthesize `.bes` saves from scratch. Start from a real baseline and
   preserve file length, reserved fields, and unknown bytes.
-- Never patch an installed `BEA.exe`. Executable changes are allowed only on a
-  verified copied target or an app-created safe game copy.
+- Development work targets a verified copied target or an app-created safe game
+  copy, never your own installation. The app itself can patch a user's installed
+  game on request, and that route goes through
+  `BinaryPatchEngine.AuthorizeInstalledGameWrite`, which will not hand back
+  permission until a verified original sits beside the target — a precondition,
+  not a convention you could accidentally work around.
 - Keep game binaries, real saves, Ghidra backups/alternate projects, debugger
   transcripts, private captures, secrets, bulk extraction output, and build
   output out of Git. The reviewed canonical Ghidra project is the sole database

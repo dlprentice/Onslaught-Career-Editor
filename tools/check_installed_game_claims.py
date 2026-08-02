@@ -41,7 +41,11 @@ SKIP_PREFIXES = (
     ".artifacts/",
 )
 
-CHECKED_SUFFIXES = (".cs", ".xaml", ".md", ".MD", ".json", ".py")
+# .txt is here because the file that ships to every user - release/readiness/
+# WINUI-ZIP-README.txt - is one, and it carried a stale prohibition for months
+# BECAUSE this list did not include its extension. The guard was fine; its reach
+# was not.
+CHECKED_SUFFIXES = (".cs", ".xaml", ".md", ".MD", ".json", ".py", ".txt")
 
 # Absolute promises. Each is a sentence about the world rather than about an action.
 BANNED = [
@@ -53,6 +57,7 @@ BANNED = [
     (r"installed game (?:remains|stays) read-only", "standing promise about the installed game"),
     (r"No installed-game mutation", "app-wide claim in something that describes one profile"),
     (r"it does not edit that folder", "standing promise about the configured folder"),
+    (r"(?:Never|Do not|Don't) patch an installed", "prohibition the app no longer honours"),
 ]
 
 # Where the banned text is legitimate, and why. A file is only exempt for the reason given.
@@ -121,6 +126,8 @@ def self_test() -> int:
         ("- Never mutate an installed game or synthesize a save.", True),
         ("No installed-game mutation.", True),
         ("it does not edit that folder", True),
+        ("- Never patch an installed `BEA.exe`.", True),
+        ("Do not patch an installed Steam/Program Files BEA.exe in place.", True),
         # These describe one action and stay true.
         ("Creating a safe copy changes nothing outside the safe copy.", False),
         ("Your installed game is never opened.", False),
