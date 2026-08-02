@@ -457,7 +457,7 @@
       "_predictions_registered_in_advance": "in the tracked manifests tools/probe/probes.campaign-0N.json, committed BEFORE each first launch: 9a1898e1, ef218b67, 70061985",
       "campaign_01": "10 runs. Poison sound. Within-arm decision-time spread 4.0s (P4 held). P3 falsified: a console command after Lose still runs.",
       "campaign_02": "12 runs. Lose is INDISTINGUISHABLE from ZZNOTACOMMAND, a command that does not exist, on every available measure -- the rival won and the nicer-sounding claim died. Unpredicted: Win never exits.",
-      "campaign_03": "confirms the Win result with the prediction registered first, and asks whether a console command can do SYNCHRONOUS work (BuildStaticShadows / BuildLandscapeCache)."
+      "campaign_03": "15 runs. W1/W2 CONFIRMED with predictions registered in advance at 70061985: winconf FAIL 3/3 self-exit 0.0 (all at the 120s deadline, no fault, no exception log, level load logged -- alive and waiting, not crashed); loseconf PASS 3/3 self-exit 1.0 at 12-14s. B1 FALSIFIED as stated: BuildStaticShadows left MemStats byte-identical. HEADLINE: BuildLandscapeCache ACCESS-VIOLATES 3/3 (0xC0000005, OnslaughtException.txt written at 0 bytes, MemStats-after never runs). BuildStaticShadows in the same position is clean 3/3."
     },
     "measured_facts_do_not_re_derive": {
       "bea_exit_code_is_noise": "Four BYTE-IDENTICAL baseline runs returned 0x80000001, 0x80000001, 1, 1. Across 3 campaigns the same input gives 0, 1 and 0x80000001 with no exception log. expectExitCode is useless against BEA. DO NOT widen the NTSTATUS fault band to the warning-severity range to \"catch\" 0x80000001 -- an adversarial review recommended exactly that on correct Windows semantics and it would veto ~30% of all clean runs.",
@@ -471,6 +471,24 @@
       "addressable_dark_after_the_d3dx_correction": "203,645 bytes, down from 432,429 before the library band was applied",
       "reachable_without_elevation": "about 21,000 bytes of it. Everything else needs the maintainer’s elevated window for TTD."
     },
-    "needs_the_maintainer": "TTD recording only. Open one elevated PowerShell window and the coverage-delta half of the campaign becomes runnable; console probes need nothing."
+    "needs_the_maintainer": "TTD recording only. Open one elevated PowerShell window and the coverage-delta half of the campaign becomes runnable; console probes need nothing.",
+    "headline_result": {
+      "what": "BuildLandscapeCache from autoexec.con access-violates 3/3 at level 100. One line, no elevation, fully deterministic.",
+      "why_it_matters": "It is the ideal first TTD target the moment an elevated window exists: a trace ending in a known access violation yields the fault address, the call path into the landscape bake, and the exception path -- all three dark across every one of the 69 coverage indexes.",
+      "repro": "tools/probe/probes.campaign-03.json, arm landscape-r1..r3",
+      "caveat": "This machine, this GPU, this driver, level 100. A bake path is exactly the kind of code that is hardware-conditional."
+    },
+    "finding_survived": "local-lab/findings/win-blocks-exit-2026-08-02.json -- SURVIVED through refute.py, 15/16 rules. Win from autoexec leaves the process running past a subsequent Quit; Lose does not; base rate of non-exit elsewhere 0/19. ONE JUDGEMENT CALL TO CHECK: campaign 02 prediction Q1 was moved out of the predictions array into a residual, on the argument that Q1 is the claim’s negation so its mismatch supports the claim. That move is the difference between REFUTED and SURVIVED. Full text and reasoning preserved in the record; overrule it if you disagree.",
+    "coverage_delta_VERIFIED": {
+      "_note": "Not from the console campaigns -- they produce no coverage. This is the ledger over the three level-521 combat takes David recorded, rebuilt and re-derived by hand rather than taken from a subagent report.",
+      "before": "local-lab/re-ledger/coverage-ledger-2026-08-02-base",
+      "after": "local-lab/re-ledger/coverage-ledger-2026-08-02-plus-combat",
+      "observed_bytes": "886,583 -> 905,016  (+18,433)",
+      "observed_pct": "45.9580% -> 46.9135%  (+0.9555 pp)",
+      "observed_functions": "3,813 -> 3,889  (+76)",
+      "new_bodies_vs_deepened": "76 new bodies (13,106 hull bytes) vs 108 deepened (9,645 bytes) -- the first number is the one that means new territory",
+      "newly_named": "CBattleEngine__GetLaunchPosition 1888b; CInfantryUnit__VFunc39_HandleCollisionDamageReaction 1257b; CBattleEngineWalkerPart__WeaponFired 823b; CBattleEngine__Morph 769b; CGame__ReceiveButtonAction 705b; CInfantryUnit__VFunc49_HandleDeathPickupAndEffects 671b; CBattleEngine__BuildInterpolatedWorldTransform 509b; CBattleEngineWalkerPart__ChargeWeapon 439b; CBattleEngineJetPart__WeaponFired 339b",
+      "what_it_supports": "Three SHORT combat takes lit the morph transform, weapon fire on two chassis, and the collision-damage and death handlers. Direct empirical support for the isolated-scenario thesis."
+    }
   }
 }
