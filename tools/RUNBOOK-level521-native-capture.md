@@ -14,6 +14,35 @@ command that tells you afterwards whether it worked.
 
 # Runbook: capture the level-521 script natives
 
+> **CORRECTION 2026-08-02, MEASURED — READ BEFORE SIZING ANY TAKE.**
+> **TTD slows the game about 62×.** A 301-second recording of this level
+> captured **97 simulation ticks = 4.85 seconds of game time**. Measured four
+> independent ways (UpdateAutoAim 97, GetInterpolatedAutoAimPos 98,
+> CHiveBossGuide::VFunc_3 97, Walker+Jet Move 95+2=97), with retail's own clock
+> confirming 20 Hz (`mLastDamageTime` steps by exactly 0.05 s). Evidence:
+> `local-lab/TTD-COMBAT-TRACES-2026-08-02.md`.
+>
+> **Every duration in this runbook was written in RECORDED seconds and is
+> therefore wildly optimistic about what it captures.** The real conversion:
+>
+> | you record | you capture |
+> | --- | --- |
+> | 60 s | ~1 s of game time |
+> | 300 s | ~5 s of game time |
+> | ~62 min, ~164 GiB | 60 s of game time |
+>
+> **Consequences for how to run this session.** The one-shot triggers below are
+> still worth catching, because a trigger is an instant, not a duration — but
+> anything described here as "wait and watch" does not work: the boss cascade's
+> ~60 s of scripted `Pause` calls would need roughly an hour of recording and
+> would blow the 32 GiB cap first. `PlayAnimationWait` was recorded as a miss in
+> the 2026-08-02 session and that is NOT an anomaly — the take was ~5 s of game
+> time and the animation fires 25–60 s in.
+>
+> **What actually works:** start recording IMMEDIATELY before the instant you
+> care about, keep takes SHORT, and take many of them. Sizing by wall clock is
+> the mistake; size by the number of game ticks you need.
+
 ## 1. Why this session exists
 
 Fifty-one of the 144 MissionScript natives are written into the shipped mission
