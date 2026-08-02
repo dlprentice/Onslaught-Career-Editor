@@ -4234,13 +4234,44 @@ def ingest_ttd_receipt(
     trace_path = pathlib.Path(trace_value)
     trace_exists = trace_path.is_file()
     trace_size_matches = trace_exists and trace_path.stat().st_size == trace_bytes
-    declared_trace_hash = str(payload.get("traceSha256", "")).upper()
+    declared_trace_hash = str(payload.get("traceSha256") or "").upper()
     trace_hash_declared = bool(re.fullmatch(r"[0-9A-F]{64}", declared_trace_hash))
-    if schema == "ttd-record-receipt.v3" and not trace_hash_declared:
+    # A DEFERRED HASH IS AN HONEST ABSENCE, NOT A MATCH.
+    #
+    # tools/ttd_record.ps1 writes a receipt with traceSha256 = null when the
+    # trace was demonstrably finished but TTD still held the file at the end of
+    # the unlock budget.  Refusing that receipt outright would put us back where
+    # the defect started - a valid trace with no pipeline record - so it is
+    # ingested, but it can never be COMPLETE and its null can never satisfy a
+    # hash comparison.  The deferral must be DECLARED: a v3 receipt whose hash is
+    # merely missing is still a malformed receipt and is still refused.
+    hash_state = str(payload.get("traceHashState") or "").strip()
+    deferral = payload.get("hashDeferred")
+    trace_hash_deferred = hash_state == "deferred"
+    if trace_hash_deferred and trace_hash_declared:
+        raise ParityLabError(
+            f"TTD receipt declares a deferred trace hash and carries one too: {path}"
+        )
+    if trace_hash_deferred and not isinstance(deferral, dict):
+        raise ParityLabError(
+            f"TTD receipt defers its trace hash without a hashDeferred block: {path}"
+        )
+    if not trace_hash_deferred and isinstance(deferral, dict):
+        raise ParityLabError(
+            "TTD receipt carries a hashDeferred block without "
+            f"traceHashState 'deferred': {path}"
+        )
+    if (
+        schema == "ttd-record-receipt.v3"
+        and not trace_hash_declared
+        and not trace_hash_deferred
+    ):
         raise ParityLabError(f"TTD v3 receipt lacks a valid traceSha256: {path}")
     current_trace_hash = sha256_file(trace_path) if trace_size_matches else ""
     trace_hash_matches = (
-        trace_hash_declared and current_trace_hash == declared_trace_hash
+        trace_hash_declared
+        and not trace_hash_deferred
+        and current_trace_hash == declared_trace_hash
     )
     trace_artifact = (
         {
@@ -4272,6 +4303,7 @@ def ingest_ttd_receipt(
             payload.get("guestRanCleanly") is True
             and trace_size_matches
             and trace_hash_matches
+            and not trace_hash_deferred
             and not stopped_at_cap
             and not runaway_duration
         )
@@ -4317,6 +4349,13 @@ def ingest_ttd_receipt(
         "traceSha256": declared_trace_hash or None,
         "traceHashDeclared": trace_hash_declared,
         "traceHashMatches": trace_hash_matches,
+        "traceHashState": (
+            hash_state or ("present" if trace_hash_declared else "absent")
+        ),
+        "traceHashDeferred": trace_hash_deferred,
+        "traceHashDeferredReason": (
+            str(deferral.get("reason")) if isinstance(deferral, dict) else None
+        ),
         "traceArtifact": trace_artifact,
         "stoppedAtOrBeyondCap": stopped_at_cap,
         "runawayDuration": runaway_duration,
@@ -5690,6 +5729,14 @@ def run_capture_bundle(args: argparse.Namespace) -> int:
             for row in ttd_receipts
             if row.get("traceFile") and isinstance(row.get("traceBytes"), int)
         }
+        # A deferred receipt carries no hash, so it can never key-match a query
+        # result (which always carries one).  That already fails closed; naming
+        # the deferral turns an opaque linkage failure into a one-command fix.
+        deferred_receipt_traces = {
+            windows_path_key(row["traceFile"])
+            for row in ttd_receipts
+            if row.get("traceHashDeferred") and row.get("traceFile")
+        }
         for result in ttd_results:
             key = (
                 windows_path_key(str(result.get("trace", ""))),
@@ -5697,9 +5744,18 @@ def run_capture_bundle(args: argparse.Namespace) -> int:
                 str(result.get("traceSha256") or "").upper(),
             )
             if key not in receipt_traces:
-                linkage_mismatches.append(
-                    f"TTD query {result['path']} is not linked to an ingested receipt"
-                )
+                if windows_path_key(str(result.get("trace", ""))) in (
+                    deferred_receipt_traces
+                ):
+                    linkage_mismatches.append(
+                        f"TTD query {result['path']} names a trace whose recorder "
+                        "receipt defers its hash; complete it with "
+                        "tools/ttd_record.ps1 -HashOnly before linking"
+                    )
+                else:
+                    linkage_mismatches.append(
+                        f"TTD query {result['path']} is not linked to an ingested receipt"
+                    )
 
     coverage_receipts_by_hash: dict[str, list[dict[str, Any]]] = defaultdict(list)
     coverages_by_hash: dict[str, list[dict[str, Any]]] = defaultdict(list)

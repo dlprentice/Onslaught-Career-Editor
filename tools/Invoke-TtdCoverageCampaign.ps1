@@ -158,6 +158,58 @@ function Get-UInt64Field {
     return [uint64]::Parse($text)
 }
 
+function Resolve-RecorderTraceHash {
+    # THE RECORDER RECEIPT'S TRACE HASH, ADJUDICATED FAIL-CLOSED.
+    #
+    # tools/ttd_record.ps1 may now write a receipt whose traceSha256 is null,
+    # when the trace was demonstrably finished but TTD still held the file at the
+    # end of the unlock budget.  That receipt is honestly marked
+    # traceHashState = 'deferred' with a hashDeferred block, and it exists so a
+    # valid trace does not vanish from the pipeline - not so the null can stand
+    # in for a hash.
+    #
+    # An absent hash and a deferred hash are BOTH unusable here.  The difference
+    # is only in what the operator is told to do about it.
+    param([Parameter(Mandatory = $true)]$Receipt)
+
+    $rawHash = Get-Field -Owner $Receipt -Name 'traceSha256'
+    $hash = if ($null -eq $rawHash) { '' } else { ([string]$rawHash).Trim() }
+    $rawState = Get-Field -Owner $Receipt -Name 'traceHashState'
+    $declaredState = if ($null -eq $rawState) { '' } else { ([string]$rawState).Trim() }
+    $hasDeferral = ($null -ne (Get-Field -Owner $Receipt -Name 'hashDeferred'))
+    $looksReal = [bool]($hash -match '^[0-9A-Fa-f]{64}$')
+
+    $state =
+        if ($looksReal -and ($declaredState -ceq 'deferred' -or $hasDeferral)) { 'contradictory' }
+        elseif ($looksReal) { 'present' }
+        elseif ($declaredState -ceq 'deferred') { 'deferred' }
+        elseif ($hasDeferral) { 'contradictory' }
+        else { 'absent' }
+
+    $reason =
+        if ($state -ceq 'present') { '' }
+        elseif ($state -ceq 'deferred') {
+            'recorder receipt defers its trace hash (traceHashState=deferred); ' +
+            'complete it with tools/ttd_record.ps1 -HashOnly -TraceDirectory ' +
+            '<trace dir> before collecting coverage'
+        }
+        elseif ($state -ceq 'contradictory') {
+            "recorder receipt contradicts itself about its trace hash " +
+            "(traceHashState='$declaredState', hash present=$looksReal, " +
+            "hashDeferred block=$hasDeferral)"
+        }
+        else {
+            'recorder receipt has no usable traceSha256'
+        }
+
+    return [pscustomobject]@{
+        state  = $state
+        sha256 = if ($state -ceq 'present') { $hash.ToUpperInvariant() } else { $null }
+        usable = ($state -ceq 'present')
+        reason = $reason
+    }
+}
+
 function Get-ReceiptExitCode {
     # The wrapper's RESOLVED exit code: what the run actually amounts to after
     # the terminal-stop adjudication.  Falls back to the collector's raw code
@@ -449,9 +501,9 @@ foreach ($directory in $selected) {
         $expectAliveAtStop = ($guestOutcome -ceq 'alive-at-stop')
         $record['guestOutcome'] = $guestOutcome
         $record['expectAliveAtStop'] = $expectAliveAtStop
-        $traceSha = $recorder.PSObject.Properties['traceSha256']
-        $record['recordedTraceSha256'] =
-            if ($null -ne $traceSha) { [string]$traceSha.Value } else { $null }
+        $recordedHash = Resolve-RecorderTraceHash -Receipt $recorder
+        $record['recordedTraceSha256'] = $recordedHash.sha256
+        $record['recordedTraceHashState'] = $recordedHash.state
 
         # RESUME.  An output directory that already holds a receipt decides
         # this level - acceptable or not - and is never re-run.
@@ -521,6 +573,26 @@ foreach ($directory in $selected) {
             # that; it does not go and collect it.
             $record['status'] = 'blocked'
             $record['reason'] = 'no coverage output directory to rebuild from'
+            $counts['blocked']++
+            Write-CampaignLine -Record $record | Out-Null
+            Write-Host ("  {0}: BLOCKED - {1}" -f $level, $record['reason'])
+            continue
+        }
+
+        # FAIL CLOSED ON A RECORDER RECEIPT THAT CANNOT NAME ITS TRACE.
+        #
+        # Deliberately AFTER the resume block above: a level already collected
+        # against a hash that was usable at the time keeps its result.  This
+        # gates only a FRESH collection, where publishing coverage attributed to
+        # a trace the receipt cannot identify would put an unbindable artefact
+        # into the evidence store.
+        #
+        # A deferred hash is recoverable without re-recording, and the reason
+        # string carries the exact command, so a blocked level is one repair away
+        # from collecting on the next resume pass.
+        if (-not $recordedHash.usable) {
+            $record['status'] = 'blocked'
+            $record['reason'] = $recordedHash.reason
             $counts['blocked']++
             Write-CampaignLine -Record $record | Out-Null
             Write-Host ("  {0}: BLOCKED - {1}" -f $level, $record['reason'])

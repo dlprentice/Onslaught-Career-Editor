@@ -4,12 +4,17 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import pathlib
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import parity_lab  # noqa: E402
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -1553,14 +1558,27 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
 
     LEVELS = ("level100", "level700", "level742")
 
+    @staticmethod
+    def fake_trace_hash(level: str) -> str:
+        """A 64-hex stand-in.  The shape is load-bearing.
+
+        The runner now refuses a recorder receipt whose traceSha256 is not a
+        real hash, so a fixture that writes 'FAKELEVEL100' would be exercising
+        the refusal instead of the path under test.
+        """
+
+        return (level.upper().encode("ascii").hex() + "0" * 64)[:64].upper()
+
     def build_sandbox(
         self,
         root: pathlib.Path,
         outcomes: dict[str, str] | None = None,
         levels: tuple[str, ...] | None = None,
         descending_sizes: bool = False,
+        hash_states: dict[str, str] | None = None,
     ) -> dict[str, pathlib.Path]:
         outcomes = outcomes or {}
+        hash_states = hash_states or {}
         levels = levels or self.LEVELS
         traces = root / "traces"
         traces.mkdir(parents=True)
@@ -1573,18 +1591,35 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
             # test can tell which one the runner actually used.
             span = len(levels) - 1 - index if descending_sizes else index
             (directory / f"{name}.run").write_bytes(b"x" * (16 + span))
+            receipt = {
+                "schemaVersion": "ttd-record-receipt.v3",
+                "name": name,
+                "guestOutcome": outcomes.get(level, "alive-at-stop"),
+                "guestRanCleanly": True,
+                "traceSha256": self.fake_trace_hash(level),
+                "traceHashState": "present",
+                "hashDeferred": None,
+                "traceBytes": 16 + index,
+            }
+            state = hash_states.get(level)
+            if state == "deferred":
+                receipt["traceSha256"] = None
+                receipt["traceHashState"] = "deferred"
+                receipt["hashDeferred"] = {
+                    "reason": "trace-file-locked-after-completion",
+                    "traceFile": str(directory / f"{name}.run"),
+                    "traceBytes": 16 + index,
+                    "timeoutSeconds": 300,
+                    "waitedSeconds": 300.0,
+                }
+            elif state == "contradictory":
+                # A hash AND a deferral: the receipt disagrees with itself.
+                receipt["traceHashState"] = "deferred"
+            elif state == "absent":
+                receipt["traceSha256"] = None
+                receipt["traceHashState"] = "no-trace"
             (directory / "receipt.json").write_text(
-                json.dumps(
-                    {
-                        "schemaVersion": "ttd-record-receipt.v3",
-                        "name": name,
-                        "guestOutcome": outcomes.get(level, "alive-at-stop"),
-                        "guestRanCleanly": True,
-                        "traceSha256": f"FAKE{level.upper()}",
-                        "traceBytes": 16 + index,
-                    }
-                ),
-                encoding="utf-8",
+                json.dumps(receipt), encoding="utf-8"
             )
         target = root / "BEA.exe"
         target.write_bytes(b"MZ fake target")
@@ -1945,6 +1980,88 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
                 self.assertNotIn("level-opening-3m-v1-level100", calls)
                 self.assertEqual(2, len(calls))
 
+    def test_a_deferred_recorder_hash_blocks_the_level_it_belongs_to(self) -> None:
+        # The receipt now EXISTS for a locked-out trace, which is the fix.  What
+        # must not follow is coverage being collected and published against a
+        # trace whose own receipt cannot name it.
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(
+                pathlib.Path(temporary), hash_states={"level100": "deferred"}
+            )
+            completed = self.run_campaign(paths)
+            self.assertEqual(1, completed.returncode, completed.stdout)
+            records = self.trace_records(paths["output"])
+            blocked = records["level-opening-3m-v1-level100"]
+            self.assertEqual("blocked", blocked["status"])
+            self.assertEqual("deferred", blocked["recordedTraceHashState"])
+            self.assertIsNone(blocked["recordedTraceSha256"])
+            # The block is one command from being cleared, and says which.
+            self.assertIn("-HashOnly", blocked["reason"])
+
+            # Blocked, not aborted, and the wrapper was never invoked for it.
+            self.assertEqual("ok", records["level-opening-3m-v1-level742"]["status"])
+            calls = [row["level"] for row in self.invocations(paths)]
+            self.assertNotIn("level-opening-3m-v1-level100", calls)
+            self.assertEqual(2, len(calls))
+
+    def test_a_self_contradicting_recorder_hash_is_blocked_too(self) -> None:
+        for state, fragment in (
+            ("contradictory", "contradicts itself"),
+            ("absent", "no usable traceSha256"),
+        ):
+            with self.subTest(receipt=state), tempfile.TemporaryDirectory() as t:
+                paths = self.build_sandbox(
+                    pathlib.Path(t), hash_states={"level100": state}
+                )
+                completed = self.run_campaign(paths)
+                self.assertEqual(1, completed.returncode, completed.stdout)
+                records = self.trace_records(paths["output"])
+                blocked = records["level-opening-3m-v1-level100"]
+                self.assertEqual("blocked", blocked["status"])
+                self.assertIn(fragment, blocked["reason"])
+                self.assertIsNone(blocked["recordedTraceSha256"])
+
+    def test_a_usable_recorder_hash_is_recorded_normalised(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            completed = self.run_campaign(paths)
+            self.assertEqual(0, completed.returncode, completed.stdout)
+            record = self.trace_records(paths["output"])[
+                "level-opening-3m-v1-level100"
+            ]
+            self.assertEqual("present", record["recordedTraceHashState"])
+            self.assertEqual(
+                self.fake_trace_hash("level100"), record["recordedTraceSha256"]
+            )
+
+    def test_a_level_already_collected_is_not_re_blocked_by_a_later_deferral(
+        self,
+    ) -> None:
+        # The gate gates a FRESH collection.  A level whose coverage was already
+        # produced keeps its result: re-litigating a finished run on the state of
+        # a receipt read afterwards would throw away good evidence.
+        with tempfile.TemporaryDirectory() as temporary:
+            paths = self.build_sandbox(pathlib.Path(temporary))
+            first = self.run_campaign(paths)
+            self.assertEqual(0, first.returncode, first.stdout)
+
+            receipt_path = (
+                paths["traces"] / "level-opening-3m-v1-level100" / "receipt.json"
+            )
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["traceSha256"] = None
+            receipt["traceHashState"] = "deferred"
+            receipt["hashDeferred"] = {"reason": "trace-file-locked-after-completion"}
+            receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+            second = self.run_campaign(paths)
+            self.assertEqual(0, second.returncode, second.stdout)
+            record = self.trace_records(paths["output"])[
+                "level-opening-3m-v1-level100"
+            ]
+            self.assertEqual("skipped", record["status"])
+            self.assertEqual("deferred", record["recordedTraceHashState"])
+
     def test_max_traces_bounds_the_pass(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             paths = self.build_sandbox(pathlib.Path(temporary))
@@ -2157,6 +2274,555 @@ class TtdCoverageCampaignContractTests(unittest.TestCase):
                 "TTD Replay 1.11.584.0 freezes those counters (#149)",
             )
         self.assertIn("steps_executed is not evidence", campaign)
+
+
+class TtdHashDeferralContractTests(unittest.TestCase):
+    """A finished trace must never be lost to a failed hash.
+
+    Measured 2026-08-02: takes 1 and 2 of level521-native-20260802-0018 finished
+    tracing, wrote both completion markers, and were then thrown away by a FIXED
+    180 s unlock wait that expired while TTD still held the 3.19 GB and 3.53 GB
+    files on the USB-attached G:.  Both receipts had to be reconstructed by hand.
+    Take 4 of the same session, 13.5 GB, hashed fine - so this is a race, not a
+    size threshold, and raising the constant would not have been a fix.
+    """
+
+    LOCK_TIMEOUT_SECONDS = 2
+
+    # Sizes that actually occurred, so the scaling is judged against the run it
+    # was written for rather than against round numbers.
+    TAKE1_BYTES = 3187671040
+    TAKE4_BYTES = 13500000000
+
+    def lift(self, names: tuple[str, ...], body: str) -> subprocess.CompletedProcess:
+        command = "$ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; "
+        for name in names:
+            command += lift_function(name, RECORDER)
+        command += body
+        return subprocess.run(
+            ["pwsh", "-NoLogo", "-NoProfile", "-Command", command],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    def budget(self, trace_bytes: int, extra: str = "") -> int:
+        completed = self.lift(
+            ("Get-TraceUnlockTimeoutSeconds",),
+            f"Write-Output (Get-TraceUnlockTimeoutSeconds -TraceBytes {trace_bytes}"
+            f"{extra})",
+        )
+        self.assertEqual(
+            0, completed.returncode, completed.stdout + completed.stderr
+        )
+        return int(completed.stdout.strip())
+
+    def test_the_unlock_budget_scales_with_the_artefact(self) -> None:
+        floor = self.budget(0)
+        take1 = self.budget(self.TAKE1_BYTES)
+        take4 = self.budget(self.TAKE4_BYTES)
+
+        # A 40x size range cannot share one number.  This is the whole defect.
+        self.assertGreater(take1, floor)
+        self.assertGreater(take4, take1)
+
+        # And it is generous where the old constant was not: take1 died at 180 s.
+        self.assertGreater(take1, 180)
+        self.assertGreaterEqual(floor, 180)
+
+        # Monotone, so a bigger trace is never given a smaller budget.
+        ladder = [self.budget(size) for size in (0, 1 << 20, 1 << 30, 8 << 30)]
+        self.assertEqual(ladder, sorted(ladder))
+
+    def test_the_budget_has_a_floor_and_a_cap(self) -> None:
+        # A tiny trace gets essentially the fixed finalisation allowance: the
+        # per-GiB term contributes nothing measurable below a GiB ...
+        self.assertLessEqual(self.budget(1024) - self.budget(0), 1)
+        # ... and an absurd one is capped, so a genuinely stuck writer is still
+        # reportable rather than an unbounded hang.
+        self.assertEqual(self.budget(1 << 50), self.budget(1 << 51))
+        self.assertLessEqual(self.budget(1 << 50), 3600)
+
+    def test_the_budget_refuses_incoherent_policy(self) -> None:
+        for extra in (
+            " -FloorSeconds 600 -MaxSeconds 300",
+            " -FloorSeconds 0",
+            " -SecondsPerGiB -1",
+        ):
+            with self.subTest(policy=extra):
+                completed = self.lift(
+                    ("Get-TraceUnlockTimeoutSeconds",),
+                    "try { Get-TraceUnlockTimeoutSeconds -TraceBytes 1024"
+                    + extra
+                    + "; Write-Output 'ACCEPTED' } catch { Write-Output 'REFUSED' }",
+                )
+                self.assertIn("REFUSED", completed.stdout)
+
+    def test_a_locked_trace_is_reported_not_thrown(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            trace = pathlib.Path(temporary) / "locked.run"
+            trace.write_bytes(b"T" * 4096)
+            literal = str(trace).replace("'", "''")
+            # A real sharing violation: the handle denies read sharing for the
+            # whole call, exactly as TTD's writer does while it finalises.
+            completed = self.lift(
+                ("Wait-TtdTraceUnlock",),
+                "$held = [IO.File]::Open('"
+                + literal
+                + "', [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, "
+                "[IO.FileShare]::None); "
+                "try { $result = Wait-TtdTraceUnlock -Path '"
+                + literal
+                + f"' -TimeoutSeconds {self.LOCK_TIMEOUT_SECONDS} "
+                "-PollMilliseconds 100 } finally { $held.Dispose() }; "
+                "Write-Output ($result | ConvertTo-Json -Compress)",
+            )
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+            result = json.loads(completed.stdout)
+            self.assertFalse(result["unlocked"])
+            self.assertGreaterEqual(
+                result["waitedSeconds"], self.LOCK_TIMEOUT_SECONDS
+            )
+            self.assertEqual(self.LOCK_TIMEOUT_SECONDS, result["timeoutSeconds"])
+            self.assertTrue(result["lastError"])
+
+    def test_an_unlocked_trace_returns_at_once_despite_a_huge_budget(self) -> None:
+        # The generous deadline must cost nothing on the common case: the poll
+        # returns the instant the handle is free, so a small trace is not made
+        # to wait for a budget sized for a 13 GB one.
+        with tempfile.TemporaryDirectory() as temporary:
+            trace = pathlib.Path(temporary) / "free.run"
+            trace.write_bytes(b"T" * 4096)
+            literal = str(trace).replace("'", "''")
+            completed = self.lift(
+                ("Wait-TtdTraceUnlock",),
+                "$result = Wait-TtdTraceUnlock -Path '"
+                + literal
+                + "' -TimeoutSeconds 3600; "
+                "Write-Output ($result | ConvertTo-Json -Compress)",
+            )
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+            result = json.loads(completed.stdout)
+            self.assertTrue(result["unlocked"])
+            self.assertLess(result["waitedSeconds"], 5)
+
+    def test_completion_needs_both_of_ttds_own_markers(self) -> None:
+        # Verbatim tail of the take-1 .out file, which is the evidence that
+        # licensed reconstructing that receipt by hand.
+        real_tail = (
+            "Tracing started at: Sun Aug  2 00:19:30 2026 (UTC)`n"
+            "Simulation time of '' (x86): 58594ms.`n"
+            "Tracing completed at: Sun Aug  2 00:20:29 2026 (UTC)`n"
+            "Trace dumped to G:\\bea-ttd\\take1\\take1.run"
+        )
+        cases = {
+            "both markers (real take-1 tail)": (real_tail, True),
+            "completed only": ("Tracing completed at: Sun Aug  2", False),
+            "dumped only": ("Trace dumped to G:\\x.run", False),
+            "neither": ("Initializing Time Travel Debugging", False),
+            "empty": ("", False),
+        }
+        for label, (text, expected) in cases.items():
+            with self.subTest(out=label):
+                completed = self.lift(
+                    ("Get-TtdCompletionMarkers",),
+                    '$markers = Get-TtdCompletionMarkers -OutText "'
+                    + text
+                    + '"; Write-Output ($markers | ConvertTo-Json -Compress)',
+                )
+                self.assertEqual(
+                    0, completed.returncode, completed.stdout + completed.stderr
+                )
+                markers = json.loads(completed.stdout)
+                self.assertEqual(expected, markers["traceFinalised"])
+
+    def test_the_recorder_defers_the_hash_instead_of_discarding_the_receipt(
+        self,
+    ) -> None:
+        recorder = read(RECORDER)
+
+        # The fixed wait that cost two receipts is gone, in both its forms.
+        self.assertNotIn("(Get-Date).AddSeconds(180)", recorder)
+        self.assertNotIn("still locked 180 s after tracing completed", recorder)
+
+        # The budget is computed from the artefact ...
+        self.assertIn("Get-TraceUnlockTimeoutSeconds `", recorder)
+        self.assertIn("-TraceBytes $final", recorder)
+
+        # ... and expiring it writes a deferred receipt rather than throwing.
+        self.assertIn("elseif ($completionMarkers.traceFinalised) {", recorder)
+        self.assertIn("$traceHashState = 'deferred'", recorder)
+        self.assertIn("$hashDeferred = New-TtdHashDeferral `", recorder)
+        self.assertIn("traceHashState       = $traceHashState", recorder)
+        self.assertIn("hashDeferred         = $hashDeferred", recorder)
+
+        # The deferral is LICENSED BY EVIDENCE.  A locked trace with no
+        # completion markers still refuses to write anything - and the refusal
+        # must be a Fail, not a warning.  Asserting the message alone would be
+        # satisfied by code that prints it and carries on.
+        self.assertIn("cannot be certified complete and no receipt is written", recorder)
+        self.assertIn(
+            "        Fail (\n"
+            '            "TTD trace file was still locked after '
+            '$($unlock.waitedSeconds) s of a " +',
+            recorder,
+        )
+
+        # Degraded, not clean, and not a failure: its own exit code.
+        self.assertIn("if ($traceHashState -ceq 'deferred') {", recorder)
+        self.assertIn("exit 8", recorder)
+
+        # The deferral branch is reached only after the unlocked branch, so a
+        # trace that CAN be hashed always is.
+        self.assertLess(
+            recorder.index("$traceHashState = 'present'"),
+            recorder.index("$traceHashState = 'deferred'"),
+        )
+
+    def test_a_deferral_block_names_its_reason_and_its_repair(self) -> None:
+        completed = self.lift(
+            ("New-TtdHashDeferral", "Get-TtdCompletionMarkers"),
+            '$markers = Get-TtdCompletionMarkers -OutText "Tracing completed at: x'
+            '`nTrace dumped to y"; '
+            "$block = New-TtdHashDeferral "
+            "-Reason 'trace-file-locked-after-completion' "
+            "-TraceFile 'G:\\bea-ttd\\t\\t.run' -TraceBytes 3187671040 "
+            "-TimeoutSeconds 657 -WaitedSeconds 657.4 -Markers $markers "
+            "-OutFile 'G:\\bea-ttd\\t\\t.out' -Detail 'used by another process' "
+            "-RepairCommand 'pwsh -File ttd_record.ps1 -HashOnly'; "
+            "Write-Output ($block | ConvertTo-Json -Compress -Depth 6)",
+        )
+        self.assertEqual(
+            0, completed.returncode, completed.stdout + completed.stderr
+        )
+        block = json.loads(completed.stdout)
+        self.assertEqual("trace-file-locked-after-completion", block["reason"])
+        self.assertEqual(3187671040, block["traceBytes"])
+        self.assertEqual(657, block["timeoutSeconds"])
+        self.assertIn("-HashOnly", block["repairCommand"])
+        self.assertTrue(block["completionEvidence"]["tracingCompleted"])
+        self.assertTrue(block["completionEvidence"]["traceDumped"])
+        # The block must say, in the artefact itself, that its null is not a
+        # hash.  A consumer author who reads only the receipt still learns it.
+        self.assertIn("MUST NOT be read as a match", block["consumerContract"])
+
+
+class TtdReceiptRepairModeContractTests(unittest.TestCase):
+    """`-HashOnly` closes a deferral without re-recording, and never lies.
+
+    The maintainer had to do this by hand on 2026-08-02 for
+    G:\\bea-ttd\\level521-native-20260802-0018-take1 and -take2, whose receipts
+    carry a _RECONSTRUCTED block.  Repair mode produces the equivalent
+    honestly - and refuses the one operation that would destroy evidence:
+    overwriting a hash that was actually measured.
+    """
+
+    REAL_HASH = "94032E1AC72BDAFBDE3B1726C05326709DA4AD1FA24762899A3353203A743EEB"
+
+    def build(
+        self,
+        root: pathlib.Path,
+        *,
+        state: str = "deferred",
+        declared_bytes: int | None = None,
+        payload: bytes = b"trace bytes",
+    ) -> tuple[pathlib.Path, pathlib.Path]:
+        directory = root / "take1"
+        directory.mkdir(parents=True)
+        trace = directory / "take1.run"
+        trace.write_bytes(payload)
+        receipt = {
+            "schemaVersion": "ttd-record-receipt.v3",
+            "guestOutcome": "alive-at-stop",
+            "guestRanCleanly": True,
+            "name": "take1",
+            "traceFile": str(trace),
+            "traceBytes": (
+                len(payload) if declared_bytes is None else declared_bytes
+            ),
+            "traceSha256": None,
+            "traceHashState": "deferred",
+            "hashDeferred": {
+                "reason": "trace-file-locked-after-completion",
+                "traceFile": str(trace),
+                "traceBytes": len(payload),
+                "timeoutSeconds": 657,
+                "waitedSeconds": 657.4,
+                "completionEvidence": {
+                    "tracingCompleted": True,
+                    "traceDumped": True,
+                    "guestExitObserved": False,
+                },
+            },
+            "traceGrew": True,
+        }
+        if state == "hashed":
+            receipt["traceSha256"] = self.REAL_HASH
+            receipt["traceHashState"] = "present"
+            receipt["hashDeferred"] = None
+        elif state == "contradictory":
+            receipt["traceSha256"] = self.REAL_HASH
+        elif state == "undeclared":
+            receipt["traceHashState"] = "no-trace"
+            receipt["hashDeferred"] = None
+        path = directory / "receipt.json"
+        path.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+        return directory, path
+
+    def repair(self, directory: pathlib.Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [
+                "pwsh",
+                "-NoLogo",
+                "-NoProfile",
+                "-File",
+                str(RECORDER),
+                "-HashOnly",
+                "-TraceDirectory",
+                str(directory),
+            ],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_repair_completes_a_deferred_receipt_in_place(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(pathlib.Path(temporary))
+            expected = (
+                hashlib.sha256((directory / "take1.run").read_bytes())
+                .hexdigest()
+                .upper()
+            )
+            completed = self.repair(directory)
+            self.assertEqual(
+                0, completed.returncode, completed.stdout + completed.stderr
+            )
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
+            self.assertEqual(expected, receipt["traceSha256"])
+            self.assertEqual("present", receipt["traceHashState"])
+            self.assertIsNone(receipt["hashDeferred"])
+            # The deferral is superseded, not erased: the receipt keeps saying
+            # its hash was taken after the fact.
+            self.assertEqual(
+                "trace-file-locked-after-completion",
+                receipt["hashRepaired"]["supersededDeferral"]["reason"],
+            )
+            self.assertIn("PARTIAL", receipt["hashRepaired"]["provenance"])
+            self.assertIn("-HashOnly", receipt["hashRepaired"]["tool"])
+
+    def test_repair_refuses_to_overwrite_a_measured_hash(self) -> None:
+        # THE ONE OPERATION THAT DESTROYS EVIDENCE.  A hash taken at capture
+        # time binds the receipt to the bytes TTD wrote; replacing it with one
+        # taken now would silently upgrade a weaker claim into a stronger one.
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(
+                pathlib.Path(temporary), state="hashed"
+            )
+            before = receipt_path.read_bytes()
+            completed = self.repair(directory)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn(
+                "already carries a real trace",
+                completed.stdout + completed.stderr,
+            )
+            self.assertEqual(before, receipt_path.read_bytes())
+
+    def test_repair_refuses_a_receipt_that_never_declared_a_deferral(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(
+                pathlib.Path(temporary), state="undeclared"
+            )
+            before = receipt_path.read_bytes()
+            completed = self.repair(directory)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn(
+                "will not manufacture provenance",
+                completed.stdout + completed.stderr,
+            )
+            self.assertEqual(before, receipt_path.read_bytes())
+
+    def test_repair_refuses_a_receipt_that_contradicts_itself(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(
+                pathlib.Path(temporary), state="contradictory"
+            )
+            before = receipt_path.read_bytes()
+            completed = self.repair(directory)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("contradicts itself", completed.stdout + completed.stderr)
+            self.assertEqual(before, receipt_path.read_bytes())
+
+    def test_repair_refuses_a_trace_that_is_not_the_one_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(
+                pathlib.Path(temporary), declared_bytes=999999
+            )
+            before = receipt_path.read_bytes()
+            completed = self.repair(directory)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn(
+                "Trace size changed since the deferral",
+                completed.stdout + completed.stderr,
+            )
+            self.assertEqual(before, receipt_path.read_bytes())
+
+    def test_repair_leaves_the_receipt_deferred_when_the_trace_is_still_locked(
+        self,
+    ) -> None:
+        # Repair is retryable.  A failed attempt must not consume the deferral.
+        with tempfile.TemporaryDirectory() as temporary:
+            directory, receipt_path = self.build(pathlib.Path(temporary))
+            before = receipt_path.read_bytes()
+            literal = str(directory / "take1.run").replace("'", "''")
+            command = (
+                "$held = [IO.File]::Open('"
+                + literal
+                + "', [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, "
+                "[IO.FileShare]::None); "
+                "try { & '"
+                + str(RECORDER).replace("'", "''")
+                + "' -HashOnly -TraceDirectory '"
+                + str(directory).replace("'", "''")
+                + "' -UnlockFloorSeconds 1 -UnlockMaxSeconds 2 "
+                "-UnlockSecondsPerGiB 0 } "
+                "catch { Write-Output \"REFUSED: $($_.Exception.Message)\" } "
+                "finally { $held.Dispose() }"
+            )
+            completed = subprocess.run(
+                ["pwsh", "-NoLogo", "-NoProfile", "-Command", command],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertIn("STILL locked", completed.stdout + completed.stderr)
+            self.assertEqual(before, receipt_path.read_bytes())
+
+
+class TtdDeferredReceiptConsumerTests(unittest.TestCase):
+    """Every consumer that needs a hash refuses the deferred receipt.
+
+    A null that is merely ignored is worse than the crash it replaced: the
+    trace would rejoin the pipeline carrying an unbindable claim.
+    """
+
+    def receipt(self, root: pathlib.Path, **overrides) -> pathlib.Path:
+        trace = root / "synthetic.run"
+        trace.write_bytes(b"T" * 321)
+        payload = {
+            "schemaVersion": "ttd-record-receipt.v3",
+            "name": "synthetic",
+            "targetSha256": "A" * 64,
+            "traceFile": str(trace),
+            "traceBytes": 321,
+            "traceSha256": None,
+            "traceHashState": "deferred",
+            "hashDeferred": {
+                "reason": "trace-file-locked-after-completion",
+                "timeoutSeconds": 657,
+            },
+            "recorderVersion": "test",
+            "guestOutcome": "alive-at-stop",
+            "guestRanCleanly": True,
+            "recordedAtUtc": "2026-08-02T00:20:28Z",
+        }
+        payload.update(overrides)
+        path = root / "receipt.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return path
+
+    def ingest(self, path: pathlib.Path) -> dict:
+        connection = parity_lab.open_database(":memory:")
+        try:
+            summary, _ = parity_lab.ingest_ttd_receipt(connection, path)
+            return summary
+        finally:
+            connection.close()
+
+    def test_parity_lab_ingests_a_deferred_receipt_but_never_calls_it_complete(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = self.receipt(pathlib.Path(temporary))
+            summary = self.ingest(path)
+            # Ingested - the trace does not drop out of the pipeline ...
+            self.assertEqual("alive-at-stop", summary["guestOutcome"])
+            self.assertTrue(summary["traceSizeMatches"])
+            # ... but its null is not a hash, and cannot become one.
+            self.assertIsNone(summary["traceSha256"])
+            self.assertFalse(summary["traceHashDeclared"])
+            self.assertFalse(summary["traceHashMatches"])
+            self.assertTrue(summary["traceHashDeferred"])
+            self.assertEqual("deferred", summary["traceHashState"])
+            self.assertEqual(
+                "trace-file-locked-after-completion",
+                summary["traceHashDeferredReason"],
+            )
+            self.assertIsNone(summary["traceArtifact"])
+            self.assertEqual("PARTIAL", summary["health"])
+
+    def test_parity_lab_still_refuses_a_v3_receipt_whose_hash_just_vanished(
+        self,
+    ) -> None:
+        # The deferral must be DECLARED.  Silence is still malformed.
+        with tempfile.TemporaryDirectory() as temporary:
+            path = self.receipt(
+                pathlib.Path(temporary), traceHashState=None, hashDeferred=None
+            )
+            with self.assertRaises(parity_lab.ParityLabError) as caught:
+                self.ingest(path)
+            self.assertIn("lacks a valid traceSha256", str(caught.exception))
+
+    def test_parity_lab_refuses_a_receipt_that_contradicts_itself(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            trace_hash = (
+                hashlib.sha256(b"T" * 321).hexdigest().upper()
+            )
+            for label, overrides, expected in (
+                (
+                    "deferred with a hash",
+                    {"traceSha256": trace_hash},
+                    "declares a deferred trace hash and carries one too",
+                ),
+                (
+                    "deferred with no block",
+                    {"hashDeferred": None},
+                    "defers its trace hash without a hashDeferred block",
+                ),
+                (
+                    "block with no declaration",
+                    {"traceSha256": trace_hash, "traceHashState": "present"},
+                    "carries a hashDeferred block without",
+                ),
+            ):
+                with self.subTest(receipt=label):
+                    path = self.receipt(root, **overrides)
+                    with self.assertRaises(parity_lab.ParityLabError) as caught:
+                        self.ingest(path)
+                    self.assertIn(expected, str(caught.exception))
+
+    def test_a_hashed_receipt_is_still_complete(self) -> None:
+        # The guard must not degrade the healthy case it was added beside.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            path = self.receipt(
+                root,
+                traceSha256=hashlib.sha256(b"T" * 321).hexdigest().upper(),
+                traceHashState="present",
+                hashDeferred=None,
+            )
+            summary = self.ingest(path)
+            self.assertTrue(summary["traceHashMatches"])
+            self.assertFalse(summary["traceHashDeferred"])
+            self.assertEqual("COMPLETE", summary["health"])
 
 
 if __name__ == "__main__":
