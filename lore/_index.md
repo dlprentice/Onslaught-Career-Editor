@@ -9,19 +9,7 @@
 - **Summary:** navigation to the 13 lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
-*Header block added 2026-07-28 to all 15 documents in `lore/` and `lore-book/`,
-using the repository's `Status:` / `Last updated:` / `Summary:` header fields.
-Adding it changed no claim. Content corrections made in the same pass are a
-separate operation, and each one is marked and dated 2026-07-28 at the line it
-affects.*
-
 A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the people who made it. This documentation preserves development history, in-game lore, community discoveries, and developer insights that would otherwise be lost.
-
-> **Related Documentation**:
-> - [RE Index](../reverse-engineering/RE-INDEX.md) - Technical reverse engineering findings
-> - [Roadmap Index](../roadmap/ROADMAP-INDEX.md) - Current action items and priorities
-> - [CURRENT_CAPABILITIES.md](../CURRENT_CAPABILITIES.md) - Project overview and current app surface
-> - Release packaging: the ignored offline Lore pack is generated directly from this canonical directory; there is no tracked mirror.
 
 ---
 
@@ -88,11 +76,3 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 
 *This index provides navigation to the lore articles collected in this directory.*
 
-**Date footer CORRECTED 2026-07-28.** A footer here previously read
-`Last updated: 2026-03-05`. That was false about its own file: `git log` shows
-this file's last content change was **2026-07-16** (`ca9fe1c7`), which replaced
-the mirror-policy bullet with the release-packaging bullet — four months after
-the date the footer claimed. Hand-maintained footers drifted because nothing ever
-re-read them, so the authoritative date is now the `Last updated:` field in the
-header block at the top of this file. This footer is not maintained and carries
-no date.

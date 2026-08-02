@@ -39,12 +39,6 @@ use the deep dives.
   - [Technical deep dive](../lore/technical-deep-dive.md)
   - [Cut content and secrets](../lore/cut-content-secrets.md)
 
-Project source links:
-
-- [Current toolkit capabilities](../CURRENT_CAPABILITIES.md)
-- [Reverse-engineering index](../reverse-engineering/RE-INDEX.md)
-- [Public roadmap](../roadmap/public-roadmap.md)
-
 Static notes and source references do not override observed retail behavior.
 Onslaught Toolkit is an unofficial community project, not affiliated with or
 endorsed by the game's publishers or rights holders. Users supply their own
