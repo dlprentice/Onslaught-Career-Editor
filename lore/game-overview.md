@@ -7,9 +7,10 @@
   page wins. Two changes landed 2026-07-28, each marked at the line it affects:
   one correction, and one note recording that the cheat table below is not
   exhaustive.
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-08-02
 - **Summary:** release dates by platform, marketing copy, the "Onslaught" naming
-  history, Battle Engine types and modes, and the retail cheat codes.
+  history, Battle Engine types and modes, how it was received, and the retail
+  cheat codes.
 
 ### Release Information
 
@@ -85,6 +86,46 @@ Strategic elements give players options:
 - Pick off specific targets
 
 The campaign provides at least 8 hours of gameplay on the easiest difficulty.
+
+### How It Landed
+
+Merged here 2026-08-02 from `reception-legacy.md`, which was 43 lines of review
+tables on its own shelf. How a game was received is part of what the game was,
+not a separate subject, and a reader who wants the scores wants them beside the
+release dates.
+
+**These numbers are an undated snapshot.** No score below cites a retrieval date
+or a URL, and aggregate scores drift as sites re-weight and reviews are added or
+removed. Treat every one of them as "roughly this, at some point" until a source
+and a date are attached.
+
+| Platform | Metacritic | Consensus |
+|----------|------------|-----------|
+| **Xbox** | 76/100 | "Generally favorable reviews" |
+| **PlayStation 2** | 73/100 | "Mixed or average reviews" |
+| **Windows** | 65/100 | "Mixed or average reviews" |
+
+| Publication | PC | PS2 | Xbox |
+|-------------|----|----|------|
+| **IGN** | 7.2/10 | 8/10 | 8/10 |
+| **Eurogamer** | — | — | 8/10 |
+| **GameSpot** | 6.1/10 | 6.7/10 | 6.7/10 |
+| **Edge** | — | 7/10 | 7/10 |
+| **Official Xbox Magazine** | — | — | 8.3/10 |
+| **GamePro** | — | 3.5/5 | 4/5 |
+| **PC Gamer** | 60% | — | — |
+
+It placed **#86** in IGN's Top 100 PlayStation 2 Games.
+
+The PC scores are the lowest of the three, which is worth knowing if you are
+reading this while playing the PC version: the reviews of the day were marking a
+2003 port that shipped nine months after the console versions.
+
+Despite the reception, it sold poorly — IGN's account. The team's own verdict has
+aged better than the numbers did:
+
+> "Battle Engine Aquila was the best thing I ever worked on."
+> — Glenn Corpes, *Retro Gamer* #160 (October 2016)
 
 ### In-Game Cheat Codes
 

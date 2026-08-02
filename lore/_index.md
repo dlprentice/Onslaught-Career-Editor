@@ -25,7 +25,6 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [development-history.md](development-history.md) | Timeline, GDM post-mortem, what went right/wrong, port history |
 | [technical-deep-dive.md](technical-deep-dive.md) | Constraints, memory management, cross-platform architecture |
 | [cut-content-secrets.md](cut-content-secrets.md) | Cut features, community discoveries, easter eggs |
-| [reception-legacy.md](reception-legacy.md) | Reviews, Metacritic scores, commercial performance |
 | [team-roster.md](team-roster.md) | Full team credits, "Where Are They Now?" profiles |
 | [community-preservation.md](community-preservation.md) | Active contacts, community resources, modding, legal note |
 | [reference-materials.md](reference-materials.md) | Repository files, external archives, sources & attribution |

@@ -30,8 +30,8 @@ happened more than once; what those articles used to say is kept out of your way
 
 ## Start here
 
-- [The game](../lore/game-overview.md) — what it was, how it played, and how it
-  was sold.
+- [The game](../lore/game-overview.md) — what it was, how it played, how it was
+  sold, and how it landed.
 - [The war](../lore/world-lore.md) — Allium, the Forseti and the Muspell, and the
   treaty that failed.
 - [The people in it](../lore/characters.md) — Hawk Winter, Tatiana Kiralova,
@@ -52,7 +52,6 @@ happened more than once; what those articles used to say is kept out of your way
 
 ## What survived
 
-- [Reception](../lore/reception-legacy.md) — how it landed at the time.
 - [What was cut](../lore/cut-content-secrets.md) — the sea monster, the team's
   own faces in the game, and who the Gill-M is named after.
 - [Keeping it alive](../lore/community-preservation.md) — the mods, the fixes,
