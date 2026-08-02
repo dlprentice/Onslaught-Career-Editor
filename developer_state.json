@@ -54,7 +54,40 @@
       "S5 CLI - adapts 2 of 31 AppCore services; the whole patch/safe-copy/launch lane is unreachable headlessly, which also blocks the trainer's CLI twin.",
       "S6 trainer - phase 1 needs NO memory writes (invulnerability, all-levels, all-goodies and free camera are retail cheats and shipped patch rows; level select is save-side). Phase 2 health/energy has a triple-corroborated layout but needs one live probe first. Ammo and timescale have ZERO address evidence - do not fake them.",
       "First-run experience still absent; the saved window size is still written on close and never applied."
-    ]
+    ],
+    "_2026_08_02_GOAL_COMPLETE": {
+      "_what_this_is": "The 'something a player shows someone else, and a repo that tells the truth about itself' goal. All 14 items are addressed. This block is the pickup pointer; the commits carry the detail and each one names its enumeration.",
+      "method_rule_held": "Every copy/claim change started with a grep producing the complete set, and the enumeration is in the commit. It paid twice more: it found the two stale 'never patch an installed BEA.exe' claims (one of them shipping to every user in a .txt the guard did not scan), and it found exactly three references to reception-legacy.md before that file was merged away.",
+      "landed": [
+        "c81e6f41 god mode - mVulnerable at CBattleEngine+0x15C, zero means invulnerable. READ ONLY.",
+        "7e96868e game imagery on Home and About + the screenshot allowance that permits it",
+        "d13098fe test infra - 145 tests that existed and never ran, plus a number I got wrong",
+        "c8843057 CardIdPresetEngine deleted; three 'dead' buttons proven live and given tests",
+        "8fb89bf6 release trust kit - SmartScreen explanation, hash check, foldered ZIP",
+        "31b44d83 reception-legacy merged into game-overview",
+        "4713f65f the-campaign.md, mission list read live from the player's install"
+      ],
+      "item_9_god_mode": {
+        "state": "Offset byte-proven, wired, displayed, and NOT written. The maintainer chose read-only on 2026-08-01 over driving a live probe.",
+        "evidence": "reverse-engineering/game-mechanics/god-mode.md - promoted out of local-lab because it closes the 'exact implementation boundary' question that document was already carrying.",
+        "what_would_close_it": "Write 0 to CBattleEngine+0x15C in a running mission and confirm a hit does not stick. Until then no copy may call it god mode, and the page points at the save-name cheat, which IS live-confirmed and ships on that same page."
+      },
+      "test_infrastructure_findings_NOT_fixed": [
+        "npm test launches the app ZERO times. Every app-driving test carries [Category(\"WinUIRuntime\")] and the default gate filters it out; they run under npm run test:ui-runtime, a separate command nobody is forced to run.",
+        "WinUiVisualSmokeTests scrapes the screen without verifying foreground, and deletes the previous run's screenshots before it starts. The repo already owns the correct capture (FlaUiReceiptBoundVisualCaptureOperations - asserts GetForegroundWindow()==hwnd, polls instead of sleeping); that harness does not use it.",
+        "19 legacy teardown blocks call app.Kill() unguarded inside finally, where a throw would replace the real assertion failure.",
+        "No DPI handling anywhere; HasRenderedHeader hard-codes physical pixel offsets and works only at 100% scaling."
+      ],
+      "not_done_deliberately": {
+        "exe_rename": "OnslaughtCareerEditor.WinUI.exe keeps its name. 25 tracked files hardcode it, including harnesses that SHA-verify the exe and product DLL by filename before launching, and there is no explicit AssemblyName to change cleanly. Wide string-based change against the one gate that proves the shippable artifact, for gain the Launch Onslaught Toolkit.cmd entry point already covers.",
+        "cli_parity": "Cheats, Media and the text catalog still have no CLI verbs. Named in CLI.md under 'what is not here'."
+      },
+      "reserved_for_the_maintainer": [
+        "The GDM post-mortem quote-wall redistribution call.",
+        "The lore fiction shelf stays EDIT-FROZEN until a provenance run says whether characters.md and the Kiralova memo are first-party text or transcribed from an archived site. Both recorded in reverse-engineering/project-meta/lore-errata.md."
+      ],
+      "gate_at_close": "npm test 1468 AppCore + 432 UiTests + 125 CLI, docs / safety / 19 tool suites, release ZIP probe green end to end."
+    }
   },
   "_TTD_CORPUS_2026_07_30": {
     "_what_this_is": "The complete surviving TTD corpus, re-enumerated 2026-07-30 from G:\\bea-ttd itself rather than from any summary: 76 directories, 487,306,338,916 bytes (~453.8 GiB) total, G: retains 466 GB free. QUERYING NEEDS NO ELEVATION - only RECORDING does. Every .run is IMMUTABLE: do not re-record, copy, move or delete one.",
