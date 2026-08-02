@@ -22,6 +22,64 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Path.Combine("rebuild", "OnslaughtRebuild.Client.Tests"),
         };
 
+        /// <summary>
+        /// The other direction, and the one that was missing.
+        ///
+        /// The check below guards tokens against classes: a rename cannot silently shrink the
+        /// gate. Nothing guarded classes against tokens, so a NEW suite was silently outside it -
+        /// and on 2026-08-01 five of them were, 144 tests including <c>AppConfigTests</c>, which
+        /// covers the config-root isolation every UI test depends on. They were green. Nobody
+        /// had run them since they were written.
+        ///
+        /// A test class that nothing selects is a test class that does not exist. Adding one and
+        /// forgetting the filter is the easiest mistake here to make, which is exactly why it
+        /// needs a guard rather than a convention.
+        /// </summary>
+        [Fact]
+        public void EveryAppCoreTestClassIsSelectedByTheDefaultGate()
+        {
+            string root = FindRepoRoot();
+            string packageJson = File.ReadAllText(Path.Combine(root, "package.json"));
+            HashSet<string> tokens = Regex.Matches(packageJson, "FullyQualifiedName~([A-Za-z0-9_.]+)")
+                .Select(match => match.Groups[1].Value)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var unreachable = new List<string>();
+            string directory = Path.Combine(root, "OnslaughtCareerEditor.AppCore.Tests");
+            foreach (string file in Directory.GetFiles(directory, "*Tests.cs", SearchOption.AllDirectories))
+            {
+                if (file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") ||
+                    file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+                {
+                    continue;
+                }
+
+                string text = File.ReadAllText(file);
+                foreach (Match match in Regex.Matches(text, @"public\s+(?:sealed\s+)?class\s+([A-Za-z0-9_]+Tests)\b"))
+                {
+                    string name = match.Groups[1].Value;
+
+                    // A [Fact] or [Theory] somewhere in the file, or it declares no tests to run.
+                    if (!text.Contains("[Fact]", StringComparison.Ordinal) &&
+                        !text.Contains("[Theory]", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (!tokens.Any(token => name.Contains(token, StringComparison.Ordinal)))
+                    {
+                        unreachable.Add(name);
+                    }
+                }
+            }
+
+            Assert.True(
+                unreachable.Count == 0,
+                $"These AppCore test classes are not selected by any npm test filter, so they never "
+                    + $"run in the default gate: {string.Join(", ", unreachable.Distinct())}. Add a "
+                    + "FullyQualifiedName~ token to package.json, or delete the suite.");
+        }
+
         [Fact]
         public void EveryNameFilterTokenInPackageJsonMatchesADeclaredTestClass()
         {

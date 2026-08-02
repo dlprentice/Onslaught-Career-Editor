@@ -46,7 +46,7 @@ public class WinUiPatchBenchInteractionSmokeTests
         string fakeExePath = Path.Combine(fakeGameDir, "BEA.exe");
         File.WriteAllBytes(fakeExePath, new byte[] { 0 });
         byte[] fakeExeHashBefore = SHA256.HashData(File.ReadAllBytes(fakeExePath));
-        int[] initialBeaProcessIds = Process.GetProcessesByName("BEA").Select(process => process.Id).ToArray();
+        int[] initialBeaProcessIds = BeaProcessIdsUnder(evidenceDir);
         string appDataDir = PrepareIsolatedAppData(evidenceDir, fakeGameDir);
         Application? app = null;
         try
@@ -243,8 +243,7 @@ public class WinUiPatchBenchInteractionSmokeTests
             AssertComboBoxSelectedText(window, "PatchBenchAdminLevelPresetComboBox", "Local split-screen test world 850");
             AssertComboBoxSelectedText(window, "PatchBenchCreateMusicSwapPresetComboBox", "BEA_02 over BEA_01");
             Assert.That(SHA256.HashData(File.ReadAllBytes(fakeExePath)), Is.EqualTo(fakeExeHashBefore), "UIA selection smoke must not mutate the source BEA.exe fixture.");
-            int[] newBeaProcessIds = Process.GetProcessesByName("BEA")
-                .Select(process => process.Id)
+            int[] newBeaProcessIds = BeaProcessIdsUnder(evidenceDir)
                 .Except(initialBeaProcessIds)
                 .ToArray();
             Assert.That(newBeaProcessIds, Is.Empty, "UIA selection smoke must not launch BEA.exe.");
@@ -811,6 +810,50 @@ public class WinUiPatchBenchInteractionSmokeTests
             File.GetLastWriteTimeUtc(outputAssemblyPath),
             Is.GreaterThanOrEqualTo(latestSourceWriteUtc),
             $"WinUI build output is older than current source. Rebuild the default output before native UIA: {outputAssemblyPath}");
+    }
+
+    /// <summary>
+    /// Game processes this test could plausibly be responsible for: BEA.exe running from
+    /// somewhere inside the test's own directory.
+    ///
+    /// It used to be every BEA.exe on the machine, diffed against a snapshot taken at the start
+    /// of the test. That reads as "this test did not launch the game" and actually asserts "no
+    /// copy of the game started anywhere on this PC during the next thirty seconds" - which is a
+    /// claim about the whole machine, and not one a test gets to make. On 2026-08-01 it failed
+    /// for real: a second tool on this machine launched its own BEA.exe out of a temp directory
+    /// while this test was running, and the test blamed itself for it. A leak detector that
+    /// cries wolf gets muted, and then it is not a leak detector.
+    ///
+    /// A process whose path cannot be read is not ours: the ones this test would launch are its
+    /// own children, and access is never denied for those.
+    /// </summary>
+    private static int[] BeaProcessIdsUnder(string root)
+    {
+        string full = Path.GetFullPath(root);
+
+        var ours = new List<int>();
+        foreach (Process process in Process.GetProcessesByName("BEA"))
+        {
+            using (process)
+            {
+                try
+                {
+                    string? path = process.MainModule?.FileName;
+                    if (path is not null &&
+                        Path.GetFullPath(path).StartsWith(full, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ours.Add(process.Id);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Exited between the enumeration and the read, or belongs to something we
+                    // cannot open. Either way it is not a child of this test.
+                }
+            }
+        }
+
+        return ours.ToArray();
     }
 
     private static string ResolveRepoRoot()
