@@ -3,7 +3,7 @@
 - **Status:** live preservation record — credits from the archived Lost Toys
   website, plus developer recollection. Some claims rest on Discord recollection
   preserved in
-  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. **Named people are real and living**: do not
   merge, infer or extend an identity here without a source that states it. One

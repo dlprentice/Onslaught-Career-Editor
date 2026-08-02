@@ -7,6 +7,11 @@
   preserved at a moment, not as measurement. Header block added 2026-07-28; no
   claim in this file was changed, so the date below is still the date of the last
   content change.
+- **Evidence:** UNKNOWN — recollection preserved from a March 2026 read of the
+  community Discord. The raw channel dumps were retired after extraction, so no
+  row here can be re-verified from this repository and none of it is
+  measurement. It is retained because four narrative documents cite it and this
+  is now the terminal source for those claims.
 - **Last updated:** 2026-06-23
 - **Summary:** the high-signal developer and community claims kept from a March
   2026 read of the community Discord, retained because other lore and RE

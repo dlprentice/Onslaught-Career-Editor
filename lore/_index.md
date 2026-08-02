@@ -29,7 +29,6 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [team-roster.md](team-roster.md) | Full team credits, "Where Are They Now?" profiles |
 | [community-preservation.md](community-preservation.md) | Active contacts, community resources, modding, legal note |
 | [reference-materials.md](reference-materials.md) | Repository files, external archives, sources & attribution |
-| [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md) | High-signal extracted claims preserved from historical Discord dump research |
 
 ---
 

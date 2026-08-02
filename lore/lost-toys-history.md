@@ -3,7 +3,7 @@
 - **Status:** live preservation record — studio history from interviews,
   archived web pages and developer recollection, not from measurement. Some
   claims here rest on Discord recollection preserved in
-  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. Header block added 2026-07-28; no claim in
   this file was changed, so the date below is still the date of the last content

@@ -3,7 +3,7 @@
 - **Status:** live preservation record — developer recollection and community
   discovery, not measurement. Some claims here rest on Discord recollection
   preserved in
-  [discord-archive-extract-2026-03.md](discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. Where an entry disagrees with a measurement
   under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), the
