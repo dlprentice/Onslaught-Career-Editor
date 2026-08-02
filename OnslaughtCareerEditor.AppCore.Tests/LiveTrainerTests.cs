@@ -541,6 +541,89 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Null(LiveTrainerBattleEngineState.Describe(4));
         }
 
+        // ============================================================ hotkeys
+
+        [Fact]
+        public void EveryHotkeyIsAModifierCombinationBecauseARegisteredKeyIsTakenFromTheMachine()
+        {
+            // A bare F1 would be taken from every other program on the PC for as long as the
+            // trainer watches. That is the reason these are Ctrl+Alt and not the bare function
+            // keys a 1990s trainer would have used, and it is worth a test rather than a comment.
+            Assert.NotEmpty(TrainerHotkeys.Bindings);
+            foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+            {
+                Assert.True(
+                    (binding.Modifiers & TrainerHotkeys.ModControl) != 0,
+                    $"{binding.Display} must require Ctrl.");
+                Assert.True(
+                    (binding.Modifiers & TrainerHotkeys.ModAlt) != 0,
+                    $"{binding.Display} must require Alt.");
+            }
+        }
+
+        [Fact]
+        public void HoldingAHotkeyDownDoesNotRepeatIt()
+        {
+            // Without MOD_NOREPEAT, leaning on the key toggles hold dozens of times a second and
+            // ends wherever the key-up lands. That reads as the switch being broken.
+            foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+            {
+                Assert.True(
+                    (binding.Modifiers & TrainerHotkeys.ModNoRepeat) != 0,
+                    $"{binding.Display} must not auto-repeat.");
+            }
+        }
+
+        [Fact]
+        public void HotkeyIdsAreDistinctAndRoundTripFromTheWindowsMessage()
+        {
+            var ids = new HashSet<int>();
+            foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+            {
+                Assert.True(ids.Add(binding.Id), $"{binding.Display} reuses an id.");
+
+                // This is the lookup WM_HOTKEY performs. Getting it wrong routes one key to
+                // another key's action, which is the worst possible failure for a panic button.
+                Assert.Equal(binding, TrainerHotkeys.ForId(binding.Id));
+            }
+
+            Assert.Null(TrainerHotkeys.ForId(0));
+            Assert.Null(TrainerHotkeys.ForId(TrainerHotkeys.IdBase - 1));
+        }
+
+        [Fact]
+        public void EveryHotkeyHasADistinctCombinationAndSaysWhatItDoes()
+        {
+            var combinations = new HashSet<(uint, uint)>();
+            foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+            {
+                Assert.True(
+                    combinations.Add((binding.Modifiers, binding.VirtualKey)),
+                    $"{binding.Display} duplicates another combination.");
+                Assert.False(string.IsNullOrWhiteSpace(binding.Display));
+                Assert.False(string.IsNullOrWhiteSpace(binding.Description));
+
+                // The page prints Display verbatim, so a description that leaked into that slot
+                // would be shown as if it were a key combination.
+                Assert.StartsWith("Ctrl + Alt + ", binding.Display);
+            }
+        }
+
+        [Fact]
+        public void OnlyTheThreeWritableVitalsHaveAHoldHotkeyAndReleaseAllHasNone()
+        {
+            Assert.Equal(LiveTrainerVital.Life, TrainerHotkeys.VitalFor(TrainerHotkeyAction.ToggleHoldLife));
+            Assert.Equal(LiveTrainerVital.Energy, TrainerHotkeys.VitalFor(TrainerHotkeyAction.ToggleHoldEnergy));
+            Assert.Equal(LiveTrainerVital.Shields, TrainerHotkeys.VitalFor(TrainerHotkeyAction.ToggleHoldShields));
+            Assert.Null(TrainerHotkeys.VitalFor(TrainerHotkeyAction.ReleaseAll));
+
+            // Every action in the enum must have a binding, or a hotkey exists in name only.
+            foreach (TrainerHotkeyAction action in Enum.GetValues<TrainerHotkeyAction>())
+            {
+                Assert.NotNull(TrainerHotkeys.ForAction(action));
+            }
+        }
+
         // ============================================================ the damage switch
 
         [Fact]

@@ -474,6 +474,29 @@
                                AutomationProperties.AutomationId="LiveTrainerWritingBlocked"
                                Style="{StaticResource SectionBodyTextStyle}" />
 
+                    <!--
+                        Hotkeys. The note stays on screen rather than going behind the
+                        disclosure: it is not where a number came from, it is what happens to
+                        the rest of the machine while the trainer is watching.
+                    -->
+                    <TextBlock x:Name="LiveTrainerHotkeyHeadlineTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerHotkeyHeadline"
+                               AutomationProperties.HeadingLevel="Level3"
+                               FontWeight="SemiBold"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerHotkeyNoteTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerHotkeyNote"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
+                    <TextBlock x:Name="LiveTrainerHotkeyListTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerHotkeyList"
+                               FontFamily="Consolas"
+                               Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="LiveTrainerHotkeyStatusTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerHotkeyStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
+
                     <Border AutomationProperties.AutomationId="TrainerMusicRow"
                             Background="{ThemeResource ShellMutedSurfaceBrush}"
                             BorderBrush="{ThemeResource ShellBorderBrush}"

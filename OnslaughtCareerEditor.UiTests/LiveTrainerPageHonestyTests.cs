@@ -478,6 +478,78 @@ public class LiveTrainerPageHonestyTests
     }
 
     /// <summary>
+    /// Hotkeys take four key combinations away from the whole machine for as long as the trainer
+    /// is watching. That is a real cost to something the player did not ask about, so the page
+    /// states it where it cannot be missed, and the keys it advertises are the keys the app
+    /// actually claims.
+    /// </summary>
+    [Test]
+    public void TheHotkeySectionSaysWhatClaimingAKeyCosts()
+    {
+        Assert.That(
+            LiveTrainerPageText.HotkeysNote,
+            Does.Contain("will not reach anything else"),
+            "The cost to the rest of the machine is the point, not a footnote.");
+        Assert.That(
+            LiveTrainerPageText.HotkeysNote,
+            Does.Contain("given back"),
+            "Say when it ends, or a player has to guess whether their PC is still affected.");
+        Assert.That(
+            LiveTrainerPageText.HotkeysNote,
+            Does.Contain("Nothing is typed or clicked for you"),
+            "This app has a standing rule about synthetic input. Listening is not sending, and "
+                + "the difference belongs on screen rather than only in a code comment.");
+
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerHotkeyNote")),
+            Is.False,
+            "What happens to the rest of the machine is not provenance and does not collapse.");
+    }
+
+    [Test]
+    public void ThePageAdvertisesExactlyTheKeysTheAppClaims()
+    {
+        string shown = LiveTrainerPageText.DescribeHotkeys();
+
+        foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+        {
+            Assert.That(
+                shown,
+                Does.Contain(binding.Display),
+                $"{binding.Display} is registered but not shown.");
+            Assert.That(shown, Does.Contain(binding.Description));
+        }
+
+        // Built from the table rather than typed out, so the page cannot advertise a key the
+        // listener does not register - which is the failure a player experiences as "broken".
+        Assert.That(
+            PageXaml,
+            Does.Not.Contain("Ctrl + Alt +"),
+            "The combinations come from TrainerHotkeys, never from hand-written XAML.");
+    }
+
+    [Test]
+    public void AKeyAnotherProgramAlreadyOwnsIsReportedRatherThanLeftLookingLive()
+    {
+        Assert.That(LiveTrainerPageText.DescribeHotkeyState(null), Does.Contain("live"));
+        Assert.That(LiveTrainerPageText.DescribeHotkeyState(Array.Empty<string>()), Does.Contain("live"));
+
+        string partial = LiveTrainerPageText.DescribeHotkeyState(new[] { "Ctrl + Alt + 1" });
+        Assert.That(partial, Does.Contain("Ctrl + Alt + 1"));
+        Assert.That(
+            partial,
+            Does.Contain("switches above still work"),
+            "Name the way out. A dead key with no alternative is a dead end.");
+
+        string[] everything = TrainerHotkeys.Bindings.Select(b => b.Display).ToArray();
+        Assert.That(
+            LiveTrainerPageText.DescribeHotkeyState(everything),
+            Does.Contain("None of these keys"),
+            "All-failed is a different sentence from some-failed, and the player needs the "
+                + "different one.");
+    }
+
+    /// <summary>
     /// The damage switch is the one field on this page whose position is known from bytes and
     /// whose behaviour has never been watched. That gap is the whole test: it may be shown, it may
     /// not be written, and the page must send a player to the god mode that does work rather than

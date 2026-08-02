@@ -37,6 +37,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private DispatcherTimer? _trainerTimer;
         private LiveTrainerReadResult? _lastTrainerReading;
         private bool _suppressHoldToggleEvents;
+        private TrainerHotkeyListener? _trainerHotkeys;
 
         public CheatsPage()
         {
@@ -66,6 +67,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 DetachLiveTrainer("You left the page, so the app stopped watching.");
                 _trainerMusic?.Dispose();
                 _trainerMusic = null;
+
+                // The hotkeys are taken from the whole machine while they are registered, so the
+                // page giving them back is not tidiness - it is the difference between a tool and
+                // a nuisance. DetachLiveTrainer has already released them; this drops the window
+                // subclass too, because the page is gone.
+                _trainerHotkeys?.Dispose();
+                _trainerHotkeys = null;
             };
 
             AppStatusService.SetStatus("Cheats: page ready");
@@ -431,6 +439,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerShieldsHoldWarningTextBlock.Text = LiveTrainerPageText.ShieldsHoldWarning;
             LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
             LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
+            LiveTrainerHotkeyHeadlineTextBlock.Text = LiveTrainerPageText.HotkeysHeadline;
+            LiveTrainerHotkeyNoteTextBlock.Text = LiveTrainerPageText.HotkeysNote;
+            LiveTrainerHotkeyListTextBlock.Text = LiveTrainerPageText.DescribeHotkeys();
             LiveTrainerVulnerableHeadlineTextBlock.Text = LiveTrainerPageText.VulnerableHeadline;
             LiveTrainerVulnerableUseCheatTextBlock.Text = LiveTrainerPageText.VulnerableUseTheCheatInstead;
             LiveTrainerVulnerableEvidenceTextBlock.Text = LiveTrainerPageText.VulnerableNote;
@@ -482,6 +493,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
             LiveTrainerTick();
+            StartTrainerHotkeys();
             SetLiveTrainerStatus(InfoBarSeverity.Informational, "Watching", LiveTrainerPageText.EvidenceHeadline);
             AppStatusService.SetStatus("Cheats: watching a running copy");
         }
@@ -497,6 +509,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         /// </summary>
         private void DetachLiveTrainer(string? message)
         {
+            _trainerHotkeys?.Stop();
+
+            // The line said "the keys below are live". They are not any more, and leaving that
+            // sentence on screen is the app telling a small lie about the state of the machine.
+            LiveTrainerHotkeyStatusTextBlock.Text = string.Empty;
+
             _trainerTimer?.Stop();
             _trainerTimer = null;
 
@@ -778,6 +796,70 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void LiveTrainerHoldShieldsToggle_Toggled(object sender, RoutedEventArgs e) =>
             ToggleLiveTrainerHold(LiveTrainerVital.Shields, LiveTrainerHoldShieldsToggle, LiveTrainerShieldsNumberBox);
+
+        /// <summary>
+        /// Claims the key combinations, and says so on the page - including which ones it could
+        /// not get. A hotkey that looks live and does nothing is worse than no hotkey, because the
+        /// person pressing it is in a fight and believes something happened.
+        /// </summary>
+        private void StartTrainerHotkeys()
+        {
+            if (App.MainWindowInstance is not Window window)
+            {
+                // No window means no message path, and a registration without one would eat the
+                // combination and deliver it nowhere.
+                LiveTrainerHotkeyStatusTextBlock.Text = LiveTrainerPageText.HotkeysUnavailable;
+                return;
+            }
+
+            _trainerHotkeys ??= new TrainerHotkeyListener(window, OnTrainerHotkeyPressed);
+
+            IReadOnlyList<string> unavailable = _trainerHotkeys.Start();
+            LiveTrainerHotkeyStatusTextBlock.Text = LiveTrainerPageText.DescribeHotkeyState(unavailable);
+        }
+
+        /// <summary>
+        /// A hotkey does exactly what clicking the switch does, by clicking the switch. Routing it
+        /// through the same control keeps one path rather than two: the refusals, the value in the
+        /// box, and the reason writing is blocked all still apply, and they cannot drift apart
+        /// from what the mouse does because there is nothing to drift.
+        /// </summary>
+        private void OnTrainerHotkeyPressed(TrainerHotkeyAction action)
+        {
+            // WM_HOTKEY arrives on the UI thread, but say so rather than depending on it.
+            if (!DispatcherQueue.HasThreadAccess)
+            {
+                DispatcherQueue.TryEnqueue(() => OnTrainerHotkeyPressed(action));
+                return;
+            }
+
+            if (_trainerHold is null)
+                return;
+
+            if (action == TrainerHotkeyAction.ReleaseAll)
+            {
+                LiveTrainerHoldLifeToggle.IsOn = false;
+                LiveTrainerHoldEnergyToggle.IsOn = false;
+                LiveTrainerHoldShieldsToggle.IsOn = false;
+                AppStatusService.SetStatus("Cheats: let go of everything");
+                return;
+            }
+
+            ToggleSwitch? toggle = TrainerHotkeys.VitalFor(action) switch
+            {
+                LiveTrainerVital.Life => LiveTrainerHoldLifeToggle,
+                LiveTrainerVital.Energy => LiveTrainerHoldEnergyToggle,
+                LiveTrainerVital.Shields => LiveTrainerHoldShieldsToggle,
+                _ => null,
+            };
+
+            // Disabled means the numbers did not look like vitals, or nothing has been read. A
+            // hotkey does not get to go around that - it is the gate, not decoration on the mouse.
+            if (toggle is null || !toggle.IsEnabled)
+                return;
+
+            toggle.IsOn = !toggle.IsOn;
+        }
 
         private void ToggleLiveTrainerHold(LiveTrainerVital vital, ToggleSwitch toggle, NumberBox valueBox)
         {

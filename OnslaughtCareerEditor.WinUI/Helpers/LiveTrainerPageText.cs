@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Onslaught___Career_Editor;
@@ -115,6 +116,66 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             + "the mission ends, when the game closes, and when you leave this page. It tops the value "
             + "back up rather than freezing it, so you still take damage between writes, and one hit "
             + "big enough to kill you outright will still kill you.";
+
+        // ------------------------------------------------------------------ hotkeys
+
+        public const string HotkeysHeadline =
+            "Keys you can press while the game has focus.";
+
+        /// <summary>
+        /// What claiming a key actually costs, said plainly.
+        ///
+        /// This is not provenance and does not go behind the disclosure. A combination registered
+        /// with Windows is taken from the whole machine: while the trainer is watching, those four
+        /// presses reach nothing else. A player is entitled to know that before it happens, and to
+        /// know that it ends when they stop watching.
+        /// </summary>
+        public const string HotkeysNote =
+            "While the app is watching a running copy, these four combinations belong to it and "
+            + "will not reach anything else on your PC. They are given back the moment you stop "
+            + "watching, leave this page, or close the app. Nothing is typed or clicked for you - "
+            + "the app only asks Windows to send these presses here instead of elsewhere.";
+
+        public const string HotkeysUnavailable =
+            "Hotkeys are not available right now, so use the switches above.";
+
+        /// <summary>
+        /// The keys, in one line each. Built from the same table the listener registers, so the
+        /// page cannot advertise a combination the app does not actually claim.
+        /// </summary>
+        public static string DescribeHotkeys()
+        {
+            var lines = new System.Text.StringBuilder();
+            foreach (TrainerHotkey binding in TrainerHotkeys.Bindings)
+            {
+                if (lines.Length > 0)
+                    lines.Append(Environment.NewLine);
+
+                lines.Append(binding.Display).Append("   -   ").Append(binding.Description);
+            }
+
+            return lines.ToString();
+        }
+
+        /// <summary>
+        /// Whether the keys are live, and which are not. A combination another program already
+        /// owns is not this app's failure, but silence about it would be: the player is in a
+        /// fight, pressing a key, believing something happened.
+        /// </summary>
+        public static string DescribeHotkeyState(IReadOnlyList<string>? unavailable)
+        {
+            if (unavailable is null || unavailable.Count == 0)
+                return "The keys below are live.";
+
+            if (unavailable.Count == TrainerHotkeys.Bindings.Count)
+            {
+                return "None of these keys could be claimed - something else on this PC already "
+                    + "has them. Use the switches above.";
+            }
+
+            return $"Live, except {string.Join(", ", unavailable)} - something else on this PC "
+                + "already has those. The switches above still work.";
+        }
 
         // ------------------------------------------------------------------ god mode
 
