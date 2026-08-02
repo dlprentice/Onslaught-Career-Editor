@@ -3,7 +3,6 @@
   "_what_this_is_NOT": "The canonical evidence store. Current state and a costly-to-rederive bounded finding may live here only with the exact pointer that can overturn it. A claim without such a pointer is a defect. IF THIS FILE AND A MEASUREMENT DISAGREE, THE MEASUREMENT WINS AND THIS FILE IS STALE.",
   "_maintenance": "Update current fields as work lands. Remove or explicitly label superseded accounts rather than appending parallel truth. Keep detailed evidence in its owning tracked or ignored note.",
   "_audited": "The 2026-07-27 form was audited by a read-only pass. On 2026-07-28 a separate read-only state-truth audit reviewed the recovery block, goal evidence, task-store pointers, TTD eras, and named documentation claims. On 2026-07-29 a fresh primary and read-only adversarial audit reconciled the recovery commits, research masters, parity-lab work, and four distinct Level 100 deterministic runs. Historical blocks remain records rather than current assertions; current state belongs in _CODEX_CURRENT_2026_07_29.",
-
   "_APP_UX_CAMPAIGN_2026_08_01": {
     "_what_this_is": "A separate forked session opened a campaign on the WinUI 3 app itself: end-user experience first, with a CLI twin for anything developer-useful. This block is the pickup pointer for that lane. It supersedes nothing in the RE or rebuild lanes.",
     "evidence": {
@@ -57,16 +56,11 @@
       "First-run experience still absent; the saved window size is still written on close and never applied."
     ]
   },
-
   "_TTD_CORPUS_2026_07_30": {
     "_what_this_is": "The complete surviving TTD corpus, re-enumerated 2026-07-30 from G:\\bea-ttd itself rather than from any summary: 76 directories, 487,306,338,916 bytes (~453.8 GiB) total, G: retains 466 GB free. QUERYING NEEDS NO ELEVATION - only RECORDING does. Every .run is IMMUTABLE: do not re-record, copy, move or delete one.",
-
     "the_66_level_opening_traces_2026_07_30": "level-opening-3m-v1-levelNNN for all 66 campaign levels (commit a45fa1fb, unattended campaign 2026-07-29/30). 66/66 producer receipts verified healthy 2026-07-30 (guestRanCleanly true). Each captures the same ~181 s instrumented opening: load, world population, script attachment, AI initialisation, plus live combat on levels that open hot - but NEVER a player under fire, taking damage, or transforming; those still need maintainer attach recordings (tools/Record-GameMoment.ps1). FREE SIGNAL, use it before opening anything: identical duration means SIZE IS INSTRUCTION DENSITY. Busiest (GiB): L742 7.87, L741 7.83, L854 7.32, L852 7.21, L200 7.17. Quietest: L700 4.28, L522 5.10, L412 5.16, L523 5.22, L612 5.45. Sizes re-measured 2026-07-30 by du over G:. First mining pass: local-lab/TTD-CORPUS-MINING-2026-07-29.md.",
-
     "there_are_no_crashed_traces_left_to_delete": "Checked 2026-07-29 against the drive, re-checked 2026-07-30. The six traces that died seconds after launch - frontend-deep, frontend-idle, frontend-idle-2, level100-deep, level100-main, level100-unrestricted - were DELETED on 2026-07-28 because BEA resolved data\\ relative to the CWD and the game exited through its fatal handler. Every surviving trace is substantial and healthy. If someone remembers 'garbage one-second traces', those are the ones, and they are already gone. G: has 466 GB free (2026-07-30); space is not a reason to delete anything here.",
-
     "DO_NOT_DELETE_the_two_tiny_codex_invalid_query_dirs": "G:\\bea-ttd\\codex-invalid-query-small-20260728-195359 and -195501 are ~30 KB, contain no .run, and LOOK like debris. They are the opposite. They are the FALSIFICATION EVIDENCE for the TTD query harness: result.json records exitCode 0 but ok=false with problems ['debugger reported: pass count must be preceeded by whitespace error in'], proving the harness fails closed on a bad debugger command. The 195359 pair is the adverse control that exposed an earlier false success. A check that cannot fail is not a gate; these are the proof this one can. Referenced from this file.",
-
     "traces": [
       "verify-cwd-fix.run - 444,596,224 B - sha256 14DE2F70... - ESSENTIALLY FINISHED. Symbol-bridge and Replay-collector proof: 7,672 symbol rows loaded, 693,973,901 instructions, 2,612 ranges, 200,611 unique BEA code bytes. Do not spend time here.",
       "play-level100.run - 34,359,738,368 B - sha256 03599CEA... - Level 100 load, fly-in, briefing. DOES NOT REACH COMBAT: cannot answer unit AI, damage, destruction, mission completion, the flight home or WaterLoss. Heavily mined. OPENING COSTS ~5 MINUTES so batch every question into one open.",
@@ -74,21 +68,14 @@
       "frontend-manual-02.run - 2,294,284,288 B - sha256 EFF21B8C... - 62.58 s, FMV skipped, healthy v3 receipt. 2,737 ranges / 170,503 bytes - a LARGER coverage set than the bigger Options trace. ZERO Options transitions observed. Best non-Options comparator.",
       "startup-to-main-menu-20260729-173124.run - 1,677,721,600 B - sha256 D30AC435... - 79.51 s, cold startup INCLUDING THE FMV, healthy v3 receipt, ~1.86 billion instructions, 4,639 ranges / 333,675 bytes. Only 0x00516ED0 CPCSoundManager__DirectSoundEnumerateCallback is closed. THE ONLY TRACE CONTAINING THE FMV."
     ],
-
     "the_query_rules_that_are_not_optional": "Query the existing coverage.jsonl BEFORE opening any trace - it may answer presence instantly. Positive execution is strong evidence; A MISS IS NON-OBSERVATION, NOT ABSENCE. Traces contain Unrecorded/Large gaps, so never claim exhaustive execution. BEA uses QueryPerformanceCounter: tick counts and ORDERING inside a trace are trustworthy, SECONDS ARE NOT. A FUN_* coverage hit is not a semantic identity. And the silent-failure trap in section 1 of TTD-LEVEL100-FINDINGS-2026-07-28.md: an arbitrary dd of a runtime-written global returns the ON-DISK BYTES, image sections read correctly so naive controls pass, and it produced a complete confident false answer once - seek to a call position where the program just touched the value, or use access history.",
-
     "steps_executed_receipts_lie_on_large_traces_task_149": "FIFTH instrument-lies defect, found 2026-07-30, quiet like the fourth. Coverage receipts on options-open-manual-01 and frontend-manual-02 report steps_executed 131,111 and 137,023 against callback_hits 1,137,340,343 and 245,245,503 - impossible on their face (callbacks cannot exceed steps); both fit steps mod 2^32, and the under-2^32 startup trace is self-consistent. Do NOT consume steps_executed from any trace that could exceed 2^32 steps - all 66 level-opening traces qualify - until the counter is widened and the fix proven on one large trace. Coverage RANGES were independently recomputed consistent, but re-verify after the fix. Task #149; falsification evidence local-lab/adversarial-fmv-audio-gate-v1-2026-07-29/RAW-CHECKS.txt lines 109-111.",
-
     "recording_more_maintainer_only": "Recording needs elevation and the maintainer at the keyboard. Traces write straight to G:; the scripts refuse other drives. Attach to a running game: tools/Record-GameMoment.ps1 -Name <fresh-name-with-timestamp> -Seconds 60 -MaxFileMB 32768, after launching local-lab/safe-copy-bea-pristine/BEA.exe with -WorkingDirectory set to its own folder. Startup WITH the FMV: tools/ttd_record.ps1 -Name startup-... -GameArguments @() -UntilExit, from an elevated pwsh. Always a fresh name - the recorder refuses to reuse a directory. A good receipt reports guestRanCleanly true, traceGrew true, and neither file-cap nor low-space termination.",
-
     "highest_value_unmined": "(A) Diff options-open-manual-01 against frontend-manual-02 using the existing coverage indexes - costs no trace open. (B) Mine startup-to-main-menu for FMV lifecycle, page transitions and audio ordering - the only FMV trace, and it can give the RUNTIME confirmation of the static English-is-Bink-track-0 chain that a lane has already shipped code on. (C) One batched open of play-level100 for briefing/HUD/load questions, including the six-row compass offset probe in HUD-LANE-RECOVERED-2026-07-29.md section 1.3. (D) Mine the 66 level-opening traces for unit AI and weapons laws - the corpus now covers every campaign level's opening, including live combat on hot openings; local-lab/TTD-CORPUS-MINING-2026-07-29.md is the first pass. Still NOT in this corpus: a player under fire, taking damage, or transforming - maintainer attach recordings only."
   },
-
   "_HISTORICAL_2026_07_29_CAMPAIGN_ALL_LANES_CLOSED": {
     "_what_this_is": "HISTORICAL as of 2026-07-30: NOTHING in this block is running. Verified: clean tree at 0e1c2cd0, no worktrees beyond the main checkout. Lane outputs: waterloss-divergence-hunt concluded in local-lab/WATERLOSS-DIAGNOSIS-2026-07-29.md and the fix landed as 23aa85af; hud-recovery wrote local-lab/HUD-LANE-RECOVERED-2026-07-29.md; cutscene-audio landed as 151b1337 (English confirmed by the maintainer's ear); ceremony-audit wrote local-lab/CEREMONY-AUDIT-2026-07-29.md; terrain-parity left no worktree - its landing, if any, is in git log, not asserted here. The dated evidence sub-blocks below (English is Bink track 0, the language-arm trap, the withdrawn claims, the landmines) remain CURRENT and load-bearing.",
-
     "isolation_discipline": "EVERY WRITING LANE IS IN ITS OWN GIT WORKTREE. The main checkout stays clean so it can be gated at any moment and any failure is attributable to one lane. Read-only lanes run unisolated but may write ONLY their single named output note. This is AGENTS.md ## Delegation, applied - the rule exists because four lanes once interleaved edits into SimulationTypes.cs, FirstFlightGame.cs and materialize_retail_assets.py and made the tree unmeasurable.",
-
     "lanes": [
       "WORKFLOW waterloss-divergence-hunt - READ-ONLY, 4 phases. Characterise (4 angles: the two harnesses, NavigateToZone/jet-exit, the client input pipeline, the failing run as data) -> ranked hypotheses -> two-lens adversarial refutation per hypothesis -> diagnosis. Writes ONLY local-lab/WATERLOSS-DIAGNOSIS-2026-07-29.md.",
       "WORKTREE hud-recovery - mines the 1.67 MB transcript of the HUD lane killed mid-sentence on 2026-07-28, writes local-lab/HUD-LANE-RECOVERED-2026-07-29.md, then implements what the recovered evidence supports (likely #105). Owns FirstFlightHud.cs, Level100HudPresentation.cs, Level100HudAssetCatalog.cs.",
@@ -96,34 +83,16 @@
       "WORKTREE terrain-parity - closes ONE of #117 / #93 / #91 / #92, whichever has the strongest existing evidence. Owns FirstFlightWorldView.cs, Level100StaticWorldAsset.cs and the terrain/tree render path.",
       "READ-ONLY ceremony-audit - quantifies unfalsifiable tests, redundant coverage, documentation ritual, and CLAUDE.md/AGENTS.md routing contradictions. Recommends only; the main loop decides. Writes local-lab/CEREMONY-AUDIT-2026-07-29.md."
     ],
-
     "the_reframing_that_drove_the_workflow_IS_REFUTED_2026_07_29": "WITHDRAWN THE SAME DAY IT WAS WRITTEN, by reading the code instead of the summaries. It said: 'a DIRECT-CORE cold career reaches Won while the CLIENT-DRIVEN one drowns, so the defect is in the CLIENT/FRONTEND path.' THAT IS FALSE, and Level100ColdStartTests.cs:148-167 already said so in its own doc comment: 'A direct-Core run WITH THE SAME pointer/integer-pixel quantisation has the SAME outcome, tick, state hash, and pose trace. The UNQUANTISED direct-Core control for the same cold career reaches Won.' The same file carries a test named ClientRoute_IsTheDirectRoutePlusPointerQuantisationAndNothingElse (line 333). So client and direct are the SAME route; the only difference is quantisation. The comment goes further and disclaims the conclusion outright: 'It does not establish a frontend defect or released water-navigation behavior.'",
-
     "what_is_actually_MEASURED_about_the_waterloss": "(1) NavigateToZone is NOT product code. It is a private method of Level100ChainAutopilot in rebuild/OnslaughtRebuild.Core.Tests - the synthetic driver. It is absent from Core, Client and Godot. (2) Level100ChainAutopilot.cs:910-939 is the whole mechanism: `if (state.Level100FlightEnabled && horizontal > 20_000) return FlyLeg(...)` and otherwise, if not already Walker, `SimActions.ToggleMode`. horizontal is MILLIMETRES, so the driver leaves jet mode as soon as the zone is within 20 m horizontally, with NO altitude and NO surface term. On the Target Zone 4 approach that fires 28 m up over open water. (3) The autopilot's own comment at 1971-1977 calls it 'a real defect' and says it was left unfixed 'because the fix is in a method shared with beats 1-8'. (4) Quantised run: Lost/WaterLoss at t17699. Unquantised control: Won. Same cold career.",
-
     "the_hypothesis_this_actually_promotes_REFUTED_2026_07_31": "REFUTED by the #141/#131 lane, measured not argued. (1) #131 was ALREADY IMPLEMENTED - LookAxisResponse.cs ports tan(1.2v)/tan(1.2), applied at Simulation.cs:1650-1652; ours was never linear at the time this paragraph was written as a current claim. (2) The 'retail gives finer control' half is BACKWARDS: the shipped PC build has NO look dead zone (decompile of CController__DoMappings cases 0x0B-0x0E: sensitivity x (cursor - centre) x 0.004333333, clamp, sign gate at 0.0 - constants at VAs 0x005D8BE0/0x005D8568/0x005D856C/0x005D97C8 in the pristine specimen 74154bfa; the GPL 0.36 dead zone is joystick-only, Controller.h:11-12, and the float 0.36 occurs ZERO times in the image) but the cursor is INTEGER PIXELS, so retail's floor is a QUANTUM of ~30 permille - COARSER than the 15-permille half-pixel floor we had invented. We were finer than retail, not harsher. The ferry approach never failed for want of corrections retail affords. The client now reads retail's exact whole-pixel lattice (read-then-ease order, one-pixel anti-stall from 0x0042DA00); the cold career is BIT-IDENTICAL either side (Won t12463 hull 12100, same state hash - the driver only ever requested lattice positions).",
-
     "CONFIRMED_BY_EAR_2026_07_29": "THE FALSIFICATION TEST PASSED. The maintainer played the extracted track and reported 'Sounds like English to me'. That closes the chain at BOTH ends - derived statically from the shipped binary, then confirmed by a human listening to the decoded audio. It was the one check no agent could run, and it was the only outcome that could have overturned the five-hop derivation below. Extracted file: G:\\onslaught-startup-media-v4-lab\\level100-intro-cutscene\\voice-track00.wav, decoded from track 0 of local-lab/safe-copy-bea-pristine/data/video/cutscenes/01.vid. Nothing about the language index is open any more.",
-
     "SETTLED_2026_07_29_english_is_bink_track_0": "The two-day blocker on the intro cutscene's audio is GONE. ENGLISH IS BINK TRACK 0, measured, not inferred. From the pristine specimen BEA.exe.original.backup (74154bfa), file offset = VA - 0x400000: CText__Init's jump table at 0x004f2498 has arms case0 -> mov eax,0x00632D74 -> 'english', case1 -> 0x00632D7C french, case2 -> 0x00632D94 german, case3 -> 0x00632D84 spanish, case4 -> 0x00632D8C italian. g_LanguageIndex = g_Text+0x1c = 0x0083d97c; CFMV__PlayFullscreenWithLoadingGate 0x00465640 forwards `localise ? g_LanguageIndex : 0` into vtable slot +0x2c; five hops on, CBinkOpenThread__VFunc_0_00541140 at 0x0054116d passes it VERBATIM to BINKW32::BinkSetSoundTrack with no remap; and 01.vid's own header (BIKi, ntracks=5) carries its track-ID table at file offset 0x54 reading {0,1,2,3,4}. Identity throughout. Corroborated three ways: localise=FALSE forces track 0 so 0 is also the fallback, CLIParams.cpp:64 defaults mLanguage=LANG_ENGLISH, and the American-English path pins the index to 0 - which also explains six .dat files against five voice lanes. Evidence: local-lab/FMV-IMPLEMENTED-2026-07-28.md, superseded block in section 4.",
-
     "TRAP_the_language_arms_load_out_of_address_order": "Reading the language string table in ADDRESS order gives english, french, spanish, italian, german - and that is the WRONG enum. The switch arms load out of address order; the true order is english, french, GERMAN, spanish, italian. The arm targets at 0x004f2498 are the evidence, the string table is not. I walked into this in the main loop and only caught it by decoding the arms. Anyone re-deriving the language order must read arms, not strings.",
-
     "two_withdrawn_claims_do_not_resurrect_them": "(1) 'Fix shields before the water ditch' - WITHDRAWN. Drowning is not a damage-model outcome; landing in water kills you regardless of shield efficiency. That sequencing reasoned about the wrong failure mode. (2) 'Eleven lanes running' in the 2026-07-28 handoff - it was false when written. Both are recorded in the historical blocks below.",
-
     "landmines_every_lane_is_briefed_on": "The installed BEA.exe is deliberately patched by the maintainer. Two diagnostic checkers exit non-zero BY DESIGN. The smoke golden is deliberately pinned. Read byte evidence only from local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (74154bfa) and name the specimen. local-lab/patches/114-1-*.patch is measured DOES NOT APPLY because the particle parser it depends on was deleted - and task #65 established the starburst sun's assets live in ParticleSets/MainSet.par, so a .par decoder is a known need. DECIDED 2026-07-30: the maintainer authorized restoring the parser from history (fff49ccf), to land WITH a live consumer (MainSet.par -> the starburst sun, #148) rather than as scaffolding."
   },
-
-  "as_of": {
-    "_date_means": "The date of the NEWEST content in this file, not the date it was last read, and NOT a review claim - see _audited for what has actually been checked. Corrected 2026-07-28: this field read '2026-07-27' while the file already carried a _HANDOFF_2026_07_28_READ_THIS_FIRST block, an in_flight._as_of of '2026-07-28 ~11:00', and four 2026-07-28 findings. A reader who trusted the stamp would have concluded the whole file predated a day of work it actually contains. Move this whenever content lands, per _maintenance above.",
-    "date": "2026-08-01",
-    "head": null,
-    "_why_head_is_null": "A HEAD recorded here is wrong the instant it is committed, because the commit that writes it moves HEAD. The first version of this file claimed b9e1ae50 and was already two commits behind on arrival. Run `git log --oneline -8` instead; the commit messages carry the reasoning and are the real record.",
-    "branch": "main",
-    "only_branch": true,
-    "_verify": "git status --short && git log --oneline origin/main..HEAD"
-  },
-
+  "as_of": "2026-08-02 (overnight probe-loop session)",
   "_OVERNIGHT_2026_07_31_FEEL_WINDOW": {
     "_what_this_is": "The overnight feel-window ledger, 2026-07-30 evening through 07-31. The window goal is set as a session Stop-hook (scope: #147 lead, #148, #146, #141/#131, trace mining gated by #149). Maintainer asleep; standing authorization in force; no elevation available or needed.",
     "landed_and_pushed": [
@@ -136,7 +105,6 @@
     "open_follow_ups": "#150 (re-score #6 with video-on references; capture retail video-on options - needs the capture rig, machine now free), #152 (billboard orientation law - retail sun quad is NOT point-facing), #153 (parity_lab ingest semantics for Thread-stop receipts - gates campaign ANALYSIS, not collection), #154 (the vertical-datum law - the last blocker on Transporter visibility, surfaced three times tonight, owning evidence TARGET-CONTACT-GEOMETRY-2026-07-26.md s4.2 which also warns the previously-specified fix is wrong). Deferred by design: #61 20 Hz migration window (P0 delta D03), #63 save-overwrite policy.",
     "corrections_this_window": "#146's 'dive into the ground' half is a SEPARATE defect (the already-indexed _actor_pose vertical-datum issue), not the waypoint order. #147's and #151's premises were both corrected by measurement - the window's pattern is that the task descriptions were honest but their references or assumed conventions were not."
   },
-
   "_STOPPING_POINT_2026_07_31_EVENING": {
     "_what_this_is": "A clean stopping point. All five workstreams closed, tree clean at bb9554b7, nothing unpushed, no worktrees, nothing running. Written from the main loop, not at handoff time.",
     "core_now_runs_at_20_hz": "LANDED bb9554b7. The P0 rebuild delta (DELTA.md D03) is CLOSED. ~30 constants are verbatim shipped values instead of conversions; the 0.983263^1.5 landing-thruster artefact is gone, replaced by retail's 0.975. Gravity was RECOVERED not chosen (Gravity() at thing.h:187 = 0.01, x0.2 morphing, 0.005 zero-energy jet; the specimen's compiler CONSTANT-FOLDED 0.01x0.2 into 0.002 at 0x004074d0) and walker gravity had been 11% too weak. Gates re-run in the main loop: core 170/170, client 441/441, Godot build 0/0, smoke PASS tick 2148 hash d4967b12. Ferry sweep Won 20/20 and objective-4 Complete 20/20, better than the 30 Hz baseline's 18/20 and 11/20.",
@@ -145,7 +113,6 @@
     "still_only_the_maintainer_can_produce": "TTD attach recordings of COMBAT - being shot at, taking damage, transforming. The AI / damage / movement-law category is at ZERO and no unattended capture reaches it: the extended D3D9 proxy sees results (matrices, vertices, textures) and never decisions. The level-521 session is ready and rehearsed: tools/RUNBOOK-level521-native-capture.md, tools/Record-Level521Session.ps1, tools/Test-Level521NativeCoverage.ps1. Starting the level fires NONE of the 17 target natives; destroying the Muspell Research Station cascades into 12 within a minute. Expect 13 of 17.",
     "operating_note_for_the_maintainer": "GODOT windows are driven programmatically with no synthetic input - he can keep working through them. RETAIL BEA windows under message transport are also safe. ARMED GLOBAL INPUT (requires the literal phrase 'I AM AWAY FROM THE KEYBOARD') drives his real mouse and keyboard and is the only mode requiring hands-off; announce it and get an explicit go before starting one."
   },
-
   "_RESULTS_2026_07_31_AFTERNOON": {
     "_what_this_is": "What the five-workstream campaign actually produced. Supersedes the in-flight block below for anything they disagree on.",
     "landed_and_pushed": "4df87b6b MESP part order (+10 meshes) | 4bf71203+68dbe332 level-521 capture workflow | 2f3944dd the last 9 meshes, 213/213, skinning structure | dc0751ae chunk-order closure, 367/367 CMSH streams parse | fc07fef6 D3D9 PROXY EXTENDED (SetTransform/MultiplyTransform/SetSamplerState/CreateTexture; M rows, geometry digests, texture identity; self-test covers all of it) | 99a6e5f2 frontend re-scored against video-on retail, parity plan STALE->CURRENT.",
@@ -162,7 +129,6 @@
     "what_still_needs_the_maintainer": "TTD attach recordings of combat - being shot at, taking damage, transforming. The AI/damage/movement-law category is at ZERO and no unattended capture reaches it (the D3D9 proxy sees results, never decisions). The level-521 session is ready: tools/RUNBOOK-level521-native-capture.md, helper tools/Record-Level521Session.ps1, checker tools/Test-Level521NativeCoverage.ps1. Starting the level fires NONE of the 17 target natives; destroying the Muspell Research Station cascades into 12 within a minute. Expect 13 of 17.",
     "animation_is_the_next_self_contained_gap": "We know how a posed skeleton is DRAWN and nothing about how a pose is PRODUCED. The mesh header carries aFrames/vFrames/hFrames counts nobody has interpreted, and TFRM (75,484 B) is cross-checked as a frame stride but has never reproduced an animation. Reachable WITHOUT the maintainer: decode those fields, then validate against the bone palettes the extended proxy can now capture frame-by-frame. Queue it after #160 lands (both touch cmsh_static_preview.py)."
   },
-
   "_IN_FLIGHT_2026_07_31_FIVE_WORKSTREAM_CAMPAIGN": {
     "_what_this_is": "Live as of 2026-07-31 midday. The maintainer set five workstreams and stepped away for 2-3 h. DELETE OR SUPERSEDE THIS BLOCK WHEN THE LANES LAND - a stale in-flight list caused a real failure on 2026-07-28.",
     "landed_and_pushed_today": "4df87b6b MESP part order (+10 meshes); 4bf71203+68dbe332 level-521 capture workflow (runbook + helper + analyzer); 2f3944dd the last 9 meshes - 213/213 convert with the skinning structure recovered.",
@@ -177,9 +143,7 @@
     "authorization_widened_2026_07_31": "The maintainer explicitly widened scope: patch/launch/drive/capture COPIED targets freely, build and extend our own tools, force values and branches to manufacture the delta you need. He was right that the prior caution was self-imposed. TWO THINGS STAY UNTOUCHED FOR CORRECTNESS, NOT LAW: the installed Steam game, and local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (74154bfa) - that backup is the byte-truth reference every finding is cited against. Patched experiments get fresh copies. TTD RECORDING still needs his elevation; querying never does.",
     "new_tasks_filed_today": "#155 campaign-runner mislabels adjudicated Thread-stops (receipts are the truth); #156 the last mesh gaps (now CLOSED by 2f3944dd - update it); #157 generalize terrain to all 66 levels (the second level becomes buildable); #158 start_cdb_server_test.py is LOAD-FLAKY and its runner's && chaining silently skips six suites after a failure."
   },
-
   "_AUTHORIZATION_2026_07_30": "The maintainer granted standing authorization to commit, push, and release: 'You are authorized to commit, and push, and release at all times' (2026-07-30, in-session, in response to an explicit question about the 65 held commits). CLAUDE.md and AGENTS.md were updated the same day; their former 'separately authorized' closing lines are superseded. Discipline retained, not waived: the first push of the held backlog follows a clean public-boundary pass per release/readiness/PUBLIC_SIGNOFF_COMMANDS.md; after that, pushing is routine. Mutation of installed game directories and pristine binaries remains forbidden by the standing rules.",
-
   "read_first": [
     "README.MD — product and lane overview.",
     "AGENTS.md — contributor boundaries, evidence, delegation, and validation.",
@@ -190,7 +154,6 @@
     "local-lab/PARITY-WORKLIST-2026-07-27.md — ranked work plus a REFUTED table",
     "git log — the reasoning is in commit messages, not only in code"
   ],
-
   "_CODEX_CURRENT_2026_07_29": {
     "_status": "COMPLETE FOR THE BOUNDED PARITY-LAB GOAL. Recovery work, the sealed v5 TTD bridge, two repeated Options drcov campaigns, the MissionScript Pause contract, the measured Options entry correction, the documentation-owner repair, and stale frontend-gate abstention are coherent local commits. Push is not authorized and has not occurred. This does not claim the wider GOAL.md rebuild objective is met.",
     "local_commits": "Recovery and documentation commits run from 88df89f0 through 99f26b9c. Parity tooling is e05f4336; the MissionScript Pause closure is 51c038f5; TTD-attempt documentation and recorder hardening are a0dc24df and cf70e3cb; the final Options, evidence-owner, and stale-gate commits are 1d2fe404, 981c3379, and aaa43097. Run `git status --short --branch` and `git log --oneline origin/main..HEAD`; Git is the exact commit-count authority.",
@@ -236,7 +199,6 @@
     },
     "_update_rule": "Update or replace these fields as work lands. Do not append a parallel current account, and do not promote a parity claim when a canary or comparison is UNSCORED."
   },
-
   "_HISTORICAL_CODEX_RECOVERY_2026_07_28": {
     "_status": "HISTORICAL SNAPSHOT. It described the dirty tree before the 2026-07-29 recovery commits and is not current. _CODEX_CURRENT_2026_07_29 supersedes every operational or status claim here.",
     "baseline": "Recovery began on local main at 6882e916, 30 commits ahead of origin/main and 0 behind. No commit or push is authorized or has occurred in this recovery pass. Run `git status --short --branch` before relying on this.",
@@ -269,7 +231,6 @@
     "fail_closed_checks": "tools/re_function_doc_names_check.py and tools/doc_header_check.py intentionally exit 1 on real drift or stale backlog; both are green after adjudicating their underlying rows rather than loosening them. The native smoke producer and validator are schema v17, and the deterministic golden was deliberately repinned only after two byte-identical native reports plus the matching in-process scenario.",
     "_update_rule": "Update or delete individual fields as their status changes. Do not append a second account of the same fact."
   },
-
   "evidence_stores": {
     "tracked_in_git": [
       "reverse-engineering/RE-INDEX.md",
@@ -288,20 +249,17 @@
       "retired_branches": "local-lab/retired-branches-2026-07-27/codex-branches.bundle, second copy on F:"
     }
   },
-
   "goal_status": {
     "met": false,
     "_goal_revised": "2026-07-27. GOAL.md is authoritative and now carries a Revision history section. Three clauses were added (Godot named, method rule, defaults rule) and one was DEMOTED: the agent-driven Won run is now stated as the ACCEPTANCE TEST for a property, not as the property itself.",
     "accurate_phrasing": "UPDATED 2026-07-30, commit 23aa85af. THE COLD FIRST CAREER NOW REACHES Won. Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface asserts Won/None where it asserted Lost/WaterLoss at t17699, and additionally asserts Target Zone 4 dispatched, so the win comes from event('Reached Target Zone 4') and nothing else. Twenty one-permille perturbations went 18/20 Won with 2 Zone-4 WaterLoss to 20/20 with 0. Gates on main: core 159/159, client 407/407, Godot build clean. THE TWO QUALIFIERS THAT MUST TRAVEL WITH THIS: (1) WHICH CAREER - the cold first career, all four SLOT_TUTORIAL_* unsaved, the only one the shipping client can start. (2) WHAT KIND OF INPUT - player-plausible IN THE OUTPUT CHANNEL ONLY. It goes through InteractiveSession restricted to stick positions a whole retail mouse pixel can produce, zero unreachable look commands; but THE PERCEPTION CHANNEL IS STILL OMNISCIENT - exact Health, full 3-D actor poses, sampled terrain line of sight. So this is NOT evidence a human can do it. GOAL.md's demotion of the driven run to an ACCEPTANCE TEST rather than the goal still applies in full, and the property actually wanted - that a human gets the released experience - is NOT established by this. There is still no human or native-Godot end-to-end run, and the feel/parity objective remains unmet.",
     "_cold_career_moved_2026_07_27_CLOSED_2026_07_30": "The full progression, kept because each step corrected the one before it. Lost/TutorialBroken at t4978 -> Lost/WaterLoss at t17699 with every beat cleared -> Won, commit 23aa85af. The middle step's own correction was that the equally quantised direct-Core run had the SAME terminal tick, state hash and pose trace, so the WaterLoss was never a frontend defect. A 16-agent hunt then refuted BOTH the client-path premise AND its quantisation replacement: the cause was Level100ChainAutopilot.NavigateToZone abandoning jet mode on a pure horizontal-distance test with no altitude term, firing ~28 m above the sea, after which UpdateAirborneWalkerMovement() - which TAKES NO PARAMETERS - fixes the touchdown point at the morph tick. Test-harness code, not product. Everything downstream of the morph is a faithful port; our landing thrusters are retail's exactly (0.983263^1.5 = 0.974999843 against BattleEngineWalkerPart.cpp:330-344's 0.975 per 20 Hz update). THE WATER RULE WAS NEVER WRONG, which is why every guard measured inert or worse - it is byte-exact against BattleEngine.cpp:1249-1266 and is now pinned by Gate C at water+200/+201. Do not retry the naive water guard.",
-
     "_the_241_millimetre_margin_READ_BEFORE_SIMPLIFYING": "The ferry fix uses a TWO-TIER clearance term and the tiers are not decoration. The diagnosis claimed an altitude term would be a no-op for beats 1-8 'by construction, because they are on the ground'. THAT IS FALSE: beats 6 and 8 hand off AIRBORNE at 18,969 mm and 19,759 mm, so the 20,000 mm cruise tier clears beat 8 by 241 MM. Measured alternatives, all equally defensible physics: 12 m keeps six kills but loses the cold career to WaterLoss; 8 m gives two kills plus abort; 5 m gives three kills plus abort. Anyone collapsing the tiers into one number will re-roll beat 9. A gate flies the chain both ways and proves poses are bit-identical until the ferry begins - ferry t15501, first divergence t15594.",
     "_input_plausibility_is_now_measured": "PlayerPlausiblePermille restricts the driver to integer mouse pixels on the lattice {0, +/-30, +/-61, +/-91, ...} from sensitivity 7.0 x 13/3000. The joined cold run is driven ENTIRELY through it: 0 of 12,639 look commands land in the dead zone, asserted in the test. Restricting the existing headline run the same way made it BETTER, not worse (Won at t12931 vs t16301, 11,600 hull vs 10,900) — sub-pixel aim was buying nothing. CAVEAT, stated by the author: input is player-plausible, PERCEPTION IS NOT — the driver still reads actor.Health as an integer and samples terrain directly.",
     "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. Do not report a Won run as goal progress without saying whether the input was player-plausible — the goal now states explicitly that an autopilot reaching Won by means no player could reproduce has proved nothing.",
     "evidence": "rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs tests ColdStart_PlaysLevel100ThroughThePlayerInputSurface and ClientRoute_IsTheDirectRoutePlusPointerQuantisationAndNothingElse establish runs (a)-(c); Level100FullChainTests.cs test ChainAutopilot_ReachesWonByInputAlone establishes returning-player run (d). Commit c02459ec is an earlier implementation point, not the full current four-run interpretation.",
     "defaults_rule_open_items": "The goal forbids shipping a lab artefact as authored behaviour. FIRST SWEEP DONE 2026-07-27: local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md. Task #137 is CLOSED — the pine LOD is now retail's authored 30.0, established from the pristine specimen's own initialisers, and gated by a test. Eight further shipping defaults are NOT retail's; five are unexplained. Read the sweep, do not take this line on trust. The worst is the look-axis dead zone owned by InteractiveSession.RetainPointerOffset (task #141). The window mode and resolution items need the maintainer, not an agent. NOTE: the force-windowed patch is at file offset 0x12A644 (VA 0x0052A644), not 0x12A6C4 — measured by diffing the two safe-copy binaries."
   },
-
   "environment": {
     "retail_install": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Battle Engine Aquila",
     "steam_exe_is_patched_deliberately": "sha256 e7881829. NOT a valid specimen. The maintainer did it on purpose — do not flag it. Evidence: reverse-engineering/binary-analysis/retail-specimen-baseline.md",
@@ -319,22 +277,16 @@
       "ttd_caveat_that_changes_readings": "BEA's clock is QueryPerformanceCounter-based, which keeps REAL time while TTD slows execution. Inside a trace, tick counts and ordering are trustworthy; SECONDS ARE NOT. Do not read a duration out of a trace."
     }
   },
-
   "instruments_built_2026_07_27": {
     "d3d9_proxy": "tools/d3d9-proxy/ — sits between the game and Direct3D; records draw calls with screen-space vertex positions, textures and blend state, and grabs the backbuffer at Present. Passive: import table is KERNEL32 + UCRT only, so it cannot open a window or send input. Intended to replace pixel-fitting for HUD positions; whether it has done so is still open. See _CODEX_CURRENT_2026_07_29.",
     "message_based_input": "tools/send_game_window_input.ps1 — CAN post to a target HWND with no global input, but ONLY under -Transport messages. The default -Transport auto still takes the foreground and uses SendInput/keybd_event/mouse_event. tools/d3d9-proxy/Run-FrontendPageCapture.ps1 passes -Transport messages. Its lParam scan-code defect was fixed in 6254e448.",
     "frontend_gate": "tools/score_frontend_capture.py — compares retail pixels and CAN fail (exit 1 on ceiling breach); returns UNSCORED rather than PASS when nothing is scorable."
   },
-
   "_HISTORICAL_HANDOFF_2026_07_28_SUPERSEDED": {
     "_what_this_is": "Historical recovery record only. It is not an operational handoff and is superseded by _CODEX_CURRENT_2026_07_29 where they disagree.",
-
     "where_the_goal_actually_stands": "NOT MET. An in-process deterministic test driver passing through the client/Core input adapter clears every cold-career beat - all 22 targets destroyed, objective 4 Complete, abort poll never fired, 0 of 12,639 look commands below its player-input quantisation rule - and then drowns on the ferry flight home at t17699. This is not a native Godot or human playthrough and therefore is not the acceptance test. The water loss is the test-chain's terminal mechanical gap, not the only remaining fidelity gap.",
-
     "why_the_ditch_is_not_being_fixed_yet_CORRECTED_2026_07_28": "SUPERSEDED by _CODEX_CURRENT_2026_07_29.cold_level100_runs. The shield-first sequencing argument was wrong, and the later frontend-defect reading was also too strong: the equally quantised direct-Core run matches the client run. No guessed fix is authorized; read the named adversarial note and obtain low-over-water retail evidence first.",
-
     "lanes_running_at_compaction_CORRECTED_2026_07_28": "THE LIST BELOW WAS WRONG WHEN WRITTEN. It claimed eleven lanes were in flight. Checked afterwards by reading the final record of every transcript: of the sixteen agents launched in the 10:39 wave, THIRTEEN ended INTERRUPTED - killed mid-write by the maintainer's earlier 'stop all background tasks' request - and only three completed (static-world animation, the address->name table, and the main-menu 39-draw diff, the last already committed as 5e82ae42). The uncommitted particle, parity-gate, function-doc and lore-book changes sitting in the working tree are the HALF-FINISHED OUTPUT OF KILLED AGENTS, not finished work awaiting a gate. They have never been built. Treat every one as unverified until it is gated file by file. The original list is kept below because it still records what each lane OWNED, which is useful when attributing a change in the tree to a lane.",
-
     "lanes_launched_in_the_10_39_wave_MOSTLY_INTERRUPTED": [
       "shield/damage-model lane - Core and Core.Tests, exclusive - INTERRUPTED, landed NOTHING; not a prerequisite for the water ditch",
       "particles - FirstFlightWorldView.cs, CuratedObjMeshLoader.cs, Level100StaticWorldAsset.cs, ParticleSet*.cs, ParticleEffect*.cs, materialize_retail_assets.py - INTERRUPTED, files in tree",
@@ -347,7 +299,6 @@
       "address->function-name table - COMPLETED, ghidra-function-name-table-2026-07-27.tsv in tree",
       "main-menu 39-draw diff - COMPLETED and COMMITTED as 5e82ae42"
     ],
-
     "lanes_launched_after_the_compaction": [
       "intro FMV (#142) - DONE, measured, UNCOMMITTED and BLOCKED on the cutscene-audio task (#145)",
       "Ghidra-from-trace - DONE, applied 1 rename + 17 comments to the live DB, backed up both sides, main-loop verified from the pristine specimen; staged a 144-native wave it deliberately did NOT apply (#143)",
@@ -355,52 +306,36 @@
       "ambient life #114",
       "HUD blind spots from the trace"
     ],
-
     "the_lane_management_mistake_2026_07_28": "Stated file ownership is ADVISORY; only a worktree is enforcement. Four writing lanes interleaved edits into SimulationTypes.cs, FirstFlightGame.cs and materialize_retail_assets.py, which made the tree unmeasurable until every one of them finished - a failing gate could not be attributed to a lane. The rule is now written into AGENTS.md: any lane that WRITES gets isolation 'worktree' and lands one at a time with a gate between; read-only lanes run free. And never stop writing lanes mid-flight to pause work - that is what produced the unattributable tree in the first place.",
-
     "function_docs_state_MEASURED": "SUPERSEDED by _CODEX_CURRENT_2026_07_29. The corpus and 2026-07-27 name table are tracked. Row-by-row adjudication now yields 1,200 assertions with 0 drift and 0 unresolved.",
-
     "lore_book_mirror_question_SETTLED": "Measured by blob hash across ca9fe1c7^: 866 mirror paths, 872 canonical, ZERO files in the mirror that are not in canonical, 863 of 866 BYTE-IDENTICAL. It was a pure publication duplicate and deleting it lost NOTHING. The 3 that differ are all BattleEngine.cpp/ - AddProjectile, SelectNearestForwardTargetFromGlobalSet, UpdateAutoTargetSetAndFireProjectiles - and are almost certainly the mirror lagging a correction the canonical received, which is itself an argument for the purge.",
-
     "instrument_lies_count_is_now_FOUR": "Named because the shape recurs and each one cost real work. (1) TTD -Module @('BEA.exe') produced an empty 4 MiB chunk a size check read as success. (2) The recorder reported exit 0 for three runs that died in a fatal handler. (3) score_frontend_capture.py returns UNSCORED, which is not a pass. (4) THE WORST: on the unindexed 32 GiB trace, dd of a runtime-written global after !tt <percent> SILENTLY RETURNS THE ON-DISK BYTES FROM BEA.exe - image sections read correctly so naive controls pass, and it produced a complete confident FALSE answer. The first three fail loudly; the fourth lies. Section 1 of local-lab/TTD-LEVEL100-FINDINGS-2026-07-28.md.",
-
     "two_main_loop_errors_worth_not_repeating": "QUAD EXTENT IS NOT VISUAL EXTENT - I read overlapping draw rectangles as overlapping ink and got the language-flag diagnosis exactly backwards; the sprite was materialized and decodable all along. And A CONTROL IS ONLY A CONTROL FOR THE TRACE CLASS IT WAS DESIGNED FOR - I reported a positive control passing on a healthy trace when it was written for dead ones, where its meaning inverts.",
-
     "_historical_actions_no_longer_operational": "Do not execute the old compaction checklist. Current work and sequencing live only in _CODEX_CURRENT_2026_07_29."
   },
-
   "_HISTORICAL_STOPPING_POINT_2026_07_28_END_OF_SESSION": {
     "_read_this_first": "Work stopped here at the maintainer's instruction, at 98% of the weekly usage budget. The tree is COMMITTED and the working tree is clean apart from this file. Written for whoever picks this up next, including a different tool - nothing here depends on Claude-specific state.",
-
     "gate_state_AT_THE_STOPPING_POINT": "ALL THREE GATES GREEN, run from the main loop against these exact commits on a quiet tree. npm run test:rebuild-client = 408 passed / 0 failed. npm run test:rebuild-core = 153 passed / 0 failed (9 m 43 s). dotnet build of OnslaughtRebuild.Godot = succeeded, 0 warnings, 0 errors - which matters because the new cutscene code lives in the Godot project and NEITHER test gate compiles it. CORRECTION, same day: an earlier revision of this field said 'CORE IS UNVERIFIED' because its run had been killed before reporting. It has since been run and it passes. NOT RUN, and therefore still unproven: the Godot smoke (npm run test:rebuild-godot-smoke) and the frontend/gameplay capture gates. Green unit gates are not a parity claim - see GOAL.md.",
-
     "two_checkers_exit_1_ON_PURPOSE_do_not_panic": "tools/re_function_doc_names_check.py and tools/doc_header_check.py BOTH EXIT 1 at this stopping point. That is them working, not the repo being broken - a check that cannot fail is not a gate. re_function_doc_names_check reports real drift between per-function document titles and the live Ghidra names (e.g. CUnit__FinishedPlayingCurrentAnimation at 0x0040eeb0 is actually CBattleEngine__FinishedPlayingCurrentAnimation); doc_header_check reports the header backlog the documentation sweep did not reach before it was stopped, listed in tools/doc_header_backlog.txt. Drive both to 0 as work; do not 'fix' them by loosening the check.",
-
     "commits_that_close_the_session": [
       "382001a3 - AGENTS.md worktree rule, and the withdrawal of the false 'eleven lanes running' handoff",
       "89aa1c49 - the documentation-integrity sweep, PARTIAL, 21 of 29 agents reported",
       "fff49ccf - intro cutscene, ambient-life bindings, particles, parity-gate repair; four lanes that interleaved in one tree"
     ],
-
     "the_three_defects_that_ship_in_fff49ccf": [
       "#145 THE LOUDEST. The intro cutscene plays with Level 100 tutorial music over it for 123.8 s and no dialogue, and gameplay then starts two minutes into its own music bed. CreateLevel100World starts the music before the cutscene runs. Fix the ORDERING first - it is mechanical. The silence needs a binkaudio decode and the English stream index is NOT established; do not guess it.",
       "#146 The ambient Air Trainer flies its authored route BACKWARDS, beginning with a dive into the ground. Flyby Path ships [43,42,41] against chain [41,42,43] and node 43 is at ground level. Reconcile with local-lab/patches/waypoint-fixture-correction-2026-07-27.patch BEFORE writing code.",
       "Particles and the parity-gate repair are the half-finished output of agents killed mid-write. They compile and the client gate passes over them. Neither is a completed lane."
     ],
-
     "what_is_staged_and_deliberately_NOT_applied": [
       "local-lab/patches/114-{1,2,3}-*.patch - ambient life, compile-verified in a scratch tree and reverted. Run core before applying patch 2.",
       "local-lab/ghidra-from-trace-2026-07-28/PROPOSED-*.{tsv,map,txt} - would name all 144 MissionScript natives. Task #143. THERE IS A PROVEN FALSE POSITIVE INSIDE IT: SetSpeed binds to 0x00453AC0, whose bytes are C2 0C 00 - a shared `ret 0x0C` stub. Exclude shared stubs before renaming anything.",
       "local-lab/patches/RECOVERED-wt-auto-uncommitted-2026-07-28.patch - 63 KB rescued from a leftover worktree so it would not be destroyed. Unreviewed; may be superseded."
     ],
-
     "the_single_thing_between_here_and_the_goal_CORRECTED": "Historical phrasing was too strong. The quantised synthetic driver's WaterLoss is not the only fidelity gap and is not yet a demonstrated product defect. See _CODEX_CURRENT_2026_07_29.cold_level100_runs.",
-
     "a_main_loop_mistake_worth_not_repeating": "Stopping background work is not free and is not reversible in the way it looks. A documentation workflow that was minutes from finishing was killed from the main loop on a 'wrap up' instruction that did not ask for it, discarding 8 in-flight agents. The rule now in AGENTS.md - never stop a writing lane mid-flight - was written BEFORE this happened and was then broken by the same session. If work must stop, let lanes reach their own stopping point; the cost of waiting is minutes, the cost of killing is the work.",
-
     "verified_in_the_main_loop_this_session_not_taken_on_trust": "FUN_00536cd0 is SpawnThing, read from the pristine specimen BEA.exe.original.backup (sha256 74154BFA...): `mov dword ptr [0x0064CEE0], 0x0064F9FC` at VA 0x00530048 where 0x0064F9FC is the C string, and `mov edi, 0x00536CD0` at 0x0052FF51 with `mov dword ptr [0x0064CF10], edi` at 0x0052FF62. Both descriptor-table slot offsets proven by direct stores. NOTE the table is CODE-POPULATED: dumping .data shows zeros and looks like a refutation. Read the stores, not the slots."
   },
-
   "_HISTORICAL_IN_FLIGHT_2026_07_28_SUPERSEDED": {
     "_caution": "No lane listed here is running. This section preserves dated evidence pointers only; current work is in _CODEX_CURRENT_2026_07_29.",
     "_as_of": "Historical snapshot from 2026-07-28 ~11:00, superseded.",
@@ -455,16 +390,13 @@
     "uncommitted_and_why": "The frontend draw corrections and the four Options pages are DONE and green (Client 349/349, build clean) but CANNOT be committed independently: InteractiveSession.cs:510 references SimActions.SkipPanning, which does not exist in HEAD. They are coupled to the uncommitted Core skip-panning change, so committing them alone breaks the build at HEAD. Verified, not assumed. Land them together once Core remediation reports.",
     "adjudicated_do_not_relitigate": "The DrawAtlasText change (shadow on the anchor, body at -1,-1) is CORRECT - checked on 63 shadow pairs across six pages and two atlases, zero exceptions, and our menu anchors already ARE retail's shadow anchors on 5 of 7 rows. The Options pages' fitted constants had absorbed the old error and need RE-FITTING; do not add a per-page compensating offset, which would be a double correction."
   },
-
   "live_task_store": {
     "path": "C:\\Users\\david\\.claude\\tasks\\87a27720-c593-4dde-979c-d9e187362510",
     "status_caveat": "Descriptions can be newer than status fields. Read both and verify against Git before treating a task as current.",
     "why_no_ranked_copy_here": "The former highest_value_open arrays included settled, re-scoped, and incorrectly human-blocked tasks. Ranking belongs in the live task store or an owning evidence note, not a second list here."
   },
-
   "_2026_07_27_evening_consolidation": {
     "_what_this_is": "The night's output gathered in one place so nothing is re-derived. POINTERS ONLY - each report is the authority for its own findings; this block is a route to them, not a summary that can drift. Two workflows and eleven agents produced these.",
-
     "reports_written_tonight": {
       "local-lab/SHIPPED-DATA-SWEEP-2026-07-27.md": "22 agents over all 5,515 retail files, ten format families, each hostile-reviewed. 87 gaps survived, 85 open (34 on the startup-through-Level-100 path), 2 killed with refutations. 910 lines.",
       "local-lab/SOURCE-DIVERGENCE-AUDIT-2026-07-27.md": "12 agents pairing all 106 GPL files against our 99 C# files, adversarially verified. 35 divergences survived. Supersedes its own earlier edition in place. CAUTION: its C# line cites can run 30-60 lines low because the tree moved under it.",
@@ -480,7 +412,6 @@
       "local-lab/UNCOMMITTED-CORE-ADVERSARY-2026-07-27.md": "DO NOT COMMIT verdict on the Core diff. Its 'tree is red' half is STALE - it judged 20:32/20:47 snapshots, and the finished tree measured Core 149/149 clean at 21:34. Its NAMED DEFECTS STAND.",
       "local-lab/TTD-PIPELINE-2026-07-27.md": "The harness, its validation, and the ranked target list for when traces work."
     },
-
     "_historical_ranked_actions_at_that_time": [
       "1. LAND THE BLOCKED PILE. Frontend draw corrections + four Options pages + Options guess resolutions are done and green but coupled to uncommitted Core through SimActions.SkipPanning. Check whether Core remediation landed, then commit it all together and re-run every gate.",
       "2. RE-PIN THE SMOKE GOLDEN once Core lands, from a run on that tree. It is deliberately stale and failing; read the comment in rebuild/tools/FirstFlightSmokeValidation.psm1 first.",
@@ -492,10 +423,8 @@
       "8. Historical water-ditch work item. Current interpretation is in _CODEX_CURRENT_2026_07_29.cold_level100_runs.",
       "9. THE 24,636-BYTE WORLD-CHUNK TRAILER. Three nested 256x256 bit planes on 115 of 115 chunks, strongly level-dependent. Sizes MEASURED, occupancy-grid reading INFERRED."
     ],
-
     "instrument_lessons_paid_for_tonight": "Three instruments reported success while measuring nothing: -Module @('BEA.exe') produced an empty 4 MiB chunk that a size check read as success; the TTD recorder reported exit 0 for three runs that died in a fatal handler; and score_frontend_capture.py returns UNSCORED on the Options page, which is not a pass. All three share one shape - a proxy for success standing in for the thing actually wanted. Ask whether a check is CAPABLE of failing before trusting that it passed."
   },
-
   "traps_recorded_the_hard_way": {
     "_caution": "Pointers, not reasoning. Follow each one before acting on it.",
     "items": [
@@ -506,5 +435,34 @@
       "Ask whether a check is CAPABLE of failing before trusting that it passed. See tasks #113, #104, #139.",
       "TWO separate refuted lists exist and they are different sizes. local-lab/PARITY-WORKLIST-2026-07-27.md has a 13-row REFUTED table plus 2 demoted. local-lab/TASK-LEDGER-2026-07-27.md carries a much larger refuted list drawn from task descriptions. Read both; do not quote one count for the other."
     ]
+  },
+  "_PROBE_LOOP_2026_08_02": {
+    "_read_this_first": "The four discovery-loop gaps named in the 2026-08-01 goal are CLOSED with can-fail proofs. Three console campaigns ran. NO COVERAGE DELTA WAS MEASURED and none could be: coverage comes from TTD indexes and tools/ttd_record.ps1 refuses to run non-elevated. Everything below is behavioural evidence, not coverage.",
+    "gaps_closed": {
+      "gap1_oracle_admitted_crashes": "FIXED. classify_exit_code + apply_fault_gate + settleSeconds in tools/probe/probe_harness.py. The gate sits ABOVE the oracle so no oracle kind can launder a crash, and has two independent triggers (NTSTATUS exit code, OnslaughtException.txt). 16 mutations, 16 detected.",
+      "gap2_cross_arm_comparison": "FIXED. tools/probe/compare.py. Enforces: a difference between arms is real only if it exceeds the spread within them. Refuses n=1, refuses runs that never reached level load, refuses arms with different oracle shapes, refuses two payloads grouped under one arm name. 7 self-checks.",
+      "gap3_findings_hand_written": "FIXED. compare.py --emit-finding. The skeleton is deliberately incomplete and --self-check asserts an unedited one is INADMISSIBLE for SUBSTANTIVE reasons (R07/R14/R03), not merely for schema reasons -- the first version of that check passed for the wrong reason and proved nothing.",
+      "gap4_probe_selection": "FIXED. tools/probe/select.py over the ledger snapshot at local-lab/re-ledger/coverage-ledger-2026-08-02-base. Every lever carries a confidence and a falsifier; it can and does return \"no known lever\"."
+    },
+    "campaigns_run": {
+      "_where": "local-lab/probe-runs/campaign-0{1,2,3}/ with compare.json in each",
+      "_predictions_registered_in_advance": "in the tracked manifests tools/probe/probes.campaign-0N.json, committed BEFORE each first launch: 9a1898e1, ef218b67, 70061985",
+      "campaign_01": "10 runs. Poison sound. Within-arm decision-time spread 4.0s (P4 held). P3 falsified: a console command after Lose still runs.",
+      "campaign_02": "12 runs. Lose is INDISTINGUISHABLE from ZZNOTACOMMAND, a command that does not exist, on every available measure -- the rival won and the nicer-sounding claim died. Unpredicted: Win never exits.",
+      "campaign_03": "confirms the Win result with the prediction registered first, and asks whether a console command can do SYNCHRONOUS work (BuildStaticShadows / BuildLandscapeCache)."
+    },
+    "measured_facts_do_not_re_derive": {
+      "bea_exit_code_is_noise": "Four BYTE-IDENTICAL baseline runs returned 0x80000001, 0x80000001, 1, 1. Across 3 campaigns the same input gives 0, 1 and 0x80000001 with no exception log. expectExitCode is useless against BEA. DO NOT widen the NTSTATUS fault band to the warning-severity range to \"catch\" 0x80000001 -- an adversarial review recommended exactly that on correct Windows semantics and it would veto ~30% of all clean runs.",
+      "memstats_cannot_see_within_the_burst": "before/after MemStats came back BYTE-IDENTICAL in all 9 campaign-02 arms. Every autoexec line is dispatched in one burst during level load, before the simulation ticks.",
+      "safe_copy_inherits_engine_logs": "local-lab/safe-copy-bea-pristine accumulates setuphistory.txt from whatever ran there last. The harness now deletes SETUP_HISTORY and EXCEPTION_LOG from the scratch tree after copytree and records it in the receipt. Campaign 01 was checked and is clean (10 runs, 10 distinct hashes).",
+      "d3dx9_is_not_the_product": "A statically-linked D3DX9 block occupies roughly 0x00570000-0x005c8000: 8.50% of bytes observed above it vs 57.99% below. 278,387 dark bytes (45% of never-entered mass) are Microsoft image codecs, stripifier and effect preprocessor -- reachable and worth nothing. Family names cross the boundary; use the address band. Evidence and falsifier: local-lab/RE-PROBE-CATALOGUE-2026-08-02.md section 1.3."
+    },
+    "coverage_baseline": {
+      "snapshot": "local-lab/re-ledger/coverage-ledger-2026-08-02-base",
+      "observed": "886,583 / 1,929,117 = 45.9580% of .text, 69 coverage indexes",
+      "addressable_dark_after_the_d3dx_correction": "203,645 bytes, down from 432,429 before the library band was applied",
+      "reachable_without_elevation": "about 21,000 bytes of it. Everything else needs the maintainer’s elevated window for TTD."
+    },
+    "needs_the_maintainer": "TTD recording only. Open one elevated PowerShell window and the coverage-delta half of the campaign becomes runnable; console probes need nothing."
   }
 }
