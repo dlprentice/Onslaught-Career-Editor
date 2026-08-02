@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "id": "skin-weight-multiplicity-law-2026-07-31",
+  "title": "Shipped skinned meshes carry no weight field because the three bone slots ARE the weights",
+  "date": "2026-07-31",
+  "lane": "rebuild/skinning",
+  "author": "main loop, 2026-07-31",
+  "sourceNote": "local-lab/SKIN-WEIGHT-LAW-2026-07-31.md",
+  "findingKind": "static-read",
+  "_fixtureNote": "The 2026-07-31 skin-weight finding transcribed AS IT WAS ACTUALLY WRITTEN, before the live capture superseded it the same day. Claim, prediction table, corpus counts, residuals and overturning test are taken verbatim from the note. Nothing has been weakened to make the checker look good: every prediction really did come back MATCH, every byte fact really is true, and the finding really did carry an overturning test. What it did not carry is a rival. This fixture exists so the refutation stage is tested against the exact record that beat us.",
+  "claim": {
+    "statement": "A bone's weight is the number of the vertex's three slots that name it, divided by three: p' = ( T[s0]*p + T[s1]*p + T[s2]*p ) * 1/3.",
+    "grade": "MEASURED_STATIC",
+    "mechanism": [
+      "mesh.skin_weights",
+      "exporter.quantizer"
+    ]
+  },
+  "scope": {
+    "population": "all 3,203 shipped skinned vertices across the seven skinned meshes",
+    "covered": "all 3,203 parsed via rebuild/tools/cmsh_static_preview.py",
+    "notCovered": [
+      "dev-format assets, whose 'Bone weights' buffer is a real array and stays NULL for shipped assets",
+      "shipped PMS2 weight arrays, spot-checked on m_mgrunt only"
+    ]
+  },
+  "rivals": [],
+  "predictions": [
+    {
+      "id": "p-third-constant",
+      "statement": "file 0x1DC680 (VA 0x005DC680) holds the float 1/3",
+      "procedure": "read 4 bytes at file offset 0x1DC680 of the pristine specimen",
+      "expected": "AB AA AA 3E, i.e. 0.3333333432674408",
+      "wouldFalsifyIf": "any other float, or a value near 0.5, which would point at a two-bone 50/50 convention rather than thirds",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md, the 'Prediction (stated in advance)' table, written before the reads",
+      "result": "match",
+      "observed": "AB AA AA 3E = 0.3333333432674408",
+      "evidenceRef": [
+        "e-bytes"
+      ]
+    },
+    {
+      "id": "p-fsub",
+      "statement": "VA 0x004B0390 is an fsub against that constant",
+      "procedure": "disassemble 6 bytes at VA 0x004B0390",
+      "expected": "D8 25 80 C6 5D 00, fsub dword ptr [0x005DC680]",
+      "wouldFalsifyIf": "any instruction that is not a subtraction of the 1/3 constant, which would break the greedy-quantizer reading",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md prediction table",
+      "result": "match",
+      "observed": "D8 25 80 C6 5D 00",
+      "evidenceRef": [
+        "e-bytes"
+      ]
+    },
+    {
+      "id": "p-diagonal",
+      "statement": "VAs 0x00502ECF/0F06/0F3D/0F74 store 1/3f as immediates forming a 4x4 diagonal",
+      "procedure": "read the four store instructions and their stack offsets",
+      "expected": "mov dword ptr [esp+X], 0x3EAAAAAB at offsets 0x174/0x188/0x19C/0x1B0, deltas 20 bytes = positions 0,5,10,15 of a float[16]",
+      "wouldFalsifyIf": "offsets that do not form a diagonal, or a fifth store, which would mean the uploaded matrix is not diag(1/3)",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md prediction table",
+      "result": "match",
+      "observed": "all four present, deltas 0x14",
+      "evidenceRef": [
+        "e-bytes"
+      ]
+    },
+    {
+      "id": "p-no-baa",
+      "statement": "the greedy quantizer emits the argmax first, so no shipped two-bone vertex may have the pattern BAA or XYY",
+      "procedure": "parse all seven skinned meshes and tabulate the slot patterns of all 3,203 vertices",
+      "expected": "zero BAA and zero XYY across all 944 two-bone vertices",
+      "wouldFalsifyIf": "one single BAA or XYY vertex, which would mean slot 0 is not the argmax and the multiplicity reading is not the generator's fingerprint",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md, 'Why the zero matters'",
+      "result": "match",
+      "observed": "0 of 944; 2,252 rigid, 809 ABA, 135 AAB, 7 three-bone, 0 out-of-range slot indices",
+      "evidenceRef": [
+        "e-corpus"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "e-bytes",
+      "grade": "MEASURED_STATIC",
+      "instrument": "byte reads by hand at image base 0x400000",
+      "summary": "the 1/3 constant, its single fsub, and the four diag(1/3) immediates",
+      "sample": {
+        "n": 6,
+        "units": "byte reads",
+        "independentReplicates": 1,
+        "sessions": 1
+      },
+      "specimen": {
+        "path": "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup",
+        "sha256": "74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750"
+      }
+    },
+    {
+      "id": "e-corpus",
+      "grade": "CORPUS",
+      "instrument": "rebuild/tools/cmsh_static_preview.py",
+      "summary": "slot-pattern census of every shipped skinned vertex",
+      "sample": {
+        "n": 3203,
+        "units": "shipped skinned vertices",
+        "independentReplicates": 1,
+        "sessions": 1
+      }
+    }
+  ],
+  "residuals": [
+    {
+      "id": "res-tiebreak",
+      "statement": "the quantizer's tie-break (earliest index wins on equal weights) is read from the disassembly's strict > comparison, not exercised by a test",
+      "mechanism": [
+        "exporter.quantizer"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-final-combine",
+      "statement": "the f_skeletal_animation shader fragment's three dp4 blocks and the c[a0.x+10/11/12] relative addressing decode cleanly; the exact final-combine opcodes do not, and are not load-bearing for the law",
+      "mechanism": [
+        "shader.final_combine"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-pms2",
+      "statement": "'Shipped PMS2 carries no weight arrays' was spot-checked on m_mgrunt only",
+      "mechanism": [
+        "asset.pms2"
+      ],
+      "blocksClaim": false
+    }
+  ],
+  "overturnedBy": [
+    {
+      "id": "kill-runtime-capture",
+      "procedure": "a runtime capture with a skinned trooper on screen: at the SetVertexShaderConstant call near VA 0x00502F85, registers c7-c9 must receive exactly (1/3,0,0,0), (0,1/3,0,0), (0,0,1/3,0), and a mid-joint ABA vertex must deform as (2/3)*T_A + (1/3)*T_B",
+      "wouldShow": "if it tracks 50/50, or gives the two-thirds share to the other bone, the law is wrong",
+      "cost": "the extended D3D9 proxy campaign can run this"
+    }
+  ]
+}

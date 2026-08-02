@@ -1,0 +1,100 @@
+{
+  "_comment": [
+    "Four probes that between them exercise every oracle kind. Paths are",
+    "resolved relative to THIS file. Run with --dry-run first; a dry run",
+    "enforces every interlock and stages nothing.",
+    "",
+    "Arm 2 and arm 3 are a matched pair: one payload the engine should accept",
+    "and one it should choke on. Keep the poison arm. An arm that should die",
+    "and does is what separates 'the engine consumed these bytes' from 'the",
+    "engine ignored them', and the container experiment on 2026-08-02 only",
+    "concluded anything because it had one."
+  ],
+  "probes": [
+    {
+      "name": "console-smoke",
+      "note": "Reproduces the 2026-08-02 console proof. Three independent confirmations in one run: MemStats writes a named file, DumpMem writes dump1.mem beside the engine's own control dump0.mem, and Quit ends the process unattended.",
+      "level": 100,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "makeDirs": ["data/Memory", "MemoryDumps"],
+      "autoexec": [
+        "Echo PROBE-CONSOLE-SMOKE",
+        "MemStats probe_console_ok.txt",
+        "DumpMem PROBESMOKE",
+        "Quit"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 90,
+        "of": [
+          { "kind": "fileAppears", "path": "data/Memory/probe_console_ok.txt", "minBytes": 1024 },
+          { "kind": "fileAppears", "path": "MemoryDumps/dump1.mem", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": [
+        "data/Memory/probe_console_ok.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem"
+      ]
+    },
+    {
+      "name": "framelength-half-rate",
+      "note": "g_framelength ships at 0.05 s = 20 Hz and is runtime-settable. Set it during load and confirm the level still loads and quits cleanly. Bind rather than a bare Win: con_win and con_map are guarded by game state [0x008a9ac0] <= 3 and autoexec.con runs DURING load, so the state at that moment is not yet measured.",
+      "level": 100,
+      "makeDirs": ["data/Memory"],
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "autoexec": [
+        "Set g_framelength 0.1",
+        "MemStats framelength_probe.txt",
+        "Quit"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 90,
+        "of": [
+          { "kind": "setupHistoryContains", "text": "Game::LoadLevel 100" },
+          { "kind": "fileAppears", "path": "data/Memory/framelength_probe.txt", "minBytes": 1024 },
+          { "kind": "processExit" }
+        ]
+      },
+      "collect": ["data/Memory/framelength_probe.txt"]
+    },
+    {
+      "name": "authored-archive-accept",
+      "note": "The ACCEPT arm. A same-length authored archive should load and the engine should still be alive at the deadline with no fault log. Fill in the real payload path and its sha256 before running; expectSha256 is not optional, because a probe that stages whatever happens to be at that path measures a different experiment than the one it claims.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "stage": [
+        {
+          "source": "PAYLOAD-authored.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "oracle": {
+        "kind": "survives",
+        "timeoutSeconds": 60
+      },
+      "collect": []
+    },
+    {
+      "name": "authored-archive-poison",
+      "note": "The POISON CONTROL for the arm above, and it must be run every time that arm is run. One invalid opcode killed the engine at about 13 s with 0xC0000005, twice, on 2026-08-02 - which is what proves the engine actually consumes these bytes. If this arm ever stops dying, the accept arm's PASS means nothing.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "stage": [
+        {
+          "source": "PAYLOAD-poison.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "oracle": {
+        "kind": "fatalFault",
+        "timeoutSeconds": 60
+      },
+      "collect": []
+    }
+  ]
+}

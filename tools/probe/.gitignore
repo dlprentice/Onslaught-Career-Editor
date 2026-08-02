@@ -1,0 +1,10 @@
+# probes.integration-proof.json tells you to author payloads INTO this directory,
+# and those payloads are retail-derived level archives. They must never be
+# tracked. Authoring is deterministic -- the five archives of the 2026-08-02 run
+# re-derive byte-identically from the pristine source -- so the hashes in the
+# manifest are the artefact worth keeping, not the files.
+*.aya
+*.manifest.json
+
+# receipts, if anyone points --out here
+probe-runs/

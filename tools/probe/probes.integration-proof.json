@@ -1,0 +1,460 @@
+{
+  "_comment": [
+    "THE INTEGRATION PROOF, run 2026-08-02. Nine launches, six archives, one",
+    "level. This is the manifest that was actually executed, with the real",
+    "payload hashes; it is here so the experiment can be re-run rather than",
+    "described. Paths resolve relative to THIS file.",
+    "",
+    "Produce the six payloads first, into the directory this manifest sits in:",
+    "",
+    "  python tools/probe/probe_author.py author <lab>/data/Resources/905_res_PC.aya \\",
+    "    --out-dir tools/probe --name levelwon_at_checkpoint1 \\",
+    "    --retarget-call Checkpoint1:8=LevelWon --poison opcode --poison null \\",
+    "    --corpus <lab>/data/Resources",
+    "  python tools/probe/probe_author.py author <lab>/data/Resources/905_res_PC.aya \\",
+    "    --out-dir tools/probe --name identity_redeflate --recipe identity.recipe.json",
+    "  python tools/probe/probe_author.py author <lab>/data/Resources/905_res_PC.aya \\",
+    "    --out-dir tools/probe --name inert_retarget_deactivate \\",
+    "    --retarget-call Checkpoint1:8=Deactivate",
+    "",
+    "where identity.recipe.json is {\"world\":\"RLWD\",\"intents\":[]}.",
+    "",
+    "The arms are ordered so the two that must NOT change anything run first: if",
+    "a0 or a4 fails, nothing after it is interpretable and there is no point",
+    "reading the rest.",
+    "",
+    "Measured outcomes on 2026-08-02, process lifetime in seconds:",
+    "  a0  pristine                    75.14  alive at deadline",
+    "  a4  identity re-deflate         75.04  alive at deadline",
+    "  a5  Activate -> Deactivate      75.20  alive at deadline",
+    "  a5b Activate -> Deactivate      75.20  alive at deadline",
+    "  a1  Activate -> LevelWon        52.85  ended its own run, exit 1",
+    "  a1b Activate -> LevelWon        24.56  ended its own run, exit 31595",
+    "  a2  LevelWon + sentinel broken  28.33  ended its own run, exit 0x80000001",
+    "  a2b LevelWon + sentinel broken  26.82  ended its own run, exit 1",
+    "  a3  LevelWon + bad opcode       11.53  FAULTED, 0xC0000005, exception log",
+    "",
+    "The exit codes are not stable across replicates of one archive and are not",
+    "interpreted. The observable that carried the result is the binary one:",
+    "ended-its-own-run versus alive-at-deadline, 4/4 each way."
+  ],
+  "probes": [
+    {
+      "name": "a0-control-pristine",
+      "note": "CONTROL. Untouched 905_res_PC.aya. Establishes that the tree, the CWD pin, -level 905 and the console channel all work, and gives the baseline file set the other arms are compared against. PREDICTION: level loads, MemStats writes its file, engine alive at 75 s, no fault log.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "setupHistoryContains",
+            "text": "Game::LoadLevel 905"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "data/Memory/loop905.txt",
+            "minBytes": 1
+          },
+          {
+            "kind": "survives"
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem",
+        "MemoryDumps/dump3.mem"
+      ]
+    },
+    {
+      "name": "a4-identity-redeflate",
+      "note": "DISCRIMINATOR ARM. Inflate and re-deflate the pristine payload with no edits: the .aya file bytes change, the inflated payload does not. Under the claim this behaves exactly like a0. Under the rival 'any modification ends the run early' it behaves like a1.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "identity_redeflate.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "8e64f41f95f958d90ec41360c46b6722e0f4603c7d1648e103ea94040a55165b"
+        }
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "setupHistoryContains",
+            "text": "Game::LoadLevel 905"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "data/Memory/loop905.txt",
+            "minBytes": 1
+          },
+          {
+            "kind": "survives"
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem"
+      ]
+    },
+    {
+      "name": "a5-inert-retarget",
+      "note": "INERT RETARGET ARM. Checkpoint1 instruction 8: CALL Activate -> CALL Deactivate. Same site, same arity, a native with no level-lifecycle meaning. Under the claim this survives like a0/a4; under the rival 'any operand change at this site ends the run' it self-exits like a1.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "inert_retarget_deactivate.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "273b6d77542ddb045cffea3fa4e78d56f7487fa8862452641a64dbc2ea8a692b"
+        }
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "setupHistoryContains",
+            "text": "Game::LoadLevel 905"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "data/Memory/loop905.txt",
+            "minBytes": 1
+          },
+          {
+            "kind": "survives"
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem"
+      ]
+    },
+    {
+      "name": "a5b-inert-retarget-repeat",
+      "note": "INERT RETARGET ARM. Checkpoint1 instruction 8: CALL Activate -> CALL Deactivate. Same site, same arity, a native with no level-lifecycle meaning. Under the claim this survives like a0/a4; under the rival 'any operand change at this site ends the run' it self-exits like a1.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "inert_retarget_deactivate.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "273b6d77542ddb045cffea3fa4e78d56f7487fa8862452641a64dbc2ea8a692b"
+        }
+      ],
+      "oracle": {
+        "kind": "all",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "setupHistoryContains",
+            "text": "Game::LoadLevel 905"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "data/Memory/loop905.txt",
+            "minBytes": 1
+          },
+          {
+            "kind": "survives"
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem"
+      ]
+    },
+    {
+      "name": "a1-probe-levelwon",
+      "note": "PROBE. Checkpoint1 instruction 8: CALL Activate/0 -> CALL LevelWon/0. One 4-byte operand change, same length, content-anchored. If the engine fires 'game playing' with no player input, LapMonitor posts 'Activate Checkpoint 1', Checkpoint1 handles it, and the level wins itself at gameplay start. PREDICTION: the arm ENDS ITS LEVEL - either the -level run loop terminates the process, or the level reloads and autoexec.con runs a second time (which shows up as MemoryDumps/dump2.mem, since one load produces the engine's dump0 plus our dump1).",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "levelwon_at_checkpoint1.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "cae84da034b989415855747a869d49493130e06285546712c623f6af972f4084"
+        }
+      ],
+      "oracle": {
+        "kind": "any",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "processExit"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "MemoryDumps/dump2.mem",
+            "minBytes": 1
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem",
+        "MemoryDumps/dump3.mem"
+      ]
+    },
+    {
+      "name": "a1b-probe-levelwon-repeat",
+      "note": "INDEPENDENT REPLICATE of a1-probe-levelwon, fresh scratch tree, same archive, same command line. Run because the first pass gave every arm n=1 and the arms are being compared on exit code and lifetime.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "levelwon_at_checkpoint1.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "cae84da034b989415855747a869d49493130e06285546712c623f6af972f4084"
+        }
+      ],
+      "oracle": {
+        "kind": "any",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "processExit"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "MemoryDumps/dump2.mem",
+            "minBytes": 1
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem",
+        "MemoryDumps/dump3.mem"
+      ]
+    },
+    {
+      "name": "a2-null-control",
+      "note": "NULL CONTROL, derived from the a1 archive: a1 plus Checkpoint1's 'end_script' sentinel overwritten with XXXXXXXXXX. The engine reads that sentinel into a stack local it never examines, so this arm must behave EXACTLY like a1. Its oracle is therefore a1's oracle verbatim. PREDICTION: same outcome as a1. If it differs, our model of the record format is wrong and a1's result is not interpretable.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "levelwon_at_checkpoint1.null-control.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "3036abd3366db9aa2603e3259d922af3b1f050a7ed894d5cdf97715fd6879996"
+        }
+      ],
+      "oracle": {
+        "kind": "any",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "processExit"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "MemoryDumps/dump2.mem",
+            "minBytes": 1
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem",
+        "MemoryDumps/dump3.mem"
+      ]
+    },
+    {
+      "name": "a2b-null-control-repeat",
+      "note": "INDEPENDENT REPLICATE of a2-null-control, fresh scratch tree, same archive, same command line. Run because the first pass gave every arm n=1 and the arms are being compared on exit code and lifetime.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "levelwon_at_checkpoint1.null-control.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "3036abd3366db9aa2603e3259d922af3b1f050a7ed894d5cdf97715fd6879996"
+        }
+      ],
+      "oracle": {
+        "kind": "any",
+        "timeoutSeconds": 75,
+        "of": [
+          {
+            "kind": "processExit"
+          },
+          {
+            "kind": "fileAppears",
+            "path": "MemoryDumps/dump2.mem",
+            "minBytes": 1
+          }
+        ]
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem",
+        "MemoryDumps/dump2.mem",
+        "MemoryDumps/dump3.mem"
+      ]
+    },
+    {
+      "name": "a3-poison-opcode",
+      "note": "POISON CONTROL, derived from the a1 archive and differing from it by ONE byte: Checkpoint1 instruction 8's opcode 0x18 -> 0x7f, outside the 0x00..0x1a range SpawnFromOpcode knows. This arm must die. If it ever stops dying, a1's and a0's survival prove nothing, because the engine would not be consuming these bytes at all. PREDICTION: 0xC0000005 during level load, OnslaughtException.txt present, dead well before the deadline.",
+      "level": 905,
+      "sourceRoot": "../../local-lab/safe-copy-bea-pristine",
+      "gameArguments": [
+        "-skipfmv",
+        "-forcewindowed"
+      ],
+      "makeDirs": [
+        "data/Memory",
+        "MemoryDumps"
+      ],
+      "autoexec": [
+        "Echo PROBE-DISCOVERY-LOOP-905",
+        "MemStats loop905.txt",
+        "DumpMem LOOP905"
+      ],
+      "stage": [
+        {
+          "source": "levelwon_at_checkpoint1.poison-opcode.aya",
+          "dest": "data/Resources/905_res_PC.aya",
+          "expectSha256": "4f3f3a18c595c8f3de467f55ff5e9a72269558fe11a0598c39b109690b5bb2cb"
+        }
+      ],
+      "oracle": {
+        "kind": "fatalFault",
+        "timeoutSeconds": 75
+      },
+      "collect": [
+        "data/Memory/loop905.txt",
+        "MemoryDumps/dump0.mem",
+        "MemoryDumps/dump1.mem"
+      ]
+    }
+  ]
+}

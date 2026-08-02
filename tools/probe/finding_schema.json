@@ -1,0 +1,455 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "onslaught://probe/finding-1.json",
+  "title": "Probe finding record, version 1",
+  "description": "The unit a discovery loop hands to the refutation stage. This file is the SINGLE source of truth for structure and enums: tools/probe/refute.py loads it and drives its structural checks from it rather than restating the field list, because two copies of one fact drift (see tools/score_frontend_capture.py on derived ceilings). Cardinality rules that carry a diagnosis - 'you stated no rival', 'you ran no prediction' - are deliberately NOT expressed as minItems here; they belong to named admissibility rules in refute.py so the report says which rule fired instead of a generic schema error.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "date",
+    "lane",
+    "findingKind",
+    "claim",
+    "scope",
+    "rivals",
+    "predictions",
+    "evidence",
+    "residuals",
+    "overturnedBy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Stable slug. Appears in the refutation ledger; do not reuse across different claims."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 8
+    },
+    "date": {
+      "type": "string",
+      "minLength": 10
+    },
+    "lane": {
+      "type": "string",
+      "minLength": 2
+    },
+    "author": {
+      "type": "string"
+    },
+    "sourceNote": {
+      "type": "string",
+      "description": "Path of the write-up this record was distilled from, if any."
+    },
+    "findingKind": {
+      "enum": [
+        "instrument-derived",
+        "static-read",
+        "corpus-derived",
+        "reasoned"
+      ],
+      "description": "instrument-derived means a probe, proxy, tracer or harness WE built produced the evidence. Those owe a control arm that demonstrates the instrument can produce a negative result at all."
+    },
+    "claim": {
+      "type": "object",
+      "required": [
+        "statement",
+        "grade",
+        "mechanism"
+      ],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 16,
+          "description": "ONE assertion. If it needs an 'and', it is two findings."
+        },
+        "grade": {
+          "enum": [
+            "EXECUTED",
+            "MEASURED_STATIC",
+            "CORPUS",
+            "DERIVED",
+            "INFERRED",
+            "ASSERTED"
+          ],
+          "description": "EXECUTED - observed while the engine ran. MEASURED_STATIC - read from specimen bytes. CORPUS - counted over shipped data. DERIVED - computed from a measurement by a stated rule. INFERRED - reasoned from a measurement that does not compel it. ASSERTED - none of the above. Ordered strongest first; the claim may not be graded above the weakest evidence in its discriminating chain."
+        },
+        "mechanism": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          },
+          "description": "Dotted subsystem tags the claim is ABOUT, e.g. 'shader.final_combine', 'exporter.quantizer'. These are matched against residual and discriminator tags, so spell them consistently; tools/probe/refute.py --mechanisms lists the ones already in use."
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "population",
+        "covered",
+        "notCovered"
+      ],
+      "properties": {
+        "population": {
+          "type": "string",
+          "minLength": 4,
+          "description": "What the claim ranges over: 'all shipped skinned vertices', 'every level archive'."
+        },
+        "covered": {
+          "type": "string",
+          "minLength": 1,
+          "description": "How much of that population the evidence actually touched."
+        },
+        "notCovered": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          },
+          "description": "Named exclusions. An empty list on a claim over a population is itself the smell: it says the author did not look for one."
+        }
+      }
+    },
+    "rivals": {
+      "type": "array",
+      "description": "Competing explanations that the SAME evidence would also produce. This is the field the 2026-07-31 skin-weight failure did not have.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "statement",
+          "indistinguishableOn",
+          "discriminator"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 16
+          },
+          "strawman": {
+            "type": "boolean",
+            "description": "Set true only when deliberately recording a rival that is not live. A record whose every rival is a strawman is inadmissible."
+          },
+          "indistinguishableOn": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The observations that are TRUE under both. Listing these is how you notice that your evidence, while real, does not choose."
+          },
+          "discriminator": {
+            "type": "object",
+            "required": [
+              "description",
+              "mechanism",
+              "expectedUnderClaim",
+              "expectedUnderRival",
+              "status",
+              "outcome"
+            ],
+            "properties": {
+              "description": {
+                "type": "string",
+                "minLength": 8
+              },
+              "mechanism": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 3
+                }
+              },
+              "expectedUnderClaim": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expectedUnderRival": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "observed",
+                  "not_observed",
+                  "unobservable",
+                  "planned"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "claim",
+                  "rival",
+                  "ambiguous",
+                  "none"
+                ],
+                "description": "Which side the observation landed on. 'none' is only valid when status is not 'observed'."
+              },
+              "evidenceRef": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "predictions": {
+      "type": "array",
+      "description": "Tests that WERE run, whose results were written down BEFORE running them. Tests not yet run belong in overturnedBy, not here.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "statement",
+          "procedure",
+          "expected",
+          "wouldFalsifyIf",
+          "predictedInAdvance",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 8
+          },
+          "procedure": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Reproducible enough that someone else runs the same thing."
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wouldFalsifyIf": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The concrete outcome that kills the claim. If you cannot name one that the procedure could actually have produced, the test is decoration."
+          },
+          "predictedInAdvance": {
+            "type": "boolean"
+          },
+          "statedAt": {
+            "type": "string",
+            "description": "When/where the prediction was written down - commit, note path, timestamp."
+          },
+          "result": {
+            "enum": [
+              "match",
+              "mismatch",
+              "not_run",
+              "inconclusive"
+            ]
+          },
+          "observed": {
+            "type": "string"
+          },
+          "evidenceRef": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "grade",
+          "instrument",
+          "sample"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "grade": {
+            "enum": [
+              "EXECUTED",
+              "MEASURED_STATIC",
+              "CORPUS",
+              "DERIVED",
+              "INFERRED",
+              "ASSERTED"
+            ]
+          },
+          "instrument": {
+            "type": "string",
+            "minLength": 3,
+            "description": "What did the observing: a script path, a proxy build, a debugger, 'read by hand'."
+          },
+          "summary": {
+            "type": "string"
+          },
+          "sample": {
+            "type": "object",
+            "required": [
+              "n",
+              "units"
+            ],
+            "properties": {
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "units": {
+                "type": "string",
+                "minLength": 2
+              },
+              "independentReplicates": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Separate sessions, runs or specimens. One run repeated 60 times is n=60, replicates=1."
+              },
+              "sessions": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "specimen": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "description": "Required whenever the grade is byte-derived and a specimen path is named: this project's standing rule is that byte findings name the specimen file and its hash."
+          }
+        }
+      }
+    },
+    "residuals": {
+      "type": "array",
+      "description": "Everything still unresolved. blocksClaim is the load-bearing field: a residual whose mechanism is also a discriminator's mechanism CANNOT honestly be marked non-blocking, and that combination is exactly the 2026-07-31 failure.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "statement",
+          "mechanism",
+          "blocksClaim"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 8
+          },
+          "mechanism": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "blocksClaim": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "poisonControl": {
+      "type": "object",
+      "description": "An arm that SHOULD produce a negative outcome. Without one, a clean result cannot be told apart from an instrument that reports clean no matter what.",
+      "required": [
+        "id",
+        "description",
+        "predictedOutcome",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "kind": {
+          "enum": [
+            "poison",
+            "negative-control"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 8
+        },
+        "predictedOutcome": {
+          "type": "string",
+          "minLength": 4
+        },
+        "observedOutcome": {
+          "type": "string"
+        },
+        "result": {
+          "enum": [
+            "failed_as_predicted",
+            "did_not_fail",
+            "not_run"
+          ],
+          "description": "'failed_as_predicted' means the control produced the negative outcome it was built to produce, so the instrument is demonstrably capable of a negative."
+        }
+      }
+    },
+    "overturnedBy": {
+      "type": "array",
+      "description": "Tests NOT yet run that would kill the claim. Never empty: a claim no future observation could overturn is not a finding.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "procedure",
+          "wouldShow"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "procedure": {
+            "type": "string",
+            "minLength": 12
+          },
+          "wouldShow": {
+            "type": "string",
+            "minLength": 8
+          },
+          "cost": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

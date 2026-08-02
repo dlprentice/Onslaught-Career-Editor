@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "id": "skin-weight-executed-law-2026-07-31",
+  "title": "The GPU executes weights (0, 2/3, 1/3) on the three bone slots; slot 0's transform is computed and discarded",
+  "date": "2026-07-31",
+  "lane": "rebuild/skinning",
+  "author": "hypothesis lane, 2026-07-31",
+  "sourceNote": "local-lab/PUZZLE-SKIN-WEIGHTS-2026-07-31.md",
+  "findingKind": "instrument-derived",
+  "_fixtureNote": "The finding that superseded the one in skin-weight-2026-07-31-as-written.json, transcribed from the note that killed it. It is here as the control arm of the self-test: a checker that rejects the wrong finding is worthless if it also rejects the right one, so this must reach SURVIVED, and the mutation tests perturb THIS record one field at a time to prove every rule can fail.",
+  "claim": {
+    "statement": "The linked vertex shader executes p' = 2*T[s1]*p + 1*T[s2]*p, so the weights the GPU applies to (slot0, slot1, slot2) are (0, 2/3, 1/3).",
+    "grade": "EXECUTED",
+    "mechanism": [
+      "shader.skinning_block",
+      "shader.final_combine"
+    ]
+  },
+  "scope": {
+    "population": "every vertex shader the game handed D3D in the sampled sessions, and the skinned draws in level 800",
+    "covered": "144 shaders created across 3 sessions and 2 levels; all 6 that use a c[a0.x+N] palette; 467 runtime vertices of the two Sentinel tentacle meshes",
+    "notCovered": [
+      "the five infantry meshes, decoded and carrying the same slot structure but never caught on screen",
+      "levels other than 800 and 611",
+      "whether the asymmetry is a bug or an intended convention - the two readings are observationally identical except on ABA vertices"
+    ]
+  },
+  "rivals": [
+    {
+      "id": "rival-multiplicity",
+      "statement": "A bone's weight is the number of slots naming it divided by three, so the three slots are summed symmetrically and scaled by 1/3.",
+      "indistinguishableOn": [
+        "file 0x1DC680 = 1/3f",
+        "the single fsub at VA 0x004B0390",
+        "the four diag(1/3) immediates at VA 0x00502ECF/0F06/0F3D/0F74",
+        "every uploaded palette row having norm 1/3",
+        "zero BAA or XYY across all 944 shipped two-bone vertices",
+        "the AAA and AAB slot patterns, on which the two laws give identical results"
+      ],
+      "discriminator": {
+        "description": "the destination registers of the linked shader's second dp4 block, and the registers the accumulator is seeded from",
+        "mechanism": [
+          "shader.final_combine"
+        ],
+        "expectedUnderClaim": "block 2 writes r0.x/.y/.z again (dst tokens 80010000/80020000/80040000, the same as block 1) and the accumulator seeds with add r1, r0, r0 (both source tokens 80E40000), so block 1's result is dead and slot 1 is doubled",
+        "expectedUnderRival": "block 1's result is preserved in a distinct register and each of the three blocks contributes exactly once to the sum",
+        "status": "observed",
+        "outcome": "claim",
+        "evidenceRef": [
+          "e-shader"
+        ]
+      }
+    },
+    {
+      "id": "rival-cpu-skinning",
+      "statement": "Skinning is performed on the CPU and the pose lives in vertex data that is rewritten every frame.",
+      "indistinguishableOn": [
+        "the presence of per-frame buffer traffic in the capture",
+        "the decoded bind pose matching the drawn silhouette"
+      ],
+      "discriminator": {
+        "description": "lock count and content digest of the skinned vertex buffer across 60 frames",
+        "mechanism": [
+          "vertexbuffer.rewrite_cadence"
+        ],
+        "expectedUnderClaim": "unlocks=1 and one single FNV-1a-64 digest for all 60 frames, with a fixed vertex count",
+        "expectedUnderRival": "the buffer is re-locked each frame and its digest changes, as the CPU writes a new pose",
+        "status": "observed",
+        "outcome": "claim",
+        "evidenceRef": [
+          "e-vb"
+        ]
+      }
+    }
+  ],
+  "predictions": [
+    {
+      "id": "p-palette-scale",
+      "statement": "if the weights are carried by the palette scale, every linear row of every uploaded bone matrix has norm exactly 1/3",
+      "procedure": "log every SetVertexShaderConstantF write with the proxy wrapper and take the norm of each linear row of c10..c51",
+      "expected": "row norm = 1/3 for every row",
+      "wouldFalsifyIf": "any row norm at 1/2 or 1, which would mean the weights are 50/50 or carried somewhere other than the palette",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md, 'The test that would still overturn it', written before the capture ran",
+      "result": "match",
+      "observed": "1,344 rows, min 0.333333222, max 0.333333423, max deviation from 1/3 = 1.11e-07",
+      "evidenceRef": [
+        "e-const"
+      ]
+    },
+    {
+      "id": "p-vb-is-bind-pose",
+      "statement": "if skinning is GPU-side, the runtime vertex buffer is the shipped bind pose unchanged",
+      "procedure": "dump the runtime vertices behind the fvf=0x15A draws and compare every field against the decoded asset",
+      "expected": "0 position mismatches above 1e-3, and a fixed vertex count per mesh",
+      "wouldFalsifyIf": "any nonzero mismatch count, or a vertex count that changes between frames",
+      "predictedInAdvance": true,
+      "statedAt": "capture plan for vskin-lvl800-20260731-133529, written before the run",
+      "result": "match",
+      "observed": "0/234 and 0/233; bounds bit-for-bit equal to the decoded bind pose on all six extremes",
+      "evidenceRef": [
+        "e-vb"
+      ]
+    },
+    {
+      "id": "p-slot-stride",
+      "statement": "the stored slot word is the bone index times three, because the palette stride per bone is three registers",
+      "procedure": "for every dumped runtime vertex, check the raw slot words against the asset's BONE index",
+      "expected": "every slot word an exact multiple of 3, and word/3 equal to the asset's BONE index",
+      "wouldFalsifyIf": "any slot word that is not a multiple of 3, or a word/3 that does not name the asset's bone",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md, which derived the x3 stride from the c10 palette base",
+      "result": "match",
+      "observed": "234/234 and 233/233",
+      "evidenceRef": [
+        "e-vb"
+      ]
+    },
+    {
+      "id": "p-specimen-reread",
+      "statement": "the superseded note's four byte predictions reproduce on an independent re-read of the pristine specimen",
+      "procedure": "re-read 0x1DC680, VA 0x004B0390 and the four immediates without consulting the earlier note's recorded values",
+      "expected": "ab aa aa 3e; d8 25 80 c6 5d 00; four movs at stack offsets 0x174/0x188/0x19C/0x1B0",
+      "wouldFalsifyIf": "any read that differs, which would mean the earlier note's byte table was wrong and this one inherited it",
+      "predictedInAdvance": true,
+      "statedAt": "SKIN-WEIGHT-LAW-2026-07-31.md prediction table",
+      "result": "match",
+      "observed": "all confirmed; the dword 0x3EAAAAAB occurs 9 times in the whole image",
+      "evidenceRef": [
+        "e-bytes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "e-shader",
+      "grade": "EXECUTED",
+      "instrument": "tools/d3d9-proxy isolated copy, sha256 6DDB1E67BE87B79BC1B7A2AFF8C503237299459766CD017C1AB86E0380FD0514, CreateVertexShader token-stream wrapper, BEA_D3D9_SHADERS=1",
+      "summary": "complete token streams of every shader the game created; 6 of 144 carry a relatively-addressed palette and all 6 have the identical block",
+      "sample": {
+        "n": 6,
+        "units": "linked shaders carrying a c[a0.x+N] palette, out of 144 created",
+        "independentReplicates": 3,
+        "sessions": 3
+      }
+    },
+    {
+      "id": "e-const",
+      "grade": "EXECUTED",
+      "instrument": "SetVertexShaderConstantF wrapper in the same proxy build",
+      "summary": "c10..c51 is 42 registers = 14 bones x 3, matching m_Sentinel Arm Big's 14-entry BONE array; every linear row is a rotation scaled by 1/3",
+      "sample": {
+        "n": 1344,
+        "units": "palette rows",
+        "independentReplicates": 2,
+        "sessions": 2
+      }
+    },
+    {
+      "id": "e-vb",
+      "grade": "EXECUTED",
+      "instrument": "proxy vertex readback, gate VFvf=346 VMinVerts=200, capture vskin-lvl800-20260731-133529",
+      "summary": "runtime vertices behind the only blend-weight FVF in the whole capture corpus; unlocks=1 and a single digest across 60 frames, reproduced in a second independent session at different addresses",
+      "sample": {
+        "n": 467,
+        "units": "runtime vertices across 2 meshes",
+        "independentReplicates": 2,
+        "sessions": 2
+      }
+    },
+    {
+      "id": "e-bytes",
+      "grade": "MEASURED_STATIC",
+      "instrument": "byte reads by hand, verified at read time",
+      "summary": "independent re-read of the superseded note's byte table",
+      "sample": {
+        "n": 4,
+        "units": "byte reads",
+        "independentReplicates": 1,
+        "sessions": 1
+      },
+      "specimen": {
+        "path": "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup",
+        "sha256": "74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750"
+      }
+    }
+  ],
+  "residuals": [
+    {
+      "id": "res-vb-byte-identity",
+      "statement": "the runtime vertex buffer is not proven byte-identical to the asset: every printed field of all 467 vertices agrees and the bounds agree exactly, but the FNV-1a-64 over the asset's own 48-byte records does not equal the proxy's over the runtime bytes; normal renormalisation at load is the obvious candidate",
+      "mechanism": [
+        "vertexbuffer.byte_identity"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-translation-scale",
+      "statement": "the translation column being scaled by 1/3 is inferred from behaviour (applying the captured palette reproduces a coherent tentacle of the right size) rather than read directly",
+      "mechanism": [
+        "palette.translation"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-infantry",
+      "statement": "only the Sentinel tentacles were observed being drawn; if the infantry path uses a different palette base or FVF, the draw mapping is untested for them",
+      "mechanism": [
+        "mesh.infantry_draw"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-c86",
+      "statement": "c86..c94 are not identified; they are the lighting/fog/eye constants the later part of the shader consumes",
+      "mechanism": [
+        "shader.lighting_constants"
+      ],
+      "blocksClaim": false
+    },
+    {
+      "id": "res-intent",
+      "statement": "bug versus intended convention on the ABA pattern is undecided; there is no ground truth for which bone the artist meant to dominate",
+      "mechanism": [
+        "design.intent"
+      ],
+      "blocksClaim": false
+    }
+  ],
+  "poisonControl": {
+    "id": "control-negative-shaders",
+    "kind": "negative-control",
+    "description": "the same logger, on the 138 shaders that are not the skinning shader, and on a level-611 session that links the skinning shader but draws no skinned mesh",
+    "predictedOutcome": "the palette block is reported for 6 shaders only, and level-611 frames are reported with zero fvf=0x15A draws; if the logger reported the block everywhere, or reported a skinned draw where there was none, it would be fabricating and none of its clean readings would mean anything",
+    "observedOutcome": "6 of 144 carried the block; level 611 linked the shader and the sampled frames contain no fvf=0x15A draw at all",
+    "result": "failed_as_predicted"
+  },
+  "overturnedBy": [
+    {
+      "id": "kill-shader-patch",
+      "procedure": "patch the shipped shader's second-block destinations from r0 to r1 and the seeding add r1, r0, r0 to add r1, r0, r1 - a six-dword edit inside CreateVertexShader, same instruction count, restoring the pre-link IR's intended three-term sum - then capture the same level-800 frame with and without",
+      "wouldShow": "if the rendered tentacle is identical, slot 0 is contributing already and the dead-block reading is wrong, and the whole reversal falls; if it changes by roughly the predicted 0.28-unit mean / 0.86-unit peak, the executed weights are (0, 2/3, 1/3)",
+      "cost": "the proxy already sees pFunction, so this needs no game patch"
+    },
+    {
+      "id": "kill-seventh-shader",
+      "procedure": "find any linked shader anywhere in the game whose skinning block seeds the accumulator with mov r1, r0 after block 1",
+      "wouldShow": "six out of six do not; a seventh that does would mean the linker's output is context-dependent and the law is not uniform",
+      "cost": "cheap - a scan of shaders already captured plus more levels"
+    }
+  ]
+}
