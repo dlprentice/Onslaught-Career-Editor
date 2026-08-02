@@ -66,6 +66,14 @@
   developer-provided material only under its own file-level provenance and terms.
 - Keep `OnslaughtRebuild.Core` deterministic and independent of presentation, filesystem, clock, process, network, and GPU APIs; clients and renderers adapt Core state rather than own simulation truth.
 
+## Driving this headlessly
+
+[`CLI.md`](CLI.md) is the front door for an agent. It carries the JSON envelope, the
+0/1/2 exit-code contract, the whole verb surface, one session that works start to finish,
+and an explicit list of what the GUI can do that the CLI cannot. Read it before writing a
+script against this repository; everything in it was produced by running the commands
+rather than from recollection.
+
 ## Delegation
 
 Delegate bounded reading, searching, measuring, porting, and drafting when doing
