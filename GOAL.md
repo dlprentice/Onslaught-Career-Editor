@@ -9,8 +9,12 @@
 > and one was demoted; see [Revision history](#revision-history) at the bottom
 > for what changed and what each change is a reaction to.
 >
-> Last updated: 2026-07-29. The objective and acceptance test are unchanged;
-> stale current-outcome prose was removed because measured status belongs in
+> **Revised 2026-08-01** by the maintainer: the standing constraint forbidding
+> mutation of the Steam install was replaced. See
+> [Revision history](#revision-history).
+>
+> Last updated: 2026-08-01. The objective and acceptance test are unchanged;
+> measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json).
 > Summary: what "done" means here — the objective, the acceptance test that
@@ -96,7 +100,15 @@ artefact and must never ship as authored behaviour.
 
 ## Standing constraints
 
-- **Never mutate the Steam install or the pristine `BEA.exe`.**
+- **The pristine `BEA.exe` (`74154bfa…`) is never mutated.** It is the
+  measurement baseline for every byte finding in the RE lane. Absolute.
+- **The user's game is theirs.** The app may change an installed game when the
+  person who owns it asks for that — and only with an explicit, informed choice
+  and a verified backup made *before* the write, with no opt-out. Refuse rather
+  than manufacture: a backup taken from an already-modified file and named
+  "original" destroys the only route back.
+- **The user's saves are theirs.** Nothing may destroy save data as a side
+  effect of doing something else.
 - Keep `OnslaughtRebuild.Core` deterministic and free of presentation,
   filesystem, clock, process, network, and GPU dependencies.
 
@@ -116,6 +128,40 @@ world. Pixel scores can expose defects; they are not the goal.
 ---
 
 ## Revision history
+
+### 2026-08-01 — the installed game belongs to the person who installed it
+
+The standing constraint read **"Never mutate the Steam install or the pristine
+`BEA.exe`."** It was written when those two were the same risk. They are not.
+
+The pristine specimen is a *measurement* concern: every byte finding in the RE
+lane is quoted against it, so mutating it would silently invalidate evidence
+nobody would think to re-check. That half is now stated on its own and is
+absolute.
+
+The installed game is a *user* concern, and forbidding it outright was the wrong
+answer. It forced a multi-gigabyte copy of the whole game on anyone who just
+wanted to play theirs patched, and the maintainer had to work around his own rule
+to test anything. A rule that forbids the thing people want produces workarounds,
+not safety.
+
+What replaced it is narrower where it matters and wider where the prohibition
+cost something: the app may change an installed game when its owner asks, and
+only behind an explicit informed choice and a verified backup taken first, with
+no opt-out. Expressed as a precondition the calling code cannot skip rather than
+a step it must remember — `BinaryPatchEngine.AuthorizeInstalledGameWrite` will
+not hand back permission until a verified original sits beside the target.
+
+A third clause was added at the same time, because the work that prompted this
+found something worse than the thing it set out to fix: deleting a safe copy was
+destroying the careers played inside it, silently. Saves are the one thing in
+that folder the game cannot regenerate, so they get their own line.
+
+This paragraph exists because `CLAUDE.md` says this document is not superseded by
+measurement. A file with that status, left contradicting the code, is not a stale
+comment — it is an instruction to a future session to revert working features.
+`CLAUDE.md` and `AGENTS.md` were rewritten to these principles in `65afc257`;
+this file lagged them by a day.
 
 ### 2026-07-27 — the Godot naming, the proxy demotion, and two method rules
 
