@@ -98,8 +98,127 @@ class Lever:
     note: str = ""
 
 
+# THE DENOMINATOR IS NOT BATTLE ENGINE AQUILA.
+#
+# A statically-linked D3DX9 block occupies roughly this address range. Below it
+# 57.99% of bytes are observed; above it, 8.50%, across all 69 indexes. The
+# .rdata of the pristine specimen carries DDERR_ x113, JFIF x7, PNG/zlib/inflate,
+# preprocessor/#include, and D3DX x15 -- the game never decodes a JPEG, inflates
+# a PNG, preprocesses an HLSL effect or stripifies a mesh at runtime.
+#
+# This matters because it inverts the ranking this file shipped with. The
+# largest prize a byte-ranked selector points at -- CFastVB plus CDXTexture,
+# 183,579 dark bytes -- is mostly Microsoft's code. Those bytes ARE reachable:
+# hand the engine a PNG and D3DX will inflate it. Lighting them teaches nothing
+# about Aquila and gives the Godot rebuild nothing at all.
+#
+# Family names do NOT respect the boundary: CFastVB__Create at 0x0051a270 is
+# game code and CFastVB__BuildTriangleAdjacency at 0x0056f620 is library code
+# with the same prefix. The address band is the only reliable cut.
+#
+# FALSIFIER, and it is free on every run: if any probe lights bytes above
+# 0x00570000 in the codec, stripifier or preprocessor clusters WITHOUT that
+# probe having deliberately supplied a foreign-format asset, this classification
+# is wrong and those bytes belong back in the scored denominator.
+# `re_coverage_ledger.py delta` reports newly-lit bodies with addresses.
+#
+# The cut is by address alone; refining it to the exact COMDAT boundary would
+# move a few thousand bytes and change no conclusion here.
+D3DX_BAND = (0x00570000, 0x005C8000)
+
+
+def parse_va(text: str) -> int:
+    try:
+        return int(text, 16)
+    except (TypeError, ValueError):
+        return 0
+
+
+def is_library_code(start_va: int) -> bool:
+    return D3DX_BAND[0] <= start_va < D3DX_BAND[1]
+
+
+def band_overlap(start_va: int, end_va: int) -> float:
+    """Fraction of a region that lies inside the D3DX band.
+
+    A dark region is a RUN of consecutive dark functions, and two of the 933 in
+    the base snapshot straddle the boundary -- 0x0056eb50-0x00574263 (21,680
+    bytes, CFastVB/CTexture) and 0x005be628-0x005c9c69 (46,657 bytes,
+    HResultToString). Classifying either by its start address alone credits the
+    whole run to whichever side it happens to begin on, and both are large
+    enough to matter: together they are 11% of the never-entered dark mass.
+    """
+
+    if end_va <= start_va:
+        return 1.0 if is_library_code(start_va) else 0.0
+    lo = max(start_va, D3DX_BAND[0])
+    hi = min(end_va, D3DX_BAND[1])
+    if hi <= lo:
+        return 0.0
+    return (hi - lo) / (end_va - start_va)
+
+
 # The catalogue. Ordered most specific first; the first match wins.
 LEVERS: tuple[Lever, ...] = (
+    Lever(
+        id="d3dx-library-not-the-product",
+        reach_classes=(),
+        families=(),
+        mechanism=(
+            "Statically-linked D3DX9: image codecs, the mesh stripifier, the "
+            "effect preprocessor. Reachable by handing the engine a foreign "
+            "format, and worth nothing to this project when reached."
+        ),
+        evidence=(
+            "address band 0x00570000-0x005c8000; 8.50% of bytes observed above "
+            "it against 57.99% below; .rdata of specimen 74154bfa carries "
+            "DDERR_ x113, JFIF x7, PNG/zlib/inflate, D3DX x15"
+        ),
+        falsifier=(
+            "any probe lighting bytes in the codec, stripifier or preprocessor "
+            "clusters without having deliberately supplied a foreign-format "
+            "asset -- re_coverage_ledger.py delta reports newly-lit addresses, "
+            "so this check costs nothing and should run every time"
+        ),
+        confidence="PLAUSIBLE",
+        needs_ttd=True,
+        needs_elevation=True,
+        note=(
+            "Not counted as addressable. These bytes would raise a coverage "
+            "percentage and teach nothing; a selector that ranks them first is "
+            "optimising the metric instead of the programme."
+        ),
+    ),
+    Lever(
+        id="content-bake-console",
+        reach_classes=(),
+        families=("CStaticShadows", "CDXLandscape", "CPolyBucket"),
+        mechanism=(
+            "A content-bake pipeline shipped inside the retail executable -- "
+            "mesh optimise, poly-bucket build, static-shadow build, landscape "
+            "palletise -- two of whose entry points are console commands and "
+            "therefore need no archive surgery at all: BuildStaticShadows "
+            "(0x004ebbb0) and BuildLandscapeCache (0x00544700)."
+        ),
+        evidence=(
+            "both appear in the 33-entry console command table in "
+            "PROBE-CONSOLE-2026-08-02; 69,490 dark GAME-code bytes below the "
+            "D3DX band, so every byte lit here is Aquila's own"
+        ),
+        falsifier=(
+            "issue the command from autoexec.con and diff before/after "
+            "MemStats: byte-identical means the command deferred its work to a "
+            "tick that the level-load burst never reaches, and no console probe "
+            "can light this or anything else"
+        ),
+        confidence="PLAUSIBLE",
+        needs_ttd=True,
+        needs_elevation=False,
+        note=(
+            "The only high-value lever whose falsifier can be run unattended "
+            "tonight. Campaign 03 does exactly that."
+        ),
+    ),
     Lever(
         id="unreachable-by-probing",
         reach_classes=("CRT_EH_FUNCLET", "EH_ERROR_PATH"),
@@ -276,7 +395,20 @@ NO_LEVER = Lever(
 
 
 def choose_lever(region: dict[str, str]) -> Lever:
-    """First match wins: family before reach class, catalogue order otherwise."""
+    """First match wins, but the ADDRESS BAND outranks every family name.
+
+    CFastVB__Create is game code and CFastVB__BuildTriangleAdjacency is D3DX9,
+    and they share a prefix. Matching on the family name first would classify
+    the second as an Aquila render target and rank 183,579 bytes of Microsoft's
+    code at the top of the board -- which is precisely what this file did until
+    the band was measured.
+    """
+
+    # Majority of the RUN, not just where it starts.
+    if band_overlap(
+        parse_va(region.get("startVa", "")), parse_va(region.get("endVa", ""))
+    ) > 0.5:
+        return LEVERS[0]  # d3dx-library-not-the-product
 
     families = region.get("topFamilies", "")
     reach = region.get("topReachClass", "")
@@ -308,7 +440,15 @@ def score_region(region: dict[str, str]) -> dict[str, Any]:
     in_total = max(int(region["inCallersTotal"]), 1)
     adjacency = in_observed / in_total
     lever = choose_lever(region)
-    reachable = lever.id != "unreachable-by-probing" and lever.confidence != "NONE"
+    library = lever.id == "d3dx-library-not-the-product"
+    overlap = band_overlap(
+        parse_va(region.get("startVa", "")), parse_va(region.get("endVa", ""))
+    )
+    reachable = (
+        lever.id != "unreachable-by-probing"
+        and not library
+        and lever.confidence != "NONE"
+    )
     return {
         "startVa": region["startVa"],
         "endVa": region["endVa"],
@@ -327,6 +467,9 @@ def score_region(region: dict[str, str]) -> dict[str, Any]:
         "needsTtd": lever.needs_ttd,
         "needsElevation": lever.needs_elevation,
         "reachableByProbing": reachable,
+        "isLibraryCode": library,
+        "libraryBandOverlap": round(overlap, 3),
+        "straddlesLibraryBoundary": 0.0 < overlap < 1.0,
         "falsifier": lever.falsifier,
     }
 
@@ -353,8 +496,9 @@ def build_worklist(
     unreachable = sum(
         r["darkBytes"] for r in scored if r["lever"] == "unreachable-by-probing"
     )
+    library = sum(r["darkBytes"] for r in scored if r["isLibraryCode"])
     no_lever = sum(r["darkBytes"] for r in scored if r["leverConfidence"] == "NONE")
-    addressable = total_dark - unreachable - no_lever
+    addressable = total_dark - unreachable - no_lever - library
 
     candidates = [r for r in scored if r["reachableByProbing"]]
     if exclude_ttd:
@@ -383,6 +527,7 @@ def build_worklist(
         "regionCount": len(scored),
         "darkBytesInRegions": total_dark,
         "unreachableByProbing": unreachable,
+        "libraryNotTheProduct": library,
         "noKnownLever": no_lever,
         "addressableDarkBytes": addressable,
         "byLever": sorted(by_lever.values(), key=lambda e: -e["darkBytes"]),
@@ -406,6 +551,8 @@ def render(worklist: dict[str, Any]) -> str:
     add(f"  unreachable by probing   {worklist['unreachableByProbing']:>9,}  "
         f"{pct(worklist['unreachableByProbing'])}   exception unwind and error "
         "paths")
+    add(f"  D3DX9, not the product   {worklist['libraryNotTheProduct']:>9,}  "
+        f"{pct(worklist['libraryNotTheProduct'])}   reachable, and worth nothing")
     add(f"  no known lever           {worklist['noKnownLever']:>9,}  "
         f"{pct(worklist['noKnownLever'])}   needs a new instrument")
     add(f"  ADDRESSABLE              {worklist['addressableDarkBytes']:>9,}  "
@@ -430,6 +577,10 @@ def render(worklist: dict[str, Any]) -> str:
         add(f"     {row['reachClass']}  {row['families'][:80]}")
         add(f"     largest: {row['largestFunc'][:70]} "
             f"({row['largestFuncBytes']:,} bytes)")
+        if row["straddlesLibraryBoundary"]:
+            add(f"     STRADDLES the D3DX boundary: "
+                f"{row['libraryBandOverlap']:.0%} of this run is library code, "
+                "so its dark bytes are not all Aquila's")
         add(f"     lever: {row['lever']} [{row['leverConfidence']}]"
             + ("  NEEDS TTD + ELEVATION" if row["needsElevation"] else "  unattended"))
         add("")
@@ -502,6 +653,40 @@ def self_check() -> int:
           f"{connected['score']}")
     if not connected["score"] > island["score"]:
         print("FAILED: adjacency is not affecting the ranking at all.")
+        failures += 1
+
+    # THE ADDRESS BAND MUST OUTRANK THE FAMILY NAME. CFastVB__Create is game
+    # code at 0x0051a270 and CFastVB__BuildTriangleAdjacency is D3DX9 at
+    # 0x0056f620, and they share a prefix -- so a selector that matched on the
+    # name would rank Microsoft's code at the top of the board, which is exactly
+    # what this file did before the band was measured.
+    game_side = choose_lever(
+        {"startVa": "0x0051a270", "topReachClass": "RENDER",
+         "topFamilies": "CFastVB(60)"}
+    )
+    library_side = choose_lever(
+        {"startVa": "0x005a32d4", "topReachClass": "RENDER",
+         "topFamilies": "CFastVB(60)"}
+    )
+    print(f"same family, two sides of the band: {game_side.id} vs "
+          f"{library_side.id}")
+    if game_side.id == "d3dx-library-not-the-product":
+        print("FAILED: game code below the band was classified as library.")
+        failures += 1
+    if library_side.id != "d3dx-library-not-the-product":
+        print("FAILED: a region inside the D3DX band was offered as an Aquila "
+              "target.")
+        failures += 1
+
+    console_lever = choose_lever(
+        {"startVa": "0x004ebbb0", "topReachClass": "RENDER",
+         "topFamilies": "CStaticShadows(2); CPolyBucket(1)"}
+    )
+    print(f"the bake pipeline is reachable unattended: "
+          f"{console_lever.id} needs_elevation={console_lever.needs_elevation}")
+    if console_lever.needs_elevation:
+        print("FAILED: the one lever that runs without the maintainer was "
+              "marked as needing them.")
         failures += 1
 
     print("=" * 62)
