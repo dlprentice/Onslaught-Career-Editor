@@ -378,6 +378,7 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
     poisons = [a for a in arms if a["isPoison"]]
     treatments = [a for a in arms if not a["isPoison"]]
+    notes: list[str] = []
     if not poisons:
         return {
             "present": False,
@@ -423,24 +424,82 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
                 "instrument did not discriminate"
             )
         for treatment in treatments:
-            if (
+            if not (
                 treatment["verdictStable"]
                 and poison["verdictStable"]
                 and set(treatment["verdicts"]) == set(poison["verdicts"])
             ):
+                continue
+            # SAME VERDICT IS NOT THE SAME BEHAVIOUR, and the verdict label is
+            # the lossiest thing in the receipt. Measured 2026-08-02, campaign
+            # 02: the poison arm FAILED because its file never appeared, and
+            # the `Win` arm FAILED because the process never exited -- its file
+            # appeared at 10,643 bytes. Self-exit rate 1.0 against 0.0, twelve
+            # runs, no overlap. Reading that as "this arm set separates
+            # nothing" would have thrown away the strongest result the campaign
+            # produced.
+            #
+            # So the question is not "did the labels match" but "is there ANY
+            # measured dimension on which these two arms differ". If there is
+            # none, the instrument really is blind.
+            differences: list[str] = []
+            # FAULT RATE FIRST, because it is the strongest separator and it was
+            # missing. Measured 2026-08-02, campaign 03: the landscape arm
+            # access-violated 3/3 while the poison arm exited cleanly 3/3, and
+            # the only dimension this check reported them differing on was a
+            # 1.5 s timing gap. The right answer for an accidental reason is
+            # still a check resting on the wrong thing.
+            if poison["faultRate"] != treatment["faultRate"]:
+                differences.append(
+                    f"fault rate {poison['faultRate']} vs "
+                    f"{treatment['faultRate']}"
+                )
+            if poison["selfExitRate"] != treatment["selfExitRate"]:
+                differences.append(
+                    f"self-exit rate {poison['selfExitRate']} vs "
+                    f"{treatment['selfExitRate']}"
+                )
+            if poison["levelLoadRate"] != treatment["levelLoadRate"]:
+                differences.append(
+                    f"level-load rate {poison['levelLoadRate']} vs "
+                    f"{treatment['levelLoadRate']}"
+                )
+            p_time = poison["oracleDecisionSeconds"]
+            t_time = treatment["oracleDecisionSeconds"]
+            if p_time["median"] is not None and t_time["median"] is not None:
+                gap = abs(p_time["median"] - t_time["median"])
+                noise = max(p_time["spread"] or 0.0, t_time["spread"] or 0.0)
+                if gap > noise:
+                    differences.append(
+                        f"decision-time medians {p_time['median']}s vs "
+                        f"{t_time['median']}s, gap {gap:.3f}s beyond the "
+                        f"{noise:.3f}s within-arm spread"
+                    )
+            if differences:
+                notes.append(
+                    f"{poison['arm']} (poison) and {treatment['arm']} "
+                    f"(treatment) share the verdict "
+                    f"{sorted(poison['verdicts'])} but are distinguishable on: "
+                    + "; ".join(differences)
+                    + ". The instrument separated them; the verdict label did "
+                    "not."
+                )
+            else:
                 problems.append(
                     f"{poison['arm']} (poison) and {treatment['arm']} "
                     f"(treatment) produced the same verdict "
-                    f"{sorted(poison['verdicts'])} -- this arm set separates "
-                    "nothing"
+                    f"{sorted(poison['verdicts'])} and differ on NO measured "
+                    "dimension -- this arm set separates nothing"
                 )
     return {
         "present": True,
         "sound": not problems,
         "poisonArms": [p["arm"] for p in poisons],
         "problems": problems,
+        "notes": notes,
         "detail": (
             "the poison control produced the negative outcome it was built for"
+            + ("; " + "; ".join(notes) if notes else "")
             if not problems
             else "; ".join(problems)
         ),
