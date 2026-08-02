@@ -229,7 +229,7 @@
                                        FontSize="22"
                                        FontWeight="SemiBold"
                                        TextWrapping="WrapWholeWords" />
-                            <TextBlock Text="Windowed &amp; Mods uses your installed game as read-only source and creates a separate playable copy with the required windowed compatibility base. Optional player mods stay off until you choose them. Research and experiments are in Lab."
+                            <TextBlock Text="Windowed &amp; Mods reads your installed game and creates a separate playable copy with the required windowed compatibility base, or patches your install directly if you ask it to. Optional player mods stay off until you choose them. Research and experiments are in Lab."
                                        Style="{StaticResource SectionBodyTextStyle}"
                                        TextWrapping="WrapWholeWords" />
                             <Button Content="Open Windowed &amp; Mods"

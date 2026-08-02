@@ -31,6 +31,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # and are resolved against ROOT so the gate behaves the same from any cwd.
 SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/enumerate_test_assertions.py", "--self-test"),
+    ("tools/check_installed_game_claims.py", "--self-test"),
+    ("tools/check_installed_game_claims.py", "--check"),
     ("tools/enumerate_test_assertions.py", "--check"),
     ("tools/aya_archive_inventory_tests.py",),
     ("tools/export_game_assets_tests.py",),

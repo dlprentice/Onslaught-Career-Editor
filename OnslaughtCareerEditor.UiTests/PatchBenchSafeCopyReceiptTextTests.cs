@@ -42,7 +42,7 @@ public class PatchBenchSafeCopyReceiptTextTests
             ],
             [
                 $"{HostJoinBoundary}.",
-                "No installed-game mutation.",
+                "Changes nothing outside the safe copy.",
                 "Original BEA.exe remains read-only.",
             ]);
 
@@ -60,7 +60,7 @@ public class PatchBenchSafeCopyReceiptTextTests
             string.Empty,
             "Still not included",
             $"- {HostJoinBoundary}.",
-            "- No installed-game mutation.",
+            "- Changes nothing outside the safe copy.",
             "- Original BEA.exe remains read-only.");
         Assert.That(output, Is.EqualTo(expected));
         Assert.That(output.EndsWith(Environment.NewLine, StringComparison.Ordinal), Is.False);
@@ -279,14 +279,14 @@ public class PatchBenchSafeCopyReceiptTextTests
             ["Windowed mode ready"],
             [
                 $"{HostJoinBoundary}.",
-                "No installed-game mutation.",
+                "Changes nothing outside the safe copy.",
                 "Original BEA.exe remains read-only.",
             ]));
 
         Assert.Multiple(() =>
         {
             Assert.That(CountOccurrences(output, HostJoinBoundary), Is.EqualTo(1));
-            Assert.That(output, Does.Contain("No installed-game mutation."));
+            Assert.That(output, Does.Contain("Changes nothing outside the safe copy."));
             Assert.That(output, Does.Contain("Original BEA.exe remains read-only."));
         });
     }
@@ -342,7 +342,7 @@ public class PatchBenchSafeCopyReceiptTextTests
             [
                 $"{HostJoinBoundary}.",
                 "Host/Join remain unavailable.",
-                "No installed-game mutation.",
+                "Changes nothing outside the safe copy.",
             ]));
 
         Assert.Multiple(() =>
@@ -369,7 +369,7 @@ public class PatchBenchSafeCopyReceiptTextTests
             ],
             [
                 $"{HostJoinBoundary}.",
-                "No installed-game mutation.",
+                "Changes nothing outside the safe copy.",
             ]);
         object helperState = CreateState(
             receipt.Headline,
@@ -390,7 +390,7 @@ public class PatchBenchSafeCopyReceiptTextTests
             "Safe copy ready",
             [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
             ["Windowed mode ready"],
-            ["No installed-game mutation."]);
+            ["Changes nothing outside the safe copy."]);
         object helperStateWithoutBoundary = CreateState(
             missingBoundaryReceipt.Headline,
             missingBoundaryReceipt.Lines.Select(line => (line.Label, line.Value)).ToArray(),
@@ -428,7 +428,7 @@ public class PatchBenchSafeCopyReceiptTextTests
                 "Savegames copied into this safe copy only; source savegames remain read-only.",
             ],
             [
-                "No installed-game mutation.",
+                "Changes nothing outside the safe copy.",
                 "Original BEA.exe remains read-only.",
             ]);
 
@@ -455,7 +455,7 @@ public class PatchBenchSafeCopyReceiptTextTests
                 GetStringListProperty(state, "StillNotIncluded"),
                 Is.EqualTo(new[]
                 {
-                    "No installed-game mutation.",
+                    "Changes nothing outside the safe copy.",
                     "Original BEA.exe remains read-only.",
                     $"{HostJoinBoundary}.",
                 }));
@@ -521,14 +521,14 @@ public class PatchBenchSafeCopyReceiptTextTests
                     " Savegames copied into this safe copy only; source savegames remain read-only. ",
                 ],
                 [
-                    "No installed-game mutation.",
+                    "Changes nothing outside the safe copy.",
                     "Original BEA.exe remains read-only.",
                 ]),
             new(
                 "Safe copy ready",
                 [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
                 ["Windowed mode ready"],
-                [$"{HostJoinBoundary}.", "No installed-game mutation."]),
+                [$"{HostJoinBoundary}.", "Changes nothing outside the safe copy."]),
         ];
 
         foreach (GameProfilePrepareReceipt receipt in receipts)
@@ -588,12 +588,12 @@ public class PatchBenchSafeCopyReceiptTextTests
             "Safe copy ready",
             [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
             ["Windowed mode ready"],
-            ["No installed-game mutation."]));
+            ["Changes nothing outside the safe copy."]));
         string presentBoundaryOutput = InvokePageReceiptFormatter(new GameProfilePrepareReceipt(
             "Safe copy ready",
             [new GameProfileReceiptLine("Profile", "Enhanced Profile Preview")],
             ["Windowed mode ready"],
-            [$"{HostJoinBoundary}.", "No installed-game mutation."]));
+            [$"{HostJoinBoundary}.", "Changes nothing outside the safe copy."]));
 
         Assert.Multiple(() =>
         {

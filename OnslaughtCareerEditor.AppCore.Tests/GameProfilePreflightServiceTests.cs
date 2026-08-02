@@ -68,7 +68,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain(receipt.IncludedChanges, change => change.Contains("Copied control defaults", StringComparison.Ordinal));
             Assert.Contains(receipt.IncludedChanges, change => change.Contains("no control-options manifest was written", StringComparison.Ordinal));
             Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No Host/Join or online multiplayer", StringComparison.Ordinal));
-            Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No installed-game mutation", StringComparison.Ordinal));
+            // Superseded 2026-08-01: this pinned "No installed-game mutation", which read as an
+            // app-wide guarantee on a page that now offers to patch the installed game. The limit
+            // it describes is real but belongs to the profile, so it says that instead. What must
+            // survive is that the receipt still states a containment limit at all.
+            Assert.Contains(receipt.StillNotIncluded, item => item.Contains("nothing outside the safe copy", StringComparison.Ordinal));
             Assert.Contains(receipt.StillNotIncluded, item => item.Contains("No fixed Enhanced copied-control-default claim", StringComparison.Ordinal));
             Assert.DoesNotContain(receipt.StillNotIncluded, item => item.Contains("online ready", StringComparison.OrdinalIgnoreCase));
             Assert.DoesNotContain(receipt.Lines, line => line.Value.Contains(@"C:\Users", StringComparison.OrdinalIgnoreCase));

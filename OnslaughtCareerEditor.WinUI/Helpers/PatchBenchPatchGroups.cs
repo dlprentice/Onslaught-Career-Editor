@@ -89,7 +89,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     : $", including {string.Join(" and ", trackSummaries)}";
 
             return $"Visible rows: {groupItems.Count} {optionLabel}{trackSummary}. " +
-                "Copied targets only; installed game stays read-only. " +
+                "These rows are applied to whichever target you choose - a safe copy by default. " +
                 "Open row details for checks and remaining limits.";
         }
     }

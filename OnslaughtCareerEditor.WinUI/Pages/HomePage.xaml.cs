@@ -116,7 +116,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 AutomationProperties.SetName(HomeSetupActionButton, "Review game folder");
                 SetupTitleTextBlock.Text = "Setup needs attention";
                 SetupStatusTextBlock.Text = "The saved game folder is missing or incomplete. Review it in Settings before using Media or playable safe copies.";
-                SetupGuidanceTextBlock.Text = "Save Lab still works with files you choose manually; the installed game remains read-only.";
+                SetupGuidanceTextBlock.Text = "Save Lab still works with any .bes file you choose, wherever it lives.";
                 return;
             }
 

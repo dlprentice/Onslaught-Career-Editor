@@ -443,7 +443,7 @@ namespace Onslaught___Career_Editor
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
             AddReceiptLimit(stillNotIncluded, "No Host/Join or online multiplayer.");
-            AddReceiptLimit(stillNotIncluded, "No installed-game mutation.");
+            AddReceiptLimit(stillNotIncluded, "Changes nothing outside the safe copy.");
             AddReceiptLimit(stillNotIncluded, "No no-noticeable-difference parity claim.");
             if (result.Level100TextModResult is not null)
             {

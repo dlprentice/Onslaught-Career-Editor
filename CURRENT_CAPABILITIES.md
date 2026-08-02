@@ -104,7 +104,8 @@ as immutable staging evidence; guarded launch validation remains strict.
 
 ### Windowed & Mods
 
-- Treat the installed game and original `BEA.exe` as read-only sources.
+- Treat the installed game and original `BEA.exe` as read-only sources by
+  default; patching them is opt-in and takes a verified backup first.
 - Create an app-owned playable safe game copy.
 - Plan, apply, restore, and verify expected-byte catalog patches on that copy.
 - Launch and stop only the copied-game process started by the app.

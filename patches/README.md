@@ -82,10 +82,12 @@ Experimental rows stay opt-in and must not be promoted by catalog prose alone.
 
 ## Safety
 
-Never patch an installed game directory or its original `BEA.exe`. Create an
-app-owned safe copy through Windowed & Mods, verify the selected rows, and use
-the generated full-file backup for restore. The installed game remains
-read-only.
+Prefer an app-owned safe copy: create one through Windowed & Mods, verify the
+selected rows, and use the generated full-file backup for restore. Patching the
+installed game is possible and is opt-in - it goes through
+`BinaryPatchEngine.AuthorizeInstalledGameWrite`, which refuses until a verified
+`BEA.exe.original.backup` and its `.sha256` sit beside the target. The pristine
+specimen is never a target of either route.
 
 Schema, dependency, evidence-reference, and mutation rules are in
 [CATALOG_CONTRACT.md](CATALOG_CONTRACT.md).

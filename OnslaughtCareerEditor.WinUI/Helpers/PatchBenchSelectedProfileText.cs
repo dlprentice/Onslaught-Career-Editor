@@ -76,12 +76,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (state.SelectedVisibleRowCount == 0)
             {
-                return "Selected safe-copy preset details: Enhanced Copy only. Included changes: verified 16:9 aspect/FOV regions, tested -res 1600 900 launch, and copied 16:9 and mouse-aim options. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup. Limits: No Host/Join or online multiplayer. No all-machine guarantee. No installed-game mutation.";
+                return "Selected safe-copy preset details: Enhanced Copy only. Included changes: verified 16:9 aspect/FOV regions, tested -res 1600 900 launch, and copied 16:9 and mouse-aim options. Restore: recreate the safe copy, restore the copied BEA.exe.original.backup, or restore copied defaultoptions.bea backup. Limits: No Host/Join or online multiplayer. No all-machine guarantee. Changes nothing outside the safe copy.";
             }
 
             if (state.MatchedPreset is null)
             {
-                return $"Selected safe-copy preset details: Manual patch selection. Included changes: {state.SelectedVisibleRowCount} visible row(s). Checks and limits: open row details for what was checked and remaining limits. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. No installed-game mutation.";
+                return $"Selected safe-copy preset details: Manual patch selection. Included changes: {state.SelectedVisibleRowCount} visible row(s). Checks and limits: open row details for what was checked and remaining limits. Restore: restore copied BEA.exe.original.backup, restore copied defaultoptions.bea backup when options were written, or recreate the safe copy. Limits: No Host/Join or online multiplayer. Changes nothing outside the safe copy.";
             }
 
             SafeCopyProfilePreset preset = state.MatchedPreset;
@@ -197,7 +197,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 .ToList();
             AddLimitIfMissing(limits, "No Host/Join or online multiplayer.");
 
-            // Superseded 2026-08-01: this appended "No installed-game mutation." to the limits a
+            // Superseded 2026-08-01: this appended "Changes nothing outside the safe copy." to the limits a
             // player reads in the preset details - on the same page that now offers to patch the
             // installed game, built from the same selection that button consumes. It described what
             // creating a safe copy does, which is still true, so it now says that instead of making

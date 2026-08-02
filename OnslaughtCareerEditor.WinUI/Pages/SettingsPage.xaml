@@ -23,7 +23,7 @@
                     <TextBlock Text="Game Directory"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Choose your installed game folder as read-only source material. The app reads it for saves, media, and safe game copies; it does not edit that folder. Windowed &amp; Mods prepares an app-owned safe game copy from this source."
+                    <TextBlock Text="Choose your installed game folder. The app reads it for saves, media, and safe game copies, and does not change it unless you ask it to in Windowed &amp; Mods - which copies your original executable first."
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Advanced BEA.exe-only patching is separate from the safe game copy workflow."
                                Style="{StaticResource SectionBodyTextStyle}" />

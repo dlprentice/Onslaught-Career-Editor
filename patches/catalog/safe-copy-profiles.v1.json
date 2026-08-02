@@ -36,7 +36,7 @@
             "screenShape=1",
             "mouseLookSensitivity=0.1"
           ],
-          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
+          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; this profile changes nothing outside the copy.",
           "evidence_refs": [
             "patches/README.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
@@ -46,7 +46,7 @@
           "non_claims": [
             "No all-resolution or all-machine compatibility guarantee.",
             "No controller deadzone or look-curve patch.",
-            "No installed-game mutation."
+            "Changes nothing outside the safe copy."
           ]
         }
       ]
@@ -87,7 +87,7 @@
             "screenShape=1",
             "mouseLookSensitivity=0.1"
           ],
-          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
+          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; this profile changes nothing outside the copy.",
           "evidence_refs": [
             "patches/README.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
@@ -97,7 +97,7 @@
           "non_claims": [
             "No all-resolution or all-machine compatibility guarantee.",
             "No controller deadzone or look-curve patch.",
-            "No installed-game mutation."
+            "Changes nothing outside the safe copy."
           ]
         },
         {
@@ -165,7 +165,7 @@
             "screenShape=1",
             "mouseLookSensitivity=0.1"
           ],
-          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
+          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; this profile changes nothing outside the copy.",
           "evidence_refs": [
             "patches/README.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
@@ -175,7 +175,7 @@
           "non_claims": [
             "No all-resolution or all-machine compatibility guarantee.",
             "No controller deadzone or look-curve patch.",
-            "No installed-game mutation."
+            "Changes nothing outside the safe copy."
           ]
         },
         {
@@ -333,7 +333,7 @@
             "screenShape=1",
             "mouseLookSensitivity=0.1"
           ],
-          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
+          "restore_strategy": "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; this profile changes nothing outside the copy.",
           "evidence_refs": [
             "patches/README.md",
             "reverse-engineering/binary-analysis/widescreen-patch-analysis.md",
@@ -343,7 +343,7 @@
           "non_claims": [
             "No all-resolution or all-machine compatibility guarantee.",
             "No controller deadzone or look-curve patch.",
-            "No installed-game mutation."
+            "Changes nothing outside the safe copy."
           ]
         },
         {
@@ -358,7 +358,7 @@
           ],
           "launch_arguments": [],
           "copied_options_edits": [],
-          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+          "restore_strategy": "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; this profile changes nothing outside the copy.",
           "evidence_refs": [
             "patches/README.md",
             "reverse-engineering/binary-analysis/executable-analysis.md",

@@ -74,7 +74,7 @@
                                AutomationProperties.HeadingLevel="Level2"
                                FontSize="18"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="This app does not include the Battle Engine Aquila game itself. When a workflow needs game data, it reads your configured game install as read-only input."
+                    <TextBlock Text="This app does not include the Battle Engine Aquila game itself. When a workflow needs game data it reads your configured install, and changes it only where you have asked it to and it has backed the original up first."
                                AutomationProperties.AutomationId="AboutGameInstallBoundaryNote"
                                Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Onslaught Toolkit is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights holders, and its licenses grant no rights in the retail game or its assets."

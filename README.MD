@@ -31,9 +31,11 @@ this section — no .NET, no Node, no Python, no build.
    it at your game folder once in Settings.
 5. Open **Windowed & Mods**, choose **Create safe copy**, then **Launch**.
 
-That copy runs windowed at 1600x900 with the widescreen correction applied. Your
-installed game is never modified — the app only ever reads it and works in a
-separate folder it owns. Optional extras (a subtitle mod, early flight, a local
+That copy runs windowed at 1600x900 with the widescreen correction applied. By
+default your installed game is only read and everything happens in a separate
+folder the app owns. If you would rather patch your own install, Windowed & Mods
+will — after copying and verifying your original executable, so you can put it
+back. Optional extras (a subtitle mod, early flight, a local
 split-screen preset) stay off until you turn them on.
 
 You can also edit a career save, browse the soundtrack, voice lines, cutscenes

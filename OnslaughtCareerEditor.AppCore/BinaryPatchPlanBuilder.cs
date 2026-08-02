@@ -110,7 +110,7 @@ namespace Onslaught___Career_Editor
                 s_windowedCompatibilityKeys,
                 new[] { "-res", "1600", "900" },
                 new[] { "screenShape=1", "mouseLookSensitivity=0.1" },
-                "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; the installed game is never changed.",
+                "Restore the copied BEA.exe.original.backup and copied defaultoptions.bea backup, or recreate the safe copy; this profile changes nothing outside the copy.",
                 new[]
                 {
                     "patches/README.md",
@@ -122,7 +122,7 @@ namespace Onslaught___Career_Editor
                 {
                     "No all-resolution or all-machine compatibility guarantee.",
                     "No controller deadzone or look-curve patch.",
-                    "No installed-game mutation.",
+                    "Changes nothing outside the safe copy.",
                 }),
         };
 
@@ -262,7 +262,7 @@ namespace Onslaught___Career_Editor
                         new[] { "free_camera_aurore_gate_bypass", "free_camera_keyboard_forward_q_hook" },
                         Array.Empty<string>(),
                         Array.Empty<string>(),
-                        "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; the installed Steam executable is never changed.",
+                        "Restore the copied BEA.exe.original.backup snapshot or recreate the safe copy; this profile changes nothing outside the copy.",
                         new[]
                         {
                             "patches/README.md",

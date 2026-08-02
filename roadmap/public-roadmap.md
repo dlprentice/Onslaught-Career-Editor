@@ -84,7 +84,8 @@ particular is a live limit on what modding is proven to do.
 
 ## Boundaries
 
-- Never mutate an installed game or synthesize a save.
+- Never synthesize a save. Change an installed game only when its owner asks,
+  behind an explicit choice and a verified backup made before the write.
 - Preserve unknown bytes, expected-byte patching, backup/restore, licenses,
   credits, provenance, and third-party terms.
 - Do not track or package retail game assets or converted copies. Keep exact
