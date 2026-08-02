@@ -431,6 +431,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerShieldsHoldWarningTextBlock.Text = LiveTrainerPageText.ShieldsHoldWarning;
             LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
             LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
+            LiveTrainerVulnerableHeadlineTextBlock.Text = LiveTrainerPageText.VulnerableHeadline;
+            LiveTrainerVulnerableUseCheatTextBlock.Text = LiveTrainerPageText.VulnerableUseTheCheatInstead;
+            LiveTrainerVulnerableEvidenceTextBlock.Text = LiveTrainerPageText.VulnerableNote;
             LiveTrainerNothingOfferedHeadlineTextBlock.Text = LiveTrainerPageText.NothingOfferedHeadline;
             LiveTrainerNothingOfferedTextBlock.Text = LiveTrainerPageText.NothingOfferedNote;
         }
@@ -609,6 +612,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerEnergyValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Energy);
             LiveTrainerShieldsValueTextBlock.Text = LiveTrainerPageText.FormatVital(vitals?.Shields);
             LiveTrainerStateValueTextBlock.Text = LiveTrainerPageText.FormatState(vitals);
+            LiveTrainerVulnerableValueTextBlock.Text = LiveTrainerPageText.DescribeVulnerable(vitals);
 
             string? blocked = LiveTrainerPageText.DescribeWhyWritingIsBlocked(attached, _lastTrainerReading);
             SetLineText(LiveTrainerWritingBlockedTextBlock, blocked ?? string.Empty);

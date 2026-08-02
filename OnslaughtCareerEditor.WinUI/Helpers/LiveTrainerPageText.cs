@@ -116,6 +116,54 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             + "back up rather than freezing it, so you still take damage between writes, and one hit "
             + "big enough to kill you outright will still kill you.";
 
+        // ------------------------------------------------------------------ god mode
+
+        /// <summary>
+        /// The headline for the field that decides whether damage sticks. It is deliberately not
+        /// called god mode here: the app has a god mode that works, on this same page, and it is a
+        /// different thing.
+        /// </summary>
+        public const string VulnerableHeadline =
+            "Damage switch: found in the game's code, not yet tested here.";
+
+        public const string VulnerableNote =
+            "The game keeps one number that decides whether a hit counts. It was found on 1 August "
+            + "2026 by reading the game's own damage routine, where setting it to zero makes the "
+            + "routine put your life, shields and energy back exactly as they were a moment "
+            + "earlier - which is why it stops new damage but never repairs a hull you have "
+            + "already lost. It is shown here and not changed, because nothing has written to it "
+            + "in a running game yet. The three numbers above only got their controls after "
+            + "somebody watched a value change on the HUD, and this has not had that.";
+
+        /// <summary>
+        /// The thing to do instead, and it is not a consolation prize - it is the better route.
+        /// The save-name God mode was confirmed in a real mission on 2026-03-29 and is already on
+        /// this page; the trainer section simply never mentioned it.
+        /// </summary>
+        public const string VulnerableUseTheCheatInstead =
+            "There is a working god mode on this page already: tick God mode above and write the "
+            + "save. The game turns it on itself when your save name contains the word, and it was "
+            + "checked in a real mission - damage stopped counting, and the pause menu showed "
+            + "God ON.";
+
+        /// <summary>How the field reads, without interpreting a number that makes no sense.</summary>
+        public static string DescribeVulnerable(LivePlayerVitals? vitals)
+        {
+            if (vitals?.Vulnerable is null)
+                return "-";
+
+            bool? invulnerable = vitals.IsInvulnerable;
+            if (invulnerable is null)
+            {
+                return $"{vitals.Vulnerable.AsInt32} - not a 0 or a 1, so this is not the switch "
+                    + $"(bytes {vitals.Vulnerable.RawHex})";
+            }
+
+            return invulnerable.Value
+                ? $"0 - damage would not stick (bytes {vitals.Vulnerable.RawHex})"
+                : $"1 - damage counts (bytes {vitals.Vulnerable.RawHex})";
+        }
+
         public const string NothingOfferedHeadline =
             "Ammunition and game speed are not offered.";
 

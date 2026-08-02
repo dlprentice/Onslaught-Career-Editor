@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -538,6 +539,66 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("jet", LiveTrainerBattleEngineState.Describe(3));
             Assert.Null(LiveTrainerBattleEngineState.Describe(0));
             Assert.Null(LiveTrainerBattleEngineState.Describe(4));
+        }
+
+        // ============================================================ the damage switch
+
+        [Fact]
+        public void TheDamageSwitchIsDecodedAndItsPolarityIsZeroMeansInvulnerable()
+        {
+            // CBattleEngine::Damage reads this, and `jnz` skips the restore - so the restore runs
+            // when the field is zero. Getting the polarity backwards would put "you are safe" on
+            // screen for a player who is not, which is the worst thing this page could say.
+            LivePlayerVitals invulnerable = DecodeWithVulnerable(0);
+            Assert.True(invulnerable.VulnerableLooksLikeABool);
+            Assert.True(invulnerable.IsInvulnerable);
+
+            LivePlayerVitals mortal = DecodeWithVulnerable(1);
+            Assert.False(mortal.IsInvulnerable);
+
+            Assert.Equal(0x15C, LiveTrainerAddresses.VulnerableOffset);
+        }
+
+        [Fact]
+        public void ADamageSwitchThatIsNotZeroOrOneIsRefusedRatherThanInterpreted()
+        {
+            LivePlayerVitals nonsense = DecodeWithVulnerable(0x4048F5C3);
+
+            Assert.False(nonsense.VulnerableLooksLikeABool);
+            Assert.Null(nonsense.IsInvulnerable);
+        }
+
+        [Fact]
+        public void AReadTooShortToReachTheDamageSwitchReportsAbsenceRatherThanZero()
+        {
+            // Zero is a meaning on this field. A truncated buffer that decoded to zero would say
+            // "damage will not stick" about a field nobody read, so it decodes to nothing at all.
+            byte[] tooShort = new byte[LiveTrainerAddresses.VulnerableOffset];
+
+            LivePlayerVitals vitals = LivePlayerVitalsDecoder.Decode(0x0A000000, 0x0B000000, tooShort);
+
+            Assert.Null(vitals.Vulnerable);
+            Assert.Null(vitals.IsInvulnerable);
+            Assert.False(vitals.VulnerableLooksLikeABool);
+        }
+
+        [Fact]
+        public void TheDamageSwitchIsInsideTheBlockTheTrainerAlreadyReads()
+        {
+            // It costs nothing to read: it sits below the state field, which the trainer has
+            // always fetched. No second read, no wider window.
+            Assert.True(
+                LiveTrainerAddresses.VulnerableOffset + 4 <= LivePlayerVitalsDecoder.RequiredBattleEngineByteCount);
+        }
+
+        private static LivePlayerVitals DecodeWithVulnerable(uint raw)
+        {
+            byte[] block = new byte[LivePlayerVitalsDecoder.RequiredBattleEngineByteCount];
+            BinaryPrimitives.WriteUInt32LittleEndian(
+                block.AsSpan(LiveTrainerAddresses.VulnerableOffset, 4),
+                raw);
+
+            return LivePlayerVitalsDecoder.Decode(0x0A000000, 0x0B000000, block);
         }
 
         // ============================================================ fakes

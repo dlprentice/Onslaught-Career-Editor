@@ -453,6 +453,25 @@ namespace Onslaught___Career_Editor.Cli
                     name = reading.Vitals.StateName,
                 },
             vitalOffsetsConfirmedAgainstALiveProcess = true,
+
+            // Read and reported, never written. The offset came out of CBattleEngine::Damage in
+            // the pristine specimen on 2026-08-01; nothing has written to it in a running game, so
+            // there is no `trainer set --vulnerable` and the payload says why in the same breath
+            // it hands over the number.
+            damageSwitch = reading.Vitals?.Vulnerable is null
+                ? null
+                : new
+                {
+                    address = "0x" + reading.Vitals.Vulnerable.Address.ToString("X8", CultureInfo.InvariantCulture),
+                    raw = reading.Vitals.Vulnerable.AsInt32,
+                    rawHex = reading.Vitals.Vulnerable.RawHex,
+                    looksLikeABool = reading.Vitals.VulnerableLooksLikeABool,
+                    invulnerable = reading.Vitals.IsInvulnerable,
+                    provenLiveByAWrite = false,
+                    note = "Zero means damage is undone. Position read from the bytes, never written "
+                        + "in a running game - so no verb sets it. The save-name God mode cheat was "
+                        + "checked in a real mission and is the working route.",
+                },
         };
 
         private static object? Describe(LiveTrainerFieldReading? field) => field is null
@@ -486,9 +505,23 @@ namespace Onslaught___Career_Editor.Cli
             }
 
             ctx.Line($"{"state",-10} {vitals.State.AsInt32.ToString(CultureInfo.InvariantCulture),-16} {vitals.State.RawHex,-12} {vitals.StateName ?? "(unknown value)"}");
+
+            if (vitals.Vulnerable is not null)
+            {
+                string meaning = vitals.IsInvulnerable switch
+                {
+                    true => "0 = damage is undone",
+                    false => "1 = damage counts",
+                    null => "not 0 or 1, so this is not the switch",
+                };
+                ctx.Line($"{"damage",-10} {vitals.Vulnerable.AsInt32.ToString(CultureInfo.InvariantCulture),-16} {vitals.Vulnerable.RawHex,-12} {meaning}");
+            }
+
             ctx.Line();
             ctx.Line("These three were read out of a running mission on 1 August 2026, and changing life");
             ctx.Line("took. If the numbers above look like nonsense, they are - and writing is refused.");
+            ctx.Line("The damage switch is shown and never set: its position is known from the bytes,");
+            ctx.Line("but nothing has written to it in a running game.");
         }
 
         /// <summary>

@@ -91,8 +91,9 @@ namespace Onslaught___Career_Editor
         /// </summary>
         private static Composition Ascent()
         {
-            // A minor: A C D E G. Semitones above A2.
-            const int a = 0, c = 3, d = 5, e = 7, g = 10, aa = 12, cc = 15, dd = 17, ee = 19, gg = 22;
+            // A minor: A C D E G. Semitones above A2. The low C is never played - the bass line
+            // walks A-G-F-E and the melody takes C an octave up - so it is not bound here.
+            const int a = 0, d = 5, e = 7, g = 10, aa = 12, cc = 15, dd = 17, ee = 19, gg = 22;
 
             int[] bass = Repeat(new[]
             {

@@ -52,6 +52,60 @@ This is the current best explanation for:
 
 Treat that as a strong mechanism inference, not yet a direct vfunc-by-vfunc proof.
 
+## The Steam build's `mVulnerable` is at `CBattleEngine + 0x15C` (2026-08-01)
+
+**Evidence:** MEASURED. Byte pattern read out of `CBattleEngine::Damage` in
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, corroborated
+by `references/Onslaught/BattleEngine.cpp:2234`.
+
+This closes the "exact implementation boundary" question raised above. The
+restore is not an inference from the internal source any more - it is in the
+Steam binary, at a known offset, with a readable polarity.
+
+`CBattleEngine::Damage`, VA `0x0040A890` (file offset `0x00A890`) - the same
+function the trainer's vital offsets came from. At `+0x035a`:
+
+```
++0x035a  8b 86 5c 01 00 00    mov   eax, [esi+0x15C]      ; mVulnerable
++0x0360  85 c0                test  eax, eax
++0x036e  75 1e                jnz   +0x1e                 ; non-zero -> damage stands
++0x0370  8b 54 24 04          mov   edx, [esp+0x04]       ; life,    from the prologue
++0x0374  8b 44 24 08          mov   eax, [esp+0x08]       ; shields, from the prologue
++0x0378  8b 4c 24 0c          mov   ecx, [esp+0x0C]       ; energy,  from the prologue
++0x037c  89 96 f8 00 00 00    mov   [esi+0x0F8], edx      ; life restored
++0x0382  89 86 00 01 00 00    mov   [esi+0x100], eax      ; shields restored
++0x0388  89 8e fc 00 00 00    mov   [esi+0x0FC], ecx      ; energy restored
+```
+
+Three things make this conclusive rather than suggestive:
+
+1. **The restored values are the prologue's own snapshot.** Life at `[esp+0x04]`,
+   shields at `[esp+0x08]`, energy at `[esp+0x0C]` are read back in order into
+   `+0x0F8`, `+0x100`, `+0x0FC` - the three vital offsets. Nothing else in the
+   function does that.
+2. **The shape matches the source exactly.** `BattleEngine.cpp:2234` is
+   `if (mVulnerable == FALSE)` guarding a restore of those same three. This is
+   that `if`, compiled.
+3. **The polarity is readable from the jump.** `jnz` skips the restore, so the
+   restore runs when the field is **zero**. Zero is invulnerable, matching
+   `SetVulnerable(FALSE)` in `Player.cpp:229`.
+
+**It is a per-hit undo, not a heal.** That is why the 2026-03-29 retest saw
+already-lost hull stay lost: the hull was committed by an earlier call, and
+nothing here goes back for it. The section above guessed at recharge to explain
+the shield refill; the restore explains it directly.
+
+### What this does not settle
+
+- **Nothing has written to `+0x15C` in a running game.** The offset is measured;
+  the write is untested. The trainer therefore reads and displays the field and
+  offers no control for it - the same bar the vitals had to clear.
+- **Whether the game re-asserts it.** The pause-menu path above may write it
+  back, in which case a single write would need the trainer's 10 Hz hold.
+- **What else reads it.** Only `Damage` was scanned. Water and other
+  environmental hazards remain the open question this document already records.
+
 **Ghidra Evidence (Dec 2025):**
 - `PauseMenu.cpp` gates the menu option via `IsCheatActive(3)` and uses `g_bGodModeEnabled` as the pause-menu toggle state
 - Retail `.bes` uses the **true dword view**:

@@ -210,6 +210,7 @@ public class LiveTrainerPageHonestyTests
                      "LiveTrainerEnergyEvidence",
                      "LiveTrainerShieldsEvidence",
                      "LiveTrainerStateEvidence",
+                     "LiveTrainerVulnerableEvidence",
                  })
         {
             Assert.That(
@@ -476,6 +477,87 @@ public class LiveTrainerPageHonestyTests
             Does.Contain("no meaning recorded"));
     }
 
+    /// <summary>
+    /// The damage switch is the one field on this page whose position is known from bytes and
+    /// whose behaviour has never been watched. That gap is the whole test: it may be shown, it may
+    /// not be written, and the page must send a player to the god mode that does work rather than
+    /// leaving them with a number and a shrug.
+    /// </summary>
+    [Test]
+    public void TheDamageSwitchIsShownAndNotOffered()
+    {
+        string xaml = PageXaml;
+
+        Assert.That(
+            xaml,
+            Does.Contain("LiveTrainerVulnerableValue"),
+            "The field is read and displayed - that is the half that is earned.");
+
+        foreach (string absent in new[]
+                 {
+                     "VulnerableNumberBox", "SetVulnerableButton", "HoldVulnerableToggle",
+                     "SetGodModeButton", "LiveTrainerGodModeToggle",
+                 })
+        {
+            Assert.That(
+                xaml,
+                Does.Not.Contain(absent),
+                $"{absent} would write a field nothing has ever written in a running game.");
+        }
+
+        Assert.That(
+            Enum.GetNames<LiveTrainerVital>(),
+            Does.Not.Contain("Vulnerable"),
+            "A writable vital is how the write path is reached; the damage switch is not one.");
+    }
+
+    [Test]
+    public void TheDamageSwitchSaysWhatIsMissingAndWhereToGoInstead()
+    {
+        Assert.That(
+            LiveTrainerPageText.VulnerableHeadline,
+            Does.Contain("not yet tested"),
+            "The gap is the headline, not the fine print.");
+        Assert.That(
+            LiveTrainerPageText.VulnerableNote,
+            Does.Contain("nothing has written to it"),
+            "Name precisely what has not happened, so a later session knows what would close it.");
+
+        // The point of the pointer. There IS a working god mode on this page - the save-name
+        // cheat, live-confirmed 2026-03-29 - and the trainer section shipped without mentioning it.
+        // A player who wants god mode should leave this section with the thing that works, not
+        // with a number they cannot use.
+        Assert.That(LiveTrainerPageText.VulnerableUseTheCheatInstead, Does.Contain("God mode"));
+        Assert.That(
+            LiveTrainerPageText.VulnerableUseTheCheatInstead,
+            Does.Contain("real mission"),
+            "Say what was observed of the cheat, on the same terms the vitals are held to.");
+        Assert.That(
+            IsBehindADisclosure(TrainerElement("LiveTrainerVulnerableUseCheat")),
+            Is.False,
+            "This is what to do instead. A player who has to open a panel to find it will not.");
+        Assert.That(IsBehindADisclosure(TrainerElement("LiveTrainerVulnerableHeadline")), Is.False);
+    }
+
+    [Test]
+    public void ADamageSwitchThatIsNeitherZeroNorOneIsNotCalledASwitch()
+    {
+        Assert.That(
+            LiveTrainerPageText.DescribeVulnerable(Vitals(1f, 1f, 1f, vulnerable: 0)),
+            Does.Contain("would not stick"));
+        Assert.That(
+            LiveTrainerPageText.DescribeVulnerable(Vitals(1f, 1f, 1f, vulnerable: 1)),
+            Does.Contain("damage counts"));
+
+        // The same plausibility gate the vitals get. If the pointer is wrong this field is
+        // whatever happens to sit at +0x15C, and the page must say so rather than reading a
+        // meaning into it.
+        Assert.That(
+            LiveTrainerPageText.DescribeVulnerable(Vitals(1f, 1f, 1f, vulnerable: 74)),
+            Does.Contain("not the switch"));
+        Assert.That(LiveTrainerPageText.DescribeVulnerable(null), Is.EqualTo("-"));
+    }
+
     [Test]
     public void TheHoldControlSaysWhyItRepeatsAndWhenItStops()
     {
@@ -498,7 +580,12 @@ public class LiveTrainerPageHonestyTests
         }
     }
 
-    private static LivePlayerVitals Vitals(float life, float energy, float shields, int state = 2)
+    private static LivePlayerVitals Vitals(
+        float life,
+        float energy,
+        float shields,
+        int state = 2,
+        int? vulnerable = null)
     {
         static LiveTrainerFieldReading Field(uint address, float value) =>
             new(address, unchecked((uint)BitConverter.SingleToInt32Bits(value)));
@@ -509,6 +596,9 @@ public class LiveTrainerPageHonestyTests
             Field(0x0B0000F8, life),
             Field(0x0B0000FC, energy),
             Field(0x0B000100, shields),
-            new LiveTrainerFieldReading(0x0B000260, unchecked((uint)state)));
+            new LiveTrainerFieldReading(0x0B000260, unchecked((uint)state)),
+            vulnerable is null
+                ? null
+                : new LiveTrainerFieldReading(0x0B00015C, unchecked((uint)vulnerable.Value)));
     }
 }

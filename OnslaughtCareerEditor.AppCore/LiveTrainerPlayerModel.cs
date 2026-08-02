@@ -79,6 +79,36 @@ namespace Onslaught___Career_Editor
         /// </summary>
         public const int StateOffset = 0x260;
 
+        /// <summary>
+        /// <c>mVulnerable</c>. Whole number, and <b>zero means invulnerable</b>.
+        ///
+        /// MEASURED from the pristine specimen (<c>74154bfa…</c>) on 2026-08-01, in the same
+        /// <c>CBattleEngine::Damage</c> the three vitals came from - file offset <c>0x00A890</c>,
+        /// at <c>+0x035a</c>:
+        /// <code>
+        ///   mov  eax, [esi+0x15C]        ; this field
+        ///   test eax, eax
+        ///   jnz  skip                    ; non-zero: the damage stands
+        ///   mov  edx, [esp+0x04]         ; life,    snapshotted in the prologue
+        ///   mov  eax, [esp+0x08]         ; shields, snapshotted in the prologue
+        ///   mov  ecx, [esp+0x0C]         ; energy,  snapshotted in the prologue
+        ///   mov  [esi+0x0F8], edx
+        ///   mov  [esi+0x100], eax
+        ///   mov  [esi+0x0FC], ecx
+        /// </code>
+        /// The three restored slots are exactly the prologue's own snapshot of the vitals, which
+        /// is what makes this conclusive rather than suggestive. It compiles
+        /// <c>references/Onslaught/BattleEngine.cpp:2234</c>, <c>if (mVulnerable == FALSE)</c>,
+        /// and it explains the live 2026-03-29 observation that god mode stops new damage but does
+        /// not repair hull already lost: it is a per-hit undo, not a heal.
+        ///
+        /// <b>Read and displayed; never written.</b> The vitals earned their write controls with a
+        /// live probe - read 20, wrote 100, watched the HUD follow. Nothing has yet written to this
+        /// field in a running game, so it does not get the same offer. See
+        /// <c>local-lab/GOD-MODE-OFFSET-2026-08-01.md</c> for what would settle it.
+        /// </summary>
+        public const int VulnerableOffset = 0x15C;
+
         /// <summary>Lowest address a 32-bit user-mode allocation can sit at.</summary>
         public const uint LowestUserAddress = 0x00010000;
 
@@ -173,8 +203,20 @@ namespace Onslaught___Career_Editor
         LiveTrainerFieldReading Life,
         LiveTrainerFieldReading Energy,
         LiveTrainerFieldReading Shields,
-        LiveTrainerFieldReading State)
+        LiveTrainerFieldReading State,
+        LiveTrainerFieldReading? Vulnerable = null)
     {
+        /// <summary>
+        /// True when the field reads 0 or 1, which is how a BOOL should look. Anything else means
+        /// the pointer or the offset is wrong, and the page says so rather than interpreting it.
+        /// </summary>
+        public bool VulnerableLooksLikeABool =>
+            Vulnerable is not null && Vulnerable.AsInt32 is 0 or 1;
+
+        /// <summary>Null when the reading is not believable, so no caller can render a guess.</summary>
+        public bool? IsInvulnerable =>
+            VulnerableLooksLikeABool ? Vulnerable!.AsInt32 == 0 : null;
+
         public LiveTrainerFieldReading Field(LiveTrainerVital vital) => vital switch
         {
             LiveTrainerVital.Life => Life,
@@ -306,7 +348,23 @@ namespace Onslaught___Career_Editor
                 Field(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.LifeOffset),
                 Field(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.EnergyOffset),
                 Field(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.ShieldsOffset),
-                Field(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.StateOffset));
+                Field(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.StateOffset),
+                OptionalField(battleEnginePointer, battleEngineBytes, LiveTrainerAddresses.VulnerableOffset));
+        }
+
+        /// <summary>
+        /// A field that is absent rather than zero when the read did not reach it.
+        ///
+        /// <see cref="Field"/> zero-fills a short read, which is safe for the vitals: zero life is
+        /// visibly wrong and the plausibility gate catches it. It is not safe for the damage
+        /// switch, where zero is a meaning - "damage will not stick" - and a caller cannot tell a
+        /// real zero from a truncated buffer. Absent says nothing, which is the truth in that case.
+        /// </summary>
+        private static LiveTrainerFieldReading? OptionalField(uint basePointer, ReadOnlySpan<byte> bytes, int offset)
+        {
+            return offset + 4 > bytes.Length
+                ? null
+                : Field(basePointer, bytes, offset);
         }
 
         private static LiveTrainerFieldReading Field(uint basePointer, ReadOnlySpan<byte> bytes, int offset)

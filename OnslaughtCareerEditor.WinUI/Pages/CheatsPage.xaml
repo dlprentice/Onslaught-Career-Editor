@@ -405,6 +405,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Life" FontWeight="SemiBold" />
                         <TextBlock Grid.Row="0" Grid.Column="1"
@@ -430,7 +431,31 @@
                                    AutomationProperties.AutomationId="LiveTrainerStateValue"
                                    FontFamily="Consolas"
                                    Text="-" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Damage" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                   x:Name="LiveTrainerVulnerableValueTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerVulnerableValue"
+                                   FontFamily="Consolas"
+                                   Text="-" />
                     </Grid>
+                    <TextBlock x:Name="LiveTrainerVulnerableHeadlineTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerVulnerableHeadline"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
+                    <TextBlock x:Name="LiveTrainerVulnerableUseCheatTextBlock"
+                               AutomationProperties.AutomationId="LiveTrainerVulnerableUseCheat"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
+                    <Expander x:Name="LiveTrainerVulnerableEvidenceExpander"
+                              AutomationProperties.AutomationId="LiveTrainerVulnerableEvidenceExpander"
+                              AutomationProperties.Name="How we know about the damage switch"
+                              Header="How we know"
+                              Style="{StaticResource EvidenceDisclosureStyle}"
+                              Margin="0">
+                        <TextBlock x:Name="LiveTrainerVulnerableEvidenceTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerVulnerableEvidence"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                    </Expander>
                     <Expander x:Name="LiveTrainerStateEvidenceExpander"
                               AutomationProperties.AutomationId="LiveTrainerStateEvidenceExpander"
                               AutomationProperties.Name="How we know about Mode"
