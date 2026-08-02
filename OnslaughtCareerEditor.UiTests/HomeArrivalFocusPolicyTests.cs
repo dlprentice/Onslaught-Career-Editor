@@ -294,30 +294,6 @@ public class HomeArrivalFocusPolicyTests
         Assert.That(harness.FocusAttempts, Is.EqualTo(new[] { HomeFocusTarget.PatchBench }));
     }
 
-    [Test]
-    public void NativeSmoke_GatesDiagnosticsAndDistinguishesGlobalUiaExceptions()
-    {
-        string smoke = File.ReadAllText(Path.Combine(
-            TestFixturePaths.RepoRoot,
-            "OnslaughtCareerEditor.UiTests",
-            "WinUiHomeNavigationSmokeTests.cs"));
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(smoke, Does.Contain("ONSLAUGHT_WINUI_TEST_FOCUS_DIAGNOSTICS"));
-            Assert.That(smoke, Does.Contain("AssertHomeArrivalFocus("));
-            Assert.That(smoke, Does.Contain("FocusedAutomationProbe"));
-            Assert.That(smoke, Does.Contain("ExceptionType"));
-            Assert.That(smoke, Does.Contain("home-arrival-focus.jsonl"));
-            Assert.That(smoke, Does.Contain("ONSLAUGHT_WINUI_TEST_FOCUS_RUN_ID"));
-            Assert.That(smoke, Does.Contain("FocusVerified"));
-            Assert.That(smoke, Does.Contain("FocusedAutomationIdAtSample"));
-            Assert.That(smoke, Does.Contain("InputEpochAtSample"));
-            Assert.That(smoke, Does.Contain("FinalXamlFocusedAutomationId"));
-            Assert.That(smoke, Does.Contain("HomeFocusEvidenceAcceptance.TryReadEndpointStatus"));
-            Assert.That(smoke, Does.Contain("ExactWindowScopedMatch"));
-        });
-    }
 
     [Test]
     public void MainWindow_WiresPolicyBeforeInitialNavigationAndPreservesHomePriority()

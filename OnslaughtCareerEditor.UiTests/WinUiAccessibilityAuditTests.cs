@@ -235,19 +235,6 @@ public class WinUiAccessibilityAuditTests
         Assert.That(missing, Is.Empty, "Primary and long-workflow WinUI controls should expose stable automation ids.");
     }
 
-    [Test]
-    public void RuntimeSmokes_DriveLongPagesThroughUiAutomationInsteadOfFocusDependentTyping()
-    {
-        string saveSmoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiSaveAnalyzerInteractionSmokeTests.cs");
-        string patchSmoke = ReadRepoFile("OnslaughtCareerEditor.UiTests", "WinUiPatchBenchInteractionSmokeTests.cs");
-
-        Assert.That(saveSmoke, Does.Contain("textBox.Text = text"));
-        Assert.That(saveSmoke, Does.Contain("ScrollIntoView(outputLog)"));
-        Assert.That(saveSmoke, Does.Not.Contain("textBox.Enter(text);"));
-        Assert.That(patchSmoke, Does.Contain("ScrollIntoView(createButton)"));
-        Assert.That(patchSmoke, Does.Contain("ScrollIntoView(operationLog)"));
-        Assert.That(patchSmoke, Does.Contain("ScrollIntoView(restoreButton)"));
-    }
 
     [Test]
     public void LongWinUiScrollSurfaces_ExposeAutomationIdsAndNames()

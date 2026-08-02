@@ -30,6 +30,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # One entry per command the gate used to chain.  Paths are repository-relative
 # and are resolved against ROOT so the gate behaves the same from any cwd.
 SUITES: tuple[tuple[str, ...], ...] = (
+    ("tools/enumerate_test_assertions.py", "--self-test"),
+    ("tools/enumerate_test_assertions.py", "--check"),
     ("tools/aya_archive_inventory_tests.py",),
     ("tools/export_game_assets_tests.py",),
     ("rebuild/tools/materialize_retail_assets_tests.py",),
