@@ -32,6 +32,8 @@ happened more than once; what those articles used to say is kept out of your way
 
 - [The game](../lore/game-overview.md) — what it was, how it played, how it was
   sold, and how it landed.
+- [The campaign](../lore/the-campaign.md) — how it is shaped, and the mission
+  list read from your own copy of the game.
 - [The war](../lore/world-lore.md) — Allium, the Forseti and the Muspell, and the
   treaty that failed.
 - [The people in it](../lore/characters.md) — Hawk Winter, Tatiana Kiralova,

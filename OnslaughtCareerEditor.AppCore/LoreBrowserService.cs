@@ -154,12 +154,55 @@ namespace Onslaught___Career_Editor
         /// path the in-app reader uses; nothing is written to disk and no HTML is
         /// produced.
         /// </summary>
+        /// <summary>
+        /// Whether the level names have been looked for yet. Distinct from the list being empty:
+        /// no game configured is a real answer and must not be retried on every page turn.
+        /// </summary>
+        private bool _levelNamesResolved;
+        private IReadOnlyList<GameLevelName>? _levelNames;
+
+        /// <summary>
+        /// Fills in any live section a document asks for.
+        ///
+        /// Runs on every document and does nothing to almost all of them - the marker check is a
+        /// substring test, and the game's text file is only opened if some document actually wants
+        /// it. That file holds about 2,571 strings, so opening it per page turn would be felt.
+        ///
+        /// The names are read from the player's install rather than shipped, because they are the
+        /// game's text. See <see cref="CampaignLoreComposer"/> for why that boundary is where it
+        /// is.
+        /// </summary>
+        private string ComposeLiveSections(string markdown)
+        {
+            if (!CampaignLoreComposer.WantsMissionList(markdown))
+                return markdown;
+
+            if (!_levelNamesResolved)
+            {
+                _levelNamesResolved = true;
+                try
+                {
+                    string? gameDirectory = AppConfig.Load().GetGameDir();
+                    GameTextCatalog? catalog = GameTextCatalogService.TryLoadFromGameDirectory(gameDirectory);
+                    _levelNames = GameTextCatalogService.GetLevelNames(catalog);
+                }
+                catch (Exception)
+                {
+                    // A lore page must still open. The composer says the list is missing and how
+                    // to fix it, which is a better outcome than a reader that will not render.
+                    _levelNames = null;
+                }
+            }
+
+            return CampaignLoreComposer.Compose(markdown, _levelNames);
+        }
+
         public LoreDocumentContent LoadDocumentContent(string sourcePath)
         {
             string normalizedSource = NormalizeDocumentKey(sourcePath);
             if (TryGetPackedDocument(normalizedSource, out LorePackDocument? packedDocument))
             {
-                string packedMarkdown = RewritePackedMarkdownLinks(packedDocument!);
+                string packedMarkdown = ComposeLiveSections(RewritePackedMarkdownLinks(packedDocument!));
                 return new LoreDocumentContent(
                     packedDocument!.Title,
                     normalizedSource,
@@ -181,7 +224,7 @@ namespace Onslaught___Career_Editor
                 return new LoreDocumentContent(htmlTitle, normalizedSource, htmlModel, false);
             }
 
-            string markdown = File.ReadAllText(normalizedSource);
+            string markdown = ComposeLiveSections(File.ReadAllText(normalizedSource));
             string title = ResolveMarkdownTitle(markdown, normalizedSource);
             return new LoreDocumentContent(
                 title,

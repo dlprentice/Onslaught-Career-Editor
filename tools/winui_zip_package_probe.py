@@ -1202,6 +1202,17 @@ def inspect_lore_pack_texts(pack_texts: dict[str, str], prefix: str) -> list[Che
         missing_rows = sorted(set(expected_rows) - seen_rows)
         if missing_rows:
             findings.append(f"missing content rows: {len(missing_rows)}")
+
+        # The campaign page's mission names are the GAME's text, read from the player's own
+        # install when the page opens. They must never be baked in here: shipping them would
+        # put the game's content inside a package anyone can download, which is a different
+        # act from reading a file the player already owns. What ships is the marker.
+        content_blob = pack_texts.get(LORE_PACK_CONTENT_FILE, "")
+        if "the-campaign" in content_blob and "LIVE:CAMPAIGN-MISSIONS" not in content_blob:
+            findings.append(
+                "the campaign page shipped without its live marker - if the mission list was "
+                "expanded into the pack, the game's own text is being redistributed"
+            )
     except Exception as exc:
         findings.append("Lore pack validation raised an unexpected error")
 

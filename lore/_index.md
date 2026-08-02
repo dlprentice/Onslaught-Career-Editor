@@ -21,6 +21,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [game-overview.md](game-overview.md) | Release info, marketing, naming, Battle Engine types, gameplay |
 | [world-lore.md](world-lore.md) | Planet Allium, Forseti vs Muspell factions, geography, story |
 | [characters.md](characters.md) | Hawk Winter, Tatiana Kiralova, Col. Kramer, Lewis Carver profiles |
+| [the-campaign.md](the-campaign.md) | Campaign shape, mission numbering, live mission list from your install |
 | [battle-engine-tech.md](battle-engine-tech.md) | In-universe Aquila program memo, mech technology lore |
 | [development-history.md](development-history.md) | Timeline, GDM post-mortem, what went right/wrong, port history |
 | [technical-deep-dive.md](technical-deep-dive.md) | Constraints, memory management, cross-platform architecture |
