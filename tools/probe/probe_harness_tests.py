@@ -733,6 +733,174 @@ class FaultGateTests(HarnessCase):
         self.assertEqual(receipt["verdict"], "PASS")
         self.assertTrue(receipt["faultGate"]["optedIn"])
 
+    def test_expecting_exit_code_zero_does_not_excuse_a_fault_log(self) -> None:
+        """S1, found by an adversarial pass and verified against the code.
+
+        `{"kind": "processExit", "expectExitCode": 0}` reads STRICTER than a
+        bare processExit, and it used to be the loosest thing in the file: any
+        expectExitCode that matched opted the whole probe out of both triggers,
+        without ever checking that the code named was a fault. The engine's own
+        handler writes the log and exits 0, and the receipt asserted the probe
+        had asked for the crash.
+        """
+
+        probe = self.probe(
+            oracle={
+                "kind": "processExit",
+                "expectExitCode": 0,
+                "timeoutSeconds": 30,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (4.0, writes(ph.EXCEPTION_LOG, "0xC0000005 in CThing::Update\n")),
+                (5.0, ("exit", 0)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertTrue(receipt["faultGate"]["vetoed"])
+        self.assertFalse(receipt["faultGate"]["optedIn"])
+
+    def test_expecting_a_fault_code_does_not_excuse_a_fault_log(self) -> None:
+        """Asking for an access violation is not asking for a log it never
+        mentioned. One excused trigger does not excuse the other."""
+
+        probe = self.probe(
+            oracle={
+                "kind": "processExit",
+                "expectExitCode": 0xC0000005,
+                "timeoutSeconds": 30,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (4.0, writes(ph.EXCEPTION_LOG, "fatal\n")),
+                (5.0, ("exit", 0xC0000005)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertTrue(receipt["faultGate"]["vetoed"])
+        self.assertTrue(receipt["faultGate"]["excused"])
+
+    def test_a_fatal_fault_arm_inside_any_does_not_disarm_the_gate(self) -> None:
+        """S3. Under `any` the composite is satisfied by whichever arm fired
+        and the gate cannot tell which -- so `any(setupHistoryContains,
+        fatalFault)`, a natural exploratory probe, used to pass on every crash
+        including a launch that died at sound init."""
+
+        probe = self.probe(
+            oracle={
+                "kind": "any",
+                "timeoutSeconds": 30,
+                "of": [
+                    {"kind": "fileAppears", "path": "data/Memory/out.txt"},
+                    {"kind": "fatalFault"},
+                ],
+            }
+        )
+        # Both in ONE poll sample: the file arm is satisfied and the process is
+        # already dead of an access violation at the same instant. Staggering
+        # them would test the settle window instead, which is a different hole.
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (3.0, writes("data/Memory/out.txt", "console wrote this")),
+                (3.0, ("exit", 0xC0000005)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "FAIL")
+        self.assertTrue(receipt["faultGate"]["vetoed"])
+
+    def test_a_fatal_fault_arm_inside_all_still_opts_in(self) -> None:
+        """`all` is the case where it IS safe: every arm must be satisfied, so
+        a fatalFault in an `all` really was satisfied and really did ask."""
+
+        probe = self.probe(
+            oracle={
+                "kind": "all",
+                "timeoutSeconds": 30,
+                "of": [
+                    {"kind": "fileAppears", "path": "data/Memory/out.txt"},
+                    {"kind": "fatalFault"},
+                ],
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (3.0, writes("data/Memory/out.txt", "console wrote this")),
+                (4.0, writes(ph.EXCEPTION_LOG, "0xC0000005\n")),
+                (5.0, ("exit", 0xC0000005)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertTrue(receipt["faultGate"]["optedIn"])
+
+    def test_a_settle_window_does_not_defeat_a_fatal_fault_probe(self) -> None:
+        """S8. The settle window's fault-log check used to fire
+        unconditionally, so a `fatalFault` oracle -- whose entire subject is the
+        crash -- could never pass once anyone added settleSeconds, and the gate
+        went on reporting optedIn while this layer failed it anyway."""
+
+        probe = self.probe(
+            oracle={
+                "kind": "fatalFault",
+                "timeoutSeconds": 30,
+                "settleSeconds": 5,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe, [(3.0, writes(ph.EXCEPTION_LOG, "0xC0000005\n"))]
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+
+    def test_a_settle_window_does_not_defeat_allow_fault_exit(self) -> None:
+        probe = self.probe(
+            allowFaultExit=True,
+            oracle={
+                "kind": "fileAppears",
+                "path": "data/Memory/out.txt",
+                "timeoutSeconds": 30,
+                "settleSeconds": 5,
+            },
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (2.0, writes("data/Memory/out.txt", "written")),
+                (3.0, writes(ph.EXCEPTION_LOG, "expected fault\n")),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+
+    def test_a_satisfied_arm_is_not_reported_as_unsatisfied_on_exit(self) -> None:
+        """S9. The process-exited branch hardcoded the unsatisfied outcome while
+        the deadline branch two lines below correctly honoured `satisfied`, so a
+        clean run whose oracle was satisfied at the very sample it exited was
+        failed with a detail reading 'appeared'."""
+
+        probe = self.probe(
+            oracle={
+                "kind": "any",
+                "timeoutSeconds": 30,
+                "of": [
+                    {"kind": "fileAppears", "path": "data/Memory/out.txt"},
+                    {"kind": "survives"},
+                ],
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (4.0, writes("data/Memory/out.txt", "console wrote this")),
+                (5.0, ("exit", 0)),
+            ],
+        )
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertEqual(receipt["oracle"]["outcome"], "satisfied")
+
     def test_the_receipt_says_the_run_crashed_in_words(self) -> None:
         receipt, _ = self.run_probe(self.probe(), [(8.0, ("exit", 0xC0000005))])
         rendered = ph.render_receipt(receipt)
@@ -826,12 +994,66 @@ class StagingTests(HarnessCase):
 
 class DiagnosisTests(HarnessCase):
     def test_missing_level_load_line_is_called_a_launch_failure(self) -> None:
+        """The engine logged, and never got as far as the level.
+
+        The fake game writes this itself. It used to rely on the seeded file in
+        the source tree surviving into the scratch copy -- which is precisely
+        the inheritance the harness now refuses, so the test was quietly
+        exercising the contamination path rather than the diagnosis.
+        """
+
         probe = self.probe(oracle={"kind": "processExit", "timeoutSeconds": 30})
-        receipt, _ = self.run_probe(probe, [(2.0, ("exit", -1073741819))])
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (1.0, writes(ph.SETUP_HISTORY, "Setup started\nD3D nego\n")),
+                (2.0, ("exit", -1073741819)),
+            ],
+        )
         diagnosis = receipt["diagnosis"]
         self.assertFalse(diagnosis["levelLoadLogged"])
         self.assertIn("BEFORE level load", diagnosis["interpretation"])
         self.assertIn("working directory", diagnosis["interpretation"])
+
+    def test_an_inherited_setuphistory_cannot_fake_a_level_load(self) -> None:
+        """The source tree's own log must never speak for a run that never ran.
+
+        Measured 2026-08-01: the shared safe copy held a setuphistory.txt
+        containing 'Game::LoadLevel 100' left by an unrelated lane. Without
+        this, a level-100 probe whose game never started would inherit that
+        line and be told the launch was fine and the payload was at fault.
+        """
+
+        (self.source / ph.SETUP_HISTORY).write_text(
+            "Setup started\nGame::LoadLevel 100\nG::LL succeeded\n",
+            encoding="utf-8",
+        )
+        probe = self.probe(oracle={"kind": "processExit", "timeoutSeconds": 30})
+        receipt, _ = self.run_probe(probe, [(1.0, ("exit", 1))])
+        self.assertFalse(
+            receipt["diagnosis"]["levelLoadLogged"],
+            "a level-load line from the SOURCE tree was credited to this run",
+        )
+        removed = [
+            entry["file"]
+            for entry in receipt["staging"]["removedInheritedLogs"]
+        ]
+        self.assertIn(ph.SETUP_HISTORY, removed)
+
+    def test_an_inherited_exception_log_cannot_fail_a_clean_run(self) -> None:
+        """The same inheritance, pointing the other way.
+
+        An OnslaughtException.txt in the source tree would veto every probe run
+        out of it as CRASHED -- a clean run wrongly failed, permanently, until
+        somebody thought to look in the safe copy.
+        """
+
+        (self.source / ph.EXCEPTION_LOG).write_text(
+            "0xC0000005 from some earlier run\n", encoding="utf-8"
+        )
+        receipt, _ = self.run_probe(self.probe(), [(3.0, ("exit", 0))])
+        self.assertEqual(receipt["verdict"], "PASS")
+        self.assertFalse(receipt["faultGate"]["vetoed"])
 
     def test_level_load_line_makes_a_negative_result_about_the_payload(self) -> None:
         probe = self.probe(oracle={"kind": "processExit", "timeoutSeconds": 30})
@@ -1295,6 +1517,130 @@ def _break_fault_band() -> Callable[[], None]:
 
     def undo() -> None:
         ph._NTSTATUS_ERROR_BAND = original
+
+    return undo
+
+
+@_mutation(
+    "any matching expectExitCode excuses every fault, fault log included",
+    [
+        "FaultGateTests.test_expecting_exit_code_zero_does_not_excuse_a_fault_log",
+        "FaultGateTests.test_expecting_a_fault_code_does_not_excuse_a_fault_log",
+    ],
+)
+def _break_expect_exit_code() -> Callable[[], None]:
+    """The pre-adversary behaviour: expectExitCode was a blanket pardon.
+
+    It never checked that the code it named WAS a fault, and it silenced the
+    exception-log trigger it had said nothing about. `expectExitCode: 0` --
+    which reads stricter than a bare processExit -- was the loosest oracle in
+    the file.
+    """
+
+    original = ph.oracle_expects_a_fault
+
+    def blanket(oracle, exit_code, trigger="any"):  # noqa: ANN001
+        kind = oracle.get("kind")
+        if kind == "fatalFault":
+            return True
+        if kind == "processExit":
+            expected = oracle.get("expectExitCode")
+            if expected is not None and exit_code is not None:
+                return (int(expected) & 0xFFFFFFFF) == (int(exit_code) & 0xFFFFFFFF)
+            return False
+        if kind in ("all", "any"):
+            return any(blanket(sub, exit_code, trigger) for sub in oracle["of"])
+        return False
+
+    ph.oracle_expects_a_fault = blanket
+
+    def undo() -> None:
+        ph.oracle_expects_a_fault = original
+
+    return undo
+
+
+@_mutation(
+    "a fatalFault arm inside an `any` disarms the gate for the whole probe",
+    ["FaultGateTests.test_a_fatal_fault_arm_inside_any_does_not_disarm_the_gate"],
+)
+def _break_any_composite() -> Callable[[], None]:
+    original = ph.oracle_expects_a_fault
+
+    def any_counts(oracle, exit_code, trigger="any"):  # noqa: ANN001
+        if oracle.get("kind") == "any":
+            return any(
+                original(sub, exit_code, trigger) for sub in oracle["of"]
+            )
+        return original(oracle, exit_code, trigger)
+
+    ph.oracle_expects_a_fault = any_counts
+
+    def undo() -> None:
+        ph.oracle_expects_a_fault = original
+
+    return undo
+
+
+@_mutation(
+    "the settle window fails a probe that asked for the crash",
+    [
+        "FaultGateTests.test_a_settle_window_does_not_defeat_a_fatal_fault_probe",
+        "FaultGateTests.test_a_settle_window_does_not_defeat_allow_fault_exit",
+    ],
+)
+def _break_settle_optin() -> Callable[[], None]:
+    """Two layers disagreeing, with the stricter winning by accident: the gate
+    said the probe opted in and the settle window failed it anyway."""
+
+    original = ph._settle
+
+    def unconditional(oracle, scratch_root, handle, clock, poll_seconds,
+                      allow_fault_exit, started, settle, detail, sample,
+                      result):  # noqa: ANN001
+        return original(oracle, scratch_root, handle, clock, poll_seconds,
+                        False, started, settle, detail, sample, result)
+
+    def patched_expects(oracle, exit_code, trigger="any"):  # noqa: ANN001
+        return False
+
+    saved_expects = ph.oracle_expects_a_fault
+    ph._settle = unconditional
+    ph.oracle_expects_a_fault = patched_expects
+
+    def undo() -> None:
+        ph._settle = original
+        ph.oracle_expects_a_fault = saved_expects
+
+    return undo
+
+
+@_mutation(
+    "the scratch tree inherits the source tree's engine logs",
+    [
+        "DiagnosisTests.test_an_inherited_setuphistory_cannot_fake_a_level_load",
+        "DiagnosisTests.test_an_inherited_exception_log_cannot_fail_a_clean_run",
+    ],
+)
+def _break_inherited_logs() -> Callable[[], None]:
+    """copytree brings the whole source root, and a safe copy is a tree people
+    launch the game out of. The inherited setuphistory.txt then speaks for a run
+    that never happened."""
+
+    original = ph.stage_scratch
+
+    def keep_the_logs(probe, source_root, scratch_root, manifest_dir):  # noqa: ANN001
+        staging = original(probe, source_root, scratch_root, manifest_dir)
+        for entry in staging.get("removedInheritedLogs", ()):
+            restored = pathlib.Path(source_root) / entry["file"]
+            if restored.is_file():
+                shutil.copy2(restored, pathlib.Path(scratch_root) / entry["file"])
+        return staging
+
+    ph.stage_scratch = keep_the_logs
+
+    def undo() -> None:
+        ph.stage_scratch = original
 
     return undo
 

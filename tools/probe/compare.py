@@ -139,6 +139,29 @@ def load_receipts(run_dir: pathlib.Path) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
+def oracle_signature(oracle: dict[str, Any], settle: Any = 0) -> str:
+    """A shape string for an oracle, so incomparable arms can be refused.
+
+    Two arms are comparable on decision time only if they asked the same KIND
+    of question with the same settle window. The path an oracle names may
+    differ -- one arm looks for baseline.txt and another for lose_after.txt --
+    because that is the variable under test. What may not differ is whether one
+    of them was waiting for a deadline while the other was waiting for a file.
+    """
+
+    kind = oracle.get("kind", "?")
+    if kind in ("all", "any"):
+        inner = ",".join(sorted(oracle_signature(sub) for sub in oracle.get("of", ())))
+        body = f"{kind}({inner})"
+    else:
+        body = kind
+    try:
+        settle_value = float(settle or 0)
+    except (TypeError, ValueError):
+        settle_value = 0.0
+    return f"{body}+settle{settle_value:g}"
+
+
 def _spread(values: Sequence[float]) -> dict[str, Any]:
     if not values:
         return {"n": 0, "min": None, "max": None, "median": None, "spread": None}
@@ -156,7 +179,15 @@ def summarise_arm(name: str, receipts: Sequence[dict[str, Any]]) -> dict[str, An
     """Everything measurable about one arm, with its denominator attached."""
 
     n = len(receipts)
-    lifetimes = [
+    # NOT "lifetime". This is the time until the ORACLE DECIDED, and the same
+    # receipt's processAliveAtDecision often proves the process outlived it by
+    # a wide margin. Calling it lifetime invited exactly one wrong comparison:
+    # a fileAppears arm deciding at 4s against a survives arm deciding at its
+    # 30s deadline reads as a 26-second difference in which nothing about the
+    # two processes differed at all. settleSeconds adds itself to this number
+    # too. Hence oracle_signature below, and the refusal to difference across
+    # different signatures.
+    decisions = [
         float(r.get("oracle", {}).get("elapsedSeconds", 0.0))
         for r in receipts
         if r.get("oracle", {}).get("elapsedSeconds") is not None
@@ -193,7 +224,13 @@ def summarise_arm(name: str, receipts: Sequence[dict[str, Any]]) -> dict[str, An
         "vetoedCount": sum(vetoed),
         "levelLoadRate": round(sum(level_loaded) / n, 3) if n else None,
         "usableRuns": usable,
-        "lifetimeSeconds": _spread(lifetimes),
+        "erroredRuns": verdicts.count("ERROR"),
+        "oracleDecisionSeconds": _spread(decisions),
+        "oracleSignature": sorted(
+            {oracle_signature(r.get("probe", {}).get("oracle", {}),
+                              r.get("oracle", {}).get("settleSeconds", 0))
+             for r in receipts}
+        ),
         "isPoison": any(marker in name.lower() for marker in _POISON_MARKERS),
         "stagedPayloads": sorted(
             {
@@ -257,9 +294,36 @@ def compare_pair(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
                 f"{arm['arm']}: only {arm['usableRuns']}/{arm['n']} runs reached "
                 "level load; the rest are not evidence about the payload"
             )
+        if len(arm["stagedPayloads"]) > 1:
+            notes.append(
+                f"{arm['arm']} groups {len(arm['stagedPayloads'])} DIFFERENT "
+                "staged payloads under one arm name. The -rN suffix reads as "
+                "'replicate' to the grouper and as 'revision' to a human, and "
+                "these runs are not replicates of each other"
+            )
+            blocked = True
+        if len(arm["oracleSignature"]) > 1:
+            notes.append(
+                f"{arm['arm']} mixes oracle shapes {arm['oracleSignature']}; "
+                "its own replicates were not asked the same question"
+            )
+            blocked = True
 
-    life_a = a["lifetimeSeconds"]
-    life_b = b["lifetimeSeconds"]
+    # DIFFERENT QUESTIONS ARE NOT A DIFFERENT ANSWER. elapsedSeconds is the
+    # time until the oracle decided, so an arm that waits for a file and an arm
+    # that waits out a deadline differ by the whole deadline even when the two
+    # processes behaved identically. Verified: a 25.99s "difference" against a
+    # 0.02s spread, in which nothing about either run differed.
+    if a["oracleSignature"] != b["oracleSignature"]:
+        notes.append(
+            f"{a['arm']} and {b['arm']} declared different oracle shapes "
+            f"({a['oracleSignature']} vs {b['oracleSignature']}). Their decision "
+            "times measure different questions and cannot be differenced"
+        )
+        blocked = True
+
+    life_a = a["oracleDecisionSeconds"]
+    life_b = b["oracleDecisionSeconds"]
     lifetime_verdict = "UNKNOWN"
     gap = None
     noise = None
@@ -271,13 +335,13 @@ def compare_pair(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
         elif gap > noise:
             lifetime_verdict = "DIFFERENT"
             notes.append(
-                f"lifetime medians differ by {gap}s, which exceeds the widest "
+                f"oracle decided at medians differ by {gap}s, which exceeds the widest "
                 f"within-arm spread ({noise}s)"
             )
         else:
             lifetime_verdict = "INDISTINGUISHABLE"
             notes.append(
-                f"lifetime medians differ by {gap}s, which does NOT exceed the "
+                f"oracle decided at medians differ by {gap}s, which does NOT exceed the "
                 f"within-arm spread ({noise}s) -- this is noise, not a result"
             )
 
@@ -327,6 +391,31 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
     problems: list[str] = []
     for poison in poisons:
+        # A POISON ARM THAT NEVER RAN IS NOT A CONTROL. Every run ERRORing is
+        # what a poison arm does when its deliberately-corrupt payload trips
+        # expectSha256, or the source root is briefly absent, or teardown
+        # fails: the payload never reached the engine, so the fact that it did
+        # not pass says nothing about whether the instrument can report a
+        # negative. It used to be scored 'failed_as_predicted' -- and that
+        # string went straight into the one judgement-bearing field the
+        # skeleton generator is allowed to fill.
+        if poison["erroredRuns"]:
+            problems.append(
+                f"{poison['arm']} is a poison control and "
+                f"{poison['erroredRuns']}/{poison['n']} of its runs ERRORED "
+                "before reaching the engine. A payload that never ran is not "
+                "a negative result"
+            )
+        if not poison["replicated"]:
+            problems.append(
+                f"{poison['arm']} is a poison control with n={poison['n']}: a "
+                "control that ran once has not been shown to behave"
+            )
+        if poison["usableRuns"] == 0:
+            problems.append(
+                f"{poison['arm']} is a poison control and not one of its runs "
+                "reached level load, so it never tested the payload at all"
+            )
         if poison["verdicts"].get("PASS"):
             problems.append(
                 f"{poison['arm']} is a poison control and it PASSED "
@@ -579,8 +668,8 @@ def emit_finding_skeleton(
                     f"self-exit rate {arm['selfExitRate']}, "
                     f"fault rate {arm['faultRate']}, "
                     f"level-load rate {arm['levelLoadRate']}, "
-                    f"lifetime median {arm['lifetimeSeconds']['median']}s "
-                    f"spread {arm['lifetimeSeconds']['spread']}s"
+                    f"oracle decided at median {arm['oracleDecisionSeconds']['median']}s "
+                    f"spread {arm['oracleDecisionSeconds']['spread']}s"
                 ),
                 "sample": {
                     "n": arm["n"],
@@ -646,8 +735,8 @@ def render(report: dict[str, Any]) -> str:
         add(f"  fault rate        {arm['faultRate']}  (vetoed {arm['vetoedCount']})")
         add(f"  level-load rate   {arm['levelLoadRate']}  "
             f"({arm['usableRuns']}/{arm['n']} usable)")
-        life = arm["lifetimeSeconds"]
-        add(f"  lifetime          median {life['median']}s  "
+        life = arm["oracleDecisionSeconds"]
+        add(f"  oracle decided at median {life['median']}s  "
             f"min {life['min']}s  max {life['max']}s  spread {life['spread']}s")
         add(f"  exit codes        {arm['exitCodes']}")
         add("")
@@ -707,7 +796,9 @@ def self_check() -> int:
             "vetoedCount": 0,
             "levelLoadRate": 1.0,
             "usableRuns": 3,
-            "lifetimeSeconds": _spread([10.0, 10.1, 10.2]),
+            "erroredRuns": 0,
+            "oracleSignature": ["processExit+settle0"],
+            "oracleDecisionSeconds": _spread([10.0, 10.1, 10.2]),
             "isPoison": False,
             "stagedPayloads": [],
         },
@@ -726,7 +817,9 @@ def self_check() -> int:
             "vetoedCount": 0,
             "levelLoadRate": 1.0,
             "usableRuns": 3,
-            "lifetimeSeconds": _spread([2.0, 2.1, 2.2]),
+            "erroredRuns": 0,
+            "oracleSignature": ["processExit+settle0"],
+            "oracleDecisionSeconds": _spread([2.0, 2.1, 2.2]),
             "isPoison": True,
             "stagedPayloads": [],
         },
@@ -818,8 +911,8 @@ def self_check() -> int:
         return 1
 
     # A difference inside the noise must not be reported as a difference.
-    noisy_a = {**fake_arms[0], "lifetimeSeconds": _spread([10.0, 20.0])}
-    noisy_b = {**fake_arms[1], "lifetimeSeconds": _spread([12.0, 22.0])}
+    noisy_a = {**fake_arms[0], "oracleDecisionSeconds": _spread([10.0, 20.0])}
+    noisy_b = {**fake_arms[1], "oracleDecisionSeconds": _spread([12.0, 22.0])}
     noisy = compare_pair(noisy_a, noisy_b)
     print(f"noise is not called a difference: "
           f"{noisy['lifetimeVerdict'] == 'INDISTINGUISHABLE'}")
@@ -829,8 +922,8 @@ def self_check() -> int:
         return 1
 
     # ...and a real difference must still be reported.
-    clean_a = {**fake_arms[0], "lifetimeSeconds": _spread([10.0, 10.1])}
-    clean_b = {**fake_arms[1], "lifetimeSeconds": _spread([60.0, 60.2])}
+    clean_a = {**fake_arms[0], "oracleDecisionSeconds": _spread([10.0, 10.1])}
+    clean_b = {**fake_arms[1], "oracleDecisionSeconds": _spread([60.0, 60.2])}
     clean = compare_pair(clean_a, clean_b)
     print(f"a real difference is still reported: "
           f"{clean['lifetimeVerdict'] == 'DIFFERENT'}")
@@ -847,6 +940,42 @@ def self_check() -> int:
     print(f"n=1 blocks a conclusion: {not single['supportable']}")
     if single["supportable"]:
         print("FAILED: an arm with one run was allowed to support a difference.")
+        return 1
+
+    # A poison arm whose every run ERRORED never reached the engine. It used to
+    # be scored 'failed_as_predicted', and that string goes into the one
+    # judgement-bearing field the skeleton generator may fill.
+    errored_poison = check_poison(
+        [
+            fake_arms[0],
+            {**fake_arms[1], "verdicts": {"ERROR": 3}, "erroredRuns": 3},
+        ]
+    )
+    print(f"an ERRORed poison arm is not a sound control: "
+          f"{not errored_poison['sound']}")
+    if errored_poison["sound"]:
+        print("FAILED: a poison arm that never ran was called a control.")
+        return 1
+
+    # An arm that waits for a file and an arm that waits out a deadline differ
+    # by the whole deadline even when the two processes behaved identically.
+    cross = compare_pair(
+        {**clean_a, "oracleSignature": ["fileAppears+settle0"]},
+        {**clean_b, "oracleSignature": ["survives+settle0"]},
+    )
+    print(f"different oracle shapes cannot be differenced: "
+          f"{not cross['supportable']}")
+    if cross["supportable"]:
+        print("FAILED: two arms asking different questions were differenced.")
+        return 1
+
+    # -rN reads as 'replicate' to the grouper and 'revision' to a human.
+    merged = compare_pair(
+        {**clean_a, "stagedPayloads": ["aa" * 32, "bb" * 32]}, clean_b
+    )
+    print(f"two payloads under one arm name blocks: {not merged['supportable']}")
+    if merged["supportable"]:
+        print("FAILED: two different payloads were treated as replicates.")
         return 1
 
     print("\nall self-checks held")

@@ -123,6 +123,31 @@ _KNOWN_FAULT_STATUS = {
     0xE06D7363: "MSVC C++ exception (0xE06D7363)",
 }
 
+# MEASURED 2026-08-02, campaign 01, and it decides how the band below is set.
+# Ten runs of BEA.exe at level 100, all ending with a console `Quit`, four of
+# them byte-identical arms. The exit codes were:
+#
+#     baseline     0x80000001, 0x80000001, 1, 1
+#     lose         1, 0, 1
+#     poison-noop  1, 0x80000001, 1
+#
+# Three distinct exit codes from identical input, and not one run wrote an
+# OnslaughtException.txt. 0x80000001 is STATUS_GUARD_PAGE_VIOLATION by the book,
+# and it is what this game returns from a clean, successful, user-requested
+# quit -- most likely a message loop returning an uninitialised wParam.
+#
+# TWO CONSEQUENCES, both load-bearing:
+#
+#   1. `expectExitCode` is useless against BEA. There is no code to expect.
+#   2. DO NOT WIDEN THE BAND TO COVER THE WARNING-SEVERITY RANGE. An
+#      adversarial review recommended exactly that, on correct Windows
+#      semantics: 0x80000001 and 0x80000002 really are fault statuses, and a
+#      gate that misses them really is incomplete. Against this binary it would
+#      veto 30% of all clean runs. The generic reasoning is right and the
+#      specific answer is wrong, which is why it took a campaign rather than a
+#      reading to settle -- the exception log, not the exit code, is the trigger
+#      that carries weight here.
+#
 # The band of Microsoft-defined NTSTATUS values whose severity field is ERROR.
 # Anything in it is a death even when this file has no name for it.  The band is
 # bounded deliberately: 0xFFFFFFFF also has ERROR severity, and it is what a
@@ -214,24 +239,58 @@ def classify_exit_code(code: Optional[int]) -> dict[str, Any]:
     }
 
 
-def oracle_expects_a_fault(oracle: dict[str, Any], exit_code: Optional[int]) -> bool:
+def oracle_expects_a_fault(
+    oracle: dict[str, Any], exit_code: Optional[int], trigger: str = "any"
+) -> bool:
     """True when this oracle tree asked for the death it got.
 
-    Two ways to ask, and no third: declare the ``fatalFault`` kind, which is an
-    oracle *about* a crash, or name the exact code in ``expectExitCode``.  A
-    bare ``processExit`` is not asking for a crash and never has been.
+    ``trigger`` names WHICH death is being excused, and the two are not the
+    same permission:
+
+        "exit-code"  the process exited with an NTSTATUS fault status.
+        "fault-log"  ``OnslaughtException.txt`` appeared.
+
+    THREE CORRECTIONS FROM AN ADVERSARIAL PASS, each verified against the real
+    code before it was believed:
+
+    1. ``expectExitCode`` used to excuse EVERYTHING, including a fault log, and
+       it never checked that the code it named was a fault at all. So
+       ``{"kind": "processExit", "expectExitCode": 0}`` -- which reads stricter
+       than a bare processExit -- reinstated the exact bug this gate was built
+       to fix: the engine's handler writes the log, the process exits 0, and
+       the receipt says the probe asked for the crash. Naming an ordinary exit
+       code is not asking for a crash, and asking for a specific exit code says
+       nothing whatever about a fault log.
+
+    2. A ``fatalFault`` arm inside an ``any`` no longer opts out. Under ``any``
+       the composite is satisfied by whichever arm fired, and the gate cannot
+       tell which one did -- so ``any(setupHistoryContains, fatalFault)``, a
+       perfectly natural exploratory probe, was passing on every crash
+       including a launch that died at sound init. Under ``all`` it is
+       different: every arm must be satisfied, so a ``fatalFault`` in an
+       ``all`` really was satisfied, and it really did ask.
+
+    3. An ``expectExitCode`` that names a non-fault code excuses nothing.
     """
 
     kind = oracle.get("kind")
     if kind == "fatalFault":
         return True
     if kind == "processExit":
+        if trigger == "fault-log":
+            return False
         expected = oracle.get("expectExitCode")
-        if expected is not None and exit_code is not None:
-            return (int(expected) & 0xFFFFFFFF) == (int(exit_code) & 0xFFFFFFFF)
+        if expected is None or exit_code is None:
+            return False
+        if (int(expected) & 0xFFFFFFFF) != (int(exit_code) & 0xFFFFFFFF):
+            return False
+        return bool(classify_exit_code(expected)["isFault"])
+    if kind == "all":
+        return any(
+            oracle_expects_a_fault(sub, exit_code, trigger) for sub in oracle["of"]
+        )
+    if kind == "any":
         return False
-    if kind in ("all", "any"):
-        return any(oracle_expects_a_fault(sub, exit_code) for sub in oracle["of"])
     return False
 
 
@@ -261,14 +320,25 @@ def apply_fault_gate(
     ``fatalFault`` oracle, or an ``expectExitCode`` naming the exact status.
     """
 
+    blanket = bool(probe.allow_fault_exit)
+    code = classification.get("code")
+
     triggers: list[str] = []
+    excused: list[str] = []
     if classification.get("isFault"):
-        triggers.append(classification["detail"])
+        if blanket or oracle_expects_a_fault(probe.oracle, code, "exit-code"):
+            excused.append(classification["detail"])
+        else:
+            triggers.append(classification["detail"])
     if diagnosis.get("fatalFaultLogPresent"):
-        triggers.append(
+        message = (
             f"{EXCEPTION_LOG} was written -- the engine's own handler recorded a "
             "fatal fault, whatever the exit code says"
         )
+        if blanket or oracle_expects_a_fault(probe.oracle, code, "fault-log"):
+            excused.append(message)
+        else:
+            triggers.append(message)
 
     # ``vetoed`` means "this run may not be a PASS", not "the gate is the only
     # thing standing between it and one".  Those come apart when the oracle
@@ -278,36 +348,29 @@ def apply_fault_gate(
     # one a campaign summary counts.
     if not triggers:
         return {
-            "triggered": False,
+            "triggered": bool(excused),
             "vetoed": False,
             "wasDecisive": False,
-            "optedIn": bool(probe.allow_fault_exit),
+            "optedIn": bool(excused),
             "triggers": [],
-            "detail": "the run did not fault",
-        }
-
-    opted_in = bool(probe.allow_fault_exit) or oracle_expects_a_fault(
-        probe.oracle, classification.get("code")
-    )
-    if opted_in:
-        return {
-            "triggered": True,
-            "vetoed": False,
-            "wasDecisive": False,
-            "optedIn": True,
-            "triggers": triggers,
+            "excused": excused,
             "detail": (
-                "the run faulted and the probe asked for it: "
-                + "; ".join(triggers)
+                "the run faulted and the probe asked for it: " + "; ".join(excused)
+                if excused
+                else "the run did not fault"
             ),
         }
 
+    # AT LEAST ONE TRIGGER WAS NOT EXCUSED, so the run is vetoed even if the
+    # other one was. A probe that asked for an access violation did not thereby
+    # ask for a fault log it never mentioned.
     return {
         "triggered": True,
         "vetoed": True,
         "wasDecisive": oracle_result.get("outcome") == "satisfied",
         "optedIn": False,
         "triggers": triggers,
+        "excused": excused,
         "detail": (
             "THIS RUN CRASHED and the probe did not declare that it expected to: "
             + "; ".join(triggers)
@@ -902,9 +965,17 @@ def wait_for_oracle(
                 )
             return result("satisfied", detail, elapsed, exit_code)
         if state.exited:
-            # A dead process cannot produce new evidence.  Decide now.
+            # A dead process cannot produce new evidence.  Decide now -- but
+            # HONOUR ``satisfied``. This branch used to hardcode the unsatisfied
+            # outcome while the deadline branch below correctly honoured it, so
+            # a composite like any(fileAppears, survives) whose file arm was
+            # satisfied at the very sample the process exited cleanly was
+            # reported FAIL with a detail reading "appeared".
             return result(
-                "unsatisfied-process-exited", detail, elapsed, exit_code
+                "satisfied" if satisfied else "unsatisfied-process-exited",
+                detail,
+                elapsed,
+                exit_code,
             )
         if state.deadline_reached:
             return result(
@@ -938,16 +1009,32 @@ def _settle(
     falling over.
     """
 
+    # A PROBE THAT ASKED FOR THE CRASH STILL GETS IT HERE.  The fault-log check
+    # below used to fire unconditionally, so a `fatalFault` oracle -- an oracle
+    # whose entire subject IS the crash -- could never pass once a settle window
+    # was added, and `allowFaultExit` silently stopped working the moment
+    # someone set settleSeconds. The gate said optedIn and this layer failed it
+    # anyway; the stricter of two disagreeing layers won by accident.
+    excused_log = allow_fault_exit or oracle_expects_a_fault(
+        oracle, None, "fault-log"
+    )
+
     settle_started = clock.now()
     while True:
         exit_code = handle.poll()
         elapsed = clock.now() - started
         settled = clock.now() - settle_started
         state = sample(elapsed, exit_code)
-        fault_log = state.file_size(EXCEPTION_LOG) is not None
+        fault_log = state.file_size(EXCEPTION_LOG) is not None and not excused_log
         classification = classify_exit_code(exit_code)
+        # Recomputed per sample, not once on entry: an expectExitCode opt-in
+        # cannot be evaluated until there IS an exit code to compare against,
+        # and on entry to this window there is not one.
+        excused_code = allow_fault_exit or oracle_expects_a_fault(
+            oracle, exit_code, "exit-code"
+        )
 
-        if fault_log or (classification["isFault"] and not allow_fault_exit):
+        if fault_log or (classification["isFault"] and not excused_code):
             return result(
                 "satisfied-then-faulted",
                 f"{detail}; then, {settled:.1f}s later, "
@@ -1055,6 +1142,37 @@ def stage_scratch(
     scratch_root.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_root, scratch_root)
 
+    # THE TWO FILES THE ENGINE SPEAKS THROUGH MUST NOT BE INHERITED.
+    # copytree brings the whole source root, and a safe copy is a tree people
+    # launch the game out of -- so it accumulates a setuphistory.txt from
+    # whatever ran there last. Measured 2026-08-01: the shared safe copy held a
+    # setuphistory.txt containing "Game::LoadLevel 100" from an unrelated lane's
+    # run. A probe for level 100 that never launched at all would then have
+    # inherited that line, and diagnose() would have reported "the game reached
+    # level load, so a negative result here is about the payload, not the
+    # launch" -- the exact opposite of the truth, from the one check whose whole
+    # job is telling a launch failure from an engine failure.
+    #
+    # An inherited OnslaughtException.txt is worse in the other direction: it
+    # would veto every probe run out of that tree as CRASHED, and let a
+    # fatalFault poison arm pass at t=0 without the engine ever faulting.
+    #
+    # Removed rather than truncated: the engine recreates setuphistory.txt on
+    # every launch (verified over 10 runs, 10 distinct hashes, none matching the
+    # source), and absence is the one state that cannot be mistaken for output.
+    inherited: list[dict[str, Any]] = []
+    for name in (SETUP_HISTORY, EXCEPTION_LOG):
+        stale = scratch_root / name
+        if stale.is_file():
+            inherited.append(
+                {
+                    "file": name,
+                    "bytes": stale.stat().st_size,
+                    "sha256": sha256_file(stale),
+                }
+            )
+            stale.unlink()
+
     staged: list[dict[str, Any]] = []
     for entry in probe.stage:
         origin = (manifest_dir / entry.source).resolve()
@@ -1113,6 +1231,7 @@ def stage_scratch(
         "stagedFiles": staged,
         "createdDirectories": list(probe.make_dirs),
         "autoexec": autoexec_record,
+        "removedInheritedLogs": inherited,
     }
 
 
