@@ -138,7 +138,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         /// </summary>
         private void RefreshQuickStart(string? gameDir, GameDirectoryInspection inspection)
         {
-            bool running = App.SafeGameCopyProcesses.Snapshot().Count > 0;
+            // Snapshot() returns what was written down, and leases outlive their process -
+            // quitting the game from its own menu, or restarting the app, both leave one behind.
+            // Home used to read that as "your game is running" and offer a Stop that stopped
+            // nothing.
+            bool running = App.SafeGameCopyProcesses.SnapshotLive().Count > 0;
             bool copyExists = false;
             try
             {

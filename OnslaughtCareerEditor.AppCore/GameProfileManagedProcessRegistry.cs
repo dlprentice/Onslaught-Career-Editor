@@ -42,6 +42,35 @@ namespace Onslaught___Career_Editor
             }
         }
 
+        /// <summary>
+        /// Only the leases whose process is genuinely still running, newest first.
+        ///
+        /// <see cref="Snapshot"/> returns what was written down, which is not the same thing:
+        /// leases live on disk, so one survives the game being quit from its own menu, the game
+        /// crashing, and the app being restarted. Anything that asks "is a copy running right now"
+        /// and answers from <see cref="Snapshot"/> will say yes long after it is not - which is how
+        /// Home came to offer a Stop button that stopped nothing.
+        ///
+        /// Read-only, like <see cref="TryResolveLiveManagedProcess"/>: it closes no process and
+        /// deletes no lease. Use <see cref="PruneDeadLeases"/> when the dead ones should actually
+        /// go.
+        /// </summary>
+        public IReadOnlyList<GameProfileRegisteredProcess> SnapshotLive(
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] candidates;
+            lock (_gate)
+            {
+                candidates = _processes.Values
+                    .OrderByDescending(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            return candidates
+                .Where(candidate => GameProfileRuntimeService.IsManagedProcessLive(candidate.Process, probe))
+                .ToArray();
+        }
+
         public bool TryGetLatest(out GameProfileRegisteredProcess registered)
         {
             lock (_gate)

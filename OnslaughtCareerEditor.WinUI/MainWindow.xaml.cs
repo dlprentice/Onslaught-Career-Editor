@@ -879,7 +879,9 @@ namespace OnslaughtCareerEditor.WinUI
                 return;
             }
 
-            IReadOnlyList<GameProfileRegisteredProcess> activeSafeCopies = App.SafeGameCopyProcesses.Snapshot();
+            // Live, not merely recorded: a stale lease would cancel the close and ask the user
+            // to confirm shutting down a game that is not running.
+            IReadOnlyList<GameProfileRegisteredProcess> activeSafeCopies = App.SafeGameCopyProcesses.SnapshotLive();
             if (activeSafeCopies.Count == 0)
             {
                 return;

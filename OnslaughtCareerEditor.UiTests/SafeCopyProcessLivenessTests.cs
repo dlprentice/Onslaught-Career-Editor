@@ -100,6 +100,77 @@ public sealed class SafeCopyProcessLivenessTests
         });
     }
 
+    /// <summary>
+    /// The distinction Home got wrong: what was written down, versus what is running.
+    ///
+    /// Leases are persisted, so one outlives the game being quit from its own menu, the game
+    /// crashing, and the whole app being restarted. Home asked Snapshot() whether a copy was
+    /// running and therefore said yes indefinitely - and offered a Stop button that stopped
+    /// nothing, because there was nothing to stop.
+    /// </summary>
+    [Test]
+    public void SnapshotLiveReportsWhatIsRunningWhileSnapshotReportsWhatWasWrittenDown()
+    {
+        string profilesRoot = CreateTempProfilesRoot();
+
+        try
+        {
+            string leasePath = Path.Combine(profilesRoot, GameProfileManagedProcessRegistry.LeaseFileName);
+            GameProfileManagedProcess record = SeedSafeCopy(profilesRoot, "safe-game-copy-live", processId: 5150);
+
+            var registry = new GameProfileManagedProcessRegistry(leasePath);
+            registry.Register(record, profilesRoot);
+
+            var running = new StubLivenessProbe(record.StartedAt, record.ExecutablePath);
+            Assert.Multiple(() =>
+            {
+                Assert.That(registry.Snapshot().Count, Is.EqualTo(1));
+                Assert.That(registry.SnapshotLive(running).Count, Is.EqualTo(1), "A running copy is live.");
+            });
+
+            // The game has gone, and nothing has pruned the lease yet - the state Home was in.
+            Assert.Multiple(() =>
+            {
+                Assert.That(registry.Snapshot().Count, Is.EqualTo(1), "The lease is still on record.");
+                Assert.That(registry.SnapshotLive(NoProcessProbe()), Is.Empty, "But nothing is running.");
+            });
+
+            // Read-only, like TryResolveLiveManagedProcess: asking must not prune.
+            Assert.That(registry.Snapshot().Count, Is.EqualTo(1), "SnapshotLive must not delete leases.");
+            Assert.That(File.Exists(record.ExecutablePath), Is.True, "...nor touch the copy.");
+        }
+        finally
+        {
+            DeleteTempRoot(profilesRoot);
+        }
+    }
+
+    /// <summary>
+    /// A recycled process id must not read as the game coming back to life.
+    /// </summary>
+    [Test]
+    public void SnapshotLiveRejectsARecycledProcessId()
+    {
+        string profilesRoot = CreateTempProfilesRoot();
+
+        try
+        {
+            string leasePath = Path.Combine(profilesRoot, GameProfileManagedProcessRegistry.LeaseFileName);
+            GameProfileManagedProcess record = SeedSafeCopy(profilesRoot, "safe-game-copy-recycled", processId: 6060);
+
+            var registry = new GameProfileManagedProcessRegistry(leasePath);
+            registry.Register(record, profilesRoot);
+
+            var recycled = new StubLivenessProbe(record.StartedAt.AddSeconds(30), record.ExecutablePath);
+
+            Assert.That(registry.SnapshotLive(recycled), Is.Empty);
+        }
+        finally
+        {
+            DeleteTempRoot(profilesRoot);
+        }
+    }
+
     [Test]
     public void PruningDropsOnlyDeadLeasesAndNeverStopsOrDeletesAnything()
     {
