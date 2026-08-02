@@ -335,6 +335,17 @@
                                                    Text="75%"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
+                                    <ToggleSwitch x:Name="AudioKeepPlayingToggle"
+                                                  AutomationProperties.AutomationId="MediaAudioKeepPlayingToggle"
+                                                  AutomationProperties.Name="Keep playing the next track"
+                                                  Header="Keep playing"
+                                                  OnContent="On"
+                                                  OffContent="Off"
+                                                  IsOn="True" />
+                                    <TextBlock AutomationProperties.AutomationId="MediaAudioKeepPlayingNote"
+                                               Text="When a track ends, the next one in the list starts. There are over three hours of it."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                 </StackPanel>
                             </Border>
 

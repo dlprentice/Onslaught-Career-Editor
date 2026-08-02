@@ -434,6 +434,30 @@ public class LiveTrainerPageHonestyTests
             "Why Hold repeats and when it stops is how the control behaves, not where a number came from.");
     }
 
+    /// <summary>
+    /// Hold is a re-heal, not a freeze, and the difference is the one a player finds out about by
+    /// dying.
+    ///
+    /// The loop writes at 10 Hz against a 20 Hz simulation, so damage lands and is undone a moment
+    /// later - and a single hit large enough to kill arrives between two writes and is not undone
+    /// at all. A switch labelled Hold that quietly means "mostly" is exactly the kind of claim the
+    /// rest of this page refuses to make, so it has to say so, on screen.
+    /// </summary>
+    [Test]
+    public void HoldSaysItIsATopUpRatherThanInvulnerability()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(LiveTrainerPageText.HoldExplanation, Does.Contain("rather than freezing it"));
+            Assert.That(LiveTrainerPageText.HoldExplanation, Does.Contain("still take damage between writes"));
+            Assert.That(LiveTrainerPageText.HoldExplanation, Does.Contain("will still kill you"));
+            Assert.That(
+                IsBehindADisclosure(TrainerElement("LiveTrainerHoldExplanation")),
+                Is.False,
+                "A caveat a player has to open is a caveat they will miss.");
+        });
+    }
+
     [Test]
     public void ThePlayerModeIsShownAndNeverOffered()
     {

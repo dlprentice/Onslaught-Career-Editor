@@ -49,6 +49,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private MediaCatalogSnapshot _snapshot = MediaCatalogSnapshot.Empty;
         private MediaAudioItem? _selectedAudio;
+
+        /// <summary>
+        /// The audio items in the order the tree is currently showing them, so auto-advance
+        /// follows what a person is looking at rather than the order they sit on disk. Rebuilt
+        /// with the tree, including when a search narrows it.
+        /// </summary>
+        private readonly List<MediaAudioItem> _audioPlayOrder = new();
         private MediaAudioItem? _currentAudioItem;
         private MediaVideoItem? _selectedVideo;
         private WaveOutEvent? _waveOut;
@@ -925,6 +932,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             List<MediaAudioItem> filtered = items.ToList();
             _audioItemsByPath.Clear();
+            _audioPlayOrder.Clear();
             AudioTreeView.RootNodes.Clear();
 
             if (filtered.Count == 0)
@@ -957,6 +965,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     string normalizedPath = NormalizeMediaPath(item.FilePath);
                     _audioItemsByPath[normalizedPath] = item;
+                    _audioPlayOrder.Add(item);
                     TreeViewNode itemNode = new()
                     {
                         Content = new MediaTreeNodeTag(BuildAudioLeafLabel(item), normalizedPath),
@@ -1578,8 +1587,27 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             DispatcherQueue.TryEnqueue(() =>
             {
+                MediaAudioItem? finished = _selectedAudio;
                 StopAudioPlayback();
-                AppStatusService.SetStatus(e.Exception == null ? "Media: audio playback finished" : "Media: audio playback error");
+
+                if (e.Exception is not null)
+                {
+                    AppStatusService.SetStatus("Media: audio playback error");
+                    return;
+                }
+
+                // A library of 629 tracks that stops after every one of them is a filing cabinet.
+                // Walk to the next thing the tree is showing; the end of the list is still an end.
+                MediaAudioItem? next = MediaKeepPlaying.FindNext(_audioPlayOrder, finished);
+                if (AudioKeepPlayingToggle.IsOn && next is not null)
+                {
+                    SetSelectedAudio(next);
+                    StartAudioPlayback(next);
+                    AppStatusService.SetStatus($"Media: playing {next.Name}");
+                    return;
+                }
+
+                AppStatusService.SetStatus("Media: audio playback finished");
             });
         }
 

@@ -99,10 +99,22 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             + "mapping; the game disagrees with the note. It is shown and never changed - knowing what a "
             + "number means is not knowing what happens if you force it.";
 
+        /// <summary>
+        /// What Hold is, and the part that decides whether somebody trusts it in a fight.
+        ///
+        /// It is a re-heal, not a freeze. The loop writes at 10 Hz against a simulation that
+        /// updates at 20, so damage still lands and is undone a fraction of a second later - and a
+        /// single hit big enough to kill outright arrives between two writes and is not undone at
+        /// all. Leaving that unsaid would let a player believe a switch labelled Hold makes them
+        /// safe, which is exactly the class of claim the rest of this page refuses to make. The
+        /// page already makes the same call for shields, in a slot that does not collapse.
+        /// </summary>
         public const string HoldExplanation =
             "The game rewrites these ten to twenty times a second, so setting a value once barely lasts "
             + "a blink. Hold writes it back about ten times a second instead. It stops on its own when "
-            + "the mission ends, when the game closes, and when you leave this page.";
+            + "the mission ends, when the game closes, and when you leave this page. It tops the value "
+            + "back up rather than freezing it, so you still take damage between writes, and one hit "
+            + "big enough to kill you outright will still kill you.";
 
         public const string NothingOfferedHeadline =
             "Ammunition and game speed are not offered.";
