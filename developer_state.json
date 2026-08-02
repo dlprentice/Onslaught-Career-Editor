@@ -92,7 +92,15 @@
     "two_withdrawn_claims_do_not_resurrect_them": "(1) 'Fix shields before the water ditch' - WITHDRAWN. Drowning is not a damage-model outcome; landing in water kills you regardless of shield efficiency. That sequencing reasoned about the wrong failure mode. (2) 'Eleven lanes running' in the 2026-07-28 handoff - it was false when written. Both are recorded in the historical blocks below.",
     "landmines_every_lane_is_briefed_on": "The installed BEA.exe is deliberately patched by the maintainer. Two diagnostic checkers exit non-zero BY DESIGN. The smoke golden is deliberately pinned. Read byte evidence only from local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (74154bfa) and name the specimen. local-lab/patches/114-1-*.patch is measured DOES NOT APPLY because the particle parser it depends on was deleted - and task #65 established the starburst sun's assets live in ParticleSets/MainSet.par, so a .par decoder is a known need. DECIDED 2026-07-30: the maintainer authorized restoring the parser from history (fff49ccf), to land WITH a live consumer (MainSet.par -> the starburst sun, #148) rather than as scaffolding."
   },
-  "as_of": "2026-08-02 (overnight probe-loop session)",
+  "as_of": {
+    "_date_means": "The date of the NEWEST content in this file, not the date it was last read, and NOT a review claim - see _audited for what has actually been checked. Corrected 2026-07-28: this field read '2026-07-27' while the file already carried a _HANDOFF_2026_07_28_READ_THIS_FIRST block, an in_flight._as_of of '2026-07-28 ~11:00', and four 2026-07-28 findings. A reader who trusted the stamp would have concluded the whole file predated a day of work it actually contains. Move this whenever content lands, per _maintenance above.",
+    "date": "2026-08-02",
+    "head": null,
+    "_why_head_is_null": "A HEAD recorded here is wrong the instant it is committed, because the commit that writes it moves HEAD. The first version of this file claimed b9e1ae50 and was already two commits behind on arrival. Run `git log --oneline -8` instead; the commit messages carry the reasoning and are the real record.",
+    "branch": "main",
+    "only_branch": true,
+    "_verify": "git status --short && git log --oneline origin/main..HEAD"
+  },
   "_OVERNIGHT_2026_07_31_FEEL_WINDOW": {
     "_what_this_is": "The overnight feel-window ledger, 2026-07-30 evening through 07-31. The window goal is set as a session Stop-hook (scope: #147 lead, #148, #146, #141/#131, trace mining gated by #149). Maintainer asleep; standing authorization in force; no elevation available or needed.",
     "landed_and_pushed": [
