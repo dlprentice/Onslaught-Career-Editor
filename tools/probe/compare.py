@@ -88,6 +88,11 @@ _POISON_MARKERS = ("poison", "control-negative", "should-fail")
 # it is.
 MIN_REPLICATES = 2
 
+# The largest within-arm decision-time spread measured on BYTE-IDENTICAL inputs
+# inside a single session: campaign 02's losecmd arm, 2.757 s over three runs.
+# Any narrower "noise floor" is an artefact of a lucky-tight sample.
+MEASURED_DECISION_TIME_NOISE_SECONDS = 2.757
+
 
 class CompareError(Exception):
     """A refusal.  Carries the reason verbatim."""
@@ -355,6 +360,9 @@ def compare_pair(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
             "at least one arm gave different verdicts on identical inputs; its "
             "own replicates disagree, so it cannot be compared to anything"
         )
+        # This used to be a note and nothing else, so the sentence "it cannot be
+        # compared to anything" was printed and then the comparison proceeded.
+        blocked = True
 
     return {
         "armA": a["arm"],
@@ -383,6 +391,9 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
         return {
             "present": False,
             "sound": False,
+            "poisonArms": [],
+            "problems": ["no poison control in this arm set"],
+            "notes": [],
             "detail": (
                 "NO POISON CONTROL in this arm set. Without an arm that should "
                 "fail, a clean result is indistinguishable from an instrument "
@@ -392,37 +403,64 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
     problems: list[str] = []
     for poison in poisons:
-        # A POISON ARM THAT NEVER RAN IS NOT A CONTROL. Every run ERRORing is
-        # what a poison arm does when its deliberately-corrupt payload trips
-        # expectSha256, or the source root is briefly absent, or teardown
-        # fails: the payload never reached the engine, so the fact that it did
-        # not pass says nothing about whether the instrument can report a
-        # negative. It used to be scored 'failed_as_predicted' -- and that
-        # string went straight into the one judgement-bearing field the
-        # skeleton generator is allowed to fill.
+        # STEP 1 -- IS THE POISON ARM ITSELF VALID? Everything after this
+        # depends on the answer, and an invalid control cannot be rescued by
+        # turning out to differ from the treatment.
+        invalid: list[str] = []
         if poison["erroredRuns"]:
-            problems.append(
-                f"{poison['arm']} is a poison control and "
+            invalid.append(
                 f"{poison['erroredRuns']}/{poison['n']} of its runs ERRORED "
-                "before reaching the engine. A payload that never ran is not "
-                "a negative result"
+                "before reaching the engine; a payload that never ran is not a "
+                "negative result"
             )
         if not poison["replicated"]:
-            problems.append(
-                f"{poison['arm']} is a poison control with n={poison['n']}: a "
-                "control that ran once has not been shown to behave"
+            invalid.append(
+                f"n={poison['n']}: a control that ran once has not been shown "
+                "to behave"
             )
-        if poison["usableRuns"] == 0:
-            problems.append(
-                f"{poison['arm']} is a poison control and not one of its runs "
-                "reached level load, so it never tested the payload at all"
+        if poison["usableRuns"] < poison["n"]:
+            invalid.append(
+                f"only {poison['usableRuns']}/{poison['n']} of its runs reached "
+                "level load, so the rest never tested the payload at all"
             )
-        if poison["verdicts"].get("PASS"):
-            problems.append(
-                f"{poison['arm']} is a poison control and it PASSED "
-                f"{poison['verdicts']['PASS']}/{poison['n']} times -- the "
-                "instrument did not discriminate"
+        if poison["faultRate"]:
+            invalid.append(
+                f"it faulted in {poison['faultRate']:.0%} of runs; a control "
+                "that crashes is not showing that the oracle can report a "
+                "negative, only that the engine can fall over"
             )
+        if not poison["verdictStable"]:
+            invalid.append(
+                f"its own replicates disagree: {sorted(poison['verdicts'])}"
+            )
+        if set(poison["verdicts"]) != {"FAIL"}:
+            invalid.append(
+                f"its verdicts are {sorted(poison['verdicts'])}; a control is "
+                "sound only when it FAILS, and neither PASS nor UNKNOWN is a "
+                "failure"
+            )
+        if invalid:
+            problems.append(
+                f"{poison['arm']} is not a usable poison control: "
+                + "; ".join(invalid)
+            )
+            continue
+
+        # STEP 2 -- ONLY NOW may a shared verdict be excused by a difference.
+        #
+        # This branch exists because campaign 03's landscape arm and its poison
+        # arm both reported FAIL for opposite reasons, and calling that
+        # "separates nothing" would have discarded the strongest result of the
+        # night. An adversarial pass then found eight ways the branch as first
+        # written certified a BROKEN control as sound: a poison arm that reached
+        # level load in 1 run of 3, a treatment that hung once, a 0.5 s gap
+        # between two lucky-tight triples, and two arms that had asked entirely
+        # different questions.
+        #
+        # The rule that survived: the difference must be evidence about the
+        # TREATMENT, measured against a control already proven healthy in step
+        # 1, on arms that asked the same question. A control's own brokenness is
+        # never evidence that the instrument discriminates.
         for treatment in treatments:
             if not (
                 treatment["verdictStable"]
@@ -430,50 +468,79 @@ def check_poison(arms: Sequence[dict[str, Any]]) -> dict[str, Any]:
                 and set(treatment["verdicts"]) == set(poison["verdicts"])
             ):
                 continue
-            # SAME VERDICT IS NOT THE SAME BEHAVIOUR, and the verdict label is
-            # the lossiest thing in the receipt. Measured 2026-08-02, campaign
-            # 02: the poison arm FAILED because its file never appeared, and
-            # the `Win` arm FAILED because the process never exited -- its file
-            # appeared at 10,643 bytes. Self-exit rate 1.0 against 0.0, twelve
-            # runs, no overlap. Reading that as "this arm set separates
-            # nothing" would have thrown away the strongest result the campaign
-            # produced.
-            #
-            # So the question is not "did the labels match" but "is there ANY
-            # measured dimension on which these two arms differ". If there is
-            # none, the instrument really is blind.
+            if poison["oracleSignature"] != treatment["oracleSignature"]:
+                problems.append(
+                    f"{poison['arm']} (poison) and {treatment['arm']} "
+                    f"(treatment) share the verdict "
+                    f"{sorted(poison['verdicts'])} and asked DIFFERENT "
+                    f"questions ({poison['oracleSignature']} vs "
+                    f"{treatment['oracleSignature']}). A control only controls "
+                    "for the thing it was run alongside"
+                )
+                continue
+            if not treatment["replicated"]:
+                problems.append(
+                    f"{treatment['arm']} shares the verdict "
+                    f"{sorted(poison['verdicts'])} with the poison arm and has "
+                    f"n={treatment['n']}: nothing about it can be distinguished "
+                    "from anything"
+                )
+                continue
+
             differences: list[str] = []
-            # FAULT RATE FIRST, because it is the strongest separator and it was
-            # missing. Measured 2026-08-02, campaign 03: the landscape arm
-            # access-violated 3/3 while the poison arm exited cleanly 3/3, and
-            # the only dimension this check reported them differing on was a
-            # 1.5 s timing gap. The right answer for an accidental reason is
-            # still a check resting on the wrong thing.
-            if poison["faultRate"] != treatment["faultRate"]:
-                differences.append(
-                    f"fault rate {poison['faultRate']} vs "
-                    f"{treatment['faultRate']}"
-                )
-            if poison["selfExitRate"] != treatment["selfExitRate"]:
-                differences.append(
-                    f"self-exit rate {poison['selfExitRate']} vs "
-                    f"{treatment['selfExitRate']}"
-                )
-            if poison["levelLoadRate"] != treatment["levelLoadRate"]:
-                differences.append(
-                    f"level-load rate {poison['levelLoadRate']} vs "
-                    f"{treatment['levelLoadRate']}"
+
+            # A RATE STRICTLY BETWEEN 0 AND 1 IS THE ARM DISAGREEING WITH
+            # ITSELF, and that is instability rather than evidence -- the same
+            # rule that governs verdicts, applied to the rates. Campaign 03's
+            # landscape arm faulted in 3 runs of 3; one flaky crash in three
+            # would have been indistinguishable from the engine having a bad
+            # afternoon, and counting it would let any flake certify any
+            # control.
+            def _consistent(rate):
+                return rate in (0.0, 1.0)
+
+            for label, key in (("fault rate", "faultRate"),
+                               ("self-exit rate", "selfExitRate")):
+                p_rate, t_rate = poison[key], treatment[key]
+                if p_rate == t_rate:
+                    continue
+                if not (_consistent(p_rate) and _consistent(t_rate)):
+                    notes.append(
+                        f"{treatment['arm']} and {poison['arm']} differ on "
+                        f"{label} ({p_rate} vs {t_rate}) but at least one arm "
+                        "is inconsistent with itself across its own replicates; "
+                        "not counted as discrimination"
+                    )
+                    continue
+                differences.append(f"{label} {p_rate} vs {t_rate}")
+            if treatment["usableRuns"] < treatment["n"]:
+                # NOT counted as discrimination: a treatment that failed to
+                # load is the treatment being broken, which is the same error
+                # as the control being broken, pointed the other way.
+                notes.append(
+                    f"{treatment['arm']} reached level load in only "
+                    f"{treatment['usableRuns']}/{treatment['n']} runs; that is "
+                    "not counted as discrimination"
                 )
             p_time = poison["oracleDecisionSeconds"]
             t_time = treatment["oracleDecisionSeconds"]
             if p_time["median"] is not None and t_time["median"] is not None:
                 gap = abs(p_time["median"] - t_time["median"])
-                noise = max(p_time["spread"] or 0.0, t_time["spread"] or 0.0)
+                # The floor matters as much as the spreads. Two lucky-tight
+                # triples can each show a 0.04 s spread and still sit 0.5 s
+                # apart for no reason, and the measured within-arm spread on
+                # BYTE-IDENTICAL inputs in one session has been as wide as
+                # 2.757 s.
+                noise = max(
+                    p_time["spread"] or 0.0,
+                    t_time["spread"] or 0.0,
+                    MEASURED_DECISION_TIME_NOISE_SECONDS,
+                )
                 if gap > noise:
                     differences.append(
                         f"decision-time medians {p_time['median']}s vs "
                         f"{t_time['median']}s, gap {gap:.3f}s beyond the "
-                        f"{noise:.3f}s within-arm spread"
+                        f"{noise:.3f}s noise floor"
                     )
             if differences:
                 notes.append(
@@ -633,6 +700,54 @@ def emit_finding_skeleton(
                     "blocksClaim": True,
                 }
             )
+    for arm in arms:
+        if len(arm["stagedPayloads"]) > 1:
+            residuals.append(
+                {
+                    "id": f"mixed-payloads-{arm['arm']}",
+                    "statement": (
+                        f"arm {arm['arm']} groups {len(arm['stagedPayloads'])} "
+                        "DIFFERENT staged payloads under one arm name; its runs "
+                        "are not replicates of each other and its sample size "
+                        "does not mean what it says"
+                    ),
+                    "mechanism": ["probe.replication"],
+                    "blocksClaim": True,
+                }
+            )
+        if len(arm["oracleSignature"]) > 1:
+            residuals.append(
+                {
+                    "id": f"mixed-oracles-{arm['arm']}",
+                    "statement": (
+                        f"arm {arm['arm']} mixes oracle shapes "
+                        f"{arm['oracleSignature']}; its replicates were not "
+                        "asked the same question"
+                    ),
+                    "mechanism": ["probe.oracle"],
+                    "blocksClaim": True,
+                }
+            )
+
+    # THE CROSS-ARM BLOCKERS. The docstring promised "the residuals the
+    # comparison itself found" and then only ever read per-arm conditions, so
+    # every reason compare_pair refused a comparison was dropped before the
+    # record was written.
+    for pair in report.get("pairs", ()):
+        if pair.get("supportable"):
+            continue
+        residuals.append(
+            {
+                "id": f"not-comparable-{pair['armA']}-vs-{pair['armB']}",
+                "statement": (
+                    f"{pair['armA']} and {pair['armB']} cannot be compared: "
+                    + "; ".join(pair.get("notes", ())) or "no reason recorded"
+                ),
+                "mechanism": ["probe.comparison"],
+                "blocksClaim": True,
+            }
+        )
+
     if not report["poisonControl"]["sound"]:
         residuals.append(
             {
@@ -730,10 +845,23 @@ def emit_finding_skeleton(
                     f"oracle decided at median {arm['oracleDecisionSeconds']['median']}s "
                     f"spread {arm['oracleDecisionSeconds']['spread']}s"
                 ),
+                # INDEPENDENCE IS A JUDGEMENT, NOT A COUNT. Writing n into
+                # independentReplicates asserts the runs were replicates of each
+                # other -- the exact thing compare_pair refuses when an arm
+                # groups two different staged payloads, and refute.py prints it
+                # in the survival record as "N independent replicate(s) at the
+                # thinnest point". It is claimed only when the arm carries at
+                # most one distinct payload; otherwise it drops to 1 and the
+                # residual below says why.
                 "sample": {
                     "n": arm["n"],
                     "units": "probe runs",
-                    "independentReplicates": arm["n"],
+                    "independentReplicates": (
+                        arm["n"] if len(arm["stagedPayloads"]) <= 1 else 1
+                    ),
+                    # Not measured: no receipt records a session. One arm is one
+                    # invocation of the harness, so this is the honest floor
+                    # rather than a count of anything.
                     "sessions": 1,
                 },
             }
@@ -838,6 +966,7 @@ def self_check() -> int:
 
     print("self-check: an unedited skeleton must NOT be promotable")
     print("=" * 62)
+    failures = 0
 
     fake_arms = [
         {
@@ -1037,6 +1166,100 @@ def self_check() -> int:
         print("FAILED: two different payloads were treated as replicates.")
         return 1
 
+    # THE EIGHT WAYS A BROKEN CONTROL WAS CERTIFIED SOUND.
+    #
+    # The "distinguishable on" branch was added because campaign 03's landscape
+    # and poison arms both reported FAIL for opposite reasons. An adversarial
+    # pass then constructed eight arm sets in which that branch waved through a
+    # control that proved nothing -- and every one of them ended in
+    # `failed_as_predicted` reaching refute.py's R12, the single rule the whole
+    # poison apparatus exists to feed. Each is now a test.
+    def _arm(name, **over):
+        base = {
+            "arm": name, "n": 3, "replicated": True, "receipts": [],
+            "probeNames": [name], "verdicts": {"FAIL": 3}, "verdictStable": True,
+            "exitCodes": [1, 1, 1], "distinctExitCodes": [1],
+            "selfExitRate": 1.0, "faultRate": 0.0, "vetoedCount": 0,
+            "levelLoadRate": 1.0, "usableRuns": 3, "erroredRuns": 0,
+            "oracleSignature": ["processExit+settle0"],
+            "oracleDecisionSeconds": _spread([13.0, 13.02, 13.04]),
+            "isPoison": False, "stagedPayloads": [],
+        }
+        base.update(over)
+        return base
+
+    broken_controls = [
+        ("poison loaded 1 level in 3",
+         _arm("poison", isPoison=True, usableRuns=1, levelLoadRate=0.333),
+         _arm("treatment")),
+
+        ("half a second between two lucky-tight triples",
+         _arm("poison", isPoison=True,
+              oracleDecisionSeconds=_spread([13.0, 13.02, 13.04])),
+         _arm("treatment",
+              oracleDecisionSeconds=_spread([13.5, 13.52, 13.54]))),
+        ("the two arms asked different questions",
+         _arm("poison", isPoison=True,
+              oracleSignature=["fileAppears+settle0"],
+              oracleDecisionSeconds=_spread([4.0, 4.01, 4.02])),
+         _arm("treatment", oracleSignature=["survives+settle0"],
+              oracleDecisionSeconds=_spread([30.0, 30.01, 30.02]))),
+        ("treatment ran once",
+         _arm("poison", isPoison=True),
+         _arm("treatment", n=1, replicated=False,
+              oracleDecisionSeconds=_spread([13.5]))),
+        ("poison verdicts are UNKNOWN, not FAIL",
+         _arm("poison", isPoison=True, verdicts={"UNKNOWN": 3}),
+         _arm("treatment", verdicts={"UNKNOWN": 3})),
+        ("the POISON arm is the one that crashed",
+         _arm("poison", isPoison=True, faultRate=1.0, vetoedCount=3),
+         _arm("treatment")),
+        ("one flaky crash in three treatment runs",
+         _arm("poison", isPoison=True),
+         _arm("treatment", faultRate=0.333, vetoedCount=1)),
+    ]
+    for label, poison_arm, treatment_arm in broken_controls:
+        verdict = check_poison([treatment_arm, poison_arm])
+        ok = not verdict["sound"]
+        print(f"broken control refused -- {label}: {ok}")
+        if not ok:
+            print(f"FAILED: a control proving nothing was certified sound "
+                  f"({label}).")
+            failures += 1
+
+    # An arm whose own replicates disagree may not be compared to anything.
+    # This is where the "treatment hung once" case actually belongs: the poison
+    # control is healthy and genuinely failed as designed, so check_poison is
+    # right to allow it -- the defect is that compare_pair printed "cannot be
+    # compared to anything" and then compared it.
+    unstable = compare_pair(
+        _arm("stable"),
+        _arm("flaky", verdicts={"FAIL": 2, "UNKNOWN": 1}, verdictStable=False),
+    )
+    print(f"an arm whose replicates disagree blocks: "
+          f"{not unstable['supportable']}")
+    if unstable["supportable"]:
+        print("FAILED: an arm that gave two different verdicts on identical "
+              "inputs was compared to another arm anyway.")
+        failures += 1
+
+    # ...and the real campaign-03 shape must still be allowed through, or the
+    # fix has simply restored the false negative it replaced.
+    real = check_poison([
+        _arm("landscape", faultRate=1.0, vetoedCount=3,
+             oracleDecisionSeconds=_spread([11.028, 11.03, 11.03])),
+        _arm("poison-c3", isPoison=True,
+             oracleDecisionSeconds=_spread([12.281, 12.53, 12.53])),
+    ])
+    print(f"the real campaign-03 pair is still separated: {real['sound']}")
+    if not real["sound"]:
+        print("FAILED: the treatment crashing 3/3 against a clean control is "
+              "the strongest separation there is, and it was rejected.")
+        failures += 1
+
+    if failures:
+        print(f"\n{failures} FAILED")
+        return 1
     print("\nall self-checks held")
     return 0
 

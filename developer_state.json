@@ -450,7 +450,7 @@
       "gap1_oracle_admitted_crashes": "FIXED. classify_exit_code + apply_fault_gate + settleSeconds in tools/probe/probe_harness.py. The gate sits ABOVE the oracle so no oracle kind can launder a crash, and has two independent triggers (NTSTATUS exit code, OnslaughtException.txt). 16 mutations, 16 detected.",
       "gap2_cross_arm_comparison": "FIXED. tools/probe/compare.py. Enforces: a difference between arms is real only if it exceeds the spread within them. Refuses n=1, refuses runs that never reached level load, refuses arms with different oracle shapes, refuses two payloads grouped under one arm name. 7 self-checks.",
       "gap3_findings_hand_written": "FIXED. compare.py --emit-finding. The skeleton is deliberately incomplete and --self-check asserts an unedited one is INADMISSIBLE for SUBSTANTIVE reasons (R07/R14/R03), not merely for schema reasons -- the first version of that check passed for the wrong reason and proved nothing.",
-      "gap4_probe_selection": "FIXED. tools/probe/select.py over the ledger snapshot at local-lab/re-ledger/coverage-ledger-2026-08-02-base. Every lever carries a confidence and a falsifier; it can and does return \"no known lever\"."
+      "gap4_probe_selection": "FIXED. tools/probe/select_probe.py (renamed from select.py: it shadowed the stdlib select module for anything running with tools/probe on sys.path) over the ledger snapshot at local-lab/re-ledger/coverage-ledger-2026-08-02-base. Every lever carries a confidence and a falsifier; it can and does return \"no known lever\"."
     },
     "campaigns_run": {
       "_where": "local-lab/probe-runs/campaign-0{1,2,3}/ with compare.json in each",
@@ -489,6 +489,7 @@
       "new_bodies_vs_deepened": "76 new bodies (13,106 hull bytes) vs 108 deepened (9,645 bytes) -- the first number is the one that means new territory",
       "newly_named": "CBattleEngine__GetLaunchPosition 1888b; CInfantryUnit__VFunc39_HandleCollisionDamageReaction 1257b; CBattleEngineWalkerPart__WeaponFired 823b; CBattleEngine__Morph 769b; CGame__ReceiveButtonAction 705b; CInfantryUnit__VFunc49_HandleDeathPickupAndEffects 671b; CBattleEngine__BuildInterpolatedWorldTransform 509b; CBattleEngineWalkerPart__ChargeWeapon 439b; CBattleEngineJetPart__WeaponFired 339b",
       "what_it_supports": "Three SHORT combat takes lit the morph transform, weapon fire on two chassis, and the collision-damage and death handlers. Direct empirical support for the isolated-scenario thesis."
-    }
+    },
+    "adversarial_passes": "Two read-only adversaries reviewed this work. The first found 9 defects in the fault gate and compare stage, 8 real and fixed; its 9th recommendation (widen the NTSTATUS band) was refuted by campaign 01. The second found 10 in the selector and compare stage, including that the poison check I had just \"fixed\" certified 8 kinds of broken control as sound and that the fix terminated in refute.py R12 passing. All fixed, each with a self-check. Remaining known limit: band_overlap credits a straddling region wholly to its majority side, overstating library bytes by ~5,125 (0.8%)."
   }
 }

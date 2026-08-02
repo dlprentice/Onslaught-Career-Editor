@@ -14,24 +14,26 @@ worklist: which dark region is worth the most, what lever might reach it, what
 that lever costs, and -- the part that makes it falsifiable -- what result would
 prove the lever does not work.
 
-WHAT THE FIRST READING CHANGED
-------------------------------
-The campaign was planned on the premise that `.text` is dark because the opening
-minutes never exercise combat, AI, damage and destruction. Against the
+WHAT TWO READINGS CHANGED, IN ORDER
+-----------------------------------
+FIRST: the campaign was planned on the premise that `.text` is dark because the
+opening minutes never exercise combat, AI, damage and destruction. Against the
 2026-08-02 base snapshot (69 coverage indexes, 66 levels) that premise does not
-survive its own numbers:
+survive its own numbers -- COMBAT_AI is 35,060 dark bytes, 5.7% of the
+never-entered mass, against RENDER's 321,340 at 52.0%. Combat is a twentieth.
 
-    RENDER          321,340 dark bytes   52.0% of never-entered dark
-    UNCLASSIFIED     73,269               11.8%
-    EH_ERROR_PATH    47,579                7.7%
-    COMBAT_AI        35,060                5.7%
-    CRT_EH_FUNCLET   19,820                3.2%
+SECOND, and it overturned the conclusion the first reading invited: most of that
+render mass is not this game's code. A statically-linked D3DX9 block occupies
+roughly 0x00570000-0x005c8000, and of the 183,579 dark bytes in `CFastVB` and
+`CDXTexture` -- the pair a byte-ranked selector puts at the top of the board --
+**176,833, or 96.3%, sit inside it**. They are Microsoft's image codecs,
+stripifier and effect preprocessor. Reachable by handing the engine a PNG, and
+worth nothing to this project when reached.
 
-Combat is a twentieth of the never-entered mass. Two render families alone --
-`CFastVB` at 88.5% dark and `CDXTexture` at 80.5% -- are 183,579 bytes, five
-times all of COMBAT_AI. And they stayed dark across all 66 shipped levels, which
-means shipped content does not reach them: the lever is content the game
-supports and the game's own assets never use, not more gameplay.
+So the honest ordering is: combat is small, render is large, and render is
+mostly not ours. What survives as the top of the board is the content-bake
+pipeline shipped inside the retail exe, two of whose entry points are console
+commands. See D3DX_BAND below for the evidence and its falsifier.
 
 A LEVER IS A HYPOTHESIS, NOT A FACT
 -----------------------------------
@@ -53,10 +55,10 @@ either idles waiting for a human or reports behavioural results as coverage.
 
 Usage
 -----
-    py -3 tools/probe/select.py --snapshot local-lab/re-ledger/<snap>
-    py -3 tools/probe/select.py --snapshot DIR --top 20 --no-ttd
-    py -3 tools/probe/select.py --snapshot DIR --json-out worklist.json
-    py -3 tools/probe/select.py --self-check
+    py -3 tools/probe/select_probe.py --snapshot local-lab/re-ledger/<snap>
+    py -3 tools/probe/select_probe.py --snapshot DIR --top 20 --no-ttd
+    py -3 tools/probe/select_probe.py --snapshot DIR --json-out worklist.json
+    py -3 tools/probe/select_probe.py --self-check
 """
 
 from __future__ import annotations
@@ -296,8 +298,11 @@ LEVERS: tuple[Lever, ...] = (
         needs_ttd=True,
         needs_elevation=True,
         note=(
-            "the largest addressable prize on the board: CFastVB 97,295 dark "
-            "bytes at 88.5%, CDXTexture 86,284 at 80.5%"
+            "Do NOT read this as the CFastVB/CDXTexture prize. Of the 183,579 "
+            "dark bytes under those two names, 176,833 route to "
+            "d3dx-library-not-the-product and 19,820 to unreachable; only "
+            "5,382 reach this lever. Across all its families this lever is "
+            "51,088 bytes -- second, behind script-native-scenario at 58,504."
         ),
     ),
     Lever(
@@ -378,6 +383,8 @@ LEVERS: tuple[Lever, ...] = (
     ),
 )
 
+LEVERS_BY_ID = {lever.id: lever for lever in LEVERS}
+
 NO_LEVER = Lever(
     id="no-known-lever",
     reach_classes=(),
@@ -404,14 +411,32 @@ def choose_lever(region: dict[str, str]) -> Lever:
     the band was measured.
     """
 
+    families = region.get("topFamilies", "")
+    reach = region.get("topReachClass", "")
+
+    # UNREACHABLE OUTRANKS THE BAND. `HResultToString` -- at 46,657 bytes the
+    # single largest dark region there is -- starts inside the D3DX band and is
+    # classified EH_ERROR_PATH, so a band-first rule routed it to the library
+    # lever whose evidence field does not mention it, and away from the
+    # unreachable lever whose evidence field cites it by address. The two
+    # disagreed by exactly that region: the lever note said 67,399 bytes while
+    # the tool printed 20,742, and 67,399 - 46,657 = 20,742.
+    #
+    # "Will never be reached by any probe" is also the stronger and more useful
+    # statement of the two. Being Microsoft's code is a reason not to chase
+    # something; being an exception path is a reason it cannot be chased.
+    unreachable = LEVERS_BY_ID["unreachable-by-probing"]
+    if reach in unreachable.reach_classes or any(
+        f"{name}(" in families for name in unreachable.families
+    ):
+        return unreachable
+
     # Majority of the RUN, not just where it starts.
     if band_overlap(
         parse_va(region.get("startVa", "")), parse_va(region.get("endVa", ""))
     ) > 0.5:
-        return LEVERS[0]  # d3dx-library-not-the-product
+        return LEVERS_BY_ID["d3dx-library-not-the-product"]
 
-    families = region.get("topFamilies", "")
-    reach = region.get("topReachClass", "")
     for lever in LEVERS:
         if lever.families and any(f"{name}(" in families for name in lever.families):
             return lever
@@ -502,7 +527,7 @@ def build_worklist(
 
     candidates = [r for r in scored if r["reachableByProbing"]]
     if exclude_ttd:
-        candidates = [r for r in candidates if not r["needsTtd"]]
+        candidates = [r for r in candidates if not r["needsElevation"]]
     candidates.sort(key=lambda r: -r["score"])
 
     by_lever: dict[str, dict[str, Any]] = {}
@@ -522,7 +547,7 @@ def build_worklist(
         entry["darkBytes"] += row["darkBytes"]
 
     return {
-        "tool": "tools/probe/select.py",
+        "tool": "tools/probe/select_probe.py",
         "snapshot": str(snapshot),
         "regionCount": len(scored),
         "darkBytesInRegions": total_dark,
@@ -561,11 +586,15 @@ def render(worklist: dict[str, Any]) -> str:
     add("BY LEVER")
     add("")
     for entry in worklist["byLever"]:
-        cost = (
-            "TTD + elevation (needs the maintainer)"
-            if entry["needsElevation"]
-            else "unattended, no elevation"
-        )
+        if entry["needsElevation"]:
+            cost = "TTD + elevation (needs the maintainer)"
+        elif entry["needsTtd"]:
+            # Runs unattended; cannot be SCORED without a coverage index, and
+            # that needs the maintainer. Two different costs, and collapsing
+            # them printed "unattended, no elevation" next to needs_ttd=True.
+            cost = "runs unattended; needs TTD to be judged by coverage"
+        else:
+            cost = "unattended, judged by its own artefacts"
         add(f"  {entry['lever']:<26} {entry['darkBytes']:>9,} bytes  "
             f"{entry['regions']:>4} regions  {entry['confidence']:<11} {cost}")
     add("")
@@ -582,7 +611,9 @@ def render(worklist: dict[str, Any]) -> str:
                 f"{row['libraryBandOverlap']:.0%} of this run is library code, "
                 "so its dark bytes are not all Aquila's")
         add(f"     lever: {row['lever']} [{row['leverConfidence']}]"
-            + ("  NEEDS TTD + ELEVATION" if row["needsElevation"] else "  unattended"))
+            + ("  NEEDS TTD + ELEVATION" if row["needsElevation"]
+               else ("  runs unattended, needs TTD to score" if row["needsTtd"]
+                     else "  unattended")))
         add("")
     return "\n".join(lines) + "\n"
 
@@ -699,9 +730,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--snapshot", type=pathlib.Path)
     parser.add_argument("--top", type=int, default=25)
     parser.add_argument(
+        "--unattended",
         "--no-ttd",
+        dest="unattended",
         action="store_true",
-        help="only levers that run unattended without elevation",
+        help="only levers that can be RUN without elevation (they may still "
+             "need TTD, and therefore the maintainer, to be JUDGED by coverage)",
     )
     parser.add_argument("--json-out", type=pathlib.Path)
     parser.add_argument("--self-check", action="store_true")
@@ -712,7 +746,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if not args.snapshot:
         parser.error("--snapshot is required unless --self-check is given")
 
-    worklist = build_worklist(args.snapshot, args.top, args.no_ttd)
+    worklist = build_worklist(args.snapshot, args.top, args.unattended)
     print(render(worklist))
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
