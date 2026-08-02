@@ -925,9 +925,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!string.IsNullOrWhiteSpace(search))
             {
+                // Searching the transcript is the point: a half-remembered line is how anyone
+                // actually looks for a voice clip, and "003_east_sphere_b" is not something a
+                // person remembers.
                 items = items.Where(item =>
                     item.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    item.GroupName.Contains(search, StringComparison.OrdinalIgnoreCase));
+                    item.GroupName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (item.Transcript is not null &&
+                     item.Transcript.Contains(search, StringComparison.OrdinalIgnoreCase)));
             }
 
             List<MediaAudioItem> filtered = items.ToList();
@@ -1320,6 +1325,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             _selectedAudio = item;
             AudioNowPlayingTextBlock.Text = item?.Name ?? "No track selected";
+
+            // The words, when the game's own text table has them for this recording.
+            string? spoken = item?.Transcript;
+            AudioTranscriptTextBlock.Text = spoken ?? string.Empty;
+            AudioTranscriptTextBlock.Visibility = string.IsNullOrWhiteSpace(spoken)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
             AudioPathTextBlock.Text = item == null
                 ? "Select a track from the left to start playback."
                 : BuildAudioSelectionSummary(item);

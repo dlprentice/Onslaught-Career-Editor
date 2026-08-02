@@ -259,6 +259,13 @@
                                                FontWeight="SemiBold"
                                                Text="No track selected"
                                                TextWrapping="WrapWholeWords" />
+                                    <TextBlock x:Name="AudioTranscriptTextBlock"
+                                               AutomationProperties.AutomationId="MediaAudioTranscript"
+                                               AutomationProperties.Name="What this line says"
+                                               FontSize="15"
+                                               FontStyle="Italic"
+                                               Visibility="Collapsed"
+                                               TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="AudioPathTextBlock"
                                                AutomationProperties.AutomationId="MediaAudioSourceSummary"
                                                Style="{StaticResource SectionBodyTextStyle}"

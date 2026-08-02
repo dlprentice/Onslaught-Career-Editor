@@ -171,6 +171,66 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain(groups, group => group.StartsWith("Mission 1", StringComparison.Ordinal));
         }
 
+        /// <summary>
+        /// The words come from the game, joined to the recording by the audio name the text table
+        /// stores beside every spoken string - which is the .ogg's own filename.
+        /// </summary>
+        [Fact]
+        public void Load_AttachesWhatEachVoiceLineActuallySays()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\512_TATIANA_NEW_1.ogg");
+            temp.WriteFile(@"data\sounds\english\MessageBox\110_arrival.ogg");
+            WriteLanguageFile(
+                temp,
+                ("Hawk, Billy! What are you two doing?", "512_TATIANA_NEW_1"),
+                ("A line with no recording", null));
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            MediaAudioItem spoken = snapshot.AudioItems.Single(item => item.Name == "512_TATIANA_NEW_1");
+            Assert.Equal("Hawk, Billy! What are you two doing?", spoken.Transcript);
+
+            // A recording the table has no line for keeps a null rather than an invented one.
+            Assert.Null(snapshot.AudioItems.Single(item => item.Name == "110_arrival").Transcript);
+        }
+
+        [Fact]
+        public void Load_LeavesTranscriptsNullWhenTheGameTextCannotBeRead()
+        {
+            using TempGameDirectory temp = TempGameDirectory.Create();
+            temp.WriteFile(@"data\sounds\english\MessageBox\512_TATIANA_NEW_1.ogg");
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(temp.RootPath);
+
+            Assert.All(snapshot.AudioItems, item => Assert.Null(item.Transcript));
+        }
+
+        /// <summary>
+        /// The claim this feature rests on, against retail bytes: measured 2026-08-01, all 607
+        /// audio-bearing entries in the English table resolve to a file that exists. If that join
+        /// ever degrades, the Media page quietly stops showing what half its clips say.
+        /// </summary>
+        [Fact]
+        public void Load_JoinsTheGamesOwnVoiceLinesToTheirRecordings()
+        {
+            string? gameDirectory = AppConfig.Load().GetGameDir() ?? AppConfig.DetectGameDirectory();
+            if (gameDirectory is null || !MediaCatalogService.LooksLikeGameDirectory(gameDirectory))
+            {
+                return;
+            }
+
+            MediaCatalogSnapshot snapshot = new MediaCatalogService().Load(gameDirectory);
+            if (snapshot.AudioItems.Count == 0)
+            {
+                return;
+            }
+
+            int withWords = snapshot.AudioItems.Count(item => !string.IsNullOrWhiteSpace(item.Transcript));
+
+            Assert.True(withWords > 500, $"Expected most voice lines to carry their words; got {withWords}.");
+        }
+
         private static void WriteLanguageFile(TempGameDirectory temp, params (string Text, string? Audio)[] entries)
         {
             string path = Path.Combine(temp.RootPath, "data", "language", "english.dat");

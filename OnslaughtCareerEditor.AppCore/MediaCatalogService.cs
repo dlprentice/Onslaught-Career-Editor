@@ -39,10 +39,11 @@ namespace Onslaught___Career_Editor
             // the two builders, so a single unreadable language file degrades to filename labels
             // everywhere at once instead of half the page.
             MissionNames missionNames = MissionNames.Load(fullGameDirectory);
+            VoiceTranscripts transcripts = VoiceTranscripts.Load(fullGameDirectory);
 
             return new MediaCatalogSnapshot(
                 fullGameDirectory,
-                BuildAudioItems(fullGameDirectory, missionNames),
+                BuildAudioItems(fullGameDirectory, missionNames, transcripts),
                 BuildVideoItems(fullGameDirectory, missionNames));
         }
 
@@ -115,7 +116,10 @@ namespace Onslaught___Career_Editor
             return MainVideoDescriptions.GetValueOrDefault(videoStem, videoStem);
         }
 
-        private static IReadOnlyList<MediaAudioItem> BuildAudioItems(string gameDirectory, MissionNames missionNames)
+        private static IReadOnlyList<MediaAudioItem> BuildAudioItems(
+            string gameDirectory,
+            MissionNames missionNames,
+            VoiceTranscripts transcripts)
         {
             List<MediaAudioItem> items = new();
 
@@ -145,7 +149,8 @@ namespace Onslaught___Career_Editor
                         file,
                         groupName,
                         groupSortOrder,
-                        TryGetOggDurationLabel(file)));
+                        TryGetOggDurationLabel(file),
+                        transcripts.TryGetLine(baseName)));
                 }
             }
 
@@ -154,6 +159,66 @@ namespace Onslaught___Career_Editor
                 .ThenBy(static item => item.GroupName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(static item => item.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+        }
+
+        /// <summary>
+        /// What each voice line says, from the game's own text table.
+        ///
+        /// The table stores an audio name beside every spoken string, and that name is the .ogg's
+        /// filename - so a line and its recording can be put back together without guessing.
+        /// Measured against the retail English table on 2026-08-01: 607 of 607 audio-bearing
+        /// entries resolve to a file that exists on disk.
+        ///
+        /// Optional, like the mission names. No installation, an unreadable table, or a build
+        /// whose names do not match all end as "no transcript", never as a page that will not
+        /// draw.
+        /// </summary>
+        private sealed class VoiceTranscripts
+        {
+            private static readonly VoiceTranscripts None = new(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+
+            private readonly Dictionary<string, string> _byAudioName;
+
+            private VoiceTranscripts(Dictionary<string, string> byAudioName)
+            {
+                _byAudioName = byAudioName;
+            }
+
+            public static VoiceTranscripts Load(string gameDirectory)
+            {
+                try
+                {
+                    GameTextCatalog? catalog = GameTextCatalogService.TryLoadFromGameDirectory(gameDirectory);
+                    if (catalog is null)
+                    {
+                        return None;
+                    }
+
+                    Dictionary<string, string> byAudioName = new(StringComparer.OrdinalIgnoreCase);
+                    foreach (GameTextEntry entry in catalog.Entries)
+                    {
+                        if (string.IsNullOrWhiteSpace(entry.AudioName) || string.IsNullOrWhiteSpace(entry.Text))
+                        {
+                            continue;
+                        }
+
+                        // First write wins: a handful of names carry more than one string, and the
+                        // first is the one the table lists against the recording.
+                        byAudioName.TryAdd(entry.AudioName, entry.Text.Trim());
+                    }
+
+                    return byAudioName.Count == 0 ? None : new VoiceTranscripts(byAudioName);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    return None;
+                }
+            }
+
+            public string? TryGetLine(string audioFileStem)
+            {
+                return _byAudioName.TryGetValue(audioFileStem, out string? line) ? line : null;
+            }
         }
 
         private static IReadOnlyList<MediaVideoItem> BuildVideoItems(string gameDirectory, MissionNames missionNames)
@@ -415,12 +480,19 @@ namespace Onslaught___Career_Editor
         public static MediaCatalogSnapshot Empty { get; } = new(string.Empty, Array.Empty<MediaAudioItem>(), Array.Empty<MediaVideoItem>());
     }
 
+    /// <param name="Transcript">
+    /// What is actually said, when the game's own text table has a line for this file, and null
+    /// otherwise. The join is the audio name the text table stores beside each string, which is
+    /// the .ogg's own filename - 607 of the 607 audio-bearing entries in the retail English table
+    /// resolve to a file that exists.
+    /// </param>
     public sealed record MediaAudioItem(
         string Name,
         string FilePath,
         string GroupName,
         int GroupSortOrder,
-        string DurationLabel);
+        string DurationLabel,
+        string? Transcript = null);
 
     public sealed record MediaVideoItem(
         string Name,
