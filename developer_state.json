@@ -717,7 +717,55 @@
         "supersedes_prior_gen11_draft": "local-lab/residual-terminal-generation11-padding-20260805-v1 (pre-xrefclean; superseded)",
         "whenUtc": "2026-08-05T03:32:56.530194+00:00"
       },
-      "current_authority_note": "Gen10 remains TTD call-context authority. Gen11 xrefclean residual-terminal padding bulk is residual-classification authority for TERMINAL_PADDING=4986 (0 E8; 26 abs-hit pads excluded)."
+      "current_authority_note": "Gen10 remains TTD call-context authority. Gen11 xrefclean residual-terminal padding bulk is residual-classification authority for TERMINAL_PADDING=4986 (0 E8; 26 abs-hit pads excluded).",
+      "executed_residual_join_20260805": {
+        "path": "local-lab/residual-executed-trace-callback-join-20260805-v1",
+        "status": "MEASURED",
+        "summary": {
+          "schema": "bea.re.executed-residual-join.v1",
+          "status": "MEASURED",
+          "specimen_sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+          "n_executed_residuals": 108,
+          "gradeCounts": {
+            "TRACE_EXECUTED_CORROBORATED": 86,
+            "SLOT_CONSUMER_NEAR_IMM": 1,
+            "ABS_PTR_TEXT_RDATA": 14,
+            "CALLBACK_SLOT_INSTALL": 7
+          },
+          "n_terminal_candidates": 8,
+          "n_coverage_corroborated": 108,
+          "n_coverage_zero": 0,
+          "coverageIndexesUsed": 86,
+          "coverageIndexErrors": 0,
+          "coverageTotalBytesInUnion": 905046,
+          "callregWindow": 48,
+          "callregSummary": {
+            "schema": "bea.re.callreg-imm-peephole.v1",
+            "status": "MEASURED",
+            "gradeCounts": {
+              "NO_IMM": 76,
+              "IMM_ONLY_NO_NEAR_CALL": 24,
+              "SLOT_CONSUMER_NEAR_IMM": 1,
+              "CALLBACK_SLOT_INSTALL": 7
+            },
+            "n_callback_install": 7,
+            "n_call_reg_near": 0,
+            "n_slot_consumer": 1,
+            "windowBytes": 48
+          },
+          "envelopePilot": "local-lab\\residual-executed-envelope-pilot-20260805-v1\\ENVELOPE.json",
+          "non_claims": [
+            "No function names invented",
+            "No Gen10/Gen11 residual ledger mutation",
+            "CALLBACK_SLOT_INSTALL is install-site evidence, not a proved live call",
+            "TRACE_EXECUTED_* does not close OPEN_CODE_BOUNDARY alone"
+          ],
+          "cheapestNextInstrument": "For CALLBACK_SLOT_INSTALL rows: runtime read of slot after install; for TRACE_EXECUTED_* majority: independent disasm fragment proof + fallthrough classification; for ABS_PTR_TEXT_RDATA: prove live load."
+        },
+        "integritySha256": "d4ca29956215905809b241d9348399daa7e264d25ebb8ea1aa02dc4d91869e72",
+        "whenUtc": "2026-08-05T03:40:01.177716+00:00",
+        "note": "108 EXECUTED residuals: coverage-corroborated 108/108; 8 slot/call terminal candidates not ledger-admitted; named cheapestFalsifier per row"
+      }
     }
   },
   "_PROBE_LOOP_2026_08_02": {
