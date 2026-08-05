@@ -138,8 +138,11 @@ def build_generation(
     if int(pack.get("n_mismatches", 1)) != 0:
         raise SystemExit("formal pack has mismatches")
     proofs = pack["proofs"]
-    if len(proofs) != 5012:
-        raise SystemExit(f"expected 5012 proofs, got {len(proofs)}")
+    if not proofs:
+        raise SystemExit("formal pack has zero proofs")
+    n_proofs = len(proofs)
+    n_need_q = sum(1 for p in proofs if p.get("proposed", {}).get("requiresQuestionSupersession"))
+    n_already = n_proofs - n_need_q
 
     # Parent integrity via Gen10 sealed verify
     parent_ready = json.loads((parent / "campaign.ready.json").read_text(encoding="utf-8"))
@@ -266,14 +269,13 @@ def build_generation(
 
     if missing:
         raise SystemExit(f"{missing} formal-pack rows missing from parent residuals")
-    if len(updated_entities) != 4997:
-        # 5012 - 15 already terminal
+    if len(updated_entities) != n_need_q:
         raise SystemExit(
-            f"expected to update 4997 residuals, updated {len(updated_entities)} "
-            f"(already_terminal_skipped={skipped_already})"
+            f"expected to update {n_need_q} residuals, updated {len(updated_entities)} "
+            f"(already_terminal_skipped={skipped_already}, pack_already_clean={n_already})"
         )
-    if len(closed_qids) != 4997:
-        raise SystemExit(f"expected 4997 closed questions, got {len(closed_qids)}")
+    if len(closed_qids) != n_need_q:
+        raise SystemExit(f"expected {n_need_q} closed questions, got {len(closed_qids)}")
 
     # write out campaign
     if out.exists():
@@ -436,9 +438,16 @@ def verify_generation(campaign: Path, formal_pack: Path, parent: Path) -> dict:
     if len(functions) != 8124 or len(residuals) != 6117:
         raise SystemExit("function/residual cardinality drifted from Gen10")
 
+    n_proofs = len(pack["proofs"])
+    n_need_q = sum(
+        1 for p in pack["proofs"] if p.get("proposed", {}).get("requiresQuestionSupersession")
+    )
     term = [r for r in residuals if r.get("campaignState") == "TERMINAL_PADDING"]
-    if len(term) != 5012:
-        raise SystemExit(f"expected 5012 TERMINAL_PADDING, got {len(term)}")
+    # Gen11 terminals = prior Atomic14 pads that remain + newly admitted pack proofs.
+    # With xref-clean filter, count equals n_proofs only if all prior terminals are subset of pack
+    # or we admit exactly the pack set; require every pack proof terminal and count >= n_proofs.
+    if len(term) < n_proofs:
+        raise SystemExit(f"expected >= {n_proofs} TERMINAL_PADDING, got {len(term)}")
 
     # every formal pack proof is terminal with empty questions
     res_by_start = {r["startVa"].lower(): r for r in residuals}
@@ -475,22 +484,26 @@ def verify_generation(campaign: Path, formal_pack: Path, parent: Path) -> dict:
             if q.get("state") != "CLOSED_SURVIVED" or q.get("lastOutcome") != "SURVIVED":
                 raise SystemExit(f"question not closed {qid}")
             closed += 1
-    if closed != 4997:
-        raise SystemExit(f"expected 4997 closed pack questions, got {closed}")
+    if closed != n_need_q:
+        raise SystemExit(f"expected {n_need_q} closed pack questions, got {closed}")
 
     # no UNSCORED-as-success on terminals: residual terminal must have falsifier
     empty_f = sum(1 for r in term if not (r.get("cheapestFalsifier") or "").strip())
     if empty_f:
         raise SystemExit(f"{empty_f} terminal residuals lack cheapestFalsifier")
 
-    # residual state partition
+    # residual state partition — executed residual count stable; dark open = 6117 - terminal - executed
     states = Counter(r.get("campaignState") for r in residuals)
-    if states.get("TERMINAL_PADDING") != 5012:
-        raise SystemExit(states)
     if states.get("OPEN_EXECUTED_RESIDUAL") != 108:
         raise SystemExit(f"executed residual count drifted: {states}")
-    if states.get("OPEN_DARK_RESIDUAL") != 997:
-        raise SystemExit(f"open dark residual count drifted: {states}")
+    expected_open_dark = 6117 - len(term) - 108
+    if states.get("OPEN_DARK_RESIDUAL") != expected_open_dark:
+        raise SystemExit(
+            f"open dark residual count drifted: got {states.get('OPEN_DARK_RESIDUAL')} "
+            f"expected {expected_open_dark} (states={states})"
+        )
+    if sum(states.values()) != 6117:
+        raise SystemExit(f"residual partition incomplete: {states}")
 
     result = {
         "status": "CAMPAIGN_VERIFIED",

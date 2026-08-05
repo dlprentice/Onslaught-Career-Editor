@@ -683,11 +683,14 @@
       },
       "next_operation_residual_terminal": "Apply residual-terminal formal pack as a new generation only via re_campaign reducer with question supersession + FORMAL_STATIC_PROOF_SURVIVED + contract TERMINAL_PADDING; do not mutate Gen10 in place. Formal pack at local-lab/residual-terminal-formal-pack-padding-20260805-v1.",
       "residual_terminal_generation11": {
-        "path": "local-lab/residual-terminal-generation11-padding-20260805-v1/generation-11-residual-terminal-padding",
+        "path": "local-lab/residual-terminal-generation11-padding-xrefclean-20260805-v1/generation-11-residual-terminal-padding",
         "generation": 11,
+        "variant": "xrefclean",
         "advance_kind": "RESIDUAL_TERMINAL_PADDING_BULK",
-        "readySha256": "907e82b78a1cabd057091ec04c51feabe1bd19cef94d1108a0842d0b0c3b0241",
-        "verify": "python -B tools/re_residual_terminal_generation.py verify",
+        "readySha256": "e660c8f0002374e303300095b785e84179008b48cdf66273e66e748726569a62",
+        "formalPack": "local-lab/residual-terminal-formal-pack-padding-xrefclean-20260805-v1/FORMAL-PACK.json",
+        "inboundScan": "local-lab/residual-padding-inbound-scan-20260805-v1/SUMMARY.json",
+        "verify": "python -B tools/re_residual_terminal_generation.py verify --campaign local-lab/residual-terminal-generation11-padding-xrefclean-20260805-v1/generation-11-residual-terminal-padding --formal-pack local-lab/residual-terminal-formal-pack-padding-xrefclean-20260805-v1/FORMAL-PACK.json",
         "counts": {
           "functions": 8124,
           "residuals": 6117,
@@ -695,23 +698,26 @@
           "scenarios": 72,
           "levers": 915,
           "contracts": 14241,
-          "adjudications": 5003,
-          "supersessions": 5581,
-          "residualTerminalPadding": 5012,
-          "residualOpenDark": 997,
+          "adjudications": 4977,
+          "supersessions": 5555,
+          "residualTerminalPadding": 4986,
+          "residualOpenDark": 1023,
           "residualOpenExecuted": 108,
-          "questionsOpen": 10237,
-          "questionsClosedSurvived": 5004,
-          "residualTerminalsAddedThisGeneration": 4997,
-          "questionsClosedThisGeneration": 4997
+          "questionsOpen": 10263,
+          "questionsClosedSurvived": 4978,
+          "residualTerminalsAddedThisGeneration": 4971,
+          "questionsClosedThisGeneration": 4971
+        },
+        "exclusions": {
+          "abs_ptr_hit_pads": 26,
+          "e8_into_pad": 0
         },
         "parent_generation": 10,
-        "parent_still_authority_for": "TTD call-context C2 contracts, Ghidra live parent remains Gen9, Gen10 campaign for combat advance",
-        "residual_authority_for": "TERMINAL_PADDING bulk (5012); open dark MIXED 997; executed open 108",
         "gen10_mutated": false,
-        "whenUtc": "2026-08-05T03:13:33.127549+00:00"
+        "supersedes_prior_gen11_draft": "local-lab/residual-terminal-generation11-padding-20260805-v1 (pre-xrefclean; superseded)",
+        "whenUtc": "2026-08-05T03:32:56.530194+00:00"
       },
-      "current_authority_note": "Gen10 remains campaign authority for TTD call-context observation advance. Gen11 residual-terminal padding bulk is residual-classification authority for the 5012 TERMINAL_PADDING cohort only."
+      "current_authority_note": "Gen10 remains TTD call-context authority. Gen11 xrefclean residual-terminal padding bulk is residual-classification authority for TERMINAL_PADDING=4986 (0 E8; 26 abs-hit pads excluded)."
     }
   },
   "_PROBE_LOOP_2026_08_02": {

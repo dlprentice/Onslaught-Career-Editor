@@ -12,13 +12,13 @@ SCRIPT = ROOT / "tools" / "re_residual_terminal_generation.py"
 GEN11 = (
     ROOT
     / "local-lab"
-    / "residual-terminal-generation11-padding-20260805-v1"
+    / "residual-terminal-generation11-padding-xrefclean-20260805-v1"
     / "generation-11-residual-terminal-padding"
 )
 PACK = (
     ROOT
     / "local-lab"
-    / "residual-terminal-formal-pack-padding-20260805-v1"
+    / "residual-terminal-formal-pack-padding-xrefclean-20260805-v1"
     / "FORMAL-PACK.json"
 )
 PARENT = (
@@ -36,11 +36,12 @@ class ResidualTerminalGenerationTests(unittest.TestCase):
         self.assertEqual(11, ready["generation"])
         self.assertEqual("RESIDUAL_TERMINAL_PADDING_BULK", ready["advance"]["kind"])
         counts = ready["counts"]
-        self.assertEqual(5012, counts["residualTerminalPadding"])
-        self.assertEqual(997, counts["residualOpenDark"])
+        # xref-clean pack: 4986 proofs (5012 - 26 abs-hit exclusions)
+        self.assertEqual(4986, counts["residualTerminalPadding"])
+        self.assertEqual(1023, counts["residualOpenDark"])
         self.assertEqual(108, counts["residualOpenExecuted"])
-        self.assertEqual(4997, counts["residualTerminalsAddedThisGeneration"])
-        self.assertEqual(4997, counts["questionsClosedThisGeneration"])
+        self.assertEqual(4971, counts["residualTerminalsAddedThisGeneration"])
+        self.assertEqual(4971, counts["questionsClosedThisGeneration"])
 
     def test_verify_cli(self) -> None:
         completed = subprocess.run(
@@ -74,7 +75,7 @@ class ResidualTerminalGenerationTests(unittest.TestCase):
 
         residuals = gen._read_tsv(GEN11 / "campaign-residuals.tsv")
         term = [r for r in residuals if r.get("campaignState") == "TERMINAL_PADDING"]
-        self.assertEqual(5012, len(term))
+        self.assertEqual(4986, len(term))
         self.assertTrue(all(not (r.get("questionIds") or "").strip() for r in term))
         self.assertTrue(
             all(r.get("classificationVerdict") == "FORMAL_STATIC_PROOF_SURVIVED" for r in term)
