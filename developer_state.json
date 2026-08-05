@@ -186,19 +186,19 @@
   },
   "_AUTHORIZATION_2026_07_30": "The maintainer granted standing authorization to commit, push, and release: 'You are authorized to commit, and push, and release at all times' (2026-07-30, in-session, in response to an explicit question about the 65 held commits). CLAUDE.md and AGENTS.md were updated the same day; their former 'separately authorized' closing lines are superseded. Discipline retained, not waived: the first push of the held backlog follows a clean public-boundary pass per release/readiness/PUBLIC_SIGNOFF_COMMANDS.md; after that, pushing is routine. Mutation of installed game directories and pristine binaries remains forbidden by the standing rules.",
   "read_first": [
-    "README.MD — product and lane overview.",
-    "AGENTS.md — contributor boundaries, evidence, delegation, and validation.",
-    "GOAL.md — what 'done' means. The one document NOT superseded by measurement.",
-    "CLAUDE.md — concise session rules and routing.",
-    "rebuild/PROVENANCE.md — the evidence partition and the Authority order",
-    "local-lab/INDEX.md — front door to all working notes; says what each SETTLES",
-    "local-lab/PARITY-WORKLIST-2026-07-27.md — ranked work plus a REFUTED table",
-    "git log — the reasoning is in commit messages, not only in code"
+    "README.MD \u2014 product and lane overview.",
+    "AGENTS.md \u2014 contributor boundaries, evidence, delegation, and validation.",
+    "GOAL.md \u2014 what 'done' means. The one document NOT superseded by measurement.",
+    "CLAUDE.md \u2014 concise session rules and routing.",
+    "rebuild/PROVENANCE.md \u2014 the evidence partition and the Authority order",
+    "local-lab/INDEX.md \u2014 front door to all working notes; says what each SETTLES",
+    "local-lab/PARITY-WORKLIST-2026-07-27.md \u2014 ranked work plus a REFUTED table",
+    "git log \u2014 the reasoning is in commit messages, not only in code"
   ],
   "_CODEX_CURRENT_2026_07_29": {
-    "_status": "COMPLETE FOR THE BOUNDED PARITY-LAB GOAL. Recovery work, the sealed v5 TTD bridge, two repeated Options drcov campaigns, the MissionScript Pause contract, the measured Options entry correction, the documentation-owner repair, and stale frontend-gate abstention are coherent local commits. Push is not authorized and has not occurred. This does not claim the wider GOAL.md rebuild objective is met.",
+    "_status": "HISTORICAL 2026-07-29 PARITY-LAB SNAPSHOT. Its bounded goal completed, but it is not the active objective. Current operational state is _RECURSIVE_RE_CAMPAIGN_2026_08_02; current authorization is _AUTHORIZATION_2026_07_30. Preserve the measurements below as dated evidence, not present-tense instructions.",
     "local_commits": "Recovery and documentation commits run from 88df89f0 through 99f26b9c. Parity tooling is e05f4336; the MissionScript Pause closure is 51c038f5; TTD-attempt documentation and recorder hardening are a0dc24df and cf70e3cb; the final Options, evidence-owner, and stale-gate commits are 1d2fe404, 981c3379, and aaa43097. Run `git status --short --branch` and `git log --oneline origin/main..HEAD`; Git is the exact commit-count authority.",
-    "current_goal": "The active Codex goal is deliberately narrower than GOAL.md: preserve and validate the recovery/research work, seal the final v5 parity artifacts and TTD symbol bridge, run two independent counterbalanced Options campaigns from one mechanically proven setup, and close exactly one authored-used/runtime-observed NO_FUNCTION or WEAK Mission native into an engine-neutral contract and deterministic rebuild test. Do not widen into WaterLoss tuning, 20 Hz, damage, audio, broad format work, push, or publication.",
+    "current_goal": "SUPERSEDED. The active recursive goal is recorded under _RECURSIVE_RE_CAMPAIGN_2026_08_02: drive every current function row and .text residual toward an evidence-graded terminal state, answer input/output/state/side-effect contract questions, and carry sufficiently proved behavior into the Godot rebuild and tests. The pristine specimen remains immutable; maintainer-Ghidra promotion is permitted only through the active goal's exact identity, backup, scratch proof, dry-run/apply/readback, and independent-refutation gates.",
     "uncommitted_groups": [],
     "last_green_recovery_gates": [
       "Core 153/153, Client 405/405, Godot C# build 0 warnings/errors, and a native smoke at tick 3228 with state hash 0f1fb80918c5acb42f2c7025736b6690d9a47109b594d0307ec90d7ecd25f5ba.",
@@ -276,41 +276,41 @@
     "tracked_in_git": [
       "reverse-engineering/RE-INDEX.md",
       "reverse-engineering/binary-analysis/",
-      "reverse-engineering/ghidra/ — the PROMOTED snapshot, deliberately behind the live DB"
+      "reverse-engineering/ghidra/ \u2014 the PROMOTED snapshot, deliberately behind the live DB"
     ],
     "invisible_to_a_fresh_clone": [
-      "local-lab/ — gitignored by design; retail-derived material and all working notes",
-      "local-lab/TASK-LEDGER-2026-07-27.md — verbatim snapshot of the numbered task store, which lives in Claude Code storage, NOT this repo. COVERS #1-#136 ONLY; the live store has more. Re-export before relying on it.",
-      "local-lab/agent-notes-2026-07-27/ — 66 subagent notes rescued from a TEMP directory",
-      "C:\\Users\\david\\Ghidra\\Projects — the LIVE Ghidra database, ahead of the tracked snapshot"
+      "local-lab/ \u2014 gitignored by design; retail-derived material and all working notes",
+      "local-lab/TASK-LEDGER-2026-07-27.md \u2014 verbatim snapshot of the numbered task store, which lives in Claude Code storage, NOT this repo. COVERS #1-#136 ONLY; the live store has more. Re-export before relying on it.",
+      "local-lab/agent-notes-2026-07-27/ \u2014 66 subagent notes rescued from a TEMP directory",
+      "C:\\Users\\david\\Ghidra\\Projects \u2014 the LIVE Ghidra database, ahead of the tracked snapshot"
     ],
     "backups": {
-      "repo_full_copy": "F:\\OnslaughtLabBackups\\repo-full-2026-07-27 — 45,170 files, 9.37 GiB, includes gitignored",
-      "ghidra": "F:\\GhidraBackups\\ — pre/post pairs with open-proof receipts",
+      "repo_full_copy": "F:\\OnslaughtLabBackups\\repo-full-2026-07-27 \u2014 45,170 files, 9.37 GiB, includes gitignored",
+      "ghidra": "F:\\GhidraBackups\\ \u2014 pre/post pairs with open-proof receipts",
       "retired_branches": "local-lab/retired-branches-2026-07-27/codex-branches.bundle, second copy on F:"
     }
   },
   "goal_status": {
     "met": false,
-    "_goal_revised": "2026-07-27. GOAL.md is authoritative and now carries a Revision history section. Three clauses were added (Godot named, method rule, defaults rule) and one was DEMOTED: the agent-driven Won run is now stated as the ACCEPTANCE TEST for a property, not as the property itself.",
+    "_goal_revised": "2026-08-02. The maintainer clarified that full retail RE for understanding/patching/modding, the 1:1 Godot rebuild, and the polished WinUI 3 app are coequal outcomes; the current goal selects focus, not permanent rank. The 2026-07-27 demotion still stands: an agent-driven Won run is the rebuild property's acceptance test, not the property itself.",
     "accurate_phrasing": "UPDATED 2026-07-30, commit 23aa85af. THE COLD FIRST CAREER NOW REACHES Won. Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface asserts Won/None where it asserted Lost/WaterLoss at t17699, and additionally asserts Target Zone 4 dispatched, so the win comes from event('Reached Target Zone 4') and nothing else. Twenty one-permille perturbations went 18/20 Won with 2 Zone-4 WaterLoss to 20/20 with 0. Gates on main: core 159/159, client 407/407, Godot build clean. THE TWO QUALIFIERS THAT MUST TRAVEL WITH THIS: (1) WHICH CAREER - the cold first career, all four SLOT_TUTORIAL_* unsaved, the only one the shipping client can start. (2) WHAT KIND OF INPUT - player-plausible IN THE OUTPUT CHANNEL ONLY. It goes through InteractiveSession restricted to stick positions a whole retail mouse pixel can produce, zero unreachable look commands; but THE PERCEPTION CHANNEL IS STILL OMNISCIENT - exact Health, full 3-D actor poses, sampled terrain line of sight. So this is NOT evidence a human can do it. GOAL.md's demotion of the driven run to an ACCEPTANCE TEST rather than the goal still applies in full, and the property actually wanted - that a human gets the released experience - is NOT established by this. There is still no human or native-Godot end-to-end run, and the feel/parity objective remains unmet.",
     "_cold_career_moved_2026_07_27_CLOSED_2026_07_30": "The full progression, kept because each step corrected the one before it. Lost/TutorialBroken at t4978 -> Lost/WaterLoss at t17699 with every beat cleared -> Won, commit 23aa85af. The middle step's own correction was that the equally quantised direct-Core run had the SAME terminal tick, state hash and pose trace, so the WaterLoss was never a frontend defect. A 16-agent hunt then refuted BOTH the client-path premise AND its quantisation replacement: the cause was Level100ChainAutopilot.NavigateToZone abandoning jet mode on a pure horizontal-distance test with no altitude term, firing ~28 m above the sea, after which UpdateAirborneWalkerMovement() - which TAKES NO PARAMETERS - fixes the touchdown point at the morph tick. Test-harness code, not product. Everything downstream of the morph is a faithful port; our landing thrusters are retail's exactly (0.983263^1.5 = 0.974999843 against BattleEngineWalkerPart.cpp:330-344's 0.975 per 20 Hz update). THE WATER RULE WAS NEVER WRONG, which is why every guard measured inert or worse - it is byte-exact against BattleEngine.cpp:1249-1266 and is now pinned by Gate C at water+200/+201. Do not retry the naive water guard.",
     "_the_241_millimetre_margin_READ_BEFORE_SIMPLIFYING": "The ferry fix uses a TWO-TIER clearance term and the tiers are not decoration. The diagnosis claimed an altitude term would be a no-op for beats 1-8 'by construction, because they are on the ground'. THAT IS FALSE: beats 6 and 8 hand off AIRBORNE at 18,969 mm and 19,759 mm, so the 20,000 mm cruise tier clears beat 8 by 241 MM. Measured alternatives, all equally defensible physics: 12 m keeps six kills but loses the cold career to WaterLoss; 8 m gives two kills plus abort; 5 m gives three kills plus abort. Anyone collapsing the tiers into one number will re-roll beat 9. A gate flies the chain both ways and proves poses are bit-identical until the ferry begins - ferry t15501, first divergence t15594.",
-    "_input_plausibility_is_now_measured": "PlayerPlausiblePermille restricts the driver to integer mouse pixels on the lattice {0, +/-30, +/-61, +/-91, ...} from sensitivity 7.0 x 13/3000. The joined cold run is driven ENTIRELY through it: 0 of 12,639 look commands land in the dead zone, asserted in the test. Restricting the existing headline run the same way made it BETTER, not worse (Won at t12931 vs t16301, 11,600 hull vs 10,900) — sub-pixel aim was buying nothing. CAVEAT, stated by the author: input is player-plausible, PERCEPTION IS NOT — the driver still reads actor.Health as an integer and samples terrain directly.",
-    "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. Do not report a Won run as goal progress without saying whether the input was player-plausible — the goal now states explicitly that an autopilot reaching Won by means no player could reproduce has proved nothing.",
+    "_input_plausibility_is_now_measured": "PlayerPlausiblePermille restricts the driver to integer mouse pixels on the lattice {0, +/-30, +/-61, +/-91, ...} from sensitivity 7.0 x 13/3000. The joined cold run is driven ENTIRELY through it: 0 of 12,639 look commands land in the dead zone, asserted in the test. Restricting the existing headline run the same way made it BETTER, not worse (Won at t12931 vs t16301, 11,600 hull vs 10,900) \u2014 sub-pixel aim was buying nothing. CAVEAT, stated by the author: input is player-plausible, PERCEPTION IS NOT \u2014 the driver still reads actor.Health as an integer and samples terrain directly.",
+    "do_not_say": "Do not say 'it runs end to end and reaches Won' without the career qualifier. Do not report a Won run as goal progress without saying whether the input was player-plausible \u2014 the goal now states explicitly that an autopilot reaching Won by means no player could reproduce has proved nothing.",
     "evidence": "rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs tests ColdStart_PlaysLevel100ThroughThePlayerInputSurface and ClientRoute_IsTheDirectRoutePlusPointerQuantisationAndNothingElse establish runs (a)-(c); Level100FullChainTests.cs test ChainAutopilot_ReachesWonByInputAlone establishes returning-player run (d). Commit c02459ec is an earlier implementation point, not the full current four-run interpretation.",
-    "defaults_rule_open_items": "The goal forbids shipping a lab artefact as authored behaviour. FIRST SWEEP DONE 2026-07-27: local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md. Task #137 is CLOSED — the pine LOD is now retail's authored 30.0, established from the pristine specimen's own initialisers, and gated by a test. Eight further shipping defaults are NOT retail's; five are unexplained. Read the sweep, do not take this line on trust. The worst is the look-axis dead zone owned by InteractiveSession.RetainPointerOffset (task #141). The window mode and resolution items need the maintainer, not an agent. NOTE: the force-windowed patch is at file offset 0x12A644 (VA 0x0052A644), not 0x12A6C4 — measured by diffing the two safe-copy binaries."
+    "defaults_rule_open_items": "The goal forbids shipping a lab artefact as authored behaviour. FIRST SWEEP DONE 2026-07-27: local-lab/DEFAULTS-RULE-SWEEP-2026-07-27.md. Task #137 is CLOSED \u2014 the pine LOD is now retail's authored 30.0, established from the pristine specimen's own initialisers, and gated by a test. Eight further shipping defaults are NOT retail's; five are unexplained. Read the sweep, do not take this line on trust. The worst is the look-axis dead zone owned by InteractiveSession.RetainPointerOffset (task #141). The window mode and resolution items need the maintainer, not an agent. NOTE: the force-windowed patch is at file offset 0x12A644 (VA 0x0052A644), not 0x12A6C4 \u2014 measured by diffing the two safe-copy binaries."
   },
   "environment": {
     "retail_install": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Battle Engine Aquila",
-    "steam_exe_is_patched_deliberately": "sha256 e7881829. NOT a valid specimen. The maintainer did it on purpose — do not flag it. Evidence: reverse-engineering/binary-analysis/retail-specimen-baseline.md",
+    "steam_exe_is_patched_deliberately": "sha256 e7881829. NOT a valid specimen. The maintainer did it on purpose \u2014 do not flag it. Evidence: reverse-engineering/binary-analysis/retail-specimen-baseline.md",
     "pristine_specimen": "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup, sha256 74154bfa. Read ALL byte evidence from this and name it in every claim.",
-    "capture_target": "local-lab/safe-copy-bea-pristine/BEA.exe, sha256 e1436ef7 — pristine plus force_windowed only, 4 bytes differ. LAUNCH ONLY FROM THIS PATH: the Windows Firewall rule is bound to it and any other path raises a blocking prompt.",
+    "capture_target": "local-lab/safe-copy-bea-pristine/BEA.exe, sha256 e1436ef7 \u2014 pristine plus force_windowed only, 4 bytes differ. LAUNCH ONLY FROM THIS PATH: the Windows Firewall rule is bound to it and any other path raises a blocking prompt.",
     "large_files": "G: has the most free space. F: is the backup drive and is the tightest. Re-check rather than trusting these.",
     "toolchain": {
       "ghidra": "12.1.2 at D:\\ghidra_12.1.2_PUBLIC_20260605",
-      "zig": "0.16.0 via WinGet Links — builds the 32-bit d3d9 proxy",
-      "renderdoc": "1.45 installed. Injects, but does NOT capture D3D9. Before retrying, read local-lab/agent-notes-2026-07-27/renderdoc-feasibility.md — sections 4a and 5 carry the measurement.",
+      "zig": "0.16.0 via WinGet Links \u2014 builds the 32-bit d3d9 proxy",
+      "renderdoc": "1.45 installed. Injects, but does NOT capture D3D9. Before retrying, read local-lab/agent-notes-2026-07-27/renderdoc-feasibility.md \u2014 sections 4a and 5 carry the measurement.",
       "ttd_early_cwd_broken_traces_HISTORICAL": "The six early traces are invalid for gameplay findings because BEA launched from the repository root and died at sound initialization. Read local-lab/TTD-FIRST-FINDINGS-2026-07-27.md; do not reuse their absence-of-execution results as product evidence.",
       "ttd_valid_level100_trace": "G:\\bea-ttd\\play-level100\\play-level100.run is a valid later trace after the working-directory correction. It covers Level 100 load, opening fly-in, and briefing, but hit its 32 GiB cap before combat. Read local-lab/TTD-LEVEL100-FINDINGS-2026-07-28.md and its instrument-lies warning before querying runtime-written globals.",
       "ttd_current_hardening": "The recorder/query recovery preserves spaced argument boundaries, rejects premature recorder exit and max-file aborts, removes the hidden -UntilExit deadline, distinguishes unrelated missing system-image warnings from target-image failures, and versions query/receipt semantics. Twelve focused contract tests pass. Real-CDB adverse receipt G:\\bea-ttd\\codex-invalid-query-small-20260728-195501\\result.json proves a debugger error fails closed even when CDB exits 0.",
@@ -319,9 +319,9 @@
     }
   },
   "instruments_built_2026_07_27": {
-    "d3d9_proxy": "tools/d3d9-proxy/ — sits between the game and Direct3D; records draw calls with screen-space vertex positions, textures and blend state, and grabs the backbuffer at Present. Passive: import table is KERNEL32 + UCRT only, so it cannot open a window or send input. Intended to replace pixel-fitting for HUD positions; whether it has done so is still open. See _CODEX_CURRENT_2026_07_29.",
-    "message_based_input": "tools/send_game_window_input.ps1 — CAN post to a target HWND with no global input, but ONLY under -Transport messages. The default -Transport auto still takes the foreground and uses SendInput/keybd_event/mouse_event. tools/d3d9-proxy/Run-FrontendPageCapture.ps1 passes -Transport messages. Its lParam scan-code defect was fixed in 6254e448.",
-    "frontend_gate": "tools/score_frontend_capture.py — compares retail pixels and CAN fail (exit 1 on ceiling breach); returns UNSCORED rather than PASS when nothing is scorable."
+    "d3d9_proxy": "tools/d3d9-proxy/ \u2014 sits between the game and Direct3D; records draw calls with screen-space vertex positions, textures and blend state, and grabs the backbuffer at Present. Passive: import table is KERNEL32 + UCRT only, so it cannot open a window or send input. Intended to replace pixel-fitting for HUD positions; whether it has done so is still open. See _CODEX_CURRENT_2026_07_29.",
+    "message_based_input": "tools/send_game_window_input.ps1 \u2014 CAN post to a target HWND with no global input, but ONLY under -Transport messages. The default -Transport auto still takes the foreground and uses SendInput/keybd_event/mouse_event. tools/d3d9-proxy/Run-FrontendPageCapture.ps1 passes -Transport messages. Its lParam scan-code defect was fixed in 6254e448.",
+    "frontend_gate": "tools/score_frontend_capture.py \u2014 compares retail pixels and CAN fail (exit 1 on ceiling breach); returns UNSCORED rather than PASS when nothing is scorable."
   },
   "_HISTORICAL_HANDOFF_2026_07_28_SUPERSEDED": {
     "_what_this_is": "Historical recovery record only. It is not an operational handoff and is superseded by _CODEX_CURRENT_2026_07_29 where they disagree.",
@@ -469,7 +469,7 @@
   "traps_recorded_the_hard_way": {
     "_caution": "Pointers, not reasoning. Follow each one before acting on it.",
     "items": [
-      "A constant traceable to defaultoptions.bea is a USER SETTING, not a default — the image is the authority. See task #137.",
+      "A constant traceable to defaultoptions.bea is a USER SETTING, not a default \u2014 the image is the authority. See task #137.",
       "A filename does not give you a class name: SquadNormal.cpp contains CNormalSquad. See task #138.",
       "A region mean is a detector, not a diagnosis. See the _caveats block in rebuild/tools/gameplay-regions-level100.json.",
       "Bound every byte scan to the function extent. See the demotion notes under reverse-engineering/binary-analysis/.",
@@ -477,8 +477,203 @@
       "TWO separate refuted lists exist and they are different sizes. local-lab/PARITY-WORKLIST-2026-07-27.md has a 13-row REFUTED table plus 2 demoted. local-lab/TASK-LEDGER-2026-07-27.md carries a much larger refuted list drawn from task descriptions. Read both; do not quote one count for the other."
     ]
   },
+  "_RECURSIVE_RE_CAMPAIGN_2026_08_02": {
+    "_read_this_first": "Current active focus: recursively account for retail functions and .text residuals, prove inputs/outputs/state contracts, and carry sufficiently proven behavior into rebuild code/tests. Re-run the named verifiers before relying on this block; developer_state is awareness, not authority.",
+    "authoritative_campaign": {
+      "root": "local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2",
+      "ready_sha256": "b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2",
+      "parent": "Generation 9 READY 8e254d25ab6e6054848e64530eeb51dd635d65751cda1e9a210a699f6582bd94; it remains the exact live-Ghidra parent. Generation 10 is campaign-only and performs no Ghidra mutation.",
+      "advance_kind": "TTD_CALL_CONTEXT_OBSERVATION; observation CO-c2bc35cee4f9ecab; refuter verdict SURVIVED",
+      "reducer_id": "7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9",
+      "ledger_sha256": {
+        "functions": "6b18eda4b537fa17aba9e41a519cc47fb3c41836f9ff9877cf735ebe7a8933f1",
+        "residuals": "aa62128b8b472311ebd2c3279a59a354495855e8640e4dbaa1147d507efd25f2",
+        "questions": "dc918c4c3fa507dba4e943cd842c8d0ada71961d14e7ed95f3d3238b067915ec",
+        "scenarios": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "levers": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "contracts": "89014479c3013c71848204a28fafc9e81c93daff6f1ac9351916405cabcadced",
+        "adjudications": "40a471f1630ea2109108d7171be030df95bec5ff95e851a3fa0eb4e495aafdad",
+        "supersessions": "7ac03203257370124b9b21bb16cd5de522c7abb6a6ce7170e93d00eafc647c9a"
+      },
+      "counts": "8,124 functions; 6,117 residuals; 15,241 questions (15,234 OPEN / 7 CLOSED_SURVIVED); 72 scenarios; 915 levers; 14,241 contracts; 6 adjudications; 584 supersessions; 1,767,100 exact body bytes; 162,017 unmapped executable bytes",
+      "contract_reality": "14,237 contracts remain C0_OPAQUE and four are C2_BOUNDED_RUNTIME: authored Mission Damage 0x005348C0 plus raw Level 521 0x004D8AE0, player Damage 0x0040A890, and player Hit 0x00407350. Zero contracts are REBUILD_READY. StartDie 0x0040BFD0 remains OPEN / C0_OPAQUE with only an exact-window zero-event annotation.",
+      "carry": "Generation 10 preserves every Generation-9 range, name, type, rebuild mapping, parity result, and supersession. It advances exactly three contracts, closes exactly their three prior questions as SURVIVED, creates three narrower successor questions and three adjudications, and annotates StartDie without closing or upgrading it. No memory write, typed return, concrete name for 0x004D8AE0, rebuild parity, or behavior outside the replay window is proved.",
+      "verify": "$env:BEA_REPO_ROOT='C:\\Users\\david\\source\\Onslaught-Career-Editor'; python -B local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/_reducer/tools/re_campaign.py verify --campaign local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2; Remove-Item Env:BEA_REPO_ROOT",
+      "tests": "Run python -B tools/re_campaign_tests.py. The Generation-10 tests replay the frozen evidence and exact delta, then reject same-length JSONL target/caller/return/backlink poisons, semantic/name/StartDie/write overclaims, and replica aliasing. Record the final observed count in handoff_2026_08_04.validation rather than trusting this prose."
+    },
+    "mission_logger_oracle": {
+      "ready": "local-lab/logger-oracle-pilot-2026-08-02/logger-oracle.ready.json",
+      "ready_sha256": "b4ae49e3344ec96b72248a657af8daa7627b79f865d6f6287a369daeeb14a1a6",
+      "static_gate": "Initializer store VA 0x004415C1, immediate byte at file offset 0x415C7. Gate arms differ only 00->01 there; both also require the shared C:\\debug.log -> relative probe.log redirect. The shipped second logger at 0x0066EB90 initializes the same +0x9EC field to 1 and writes setuphistory.txt, independently corroborating field semantics.",
+      "runtime": "Two equivalent, hash-staged, exact-oracle A/B/C triangles (r2 and r3): gate0+authored Setup loads/survives with no log; gate1+same Setup emits exact ordered unique string, int 424242, float 123.250000 and done lines once; gate1+hash-pinned stock Level100 emits ordinary diagnostics but neither nonce. Exploratory r1 is explicitly excluded because its stock archive was inherited and its harness oracle checked existence rather than exact content.",
+      "bounded_claim": "A disposable copied-binary derivative provides a reliable external write-only transport for Mission Print values, proves generated straight-line Setup bytecode executes, and proves it resumes after Pause(1.0). Float text has six decimal places. It does not expose arbitrary memory/registers/private fields/call order, scripts cannot read it back, and unmodified retail Print remains inert.",
+      "refutation": "tools/probe/refute.py returned SURVIVED at EXECUTED grade: 16/16 rules passed, 3 preregistered predictions resolved, 2 live rivals eliminated, sample n=6 across 2 independent replications. The READY verifier replays the refuter byte-identically and requires the single adjudication ledger row.",
+      "verify": "python -B local-lab/logger-oracle-pilot-2026-08-02/verify_logger_oracle.py",
+      "harness": "tools/probe/probe_harness.py now has fileTextSequence exact count/order/exclusion and removes inherited declared outputs. 82 tests pass; 16/16 can-fail mutations detected.",
+      "author": "tools/probe/mission_script_emitter.py + probe_author.py: 43 checks pass, 17 guards proven falsifiable. A generated length-changing Level100 Setup replacement executed; set-script-trace now owns the same-length VM trace field; appended script-table entries remain static-only."
+    },
+    "console_registry_logger_bridge": {
+      "ready": "local-lab/console-logger-bridge-20260803-v1/console-logger-bridge.ready.json",
+      "ready_sha256": "ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297",
+      "treatment_sha256": "8c57acac0001ec5ec4a6ebb3b65ff01e074a96bc10514ed5abddfab3a5b4cfe3",
+      "runtime": "Two sequential A/B replications used the same Level 100 autoexec (ShowCmds then ShowVars). All four arms loaded and survived 30.2 seconds without a fault. Control logs are byte-identical at 696 bytes; treatment logs are byte-identical at 6,081 bytes and contain the exact ordered registry sections.",
+      "registry": "Static registration contains 32 commands and 59 variables. The Level 100 realized registry contains 31 commands and 56 variables. Static-only on this path: fmv_play, cg_debrisarea, cg_debrisfadeend, cg_debrisfadestart. No runtime-only row or help-text mismatch was observed.",
+      "patch_scope": "The proven logger-gate derivative was changed at exactly four receiver immediates and four rel32 calls in ShowCmds/ShowVars: 16 differing byte positions total. Safety census found all static names/help strings percent-free and conservatively bounded rows below the formatter buffer.",
+      "boundary": "C2_BOUNDED_RUNTIME on an authored disposable derivative. This proves a deterministic runtime-registry transport, not that unmodified retail naturally logs console listings, that other levels register no additional entries, or that callback semantics are solved.",
+      "verify": "python -B local-lab/console-logger-bridge-20260803-v1/verify_console_logger_bridge.py verify"
+    },
+    "console_callback_frontier": {
+      "candidate": "COMPLETED boundary-only. Generation-8 retired residual [0x004295BC,0x00429BC0) through an exact 14-function / 1,433-byte plus 15-NOP-padding / 107-byte partition. Live Ghidra moved 8,110 -> 8,124 and POST fileset SHA-256 is 309ba7f6fcf6a0d8ecdbd2803c0d7a1279a3d3027b7ee219efbbb0312e1143ab.",
+      "next_gate": "The 14 functions remain default FUN_* / DARK / OPAQUE / NOT_READY. Static callback-table evidence may support later candidate identities, but behavior now requires function-specific controlled runtime or call/return evidence; do not infer semantics from the boundary promotion."
+    },
+    "mission_vm_trace": {
+      "ready": "local-lab/vm-trace-pilot-2026-08-02/vm-trace.ready.json",
+      "ready_sha256": "ad373947273ad083c9c37a53aba876e28399cba26821ae067df59d207e4ced09",
+      "static_contract": "CScriptObjectCode constructor reads serialized trailerA into object+0x60. Run executes an instruction, then exact-compares +0x60 with 1 at VA 0x00539BA4 before formatting executed index, post-instruction stack size and flags. All 762 shipped records use trailerA=0.",
+      "runtime": "Two treatment/control/gate triangles on stock Level100 Setup: trailerA=1 emits exactly indices 1..136 and produces bit-identical 5,320-byte logs across replications; unchanged trailerA=0 emits zero trace rows; gate0 suppresses the file. Two trailerA=2 launches produce the bit-identical 696-byte stock log and zero trace rows, proving the exact-one gate at runtime. Inflated archive comparison requires trailerA's low byte to be the only content differential across values 0/1/2.",
+      "author": "Use probe_author.py intent {op:set-script-trace, script:<name>, value:1}; values 0 and 2 are controls. The intent resolves trailerA from the parsed script record, anchors the exact dword, preserves trailerB and framing, and refuses identity/out-of-domain writes.",
+      "boundary": "This is a per-script retail-bytecode execution/index/stack-depth/flags instrument, not arbitrary value or C++ state introspection. The logger synchronously opens/writes/closes per instruction, so all traced-run timing/performance evidence is void.",
+      "refutation": "tools/probe/refute.py returned SURVIVED at EXECUTED grade: 16/16 rules passed, 4 predictions resolved, 2 rivals eliminated, discriminating n=6 at 2 independent replications. The READY verifier replays the refuter byte-identically and requires a unique adjudication row. The preregistration note was written before the respective initial/value2 launches but lacked an immutable pre-run READY, so that provenance weakness remains explicit.",
+      "verify": "python -B local-lab/vm-trace-pilot-2026-08-02/verify_vm_trace_pilot.py"
+    },
+    "crt_recursive_cohort": {
+      "ready": "local-lab/crt-recursive-cohort-2026-08-02/architect/derivation.ready.json",
+      "ready_sha256": "59b64f11ce4e9d0a8f994c15a438c4a5f98e8dcb40626a55f1c451e843f2628b",
+      "exact_result": "547 hard entries: 537 instruction-present plus 10 requiring disassembly; one direct-call closure at 0x00564FD6; two weak tail-jump candidates remain quarantined outside the hard cohort.",
+      "hard547_sha256": "d2da064ec77f8593b8c4b63f6e6867a0c7030be0e9354d47219770506c38a7a3",
+      "direct537_sha256": "f6e483b6496bced186825c590c1140f2ef442a0a046db2a26d72984770014c8c",
+      "clean_boundary": "local-lab/crt-recursive-cohort-2026-08-02/clean520-boundary-v3-canary-refuted/boundary-targets.ready.json; SHA-256 53ab9de5bc113ad45d593f3732627860f2639c819d21c771d8369d139a4c6832. Exactly 520 bodies / 58,157 bytes survive; 16 structural cases remain quarantined and the original 0x00542710 one-range canary is refuted.",
+      "formal_proof": "local-lab/formal-global-init515-proof-20260803-v4/proof.ready.json; SHA-256 0fa28300606f55d96e9e4c4168501c39d8eee25823033042d89339ae58d40729. Verdict SURVIVED: exactly 515 admissible targets and five quarantined listing repairs; two independent replicas moved 7,595 -> 8,110 functions with instructions unchanged, exact target-symbol transitions, unchanged pre-existing functions/program metrics/outside-target symbols, late-row poison rejection, reopened readback, and frozen-verifier replay.",
+      "promotion_state": "COMPLETED once through local-lab/global-init515-live-promotion-20260803-v4/promotion/promotion.ready.json (SHA-256 57015dd561fed34cbc9c7b322a63d3774cf234aef3138436e68f297fd17929cf). Exact PRE/POST identity, quiescence, verified restorable backup, clone controls, one live apply, separate-process readback, and byte-identical POST backup/restore drill survived. POST fileset SHA-256 is 3f3cdc53bcd1e38d11bad822500a776f8885f42d8f7093fbba0bc403133936dd. This promoted 515 boundaries / 57,182 bytes only; it assigned no names, signatures, behavior contracts, library classification, rebuild parity, or status to the five quarantined repairs."
+    },
+    "source_unit_census": {
+      "ready": "local-lab/source-unit-census-v1-ready/source-unit-census.ready.json",
+      "ready_sha256": "63099dbf88d031bcbc186303627f6692e157cc80a270670018a5ed68744ff2b4",
+      "result": "166 raw __FILE__ strings -> 162 canonical paths: 151 CPP translation units and 11 headers. 1,870 exact decoded plates; 1,845 function-owned sites and 25 residual-owned sites; 987 functions touched; 20 residual entities touched; 368 direct CPP anchors.",
+      "boundary": "Headers are context only. The 1,465 closed-span candidates, link runs and neighbours are order priors, never automatic names. 0x00437A3A crosses from an exact function body into a residual and remains open. The frozen owner rederives all TSV bytes and authorizes no Ghidra mutation.",
+      "verify": "python -I -B local-lab/source-unit-census-v1-ready/source-unit-owner.py verify --bundle local-lab/source-unit-census-v1-ready; tools/re_source_unit_census_tests.py: 26 passed against the real bundle including self-restamped poisons."
+    },
+    "source_allocation_census": {
+      "ready": "local-lab/source-allocation-census-v1-ready/READY.json",
+      "ready_sha256": "16c858e1ee7f0961ed0fce8d53bb69536e90b295db91bf6082b1fa8f3dea4635",
+      "result": "All 1,870 exact source plates classify as 1,377 allocation plus 493 unwind calls. Type arguments resolve to 1,867 immediate constants, one conservatively proven local constant, and two genuinely dynamic definitions; 1,868 sites have runtime labels, 1,860 have semantic names, and eight logical-type-42 sites use the observed fallback 'Name not found'. Requested allocation sizes are 1,060 immediate plus 317 register values.",
+      "ownership": "1,845 sites are function-owned, 25 residual-owned, and the 0x00437A2C plate crosses into residual 0x00437A3A. The 129-row physical table has duplicate index 41 and no physical row 42. Sizes are requested bytes, not C++ sizeof identities or proof of successful allocation; plates do not automatically own neighboring functions.",
+      "verify": "python -I -B local-lab/source-allocation-census-v1-ready/source-allocation-owner.py verify --bundle local-lab/source-allocation-census-v1-ready; tools/re_source_allocation_census_tests.py: 8 passed. Independent reconstruction was byte-identical and found zero discrepancies."
+    },
+    "stock_logger_cartography": {
+      "state": "HARDENED_CONTENT_AND_COVERAGE_CENSUS_READY; passive runtime transcripts remain observation-only",
+      "ready": "local-lab/msl-logger-census-2026-08-03-v2-ready/READY.json",
+      "ready_sha256": "ce9a0a7b29f70b346d020a7c7e01193eed1f229fd3dd883bf63262a8da5ab92d",
+      "corpus": "733 shipped .msl files; comment/string-aware source census gives 726 Print calls in 207 files / 62 level directories and 9,382 native calls using 110/144 registry names. Compiled resources give 783 Print calls and 9,236 native calls using 108 names. SetSegmentHealth and SetAllSegmentsHealth are source-only. Against 72 coverage indexes, 63 source-present handlers are observed and 47 remain unobserved; 34 source-absent names divide into one observed and 33 unobserved.",
+      "static_dispatch": "The pristine binary has exactly 380 direct rel32 calls to CConsole__Printf: 253 dormant-debug receiver and 127 setup-history receiver. Ghidra maps 377 sites; residual calls are 0x004F22FA, 0x005351F0, and 0x00536BA9. The earlier 329-call W* export subset is rejected as the binary denominator.",
+      "level611": "Two fresh 30-second gate1 stock runs survived and produced identical 910-byte/46-line logs, SHA-256 a631a398aa020f89cbe0ba297080adaf00367112e566967ab02f037412b36fce. Mission lines map exactly to Level611script.msl:54/56/58/62; this proves only a deterministic opening transcript prefix.",
+      "next_gate": "The corpus/compiled-resource/coverage join is frozen and independently adversarially verified. Ranked runtime harvesting still requires two fresh runs per level with exact load/alive/fault receipts, raw-log equality, and line attribution. Divergence or UNKNOWN lines remain observation-only/UNSCORED; event-only Print sites require controlled stimuli rather than passive waiting."
+    },
+    "binary_string_corpus": {
+      "ready": "local-lab/binary-strings-20260803-v2/binary-strings.ready.json",
+      "ready_sha256": "b088739efd9e514da05d3013f9ab55afa7f06837dc14ac67103f1c1f584d5dd9",
+      "counts": "9,059 Ghidra-defined occurrences / 8,541 distinct values; 23,314 raw printable candidates / 12,520 NUL-terminated; joined corpus 23,459 occurrences / 16,244 distinct values.",
+      "tracked_view": "BINARY_STRINGS.md is regenerated from the verified Atomic14 POST backup string export (defined TSV SHA-256 ee0782c7577c15da7e5c84b3cdf77a8b34b772cdcbb4cf94b8df174d889fdc2e). The former false .text string VhLKb is absent. Raw-only candidates and joined machine tables remain local because printable executable bytes can be false strings.",
+      "boundary": "A defined string and its xrefs are static evidence, not runtime reachability or feature viability. Reviewed command/logger/devtool hypotheses require independent code-path and runtime proof."
+    },
+    "ttd_corpus_current": {
+      "inventory": "75 traces / 533,985,230,848 bytes / 497.31 GiB: 66 level openings, five legacy/manual traces, three Level 521 combat takes, and one authored damage trace.",
+      "mining_state": "Replay executed-byte coverage exists for 73 traces. Sixty-five traces remain coverage-only; a target-filtered call-context mode is calibrated but no normalized corpus-wide semantic ledger exists.",
+      "available_instrument": "tools/ttd-exec-coverage/ttd_exec_coverage.cpp now has mutually exclusive coverage and call-context modes. tools/Invoke-TtdCallContext.ps1 snapshots the exact target table, collector, Replay DLLs, build receipt, and all inputs; it validates event/invocation backlinks and grades and emits a manifest-bound READY only on a clean result. Raw x86 registers and stack bytes remain untyped.",
+      "calibration": "G:\\bea-ttd\\verify-cwd-fix\\verify-cwd-fix.run, SHA-256 14DE2F708BC7C661F63DB99173C4E0869C83DA2A88328444E4FEBA3A78C6E987. Schema-v3 replay reproduces FUN_004010c0=1, CCareer__Load=1, CFrameTimer__Frame=2, FatalError=0 as four call-entry pairs, four raw return boundaries, three validated returns, one orphan return, and three gap-free envelopes. CCareer__Load crosses an Unrecorded gap and remains CALL_ENTRY rather than CALL_ENTRY_RETURN.",
+      "adverse_controls": "Event limit 2 and a false 3-vs-2 timer expectation both exit 10, write BLOCKED, and emit no READY. Executed interior RVA 0x23723 produces two ENTRY_ONLY rows and zero calls/returns/pairs. Focused relationship tests accept both honest return grades and reject broken backlinks, false gap-free promotion, and aggregate drift.",
+      "boundary": "The target table comes from a separate exact-boundary authority. READY proves internally consistent raw boundary observations, not function boundaries, names, receivers, ABI, argument types, return types, or semantics. The trace's legacy producer provenance remains PARTIAL even though current trace bytes and module identity are bound.",
+      "level521_impact_schema3": "local-lab/ttd-call-context-level521-impact-schema3-20260804-v1 is READY_REPLICATED and admitted by Generation 10. Hardened verifier SHA-256 77efcca17feaa9a359713110a061df4aed5539098fbff07fd1729d78a81acec7; proof.ready.json SHA-256 7d784a6741c791677fa0083390c53424c0102ef9e7b5edca419eb23a97921765. Two existing-trace replays have identical 17,804 path-neutral evidence bytes, SHA-256 3e12c0a391540ba79e50ee559bc04ccff344729fcbe0cec288731e12c5dc7558. In the exact window, collision callsite 0x004268CB dispatches slot 39 to 0x004D8AE0, that routine calls Damage 0x0040A890 with raw 0.05f/projectile/1/-1 carriers, and the collision resolver then calls Hit 0x00407350 with the same projectile and collision-report carriers. Four calls/entries/raw returns yield one validated Hit return, three orphan raw returns, and one gap-free envelope. StartDie is only a bounded zero-call observation. No concrete name for 0x004D8AE0, typed return, state write, or behavior outside the window is proved.",
+      "next_gate": "Answer the three Generation-10 successor questions through a new thread-aware schema-v4 replay plus bounded data-write/static-ABI joins, then map only survived laws to rebuild/OnslaughtRebuild.Core/Level100PlayerDamage.cs and its focused tests. Preserve v3 as conservative evidence; do not reinterpret it, run a blind corpus-wide batch, or record a new trace first."
+    },
+    "pristine_and_live_db": "Pristine SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750 remains untouched. The maintainer Ghidra project contains two authorized boundary-only promotions totaling 529 functions (515 plus Atomic14's 14), followed by an exact five-row semantic correction for StartLock, FireLock, LockHit, GetCurrentTarget, and DisplayLock. Function count remains 8,124. The latest verified live promotion READY is local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/promotion/promotion.ready.json, SHA-256 77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945; its POST owner and disjoint recoverable backup share fileset SHA-256 f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702. Generation 10 did not mutate Ghidra.",
+    "handoff_2026_08_04": {
+      "status": "READY_FOR_HANDOFF. Only the temporary atomic handoff objective may be completed; the preserved recursive campaign in GOAL.md remains unfinished and actionable.",
+      "read_first": [
+        "GOAL.md",
+        "AGENTS.md",
+        "developer_state.json:_RECURSIVE_RE_CAMPAIGN_2026_08_02",
+        "reverse-engineering/RE-INDEX.md",
+        "CONTRACTS.md",
+        "local-lab/INDEX.md",
+        "local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/campaign.ready.json"
+      ],
+      "current_authority": "Generation 10 at local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2; READY b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2; reducer 7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9; exact verify command is authoritative_campaign.verify above.",
+      "do_not_trust": [
+        "Model or subagent reports until their load-bearing claims are mechanically reproduced and admitted.",
+        "The rejected Generation-10 v1 candidate, stale README/proof hashes, path labels, or metadata saying READY without replay.",
+        "Raw x86 carriers as typed C++ values, TU ownership as a function name, or a bounded zero-event control as a non-reachability law.",
+        "The tracked Ghidra snapshot as current live state; use the named POST/backup boundary."
+      ],
+      "outside_authority_candidates": {
+        "rejected_generation10_v1": "local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation; READY 038afabca6f288567b378b657384741bc8b4bc047d292c0a2317e1be86e2179a; reducer 6afccba42bbe1cb0d64a4392ce1e06a80de17e467939918ecf245617d4668982. Its ledgers were semantically correct, but the receipt falsely counted unchanged requiresElevation=False because one side was a string and the other a boolean. V2 is the corrected authority; never advance from v1.",
+        "level521_lockhit_data_writes": "local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/run-e-v3-source-bound; READY 92e74ec7ad0fadbd956463141ffaa25487a310a956b9753d9666f6c179ce4615; receipt e39cc7a2a9bc9b801911e0441396ce4e00d86008f8bd97bda0c91a5b02370d74; manifest dfa248bff0a5af62dba535cfe40b5d531b851045dcd4a916a23c0d05c4eb06ec; JSONL be6dfbf804c34aa2e38431f67e1c1ade5c55386d66e681df979c090e46e96289. Refuter-survived one-invocation node-removal contract, still outside campaign authority. Cheapest falsifier: directly watch global free-list head 0x0083D130 and extend through payload destruction/full return; next action is a separate prospective campaign advance only after that exact question is selected.",
+        "call_context_schema_v4": "Design hypothesis only: ContextSwitch(T) preserves callback thread T and invalidates other known threads; Unrecorded, Large, and continuity breaks remain global. First mechanical gate must preserve calibration 4 calls / 4 raw returns / 3 validated / 1 orphan / 3 gap-free and may recover at most the final Level-521 slot-39 return with exact barrier provenance.",
+        "translation_unit_atlas": "Existing verified census has 151 CPP units, 1,870 exact path-push sites, 368 directly owned functions, and 22 interior-string references that a defined-string-only join misses. A Generation-10 join plus pinned-Stuart calibration is a future candidate; TU ownership alone may not promote a name, signature, contract, or behavior."
+      },
+      "ranked_frontiers": [
+        {
+          "rank": 1,
+          "question": "Level 521 natural player-damage reconstruction bridge for 0x004D8AE0, player Damage 0x0040A890, and player Hit 0x00407350.",
+          "existing_evidence": "Generation 10 plus the prior CDB life/shield/augment deltas and exact call-context window.",
+          "instrument": "Thread-aware call-context v4, bounded data-write watchpoints, and static ABI/field joins over the existing trace.",
+          "gate": "Reproduce exact call/carrier order; identify only mechanically linked field transitions and branch outcomes; preserve unresolved returns/types; then make focused Level100PlayerDamage parity tests pass without claiming unobserved behavior.",
+          "reconstruction_owner": "rebuild/OnslaughtRebuild.Core/Level100PlayerDamage.cs and rebuild/OnslaughtRebuild.Core.Tests/Level100PlayerDamageTests.cs",
+          "why": "It is an observed natural combat chain and directly blocks rebuild fidelity, so it outranks processing functions by address."
+        },
+        {
+          "rank": 2,
+          "question": "Can call-context association become thread-aware without laundering gaps or changing existing v3 evidence?",
+          "existing_evidence": "Schema-v3 calibration and Level-521 replicas plus the conservative barrier census.",
+          "instrument": "A new schema-v4 implementation in tools/ttd-exec-coverage/ttd_exec_coverage.cpp, wrapper receipt validation, and focused contract tests.",
+          "gate": "Calibration remains exactly 4/4/3/1/3; Level 521 gains at most one additional validated return; every change cites callback-thread and barrier provenance; any other count or cross-thread association blocks publication.",
+          "reconstruction_owner": "No direct Core owner; this is the evidence instrument feeding frontier 1.",
+          "why": "It can recover contracts across existing traces cheaply, but must be proven before wider mining."
+        },
+        {
+          "rank": 3,
+          "question": "Which Generation-10 functions and residuals belong to each shipped translation unit, and where does pinned Stuart source nominate\u2014not prove\u2014source counterparts?",
+          "existing_evidence": "Verified 151-unit/1,870-site source-unit census, Generation-10 ledgers, and pinned Stuart commit 5352a81cdb838b145a57f7febc5d9fc4b0129ebb.",
+          "instrument": "Hash-bound Generation-10 atlas join covering all sites, interior-string references, owner crossings, all 8,124 function priors, and source-line calibration.",
+          "gate": "All 1,870 sites remap exactly; 22 interior references and residual-only/cross-owner controls survive; no TU-only name promotion; output receives an immutable READY.",
+          "reconstruction_owner": "tools/re_source_unit_census.py plus subsystem-specific reverse-engineering and rebuild owners selected by the resulting atlas.",
+          "why": "It compresses the unknown frontier by subsystem and source overlap after the combat contract bridge, without inventing semantics."
+        }
+      ],
+      "next_operation": "One isolated writing lane implements schema-v4 thread-aware ContextSwitch association, then replays only the existing four-target calibration trace and Level-521 take-4 window. Run tools/ttd_pipeline_contract_tests.py and exact wrapper controls; publish no new campaign generation unless the 4/4/3/1/3 calibration and bounded Level-521 gate both close. No new capture, live Ghidra mutation, or corpus-wide traversal comes first.",
+      "temporary_external_agent_contract": "One integration owner and one writer at a time. Grok 4.5 High is operational lead and primary subagent reviewer. OpenCode DeepSeek DIRECT only: deepseek/deepseek-v4-flash and deepseek/deepseek-v4-pro, variant max on both (never high/low/default for standing RE). Official flash id is DeepSeek-V4-Flash-0731. Do not use InferX mirrors or opencode/deepseek-* Zen for load-bearing work. Consequential plates: Flash-max normal + Flash-max adversarial + Pro-max normal + Pro-max adversarial (four runs) plus Grok lenses. Prefer serial OpenCode runs (concurrent opencode run can hit database is locked). Tools required; always --title; no --auto; single-line CLI prompts; long waits OK; cleanup failed sessions. Writer uses isolated worktree and does not integrate its own result. Reports are hypotheses until the integration owner reproduces them. MEASURED 2026-08-05 after $20 top-up: flash+pro x low/high/max short all OK; flash-max and pro-max toolful OK (pro tool needed serial retry after DB lock). Pin: local-lab/opencode-deepseek-direct-proof/PROOF.md.",
+      "validation": {
+        "campaign": "PASS. Frozen Generation-10 reducer reproduced 8,124 / 6,117 / 15,241 / 72 / 915 / 14,241 / 6 / 584. tools/re_campaign_tests.py ran 84 tests in 289.353 seconds: OK.",
+        "exact_delta": "PASS. Independent row-key comparison found functions changed 4; contracts changed 4; questions changed 3 plus 3 successors; adjudications added 3; no removals. Residuals, scenarios, levers, and supersessions are byte-identical. Names, ranges, rebuild mappings, parity, writes, and supersessions did not advance.",
+        "evidence": "PASS. Schema-v3 verifier returned READY_REPLICATED / SURVIVED for distinct run-a/run-b; duplicate run-a/run-a exited 10 and BLOCKED. Independent Codex refutation ACCEPT also rejected same-length target/caller/raw-return/backlink poisons, write/StartDie overclaims, and a rehashed semantic-name forgery.",
+        "pristine": "PASS. Rehashed local-lab/safe-copy-bea-pristine/BEA.exe.original.backup: 2,506,752 bytes; SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750.",
+        "ghidra": "PASS for present state and recovery boundary. The live project, post-live backup, and post-live-restore-drill each independently rehashed to 19 files / 186,403,717 bytes / fileset f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702. Promotion READY remains 77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945, state POST, status READY, automaticRestorePerformed false. A current-source replay of the historical promotion verifier REFUSED because its sealed proof hashes the now-updated DELTA.md; no historical artifact was restamped, and this expected documentation drift is not represented as a live mutation failure.",
+        "documentation": "PASS. developer_state.json parses; stale Generation-9/prospective-Generation-10 and superseded proof-hash scan found no hit; npm run test:docs passed 1,057-file/1,180-link validation, headers, and strict RE function-name checks after adding the required pristine Specimen header to CONTRACTS.md.",
+        "processes": "PASS. Final Win32 process census found zero Codex-owned BEA/debugger/replay/Python-helper/Java/Ghidra/Grok/Claude-CLI processes. Ten long-running Claude Desktop processes rooted in the user's WindowsApps installation remain user-owned and were not terminated.",
+        "limitations": "The 14.2-GiB Level-521 trace SHA is inherited from exact hash-bound run receipts; current replay rechecks its path and 14,214,496,256-byte length rather than rereading the whole trace. Older preregistration/semantic-verification material contains prior role labels, while proof v2 and promoted contracts deliberately withhold those identities."
+      },
+      "residual_terminal_candidates_20260805": {
+        "note": "Local integrity-READY residual terminal *candidates* only. Gen10 ledger unchanged. Gen11 residual-terminal generation NOT admitted. DeepSeek adversarial: promoting 5012 without question closure would launder OPEN DARK_TEXT_CLASSIFICATION questions.",
+        "padding": {
+          "path": "local-lab/residual-padding-terminal-ready-20260805-v1",
+          "n_terminal": 5012,
+          "integrity": "READY",
+          "terminal_tsv_sha256": "7179a983b72529bfe4f3f954bd8664211390af76a298915227baf0eeb728f34d"
+        },
+        "mixed_shape": {
+          "path": "local-lab/residual-mixed-shape-terminal-ready-20260805-v1",
+          "n_shape_terminal": 277,
+          "integrity": "READY",
+          "shape_terminal_tsv_sha256": "6499213b8f9a77ef4b30c4f3f70c5ebf4b2f7e639b6989f516b9675166c07c79"
+        },
+        "implied_open_if_both_admitted_after_gate": 828,
+        "deepseek_reviews": "local-lab/opencode-deepseek-residual-padding-20260805-v1",
+        "whenUtc": "2026-08-05T03:04:13.019809+00:00"
+      }
+    }
+  },
   "_PROBE_LOOP_2026_08_02": {
-    "_read_this_first": "The four discovery-loop gaps named in the 2026-08-01 goal are CLOSED with can-fail proofs. Three console campaigns ran. NO COVERAGE DELTA WAS MEASURED and none could be: coverage comes from TTD indexes and tools/ttd_record.ps1 refuses to run non-elevated. Everything below is behavioural evidence, not coverage.",
+    "_read_this_first": "The four original discovery-loop gaps are CLOSED with can-fail proofs. The three console campaigns below produced behavior, not coverage. Later work added the exact authored Mission logger and the generation-5 campaign ratchet; read _RECURSIVE_RE_CAMPAIGN_2026_08_02 before treating this older probe snapshot as current.",
     "gaps_closed": {
       "gap1_oracle_admitted_crashes": "FIXED. classify_exit_code + apply_fault_gate + settleSeconds in tools/probe/probe_harness.py. The gate sits ABOVE the oracle so no oracle kind can launder a crash, and has two independent triggers (NTSTATUS exit code, OnslaughtException.txt). 16 mutations, 16 detected.",
       "gap2_cross_arm_comparison": "FIXED. tools/probe/compare.py. Enforces: a difference between arms is real only if it exceeds the spread within them. Refuses n=1, refuses runs that never reached level load, refuses arms with different oracle shapes, refuses two payloads grouped under one arm name. 7 self-checks.",
@@ -502,16 +697,16 @@
       "snapshot": "local-lab/re-ledger/coverage-ledger-2026-08-02-base",
       "observed": "886,583 / 1,929,117 = 45.9580% of .text, 69 coverage indexes",
       "addressable_dark_after_the_d3dx_correction": "203,645 bytes, down from 432,429 before the library band was applied",
-      "reachable_without_elevation": "about 21,000 bytes of it. Everything else needs the maintainer’s elevated window for TTD."
+      "reachable_without_elevation": "about 21,000 bytes of it. Everything else needs the maintainer\u2019s elevated window for TTD."
     },
-    "needs_the_maintainer": "TTD recording only. Open one elevated PowerShell window and the coverage-delta half of the campaign becomes runnable; console probes need nothing.",
+    "needs_the_maintainer": "Elevation is needed only for new TTD recording. Existing trace mining, console probes, authored Mission/logger probes, static work, CDB copied-runtime work, and scratch Ghidra validation do not require it.",
     "headline_result": {
       "what": "BuildLandscapeCache from autoexec.con access-violates 3/3 at level 100. One line, no elevation, fully deterministic.",
       "why_it_matters": "It is the ideal first TTD target the moment an elevated window exists: a trace ending in a known access violation yields the fault address, the call path into the landscape bake, and the exception path -- all three dark across every one of the 69 coverage indexes.",
       "repro": "tools/probe/probes.campaign-03.json, arm landscape-r1..r3",
       "caveat": "This machine, this GPU, this driver, level 100. A bake path is exactly the kind of code that is hardware-conditional."
     },
-    "finding_survived": "local-lab/findings/win-blocks-exit-2026-08-02.json -- SURVIVED through refute.py, 15/16 rules. Win from autoexec leaves the process running past a subsequent Quit; Lose does not; base rate of non-exit elsewhere 0/19. ONE JUDGEMENT CALL TO CHECK: campaign 02 prediction Q1 was moved out of the predictions array into a residual, on the argument that Q1 is the claim’s negation so its mismatch supports the claim. That move is the difference between REFUTED and SURVIVED. Full text and reasoning preserved in the record; overrule it if you disagree.",
+    "finding_survived": "local-lab/findings/win-blocks-exit-2026-08-02.json -- SURVIVED through refute.py, 15/16 rules. Win from autoexec leaves the process running past a subsequent Quit; Lose does not; base rate of non-exit elsewhere 0/19. ONE JUDGEMENT CALL TO CHECK: campaign 02 prediction Q1 was moved out of the predictions array into a residual, on the argument that Q1 is the claim\u2019s negation so its mismatch supports the claim. That move is the difference between REFUTED and SURVIVED. Full text and reasoning preserved in the record; overrule it if you disagree.",
     "coverage_delta_VERIFIED": {
       "_note": "Not from the console campaigns -- they produce no coverage. This is the ledger over the three level-521 combat takes David recorded, rebuilt and re-derived by hand rather than taken from a subagent report.",
       "before": "local-lab/re-ledger/coverage-ledger-2026-08-02-base",
