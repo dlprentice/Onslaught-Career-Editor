@@ -669,7 +669,19 @@
         "implied_open_if_both_admitted_after_gate": 828,
         "deepseek_reviews": "local-lab/opencode-deepseek-residual-padding-20260805-v1",
         "whenUtc": "2026-08-05T03:04:13.019809+00:00"
-      }
+      },
+      "residual_terminal_formal_pack_20260805": {
+        "path": "local-lab/residual-terminal-formal-pack-padding-20260805-v1",
+        "status": "READY_FOR_GENERATION",
+        "n_proofs": 5012,
+        "n_require_question_supersession": 4997,
+        "n_already_clean": 15,
+        "advance_kind_proposed": "RESIDUAL_TERMINAL_PADDING_BULK.v1",
+        "parent_generation": 10,
+        "gen11_admitted": false,
+        "whenUtc": "2026-08-05T03:07:07.303972+00:00"
+      },
+      "next_operation_residual_terminal": "Apply residual-terminal formal pack as a new generation only via re_campaign reducer with question supersession + FORMAL_STATIC_PROOF_SURVIVED + contract TERMINAL_PADDING; do not mutate Gen10 in place. Formal pack at local-lab/residual-terminal-formal-pack-padding-20260805-v1."
     }
   },
   "_PROBE_LOOP_2026_08_02": {
