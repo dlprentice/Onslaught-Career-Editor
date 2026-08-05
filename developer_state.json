@@ -681,7 +681,37 @@
         "gen11_admitted": false,
         "whenUtc": "2026-08-05T03:07:07.303972+00:00"
       },
-      "next_operation_residual_terminal": "Apply residual-terminal formal pack as a new generation only via re_campaign reducer with question supersession + FORMAL_STATIC_PROOF_SURVIVED + contract TERMINAL_PADDING; do not mutate Gen10 in place. Formal pack at local-lab/residual-terminal-formal-pack-padding-20260805-v1."
+      "next_operation_residual_terminal": "Apply residual-terminal formal pack as a new generation only via re_campaign reducer with question supersession + FORMAL_STATIC_PROOF_SURVIVED + contract TERMINAL_PADDING; do not mutate Gen10 in place. Formal pack at local-lab/residual-terminal-formal-pack-padding-20260805-v1.",
+      "residual_terminal_generation11": {
+        "path": "local-lab/residual-terminal-generation11-padding-20260805-v1/generation-11-residual-terminal-padding",
+        "generation": 11,
+        "advance_kind": "RESIDUAL_TERMINAL_PADDING_BULK",
+        "readySha256": "907e82b78a1cabd057091ec04c51feabe1bd19cef94d1108a0842d0b0c3b0241",
+        "verify": "python -B tools/re_residual_terminal_generation.py verify",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "questions": 15241,
+          "scenarios": 72,
+          "levers": 915,
+          "contracts": 14241,
+          "adjudications": 5003,
+          "supersessions": 5581,
+          "residualTerminalPadding": 5012,
+          "residualOpenDark": 997,
+          "residualOpenExecuted": 108,
+          "questionsOpen": 10237,
+          "questionsClosedSurvived": 5004,
+          "residualTerminalsAddedThisGeneration": 4997,
+          "questionsClosedThisGeneration": 4997
+        },
+        "parent_generation": 10,
+        "parent_still_authority_for": "TTD call-context C2 contracts, Ghidra live parent remains Gen9, Gen10 campaign for combat advance",
+        "residual_authority_for": "TERMINAL_PADDING bulk (5012); open dark MIXED 997; executed open 108",
+        "gen10_mutated": false,
+        "whenUtc": "2026-08-05T03:13:33.127549+00:00"
+      },
+      "current_authority_note": "Gen10 remains campaign authority for TTD call-context observation advance. Gen11 residual-terminal padding bulk is residual-classification authority for the 5012 TERMINAL_PADDING cohort only."
     }
   },
   "_PROBE_LOOP_2026_08_02": {
