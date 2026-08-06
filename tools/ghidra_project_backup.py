@@ -330,7 +330,21 @@ def publish_staged_atomic_new(partial: Path, path: Path) -> None:
     except FileExistsError as exc:
         raise BackupError(f"refusing to overwrite existing output: {path}") from exc
     except OSError as exc:
-        raise BackupError(f"could not atomically publish new output: {path}: {exc}") from exc
+        # Filesystems without hard links (e.g. exFAT) reject os.link.  Fall
+        # back to a same-directory atomic rename, still refusing to clobber an
+        # existing final path.  The existence check and rename are not one
+        # atomic step on such filesystems; the final manifest build re-hashes
+        # every published file, so a raced overwrite would fail verification.
+        if path.exists():
+            raise BackupError(f"refusing to overwrite existing output: {path}") from exc
+        try:
+            os.replace(partial, path)
+        except OSError as replace_exc:
+            raise BackupError(
+                f"could not atomically publish new output: {path}: {replace_exc}"
+            ) from replace_exc
+        partial.unlink(missing_ok=True)
+        return
     partial.unlink()
 
 

@@ -29,7 +29,7 @@ public class GhidraProjectOpenProbe extends GhidraScript {
     protected void run() throws Exception {
         String[] args = getScriptArgs();
         if (args == null || args.length != 3) {
-            println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=usage"
+            System.out.println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=usage"
                 + " expected=<programName> <expectedMd5> <expectedSha256>");
             return;
         }
@@ -38,13 +38,13 @@ public class GhidraProjectOpenProbe extends GhidraScript {
         String expectedSha256 = args[2].toLowerCase();
 
         if (currentProgram == null) {
-            println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=no_current_program");
+            System.out.println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=no_current_program");
             return;
         }
 
         String actualProgram = currentProgram.getName();
         if (!expectedProgram.equals(actualProgram)) {
-            println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=program_name_mismatch"
+            System.out.println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=program_name_mismatch"
                 + " expected=" + expectedProgram + " actual=" + actualProgram);
             return;
         }
@@ -52,7 +52,7 @@ public class GhidraProjectOpenProbe extends GhidraScript {
         String actualMd5 = currentProgram.getExecutableMD5();
         actualMd5 = actualMd5 == null ? "" : actualMd5.toLowerCase();
         if (!expectedMd5.isEmpty() && !expectedMd5.equals(actualMd5)) {
-            println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=md5_mismatch"
+            System.out.println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=md5_mismatch"
                 + " expected=" + expectedMd5 + " actual=" + actualMd5);
             return;
         }
@@ -60,7 +60,7 @@ public class GhidraProjectOpenProbe extends GhidraScript {
         String actualSha256 = currentProgram.getExecutableSHA256();
         actualSha256 = actualSha256 == null ? "" : actualSha256.toLowerCase();
         if (!expectedSha256.equals(actualSha256)) {
-            println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=sha256_mismatch"
+            System.out.println("GHIDRA_PROJECT_OPEN_PROBE_FAIL reason=sha256_mismatch"
                 + " expected=" + expectedSha256 + " actual=" + actualSha256);
             return;
         }
@@ -68,9 +68,10 @@ public class GhidraProjectOpenProbe extends GhidraScript {
         // Touch the listing so the probe proves the database is readable, not
         // merely that the project directory could be latched.
         long functionCount = currentProgram.getFunctionManager().getFunctionCount();
-        println("GHIDRA_PROJECT_OPEN_PROBE_OK program=" + actualProgram
+        System.out.println("GHIDRA_PROJECT_OPEN_PROBE_OK program=" + actualProgram
             + " md5=" + actualMd5
             + " sha256=" + actualSha256
             + " functions=" + functionCount);
     }
 }
+
