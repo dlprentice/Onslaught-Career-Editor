@@ -136,9 +136,9 @@ The findings below were reconciled against these exact document states:
 | Input | SHA-256 | Lines | Bytes | Role |
 | --- | --- | ---: | ---: | --- |
 | `BEA_DATA.md` | `9542028F20518742F3BFE90567E0C7DC084EC1988F24E3C1E61E3B495A84C9E3` | 1,928 | 83,045 | Complete aggregate installation map and data-family research program |
-| `GHIDRA_FUNCTONS.md` | `9C5A124371DA0D20F975C8FC8F81691B480DDCDBEC00BB211DDBF1750CF7B674` | 2,618 | 143,231 | Executable/Ghidra/runtime master |
+| `GHIDRA_FUNCTONS.md` | `935EE100835BD82A16F913B7A8CE0785AE6A8499A67BA6E0BBAD14BB4E61F1AD` | 2,287 | 150,571 | Executable/Ghidra/runtime master |
 | `STUART_FUNCTIONS.md` | `57C2C02E5443BD72049EF342B85880F33E523B8970D6434B00835384C3AB7B45` | 3,899 | 173,240 | Pinned-source master |
-| **Combined review surface** | — | **8,445** | **399,516** | 279 headings and 2,431 table-shaped rows; counts describe documents, not game coverage |
+| **Combined review surface** | — | **8,114** | **406,836** | 279 headings and 2,431 table-shaped rows; counts describe documents, not game coverage |
 
 These hashes bind this synthesis to exact measured input snapshots. A later
 change can improve an input without silently changing what this version of the
@@ -244,7 +244,7 @@ No percentage between these rows is meaningful. In particular:
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
 | Tracked Ghidra snapshot | 6,411 functions | Reviewed distributable database snapshot, older than live |
 | Live Ghidra database | 7,555 functions | Newer maintainer state; one rename ahead of the tracked 7,555-row name projection |
-| Reconstruction state | Assertions frozen inside `STUART_FUNCTIONS.md` SHA-256 `7F406F9C...AE69` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
+| Reconstruction state | Assertions frozen inside `STUART_FUNCTIONS.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
 and denominator can be numerically correct and still describe the wrong object.

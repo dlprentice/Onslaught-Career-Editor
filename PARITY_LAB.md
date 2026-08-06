@@ -54,9 +54,12 @@ not establish its Steam depot identity.
 Live tip census is **not** the Gen10 block below. Re-read
 `developer_state.json` → `complete_re_tip_20260805` and
 [`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
-As of 2026-08-06: tip **Gen73**, C1=**222**, C2=**5**, function_semantic
-OPAQUE=**7897**, OPEN residual=**20**, complete_RE=**false**, REBUILD_READY=**0**,
-Ghidra apply **NOT_AUTHORIZED**. Next mass lever: Gen74 OPAQUE→C1 under six-way
+As of 2026-08-06: tip **Gen73**, functions=**8124**, C1=**222**, C2=**5**,
+function_semantic OPAQUE=**7897**, contract_C0_OPAQUE=**14219**, FUN* counter=**0**,
+OPEN residual=**20**, complete_RE=**false**, REBUILD_READY=**0**,
+Ghidra apply **NOT_AUTHORIZED**. Tip campaign:
+`local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1`.
+Next mass lever: Gen74 OPAQUE→C1 under six-way
 (direct DeepSeek sessions: native subagent N+A per AGENTS.md carve-out);
 C1 PE ≠ C2 dual-runtime.
 

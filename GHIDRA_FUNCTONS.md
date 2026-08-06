@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-04
+Last updated: 2026-08-06 (live tip pointer added; contract census refreshed to Gen73)
 Verdict: **The verified maintainer database now contains 8,124 function
 boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
 previous residual entries, then 14 exact console-callback-region boundaries.
@@ -37,18 +37,42 @@ not establish its Steam depot identity.
 
 ---
 
-## Current recursive-campaign delta (2026-08-04)
+## Live complete-RE tip (2026-08-06) — read this first
 
-This block supersedes later 7,555-row present-tense denominators. Those tables
-remain useful as the dated 2026-07-29 semantic/naming baseline until their
-derived percentages are regenerated against generation 10.
+The campaign census below this pointer is the Generation-10 (2026-08-04)
+snapshot. The **live** complete-RE tip is Generation **73** and is owned by
+`developer_state.json` → `complete_re_tip_20260805` plus
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md):
+
+| Metric | Live tip (Gen73) |
+|--------|------------------|
+| Functions | 8,124 (= C1 222 + C2 5 + function_semantic OPAQUE 7,897) |
+| Grades | **C1=222**, **C2=5**, function_semantic **OPAQUE=7897**; contract_C0_OPAQUE **14219**; REBUILD_READY **0** |
+| FUN* tip counter | **0** (ledger counter; not settled nameClass/supersession closure without Gen26–38 scoreboard audit — FINAL delta A3) |
+| OPEN residual | **20** police holds |
+| complete_RE | **false** |
+| Ghidra apply | **NOT_AUTHORIZED** (operator 2026-08-06); FINAL-3WAY-DELTA is eligibility frame only |
+| Tip campaign | `local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/…` |
+
+The Generation-10 blocks that follow are historical records, not the live tip.
+Their durable engineering content (atlas, registries, safety doctrine,
+superseded-claims appendix) is unaffected by Generations 11–73.
+
+---
+
+## Current recursive-campaign delta (2026-08-04, Generation 10 — historical)
+
+**Not the live tip** (see the pointer above; live tip is Gen73 as of
+2026-08-06). This block supersedes later 7,555-row present-tense denominators.
+Those tables remain useful as the dated 2026-07-29 semantic/naming baseline
+until their derived percentages are regenerated against the live tip.
 
 | Surface | Current exact state |
 | --- | --- |
 | Authoritative campaign | `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2`; READY SHA-256 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; frozen reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9` |
 | Live maintainer Ghidra | 8,124 functions after 529 exact boundary-only promotions plus five same-range target-lock semantic corrections; POST fileset SHA-256 `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702` |
 | Remaining executable accounting | 6,117 residuals; 162,017 unmapped executable bytes; exact function bodies cover 1,767,100 bytes / 91.6015% of `.text` |
-| Contract reality | 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts |
+| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Live tip (Gen73): C1=222, C2=5, contract_C0_OPAQUE=14219, REBUILD_READY=0** |
 | Runtime console census | A replicated 16-byte disposable logger bridge realizes 31 commands and 56 CVars on Level 100; static registration contains 32/59, with `fmv_play` and three debris CVars absent on that path. READY SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297` |
 | Latest exact partition | The retired residual `[0x004295BC,0x00429BC0)` is now exactly replaced by 14 opaque functions / 1,433 code bytes and 15 terminal NOP-padding residuals / 107 bytes. No callback name, signature, ABI, behavior, or rebuild claim was promoted. |
 | TTD corpus | 75 traces / 497.31 GiB. Coverage exists for 73 traces, but 65 traces remain coverage-only and there is no normalized corpus-wide call/return/receiver/argument ledger |

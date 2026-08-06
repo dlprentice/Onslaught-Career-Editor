@@ -429,10 +429,14 @@ patch, so commands for the patched and unpatched specimens must not be mixed.
 
 The executable RE program is deep but not complete. The historical
 6,411-function body pass covered 1,539,953 of the baseline image's 1,929,117
-`.text` bytes (79.8268%). This pass did not recompute interval coverage for the
-newer 7,555-row inventory, so current `.text` coverage is **UNKNOWN**. Neither
-metric proves that every recovered function's semantics or every released
-behavior is understood.
+`.text` bytes (79.8268%). That pass did not recompute interval coverage for the
+7,555-row inventory current at this document's 2026-07-28 survey date, so that
+survey's `.text` coverage figure was **UNKNOWN**. Neither metric proves that
+every recovered function's semantics or every released behavior is understood.
+The live function ledger has since grown to 8,124 functions at campaign
+generation 73 (2026-08-06); the campaign census is owned by
+`developer_state.json` → `complete_re_tip_20260805`, not by this
+survey-dated document.
 
 ### `Message.exe`
 
