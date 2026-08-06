@@ -68,6 +68,17 @@ extern int bea_cfg_texhash;
  * asserted to. Any log produced with it set is stamped as a test artefact. */
 extern int bea_cfg_fault_noclearbind;
 
+/* FAULT INJECTION for HResultToString / CreateTexture error-path probes.
+ * When bea_cfg_fault_createtexture_after > 0, the Nth CreateTexture call
+ * (1-based) returns bea_cfg_fault_createtexture_hr instead of calling through.
+ * When bea_cfg_fault_createtexture_sticky != 0, every call with count >= N fails
+ * (not only the single Nth call). Enables device wrapping even without a
+ * capture log. Logs stamped FAULT-INJECTION. Not production evidence. */
+extern unsigned bea_cfg_fault_createtexture_after;
+extern unsigned bea_cfg_fault_createtexture_hr;
+extern int bea_cfg_fault_createtexture_sticky;
+extern unsigned bea_fault_createtexture_count;
+
 /* ---- logging ------------------------------------------------------------- */
 
 void bea_logf(const char *fmt, ...);

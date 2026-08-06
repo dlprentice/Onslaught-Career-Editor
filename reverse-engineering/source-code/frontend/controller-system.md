@@ -247,39 +247,46 @@ untouched sensitivity of `7.0` the reachable axis is the lattice
 
 ### Input Recording/Playback System
 
-The controller includes a demo recording system for QA and attract modes:
+The Steam image retains the controller-tape implementation, but it differs from
+the available source and its command-line entry points are dormant.
 
-```cpp
-// From Controller.cpp
-void CController::StartRecording(char *filename) {
-    mRecording = true;
-    mDataFile.InitFromMem(filename);
-}
+| Retail function | Address | Released behavior |
+|-----------------|---------|-------------------|
+| `CController__StartRecording` | `0x0042D8A0` | Sets `this+0x160`, then opens the supplied filename for writing |
+| `CController__StartPlayback` | `0x0042D8C0` | Sets `this+0x161`, then opens the supplied filename for reading |
+| `CPCController__RecordControllerState` | `0x00514720` | Writes exactly three four-byte words from `this+0x14/+0x18/+0x1C` |
+| `CPCController__ReadControllerState` | `0x00514760` | Reads those same three words; EOF closes the buffer and clears playback |
 
-void CController::StartPlayback(char *filename) {
-    mPlaying = true;
-    mDataFile.InitFromFile(filename);
-}
+Each retail tick is therefore exactly 12 little-endian bytes:
+
+```text
+uint32 buttons_0_to_31
+uint32 buttons_32_to_63
+uint32 buttons_64_to_95
 ```
 
-**Recorded State** (per frame):
+This corrects the earlier 28-byte account. `PCController.cpp` in the available
+source serializes the same three button words plus four analogue values, but the
+Steam functions contain only three I/O calls. A retail tape cannot reproduce
+analogue aim or movement.
 
-| Data | Size | Description |
-|------|------|-------------|
-| `mButtons1` | 4 bytes | Button bits 0-31 |
-| `mButtons2` | 4 bytes | Button bits 32-63 |
-| `mButtons3` | 4 bytes | Button bits 64-95 |
-| `mAnaloguex1` | 4 bytes | Left stick X |
-| `mAnaloguey1` | 4 bytes | Left stick Y |
-| `mAnaloguex2` | 4 bytes | Right stick X |
-| `mAnaloguey2` | 4 bytes | Right stick Y |
+`CGame__PostLoadProcess` still tests the record/playback bytes at `0x00662F34`
+and `0x00662F36`, passes the shared filename buffer at `0x00662F4C`, and calls
+the two start functions. The Steam command-line parser does **not** contain the
+source build's `-record` or `-play` spellings or parser arms, however. The
+surviving fields are cleared by the `CLIParams` defaults constructor at
+`0x004239F0`; they require a debugger intervention or an exact safe-copy patch
+before the post-load path can activate them.
 
-**Total**: 28 bytes per frame of input recording.
+The final complete 12-byte frame is consumed. The following attempted read sets
+EOF, closes playback, and clears its flag. Reject a tape unless its size is
+positive and divisible by 12; `StartPlayback` does not make an open failure safe
+and a missing file is not a valid negative control.
 
-This system is used by:
-- `-record FILENAME` CLI parameter (record gameplay)
-- `-play FILENAME` CLI parameter (playback demo)
-- Attract mode (auto-play when idle)
+Useful deterministic action masks are `0x00000080` in word 0 for skip-cutscene,
+`0x04000000` in word 1 for skip-panning, and `0x00080000` / `0x00040000` in word
+0 for charge / fire. These are exact static retail mappings. Controlled runtime
+playback remains the gate before claiming a reproducible natural combat chain.
 
 ### Cheat Combo Detection
 

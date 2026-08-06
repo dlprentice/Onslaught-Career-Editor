@@ -32,9 +32,22 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import bea_lab  # noqa: E402
+import mission_script_emitter as mse  # noqa: E402
 import probe_author as pa  # noqa: E402
 
 RESULTS: list[tuple[str, str, str]] = []  # (status, name, detail)
+
+PILOT_PROGRAM = [
+    {"op": "let", "name": "target", "native": "GetThingRef",
+     "args": [{"string": "Turret 01"}]},
+    {"op": "call", "target": "target", "native": "SetVulnerable",
+     "args": [{"bool": True}]},
+    {"op": "call", "target": "target", "native": "SetHealth",
+     "args": [{"float": 0.001}]},
+    {"op": "call", "native": "Pause", "args": [{"float": 1.0}]},
+    {"op": "call", "target": "target", "native": "Damage",
+     "args": [{"float": 1000.0}]},
+]
 
 
 # --------------------------------------------------------------------------- #
@@ -190,6 +203,77 @@ def t_set_constant(f: Fix) -> None:
                     "new": bytes.fromhex(e["new_hex"].replace(" ", "")).hex()}],
                   lab=f.lab, force=True)
     falsify("...and the anchor refuses the same write shifted by one byte", sabotage2)
+
+
+def t_set_script_trace(f: Fix) -> None:
+    """The durable intent owns the now-runtime-proven trailerA trace lever."""
+    def run():
+        before = pa.Archive(f.src100, lab=f.lab).world("RLWD").script("Setup")
+        assert before["instr_count"] == 138 and before["trailer"] == [0, 1]
+        m = f.author(
+            [{"op": "set-script-trace", "script": "Setup", "value": 1}],
+            src=f.src100,
+            name="script_trace",
+        )["probe"]
+        after = pa.Archive(m["output"]["path"], lab=f.lab).world("RLWD").script("Setup")
+        assert after["instr_count"] == 138 and after["trailer"] == [1, 1]
+        edit = m["edits"][0]
+        assert edit["kind"] == "set-script-trace"
+        assert edit["offset"] == 3681592
+        assert edit["expect_hex"] == "00 00 00 00"
+        assert edit["new_hex"] == "01 00 00 00"
+        assert edit["scriptOrdinal"] == 9
+        assert edit["objectField"] == "CScriptObjectCode+0x60"
+        assert m["verification"]["changed_bytes"] == 1
+        assert "RUNS AND TRACES" in m["prediction"]
+        assert any("value-0/value-2 controls" in row for row in m["unproven"])
+        return "Setup trailerA 0 -> 1 at inflated 3681592; one changed byte; trailerB preserved"
+    check("set-script-trace enables the exact serialized VM trace field", run)
+
+    def value_two():
+        m = f.author(
+            [{"op": "set-script-trace", "script": "Setup", "value": 2}],
+            src=f.src100,
+            name="script_trace_value2",
+        )["probe"]
+        trailer = pa.Archive(m["output"]["path"], lab=f.lab).world("RLWD").script("Setup")["trailer"]
+        assert trailer == [2, 1]
+        assert "WITHOUT VM TRACE LINES" in m["prediction"]
+        return "exact-comparison control reparses as trailer [2, 1]"
+    check("set-script-trace authors the exact-value-two negative control", value_two)
+
+    refuses(
+        "set-script-trace refuses values outside the measured 0/1/2 domain",
+        pa.IntentError,
+        lambda: f.author(
+            [{"op": "set-script-trace", "script": "Setup", "value": 3}],
+            src=f.src100,
+            name="script_trace_bad_value",
+        ),
+    )
+    refuses(
+        "set-script-trace refuses an identity write",
+        pa.IntentError,
+        lambda: f.author(
+            [{"op": "set-script-trace", "script": "Setup", "value": 0}],
+            src=f.src100,
+            name="script_trace_identity",
+        ),
+    )
+
+    def sabotage_readback():
+        archive = pa.Archive(f.src100, lab=f.lab)
+        world = archive.world("RLWD")
+        setup = world.script("Setup")
+        trailer_b = world.abs(setup["end"] - 4)
+        m = f.author(
+            [{"op": "raw", "offset": trailer_b, "expect": "01000000", "new": "02000000"}],
+            src=f.src100,
+            name="script_trace_wrong_dword",
+        )["probe"]
+        trailer = pa.Archive(m["output"]["path"], lab=f.lab).world("RLWD").script("Setup")["trailer"]
+        assert trailer == [1, 1], f"wrong dword leaves trace field disabled: {trailer}"
+    falsify("...and the trailerA read-back test rejects a trailerB edit", sabotage_readback)
 
 
 def t_anchor_guard(f: Fix) -> None:
@@ -572,6 +656,176 @@ def t_splice(f: Fix) -> None:
     falsify("...and omitting the scriptCount bump is caught", sabotage)
 
 
+def t_replace_script(f: Fix) -> None:
+    """The bounded emitter replaces Setup in the same slot and nothing else."""
+    state = {}
+
+    def run():
+        intent = {"op": "replace-script", "script": "Setup", "program": PILOT_PROGRAM,
+                  "why": "single-target damage-chain pilot"}
+        m = f.author([intent], src=f.src100, allow_length_change=True,
+                     name="damage_pilot")["probe"]
+        state["manifest"] = m
+        before = pa.Archive(f.src100, lab=f.lab).world("RLWD")
+        after = pa.Archive(m["output"]["path"], lab=f.lab).world("RLWD")
+        assert before.script_count == after.script_count == 25
+        assert [s["name"] for s in before.scripts] == [s["name"] for s in after.scripts]
+        setup_ordinal = [s["name"] for s in before.scripts].index("Setup")
+        assert setup_ordinal == m["splice"]["scriptOrdinal"]
+
+        unchanged = 0
+        for ordinal, (a, b) in enumerate(zip(before.scripts, after.scripts)):
+            old = before.payload[a["record_start"]:a["record_end"]]
+            new = after.payload[b["record_start"]:b["record_end"]]
+            if ordinal == setup_ordinal:
+                assert old != new
+            else:
+                assert old == new, f"non-target script changed: {a['name']}"
+                unchanged += 1
+        assert unchanged == 24
+
+        setup = after.script("Setup")
+        assert setup["event_table"] == [1] + [-1] * 12
+        assert setup["trailer"] == [0, 1]
+        assert setup["event_count"] == 0
+        want_instructions = [
+            (0x17, -1),
+            (0x05, 3), (0x18, 0x1010E), (0x15, 0), (0x0E, -1),
+            (0x05, 0), (0x16, -1), (0x05, 5), (0x18, 0x120), (0x0E, -1),
+            (0x05, 0), (0x16, -1), (0x05, 7), (0x18, 0x12E), (0x0E, -1),
+            (0x05, 9), (0x18, 0x104), (0x0E, -1),
+            (0x05, 0), (0x16, -1), (0x05, 11), (0x18, 0x145), (0x0E, -1),
+            (0x17, -1),
+        ]
+        assert setup["instructions"] == want_instructions, setup["instructions"]
+        syms = setup["symtab"]["symbols"]
+        assert [(syms[i]["type"], syms[i]["value"]) for i in (3, 5, 7, 9, 11)] == [
+            (3, "Turret 01"), (4, 1), (2, struct.unpack("<f", struct.pack("<f", 0.001))[0]),
+            (2, 1.0), (2, 1000.0),
+        ]
+
+        # Independent compiler-template witnesses from retail bytecode.  These
+        # checks can fail if our six-opcode reading or statement lowering drifts.
+        shipped_setup = before.script("Setup")["instructions"]
+        assert [op for op, _ in shipped_setup[1:5]] == [0x05, 0x18, 0x15, 0x0E]
+        assert [op for op, _ in shipped_setup[34:39]] == [0x05, 0x16, 0x05, 0x18, 0x0E]
+        weather = before.script("Weather")["instructions"]
+        assert any(
+            [op for op, _ in weather[i:i + 3]] == [0x05, 0x18, 0x0E]
+            and pa.decode_call(weather[i + 1][1])[0] == 4
+            for i in range(len(weather) - 2)
+        ), "retail Weather has no PUSH/CALL Pause/REMOVE_TOP template"
+
+        v = m["verification"]
+        assert v["replacementScriptOrderPreserved"]
+        assert v["replacementTargetOrdinalPreserved"]
+        assert v["replacementRecordReadbackExact"]
+        assert v["replacementNonTargetRecordsIdentical"] == 24
+        assert m["splice"]["emitter"]["nativeTable"]["sha256"] == mse.NATIVE_TABLE_SHA256
+        assert m["unproven"], "generated bytecode must remain explicitly unproven until runtime"
+        verified = pa.verify_manifest(m["manifest_path"], lab=f.lab)
+        assert verified["ok"], verified
+        assert verified["checks"]["splice_anchor_still_present_in_source"]
+        assert verified["checks"]["splice_insert_present_in_output"]
+        return (f"Setup stayed at ordinal {setup_ordinal}; 25 scripts, 24/24 non-target records "
+                f"identical, {len(want_instructions)} emitted instructions parsed back")
+    check("replace-script emits the damage pilot in Setup's existing slot", run)
+
+    refuses("replace-script is gated behind explicit length-change authorisation",
+            pa.LengthChangeRefused,
+            lambda: f.author([{"op": "replace-script", "script": "Setup",
+                               "program": PILOT_PROGRAM}],
+                             src=f.src100, name="replace_no_auth"))
+
+    bad_bool = json.loads(json.dumps(PILOT_PROGRAM))
+    bad_bool[1]["args"] = [{"bool": 1}]
+    refuses("the emitter refuses an implicit integer-as-bool recipe",
+            pa.IntentError,
+            lambda: f.author([{"op": "replace-script", "script": "Setup",
+                               "program": bad_bool}], src=f.src100,
+                             allow_length_change=True, name="replace_bad_bool"))
+
+    bad_flow = json.loads(json.dumps(PILOT_PROGRAM))
+    bad_flow[0] = {"op": "if", "condition": {"bool": True}}
+    refuses("the bounded emitter refuses invented control flow",
+            pa.IntentError,
+            lambda: f.author([{"op": "replace-script", "script": "Setup",
+                               "program": bad_flow}], src=f.src100,
+                             allow_length_change=True, name="replace_bad_flow"))
+
+    uninitialised = [PILOT_PROGRAM[1], PILOT_PROGRAM[0]]
+    refuses("the emitter refuses a target used before its value exists",
+            pa.IntentError,
+            lambda: f.author([{"op": "replace-script", "script": "Setup",
+                               "program": uninitialised}], src=f.src100,
+                             allow_length_change=True, name="replace_uninitialised"))
+
+    def sabotage_name_guard():
+        original = pa.mse.emit_record_from_lab
+        def wrong_name(*args, **kwargs):
+            emitted = original(*args, **kwargs)
+            record = emitted.record[:4] + b"Other" + emitted.record[9:]
+            return mse.EmittedRecord(record, emitted.instructions, emitted.symbols, emitted.metadata)
+        pa.mse.emit_record_from_lab = wrong_name
+        try:
+            f.author([{"op": "replace-script", "script": "Setup",
+                       "program": PILOT_PROGRAM}], src=f.src100,
+                     allow_length_change=True, name="replace_wrong_name")
+        finally:
+            pa.mse.emit_record_from_lab = original
+    falsify("...and changing the emitted record name is caught before write", sabotage_name_guard)
+
+    def sabotage_splice_verify():
+        m = json.loads(json.dumps(state["manifest"]))
+        m["splice"]["insert_sha256"] = "0" * 64
+        path = f.out / "bad-splice-hash.manifest.json"
+        path.write_text(json.dumps(m), encoding="utf-8")
+        result = pa.verify_manifest(path, lab=f.lab)
+        assert result["ok"], "verify accepted a false inserted-record hash"
+    falsify("...and verify checks the complete inserted record, not only the archive hash",
+            sabotage_splice_verify)
+
+    def sabotage_chunk_size_source_anchor():
+        """Re-hash a source with one wrong size field; only the edit anchor can catch it."""
+        m = json.loads(json.dumps(state["manifest"]))
+        size_edit = next(edit for edit in m["edits"] if edit["kind"] == "chunk-size")
+        _root, aya, _sp, _ba = bea_lab.load(f.lab)
+        _raw, inflated, blocks = aya.read_aya(m["source"]["path"])
+        changed = bytearray(inflated)
+        changed[size_edit["offset"]] ^= 1
+        bad_source = f.out / "wrong-chunk-size-source.aya"
+        aya.write_aya(str(bad_source), bytes(changed), [row[1] for row in blocks])
+        bad_raw, bad_inflated, bad_blocks = aya.read_aya(str(bad_source))
+        m["source"].update({
+            "path": str(bad_source),
+            "sha256": pa.sha256(bad_raw),
+            "bytes": len(bad_raw),
+            "inflated_sha256": pa.sha256(bad_inflated),
+            "inflated_bytes": len(bad_inflated),
+            "blocks": [row[1] for row in bad_blocks],
+        })
+        manifest = f.out / "wrong-chunk-size-source.manifest.json"
+        manifest.write_text(json.dumps(m), encoding="utf-8")
+        result = pa.verify_manifest(manifest, lab=f.lab)
+        assert result["checks"]["source_sha256"]
+        assert result["checks"]["source_inflated_sha256"]
+        assert result["ok"], "verify ignored a changed source chunk-size anchor"
+    falsify("...and verify authenticates chunk-size source anchors after re-hashing",
+            sabotage_chunk_size_source_anchor)
+
+    def tampered_signature_table():
+        lab = f.work / "tampered-lab"
+        dst = lab / mse.NATIVE_TABLE_REL
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(Path(f.lab) / mse.NATIVE_TABLE_REL, dst)
+        raw = bytearray(dst.read_bytes())
+        raw[len(raw) // 2] ^= 1
+        dst.write_bytes(raw)
+        mse.load_native_table(lab)
+    falsify("...and a changed native signature table is rejected by its SHA-256 pin",
+            tampered_signature_table)
+
+
 def t_unexercised_types(f: Fix) -> None:
     def run():
         assert 5 not in pa.WRITABLE_TAGS and 6 not in pa.WRITABLE_TAGS, \
@@ -678,9 +932,9 @@ def main() -> int:
     print(f"source   {f.src}")
     print(f"workdir  {work}\n")
 
-    for t in (t_identity, t_set_constant, t_anchor_guard, t_overlap, t_retarget_call,
-              t_poison, t_framing_gate, t_length_change, t_splice, t_unexercised_types,
-              t_path_guard, t_verify):
+    for t in (t_identity, t_set_constant, t_set_script_trace, t_anchor_guard, t_overlap, t_retarget_call,
+              t_poison, t_framing_gate, t_length_change, t_splice, t_replace_script,
+              t_unexercised_types, t_path_guard, t_verify):
         t(f)
     t_no_collateral(f, protected)
 

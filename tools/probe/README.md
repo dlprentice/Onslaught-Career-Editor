@@ -1,23 +1,31 @@
 # `tools/probe` — the discovery loop
 
 Status: integrated — the three stages below were built in separate lanes and
-merged here; on 2026-08-02 nine launches over six archives were authored, run
-and adjudicated end to end through all three, unattended.
+merged here; on 2026-08-02 the original nine-launch integration was followed by
+six replicated Mission-logger launches and seven Mission VM-trace/control
+launches, all unattended.
 Last updated: 2026-08-02.
 Summary: author a probe that makes specific engine behaviour fire, run it
 unattended and record it, then put the result through a stage that tries to kill
 it. Authoring, running and refuting are three separate programs with three
 separate test suites; this file is the one door to all of them.
 Evidence: MEASURED for the parts marked so in each section — the container
-experiment and the console proof of 2026-08-02 and the four-arm integration run
-recorded under `local-lab/probe-runs`. INFERRED for everything each section's own
-`unproven` list names. Nothing here is SOURCE.
+experiment, console proof, four-arm integration run under `local-lab/probe-runs`,
+the replicated logger aggregate at
+`local-lab/logger-oracle-pilot-2026-08-02/logger-oracle.ready.json`, and the
+replicated stock-script VM trace at
+`local-lab/vm-trace-pilot-2026-08-02/vm-trace.ready.json`. INFERRED for
+everything each section's own `unproven` list names. Nothing here is SOURCE.
 Specimen: every byte claim below is read from
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, sha256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. The
 installed Steam `BEA.exe` is deliberately patched and is never read for evidence.
-Verdict: the loop closes for authoring, running and refuting a same-length
-script edit on a level archive. What still needs a human is named in
+Verdict: the loop closes for authoring, running and refuting same-length edits
+and the bounded length-changing replacement of an existing script record. The
+Mission logger can now gate exact ordered text/value content, and the bounded
+`set-script-trace` intent exposes executed instruction index, post-instruction
+stack size, and flags for one selected script; appending a new script-table
+record remains static-only. What still needs a human is named in
 "[What still needs a human](#what-still-needs-a-human)".
 
 | stage | program | tests |
@@ -114,14 +122,25 @@ use when a loop is generating them.
 | `poison-opcode` | same | **proven** — the measured `0xC0000005` |
 | `poison-datatype` | same | derived from `CreateFromType` |
 | `null-control` | same | derived from `LoadScriptEvents` discarding the sentinel |
+| `set-script-trace` | same | **runtime-proven twice** on stock Level 100 `Setup`; exact values 0 and 2 are negative controls, 1 emits indices 1..136 |
 | `raw` | same | escape hatch, still content-anchored |
 | `set-constant` string, different length | changes | **statically verified, never executed** |
 | `splice-script` | changes | **statically verified, never executed** |
+| `replace-script` | changes | **runtime-proven for a generated Level 100 `Setup`**; preserves name, ordinal, and every non-target record; each new program still needs its own controls |
 
 `retarget-call` is guarded by a corpus profile: all 9,236 shipped `CALL`s give
 each of the 108 called natives exactly one `(argc, returns)` pair, so a retarget
 that would change arity or return discipline — and unbalance the VM stack — is
 refused with the observed profile in the message.
+
+`set-script-trace` resolves the first object-trailer dword by script name rather
+than asking a caller for an inflated offset. The constructor reads that dword
+into `CScriptObjectCode+0x60`; retail compares it exactly with `1`. Authoring is
+same-length and content-anchored, but output also requires the selected script
+to execute and the separately enabled logger to have a writable path. The
+campaign-grade proof therefore pairs value `1` with value `0`, value `2`, and
+logger-disabled controls; traced-run timing is void because the logger opens,
+writes, and closes the file once per instruction.
 
 #### What it will not author, deliberately
 
@@ -130,9 +149,9 @@ refused with the observed profile in the message.
 * **Inserting a script anywhere but the end of the table.** Whether world
   `things` reference scripts by table index is not established, so no existing
   script is ever renumbered.
-* **Compiling `.msl`.** The executable has the VM and no compiler. Authoring
-  means splicing compiled bytecode; `splice-script` copies a donor object
-  verbatim.
+* **Compiling `.msl`.** The executable has the VM and no compiler.
+  `splice-script` copies a donor object verbatim; `replace-script` emits only
+  bounded straight-line `let`/`call` recipes from pinned native signatures.
 * **Inventing control flow.** Opcodes `0x06, 0x0e, 0x12, 0x14, 0x15, 0x16, 0x19,
   0x1a` are framing-settled but behaviour-unknown (spec §9.1), so the tool moves
   a `CALL` and changes a constant and does not synthesise branches.
@@ -152,10 +171,12 @@ What the tool does for them:
 4. re-parses the whole payload and requires the chunk chain to close exactly and
    every sentinel to survive.
 
-Two residual unknowns are recorded in the manifest's `unproven` list rather than
-papered over: no length-changed archive has ever been loaded by the engine, and
-whether the loader depends on the 1 MiB block rule is not established. Both are
-gated behind `--allow-length-change`.
+Length-changing `replace-script` archives have now loaded and executed under
+matched controls. Two narrower residuals remain rather than being papered over:
+different-length `set-constant` and appended `splice-script` outputs are still
+static-only, and the successful re-blocked runs do not establish whether the
+loader *requires* the shipped 1 MiB block rule. Every length-changing operation
+remains gated behind `--allow-length-change`.
 
 ### Safety properties
 
@@ -245,7 +266,7 @@ and confirms the output on disk is still the file described.
 python tools/probe/test_probe_author.py        # exit 0 = pass
 ```
 
-34 checks and **12 guards proven falsifiable**. Every guarded behaviour is tested
+43 checks and **17 guards proven falsifiable**. Every guarded behaviour is tested
 twice: once that it works or refuses, and once that the thing it guards, when
 deliberately broken, is *caught*. A sabotage that sails through is reported as
 `VACUOUS` and fails the suite — because a guard that cannot fail is worse than no
@@ -259,9 +280,10 @@ asserts they are byte-identical.
 # Stage 2 — running
 
 Status: implemented, and run against the real binary. Its tests still use fakes
-only; the nine live launches of 2026-08-02 are recorded in
+only; the original nine live launches of 2026-08-02 are recorded in
 [`probes.integration-proof.json`](probes.integration-proof.json), which is the
-manifest that was actually executed.
+manifest that was actually executed. The six logger replications and aggregate
+READY live under `local-lab/logger-oracle-pilot-2026-08-02/`.
 Last updated: 2026-08-02.
 Summary: run a list of engine probes end to end, unattended, and get a receipt
 per probe. This directory owns launch mechanics so probe authors do not have to.
@@ -282,6 +304,7 @@ remembered:
 | forgotten `autoexec.con` | executes silently on every future level load of that tree | armed stale files are a hard stop before the run; ours is removed after, even on the failure path, even with `--keep-scratch` |
 | writing to the shared safe copy | every other instrument in the repo is now measuring a different game | staging always copies out; source `BEA.exe` and `BEA.exe.original.backup` are hashed before **and after** |
 | a payload that is not the one the probe was written against | a real result about the wrong bytes | `expectSha256` per staged file, verified before the copy |
+| a declared output inherited from the copied source tree | stale bytes satisfy a content oracle before the game writes anything | recursively declared oracle/collection outputs are removed before launch and recorded in `removedInheritedOutputs` |
 
 ### Interface
 
@@ -334,6 +357,7 @@ measured ones.
 |---|---|---|
 | `processExit` | the process exits on its own; optional `expectExitCode` | a `Quit` in `autoexec.con` — the container experiment's oracle |
 | `fileAppears` | `path` exists with `minBytes` | anything a console command writes: `MemStats <n>` → `data\Memory\<n>`, `DumpMem` → `MemoryDumps\dump<n>.mem` |
+| `fileTextSequence` | a safe relative file contains each distinct exact line `exactOccurrences` times and positive lines occur in declared order; `0` is an exclusion decided only at the deadline | authored logger sentinels, typed value transport, and stock-content negative controls |
 | `fatalFault` | `OnslaughtException.txt` at the game root exists | the **poison control**: an arm that should die |
 | `setupHistoryContains` | `setuphistory.txt` contains `text` | `Game::LoadLevel <n>`, render-method negotiation |
 | `survives` | still alive at the deadline with no fault log | the accept arm: "the engine took these bytes" |
@@ -368,8 +392,9 @@ probe asked for them.
 `receipt.md` carries, in this order: verdict and wall time; **Staged** (source
 root, scratch root, `BEA.exe` sha256, every staged file with its sha256 and the
 sha256 of what it replaced, the `autoexec.con` body and its sha256, and the
-source witness hashes re-verified after the run); **Command** (the exact argv
-and the working directory); **Oracle** (kind, outcome, detail, exit code);
+source witness hashes re-verified after the run), plus inherited engine logs and
+declared outputs removed before launch; **Command** (the exact argv and the
+working directory); **Oracle** (kind, outcome, detail, exit code);
 **Diagnosis**; **Artefacts**; **Teardown**; and **Failure** if there was one.
 
 ### Teardown, and how it is enforced
@@ -406,7 +431,7 @@ route.
 ### Tests
 
 ```
-python tools/probe/probe_harness_tests.py                 # 51 tests
+python tools/probe/probe_harness_tests.py                 # 82 tests
 python tools/probe/probe_harness_tests.py --prove-can-fail
 ```
 
@@ -423,7 +448,7 @@ requires the guarding test to fail. A mutation that leaves the suite green is
 reported as a survivor and exits non-zero, because a test that cannot fail
 proves nothing.
 
-Current: **51 tests pass; 9 mutations, 9 detected, 0 survived.**
+Current: **82 tests pass; 16 mutations, 16 detected, 0 survived.**
 
 The last two mutations exist because the first live dry run of this harness
 found two real defects that the fake-driven suite had missed — the exit code
@@ -437,7 +462,7 @@ mutations confirm those tests bite.
 # Stage 3 — refuting
 
 Status: exercised on live findings — two records from the 2026-08-02 integration
-run were adjudicated, one SURVIVED and one UNSCORED, and all 15 rules were shown
+run were adjudicated, one SURVIVED and one UNSCORED, and all 16 rules were shown
 to fire on the surviving record by mutating it one field at a time. Two
 adjudications is still far too few for `--audit` to say anything, and it says so:
 INSUFFICIENT_DATA, exit 1.
@@ -471,11 +496,11 @@ sanitised one.
 | file | what it is |
 | --- | --- |
 | `finding_schema.json` | the record a discovery loop must emit. Single source of truth for fields and enums — `refute.py` loads it rather than restating it |
-| `refute.py` | the checker: 15 named admissibility rules, four verdicts, four exit codes |
+| `refute.py` | the checker: 16 named admissibility rules, four verdicts, four exit codes |
 | `ADVERSARY-PROMPT.md` | the brief handed to a refuting agent. Six attacks, run in order, with a required return shape |
 | `adversary.py` | renders the brief, merges the attack report back into the finding, and audits the refuter's own kill rate |
 | `fixtures/` | the two real 2026-07-31 records |
-| `refute_tests.py` | 43 tests, including 15 mutations and 15 rule-neuterings |
+| `refute_tests.py` | 43 tests, including 16 mutations and 16 rule-neuterings |
 
 No third-party dependencies; `jsonschema` is not installed on this machine, so
 `refute.py` carries a small validator for the schema subset the file uses.
@@ -485,7 +510,7 @@ No third-party dependencies; `jsonschema` is not installed on this machine, so
 ```
 python tools/probe/refute.py FINDING.json                # adjudicate
 python tools/probe/refute.py --template > new.json       # blank record
-python tools/probe/refute.py --explain                   # the 15 rules
+python tools/probe/refute.py --explain                   # the 16 rules
 python tools/probe/adversary.py --brief FINDING.json     # the attack brief
 python tools/probe/adversary.py --merge FINDING.json --attack ATTACK.json -o merged.json
 python tools/probe/adversary.py --audit --ledger local-lab/probe/refutation-ledger.jsonl
@@ -551,7 +576,7 @@ Three layers, because a gate that cannot fail is the defect this exists to
 prevent:
 
 1. `MutationTests` — one mutation per rule against the record that *does*
-   survive. 15 mutations, 0 survivors. `test_every_rule_has_a_mutation` makes a
+   survive. 16 mutations, 0 survivors. `test_every_rule_has_a_mutation` makes a
    new rule without a falsification a red suite.
 2. `EveryRuleIsLoadBearing` — each rule is replaced in turn by a stub that can
    never fire, and its own mutation is re-adjudicated. If the verdict does not
@@ -572,6 +597,6 @@ prevent:
   discriminating evidence; it cannot catch evidence graded generously.
 * The fixtures are transcriptions. They are faithful to the notes, but they are
   not the notes, and the notes are the evidence.
-* Not wired into `npm run test:tools`. `tools/run_tool_tests.py` owns that list
-  and was being edited in another lane when this landed; the addition is one
-  line — `("tools/probe/refute_tests.py",)`.
+* The author, runner, mutation proof, refuter, comparison self-check and selector
+  self-check are wired into `npm run test:tools` through
+  `tools/run_tool_tests.py`.

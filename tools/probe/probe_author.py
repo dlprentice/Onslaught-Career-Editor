@@ -29,6 +29,9 @@ WHAT IT CAN AUTHOR
   set-constant     retarget a compiled constant (the proven case: a Pause
                    duration).  Same length for int/float/bool; a string of a
                    different length needs --allow-length-change.
+  set-script-trace set the first serialized script trailer dword, which retail
+                   reads into CScriptObjectCode+0x60 and compares exactly with
+                   1 after each executed instruction. Same length, anchored.
   retarget-call    point a CALL at a different native of the same arity and
                    return discipline, so a probe can invoke something we want to
                    observe.  Same length, always.
@@ -45,6 +48,9 @@ WHAT IT CAN AUTHOR
                    inside an object is an offset (spec S7.1), so this is pure
                    concatenation plus a scriptCount bump.  Length-changing;
                    statically verified, never executed.
+  replace-script   replace one script record in place with a deliberately tiny
+                   straight-line program emitted from specimen-derived native
+                   signatures.  Script name and table ordinal are preserved.
   raw              escape hatch.  Still requires expected bytes.
 
 WHAT IT CANNOT AUTHOR, DELIBERATELY
@@ -54,12 +60,11 @@ WHAT IT CANNOT AUTHOR, DELIBERATELY
   * inserting a script anywhere but the end of the table.  Whether world "things"
     reference scripts by index is not established, so no existing script is ever
     renumbered.
-  * compiling .msl.  The executable has the VM and no compiler; authoring means
-    splicing compiled bytecode.
-  * anything with opcode semantics behind it (spec S9.1): 0x06, 0x0e, 0x12,
-    0x14, 0x15, 0x16, 0x19, 0x1a are framing-settled but behaviour-unknown, so
-    the tool will move a CALL and change a constant but will not invent control
-    flow.
+  * compiling .msl.  The executable has the VM and no compiler. replace-script
+    emits only straight-line let/call recipes; it is not a source compiler.
+  * branches, jumps, arithmetic, nested expressions, or arbitrary opcodes.
+    The bounded emitter uses only six corpus-observed operations and will not
+    invent control flow.
 """
 from __future__ import annotations
 
@@ -74,8 +79,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import bea_lab
+import mission_script_emitter as mse
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 SPEC = "local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md"
 SPECIMEN_SHA = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 
@@ -763,6 +769,66 @@ def intent_raw(world: World, spec: dict):
                  spec.get("why") or f"raw {len(expect)}-byte write at {off}")], None
 
 
+def intent_set_script_trace(world: World, spec: dict):
+    """Set the serialized per-script VM trace mode without a bare offset.
+
+    The retail constructor reads object trailer dword A into
+    CScriptObjectCode+0x60. CScriptObjectCode__Run compares it exactly with 1
+    before emitting the post-instruction trace line. Values 0 and 2 are useful
+    controls; 1 is the only enabling value.
+    """
+    unknown = set(spec) - {"op", "script", "value", "why"}
+    missing = {"script"} - set(spec)
+    if unknown or missing:
+        raise IntentError(
+            f"set-script-trace schema mismatch: unknown={sorted(unknown)}, "
+            f"missing={sorted(missing)}"
+        )
+    value = spec.get("value", 1)
+    if type(value) is not int or value not in {0, 1, 2}:
+        raise IntentError(
+            "set-script-trace.value must be integer 0, 1, or 2; retail enables "
+            "the trace only for exact value 1"
+        )
+    script = world.script(spec["script"])
+    if len(script.get("trailer", [])) != 2:
+        raise FramingError(f"{script['name']}: expected exactly two object trailer dwords")
+    trailer_off = script["end"] - 8
+    old = world.payload[trailer_off:trailer_off + 4]
+    expected = struct.pack("<i", script["trailer"][0])
+    if old != expected:
+        raise AnchorMismatch(
+            f"{script['name']}: trailerA parser value {script['trailer'][0]} does not "
+            f"match bytes {hx(old)}"
+        )
+    new = struct.pack("<i", value)
+    if new == old:
+        raise IntentError(
+            f"{script['name']}: trailerA is already {value}; identity trace edit refused"
+        )
+    ordinal = world.scripts.index(script)
+    expected_outcome = (
+        "post-instruction VM trace lines when the separately enabled file logger is writable"
+        if value == 1
+        else "no VM trace lines; exact-comparison control"
+    )
+    return [Edit(
+        world.abs(trailer_off), old, new, "set-script-trace",
+        spec.get("why")
+        or f"{script['name']} trailerA {script['trailer'][0]} -> {value} "
+           f"(CScriptObjectCode+0x60; exact value 1 enables post-instruction trace)",
+        {
+            "script": script["name"],
+            "scriptOrdinal": ordinal,
+            "objectField": "CScriptObjectCode+0x60",
+            "serializedField": "trailerA",
+            "oldValue": script["trailer"][0],
+            "newValue": value,
+            "expectedOutcome": expected_outcome,
+        },
+    )], None
+
+
 def intent_splice_script(world: World, spec: dict, lab=None):
     """Append a whole compiled object to the script table.
 
@@ -824,14 +890,62 @@ def intent_splice_script(world: World, spec: dict, lab=None):
     return [bump], splice
 
 
+def intent_replace_script(world: World, spec: dict, lab=None):
+    """Replace one record without changing its name or table ordinal.
+
+    This is the attachment-safe path for a probe program: a world thing that
+    already names `Setup` continues to name the same record at the same ordinal.
+    The replacement bytes come only from the bounded straight-line emitter;
+    arbitrary record bytes are not accepted here.
+    """
+    unknown = set(spec) - {"op", "script", "program", "why"}
+    missing = {"script", "program"} - set(spec)
+    if unknown or missing:
+        raise IntentError(
+            f"replace-script schema mismatch: unknown={sorted(unknown)}, missing={sorted(missing)}"
+        )
+    target = world.script(spec["script"])
+    try:
+        emitted = mse.emit_record_from_lab(target["name"], spec["program"], bea_lab.find_lab(lab))
+    except mse.EmitError as exc:
+        raise IntentError(f"replace-script {target['name']}: {exc}") from exc
+
+    old = world.payload[target["record_start"] : target["record_end"]]
+    if emitted.record == old:
+        raise IntentError(f"replace-script {target['name']} emitted an identity record")
+    index = world.scripts.index(target)
+    splice = Splice(
+        world.abs(target["record_start"]),
+        old,
+        old,
+        emitted.record,
+        "replace-script",
+        f"replace {world.tag} script {target['name']!r} at table ordinal {index} "
+        f"({len(old)} -> {len(emitted.record)} bytes; "
+        f"{target['instr_count']} -> {emitted.metadata['instructionCount']} instructions)"
+        + (f"  [{spec['why']}]" if spec.get("why") else ""),
+        {
+            "world": world.tag,
+            "script": target["name"],
+            "scriptOrdinal": index,
+            "oldRecordSha256": sha256(old),
+            "newRecordSha256": emitted.metadata["recordSha256"],
+            "oldInstructions": target["instr_count"],
+            "newInstructions": emitted.metadata["instructionCount"],
+            "emitter": emitted.metadata,
+        },
+    )
+    return [], splice
 INTENTS = {
     "set-constant": "intent_set_constant",
     "retarget-call": "intent_retarget_call",
     "poison-opcode": "intent_poison_opcode",
     "poison-datatype": "intent_poison_datatype",
     "null-control": "intent_null_control",
+    "set-script-trace": "intent_set_script_trace",
     "raw": "intent_raw",
     "splice-script": "intent_splice_script",
+    "replace-script": "intent_replace_script",
 }
 # Intents that are MEANT to break the format. The post-edit gate inverts itself
 # for these: the predicted breakage must actually happen, and nothing else may.
@@ -975,10 +1089,14 @@ def author(
             e, s = intent_poison_datatype(world, spec)
         elif op == "null-control":
             e, s = intent_null_control(world, spec)
+        elif op == "set-script-trace":
+            e, s = intent_set_script_trace(world, spec)
         elif op == "raw":
             e, s = intent_raw(world, spec)
-        else:
+        elif op == "splice-script":
             e, s = intent_splice_script(world, spec, lab=lab)
+        else:
+            e, s = intent_replace_script(world, spec, lab=lab)
         edits.extend(e)
         if s is not None:
             if splice is not None:
@@ -987,10 +1105,15 @@ def author(
 
     if splice is not None:
         if not allow_length_change:
+            evidence_status = (
+                "Controlled generated replacements have loaded and executed, but authoring "
+                "cannot prove that this particular program will execute."
+                if splice.kind == "replace-script"
+                else "This length-changing path is only statically verified and has not executed."
+            )
             raise LengthChangeRefused(
                 f"{splice.kind} changes the payload length by {splice.delta:+d} bytes. "
-                "Same-length edits are proven by the container experiment; length changes "
-                "are only STATICALLY verified here and have never been executed. "
+                f"{evidence_status} "
                 "Pass --allow-length-change if that is what you want."
             )
         if not arch.blocks_regular():
@@ -1021,6 +1144,8 @@ def author(
     expect_sentinel_breaks = sum(1 for o in breaking if FRAMING_BREAKING[o] == "sentinel")
 
     post: dict[str, dict] = {}
+    post_worlds: dict[str, World] = {}
+    replacement_verification: dict[str, object] = {}
     parse_error: str | None = None
     try:
         list(chunk_chain(patched, 0, len(patched)))  # top-level chain must close exactly
@@ -1030,6 +1155,7 @@ def author(
             except FramingError:
                 continue
             w2 = World(patched, chain, arch._sp)
+            post_worlds[w2.tag] = w2
             good, total = w2.sentinels_ok()
             post[w2.tag] = {"scripts": total, "sentinels_ok": good,
                             "sentinels_broken": total - good}
@@ -1063,6 +1189,44 @@ def author(
                 raise FramingError(
                     f"{t}: script count is {post.get(t, {}).get('scripts')}, expected {want}"
                 )
+
+        if splice is not None and splice.kind == "replace-script":
+            w2 = post_worlds.get(world_tag)
+            if w2 is None:
+                raise FramingError(f"replacement result has no {world_tag} world")
+            old_names = [s["name"] for s in world.scripts]
+            new_names = [s["name"] for s in w2.scripts]
+            if old_names != new_names:
+                raise FramingError(
+                    "replace-script changed script names or table order; "
+                    f"before={old_names}, after={new_names}"
+                )
+            target_name = splice.meta["script"]
+            target_ordinal = splice.meta["scriptOrdinal"]
+            if new_names[target_ordinal] != target_name:
+                raise FramingError(
+                    f"replace-script target moved: ordinal {target_ordinal} is "
+                    f"{new_names[target_ordinal]!r}, expected {target_name!r}"
+                )
+            unchanged = 0
+            for ordinal, (before_script, after_script) in enumerate(zip(world.scripts, w2.scripts)):
+                before_blob = world.payload[before_script["record_start"] : before_script["record_end"]]
+                after_blob = w2.payload[after_script["record_start"] : after_script["record_end"]]
+                if ordinal == target_ordinal:
+                    if after_blob != splice.insert:
+                        raise FramingError("replace-script target does not read back as the emitted record")
+                elif before_blob != after_blob:
+                    raise FramingError(
+                        f"replace-script changed non-target record #{ordinal} {before_script['name']!r}"
+                    )
+                else:
+                    unchanged += 1
+            replacement_verification = {
+                "replacementScriptOrderPreserved": True,
+                "replacementTargetOrdinalPreserved": True,
+                "replacementRecordReadbackExact": True,
+                "replacementNonTargetRecordsIdentical": unchanged,
+            }
 
     # ---- gate 3: no collateral damage --------------------------------------
     collateral: dict = {}
@@ -1149,6 +1313,7 @@ def author(
             "framing_error": parse_error,
             "roundtrip_inflated_identical": True,
             "block_structure": "preserved" if splice is None else "reblocked",
+            **replacement_verification,
             **collateral,
         },
         "unproven": _unproven(splice, intents),
@@ -1159,7 +1324,7 @@ def author(
 
 def _unproven(splice, intents) -> list[str]:
     out: list[str] = []
-    if splice is not None:
+    if splice is not None and splice.kind != "replace-script":
         out.append(
             "This archive changes the payload length. The container round-trip and the "
             "framing are verified statically here, but no length-changed archive has ever "
@@ -1174,6 +1339,20 @@ def _unproven(splice, intents) -> list[str]:
             "Whether world 'things' reference scripts by table index is not established; the "
             "splice appends at the end so no existing index moves, but a donor script's own "
             "assumptions about the level it now lives in are not checked."
+        )
+    if any(i["op"] == "replace-script" for i in intents):
+        out.append(
+            "This generated record is bytecode-authored by this project. The authoring step "
+            "checks its grammar, native signatures, table ordinal, and non-target records, "
+            "but cannot establish that this particular program executed. Require matched "
+            "controls and a runtime receipt before claiming it ran."
+        )
+    if any(i["op"] == "set-script-trace" for i in intents):
+        out.append(
+            "The authored trailer value and archive framing are proven here, but trace "
+            "output also requires the target script to execute and a separately enabled, "
+            "writable logger. Require logger liveness plus value-0/value-2 controls before "
+            "claiming a trace."
         )
     if any(i["op"] == "retarget-call" for i in intents):
         out.append(
@@ -1205,6 +1384,18 @@ PREDICTIONS = {
 
 def _prediction(intents: list[dict]) -> str:
     for i in intents:
+        if i["op"] == "set-script-trace":
+            value = i.get("value", 1)
+            if value == 1:
+                return (
+                    "RUNS AND TRACES if this script executes and the separately enabled file "
+                    "logger is writable; expect one post-instruction line per executed "
+                    "non-RETURN instruction."
+                )
+            return (
+                f"RUNS WITHOUT VM TRACE LINES: trailerA={value} is an exact-comparison "
+                "control; retail enables tracing only for value 1."
+            )
         if i["op"] in PREDICTIONS:
             return PREDICTIONS[i["op"]]
     return "RUNS: the probe's edits take effect; the engine loads the level normally."
@@ -1289,11 +1480,22 @@ def verify_manifest(manifest_path: str | os.PathLike, lab=None) -> dict:
 
     bad = []
     for e in m["edits"]:
-        if e["kind"] == "chunk-size":
-            continue
         exp = bytes.fromhex(e["expect_hex"].replace(" ", ""))
         if src_inf[e["offset"] : e["offset"] + len(exp)] != exp:
             bad.append(e["offset"])
+    splice = m.get("splice")
+    if splice:
+        off = splice["offset"]
+        removed = splice["removed"]
+        if removed:
+            expected = bytes.fromhex(splice["expect_remove_hex"].replace(" ", ""))
+            splice_anchor_ok = len(expected) == removed and src_inf[off : off + removed] == expected
+        else:
+            expected = bytes.fromhex(splice["expect_anchor_hex"].replace(" ", ""))
+            splice_anchor_ok = bool(expected) and src_inf[off : off + len(expected)] == expected
+        report["checks"]["splice_anchor_still_present_in_source"] = splice_anchor_ok
+        if not splice_anchor_ok:
+            bad.append(off)
     report["checks"]["all_anchors_still_present_in_source"] = not bad
     report["anchor_failures"] = bad
 
@@ -1310,12 +1512,18 @@ def verify_manifest(manifest_path: str | os.PathLike, lab=None) -> dict:
     report["checks"]["output_sha256"] = sha256(out_raw) == m["output"]["sha256"]
     report["checks"]["output_inflated_sha256"] = sha256(out_inf) == m["output"]["inflated_sha256"]
     report["checks"]["output_blocks"] = [b[1] for b in out_blocks] == m["output"]["blocks"]
+    if splice:
+        off = splice["offset"]
+        inserted = splice["inserted"]
+        report["checks"]["splice_insert_present_in_output"] = (
+            sha256(out_inf[off : off + inserted]) == splice["insert_sha256"]
+        )
 
     for e in m["edits"]:
         new = bytes.fromhex(e["new_hex"].replace(" ", ""))
         off = e["offset"]
-        if m.get("splice") and off > m["splice"]["offset"]:
-            off += m["splice"]["delta"]
+        if splice and off > splice["offset"]:
+            off += splice["delta"]
         if out_inf[off : off + len(new)] != new:
             report["checks"].setdefault("all_new_bytes_present_in_output", True)
             report["checks"]["all_new_bytes_present_in_output"] = False
@@ -1329,12 +1537,12 @@ def verify_manifest(manifest_path: str | os.PathLike, lab=None) -> dict:
 # CLI
 # --------------------------------------------------------------------------- #
 OPNAMES = {
-    0x00: "nop?", 0x01: "PLUS", 0x02: "MINUS", 0x03: "MUL", 0x04: "DIV",
-    0x05: "PUSH", 0x06: "op06", 0x07: "OR", 0x08: "AND", 0x09: "GT",
-    0x0A: "LT", 0x0B: "GE", 0x0C: "LE", 0x0D: "op0d", 0x0E: "op0e",
-    0x0F: "CMP", 0x10: "CMPEQ", 0x11: "CMPNE", 0x12: "op12", 0x13: "JMPFALSE",
-    0x14: "JMP", 0x15: "op15", 0x16: "op16", 0x17: "POP", 0x18: "CALL",
-    0x19: "op19", 0x1A: "op1a",
+    0x00: "NOP", 0x01: "PLUS", 0x02: "MINUS", 0x03: "MUL", 0x04: "DIV",
+    0x05: "PUSH", 0x06: "POP", 0x07: "OR", 0x08: "AND", 0x09: "GT",
+    0x0A: "LT", 0x0B: "GE", 0x0C: "LE", 0x0D: "LABEL", 0x0E: "REMOVE_TOP",
+    0x0F: "CMP", 0x10: "CMPB", 0x11: "CMPNEB", 0x12: "JMPNE", 0x13: "JMPFALSE",
+    0x14: "JMP", 0x15: "GETTOP", 0x16: "POINTER", 0x17: "RETURN", 0x18: "CALL",
+    0x19: "CALLLOCAL", 0x1A: "PUSHPC",
 }
 EVENT_SLOTS = {0: "init", 3: "died", 4: "hit", 5: "started_dying", 6: "ready", 7: "shutdown"}
 
@@ -1393,7 +1601,8 @@ def cmd_show(a) -> int:
     print(f"{w.tag} at inflated {w.base}; record +{s['record_start']}..{s['record_end']} "
           f"({s['record_end'] - s['record_start']} B)")
     print(f"script {s['name']!r}: {s['instr_count']} instructions, {len(syms)} symbols, "
-          f"{s['event_count']} named-event handlers, trailer {s['trailer']}")
+          f"{s['event_count']} named-event handlers, trailer {s['trailer']} "
+          f"at inflated {w.abs(s['end'] - 8)}")
     entries = {v: f"slot {i} ({EVENT_SLOTS.get(i, '?')})"
                for i, v in enumerate(s["event_table"]) if v != -1}
     for ev in s["events"]:

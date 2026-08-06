@@ -28,6 +28,10 @@ unsigned bea_cfg_maxverts = 64;
 int bea_cfg_noverts = 0;
 int bea_cfg_strictcov = 0;
 int bea_cfg_fault_noclearbind = 0;
+unsigned bea_cfg_fault_createtexture_after = 0;
+unsigned bea_cfg_fault_createtexture_hr = 0x80004005u; /* E_FAIL */
+int bea_cfg_fault_createtexture_sticky = 0;
+unsigned bea_fault_createtexture_count = 0;
 unsigned bea_cfg_vdraw_first = 0;
 unsigned bea_cfg_vdraw_last = 0xFFFFFFFFu;
 unsigned bea_cfg_vminverts = 0;
@@ -326,6 +330,12 @@ static BOOL CALLBACK bea_init_once(PINIT_ONCE once, PVOID param, PVOID *ctx)
     bea_cfg_strictcov = (int)bea_env_uint(L"BEA_D3D9_STRICTCOV", 0);
     bea_cfg_fault_noclearbind =
         (int)bea_env_uint(L"BEA_D3D9_FAULT_NOCLEARBIND", 0);
+    bea_cfg_fault_createtexture_after =
+        bea_env_uint(L"BEA_D3D9_FAULT_CREATETEXTURE_AFTER", 0);
+    bea_cfg_fault_createtexture_hr =
+        bea_env_uint(L"BEA_D3D9_FAULT_CREATETEXTURE_HR", 0x80004005u);
+    bea_cfg_fault_createtexture_sticky =
+        (int)bea_env_uint(L"BEA_D3D9_FAULT_CREATETEXTURE_STICKY", 0);
     bea_cfg_vdraw_first = bea_env_uint(L"BEA_D3D9_VDRAWFIRST", 0);
     bea_cfg_vdraw_last = bea_env_uint(L"BEA_D3D9_VDRAWLAST", 0xFFFFFFFFu);
     bea_cfg_vminverts = bea_env_uint(L"BEA_D3D9_VMINVERTS", 0);
@@ -345,6 +355,39 @@ static BOOL CALLBACK bea_init_once(PINIT_ONCE once, PVOID param, PVOID *ctx)
         bea_enabled = 1;
         bea_logf("# back-buffer grab armed\n");
         bea_log_flush();
+    }
+    /* Fault-injection of CreateTexture needs the device wrapped even when no
+     * capture log is open (probe runs use CDB/TTD, not the draw recorder). */
+    if (bea_cfg_fault_createtexture_after > 0) {
+        bea_enabled = 1;
+        /* Open a small fault log if none exists so FAULT lines are visible. */
+        if (!bea_fp) {
+            wchar_t path[MAX_PATH * 2];
+            SYSTEMTIME st;
+            GetLocalTime(&st);
+            _snwprintf(path, MAX_PATH * 2 - 1,
+                       L"G:\\bea-d3d9-capture\\d3d9-fault-%04u%02u%02u-%02u%02u%02u-%lu.log",
+                       st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
+                       st.wSecond, (unsigned long)GetCurrentProcessId());
+            path[MAX_PATH * 2 - 1] = 0;
+            bea_make_parent_dirs(path);
+            bea_fp = _wfopen(path, L"wb");
+            if (bea_fp) {
+                setvbuf(bea_fp, NULL, _IOFBF, 1 << 16);
+                bea_logf("# bea-d3d9-proxy FAULT-INJECTION CreateTexture after=%u "
+                         "hr=0x%08lX sticky=%d\n",
+                         bea_cfg_fault_createtexture_after,
+                         (unsigned long)bea_cfg_fault_createtexture_hr,
+                         bea_cfg_fault_createtexture_sticky);
+                bea_log_flush();
+            }
+        } else {
+            bea_logf("# FAULT-INJECTION CreateTexture after=%u hr=0x%08lX sticky=%d\n",
+                     bea_cfg_fault_createtexture_after,
+                     (unsigned long)bea_cfg_fault_createtexture_hr,
+                     bea_cfg_fault_createtexture_sticky);
+            bea_log_flush();
+        }
     }
     return TRUE;
 }

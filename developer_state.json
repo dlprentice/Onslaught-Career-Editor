@@ -3,6 +3,7 @@
   "_what_this_is_NOT": "The canonical evidence store. Current state and a costly-to-rederive bounded finding may live here only with the exact pointer that can overturn it. A claim without such a pointer is a defect. IF THIS FILE AND A MEASUREMENT DISAGREE, THE MEASUREMENT WINS AND THIS FILE IS STALE.",
   "_maintenance": "Update current fields as work lands. Remove or explicitly label superseded accounts rather than appending parallel truth. Keep detailed evidence in its owning tracked or ignored note.",
   "_audited": "The 2026-07-27 form was audited by a read-only pass. On 2026-07-28 a separate read-only state-truth audit reviewed the recovery block, goal evidence, task-store pointers, TTD eras, and named documentation claims. On 2026-07-29 a fresh primary and read-only adversarial audit reconciled the recovery commits, research masters, parity-lab work, and four distinct Level 100 deterministic runs. Historical blocks remain records rather than current assertions; current state belongs in _CODEX_CURRENT_2026_07_29.",
+  "_REVIEW_MODE_2026_08_06_DIRECT_SESSION": "MAINTAINER FRAGO 2026-08-06, recorded while this file was edited from an interactive OpenCode DeepSeek session. While the maintainer works directly with DeepSeek in an interactive OpenCode session, the reviewer pair is the native OpenCode subagent tool in normal and adversarial roles (explore/general); the standing external six-way lanes are NOT mandatory there. External CLIs (Grok, Claude Code headless, Codex, opencode run DeepSeek via npm shim) run on request and when available only. Standing campaign/harness plates launched outside a direct session still require their six-way cells per the per-gen police and gauntlet bars. DeepSeek authority boundaries (no name/signature/type/memory/campaign/parity/Ghidra/capture authorization; maintainer adjudicates) remain in force. Authoritative policy: AGENTS.md 'Direct DeepSeek session carve-out'. Docs updated in the same change: AGENTS.md, VALIDATION.md (C1 plate gate row), GOAL.md, DELTA.md, PARITY_LAB.md, CONTRACTS.md, RE-INDEX.md, CURRENT_CAPABILITIES.md.",
   "_APP_UX_CAMPAIGN_2026_08_01": {
     "_what_this_is": "A separate forked session opened a campaign on the WinUI 3 app itself: end-user experience first, with a CLI twin for anything developer-useful. This block is the pickup pointer for that lane. It supersedes nothing in the RE or rebuild lanes.",
     "evidence": {
@@ -125,15 +126,7 @@
     "two_withdrawn_claims_do_not_resurrect_them": "(1) 'Fix shields before the water ditch' - WITHDRAWN. Drowning is not a damage-model outcome; landing in water kills you regardless of shield efficiency. That sequencing reasoned about the wrong failure mode. (2) 'Eleven lanes running' in the 2026-07-28 handoff - it was false when written. Both are recorded in the historical blocks below.",
     "landmines_every_lane_is_briefed_on": "The installed BEA.exe is deliberately patched by the maintainer. Two diagnostic checkers exit non-zero BY DESIGN. The smoke golden is deliberately pinned. Read byte evidence only from local-lab/safe-copy-bea-pristine/BEA.exe.original.backup (74154bfa) and name the specimen. local-lab/patches/114-1-*.patch is measured DOES NOT APPLY because the particle parser it depends on was deleted - and task #65 established the starburst sun's assets live in ParticleSets/MainSet.par, so a .par decoder is a known need. DECIDED 2026-07-30: the maintainer authorized restoring the parser from history (fff49ccf), to land WITH a live consumer (MainSet.par -> the starburst sun, #148) rather than as scaffolding."
   },
-  "as_of": {
-    "_date_means": "The date of the NEWEST content in this file, not the date it was last read, and NOT a review claim - see _audited for what has actually been checked. Corrected 2026-07-28: this field read '2026-07-27' while the file already carried a _HANDOFF_2026_07_28_READ_THIS_FIRST block, an in_flight._as_of of '2026-07-28 ~11:00', and four 2026-07-28 findings. A reader who trusted the stamp would have concluded the whole file predated a day of work it actually contains. Move this whenever content lands, per _maintenance above.",
-    "date": "2026-08-02",
-    "head": null,
-    "_why_head_is_null": "A HEAD recorded here is wrong the instant it is committed, because the commit that writes it moves HEAD. The first version of this file claimed b9e1ae50 and was already two commits behind on arrival. Run `git log --oneline -8` instead; the commit messages carry the reasoning and are the real record.",
-    "branch": "main",
-    "only_branch": true,
-    "_verify": "git status --short && git log --oneline origin/main..HEAD"
-  },
+  "as_of": "2026-08-06",
   "_OVERNIGHT_2026_07_31_FEEL_WINDOW": {
     "_what_this_is": "The overnight feel-window ledger, 2026-07-30 evening through 07-31. The window goal is set as a session Stop-hook (scope: #147 lead, #148, #146, #141/#131, trace mining gated by #149). Maintainer asleep; standing authorization in force; no elevation available or needed.",
     "landed_and_pushed": [
@@ -641,7 +634,19 @@
         }
       ],
       "next_operation": "One isolated writing lane implements schema-v4 thread-aware ContextSwitch association, then replays only the existing four-target calibration trace and Level-521 take-4 window. Run tools/ttd_pipeline_contract_tests.py and exact wrapper controls; publish no new campaign generation unless the 4/4/3/1/3 calibration and bounded Level-521 gate both close. No new capture, live Ghidra mutation, or corpus-wide traversal comes first.",
-      "temporary_external_agent_contract": "One integration owner and one writer at a time. Grok 4.5 High is operational lead and primary subagent reviewer. OpenCode DeepSeek DIRECT only: deepseek/deepseek-v4-flash and deepseek/deepseek-v4-pro, variant max on both (never high/low/default for standing RE). Official flash id is DeepSeek-V4-Flash-0731. Do not use InferX mirrors or opencode/deepseek-* Zen for load-bearing work. Consequential plates: Flash-max normal + Flash-max adversarial + Pro-max normal + Pro-max adversarial (four runs) plus Grok lenses. Prefer serial OpenCode runs (concurrent opencode run can hit database is locked). Tools required; always --title; no --auto; single-line CLI prompts; long waits OK; cleanup failed sessions. Writer uses isolated worktree and does not integrate its own result. Reports are hypotheses until the integration owner reproduces them. MEASURED 2026-08-05 after $20 top-up: flash+pro x low/high/max short all OK; flash-max and pro-max toolful OK (pro tool needed serial retry after DB lock). Pin: local-lab/opencode-deepseek-direct-proof/PROOF.md.",
+      "temporary_external_agent_contract": "One integration owner and one writer at a time. Grok 4.5 High is operational lead and primary subagent reviewer. OpenCode DeepSeek DIRECT standing: deepseek/deepseek-v4-flash variant max only (never high/low/default). Official flash id DeepSeek-V4-Flash-0731. Do not use InferX mirrors or opencode/deepseek-* Zen for load-bearing work. deepseek/deepseek-v4-pro and Claude Opus effort max are NOT standing-authorized (retired FRAGO 2026-08-05; one-off only with explicit re-auth). Consequential plates six-way: Grok N+A + Flash-max N+A + Opus 5 medium N+A. Per-generation police for Gen9..tip. Gauntlet Loop standing: split smallest pieces; separate builders/critics; hard bar = specimen 74154bfa + honest terminal/OPEN+falsifier + dual authority + AGENTS evidence. DURABLE: OpenCode opencode.db shared SQLite; bounded concurrent flash-max (prefer 2 for N+A); SQLITE_BUSY possible under heavy fan-out\u2014retry or XDG_DATA_HOME isolate. Grok fans out parallel. Tools required; always --title; no --auto; single-line CLI prompts. Writer uses isolated worktree. Reports are hypotheses until the integration owner reproduces them. Authority: AGENTS.md six-way pin.",
+      "durable_ops_survive_compaction": {
+        "goal_posture": "Complete reverse of BEA; open-ended; do not stop premature at residual tip pretty-good",
+        "gauntlet": "local-lab/per-gen-review-20260805-v1/GAUNTLET.md + AGENTS.md Gauntlet bullet; bar is inspectable not vibes",
+        "deepseek": "OpenCode deepseek-v4-flash variant max only; two roles/gen (normal+adversarial); bounded parallel concurrency ~2; runner tools/re_per_gen_deepseek_parallel.py (flash jobs only)",
+        "grok": "normal+adversarial subagents; parallel fan-out OK",
+        "opencode_db": "~/.local/share/opencode/opencode.db shared; desktop multi-session OK; concurrent opencode run usually OK at low fan-out; SQLITE_BUSY possible under heavy contention (busy_timeout=0 upstream); retry or XDG_DATA_HOME isolation if locks return",
+        "opencode_parallel_remeasure_20260805": "shared-db 2-short OK; 4-short OK; 2-toolful flash-max OK; 3x XDG isolate short OK; historical pro-max-tool parallel lock once",
+        "per_gen_police": "Gen9-24 six-way complete; see SCOREBOARD+SYNTHESIS",
+        "invoke": "opencode.cmd not Start-Process bare opencode.ps1 shim",
+        "opus": "Claude Opus 5 medium only (normal+adversarial); not max effort for standing RE",
+        "critic_matrix": "six-way (Grok N+A, DS Flash-max N+A, Opus medium N+A)"
+      },
       "validation": {
         "campaign": "PASS. Frozen Generation-10 reducer reproduced 8,124 / 6,117 / 15,241 / 72 / 915 / 14,241 / 6 / 584. tools/re_campaign_tests.py ran 84 tests in 289.353 seconds: OK.",
         "exact_delta": "PASS. Independent row-key comparison found functions changed 4; contracts changed 4; questions changed 3 plus 3 successors; adjudications added 3; no removals. Residuals, scenarios, levers, and supersessions are byte-identical. Names, ranges, rebuild mappings, parity, writes, and supersessions did not advance.",
@@ -765,6 +770,1753 @@
         "integritySha256": "d4ca29956215905809b241d9348399daa7e264d25ebb8ea1aa02dc4d91869e72",
         "whenUtc": "2026-08-05T03:40:01.177716+00:00",
         "note": "108 EXECUTED residuals: coverage-corroborated 108/108; 8 slot/call terminal candidates not ledger-admitted; named cheapestFalsifier per row"
+      },
+      "trace_executed_closeout_20260805": {
+        "whenUtc": "2026-08-05T07:47:42.239020+00:00",
+        "status": "MEASURED",
+        "scoreboard": "local-lab/trace-executed-scoreboard-20260805-v1",
+        "trace86": {
+          "CALL_ENTRY": 35,
+          "RANGE_HIT": 49,
+          "UNREACHED": 2,
+          "unreachedReclass": "local-lab/ret-unknown-unreached-static-reclass-20260805-v1"
+        },
+        "caseBodyFull55": {
+          "CALL_ENTRY": 25,
+          "RANGE_HIT": 30,
+          "UNREACHED": 0
+        },
+        "prologue7": {
+          "CALL_ENTRY": 7
+        },
+        "callbackSlot": {
+          "CLOSED": 8,
+          "PARTIAL": 0
+        },
+        "absPtrTable6": {
+          "JMP_TABLE_CASE": 6,
+          "UNREACHED": 0,
+          "CALL_ENTRY": 0,
+          "extension": "local-lab/ttd-call-context-abs-ptr-unreached-20260805-v1"
+        },
+        "rangeHitParents": "local-lab/range-hit-parent-recovery-20260805-v1",
+        "deepseek": {
+          "case_body_extension": "local-lab/opencode-deepseek-case-body-extension-20260805-v1 (normal REPRODUCED, adversarial SURVIVES)",
+          "abs_ptr_unreached": "local-lab/opencode-deepseek-abs-ptr-unreached-20260805-v1 (normal REPRODUCED, adversarial SURVIVES)"
+        },
+        "gen10_mutated": false,
+        "gen11_admitted": false,
+        "open_frontier": [
+          "ABS_PTR non-table forms live proof + parent switch CALL for table owners",
+          "CASE_ISLAND promotion under named prevFunc parents",
+          "L521 data-write C2 still open",
+          "Formal Gen11 residual-terminal only via reducer with question supersession",
+          "Remaining ~1023 OPEN DARK + residual OPEN beyond TRACE join"
+        ],
+        "note": "Gen9 READY Ghidra parent done; Gen10 remains TTD call-context authority (not finished). TRACE_EXECUTED 86 + CALLBACK/SLOT + ABS_PTR table cohort closed for call-context/shape grades without inventing names."
+      },
+      "callback_slot_5a0cc2_20260805": {
+        "whenUtc": "2026-08-05T08:04:08.434119+00:00",
+        "status": "CLOSED",
+        "entryPlate": "local-lab/ttd-call-context-5a0cc2-entry-20260805-v1",
+        "grade": "RUNTIME_ENTRY_VIA_JMP_THUNK",
+        "rollup": "8/8 CLOSED",
+        "best": {
+          "run": "run-level731",
+          "entry": 984,
+          "return": 984
+        },
+        "thunk": "0x005768fe jmp [0x656f3c]",
+        "gen10_mutated": false
+      },
+      "parent_switch_call_20260805": {
+        "whenUtc": "2026-08-05T08:32:03.491706+00:00",
+        "plate": "local-lab/ttd-call-context-parent-switch-20260805-v1",
+        "fullUnionCallEntry": 6,
+        "readyOnlyCallEntry": 3,
+        "gen10_mutated": false
+      },
+      "runtime_slot_read_rescore_20260805": {
+        "whenUtc": "2026-08-05T08:41:59.097857+00:00",
+        "plate": "local-lab/runtime-slot-read-rescore-20260805-v1",
+        "CLOSED": 8,
+        "PARTIAL": 0,
+        "OPEN": 0,
+        "create": {
+          "nSlotOk": 1,
+          "nEntryHit": 1
+        },
+        "jpeg": {
+          "nSlotOk": 6,
+          "nEntryHit": 5
+        },
+        "gen10_mutated": false
+      },
+      "level521_damage_hit_c2_package_20260805": {
+        "whenUtc": "2026-08-05T08:53:51.570488+00:00",
+        "plate": "local-lab/ttd-data-writes-level521-damage-c2-package-20260805-v1",
+        "c2Grade": "C2_BOUNDED_RUNTIME_FIELD_WRITES",
+        "damageMarker": "READY_WITNESSED_WRITES",
+        "hitMarker": "READY",
+        "gapFreeDamage": false,
+        "gen10_mutated": false,
+        "gen11_admitted": false,
+        "note": "Packages existing take-4 data-write plates with independent JSONL re-derivation + integrity hashes; does not advance campaign generation."
+      },
+      "schema_v4_contextswitch_gate_closeout_20260805": {
+        "whenUtc": "2026-08-05T09:14:11.459064+00:00",
+        "plate": "local-lab/schema-v4-contextswitch-gate-closeout-20260805-v1",
+        "calibration": "SURVIVES",
+        "level521PlusValidated": "POLICY_BOUNDED_NO_PLUS_VALIDATED",
+        "softCsOnlyWouldAssociate": true,
+        "unrecordedCrossingDisallowed": true,
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "WEAK"
+        },
+        "gen10_mutated": false,
+        "note": "Standing next_operation CS gate closed for return-recovery; successor remains data-write C2 (done) and residual OPEN mass, not more CS fitting."
+      },
+      "next_operation_note_20260805": "Schema-v4 soft-CS return-recovery gate closed as POLICY_BOUNDED (not physical REFUTED). Do not implement further CS policy fitting for Damage/slot-39 validated returns. Gen10 remains authority. Source-unit atlas join Gen10 closed 2026-08-05 (MEASURED, DeepSeek REPRODUCED+SURVIVES). Next material mass: residual OPEN DARK (~667 post-Gen12) / OPEN EXECUTED / Stuart source-line calibration \u2014 not Gen10 in-place residual laundering.",
+      "residual_open_mixed_deeper_20260805": {
+        "whenUtc": "2026-08-05T09:15:02.267295+00:00",
+        "plate": "local-lab/residual-open-mixed-deeper-20260805-v1",
+        "counts": {
+          "n_open_input": 828,
+          "n_whole_span_terminal": 446,
+          "n_partial_subspan_terminal": 63,
+          "n_still_fully_open": 319,
+          "terminal_bytes_accounted": 18651,
+          "open_bytes_remaining": 84218,
+          "terminal_subspan_count": 510
+        },
+        "gen10_mutated": false
+      },
+      "residual_mixed_shape_formal_pack_20260805": {
+        "whenUtc": "2026-08-05T09:19:47.130977+00:00",
+        "path": "local-lab/residual-mixed-shape-formal-pack-20260805-v1",
+        "status": "READY_FOR_GENERATION",
+        "n_proofs": 356,
+        "n_require_question_supersession": 356,
+        "n_excluded_executed": 89,
+        "n_partial_accounting": 65,
+        "advance_kind_proposed": "RESIDUAL_TERMINAL_MIXED_SHAPE_BULK.v1",
+        "gen10_mutated": false,
+        "gen11_mutated": false,
+        "generation_applied": false
+      },
+      "residual_terminal_generation12_mixed_shape": {
+        "whenUtc": "2026-08-05T09:33:53.258759+00:00",
+        "path": "local-lab/residual-terminal-generation12-mixed-shape-20260805-v1/generation-12-residual-terminal-mixed-shape",
+        "generation": 12,
+        "advance_kind": "RESIDUAL_TERMINAL_MIXED_SHAPE_BULK",
+        "parent_generation": 11,
+        "formalPack": "local-lab/residual-mixed-shape-formal-pack-20260805-v1/FORMAL-PACK.json",
+        "readySha256": "31d8c10f74b6fee5778fadf3b70413766c82b1e08b4d243f9f9591ad952e4459",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "questions": 15241,
+          "scenarios": 72,
+          "levers": 915,
+          "contracts": 14241,
+          "adjudications": 5333,
+          "supersessions": 5911,
+          "residualTerminalPadding": 4986,
+          "residualTerminalData": 21,
+          "residualTerminalBoundedAmbiguity": 335,
+          "residualOpenDark": 667,
+          "residualOpenExecuted": 108,
+          "questionsOpen": 9907,
+          "questionsClosedSurvived": 5334,
+          "residualTerminalsAddedThisGeneration": 356,
+          "questionsClosedThisGeneration": 356,
+          "terminalDataAddedThisGeneration": 21,
+          "terminalBoundedAmbiguityAddedThisGeneration": 335
+        },
+        "gen10_mutated": false,
+        "gen11_mutated": false,
+        "verify": "python -B tools/re_residual_mixed_shape_generation.py verify --campaign <gen12> ...",
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES",
+          "plate": "local-lab/opencode-deepseek-gen12-mixed-shape-20260805-v1"
+        },
+        "status": "VERIFIED"
+      },
+      "source_unit_atlas_join_gen10_20260805": {
+        "whenUtc": "2026-08-05T09:55:00+00:00",
+        "plate": "local-lab/source-unit-atlas-join-gen10-20260805-v1",
+        "tool": "tools/re_source_unit_atlas_join.py",
+        "tests": "tools/re_source_unit_atlas_join_tests.py",
+        "status": "MEASURED_VERIFIED",
+        "schema": "bea.re.source-unit-atlas-join.v1",
+        "summarySha256": "672038cd4b475b80f9141a92d5806ed22b55e500f8850de465bb7613cee529db",
+        "integritySha256": "383d6be22115d07fdb529740f4722f7446b3ac671cfe5479f4c78fdc380dd648",
+        "atlasSitesSha256": "1f2fb16c6a7667549243d4d32d3e21ddc625603c935aecf946380bbb1e8db3ee",
+        "atlasPriorsSha256": "578264197803e3d670013c9295b3fdc53db56376c2142fd71c4d02bc471923c9",
+        "census": "local-lab/source-unit-census-v1-ready (Gen5-pinned, 1870 sites / 151 CPP)",
+        "gen10": "local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2",
+        "counts": {
+          "atlasSites": 1870,
+          "atlasUnits": 151,
+          "pathOwnerAgree": 1870,
+          "pathOwnerDisagree": 0,
+          "callOwnerAgree": 1870,
+          "functionsWithDirectCpp": 368,
+          "functionsWithAnySite": 987,
+          "functionsWithNoSiteEvidence": 7137,
+          "residualsWithSites": 20,
+          "gen10PathResidualSites": 25,
+          "gen10SamePathAndCallOwnerSites": 1869,
+          "gen10OwnerBoundaryCrossings": 1
+        },
+        "crossingControl": "0x00437a2c cphysicsscriptstatements.cpp path=0x00437490 callResidualHead=0x00437a3a",
+        "gen10_mutated": false,
+        "gen11_mutated": false,
+        "gen12_mutated": false,
+        "name_promotion": false,
+        "ghidra_mutated": false,
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-source-unit-atlas-join-gen10-20260805-v1"
+        },
+        "verify": "python -I -B tools/re_source_unit_atlas_join.py verify --plate local-lab/source-unit-atlas-join-gen10-20260805-v1; python -I -B tools/re_source_unit_atlas_join_tests.py",
+        "note": "Frontier-3 atlas join closed as MEASURED plate. Remaps all 1870 census plates onto Gen10 owners with full entity-key AGREE; does not promote TU names or mutate ledgers. Stuart source-line calibration remains a separate instrument."
+      },
+      "next_operation_note_20260805_post_atlas": "Source-unit atlas join over Gen10 is MEASURED+DeepSeek-reviewed. Gen10 still the campaign authority (not complete as a recursive RE goal). Prefer residual OPEN DARK (~667 post-Gen12) / OPEN EXECUTED contracts, Stuart source-line calibration against pinned GPL tree, or Level-521 damage reconstruction owners \u2014 not Gen10 in-place residual laundering and not more soft-CS fitting.",
+      "open_dark_frontier_gen12_20260805": {
+        "whenUtc": "2026-08-05T10:18:56.010896+00:00",
+        "plate": "local-lab/residual-open-dark-frontier-gen12-20260805-v1",
+        "tool": "tools/re_open_dark_frontier.py",
+        "status": "MEASURED_VERIFIED",
+        "counts": {
+          "openDark": 667,
+          "wholeSpanShape": 262,
+          "formalPackEligiblePadData": 12,
+          "codeEnvelopeQuarantined": 250,
+          "partialSubspan": 73,
+          "stillFullyOpen": 332,
+          "terminalBytes": 21370,
+          "openBytes": 85656
+        },
+        "gen10_mutated": false,
+        "gen12_mutated": false,
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial_pre_fix": "A_SURVIVES_envelope_pack_eligible",
+          "adversarial_remediation": "CODE_ENVELOPE quarantined; formalPackEligible pad/data only",
+          "plate": "local-lab/opencode-deepseek-open-dark-frontier-gen12-20260805-v1"
+        },
+        "note": "Gen12 OPEN DARK re-instrumented. 12 pad/data formal-pack candidates only; 250 code envelopes need entry adjudication not residual-terminal bulk."
+      },
+      "next_operation_note_20260805_post_open_dark": "OPEN DARK frontier MEASURED. Next: formal pack for 12 pad/data only; CODE envelope entry/call-context; still-open LARGE_MIXED/CODE_LIKE (332); EXECUTED PROLOGUE_LIKE call-context. No Gen10/12 in-place laundering.",
+      "open_dark_pad_data_formal_pack_20260805": {
+        "whenUtc": "2026-08-05T10:27:42.740059+00:00",
+        "plate": "local-lab/open-dark-pad-data-formal-pack-20260805-v1",
+        "tool": "tools/re_open_dark_pad_data_formal_pack.py",
+        "status": "READY_FOR_GENERATION",
+        "n_proofs": 12,
+        "kindCounts": {
+          "TINY_PAD_GAP": 10,
+          "CODE_ADDRESS_TABLE_PREFIX": 2
+        },
+        "proposedTerminalStateCounts": {
+          "TERMINAL_PADDING": 10,
+          "TERMINAL_DATA": 2
+        },
+        "n_require_question_supersession": 12,
+        "generation_applied": true,
+        "gen10_mutated": false,
+        "gen12_mutated": false,
+        "code_envelope_excluded": true,
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-open-dark-pad-data-formal-pack-20260805-v1"
+        },
+        "note": "12 pad/data OPEN DARK formal proofs only. Not applied. Next: generation reducer with question supersession OR code-envelope/entry instruments.",
+        "applied_generation": 13
+      },
+      "next_operation_note_20260805_post_pad_pack": "Pad/data formal pack READY_FOR_GENERATION (12). Apply only via residual-terminal generation reducer with supersession; do not mutate Gen12 in place. Parallel: CODE envelope entry adjudication (250); still-open LARGE_MIXED/CODE_LIKE (332); EXECUTED PROLOGUE_LIKE call-context.",
+      "residual_terminal_generation13_open_dark_pad_data": {
+        "whenUtc": "2026-08-05T10:39:10.914028+00:00",
+        "path": "local-lab/residual-terminal-generation13-open-dark-pad-data-20260805-v1/generation-13-residual-terminal-open-dark-pad-data",
+        "generation": 13,
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_DARK_PAD_DATA",
+        "parent_generation": 12,
+        "formalPack": "local-lab/open-dark-pad-data-formal-pack-20260805-v1/FORMAL-PACK.json",
+        "formalPackSha256": "64274c1826213f97bd837d3997b55dc84f3387fab0294247c9fec01aebf1d7a2",
+        "readySha256": "5fe6970c4019a125ebec5d1297be8bbcefec5cc64a1a8cb897bcc952106cfe83",
+        "parentResidualsSha256": "3cb32e4816a4c0be76ff6a1e2b23567ba95687ba66e24191c0f41cad8ecf7a75",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "questions": 15241,
+          "scenarios": 72,
+          "levers": 915,
+          "contracts": 14241,
+          "adjudications": 5345,
+          "supersessions": 5923,
+          "residualTerminalPadding": 4996,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 335,
+          "residualOpenDark": 655,
+          "residualOpenExecuted": 108,
+          "questionsOpen": 9895,
+          "questionsClosedSurvived": 5346,
+          "residualTerminalsAddedThisGeneration": 12,
+          "questionsClosedThisGeneration": 12,
+          "terminalPaddingAddedThisGeneration": 10,
+          "terminalDataAddedThisGeneration": 2
+        },
+        "gen10_mutated": false,
+        "gen12_mutated": false,
+        "status": "APPLIED_VERIFIED",
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-gen13-open-dark-pad-data-20260805-v1"
+        },
+        "verify": "python -I -B tools/re_open_dark_pad_data_generation.py verify --campaign local-lab/residual-terminal-generation13-open-dark-pad-data-20260805-v1/generation-13-residual-terminal-open-dark-pad-data",
+        "note": "Gen13 residual-classification authority for pad/data OPEN DARK terminals (+12). Gen10 remains TTD call-context authority. Gen12 parent unmutated."
+      },
+      "next_operation_note_20260805_post_gen13": "Gen13 pad/data bulk APPLIED+VERIFIED (OPEN_DARK 655). Next material: CODE envelope entry adjudication (250); still-open LARGE_MIXED/CODE_LIKE mass; EXECUTED PROLOGUE_LIKE call-context. Dual authority: Gen10 TTD; Gen13 residual pad/data+prior MIXED/padding terminals.",
+      "code_envelope_adjudication_20260805": {
+        "plate": "local-lab/code-envelope-adjudication-20260805-v1",
+        "n_candidates": 250,
+        "n_pure_proofs": 242,
+        "n_multi_accounting": 8,
+        "status": "READY_FOR_GENERATION_APPLIED",
+        "formalPackSha256": "27b58d5f5585e396f2671985400c9c64ab811739fdd9042e73af1eca17930b60"
+      },
+      "residual_terminal_generation14_code_envelope": {
+        "whenUtc": "2026-08-05T10:53:24.574410+00:00",
+        "path": "local-lab/residual-terminal-generation14-code-envelope-20260805-v1/generation-14-residual-terminal-code-envelope",
+        "generation": 14,
+        "advance_kind": "RESIDUAL_TERMINAL_CODE_ENVELOPE_BOUNDED",
+        "parent_generation": 13,
+        "parentResidualsSha256": "4cb34f97d32bfe3cdc869b4fd011fb05736c1dbc7fae384ba7fdf0d3ca237c28",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "questions": 15241,
+          "scenarios": 72,
+          "levers": 915,
+          "contracts": 14241,
+          "adjudications": 5587,
+          "supersessions": 6165,
+          "residualTerminalPadding": 4996,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 577,
+          "residualOpenDark": 413,
+          "residualOpenExecuted": 108,
+          "questionsOpen": 9653,
+          "questionsClosedSurvived": 5588,
+          "residualTerminalsAddedThisGeneration": 242,
+          "questionsClosedThisGeneration": 242,
+          "terminalBoundedAmbiguityAddedThisGeneration": 242
+        },
+        "gen10_mutated": false,
+        "gen13_mutated": false,
+        "status": "APPLIED_VERIFIED",
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-gen14-code-envelope-20260805-v1"
+        },
+        "verify": "python -I -B tools/re_code_envelope_generation.py verify --campaign local-lab/residual-terminal-generation14-code-envelope-20260805-v1/generation-14-residual-terminal-code-envelope",
+        "note": "Gen14 residual CODE envelope BOUNDED_AMBIGUITY (+242). Static entry grades only. 8 multi-subspan remain open. Gen10 TTD authority; Gen14 residual terminal authority."
+      },
+      "next_operation_note_20260805_post_gen14": "Gen14 CODE envelopes APPLIED (OPEN_DARK 413). Next: multi-subspan 8; still-open LARGE_MIXED/CODE_LIKE; EXECUTED PROLOGUE_LIKE call-context; PROLOGUE_LIKE subset of envelopes for TTD when traces cover them.",
+      "open_dark_remaining_frontier_gen14_20260805": {
+        "whenUtc": "2026-08-05T11:11:29.972424+00:00",
+        "plate": "local-lab/open-dark-remaining-frontier-gen14-20260805-v1",
+        "tool": "tools/re_open_dark_remaining_frontier.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 413,
+        "n_proofs": 32,
+        "n_multi_known_cohort": 8,
+        "n_pad_tail_promotions": 24,
+        "n_still_open": 381,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 32
+        },
+        "formalPackSha256": "85a691197e7d9c0c83ec8696b4250aba0a9f63d5279c59cdac6987f5882529fd",
+        "gen14_mutated": false,
+        "gen15_applied": false,
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-open-dark-remaining-frontier-gen14-20260805-v1"
+        },
+        "verify": "python -I -B tools/re_open_dark_remaining_frontier.py verify --plate local-lab/open-dark-remaining-frontier-gen14-20260805-v1",
+        "note": "32 multi-subspan full-cover BOUNDED_AMBIGUITY proofs (8 known multi + 24 pad-tail). 381 OPEN_DARK remain. No Gen15 apply yet."
+      },
+      "next_operation_note_20260805_post_remaining_pack": "Remaining OPEN_DARK formal pack READY (32). Apply Gen15 only via residual-terminal reducer + supersession. Still open 381: CODE_LIKE_PARTIAL/LARGE_MIXED need different instruments. EXECUTED PROLOGUE_LIKE call-context still open.",
+      "residual_terminal_generation15_open_dark_remaining": {
+        "whenUtc": "2026-08-05T11:50:42.758546+00:00",
+        "path": "local-lab\\residual-terminal-generation15-open-dark-remaining-20260805-v1\\generation-15-residual-terminal-open-dark-remaining",
+        "generation": 15,
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_DARK_REMAINING",
+        "parent_generation": 14,
+        "parentResidualsSha256": "c59241feb2d3cd2fb2f8e6c7affc59c7f653140a467d3894cc44f8d471110a3c",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "questions": 15241,
+          "scenarios": 72,
+          "levers": 915,
+          "contracts": 14241,
+          "adjudications": 5619,
+          "supersessions": 6197,
+          "residualTerminalPadding": 4996,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 609,
+          "residualOpenDark": 381,
+          "residualOpenExecuted": 108,
+          "questionsOpen": 9621,
+          "questionsClosedSurvived": 5620,
+          "residualTerminalsAddedThisGeneration": 32,
+          "questionsClosedThisGeneration": 32,
+          "terminalBoundedAmbiguityAddedThisGeneration": 32
+        },
+        "gen10_mutated": false,
+        "gen14_mutated": false,
+        "status": "APPLIED_VERIFIED",
+        "deepseek": {
+          "normal": "REPRODUCED",
+          "adversarial": "SURVIVES_A_H_REFUTED",
+          "plate": "local-lab/opencode-deepseek-gen15-open-dark-remaining-20260805-v1"
+        },
+        "verify": "python -I -B tools/re_open_dark_remaining_generation.py verify --campaign local-lab/residual-terminal-generation15-open-dark-remaining-20260805-v1/generation-15-residual-terminal-open-dark-remaining"
+      },
+      "open_dark_code_like_mass_gen15_20260805": {
+        "whenUtc": "2026-08-05T11:50:42.758564+00:00",
+        "plate": "local-lab/open-dark-code-like-mass-gen15-20260805-v1",
+        "tool": "tools/re_open_dark_code_like_mass.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 381,
+        "n_proofs": 46,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_PADDING": 16,
+          "TERMINAL_BOUNDED_AMBIGUITY": 30
+        },
+        "recoveryLaneCounts": {
+          "PURE_PAD_WHOLE": 16,
+          "OFFSET_ENVELOPE": 20,
+          "TABLE_PLUS_PAD": 10
+        },
+        "n_still_open": 335,
+        "formalPackSha256": "9770b87a655c164a7bb8a907ffcc32af158dbdb12ed7188d80bfe56f7af24aed",
+        "gen15_mutated": false,
+        "gen16_applied": true,
+        "deepseek": {
+          "normal_v1": "OVERCLAIMED_float_plus_pad",
+          "normal_v2_after_fix": "REPRODUCED_SURVIVED",
+          "adversarial_v2": "G_narrow_then_float_quarantine",
+          "plate": "local-lab/opencode-deepseek-open-dark-code-like-mass-gen15-20260805-v1"
+        },
+        "note": "46 proofs: 16 pad + 20 envelopes + 10 multi-align pointer tables. FLOAT lane removed. 335 still open.",
+        "verify": "python -I -B tools/re_open_dark_code_like_mass.py verify --plate local-lab/open-dark-code-like-mass-gen15-20260805-v1",
+        "gen16_campaign": "local-lab/residual-terminal-generation16-code-like-mass-20260805-v1/generation-16-residual-terminal-code-like-mass"
+      },
+      "next_operation_note_20260805_post_code_like": "SUPERSEDED by Gen16 apply + still-open inbound plate + Gen17. See residual_terminal_generation16/17 and open_dark_still_open_inbound_gen16.",
+      "residual_terminal_generation16_code_like_mass_20260805": {
+        "whenUtc": "2026-08-05T11:54:30.630051+00:00",
+        "campaign": "local-lab/residual-terminal-generation16-code-like-mass-20260805-v1/generation-16-residual-terminal-code-like-mass",
+        "tool": "tools/re_open_dark_code_like_mass_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_DARK_CODE_LIKE_MASS",
+        "parent": "local-lab/residual-terminal-generation15-open-dark-remaining-20260805-v1/generation-15-residual-terminal-open-dark-remaining",
+        "parent_residuals_sha256": "880b475ee9c48b925677c7879111cc282a6446a8c2fd431cb1597561b3a136bd",
+        "residuals_sha256": "a85912269a5c9d97314081b83e189c3c61cf0e31d6270e5a9d9fa6503c332c35",
+        "formalPackSha256": "9770b87a655c164a7bb8a907ffcc32af158dbdb12ed7188d80bfe56f7af24aed",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5012,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 639,
+          "residualOpenDark": 335,
+          "residualOpenExecuted": 108,
+          "residualTerminalsAddedThisGeneration": 46,
+          "terminalPaddingAddedThisGeneration": 16,
+          "terminalBoundedAmbiguityAddedThisGeneration": 30,
+          "questionsClosedThisGeneration": 46
+        },
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_H": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "note": "AGENTS forbids OpenCode/DeepSeek; subagent review used. Maintainer already ran python verify (CAMPAIGN_VERIFIED).",
+          "receipt": "local-lab/residual-terminal-generation16-code-like-mass-20260805-v1/ADVERSARIAL-VERDICT.md"
+        },
+        "gen15_mutated": false,
+        "verify": "python -I -B tools/re_open_dark_code_like_mass_generation.py verify --campaign local-lab/residual-terminal-generation16-code-like-mass-20260805-v1/generation-16-residual-terminal-code-like-mass"
+      },
+      "open_dark_still_open_inbound_gen16_20260805": {
+        "whenUtc": "2026-08-05T11:59:16.453947+00:00",
+        "plate": "local-lab/open-dark-still-open-inbound-gen16-20260805-v1",
+        "tool": "tools/re_open_dark_still_open_inbound.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 335,
+        "n_proofs": 50,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_PADDING": 50
+        },
+        "recoveryLaneCounts": {
+          "MSVC_ALIGN_NOP_FULL": 50
+        },
+        "n_still_open": 285,
+        "inboundAll": {
+          "NO_INBOUND": 287,
+          "ABS_PTR_ONLY": 45,
+          "E8_TARGET": 2,
+          "E9_TARGET": 1
+        },
+        "formalPackSha256": "41a231d7d394e623a3cb45eb5f4fd8d02d8bd888d7226348aeadb4688e4d9042",
+        "gen16_mutated": false,
+        "gen17_applied": true,
+        "note": "50 full-span MSVC/Intel multi-byte align-NOP TERMINAL_PADDING. Inbound census frozen; not function-entry promotion. 285 still open.",
+        "verify": "python -I -B tools/re_open_dark_still_open_inbound.py verify --plate local-lab/open-dark-still-open-inbound-gen16-20260805-v1"
+      },
+      "residual_terminal_generation17_still_open_inbound_20260805": {
+        "whenUtc": "2026-08-05T12:00:50.514479+00:00",
+        "campaign": "local-lab/residual-terminal-generation17-still-open-inbound-20260805-v1/generation-17-residual-terminal-still-open-inbound",
+        "tool": "tools/re_open_dark_still_open_inbound_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_DARK_STILL_OPEN_INBOUND",
+        "parent": "local-lab/residual-terminal-generation16-code-like-mass-20260805-v1/generation-16-residual-terminal-code-like-mass",
+        "parent_residuals_sha256": "a85912269a5c9d97314081b83e189c3c61cf0e31d6270e5a9d9fa6503c332c35",
+        "residuals_sha256": "f4b2c382555adf02f06f7f1108c5d5d51b317c0d0df50cbd0bf71116db3d72a7",
+        "formalPackSha256": "41a231d7d394e623a3cb45eb5f4fd8d02d8bd888d7226348aeadb4688e4d9042",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 639,
+          "residualOpenDark": 285,
+          "residualOpenExecuted": 108,
+          "residualTerminalsAddedThisGeneration": 50,
+          "terminalPaddingAddedThisGeneration": 50,
+          "terminalBoundedAmbiguityAddedThisGeneration": 0,
+          "questionsClosedThisGeneration": 50
+        },
+        "gen16_mutated": false,
+        "verify": "python -I -B tools/re_open_dark_still_open_inbound_generation.py verify --campaign local-lab/residual-terminal-generation17-still-open-inbound-20260805-v1/generation-17-residual-terminal-still-open-inbound"
+      },
+      "next_operation_note_20260805_post_gen17": "Gen17 APPLIED+VERIFIED (OPEN_DARK 285; pad 5062). Dual authority: Gen10 TTD; Gen13-17 residual terminals. Next: remaining 285 STILL_OPEN (CODE_LIKE_PARTIAL/LARGE_MIXED/partial-subspan) via coverage/TTD + deeper island instruments; EXECUTED PROLOGUE_LIKE call-context still open. Gen15/16 unmutated.",
+      "open_residual_gen17_table_align_20260805": {
+        "whenUtc": "2026-08-05T12:07:59.972723+00:00",
+        "plate": "local-lab/open-residual-gen17-table-align-20260805-v1",
+        "tool": "tools/re_open_residual_gen17_table_align.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 285,
+        "n_open_executed_input": 108,
+        "n_proofs": 37,
+        "n_table_align_proofs": 30,
+        "n_executed_prologue_proofs": 7,
+        "n_still_open_dark": 255,
+        "n_still_open_executed": 101,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 37
+        },
+        "formalPackSha256": "868ae536f3ac9fd8d2f0928cfb72a3dd6cf4c38ec188c93c597267bf252b5350",
+        "gen17_mutated": false,
+        "gen18_applied": true,
+        "note": "30 TABLE_PLUS_ALIGN_PAD (MSVC multi-byte lead/tail) + 7 EXECUTED PROLOGUE_LIKE RUNTIME_CALL_ENTRY. No names/REBUILD_READY.",
+        "verify": "python -I -B tools/re_open_residual_gen17_table_align.py verify --plate local-lab/open-residual-gen17-table-align-20260805-v1"
+      },
+      "residual_terminal_generation18_table_align_executed_20260805": {
+        "whenUtc": "2026-08-05T12:09:40.676429+00:00",
+        "campaign": "local-lab/residual-terminal-generation18-table-align-executed-20260805-v1/generation-18-residual-terminal-table-align-executed",
+        "tool": "tools/re_open_residual_gen17_table_align_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_TABLE_ALIGN_EXECUTED",
+        "parent": "local-lab/residual-terminal-generation17-still-open-inbound-20260805-v1/generation-17-residual-terminal-still-open-inbound",
+        "parent_residuals_sha256": "f4b2c382555adf02f06f7f1108c5d5d51b317c0d0df50cbd0bf71116db3d72a7",
+        "residuals_sha256": "391cb0bbb5ce049662b23f1836eabcaa09c329c268d7aea6a8c4a8cb320c922f",
+        "formalPackSha256": "868ae536f3ac9fd8d2f0928cfb72a3dd6cf4c38ec188c93c597267bf252b5350",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 676,
+          "residualOpenDark": 255,
+          "residualOpenExecuted": 101,
+          "residualTerminalsAddedThisGeneration": 37,
+          "terminalBoundedAmbiguityAddedThisGeneration": 37,
+          "openDarkClosedThisGeneration": 30,
+          "openExecutedClosedThisGeneration": 7,
+          "questionsClosedThisGeneration": 37
+        },
+        "gen17_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen17_table_align_generation.py verify --campaign local-lab/residual-terminal-generation18-table-align-executed-20260805-v1/generation-18-residual-terminal-table-align-executed",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_I": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation18-table-align-executed-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen18": "Gen18 APPLIED+VERIFIED (OPEN_DARK 255; OPEN_EXECUTED 101; ambig 676). Dual authority: Gen10 TTD; Gen13-18 residual terminals. Next: remaining CODE_LIKE_PARTIAL/LARGE_MIXED dark + non-prologue EXECUTED (BODY_FRAGMENT/CASE/RET_SHAPED) instruments. Gen17 unmutated.",
+      "open_residual_gen18_code_envelope_20260805": {
+        "whenUtc": "2026-08-05T12:16:44.894689+00:00",
+        "plate": "local-lab/open-residual-gen18-code-envelope-20260805-v1",
+        "tool": "tools/re_open_residual_gen18_code_envelope.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 255,
+        "n_open_executed_input": 101,
+        "n_proofs": 112,
+        "n_dark_proofs": 20,
+        "n_executed_proofs": 92,
+        "n_still_open_dark": 235,
+        "n_still_open_executed": 9,
+        "recoveryLaneCounts": {
+          "STRICT_CODE_ENVELOPE": 82,
+          "RELAXED_CODE_TAIL": 30
+        },
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 112
+        },
+        "formalPackSha256": "cdc8456dcacee3206910a2dd64f14af1663bdc0c820a143019840c3841e2ffcb",
+        "gen18_mutated": false,
+        "gen19_applied": true,
+        "note": "112 BOUNDED_AMBIGUITY: 20 dark code tails + 92 executed envelopes/tails. No names/REBUILD_READY.",
+        "verify": "python -I -B tools/re_open_residual_gen18_code_envelope.py verify --plate local-lab/open-residual-gen18-code-envelope-20260805-v1"
+      },
+      "residual_terminal_generation19_code_envelope_20260805": {
+        "whenUtc": "2026-08-05T12:18:22.505197+00:00",
+        "campaign": "local-lab/residual-terminal-generation19-code-envelope-20260805-v1/generation-19-residual-terminal-code-envelope",
+        "tool": "tools/re_open_residual_gen18_code_envelope_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_CODE_ENVELOPE",
+        "parent": "local-lab/residual-terminal-generation18-table-align-executed-20260805-v1/generation-18-residual-terminal-table-align-executed",
+        "parent_residuals_sha256": "391cb0bbb5ce049662b23f1836eabcaa09c329c268d7aea6a8c4a8cb320c922f",
+        "residuals_sha256": "6853a116d4525b41269691a94d2f9e08b51cb1fa7690c4788315ce2f56283a35",
+        "formalPackSha256": "cdc8456dcacee3206910a2dd64f14af1663bdc0c820a143019840c3841e2ffcb",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 788,
+          "residualOpenDark": 235,
+          "residualOpenExecuted": 9,
+          "residualTerminalsAddedThisGeneration": 112,
+          "terminalBoundedAmbiguityAddedThisGeneration": 112,
+          "openDarkClosedThisGeneration": 20,
+          "openExecutedClosedThisGeneration": 92,
+          "questionsClosedThisGeneration": 112
+        },
+        "gen18_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen18_code_envelope_generation.py verify --campaign local-lab/residual-terminal-generation19-code-envelope-20260805-v1/generation-19-residual-terminal-code-envelope",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_I": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation19-code-envelope-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen19": "Gen19 APPLIED+VERIFIED (OPEN_DARK 235; OPEN_EXECUTED 9; ambig 788). Dual authority: Gen10 TTD; Gen13-19 residual terminals. Next: remaining 235 OPEN_DARK CODE_LIKE_PARTIAL/LARGE_MIXED; 9 OPEN_EXECUTED non-envelope. Gen18 unmutated.",
+      "open_residual_gen19_multi_unit_20260805": {
+        "whenUtc": "2026-08-05T12:29:29.247951+00:00",
+        "plate": "local-lab/open-residual-gen19-multi-unit-20260805-v1",
+        "tool": "tools/re_open_residual_gen19_multi_unit.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 235,
+        "n_open_executed_input": 9,
+        "n_proofs": 68,
+        "n_dark_proofs": 64,
+        "n_executed_proofs": 4,
+        "n_still_open_dark": 171,
+        "n_still_open_executed": 5,
+        "recoveryLaneCounts": {
+          "MULTI_UNIT_CODE_PACK": 68
+        },
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 68
+        },
+        "formalPackSha256": "1b7338bd2e60c28c8a3cae0fc8ae51172ff2e9529ff3614e8e433d778fb8e716",
+        "gen19_mutated": false,
+        "gen20_applied": true,
+        "note": "68 multi-unit ret/jmp packs (n_code>=2). 64 dark + 4 executed. No names/REBUILD_READY.",
+        "verify": "python -I -B tools/re_open_residual_gen19_multi_unit.py verify --plate local-lab/open-residual-gen19-multi-unit-20260805-v1"
+      },
+      "residual_terminal_generation20_multi_unit_20260805": {
+        "whenUtc": "2026-08-05T12:31:07.318407+00:00",
+        "campaign": "local-lab/residual-terminal-generation20-multi-unit-20260805-v1/generation-20-residual-terminal-multi-unit",
+        "tool": "tools/re_open_residual_gen19_multi_unit_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_MULTI_UNIT",
+        "parent": "local-lab/residual-terminal-generation19-code-envelope-20260805-v1/generation-19-residual-terminal-code-envelope",
+        "parent_residuals_sha256": "6853a116d4525b41269691a94d2f9e08b51cb1fa7690c4788315ce2f56283a35",
+        "residuals_sha256": "6a9fd5fb722b38e1efae7d086c2370b186cb02bf1a1e8da25882bc131b2dbc65",
+        "formalPackSha256": "1b7338bd2e60c28c8a3cae0fc8ae51172ff2e9529ff3614e8e433d778fb8e716",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 856,
+          "residualOpenDark": 171,
+          "residualOpenExecuted": 5,
+          "residualTerminalsAddedThisGeneration": 68,
+          "terminalBoundedAmbiguityAddedThisGeneration": 68,
+          "openDarkClosedThisGeneration": 64,
+          "openExecutedClosedThisGeneration": 4,
+          "questionsClosedThisGeneration": 68
+        },
+        "gen19_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen19_multi_unit_generation.py verify --campaign local-lab/residual-terminal-generation20-multi-unit-20260805-v1/generation-20-residual-terminal-multi-unit",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_J": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation20-multi-unit-20260805-v1/ADVERSARIAL-VERDICT.md",
+          "note": "Reviewer table mislabeled REFUTED as ATTACK_SURVIVES; evidence and overall SURVIVED."
+        }
+      },
+      "next_operation_note_20260805_post_gen20": "Gen20 APPLIED+VERIFIED (OPEN_DARK 171; OPEN_EXECUTED 5; ambig 856). Dual authority: Gen10 TTD; Gen13-20 residual terminals. Next: remaining 171 OPEN_DARK CODE_LIKE_PARTIAL/LARGE_MIXED; 5 OPEN_EXECUTED body fragments. Gen19 unmutated.",
+      "open_residual_gen20_code_pad_20260805": {
+        "whenUtc": "2026-08-05T12:38:50.276124+00:00",
+        "plate": "local-lab/open-residual-gen20-code-pad-20260805-v1",
+        "tool": "tools/re_open_residual_gen20_code_pad.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 171,
+        "n_open_executed_input": 5,
+        "n_proofs": 6,
+        "n_dark_proofs": 5,
+        "n_executed_proofs": 1,
+        "n_still_open_dark": 166,
+        "n_still_open_executed": 4,
+        "recoveryLaneCounts": {
+          "ENVELOPE_PLUS_PAD": 4,
+          "MULTI_UNIT_PLUS_PAD": 1,
+          "SOFT_MULTI_UNIT_EXECUTED": 1
+        },
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 6
+        },
+        "formalPackSha256": "aa5310d504d1c2aaa60a095223079845b150a2ce61f2076edc7e04cd1adcbe10",
+        "gen20_mutated": false,
+        "gen21_applied": true,
+        "note": "6 proofs: 5 dark envelope/multi+trailing pad + 1 executed soft multi-unit (ret+call+je).",
+        "verify": "python -I -B tools/re_open_residual_gen20_code_pad.py verify --plate local-lab/open-residual-gen20-code-pad-20260805-v1"
+      },
+      "residual_terminal_generation21_code_pad_20260805": {
+        "whenUtc": "2026-08-05T12:40:35.612827+00:00",
+        "campaign": "local-lab/residual-terminal-generation21-code-pad-20260805-v1/generation-21-residual-terminal-code-pad",
+        "tool": "tools/re_open_residual_gen20_code_pad_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_CODE_PAD",
+        "parent": "local-lab/residual-terminal-generation20-multi-unit-20260805-v1/generation-20-residual-terminal-multi-unit",
+        "parent_residuals_sha256": "6a9fd5fb722b38e1efae7d086c2370b186cb02bf1a1e8da25882bc131b2dbc65",
+        "residuals_sha256": "cabe2ee33937d932b6bbe1a2b1736bbfe7be9badaa2ab790a04ee1cbeac00afb",
+        "formalPackSha256": "aa5310d504d1c2aaa60a095223079845b150a2ce61f2076edc7e04cd1adcbe10",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 23,
+          "residualTerminalBoundedAmbiguity": 862,
+          "residualOpenDark": 166,
+          "residualOpenExecuted": 4,
+          "residualTerminalsAddedThisGeneration": 6,
+          "terminalBoundedAmbiguityAddedThisGeneration": 6,
+          "openDarkClosedThisGeneration": 5,
+          "openExecutedClosedThisGeneration": 1,
+          "questionsClosedThisGeneration": 6
+        },
+        "gen20_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen20_code_pad_generation.py verify --campaign local-lab/residual-terminal-generation21-code-pad-20260805-v1/generation-21-residual-terminal-code-pad",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_I": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation21-code-pad-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen21": "Gen21 APPLIED+VERIFIED (OPEN_DARK 166; OPEN_EXECUTED 4; ambig 862). Dual authority: Gen10 TTD; Gen13-21 residual terminals. Remaining 166 OPEN_DARK are mostly high false-decode CODE_LIKE without ret-terminated units; 4 OPEN_EXECUTED are body fragments / 1-2B noise. Next: LARGE_MIXED upgrade, inbound xref, or honest OPEN with terminal falsifiers / partial subspan split policy. Gen20 unmutated.",
+      "open_residual_gen21_data_shape_20260805": {
+        "whenUtc": "2026-08-05T12:50:16.547509+00:00",
+        "plate": "local-lab/open-residual-gen21-data-shape-20260805-v1",
+        "tool": "tools/re_open_residual_gen21_data_shape.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 166,
+        "n_open_executed_input": 4,
+        "n_proofs": 31,
+        "n_dark_proofs": 31,
+        "n_executed_proofs": 0,
+        "n_still_open_dark": 135,
+        "n_still_open_executed": 4,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 27,
+          "TERMINAL_DATA": 4
+        },
+        "recoveryLaneCounts": {
+          "DATA_SHAPE_COMPOSE": 31
+        },
+        "formalPackSha256": "76c5efa79236118c8ff27a7580bffcf8f8d87135f8cf0922e94f18d6794f1ff6",
+        "gen21_mutated": false,
+        "gen22_applied": true,
+        "note": "31 data-shape full-cover: pad+SSE/const/index/table compose. No EXECUTED promotions. No code envelopes.",
+        "verify": "python -I -B tools/re_open_residual_gen21_data_shape.py verify --plate local-lab/open-residual-gen21-data-shape-20260805-v1"
+      },
+      "residual_terminal_generation22_data_shape_20260805": {
+        "whenUtc": "2026-08-05T12:51:55.370497+00:00",
+        "campaign": "local-lab/residual-terminal-generation22-data-shape-20260805-v1/generation-22-residual-terminal-data-shape",
+        "tool": "tools/re_open_residual_gen21_data_shape_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_DATA_SHAPE",
+        "parent": "local-lab/residual-terminal-generation21-code-pad-20260805-v1/generation-21-residual-terminal-code-pad",
+        "parent_residuals_sha256": "cabe2ee33937d932b6bbe1a2b1736bbfe7be9badaa2ab790a04ee1cbeac00afb",
+        "residuals_sha256": "c94cc12fc750ffbe14eef185d97529af82bf474eee80c11a6e4bef2b3a98df3d",
+        "formalPackSha256": "76c5efa79236118c8ff27a7580bffcf8f8d87135f8cf0922e94f18d6794f1ff6",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 27,
+          "residualTerminalBoundedAmbiguity": 889,
+          "residualOpenDark": 135,
+          "residualOpenExecuted": 4,
+          "residualTerminalsAddedThisGeneration": 31,
+          "terminalDataAddedThisGeneration": 4,
+          "terminalBoundedAmbiguityAddedThisGeneration": 27,
+          "openDarkClosedThisGeneration": 31,
+          "openExecutedClosedThisGeneration": 0,
+          "questionsClosedThisGeneration": 31
+        },
+        "gen21_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen21_data_shape_generation.py verify --campaign local-lab/residual-terminal-generation22-data-shape-20260805-v1/generation-22-residual-terminal-data-shape",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_I": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation22-data-shape-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen22": "Gen22 APPLIED+VERIFIED (OPEN_DARK 135; OPEN_EXECUTED 4; data 27; ambig 889). Dual authority: Gen10 TTD; Gen13-22 residual terminals. Remaining 135 OPEN_DARK are mostly false-decode CODE_LIKE without data-shape cover; 4 OPEN_EXECUTED body/noise fragments. Next: inbound-xref ownership plates, TTD unit split for EXECUTED, or honest OPEN with frozen falsifiers / partial-subspan policy. Gen21 unmutated.",
+      "open_residual_gen22_partial_data_20260805": {
+        "whenUtc": "2026-08-05T13:00:58.124737+00:00",
+        "plate": "local-lab/open-residual-gen22-partial-data-20260805-v1",
+        "tool": "tools/re_open_residual_gen22_partial_data.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 135,
+        "n_open_executed_input": 4,
+        "n_proofs": 10,
+        "n_dark_proofs": 10,
+        "n_executed_proofs": 0,
+        "n_still_open_dark": 125,
+        "n_still_open_executed": 4,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 10
+        },
+        "recoveryLaneCounts": {
+          "PARTIAL_DATA_SHAPE_COMPOSE": 10
+        },
+        "formalPackSha256": "60bd7b16197ef8f27d94e47ecf85684bfd0c3f2b59987966fc1f86bd2f015ad6",
+        "gen22_mutated": false,
+        "gen23_applied": true,
+        "note": "10 partial data-shape: relaxed INDEX after TABLE/SSE + SHORT_DATA_TAIL; EXECUTED frozen OPEN with falsifiers.",
+        "verify": "python -I -B tools/re_open_residual_gen22_partial_data.py verify --plate local-lab/open-residual-gen22-partial-data-20260805-v1"
+      },
+      "residual_terminal_generation23_partial_data_20260805": {
+        "whenUtc": "2026-08-05T13:02:39.593911+00:00",
+        "campaign": "local-lab/residual-terminal-generation23-partial-data-20260805-v1/generation-23-residual-terminal-partial-data",
+        "tool": "tools/re_open_residual_gen22_partial_data_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_PARTIAL_DATA",
+        "parent": "local-lab/residual-terminal-generation22-data-shape-20260805-v1/generation-22-residual-terminal-data-shape",
+        "parent_residuals_sha256": "c94cc12fc750ffbe14eef185d97529af82bf474eee80c11a6e4bef2b3a98df3d",
+        "residuals_sha256": "99e95c4e9d7089a1b58771357e14a2e10276e80eb2b55dcfeb986651599212b2",
+        "formalPackSha256": "60bd7b16197ef8f27d94e47ecf85684bfd0c3f2b59987966fc1f86bd2f015ad6",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 27,
+          "residualTerminalBoundedAmbiguity": 899,
+          "residualOpenDark": 125,
+          "residualOpenExecuted": 4,
+          "residualTerminalsAddedThisGeneration": 10,
+          "terminalBoundedAmbiguityAddedThisGeneration": 10,
+          "openDarkClosedThisGeneration": 10,
+          "openExecutedClosedThisGeneration": 0,
+          "questionsClosedThisGeneration": 10
+        },
+        "gen22_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen22_partial_data_generation.py verify --campaign local-lab/residual-terminal-generation23-partial-data-20260805-v1/generation-23-residual-terminal-partial-data",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_I": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation23-partial-data-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen23": "Gen23 APPLIED+VERIFIED (OPEN_DARK 125; OPEN_EXECUTED 4; ambig 899). Dual authority: Gen10 TTD; Gen13-23 residual terminals. Remaining 125 OPEN_DARK lack full-cover data/code shape; 4 OPEN_EXECUTED need TTD unit-split. Honest OPEN falsifiers frozen on plate still-open TSVs. Gen22 unmutated.",
+      "open_residual_gen23_small_table_20260805": {
+        "whenUtc": "2026-08-05T13:09:53.980292+00:00",
+        "plate": "local-lab/open-residual-gen23-small-table-20260805-v1",
+        "tool": "tools/re_open_residual_gen23_small_table.py",
+        "status": "READY_FOR_GENERATION",
+        "n_open_dark_input": 125,
+        "n_open_executed_input": 4,
+        "n_proofs": 47,
+        "n_dark_proofs": 47,
+        "n_executed_proofs": 0,
+        "n_still_open_dark": 78,
+        "n_still_open_executed": 4,
+        "proposedTerminalStateCounts": {
+          "TERMINAL_BOUNDED_AMBIGUITY": 45,
+          "TERMINAL_DATA": 2
+        },
+        "recoveryLaneCounts": {
+          "SMALL_CODE_PTR_TABLE": 47
+        },
+        "tableBytesDomain": "16-31 exclusive of Gen21 32B threshold",
+        "formalPackSha256": "b3c1b12deb722b0a10e67cdd2cd64c5727aa85691419b224a79affd2e6f8f872",
+        "gen23_mutated": false,
+        "gen24_applied": true,
+        "note": "47 small code-ptr tables (16-31B .text dwords + pad/index/short-tail). EXECUTED frozen OPEN with falsifiers. Prior Gen21/22 compose exclusion.",
+        "verify": "python -I -B tools/re_open_residual_gen23_small_table.py verify --plate local-lab/open-residual-gen23-small-table-20260805-v1"
+      },
+      "residual_terminal_generation24_small_table_20260805": {
+        "whenUtc": "2026-08-05T13:12:05.787878+00:00",
+        "campaign": "local-lab/residual-terminal-generation24-small-table-20260805-v1/generation-24-residual-terminal-small-table",
+        "tool": "tools/re_open_residual_gen23_small_table_generation.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_OPEN_SMALL_TABLE",
+        "parent": "local-lab/residual-terminal-generation23-partial-data-20260805-v1/generation-23-residual-terminal-partial-data",
+        "parent_residuals_sha256": "99e95c4e9d7089a1b58771357e14a2e10276e80eb2b55dcfeb986651599212b2",
+        "residuals_sha256": "92f3b07a7d6de98bc499e8acf42d1141c965141686fa827e7557dfffe02cd783",
+        "readySha256": "8293ad6cea8d9d188af66a4fc324fdff686c68175707b8620d7ba92cbe946d2d",
+        "formalPackSha256": "b3c1b12deb722b0a10e67cdd2cd64c5727aa85691419b224a79affd2e6f8f872",
+        "counts": {
+          "functions": 8124,
+          "residuals": 6117,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 29,
+          "residualTerminalBoundedAmbiguity": 944,
+          "residualOpenDark": 78,
+          "residualOpenExecuted": 4,
+          "residualTerminalsAddedThisGeneration": 47,
+          "terminalDataAddedThisGeneration": 2,
+          "terminalBoundedAmbiguityAddedThisGeneration": 45,
+          "openDarkClosedThisGeneration": 47,
+          "openExecutedClosedThisGeneration": 0,
+          "questionsClosedThisGeneration": 47
+        },
+        "gen23_mutated": false,
+        "verify": "python -I -B tools/re_open_residual_gen23_small_table_generation.py verify --campaign local-lab/residual-terminal-generation24-small-table-20260805-v1/generation-24-residual-terminal-small-table",
+        "adversarial": {
+          "grade": "SURVIVED",
+          "attacks_A_J": "ALL_REFUTED",
+          "reviewer": "grok-subagent-read-only",
+          "receipt": "local-lab/residual-terminal-generation24-small-table-20260805-v1/ADVERSARIAL-VERDICT.md"
+        }
+      },
+      "next_operation_note_20260805_post_gen24": "Gen24 APPLIED+VERIFIED (OPEN_DARK 78; OPEN_EXECUTED 4; data 29; ambig 944). Dual authority: Gen10 TTD; Gen13-24 residual terminals. Remaining 78 OPEN_DARK lack full-cover small-table/data/code shape (tiny gaps, large mixed, false-decode); 4 OPEN_EXECUTED need TTD unit-split. Gen23 unmutated (residuals sha 99e95c4e\u2026).",
+      "per_gen_police_wave_20260805": {
+        "status": "DEEPSEEK_64_COMPLETE_GROK_32_COMPLETE",
+        "scoreboard": "local-lab/per-gen-review-20260805-v1/SCOREBOARD.md",
+        "synthesis": "local-lab/per-gen-review-20260805-v1/SYNTHESIS.md",
+        "deepseek_parallel_receipts": "local-lab/per-gen-review-20260805-v1/deepseek-parallel-receipts.json",
+        "material": [
+          "Gen16 Grok-A REFUTED OFFSET_ENVELOPE launder",
+          "Gen9 DeepSeek flash-A REFUTED",
+          "flash-A NEEDS_WORK cluster: PE-less gen verify / EXPECTED pins / self-stamped SURVIVED",
+          "Gen24 INDEX bulk-close concern"
+        ],
+        "next": "Adjudicate Gen16+Gen9 flash-A+verify PE-rebind before Gen25 mass; optional focused critics on SYNTHESIS.md; then resume complete-RE goal"
+      },
+      "residual_terminal_generation25_police_reopen_20260805": {
+        "whenUtc": "2026-08-05T15:04:14.094280+00:00",
+        "campaign": "local-lab\\residual-terminal-generation25-police-reopen-20260805-v1\\generation-25-residual-terminal-police-reopen",
+        "tool": "tools/re_open_residual_gen24_police_reopen.py",
+        "status": "APPLIED_VERIFIED",
+        "advance_kind": "RESIDUAL_TERMINAL_POLICE_REOPEN",
+        "parent": "local-lab/residual-terminal-generation24-small-table-20260805-v1/generation-24-residual-terminal-small-table",
+        "parent_residuals_sha256": "92f3b07a7d6de98bc499e8acf42d1141c965141686fa827e7557dfffe02cd783",
+        "n_reopened": 21,
+        "counts": {
+          "residualOpenDark": 99,
+          "residualOpenExecuted": 4,
+          "residualTerminalBoundedAmbiguity": 923,
+          "residualTerminalData": 29,
+          "residualTerminalPadding": 5062
+        },
+        "adjudication": "local-lab/per-gen-review-20260805-v1/ADJUDICATION-20260805-police-reopen.md",
+        "instrument_fixes": [
+          "tools/re_open_dark_code_like_mass.py full-cover envelope + control-end",
+          "tools/re_open_residual_gen23_small_table.py INDEX remainder cap",
+          "tools/re_open_residual_gen23_small_table_generation.py pack-row join verify"
+        ],
+        "gen9_flash_a": "grade-line bug; integration SURVIVES",
+        "next": "Census+residual-split+unit-split plates measured; Gen26 apply held; 98 OPEN_DARK remain after optional unit-split close of 4 OPEN_EXECUTED"
+      },
+      "open_residual_gen25_census_20260805": {
+        "whenUtc": "2026-08-05",
+        "plate": "local-lab/open-residual-gen25-census-20260805-v1",
+        "tool": "tools/re_open_residual_gen25_open_census.py",
+        "status": "MEASURED_VERIFIED",
+        "formalPackStatus": "READY_FOR_GENERATION",
+        "n_proofs": 1,
+        "proof": "MULTI_UNIT 0x005344fc (212B)",
+        "hold_generation_apply": true,
+        "pilotHits": {
+          "NONE": 84,
+          "OFFSET_ENVELOPE": 18,
+          "MULTI": 1
+        },
+        "note": "SPLIT_CAND retired bare-0x00 noise; pad delimiter nop/int3 only"
+      },
+      "open_residual_gen25_residual_split_20260805": {
+        "whenUtc": "2026-08-05",
+        "plate": "local-lab/open-residual-gen25-residual-split-20260805-v1",
+        "tool": "tools/re_open_residual_gen25_residual_split.py",
+        "status": "MEASURED_VERIFIED",
+        "formalPackStatus": "EMPTY",
+        "n_proofs": 0,
+        "hold_generation_apply": true,
+        "note": "No full-cover interior 0x90/0xCC pad-split on Gen25 open mass"
+      },
+      "open_residual_gen25_ttd_unit_split_20260805": {
+        "whenUtc": "2026-08-05",
+        "plate": "local-lab/open-residual-gen25-ttd-unit-split-20260805-v1",
+        "tool": "tools/re_open_residual_gen25_ttd_unit_split.py",
+        "status": "MEASURED_VERIFIED",
+        "formalPackStatus": "READY_FOR_GENERATION",
+        "n_proofs": 4,
+        "lanes": {
+          "PREV_INSN_SPAN": 2,
+          "SWITCH_CASE_ENTRY": 1,
+          "JMP_OVER_FRAGMENT": 1
+        },
+        "hold_generation_apply": true,
+        "note": "All 4 OPEN_EXECUTED statically unit-split; Gen10 TTD still naming authority; no Gen26 apply"
+      },
+      "next_operation_note_20260805_post_gen25_instruments": "Gen25 tip APPLIED police reopen (OPEN_DARK 99, OPEN_EXECUTED 4). Census READY n=1 MULTI hold. Residual-split EMPTY. Unit-split READY n=4 OPEN_EXECUTED hold. Dual authority Gen10 TTD + residual terminals. Next: optional intentional Gen26 apply of unit-split+optional MULTI only after dual-role review; remaining 98 OPEN_DARK need new instruments (abs-ptr/fallthrough/tiny).",
+      "residual_terminal_generation26_unit_split_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation26-unit-split-20260805-v1/generation-26-residual-terminal-unit-split",
+        "tool": "tools/re_open_residual_gen26_unit_split_generation.py",
+        "n_proofs": 5,
+        "counts": {
+          "residualOpenDark": 98,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 928
+        },
+        "parent_gen25_unmutated": true,
+        "pre_apply_review": "local-lab/gen26-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "residual_terminal_generation27_tiny_fragment_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation27-tiny-fragment-20260805-v1/generation-27-residual-terminal-tiny-fragment",
+        "tool": "tools/re_open_residual_gen27_tiny_fragment_generation.py",
+        "instrument": "tools/re_open_residual_gen26_tiny_fragment.py",
+        "n_proofs": 16,
+        "counts": {
+          "residualOpenDark": 82,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 944
+        },
+        "parent_gen26_unmutated": true,
+        "pre_apply_review": "local-lab/gen27-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "next_operation_note_20260805_post_gen27": "Tip Gen27: OPEN_DARK 82, OPEN_EXECUTED 0, pad 5062, data 29, ambig 944. Dual authority Gen10 TTD + residual terminals. Next: select\u2192instrument on remaining 82 OPEN_DARK (abs-ptr/fallthrough/shape for 4-15B and larger mixed); do not re-close police envelopes.",
+      "open_residual_gen27_open_dark_unit_split_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen27-open-dark-unit-split-20260805-v1",
+        "tool": "tools/re_open_residual_gen27_open_dark_unit_split.py",
+        "n_proofs": 24,
+        "lanes": {
+          "JMP_OVER_FRAGMENT": 23,
+          "SWITCH_CASE_ENTRY": 1
+        },
+        "police_envelope_hold": 17,
+        "hold_generation_apply_cleared_by": "Gen28 apply after SURVIVES review"
+      },
+      "residual_terminal_generation28_open_dark_unit_split_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation28-open-dark-unit-split-20260805-v1/generation-28-residual-terminal-open-dark-unit-split",
+        "tool": "tools/re_open_residual_gen28_open_dark_unit_split_generation.py",
+        "n_proofs": 24,
+        "counts": {
+          "residualOpenDark": 58,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 968
+        },
+        "parent_gen27_unmutated": true,
+        "pre_apply_review": "local-lab/gen28-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "next_operation_note_20260805_post_gen28": "Tip Gen28: OPEN_DARK 58, OPEN_EXECUTED 0, pad 5062, data 29, ambig 968. 17 police envelope holds remain OPEN. Dual authority Gen10 TTD + residual terminals. Next: census 58 still-open (non-unit) for abs-ptr/shape/mixed; do not re-close police envelopes.",
+      "open_residual_gen28_pad_peel_sandwich_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen28-pad-peel-sandwich-20260805-v1",
+        "tool": "tools/re_open_residual_gen28_pad_peel_sandwich.py",
+        "n_proofs": 18,
+        "lanes": {
+          "PAD_PEEL_SMALL_TABLE": 7,
+          "PAD_PEEL_DATA_SHAPE": 1,
+          "SANDWICH_FULL_LINEAR": 10
+        }
+      },
+      "residual_terminal_generation29_pad_peel_sandwich_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation29-pad-peel-sandwich-20260805-v1/generation-29-residual-terminal-pad-peel-sandwich",
+        "tool": "tools/re_open_residual_gen29_pad_peel_sandwich_generation.py",
+        "n_proofs": 18,
+        "counts": {
+          "residualOpenDark": 40,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 986
+        },
+        "parent_gen28_unmutated": true,
+        "pre_apply_review": "local-lab/gen29-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "next_operation_note_20260805_post_gen29": "Tip Gen29: OPEN_DARK 40, OPEN_EXECUTED 0, pad 5062, data 29, ambig 986. ~20 police envelope holds remain among open. Dual authority Gen10 TTD + residual terminals. Next: census 40 still-open for abs-ptr/mixed/TTD; do not re-close police envelopes.",
+      "open_residual_gen29_msvc_table_mix_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen29-msvc-table-mix-20260805-v1",
+        "tool": "tools/re_open_residual_gen29_msvc_table_mix.py",
+        "n_proofs": 10,
+        "lanes": {
+          "MSVC_MULTI_TABLE_MIX": 10
+        },
+        "police_hold": 20
+      },
+      "residual_terminal_generation30_msvc_table_mix_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation30-msvc-table-mix-20260805-v1/generation-30-residual-terminal-msvc-table-mix",
+        "tool": "tools/re_open_residual_gen30_msvc_table_mix_generation.py",
+        "n_proofs": 10,
+        "counts": {
+          "residualOpenDark": 30,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 996
+        },
+        "parent_gen29_unmutated": true,
+        "pre_apply_review": "local-lab/gen30-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "next_operation_note_20260805_post_gen30": "Tip Gen30: OPEN_DARK 30, OPEN_EXECUTED 0, pad 5062, data 29, ambig 996. 20 police envelope holds remain OPEN. ~10 non-police still-open (large mixed / code fragments). Dual authority Gen10 TTD + residual terminals. Next: census 30 for TTD/shape; no police envelope re-close.",
+      "open_residual_gen30_seh_segment_resolve_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen30-seh-segment-resolve-20260805-v1",
+        "tool": "tools/re_open_residual_gen30_seh_segment_resolve.py",
+        "n_proofs": 4,
+        "lanes": {
+          "SEH_PLUS_EXACT_INSN": 1,
+          "SEGMENT_RESOLVE": 3
+        },
+        "police_hold": 20
+      },
+      "residual_terminal_generation31_seh_segment_resolve_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation31-seh-segment-resolve-20260805-v1/generation-31-residual-terminal-seh-segment-resolve",
+        "tool": "tools/re_open_residual_gen31_seh_segment_resolve_generation.py",
+        "n_proofs": 4,
+        "counts": {
+          "residualOpenDark": 26,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 1000
+        },
+        "parent_gen30_unmutated": true,
+        "pre_apply_review": "local-lab/gen31-preapply-review-20260805-v1/GROK-ADVERSARIAL.json"
+      },
+      "next_operation_note_20260805_post_gen31": "SUPERSEDED by Gen32. Tip Gen31 was OPEN_DARK 26; Gen32 closed 2 non-police deep-segment/SEH-linear rows.",
+      "open_residual_gen31_deep_segment_resolve_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen31-deep-segment-resolve-20260805-v1",
+        "tool": "tools/re_open_residual_gen31_deep_segment_resolve.py",
+        "n_proofs": 2,
+        "lanes": {
+          "SEGMENT_DEEP": 1,
+          "SEH_PLUS_LINEAR": 1
+        },
+        "police_hold": 20,
+        "formalPackStatus": "READY_FOR_GENERATION",
+        "parent_residuals_sha256": "1b92e50bdf8e36004b5ca5cae7c9e956db607649041ef91a83ef431c11c57896"
+      },
+      "residual_terminal_generation32_deep_segment_resolve_20260805": {
+        "whenUtc": "2026-08-05T16:27:04.020537+00:00",
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation32-deep-segment-resolve-20260805-v1/generation-32-residual-terminal-deep-segment-resolve",
+        "tool": "tools/re_open_residual_gen32_deep_segment_resolve_generation.py",
+        "n_proofs": 2,
+        "counts": {
+          "residualOpenDark": 24,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 1002,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 29
+        },
+        "parent_gen31_unmutated": true,
+        "parent_residuals_sha256": "1b92e50bdf8e36004b5ca5cae7c9e956db607649041ef91a83ef431c11c57896",
+        "pre_apply_review": "local-lab/gen32-preapply-review-20260805-v1/GROK-ADVERSARIAL.json",
+        "verify": "python -I -B tools/re_open_residual_gen32_deep_segment_resolve_generation.py verify --campaign local-lab/residual-terminal-generation32-deep-segment-resolve-20260805-v1/generation-32-residual-terminal-deep-segment-resolve --formal-pack local-lab/open-residual-gen31-deep-segment-resolve-20260805-v1/FORMAL-PACK.json --parent local-lab/residual-terminal-generation31-seh-segment-resolve-20260805-v1/generation-31-residual-terminal-seh-segment-resolve"
+      },
+      "next_operation_note_20260805_post_gen32": "SUPERSEDED by Gen33. Tip Gen32 was OPEN_DARK 24; Gen33 closed 4 non-police large-island mixed-walk rows.",
+      "open_residual_gen32_large_island_resolve_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/open-residual-gen32-large-island-resolve-20260805-v1",
+        "tool": "tools/re_open_residual_gen32_large_island_resolve.py",
+        "n_proofs": 4,
+        "lanes": {
+          "WHOLE_MIXED_WALK": 4
+        },
+        "police_hold": 20,
+        "formalPackStatus": "READY_FOR_GENERATION",
+        "proof_starts": [
+          "0x00455d9b",
+          "0x0052a6f2",
+          "0x005925e9",
+          "0x005c9c69"
+        ],
+        "parent_residuals_sha256": "3b0aba520f9a75ae4a0bf75df8fcfddc7ccaf18daec4cc354a2037a7740bd3ba"
+      },
+      "residual_terminal_generation33_large_island_resolve_20260805": {
+        "whenUtc": "2026-08-05T16:45:59.952696+00:00",
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/residual-terminal-generation33-large-island-resolve-20260805-v1/generation-33-residual-terminal-large-island-resolve",
+        "tool": "tools/re_open_residual_gen33_large_island_resolve_generation.py",
+        "n_proofs": 4,
+        "counts": {
+          "residualOpenDark": 20,
+          "residualOpenExecuted": 0,
+          "residualTerminalBoundedAmbiguity": 1006,
+          "residualTerminalPadding": 5062,
+          "residualTerminalData": 29
+        },
+        "parent_gen32_unmutated": true,
+        "parent_residuals_sha256": "3b0aba520f9a75ae4a0bf75df8fcfddc7ccaf18daec4cc354a2037a7740bd3ba",
+        "pre_apply_review": "local-lab/gen33-preapply-review-20260805-v1/GROK-ADVERSARIAL.json",
+        "verify": "python -I -B tools/re_open_residual_gen33_large_island_resolve_generation.py verify --campaign local-lab/residual-terminal-generation33-large-island-resolve-20260805-v1/generation-33-residual-terminal-large-island-resolve --formal-pack local-lab/open-residual-gen32-large-island-resolve-20260805-v1/FORMAL-PACK.json --parent local-lab/residual-terminal-generation32-deep-segment-resolve-20260805-v1/generation-32-residual-terminal-deep-segment-resolve"
+      },
+      "next_operation_note_20260805_post_gen33": "SUPERSEDED by Gen34 tip. Gen33 remains residual authority parent (OPEN_DARK 20 police holds).",
+      "fun_native_name_align_plate_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/fun-native-name-align-20260805-v1",
+        "tool": "tools/re_fun_native_name_align.py",
+        "n_proofs": 40,
+        "note": "Rejects stringified None nativeShippedName (Claude NEEDS_WORK fix). WEAK natives held."
+      },
+      "function_native_name_align_generation34_20260805": {
+        "whenUtc": "2026-08-05T21:40:00+00:00",
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/function-native-name-align-generation34-20260805-v1/generation-34-function-native-name-align",
+        "tool": "tools/re_fun_native_name_align_generation.py",
+        "n_names_aligned": 40,
+        "fun_identity_remaining": 893,
+        "ghidraMutated": false,
+        "residualOpenDark": 20,
+        "parent_gen33_unmutated": true,
+        "pre_apply_review": "local-lab/gen34-preapply-review-20260805-v1/",
+        "deepseek_review": "local-lab/opencode-deepseek-gen34-native-name-20260805-v1/",
+        "verify": "python -I -B tools/re_fun_native_name_align_generation.py verify --campaign local-lab/function-native-name-align-generation34-20260805-v1/generation-34-function-native-name-align --formal-pack local-lab/fun-native-name-align-20260805-v1/FORMAL-PACK.json --parent local-lab/residual-terminal-generation33-large-island-resolve-20260805-v1/generation-33-residual-terminal-large-island-resolve"
+      },
+      "next_operation_note_20260805_post_gen34": "SUPERSEDED by Gen35. Gen34 aligned 40 BOUNDARY_ONLY natives; FUN 893.",
+      "fun_weak_native_name_align_plate_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/fun-weak-native-name-align-20260805-v1",
+        "tool": "tools/re_fun_weak_native_name_align.py",
+        "n_proofs": 15,
+        "evidence": "local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv"
+      },
+      "function_weak_native_name_align_generation35_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/function-weak-native-name-align-generation35-20260805-v1/generation-35-function-weak-native-name-align",
+        "tool": "tools/re_fun_weak_native_name_align_generation.py",
+        "n_names_aligned": 15,
+        "fun_identity_remaining": 878,
+        "includes": [
+          "Damage@0x005348c0",
+          "Pause@0x00537c70",
+          "SetLockable@0x00533950"
+        ],
+        "ghidraMutated": false,
+        "residualOpenDark": 20,
+        "parent_gen34_unmutated": true,
+        "pre_apply_review": "local-lab/gen35-preapply-review-20260805-v1/",
+        "verify": "python -I -B tools/re_fun_weak_native_name_align_generation.py verify --campaign local-lab/function-weak-native-name-align-generation35-20260805-v1/generation-35-function-weak-native-name-align --formal-pack local-lab/fun-weak-native-name-align-20260805-v1/FORMAL-PACK.json --parent local-lab/function-native-name-align-generation34-20260805-v1/generation-34-function-native-name-align"
+      },
+      "next_operation_note_20260805_post_gen35": "SUPERSEDED by Gen36. Gen35 +15 WEAK natives; FUN 878.",
+      "fun_rtti_vfunc_name_align_plate_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/fun-rtti-vfunc-name-align-20260805-v1",
+        "tool": "tools/re_fun_rtti_vfunc_name_align.py",
+        "n_proofs": 38,
+        "lanes": {
+          "RTTI_VFUNC_EXCLUSIVE": 14,
+          "RTTI_VFUNC_SHARED_SLOT": 24
+        },
+        "evidence": "local-lab/rtti-strict-census-2026-08-03/strict-census-v1-ready/vtables.tsv"
+      },
+      "function_rtti_vfunc_name_align_generation36_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/function-rtti-vfunc-name-align-generation36-20260805-v1/generation-36-function-rtti-vfunc-name-align",
+        "tool": "tools/re_fun_rtti_vfunc_name_align_generation.py",
+        "n_names_aligned": 38,
+        "fun_identity_remaining": 840,
+        "ghidraMutated": false,
+        "residualOpenDark": 20,
+        "parent_gen35_unmutated": true,
+        "pre_apply_review": "local-lab/gen36-preapply-review-20260805-v1/",
+        "verify": "python -I -B tools/re_fun_rtti_vfunc_name_align_generation.py verify --campaign local-lab/function-rtti-vfunc-name-align-generation36-20260805-v1/generation-36-function-rtti-vfunc-name-align --formal-pack local-lab/fun-rtti-vfunc-name-align-20260805-v1/FORMAL-PACK.json --parent local-lab/function-weak-native-name-align-generation35-20260805-v1/generation-35-function-weak-native-name-align"
+      },
+      "next_operation_note_20260805_post_gen36": "SUPERSEDED by Gen37. Gen36 +38 RTTI vfuncs; FUN 840.",
+      "fun_trivial_template_name_align_plate_20260805": {
+        "status": "MEASURED_VERIFIED",
+        "plate": "local-lab/fun-trivial-template-name-align-20260805-v1",
+        "tool": "tools/re_fun_trivial_template_name_align.py",
+        "n_proofs": 368,
+        "lanes": {
+          "ZERO_DWORDS3": 283,
+          "RET": 19,
+          "JMP_THUNK": 66
+        }
+      },
+      "function_trivial_template_name_align_generation37_20260805": {
+        "status": "APPLIED_VERIFIED",
+        "campaign": "local-lab/function-trivial-template-name-align-generation37-20260805-v1/generation-37-function-trivial-template-name-align",
+        "tool": "tools/re_fun_trivial_template_name_align_generation.py",
+        "n_names_aligned": 368,
+        "fun_identity_remaining": 472,
+        "ghidraMutated": false,
+        "residualOpenDark": 20,
+        "parent_gen36_unmutated": true,
+        "pre_apply_review": "local-lab/gen37-preapply-review-20260805-v1/",
+        "deepseek_review": "local-lab/opencode-deepseek-gen37-trivial-template-20260805-v1/",
+        "verify": "python -I -B tools/re_fun_trivial_template_name_align_generation.py verify"
+      },
+      "next_operation_note_20260805_post_gen37": "Tip Gen37: +368 structural PE template names (FUN 472). Cumulative Gen34-37 +461. Residuals OPEN_DARK 20 police (envelope reopen \u2014 do not re-close with walk_cover/WHOLE_MIXED_WALK). Gen38 extended plate READY n=315 HELD for Opus. Claude Code fully available (maintainer correction 2026-08-05: 100% available, not exhausted)."
+    },
+    "tip_generation_note_20260806": "Tip Gen39 after Gen38+39 structural PE template name aligns; FUN 126; OPEN_DARK 20; ten-way Gen38/39 in flight"
+  },
+  "opus_backlog_gen32_plus_20260805": {
+    "status": "COMPLETE_CELLS_NEEDS_WORK_DOMINANT",
+    "user_gate": "Opus medium+max N+A has now run Gen34-38; Gen32-33 already complete earlier. Plan resume only after reading SCOREBOARD and acting on load-bearing NEEDS_WORK.",
+    "claude_availability": "FULL",
+    "scoreboard": "local-lab/per-gen-review-gen34-38-20260805-v1/SCOREBOARD.md",
+    "base": "local-lab/per-gen-review-gen34-38-20260805-v1",
+    "aggregate": "local-lab/per-gen-review-gen34-38-20260805-v1/claude-opus-parallel-receipts.json",
+    "grades_gen34_38": {
+      "gen34": "mediumN NEEDS_WORK / mediumA SURVIVES / maxN NEEDS_WORK / maxA NEEDS_WORK",
+      "gen35": "all 4 NEEDS_WORK",
+      "gen36": "all 4 NEEDS_WORK",
+      "gen37": "mediumN re-run in flight or NO_GRADE first pass; others NEEDS_WORK",
+      "gen38": "all 4 NEEDS_WORK (plate substance OK under Grok; instrument hygiene)"
+    },
+    "already_complete_4_cells": {
+      "gen32": "local-lab/per-gen-review-gen26-33-20260805-v1/gen32/",
+      "gen33": "local-lab/per-gen-review-gen26-33-20260805-v1/gen33/"
+    },
+    "opus_hits_fixed_pre_gen38_apply": {
+      "trivialTemplate_evidence_token": "tools/re_fun_trivial_template_name_align_generation.py supersession rttiVfunc# -> trivialTemplate#",
+      "no_VFUNC_SLOT_fallback": "hard fail if nameClass missing",
+      "hold_generation_apply_enforced": true,
+      "out_ne_parent_guard": true,
+      "reducer_id": "function-trivial-template-name-align-bulk-v1",
+      "tests_registered": [
+        "tools/re_fun_trivial_template_name_align_tests.py",
+        "tools/re_fun_native_name_align_tests.py"
+      ]
+    },
+    "gen38_plate_held": {
+      "plate": "local-lab/fun-extended-template-name-align-20260805-v2",
+      "n_proofs": 315,
+      "grok_dual_role": "SURVIVES N+A",
+      "opus": "NEEDS_WORK x4 \u2014 apply still held until hold flag cleared after re-review of instrument fixes",
+      "apply": "HELD"
+    },
+    "gen37_deepseek": {
+      "dir": "local-lab/opencode-deepseek-gen37-trivial-template-20260805-v1",
+      "grades": "flash N/A + pro N/A all SURVIVES"
+    }
+  },
+  "complete_re_tip_20260805": {
+    "generation": 73,
+    "campaign": "C:/Users/david/source/Onslaught-Career-Editor/local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/generation-73-function-c1-opaque-squad-spawn-helpers-batch",
+    "functions": 8124,
+    "fun_star_remaining": 0,
+    "milestone": "No remaining FUN_* nameClass/currentName identity on tip (Gen37 472 -> 0)",
+    "c1_candidates": 222,
+    "c2_bounded_runtime": 5,
+    "contracts_still_opaque": 7897,
+    "c2_plate_refuted": "local-lab/c1-to-c2-perva-measured-io-20260805-v1",
+    "residuals_open_dark": 20,
+    "complete_RE": false,
+    "complete_RE_blocker": "FUN*0; approx 7897 OPAQUE; C1=222; C2=5; OPEN residual 20 police",
+    "updatedAtUtc": "2026-08-06T11:13:15.175334+00:00",
+    "function_semantic_OPAQUE": 7897,
+    "contract_C0_OPAQUE": 14219,
+    "c2_perva_plate_status": "TEN_WAY_IN_FLIGHT_INTEGRATION_REFUTED_C2_GRADE",
+    "c2_perva_plate": "local-lab/c1-to-c2-perva-measured-io-20260805-v1",
+    "c2_perva_disposition": "DO_NOT_APPLY multi-agent REFUTED (DS 4/4 + Grok + Opus med/max-N)",
+    "generation_reviews": {
+      "gen58_60": "COMPLETE_ALL_SURVIVES six-way",
+      "gen61": "SumActive+yaw/pitch hygiene; C1 retained",
+      "gen62": "Grok+DS SURVIVES; Opus normal SURVIVES; Opus adversarial TIMEOUT",
+      "gen63_c1_combat_lock_segment": {
+        "n": 10,
+        "hygiene": [
+          "GetTarget polarity FIXED",
+          "Behaviour switch index map FIXED",
+          "Compass blend names FIXED"
+        ],
+        "reviews": {
+          "grok_recert": "SURVIVES_N+A",
+          "ds_flash": "SURVIVES_N+A",
+          "opus_medium_normal": "SURVIVES_WITH_FIELD_CORRECTION_applied",
+          "opus_medium_adversarial": "REFUTED_compass_THEN_FIXED"
+        }
+      },
+      "gen64_c1_deploy_lock_support": {
+        "n": 11,
+        "plate": "local-lab/c1-opaque-deploy-lock-support-batch-20260805-v1",
+        "packSha256": "913e0c58a8c454032330d59064be10f6e678e27d9a11d80603658dd4381745d0",
+        "hygiene": [
+          "UnlockVB SIB base/index FIXED after Grok subagent REFUTED",
+          "SetLockable prose unit-bridge clarified; ready functions/contracts shas re-pinned (Opus adv HOLD)"
+        ],
+        "reviews": {
+          "grok_normal_hygiene": "SURVIVES",
+          "grok_adversarial_hygiene": "SURVIVES",
+          "grok_subagent_normal": "REFUTED_THEN_FIXED",
+          "grok_subagent_adversarial": "REFUTED_THEN_FIXED",
+          "grok_recert_sib": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES_HYGIENE_NIT_pre_fix",
+          "opus_medium_normal": "SURVIVES_WITH_SIB_CORRECTION_applied",
+          "opus_medium_adversarial": "HOLD_THEN_BOOKKEEPING_FIXED"
+        }
+      },
+      "gen65_c1_weapon_unit_tuning": {
+        "n": 12,
+        "plate": "local-lab/c1-opaque-weapon-unit-tuning-batch-20260806-v1",
+        "packSha256": "6fea0a8970049369f38e9b554a0b1881ba6928813bb030dd630ed64d27be5d66",
+        "campaign": "local-lab/function-c1-opaque-weapon-unit-tuning-batch-generation65-20260806-v1/generation-65-function-c1-opaque-weapon-unit-tuning-batch",
+        "census": {
+          "c1": 108,
+          "c2": 5,
+          "opaque": 8011,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_normal": "SURVIVES",
+          "grok_subagent_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES"
+      },
+      "gen66_c1_collision_battle_ground": {
+        "n": 14,
+        "plate": "local-lab/c1-opaque-collision-battle-ground-batch-20260806-v1",
+        "packSha256": "388a55a4d9a0c7b589623884387f0f95be66e30667eb0f52ba0b06411599e89d",
+        "campaign": "local-lab/function-c1-opaque-collision-battle-ground-batch-generation66-20260806-v1/generation-66-function-c1-opaque-collision-battle-ground-batch",
+        "census": {
+          "c1": 122,
+          "c2": 5,
+          "opaque": 7997,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_initial": "REFUTED_THEN_FIXED",
+          "grok_final_recert_normal": "SURVIVES",
+          "grok_final_recert_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": {
+          "bodies": [
+            "0x0040e8e0",
+            "0x0040e910",
+            "0x004080f0"
+          ],
+          "issues": [
+            "fsub not fmul",
+            "BT nonzero fld 0.0",
+            "BT zero ret0",
+            "C0 clear\u21920.0 set\u21925.0"
+          ]
+        }
+      },
+      "gen67_c1_mapwho_ground_walker": {
+        "n": 13,
+        "plate": "local-lab/c1-opaque-mapwho-ground-walker-batch-20260806-v1",
+        "packSha256": "b2d302676b9229d8e446d98535081d814fd8a04d0e1881099da482438f22a015",
+        "campaign": "local-lab/function-c1-opaque-mapwho-ground-walker-batch-generation67-20260806-v1/generation-67-function-c1-opaque-mapwho-ground-walker-batch",
+        "census": {
+          "c1": 135,
+          "c2": 5,
+          "opaque": 7984,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_normal": "SURVIVES",
+          "grok_subagent_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES"
+      },
+      "gen68_c1_mapwho_occupancy": {
+        "n": 12,
+        "plate": "local-lab/c1-opaque-mapwho-occupancy-batch-20260806-v1",
+        "packSha256": "1b01fda2a2f6248f4d0b09c5b0065fbd3ce135684175c61ae4a90dd3358d67b0",
+        "campaign": "local-lab/function-c1-opaque-mapwho-occupancy-batch-generation68-20260806-v1/generation-68-function-c1-opaque-mapwho-occupancy-batch",
+        "census": {
+          "c1": 147,
+          "c2": 5,
+          "opaque": 7972,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_normal": "SURVIVES",
+          "grok_subagent_adversarial": "SURVIVES",
+          "grok_final_recert_normal": "SURVIVES",
+          "grok_final_recert_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": {
+          "bodies": [
+            "0x004bc260",
+            "0x00492670",
+            "0x004f3940"
+          ],
+          "issues": [
+            "bitplane fill strides",
+            "W2S arg ordinals",
+            "bounding radius null-test scope"
+          ],
+          "source": "Opus medium N+A REFUTED then fixed"
+        }
+      },
+      "gen69_c1_battleengine_mode_helpers": {
+        "n": 12,
+        "plate": "local-lab/c1-opaque-battleengine-mode-helpers-batch-20260806-v1",
+        "packSha256": "b1d1eaa2ff541364327c143291b65f9c8a2a0ef911e0712c3b18176d67de7156",
+        "census": {
+          "c1": 159,
+          "c2": 5,
+          "opaque": 7960,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_normal": "SURVIVES",
+          "grok_subagent_adversarial": "SURVIVES",
+          "grok_final_recert_normal": "SURVIVES",
+          "grok_final_recert_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": {
+          "bodies": [
+            "0x0040c340",
+            "0x00406020"
+          ],
+          "issues": [
+            "call target pad clarity",
+            "Printf console BSS + fmt not two strings"
+          ]
+        }
+      },
+      "gen70_c1_unit_targeting": {
+        "n": 15,
+        "plate": "local-lab/c1-opaque-unit-targeting-batch-20260806-v1",
+        "packSha256": "018ea645da1547597a207ba7bc66d6cf092e94133a3b412f64a13dc8fdb0e3a4",
+        "census": {
+          "c1": 174,
+          "c2": 5,
+          "opaque": 7945,
+          "fun_star": 0,
+          "open_res": 20
+        },
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "grok_subagent_normal": "SURVIVES",
+          "grok_subagent_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES",
+          "opus_medium_adversarial": "SURVIVES"
+        },
+        "six_way": "COMPLETE_ALL_SURVIVES"
+      },
+      "gen71_c1_unit_thing_helpers": {
+        "n": 16,
+        "plate": "local-lab/c1-opaque-unit-thing-helpers-batch-20260806-v1",
+        "packSha256": "5050454fbed7c0dabbcff4b68fe5090d57ac69d2a3b2d1e2aa8ad18b45986b0a",
+        "disposition": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": [
+          "TrackBurst 0x0044a610 thiscall receiver not push; arg1 push restored (Opus/DS REFUTED)",
+          "CLine 0x004098c0 ordered frame (arg1,arg0,this,arg3)/receiver=arg2 (DS adv REFUTED)"
+        ],
+        "lineagePackSha256": [
+          "2bce5a5679c1d6c4b7b30c10f45a764dc8da1a582ba07b79449d4c7ada51c144",
+          "ed03170471d71856f345bc7a8725770797bc3131a24860fb19cee2b46ab979ef",
+          "5050454fbed7c0dabbcff4b68fe5090d57ac69d2a3b2d1e2aa8ad18b45986b0a"
+        ],
+        "reviews": {
+          "grok_normal_post_hygiene_v2": "SURVIVES",
+          "grok_adversarial_post_hygiene_v2": "SURVIVES",
+          "grok_subagent_normal_post_hygiene_v2": "SURVIVES",
+          "grok_subagent_adversarial_post_hygiene_v2": "SURVIVES",
+          "ds_flash_normal_post_hygiene_v2": "SURVIVES",
+          "ds_flash_adversarial_post_hygiene_v2": "SURVIVES",
+          "opus_medium_normal_post_hygiene_v2": "SURVIVES",
+          "opus_medium_adversarial_post_hygiene_v2": "SURVIVES"
+        },
+        "census_after": {
+          "C1": 190,
+          "C2": 5,
+          "OPAQUE": 7929,
+          "FUN_star": 0,
+          "OPEN_residual": 20
+        }
+      },
+      "gen72_c1_unit_combat_helpers": {
+        "n": 16,
+        "plate": "local-lab/c1-opaque-unit-combat-helpers-batch-20260806-v1",
+        "packSha256": "3f85677449a903b6c48a56a1af00d77aa1f860740d81b613ed8b5f18fdadf58e",
+        "disposition": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": [
+          "Particle tracker-on-mismatch",
+          "IsCandidate case1 {0,6}",
+          "VFunc25 uninit 4th",
+          "dead_forward",
+          "PhysicsDestroy head+8 write",
+          "SetReader lea embedded slot"
+        ],
+        "reviews": {
+          "grok_normal_post_hygiene_v4": "SURVIVES",
+          "grok_adversarial_post_hygiene_v4": "SURVIVES",
+          "grok_subagent_normal_post_hygiene_v4": "SURVIVES",
+          "grok_subagent_adversarial_post_hygiene_v4": "SURVIVES",
+          "ds_flash_normal_post_hygiene_v4": "SURVIVES",
+          "ds_flash_adversarial_post_hygiene_v4": "SURVIVES",
+          "opus_medium_normal_post_hygiene_v4": "SURVIVES",
+          "opus_medium_adversarial_post_hygiene_v4": "SURVIVES"
+        },
+        "census_after": {
+          "C1": 206,
+          "C2": 5,
+          "OPAQUE": 7913,
+          "FUN_star": 0,
+          "OPEN_residual": 20
+        }
+      },
+      "gen73_c1_squad_spawn_helpers": {
+        "n": 16,
+        "plate": "local-lab/c1-opaque-squad-spawn-helpers-batch-20260806-v1",
+        "packSha256": "96c0ce0fcbe05eef2f98f2f2221107a07310d2ccffb50e3a6bbbc85da72678b7",
+        "disposition": "COMPLETE_ALL_SURVIVES_POST_HYGIENE",
+        "hygiene": [
+          "IsSpawnTypeAllowed ja\u21921",
+          "IsSpawnComplete jl\u21920",
+          "CreateSpawner esi=[this+0x10c] guard base"
+        ],
+        "reviews": {
+          "grok_normal_post_hygiene": "SURVIVES",
+          "grok_adversarial_post_hygiene": "SURVIVES",
+          "grok_subagent_normal_post_hygiene": "SURVIVES",
+          "grok_subagent_adversarial_post_hygiene": "SURVIVES",
+          "ds_flash_normal_post_hygiene": "SURVIVES",
+          "ds_flash_adversarial_post_hygiene": "SURVIVES",
+          "opus_medium_normal_post_hygiene": "SURVIVES",
+          "opus_medium_adversarial_post_hygiene": "SURVIVES"
+        },
+        "census_after": {
+          "C1": 222,
+          "C2": 5,
+          "OPAQUE": 7897,
+          "FUN_star": 0,
+          "OPEN_residual": 20
+        }
+      }
+    },
+    "cumulative_checkpoint": {
+      "path": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md",
+      "asOfGeneration": 73,
+      "whenUtc": "2026-08-06T12:01:32.518695+00:00",
+      "note": "Prefer FINAL-3WAY-DELTA; peer lane files under OPAQUE-C1-CHECKPOINT-GEN73-*; no Ghidra apply"
+    },
+    "cumulative_checkpoints": {
+      "asOfGeneration": 73,
+      "whenUtc": "2026-08-06T12:01:32.518695+00:00",
+      "grok": {
+        "normal": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806.md",
+        "adversarial": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-ADVERSARIAL.md"
+      },
+      "deepseek_flash_max": {
+        "normal": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-DEEPSEEK.md",
+        "adversarial": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-DEEPSEEK-ADVERSARIAL.md",
+        "grades": {
+          "normal": "ADEQUATE",
+          "adversarial": "SURVIVES"
+        }
+      },
+      "opus_max": {
+        "normal": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-OPUS.md",
+        "adversarial": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-OPUS-ADVERSARIAL.md",
+        "grades": {
+          "normal": "ADEQUATE",
+          "adversarial": "SURVIVES_as_plate_index"
+        },
+        "note": "Agent cells graded but write-gate blocked; integration owner landed files from corpus + receipts"
+      },
+      "note": "Indexes + lessons + final 3-way delta; not full contracts; Ghidra apply not authorized",
+      "final_3way_delta": {
+        "path": "local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md",
+        "grade": "ADEQUATE",
+        "reviews_dir": "local-lab/checkpoint-final-delta-gen73-20260806/reviews/",
+        "reviews": {
+          "grok_normal": "SURVIVES",
+          "grok_adversarial": "SURVIVES",
+          "ds_flash_normal": "SURVIVES",
+          "ds_flash_adversarial": "SURVIVES",
+          "opus_medium_normal": "SURVIVES_with_F1_F6_patches_applied",
+          "opus_medium_adversarial": "SURVIVES_with_H_patches_applied",
+          "opus_max_final_cell": "ADEQUATE"
+        },
+        "post_review_hygiene": "F1/F6/H* applied 2026-08-06 docs-only",
+        "ghidra_apply": "NOT_AUTHORIZED \u2014 operator instruction 2026-08-06 do not proceed to Ghidra apply"
       }
     }
   },
@@ -815,5 +2567,30 @@
       "what_it_supports": "Three SHORT combat takes lit the morph transform, weapon fire on two chassis, and the collision-damage and death handlers. Direct empirical support for the isolated-scenario thesis."
     },
     "adversarial_passes": "Two read-only adversaries reviewed this work. The first found 9 defects in the fault gate and compare stage, 8 real and fixed; its 9th recommendation (widen the NTSTATUS band) was refuted by campaign 01. The second found 10 in the selector and compare stage, including that the poison check I had just \"fixed\" certified 8 kinds of broken control as sound and that the fix terminated in refute.py R12 passing. All fixed, each with a self-check. Remaining known limit: band_overlap credits a straddling region wholly to its majority side, overstating library bytes by ~5,125 (0.8%)."
+  },
+  "_updatedAtUtc": "2026-08-06T12:01:32.518695+00:00",
+  "gen26_33_review_debt_20260805": {
+    "status": "COVERAGE_COMPLETE_NEEDS_WORK_OPEN",
+    "whenUtc": "2026-08-05T19:01:44.742898+00:00",
+    "matrix": "local-lab/per-gen-review-gen26-33-20260805-v1",
+    "scoreboard": "local-lab/per-gen-review-gen26-33-20260805-v1/SCOREBOARD.md",
+    "cells": 80,
+    "tallies": {
+      "SURVIVES": 41,
+      "NEEDS_WORK": 37,
+      "REFUTED": 1,
+      "NO_LINE": 1
+    },
+    "families_complete": [
+      "grok-16/16",
+      "deepseek-32/32",
+      "claude-opus-32/32"
+    ],
+    "hard_flags": [
+      "gen32 opus5-medium-adversarial REFUTED",
+      "gen33 grok-adversarial + multi-family NEEDS_WORK on WHOLE_MIXED_WALK",
+      "process: preapply stubs were not ten-way police"
+    ],
+    "next": "Synthesize NEEDS_WORK/REFUTED; fix instruments/process claims before Gen34 police OFFSET_ENVELOPE; keep ten-way in loop on new applies"
   }
 }

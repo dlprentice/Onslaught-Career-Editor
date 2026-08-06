@@ -302,13 +302,29 @@ while (opcode != 0x17 /*END*/ || callDepth > 0) && !abort:
     instruction.Execute()
 
     if (debugMode):
-        print("-> %4d stack size = %d flags = %d", IP, stackSize, flags)
+        print("-> %4d stack size = %d flags = %d", executedInstructionIndex, stackSize, flags)
 
     iterationCount++
     if (iterationCount > 10000):
         error("Infinite loop")
         abort = true
 ```
+
+The first printed value is the just-executed, pre-increment instruction index:
+the loop saves it before advancing `runtime+0x214`. This was closed dynamically
+on 2026-08-02. In a disposable Level 100 copy, changing only stock
+`Setup.trailerA` from `0` to exactly `1` produced 136 deterministic lines for
+indices 1 through 136 in two replications; unchanged value `0` and exact-compare
+control value `2` produced none, and a disabled logger gate produced no file.
+The constructor reads serialized `trailerA` into object `+0x60`; all 762 shipped
+records set it to zero. The hash-bound local proof is
+`local-lab/vm-trace-pilot-2026-08-02/vm-trace.ready.json`, SHA-256
+`ad373947273ad083c9c37a53aba876e28399cba26821ae067df59d207e4ced09`.
+That boundary includes two value-2 exact-compare controls and a byte-identically
+replayed `SURVIVED` generic-refuter report (16/16 rules, four predictions, two
+eliminated rivals, discriminating `n = 6`, two replications).
+This proves a copied-runtime instruction/stack-depth/flags instrument, not
+retail-default logging or unperturbed timing.
 
 ## Related Files
 
@@ -321,7 +337,8 @@ while (opcode != 0x17 /*END*/ || callDepth > 0) && !abort:
 
 1. **SpawnThing Collection**: The `CollectSpawnThings` function scans bytecode for spawn instructions (opcode 0x18) to pre-load assets
 
-2. **Debug Mode**: Setting offset 0x60 to 1 enables per-instruction trace logging
+2. **Debug Mode**: serialized `trailerA` becomes object offset `0x60`; exact
+   value `1` enables per-instruction trace logging, while shipped records use `0`
 
 3. **Clone Support**: Scripts can be cloned for multiple concurrent instances (important for spawned entities)
 

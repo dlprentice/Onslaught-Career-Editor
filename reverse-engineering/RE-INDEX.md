@@ -1,9 +1,11 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-07-30
+Last updated: 2026-08-06
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
+Live tip is Gen73 via `developer_state.json` → `complete_re_tip_20260805`, not
+the historical Gen10 admission below.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
@@ -37,8 +39,10 @@ re-running the grader that produced it.
 | --- | --- |
 | Cross-source synthesis | [Data/source/executable delta](../DELTA.md) |
 | Agentic parity and function discovery | [Parity lab](../PARITY_LAB.md) |
+| Function and behavior contract system | [Contract front door](../CONTRACTS.md) |
 | Installed data narrative | [Measured installation census](../BEA_DATA.md) |
 | Executable/Ghidra narrative | [Ghidra function synthesis](../GHIDRA_FUNCTONS.md) |
+| Complete executable string inventory | [Binary strings](../BINARY_STRINGS.md) |
 | Pinned-source narrative | [Stuart source synthesis](../STUART_FUNCTIONS.md) |
 | Save and options formats | [Save-file index](save-file/_index.md) |
 | Retail binary analysis | [Binary-analysis index](binary-analysis/_index.md) |
@@ -52,6 +56,187 @@ re-running the grader that produced it.
 Further down this page, past the authority block: the patch recipes, the
 per-subsystem static contracts, the 2026-05-26 review cohort, the lane
 reference and runbooks, and the retail → Core translation policies.
+
+## Live complete-RE tip — machine-local evidence (2026-08-06)
+
+The tracked Ghidra snapshot and 2026-07 name ledgers deliberately lag current
+work. **Live tip** is not Generation 10. On this maintainer machine, the live
+complete-RE tip is recorded in `developer_state.json` →
+`complete_re_tip_20260805` (as of 2026-08-06: **Gen73**, C1=**222**, C2=**5**,
+function_semantic OPAQUE=**7897**, OPEN residual=**20**, complete_RE=**false**,
+Ghidra apply **NOT_AUTHORIZED**). Prefer the cumulative index
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
+over peer lane synths. Tip campaign path (re-read tip if moved):
+`local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/generation-73-function-c1-opaque-squad-spawn-helpers-batch`.
+Post-Gen55 work is dominated by OPAQUE→C1 PE plates under standing six-way
+critics (direct DeepSeek sessions: native subagent N+A per the AGENTS.md
+carve-out); C1 is partial PE, not dual-runtime C2.
+
+## Historical Gen10 dual-authority / TTD admission (2026-08-04)
+
+Generation 10 remains a valid **historical** function/range/contract admission
+for Level 521 call-context dual authority, not the live tip:
+`local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/`:
+8,124 functions, 6,117 exact `.text` residuals, 15,241 open/closed questions,
+72 scenarios, 915 levers, 14,241 contracts, 6 adjudications, and 584 exact
+supersessions. Its READY SHA-256 is
+`b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`.
+The exact post-promotion coverage snapshot is
+`local-lab/console-callback-atomic14-post-campaign-20260803-v1/snapshot/ledger.ready.json`,
+SHA-256 `efabd9c2ae7a0be5adee2bf478df0cbec69482918197ae87ed7d6a9fc3ac6b3f`.
+Replay Generation 10 with its frozen `_reducer` (ID
+`7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9`);
+the evolving working dependency
+bundle is not interchangeable.
+
+Current local boundaries that materially change the discovery lane:
+
+- `local-lab/logger-oracle-pilot-2026-08-02/logger-oracle.ready.json`, SHA-256
+  `b4ae49e3344ec96b72248a657af8daa7627b79f865d6f6287a369daeeb14a1a6`,
+  proves that, with a writable relative path in both arms, a one-byte
+  copied-binary gate lets generated Mission `Print` bytecode export exact
+  string/int/six-decimal float text and resume after `Pause`. Unmodified retail
+  remains inert; the channel is external write-only and does not expose
+  arbitrary private state.
+  The frozen boundary also replays the generic refuter byte-identically: all
+  16 rules pass, three preregistered predictions resolve, and two rival causes
+  are eliminated across six arms and two independent replications.
+- `local-lab/console-logger-bridge-20260803-v1/console-logger-bridge.ready.json`,
+  SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297`,
+  freezes two A/B replications of a 16-byte disposable bridge from the four
+  `ShowCmds`/`ShowVars` output sites to that logger. Level 100 realizes 31
+  commands and 56 variables; static registration contains 32/59, with
+  `fmv_play` and three debris variables absent on that path. This is authored
+  instrumentation, not a retail-default logging path or a callback-semantics
+  claim.
+- `local-lab/vm-trace-pilot-2026-08-02/vm-trace.ready.json`, SHA-256
+  `ad373947273ad083c9c37a53aba876e28399cba26821ae067df59d207e4ced09`,
+  proves that stock Level 100 `Setup.trailerA = 1` enables deterministic
+  post-instruction index/stack-size/flags lines. Two replicated triangles plus
+  two exact-comparison value `2` controls distinguish the script field, logger gate,
+  and ordinary diagnostics. Traced-run timing is invalid because output is
+  synchronous per instruction.
+  Its replayed generic refuter passes 16/16 rules with four resolved predictions,
+  two eliminated rivals, and discriminating `n = 6` at two replications.
+- `local-lab/crt-recursive-cohort-2026-08-02/architect/derivation.ready.json`,
+  SHA-256 `59b64f11ce4e9d0a8f994c15a438c4a5f98e8dcb40626a55f1c451e843f2628b`,
+  reproduces 547 hard missing CRT entries (537 instruction-present, 10 requiring
+  disassembly) and quarantines two weak tail candidates. The later
+  `clean520-boundary-v3-canary-refuted/boundary-targets.ready.json`, SHA-256
+  `53ab9de5bc113ad45d593f3732627860f2639c819d21c771d8369d139a4c6832`,
+  narrows that evidence to 520 exact one-residual bodies (58,157 bytes), preserves
+  16 structural cases in quarantine, and excludes the refuted original canary.
+  The later `local-lab/formal-global-init515-proof-20260803-v4/proof.ready.json`,
+  SHA-256 `0fa28300606f55d96e9e4c4168501c39d8eee25823033042d89339ae58d40729`,
+  formally partitions that cohort into 515 admissible targets and five listing
+  repairs that remain quarantined. Two independent replicas produce the exact
+  7,595 -> 8,110 boundary delta with no instruction or pre-existing-function
+  change; a late poison fails and separate-process readback agrees. The separate
+  live owner then completed the authorized promotion once:
+  `local-lab/global-init515-live-promotion-20260803-v4/promotion/promotion.ready.json`,
+  SHA-256 `57015dd561fed34cbc9c7b322a63d3774cf234aef3138436e68f297fd17929cf`.
+  Exact PRE/POST identity, quiescence, verified backup, clone controls, one live
+  apply, separate-process readback, byte-identical POST backup/restore drill, and
+  generation-7 reseed all survived. This promotes boundaries only; it does not
+  authorize names, signatures, semantic contracts, library classification,
+  rebuild parity, or the five quarantined repairs.
+- `local-lab/console-callback-atomic14-live-promotion-20260803-v2/promotion/promotion.ready.json`,
+  SHA-256 `f3d58ccb74891a20bade971f043382ab77b3c32bebdef977fabcd76274752541`,
+  records the later authorized 8,110 -> 8,124 boundary-only promotion. Its
+  formal proof (`a504c24b…a83e6`), exact target/padding manifests, separate-process
+  readback, POST backup/restore drill, and Generation-8 reducer agree that the
+  old `[0x004295BC,0x00429BC0)` residual is exactly 14 functions / 1,433 bytes
+  plus 15 NOP-padding ranges / 107 bytes. No semantic name, signature, ABI,
+  behavior, thunk, or rebuild claim was promoted.
+- `local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/promotion/promotion.ready.json`,
+  SHA-256 `77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945`,
+  records the later backed-up, scratch-reproduced, separately read-back
+  correction of five same-range rows: `StartLock @ 0x00406FC0`, `FireLock @
+  0x00407060`, `LockHit @ 0x00407140`, `GetCurrentTarget @ 0x004071B0`, and
+  `DisplayLock @ 0x00407310`. The live POST fileset is
+  `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702`.
+  Generation 9 carries exactly those metadata/evidence-reference corrections;
+  it changes no boundary/entity key, closes no question, advances no contract
+  grade, creates no supersession, and proves no rebuild parity.
+- `local-lab/binary-strings-20260803-v2/binary-strings.ready.json`, SHA-256
+  `b088739efd9e514da05d3013f9ab55afa7f06837dc14ac67103f1c1f584d5dd9`,
+  binds the pristine specimen to 9,059 Ghidra-defined string occurrences (8,541
+  distinct values) and a separately graded raw printable scan. The joined local
+  corpus contains 23,459 occurrences / 16,244 distinct values; raw-only rows may
+  be instruction or packed-data noise. [`../BINARY_STRINGS.md`](../BINARY_STRINGS.md)
+  renders the complete Ghidra-defined inventory; xrefs narrow investigation but
+  do not prove a dormant feature is live.
+- `local-lab/source-unit-census-v1-ready/source-unit-census.ready.json`,
+  SHA-256 `63099dbf88d031bcbc186303627f6692e157cc80a270670018a5ed68744ff2b4`,
+  rederives 1,870 exact embedded `__FILE__` plates into 162 canonical paths:
+  151 CPP translation units and 11 headers. Exact fragmented-body joins touch
+  987 current functions and 20 residual entities; 368 functions have direct CPP
+  anchors. Closed spans and neighbours remain order priors, headers never own a
+  translation unit, and the owner-crossing call at `0x00437A3A` stays open.
+  Replay with the frozen `source-unit-owner.py`; the tool assigns no names and
+  authorizes no Ghidra promotion.
+- The current TTD corpus contains 75 traces / 497.31 GiB. Replay executed-byte
+  coverage exists for 73 traces, but 65 traces remain coverage-only and no
+  normalized corpus-wide semantic ledger exists. Schema-v3 call-context replay
+  clears pending/active associations across its conservative global barriers.
+  The `verify-cwd-fix` calibration owns exact `1/1/2/0` calls, four paired
+  entries, four raw return boundaries, three validated returns, one orphan, and
+  three gap-free envelopes; raw register/stack carriers remain untyped. Tiny-cap
+  and wrong-count controls fail closed, and an executed interior address remains
+  `ENTRY_ONLY`. Existing v3 receipts are conservative evidence; a proposed
+  per-thread ContextSwitch refinement requires a new schema and replay rather
+  than retroactive reinterpretation.
+- `local-lab/ttd-call-context-level521-impact-schema3-20260804-v1/` is the
+  replicated existing-trace evidence admitted by Generation 10. Two runs
+  have identical 17,804 path-neutral evidence bytes, SHA-256
+  `3e12c0a391540ba79e50ee559bc04ccff344729fcbe0cec288731e12c5dc7558`.
+  In the exact window, callsite `0x004268CB` dispatches slot 39 to un-named
+  `0x004D8AE0`; that routine calls `Damage @ 0x0040A890` with raw
+  `0.05f`/projectile/`1`/`-1` carriers; the collision resolver then calls `Hit @
+  0x00407350` with the same projectile and collision-report carriers. Four raw
+  returns yield one validated `Hit` return and three orphans. `StartDie` is only
+  a bounded zero-call observation. No name for `0x004D8AE0`, typed return,
+  memory write, or behavior outside the window is proved. Generation 10 closes
+  three prior questions as `SURVIVED`, creates three changed successor
+  questions, and advances only `0x004D8AE0`, `0x0040A890`, and `0x00407350` to
+  `C2_BOUNDED_RUNTIME`. `StartDie` remains `OPEN / C0_OPAQUE`; no name, range,
+  rebuild mapping, parity result, or supersession changed.
+- The separate exact-window data-write lane has a source-bound,
+  independently-refuted first semantic plate. In one Level 521
+  `CBattleEngine::LockHit @ 0x00407140` invocation, five ordered field
+  transitions remove the supplied target's sole `mFiredLocks` node and leave
+  the container empty. Three replays have identical 22 non-metadata rows,
+  SHA-256 `AF8CD84F...FC57D`; the final READY is `92E74EC7...4615` and binds
+  wrapper/collector sources, binary, runtime, target table, and outputs. Global
+  free-list reattachment is a gap-free static/runtime path proof, not a direct
+  global-head watch; payload destruction, full return, other paths, and parity
+  remain open. Owner:
+  `local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/README.md`.
+- `local-lab/source-allocation-census-v1-ready/READY.json`, SHA-256
+  `16c858e1ee7f0961ed0fce8d53bb69536e90b295db91bf6082b1fa8f3dea4635`,
+  classifies all 1,870 source plates as 1,377 allocation and 493 unwind calls.
+  It recovers 1,867 immediate type constants, one conservatively proved local
+  constant, two dynamic definitions, 1,060 immediate allocation sizes, and 317
+  register sizes. Of the sites, 1,845 are function-owned and 25 residual-owned;
+  the `0x00437A2C` plate crosses into residual `0x00437A3A` and remains a range-
+  repair lead. Eight logical-type-42 sites use the runtime fallback `Name not
+  found`; requested byte counts are not C++ `sizeof` identities or proof that an
+  allocation succeeded. The frozen owner authorizes no automatic name or
+  boundary promotion.
+- `local-lab/msl-logger-census-2026-08-03-v2-ready/READY.json`, SHA-256
+  `ce9a0a7b29f70b346d020a7c7e01193eed1f229fd3dd883bf63262a8da5ab92d`,
+  freezes the 733-file source corpus, 301 compiled resource archives, the 144-row
+  native registry, and the 72-index coverage join. It finds 726 source `Print`
+  calls, 783 compiled calls, 9,382 source native calls using 110 names, and 9,236
+  compiled native calls using 108 names. The pristine binary has exactly 380
+  direct calls to `CConsole__Printf`: 253 use the dormant-debug receiver and 127
+  use setup history; Ghidra maps 377, leaving call sites `0x004F22FA`,
+  `0x005351F0`, and `0x00536BA9` residual-owned. The older 329-call W* export
+  subset is not the binary denominator. Census membership does not prove that a
+  source site executes in a particular run.
+
+These paths are ignored and absent from a fresh clone. They are routing pointers,
+not substitutes for re-running their verifiers.
 
 ## Current static authority
 
@@ -225,18 +410,16 @@ Host install paths, headless entry, and local project layout:
 `local-lab/`; do not treat discovery notes as proof that the tracked snapshot
 or live DB was mutated.
 
-## Patch recipes — analysis documents, not a mutation workflow
+## Patch recipes — analysis documents, not write authorization
 
-The closing line of this page says mutation of the installed game or original
-`BEA.exe` is never an RE workflow. That line and this section do not conflict,
-and the reconciliation is stated here rather than left to inference: **these are
-analysis documents.** They record where a byte lives, which function owns it,
-what the clean bytes are, and what was observed when an **app-owned copied**
-executable carried the change. Every recipe below applies only to a verified
-copied target — never the install, never the original, never
-`BEA.exe.original.backup`. The closing line governs **workflows**; it does not
-forbid documenting patch knowledge, and a front door that hid these notes would
-not make the installed game any safer, only the evidence harder to find.
+These are analysis documents. They record where a byte lives, which function
+owns it, what the clean bytes are, and what was observed when an **app-owned copied**
+executable carried the change. Those observations authorize only their measured
+copied targets. Applying a proved recipe to an installed target is a separate
+user choice behind the owning verified-backup precondition; the original
+`BEA.exe.original.backup` is never a target. Documenting patch knowledge is not
+write authorization, and hiding these notes would not make a game safer—only the
+evidence harder to find.
 
 The normative authority for the byte definitions and for the copied-target
 boundary is the [patch catalog contract](../patches/CATALOG_CONTRACT.md), with
@@ -387,5 +570,6 @@ four do not, and the policy `.md` is the whole record — there is no
 - [Static contracts](public-static-contracts.md)
 
 Reusable read-only Ghidra exporters, guarded asset tools, parsers, and copied-
-runtime helpers live under [`tools/`](../tools/README.md). Mutation of the
-installed game or original `BEA.exe` is never an RE workflow.
+runtime helpers live under [`tools/`](../tools/README.md). Applying a proved patch
+to an installed target is a separate, explicit user choice behind a verified
+pre-write backup. The pristine `74154bfa…` specimen is never writable.

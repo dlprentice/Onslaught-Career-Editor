@@ -758,6 +758,8 @@ def adjudicate(finding: dict, *, min_sample_n: int = 1,
         "rulesFired": fired,
         "minSampleN": min_sample_n,
     }
+    if isinstance(finding, dict) and "subject" in finding:
+        report["subject"] = finding["subject"]
     if isinstance(finding, dict) and not schema_failed:
         report["survival"] = survival_record(finding)
         if verdict != SURVIVED:

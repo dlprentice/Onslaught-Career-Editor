@@ -23,10 +23,19 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 
-SCHEMA_VERSION = "onslaught-ghidra-project-backup.v1"
-OPEN_SENTINEL_PREFIX = "GHIDRA_PROJECT_OPEN_PROBE_OK program="
+SCHEMA_VERSION = "onslaught-ghidra-project-backup.v2"
+OPEN_SENTINEL_PATTERN = re.compile(
+    r"^GHIDRA_PROJECT_OPEN_PROBE_OK program=(\S+) md5=([0-9a-f]{32}) "
+    r"sha256=([0-9a-f]{64}) functions=([0-9]+)$",
+    re.MULTILINE,
+)
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 DEFAULT_OPEN_TIMEOUT_SECONDS = 300
+GHIDRA_OPEN_ERROR_MARKERS = (
+    "GHIDRA_PROJECT_OPEN_PROBE_FAIL",
+    "REPORT SCRIPT ERROR",
+    "Exception",
+)
 
 
 class BackupError(ValueError):
@@ -107,16 +116,32 @@ class OpenResult:
     content_stable: bool
     exit_code: int
     expected_program_md5: str | None
+    expected_program_sha256: str | None
+    observed_program_name: str
+    observed_program_md5: str
+    observed_program_sha256: str
+    observed_function_count: int
     command: tuple[str, ...]
     comparison: ManifestComparison
+    combined_output: str
 
-    def to_json(self) -> dict[str, object]:
+    def to_json(self, probe_log: dict[str, object]) -> dict[str, object]:
+        command_argv = list(self.command)
         return {
             "opened": self.opened,
             "contentStable": self.content_stable,
             "exitCode": self.exit_code,
             "expectedProgramMd5": self.expected_program_md5,
-            "commandShape": [Path(self.command[0]).name, *self.command[1:3], "-process", "<PROGRAM>", "-readOnly", "-noanalysis", "-postScript", "GhidraProjectOpenProbe.java"],
+            "expectedProgramSha256": self.expected_program_sha256,
+            "observedProgramName": self.observed_program_name,
+            "observedProgramMd5": self.observed_program_md5,
+            "observedProgramSha256": self.observed_program_sha256,
+            "observedFunctionCount": self.observed_function_count,
+            "probeLog": probe_log,
+            # This is the command that actually ran, not a hand-maintained
+            # template.  Local evidence may contain machine-local paths; the
+            # public console summary intentionally does not.
+            "commandArgv": command_argv,
             "postOpenComparison": self.comparison.to_json(),
         }
 
@@ -143,6 +168,30 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def parse_clean_open_probe(
+    combined: str,
+    *,
+    expected_program: str,
+    expected_md5: str,
+    expected_sha256: str,
+) -> tuple[str, str, str, int]:
+    normalized = combined.replace("\r\n", "\n")
+    matches = OPEN_SENTINEL_PATTERN.findall(normalized)
+    if len(matches) != 1 or any(marker in normalized for marker in GHIDRA_OPEN_ERROR_MARKERS):
+        raise BackupError("read-only open probe did not emit one clean measured success sentinel")
+    observed_program, observed_md5, observed_sha256, observed_count_text = matches[0]
+    if (
+        observed_program != expected_program
+        or observed_md5 != expected_md5.lower()
+        or observed_sha256 != expected_sha256.lower()
+    ):
+        raise BackupError("read-only open probe observed another program identity")
+    observed_function_count = int(observed_count_text)
+    if observed_function_count <= 0:
+        raise BackupError("read-only open probe observed no functions")
+    return observed_program, observed_md5, observed_sha256, observed_function_count
 
 
 def is_reparse(path: Path) -> bool:
@@ -250,10 +299,47 @@ def compare_manifests(expected: ProjectManifest, actual: ProjectManifest) -> Man
     return ManifestComparison(missing, extra, size_differences, hash_differences)
 
 
+def json_bytes(payload: dict[str, object]) -> bytes:
+    return (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
 def write_json(path: Path, payload: dict[str, object]) -> None:
+    write_bytes_atomic_new(path, json_bytes(payload))
+
+
+def stage_bytes_atomic_new(path: Path, content: bytes) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8", newline="\n") as stream:
-        stream.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    if path.exists():
+        raise BackupError(f"refusing to overwrite existing output: {path}")
+    partial = path.parent / f".{path.name}.partial-{uuid.uuid4().hex}"
+    with partial.open("xb") as stream:
+        stream.write(content)
+        stream.flush()
+        os.fsync(stream.fileno())
+    return partial
+
+
+def publish_staged_atomic_new(partial: Path, path: Path) -> None:
+    if partial.parent != path.parent:
+        raise BackupError("staged output and final output must share one directory")
+    try:
+        # A same-directory hard link publishes the fully flushed bytes without
+        # the overwrite race of os.replace.  The partial name is removed after
+        # the final name exists; FileExistsError remains a fail-closed refusal.
+        os.link(partial, path)
+    except FileExistsError as exc:
+        raise BackupError(f"refusing to overwrite existing output: {path}") from exc
+    except OSError as exc:
+        raise BackupError(f"could not atomically publish new output: {path}: {exc}") from exc
+    partial.unlink()
+
+
+def write_bytes_atomic_new(path: Path, content: bytes) -> None:
+    partial = stage_bytes_atomic_new(path, content)
+    try:
+        publish_staged_atomic_new(partial, path)
+    finally:
+        partial.unlink(missing_ok=True)
 
 
 def copy_project_pair(source_root: Path, destination_root: Path, project_name: str) -> CopyResult:
@@ -314,9 +400,12 @@ def build_open_command(
     program_name: str,
     script_path: Path,
     program_md5: str,
+    program_sha256: str,
 ) -> list[str]:
     if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
         raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", program_sha256):
+        raise BackupError("expected program SHA-256 must be exactly 64 hexadecimal characters")
     command = [
         str(analyze_headless),
         str(project_root.resolve()),
@@ -332,6 +421,7 @@ def build_open_command(
         program_name,
     ]
     command.append(program_md5.lower())
+    command.append(program_sha256.lower())
     return command
 
 
@@ -359,11 +449,15 @@ def verify_readonly_open(
     script_path: Path,
     *,
     program_md5: str,
+    program_sha256: str,
     runner: Runner = default_runner,
 ) -> OpenResult:
     if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
         raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", program_sha256):
+        raise BackupError("expected program SHA-256 must be exactly 64 hexadecimal characters")
     normalized_md5 = program_md5.lower()
+    normalized_sha256 = program_sha256.lower()
     before = build_manifest(project_root, project_name)
     command = build_open_command(
         analyze_headless,
@@ -372,21 +466,38 @@ def verify_readonly_open(
         program_name,
         script_path,
         normalized_md5,
+        normalized_sha256,
     )
     completed = runner(command)
     after = build_manifest(project_root, project_name)
     comparison = compare_manifests(before, after)
     if completed.returncode != 0:
         raise BackupError(f"read-only open probe exit code {completed.returncode}")
-    combined = f"{completed.stdout}\n{completed.stderr}"
-    sentinel = f"{OPEN_SENTINEL_PREFIX}{program_name}"
-    if normalized_md5:
-        sentinel += f" md5={normalized_md5}"
-    if sentinel not in combined:
-        raise BackupError("read-only open probe did not emit the success sentinel")
+    combined = f"{completed.stdout}\n{completed.stderr}".replace("\r\n", "\n")
+    observed_program, observed_md5, observed_sha256, observed_function_count = (
+        parse_clean_open_probe(
+            combined,
+            expected_program=program_name,
+            expected_md5=normalized_md5,
+            expected_sha256=normalized_sha256,
+        )
+    )
     if not comparison.matches:
         raise BackupError("read-only open probe caused project content drift")
-    return OpenResult(True, True, completed.returncode, normalized_md5, tuple(command), comparison)
+    return OpenResult(
+        True,
+        True,
+        completed.returncode,
+        normalized_md5,
+        normalized_sha256,
+        observed_program,
+        observed_md5,
+        observed_sha256,
+        observed_function_count,
+        tuple(command),
+        comparison,
+        combined,
+    )
 
 
 def verify_on_copy(
@@ -398,11 +509,14 @@ def verify_on_copy(
     script_path: Path,
     *,
     program_md5: str,
+    program_sha256: str,
     runner: Runner = default_runner,
     keep_failed_probe_copy: bool = False,
 ) -> VerificationResult:
     if not re.fullmatch(r"[0-9a-fA-F]{32}", program_md5):
         raise BackupError("expected program MD5 must be exactly 32 hexadecimal characters")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", program_sha256):
+        raise BackupError("expected program SHA-256 must be exactly 64 hexadecimal characters")
     source_root = resolve_plain_path(source_root, "source project root", strict=True)
     scratch_root = resolve_plain_path(scratch_root, "scratch root", strict=False)
     require_disjoint_paths(source_root, scratch_root, "source and scratch roots")
@@ -419,6 +533,7 @@ def verify_on_copy(
             analyze_headless,
             script_path,
             program_md5=program_md5,
+            program_sha256=program_sha256,
             runner=runner,
         )
         source_after = build_manifest(source_root, project_name)
@@ -432,15 +547,20 @@ def verify_on_copy(
         raise
 
 
-def verification_receipt(result: VerificationResult) -> dict[str, object]:
+def verification_receipt(
+    result: VerificationResult,
+    probe_log: dict[str, object],
+    probe_copy_disposition: str,
+) -> dict[str, object]:
     return {
         "schemaVersion": SCHEMA_VERSION,
         "verifiedAtUtc": utc_now(),
         "source": result.source_manifest.to_json(),
         "probeCopy": str(result.probe_copy),
+        "probeCopyDisposition": probe_copy_disposition,
         "sourceStable": result.source_stable,
         "copyComparison": result.copy_result.copy_comparison.to_json(),
-        "readonlyOpen": result.open_result.to_json(),
+        "readonlyOpen": result.open_result.to_json(probe_log),
     }
 
 
@@ -478,16 +598,43 @@ def publish_verification_result(
     *,
     keep_probe_copy: bool,
 ) -> None:
+    receipt_path = validate_external_output_path(
+        receipt_path,
+        [result.source_manifest.root, scratch_root, result.probe_copy],
+        "verification receipt",
+    )
+    log_path = receipt_path.with_name(f"{receipt_path.stem}.open-probe.log")
+    log_path = validate_external_output_path(
+        log_path,
+        [result.source_manifest.root, scratch_root, result.probe_copy],
+        "open-probe log",
+    )
+    if receipt_path.exists():
+        raise BackupError(f"refusing to overwrite existing output: {receipt_path}")
+    if log_path.exists():
+        raise BackupError(f"refusing to overwrite existing output: {log_path}")
+    disposition = (
+        "RETAINED_AT_VERIFICATION" if keep_probe_copy else "DELETED_AFTER_VERIFICATION"
+    )
+    log_bytes = result.open_result.combined_output.encode("utf-8")
+    probe_log = {
+        "path": os.path.relpath(log_path, receipt_path.parent),
+        "bytes": len(log_bytes),
+        "sha256": hashlib.sha256(log_bytes).hexdigest(),
+    }
+    receipt_bytes = json_bytes(verification_receipt(result, probe_log, disposition))
+    log_partial = stage_bytes_atomic_new(log_path, log_bytes)
+    receipt_partial: Path | None = None
     try:
-        receipt_path = validate_external_output_path(
-            receipt_path,
-            [result.source_manifest.root, scratch_root, result.probe_copy],
-            "verification receipt",
-        )
-        write_json(receipt_path, verification_receipt(result))
-    finally:
-        if result.probe_copy.exists() and not keep_probe_copy:
+        receipt_partial = stage_bytes_atomic_new(receipt_path, receipt_bytes)
+        publish_staged_atomic_new(log_partial, log_path)
+        if not keep_probe_copy:
             safe_remove_probe_copy(result.probe_copy, scratch_root, project_name)
+        publish_staged_atomic_new(receipt_partial, receipt_path)
+    finally:
+        log_partial.unlink(missing_ok=True)
+        if receipt_partial is not None:
+            receipt_partial.unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -511,6 +658,7 @@ def main() -> int:
     verify_parser.add_argument("--project-name", default="BEA")
     verify_parser.add_argument("--program", default="BEA.exe")
     verify_parser.add_argument("--program-md5", required=True)
+    verify_parser.add_argument("--program-sha256", required=True)
     verify_parser.add_argument("--analyze-headless", required=True, type=Path)
     verify_parser.add_argument("--script-path", default=Path(__file__).resolve().parent, type=Path)
     verify_parser.add_argument("--keep-probe-copy", action="store_true")
@@ -519,7 +667,11 @@ def main() -> int:
     try:
         if args.command == "inspect":
             manifest = build_manifest(args.project_root, args.project_name)
-            payload = {"schemaVersion": SCHEMA_VERSION, "manifest": manifest.to_json()}
+            payload = {
+                "schemaVersion": SCHEMA_VERSION,
+                "createdAtUtc": utc_now(),
+                "manifest": manifest.to_json(),
+            }
             if args.output:
                 output = validate_external_output_path(
                     args.output, [manifest.root], "inspection output"
@@ -538,6 +690,7 @@ def main() -> int:
                 args.analyze_headless,
                 args.script_path,
                 program_md5=args.program_md5,
+                program_sha256=args.program_sha256,
                 keep_failed_probe_copy=args.keep_probe_copy,
             )
             print(sanitized_summary(result))

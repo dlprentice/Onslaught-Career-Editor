@@ -242,6 +242,34 @@ class ManifestTests(HarnessCase):
                 }
             )
 
+    def test_file_text_sequence_refuses_escaping_paths_and_ambiguous_lines(self) -> None:
+        with self.assertRaises(ph.ProbeError):
+            ph.parse_probe(
+                {
+                    "name": "x",
+                    "level": 1,
+                    "sourceRoot": ".",
+                    "oracle": {
+                        "kind": "fileTextSequence",
+                        "path": "../probe.log",
+                        "lines": ["SENTINEL"],
+                    },
+                }
+            )
+        with self.assertRaises(ph.ProbeError):
+            ph.parse_probe(
+                {
+                    "name": "x",
+                    "level": 1,
+                    "sourceRoot": ".",
+                    "oracle": {
+                        "kind": "fileTextSequence",
+                        "path": "probe.log",
+                        "lines": ["SENTINEL", "SENTINEL"],
+                    },
+                }
+            )
+
     def test_level_in_game_arguments_is_refused(self) -> None:
         with self.assertRaises(ph.ProbeError) as caught:
             ph.parse_probe(
@@ -439,6 +467,66 @@ class OracleTests(HarnessCase):
         receipt, _ = self.run_probe(probe, [(1.0, writes("out.txt", "tiny"))])
         self.assertEqual(receipt["verdict"], "FAIL")
         self.assertIn("need >=", receipt["oracle"]["detail"])
+
+    def test_file_text_sequence_requires_exact_counts_and_order(self) -> None:
+        probe = self.probe(
+            oracle={
+                "kind": "fileTextSequence",
+                "path": "probe.log",
+                "lines": ["BEGIN", "424242", "123.250000", "DONE"],
+                "exactOccurrences": 1,
+                "timeoutSeconds": 10,
+            },
+            collect=["probe.log"],
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [
+                (
+                    2.0,
+                    writes(
+                        "probe.log",
+                        "engine noise\r\nBEGIN\r\n424242\r\n123.250000\r\nDONE\r\n",
+                    ),
+                )
+            ],
+        )
+        self.assertEqual("PASS", receipt["verdict"])
+        self.assertIn("exact ordered lines", receipt["oracle"]["detail"])
+
+        out_of_order, _ = self.run_probe(
+            probe,
+            [
+                (
+                    2.0,
+                    writes(
+                        "probe.log",
+                        "BEGIN\r\n123.250000\r\n424242\r\nDONE\r\n",
+                    ),
+                ),
+                (3.0, ("exit", 0)),
+            ],
+        )
+        self.assertEqual("FAIL", out_of_order["verdict"])
+        self.assertIn("out of order", out_of_order["oracle"]["detail"])
+
+    def test_file_text_exclusion_is_only_decided_at_the_deadline(self) -> None:
+        probe = self.probe(
+            oracle={
+                "kind": "fileTextSequence",
+                "path": "probe.log",
+                "lines": ["FORBIDDEN"],
+                "exactOccurrences": 0,
+                "timeoutSeconds": 5,
+            }
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [(1.0, writes("probe.log", "ordinary diagnostics\r\n"))],
+        )
+        self.assertEqual("PASS", receipt["verdict"])
+        self.assertGreaterEqual(receipt["oracle"]["elapsedSeconds"], 5)
+        self.assertIn("excludes", receipt["oracle"]["detail"])
 
     def test_fatal_fault_oracle_is_the_poison_control(self) -> None:
         probe = self.probe(
@@ -990,6 +1078,31 @@ class StagingTests(HarnessCase):
         probe = self.probe(makeDirs=["data/Memory", "MemoryDumps"])
         self.run_probe(probe, [(0.5, look), (1.0, "exit")])
         self.assertEqual(seen, {"memory": True, "dumps": True})
+
+    def test_declared_output_is_not_inherited_from_the_source_tree(self) -> None:
+        stale = self.source / "probe.log"
+        stale.write_text("STALE SENTINEL\n", encoding="utf-8")
+        stale_bytes = stale.stat().st_size
+        stale_hash = hashlib.sha256(stale.read_bytes()).hexdigest()
+        probe = self.probe(
+            oracle={
+                "kind": "fileTextSequence",
+                "path": "probe.log",
+                "lines": ["FRESH SENTINEL"],
+                "timeoutSeconds": 10,
+            },
+            collect=["probe.log"],
+        )
+        receipt, _ = self.run_probe(
+            probe,
+            [(2.0, writes("probe.log", "FRESH SENTINEL\r\n"))],
+        )
+        removed = receipt["staging"]["removedInheritedOutputs"]
+        self.assertEqual(
+            [{"file": "probe.log", "bytes": stale_bytes, "sha256": stale_hash}],
+            removed,
+        )
+        self.assertEqual("PASS", receipt["verdict"])
 
 
 class DiagnosisTests(HarnessCase):

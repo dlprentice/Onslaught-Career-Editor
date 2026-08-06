@@ -27,11 +27,10 @@ HONESTY CONTRACT (do not weaken these)
    it came from. `build` refuses to run against a specimen whose sha256 is not
    the pristine baseline unless `--allow-specimen-mismatch` is passed.
 2. The historical 79.8268% `.text` figure is a DATED 6,411-body measurement.
-   This tool never reproduces, rolls forward, or approximates it. What it emits
-   instead is a 7,555-body *hull* union explicitly labelled an UPPER BOUND,
-   because the name table carries bodyMin/bodyMax hulls and 67 bodies are
-   non-contiguous. The exact current body-byte total is UNKNOWN until a fresh
-   per-instruction interval export exists.
+   This tool never reproduces, rolls forward, or approximates it. When supplied
+   an authenticated `ExportParityLabGraph` READY receipt it uses exact fragmented
+   bodies and verifies every fragment against the specimen. Without that input,
+   it falls back to a 7,555-body *hull* union explicitly labelled an UPPER BOUND.
 3. Where a number cannot be computed from the inputs present, the field is the
    string "UNKNOWN". It is never estimated into a plausible-looking value.
 4. DARK is exact (a real body is a subset of its hull, so a hull with zero
@@ -59,6 +58,7 @@ USAGE
   ledger-functions.tsv   one row per function in the inventory
   ledger-dark.tsv        dark regions ranked
   ledger-gaps.tsv        executed `.text` bytes claimed by no function
+  ledger-native-handlers.tsv  finite 144-row Mission native accounting
   ledger-families.tsv    dark bytes aggregated by class-name family
 
 Re-run `build` after every probe, then `delta` the two snapshots to see what the
@@ -72,14 +72,29 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import struct
 import sys
-from bisect import bisect_right
+import tempfile
+from bisect import bisect_left, bisect_right
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA = "bea.re.coverage-ledger.v1"
+SCHEMA = "bea.re.coverage-ledger.v2"
+PARITY_GRAPH_RECEIPT_SCHEMA = "bea-ghidra-parity-graph-receipt.v2"
+PARITY_GRAPH_TSV_SCHEMA = "bea-ghidra-parity-graph.v2"
+NATIVE_CANARY_SCHEMA = "bea.re.native-execution-canary.v1"
+SNAPSHOT_READY_SCHEMA = "bea.re.coverage-ledger-ready.v1"
+SNAPSHOT_FILES = (
+    "ledger-summary.json",
+    "ledger-functions.tsv",
+    "ledger-dark.tsv",
+    "ledger-gaps.tsv",
+    "ledger-unmapped.tsv",
+    "ledger-native-handlers.tsv",
+    "ledger-families.tsv",
+)
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -93,6 +108,7 @@ PRISTINE_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7
 DEFAULT_SPECIMEN = REPO / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"
 DEFAULT_NAMES = REPO / "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv"
 DEFAULT_NATIVES = REPO / "local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv"
+DEFAULT_PARITY_GRAPH = REPO / "local-lab/parity-lab-static-v5-2026-07-29/parity-graph.ready.json"
 
 DEFAULT_COVERAGE_ROOTS = [
     Path("G:/bea-ttd/q-campaign-coverage-v1"),
@@ -127,6 +143,10 @@ BULK_REVIEW_MARKERS = ("ghidra-fullpass-findings", "ghidra-reviewed-correction-p
 # Above this, a bodyMin..bodyMax hull is very unlikely to be one contiguous
 # function body and the byte figure should not be trusted as a body size.
 HULL_SUSPECT_BYTES = 8192
+
+
+class LedgerInputError(ValueError):
+    """An evidence input failed an identity, shape, or consistency check."""
 
 
 # ---------------------------------------------------------------------------
@@ -237,6 +257,75 @@ def file_stamp(path: Path) -> dict:
     }
 
 
+def verify_snapshot(snapshot: Path) -> dict:
+    """Verify the atomic READY receipt and every published ledger byte."""
+    receipt_path = snapshot / "ledger.ready.json"
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LedgerInputError(f"cannot read coverage READY receipt: {exc}") from exc
+    if receipt.get("schema") != SNAPSHOT_READY_SCHEMA:
+        raise LedgerInputError(
+            f"unsupported coverage READY schema: {receipt.get('schema')!r}"
+        )
+    files = receipt.get("files")
+    if not isinstance(files, dict) or set(files) != set(SNAPSHOT_FILES):
+        raise LedgerInputError(
+            "coverage READY receipt does not name the exact published ledger set"
+        )
+    for name in SNAPSHOT_FILES:
+        path = snapshot / name
+        expected = files.get(name)
+        if not path.is_file() or not isinstance(expected, dict):
+            raise LedgerInputError(f"coverage output missing from disk/receipt: {name}")
+        if expected.get("path") != name:
+            raise LedgerInputError(
+                f"coverage READY receipt contains a non-portable output path: {name}"
+            )
+        actual = file_stamp(path)
+        if (
+            actual["bytes"] != expected.get("bytes")
+            or actual["sha256"] != expected.get("sha256")
+        ):
+            raise LedgerInputError(
+                f"coverage output disagrees with READY receipt: {name}"
+            )
+    return receipt
+
+
+def function_population_date(path: Path) -> str:
+    """Return only a date the input itself authorises us to claim.
+
+    Ghidra's full-inventory TSV has no embedded export timestamp.  Filesystem
+    mtime is recorded separately by `file_stamp`; it is not silently promoted
+    to an evidence date.  The canonical historical table is the one exception:
+    its dated filename is its published identity.
+    """
+    try:
+        canonical = path.resolve() == DEFAULT_NAMES.resolve()
+    except OSError:
+        canonical = False
+    if canonical:
+        return "2026-07-27 (canonical name-table export date encoded in its filename)"
+    return "UNKNOWN (supplied inventory has no embedded export timestamp; lastWriteUtc is filesystem metadata only)"
+
+
+def _canonical_json_sha256(value) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def coverage_set_sha256(sources: list[dict]) -> str:
+    """Content identity for one complete coverage input set.
+
+    Paths and source labels are deliberately excluded: the same byte-identical
+    indexes remain the same evidence set after a move. Duplicate inputs remain
+    visible because this hashes a sorted list rather than a set.
+    """
+
+    return _canonical_json_sha256(sorted(row["coverageSha256"] for row in sources))
+
+
 class Specimen:
     """Read-only PE reader over the pristine baseline. Writes nothing, ever."""
 
@@ -274,6 +363,252 @@ class Specimen:
                 return s["name"]
         return None
 
+    def bytes_at_rva(self, rva: int, size: int) -> bytes:
+        """Read initialized image bytes for one range without RVA=file-offset guesses."""
+
+        if size < 0:
+            raise LedgerInputError(f"negative specimen read size: {size}")
+        for section in self.sections:
+            start = section["rva"]
+            raw_end = start + section["rawsize"]
+            if start <= rva and rva + size <= raw_end:
+                offset = section["rawptr"] + (rva - start)
+                return self.data[offset : offset + size]
+        raise LedgerInputError(
+            f"RVA range [0x{rva:x},0x{rva + size:x}) is not wholly backed by one PE section"
+        )
+
+
+def _read_tsv_metadata(path: Path) -> dict[str, str]:
+    metadata: dict[str, str] = {}
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if not line.startswith("#"):
+                break
+            item = line[1:].strip()
+            if "=" in item:
+                key, value = item.split("=", 1)
+                metadata[key.strip()] = value.strip()
+    return metadata
+
+
+def _parse_hex(value: object, label: str) -> int:
+    try:
+        return int(str(value), 16)
+    except (TypeError, ValueError) as exc:
+        raise LedgerInputError(f"{label} is not a hexadecimal integer: {value!r}") from exc
+
+
+def load_exact_body_graph(receipt_path: Path, spec: Specimen, name_rows: list[dict]) -> dict:
+    """Load and fully authenticate an ExportParityLabGraph body-fragment export."""
+
+    try:
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LedgerInputError(f"cannot read parity-graph receipt {receipt_path}: {exc}") from exc
+
+    if receipt.get("schemaVersion") != PARITY_GRAPH_RECEIPT_SCHEMA:
+        raise LedgerInputError(
+            f"unsupported parity-graph receipt schema: {receipt.get('schemaVersion')!r}"
+        )
+
+    program = receipt.get("program")
+    body_record = receipt.get("bodyRanges")
+    if not isinstance(program, dict) or not isinstance(body_record, dict):
+        raise LedgerInputError("parity-graph receipt is missing program/bodyRanges objects")
+
+    expected_md5 = str(program.get("executableMd5", "")).lower()
+    specimen_md5 = hashlib.md5(spec.data, usedforsecurity=False).hexdigest()
+    if expected_md5 != specimen_md5:
+        raise LedgerInputError(
+            "parity-graph executable MD5 does not match the supplied specimen: "
+            f"receipt={expected_md5 or '<missing>'} specimen={specimen_md5}"
+        )
+    if _parse_hex(program.get("imageBase"), "parity-graph imageBase") != spec.image_base:
+        raise LedgerInputError("parity-graph image base does not match the supplied specimen")
+
+    body_name = body_record.get("file")
+    if not isinstance(body_name, str) or not body_name or Path(body_name).name != body_name:
+        raise LedgerInputError("parity-graph bodyRanges.file must be one sibling filename")
+    body_path = receipt_path.parent / body_name
+    if not body_path.is_file():
+        raise LedgerInputError(f"parity-graph body-range file is missing: {body_path}")
+    body_stamp = file_stamp(body_path)
+    if body_stamp["bytes"] != body_record.get("bytes"):
+        raise LedgerInputError("parity-graph body-range byte count disagrees with its READY receipt")
+    if body_stamp["sha256"] != str(body_record.get("sha256", "")).lower():
+        raise LedgerInputError("parity-graph body-range SHA-256 disagrees with its READY receipt")
+
+    metadata = _read_tsv_metadata(body_path)
+    if metadata.get("schema") != PARITY_GRAPH_TSV_SCHEMA:
+        raise LedgerInputError(f"unsupported body-range TSV schema: {metadata.get('schema')!r}")
+    if metadata.get("executableMd5", "").lower() != specimen_md5:
+        raise LedgerInputError("body-range TSV executable MD5 does not match the supplied specimen")
+    if _parse_hex(metadata.get("imageBase"), "body-range imageBase") != spec.image_base:
+        raise LedgerInputError("body-range TSV image base does not match the supplied specimen")
+
+    by_entry: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    ordinals: dict[int, set[int]] = defaultdict(set)
+    export_names: dict[int, str] = {}
+    all_ranges: list[tuple[int, int, int]] = []
+    row_count = 0
+    with open(body_path, encoding="utf-8") as fh:
+        header = None
+        for raw in fh:
+            if raw.startswith("#") or not raw.strip():
+                continue
+            fields = raw.rstrip("\n").split("\t")
+            if header is None:
+                header = fields
+                required = {
+                    "functionAddress", "functionName", "rangeOrdinal", "rangeMin",
+                    "rangeMax", "rangeEndExclusive", "rangeBytes", "rangeSha256",
+                }
+                if not required.issubset(header):
+                    raise LedgerInputError("body-range TSV is missing required columns")
+                continue
+            row_count += 1
+            row = dict(zip(header, fields))
+            entry = _parse_hex(row.get("functionAddress"), "functionAddress")
+            lo_va = _parse_hex(row.get("rangeMin"), "rangeMin")
+            max_va = _parse_hex(row.get("rangeMax"), "rangeMax")
+            hi_va = _parse_hex(row.get("rangeEndExclusive"), "rangeEndExclusive")
+            try:
+                size = int(row.get("rangeBytes", ""))
+                ordinal = int(row.get("rangeOrdinal", ""))
+            except ValueError as exc:
+                raise LedgerInputError("body-range ordinal/size is not an integer") from exc
+            if size <= 0 or hi_va - lo_va != size or max_va + 1 != hi_va:
+                raise LedgerInputError(
+                    f"inconsistent body range at 0x{entry:08x}: "
+                    f"[0x{lo_va:x},0x{hi_va:x}) size={size} max=0x{max_va:x}"
+                )
+            if ordinal <= 0 or ordinal in ordinals[entry]:
+                raise LedgerInputError(f"duplicate/invalid range ordinal {ordinal} at 0x{entry:08x}")
+            ordinals[entry].add(ordinal)
+
+            lo = lo_va - spec.image_base
+            hi = hi_va - spec.image_base
+            if not (spec.text_lo <= lo < hi <= spec.text_hi):
+                raise LedgerInputError(
+                    f"body range [0x{lo_va:x},0x{hi_va:x}) is outside the specimen .text section"
+                )
+            actual_hash = hashlib.sha256(spec.bytes_at_rva(lo, size)).hexdigest()
+            if actual_hash != str(row.get("rangeSha256", "")).lower():
+                raise LedgerInputError(
+                    f"body-range bytes do not match the specimen at [0x{lo_va:x},0x{hi_va:x})"
+                )
+            by_entry[entry].append((lo, hi))
+            export_names[entry] = row.get("functionName", "")
+            all_ranges.append((lo, hi, entry))
+
+    expected_rows = body_record.get("rangeCount")
+    expected_functions = body_record.get("functionCount")
+    if row_count != expected_rows or len(by_entry) != expected_functions:
+        raise LedgerInputError(
+            "parity-graph row/function counts disagree with its READY receipt: "
+            f"rows={row_count}/{expected_rows}, functions={len(by_entry)}/{expected_functions}"
+        )
+
+    name_entries = {row["va"] for row in name_rows}
+    body_entries = set(by_entry)
+    if body_entries != name_entries:
+        missing = sorted(name_entries - body_entries)
+        extra = sorted(body_entries - name_entries)
+        raise LedgerInputError(
+            "parity-graph and name-table function populations differ: "
+            f"missing={len(missing)} extra={len(extra)}"
+        )
+
+    for entry, ranges in by_entry.items():
+        expected_ordinals = set(range(1, len(ranges) + 1))
+        if ordinals[entry] != expected_ordinals:
+            raise LedgerInputError(f"non-contiguous range ordinals at 0x{entry:08x}")
+        if not any(lo <= entry - spec.image_base < hi for lo, hi in ranges):
+            raise LedgerInputError(f"function entry 0x{entry:08x} is outside its exported body")
+        ranges.sort()
+
+    previous = None
+    for lo, hi, entry in sorted(all_ranges):
+        if previous is not None and lo < previous[1]:
+            raise LedgerInputError(
+                "overlapping exact function bodies: "
+                f"0x{spec.image_base + lo:08x} begins before "
+                f"0x{spec.image_base + previous[1]:08x}"
+            )
+        previous = (lo, hi, entry)
+
+    name_by_entry = {row["va"]: row["name"] for row in name_rows}
+    union = merge((lo, hi) for lo, hi, _entry in all_ranges)
+    return {
+        "byEntryVa": dict(by_entry),
+        "union": union,
+        "unionBytes": total(union),
+        "rangeCount": row_count,
+        "functionCount": len(by_entry),
+        "nameMismatchCount": sum(
+            1 for entry, exported in export_names.items()
+            if name_by_entry.get(entry) != exported
+        ),
+        "receipt": file_stamp(receipt_path),
+        "bodyRanges": body_stamp,
+        "program": program,
+    }
+
+
+def native_canary_result(
+    canary_path: Path | None,
+    coverage_digest: str,
+    native_stamp: dict | None,
+    observed: int,
+    observed_uncontradicted: int,
+) -> dict:
+    """Validate an optional native-hit canary bound to exact input manifests."""
+
+    base = {
+        "schema": NATIVE_CANARY_SCHEMA,
+        "status": "NOT_CONFIGURED",
+        "coverageSetSha256": coverage_digest,
+        "note": (
+            "No count expectation applies to an arbitrary coverage set. Supply --native-canary "
+            "with a manifest bound to this coverage-set and registry SHA-256 to enforce one."
+        ),
+    }
+    if canary_path is None:
+        return base
+    try:
+        canary = json.loads(canary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LedgerInputError(f"cannot read native canary {canary_path}: {exc}") from exc
+    if canary.get("schema") != NATIVE_CANARY_SCHEMA:
+        raise LedgerInputError(f"unsupported native canary schema: {canary.get('schema')!r}")
+    if canary.get("coverageSetSha256") != coverage_digest:
+        raise LedgerInputError("native canary is bound to a different coverage input set")
+    if native_stamp is None or canary.get("nativeRegistrySha256") != native_stamp.get("sha256"):
+        raise LedgerInputError("native canary is bound to a different native registry")
+    expected = canary.get("expected")
+    if not isinstance(expected, dict):
+        raise LedgerInputError("native canary is missing its expected object")
+    wanted = {
+        "handlerFirstByteObserved": observed,
+        "handlerFirstByteObservedExcludingContradicted": observed_uncontradicted,
+    }
+    mismatches = {
+        key: {"expected": expected.get(key), "actual": actual}
+        for key, actual in wanted.items()
+        if expected.get(key) != actual
+    }
+    if mismatches:
+        raise LedgerInputError(f"native canary failed: {mismatches}")
+    return {
+        **base,
+        "status": "PASS",
+        "manifest": file_stamp(canary_path),
+        "nativeRegistrySha256": native_stamp["sha256"],
+        "expected": expected,
+        "note": "Expected native-hit counts matched the exact coverage and registry manifests.",
+    }
+
 
 # --- Ghidra name table ------------------------------------------------------
 
@@ -305,26 +640,60 @@ HUMAN_NAMED_CLASSES = {"NAMED"}
 UNNAMED_CLASSES = {"FUN", "VFUNC_SLOT"}
 
 
+def evidence_proxy_tier(name_class_value: str, focused_citations: int, citations: int) -> str:
+    """Return only the weak evidence grade this ledger can establish.
+
+    Runtime entry coverage and a registry binding are deliberately absent from
+    this decision. They establish execution and a candidate identity, not a
+    reviewed receiver/input/write/return contract.
+    """
+    if focused_citations > 0:
+        return "U2_ADDRESS_CITED"
+    if citations > 0:
+        return "U1b_BULK_REVIEWED"
+    if name_class_value in HUMAN_NAMED_CLASSES:
+        return "U1_NAMED_ONLY"
+    return "U0_NONE"
+
+
 def load_name_table(path: Path):
     rows = []
     header_lines = []
+    columns = None
     with open(path, encoding="utf-8") as fh:
         for line in fh:
             if line.startswith("#"):
                 header_lines.append(line.rstrip("\n"))
                 continue
-            if line.startswith("address\t"):
+            if not line.strip():
                 continue
-            f = line.rstrip("\n").split("\t")
-            if len(f) < 4:
+            fields = line.rstrip("\n").split("\t")
+            if columns is None:
+                columns = {name: index for index, name in enumerate(fields)}
+                required = {"address", "name", "bodyMin", "bodyMax"}
+                if not required.issubset(columns):
+                    raise LedgerInputError(
+                        f"name table is missing required columns: {sorted(required - set(columns))}"
+                    )
+                continue
+            if len(fields) <= max(columns[column] for column in required):
                 continue
             try:
-                addr = int(f[0], 16)
-                lo = int(f[2], 16)
-                hi = int(f[3], 16)
+                addr = int(fields[columns["address"]], 16)
+                lo = int(fields[columns["bodyMin"]], 16)
+                hi = int(fields[columns["bodyMax"]], 16)
             except ValueError:
                 continue
-            rows.append({"va": addr, "name": f[1], "hullLoVa": lo, "hullHiVa": hi})
+            rows.append(
+                {
+                    "va": addr,
+                    "name": fields[columns["name"]],
+                    "hullLoVa": lo,
+                    "hullHiVa": hi,
+                }
+            )
+    if columns is None:
+        raise LedgerInputError(f"name table has no header: {path}")
     rows.sort(key=lambda r: r["va"])
     return rows, header_lines
 
@@ -345,10 +714,19 @@ def load_natives(path: Path):
             if len(f) < 6 or f[0] == "index":
                 continue
             try:
+                index = int(f[0])
+                record = int(f[1], 16)
                 handler = int(f[2], 16)
             except ValueError:
                 continue
+            if handler in out:
+                raise LedgerInputError(
+                    f"native registry aliases handler 0x{handler:08x}; "
+                    "aliases must be represented explicitly before they can be classified"
+                )
             out[handler] = {
+                "index": index,
+                "recordVa": record,
                 "shippedName": f[3],
                 "ghidraName": f[4],
                 "registryStatus": f[5],
@@ -674,6 +1052,43 @@ def family_of(name: str) -> str:
 
 
 def build(args) -> int:
+    destination = Path(args.out)
+    if destination.exists():
+        print(f"FATAL: refusing existing snapshot destination: {destination}", file=sys.stderr)
+        return 2
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{destination.name}.", dir=destination.parent))
+    original_out = args.out
+    args.out = str(stage)
+    try:
+        result = _build_into(args)
+        if result != 0:
+            return result
+        missing = [name for name in SNAPSHOT_FILES if not (stage / name).is_file()]
+        if missing:
+            print(f"FATAL: staged snapshot omitted outputs: {missing}", file=sys.stderr)
+            return 2
+        ready = {
+            "schema": SNAPSHOT_READY_SCHEMA,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "files": {
+                name: {**file_stamp(stage / name), "path": name}
+                for name in SNAPSHOT_FILES
+            },
+        }
+        (stage / "ledger.ready.json").write_text(
+            json.dumps(ready, indent=2) + "\n", encoding="utf-8"
+        )
+        os.replace(stage, destination)
+        print(f"READY snapshot published atomically to {destination}", file=sys.stderr)
+        return 0
+    finally:
+        args.out = original_out
+        if stage.exists():
+            shutil.rmtree(stage, ignore_errors=True)
+
+
+def _build_into(args) -> int:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -744,12 +1159,14 @@ def build(args) -> int:
     union = CoverageIndex(clip(merge(all_ranges), text_lo, text_hi))
     union_runs = union.runs
     observed_bytes = union.total()
+    coverage_digest = coverage_set_sha256(sources)
     print(f"      union observed .text = {observed_bytes:,} bytes ({100*observed_bytes/text_size:.4f}%)", file=sys.stderr)
 
     # --- name table --------------------------------------------------------
     names_path = Path(args.names)
     rows, name_header = load_name_table(names_path)
     names_stamp = file_stamp(names_path)
+    population_date = function_population_date(names_path)
     print(f"[3/7] name table: {len(rows):,} functions", file=sys.stderr)
 
     hulls = []
@@ -771,11 +1188,39 @@ def build(args) -> int:
 
     hull_union = merge(clip(hulls, text_lo, text_hi))
     hull_union_bytes = total(hull_union)
-    unmapped = subtract([(text_lo, text_hi)], hull_union)
+
+    exact_graph = None
+    graph_value = None if args.no_exact_bodies else args.parity_graph
+    if graph_value and str(graph_value).strip():
+        graph_path = Path(graph_value)
+        if not graph_path.is_file():
+            print(f"FATAL: parity-graph receipt not found: {graph_path}", file=sys.stderr)
+            return 2
+        try:
+            exact_graph = load_exact_body_graph(graph_path, spec, rows)
+        except LedgerInputError as exc:
+            print(f"FATAL: exact body graph rejected: {exc}", file=sys.stderr)
+            return 2
+        print(
+            f"      exact bodies: {exact_graph['rangeCount']:,} fragments / "
+            f"{exact_graph['functionCount']:,} functions = {exact_graph['unionBytes']:,} bytes",
+            file=sys.stderr,
+        )
+    else:
+        print("      exact bodies: unavailable; retaining conservative hull accounting", file=sys.stderr)
+
+    body_union = exact_graph["union"] if exact_graph else hull_union
+    body_union_bytes = total(body_union)
+    body_accounting = "EXACT_GHIDRA_FRAGMENTS" if exact_graph else "BODY_MIN_MAX_HULLS"
+    unmapped = subtract([(text_lo, text_hi)], body_union)
     unmapped_bytes = total(unmapped)
 
     # --- natives, evidence, static refs ------------------------------------
-    natives, natives_stamp = load_natives(Path(args.natives) if args.natives else None)
+    try:
+        natives, natives_stamp = load_natives(Path(args.natives) if args.natives else None)
+    except LedgerInputError as exc:
+        print(f"FATAL: native registry rejected: {exc}", file=sys.stderr)
+        return 2
     print(f"[4/7] native registry: {len(natives)} handler bindings", file=sys.stderr)
 
     # Native execution, tested at the BYTE level and independent of whether
@@ -793,6 +1238,49 @@ def build(args) -> int:
         1 for h, v in natives_observed.items()
         if v and natives[h]["registryStatus"] != "CONTRADICTED"
     )
+    try:
+        native_canary = native_canary_result(
+            Path(args.native_canary) if args.native_canary else None,
+            coverage_digest,
+            natives_stamp,
+            natives_hit,
+            natives_hit_uncontradicted,
+        )
+    except LedgerInputError as exc:
+        print(f"FATAL: native execution canary rejected: {exc}", file=sys.stderr)
+        return 2
+
+    function_by_va = {row["va"]: row for row in rows}
+    native_rows = []
+    for handler, info in sorted(natives.items(), key=lambda item: item[1]["index"]):
+        function = function_by_va.get(handler)
+        observed = natives_observed[handler]
+        if info["registryStatus"] == "CONTRADICTED":
+            terminal = "WRONG_PRIOR_NAME"
+        elif function is None:
+            terminal = "BOUNDARY_MISSING"
+        elif not observed:
+            terminal = "UNREACHED_IN_SCENARIOS"
+        elif info["registryStatus"] in ("MATCH", "WEAK"):
+            terminal = "ENTRY_CONFIRMED_NAME_WEAK"
+        else:
+            terminal = "ENTRY_CONFIRMED_BEHAVIOR_UNKNOWN"
+        native_rows.append(
+            {
+                "index": info["index"],
+                "recordVa": info["recordVa"],
+                "handlerVa": handler,
+                "shippedName": info["shippedName"],
+                "currentGhidraName": function["name"] if function else "",
+                "registryStatus": info["registryStatus"],
+                "functionPresent": function is not None,
+                "observed": observed,
+                "terminalState": terminal,
+                "needsBoundaryReview": function is None,
+                "needsBehaviorContract": observed,
+            }
+        )
+    native_terminal_counts = Counter(row["terminalState"] for row in native_rows)
 
     if args.skip_evidence:
         cite_counts, cite_focused, cite_docs, n_evidence_files, n_bulk_files, cite_excluded = (
@@ -822,7 +1310,25 @@ def build(args) -> int:
     by_rva = {r["va"] - spec.image_base: r for r in rows}
     starts = [r["lo"] for r in rows]
 
+    exact_intervals = []
+    exact_interval_starts = []
+    if exact_graph:
+        row_by_va = {r["va"]: r for r in rows}
+        exact_intervals = sorted(
+            (lo, hi, row_by_va[entry])
+            for entry, ranges in exact_graph["byEntryVa"].items()
+            for lo, hi in ranges
+        )
+        exact_interval_starts = [lo for lo, _hi, _row in exact_intervals]
+
     def containing(rva):
+        if exact_graph:
+            i = bisect_right(exact_interval_starts, rva) - 1
+            if i >= 0:
+                lo, hi, row = exact_intervals[i]
+                if lo <= rva < hi:
+                    return row
+            return None
         i = bisect_right(starts, rva) - 1
         while i >= 0:
             r = rows[i]
@@ -841,32 +1347,66 @@ def build(args) -> int:
     funcs = []
     for idx, r in enumerate(rows):
         lo, hi = r["lo"], r["hi"]
-        obs = union.covered_in(lo, hi) if text_lo <= lo < text_hi else 0
+        hull_obs = union.covered_in(lo, hi) if text_lo <= lo < text_hi else 0
         nc = name_class(r["name"])
         nat = natives.get(r["va"])
         cited = cite_counts.get(r["va"], 0)
-        hit_sources = [sid for sid, runs in per_source_runs.items()
-                       if CoverageIndexCacheGet(sid, runs).covered_in(lo, hi) > 0] if args.per_source else []
         # Tighter of two upper bounds on body size: the bodyMin..bodyMax hull,
         # and the distance to the next function entry. Both over-count (padding,
         # non-contiguity); neither under-counts a contiguous body.
         next_lo = rows[idx + 1]["lo"] if idx + 1 < len(rows) else None
         span_next = (next_lo - lo) if (next_lo is not None and next_lo > lo) else None
         body_est = min(r["hullBytes"], span_next) if span_next else r["hullBytes"]
+        exact_ranges = exact_graph["byEntryVa"][r["va"]] if exact_graph else []
+        body_ranges = exact_ranges if exact_graph else [(lo, hi)]
+        body_exact = sum(b - a for a, b in exact_ranges) if exact_graph else None
+        body_bytes = body_exact if body_exact is not None else body_est
+        exec_denominator = body_exact if body_exact is not None else r["hullBytes"]
+        range_text = ";".join(f"0x{a:x}-0x{b:x}" for a, b in body_ranges)
+        range_set_sha256 = _canonical_json_sha256(body_ranges) if exact_graph else "UNKNOWN"
+        entity_key = (
+            f"CODE:{spec_stamp['sha256']}:VA=0x{r['va']:08x}:RANGES={range_set_sha256}"
+            if exact_graph else "UNKNOWN"
+        )
+        obs = sum(union.covered_in(a, b) for a, b in body_ranges)
+        hit_sources = (
+            [
+                sid for sid, runs in per_source_runs.items()
+                if sum(CoverageIndexCacheGet(sid, runs).covered_in(a, b) for a, b in body_ranges) > 0
+            ]
+            if args.per_source else []
+        )
+        exec_state = "DARK" if obs == 0 else ("COVERED" if obs >= exec_denominator else "PARTIAL")
         funcs.append(
             {
                 "va": r["va"],
+                "entryRva": r["va"] - spec.image_base,
+                "entityKey": entity_key,
                 "name": r["name"],
                 "lo": lo,
                 "hi": hi,
+                "bodyRanges": body_ranges,
+                "bodyRangesRva": range_text if exact_graph else "UNKNOWN",
+                "bodyRangeSetSha256": range_set_sha256,
+                "bodyRangeCount": len(body_ranges) if exact_graph else "UNKNOWN",
+                "bodyAccounting": body_accounting,
+                "bodyBytes": body_bytes,
+                "bodyBytesExact": body_exact if body_exact is not None else "UNKNOWN",
                 "hullBytes": r["hullBytes"],
                 "spanToNextEntry": span_next if span_next is not None else "",
                 "bodyBytesEstimate": body_est,
                 "hullSuspect": r["hullBytes"] > HULL_SUSPECT_BYTES,
                 "nameClass": nc,
                 "observedBytes": obs,
-                "observedPctOfHull": round(100.0 * obs / r["hullBytes"], 4) if r["hullBytes"] else 0.0,
-                "execState": "DARK" if obs == 0 else ("COVERED" if obs >= r["hullBytes"] else "PARTIAL"),
+                "observedBytesInHull": hull_obs,
+                "observedPctOfBody": (
+                    round(100.0 * obs / exec_denominator, 4) if exec_denominator else 0.0
+                ),
+                "observedPctOfHull": round(100.0 * hull_obs / r["hullBytes"], 4) if r["hullBytes"] else 0.0,
+                "execState": exec_state,
+                "execStateHull": (
+                    "DARK" if hull_obs == 0 else ("COVERED" if hull_obs >= r["hullBytes"] else "PARTIAL")
+                ),
                 "sourceHits": len(hit_sources),
                 "nativeShippedName": (nat or {}).get("shippedName"),
                 "nativeRegistryStatus": (nat or {}).get("registryStatus"),
@@ -909,52 +1449,50 @@ def build(args) -> int:
         f["staticRefTotal"] = f["inCallSites"] + f["ptrRefs"] + f["immRefs"]
         f["noStaticRef"] = f["staticRefTotal"] == 0
         f["vtableOnly"] = f["inCallSites"] == 0 and f["immRefs"] == 0 and f["ptrRefs"] > 0
-        # understanding tier
-        if f["nativeShippedName"] and f["nativeRegistryStatus"] != "CONTRADICTED" and f["observedBytes"] > 0:
-            f["understoodTier"] = "U3_RUNTIME_BEHAVIOUR"
-        elif f["citationCountFocused"] > 0:
-            f["understoodTier"] = "U2_ADDRESS_CITED"
-        elif f["citationCount"] > 0:
-            f["understoodTier"] = "U1b_BULK_REVIEWED"
-        elif f["nameClass"] in HUMAN_NAMED_CLASSES:
-            f["understoodTier"] = "U1_NAMED_ONLY"
-        else:
-            f["understoodTier"] = "U0_NONE"
+        f["understoodTier"] = evidence_proxy_tier(
+            f["nameClass"], f["citationCountFocused"], f["citationCount"]
+        )
         # cheapness of identifying a dark body from observed neighbours.
         # Components are all present as their own columns; this is a sort key,
         # not a claim.
         f["adjacencyScore"] = f["inCallersObserved"] * 4 + f["inCallersNamed"] * 2 + min(f["ptrRefs"], 8)
 
     # --- reconcile the dark byte mass ---------------------------------------
-    # These two DO sum exactly to the dark byte total, unlike the dark-function
-    # hull sum, which double-counts overlapping hulls and over-counts
-    # non-contiguous bodies. Printing the reconciliation stops a reader
-    # equating "dark function bytes" with "dark .text bytes".
+    # With an authenticated parity graph these are exact Ghidra fragments. The
+    # legacy fallback retains hulls and labels them as such.
     unobserved = subtract([(text_lo, text_hi)], union_runs)
-    unobserved_in_hulls = total(
-        [(max(a, ha), min(b, hb)) for (ha, hb) in hull_union for (a, b) in unobserved
-         if min(b, hb) > max(a, ha)]
+    unobserved_in_bodies = total(
+        [(max(a, ba), min(b, bb)) for (ba, bb) in body_union for (a, b) in unobserved
+         if min(b, bb) > max(a, ba)]
     )
-    unobserved_unmapped = total(unobserved) - unobserved_in_hulls
+    unobserved_unmapped = total(unobserved) - unobserved_in_bodies
 
     # The three-way split the reachability question actually turns on.
     # Dark bytes inside a PARTIALLY observed body are branches not taken in a
     # function the process has already entered -- a different problem entirely
-    # from a body that never ran. Computed against merged hulls per class so
-    # overlapping hulls cannot double-count.
-    dark_hulls = merge(clip([(f["lo"], f["hi"]) for f in funcs if f["execState"] == "DARK"], text_lo, text_hi))
-    partial_hulls = merge(clip([(f["lo"], f["hi"]) for f in funcs if f["execState"] == "PARTIAL"], text_lo, text_hi))
+    # from a body that never ran. Exact fragments do not overlap; the fallback
+    # merges hulls per class and preserves the earlier overlap attribution.
+    dark_body_ranges = merge(clip(
+        [item for f in funcs if f["execState"] == "DARK" for item in f["bodyRanges"]],
+        text_lo,
+        text_hi,
+    ))
+    partial_body_ranges = merge(clip(
+        [item for f in funcs if f["execState"] == "PARTIAL" for item in f["bodyRanges"]],
+        text_lo,
+        text_hi,
+    ))
     dark_in_dark_bodies = total(
-        [(max(a, ha), min(b, hb)) for (ha, hb) in dark_hulls for (a, b) in unobserved
-         if min(b, hb) > max(a, ha)]
+        [(max(a, ba), min(b, bb)) for (ba, bb) in dark_body_ranges for (a, b) in unobserved
+         if min(b, bb) > max(a, ba)]
     )
     partial_dark_raw = total(
-        [(max(a, ha), min(b, hb)) for (ha, hb) in partial_hulls for (a, b) in unobserved
-         if min(b, hb) > max(a, ha)]
+        [(max(a, ba), min(b, bb)) for (ba, bb) in partial_body_ranges for (a, b) in unobserved
+         if min(b, bb) > max(a, ba)]
     )
-    # A byte can sit in both a dark hull and a partial hull where hulls overlap.
-    # Attribute such bytes to the partial side only, so the three parts sum.
-    dark_in_partial_bodies = max(0, unobserved_in_hulls - dark_in_dark_bodies)
+    # A byte can sit in both a dark hull and a partial hull only in fallback
+    # mode. Attribute such bytes to the partial side so all parts still sum.
+    dark_in_partial_bodies = max(0, unobserved_in_bodies - dark_in_dark_bodies)
     partial_overlap_note = partial_dark_raw - dark_in_partial_bodies
 
     # --- executed but unmapped ---------------------------------------------
@@ -988,6 +1526,74 @@ def build(args) -> int:
     dark_unmapped = subtract(merge(unmapped), union_runs)
     dark_unmapped_pad = pad_tally(dark_unmapped)
 
+    # Partition every byte not claimed by an exact Ghidra body at coverage
+    # boundaries. Executed segments are code candidates; dark segments remain
+    # mechanically AMBIGUOUS even when their bytes look like padding. A byte
+    # pattern is a useful falsifier hint, never sufficient proof of DATA or
+    # PADDING on its own.
+    unmapped_rows = []
+    for gap_lo, gap_hi in unmapped:
+        cuts = {gap_lo, gap_hi}
+        for run_lo, run_hi in union_runs:
+            if run_hi <= gap_lo:
+                continue
+            if run_lo >= gap_hi:
+                break
+            cuts.add(max(gap_lo, run_lo))
+            cuts.add(min(gap_hi, run_hi))
+        points = sorted(cuts)
+        for seg_lo, seg_hi in zip(points, points[1:]):
+            if seg_hi <= seg_lo:
+                continue
+            observed = union.covered_in(seg_lo, seg_hi)
+            segment_bytes = seg_hi - seg_lo
+            if observed not in (0, segment_bytes):
+                raise LedgerInputError("unmapped partition did not split at a coverage boundary")
+            raw_off = spec.text_rawptr + (seg_lo - text_lo)
+            raw_len = max(0, min(seg_hi, text_lo + spec.text_rawsize) - seg_lo)
+            payload = spec.data[raw_off : raw_off + raw_len]
+            if raw_len != segment_bytes:
+                byte_pattern = "VIRTUAL_TAIL"
+            elif payload and all(value in (0x00, 0x90, 0xCC) for value in payload):
+                byte_pattern = "PADDING_LIKE_BYTES"
+            else:
+                byte_pattern = "MIXED_OR_CODE_LIKE_BYTES"
+            start_va = spec.image_base + seg_lo
+            end_va = spec.image_base + seg_hi
+            i = bisect_right(starts, seg_lo) - 1
+            j = bisect_left(starts, seg_hi)
+            unmapped_rows.append(
+                {
+                    "entityKey": (
+                        f"TEXT_RESIDUAL:{spec_stamp['sha256']}:"
+                        f"0x{start_va:08X}-0x{end_va:08X}"
+                    ),
+                    "startVa": start_va,
+                    "endVa": end_va,
+                    "bytes": segment_bytes,
+                    "observedBytes": observed,
+                    "observationState": "EXECUTED" if observed else "DARK",
+                    "classification": "CODE_CANDIDATE" if observed else "AMBIGUOUS",
+                    "classificationVerdict": "MEASURED_EXECUTION" if observed else "UNSCORED",
+                    "terminalState": (
+                        "OPEN_CODE_BOUNDARY" if observed else "OPEN_CLASSIFICATION"
+                    ),
+                    "bytePattern": byte_pattern,
+                    "prevFunc": rows[i]["name"] if 0 <= i < len(rows) else "",
+                    "nextFunc": rows[j]["name"] if 0 <= j < len(rows) else "",
+                }
+            )
+
+    unmapped_row_bytes = sum(row["bytes"] for row in unmapped_rows)
+    if unmapped_row_bytes != unmapped_bytes:
+        raise LedgerInputError(
+            "complete residual partition does not reproduce the unmapped-byte denominator"
+        )
+    if sum(row["observedBytes"] for row in unmapped_rows) != exec_unmapped_bytes:
+        raise LedgerInputError(
+            "complete residual partition does not reproduce executed-unmapped bytes"
+        )
+
     # --- dark regions -------------------------------------------------------
     regions = []
     cur = None
@@ -1017,7 +1623,7 @@ def build(args) -> int:
                 "startVa": spec.image_base + reg["startRva"],
                 "endVa": spec.image_base + reg["endRva"],
                 "spanBytes": reg["endRva"] - reg["startRva"],
-                "darkBytes": sum(x["bodyBytesEstimate"] for x in fs),
+                "darkBytes": sum(x["bodyBytes"] for x in fs),
                 "darkHullBytes": sum(x["hullBytes"] for x in fs),
                 "funcCount": len(fs),
                 "hullSuspectFuncs": sum(1 for x in fs if x["hullSuspect"]),
@@ -1032,8 +1638,8 @@ def build(args) -> int:
                 "topFamilies": "; ".join(f"{k}({v})" for k, v in fam.most_common(4)),
                 "topReachClass": rc.most_common(1)[0][0] if rc else "UNCLASSIFIED",
                 "reachMix": "; ".join(f"{k}({v})" for k, v in rc.most_common(4)),
-                "largestFunc": max(fs, key=lambda x: x["bodyBytesEstimate"])["name"],
-                "largestFuncBytes": max(x["bodyBytesEstimate"] for x in fs),
+                "largestFunc": max(fs, key=lambda x: x["bodyBytes"])["name"],
+                "largestFuncBytes": max(x["bodyBytes"] for x in fs),
             }
         )
     region_rows.sort(key=lambda x: -x["darkBytes"])
@@ -1044,12 +1650,12 @@ def build(args) -> int:
                                       "reach": Counter()})
     for f in funcs:
         e = fam_rollup[f["family"]]
-        e["totalBytes"] += f["hullBytes"]
+        e["totalBytes"] += f["bodyBytes"]
         e["totalFuncs"] += 1
         e["observedBytes"] += f["observedBytes"]
         e["reach"][f["reachClass"]] += 1
         if f["execState"] == "DARK":
-            e["darkBytes"] += f["hullBytes"]
+            e["darkBytes"] += f["bodyBytes"]
             e["darkFuncs"] += 1
             e["inCallersObserved"] += f["inCallersObserved"]
             if f["noStaticRef"]:
@@ -1058,21 +1664,21 @@ def build(args) -> int:
     # --- reachability accounting -------------------------------------------
     dark_funcs = [f for f in funcs if f["execState"] == "DARK"]
     dark_hull_bytes = sum(f["hullBytes"] for f in dark_funcs)
-    dark_body_bytes = sum(f["bodyBytesEstimate"] for f in dark_funcs)
+    dark_body_bytes = sum(f["bodyBytes"] for f in dark_funcs)
 
     reach_buckets = defaultdict(lambda: {"funcs": 0, "darkBytes": 0, "darkHullBytes": 0})
     for f in dark_funcs:
         b = reach_buckets[f["reachClass"]]
         b["funcs"] += 1
-        b["darkBytes"] += f["bodyBytesEstimate"]
+        b["darkBytes"] += f["bodyBytes"]
         b["darkHullBytes"] += f["hullBytes"]
 
     dark_no_ref = [f for f in dark_funcs if f["noStaticRef"]]
-    dark_no_ref_bytes = sum(f["bodyBytesEstimate"] for f in dark_no_ref)
+    dark_no_ref_bytes = sum(f["bodyBytes"] for f in dark_no_ref)
     dark_reachable_from_observed = [f for f in dark_funcs if f["inCallersObserved"] > 0]
-    dark_reachable_bytes = sum(f["bodyBytesEstimate"] for f in dark_reachable_from_observed)
+    dark_reachable_bytes = sum(f["bodyBytes"] for f in dark_reachable_from_observed)
     dark_vtable_only = [f for f in dark_funcs if f["vtableOnly"]]
-    dark_vtable_only_bytes = sum(f["bodyBytesEstimate"] for f in dark_vtable_only)
+    dark_vtable_only_bytes = sum(f["bodyBytes"] for f in dark_vtable_only)
 
     hard_bytes = sum(v["darkBytes"] for k, v in reach_buckets.items() if k in REACH_HARD)
     hard_funcs = sum(v["funcs"] for k, v in reach_buckets.items() if k in REACH_HARD)
@@ -1084,6 +1690,7 @@ def build(args) -> int:
     by_exec = Counter(f["execState"] for f in funcs)
     by_name = Counter(f["nameClass"] for f in funcs)
     by_understood = Counter(f["understoodTier"] for f in funcs)
+    fully_covered_hull = sum(1 for f in funcs if f["execStateHull"] == "COVERED")
 
     observed_funcs = [f for f in funcs if f["execState"] != "DARK"]
     observed_named = [f for f in observed_funcs if f["nameClass"] in HUMAN_NAMED_CLASSES]
@@ -1096,13 +1703,24 @@ def build(args) -> int:
         "readingRules": [
             "A coverage MISS is NON-OBSERVATION across the indexes supplied, never absence from the game.",
             "A coverage HIT proves bytes at that address executed. It does not prove the symbol name is correct.",
-            "DARK is exact: a real body is a subset of its hull, so a hull with zero observed bytes had a body with zero observed bytes.",
-            "COVERED is conservative: it requires 100% of the bodyMin..bodyMax hull, which over-covers 67 non-contiguous bodies.",
+            (
+                "Function execution states use authenticated exact Ghidra body fragments."
+                if exact_graph else
+                "Function execution states use bodyMin..bodyMax hulls; DARK is exact and COVERED is conservative."
+            ),
             "Hull-union byte totals are UPPER BOUNDS on named-body bytes, not measurements of them.",
+            (
+                "The exact body export is a dated input, not an assertion about an unexported live Ghidra database."
+                if exact_graph else
+                "The exact body-byte total is UNKNOWN because no authenticated parity graph was supplied."
+            ),
             "The historical 79.8268% .text figure is a DATED 6,411-body measurement and is NOT reproduced here.",
             "No step or instruction counter was read from any receipt (task #149).",
             "The static call graph is a byte-pattern superset, not a disassembly.",
-            "UNDERSTOOD tiers are citation/registry proxies. Citation is not correctness.",
+            (
+                "UNDERSTOOD tiers are weak citation/name proxies. Runtime entry coverage and registry "
+                "bindings never establish a behavior contract."
+            ),
         ],
         "denominators": {
             "textVirtualSizeBytes": text_size,
@@ -1110,16 +1728,41 @@ def build(args) -> int:
             "textSource": "PE section header of the specimen named in inputs.specimen",
             "functionPopulation": n_funcs,
             "functionPopulationSource": str(names_path),
-            "functionPopulationDate": "2026-07-27 (name table export date; do not treat as today's live DB)",
+            "functionPopulationDate": population_date,
             "humanNamableDenominator": human_denom,
             "humanNamableNote": f"{n_funcs} functions minus {n_unwind} MSVC Unwind@ EH funclets",
             "coverageIndexCount": len(sources),
+            "coverageSetSha256": coverage_digest,
             "nativeRegistryPopulation": len(natives),
-            "exactCurrentBodyByteTotal": "UNKNOWN -- requires a fresh per-instruction interval export of the live inventory",
+            "bodyAccountingMethod": body_accounting,
+            "exactBodyByteTotal": exact_graph["unionBytes"] if exact_graph else "UNKNOWN",
+            "exactBodyBytePctOfText": (
+                round(100.0 * exact_graph["unionBytes"] / text_size, 6)
+                if exact_graph else "UNKNOWN"
+            ),
+            "exactBodyFunctionCount": exact_graph["functionCount"] if exact_graph else "UNKNOWN",
+            "exactBodyRangeCount": exact_graph["rangeCount"] if exact_graph else "UNKNOWN",
+            "exactBodyFreshnessNote": (
+                "Exact for the supplied, specimen-bound parity-graph export and matching function population; "
+                "live Ghidra state after that export is not observed by this tool."
+                if exact_graph else
+                "UNKNOWN -- supply an authenticated ExportParityLabGraph READY receipt."
+            ),
         },
         "inputs": {
             "specimen": spec_stamp,
             "nameTable": names_stamp,
+            "parityGraph": (
+                {
+                    "receipt": exact_graph["receipt"],
+                    "bodyRanges": exact_graph["bodyRanges"],
+                    "program": exact_graph["program"],
+                    "functionCount": exact_graph["functionCount"],
+                    "rangeCount": exact_graph["rangeCount"],
+                    "nameMismatchCount": exact_graph["nameMismatchCount"],
+                }
+                if exact_graph else None
+            ),
             "nativeRegistry": natives_stamp,
             "evidenceFileCount": n_evidence_files,
             "evidenceInventoryThreshold": args.inventory_threshold,
@@ -1132,7 +1775,8 @@ def build(args) -> int:
             "observedUnionPct": round(100.0 * observed_bytes / text_size, 4),
             "darkBytes": text_size - observed_bytes,
             "darkPct": round(100.0 * (text_size - observed_bytes) / text_size, 4),
-            "darkBytesInsideAFunctionHull": unobserved_in_hulls,
+            "darkBytesInsideKnownBodies": unobserved_in_bodies,
+            "knownBodyMethod": body_accounting,
             "darkBytesClaimedByNoFunction": unobserved_unmapped,
             "darkBytesInsideNeverEnteredBodies": dark_in_dark_bodies,
             "darkBytesInsidePartiallyObservedBodies": dark_in_partial_bodies,
@@ -1140,14 +1784,24 @@ def build(args) -> int:
                 "darkBytesInsideNeverEnteredBodies + darkBytesInsidePartiallyObservedBodies + "
                 "darkBytesClaimedByNoFunction == darkBytes. The middle term is branches not taken in a "
                 "function the process ALREADY entered -- a different and much easier problem than a body "
-                "that never ran. Bytes lying in both a dark and a partial hull (hull overlap, "
-                f"{partial_overlap_note} bytes) are attributed to the partial side so the parts sum."
+                "that never ran. "
+                + (
+                    "Exact Ghidra fragments are non-overlapping."
+                    if exact_graph else
+                    f"Hull overlap is {partial_overlap_note} bytes and is attributed to the partial side."
+                )
             ),
             "darkReconciliationNote": (
-                "darkBytesInsideAFunctionHull + darkBytesClaimedByNoFunction == darkBytes. The dark-FUNCTION "
-                "hull sum in functions.darkHullBytes does not, because hulls overlap and over-cover; do not "
-                "equate the two."
+                "darkBytesInsideKnownBodies + darkBytesClaimedByNoFunction == darkBytes. "
+                + (
+                    "Known bodies are authenticated exact fragments."
+                    if exact_graph else
+                    "Known bodies are legacy bodyMin..bodyMax hulls and therefore an upper-bound mapping."
+                )
             ),
+            "namedBodyUnion": body_union_bytes,
+            "namedBodyUnionPct": round(100.0 * body_union_bytes / text_size, 6),
+            "namedBodyUnionMethod": body_accounting,
             "namedHullUnion_UPPER_BOUND": hull_union_bytes,
             "namedHullUnionPct_UPPER_BOUND": round(100.0 * hull_union_bytes / text_size, 4),
             "namedHullUnionCaveat": (
@@ -1157,6 +1811,7 @@ def build(args) -> int:
             ),
             "unmappedByAnyFunction": unmapped_bytes,
             "unmappedByAnyFunctionPct": round(100.0 * unmapped_bytes / text_size, 4),
+            "unmappedMethod": body_accounting,
             "unmappedBytesEqualToCC90or00": pad_bytes,
             "unmappedBytesEqualToCC90or00Note": (
                 "A byte-value tally over the unmapped runs, not a run-length padding analysis. "
@@ -1172,7 +1827,18 @@ def build(args) -> int:
             ),
             "executedButUnmapped": exec_unmapped_bytes,
             "executedButUnmappedRuns": len(exec_unmapped),
-            "executedButUnmappedNote": "Bytes proven to execute that no current Ghidra function claims. Each run is a missing function.",
+            "allUnmappedSegments": len(unmapped_rows),
+            "darkUnmappedSegments": sum(
+                1 for row in unmapped_rows if row["observationState"] == "DARK"
+            ),
+            "executedButUnmappedNote": (
+                "Bytes proven to execute that no supplied exact Ghidra body claims. Runs are candidate "
+                "boundary fragments: several runs may belong to one function, and one run may include "
+                "adjacent code/data. They are not a one-run/one-function count."
+                if exact_graph else
+                "Bytes proven to execute outside every supplied function hull. Runs are candidate "
+                "boundary fragments, not a one-run/one-function count."
+            ),
         },
         "functions": {
             "population": n_funcs,
@@ -1180,8 +1846,11 @@ def build(args) -> int:
             "observedPct": round(100.0 * len(observed_funcs) / n_funcs, 4),
             "dark": by_exec.get("DARK", 0),
             "darkPct": round(100.0 * by_exec.get("DARK", 0) / n_funcs, 4),
-            "fullyCovered_conservative": by_exec.get("COVERED", 0),
+            "fullyCovered": by_exec.get("COVERED", 0),
+            "fullyCoveredMethod": body_accounting,
+            "fullyCovered_conservativeHull": fully_covered_hull,
             "partial": by_exec.get("PARTIAL", 0),
+            "darkBodyBytes": dark_body_bytes,
             "darkHullBytes": dark_hull_bytes,
             "byNameClass": dict(by_name),
             "byUnderstoodTier": dict(by_understood),
@@ -1192,15 +1861,10 @@ def build(args) -> int:
             "observedAndUnnamedNote": "Executed bytes with no human name. The cheapest naming targets on the board.",
         },
         "understanding": {
-            "U3_RUNTIME_BEHAVIOUR": by_understood.get("U3_RUNTIME_BEHAVIOUR", 0),
-            "U3_definition": "script-native registry binding (not CONTRADICTED) whose bytes also executed",
-            "U3_blockedByMissingGhidraFunction": natives_hit - sum(
-                1 for h, v in natives_observed.items()
-                if v and (h - spec.image_base) in {r["lo"] for r in rows}
-            ),
-            "U3_blockedNote": (
-                "Handlers observed executing that Ghidra has no function for, so they cannot appear in "
-                "the per-function table at all. Creating those bodies converts them to U3 for free."
+            "U3_REVIEWED_RUNTIME_CONTRACT": 0,
+            "U3_definition": (
+                "Reserved for a reviewed receiver/input/write/return contract. This ledger has no contract "
+                "input, so it never awards U3 from coverage, registry strings, names, or function creation."
             ),
             "U2_ADDRESS_CITED": by_understood.get("U2_ADDRESS_CITED", 0),
             "U2_definition": (
@@ -1211,18 +1875,23 @@ def build(args) -> int:
             "U1b_definition": "cited only inside a bulk review corpus -- it was in a sweep, not the subject of a claim",
             "U1_NAMED_ONLY": by_understood.get("U1_NAMED_ONLY", 0),
             "U0_NONE": by_understood.get("U0_NONE", 0),
-            "caveat": "These are proxies for understanding, not measurements of it. A citation can be wrong.",
+            "caveat": (
+                "These are weak evidence proxies, not measurements of semantic understanding. A citation "
+                "or name can be wrong; only a separately reviewed contract may earn U3."
+            ),
         },
         "nativeCrossCheck": {
             "registryRows": len(natives),
             "handlersAtAGhidraFunctionEntry": sum(1 for h in natives if (h - spec.image_base) in {r["lo"] for r in rows}),
             "handlerFirstByteObserved": natives_hit,
             "handlerFirstByteObservedExcludingContradicted": natives_hit_uncontradicted,
+            "terminalStates": dict(native_terminal_counts),
+            "coverageSetSha256": coverage_digest,
+            "canary": native_canary,
             "note": (
-                "Byte-level test at the handler VA, independent of whether Ghidra has a function there. "
-                "Over the 66-level campaign this should reproduce the independently verified 60-hit / "
-                "59-real figure from local-lab/TTD-CORPUS-ANALYSIS-2026-07-31.md. A disagreement means "
-                "this tool is wrong or the input set changed -- investigate before trusting anything above."
+                "Byte-level handler observations are computed independently of Ghidra function creation. "
+                "There is deliberately no universal expected count: expectations are valid only when a "
+                "native canary is bound to the exact coverage-set and registry hashes."
             ),
         },
         "staticRefs": {
@@ -1243,6 +1912,8 @@ def build(args) -> int:
         },
         "reachability": {
             "darkFunctionCount": len(dark_funcs),
+            "darkBodyBytes": dark_body_bytes,
+            "darkBodyBytesMethod": body_accounting,
             "darkBodyBytesEstimate": dark_body_bytes,
             "darkHullBytes": dark_hull_bytes,
             "darkWithObservedCaller": len(dark_reachable_from_observed),
@@ -1273,22 +1944,31 @@ def build(args) -> int:
 
     # --- per-function TSV ---------------------------------------------------
     fcols = [
-        "va", "name", "nameClass", "execState", "understoodTier", "reachClass", "family",
+        "va", "entryRva", "entityKey", "name", "nameClass", "execState", "understoodTier", "reachClass", "family",
+        "bodyAccounting", "bodyRangeCount", "bodyBytes", "bodyBytesExact",
+        "bodyRangesRva", "bodyRangeSetSha256",
         "hullBytes", "bodyBytesEstimate", "spanToNextEntry", "hullSuspect",
-        "observedBytes", "observedPctOfHull", "citationCount", "citationCountFocused", "citingDocs",
+        "observedBytes", "observedPctOfBody", "observedBytesInHull", "observedPctOfHull", "execStateHull",
+        "sourceHits",
+        "citationCount", "citationCountFocused", "citingDocs",
         "nativeShippedName", "nativeRegistryStatus",
         "inCallSites", "inCallers", "inCallersObserved", "inCallersNamed",
         "ptrRefs", "immRefs", "staticRefTotal", "noStaticRef", "vtableOnly", "adjacencyScore",
     ]
     with open(out_dir / "ledger-functions.tsv", "w", encoding="utf-8", newline="") as fh:
         fh.write("# " + SCHEMA + " per-function ledger\n")
-        fh.write(f"# denominator: {n_funcs} functions from {names_path.name} (export date 2026-07-27)\n")
+        fh.write(f"# denominator: {n_funcs} functions from {names_path.name} (as of {population_date})\n")
         fh.write(f"# .text {text_size} bytes; union observed {observed_bytes} bytes over {len(sources)} coverage index(es)\n")
-        fh.write("# hullBytes is bodyMin..bodyMax and OVER-COVERS non-contiguous bodies. DARK is exact; COVERED is conservative.\n")
+        fh.write(f"# execution state basis: {body_accounting}\n")
+        fh.write("# hullBytes remains the bodyMin..bodyMax upper bound for comparison; bodyBytes is the accounting denominator.\n")
         fh.write("\t".join(fcols) + "\n")
         for f in sorted(funcs, key=lambda x: x["va"]):
             fh.write("\t".join(
-                (f"0x{f['va']:08x}" if c == "va" else str(f.get(c, ""))) for c in fcols
+                (
+                    f"0x{f[c]:08x}"
+                    if c in ("va", "entryRva") else str(f.get(c, ""))
+                )
+                for c in fcols
             ) + "\n")
 
     # --- dark regions TSV ---------------------------------------------------
@@ -1299,7 +1979,7 @@ def build(args) -> int:
     with open(out_dir / "ledger-dark.tsv", "w", encoding="utf-8", newline="") as fh:
         fh.write("# " + SCHEMA + " dark regions, ranked by darkBytes\n")
         fh.write(f"# a region is a run of consecutive DARK functions with gaps <= {args.region_gap} bytes\n")
-        fh.write("# darkBytes sums bodyBytesEstimate = min(hull, distance-to-next-entry); darkHullBytes sums the raw hulls\n")
+        fh.write(f"# darkBytes sums bodyBytes using {body_accounting}; darkHullBytes preserves the raw hull comparison\n")
         fh.write("# inCallersObserved is the count of distinct OBSERVED bodies that call into this region: high = cheap to identify\n")
         fh.write("\t".join(rcols) + "\n")
         for r in region_rows:
@@ -1310,14 +1990,55 @@ def build(args) -> int:
     # --- executed-but-unmapped TSV -----------------------------------------
     with open(out_dir / "ledger-gaps.tsv", "w", encoding="utf-8", newline="") as fh:
         fh.write("# " + SCHEMA + " executed .text bytes claimed by NO function in the inventory\n")
-        fh.write("# each run is a missing function: bytes proven to run that Ghidra has no body for\n")
+        fh.write("# runs are boundary candidates, not a one-run/one-function count; adjacent runs may share an owner\n")
         fh.write("startVa\tendVa\tbytes\tprevFunc\tnextFunc\n")
         for a, b in sorted(exec_unmapped, key=lambda x: -(x[1] - x[0])):
             i = bisect_right(starts, a) - 1
             prev_name = rows[i]["name"] if 0 <= i < len(rows) else ""
-            j = bisect_right(starts, b)
+            j = bisect_left(starts, b)
             next_name = rows[j]["name"] if 0 <= j < len(rows) else ""
             fh.write(f"0x{spec.image_base+a:08x}\t0x{spec.image_base+b:08x}\t{b-a}\t{prev_name}\t{next_name}\n")
+
+    # --- all unmapped .text segments --------------------------------------
+    unmapped_columns = [
+        "entityKey", "startVa", "endVa", "bytes", "observedBytes",
+        "observationState", "classification", "classificationVerdict",
+        "terminalState", "bytePattern", "prevFunc", "nextFunc",
+    ]
+    with open(out_dir / "ledger-unmapped.tsv", "w", encoding="utf-8", newline="") as fh:
+        fh.write("# " + SCHEMA + " complete .text residual accounting\n")
+        fh.write(
+            "# every byte outside authenticated Ghidra body fragments appears exactly once; "
+            "dark padding-like bytes remain AMBIGUOUS until independently classified\n"
+        )
+        fh.write("\t".join(unmapped_columns) + "\n")
+        for row in sorted(unmapped_rows, key=lambda item: item["startVa"]):
+            fh.write("\t".join(
+                f"0x{row[column]:08x}"
+                if column in ("startVa", "endVa")
+                else str(row.get(column, ""))
+                for column in unmapped_columns
+            ) + "\n")
+
+    # --- finite Mission-native surface -------------------------------------
+    native_columns = [
+        "index", "recordVa", "handlerVa", "shippedName", "currentGhidraName",
+        "registryStatus", "functionPresent", "observed", "terminalState",
+        "needsBoundaryReview", "needsBehaviorContract",
+    ]
+    with open(out_dir / "ledger-native-handlers.tsv", "w", encoding="utf-8", newline="") as fh:
+        fh.write("# " + SCHEMA + " MissionScript native handler ledger\n")
+        fh.write("# denominator is the supplied registry; execution is bounded to this snapshot's coverage set\n")
+        fh.write("# ENTRY_CONFIRMED_AND_SEMANTIC is never inferred from registry+coverage alone; a reviewed contract must earn it\n")
+        fh.write("\t".join(native_columns) + "\n")
+        for row in native_rows:
+            fh.write("\t".join(
+                (
+                    f"0x{row[column]:08x}"
+                    if column in ("recordVa", "handlerVa") else str(row.get(column, ""))
+                )
+                for column in native_columns
+            ) + "\n")
 
     # --- family rollup TSV --------------------------------------------------
     with open(out_dir / "ledger-families.tsv", "w", encoding="utf-8", newline="") as fh:
@@ -1360,6 +2081,9 @@ def render_report(summary, region_rows, funcs, top):
     fx = summary["functions"]
     d = summary["denominators"]
     rr = summary["reachability"]
+    body_method = d.get("bodyAccountingMethod", "BODY_MIN_MAX_HULLS")
+    body_union = b.get("namedBodyUnion", b.get("namedHullUnion_UPPER_BOUND"))
+    body_union_pct = b.get("namedBodyUnionPct", b.get("namedHullUnionPct_UPPER_BOUND"))
 
     print()
     print("=" * 78)
@@ -1367,7 +2091,7 @@ def render_report(summary, region_rows, funcs, top):
     print("=" * 78)
     print(f"generated       {summary['generatedAtUtc']}")
     print(f"specimen        {Path(summary['inputs']['specimen']['path']).name}  sha256 {summary['inputs']['specimen']['sha256'][:16]}…")
-    print(f"name table      {Path(summary['inputs']['nameTable']['path']).name}  ({d['functionPopulation']:,} functions, export {d['functionPopulationDate']})")
+    print(f"name table      {Path(summary['inputs']['nameTable']['path']).name}  ({d['functionPopulation']:,} functions, as of {d['functionPopulationDate']})")
     print(f"coverage        {d['coverageIndexCount']} index(es)")
     print()
     print("-- BYTES ------------------------------------------------------------------")
@@ -1380,45 +2104,67 @@ def render_report(summary, region_rows, funcs, top):
         print(f"      that DID execute               {b['darkBytesInsidePartiallyObservedBodies']:>12,}  {_pct(b['darkBytesInsidePartiallyObservedBodies'], b['darkBytes'])} of dark")
         print(f"    claimed by no function at all    {b['darkBytesClaimedByNoFunction']:>12,}  {_pct(b['darkBytesClaimedByNoFunction'], b['darkBytes'])} of dark")
         print(f"                                                   (these three sum exactly to DARK)")
+    elif "darkBytesInsideKnownBodies" in b:
+        print(f"    inside supplied function bodies {b['darkBytesInsideKnownBodies']:>12,}")
+        print(f"    claimed by no function at all    {b['darkBytesClaimedByNoFunction']:>12,}")
     elif "darkBytesInsideAFunctionHull" in b:
         print(f"    inside a known function hull     {b['darkBytesInsideAFunctionHull']:>12,}")
         print(f"    claimed by no function at all    {b['darkBytesClaimedByNoFunction']:>12,}")
-    print(f"  claimed by a function hull         {b['namedHullUnion_UPPER_BOUND']:>12,}  {b['namedHullUnionPct_UPPER_BOUND']:.4f}%   << UPPER BOUND")
+    body_label = "exact Ghidra body fragments" if body_method == "EXACT_GHIDRA_FRAGMENTS" else "function hulls (upper bound)"
+    print(f"  claimed by {body_label:<26} {body_union:>12,}  {body_union_pct:.6f}%")
+    if body_method == "EXACT_GHIDRA_FRAGMENTS":
+        print(f"  hull comparison (upper bound)      {b['namedHullUnion_UPPER_BOUND']:>12,}  {b['namedHullUnionPct_UPPER_BOUND']:.4f}%")
     print(f"  claimed by NO function             {b['unmappedByAnyFunction']:>12,}  {b['unmappedByAnyFunctionPct']:.4f}%")
     print(f"    of which bytes are CC/90/00      {b['unmappedBytesEqualToCC90or00']:>12,}  (byte tally, not a run analysis)")
-    print(f"  EXECUTED but unmapped              {b['executedButUnmapped']:>12,}  in {b['executedButUnmappedRuns']} runs  << missing functions")
-    print(f"  exact current body-byte total      {'UNKNOWN':>12}  (needs a fresh interval export)")
+    print(f"  EXECUTED but unmapped              {b['executedButUnmapped']:>12,}  in {b['executedButUnmappedRuns']} candidate runs")
+    exact_total = d.get("exactBodyByteTotal", d.get("exactCurrentBodyByteTotal", "UNKNOWN"))
+    if isinstance(exact_total, int):
+        print(f"  exact supplied body-byte total     {exact_total:>12,}  (dated export; not unexported live state)")
+    else:
+        print(f"  exact supplied body-byte total     {'UNKNOWN':>12}  (supply a parity-graph READY receipt)")
     print()
     print("-- FUNCTIONS --------------------------------------------------------------")
     print(f"  population (denominator)           {fx['population']:>12,}")
     print(f"  OBSERVED executing                 {fx['observed']:>12,}  {fx['observedPct']:.4f}%")
-    print(f"    fully covered (conservative)     {fx['fullyCovered_conservative']:>12,}")
+    fully_covered = fx.get("fullyCovered", fx.get("fullyCovered_conservative", 0))
+    fully_label = "exact fragments" if body_method == "EXACT_GHIDRA_FRAGMENTS" else "conservative hull"
+    print(f"    fully covered ({fully_label})    {fully_covered:>12,}")
+    if body_method == "EXACT_GHIDRA_FRAGMENTS":
+        print(f"    fully covered (whole hull too)   {fx.get('fullyCovered_conservativeHull', 0):>12,}")
     print(f"    partially covered                {fx['partial']:>12,}")
     print(f"  DARK                               {fx['dark']:>12,}  {fx['darkPct']:.4f}%")
-    print(f"  dark hull bytes                    {fx['darkHullBytes']:>12,}")
+    print(f"  dark accounted body bytes          {fx.get('darkBodyBytes', fx['darkHullBytes']):>12,}")
+    print(f"  dark hull comparison               {fx['darkHullBytes']:>12,}")
     print()
     print(f"  human-named                        {fx['humanNamed']:>12,}  {fx['humanNamedPctOfNamableDenom']:.4f}% of {d['humanNamableDenominator']:,} namable")
     for k, v in sorted(fx["byNameClass"].items(), key=lambda kv: -kv[1]):
         print(f"    {k:<22}                {v:>10,}")
     print()
-    print("-- UNDERSTOOD (proxy tiers; citation is not correctness) -------------------")
+    print("-- SEMANTIC EVIDENCE PROXY (coverage is not behavior) ----------------------")
     u = summary["understanding"]
-    for k in ("U3_RUNTIME_BEHAVIOUR", "U2_ADDRESS_CITED", "U1b_BULK_REVIEWED", "U1_NAMED_ONLY", "U0_NONE"):
-        print(f"  {k:<24}             {u.get(k,0):>10,}")
-    if u.get("U3_blockedByMissingGhidraFunction"):
-        print(f"  (+{u['U3_blockedByMissingGhidraFunction']} handlers observed executing that Ghidra has no function for --")
-        print("   they cannot enter the table at all until those bodies are created)")
+    for k in (
+        "U3_REVIEWED_RUNTIME_CONTRACT",
+        "U3_RUNTIME_BEHAVIOUR",  # legacy snapshots only
+        "U2_ADDRESS_CITED",
+        "U1b_BULK_REVIEWED",
+        "U1_NAMED_ONLY",
+        "U0_NONE",
+    ):
+        if k in u:
+            print(f"  {k:<32}     {u.get(k,0):>10,}")
     print()
     nx = summary.get("nativeCrossCheck")
     if nx:
-        print("-- SELF-TEST: MissionScript native execution -------------------------------")
+        print("-- MISSION NATIVE EXECUTION CROSS-CHECK -----------------------------------")
         print(f"  registry rows                      {nx['registryRows']:>12,}")
         print(f"  handler first byte OBSERVED        {nx['handlerFirstByteObserved']:>12,}")
         print(f"  handlers that are Ghidra entries   {nx['handlersAtAGhidraFunctionEntry']:>12,}")
-        print("  EXPECTED 60 over the 66-level campaign, of which 59 are real: the verified")
-        print("  analysis strikes SetSpeed@0x00453AC0, a shared 3-byte ret-stub whose hits")
-        print("  belong to any caller of the stub. If this reads anything but 60, either the")
-        print("  tool is wrong or the coverage set changed -- do not trust the numbers above.")
+        canary = nx.get("canary")
+        if canary:
+            print(f"  input-bound canary                 {canary.get('status', 'UNKNOWN'):>12}")
+        else:
+            print(f"  input-bound canary                 {'LEGACY/NONE':>12}")
+        print("  No universal expected hit count is applied to arbitrary augmented inputs.")
         print()
     print("-- OBSERVED BUT UNNAMED (cheapest naming targets) --------------------------")
     print(f"  {fx['observedAndUnnamed']:,} functions executed with no human name")
@@ -1427,7 +2173,8 @@ def render_report(summary, region_rows, funcs, top):
         key=lambda f: -f["observedBytes"],
     )[:top]
     for f in cand:
-        print(f"    0x{f['va']:08x}  {f['observedBytes']:>7,}b obs / {f['hullBytes']:>7,}b  "
+        denominator = f.get("bodyBytes", f["hullBytes"])
+        print(f"    0x{f['va']:08x}  {f['observedBytes']:>7,}b obs / {denominator:>7,}b  "
               f"callers-obs={f.get('inCallersObserved',0):<3} ptr={f.get('ptrRefs',0):<3} imm={f.get('immRefs',0):<3} {f['name']}")
     print()
     print("-- DARK REGIONS ranked by size --------------------------------------------")
@@ -1442,7 +2189,8 @@ def render_report(summary, region_rows, funcs, top):
               f"{r['topReachClass']}  {r['topFamilies'][:48]}")
     print()
     print("-- REACHABILITY OF THE DARK MASS (name heuristic; INFERRED) ----------------")
-    print(f"  dark functions                     {rr['darkFunctionCount']:>12,}   {rr.get('darkBodyBytesEstimate', rr['darkHullBytes']):>12,} body bytes (est)")
+    byte_label = "exact body bytes" if body_method == "EXACT_GHIDRA_FRAGMENTS" else "body bytes (est)"
+    print(f"  dark functions                     {rr['darkFunctionCount']:>12,}   {rr.get('darkBodyBytes', rr.get('darkBodyBytesEstimate', rr['darkHullBytes'])):>12,} {byte_label}")
     print(f"  with an OBSERVED caller            {rr['darkWithObservedCaller']:>12,}   {rr['darkWithObservedCallerBytes']:>12,} bytes  << cheap")
     print(f"  reachable only via a vtable        {rr.get('darkVtableOnly',0):>12,}   {rr.get('darkVtableOnlyBytes',0):>12,} bytes  << needs the object type")
     print(f"  with NO static reference at all    {rr['darkWithNoStaticRefAtAll']:>12,}   {rr['darkWithNoStaticRefBytes']:>12,} bytes  << candidate-unreachable")
@@ -1459,7 +2207,7 @@ def render_report(summary, region_rows, funcs, top):
     if unc:
         agg = Counter()
         for fam, f in unc:
-            agg[fam] += int(f.get("bodyBytesEstimate") or f.get("hullBytes") or 0)
+            agg[fam] += int(f.get("bodyBytes") or f.get("bodyBytesEstimate") or f.get("hullBytes") or 0)
         print()
         print("  largest UNCLASSIFIED dark families (the classifier's blind spot -- fix these first):")
         for k, v in agg.most_common(10):
@@ -1471,7 +2219,7 @@ def render_report(summary, region_rows, funcs, top):
     print("=" * 78)
 
 
-HEX_COLUMNS = {"va", "startVa", "endVa"}
+HEX_COLUMNS = {"va", "entryRva", "startVa", "endVa"}
 
 
 def _coerce(rec):
@@ -1517,6 +2265,11 @@ def _read_tsv(path: Path):
 
 def report(args) -> int:
     snap = Path(args.snapshot)
+    try:
+        verify_snapshot(snap)
+    except LedgerInputError as exc:
+        print(f"FATAL: {exc}", file=sys.stderr)
+        return 2
     summary = json.loads((snap / "ledger-summary.json").read_text(encoding="utf-8"))
     funcs = _read_tsv(snap / "ledger-functions.tsv")
     regions = _read_tsv(snap / "ledger-dark.tsv")
@@ -1535,6 +2288,12 @@ def _load_funcs(snap: Path):
 
 def delta(args) -> int:
     a_dir, b_dir = Path(args.before), Path(args.after)
+    try:
+        verify_snapshot(a_dir)
+        verify_snapshot(b_dir)
+    except LedgerInputError as exc:
+        print(f"FATAL: {exc}", file=sys.stderr)
+        return 2
     a = json.loads((a_dir / "ledger-summary.json").read_text(encoding="utf-8"))
     b = json.loads((b_dir / "ledger-summary.json").read_text(encoding="utf-8"))
     af, bf = _load_funcs(a_dir), _load_funcs(b_dir)
@@ -1546,6 +2305,9 @@ def delta(args) -> int:
 
     same_pop = a["denominators"]["functionPopulation"] == b["denominators"]["functionPopulation"]
     same_names = a["inputs"]["nameTable"]["sha256"] == b["inputs"]["nameTable"]["sha256"]
+    a_graph = ((a.get("inputs", {}).get("parityGraph") or {}).get("bodyRanges") or {}).get("sha256")
+    b_graph = ((b.get("inputs", {}).get("parityGraph") or {}).get("bodyRanges") or {}).get("sha256")
+    same_bodies = a_graph == b_graph and a["denominators"].get("bodyAccountingMethod") == b["denominators"].get("bodyAccountingMethod")
 
     d_bytes = b["bytes"]["observedUnion"] - a["bytes"]["observedUnion"]
     d_funcs = b["functions"]["observed"] - a["functions"]["observed"]
@@ -1563,7 +2325,7 @@ def delta(args) -> int:
     new_funcs = [bv for va, bv in bf.items() if va not in af]
     gone_funcs = [av for va, av in af.items() if va not in bf]
 
-    new_body_bytes = sum(f["hullBytes"] for f in flipped)
+    new_body_bytes = sum(f.get("bodyBytes", f["hullBytes"]) for f in flipped)
     deeper_bytes = sum(dv for _f, dv in deepened)
 
     print("=" * 78)
@@ -1578,6 +2340,8 @@ def delta(args) -> int:
         print("     function counts before trusting any coverage delta.")
     if not same_pop:
         print(f"  !! population {a['denominators']['functionPopulation']:,} -> {b['denominators']['functionPopulation']:,}")
+    if not same_bodies:
+        print("  !! BODY ACCOUNTING CHANGED between snapshots. Function-byte deltas are not comparable.")
     print(f"  coverage indexes added   : {', '.join(added_src) if added_src else '(none)'}")
     print(f"  coverage indexes removed : {', '.join(removed_src) if removed_src else '(none)'}")
     print()
@@ -1587,7 +2351,8 @@ def delta(args) -> int:
     print(f"  observed functions       {a['functions']['observed']:>12,} -> {b['functions']['observed']:>12,}   {d_funcs:+,}")
     print(f"  executed-but-unmapped    {a['bytes']['executedButUnmapped']:>12,} -> {b['bytes']['executedButUnmapped']:>12,}   {b['bytes']['executedButUnmapped']-a['bytes']['executedButUnmapped']:+,}")
     print()
-    print(f"  NEW BODIES lit (DARK -> observed) : {len(flipped):,} functions, {new_body_bytes:,} hull bytes")
+    unit = "exact body bytes" if b["denominators"].get("bodyAccountingMethod") == "EXACT_GHIDRA_FRAGMENTS" else "estimated body bytes"
+    print(f"  NEW BODIES lit (DARK -> observed) : {len(flipped):,} functions, {new_body_bytes:,} {unit}")
     print(f"  DEEPER penetration of known bodies: {len(deepened):,} functions, {deeper_bytes:,} extra bytes")
     print("  (the first number is the one that matters: it is new territory, not a longer")
     print("   walk through territory you already had)")
@@ -1595,14 +2360,15 @@ def delta(args) -> int:
         print(f"  inventory churn: {len(new_funcs):,} functions added, {len(gone_funcs):,} removed")
     print()
     print(f"-- TOP {args.top} NEWLY-LIT BODIES ------------------------------------------------")
-    for f in sorted(flipped, key=lambda x: -x["hullBytes"])[: args.top]:
-        print(f"  0x{f['va']:08x}  {f['hullBytes']:>7,}b  {f['nameClass']:<14} {f['reachClass']:<16} {f['name']}")
+    for f in sorted(flipped, key=lambda x: -x.get("bodyBytes", x["hullBytes"]))[: args.top]:
+        size = f.get("bodyBytes", f["hullBytes"])
+        print(f"  0x{f['va']:08x}  {size:>7,}b  {f['nameClass']:<14} {f['reachClass']:<16} {f['name']}")
     if not flipped:
         print("  (none -- this probe lit no body that was previously dark)")
     print()
     fam = Counter()
     for f in flipped:
-        fam[f["family"]] += f["hullBytes"]
+        fam[f["family"]] += f.get("bodyBytes", f["hullBytes"])
     if fam:
         print("-- NEWLY-LIT BYTES BY FAMILY ----------------------------------------------")
         for k, v in fam.most_common(args.top):
@@ -1628,6 +2394,27 @@ def main() -> int:
     b.add_argument("--specimen", default=str(DEFAULT_SPECIMEN))
     b.add_argument("--names", default=str(DEFAULT_NAMES))
     b.add_argument("--natives", default=str(DEFAULT_NATIVES))
+    exact = b.add_mutually_exclusive_group()
+    exact.add_argument(
+        "--parity-graph",
+        default=str(DEFAULT_PARITY_GRAPH) if DEFAULT_PARITY_GRAPH.is_file() else None,
+        help=(
+            "ExportParityLabGraph READY receipt; exact body fragments are hash-checked against "
+            "the specimen and must match the name-table population"
+        ),
+    )
+    exact.add_argument(
+        "--no-exact-bodies",
+        action="store_true",
+        help="deliberately fall back to bodyMin..bodyMax hull accounting",
+    )
+    b.add_argument(
+        "--native-canary",
+        help=(
+            "optional JSON expectation bound to the exact coverage-set and native-registry hashes; "
+            "there is no universal expected hit count"
+        ),
+    )
     b.add_argument("--coverage-root", action="append", help="directory scanned recursively for coverage.jsonl (repeatable)")
     b.add_argument("--coverage-index", action="append", help="a single coverage.jsonl (repeatable)")
     b.add_argument("--evidence-root", action="append", help="directory scanned for entry-address citations (repeatable)")
@@ -1652,6 +2439,20 @@ def main() -> int:
     dl.add_argument("--after", required=True)
     dl.add_argument("--top", type=int, default=25)
     dl.set_defaults(func=delta)
+
+    v = sub.add_parser("verify", help="verify an atomic READY snapshot")
+    v.add_argument("--snapshot", required=True)
+
+    def verify_command(args) -> int:
+        try:
+            receipt = verify_snapshot(Path(args.snapshot))
+        except LedgerInputError as exc:
+            print(f"FATAL: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(receipt, indent=2))
+        return 0
+
+    v.set_defaults(func=verify_command)
 
     args = ap.parse_args()
     return args.func(args)

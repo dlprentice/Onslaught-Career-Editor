@@ -414,7 +414,7 @@ Built-in screen recording via `CCAPTURE` class:
 
 | Feature | Description |
 |---------|-------------|
-| Exception handler | Writes crash dump to `OnslaughtException.txt` with stack trace |
+| Exception handler | Source builds contain symbolic stack-reporting code; the measured retail handler only opens/truncates `OnslaughtException.txt` and returns, with no stack walk or symbols |
 | Console command | `cg_whatami` - identity/debug info |
 | Screen capture | Saves to `grabs\scrNNNN.tga` (sequential numbering) |
 

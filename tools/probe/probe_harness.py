@@ -509,12 +509,35 @@ _PROBE_KEYS = {
 ORACLE_KINDS = {
     "processExit",
     "fileAppears",
+    "fileTextSequence",
     "fatalFault",
     "setupHistoryContains",
     "survives",
     "all",
     "any",
 }
+
+
+def _validate_artifact_path(value: object, label: str) -> str:
+    relative = str(value or "")
+    path = pathlib.Path(relative)
+    if (
+        not relative
+        or path.is_absolute()
+        or ".." in path.parts
+        or relative in {".", "./", ".\\"}
+    ):
+        raise ProbeError(f"{label} must be a non-escaping relative file path")
+    return relative
+
+
+def oracle_artifact_paths(oracle: dict[str, Any]) -> set[str]:
+    kind = oracle["kind"]
+    if kind in {"fileAppears", "fileTextSequence"}:
+        return {str(oracle["path"])}
+    if kind in {"all", "any"}:
+        return set().union(*(oracle_artifact_paths(item) for item in oracle["of"]))
+    return set()
 
 
 def parse_probe(raw: dict[str, Any]) -> Probe:
@@ -600,8 +623,52 @@ def validate_oracle(oracle: Any, probe_name: str) -> None:
             raise ProbeError(f"{probe_name}: '{kind}' oracle needs a non-empty 'of'")
         for sub in of:
             validate_oracle(sub, probe_name)
-    if kind == "fileAppears" and not oracle.get("path"):
-        raise ProbeError(f"{probe_name}: 'fileAppears' oracle needs a 'path'")
+    if kind == "fileAppears":
+        if not oracle.get("path"):
+            raise ProbeError(f"{probe_name}: 'fileAppears' oracle needs a 'path'")
+        _validate_artifact_path(
+            oracle["path"], f"{probe_name}: fileAppears.path"
+        )
+    if kind == "fileTextSequence":
+        extra = sorted(
+            set(oracle)
+            - {
+                "kind",
+                "path",
+                "lines",
+                "exactOccurrences",
+                "timeoutSeconds",
+                "settleSeconds",
+            }
+        )
+        if extra:
+            raise ProbeError(
+                f"{probe_name}: fileTextSequence has unknown keys: {extra}"
+            )
+        _validate_artifact_path(
+            oracle.get("path"), f"{probe_name}: fileTextSequence.path"
+        )
+        lines = oracle.get("lines")
+        if (
+            not isinstance(lines, list)
+            or not lines
+            or any(
+                not isinstance(line, str)
+                or not line
+                or "\r" in line
+                or "\n" in line
+                for line in lines
+            )
+            or len(lines) != len(set(lines))
+        ):
+            raise ProbeError(
+                f"{probe_name}: fileTextSequence.lines must be distinct, nonempty exact lines"
+            )
+        occurrences = oracle.get("exactOccurrences", 1)
+        if type(occurrences) is not int or occurrences < 0:
+            raise ProbeError(
+                f"{probe_name}: fileTextSequence.exactOccurrences must be a nonnegative integer"
+            )
     if kind == "setupHistoryContains" and not oracle.get("text"):
         raise ProbeError(f"{probe_name}: 'setupHistoryContains' oracle needs 'text'")
     if kind == "processExit":
@@ -848,6 +915,39 @@ def check_oracle(oracle: dict[str, Any], state: RunState) -> tuple[bool, str]:
             return False, f"{relative} is {size} bytes, need >= {minimum}"
         return True, f"{relative} appeared, {size} bytes"
 
+    if kind == "fileTextSequence":
+        relative = str(oracle["path"])
+        size = state.file_size(relative)
+        if size is None:
+            return False, f"{relative} does not exist"
+        expected = list(oracle["lines"])
+        occurrences = int(oracle.get("exactOccurrences", 1))
+        actual = state.read_text(relative).splitlines()
+        positions = {
+            line: [index for index, observed in enumerate(actual) if observed == line]
+            for line in expected
+        }
+        wrong = {
+            line: len(indices)
+            for line, indices in positions.items()
+            if len(indices) != occurrences
+        }
+        if wrong:
+            detail = ", ".join(f"{line!r}={count}" for line, count in wrong.items())
+            return (
+                False,
+                f"{relative} exact-line occurrence mismatch (need {occurrences}): {detail}",
+            )
+        if occurrences > 0:
+            first_positions = [positions[line][0] for line in expected]
+            if first_positions != sorted(first_positions):
+                return False, f"{relative} contains the exact lines out of order"
+            return (
+                True,
+                f"{relative} contains {len(expected)} exact ordered lines, each {occurrences} time(s)",
+            )
+        return True, f"{relative} excludes all {len(expected)} exact lines"
+
     if kind == "fatalFault":
         size = state.file_size(EXCEPTION_LOG)
         if size is None:
@@ -891,6 +991,11 @@ def oracle_needs_deadline(oracle: dict[str, Any]) -> bool:
     """True when the oracle can only be decided once the clock runs out."""
 
     if oracle["kind"] == "survives":
+        return True
+    if (
+        oracle["kind"] == "fileTextSequence"
+        and oracle.get("exactOccurrences", 1) == 0
+    ):
         return True
     if oracle["kind"] in ("all", "any"):
         return any(oracle_needs_deadline(sub) for sub in oracle["of"])
@@ -1173,6 +1278,28 @@ def stage_scratch(
             )
             stale.unlink()
 
+    inherited_outputs: list[dict[str, Any]] = []
+    declared_outputs = set(probe.collect) | oracle_artifact_paths(probe.oracle)
+    declared_outputs.difference_update({SETUP_HISTORY, EXCEPTION_LOG})
+    for relative in sorted(declared_outputs):
+        _validate_artifact_path(relative, f"{probe.name}: declared output")
+        stale = scratch_root / relative
+        if not _is_within(stale.resolve(), resolved_scratch):
+            raise ProbeError(f"{probe.name}: declared output escapes scratch: {relative}")
+        if stale.is_dir():
+            raise ProbeError(
+                f"{probe.name}: declared output is an inherited directory: {relative}"
+            )
+        if stale.is_file():
+            inherited_outputs.append(
+                {
+                    "file": relative,
+                    "bytes": stale.stat().st_size,
+                    "sha256": sha256_file(stale),
+                }
+            )
+            stale.unlink()
+
     staged: list[dict[str, Any]] = []
     for entry in probe.stage:
         origin = (manifest_dir / entry.source).resolve()
@@ -1232,6 +1359,7 @@ def stage_scratch(
         "createdDirectories": list(probe.make_dirs),
         "autoexec": autoexec_record,
         "removedInheritedLogs": inherited,
+        "removedInheritedOutputs": inherited_outputs,
     }
 
 

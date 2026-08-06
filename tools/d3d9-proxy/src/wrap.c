@@ -2366,7 +2366,27 @@ static HRESULT STDMETHODCALLTYPE WD_CreateTexture(IDirect3DDevice9 *This,
                                                   HANDLE *pSharedHandle)
 {
     BeaDev *d = (BeaDev *)This;
-    HRESULT hr = d->real->lpVtbl->CreateTexture(d->real, Width, Height, Levels,
+    HRESULT hr;
+    bea_fault_createtexture_count += 1;
+    if (bea_cfg_fault_createtexture_after > 0) {
+        int fire = bea_cfg_fault_createtexture_sticky
+            ? (bea_fault_createtexture_count >= bea_cfg_fault_createtexture_after)
+            : (bea_fault_createtexture_count == bea_cfg_fault_createtexture_after);
+        if (fire) {
+            if (ppTexture)
+                *ppTexture = NULL;
+            bea_logf("# FAULT-INJECTION CreateTexture n=%u -> hr=0x%08lX "
+                     "(%ux%u lv=%u fmt=%u)%s\n",
+                     bea_fault_createtexture_count,
+                     (unsigned long)bea_cfg_fault_createtexture_hr,
+                     (unsigned)Width, (unsigned)Height, (unsigned)Levels,
+                     (unsigned)Format,
+                     bea_cfg_fault_createtexture_sticky ? " sticky" : "");
+            bea_log_flush();
+            return (HRESULT)bea_cfg_fault_createtexture_hr;
+        }
+    }
+    hr = d->real->lpVtbl->CreateTexture(d->real, Width, Height, Levels,
                                                 Usage, Format, Pool, ppTexture,
                                                 pSharedHandle);
     if (SUCCEEDED(hr) && ppTexture && *ppTexture) {
