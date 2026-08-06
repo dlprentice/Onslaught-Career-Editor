@@ -1,15 +1,16 @@
 # BEA's parity lab now turns unknown runtime code into a finite, evidence-ranked function queue
 
-Status: active — differential `drcov` and TTD Replay coverage, exact
-Ghidra-range mapping, synthetic debugger symbols, structured capture bundles,
-calibrated Stuart/BSim matching, verification, and query tooling are implemented;
-the first retail canaries passed, while repeated action campaigns and reviewed
-semantic promotion remain open
+Status: active — differential `drcov`, TTD Replay coverage and target-filtered
+call context, exact Ghidra-range mapping, synthetic debugger symbols, structured
+capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
+and verified campaign ratchets are implemented; corpus-wide semantic joins,
+repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-07-31
+Last updated: 2026-08-06 (tip pointer; Gen10 block demoted to historical)
 
-Verdict: Battle Engine Aquila no longer needs to be approached as 7,555 isolated
-decompiler functions. A specimen-bound pipeline can now ask one controlled
+Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
+decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
+now ask one controlled
 question, reduce the answer to exact executed basic-block starts or instruction
 bytes, join them to exact Ghidra body fragments and direct-call context, make the
 same names usable in TTD, ask the surviving Stuart source for calibrated
@@ -36,14 +37,56 @@ Specimen: static Ghidra baseline
 `local-lab/safe-copy-bea-pristine/BEA.exe`, SHA-256
 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4`,
 2,506,752 bytes. Both are copied targets. The installed Steam directory and
-original executable were not mutated. The maintainer Ghidra project was opened
-only through headless `-readOnly -noanalysis`; no Ghidra state was changed.
+original executable were not mutated. The maintainer Ghidra project now contains
+two authorized, recoverably backed-up promotions totaling 529 exact function
+boundaries (515 plus 14); their separate-process POST readbacks are recorded
+below. Those mutations assigned no semantic names, signatures, contracts, or
+rebuild status.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
 not establish its Steam depot identity.
 
 ---
+
+## Live complete-RE tip (2026-08-06) — read first
+
+Live tip census is **not** the Gen10 block below. Re-read
+`developer_state.json` → `complete_re_tip_20260805` and
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
+As of 2026-08-06: tip **Gen73**, C1=**222**, C2=**5**, function_semantic
+OPAQUE=**7897**, OPEN residual=**20**, complete_RE=**false**, REBUILD_READY=**0**,
+Ghidra apply **NOT_AUTHORIZED**. Next mass lever: Gen74 OPAQUE→C1 under six-way
+(direct DeepSeek sessions: native subagent N+A per AGENTS.md carve-out);
+C1 PE ≠ C2 dual-runtime.
+
+## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
+
+- Generation 10 was the machine-local range/contract admission then: 8,124 functions,
+  6,117 residuals, 162,017 unmapped executable bytes, 14,241 contracts, and 584
+  exact supersessions. At that handoff four contracts were `C2_BOUNDED_RUNTIME`
+  (tip Gen73 has **C2=5**). None was rebuild-ready. Generation 9's five target-lock
+  changes remain same-range metadata/evidence corrections; Generation 10
+  separately admitted three bounded Level 521 call-context contracts.
+- A replicated disposable bridge redirected only the four `ShowCmds`/`ShowVars`
+  output calls into the already proved file logger. Two A/B replications yielded
+  byte-identical treatment logs and recovered 31 commands plus 56 variables on
+  Level 100. Static registration has 32/59; `fmv_play` and three debris variables
+  were not realized on that path.
+- The retired residual `[0x004295BC,0x00429BC0)` now has a proved and live-read-back
+  exact partition: 14 opaque function bodies / 1,433 code bytes plus 15 terminal
+  NOP-padding ranges / 107 bytes. The campaign deliberately leaves callback
+  names, signatures, behavior, and rebuild ownership open.
+- The trace corpus is 75 traces / 497.31 GiB. Coverage exists for 73 traces, yet
+  65 are still coverage-only. The target-filtered Replay collector is now
+  calibrated twice against exact `1/1/2/0` controls: four call-entry pairs,
+  four raw returns, three validated returns, one orphan, three gap-free
+  envelopes, and successful adverse controls. Registers and stack bytes remain
+  untyped; corpus-scale semantic joining remains open.
+
+These are instrument and accounting gains. They shorten the path to contracts
+and reconstruction, but do not themselves prove callback semantics or gameplay
+parity.
 
 ## What this document is
 
@@ -167,6 +210,7 @@ its acceptance gate.
 | Structured D3D9/TTD/shot bundle | `parity_lab.py capture-bundle` | real Level 100 B2 capture indexed losslessly | `MEASURED` |
 | Read-only query and artifact verification | `parity_lab.py query/verify` | real 74 MiB SQLite index; 246 artifacts rehashed | `MEASURED` |
 | One-pass TTD Replay-API coverage miner | [`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](tools/ttd-exec-coverage/ttd_exec_coverage.cpp), build/invoke wrappers, and `ttd-coverage-diff` | 693,973,901-instruction whole trace plus exact two-window differential | `MEASURED`; one existing trace, presence not frequency |
+| Target-filtered TTD call-context miner | same native collector plus [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1) | schema-v3 calibration: 4 paired entries, 4 raw returns, 3 validated returns, 1 orphan, 3 gap-free envelopes; replicated Level 521 bounded join | `MEASURED`; raw untyped context, existing traces only, no semantic auto-promotion |
 | TTD Replay bundle/query integration | `capture-bundle --ttd-coverage/--ttd-coverage-receipt` | 2,612 ranges, assertions, gaps, and receipts indexed and reverified | `MEASURED` |
 | Stuart-source BSim candidate oracle | [`tools/Build-StuartBsimPilot.ps1`](tools/Build-StuartBsimPilot.ps1) and [`tools/ExportBSimCandidates.java`](tools/ExportBSimCandidates.java) | 8 reproducible COFF objects, 58 BSim functions, 15/15 controls within rank seven | `MEASURED` candidate calibration; never an auto-renamer |
 | apitrace D3D9 trial | [`tools/Record-ApitraceD3D9.ps1`](tools/Record-ApitraceD3D9.ps1) | 466 complete presents recovered from one forced-end startup capture and replayed cleanly | `MEASURED` feasibility; translated inspection only |
@@ -1527,6 +1571,131 @@ No broader startup/frontend naming wave follows from these traces. The other
 literal `FUN_*` hits are broad positive coverage without a uniquely attributable
 action, caller, or owner. They remain candidates rather than names.
 
+## Target-filtered TTD call context: schema-v3 association calibrated
+
+Evidence: **MEASURED implementation, replication, adverse controls, and
+adversarial refutation** on existing traces. Raw calls, immediately paired
+entries, decoded return boundaries, and only barrier-free backlinks survive.
+
+The same native collector now has a mutually exclusive `--mode call-context`.
+It replays sequentially, installs one-byte execute watchpoints at selected exact
+entries, consumes the Replay API call/return callback, and captures bounded x86
+register/stack context only for selected targets. Ordinary byte coverage keeps
+its original mode and schema. [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1)
+owns a separate receipt/manifest boundary and emits `READY` only after it:
+
+1. validates PE32 identity and the two-build collector receipt;
+2. snapshots and hashes the collector, replay runtime, and exact target table;
+3. verifies trace, target, target-table, and tool immutability across replay;
+4. parses every target, event, invocation, gap, and summary row;
+5. verifies bidirectional event/invocation links and grade/count consistency;
+6. binds the JSONL and receipt into a manifest whose hash is recorded by
+   `READY`.
+
+The calibration target table used the existing exact-count debugger controls:
+`FUN_004010c0`, `CCareer__Load`, `CFrameTimer__Frame`, and the uncalled fatal
+handler. Schema v3 clears pending/active associations across every non-`NoGap`
+gap and continuity callback, retains later raw returns as orphans, and validates
+only same-epoch call/entry/ordinary-return envelopes. Two final wrapper runs
+reproduced exact calls `1/1/2/0`, four immediately paired entries, four raw
+ordinary-return boundaries, three validated returns, one orphan, and three
+gap-free envelopes. `CCareer__Load` crosses an `Unrecorded` barrier, so its raw
+EDX:EAX return remains visible but unlinked. Raw entry and return registers for
+the controls agree with independent explicit debugger seeks.
+
+`local-lab/ttd-call-context-level521-impact-schema3-20260804-v1/` is the first
+replicated semantic join using that policy. Two runs produced the same 17,804
+path-neutral evidence bytes, SHA-256
+`3e12c0a391540ba79e50ee559bc04ccff344729fcbe0cec288731e12c5dc7558`.
+Within the exact window, collision callsite `0x004268CB` dispatches a round
+instance through slot 39 to `0x004D8AE0`; that routine calls player `Damage @
+0x0040A890` with raw `0.05f`/projectile/`1`/`-1` carriers; the collision
+resolver then calls player `Hit @ 0x00407350` with the same projectile and a
+collision-report carrier. Four call-entry pairs and raw returns yield one
+validated `Hit` return, three orphan returns, and one gap-free envelope.
+`StartDieProcess` has no call/entry/return in that window. This does not prove a
+concrete name for `0x004D8AE0`, typed returns, memory writes, behavior outside
+the window, or the universal claim that slot 39 always damages.
+
+Generation 10 admits exactly that bounded observation through
+`TTD_CALL_CONTEXT_OBSERVATION`: READY SHA-256
+`b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,
+frozen reducer ID
+`7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9`.
+It advances `0x004D8AE0`, `0x0040A890`, and `0x00407350` to bounded-runtime
+contracts, closes three questions and creates three narrower successors. It
+does not advance `StartDie`, a name, a type, a write, a rebuild mapping, parity,
+or a supersession. The frozen reducer reruns both replicas and the hardened
+proof; same-length target/caller/raw-return/backlink poisons and a re-hashed
+fabricated write all fail.
+
+Three controls define the failure surface:
+
+- an event limit of two sets `truncated`, exits `10`, writes `BLOCKED`, and emits
+  no `READY`;
+- preregistering three timer calls when the trace contains two fails the count
+  and pairing gates with no `READY`;
+- watching the executed interior timer instruction at RVA `0x23723` yields two
+  `ENTRY_ONLY` rows and zero calls/returns/pairs. Address execution is therefore
+  not silently promoted to function-entry evidence.
+
+The target table comes from a separate exact-boundary authority. The collector
+does not establish that its entries are functions, and it deliberately records
+raw values without calling ECX `this`, stack dwords arguments, or EDX:EAX a
+typed return. Static callsite decoding, ownership, controlled deltas, source,
+and parity tests must supply those claims. Full receipts and exact hashes are in
+`local-lab/TTD-CALL-CONTEXT-CALIBRATION-2026-08-03.md`.
+
+The next instrument is schema v4, not a reinterpretation of v3. Design status
+2026-08-04 (hypothesis only; see
+`local-lab/SCHEMA-V4-CALL-CONTEXT-DESIGN-2026-08-04.md`): TTD’s own
+`GapKind::ContextSwitch` comment states that no code was skipped in this thread
+while other threads may have run, so the preferred soft rule is **not** “preserve
+callback thread T and invalidate others” (that first-cut handoff rule was
+refuted as a primary policy). Prefer treating ContextSwitch as a **map/flag/epoch
+no-op** that still records a barrier-kind ledger, while keeping global
+fail-closed clears for `Unrecorded`, `Large`, and continuity callbacks. Existing
+v3 receipts remain valid conservative evidence and must not be re-linked under
+v4 without a fresh collector replay and new schema ids. The first v4 gate must
+preserve calibration semantics `4 calls / 4 raw returns / 3 validated / 1 orphan
+/ 3 gap-free`; the Level 521 window may recover at most one additional validated
+return and only with ContextSwitch-only barrier provenance (second slot-39 recovery
+stays OPEN until the ledger separates ContextSwitch from ContinuityBreak).
+
+## Target-filtered TTD data writes: exact event chains implemented
+
+Evidence: **MEASURED implementation, source-bound replication, adverse
+controls, and independent refutation** on an existing Level 521 trace.
+
+The collector's separate `--mode data-writes` installs bounded x86 write and
+overwrite watchpoints over at most sixteen non-overlapping ranges. Promotion
+uses state at the exact start plus transitions in `(from,to]`; it requires the
+actual replay cursor to equal both requested full positions, explicit expected
+counts, exact event-position memory, ordered Overwrite/Write backlinks, a closed
+post-to-next-pre chain, sane replay counters, and zero gap, continuity,
+ambiguity, orphan, truncation, or callback-failure counts. Cursor endpoint
+images are diagnostic for positive targets, not their causal authority. An
+explicit `0/0` target proves only that no matching callback occurred in that
+exact window. Blank expectations are discovery-only and cannot earn `READY`.
+
+[`tools/Invoke-TtdDataWrites.ps1`](tools/Invoke-TtdDataWrites.ps1) independently
+reparses the frozen target table and every relationship, snapshots the wrapper,
+collector C++ and project inputs, reproducible binary, build receipt, replay
+DLLs, and table, and binds them with the raw JSONL into a v3
+receipt/manifest/`READY` boundary. Focused poison tests reject forged targets,
+counts, event sources, backlinks, changed flags, gaps, callback totals, and
+missing output.
+
+The first semantic plate watches five four-byte fields across one exact
+`LockHit @ 0x00407140` removal window. It observes iterator selection, head and
+tail clearing, removed-node linkage, and size `1 -> 0`, proving the supplied
+target's sole `mFiredLocks` node was removed. Three replays have identical 22
+non-metadata rows; the final two use the same collector, and the last one binds
+the complete source boundary. The global free-list install is a gap-free
+static/runtime path proof rather than a direct watch, and payload destruction,
+full return, other invocations, and target-lock parity remain open. Evidence:
+`local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/README.md`.
+
 ## Short TTD recording: keep it, but measure its stop path
 
 Evidence: **MEASURED limitation** plus **SOURCE-backed API constraints**.
@@ -2665,6 +2834,14 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
 - [x] capture-bundle importer supports Replay ranges, gaps, assertions, and receipts;
 - [x] exact position slicing and byte-level differential implemented;
 - [x] same-trace chronological window canary maps 21,781/21,781 bytes;
+- [x] target-filtered call/entry/ordinary-return mode is separate and
+      sequential;
+- [x] exact `1/1/2/0` calibration reproduced twice with byte-identical evidence
+      rows;
+- [x] truncation, false-count, interior-entry, backlink, and grade-upgrade
+      controls fail or downgrade as preregistered;
+- [ ] first rebuild-facing cohort advances from raw context to a bounded
+      semantic contract and focused parity owner;
 - [ ] same-trace Options campaign passes.
 
 ### M4 — calibrated BSim

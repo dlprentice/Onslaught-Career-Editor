@@ -1,9 +1,8 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-07-28 (body; the tracked-`.md`-header row was added that
-day). Header fields added at the same time under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); no other row was re-reviewed.
+Last updated: 2026-08-06 (RE rows added; app/rebuild rows not re-reviewed).
+Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -26,6 +25,11 @@ options, not a required sequence.
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |
 | Portable ZIP inputs or layout | `npm run release:winui-zip` |
+| Tip census claim in docs | Re-read `developer_state.json` → `complete_re_tip_20260805` (and FINAL-3WAY-DELTA if named); do not trust Gen10 prose in DELTA/PARITY_LAB as live tip |
+| Campaign ledger / generation TSVs | Frozen generation `re_campaign.py verify` (or the owning tool for that plate); tip campaigns may REFUSE without reducer — expected |
+| C1 PE plate apply | Mutual packSha256 on DISPOSITION/SUMMARY/FORMAL-PACK; standing **six-way** after last hygiene (Grok subagent N+A, DeepSeek Flash max N+A, Opus medium N+A); **direct DeepSeek session carve-out**: native OpenCode subagent N+A satisfies the reviewer bar, external CLIs on request (see AGENTS.md); peBodySha256 dual-pin to specimen |
+| C2_BOUNDED_RUNTIME claim | Entity-scoped controlled runtime + can-fail refuter; refuse PE-only bulk C2 |
+| Ghidra mutation | `reverse-engineering/ghidra/README.md` promotion gate + explicit operator authorization; default **not authorized** |
 
 Rebuild commands materialize their exact retail inputs to ignored paths from a
 detected user installation. Run `npm run prepare:rebuild-assets` explicitly when

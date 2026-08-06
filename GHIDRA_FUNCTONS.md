@@ -1,28 +1,29 @@
-# Battle Engine Aquila's 7,555-function Ghidra corpus is deeply mapped, not atom-complete
+# Battle Engine Aquila's 8,124-function Ghidra corpus is deeply mapped, not atom-complete
 
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-07-29
-Verdict: **The Steam executable is no longer a black box: its current maintainer
-database contains 7,555 function entries, every one of 2,127 RTTI vtable targets
-is a function start, the major game/runtime subsystems have been mapped, and
-several finite registries are completely decoded. It is not yet atom-complete.
-Of 6,376 human-namable functions, the current pinned-source grader still places
-1,867 (29.3%) in its three weak/unsupported naming cohorts; 1,144 current
-functions never passed through the 2026 fullpass; the
-function-note corpus gives a clear identity entry to only 1,027 functions; and
-86 shipped MissionScript handlers are not functions in Ghidra at all. This file
-is the integrated master truth and work queue, not a claim that those measured
-gaps are solved.**
-Evidence: MEASURED — read-only inspection of the repo-designated unpatched
-executable baseline, current
-7,555-row Ghidra readback, tracked Ghidra snapshot, all 322 function-note
-documents, all 514 fullpass shards and 18 closeouts, current grading/tooling
-code, pinned source, finite shipped registries, copied-runtime captures, D3D9
-proxy evidence, and the Level 100 TTD trace. SOURCE-backed and INFERRED claims
-are labelled where they carry less authority than shipped bytes or controlled
-runtime observation.
+Last updated: 2026-08-04
+Verdict: **The verified maintainer database now contains 8,124 function
+boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
+previous residual entries, then 14 exact console-callback-region boundaries.
+Generation 10 accounts for those functions plus 6,117 exact residual entities,
+1,767,100 body bytes, and 162,017 still-unmapped executable bytes. The 14 new
+functions remain deliberately opaque; 15 interstitial ranges / 107 bytes are
+terminally proven NOP padding. A third authorized operation corrected five
+same-range target-lock names/signatures/comments without changing that boundary
+inventory or advancing a behavioral grade. Boundary accounting has advanced materially, but
+semantics remain the hard problem: 14,237 of 14,241 contract rows are `C0_OPAQUE`;
+four are `C2_BOUNDED_RUNTIME`, and none is rebuild-ready. The authored Mission
+`Damage` chain plus three raw Level 521 call-context contracts have crossed a
+bounded runtime gate. This file is the integrated narrative and queue, not a
+claim that those gaps are solved.**
+Evidence: MEASURED — the pristine specimen, verified live-promotion POST
+readback, authoritative generation-10 campaign bundle, tracked Ghidra snapshot,
+function-note/fullpass corpus, pinned source, finite shipped registries,
+copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
+claims are labelled where they carry less authority than shipped bytes or
+controlled runtime observation.
 Specimen: `BEA.exe.original.backup`, 2,506,752 bytes, MD5
 `3b456964020070efe696d2cc09464a55`, SHA-256
 `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
@@ -36,6 +37,55 @@ not establish its Steam depot identity.
 
 ---
 
+## Current recursive-campaign delta (2026-08-04)
+
+This block supersedes later 7,555-row present-tense denominators. Those tables
+remain useful as the dated 2026-07-29 semantic/naming baseline until their
+derived percentages are regenerated against generation 10.
+
+| Surface | Current exact state |
+| --- | --- |
+| Authoritative campaign | `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2`; READY SHA-256 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; frozen reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9` |
+| Live maintainer Ghidra | 8,124 functions after 529 exact boundary-only promotions plus five same-range target-lock semantic corrections; POST fileset SHA-256 `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702` |
+| Remaining executable accounting | 6,117 residuals; 162,017 unmapped executable bytes; exact function bodies cover 1,767,100 bytes / 91.6015% of `.text` |
+| Contract reality | 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts |
+| Runtime console census | A replicated 16-byte disposable logger bridge realizes 31 commands and 56 CVars on Level 100; static registration contains 32/59, with `fmv_play` and three debris CVars absent on that path. READY SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297` |
+| Latest exact partition | The retired residual `[0x004295BC,0x00429BC0)` is now exactly replaced by 14 opaque functions / 1,433 code bytes and 15 terminal NOP-padding residuals / 107 bytes. No callback name, signature, ABI, behavior, or rebuild claim was promoted. |
+| TTD corpus | 75 traces / 497.31 GiB. Coverage exists for 73 traces, but 65 traces remain coverage-only and there is no normalized corpus-wide call/return/receiver/argument ledger |
+
+The exact five live semantic corrections are deliberately narrower than full
+function contracts:
+
+| Address | Current live name | Generation-10 limit |
+| --- | --- | --- |
+| `0x00406FC0` | `CBattleEngine__StartLock` | same-range metadata corrected; runtime remains `DARK / UNKNOWN_WITH_FALSIFIER` |
+| `0x00407060` | `CBattleEngine__FireLock` | same-range metadata corrected; contract remains open/opaque |
+| `0x00407140` | `CBattleEngine__LockHit` | same-range metadata corrected; bounded data-write evidence remains a separate candidate contract |
+| `0x004071B0` | `CBattleEngine__GetCurrentTarget` | same-range metadata corrected; contract remains open/opaque |
+| `0x00407310` | `CBattleEngine__DisplayLock` | same-range metadata corrected; contract remains open/opaque |
+
+The live promotion READY is
+`local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/promotion/promotion.ready.json`,
+SHA-256 `77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945`.
+It closes no question, creates no supersession, and proves no rebuild parity.
+
+Generation 10 is a campaign-only behavioral advance; it did not mutate Ghidra.
+Its replicated Level 521 window advances exactly three existing same-range rows
+to `C2_BOUNDED_RUNTIME`: unnamed slot-39 `0x004D8AE0` (two contrasting raw
+invocations), player `Damage @ 0x0040A890` (one raw call/entry plus an orphan
+return), and player `Hit @ 0x00407350` (one gap-free call/entry/return). Raw ECX,
+stack, EAX, and EDX values remain untyped. Memory writes, typed returns, a
+concrete name for `0x004D8AE0`, behavior outside the inclusive replay window,
+and rebuild parity remain open. `StartDie @ 0x0040BFD0` has a replicated bounded
+zero-event annotation but remains `OPEN / C0_OPAQUE`. The proof READY is
+`7d784a6741c791677fa0083390c53424c0102ef9e7b5edca419eb23a97921765`;
+the campaign creates three changed successor questions and no supersession.
+
+The console bridge is authored instrumentation. It proves the named derivative
+can transport the runtime registry; it does not prove unmodified retail routes
+`ShowCmds`/`ShowVars` to the file logger or that each callback's behavior is
+already understood.
+
 ## Purpose and reading contract
 
 This is the single narrative master for Ghidra and executable reverse
@@ -45,7 +95,7 @@ contracts, runtime traces, and reconstruction investigations. The distinctions
 between those stores appear here only when they change what may safely be
 claimed.
 
-The address is the primary key. Names move, and six current names are duplicated
+The address is the primary key. Names move, and eight current names are duplicated
 at two addresses. A name without an address and an evidence grade is not a
 durable fact.
 
@@ -75,10 +125,12 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use the 2026-07-28 7,555-row readback for current function metadata, the
-unpatched baseline image for bytes and shipped tables, RTTI/source strings for identity evidence,
-controlled copied-runtime work for behavior, and this document for the reviewed
-synthesis and open queue.
+Use generation 10 and its verified parent live-POST/partition evidence for current function/residual
+identity, the unpatched baseline image for bytes and shipped tables, RTTI/source
+strings for identity evidence, controlled copied-runtime work for behavior, and
+this document for the reviewed synthesis and open queue. Use the 2026-07-28
+7,555-row table only for semantic fields that generation 10 explicitly carried
+forward or for a clearly dated comparison.
 
 ### Master map
 
@@ -104,21 +156,23 @@ synthesis and open queue.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest readback | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
-| Current distinct function names | 7,549; six names occur at two addresses |
-| Explicit `FUN_*` names | 366 |
+| Latest verified live readback | 8,124 functions; 515-boundary and 14-boundary promotions plus five same-range target-lock semantic corrections recorded in Generation 9 and carried unchanged by Generation 10; latest POST fileset `f803cd83…0702` |
+| Current live function inventory | 8,124 rows; TSV SHA-256 `e7ffc76b6073cf9f96c057ded436e24958596d9d14162e89f3e2d1007b620950` |
+| Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
+| Current distinct function names | 8,116; eight names occur at two addresses |
+| Explicit `FUN_*` names | 933 |
 | MSVC `Unwind@*` funclets | 1,179 |
-| Thunks | 98 |
+| Thunks | 100 |
 | Functions with plate comments | 6,947 |
-| Functions without a plate comment | 608 |
+| Functions without a plate comment | 1,177 |
 | Functions with at least one tag | 5,919 |
-| Current human-namable denominator | 6,376, excluding the 1,179 compiler EH funclets |
-| Pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% |
+| Current human-namable denominator | 6,945, excluding the 1,179 compiler EH funclets |
+| Dated pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% against the 7,555-row baseline |
 | RTTI vtable target coverage | 2,127 / 2,127 targets are current function starts |
 | Fullpass population | 6,411 functions reviewed in W001–W018 |
-| Current functions never in that fullpass | 1,144 / 7,555 = 15.1% |
-| Clear identity coverage in the 322 function notes | 1,027 / 7,555 = 13.594% |
-| Any exact entry-address mention in those notes | 1,285 / 7,555 = 17.009% |
+| Current functions never in that dated fullpass | 1,713 / 8,124 = 21.1% |
+| Dated clear identity coverage in the 322 function notes | 1,027 / 7,555 = 13.594% |
+| Dated exact entry-address mention in those notes | 1,285 / 7,555 = 17.009% |
 | MissionScript native registry | 144 / 144 names and 144 distinct handlers recovered |
 | Mission handlers absent as Ghidra functions | 86 |
 | PhysicsScript corpus | 777 statements; every used value id closes against its factory |

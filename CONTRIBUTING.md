@@ -1,9 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
-pass.
+Last updated: 2026-08-06.
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -80,17 +78,24 @@ their origin, license, and attribution are clear. The rebuild materialization
 owners are reserved for local retail-derived outputs; large opaque additions
 require a reviewed hash exception in the existing public-safety check.
 
-Save edits must start from a real baseline and preserve unknown bytes. Retail
-executable mutation must target a verified copy, never an installed game
-directory. Exporters must require explicit local inputs and a separate local
-output root.
+Save edits must start from a real baseline and preserve unknown bytes. An
+installed executable may be changed only when its owner explicitly chooses it
+and the write path has already made and verified a pre-write backup; otherwise
+use a verified copy. The pristine specimen is never a mutation target.
+Exporters must require explicit local inputs and a separate local output root.
 
 ## Reverse engineering and rebuild
 
 Use [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) to find
-the canonical evidence owner. Retain raw or bulky proof locally; commit only the
-smallest public-safe evidence needed to support a current contract. Cite the
-evidence class and state what it does not prove.
+the canonical evidence owner (**live tip first**; Gen10 blocks are historical).
+Complete-RE tip census is `developer_state.json` → `complete_re_tip_20260805`;
+prefer the named FINAL-3WAY-DELTA path over peer synths. Contract grades follow
+[`CONTRACTS.md`](CONTRACTS.md): C1 PE plates are partial candidates, not C2,
+not rebuild-ready, and not bulk Ghidra rename authority. Do not apply Ghidra
+mutations without separate authorization and the ghidra README promotion gate
+(standing default: not authorized). Retain raw or bulky proof locally; commit
+only the smallest public-safe evidence needed to support a current contract.
+Cite the evidence class and state what it does not prove.
 
 Before changing `rebuild/`, read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 and [`rebuild/README.md`](rebuild/README.md). GPL-compatible source adaptation

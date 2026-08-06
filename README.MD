@@ -1,9 +1,10 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-08-01. A player-facing quick start was added at the top,
-including the SmartScreen warning a stranger meets before anything else; the
-lane sections below it were not re-reviewed and keep their 2026-07-29 boundary.
+Last updated: 2026-08-06 (contributor RE tip pointer only). A player-facing
+quick start was added 2026-08-01 at the top, including the SmartScreen warning a
+stranger meets before anything else; most lane sections were not re-reviewed and
+keep their prior product boundaries.
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -85,6 +86,10 @@ as files in the current source tree or its release packages.
 | `reverse-engineering/` | Provenance-bounded technical evidence and format notes |
 | `lore/` | Canonical public lore/history library |
 | `tools/` | Focused extraction, validation, release, Ghidra, and copied-runtime helpers |
+
+[`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership, application flow,
+project dependencies, tests, and the remaining root owners without duplicating
+their current capability or evidence claims.
 
 Retired Electron, Python GUI, WPF, generated readiness waves, and mirrored
 documentation remain available in Git history; they are not current source
@@ -190,9 +195,13 @@ is the reviewed narrow exception to the no-save-payload rule. See
 ## Evidence and provenance
 
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the
-technical evidence front door. Static analysis proves only the identities and
-structures it directly demonstrates; controlled copied-runtime work is needed
-for observed behavior and measured values. Stuart's source and the pinned
+technical evidence front door. Complete-RE tip census and Ghidra-apply
+authorization live in [`developer_state.json`](developer_state.json) →
+`complete_re_tip_20260805` (prefer the named FINAL-3WAY-DELTA path when present);
+do not treat Gen10 prose in older deltas as live tip. Static analysis proves only
+the identities and structures it directly demonstrates; controlled
+copied-runtime work is needed for observed behavior and measured values.
+Stuart's source and the pinned
 [`references/Onslaught`](references/Onslaught) submodule are source references,
 not proof of Steam behavior or exact source identity.
 

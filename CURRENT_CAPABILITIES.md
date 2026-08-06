@@ -1,25 +1,25 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-01. The WinUI shell, appearance, Lore, and Media sections
-were rewritten to match what the app now does, and one block of fabricated
-content was withdrawn. The four-run Level 100 result was then re-derived against
-the vertical-datum (#154) and look-table (#161) changes: the ferry `WaterLoss`
-is gone and the wave-2 counts moved. The rest of the rebuild, RE, and save/patch
-claims were NOT re-reviewed by either pass and retain their 2026-07-29 boundary.
+Last updated: 2026-08-06. RE tip census block refreshed to Gen73
+(`complete_re_tip_20260805` + FINAL-3WAY-DELTA pointer). Primary WinUI
+navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
+The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
+retain their stated boundaries. Other rebuild and save/patch claims not
+re-reviewed by this pass retain their prior boundaries.
 Summary: the demonstrated capability of each lane with the measured gap stated
 beside it. Every figure here is the value at the commit that wrote it;
 re-measure before relying on one.
 
-Onslaught Toolkit has one player-facing product: the WinUI 3 Windows app.
-AppCore owns its file and copied-target correctness. Reverse engineering, the
-unshipped CLI, focused tools, and the early GPL rebuild support that product and
-the longer reconstruction effort; they are not parallel app lanes.
+Onslaught Toolkit has one player-facing preservation app: the WinUI 3 Windows
+app. AppCore owns its file and copied-target correctness. Full retail reverse
+engineering and the 1:1 Godot rebuild are coequal project outcomes, not
+subordinate app lanes; the unshipped CLI and focused tools are support surfaces.
 
 ## WinUI toolkit
 
-The primary navigation is Home, Windowed & Mods, Save Lab, Media, Lore, Asset
-Library, Settings, and About.
+The primary navigation is Home, Windowed & Mods, Save Lab, Cheats, Media, Lore,
+Asset Library, Settings, and About.
 
 > **Updated 2026-08-01.** The order previously read Home, Save Lab, Media, Asset
 > Library, Lore, Windowed & Mods, Settings, About — which put the step the Home
@@ -635,6 +635,65 @@ The rebuild materializes the exact currently consumed slice
 from a user-provided supported retail installation into ignored local paths.
 The remaining asset gap is technical integration and format fidelity.
 Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
+
+## Reverse engineering and proof campaign
+
+**Live tip (2026-08-06):** read `developer_state.json` → `complete_re_tip_20260805`
+and the cumulative index
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
+before quoting generation or grade counts. Do not treat the Gen10 historical
+block below as current tip.
+
+| Metric | Tip Gen73 (as of 2026-08-06) |
+| --- | ---: |
+| Tip generation | **73** |
+| Functions | **8124** |
+| C1_CANDIDATE_PARTIAL | **222** |
+| C2_BOUNDED_RUNTIME | **5** |
+| function_semantic OPAQUE | **7897** |
+| contract_C0_OPAQUE | **14219** (second opacity axis) |
+| FUN* tip counter | **0** (ledger; not settled public nameClass closure without Gen26–38 audit) |
+| OPEN residual | **20** |
+| REBUILD_READY | **0** |
+| complete_RE | **false** |
+| Ghidra apply | **NOT_AUTHORIZED** |
+
+Two RE lanes (do not conflate gen numbers): identity/naming/residual campaigns
+(early → ~Gen54) drove FUN* and residual terminals; the **OPAQUE→C1 PE plate
+lane** (~Gen55–73) is the dominant post-Gen10 lever for remaining function mass
+under standing six-way critics (Grok subagent N+A, DeepSeek Flash max N+A, Opus
+medium N+A; direct DeepSeek sessions: native subagent N+A per AGENTS.md
+carve-out). C1 is a PE-static partial contract, not dual-runtime C2 or rebuild
+parity. Next mass step: **Gen74** OPAQUE→C1 (not bulk C2 from PE alone).
+
+**Historical Gen10 instruments (still true as capabilities, not tip census):**
+
+The copied-runtime lab can use generated Mission bytecode as a typed text
+oracle through the one-byte logger gate, expose the realized console command and
+variable registries through a bounded disposable bridge, collect exact executed
+instruction-byte ranges from existing TTD traces, collect selected raw
+call/entry/return boundaries with x86 registers and bounded stack bytes, and
+collect exact-window field-write chains. Schema-v3 call-context replay clears
+associations across conservative global barriers: the replicated calibration has
+four call-entry pairs, four raw returns, three validated returns, one orphan,
+and three gap-free envelopes. Raw registers and stack bytes remain untyped.
+
+Generation 10 admitted three bounded Level 521 call-context contracts (collision
+slot-39 → player `Damage` → player `Hit` raw carriers/order with limited return
+linkage) and carried Generation 9's five same-range target-lock metadata
+corrections. `StartDie` remained open/opaque at that handoff. The independent
+data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
+invocation removed the supplied target's sole fired-lock node through five exact
+ordered field transitions. These are instrument capabilities and historical
+admissions; tip C2 is **5** rows and tip authority is Gen73.
+
+These instruments do not infer function boundaries, C++ receivers, argument or
+return types, semantics, or parity. Static/source/RTTI evidence supplied joins
+for early data-write plates. Focused player-damage / Level 521 successor work
+remains an open runtime front **alongside** Gen74 OPAQUE→C1 PE ranking. There is
+not yet a normalized corpus-wide semantic ledger, and no new trace is justified
+until existing evidence plus these instruments cannot answer a preregistered
+question.
 
 ## Evidence boundary
 

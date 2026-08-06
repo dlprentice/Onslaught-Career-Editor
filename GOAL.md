@@ -13,11 +13,17 @@
 > mutation of the Steam install was replaced. See
 > [Revision history](#revision-history).
 >
-> Last updated: 2026-08-01. The objective and acceptance test are unchanged;
-> measured status belongs in
+> **Revised 2026-08-02** by the maintainer: full retail reverse engineering, the
+> Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
+> focus, not standing rank. See [Revision history](#revision-history).
+>
+> Last updated: 2026-08-06. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
-> [`developer_state.json`](developer_state.json).
-> Summary: what "done" means here — the objective, the acceptance test that
+> [`developer_state.json`](developer_state.json) (tip key
+> `complete_re_tip_20260805`; prefer
+> [`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
+> over older Gen10 handoff prose).
+> Summary: what "done" means here — the objectives, the rebuild acceptance test that
 > stands in for it, the evidence partition, the evidence rule, and the standing
 > constraints.
 
@@ -27,14 +33,31 @@ service of it.
 
 ---
 
-## The objective
+## The objectives
 
-Rebuild Battle Engine Aquila **in Godot** so its released experience runs again,
-faithfully, from startup through Level 100 completed — splash, intro FMV,
-click-to-start, main menu, level select, loading, and the full Level 100 tutorial
-— such that **it feels like the original game, not a resemblance of it**.
+This is one full-scope project with three coequal, mutually reinforcing outcomes:
 
-### The property, and the test that stands in for it
+1. **Fully reverse Battle Engine Aquila's retail release**—its functions,
+   contracts, data, systems, patch points, and dormant capabilities—so the game
+   can be understood, preserved, patched, and modded with evidence rather than
+   folklore.
+2. **Rebuild Battle Engine Aquila in Godot at 1:1 behavioral and experiential
+   parity**, beginning with the complete released path from startup through
+   Level 100 completed—splash, intro FMV, click-to-start, main menu, level
+   select, loading, and the full tutorial—such that it feels like the original
+   game, not a resemblance of it.
+3. **Ship a polished WinUI 3 preservation toolkit** for careers, saves, safe
+   copies, patching, media, and the other user-facing capabilities the project
+   proves, with no known data-loss path.
+
+Retail RE feeds reconstruction, and reconstruction exposes the next retail
+questions; RE and shared tooling also make safe app features possible. None is a
+side lane or lower priority. Limited attention follows the current goal without
+changing their standing rank. A recovered name or one observed call is not a
+completed function contract, and a reconstruction approximation does not become
+retail truth because it looks plausible.
+
+### The rebuild property, and the test that stands in for it
 
 The **property wanted** is that a human starting a **cold first career** — the
 only career the shipping client can start — gets the released experience.
@@ -91,13 +114,6 @@ Fitting produces confident wrong answers that cost more to withdraw than to make
 this machine's settings, or to a convenience patch in the capture rig, is a lab
 artefact and must never ship as authored behaviour.
 
-## Supporting aims
-
-- A Ghidra reconstruction in which every function that can carry a developer name
-  has one, **graded by its evidence**, with compiler-generated funclets and
-  import thunks excluded **by measurement rather than assumption**.
-- A WinUI 3 save/career editor with **no known data-loss path**.
-
 ## Standing constraints
 
 - **The pristine `BEA.exe` (`74154bfa…`) is never mutated.** It is the
@@ -111,6 +127,64 @@ artefact and must never ship as authored behaviour.
   effect of doing something else.
 - Keep `OnslaughtRebuild.Core` deterministic and free of presentation,
   filesystem, clock, process, network, and GPU dependencies.
+
+---
+
+## Preserved recursive RE campaign objective
+
+The maintainer set the following campaign objective on 2026-08-02 and asked on
+2026-08-04 that it remain durable even when a shorter thread goal is used to
+reach a safe handoff boundary. It is preserved verbatim below. A handoff goal
+may define where one agent stops safely; it does not supersede, narrow, or mark
+this standing campaign complete.
+
+> Build, validate, and operate a recursive Battle Engine Aquila function-discovery, proof, and reconstruction campaign. Refresh exact specimen-bound Ghidra function/range accounting and publish atomic, hash-bound READY snapshots. Account for every current Ghidra function and every mapped or unmapped .text range—including never-executed residuals—until each has an evidence-graded terminal classification or an explicit open question, cheapest falsifier, and next instrument.
+>
+> Run coupled discovery, contract, and rebuild lanes. The discovery lane must find and classify missing functions and recover exact boundaries, callers/callees, class ownership, signatures, globals, structure fields, algorithms, constants, units, ordering, and failure behavior. The contract lane must establish what enters, what leaves, what changes, and under which conditions. A function is not complete merely because one observed call has a contract: progress it toward REBUILD_READY, with enough bounded evidence to implement its relevant behavior in rebuild/, create focused parity tests, and state remaining uncertainty. Prioritize unknown functions by their impact on blocked rebuild systems, call chains, and vertical slices. Maintain explicit mappings from specimen-bound retail function/entity keys to reconstruction owners, implementations, and tests.
+>
+> Implement a durable select → author → run → refute → advance loop that addresses questions individually, preserves unanswered fields and unresolved questions, records superseded entities, and never treats UNSCORED evidence as success. Parse and validate actual receipts, manifests, debugger observations, identities, controls, and refuter outputs instead of trusting metadata labels. Every nonterminal function or residual must remain reachable through the frontier; successful work must advance campaign state rather than causing the same question to recur indefinitely.
+>
+> Mine the existing 60+ level-start traces, combat takes, static evidence, Stuart source, and Ghidra evidence before creating new captures. Treat natural gameplay traces as broad discovery evidence and authored scenarios as sparse causal probes. When existing evidence cannot answer a preregistered question, use fresh safe-copy derivatives to construct the smallest controlled experiment necessary: isolate relevant actors and systems, suppress presentation or briefing state when appropriate, position actors deterministically, remove unrelated activity, select exact inputs, define competing outcomes, and stop capture immediately after the answer window.
+>
+> Prove the complete loop with the observed missing-handler cohort and the bounded Level 100 Turret 01 damage-chain pilot, then recursively expand across the remaining function and .text residual frontier. Carry sufficiently proven findings into focused reconstruction code and parity tests rather than allowing the campaign to become a documentation-only exercise. Separate released-behavior evidence, source-informed architecture, reconstruction decisions, and remaining hypotheses.
+>
+> Promotion to the maintainer Ghidra project is authorized for evidence-adjudicated function boundaries, names, signatures, types, comments, and references only after exact program/specimen identity verification, a verified recoverable project backup, isolated scratch-project validation, explicit dry-run/apply/readback receipts, and successful independent refutation gates. Never promote UNSCORED, aliased, identity-mismatched, partially applied, or refuter-pending claims. Record candidate-to-final entity supersession so later snapshots and campaign generations inherit completed work.
+>
+> Preserve the pristine 74154bfa… specimen absolutely, use fresh scratch derivatives for runtime experiments, and defer elevation-dependent operations until elevation is available. “100%” means honest terminal-state accounting—proved code, proved data or padding, bounded ambiguity with a falsifier, or rebuild-ready behavior—not invented names, assumed semantics, or a requirement that every byte execute.
+>
+> Do not mark this goal complete while any current function, .text residual, contract, rebuild mapping, or newly proven high-throughput discovery instrument retains an actionable unresolved frontier; a milestone, successful pilot, or live Ghidra promotion is progress, not completion.
+
+---
+
+## Live tip (do not restate volatile counts here)
+
+Standing complete-RE progress is **not** the Gen10 handoff below. Read
+`developer_state.json` → `complete_re_tip_20260805` and
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
+As of 2026-08-06 tip is Gen73 with complete_RE false; Ghidra apply is
+**not authorized** unless tip state says otherwise. Next mass lever after that
+checkpoint is Gen74 OPAQUE→C1 under standing six-way critics (direct DeepSeek
+sessions use native subagent N+A per the AGENTS.md carve-out).
+
+## Historical atomic handoff boundary (2026-08-04 / Generation 10)
+
+The temporary 2026-08-04 handoff objective stopped at campaign Generation 10,
+`local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/`.
+Its `campaign.ready.json` SHA-256 is
+`b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`
+and its frozen reducer ID is
+`7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9`.
+Generation 10 advanced exactly three bounded Level 521 call-context contracts;
+it changed no Ghidra range or name, proved no memory write or rebuild parity,
+and left `StartDie` open and opaque. Generation 9 remained its exact live
+Ghidra parent. That boundary is **historical**, not the live tip after Gen73.
+
+The immutable boundary, rejected candidates, verification command, ranked next
+three frontiers, and successor operating brief are recorded under
+`_RECURSIVE_RE_CAMPAIGN_2026_08_02.handoff_2026_08_04` in
+[`developer_state.json`](developer_state.json). A successor must replay that
+boundary rather than trusting this summary. Completing the temporary handoff
+does **not** complete the preserved recursive campaign above.
 
 ---
 
@@ -128,6 +202,26 @@ world. Pixel scores can expose defects; they are not the goal.
 ---
 
 ## Revision history
+
+### 2026-08-04 — recursive campaign directive preserved for handoff
+
+The full recursive function-discovery, proof, contract, Ghidra-promotion, and
+reconstruction directive is now recorded verbatim in this file. A temporary
+thread goal may end at an atomic, verified, externally resumable handoff
+boundary, but that administrative stopping condition does not redefine the
+standing project objective or turn an unfinished frontier into completion.
+
+### 2026-08-02 — RE, rebuild, and the WinUI app are coequal
+
+The objective previously made the Godot rebuild primary and listed the Ghidra
+reconstruction and WinUI app as supporting aims. The maintainer corrected that
+hierarchy: full retail RE, the 1:1 Godot rebuild, and the polished WinUI 3 app
+are equal standing outcomes. A current goal can focus almost entirely on one of
+them because attention is finite; that focus is not a permanent priority rank.
+
+The rebuild's cold-career Level 100 acceptance test remains unchanged. It tests
+the rebuild objective; it is not a completion test for full retail function and
+range accounting or the WinUI product.
 
 ### 2026-08-01 — the installed game belongs to the person who installed it
 

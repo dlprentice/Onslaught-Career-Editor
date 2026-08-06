@@ -1,146 +1,81 @@
 # Onslaught Toolkit
 
-Status: active — rules, routing, and state pointers; not the canonical evidence store.
-Last updated: 2026-08-01. The blanket "never touch an installed game" rule was
-replaced by three principles about backups, saves, and the pristine specimen;
-other rules retain their prior evidence boundaries.
-Summary: the highest-stakes rules that bind every session, and the pointers to
-where the current state actually lives.
+Status: active — Claude Code bootstrap; rules and routing only.
+Last updated: 2026-08-06.
+Summary: load the authoritative contributor contract, current state, and the
+right evidence owner without duplicating them here.
 
-[`AGENTS.md`](AGENTS.md) is the authoritative contributor guide for this
-repository. Read it before making changes; this file only surfaces the
-highest-stakes rules early and does not restate or override it.
+[`AGENTS.md`](AGENTS.md) is the authoritative contributor contract. Claude Code
+does not automatically load it: open and read it in full before changing files
+or making evidence claims. This file does not restate or override it.
 
-## Rules that must not be violated
+## Mission
 
-**Three principles govern anything that writes to a user's files.** They
-replaced a blanket "never touch an installed game" prohibition on 2026-08-01: a
-rule that forbids the thing people want produces workarounds, not safety. Be
-permissive where it costs nothing and strict where data can be lost.
+This is one full-scope project with three coequal outcomes: completely reverse
+the retail game so it can be understood, preserved, patched, and modded; rebuild
+it in Godot at 1:1 behavioral and experiential parity; and ship the polished
+WinUI 3 preservation toolkit. They reinforce one another. None is a side lane or
+lower priority; the current goal selects focus, not rank. A function name without
+a bounded contract is not completion.
 
-1. **Nothing irreversible without an explicit informed choice AND a verified
-   backup made before the write.** The backup has no opt-out. Make it a
-   precondition the calling code cannot skip, not a step it must remember —
-   `BinaryPatchEngine.AuthorizeInstalledGameWrite` will not hand back permission
-   until a verified original sits beside the target, so a caller that skipped the
-   backup has nothing to pass. Refuse rather than manufacture: snapshotting an
-   already-modified file and naming it "original" destroys the only route back.
-2. **The user's saves are theirs.** Nothing may destroy save data as a side
-   effect of doing something else. Detect, name, and offer to keep — see
-   `SafeCopySaveRescueService`.
-3. **The pristine specimen (`74154bfa…`) stays untouchable.** It is the
-   measurement baseline for every byte finding in the RE lane, not a safety
-   blanket. Read from it, never write to it. This one is absolute.
+## Start here
 
-- **The maintainer's own Steam `BEA.exe` is already patched, deliberately, for
-  his personal testing — this is not drift and is not to be flagged.** The
-  pristine original sits beside it as `BEA.exe.original.backup` (`74154bfa…`),
-  and identically at `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`.
-  **Read byte evidence from a pristine specimen, never from the live `BEA.exe`,
-  and name the specimen file and hash in every byte finding.**
-- Never synthesize `.bes` saves from scratch. Start from a real retail baseline
-  and preserve file length, reserved fields, and unknown bytes.
-- Do not track retail game assets, converted copies, game binaries, arbitrary
-  save payloads, raw debugger logs, Ghidra backups, credentials, `.env*`, or
-  bulky runtime captures. Retail inputs are materialized to ignored local paths
-  from the user's own installation. **This is about the game's own shipped
-  files, not pictures of the game** — a few deliberately chosen screenshots may
-  be tracked for the app's own surfaces. See
-  [`AGENTS.md`](AGENTS.md) ("A screenshot is not an asset") for the line and
-  the conditions; bulk capture directories stay local.
-- Keep `OnslaughtRebuild.Core` deterministic and independent of presentation,
-  filesystem, clock, process, network, and GPU APIs.
-- Keep public claims bounded to demonstrated evidence. Separate proven behavior
-  from plans and reconstruction aspirations. "Never a code path" targets
-  **decompiler output** — it is not a ban on the pinned GPL source, which is the
-  developers' own text and the fastest correct route for structure and intent.
-  Port from it by default and cite file and line; override from bytes only where
-  a measurement proves divergence. See
-  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md).
-- Do not add hosted CI, release automation, or workflow scaffolding. Validation
-  is local.
-- Delegate bounded independent work when it materially protects the primary
-  task's context. Keep judgement, integration, and commits with one owner; see
-  [`AGENTS.md`](AGENTS.md#delegation) for the isolation and review rules.
+1. [`README.MD`](README.MD) — repository and product orientation.
+2. [`PROJECT-INDEX.md`](PROJECT-INDEX.md) — source ownership, application flow,
+   and dependency direction.
+3. [`AGENTS.md`](AGENTS.md) — safety, evidence, delegation, and validation.
+4. [`GOAL.md`](GOAL.md) — standing outcomes and acceptance targets.
+5. [`developer_state.json`](developer_state.json) — resumable state and exact
+   evidence pointers. Treat it as awareness, never as truth that primary
+   evidence cannot overturn. For complete-RE tip census and Ghidra-apply
+   authorization, open key `complete_re_tip_20260805` (and
+   `cumulative_checkpoints` when present). Prefer the path named as
+   FINAL-3WAY-DELTA over Gen10 “current handoff” prose in GOAL/DELTA.
+6. `local-lab/INDEX.md`, when present — ignored working evidence invisible to a
+   fresh clone.
+7. The owning lane: [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
+   (live tip first, historical Gen10 demoted),
+   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md), or [`CLI.md`](CLI.md).
 
-## The goal
+Current user intent, code, runtime behavior, and primary evidence outrank stale
+documentation. Supersede a stale claim in place; do not preserve parallel truth.
+Do not paste live C1/OPAQUE numbers into this file.
 
-[`GOAL.md`](GOAL.md) holds the maintainer's standing objective verbatim — what
-"done" means, the evidence partition, the evidence rule, and the standing
-constraints. It is the one document here that is **not** superseded by
-measurement, because it states what is wanted rather than what is true.
+## Stop signs before any write
 
-## Resuming work
+- Never mutate the pristine `74154bfa…` specimen.
+- Never make an irreversible user-file change without explicit informed choice
+  and a verified pre-write backup; never destroy career saves as a side effect.
+- Never track retail binaries/assets, converted retail material, arbitrary
+  saves, raw debugger logs, bulky captures, Ghidra backups, or secrets.
+- Never turn source intent, decompiler output, a document label, or an agent's
+  opinion into a retail-behavior claim without the evidence required by
+  `AGENTS.md`.
 
-**[`developer_state.json`](developer_state.json) is the pick-up-where-we-left-off
-file.** After the repository overview and contributor rules above, read it when
-resuming an interrupted task or after compaction. It carries current gate status,
-work in progress, and pointers to machine-local evidence stores.
+## Operating posture
 
-Keep current resumable state and exact evidence pointers there. Include a
-bounded finding only when it prevents costly re-derivation, and always include
-the evidence path that can overturn it. Measurements outrank the file; when
-current evidence supersedes an older account, mark or remove that account
-instead of preserving parallel truth.
+- Use everything legitimately shipped as potential evidence—RTTI, strings,
+  `FILE` paths, registries, asserts, dormant loggers, resources, data, and
+  traces—but reproduce and grade every conclusion against the pristine
+  specimen or controlled copied runtime.
+- Recursively move unknown functions and ranges toward exact identities,
+  contracts, patch/mod value, and reconstruction owners/tests. Preserve open
+  questions and the cheapest falsifier instead of filling gaps with plausible
+  names.
+- Delegate independent measurement and adversarial review when useful. Verify a
+  background reviewer actually began; a spawn receipt is not liveness. Treat
+  every report as input to reproduce, not authority to publish or promote.
+- The presence of a Ghidra MCP connection grants access, not permission to
+  mutate the maintainer project. Follow the promotion gate in `AGENTS.md` and
+  `reverse-engineering/ghidra/README.md`.
 
-Keep it current as work lands. It is maintained from the main loop, not written
-at handoff time.
+## Context hygiene
 
-## Orientation
+Keep this file to stable rules and pointers. Current resumable state belongs in
+`developer_state.json`; detailed findings and raw evidence belong to their
+tracked or ignored owners. A finding should enter always-loaded context only
+when it remains valid even if its underlying measurement is later overturned.
 
-- [`README.MD`](README.MD) — product and lane overview.
-- [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) — what is proven today
-  and what remains unproven.
-- [`VALIDATION.md`](VALIDATION.md) — choosing the smallest gate that proves the
-  changed contract. Root [`package.json`](package.json) owns the commands.
-- [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) — RE
-  evidence front door.
-- [`rebuild/README.md`](rebuild/README.md) and
-  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) — the GPL reconstruction lane
-  boundary.
-- [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) — what belongs in the ignored
-  local directories and what may be promoted out of them.
-
-## In-flight work is not in this repository
-
-Working notes, measurement write-ups, handoffs, and raw runtime evidence live
-under `local-lab/`, which is **gitignored by design** — it holds retail-derived
-material that must never be tracked. A fresh clone therefore contains none of
-it, and a new session will not discover it by reading source.
-
-**If a `local-lab/` directory exists on this machine, read `local-lab/INDEX.md`
-first.** It indexes the current working notes, what each one settles, and what is
-still open. Without it, findings that cost hours to establish are invisible and
-get re-derived.
-
-Conclusions that survive scrutiny may be promoted out of `local-lab/` into
-tracked evidence under
-[`RE-INDEX.md`](reverse-engineering/RE-INDEX.md); the raw logs and captures stay
-local. Promotion is a judgement about whether a claim has been tested enough to
-be relied on, not a backlog to clear — on this project findings are routinely
-overturned within hours, and promoting early is how a wrong one acquires
-authority.
-
-## Editing this file
-
-This file is loaded into every session, so whatever it says is treated as
-settled — agents rarely re-litigate it, which is exactly what makes it dangerous.
-
-Keep it to **rules and pointers**. Durable current state belongs in
-`developer_state.json`; detailed findings belong in dated evidence documents
-that can be superseded in place. A bounded finding may be retained in the state
-file only with the exact evidence pointer that can overturn it.
-
-Before adding a line, ask whether it is still true if the measurement behind it
-turns out to be wrong. If the answer is no, it is a finding — link to it instead.
-
-Keep this file short. It competes with the actual task for context, and length
-here is paid on every single session.
-
-Commit, push, publication, and release are standing-authorized by the
-maintainer (2026-07-30; recorded in `developer_state.json` under
-`_AUTHORIZATION_2026_07_30`). The first push of a held backlog follows a clean
-public-boundary pass per `release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`; after
-that, pushing is routine. The pristine specimen remains untouchable, and
-anything that writes to a user's files still owes them the backup and the
-choice, per the principles above.
+Keep `developer_state.json` current as evidence lands, but always include the
+path, identity, or test that can recheck it. Measurements win when state and
+reality disagree.

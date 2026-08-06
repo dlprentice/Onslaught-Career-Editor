@@ -2,7 +2,7 @@
 
 Status: active canonical three-source synthesis; the three input masters and
 their line-level evidence remain the owning detail
-Last updated: 2026-07-29
+Last updated: 2026-08-06
 Verdict: **The installed corpus, the project's repo-designated unpatched executable
 baseline, and pinned Stuart source describe one recognizable engine lineage
 from three different sides,
@@ -29,6 +29,50 @@ The installed live executable and the force-windowed trace executable have
 different hashes and are identified separately below.
 
 ---
+
+## Live complete-RE tip census (2026-08-06) — read this first
+
+**Do not treat the Gen10 table below as the live tip.** Live tip census and
+campaign path are owned by `developer_state.json` → `complete_re_tip_20260805`
+and the cumulative index
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
+Re-read those before quoting generation, C1/C2/OPAQUE, or next steps.
+
+| Surface | Tip measured state (as of 2026-08-06) |
+| --- | --- |
+| Tip generation | **73** (OPAQUE→C1 PE plate lane dominant after Gen55) |
+| Function ledger | 8,124 functions; tip campaign under `local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/…` |
+| Grades | **C1=222**, **C2=5**, function_semantic **OPAQUE=7897**; contract_C0_OPAQUE **14219**; REBUILD_READY **0** |
+| FUN* tip counter | **0** (ledger counter; do not publish as settled nameClass/supersession closure without Gen26–38 scoreboard audit — FINAL delta A3) |
+| OPEN residual | **20** police holds |
+| complete_RE | **false** |
+| Immediate RE front | Rank/build **Gen74** OPAQUE→C1 under standing six-way (Grok subagent N+A, DeepSeek Flash max N+A, Opus medium N+A; direct DeepSeek sessions: native subagent N+A per AGENTS.md carve-out); not bulk C2 from PE alone |
+| Ghidra apply | **NOT_AUTHORIZED** (operator 2026-08-06); FINAL-3WAY-DELTA is eligibility frame only |
+
+The frozen three-master hashes later in this document remain the correct inputs
+for the 2026-07-29 synthesis. Body rows below that still say “current” without
+an era label are historical join content until re-adjudicated.
+
+## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
+
+The frozen three-master hashes later in this document remain the correct inputs
+for the 2026-07-29 synthesis. This **historical** delta records material facts
+proved through Generation 10 as of 2026-08-04; it does not silently rewrite
+those historical inputs and it is **not** the live tip after Gen73.
+
+| Surface | Measured state at Gen10 (2026-08-04) |
+| --- | --- |
+| Function/range authority | Generation 10 carries the unchanged Generation 9 range inventory: 8,124 functions, 6,117 exact residual entities, 1,767,100 function-body bytes, and 162,017 unmapped executable bytes. Its READY SHA-256 is `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9`. |
+| Live Ghidra delta | Two backed-up, scratch-reproduced, separately read-back promotions added 529 exact boundaries: 515 global-initializer/library-shaped entries plus 14 console-callback-region entries. A later equally gated operation corrected the five same-range target-lock names/signatures/comments (`StartLock`, `FireLock`, `LockHit`, `GetCurrentTarget`, `DisplayLock`) without changing any boundary/entity key or behavioral grade. Latest POST fileset: `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702`. |
+| Contract delta | At Gen10: 14,237 of 14,241 campaign contracts remained `C0_OPAQUE`; 15 structurally terminal padding. Four rows were then `C2_BOUNDED_RUNTIME` (Mission `Damage @ 0x005348C0` plus Level 521 `0x004D8AE0`, player `Damage @ 0x0040A890`, player `Hit @ 0x00407350`). Tip Gen73 has **C2=5** and dual opacity axes — re-read tip for current counts. |
+| Authored observability | The one-byte Mission logger gate is independently replicated. A later 16-byte disposable console bridge recovered the Level 100 realized registry: 31 commands and 56 variables, versus 32/59 statically registered entries. It is instrumentation, not a retail-default path. |
+| Trace corpus | The corpus was 75 traces / 497.31 GiB. Replay coverage existed for 73 traces, but 65 remained coverage-only. Schema-v3 call-context calibration had four paired calls/entries, four raw returns, three validated returns, one orphan, and three gap-free envelopes. Generation 10 admitted one replicated Level 521 window: slot-39 `0x004D8AE0` → `Damage` → `Hit` raw carriers/order with one validated and three orphan returns; it proved no writes or concrete name for slot 39. The separate data-write mode proved five transitions remove one target's sole fired-lock node. |
+| Closure fronts at Gen10 | Join the three Generation 10 successor questions to the existing player-damage reconstruction owner using thread-aware schema-v4 replay and bounded data-write/static ABI evidence. That front remains open; it is **not** the only complete-RE lever after Gen73 (OPAQUE→C1 PE plates dominate remaining mass). |
+
+The telemetry results strengthen the join among executable bytes, authored
+scripts, source names, and runtime state; they do not make those evidence planes
+interchangeable. Rebuild-ready behavior still requires a focused contract and
+parity owner, while a patch/mod feature still requires its own safe-copy gate.
 
 ## Purpose
 
