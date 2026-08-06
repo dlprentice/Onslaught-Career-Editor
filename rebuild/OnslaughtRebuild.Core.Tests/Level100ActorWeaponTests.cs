@@ -133,7 +133,7 @@ public sealed class Level100ActorWeaponTests
 
         int blasterImpacts = 0;
         int missileImpacts = 0;
-        int hullDamage = 0;
+        int incomingDamage = 0;
         int firstImpactTick = -1;
         for (int tick = 0; tick < 30 * 180; tick++)
         {
@@ -143,7 +143,7 @@ public sealed class Level100ActorWeaponTests
             {
                 Assert.Equal(playerId, impact.TargetActorId);
                 Assert.Equal(droneId, impact.OwnerActorId);
-                hullDamage += impact.HullDamage;
+                incomingDamage += impact.IncomingDamageMilliLife;
                 if (impact.Kind == Level100ActorRoundKind.Blaster)
                 {
                     blasterImpacts++;
@@ -162,20 +162,24 @@ public sealed class Level100ActorWeaponTests
         _output.WriteLine(
             $"blaster impacts {blasterImpacts}, missile impacts " +
             $"{missileImpacts}, first at Core tick {firstImpactTick}, total " +
-            $"{hullDamage} hull of {SimulationConstants.MaximumHull}");
+            $"{incomingDamage} incoming milli-life");
         Assert.True(
             blasterImpacts > 0,
             "the released Drone Vulcan Cannon must reach the player it is " +
             "told to attack.");
-        Assert.True(hullDamage > 0);
+        Assert.True(incomingDamage > 0);
     }
 
     /// <summary>
     /// Released Blaster damage is <c>CRoundDamage</c> 0.2 with an explosion
     /// (<c>Small Energy Hit</c>) that carries no <c>CExplosionDamage</c>;
-    /// released Forseti Missile damage is <c>CRoundDamage</c> 2.0 plus the 0.5
-    /// <c>CExplosionDamage</c> its <c>Micro Missile Hit</c> inherits from
-    /// <c>Small Explosion Base</c>.
+    /// released Forseti Missile data contains <c>CRoundDamage</c> 2.0 plus the
+    /// 0.5 <c>CExplosionDamage</c> its <c>Micro Missile Hit</c> inherits from
+    /// <c>Small Explosion Base</c>. Core currently emits their decoded 2.5 sum
+    /// as one impact. Whether retail calls <c>Damage</c> once with that sum or
+    /// separately for the round and explosion remains an explicit runtime
+    /// question; the player-damage boundary test preserves the consequential
+    /// near-shield-exhaustion difference.
     ///
     /// <para>The expectation is stated in RELEASED POINTS (permille of a life
     /// unit) and converted here, rather than as a hull literal. It used to be
@@ -191,14 +195,14 @@ public sealed class Level100ActorWeaponTests
     [InlineData(Level100ActorRoundKind.Blaster, 200)]
     // Forseti: CRoundDamage 2.0 + inherited CExplosionDamage 0.5 -> 2.5 points.
     [InlineData(Level100ActorRoundKind.ForsetiMissile, 2_500)]
-    public void ActorRoundDamage_MatchesTheShippedRecords(
+    public void ActorRoundImpact_UsesTheDecodedRecordAggregate(
         Level100ActorRoundKind kind,
         int releasedDamageMilliPoints)
     {
         // milli-points of released life -> registry milli-life. The registry's
         // unit IS milli-life (see Level100TargetTankLife), so a released point
         // is exactly 1,000 of them and this conversion is the identity on units.
-        int expectedHullDamage = releasedDamageMilliPoints *
+        int expectedIncomingDamage = releasedDamageMilliPoints *
             SimulationConstants.MaximumHull /
             (SimulationConstants.Level100PlayerReleasedLife * 1_000);
         Level100ActorDefinitionSet definitions =
@@ -241,7 +245,7 @@ public sealed class Level100ActorWeaponTests
             {
                 if (impact.Kind == kind)
                 {
-                    observed = impact.HullDamage;
+                    observed = impact.IncomingDamageMilliLife;
                 }
             }
         }
@@ -249,8 +253,8 @@ public sealed class Level100ActorWeaponTests
             $"{kind}: {launched} rounds launched overall, high-water " +
             $"{highWater} of this kind in flight");
 
-        _output.WriteLine($"{kind} hull damage: {observed}");
-        Assert.Equal(expectedHullDamage, observed);
+        _output.WriteLine($"{kind} incoming milli-life: {observed}");
+        Assert.Equal(expectedIncomingDamage, observed);
     }
 
     /// <summary>

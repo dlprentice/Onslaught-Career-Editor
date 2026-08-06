@@ -808,7 +808,9 @@ public sealed class Level100DestructionState
             hit.PartIndex,
             _currentLifeBits,
             hit.SurfacePoint));
-        if (remaining <= 0)
+        // Retail's CUnit__ApplyDamage compares the stored remainder with
+        // +0.0 and enters this lane only when x87 C0 is set; see PROVENANCE.
+        if (remaining < 0)
         {
             SetTerminal(hit, ref writer);
         }

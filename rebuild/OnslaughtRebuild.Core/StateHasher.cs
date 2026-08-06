@@ -24,6 +24,11 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 34: added canonical Aquila augment charge/active state and the
+            // ordered per-tick player-damage stream. This replaces direct hull
+            // subtraction with the released shield/augment damage boundary;
+            // every tick gains two fields and an event count even when quiet.
+            //
             // 33: the 30 Hz -> 20 Hz Core migration. This bump exists because
             // the hashed BYTE LAYOUT changed, independently of any trajectory:
             // Level100ActorMechanicsSnapshot.RetailBaseTickAccumulatorThirtieths
@@ -50,7 +55,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(33);
+            writer.Write(34);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -91,6 +96,18 @@ public static class StateHasher
             writer.Write(state.Energy);
             writer.Write(state.Shield);
             writer.Write(state.Hull);
+            writer.Write(state.AugmentCharge);
+            writer.Write(state.AugmentActive);
+            writer.Write(state.Level100PlayerDamageEvents.Count);
+            foreach (Level100PlayerDamageEvent damage in state.Level100PlayerDamageEvents)
+            {
+                writer.Write(damage.Tick);
+                writer.Write((byte)damage.Source);
+                writer.Write(damage.IncomingDamageMilliLife);
+                writer.Write(damage.ShieldAbsorbedMilliLife);
+                writer.Write(damage.LifeDamageMilliLife);
+                writer.Write(damage.RequestsDeath);
+            }
             writer.Write(state.TransformTicksRemaining);
             writer.Write(state.WalkerToJetUsesTakeoffLift);
             writer.Write(state.WalkerToJetLiftApplied);

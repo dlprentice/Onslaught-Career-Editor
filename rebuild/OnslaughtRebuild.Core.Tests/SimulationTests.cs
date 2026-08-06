@@ -409,9 +409,8 @@ public sealed class SimulationTests
             expectedPerReleasedUpdate);
 
         // The same quantity through OUR units, in the direction the simulation
-        // actually computes it. The reverse round-trip is NOT asserted because
-        // 20/30 is not exact in integers and would be off by one - which is a
-        // property of the tick ratio, not evidence about the damage law.
+        // actually computes it. Core and retail both run at 20 Hz now, so this
+        // ratio is exact; spelling it out still binds the unit-conversion law.
         long milliLifePerCoreTick = SimulationConstants.JetSkimHeightMillimeters *
             (long)SimulationConstants.JetWaterSkimDamagePerReleasedUnit *
             SimulationConstants.RetailTicksPerCoreTickNumerator /
@@ -423,13 +422,16 @@ public sealed class SimulationTests
 
         Assert.Equal(expectedPerCoreTick, milliLifePerCoreTick);
 
-        // And the magnitude the released law implies, stated so a future reader
-        // does not "correct" it for feeling too harsh: touching the water kills
-        // a full-hull Aquila in FOUR Core ticks - an eighth of a second.
-        int ticksToDeath =
-            (SimulationConstants.MaximumHull + (int)expectedPerCoreTick - 1) /
-            (int)expectedPerCoreTick;
-        Assert.Equal(2, ticksToDeath);
+        // Retail starts death strictly below zero. Two 10.0 released updates
+        // therefore leave exact-zero life alive and the third kills. Core now
+        // runs at retail's 20 Hz rate, so those are also three Core ticks and
+        // 0.15 seconds—not a ceil-to-zero shortcut.
+        int releasedUpdatesToDeath =
+            ((int)ReleasedAquilaLife / (int)releasedDamageAtZeroAltitude) + 1;
+        int coreTicksToDeath =
+            (SimulationConstants.MaximumHull / (int)expectedPerCoreTick) + 1;
+        Assert.Equal(3, releasedUpdatesToDeath);
+        Assert.Equal(3, coreTicksToDeath);
     }
 
     [Fact]
@@ -607,7 +609,7 @@ public sealed class SimulationTests
 
         WorldSnapshot state = simulation.Step(
             new SimInput(1, 1, SimActions.ToggleMode, LookX: 1),
-            [new Level100PlayerDamageFact(137)]);
+            [new Level100PlayerDamageFact(200)]);
 
         AssertCanonicalPlayer(state);
         Assert.Equal(VehicleTransition.None, state.Transition);
@@ -626,7 +628,9 @@ public sealed class SimulationTests
         state = simulation.Step(
             SimInput.Idle,
             [new Level100ActorActivationFact(playerId, true),
-             new Level100PlayerDamageFact(SimulationConstants.MaximumHull)]);
+             new Level100PlayerDamageFact(
+                 SimulationConstants.MaximumHull +
+                 SimulationConstants.MaximumShield + 1)]);
         AssertCanonicalPlayer(state);
         Assert.Equal(0, state.Hull);
         Assert.Equal(Level100ActorLifecycle.Destroyed, state.Level100Actors.Actors.Single(

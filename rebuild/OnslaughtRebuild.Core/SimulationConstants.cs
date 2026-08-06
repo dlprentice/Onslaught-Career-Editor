@@ -445,6 +445,9 @@ public static class SimulationConstants
     // every non-jet update. This alias preserves the public snapshot field
     // without inventing a second capacity or regeneration curve.
     public const int MaximumShield = MaximumEnergy;
+    public const int AquilaShieldEfficiencyPercent = 98;
+    public const int MaximumAugmentCharge = 10_000;
+    public const int AugmentDrainPerTick = 10;
     // The Aquila Prototype's released mLife is 20.0, and the actor registry's
     // Health field carries MILLI-LIFE - stated at Level100TargetTankLife above
     // and obeyed by every actor there (Target Drone CUnitLife 1.0 -> 1_000,
@@ -463,13 +466,14 @@ public static class SimulationConstants
     // `battle engine configurations.dat`: record "Aquila Prototype", mLife at
     // file offset 0x2D6, bits 0x41A00000 = 20.0f.
     //
-    // NOT A LETHALITY BUG, and that is why it survived. Damage is converted
-    // through `MaximumHull / Level100PlayerReleasedLife`
-    // (Level100ActorWeapons.HullDamageFromFloatBits), so the constant cancels
-    // out of hits-to-kill: Blaster stayed 100 hits and Forseti 8 at either
-    // value. The error was pure unit, invisible to every ratio - including the
-    // LevelScript's sub-40% hull poll, which is why the Level 100 chain reached
-    // its abort branch at the correct moment throughout.
+    // NOT A LETHALITY BUG UNDER THE FORMER DIRECT-HULL SHORTCUT, and that is why
+    // it survived. Damage was converted through
+    // `MaximumHull / Level100PlayerReleasedLife`
+    // (Level100ActorWeapons.IncomingDamageMilliLifeFromFloatBits), so the
+    // constant cancelled out of hits-to-kill: Blaster stayed 100 hits and
+    // Forseti 8 at either value. That historical shortcut is now replaced by
+    // the released shield/augment split; this paragraph explains only why the
+    // earlier unit defect evaded the then-current tests.
     //
     // It also unblocks two things that could not be written correctly before:
     // retail absorbs into shields first at mShieldEfficiency 98.0, and its
@@ -507,8 +511,8 @@ public static class SimulationConstants
     // as retail's single constant already implies.
     public const int WalkerToJetTransitionTicks = 10;
     public const int JetToWalkerTransitionTicks = 10;
-    // CBattleEngineWalkerPart::Move recharges the store on the ground
-    // (references/Onslaught/BattleEngineWalkerPart.cpp:374-388):
+    // CBattleEngineWalkerPart::Move recharges the store after recent ground
+    // contact (references/Onslaught/BattleEngineWalkerPart.cpp:374-388):
     //
     //   if (EVENT_MANAGER.GetTime() - mMainPart->mLastTimeOnGround < 0.3f)
     //     if ((!mInfinateEnergy) && (!mCloaked))
@@ -529,12 +533,18 @@ public static class SimulationConstants
     // times too slow, which cost the beat-9 sortie about 58 released seconds
     // of standing still to recharge.
     //
-    // The `/2` arm is DELIBERATELY NOT MODELLED. `Move` sets
-    // mShieldsRecharging = TRUE at the end of every update
-    // (BattleEngineWalkerPart.cpp:389), so the full rate is the steady state and
-    // the halved rate only occurs on an update following a shield drain. Core
-    // has no shield-drain path to clear that flag, so modelling the halved arm
-    // would mean inventing the condition that selects it.
+    // The pristine 74154bfa… body 0x00413760..0x00413A63 performs the elapsed
+    // comparison at 0x004137D3 against 0x005D8CB4 = 9A 99 99 3E = 0.3f.
+    // This is distinct from the 0.5f InJetMode threshold at 0x005D85EC.
+    public const int WalkerRechargeGroundContactTicks =
+        SimulationConstants.TicksPerSecond * 3 / 10;
+
+    // The `/2` arm is DELIBERATELY NOT MODELLED. The pristine body tests the
+    // WalkerPart flag at +0x14 and multiplies by 0.5 at 0x00413804 when false,
+    // then resets it true at 0x0041383B. Stuart's writes that clear the flag
+    // belong to charging/firing heat-backed weapons, not to shield damage.
+    // Core does not yet model those released heat/ammo-store transitions, so
+    // selecting the half-rate arm here would invent its trigger.
     public const int WalkerEnergyRegenerationPerTick = 50;
     // CBattleEngineJetPart::Move spends
     //   cost = (mMaxAirEnergyCost - mMinAirEnergyCost) * mThrusterValue
@@ -909,7 +919,7 @@ public static class SimulationConstants
     // Player hull per released life point. `mLife` for Aquila Prototype is
     // 20.0 (data/battle engine configurations.dat @0x2d2), and Core defines a
     // full hull as MaximumHull. One released damage unit is therefore
-    // MaximumHull / 20 = 50 Core hull units. Both operands are shipped or
+    // MaximumHull / 20 = 1,000 Core milli-life. Both operands are shipped or
     // definitional; the ratio is not an independent measurement.
     public const int Level100PlayerReleasedLife = 20;
 

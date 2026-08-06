@@ -43,15 +43,14 @@ public sealed record Level100ActorRoundSnapshot(
     bool Locked);
 
 /// <summary>
-/// A released actor round reaching its designated target. The damage is
-/// already expressed in Core hull units through
-/// <see cref="SimulationConstants.Level100PlayerReleasedLife"/>.
+/// A released actor round reaching its designated target. Damage is incoming
+/// milli-life; the Battle Engine still has to route it through shields.
 /// </summary>
 public sealed record Level100ActorRoundImpact(
     Level100ActorId TargetActorId,
     Level100ActorId OwnerActorId,
     Level100ActorRoundKind Kind,
-    int HullDamage);
+    int IncomingDamageMilliLife);
 
 /// <summary>
 /// The released gameplay pseudo-random stream.
@@ -170,7 +169,7 @@ internal sealed record Level100ActorRoundData(
     Level100ActorRoundKind Kind,
     int SpeedMillimetersPerBaseTick,
     int LifeSpanBaseTicks,
-    int HullDamage,
+    int IncomingDamageMilliLife,
     bool Seeks,
     int TurnRateMicroRadians,
     int SeekDelayBaseTicks,
@@ -185,12 +184,13 @@ internal static class Level100ActorArmament
         milliseconds * BaseTicksPerSecond / 1_000;
 
     /// <summary>
-    /// Released damage converted into Core hull units. Aquila Prototype ships
+    /// Released damage converted into Core milli-life. Aquila Prototype ships
     /// <c>mLife</c> 20.0 and Core defines a full hull as
     /// <see cref="SimulationConstants.MaximumHull"/>, so one released damage
     /// unit is <c>MaximumHull / 20</c>.
     /// </summary>
-    internal static int HullDamageFromFloatBits(params int[] releasedDamageBits)
+    internal static int IncomingDamageMilliLifeFromFloatBits(
+        params int[] releasedDamageBits)
     {
         long total = 0;
         foreach (int bits in releasedDamageBits)
@@ -240,7 +240,7 @@ internal static class Level100ActorArmament
                         BaseTicksPerSecond,
                 LifeSpanBaseTicks:
                     Milliseconds(SimulationConstants.Level100BlasterLifeSpanMilliseconds),
-                HullDamage: HullDamageFromFloatBits(
+                IncomingDamageMilliLife: IncomingDamageMilliLifeFromFloatBits(
                     SimulationConstants.Level100BlasterDamageFloatBits),
                 Seeks: false,
                 TurnRateMicroRadians: 0,
@@ -255,7 +255,7 @@ internal static class Level100ActorArmament
                         BaseTicksPerSecond,
                 LifeSpanBaseTicks: Milliseconds(
                     SimulationConstants.Level100ForsetiMissileLifeSpanMilliseconds),
-                HullDamage: HullDamageFromFloatBits(
+                IncomingDamageMilliLife: IncomingDamageMilliLifeFromFloatBits(
                     SimulationConstants.Level100ForsetiMissileDamageFloatBits,
                     SimulationConstants
                         .Level100ForsetiMissileExplosionDamageFloatBits),

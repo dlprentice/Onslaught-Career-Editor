@@ -59,6 +59,7 @@ public sealed class Simulation
     private int _groundImpactSpeedMillimetersPerTick;
     private readonly List<AquilaFlightEvent> _flightEvents = [];
     private readonly List<Level100WeaponFireEvent> _weaponFireEvents = [];
+    private readonly List<Level100PlayerDamageEvent> _playerDamageEvents = [];
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -70,6 +71,8 @@ public sealed class Simulation
     private int _rollVelocityMicroRadPerTick;
     private int _energy;
     private int _shield;
+    private int _augmentCharge;
+    private bool _augmentActive;
     private int _transformTicksRemaining;
     private int _fireCooldownTicksRemaining;
     private int _twinVulcanReloadTicksRemaining;
@@ -144,10 +147,12 @@ public sealed class Simulation
     {
         input.Validate();
         _level100Destruction.ValidateExternalFacts(level100Facts);
+        ValidateLevel100PlayerDamageFacts(level100Facts);
 
         _tick++;
         _flightEvents.Clear();
         _weaponFireEvents.Clear();
+        _playerDamageEvents.Clear();
 
         if (input.HasAction(SimActions.Reset))
         {
@@ -175,6 +180,9 @@ public sealed class Simulation
         PumpLevel100EventBus();
         ApplyLevel100Facts(level100Facts);
         AdvanceLevel100ActorMechanics();
+        bool playerPartMoveStarted =
+            _level100Actors.GetLifecycle(_level100PlayerActorId) ==
+                Level100ActorLifecycle.Alive;
 
         // Three independent released gates, not one restated three ways.
         //
@@ -204,6 +212,7 @@ public sealed class Simulation
             : SimInput.Idle;
 
         AdvanceTransition();
+        UpdateAugmentState();
 
         if (_fireCooldownTicksRemaining > 0)
         {
@@ -219,7 +228,7 @@ public sealed class Simulation
         UpdateMovement(playerInput);
         UpdateWalkerFeet();
         UpdateLevel100TriggerActors();
-        UpdateResources();
+        UpdateResources(playerPartMoveStarted);
         TryFire(playerInput);
         UpdateProjectiles();
         SyncLevel100PlayerState();
@@ -520,22 +529,21 @@ public sealed class Simulation
                     _level100Mission.SubmitInput(missionInput.Input);
                     break;
                 case Level100PlayerDamageFact damage:
-                    if (damage.Damage <= 0)
+                    if (damage.IncomingDamageMilliLife <= 0)
                     {
                         throw new ArgumentOutOfRangeException(
                             nameof(facts),
                             "Player damage must be positive.");
                     }
 
-                    int hull = Math.Max(0, PlayerHull - damage.Damage);
-                    _level100Destruction.SetExternalHealth(
-                        _level100PlayerActorId,
-                        hull);
-                    _level100Mission.ReportPlayerHitDuringEvasion();
-                    if (hull == 0)
+                    if (ApplyLevel100PlayerDamage(
+                        damage.IncomingDamageMilliLife,
+                        damageShields: true,
+                        Level100PlayerDamageSource.ExternalFact,
+                        out bool factRequestsDeath))
                     {
-                        DestroyLevel100PlayerActor();
-                        _level100Mission.ReportPlayerDeath();
+                        _level100Mission.ReportPlayerHitDuringEvasion();
+                        CompleteLevel100PlayerDamageDeath(factRequestsDeath);
                     }
                     break;
                 case Level100PlayerDeathFact:
@@ -552,6 +560,41 @@ public sealed class Simulation
             }
 
             PumpLevel100EventBus();
+        }
+    }
+
+    private static void ValidateLevel100PlayerDamageFacts(
+        IReadOnlyList<Level100SimulationFact>? facts)
+    {
+        if (facts is null)
+        {
+            return;
+        }
+
+        foreach (Level100SimulationFact fact in facts)
+        {
+            if (fact is not Level100PlayerDamageFact damage)
+            {
+                continue;
+            }
+            if (damage.IncomingDamageMilliLife <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(facts),
+                    "Player damage must be positive.");
+            }
+            // The public fact is a shielded Damage call. Constrain it to the
+            // exact whole-milli subset before the tick mutates; internal actor
+            // rounds already use 200/2500, and water bypasses shields.
+            if (damage.IncomingDamageMilliLife <=
+                    SimulationConstants.MaximumShield &&
+                damage.IncomingDamageMilliLife % 50 != 0)
+            {
+                throw new InvalidOperationException(
+                    "A player-damage fact that can reach the sufficient-shield " +
+                    "branch must be divisible by 50 until fractional retail " +
+                    "state is represented canonically.");
+            }
         }
     }
 
@@ -717,7 +760,7 @@ public sealed class Simulation
         foreach (Level100ActorRoundImpact impact in impacts)
         {
             if (impact.TargetActorId != _level100PlayerActorId ||
-                impact.HullDamage <= 0)
+                impact.IncomingDamageMilliLife <= 0)
             {
                 continue;
             }
@@ -729,21 +772,22 @@ public sealed class Simulation
             }
 
             // Released THING_TYPE_AMMUNITION contact on the player. This is the
-            // hit BattleEngine.msl's `hit()` observes during the beat-5 dodge,
-            // which is why the mission is told about it before the hull is
-            // reduced.
+            // hit BattleEngine.msl's `hit()` observes during the beat-5 dodge.
+            // The script-level hit callback runs before Damage; the explicit
+            // evasion report below runs after the Damage boundary succeeds.
             _level100Actors.ReportHit(
                 _level100PlayerActorId,
                 otherThingTypeMask: Level100ReleasedThingTypeMasks.Ammunition);
             DrainAndDispatchLevel100ActorFacts();
 
-            int hull = Math.Max(0, PlayerHull - impact.HullDamage);
-            _level100Destruction.SetExternalHealth(_level100PlayerActorId, hull);
-            _level100Mission.ReportPlayerHitDuringEvasion();
-            if (hull == 0)
+            if (ApplyLevel100PlayerDamage(
+                impact.IncomingDamageMilliLife,
+                damageShields: true,
+                Level100PlayerDamageSource.ActorRound,
+                out bool impactRequestsDeath))
             {
-                DestroyLevel100PlayerActor();
-                _level100Mission.ReportPlayerDeath();
+                _level100Mission.ReportPlayerHitDuringEvasion();
+                CompleteLevel100PlayerDamageDeath(impactRequestsDeath);
             }
 
             PumpLevel100EventBus();
@@ -1363,13 +1407,15 @@ public sealed class Simulation
         // law test below caught it:
         //     depth in millimetres -> released units   is  / 1,000
         //     released life        -> registry milli-life is  x 1,000
-        // so the conversion is just depth_mm * 20, then the shared 20 Hz -> 30 Hz
-        // tick ratio. At zero altitude that is 6,666 milli-life per Core tick
-        // against a 20,000 hull - four ticks to death, an eighth of a second.
+        // so the conversion is just depth_mm * 20. Core now runs at retail's
+        // own 20 Hz rate, so the retained ratio is 1/1. At zero altitude that is
+        // 10,000 milli-life per update against a 20,000 hull.
         //
         // That is brutal, and it is meant to be: retail's own numbers are 10.0
-        // damage per update against mLife 20.0, i.e. two updates. This was NOT
-        // softened to taste, and it could not have been written at all before
+        // damage per update against mLife 20.0. Damage starts death only below
+        // zero, so two updates leave exact-zero life alive and the third kills:
+        // 0.15 seconds. This was NOT softened to taste, and it could not have
+        // been written at all before
         // MaximumHull was corrected from 1.0 to 20.0 released life - against the
         // old unit the same law would have killed the player in a sixth of a
         // tick and read as a bug in this code rather than in the constant.
@@ -1384,12 +1430,13 @@ public sealed class Simulation
             SimulationConstants.RetailTicksPerCoreTickDenominator));
         if (skimDamage > 0)
         {
-            int hull = Math.Max(0, PlayerHull - skimDamage);
-            _level100Destruction.SetExternalHealth(_level100PlayerActorId, hull);
-            if (hull == 0)
+            if (ApplyLevel100PlayerDamage(
+                skimDamage,
+                damageShields: false,
+                Level100PlayerDamageSource.WaterSkim,
+                out bool skimRequestsDeath))
             {
-                DestroyLevel100PlayerActor();
-                _level100Mission.ReportPlayerDeath();
+                CompleteLevel100PlayerDamageDeath(skimRequestsDeath);
             }
         }
 
@@ -2654,13 +2701,27 @@ public sealed class Simulation
         };
     }
 
-    private void UpdateResources()
+    private void UpdateResources(bool playerPartMoveStarted)
     {
+        // The released outer CBattleEngine::Move does not call WalkerPart::Move
+        // or JetPart::Move once IsDying() is true. Resource regeneration/drain
+        // belongs to those part moves, so a pre-Move lethal hit skips it. A
+        // lethal water skim occurs near the END of JetPart::Move, after its
+        // energy work; preserve that already-started part update even though
+        // the lifecycle has changed by the time this method commits it.
+        if (!playerPartMoveStarted)
+        {
+            return;
+        }
+
         if (!_jetMovedThisTick)
         {
-            _energy = Math.Min(
-                SimulationConstants.MaximumEnergy,
-                _energy + SimulationConstants.WalkerEnergyRegenerationPerTick);
+            if (CanRechargeWalkerEnergy(_ticksSinceGroundContact))
+            {
+                _energy = Math.Min(
+                    SimulationConstants.MaximumEnergy,
+                    _energy + SimulationConstants.WalkerEnergyRegenerationPerTick);
+            }
             if (_energy == SimulationConstants.MaximumEnergy)
             {
                 _jetEnergyDrainRemainderMicro = 0;
@@ -2676,6 +2737,98 @@ public sealed class Simulation
             _jetEnergyDrainRemainderMicro = 0;
         }
         _shield = 0;
+    }
+
+    /// <summary>
+    /// Released WalkerPart recharge gate. The pristine body compares elapsed
+    /// time since ground contact strictly below 0.3 seconds.
+    /// </summary>
+    internal static bool CanRechargeWalkerEnergy(int ticksSinceGroundContact)
+    {
+        if (ticksSinceGroundContact < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ticksSinceGroundContact));
+        }
+
+        return ticksSinceGroundContact <
+            SimulationConstants.WalkerRechargeGroundContactTicks;
+    }
+
+    private void UpdateAugmentState()
+    {
+        if (_level100Actors.GetLifecycle(_level100PlayerActorId) !=
+            Level100ActorLifecycle.Alive)
+        {
+            return;
+        }
+
+        // CBattleEngine::Move handles this after Damage has accumulated charge.
+        // Aquila Prototype's primary Pulse Cannon Pod uses an available store,
+        // so its AugmentWeapon gate succeeds when the released 10.0 threshold
+        // is reached. Damage itself never flips the active flag.
+        Level100PlayerDamageState advanced = Level100PlayerDamage.AdvanceAugment(
+            new Level100PlayerDamageState(
+                PlayerHull,
+                _energy,
+                _shield,
+                _augmentCharge,
+                _augmentActive));
+        _augmentCharge = advanced.AugmentChargeMilli;
+        _augmentActive = advanced.AugmentActive;
+    }
+
+    private bool ApplyLevel100PlayerDamage(
+        int incomingDamageMilliLife,
+        bool damageShields,
+        Level100PlayerDamageSource source,
+        out bool requestsDeath)
+    {
+        requestsDeath = false;
+        if (_level100Actors.GetLifecycle(_level100PlayerActorId) !=
+            Level100ActorLifecycle.Alive)
+        {
+            return false;
+        }
+
+        Level100PlayerDamageResult result = Level100PlayerDamage.Apply(
+            new Level100PlayerDamageState(
+                PlayerHull,
+                _energy,
+                _shield,
+                _augmentCharge,
+                _augmentActive),
+            incomingDamageMilliLife,
+            damageShields,
+            isWalker: _mode == VehicleMode.Walker &&
+                _transition == VehicleTransition.None);
+
+        _energy = result.State.EnergyMilli;
+        _shield = result.State.ShieldMilli;
+        _augmentCharge = result.State.AugmentChargeMilli;
+        _augmentActive = result.State.AugmentActive;
+        _level100Destruction.SetExternalHealth(
+            _level100PlayerActorId,
+            Math.Max(0, result.State.LifeMilli));
+        _playerDamageEvents.Add(new Level100PlayerDamageEvent(
+            _tick,
+            source,
+            incomingDamageMilliLife,
+            result.ShieldAbsorbedMilliLife,
+            result.LifeDamageMilliLife,
+            result.RequestsDeath));
+        requestsDeath = result.RequestsDeath;
+        return true;
+    }
+
+    private void CompleteLevel100PlayerDamageDeath(bool requestsDeath)
+    {
+        if (!requestsDeath)
+        {
+            return;
+        }
+
+        DestroyLevel100PlayerActor();
+        _level100Mission.ReportPlayerDeath();
     }
 
     private void TryFire(SimInput input)
@@ -2896,6 +3049,7 @@ public sealed class Simulation
         _groundImpactSpeedMillimetersPerTick = 0;
         _flightEvents.Clear();
         _weaponFireEvents.Clear();
+        _playerDamageEvents.Clear();
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -2905,6 +3059,8 @@ public sealed class Simulation
         _rollVelocityMicroRadPerTick = 0;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
+        _augmentCharge = 0;
+        _augmentActive = false;
         _transformTicksRemaining = 0;
         _fireCooldownTicksRemaining = 0;
         _twinVulcanReloadTicksRemaining = 0;
@@ -3067,6 +3223,9 @@ public sealed class Simulation
             _energy,
             _shield,
             player.Health,
+            _augmentCharge,
+            _augmentActive,
+            Array.AsReadOnly(_playerDamageEvents.ToArray()),
             _transformTicksRemaining,
             _walkerToJetUsesTakeoffLift,
             _walkerToJetLiftApplied,

@@ -699,7 +699,7 @@ public sealed partial class Level100ActorMechanics
             round.TargetActorId,
             round.OwnerActorId,
             round.Kind,
-            data.HullDamage));
+            data.IncomingDamageMilliLife));
         return true;
     }
 

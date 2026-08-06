@@ -344,6 +344,34 @@ public sealed class Level100DestructionContactTests
     }
 
     [Fact]
+    public void WholeBodyLifeRequiresStrictlyNegativeRemainingLifeToBecomeTerminal()
+    {
+        Level100ContactDefinition tank =
+            Level100ContactCatalog.Instance.GetDefinition("Target Tank");
+        var state = new Level100DestructionState(202, tank);
+        var events = new Level100DestructionEvent[
+            Level100DestructionState.MaximumEventsPerHit];
+        Level100ContactHit hit = Hit(202, 0);
+        Assert.Equal(0x40C00000u, tank.MaximumLifeBits);
+
+        int zeroCount = state.ApplyRoundHit(hit, tank.MaximumLifeBits, events);
+
+        Assert.Equal(0x00000000u, state.CurrentLifeBits);
+        Assert.False(state.Terminal);
+        Assert.DoesNotContain(
+            events.AsSpan(0, zeroCount).ToArray(),
+            item => item.Kind == Level100DestructionEventKind.Terminal);
+
+        int negativeCount = state.ApplyRoundHit(hit, 0x3F800000u, events);
+
+        Assert.Equal(0xBF800000u, state.CurrentLifeBits);
+        Assert.True(state.Terminal);
+        Assert.Contains(
+            events.AsSpan(0, negativeCount).ToArray(),
+            item => item.Kind == Level100DestructionEventKind.Terminal);
+    }
+
+    [Fact]
     public void RuntimeConsumesRegistryPoseAndReportsReleasedLifecycleFacts()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

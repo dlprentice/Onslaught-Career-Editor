@@ -500,7 +500,7 @@ public sealed class Level100ActorMechanicsTests
     /// 20-of-every-30 base-tick accumulator, and the 20 Hz migration deleted it
     /// because a Core tick now IS a released base tick. Its removal is one of
     /// the reasons every pinned hash moved in that change, independently of any
-    /// trajectory - see <c>StateHasher</c> version 33.
+    /// trajectory - see <c>StateHasher</c> version 34.
     /// </remarks>
     [Fact]
     public void CanonicalHash_RetainsCommandCursorAndGuidePhase()

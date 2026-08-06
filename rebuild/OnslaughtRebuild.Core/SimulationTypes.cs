@@ -457,11 +457,31 @@ public sealed record Level100SpawnThingFact(
 public sealed record Level100MissionInputFact(Level100MissionInput Input)
     : Level100SimulationFact;
 
-public sealed record Level100PlayerDamageFact(int Damage) : Level100SimulationFact;
+public sealed record Level100PlayerDamageFact(int IncomingDamageMilliLife)
+    : Level100SimulationFact;
 
 public sealed record Level100PlayerDeathFact : Level100SimulationFact;
 
 public sealed record Level100WaterLossFact : Level100SimulationFact;
+
+public enum Level100PlayerDamageSource : byte
+{
+    ExternalFact = 1,
+    ActorRound = 2,
+    WaterSkim = 3,
+}
+
+/// <summary>
+/// One positive incoming-damage application after the released shield split.
+/// This is a per-tick observation stream, not accumulated history.
+/// </summary>
+public sealed record Level100PlayerDamageEvent(
+    int Tick,
+    Level100PlayerDamageSource Source,
+    int IncomingDamageMilliLife,
+    int ShieldAbsorbedMilliLife,
+    int LifeDamageMilliLife,
+    bool RequestsDeath);
 
 public sealed record Level100TriggerActorSnapshot(
     Level100MissionTrigger Trigger,
@@ -500,6 +520,9 @@ public sealed record WorldSnapshot(
     int Energy,
     int Shield,
     int Hull,
+    int AugmentCharge,
+    bool AugmentActive,
+    IReadOnlyList<Level100PlayerDamageEvent> Level100PlayerDamageEvents,
     int TransformTicksRemaining,
     bool WalkerToJetUsesTakeoffLift,
     bool WalkerToJetLiftApplied,

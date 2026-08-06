@@ -541,20 +541,15 @@ internal sealed class Level100ChainAutopilot
 
     internal IReadOnlyList<ObservedBlaster> Blasters => _blasters;
 
-    private readonly List<(int Tick, int Delta)> _hullDrops = [];
-    private int _previousHull = int.MinValue;
+    private readonly List<Level100PlayerDamageEvent> _playerDamageEvents = [];
 
-    /// <summary>Every hull decrease this run saw, with the tick it landed on.</summary>
-    internal IReadOnlyList<(int Tick, int Delta)> HullDrops => _hullDrops;
+    /// <summary>Every explicit player-damage boundary this run observed.</summary>
+    internal IReadOnlyList<Level100PlayerDamageEvent> PlayerDamageEvents =>
+        _playerDamageEvents;
 
     private void RecordBlasterBallistics(WorldSnapshot state)
     {
-        if (_previousHull != int.MinValue && state.Hull < _previousHull)
-        {
-            _hullDrops.Add((state.Tick, _previousHull - state.Hull));
-        }
-
-        _previousHull = state.Hull;
+        _playerDamageEvents.AddRange(state.Level100PlayerDamageEvents);
 
         Level100ActorSnapshot? player = state.Level100Actors.Actors
             .FirstOrDefault(actor => actor.Name == "Player 1");
@@ -1950,14 +1945,16 @@ internal sealed class Level100ChainAutopilot
     /// <list type="bullet">
     ///   <item><description><c>Drone Vulcan Cannon</c>: <c>CWeaponMaxRange</c>
     ///   40.0, burst 8 at 0.15 s, reload 1.0 s, round <c>Blaster</c> at
-    ///   <c>CRoundVelocity</c> 45.0 for <b>200 hull</b> a hit. Six drones is
-    ///   48 rounds a second, or 9,600 hull a second if they all
-    ///   land.</description></item>
+    ///   <c>CRoundVelocity</c> 45.0 for <b>200 incoming damage</b> a hit. Six
+    ///   drones is 48 rounds a second, or 9,600 incoming damage a second if
+    ///   they all land. <c>CBattleEngine::Damage</c> then routes that through
+    ///   Aquila shields; it is not 9,600 direct hull loss.</description></item>
     ///   <item><description><c>Forseti Drone Missile Launcher</c>:
     ///   <c>CWeaponMinRange</c> 20.0, <c>CWeaponMaxRange</c> 80.0, reload
     ///   <b>10.0 s</b>, round <c>Forseti Missile</c> at 15.0 for <b>2,500
-    ///   hull</b>. Slow and rare, and it cannot fire inside 20 m at
-    ///   all.</description></item>
+    ///   aggregate incoming damage</b> (2.0 round plus 0.5 explosion). Whether
+    ///   those become one or two retail Damage calls remains open. Slow and
+    ///   rare, and it cannot fire inside 20 m at all.</description></item>
     /// </list>
     ///
     /// <para><b>The Vulcan is the whole threat, and it is beaten by moving.</b>
@@ -1994,23 +1991,24 @@ internal sealed class Level100ChainAutopilot
     /// and re-attacking past the ceiling:</para>
     ///
     /// <list type="table">
-    ///   <item><description>11-19 m band, 90 degrees off: Blaster damage fell
-    ///   from 7,600 hull to <b>200</b> - one hit in the whole beat, exactly what
-    ///   the law predicts - but <c>Forseti</c> hits rose from two to <b>seven</b>
-    ///   and the run finished with <b>zero</b> kills at 2,500
-    ///   hull.</description></item>
+    ///   <item><description>11-19 m band, 90 degrees off: the historical
+    ///   pre-funnel run's net hull loss attributed to Blaster hits fell from
+    ///   7,600 to <b>200</b> - one hit in the whole beat - but
+    ///   <c>Forseti</c> hits rose from two to <b>seven</b> and the run finished
+    ///   with <b>zero</b> kills at 2,500 hull.</description></item>
     ///   <item><description>10-16 m band, 60 degrees off, to stop the airframe
-    ///   overshooting into missile range: 26 Blaster hits and three Forseti,
-    ///   7,300 hull - the same total as this driver - and again <b>zero</b>
-    ///   kills.</description></item>
+    ///   overshooting into missile range: the historical pre-funnel model
+    ///   counted 26 Blaster hits and three Forseti, leaving 7,300 hull - the
+    ///   same total as that driver - and again <b>zero</b> kills.</description></item>
     /// </list>
     ///
     /// <para>Both fail for the same two shipped reasons. First, the
     /// <c>Forseti Drone Missile Launcher</c> carries <c>CWeaponMinRange</c>
     /// 20.0 and <c>CanActorWeaponFire</c> rejects the shot below it, so knife
-    /// range is the only place in the level where the 2,500-hull weapon cannot
-    /// fire at all: hull saved from the 200-hull Blaster is handed back at
-    /// 12.5 times the price. Second, and decisively, the Aquila cannot hover -
+    /// range is the only place in the level where the 2,500-incoming-damage
+    /// weapon cannot fire at all. Its aggregate input is 12.5 times a
+    /// 200-damage Blaster, but shield routing means that is not a 12.5x hull
+    /// price. Second, and decisively, the Aquila cannot hover -
     /// the released speed correction floors the magnitude at
     /// <c>JetMinimumSpeedPerTick</c> even at <c>MoveZ</c> -1 - so a range band
     /// is held only by pointing the nose away from the target, and the time
@@ -2123,13 +2121,13 @@ internal sealed class Level100ChainAutopilot
             state.WalkerYawVelocityMicroRadPerTick,
             SimulationConstants.JetYawInputMicroRadPerTick);
 
-        // Missile defence, and it is the larger half of this fight. Recorded
-        // hull losses across the previous revision's beat 9 came in steps of
-        // 2,500 and 2,900 - that is `Forseti Missile` (2.0 round + 0.5
-        // explosion = 2,500 hull) with the odd 200-hull Blaster on top, not a
-        // Blaster stream. Six launchers on a 10 s reload put roughly eighteen
-        // of those in the air across the beat, and three landing is the whole
-        // budget between 17,500 and the sub-40 % abort at 8,000.
+        // Missile defence remains the larger half of this fight. The previous
+        // direct-hull model showed 2,500/2,900 drops, which identified Forseti's
+        // 2.0 round + 0.5 explosion with an occasional 200 Blaster, but those
+        // hull deltas are historical evidence about that superseded model—not
+        // the released shield funnel. Six launchers on a 10 s reload still put
+        // roughly eighteen missiles in the air; the survivability budget must
+        // be read from explicit Damage events and post-funnel resources.
         //
         // The released seeker is beatable and the shipped record says exactly
         // how. Round vtable slot 66 takes the direction to the target into the

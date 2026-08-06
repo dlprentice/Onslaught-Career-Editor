@@ -299,62 +299,14 @@ public sealed class Level100FullChainTests
     /// then. <c>LevelWon()</c> is called by the released
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
-    /// <para>What this test does <b>not</b> claim: that beat 9 is completed by
-    /// kills. <b>Two of the six wave-2 drones are destroyed</b>, and the other
-    /// four are still alive when the LevelScript's own health poll posts
-    /// <c>Abort Airborne Drones</c> below 40 % hull, which sets Target Zone 4
-    /// as the objective and leads to the same <c>LevelWon()</c>. That is a
-    /// shipped path with its own dialogue (<c>TUTORIAL_ABORTED</c>) and its own
-    /// <c>AddScore(-50)</c>, not a shortcut, but it is a worse run than a good
-    /// player's and <c>PrimaryObjectiveComplete(4, ...)</c> never fires.</para>
-    ///
-    /// <para><b>This count went down, and the cause is a correction rather than
-    /// a regression.</b> The previous run destroyed four, but it was flown
-    /// against <c>WalkerEnergyRegenerationPerTick = 4</c> - a placeholder that
-    /// is eight times slower than the shipped
-    /// <c>mGroundEnergyIncrease</c> 0.05. With the byte-faithful 33 the store
-    /// refills in about eight released seconds instead of about fifty-eight, so
-    /// the driver no longer has to charge on the ground before it launches: it
-    /// takes off the moment the wave arms and transits 107 m into the spawn
-    /// cluster, merging with all six drones at once instead of meeting them as
-    /// they trickle in. The old ground recharge, named as the blocker in
-    /// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c> §3, is gone - the jet
-    /// never runs its store dry in this run at all - and a different blocker is
-    /// in its place.</para>
-    ///
-    /// <para><b>The measured beat-9 trace.</b> Wave armed t9418 at 17,500 hull;
-    /// kills at t10416 and later, hull 7,400 at the abort at t11896, and
-    /// <c>Won</c> at t12394. The losses are two <c>Forseti Missile</c> hits and
-    /// three <c>Blaster</c> streams, and every stream happens at a nearest-drone
-    /// slant of 4-8 m.</para>
-    ///
-    /// <para><b>The blocker, stated precisely: the driver cannot both track and
-    /// dodge, and that is a property of the released airframe.</b> A clean
-    /// Blaster miss needs a perpendicular speed of <c>18 / slant</c> m/s - 0.45
-    /// m/s at 40 m, 3.6 m/s at 5 m. With <c>JetAlignmentPermille</c> 0 the only
-    /// thing feeding the crab is the released speed correction, which drives
-    /// the magnitude towards <c>JetMinimumSpeedPerTick</c> at <c>MoveZ</c> -1:
-    /// measured over t9925-t10005, the airframe held 75 mm per tick, i.e. 2.2
-    /// m/s, at exactly the 4-8 m range where 2.2-4.5 m/s was required. But
-    /// <c>MoveZ</c> -1 is also what collapses the turn radius enough to hold a
-    /// drone on the reticle. The two throttles were measured against each
-    /// other: <c>MoveZ</c> +1 throughout kept the hull above the abort
-    /// threshold for 2,850 ticks longer (abort t14746 rather than t11896) and
-    /// scored <b>zero</b> kills; <c>MoveZ</c> -1 scores kills and is shredded.
-    /// Nine intermediate throttle policies, including a firing-solution-gated
-    /// blend, were measured and none beat two.</para>
-    ///
-    /// <para><b>And the result is chaotic, so do not treat two as a tuning
-    /// target.</b> Roughly thirty single- and two-parameter variations of this
-    /// driver were measured against the corrected constant - yaw gain, crab
-    /// segment, missile-break range, fire tolerance, altitude band, launch
-    /// energy, stand-off ramps, loiter, and nearest-target hysteresis - and the
-    /// kill count swings between 0 and 3 with no gradient, with two variations
-    /// losing the level outright. One 3-kill point exists but its immediate
-    /// neighbours in the same parameter score 0 and 2, so it is a spike and is
-    /// deliberately not shipped. The honest reading is unchanged from
-    /// <c>local-lab/BEAT-9-DOGFIGHT-2026-07-27.md</c> §3.1: this driver sits on
-    /// a cliff, and the previous four was a point on the same cliff.</para>
+    /// <para><b>Current measured branch, 2026-08-03.</b> With actor impacts
+    /// routed through the released shield/damage funnel and walker recharge
+    /// gated by the pristine 0.3-second ground-contact comparison, beat 9
+    /// destroys all six wave-2 drones. The sub-40 % emergency poll never posts
+    /// <c>Abort Airborne Drones</c>; objective 4 completes normally, and the run
+    /// reaches <c>Won</c> at t6682 with 11,882 milli-life. The prior abort-path
+    /// trajectories remain dated evidence in the local-lab reports, not the
+    /// active expectation of this test.</para>
     /// </summary>
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
@@ -427,138 +379,22 @@ public sealed class Level100FullChainTests
             $"objective4=" +
             $"{final.Level100Mission.PrimaryObjectives.Single(objective => objective.Objective == 4).Status}");
 
-        // Beat 9, and this is the assertion the whole file exists for.
-        //
-        // WHAT THIS REPLACED, AND IT IS A STRENGTHENING, NOT A WEAKENING.
-        // Until this change the three assertions here were
-        //     Assert.True(Aborted)
-        //     Assert.True(WaveTwoSpawnsDamaged >= 1)
-        //     Assert.Equal(Failed, objective 4)
-        // - the run reached `Won` through the released sub-40 % hull branch
-        // with two of six drones down and `PrimaryObjectiveComplete(4, ...)`
-        // never firing. The first of those carried its own instruction:
-        // "If it now wins by clearing wave 2, that is better - update this
-        // assertion". It does, so it is updated, and each of the three is
-        // replaced by its strictly stronger complement rather than by a
-        // looser bound. Nothing here admits a run the old assertions admitted.
-        //
-        // AND ON 2026-08-01 THE STRENGTHENING ABOVE WAS GIVEN BACK. This run no
-        // longer clears wave 2 outright: beat 9 went from six kills with no
-        // abort to THREE kills with the poll firing at t5406 on 6,200 of 20,000
-        // hull. The run still reaches `Won`, and still through
-        // `Reached Target Zone 4`.
-        //
-        // ISOLATED CAUSALLY, NOT ARGUED, AND IT IS #161 RATHER THAN #154. Two
-        // changes landed together - #154 (the vertical datum, so every static
-        // and every air spawn seats where released `CThing::Init` puts it) and
-        // #161 (the look-response table, now the nearest integer permille to
-        // the released law at all 1,001 inputs). Re-running this fixture with
-        // ONLY #154 applied and the released look table restored leaves this
-        // test GREEN - six kills, no abort, objective 4 `Complete`. The move
-        // here is #161's.
-        //
-        // The COLD career went the other way in the same measurement: under
-        // #154 alone both of its arms drop onto the abort branch, and adding
-        // #161 puts its unquantised control back to a full clear of all 22.
-        // Each change flips one career and not the other, which is precisely
-        // the pattern the measurement table on
-        // `Level100ChainAutopilot.ErrorPole` records for this objective.
-        //
-        // IT IS RECORDED, NOT REPAIRED, AND NOT HIDDEN. Both changes move the
-        // reconstruction TOWARD the released build and neither is backed out
-        // for this. The beat-9 kill count is a property of this synthetic
-        // driver rather than of the game, and it was ALREADY KNOWN to be
-        // chaotic at the one-permille level: the measurement table on
-        // `Level100ChainAutopilot.ErrorPole` shows single-term changes flipping
-        // it between 0 and 6 on either career, and only the complete conversion
-        // passed both at once. Re-deriving the driver's poles to recover six
-        // kills here would be fitting a chaotic objective, which `AGENTS.md`
-        // forbids and which that comment names.
-        //
-        // The assertions below are EXACT re-derivations of the branch the run
-        // now takes - `Assert.True` on the poll, an exact kill count, an exact
-        // damaged count, an exact objective status. Not one of them is a
-        // widened bound, and not one would pass for a run that did something
-        // else. What does NOT move is the load-bearing claim: `Won`, through
-        // `Reached Target Zone 4`, with all five trigger volumes dispatched and
-        // beats 1-8 unchanged.
-        Assert.True(
-            final.Level100Mission.Aborted,
-            "This run is expected to reach `Reached Target Zone 4` through the " +
-            "LevelScript's sub-40 % hull poll. If the poll has stopped firing, " +
-            "the driver is clearing wave 2 outright again - that is a BETTER " +
-            "run, and this assertion, the kill count and objective 4 below " +
-            "should all be re-derived back up rather than left passing.");
-
-        // Three of six, re-derived 2026-08-01 from six.
-        // `event("Airborne Target 2 Destroyed")` counts down `numTargets` from
-        // 6, and only the arm that reaches zero calls
-        // `PrimaryObjectiveComplete(4, ...)`, so this and the objective-4
-        // assertion below are two readings of the same released gate: one on
-        // the world, one on the mission record. They move together, which is
-        // the check that this is one behaviour and not two.
+        // Exact re-derivation after the player-damage/resource correction.
+        // These are three readings of the same released branch: six world
+        // deaths count numTargets to zero, PrimaryObjectiveComplete(4, ...)
+        // marks the objective, and the low-hull abort never fires.
+        Assert.False(final.Level100Mission.Aborted);
         int waveTwoKills =
             CountDestroyed(final, Level100MissionTargetGroup.AirborneTargets2);
-        Assert.Equal(3, waveTwoKills);
-
-        // Four of six wounded, re-derived 2026-08-01 from six, with 3,302 hull
-        // of damage dealt. `WaveTwoSpawnsDamaged` exists because it is the
-        // steadier of the two beat-9 terms - see its own remarks - and it moved
-        // less than the kill count did, but it did move. Four is inside the
-        // "4 to 6" band the twenty-run sweep below measured for this driver,
-        // which is the check that this is the same chaos and not a new failure
-        // mode: the driver still finds and engages the wave.
-        Assert.Equal(4, driver.WaveTwoSpawnsDamaged);
-
-        // AND THE CHAOS IS NOT HIDDEN BY THIS ASSERTION. The chain outcome is
-        // chaotic at the one-permille level and always was - that is recorded
-        // on `Level100ChainAutopilot.RateCommand` and was re-measured for this
-        // change. What is asserted here is the unperturbed run; what was
-        // measured around it is twenty separate one-permille perturbations of
-        // beat 9 ALONE - beats 1-8 are bit-identical by construction, because
-        // nothing outside `EngageWaveTwo` moved, and the milestone ticks were
-        // diffed to confirm it. Measured, this driver against the previous
-        // one, over the same twenty perturbations:
-        //
-        //                             previous driver      this driver
-        //   reaches `Won`                  15 / 20            18 / 20
-        //   objective 4 Complete            0 / 20            11 / 20
-        //   all six drones destroyed        0 / 20            11 / 20
-        //   wave-2 kills                    0 every time      3 to 6
-        //   wave-2 spawns damaged           1 to 3            4 to 6
-        //   hull at the end                 0 to 7,900        3,900 to 12,800
-        //
-        // Those figures were taken while `NavigateToZone` still handed off to
-        // the walker on horizontal distance alone, and every loss in that sweep
-        // was `WaterLoss` on the flight to Target Zone 4 AFTER objective 4
-        // completed - the fight was won and the trip home drowned. THAT DEFECT
-        // IS FIXED: see `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters`
-        // and the re-measured distribution in `Level100FerryLandingTests`, which
-        // asserts zero `WaterLoss` across the same twenty perturbations and
-        // carries an adverse control that reinstates the defect and drowns.
-        //
-        // This run was unchanged by that fix, tick for tick: the clearance term
-        // is a measured no-op on beats 6 and 8, and every milestone there -
-        // including beat 9's six kills at the time - was identical before and
-        // after. Only the Target Zone 4 leg moved.
-        //
-        // The whole sweep above is a PREVIOUS WORLD, kept because it is the
-        // record of how chaotic this objective is rather than a claim about the
-        // current run. Three kills is inside the "3 to 6" band that same sweep
-        // measured for this driver, which is the reason the 2026-08-01 move is
-        // read as the chaos it always was and not as a new failure mode.
-        //
-        // Objective 4 is now `Failed` on this arm, for the reason stated at the
-        // abort assertion above: the countdown from six never reaches zero, so
-        // `PrimaryObjectiveComplete(4, ...)` is never called. The COLD-career
-        // unquantised control still completes it - see
-        // `Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface`,
-        // which asserts that separately - so the released gate itself is still
-        // demonstrably reachable.
+        Assert.Equal(6, waveTwoKills);
+        Assert.Equal(6, driver.WaveTwoSpawnsDamaged);
+        Assert.Equal(6_000, driver.WaveTwoDamageDealt);
         Assert.Equal(
-            Level100PrimaryObjectiveStatus.Failed,
+            Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
+        Assert.Equal(6_682, final.Tick);
+        Assert.Equal(11_882, final.Hull);
     }
 
     /// <summary>
@@ -601,12 +437,16 @@ public sealed class Level100FullChainTests
     /// taken.</b> The required crossing speed falls as range grows, so the
     /// Blaster is a knife-range weapon: the measured hit rate by launch band is
     /// 70 % inside 5 m, 65 % from 5-10 m, and 5 % or less at every band beyond
-    /// 10 m. All 7,600 hull this run loses to Blasters is spent inside 10 m.
+    /// 10 m. This run's Blaster impacts all occur inside 10 m; their 200-unit
+    /// inputs are routed through the player Damage contract rather than treated
+    /// as direct hull subtraction.
     /// <b>Standing off does not follow from that, and was measured.</b> See the
     /// class remarks on <c>Level100ChainAutopilot.EngageWaveTwo</c>: the
     /// <c>Forseti Drone Missile Launcher</c>'s <c>CWeaponMinRange</c> 20.0 means
     /// the range band that defeats the Blaster is also the band that switches
-    /// on a weapon costing 2,500 hull a hit rather than 200.</para>
+    /// on a weapon carrying 2,500 aggregate incoming damage rather than 200.
+    /// The resulting hull cost depends on shield state and on whether the
+    /// missile's round and explosion are separate Damage calls.</para>
     /// </summary>
     [Fact]
     public void BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses()
@@ -708,17 +548,23 @@ public sealed class Level100FullChainTests
             $"Blasters fired at a player crossing well above the law's " +
             $"requirement still hit {outsideHitRate:P0} of the time.");
 
-        // And the closest-approach observable has to agree with the hull, which
-        // is what makes it evidence rather than a second geometry engine. Each
-        // Blaster is 200 hull; the observable over-counts slightly because it
-        // evaluates a swept segment on every Core tick while the runtime
-        // advances rounds only on the 20 Hz retail base tick.
+        // And the closest-approach observable has to agree with the explicit
+        // damage boundary, which is what makes it evidence rather than a second
+        // geometry engine. Each Blaster carries 200 incoming milli-life; its
+        // actual hull share depends on the released shield law. The observable
+        // over-counts slightly because it evaluates a swept segment on every
+        // Core tick while the runtime advances rounds only on the 20 Hz retail
+        // base tick.
         int observedHits = blasters
             .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
-        int hullBlasterHits =
-            _abortControl.Driver.HullDrops.Count(drop => drop.Delta == 200) +
-            _abortNoCrab.Driver.HullDrops.Count(drop => drop.Delta == 200);
-        Assert.InRange(observedHits, hullBlasterHits, hullBlasterHits + 8);
+        int damageBlasterHits =
+            _abortControl.Driver.PlayerDamageEvents.Count(damage =>
+                damage.Source == Level100PlayerDamageSource.ActorRound &&
+                damage.IncomingDamageMilliLife == 200) +
+            _abortNoCrab.Driver.PlayerDamageEvents.Count(damage =>
+                damage.Source == Level100PlayerDamageSource.ActorRound &&
+                damage.IncomingDamageMilliLife == 200);
+        Assert.InRange(observedHits, damageBlasterHits, damageBlasterHits + 8);
     }
 
     /// <summary>

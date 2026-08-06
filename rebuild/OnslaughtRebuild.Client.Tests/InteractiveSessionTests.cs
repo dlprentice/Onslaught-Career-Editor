@@ -1589,8 +1589,11 @@ public sealed class InteractiveSessionTests
         // and rebuilding returns this assertion to ab1e5844... exactly, so the
         // hull unit accounts for the whole move and nothing else changed
         // behaviour. No damage number, threshold or trajectory moved - the
-        // conversion in Level100ActorWeapons.HullDamageFromFloatBits divides by
-        // MaximumHull, so hits-to-kill are identical on both sides.
+        // conversion in
+        // Level100ActorWeapons.IncomingDamageMilliLifeFromFloatBits scaled with
+        // MaximumHull, so the former direct-hull shortcut kept hits-to-kill
+        // identical on both sides. The later shield-law reconstruction is a
+        // separate trajectory change.
         // DID NOT MOVE 2026-07-27 for the WalkerEnergyRegenerationPerTick
         // correction, 4 -> 33, and that is a measurement rather than an
         // assumption. This scenario is walker-only, so energy is never spent by

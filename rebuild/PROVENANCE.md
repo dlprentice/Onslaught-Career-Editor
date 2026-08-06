@@ -747,6 +747,21 @@ objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
 does not generalize the unmeasured part multiplier. It consumes only the
 three independently demonstrated direct-hit paths, the retained mesh bound,
 and the released per-update speed, which is now Core's per-tick speed.
+The pristine specimen also fixes the whole-body terminal threshold exactly.
+At VA `0x004F9E61` / file offset `0x000F9E61`, the 32-byte range through
+`0x004F9E80` is SHA-256
+`F6A5A6D8AAB47FFDDD06A16B493FBEDACD0583519277AF2F9E035FF314B087A2`:
+it loads life, subtracts damage, stores the remainder, compares the retained
+x87 value with the `+0.0f` constant at VA `0x005D856C` (file offset
+`0x001D856C`, bytes `00 00 00 00`, SHA-256
+`DF3F619804A92FDB4057192DC43DD748EA778ADC52BC498CE80524C014B81119`),
+then tests x87 C0 and skips the destruction lane when C0 is clear. Finite
+positive and exact-zero remainders therefore survive; finite negative values
+enter the lane. A later `[ESI+0x2C] & 4` gate can still bypass cleanup, so this
+proves the comparison threshold rather than asserting that every negative
+`CUnit` is immediately terminal. The current Level 100 authored life and
+damage values are finite; retail's unordered/NaN C0 behavior remains outside
+this reconstruction contract.
 The speed-`35` physics record names `Mech Pulse Bolt Medium`; its released
 five-entry particle descriptor references four unique texture archives: Blue
 Spark 2, Blue Trail, Halo, and Energy Trail. Those exact archives and their
