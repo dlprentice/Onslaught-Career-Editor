@@ -47,7 +47,7 @@ Re-read those before quoting generation, C1/C2/OPAQUE, or next steps.
 | OPEN residual | **20** police holds |
 | complete_RE | **false** |
 | Immediate RE front | Rank/build **Gen74** OPAQUE→C1 under standing six-way (Grok subagent N+A, DeepSeek Flash max N+A, Opus medium N+A; direct DeepSeek sessions: native subagent N+A per AGENTS.md carve-out); not bulk C2 from PE alone |
-| Ghidra apply | **NOT_AUTHORIZED** (operator 2026-08-06); FINAL-3WAY-DELTA is eligibility frame only |
+| Ghidra apply | **AUTHORIZED 2026-08-06 night for the Gen71–73 C1 pilot only** (F:\ backups pre/post verified; 48/48 dual-pinned, readback PASS; live DB already held the names). Gen74+ plates need per-plate authorization per the promotion gate |
 
 The frozen three-master hashes later in this document remain the correct inputs
 for the 2026-07-29 synthesis. Body rows below that still say “current” without

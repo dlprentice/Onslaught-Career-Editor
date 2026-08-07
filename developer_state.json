@@ -2516,7 +2516,7 @@
           "opus_max_final_cell": "ADEQUATE"
         },
         "post_review_hygiene": "F1/F6/H* applied 2026-08-06 docs-only",
-        "ghidra_apply": "NOT_AUTHORIZED \u2014 operator instruction 2026-08-06 do not proceed to Ghidra apply"
+        "ghidra_apply": "AUTHORIZED_2026_08_06_NIGHT for the Gen71-73 C1 pilot only: pre-backup verified F:\\GhidraBackups\\BEA-20260806-pre-Gen74 (ReadOnlyOpen=PASS), pilot ran (48/48 dual-pinned, readback PASS, live DB already held the names; one pending rename SetSpawnScript confirmed present), post-backup F:\\GhidraBackups\\BEA-20260807-post-pilot hash-clean. Gen74+ plates still need per-plate authorization per the standing promotion gate (reverse-engineering/ghidra/README.md)."
       }
     }
   },
