@@ -150,6 +150,20 @@ Also:
 
 ## Working and delegation
 
+- **Lab evidence is never hard-deleted in one step.** Anything under
+  `local-lab/` (and any dated lab output elsewhere) is first **staged** with
+  `tools/lab_quarantine.py stage <path> --reason "<why>"`, which moves it to
+  `D:\lab-quarantine\<date>\` with a tree SHA-256, byte count, and manifest
+  row. True deletion happens later, only under space pressure, via
+  `lab_quarantine.py purge <id> --reason "<why>"`; the manifest and purge log
+  preserve identity for recovery. `restore <id>` brings a staged item back.
+  This rule exists because a 2026-08-06 cleanup deleted a frozen campaign
+  carry bundle whose `campaign.ready.json` SHA was hard-pinned in
+  `tools/re_campaign.py` — the audit checked *docs* for references, not
+  *test code*, and the fixtures were unrecoverable (not in git, not in
+  OneDrive, no VSS shadow, recycle bin bypassed by `Remove-Item -Force`).
+  Before classifying anything "stale", grep the **tooling and tests** too,
+  not only the docs.
 - Preserve unrelated and pre-existing work, especially in a dirty tree. Make
   the smallest coherent change that closes the observed contract; do not widen
   into adjacent cleanup or new machinery without evidence that it is needed.
