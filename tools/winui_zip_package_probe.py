@@ -171,10 +171,12 @@ ZIP_PAYLOAD_DENY_SUFFIXES = (
     ".mp4",
     ".obj",
     ".ogg",
+    ".pdb",
     ".pem",
     ".png",
     ".jpg",
     ".jpeg",
+    ".lib",
     ".raw",
     ".sqlite",
     ".trx",
@@ -588,6 +590,9 @@ def keep_only_target_libvlc_runtime(app_dir: Path) -> CheckResult:
         if candidate.is_dir() and candidate.name.lower() != "win-x64":
             removed.append(candidate.name)
             shutil.rmtree(candidate)
+    for stale in sorted((target_root).glob("*.lib")):
+        removed.append(stale.name)
+        stale.unlink()
     return CheckResult(
         "bundle_libvlc_runtime",
         "PASS",

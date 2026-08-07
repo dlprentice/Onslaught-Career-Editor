@@ -5,6 +5,13 @@
     <RootNamespace>Onslaught___Career_Editor</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      No debug symbols in published output: the AppCore PDB carries a SourceLink
+      mapping with the build machine's username and path, which the release
+      probe denies. Keep PDBs out of the shipped ZIP.
+    -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

@@ -17,6 +17,21 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <!-- Project-authored artwork; see tools/generate_app_icon.py for provenance. -->
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <!--
+      Public identity. The ZIP probe and About page show these strings, and the
+      release artifact must not carry the internal project name or a local
+      SourceLink mapping (which embeds the build machine's username and path in
+      PDB debug symbols). DebugType none keeps PDBs out of the shipped payload.
+    -->
+    <AssemblyTitle>Onslaught Toolkit</AssemblyTitle>
+    <AssemblyProduct>Onslaught Toolkit</AssemblyProduct>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <AssemblyDescription>Preservation and safe-editing toolkit for Battle Engine Aquila saves, careers, and copies.</AssemblyDescription>
+    <Company></Company>
+    <Product>Onslaught Toolkit</Product>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
