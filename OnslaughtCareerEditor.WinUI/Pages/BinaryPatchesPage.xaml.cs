@@ -2773,7 +2773,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote(ex.Message);
+                ShowSafeCopyManagerNote($"That copy could not be checked. Nothing was changed. {ex.Message}");
                 return;
             }
 

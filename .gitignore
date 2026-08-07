@@ -34,6 +34,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+/.pytest_cache/
 /.artifacts/
 /lore-pack/
 /subagents/

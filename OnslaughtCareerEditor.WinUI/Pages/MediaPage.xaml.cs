@@ -263,7 +263,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _snapshot = MediaCatalogSnapshot.Empty;
                 ResetLibraryState();
                 MediaSummaryTextBlock.Text = "Media load failed";
-                MediaGameDirectoryTextBlock.Text = ex.Message;
+                MediaGameDirectoryTextBlock.Text = "The selected game folder could not be read. Check that it still exists and is not locked by another program.";
                 SetMediaDirectoryDisplay(null, "Media loading failed. Check the selected install folder and try again.");
                 ShowMediaStatus(
                     InfoBarSeverity.Error,
@@ -768,8 +768,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 catch (Exception ex)
                 {
                     ResetVideoPlaybackState(stopPlayer: false);
-                    VideoPathTextBlock.Text = ex.Message;
-                    AppStatusService.SetStatus("Media: video playback failed");
+                    VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                    AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
                 }
             });
         }
@@ -1856,8 +1856,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = ex.Message;
-                AppStatusService.SetStatus("Media: audio playback failed");
+                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
+                AppStatusService.SetStatus($"Media: audio playback failed - {ex.Message}");
             }
         }
 
@@ -1875,8 +1875,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = ex.Message;
-                AppStatusService.SetStatus("Media: video playback failed");
+                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
             }
         }
 
@@ -1895,8 +1895,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = ex.Message;
-                AppStatusService.SetStatus("Media: audio playback failed");
+                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
+                AppStatusService.SetStatus($"Media: audio playback failed - {ex.Message}");
             }
         }
 
@@ -2009,8 +2009,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = ex.Message;
-                AppStatusService.SetStatus("Media: video playback failed");
+                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
             }
         }
 
