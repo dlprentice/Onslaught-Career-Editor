@@ -48,6 +48,12 @@ def tree_sha256(root: Path) -> str:
     return digest.hexdigest()
 
 
+def tree_bytes(root: Path) -> int:
+    """Count file content only; directory inode sizes vary across volumes."""
+
+    return sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
+
+
 def stage(path: Path, *, reason: str) -> dict:
     path = path.resolve()
     if not path.exists():
@@ -56,21 +62,50 @@ def stage(path: Path, *, reason: str) -> dict:
         raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)")
     date = datetime.now(timezone.utc).strftime("%Y%m%d")
     dest = QUARANTINE_ROOT / date / f"{uuid.uuid4().hex[:8]}-{path.name}"
+    dest.parent.mkdir(parents=True, exist_ok=True)
     if path.is_dir():
         shutil.copytree(path, dest)
     else:
         shutil.copy2(path, dest)
+    source_bytes = (
+        tree_bytes(path)
+        if path.is_dir()
+        else path.stat().st_size
+    )
+    source_sha256 = (
+        tree_sha256(path)
+        if path.is_dir()
+        else hashlib.sha256(path.read_bytes()).hexdigest()
+    )
+    staged_bytes = (
+        tree_bytes(dest)
+        if dest.is_dir()
+        else dest.stat().st_size
+    )
+    staged_sha256 = (
+        tree_sha256(dest)
+        if dest.is_dir()
+        else hashlib.sha256(dest.read_bytes()).hexdigest()
+    )
+    if (staged_bytes, staged_sha256) != (source_bytes, source_sha256):
+        raise SystemExit(
+            "staged quarantine copy does not reproduce the source identity: "
+            f"source=({source_bytes}, {source_sha256}) "
+            f"staged=({staged_bytes}, {staged_sha256})"
+        )
     row = {
         "id": dest.name,
         "original": str(path),
         "staged": str(dest),
         "stagedAtUtc": utc_now(),
-        "bytes": sum(p.stat().st_size for p in dest.rglob("*")) if dest.is_dir() else dest.stat().st_size,
-        "sha256": tree_sha256(dest) if dest.is_dir() else hashlib.sha256(dest.read_bytes()).hexdigest(),
+        "bytes": staged_bytes,
+        "sha256": staged_sha256,
         "reason": reason,
     }
     with MANIFEST.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(row) + "\n")
+        stream.flush()
+    shutil.rmtree(path) if path.is_dir() else path.unlink()
     return row
 
 

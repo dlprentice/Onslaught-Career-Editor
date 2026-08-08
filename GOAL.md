@@ -17,12 +17,12 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-06. Current measured status belongs in
+> Last updated: 2026-08-08. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
-> [`developer_state.json`](developer_state.json) (tip key
-> `complete_re_tip_20260805`; prefer
-> [`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
-> over older Gen10 handoff prose).
+> [`developer_state.json`](developer_state.json) (routing key
+> `current_re_authority`). Generation 73 is retained only as the exact
+> projection oracle named by the post-loss claim-closure receipt; it is not a
+> campaign parent or authority.
 > Summary: what "done" means here — the objectives, the rebuild acceptance test that
 > stands in for it, the evidence partition, the evidence rule, and the standing
 > constraints.
@@ -156,15 +156,23 @@ this standing campaign complete.
 
 ---
 
-## Live tip (do not restate volatile counts here)
+## Current replay authority (do not restate volatile counts here)
 
-Standing complete-RE progress is **not** the Gen10 handoff below. Read
-`developer_state.json` → `complete_re_tip_20260805` and
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
-As of 2026-08-06 tip is Gen73 with complete_RE false; Ghidra apply is
-**not authorized** unless tip state says otherwise. Next mass lever after that
-checkpoint is Gen74 OPAQUE→C1 under standing six-way critics (direct DeepSeek
-sessions use native subagent N+A per the AGENTS.md carve-out).
+Standing complete-RE progress is **not** the Gen10 handoff below and is no
+longer selected from the damaged Generation-73 candidate chain. Read
+`developer_state.json` → `current_re_authority`. As of 2026-08-08 the exact
+post-loss authority is canonical Generation 11 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/`:
+READY SHA-256 `9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d`,
+frozen reducer ID
+`e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993`,
+and external authority receipt SHA-256
+`2594d78d7ec6b4908ecfba9509122fedbe1959ff0e5eeaceb6d1164ae758238c`.
+Its independent replica is reproduction-only. Generation 73 supplied a
+field-level projection oracle; every candidate claim was readmitted, rejected,
+or quarantined without making it a parent. The campaign remains incomplete and
+the next valid campaign generation is 12. Ghidra mutation still requires its
+separate promotion gate and authority.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 
@@ -177,7 +185,8 @@ and its frozen reducer ID is
 Generation 10 advanced exactly three bounded Level 521 call-context contracts;
 it changed no Ghidra range or name, proved no memory write or rebuild parity,
 and left `StartDie` open and opaque. Generation 9 remained its exact live
-Ghidra parent. That boundary is **historical**, not the live tip after Gen73.
+Ghidra parent. That boundary is **historical**, not the current post-loss
+Generation-11 replay authority.
 
 The immutable boundary, rejected candidates, verification command, ranked next
 three frontiers, and successor operating brief are recorded under

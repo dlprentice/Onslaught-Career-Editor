@@ -1,8 +1,8 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-06. RE tip census block refreshed to Gen73
-(`complete_re_tip_20260805` + FINAL-3WAY-DELTA pointer). Primary WinUI
+Last updated: 2026-08-08. RE authority block refreshed to recovered Gen11
+(`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
 retain their stated boundaries. Other rebuild and save/patch claims not
@@ -638,33 +638,32 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering and proof campaign
 
-**Live tip (2026-08-06):** read `developer_state.json` → `complete_re_tip_20260805`
-and the cumulative index
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
-before quoting generation or grade counts. Do not treat the Gen10 historical
-block below as current tip.
+**Current replay authority (2026-08-08):** read `developer_state.json` →
+`current_re_authority` before quoting generation or grade counts. Do not select
+the historical Gen10 or candidate Gen73 roots by generation number, ledger
+equality, or self-derived pins.
 
-| Metric | Tip Gen73 (as of 2026-08-06) |
+| Metric | Canonical recovered Gen11 |
 | --- | ---: |
-| Tip generation | **73** |
+| Authority generation | **11** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8124** |
-| C1_CANDIDATE_PARTIAL | **222** |
-| C2_BOUNDED_RUNTIME | **5** |
-| function_semantic OPAQUE | **7897** |
-| contract_C0_OPAQUE | **14219** (second opacity axis) |
-| FUN* tip counter | **0** (ledger; not settled public nameClass closure without Gen26–38 audit) |
+| C1_CANDIDATE_PARTIAL | **216** |
+| C2_BOUNDED_RUNTIME | **4** |
+| function_semantic OPAQUE | **7904** |
+| contract_C0_OPAQUE | **14021** (second opacity axis) |
 | OPEN residual | **20** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| Ghidra apply | **NOT_AUTHORIZED** |
+| READY / reducer | `9b3769c5…2686d` / `e88c9739…6993` |
+| Next valid generation | **12** |
 
-Two RE lanes (do not conflate gen numbers): identity/naming/residual campaigns
-(early → ~Gen54) drove FUN* and residual terminals; the **OPAQUE→C1 PE plate
-lane** (~Gen55–73) is the dominant post-Gen10 lever for remaining function mass
-under standing six-way critics (Grok subagent N+A, DeepSeek Flash max N+A, Opus
-medium N+A; direct DeepSeek sessions: native subagent N+A per AGENTS.md
-carve-out). C1 is a PE-static partial contract, not dual-runtime C2 or rebuild
-parity. Next mass step: **Gen74** OPAQUE→C1 (not bulk C2 from PE alone).
+The post-loss closure accounts for every Generation-73 candidate delta without
+making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
+and 6,082 residual terminalizations; preserves 20 police-open residuals; keeps
+seven wrappers name-only/opaque; retains ApplyDamage at C1; rejects its C2; and
+quarantines the unsupported NearClone claim. C1 is a partial contract, not
+dual-runtime C2 or rebuild parity. Further reviewer use is situational under
+`reverse-engineering/REVIEW-PROTOCOL.md`, not a fixed model matrix.
 
 **Historical Gen10 instruments (still true as capabilities, not tip census):**
 
@@ -685,12 +684,14 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions; tip C2 is **5** rows and tip authority is Gen73.
+admissions. Canonical Gen11 retains the four independently supported C2 rows;
+the fifth candidate ApplyDamage C2 claim was rejected.
 
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front **alongside** Gen74 OPAQUE→C1 PE ranking. There is
+remains an open runtime front alongside the next impact-ranked Generation-12
+contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
 question.

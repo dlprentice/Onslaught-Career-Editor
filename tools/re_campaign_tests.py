@@ -17,6 +17,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import re_campaign as campaign
+import re_gen73_reseal as gen73_reseal
 
 
 def write_tsv(path: Path, columns: list[str], rows: list[dict]) -> None:
@@ -770,7 +771,7 @@ class CampaignTests(unittest.TestCase):
             self.assertTrue((out / "campaign.ready.json").is_file())
             self.assertEqual("bea.re.campaign.v5", receipt["schema"])
             self.assertEqual(campaign.REDUCER_SCHEMA, receipt["reducer"]["schema"])
-            self.assertEqual(13, len(receipt["reducer"]["files"]))
+            self.assertEqual(campaign._current_reducer_manifest(), receipt["reducer"])
             self.assertIn(
                 "level521-call-context-refuter",
                 {row["role"] for row in receipt["reducer"]["files"]},
@@ -986,6 +987,7 @@ class CampaignTests(unittest.TestCase):
             ready_path = prior / "campaign.ready.json"
             ready = json.loads(ready_path.read_text(encoding="utf-8"))
             ready["generation"] = campaign.FROZEN_V5_CAMPAIGN_CARRY_GENERATION
+            ready["advance"] = {"kind": "SYNTHETIC_FROZEN_BRIDGE_TEST"}
             ready_path.write_text(json.dumps(ready), encoding="utf-8")
             ready_sha = sha256(ready_path)
 
@@ -2270,23 +2272,31 @@ class ResidualSupersessionRelationTests(unittest.TestCase):
 
 
 def v5_carry_reducer_restored_byte_exact() -> bool:
-    """False when the reconstructed v5 carry root carries the recovery marker.
+    """Require every receipt-bound reducer byte, not merely marker absence."""
 
-    The original ``local-lab/re-campaign/`` tree was deleted 2026-08-06 (see
-    AGENTS.md); the Gen5 bundle was reconstructed byte-exact (READY + outputs)
-    from the lineage export, but three reducer snapshot files were fixed after
-    the v5 cut and cannot be restored byte-exact.  Frozen descendant
-    generations (Gen8/9/10) replay against the strict on-disk reducer
-    snapshot, so their full-lineage tests cannot pass until a byte-exact
-    original is recovered (WinFR), and must skip with this documented reason
-    instead of failing forever.
-    """
-    marker = (
-        campaign.FROZEN_V5_CAMPAIGN_CARRY_ROOT
-        / "_reducer"
-        / "REDUCER_SNAPSHOT_LOST_20260806.marker"
-    )
-    return not marker.is_file()
+    root = campaign.FROZEN_V5_CAMPAIGN_CARRY_ROOT
+    ready_path = root / "campaign.ready.json"
+    if (
+        not ready_path.is_file()
+        or sha256(ready_path) != campaign.FROZEN_V5_CAMPAIGN_CARRY_READY_SHA256
+    ):
+        return False
+    try:
+        ready = json.loads(ready_path.read_text(encoding="utf-8"))
+        reducer = ready["reducer"]
+        files = reducer["files"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return False
+    if reducer.get("id") != campaign.FROZEN_V5_CAMPAIGN_CARRY_REDUCER_ID:
+        return False
+    for row in files:
+        try:
+            path = root / row["path"]
+            if path.stat().st_size != row["bytes"] or sha256(path) != row["sha256"]:
+                return False
+        except (OSError, KeyError, TypeError):
+            return False
+    return campaign._reducer_id(files) == reducer["id"]
 
 
 def require_v5_carry_reducer(test_method):
@@ -2296,9 +2306,55 @@ def require_v5_carry_reducer(test_method):
     def wrapper(self, *args, **kwargs):
         if not v5_carry_reducer_restored_byte_exact():
             self.skipTest(
-                "frozen v5 carry reducer snapshot lost 2026-08-06 (reconstructed "
-                "byte-exact except three post-cut files); replay needs the strict "
-                "original reducer snapshot"
+                "frozen v5 carry reducer does not match all receipt-bound bytes"
+            )
+        return test_method(self, *args, **kwargs)
+
+    return wrapper
+
+
+def missing_atomic14_replay_inputs() -> list[str]:
+    """List exact external inputs still absent from the historical Gen8 replay."""
+
+    root = (
+        Path(__file__).resolve().parent.parent
+        / "local-lab/console-callback-atomic14-post-campaign-20260803-v1"
+        / "generation-8-live-promoted"
+    )
+    try:
+        ready = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+        advance = ready["advance"]
+        stamps = {
+            field: advance[field]
+            for field in ("liveReady", "formalReady", "targets", "padding", "parityExport")
+        }
+        snapshot = advance["snapshot"]
+        stamps["snapshot.ready"] = {
+            **snapshot["ready"],
+            "path": str(Path(snapshot["root"]) / snapshot["ready"]["path"]),
+        }
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return ["Generation 8 advance receipt"]
+    missing = []
+    for label, stamp in stamps.items():
+        try:
+            path = Path(stamp["path"])
+            if path.stat().st_size != stamp["bytes"] or sha256(path) != stamp["sha256"]:
+                missing.append(label)
+        except (OSError, KeyError, TypeError):
+            missing.append(label)
+    return missing
+
+
+def require_atomic14_replay_inputs(test_method):
+    """Skip only tests whose claim actually needs the lost Atomic14 inputs."""
+
+    @functools.wraps(test_method)
+    def wrapper(self, *args, **kwargs):
+        missing = missing_atomic14_replay_inputs()
+        if missing:
+            self.skipTest(
+                "exact Atomic14 replay inputs are unavailable: " + ", ".join(missing)
             )
         return test_method(self, *args, **kwargs)
 
@@ -3689,7 +3745,7 @@ class GlobalInit515ResidualAdvanceTests(unittest.TestCase):
         repo = Path(__file__).resolve().parent.parent
         snapshot = (
             repo
-            / "local-lab/global-init515-residual-producer-surrogate-20260803-v1/snapshot"
+            / "local-lab/global-init515-residual-producer-surrogate-20260803-v4/snapshot"
         )
         lineage = repo / "local-lab/global-init515-campaign-lineage-v1-ready"
         with tempfile.TemporaryDirectory() as temporary:
@@ -3733,12 +3789,6 @@ class Atomic14ExactPartitionTests(unittest.TestCase):
         )
         if not (cls.root / "campaign.ready.json").is_file():
             raise unittest.SkipTest("maintainer-local Atomic14 Generation 8 is unavailable")
-        if not v5_carry_reducer_restored_byte_exact():
-            raise unittest.SkipTest(
-                "frozen v5 carry reducer snapshot lost 2026-08-06 (reconstructed "
-                "byte-exact except three post-cut files); Gen8 frozen verifier "
-                "cannot replay until the original bytes are recovered"
-            )
 
     def load_generation(self) -> tuple[dict[str, list[dict[str, str]]], dict]:
         rows = campaign._campaign_rows_from_root(self.root)
@@ -3747,7 +3797,15 @@ class Atomic14ExactPartitionTests(unittest.TestCase):
         )
         return rows, receipt
 
-    def test_generation_8_self_replays(self) -> None:
+    def test_generation_8_replays_or_reports_the_exact_lost_identity(self) -> None:
+        missing = missing_atomic14_replay_inputs()
+        if missing:
+            self.assertEqual(["formalReady"], missing)
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "formalReady is missing"
+            ):
+                campaign._verify_target_lock_semantic_parent_campaign(self.root)
+            return
         receipt = campaign._verify_target_lock_semantic_parent_campaign(self.root)
         self.assertEqual(
             {
@@ -3764,6 +3822,16 @@ class Atomic14ExactPartitionTests(unittest.TestCase):
         )
         self.assertEqual("EXACT_FROZEN_GENERATION8_REPLAY", receipt["_carryBridge"])
         self.assertFalse(receipt["advance"]["semanticPromotionApplied"])
+
+    def test_generation_8_frozen_integrity_without_historical_replay(self) -> None:
+        receipt, reducer = campaign._verify_frozen_campaign_integrity(
+            self.root, "Generation 8"
+        )
+        self.assertEqual(8, receipt["generation"])
+        self.assertEqual(
+            "04acc723a5ecbe40544223b3fa26fa15d3d5d50ce0fd64682147d4073c5670b5",
+            reducer["id"],
+        )
 
     def test_relation_gate_rejects_atomic14_overclaims_and_lineage_attacks(self) -> None:
         import copy
@@ -3842,18 +3910,20 @@ class TargetLockSemanticGeneration9Tests(unittest.TestCase):
             raise unittest.SkipTest(
                 "maintainer-local Generation 8 / target-lock live evidence is unavailable"
             )
-        if not v5_carry_reducer_restored_byte_exact():
-            raise unittest.SkipTest(
-                "frozen v5 carry reducer snapshot lost 2026-08-06 (reconstructed "
-                "byte-exact except three post-cut files); Generation 9 replay "
-                "needs the strict original reducer snapshot"
-            )
 
     @staticmethod
     def file_sha256(path: Path) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def test_generation_9_self_replays_with_only_the_exact_five_row_delta(self) -> None:
+    def test_generation_9_replays_or_reports_the_exact_lost_identity(self) -> None:
+        missing = missing_atomic14_replay_inputs()
+        if missing:
+            self.assertEqual(["formalReady"], missing)
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "formalReady is missing"
+            ):
+                campaign._verify_target_lock_semantic_parent_campaign(self.parent)
+            return
         expected_names = {
             "0x00406fc0": "CBattleEngine__StartLock",
             "0x00407060": "CBattleEngine__FireLock",
@@ -4092,6 +4162,21 @@ class TargetLockSemanticGeneration9Tests(unittest.TestCase):
             ):
                 campaign.verify(partition_poison, _replay_generation=False)
 
+    def test_generation_9_frozen_integrity_without_historical_replay(self) -> None:
+        root = (
+            Path(__file__).resolve().parent.parent
+            / "local-lab/ghidra-target-lock-semantic-generation9-20260804-v1"
+            / "generation-9-live-semantic-promoted"
+        )
+        receipt, reducer = campaign._verify_frozen_campaign_integrity(
+            root, "Generation 9"
+        )
+        self.assertEqual(9, receipt["generation"])
+        self.assertEqual(
+            "480af29c0d51a02527a8b0e144dc5c6f5127ec6399f0dfefbdcd221ecae94db4",
+            reducer["id"],
+        )
+
     def test_partition_context_rejects_non_monotone_parent_generation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             parent = Path(temporary) / "parent"
@@ -4145,12 +4230,6 @@ class TtdCallContextGeneration10Tests(unittest.TestCase):
             raise unittest.SkipTest(
                 "maintainer-local Generation 9 / Level 521 evidence is unavailable"
             )
-        if not v5_carry_reducer_restored_byte_exact():
-            raise unittest.SkipTest(
-                "frozen v5 carry reducer snapshot lost 2026-08-06 (reconstructed "
-                "byte-exact except three post-cut files); Generation 10 replay "
-                "needs the strict original reducer snapshot"
-            )
 
     @staticmethod
     def keyed(root: Path, name: str, field: str) -> dict[str, dict[str, str]]:
@@ -4159,7 +4238,14 @@ class TtdCallContextGeneration10Tests(unittest.TestCase):
             for row in campaign._read_tsv(root / f"campaign-{name}.tsv")
         }
 
-    def test_generation_10_frozen_replay_and_exact_delta(self) -> None:
+    def test_generation_10_replays_or_reports_the_exact_lost_identity(self) -> None:
+        missing = missing_atomic14_replay_inputs()
+        if missing:
+            self.assertEqual(["formalReady"], missing)
+            completed = CampaignRecoveryGeneration10Tests.frozen_verify(self.generation)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("formalReady is missing", completed.stderr)
+            return
         receipt = campaign.verify(self.generation)
         self.assertEqual(10, receipt["generation"])
         self.assertEqual(
@@ -4249,6 +4335,16 @@ class TtdCallContextGeneration10Tests(unittest.TestCase):
                 self.assertEqual("OPEN", parent["state"])
                 self.assertEqual("UNSCORED", parent["lastOutcome"])
 
+    def test_generation_10_frozen_integrity_without_historical_replay(self) -> None:
+        receipt, reducer = campaign._verify_frozen_campaign_integrity(
+            self.generation, "Generation 10"
+        )
+        self.assertEqual(10, receipt["generation"])
+        self.assertEqual(
+            "7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9",
+            reducer["id"],
+        )
+
     def test_independent_jsonl_parser_rejects_same_length_poison(self) -> None:
         source = (self.evidence / "run-a/call-context.jsonl").read_bytes()
         attacks = {
@@ -4301,7 +4397,14 @@ class TtdCallContextGeneration10Tests(unittest.TestCase):
         with self.assertRaisesRegex(campaign.CampaignError, "whitelist"):
             campaign._ttd_call_context_delta(before, closed)
 
-    def test_frozen_replay_rejects_a_rehashed_write_overclaim(self) -> None:
+    def test_historical_replay_attack_or_exact_lost_identity_is_explicit(self) -> None:
+        missing = missing_atomic14_replay_inputs()
+        if missing:
+            self.assertEqual(["formalReady"], missing)
+            completed = CampaignRecoveryGeneration10Tests.frozen_verify(self.generation)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("formalReady is missing", completed.stderr)
+            return
         with tempfile.TemporaryDirectory() as temporary:
             forged = Path(temporary) / "forged"
             shutil.copytree(self.generation, forged)
@@ -4343,6 +4446,1291 @@ class TtdCallContextGeneration10Tests(unittest.TestCase):
         self.assertEqual(10, completed.returncode)
         self.assertIn("replica roots alias", completed.stderr)
 
+
+class FrozenCampaignBootstrapTests(unittest.TestCase):
+    def test_manifested_missing_parent_reducer_is_rejected_before_import(self) -> None:
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "campaign"
+            owner = root / "_reducer/tools/re_campaign.py"
+            owner.parent.mkdir(parents=True)
+            marker = Path(td) / "MALICIOUS_IMPORT_MARKER"
+            owner.write_text(
+                "from pathlib import Path\n"
+                f"Path({os.fspath(marker)!r}).write_text('IMPORTED', encoding='utf-8')\n"
+                "def verify(root, _replay_generation=True):\n"
+                "    return {'counts': {}}\n",
+                encoding="utf-8",
+            )
+            owner_bytes = owner.read_bytes()
+            owner_row = {
+                "role": "campaign",
+                "path": "_reducer/tools/re_campaign.py",
+                "bytes": len(owner_bytes),
+                "sha256": hashlib.sha256(owner_bytes).hexdigest(),
+            }
+            reducer_id = hashlib.sha256(
+                (
+                    f"{owner_row['role']}\t{owner_row['sha256']}\t"
+                    f"{owner_row['bytes']}\t{owner_row['path']}\n"
+                ).encode("utf-8")
+            ).hexdigest()
+            receipt = {
+                "schema": campaign.SCHEMA,
+                "reducer": {
+                    "schema": campaign.REDUCER_SCHEMA,
+                    "id": reducer_id,
+                    "entry": "_reducer/tools/re_campaign.py",
+                    "files": [owner_row],
+                },
+                "generation": 99,
+                "parentCampaign": {
+                    "path": os.fspath(Path(td) / "missing-parent"),
+                    "ready": {
+                        "path": "campaign.ready.json",
+                        "bytes": 1,
+                        "sha256": "0" * 64,
+                    },
+                },
+            }
+            ready_path = root / "campaign.ready.json"
+            ready_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+            completed = subprocess.run(
+                [
+                    os.fspath(Path(os.sys.executable)),
+                    "-I",
+                    "-B",
+                    os.fspath(bootstrap),
+                    "--campaign",
+                    os.fspath(root),
+                    "--mode",
+                    "integrity",
+                    "--expected-ready-sha256",
+                    hashlib.sha256(ready_path.read_bytes()).hexdigest(),
+                    "--expected-reducer-id",
+                    reducer_id,
+                ],
+                cwd=Path(__file__).resolve().parent.parent,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(10, completed.returncode)
+            self.assertIn("outside the exact Generation-5 recovery bridge", completed.stderr)
+            self.assertFalse(marker.exists(), "unsafe reducer imported before parent gate")
+
+
+class CampaignRecoveryGeneration8Tests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        prerequisite = repo / campaign.ATOMIC14_RECOVERY_PARENT_RELATIVE
+        cls.generation = base / "generation-8-atomic14-recovered-v2"
+        cls.replica = base / "generation-8-atomic14-recovered-v2-replica"
+        if not (prerequisite / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local Generation 7 prerequisite is unavailable")
+        for root in (cls.generation, cls.replica):
+            if not (root / "campaign.ready.json").is_file():
+                raise AssertionError(f"required recovered Generation 8 is missing: {root}")
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = True) -> subprocess.CompletedProcess:
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        ready_path = root / "campaign.ready.json"
+        receipt = json.loads(ready_path.read_text(encoding="utf-8"))
+        reducer_id = receipt.get("reducer", {}).get("id")
+        if not isinstance(reducer_id, str) or not reducer_id:
+            raise AssertionError(f"campaign has no exact reducer identity: {root}")
+        argv = [
+            os.fspath(Path(os.sys.executable)),
+            "-I",
+            "-B",
+            os.fspath(bootstrap),
+            "--campaign",
+            os.fspath(root),
+            "--mode",
+            "full" if replay else "integrity",
+            "--expected-ready-sha256",
+            hashlib.sha256(ready_path.read_bytes()).hexdigest(),
+            "--expected-reducer-id",
+            reducer_id,
+        ]
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(Path(__file__).resolve().parent.parent)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            argv,
+            cwd=Path(__file__).resolve().parent.parent,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+
+    def test_two_independent_builds_reproduce_and_fully_replay(self) -> None:
+        names = tuple(campaign.OUTPUTS)
+        for name in names:
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        receipts = []
+        for root in (self.generation, self.replica):
+            completed = self.frozen_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            receipts.append(receipt)
+        self.assertEqual(receipts[0], receipts[1])
+        self.assertEqual(
+            campaign.GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+            receipts[0]["advance"]["branchId"],
+        )
+
+    def test_integrity_gate_rejects_recovery_metadata_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+            original = json.loads(ready_path.read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                poisoned = json.loads(json.dumps(original))
+                mutator(poisoned)
+                ready_path.write_text(
+                    json.dumps(poisoned, indent=2) + "\n", encoding="utf-8"
+                )
+                completed = self.frozen_verify(forged, replay=False)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value["advance"]["formalReady"].update(
+                    {"bytes": 23028, "sha256": campaign.ATOMIC14_FORMAL_READY_SHA256}
+                ),
+                "recovery partition formal proof differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalFormalReady"].update(
+                    {"disposition": "SUBSTITUTED"}
+                ),
+                "recovery partition provenance differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"].update(
+                    {"historicalAuthorityClass": "FULL_REPLAY_AUTHORITY"}
+                ),
+                "nested frozen campaign invocation was not prevalidated by the root chain",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "changedRows"
+                ].update({"contracts": 28}),
+                "historical projection differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "canonicalLedgerSha256"
+                ].update({"functions": "0" * 64}),
+                "historical projection differs",
+            )
+            rejected(
+                lambda value: value["advance"].update({"branchId": "wrong-branch"}),
+                "recovery partition provenance differs",
+            )
+
+    def test_integrity_gate_rejects_an_unchanged_ledger_poison(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            functions_path = forged / "campaign-functions.tsv"
+            functions = campaign._read_tsv(functions_path)
+            target = next(
+                row
+                for row in functions
+                if row["entryVa"] == "0x00401000"
+            )
+            target["requiresElevation"] = (
+                "False" if target["requiresElevation"] == "True" else "True"
+            )
+            campaign._write_tsv(
+                functions_path, campaign.FUNCTION_COLUMNS, functions
+            )
+            ready_path = forged / "campaign.ready.json"
+            ready = json.loads(ready_path.read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-functions.tsv"] = {
+                **campaign.coverage.file_stamp(functions_path),
+                "path": "campaign-functions.tsv",
+            }
+            ready_path.write_text(
+                json.dumps(ready, indent=2) + "\n", encoding="utf-8"
+            )
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("non-provenance state", completed.stderr)
+
+
+class CampaignRecoveryGeneration9Tests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-8-atomic14-recovered-v2"
+        cls.generation = base / "generation-9-target-lock-recovered-v2"
+        cls.replica = base / "generation-9-target-lock-recovered-v2-replica"
+        cls.owner_recovery = base / "target-lock-owner-recovery.ready.json"
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local Generation 8R prerequisite is unavailable")
+        for root in (cls.generation, cls.replica):
+            if not (root / "campaign.ready.json").is_file():
+                raise AssertionError(f"required recovered Generation 9 is missing: {root}")
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = True) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        reducer = root / "_reducer"
+        return {
+            path.relative_to(reducer).as_posix(): path.read_bytes()
+            for path in reducer.rglob("*")
+            if path.is_file()
+        }
+
+    def test_two_independent_builds_reproduce_and_fully_replay(self) -> None:
+        self.assertEqual(["formalReady"], missing_atomic14_replay_inputs())
+        for name in campaign.OUTPUTS:
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(
+            self.reducer_files(self.generation), self.reducer_files(self.replica)
+        )
+        receipts = []
+        expected_counts = {
+            "functions": 8124,
+            "residuals": 6117,
+            "questions": 15238,
+            "scenarios": 72,
+            "levers": 915,
+            "contracts": 14241,
+            "adjudications": 3,
+            "supersessions": 584,
+        }
+        for root in (self.generation, self.replica):
+            completed = self.frozen_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(9, receipt["generation"])
+            self.assertEqual(expected_counts, receipt["counts"])
+            self.assertEqual(
+                campaign.GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND,
+                receipt["advance"]["kind"],
+            )
+            self.assertEqual(
+                campaign.GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA,
+                receipt["advance"]["schema"],
+            )
+            self.assertEqual(
+                campaign.GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+                receipt["advance"]["branchId"],
+            )
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            receipts.append(receipt)
+        self.assertEqual(receipts[0], receipts[1])
+
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        child_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        parent_contracts = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        child_contracts = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        self.assertEqual(
+            5,
+            sum(parent_functions[key] != child_functions[key] for key in parent_functions),
+        )
+        self.assertEqual(
+            5,
+            sum(parent_contracts[key] != child_contracts[key] for key in parent_contracts),
+        )
+        for name in (
+            "campaign-residuals.tsv",
+            "campaign-questions.tsv",
+            "campaign-scenarios.tsv",
+            "campaign-levers.tsv",
+            "campaign-adjudications.tsv",
+            "campaign-supersessions.tsv",
+        ):
+            self.assertEqual(
+                (self.parent / name).read_bytes(),
+                (self.generation / name).read_bytes(),
+                name,
+            )
+
+    def test_integrity_gate_rejects_semantic_recovery_laundering(self) -> None:
+        expected_changed = {
+            "functions": 0,
+            "residuals": 0,
+            "questions": 0,
+            "scenarios": 0,
+            "levers": 0,
+            "contracts": 29,
+            "adjudications": 1,
+            "supersessions": 29,
+        }
+        ready = json.loads(
+            (self.generation / "campaign.ready.json").read_text(encoding="utf-8")
+        )
+        projection = ready["advance"]["historicalProjection"]
+        self.assertEqual(campaign.TTD_CALL_CONTEXT_PARENT_READY_SHA256,
+                         projection["historicalReady"]["sha256"])
+        self.assertEqual("HISTORICAL_FROZEN_INTEGRITY_ONLY",
+                         projection["historicalAuthorityClass"])
+        self.assertEqual(expected_changed, projection["changedRows"])
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+            original = json.loads(ready_path.read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                poisoned = json.loads(json.dumps(original))
+                mutator(poisoned)
+                ready_path.write_text(
+                    json.dumps(poisoned, indent=2) + "\n", encoding="utf-8"
+                )
+                completed = self.frozen_verify(forged, replay=False)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(lambda value: value.update({"advance": None}), "not the exact semantic recovery")
+            rejected(
+                lambda value: value["advance"].update(
+                    {
+                        "kind": campaign.GHIDRA_SEMANTIC_ADVANCE_KIND,
+                        "schema": campaign.GHIDRA_SEMANTIC_ADVANCE_SCHEMA,
+                    }
+                ),
+                "not the exact semantic recovery",
+            )
+            rejected(
+                lambda value: value["advance"].update({"branchId": "wrong"}),
+                "not the exact semantic recovery",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"].update(
+                    {"historicalAuthorityClass": "FULL_REPLAY_AUTHORITY"}
+                ),
+                "historical projection differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "changedRows"
+                ].update({"contracts": 28}),
+                "historical projection differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "canonicalLedgerSha256"
+                ].update({"functions": "0" * 64}),
+                "historical projection differs",
+            )
+            rejected(
+                lambda value: value["advance"]["ownerRecovery"][
+                    "recoveredOwner"
+                ].update({"sha256": "0" * 64}),
+                "owner recovery binding differs",
+            )
+            rejected(
+                lambda value: value["advance"]["owner"].update(
+                    {"sha256": "0" * 64}
+                ),
+                "changes historical evidence: owner",
+            )
+            rejected(
+                lambda value: value.update({"sourceSnapshot": {}}),
+                "source snapshot differs",
+            )
+            rejected(
+                lambda value: value.update({"questionTypes": {}}),
+                "question types differ",
+            )
+            rejected(
+                lambda value: value.update({"policies": []}),
+                "policies differ",
+            )
+            rejected(
+                lambda value: value.update({"generatedAtUtc": "not-a-time"}),
+                "has an invalid timestamp",
+            )
+            rejected(
+                lambda value: value["outputs"].update({"extra.tsv": {}}),
+                "output set differs",
+            )
+            rejected(
+                lambda value: value["outputs"]["campaign-functions.tsv"].update(
+                    {"authority": "invented"}
+                ),
+                "output stamp shape differs",
+            )
+
+            alternate_parent = (
+                Path(__file__).resolve().parent.parent
+                / "local-lab/re-campaign-incident-recovery-20260808-v1"
+                / "generation-8-atomic14-recovered"
+            )
+
+            def alternate_8r_historical_kind(value) -> None:
+                value["parentCampaign"] = {
+                    "path": os.fspath(alternate_parent.resolve()),
+                    "ready": {
+                        **campaign.coverage.file_stamp(
+                            alternate_parent / "campaign.ready.json"
+                        ),
+                        "path": "campaign.ready.json",
+                    },
+                }
+                value["advance"]["kind"] = campaign.GHIDRA_SEMANTIC_ADVANCE_KIND
+                value["advance"]["schema"] = campaign.GHIDRA_SEMANTIC_ADVANCE_SCHEMA
+
+            rejected(
+                alternate_8r_historical_kind,
+                "not the exact semantic recovery",
+            )
+
+    def test_integrity_gate_rejects_unchanged_function_poison(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            functions_path = forged / "campaign-functions.tsv"
+            functions = campaign._read_tsv(functions_path)
+            target = next(row for row in functions if row["entryVa"] == "0x00401000")
+            target["requiresElevation"] = (
+                "False" if target["requiresElevation"] == "True" else "True"
+            )
+            campaign._write_tsv(functions_path, campaign.FUNCTION_COLUMNS, functions)
+            ready_path = forged / "campaign.ready.json"
+            ready = json.loads(ready_path.read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-functions.tsv"] = {
+                **campaign.coverage.file_stamp(functions_path),
+                "path": "campaign-functions.tsv",
+            }
+            ready_path.write_text(json.dumps(ready, indent=2) + "\n", encoding="utf-8")
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("non-provenance state", completed.stderr)
+
+    def test_owner_git_recovery_is_exact_and_rejects_git_poison(self) -> None:
+        validated = campaign._validate_target_lock_owner_recovery(self.owner_recovery)
+        recovered = Path(validated["recoveredOwner"]["path"])
+        self.assertEqual(campaign.TARGET_LOCK_HISTORICAL_OWNER_BYTES,
+                         recovered.stat().st_size)
+        self.assertEqual(campaign.TARGET_LOCK_HISTORICAL_OWNER_SHA256,
+                         hashlib.sha256(recovered.read_bytes()).hexdigest())
+        current = Path(__file__).resolve().parent / "ghidra_target_lock_semantic_live_promotion.py"
+        self.assertNotEqual(
+            campaign.TARGET_LOCK_HISTORICAL_OWNER_SHA256,
+            hashlib.sha256(current.read_bytes()).hexdigest(),
+        )
+
+        actual_run = campaign.subprocess.run
+
+        def wrong_tree(argv, **kwargs):
+            if argv[:2] == ["git", "ls-tree"]:
+                return subprocess.CompletedProcess(argv, 0, "wrong\n", "")
+            return actual_run(argv, **kwargs)
+
+        with patch.object(campaign.subprocess, "run", side_effect=wrong_tree):
+            with self.assertRaisesRegex(campaign.CampaignError, "does not reproduce"):
+                campaign._validate_target_lock_owner_recovery(self.owner_recovery)
+
+        def wrong_blob(argv, **kwargs):
+            if argv[:3] == ["git", "cat-file", "blob"]:
+                data = bytearray(recovered.read_bytes())
+                data[-1] ^= 1
+                return subprocess.CompletedProcess(argv, 0, bytes(data), b"")
+            return actual_run(argv, **kwargs)
+
+        with patch.object(campaign.subprocess, "run", side_effect=wrong_blob):
+            with self.assertRaisesRegex(campaign.CampaignError, "does not reproduce"):
+                campaign._validate_target_lock_owner_recovery(self.owner_recovery)
+
+    def test_authority_files_must_be_plain_single_link_files(self) -> None:
+        for relative, expected in (
+            (
+                Path("campaign.ready.json"),
+                "campaign READY is not a plain single-link file",
+            ),
+            (
+                Path("_reducer/tools/re_campaign.py"),
+                "campaign reducer file is not plain/single-link",
+            ),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged, replay=False)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+    def test_unmanifested_reducer_module_is_rejected_before_import(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            marker = Path(temporary) / "shadow-module-executed.txt"
+            (forged / "_reducer/tools/json.py").write_text(
+                "from pathlib import Path\n"
+                f"Path({str(marker)!r}).write_text('EXECUTED', encoding='utf-8')\n",
+                encoding="utf-8",
+            )
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("campaign reducer file set differs", completed.stderr)
+            self.assertFalse(marker.exists(), "shadow module executed before rejection")
+
+
+class CampaignRecoveryGeneration10Tests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-9-target-lock-recovered-v2"
+        cls.generation = base / "generation-10-ttd-call-context-recovered-v2"
+        cls.replica = base / "generation-10-ttd-call-context-recovered-v2-replica"
+        cls.evidence = (
+            repo / "local-lab/ttd-call-context-level521-impact-schema3-20260804-v1"
+        )
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local Generation 9R prerequisite is unavailable")
+        for root in (cls.generation, cls.replica):
+            if not (root / "campaign.ready.json").is_file():
+                raise AssertionError(
+                    f"required recovered Generation 10 is missing: {root}"
+                )
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = True) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_reproduce_and_fully_replay(self) -> None:
+        self.assertEqual(["formalReady"], missing_atomic14_replay_inputs())
+        expected_hashes = {
+            "campaign-functions.tsv": "6b18eda4b537fa17aba9e41a519cc47fb3c41836f9ff9877cf735ebe7a8933f1",
+            "campaign-residuals.tsv": "aa62128b8b472311ebd2c3279a59a354495855e8640e4dbaa1147d507efd25f2",
+            "campaign-questions.tsv": "dc918c4c3fa507dba4e943cd842c8d0ada71961d14e7ed95f3d3238b067915ec",
+            "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+            "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+            "campaign-contracts.tsv": "05f73d3dfdfcdbd454fad97f90d9f5c02094b26047e6b5d4648509f1eecfdf5a",
+            "campaign-adjudications.tsv": "8693f81f9cf8531961460d09087b018c73b981246bdc839c88b438947e41ff0c",
+            "campaign-supersessions.tsv": "7569852a3fe9aea25a4fcc4f6d17b6d9d81ff658f644b007bda1f50ae55559cb",
+        }
+        for name, digest in expected_hashes.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(
+            self.reducer_files(self.generation), self.reducer_files(self.replica)
+        )
+
+        receipts = []
+        expected_ids = {
+            "C-2f608ec63fd10347": "A-1836c8724e6ec854",
+            "C-62b3c956518ff9a5": "A-198768719510d9d5",
+            "C-a14d999cf14fbbe3": "A-59a5ffd7fe0634da",
+        }
+        for root in (self.generation, self.replica):
+            completed = self.frozen_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads(
+                (root / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(10, receipt["generation"])
+            self.assertEqual(
+                campaign.TTD_CALL_CONTEXT_EXPECTED_GENERATION10_COUNTS,
+                receipt["counts"],
+            )
+            advance = receipt["advance"]
+            self.assertEqual(campaign.TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND, advance["kind"])
+            self.assertEqual(campaign.TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA, advance["schema"])
+            self.assertEqual("CO-eb39e64982981579", advance["observationId"])
+            self.assertEqual(
+                expected_ids,
+                {
+                    row["contractId"]: row["adjudicationId"]
+                    for row in advance["promotions"]
+                },
+            )
+            self.assertEqual(
+                sorted(expected_ids.values()), advance["delta"]["adjudicationIdsAdded"]
+            )
+            self.assertEqual(
+                {
+                    "hashReadFromBoundReceipt": True,
+                    "actualSizeVerified": True,
+                    "actualHashVerified": False,
+                    "currentContentIdentityClaimed": False,
+                },
+                {
+                    key: advance["evidence"]["trace"][key]
+                    for key in (
+                        "hashReadFromBoundReceipt",
+                        "actualSizeVerified",
+                        "actualHashVerified",
+                        "currentContentIdentityClaimed",
+                    )
+                },
+            )
+            projection = advance["historicalProjection"]
+            self.assertEqual(
+                campaign.TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_READY_SHA256,
+                projection["historicalReady"]["sha256"],
+            )
+            self.assertEqual(
+                {
+                    "functions": 0,
+                    "residuals": 0,
+                    "questions": 0,
+                    "scenarios": 0,
+                    "levers": 0,
+                    "contracts": 29,
+                    "adjudications": 4,
+                    "supersessions": 29,
+                },
+                projection["changedRows"],
+            )
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            receipts.append(receipt)
+        self.assertEqual(receipts[0], receipts[1])
+
+    def test_integrity_gate_rejects_ttd_recovery_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+            original = json.loads(ready_path.read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                poisoned = json.loads(json.dumps(original))
+                mutator(poisoned)
+                self.write_ready(forged, poisoned)
+                completed = self.frozen_verify(forged, replay=False)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value.update({"advance": None}),
+                "not the exact TTD recovery",
+            )
+            rejected(
+                lambda value: value["advance"].update(
+                    {
+                        "kind": campaign.TTD_CALL_CONTEXT_ADVANCE_KIND,
+                        "schema": campaign.TTD_CALL_CONTEXT_ADVANCE_SCHEMA,
+                    }
+                ),
+                "not the exact TTD recovery",
+            )
+            rejected(
+                lambda value: value["advance"].update({"branchId": "wrong"}),
+                "not the exact TTD recovery",
+            )
+            rejected(
+                lambda value: value["advance"].update(
+                    {"observationEvidenceMode": "RERUN"}
+                ),
+                "advance identity differs",
+            )
+            rejected(
+                lambda value: value["advance"].update(
+                    {"traceHashDisposition": "ACTUAL_HASH_VERIFIED"}
+                ),
+                "advance identity differs",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"].update(
+                    {"historicalAuthorityClass": "FULL_REPLAY_AUTHORITY"}
+                ),
+                "historical projection",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "changedRows"
+                ].update({"contracts": 28}),
+                "historical projection",
+            )
+            rejected(
+                lambda value: value["advance"]["historicalProjection"][
+                    "canonicalLedgerSha256"
+                ].update({"functions": "0" * 64}),
+                "historical projection",
+            )
+            historical_candidate = (
+                Path(__file__).resolve().parent.parent
+                / "local-lab/ttd-call-context-level521-impact-generation10-20260804-v1"
+                / "generation-10-ttd-call-context-observation"
+                / "campaign.ready.json"
+            )
+            if historical_candidate.is_file():
+                candidate_stamp = {
+                    **campaign.coverage.file_stamp(historical_candidate),
+                    "path": str(historical_candidate.resolve()),
+                }
+                rejected(
+                    lambda value: value["advance"]["historicalProjection"].update(
+                        {"historicalReady": candidate_stamp}
+                    ),
+                    "historical projection",
+                )
+            rejected(
+                lambda value: value.update({"sourceSnapshot": {}}),
+                "source snapshot differs",
+            )
+            rejected(
+                lambda value: value.update({"questionTypes": {}}),
+                "question types differ",
+            )
+            rejected(
+                lambda value: value.update({"policies": []}),
+                "policies differ",
+            )
+            rejected(
+                lambda value: value.update({"generatedAtUtc": "not-a-time"}),
+                "invalid timestamp",
+            )
+            rejected(
+                lambda value: value["outputs"].update({"extra.tsv": {}}),
+                "output set differs",
+            )
+
+    def test_integrity_gate_rejects_forged_adjudication_and_contract_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+
+            adjudications_path = forged / "campaign-adjudications.tsv"
+            adjudications = campaign._read_tsv(adjudications_path)
+            target = next(
+                row
+                for row in adjudications
+                if row["baseContractId"] == "C-2f608ec63fd10347"
+            )
+            old_id = target["adjudicationId"]
+            target["adjudicationId"] = "A-0000000000000000"
+            campaign._write_tsv(
+                adjudications_path, campaign.ADJUDICATION_COLUMNS, adjudications
+            )
+            ready = json.loads(ready_path.read_text(encoding="utf-8"))
+            promotion = next(
+                row
+                for row in ready["advance"]["promotions"]
+                if row["contractId"] == "C-2f608ec63fd10347"
+            )
+            promotion["adjudicationId"] = "A-0000000000000000"
+            ready["advance"]["delta"]["adjudicationIdsAdded"] = sorted(
+                "A-0000000000000000" if value == old_id else value
+                for value in ready["advance"]["delta"]["adjudicationIdsAdded"]
+            )
+            ready["outputs"]["campaign-adjudications.tsv"] = {
+                **campaign.coverage.file_stamp(adjudications_path),
+                "path": "campaign-adjudications.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("exact historical projection", completed.stderr)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            contracts_path = forged / "campaign-contracts.tsv"
+            contracts = campaign._read_tsv(contracts_path)
+            target = next(
+                row for row in contracts if row["contractId"] == "C-2f608ec63fd10347"
+            )
+            target["writes"] = "FORGED_WRITE_CLAIM"
+            campaign._write_tsv(contracts_path, campaign.CONTRACT_COLUMNS, contracts)
+            ready_path = forged / "campaign.ready.json"
+            ready = json.loads(ready_path.read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-contracts.tsv"] = {
+                **campaign.coverage.file_stamp(contracts_path),
+                "path": "campaign-contracts.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("non-provenance state", completed.stderr)
+
+    def test_authority_and_evidence_modules_are_rejected_before_import(self) -> None:
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (
+                Path("_reducer/tools/re_campaign.py"),
+                "campaign reducer file is not plain/single-link",
+            ),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged, replay=False)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            marker = Path(temporary) / "reducer-shadow-executed.txt"
+            (forged / "_reducer/tools/json.py").write_text(
+                "from pathlib import Path\n"
+                f"Path({str(marker)!r}).write_text('EXECUTED', encoding='utf-8')\n",
+                encoding="utf-8",
+            )
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("campaign reducer file set differs", completed.stderr)
+            self.assertFalse(marker.exists())
+
+        with tempfile.TemporaryDirectory() as temporary:
+            lab = Path(temporary) / "local-lab"
+            copied_evidence = lab / self.evidence.name
+            shutil.copytree(self.evidence, copied_evidence)
+            marker = Path(temporary) / "evidence-shadow-executed.txt"
+            (copied_evidence / "json.py").write_text(
+                "from pathlib import Path\n"
+                f"Path({str(marker)!r}).write_text('EXECUTED', encoding='utf-8')\n",
+                encoding="utf-8",
+            )
+            parent_receipt = json.loads(
+                (self.parent / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+            with patch.object(campaign, "_FROZEN_LOCAL_LAB", lab), patch.object(
+                campaign, "TTD_CALL_CONTEXT_EVIDENCE_RELATIVE", copied_evidence
+            ):
+                with self.assertRaisesRegex(campaign.CampaignError, "evidence file set differs"):
+                    campaign.validate_ttd_call_context_observation(
+                        self.parent,
+                        copied_evidence,
+                        _verified_campaign_receipt=parent_receipt,
+                        _recovery_profile=True,
+                    )
+            self.assertFalse(marker.exists())
+
+
+class CampaignRecoveryGeneration11Tests(unittest.TestCase):
+    AUTHORITY_REDUCER_ID = (
+        "e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-11-gen73-claims-resealed-v2": (
+            "9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d"
+        ),
+        "generation-11-gen73-claims-resealed-replica-v2": (
+            "755168fb8b8ff480fe4458792ef9ad3225e7cd0c4cbe6b59395f671c5ce0b463"
+        ),
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-10-ttd-call-context-recovered-v2"
+        cls.closure = base / "gen73-claim-closure-v1"
+        cls.generation = base / "generation-11-gen73-claims-resealed-v2"
+        cls.replica = base / "generation-11-gen73-claims-resealed-replica-v2"
+        cls.authority = base / "generation-11-recovery-authority.ready.json"
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local canonical 10R prerequisite is unavailable")
+        for root, label in (
+            (cls.closure, "claim closure"),
+            (cls.generation, "canonical Generation 11"),
+            (cls.replica, "replicated Generation 11"),
+        ):
+            ready_name = "closure.ready.json" if root == cls.closure else "campaign.ready.json"
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = True) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen11 authority: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        expected_hashes = {
+            "campaign-functions.tsv": "a0ad6ff40d6188d66b73d651305d11cda70ebe43d0ae1fcb85aa2d9f26a5f494",
+            "campaign-residuals.tsv": "30d390b75a9984efc6bebedf5ddb00412326d36e51d2c9f3c1883032dd25ef49",
+            "campaign-questions.tsv": "8be824b54e1cd665ae901d68611f88269430ffd1a76b230de4e30831aed53c3d",
+            "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+            "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+            "campaign-contracts.tsv": "d15311626833cf3202ad99d36f76f87b17f3a8c51ea1876a76f44223006f8d83",
+            "campaign-adjudications.tsv": "5e002a12364a7b1da4b09b5fdf1e4a51d42d236ced2bf6f3efa474a934378f99",
+            "campaign-supersessions.tsv": "7569852a3fe9aea25a4fcc4f6d17b6d9d81ff658f644b007bda1f50ae55559cb",
+        }
+        for name, digest in expected_hashes.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(self.reducer_files(self.generation), self.reducer_files(self.replica))
+
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(11, receipt["generation"])
+            self.assertEqual(gen73_reseal.EXPECTED_COUNTS, receipt["counts"])
+            self.assertEqual(campaign.GEN73_RESEAL_RECOVERY_ADVANCE_KIND, receipt["advance"]["kind"])
+            self.assertEqual(campaign.GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA, receipt["advance"]["schema"])
+            self.assertEqual("SUPERSEDED_PROJECTION_ORACLE_NOT_PARENT", receipt["advance"]["candidateTipDisposition"])
+            self.assertEqual(6082, receipt["advance"]["newAdjudications"]["count"])
+            self.assertFalse(receipt["advance"]["newAdjudications"]["semanticPromotionApplied"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_reseal_boundary_preserves_valid_claims_and_quarantines_overclaims(self) -> None:
+        rows = {
+            family: campaign._read_tsv(self.generation / name)
+            for family, name in zip(gen73_reseal.LEDGER_KEYS, campaign.OUTPUTS)
+        }
+        functions_by_va = {row["entryVa"].lower(): row for row in rows["functions"]}
+        contracts_by_entity = {row["entityKey"]: row for row in rows["contracts"]}
+        for va in (
+            "0x00535590", "0x00535a30", "0x005367c0", "0x00536920",
+            "0x00537ad0", "0x00537c70", "0x00537e40",
+        ):
+            function = functions_by_va[va]
+            contract = contracts_by_entity[function["entityKey"]]
+            self.assertEqual("OPAQUE", function["semanticGrade"])
+            self.assertEqual("OPEN_JOIN", function["resolutionState"])
+            self.assertEqual("C0_OPAQUE", contract["semanticGrade"])
+            self.assertEqual("OPEN", contract["contractState"])
+            self.assertEqual("UNSCORED", contract["refuterVerdict"])
+
+        apply_damage = functions_by_va["0x004f9a90"]
+        apply_contract = contracts_by_entity[apply_damage["entityKey"]]
+        self.assertEqual("C1_CANDIDATE_PARTIAL", apply_damage["semanticGrade"])
+        self.assertEqual("C1_CANDIDATE_PARTIAL", apply_contract["semanticGrade"])
+        self.assertEqual("CANDIDATE_NEEDS_REFUTER", apply_contract["contractState"])
+        self.assertEqual("UNSCORED", apply_contract["refuterVerdict"])
+        self.assertNotIn("61295806d62f68e6", apply_contract["evidenceRefs"])
+
+        near_clone = functions_by_va["0x0056473e"]
+        self.assertEqual("FUN_0056473e", near_clone["currentName"])
+        self.assertEqual("OPAQUE", near_clone["semanticGrade"])
+        self.assertEqual("UNKNOWN_WITH_FALSIFIER", near_clone["resolutionState"])
+
+        parent_residuals = {
+            row["entityKey"]: row for row in campaign._read_tsv(self.parent / "campaign-residuals.tsv")
+        }
+        output_residuals = {row["entityKey"]: row for row in rows["residuals"]}
+        closure = gen73_reseal.derive_projection()
+        self.assertEqual(20, len(closure["preservedPolice"]))
+        for entity in closure["preservedPolice"]:
+            self.assertEqual(parent_residuals[entity], output_residuals[entity])
+            self.assertEqual("OPEN_CLASSIFICATION", output_residuals[entity]["terminalState"])
+        self.assertNotIn(closure["reclosedPolice"], closure["preservedPolice"])
+
+        function_names = {row["entityKey"]: row["currentName"] for row in rows["functions"]}
+        self.assertTrue(
+            all(
+                contract["currentName"] == function_names[contract["entityKey"]]
+                for contract in rows["contracts"]
+                if contract["entityKind"] == "FUNCTION"
+            )
+        )
+
+    def test_exact_parent_provenance_and_new_nonsemantic_adjudications(self) -> None:
+        receipt = json.loads((self.generation / "campaign.ready.json").read_text(encoding="utf-8"))
+        self.assertEqual(campaign.GEN73_RESEAL_PARENT_READY_SHA256, receipt["parentCampaign"]["ready"]["sha256"])
+        self.assertNotEqual(gen73_reseal.CANDIDATE_READY_SHA256, receipt["parentCampaign"]["ready"]["sha256"])
+        closure_ready = gen73_reseal.verify_closure(self.closure)
+        self.assertEqual(campaign.GEN73_RESEAL_CLOSURE_READY_SHA256, campaign.coverage.sha256_of(self.closure / "closure.ready.json"))
+        self.assertEqual(7294, closure_ready["accounting"]["sourceAdjudications"])
+
+        parent_adjudications = campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        output_adjudications = campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+        parent_ids = {row["adjudicationId"] for row in parent_adjudications}
+        candidate_ids = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(
+                gen73_reseal.REPO_ROOT / gen73_reseal.CANDIDATE_RELATIVE / "campaign-adjudications.tsv"
+            )
+        }
+        self.assertEqual(6, len(parent_ids))
+        self.assertTrue(parent_ids <= {row["adjudicationId"] for row in output_adjudications})
+        new_rows = [row for row in output_adjudications if row["adjudicationId"] not in parent_ids]
+        self.assertEqual(6082, len(new_rows))
+        self.assertFalse({row["adjudicationId"] for row in new_rows} & candidate_ids)
+        self.assertTrue(all(row["semanticPromotionApplied"] == "False" for row in new_rows))
+        self.assertTrue(all(row["overlayReadySha256"] == campaign.GEN73_RESEAL_CLOSURE_READY_SHA256 for row in new_rows))
+
+        parent_supersessions = (self.parent / "campaign-supersessions.tsv").read_bytes()
+        self.assertEqual(parent_supersessions, (self.generation / "campaign-supersessions.tsv").read_bytes())
+        contracts = {row["contractId"]: row for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")}
+        derived = gen73_reseal.derive_projection()
+        self.assertEqual(29, len(derived["recoveryContractIds"]))
+        for contract_id in derived["recoveryContractIds"]:
+            self.assertIn("8a83b9617de616d6", contracts[contract_id]["evidenceRefs"])
+            self.assertNotIn("a504c24b1eab555d", contracts[contract_id]["evidenceRefs"])
+
+    def test_external_authority_receipt_selects_only_canonical_v2(self) -> None:
+        self.assertTrue(self.authority.is_file(), f"missing authority receipt: {self.authority}")
+        self.assertFalse(self.authority.is_symlink())
+        self.assertEqual(1, self.authority.stat().st_nlink)
+        self.assertEqual(10_501, self.authority.stat().st_size)
+        self.assertEqual(
+            "2594d78d7ec6b4908ecfba9509122fedbe1959ff0e5eeaceb6d1164ae758238c",
+            campaign.coverage.sha256_of(self.authority),
+        )
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("bea.re.campaign-incident-recovery-authority.v2", receipt["schema"])
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_RECOVERY_BRANCH_BOUNDARY", receipt["authorityClass"])
+        self.assertEqual("FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_OR_TTD_REPLAY", receipt["replayScope"])
+        self.assertEqual("incident-20260806-recovery-v1", receipt["lineageId"])
+        self.assertEqual(os.fspath(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(os.fspath(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual(
+            self.AUTHORITY_READY_SHA256[self.generation.name],
+            receipt["canonical"]["ready"]["sha256"],
+        )
+        self.assertEqual(
+            self.AUTHORITY_READY_SHA256[self.replica.name],
+            receipt["replica"]["ready"]["sha256"],
+        )
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["canonical"]["reducerId"])
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["replica"]["reducerId"])
+        self.assertEqual("REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"])
+        self.assertEqual(
+            os.fspath(self.generation.resolve()),
+            receipt["selectionRule"]["requiredAbsolutePath"],
+        )
+        self.assertEqual(
+            {
+                "path": (
+                    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+                    "generation-10-ttd-call-context-recovered-v2"
+                ),
+                "readySha256": "12cb61f9d8cad06cd0c58ca5262a9c497a62d7268fc108d546ed988b9a757561",
+                "reducerId": "88d61c227970ead0807e110ff14712ca74fcf23ce51b4bc88434b98bc0e956d4",
+                "authorityReceiptSha256": "dd41e3b01ae410bdcfc9c1a0b273b15e45b5829d13fb6247a3a7e6fce54ac61b",
+            },
+            receipt["parent"],
+        )
+        self.assertEqual(
+            {
+                "path": (
+                    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+                    "generation-11-gen73-claims-resealed-v2/_reducer/tools/"
+                    "re_campaign_frozen_bootstrap.py"
+                ),
+                "bytes": 15_209,
+                "sha256": "5f4725569e3e1578fa2a963d2ea6046ad0dbba6653e6fc76491ec8024fc37f0e",
+            },
+            receipt["frozenOwners"]["preImportLauncher"],
+        )
+        self.assertEqual(campaign.GEN73_RESEAL_CLOSURE_READY_SHA256, receipt["closure"]["readySha256"])
+        self.assertEqual(gen73_reseal.CANDIDATE_READY_SHA256, receipt["candidateProjectionOracle"]["readySha256"])
+        self.assertEqual("SUPERSEDED_NOT_PARENT_NOT_AUTHORITY", receipt["candidateProjectionOracle"]["disposition"])
+        self.assertEqual(
+            self.AUTHORITY_READY_SHA256,
+            receipt["selectionRule"]["literalReadySha256ByRoot"],
+        )
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"])
+        self.assertEqual("FULL", receipt["selectionRule"]["requiredMode"])
+        for root, role in ((self.generation, "canonical"), (self.replica, "replica")):
+            ready_path = root / "campaign.ready.json"
+            self.assertEqual(receipt[role]["ready"]["bytes"], ready_path.stat().st_size)
+            self.assertEqual(receipt[role]["ready"]["sha256"], campaign.coverage.sha256_of(ready_path))
+        for name, expected in receipt["outputs"].items():
+            self.assertEqual(expected["bytes"], (self.generation / name).stat().st_size)
+            self.assertEqual(expected["sha256"], campaign.coverage.sha256_of(self.generation / name))
+
+    def test_integrity_gate_rejects_metadata_and_row_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+            original = json.loads(ready_path.read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged, replay=False)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(lambda value: value.update({"advance": None}), "reseal advance is missing")
+            rejected(
+                lambda value: value["advance"].update({"kind": "GEN73_CANDIDATE_CARRY"}),
+                "reseal identity differs",
+            )
+            rejected(
+                lambda value: value["parentCampaign"]["ready"].update(
+                    {"sha256": gen73_reseal.CANDIDATE_READY_SHA256}
+                ),
+                "campaign parent READY differs",
+            )
+            rejected(
+                lambda value: value.update({"generatedAtUtc": "not-a-time"}),
+                "invalid timestamp",
+            )
+            rejected(
+                lambda value: value.update({"sourceSnapshot": {}}),
+                "source snapshot differs",
+            )
+            rejected(
+                lambda value: value.update({"questionTypes": {}}),
+                "question types differ",
+            )
+            rejected(
+                lambda value: value.update({"policies": []}),
+                "policies differ",
+            )
+            rejected(
+                lambda value: value["outputs"].update({"extra.tsv": {}}),
+                "output set differs",
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            contracts_path = forged / "campaign-contracts.tsv"
+            contracts = campaign._read_tsv(contracts_path)
+            target = next(row for row in contracts if row["entityKey"] == gen73_reseal.APPLY_DAMAGE_ENTITY)
+            target["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+            target["contractState"] = "BOUNDED_CONTRACT_ADVANCED"
+            campaign._write_tsv(contracts_path, campaign.CONTRACT_COLUMNS, contracts)
+            ready = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-contracts.tsv"] = {
+                **campaign.coverage.file_stamp(contracts_path),
+                "path": "campaign-contracts.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged, replay=False)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("contracts rows do not reproduce", completed.stderr)
+
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (
+                Path("campaign-functions.tsv"),
+                "output has multiple hard links: campaign-functions.tsv",
+            ),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged, replay=False)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
 
 if __name__ == "__main__":
     raise SystemExit(0 if unittest.main(verbosity=2, exit=False).result.wasSuccessful() else 1)

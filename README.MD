@@ -195,10 +195,10 @@ is the reviewed narrow exception to the no-save-payload rule. See
 ## Evidence and provenance
 
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the
-technical evidence front door. Complete-RE tip census and Ghidra-apply
-authorization live in [`developer_state.json`](developer_state.json) →
-`complete_re_tip_20260805` (prefer the named FINAL-3WAY-DELTA path when present);
-do not treat Gen10 prose in older deltas as live tip. Static analysis proves only
+technical evidence front door. Current complete-RE replay selection lives in
+[`developer_state.json`](developer_state.json) → `current_re_authority`;
+Generation 73 is a projection oracle, not a parent, and Ghidra mutation has a
+separate promotion gate. Static analysis proves only
 the identities and structures it directly demonstrates; controlled
 copied-runtime work is needed for observed behavior and measured values.
 Stuart's source and the pinned

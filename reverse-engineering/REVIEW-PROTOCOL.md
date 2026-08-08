@@ -1,176 +1,139 @@
 # Review protocol
 
-Status: active — the standing reviewer set, pins, and invocation rules
-Last updated: 2026-08-07
-Evidence: MEASURED — every pin and measurement below was produced on this
-host by the named harness (OpenCode concurrency re-measured 2026-08-05; the
-Grok/Opus/Codex invocations verified 2026-08-07).
-Summary: who reviews load-bearing plates, at what effort, with what
-invocation, and what must be preserved. This file owns the reviewer-pin
-machinery that used to live in `AGENTS.md`; AGENTS.md keeps only the
-invariant and this pointer, so FRAGO churn no longer rewrites the
-auto-loaded constitution.
+Status: active — situational, harness-agnostic reviewer guidance
+Last updated: 2026-08-08
+Summary: how to obtain useful independent review without turning a model matrix
+into authority or a mandatory ceremony.
+Evidence: MEASURED — maintainer direction and observed reviewer-harness behavior
+own the operating policy; model output remains untrusted until reproduced by
+the named mechanical evidence gate.
 
-## The invariant (restated nowhere else)
+## Invariant
 
-Delegated review is input, not authority. Keep reviewer lanes read-only and
-preserve prompts/reports under `local-lab/`. A subagent or CLI report is
-data; the integration owner reproduces load-bearing conclusions before they
-land. A spawn receipt is not a liveness oracle — verify the reviewer actually
-reached a working state.
+Delegated review is input, not authority. Keep reviewer lanes read-only unless a
+separate writing worktree was explicitly authorized. Preserve prompts, reports,
+model/effort/role, timing, and exit status under `local-lab/`. The integration
+owner reproduces every load-bearing conclusion and admits it only through the
+repository's mechanical evidence gates. A spawn receipt is not a liveness
+oracle; verify that the reviewer reached real work and exited cleanly.
 
-## Standing reviewer set (maintainer FRAGO 2026-08-05, extended 2026-08-06)
+No fixed reviewer mix, model count, or normal/adversarial matrix is mandatory.
+Review depth follows consequence, uncertainty, novelty, and the quality of the
+available mechanical refuters. A model report never compensates for a missing
+receipt, failed control, stale reducer, identity mismatch, or unproved claim.
 
-The default reviewer mix is the standing set:
+## Harness-agnostic selection
 
-| Lane | Model | Invocation | Effort |
-|---|---|---|---|
-| Grok | Grok 4.5 (reasoning high) | `grok --single --model grok-4.5 --reasoning-effort high --permission-mode dontAsk --tools Read,Glob,Grep --disable-web-search --no-memory --no-subagents --max-turns 100 --output-format plain --cwd <repo> <prompt>` | high |
-| DeepSeek | `deepseek/deepseek-v4-flash` variant `max` | `opencode run --pure -m deepseek/deepseek-v4-flash --variant max --title <t> --dir <repo> <prompt>` | max (only) |
-| Claude | `claude-opus-5` | `claude -p <prompt> --model claude-opus-5 --effort medium --output-format text` | medium (only) |
-| GPT | `gpt-5.6-luna` | `codex exec -m gpt-5.6-luna --skip-git-repo-check -c model_reasoning_effort=max <prompt>` | max (only) |
+The active harness owns integration and normally uses its own native subagents
+first. Codex uses Codex subagents, Claude Code uses Claude subagents, Grok uses
+Grok subagents, and OpenCode uses its native agents. Do not launch a redundant
+external copy merely to recreate the model already leading the work.
 
-Notes:
+Use fresh normal and adversarial contexts when their different jobs materially
+reduce risk. Both are strongly advised for consequential evidence admission,
+mutation, recovery, or verifier design, but they are not compulsory cells for
+every generation or ordinary change. One strong independent critic can be
+enough when exact tests and receipts already dominate the decision; additional
+models are warranted when the problem is broad, ambiguous, or vulnerable to a
+shared blind spot.
 
-- The Codex model slug is `gpt-5.6-luna` with `model_reasoning_effort=max`;
-  `gpt-5.6-luna-max` is not a valid model id with a ChatGPT account.
-- Opus 5 **max** and DeepSeek **pro-max** are **retired for standing RE** —
-  one-off use only with explicit maintainer re-authorization.
-- Codex remains usable when weekly quota allows; do **not** skip Grok,
-  DeepSeek Flash, Opus medium, or GPT 5.6 Luna lanes because a quota
-  percentage looks low.
+The builder does not self-grade. A native adversarial subagent is independent
+review data only when it receives the real artifacts and a fresh brief rather
+than the builder's desired conclusion. External lanes are selected because they
+add perspective, not because a historical scaffold has empty boxes.
 
-**Standing critic pin:** load-bearing plates require **all eight** cells
-(Grok N+A, DeepSeek Flash-max N+A, Opus 5 medium N+A, GPT 5.6 Luna Max N+A).
-Incomplete coverage is not a finished review.
+## Reviewer toolbox
 
-## Harness-agnostic reviewer selection (maintainer FRAGO 2026-08-08)
+These are available choices, not a required ranking or invocation checklist:
 
-The reviewer set and the invocation table above are **harness-agnostic**:
-they describe *what the project needs*, not *which harness must provide it*.
-The harness the maintainer is currently running in provides the primary
-cells from its **own native subagents**; the other lanes are complementary
-and run when available or on request.
+| Reviewer | Best use | Standing effort |
+|---|---|---|
+| Native subagents | Fast repository-grounded measurement, normal and adversarial checks, parallel bounded reading | Use the active harness's strongest suitable setting |
+| Claude Opus 5 | Long-form architecture, recovery, cross-system synthesis, difficult adversarial review | `max` for highest-impact work; `medium` for faster secondary review |
+| DeepSeek V4 Flash | Substantial independent architecture/refutation and bounded high-volume analysis | `max` |
+| Grok 4.5 | Quick alternate angle, challenge, triage, and focused checks | `high` |
 
-- **Running in Codex:** primary N+A = Codex native subagents (`codex exec`
-  subagent lanes, e.g. `codex-collaboration-subagent`); do **not** spawn a
-  separate `gpt-5.6-luna` lane — you ARE that lane. Complement with Grok,
-  Opus 5 medium, and DeepSeek Flash-max via their CLIs when the maintainer
-  requests them or quota allows.
-- **Running in Claude Code:** primary N+A = Claude Code native subagents
-  (`claude -p` with subagent tooling or `/agents`); you ARE the Opus lane.
-  Complement with the others on request.
-- **Running in Grok:** primary N+A = Grok subagents; you ARE the Grok lane.
-- **Running in OpenCode (DeepSeek):** primary N+A = native OpenCode subagent
-  tool (explore/general); you ARE the DeepSeek Flash-max lane (variant max).
-  This is the FRAGO 2026-08-06 direct-session carve-out, generalized.
-- **Always normal AND adversarial.** Whatever the harness, each load-bearing
-  review needs both roles with fresh context, inspecting real artifacts —
-  never the builder's self-summary.
-- **Never self-grade.** A harness's own work is reviewed by OTHER lanes or by
-  its own adversarial pass against the builder's report, not by the builder
-  grading itself.
-- The eight-way pin still describes the *complete* load-bearing review. When
-  running in one harness, the maintainer decides (with the pin as default)
-  which additional external lanes to invoke; their absence does not block a
-  direct-session plate but does mean the review is a subset, and that subset
-  must be labeled as such when it lands.
+Opus 5 Max is the preferred external long-form reviewer when the question is
+important enough to justify its latency. Opus 5 Medium is useful when turnaround
+matters. Grok 4.5 High is a fast additional view, not intrinsically more
+authoritative than the active agent or its native subagents. DeepSeek V4 Flash
+Max can provide a substantial independent review, but its report is still only
+a hypothesis until reproduced.
 
-## Direct DeepSeek session carve-out (FRAGO 2026-08-06)
+## DeepSeek through OpenCode
 
-When the maintainer works directly with DeepSeek in an interactive OpenCode
-session, the external eight-way lanes are **not mandatory**. The reviewer
-pair is the native OpenCode subagent tool run as normal **and** adversarial
-roles (explore/general), orchestrated by the session lead. The external CLIs
-remain available on request and when available; their absence does not block
-a direct-session plate. This is the OpenCode instance of the general
-harness-agnostic rule above — the other harnesses follow the same pattern.
-The carve-out does **not** relax per-generation police or gauntlet-loop bars
-for campaign work launched outside a direct session,
-and it does not relax the DeepSeek authority boundaries (DeepSeek is still
-not the integration owner and does not authorize names, signatures, types,
-memory writes, campaign upgrades, rebuild parity, Ghidra mutation, or new
-captures — the maintainer is present and adjudicates).
+Use OpenCode as the DeepSeek harness. Select the provider in this order:
 
-## DeepSeek direct pin (standing)
+1. the maintainer's OpenCode Go DeepSeek V4 Flash offering;
+2. the OpenCode Zen free DeepSeek V4 Flash model as a fallback;
+3. the direct DeepSeek V4 Flash provider using the maintainer's API credential
+   only when the first two routes are unavailable or unsuitable.
 
-- Model: `deepseek/deepseek-v4-flash` only for standing RE
-- Variant: **`max` only** (never `high`, `low`, or unset/default)
-- Official Flash API id serves **DeepSeek-V4-Flash-0731**; do not use InferX
-  `inferx/deepseek-v4-flash` (non-0731) or pay InferX for a 0731 mirror when
-  direct is funded; do **not** use `opencode/deepseek-*` (Zen) as a fallback
-- `deepseek/deepseek-v4-pro` is not standing-authorized
-- Live pin proof: `local-lab/opencode-deepseek-direct-proof/PROOF.md`
-  (historical Flash/Pro measurements remain valid evidence of harness
-  capability; standing RE uses Flash-max only)
+Use variant `max`. Provider model IDs can change, so run `opencode models` and
+record the exact selected ID rather than copying a stale slug. Never expose an
+API key in a prompt, command log, receipt, state file, or report. Free-provider
+data handling may differ; do not send secrets or material outside the user's
+authorized scope.
 
-## Opus 5 pin (standing)
+Typical shape:
 
-Model `claude-opus-5` via Claude Code headless; effort **medium only** for
-standing RE. Run both normal and adversarial roles at medium. Preserve
-prompt, stdout, model, effort, role, start/finish, exit under `local-lab/`.
-Do not delay Opus medium lanes for "low weekly %" foot-dragging.
+`opencode run --pure -m <verified-model-id> --variant max --dir <repo> <prompt>`
 
-## Per-generation police
+Prefer serial DeepSeek sessions by default because the shared OpenCode SQLite
+store has previously experienced contention. Bounded parallel runs are allowed
+only when the integration owner has checked memory, distinct outputs, and real
+session progress. A lock or failed process invalidates that lane; retry it
+cleanly rather than treating a spawn as a report.
 
-For multi-gen residual/function campaign work, each generation is its own
-review lane (Gen9, Gen10, … GenN separately) — not one mega-sweep. Each
-load-bearing gen needs the eight-way set. A cross-gen retrospective may
-supplement but does not replace per-gen lanes. Scaffold/status:
-`local-lab/per-gen-review-*/` + `tools/re_per_gen_review_scaffold.py` /
-`tools/re_per_gen_review_scaffold_gen26_33.py`.
+## Opus and Grok
 
-## Gauntlet Loop (standing for the complete-RE goal)
+Opus runs through Claude Code headless. For the highest-impact pass:
 
-Ambitious bar (specimen + honest 100% terminal/OPEN+falsifier + dual
-authority + AGENTS evidence gates) — not "pretty good." Lead splits into
-smallest pieces; each piece gets a builder and **separate** critics with
-fresh context (Grok N+A, DeepSeek Flash-max N+A, Opus 5 medium N+A, GPT 5.6
-Luna Max N+A). Critics inspect real artifacts, never the builder's
-self-summary. No fixed round count; keep looping until the bar wins or the
-maintainer stops. See `local-lab/per-gen-review-*/GAUNTLET.md` and
-https://somethingbig.ai/gauntlet-loop. Grok and Claude fan out in parallel;
-OpenCode DeepSeek runs use **bounded parallel** on this host (see below). The
-goal does **not** authorize skipping critics for throughput.
+`claude -p <prompt> --model claude-opus-5 --effort max --permission-mode plan --output-format text`
 
-## Review both claims and instruments
+Use `--effort medium` for the faster lane. Background runs must have a trusted
+project, preserved stdin/prompt and stdout/stderr, and enough time for real tool
+work. Plan permission is appropriate for read-only reviews.
 
-Review **both** campaign/evidence claims **and** the scripts/instruments
-that produced them (compose gates, reducers, verify paths, tests). All lanes
-are expected to improve code quality as well as catch false terminals — not
-only post-apply attack tables.
+Grok uses model `grok-4.5` with `--reasoning-effort high`. Run one Grok review
+at a time unless the maintainer explicitly changes that resource rule. Give it
+strict no-write instructions and preserve its complete output; use it for quick
+independent angles rather than as an authority shortcut.
+
+## Campaign and gauntlet work
+
+Each campaign generation still needs its own mechanical parent, delta, receipt,
+reducer, replay, and adverse-control gates. A cross-generation review cannot
+replace those. Reviewer choice is situational: use separate critics where a
+generation introduces a consequential new claim or instrument, and do not force
+an eight-way model sweep over a generation whose exact reducer and focused
+counterexamples already settle the question.
+
+The gauntlet remains an outcome, not a model quota: split the ambitious goal
+into falsifiable pieces; inspect the real artifacts; attack both the claim and
+the instrument; loop until the evidence bar wins or the maintainer redirects.
+No model may authorize a function name, signature, type, runtime contract,
+campaign promotion, rebuild parity claim, Ghidra mutation, capture, or memory
+write. Those decisions belong to the owning evidence gate and integration
+owner.
+
+Historical per-generation scaffolds may record the reviewer set used at that
+time. Active scaffolds must accept an explicitly selected reviewer subset and
+must not silently launch retired or unrequested models. Label the actual subset
+that ran; do not describe absent cells as failed authority.
 
 ## Invocation hygiene
 
-- Tools are required for real reviews; always `--title`; never `--auto`; use
-  single-line CLI messages (multiline positionals truncate); wait long enough
-  for tool loops (10–30+ min is fine); on kill/timeout delete the OpenCode
-  session and mark the plate failed.
-- Preserve prompt, stdout/stderr, model id, variant, role
-  (normal|adversarial), start/finish, exit code under a distinct `local-lab/`
-  review directory.
-- `low`/`high` variants may exist on direct Flash (measured) but are **not**
-  authorized for standing RE reviews; pin **max** only.
-
-## OpenCode concurrency (retain across sessions/compactions)
-
-OpenCode stores sessions in a shared SQLite DB
-(`~/.local/share/opencode/opencode.db`). Desktop/TUI multi-session is
-supported; concurrent `opencode run` is also **allowed** and was re-measured
-OK on this host (2026-08-05): 2–4 short shared-DB runs and 2 concurrent
-toolful flash-max runs all exit 0 with no lock error. A historical
-`database is locked` / `SQLITE_BUSY` failure still exists under heavy write
-contention when `busy_timeout=0` (upstream issue #21215; also seen once in
-`local-lab/opencode-deepseek-direct-proof/PROOF.md` under parallel
-pro-max-tool). Standing RE path: **bounded parallel** DeepSeek Flash-max only
-(prefer 2 concurrent `opencode run` for the two Flash roles, not large
-fan-out); on lock/fail **retry** that cell; optional isolation via per-job
-`XDG_DATA_HOME` + copied `auth.json` if contention returns. Serial remains
-valid but is not required. Grok subagents fan out freely.
-
-## Historical note (unban)
-
-OpenCode was previously avoided because free / Zen / InferX DeepSeek mirrors
-were unreliable for load-bearing RE. That ban is **lifted**. Standing work
-uses **DeepSeek direct** (maintainer API key via OpenCode). Do not revive the
-ban; do not fall back to Zen/InferX for consequential reviews.
+- Give reviewers the real files and a falsifiable question, not only a summary
+  engineered for agreement.
+- Preserve prompt, stdout/stderr, model/provider, effort/variant, role, start and
+  finish time, exit code, and any session ID under a distinct `local-lab/` root.
+- Verify process state and resource use. Do not mistake an auth/trust dialog,
+  empty output, timeout, or partial stream for completed reasoning.
+- Keep CLI reviewers read-only. A writing reviewer uses an isolated worktree and
+  is integrated or discarded as one reviewed unit.
+- Review instruments as well as findings: reducers, parsers, exact-delta gates,
+  negative controls, exporters, and publication ordering are frequent sources
+  of false authority.
+- Stop adding reviewers when their marginal result is lower than running the
+  cheapest mechanical falsifier.

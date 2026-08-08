@@ -1,11 +1,9 @@
 # Onslaught Toolkit
 
 Status: active — authoritative contributor contract for this repository.
-Last updated: 2026-08-06 (standing eight-way critic pin: Grok + DS Flash max +
-Opus medium + GPT 5.6 Luna Max via Codex; Pro max and Opus max retired for
-standing RE; direct DeepSeek session carve-out added — native subagents N+A
-when the maintainer works directly with DeepSeek in an interactive OpenCode
-session).
+Last updated: 2026-08-08 (reviewer use is situational and harness-agnostic;
+native subagents are the default, external models are selected when their
+different perspective justifies the cost).
 Summary: the mission, evidence boundaries, safety rules, and smallest set of
 routes every contributor needs before working on Battle Engine Aquila.
 
@@ -158,11 +156,12 @@ Also:
   row. True deletion happens later, only under space pressure, via
   `lab_quarantine.py purge <id> --reason "<why>"`; the manifest and purge log
   preserve identity for recovery. `restore <id>` brings a staged item back.
-  This rule exists because a 2026-08-06 cleanup deleted a frozen campaign
-  carry bundle whose `campaign.ready.json` SHA was hard-pinned in
-  `tools/re_campaign.py` — the audit checked *docs* for references, not
-  *test code*, and the fixtures were unrecoverable (not in git, not in
-  OneDrive, no VSS shadow, recycle bin bypassed by `Remove-Item -Force`).
+  This rule exists because a 2026-08-06 cleanup deleted frozen campaign and
+  proof inputs whose identities were hard-pinned in tooling and tests. Later
+  rollout replay and surviving twins recovered some bytes exactly, but several
+  historical receipts remain genuinely absent; the initial audit checked
+  *docs* for references, not *tooling and tests*, and `Remove-Item -Force`
+  bypassed the recycle bin.
   Before classifying anything "stale", grep the **tooling and tests** too,
   not only the docs.
 - Preserve unrelated and pre-existing work, especially in a dirty tree. Make
@@ -179,9 +178,8 @@ Also:
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. The standing
-  reviewer set, the eight-way pin, the harness-agnostic selection rule (each
-  harness provides its own N+A from its native subagents), per-generation
-  police, gauntlet loop, and every invocation/concurrency rule are owned by
+  situational model selection, harness-agnostic native-subagent rule,
+  campaign-review guidance, gauntlet loop, and invocation/resource rules are owned by
   [`reverse-engineering/REVIEW-PROTOCOL.md`](reverse-engineering/REVIEW-PROTOCOL.md)
   — read it before launching external reviews, and change it there rather than
   here.

@@ -1,11 +1,12 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-06
+Last updated: 2026-08-08
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Live tip is Gen73 via `developer_state.json` → `complete_re_tip_20260805`, not
-the historical Gen10 admission below.
+Current replay authority is recovered Generation 11 via
+`developer_state.json` → `current_re_authority`; Generation 73 is a projection
+oracle only, and the Generation-10 block below is historical.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
@@ -57,25 +58,26 @@ Further down this page, past the authority block: the patch recipes, the
 per-subsystem static contracts, the 2026-05-26 review cohort, the lane
 reference and runbooks, and the retail → Core translation policies.
 
-## Live complete-RE tip — machine-local evidence (2026-08-06)
+## Current complete-RE replay authority — machine-local evidence (2026-08-08)
 
 The tracked Ghidra snapshot and 2026-07 name ledgers deliberately lag current
-work. **Live tip** is not Generation 10. On this maintainer machine, the live
-complete-RE tip is recorded in `developer_state.json` →
-`complete_re_tip_20260805` (as of 2026-08-06: **Gen73**, C1=**222**, C2=**5**,
-function_semantic OPAQUE=**7897**, OPEN residual=**20**, complete_RE=**false**,
-Ghidra apply **NOT_AUTHORIZED**). Prefer the cumulative index
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
-over peer lane synths. Tip campaign path (re-read tip if moved):
-`local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/generation-73-function-c1-opaque-squad-spawn-helpers-batch`.
-Post-Gen55 work is dominated by OPAQUE→C1 PE plates under standing six-way
-critics (direct DeepSeek sessions: native subagent N+A per the AGENTS.md
-carve-out); C1 is partial PE, not dual-runtime C2.
+campaign work. Select the exact authority recorded in `developer_state.json` →
+`current_re_authority`: canonical Generation 11 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/`,
+READY `9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d`,
+frozen reducer `e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993`,
+external selector `2594d78d…238c`. It contains 8,124 functions, 216 C1, four
+C2, 7,904 opaque functions, 20 open residuals, and no rebuild-ready contract.
+Its independent replica is reproduction-only. Generation 73 is retained only
+as the exact field-level oracle named by closure READY `94d7a9eb…323e0`; it is
+never a parent or authority. The next valid campaign generation is 12. Model
+review is situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
-Generation 10 remains a valid **historical** function/range/contract admission
-for Level 521 call-context dual authority, not the live tip:
+Generation 10 remains a valid **historical frozen-integrity**
+function/range/contract admission for Level 521 call-context evidence, not the
+current replay authority:
 `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/`:
 8,124 functions, 6,117 exact `.text` residuals, 15,241 open/closed questions,
 72 scenarios, 915 levers, 14,241 contracts, 6 adjudications, and 584 exact
@@ -84,10 +86,12 @@ supersessions. Its READY SHA-256 is
 The exact post-promotion coverage snapshot is
 `local-lab/console-callback-atomic14-post-campaign-20260803-v1/snapshot/ledger.ready.json`,
 SHA-256 `efabd9c2ae7a0be5adee2bf478df0cbec69482918197ae87ed7d6a9fc3ac6b3f`.
-Replay Generation 10 with its frozen `_reducer` (ID
+Its intact ledgers can be checked with its frozen `_reducer` (ID
 `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9`);
-the evolving working dependency
-bundle is not interchangeable.
+the evolving working dependency bundle is not interchangeable. The deleted
+historical Atomic14 formal READY prevents full replay of this original lineage;
+the post-loss 8R→11 branch is the full-replay replacement without substituting
+that lost identity.
 
 Current local boundaries that materially change the discovery lane:
 

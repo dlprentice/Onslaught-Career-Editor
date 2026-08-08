@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-08-06
+Last updated: 2026-08-08
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -10,8 +10,7 @@ This index answers **where code and responsibility live**. It does not restate
 what is currently proved or working. Use [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
 for demonstrated capability, [`GOAL.md`](GOAL.md) for desired outcomes,
 [`developer_state.json`](developer_state.json) for resumable evidence pointers
-(complete-RE tip census: key `complete_re_tip_20260805`; prefer named
-FINAL-3WAY-DELTA over peer lane synths),
+(complete-RE replay selector: key `current_re_authority`),
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for retail
 evidence routing, and [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the
 rebuild's evidence and licence boundary. Do not embed volatile Gen/C1/OPAQUE

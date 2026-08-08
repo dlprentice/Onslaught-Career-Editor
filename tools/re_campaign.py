@@ -28,6 +28,7 @@ from pathlib import Path
 
 import re_coverage_ledger as coverage
 import ghidra_project_backup as ghidra_backup
+import re_gen73_reseal as gen73_reseal
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -62,9 +63,27 @@ GHIDRA_PARTITION_ADVANCE_KIND = "GHIDRA_RESIDUAL_EXACT_PARTITION_PROMOTION"
 GHIDRA_PARTITION_ADVANCE_SCHEMA = (
     "bea.re.ghidra-residual-exact-partition-advance.v1"
 )
+GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND = (
+    "GHIDRA_RESIDUAL_EXACT_PARTITION_POST_LOSS_RECOVERY"
+)
+GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA = (
+    "bea.re.ghidra-residual-exact-partition-recovery-advance.v1"
+)
+GHIDRA_PARTITION_RECOVERY_LINEAGE_ID = "incident-20260806-recovery-v1"
+GHIDRA_PARTITION_ADVANCE_IDENTITIES = {
+    GHIDRA_PARTITION_ADVANCE_KIND: GHIDRA_PARTITION_ADVANCE_SCHEMA,
+    GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND: GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA,
+}
+GHIDRA_PARTITION_ADVANCE_KINDS = frozenset(GHIDRA_PARTITION_ADVANCE_IDENTITIES)
 GHIDRA_SEMANTIC_ADVANCE_KIND = "GHIDRA_FUNCTION_SEMANTIC_PROMOTION"
 GHIDRA_SEMANTIC_ADVANCE_SCHEMA = (
     "bea.re.ghidra-function-semantic-promotion-advance.v1"
+)
+GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND = (
+    "GHIDRA_FUNCTION_SEMANTIC_PROMOTION_POST_LOSS_RECOVERY"
+)
+GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA = (
+    "bea.re.ghidra-function-semantic-promotion-recovery-advance.v1"
 )
 GHIDRA_SEMANTIC_LIVE_READY_SCHEMA = (
     "bea.re.ghidra-target-lock-semantic-live-promotion.v1"
@@ -80,6 +99,16 @@ GHIDRA_SEMANTIC_OBSERVATION_SCHEMA = (
 )
 TTD_CALL_CONTEXT_ADVANCE_KIND = "TTD_CALL_CONTEXT_OBSERVATION"
 TTD_CALL_CONTEXT_ADVANCE_SCHEMA = "bea.re.ttd-call-context-observation-advance.v1"
+TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND = (
+    "TTD_CALL_CONTEXT_OBSERVATION_POST_LOSS_RECOVERY"
+)
+TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA = (
+    "bea.re.ttd-call-context-observation-recovery-advance.v1"
+)
+GEN73_RESEAL_RECOVERY_ADVANCE_KIND = "GEN73_CLAIM_RESEAL_POST_LOSS_RECOVERY"
+GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA = (
+    "bea.re.gen73-claim-reseal-recovery-advance.v1"
+)
 TTD_CALL_CONTEXT_PROOF_SCHEMA = "bea-level521-impact-schema3-proof.v2"
 TTD_CALL_CONTEXT_PARENT_RELATIVE = (
     Path("local-lab/ghidra-target-lock-semantic-generation9-20260804-v1")
@@ -133,11 +162,71 @@ TTD_CALL_CONTEXT_EXPECTED_GENERATION10_COUNTS = {
     "adjudications": 6,
     "supersessions": 584,
 }
+TTD_CALL_CONTEXT_RECOVERY_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-9-target-lock-recovered-v2"
+)
+TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256 = (
+    "5f9ca05aab0c30bd72b5dc05f35fd65dddea947ebfba9e8d8b50f3828386d3ce"
+)
+TTD_CALL_CONTEXT_RECOVERY_PARENT_REDUCER_ID = (
+    "55eaf3ce12bef9e7426a93802020473f1c82b54916f311dbee82e30ecff936d2"
+)
+TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_RELATIVE = (
+    Path("local-lab/ttd-call-context-level521-impact-generation10-20260804-v1")
+    / "generation-10-ttd-call-context-observation-v2"
+)
+TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_READY_SHA256 = (
+    "b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2"
+)
+TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_REDUCER_ID = (
+    "7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9"
+)
+GEN73_RESEAL_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-10-ttd-call-context-recovered-v2"
+)
+GEN73_RESEAL_PARENT_READY_SHA256 = (
+    "12cb61f9d8cad06cd0c58ca5262a9c497a62d7268fc108d546ed988b9a757561"
+)
+GEN73_RESEAL_PARENT_REDUCER_ID = (
+    "88d61c227970ead0807e110ff14712ca74fcf23ce51b4bc88434b98bc0e956d4"
+)
+GEN73_RESEAL_PARENT_COUNTS = dict(TTD_CALL_CONTEXT_EXPECTED_GENERATION10_COUNTS)
+GEN73_RESEAL_CLOSURE_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "gen73-claim-closure-v1"
+)
+GEN73_RESEAL_CLOSURE_READY_BYTES = 48533
+GEN73_RESEAL_CLOSURE_READY_SHA256 = (
+    "94d7a9eb380752671fdc5d5a152e1491bc6d4e4c87c225b8a1c385e39d0323e0"
+)
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
 )
+ATOMIC14_RECOVERY_PARENT_RELATIVE = (
+    Path("local-lab/global-init515-live-post-campaign-20260803-v1")
+    / "generation-7-live-promoted"
+)
 ATOMIC14_FORMAL_READY_SHA256 = (
     "a504c24b1eab555da8a01fc56d91561d3147a508dd3f906b0ac41e97697a83e6"
+)
+ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE = (
+    Path("local-lab/atomic14-rederived-formal-proof-20260808-v1")
+    / "proof-v2/rederived-formal-proof.ready.json"
+)
+ATOMIC14_REDERIVED_FORMAL_READY_SHA256 = (
+    "8a83b9617de616d6f9bf0572ef5298acbf9b504996c536f76119e0afd4f4162c"
+)
+ATOMIC14_REDERIVED_FORMAL_SCHEMA = (
+    "bea.re.console-callback-atomic14-rederived-formal-proof.v2"
+)
+ATOMIC14_REDERIVED_FORMAL_AUTHOR_RELATIVE = (
+    Path("local-lab/atomic14-rederived-formal-proof-20260808-v1")
+    / "run_rederived_formal_proof_v2.py"
+)
+ATOMIC14_REDERIVED_FORMAL_AUTHOR_SHA256 = (
+    "597973fe74d3e7c3bcbe897cfed67253a10d662a1a3969dfbd0c925d9c491a54"
 )
 ATOMIC14_LIVE_READY_SHA256 = (
     "f3d58ccb74891a20bade971f043382ab77b3c32bebdef977fabcd76274752541"
@@ -180,6 +269,91 @@ TARGET_LOCK_SEMANTIC_PARENT_COUNTS = {
     "adjudications": 3,
     "supersessions": 584,
 }
+TARGET_LOCK_RECOVERY_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-8-atomic14-recovered-v2"
+)
+TARGET_LOCK_RECOVERY_PARENT_READY_SHA256 = (
+    "86823582785d996362743377d254951bca0ca966fff72553d0f51356d1707849"
+)
+TARGET_LOCK_RECOVERY_PARENT_REDUCER_ID = (
+    "404b18e6dceb956bae672033fc5f53b4faad81f2e0fd1cc605394691df7e9f47"
+)
+TARGET_LOCK_OWNER_RECOVERY_READY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "target-lock-owner-recovery.ready.json"
+)
+TARGET_LOCK_OWNER_RECOVERY_READY_SHA256 = (
+    "28ecaae67eee03b37c327a4f5b232286090516fabb88cf2d5fa3305a9a203efc"
+)
+TARGET_LOCK_OWNER_RECOVERY_AUTHOR_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "recover_target_lock_owner.py"
+)
+TARGET_LOCK_OWNER_RECOVERY_AUTHOR_SHA256 = (
+    "1770c3f558f46420a93479ef8671d43c7a079bcb2517fc4abc35b36819968d10"
+)
+TARGET_LOCK_OWNER_RECOVERY_AUTHOR_BYTES = 5319
+TARGET_LOCK_OWNER_RECOVERED_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "recovered-inputs/ghidra_target_lock_semantic_live_promotion.py"
+)
+TARGET_LOCK_HISTORICAL_OWNER_RELATIVE = Path(
+    "tools/ghidra_target_lock_semantic_live_promotion.py"
+)
+TARGET_LOCK_HISTORICAL_OWNER_BYTES = 125982
+TARGET_LOCK_HISTORICAL_OWNER_SHA256 = (
+    "35ce980cf09cfa2f9af5f8d931705951a9dca50db6712069ed08fcd5f96c6911"
+)
+TARGET_LOCK_SEMANTIC_LIVE_READY_RELATIVE = (
+    Path("local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2")
+    / "promotion/promotion.ready.json"
+)
+TARGET_LOCK_SEMANTIC_LIVE_READY_BYTES = 108418
+TARGET_LOCK_SEMANTIC_LIVE_READY_SHA256 = (
+    "77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945"
+)
+TARGET_LOCK_PLAN_EVIDENCE_ROOT_RELATIVE = Path(
+    "local-lab/ghidra-target-lock-semantic-promotion-20260803-v1"
+)
+TARGET_LOCK_PLAN_RELATIVE = (
+    TARGET_LOCK_PLAN_EVIDENCE_ROOT_RELATIVE
+    / "lock-five-semantic-plan-v3.candidate.tsv"
+)
+TARGET_LOCK_PLAN_BYTES = 19576
+TARGET_LOCK_PLAN_SHA256 = (
+    "f6556238580a8d54b95e5603cd41e70313cebe7a9c92dff45687db7d21bc73c9"
+)
+TARGET_LOCK_EVIDENCE_RELATIVE = (
+    TARGET_LOCK_PLAN_EVIDENCE_ROOT_RELATIVE
+    / "lock-five-semantic-evidence-v1.candidate.tsv"
+)
+TARGET_LOCK_EVIDENCE_BYTES = 33172
+TARGET_LOCK_EVIDENCE_SHA256 = (
+    "16c07f34feb374067ea19a9019da1f1a648778338d905928e989eced506e7ebc"
+)
+TARGET_LOCK_PLAN_EVIDENCE_RECOVERY_NOTE_RELATIVE = (
+    TARGET_LOCK_PLAN_EVIDENCE_ROOT_RELATIVE / "RECOVERY-NOTE-20260807.txt"
+)
+TARGET_LOCK_PLAN_EVIDENCE_RECOVERY_NOTE_SHA256 = (
+    "c91ee26faa0e9119193988fbb39833d5f658bc52d47bf9345fef4b236df81227"
+)
+TARGET_LOCK_SEALED_REHEARSAL_RELATIVE = Path(
+    "local-lab/ghidra-target-lock-semantic-sealed-stage-rehearsal-20260804-v2"
+)
+TARGET_LOCK_SEALED_REHEARSAL_READY_SHA256 = (
+    "ce5e3159d1090b005525e178a0dffdd2a9b3537fb00173ccdcd104dd27e30ad8"
+)
+TARGET_LOCK_SEALED_REHEARSAL_RESULT_SHA256 = (
+    "97a19d2f618d1de5ea41b218b52c545c377b01cd297819f3e674838967c73036"
+)
+TARGET_LOCK_SEALED_MIRROR_ROOT_RELATIVE = (
+    TARGET_LOCK_SEALED_REHEARSAL_RELATIVE
+    / "execution-bundle/repo"
+    / TARGET_LOCK_PLAN_EVIDENCE_ROOT_RELATIVE
+)
+TARGET_LOCK_OWNER_GIT_COMMIT = "075df1dbbffe23302f8317917741355657756a51"
+TARGET_LOCK_OWNER_GIT_BLOB = "247e001eeeaa0d6e8618f1eacaad0d932ca3b5e1"
 ATOMIC14_OLD_RESIDUAL = (
     "TEXT_RESIDUAL:74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750:"
     "0x004295BC-0x00429BC0"
@@ -426,6 +600,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
     return [
         ("campaign", "_reducer/tools/re_campaign.py", Path(__file__).resolve()),
         (
+            "frozen-bootstrap",
+            "_reducer/tools/re_campaign_frozen_bootstrap.py",
+            Path(__file__).resolve().with_name("re_campaign_frozen_bootstrap.py"),
+        ),
+        (
             "coverage",
             "_reducer/tools/re_coverage_ledger.py",
             Path(coverage.__file__).resolve(),
@@ -434,6 +613,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "ghidra-backup",
             "_reducer/tools/ghidra_project_backup.py",
             Path(ghidra_backup.__file__).resolve(),
+        ),
+        (
+            "gen73-reseal",
+            "_reducer/tools/re_gen73_reseal.py",
+            Path(gen73_reseal.__file__).resolve(),
         ),
         (
             "probe-selector",
@@ -575,9 +759,19 @@ def _validate_reducer_snapshot(campaign: Path, receipt: dict) -> dict[str, objec
             raise CampaignError("campaign reducer contains a duplicate/escaping file")
         seen_roles.add(role)
         seen_paths.add(relative)
-        path = campaign / Path(relative)
-        if not path.is_file():
-            raise CampaignError(f"campaign reducer file is missing: {relative}")
+        raw_path = campaign / Path(relative)
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                raw_path, f"campaign reducer {relative}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"campaign reducer file is not plain: {relative}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"campaign reducer file has multiple hard links: {relative}"
+            )
         actual = coverage.file_stamp(path)
         actual_row = {
             "role": role,
@@ -588,6 +782,19 @@ def _validate_reducer_snapshot(campaign: Path, receipt: dict) -> dict[str, objec
         if actual_row != row:
             raise CampaignError(f"campaign reducer file has changed: {relative}")
         actual_files.append(actual_row)
+    reducer_root = campaign / "_reducer"
+    actual_paths = {
+        path.relative_to(campaign).as_posix()
+        for path in reducer_root.rglob("*")
+        if path.is_file()
+    }
+    expected_paths = {str(path).replace("\\", "/") for path in seen_paths}
+    if actual_paths != expected_paths:
+        missing = sorted(expected_paths - actual_paths)
+        extra = sorted(actual_paths - expected_paths)
+        raise CampaignError(
+            f"campaign reducer file set differs: missing={missing} extra={extra}"
+        )
     if _reducer_id(actual_files) != manifest.get("id"):
         raise CampaignError("campaign reducer bundle digest is inconsistent")
     return manifest
@@ -602,6 +809,71 @@ def _validate_reducer_bundle(campaign: Path, receipt: dict) -> dict[str, object]
             f"{manifest['entry']} or publish an explicit migration"
         )
     return manifest
+
+
+def _run_frozen_campaign_verifier(
+    root: Path,
+    *,
+    replay: bool,
+    timeout: int,
+    expected_ready_sha256: str | None = None,
+    expected_reducer_id: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Launch a frozen owner only after an isolated pre-import bundle check.
+
+    Running ``_reducer/tools/re_campaign.py`` as a script would add that
+    directory to ``sys.path`` before the owner validates its manifest.  The
+    bootstrap runs under ``-I``, rejects unmanifested/link/reparse reducer
+    entries across the reachable parent chain, and then imports the owner.  It
+    also wraps campaign-verifier subprocesses used by older frozen owners so
+    nested generations cross the same gate.
+    """
+
+    bootstrap = Path(__file__).resolve().with_name(
+        "re_campaign_frozen_bootstrap.py"
+    )
+    try:
+        plain_bootstrap = ghidra_backup.resolve_plain_path(
+            bootstrap, "frozen campaign bootstrap", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"frozen campaign bootstrap is not plain: {exc}") from exc
+    if plain_bootstrap.stat().st_nlink != 1:
+        raise CampaignError("frozen campaign bootstrap has multiple hard links")
+    argv = [
+        sys.executable,
+        "-I",
+        "-B",
+        str(plain_bootstrap),
+        "--campaign",
+        str(Path(os.path.abspath(root))),
+        "--mode",
+        "full" if replay else "integrity",
+    ]
+    if expected_ready_sha256:
+        argv.extend(["--expected-ready-sha256", expected_ready_sha256])
+    if expected_reducer_id:
+        argv.extend(["--expected-reducer-id", expected_reducer_id])
+    environment = os.environ.copy()
+    for name in (
+        "PYTHONHOME",
+        "PYTHONPATH",
+        "PYTHONSTARTUP",
+        "PYTHONINSPECT",
+        "PYTHONUSERBASE",
+    ):
+        environment.pop(name, None)
+    environment["BEA_REPO_ROOT"] = str(REPO_ROOT)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    return subprocess.run(
+        argv,
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
 
 
 def _read_tsv(path: Path) -> list[dict[str, str]]:
@@ -1235,7 +1507,10 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     visited_parents: set[tuple[str, str]] = set()
     while True:
         advance = receipt.get("advance")
-        if isinstance(advance, dict) and advance.get("kind") == GHIDRA_PARTITION_ADVANCE_KIND:
+        if (
+            isinstance(advance, dict)
+            and advance.get("kind") in GHIDRA_PARTITION_ADVANCE_KINDS
+        ):
             break
         parent = receipt.get("parentCampaign")
         if parent is None:
@@ -1255,6 +1530,13 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
             parent_ready,
             "campaign partition lineage parent READY",
         )
+        if parent_path.resolve() == FROZEN_V5_CAMPAIGN_CARRY_ROOT.resolve():
+            frozen_parent = _verify_frozen_v5_campaign_carry(parent_path)
+            if _integer(frozen_parent.get("generation"), -1) != child_generation - 1:
+                raise CampaignError(
+                    "campaign partition lineage frozen bridge generation is non-monotone"
+                )
+            return None
         parent_identity = (
             str(parent_ready_path.resolve()).casefold(),
             actual_parent_ready["sha256"],
@@ -1268,8 +1550,64 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
         if _integer(parent_receipt.get("generation"), -1) != child_generation - 1:
             raise CampaignError("campaign partition lineage generation is non-monotone")
         receipt = parent_receipt
-    if advance.get("schema") != GHIDRA_PARTITION_ADVANCE_SCHEMA:
+    advance_kind = str(advance.get("kind", ""))
+    expected_schema = GHIDRA_PARTITION_ADVANCE_IDENTITIES.get(advance_kind)
+    if expected_schema is None or advance.get("schema") != expected_schema:
         raise CampaignError("Ghidra exact-partition campaign advance schema is unsupported")
+    formal_ready = advance.get("formalReady")
+    if not isinstance(formal_ready, dict):
+        raise CampaignError("Ghidra exact-partition formal READY stamp is malformed")
+    if advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
+        expected_formal_path = str(
+            (REPO_ROOT / ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE).resolve()
+        )
+        if (
+            formal_ready.get("path") != expected_formal_path
+            or formal_ready.get("bytes") != 32880
+            or formal_ready.get("sha256")
+            != ATOMIC14_REDERIVED_FORMAL_READY_SHA256
+        ):
+            raise CampaignError("Ghidra recovery partition formal proof differs")
+        _require_file_stamp(
+            Path(expected_formal_path),
+            formal_ready,
+            "Ghidra recovery partition formal proof",
+        )
+    elif (
+        formal_ready.get("bytes") != 23028
+        or formal_ready.get("sha256") != ATOMIC14_FORMAL_READY_SHA256
+    ):
+        raise CampaignError("Ghidra historical partition formal proof differs")
+    if advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
+        historical_formal = advance.get("historicalFormalReady")
+        projection = advance.get("historicalProjection")
+        expected_historical_path = str(
+            (
+                REPO_ROOT
+                / "local-lab/console-callback-atomic14-20260803-v1"
+                / "formal-proof-v2/formal-proof.ready.json"
+            ).resolve()
+        )
+        if (
+            advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+            or not isinstance(historical_formal, dict)
+            or set(historical_formal)
+            != {"path", "bytes", "sha256", "disposition"}
+            or historical_formal.get("path") != expected_historical_path
+            or historical_formal.get("bytes") != 23028
+            or historical_formal.get("sha256") != ATOMIC14_FORMAL_READY_SHA256
+            or historical_formal.get("disposition")
+            != "LOST_HISTORICAL_IDENTITY_NOT_SUBSTITUTED"
+            or not isinstance(projection, dict)
+            or projection.get("schema")
+            != "bea.re.campaign-historical-projection.v1"
+            or projection.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+            or projection.get("stateProjection")
+            != "EQUIVALENT_EXCEPT_EXACT_RECOVERY_PROVENANCE"
+            or projection.get("evidenceIdentity")
+            != "NEW_PROOF_NOT_HISTORICAL_SUBSTITUTION"
+        ):
+            raise CampaignError("Ghidra recovery partition provenance differs")
     retired = advance.get("retiredSubject")
     partition = advance.get("partition")
     if not isinstance(retired, dict) or not isinstance(partition, dict):
@@ -1307,6 +1645,12 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     parent_path = _resolve_repo_or_absolute(
         parent_spec.get("path"), "Ghidra exact-partition parent campaign"
     )
+    if (
+        advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        and parent_path.resolve()
+        != (REPO_ROOT / ATOMIC14_RECOVERY_PARENT_RELATIVE).resolve()
+    ):
+        raise CampaignError("Ghidra recovery partition parent path differs")
     parent_ready = parent_spec.get("ready")
     _require_file_stamp(
         parent_path / "campaign.ready.json",
@@ -1381,6 +1725,8 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
         raise CampaignError("Ghidra exact-partition evidence stamps are malformed")
     return {
         "advance": advance,
+        "advanceKind": advance_kind,
+        "advanceSchema": expected_schema,
         "retiredResidual": residual,
         "retiredQuestion": question,
         "retiredContract": contract,
@@ -1392,7 +1738,90 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     }
 
 
-def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> None:
+def _validate_gen73_reseal_advance_relation(
+    rows: dict[str, list[dict]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None = None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("Generation 11 reseal advance is missing")
+    if (
+        _integer(receipt.get("generation"), -1) != 11
+        or advance.get("kind") != GEN73_RESEAL_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Generation 11 reseal identity differs")
+    parent = receipt.get("parentCampaign")
+    if not isinstance(parent, dict) or not isinstance(parent.get("ready"), dict):
+        raise CampaignError("Generation 11 reseal parent receipt is malformed")
+    raw_parent = Path(os.path.abspath(str(parent.get("path", ""))))
+    expected_parent = (REPO_ROOT / GEN73_RESEAL_PARENT_RELATIVE).resolve()
+    try:
+        plain_parent = ghidra_backup.resolve_plain_path(
+            raw_parent, "Generation 11 reseal parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Generation 11 reseal parent is not plain: {exc}") from exc
+    expected_parent_ready = {
+        **coverage.file_stamp(plain_parent / "campaign.ready.json"),
+        "path": "campaign.ready.json",
+    }
+    if (
+        expected_parent_ready.get("bytes") != 32794
+        or expected_parent_ready.get("sha256") != GEN73_RESEAL_PARENT_READY_SHA256
+    ):
+        raise CampaignError("Generation 11 reseal parent READY identity differs")
+    if plain_parent != expected_parent or parent.get("ready") != expected_parent_ready:
+        raise CampaignError("Generation 11 reseal parent identity differs")
+    parent_ready = _runtime_json(
+        plain_parent / "campaign.ready.json", "Generation 11 reseal parent READY"
+    )
+    if parent_ready.get("reducer", {}).get("id") != GEN73_RESEAL_PARENT_REDUCER_ID:
+        raise CampaignError("Generation 11 reseal parent reducer differs")
+    closure = advance.get("closure")
+    if not isinstance(closure, dict) or closure.get("root") != (
+        GEN73_RESEAL_CLOSURE_RELATIVE.as_posix()
+    ):
+        raise CampaignError("Generation 11 reseal closure route differs")
+    expected_rows, expected_advance, adjudication_ids = _gen73_reseal_rows_and_advance(
+        plain_parent,
+        REPO_ROOT / GEN73_RESEAL_CLOSURE_RELATIVE,
+        parent_ready,
+    )
+    if advance != expected_advance:
+        raise CampaignError("Generation 11 reseal advance does not reproduce")
+    for family, key_name in gen73_reseal.LEDGER_KEYS.items():
+        actual = {str(row.get(key_name, "")): row for row in rows[family]}
+        expected = {str(row.get(key_name, "")): row for row in expected_rows[family]}
+        if actual != expected:
+            raise CampaignError(f"Generation 11 reseal {family} rows do not reproduce")
+    function_names = {row["entityKey"]: row["currentName"] for row in rows["functions"]}
+    for contract in rows["contracts"]:
+        if contract.get("entityKind") == "FUNCTION" and contract.get("currentName") != (
+            function_names.get(contract.get("entityKey"))
+        ):
+            raise CampaignError(
+                f"Generation 11 function/contract name coherence differs: {contract.get('entityKey')}"
+            )
+    if campaign_root is not None:
+        _validate_gen73_reseal_receipt_envelope(rows, receipt, campaign_root)
+    return {
+        "adjudicationIds": adjudication_ids,
+        "supersessionIds": {
+            row["supersessionId"] for row in expected_rows["supersessions"]
+        },
+        "advance": expected_advance,
+    }
+
+
+def _validate_campaign_relations(
+    rows: dict[str, list[dict]],
+    receipt: dict,
+    campaign_root: Path | None = None,
+) -> None:
     """Validate semantic graph invariants independently of reducer replay."""
 
     functions = rows["functions"]
@@ -1402,6 +1831,100 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
     adjudications = rows["adjudications"]
     supersessions = rows["supersessions"]
     partition_context = _partition_relation_context(receipt)
+    current_advance = receipt.get("advance")
+    reseal_context = None
+    if _integer(receipt.get("generation"), -1) == 11 or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == GEN73_RESEAL_RECOVERY_ADVANCE_KIND
+    ):
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            rows, receipt, current_advance, campaign_root=campaign_root
+        )
+    generation9_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 9
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation9_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+        or current_advance.get("schema") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Generation 8R child is not the exact semantic recovery advance")
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError("semantic recovery advance lacks exact 8R partition ancestry")
+    if (
+        partition_context is not None
+        and partition_context["advanceKind"]
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        and isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    ):
+        expected_projection = _atomic14_recovery_historical_projection(
+            rows,
+            {"formalStamp": partition_context["advance"]["formalReady"]},
+        )
+        if (
+            partition_context["advance"].get("historicalProjection")
+            != expected_projection
+        ):
+            raise CampaignError("Ghidra recovery historical projection differs")
+    if generation9_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+    ):
+        _validate_semantic_recovery_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            partition_context,
+            campaign_root=campaign_root,
+        )
+    generation10_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 10
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation10_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+        or current_advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Generation 9R child is not the exact TTD recovery advance")
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError("TTD recovery advance lacks exact 8R partition ancestry")
+    if generation10_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+    ):
+        _validate_ttd_recovery_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            partition_context,
+            campaign_root=campaign_root,
+        )
 
     def unique_map(items: list[dict], key: str, label: str) -> dict[str, dict]:
         result: dict[str, dict] = {}
@@ -1520,6 +2043,10 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
             partition_context is not None
             and adjudication_id == partition_context["adjudicationId"]
         )
+        reseal_residual_adjudication = bool(
+            reseal_context is not None
+            and adjudication_id in reseal_context["adjudicationIds"]
+        )
         contract = (
             partition_context["retiredContract"]
             if partition_adjudication
@@ -1541,7 +2068,7 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
         semantic_promotion = _bool(adjudication.get("semanticPromotionApplied"))
         semantic_flag_valid = (
             verdict == "SURVIVED" and not semantic_promotion
-            if partition_adjudication
+            if partition_adjudication or reseal_residual_adjudication
             else semantic_promotion == (verdict == "SURVIVED")
         )
         if not semantic_flag_valid:
@@ -1549,7 +2076,7 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
                 f"campaign adjudication semantic-promotion flag disagrees with its verdict: {adjudication_id}"
             )
         if partition_adjudication and (
-            adjudication.get("overlaySchema") != GHIDRA_PARTITION_ADVANCE_SCHEMA
+            adjudication.get("overlaySchema") != partition_context["advanceSchema"]
             or adjudication.get("terminalState") != "TERMINAL_EXACT_PARTITION"
             or adjudication.get("overlayReadySha256")
             != partition_context["expectedEvidenceHashes"][1]
@@ -1780,7 +2307,7 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
                     f"function {new} evidenceStates",
                 )
             )
-        elif kind == GHIDRA_PARTITION_ADVANCE_KIND:
+        elif kind in GHIDRA_PARTITION_ADVANCE_KINDS:
             function = function_by_entity.get(new)
             residual = residual_by_entity.get(new)
             contract = contract_by_entity.get(new)
@@ -1854,10 +2381,19 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
                 and int(residual_old_match.group(2), 16) == ATOMIC14_START_VA
                 and int(residual_old_match.group(3), 16) == ATOMIC14_END_VA
                 and old not in entity_keys
+                and kind == partition_context["advanceKind"]
                 and new in partition_context["successorEntityKeys"]
                 and ATOMIC14_START_VA <= child_start < child_end <= ATOMIC14_END_VA
                 and (function_valid or padding_valid)
             )
+            if (
+                reseal_context is not None
+                and supersession_id in reseal_context["supersessionIds"]
+            ):
+                # The reseal relation has already reproduced this complete row
+                # from exact 10R.  Later field-scoped name/C1 claims do not
+                # invalidate the inherited Atomic14 boundary supersession.
+                kind_valid = True
         evidence_refs = _state_values(
             supersession.get("evidenceRefs"),
             f"supersession {supersession_id} evidenceRefs",
@@ -1876,7 +2412,7 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
                 for value in evidence_refs
             )
             or (
-                kind == GHIDRA_PARTITION_ADVANCE_KIND
+                kind in GHIDRA_PARTITION_ADVANCE_KINDS
                 and partition_context is not None
                 and evidence_refs != partition_context["expectedEvidenceRefs"]
             )
@@ -1896,7 +2432,9 @@ def _validate_campaign_relations(rows: dict[str, list[dict]], receipt: dict) -> 
 
     for old, grouped in supersessions_by_old.items():
         kinds = {str(row.get("kind", "")) for row in grouped}
-        if len(grouped) > 1 and kinds != {GHIDRA_PARTITION_ADVANCE_KIND}:
+        if len(grouped) > 1 and not (
+            len(kinds) == 1 and kinds.issubset(GHIDRA_PARTITION_ADVANCE_KINDS)
+        ):
             raise CampaignError(
                 f"campaign supersessions repeat an old entity outside exact partition: {old}"
             )
@@ -2014,6 +2552,42 @@ def _verify_legacy_campaign_carry(root: Path) -> dict:
     return verified
 
 
+def _verify_frozen_campaign_integrity(root: Path, label: str) -> tuple[dict, dict]:
+    """Run one campaign's exact frozen owner without replaying its parent chain."""
+
+    resolved = root.resolve()
+    receipt = _runtime_json(resolved / "campaign.ready.json", f"{label} READY")
+    reducer = _validate_reducer_snapshot(resolved, receipt)
+    frozen_entry = resolved / str(reducer.get("entry", ""))
+    if not frozen_entry.is_file():
+        raise CampaignError(f"{label} frozen reducer entry is absent")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=False,
+            timeout=180,
+            expected_ready_sha256=coverage.sha256_of(
+                resolved / "campaign.ready.json"
+            ),
+            expected_reducer_id=str(reducer.get("id", "")),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(f"{label} frozen integrity verifier timed out") from exc
+    expected_marker = (
+        f"FROZEN_CAMPAIGN_INTEGRITY_VERIFIED {receipt.get('schema')} "
+        f"{receipt.get('generation')}"
+    )
+    if completed.returncode != 0 or expected_marker not in completed.stdout:
+        raise CampaignError(
+            f"{label} failed its exact frozen integrity verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    integrity = dict(receipt)
+    integrity["_authorityClass"] = "FROZEN_INTEGRITY_ONLY_NOT_REPLAY_AUTHORITY"
+    integrity["_replayGeneration"] = False
+    return integrity, reducer
+
+
 def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
     """Verify the one exact v5 generation allowed across the reducer-v2 cut.
 
@@ -2022,19 +2596,13 @@ def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
     audited carried-r3 root, READY bytes, specimen, generation, output hashes,
     and row counts.  It is a migration fixture, not a generic old-v5 verifier.
 
-    Recovery note (2026-08-06/07): the original bundle under
-    ``local-lab/re-campaign/`` was deleted by a cleanup whose audit grepped
-    docs, not tool/test code (see AGENTS.md "Lab evidence is never
-    hard-deleted").  It was reconstructed byte-exact from the surviving
-    lineage export (``local-lab/global-init515-campaign-lineage-v1-ready/
-    inputs/generation5-campaign.*``): READY SHA ``5bddceb5...`` and all eight
-    OUTPUTS re-verified against the receipt.  Three of the twelve reducer
-    snapshot files (``re_campaign.py``, ``probe_author.py``,
-    ``ghidra_project_backup.py``) cannot be restored byte-exact because they
-    were legitimately fixed after the v5 cut; their manifest rows and the
-    reducer digest still come from the receipt itself, and the loss is
-    carried visibly in the bridge tag so no downstream receipt can mistake
-    the reconstruction for the original on-disk snapshot.
+    Recovery note (2026-08-08): all twelve reducer files are again present at
+    their receipt-bound byte identities.  Two survived in other frozen proof
+    bundles; ``re_campaign.py`` was recovered from a receipt-bounded frozen
+    base plus fourteen successful patch-apply events and matched its original
+    manifest SHA-256.  The missing Generation 3/4 receipts remain archival
+    losses, so this bridge asks the exact Generation 5 reducer to validate its
+    own bundle without replaying that unavailable earlier history.
     """
 
     resolved = root.resolve()
@@ -2046,10 +2614,7 @@ def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
         or coverage.sha256_of(ready_path) != FROZEN_V5_CAMPAIGN_CARRY_READY_SHA256
     ):
         raise CampaignError("frozen v5 carry READY is absent or changed")
-    try:
-        receipt = json.loads(ready_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise CampaignError(f"cannot read frozen v5 carry READY: {exc}") from exc
+    receipt, reducer = _verify_frozen_campaign_integrity(resolved, "frozen v5 carry")
     specimen_sha = (
         receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
     )
@@ -2060,7 +2625,6 @@ def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
         or specimen_sha.lower() != FROZEN_V5_CAMPAIGN_CARRY_SPECIMEN_SHA256
     ):
         raise CampaignError("frozen v5 carry identity is unsupported")
-    reducer = _validate_reducer_manifest_digest(resolved, receipt)
     if reducer.get("id") != FROZEN_V5_CAMPAIGN_CARRY_REDUCER_ID:
         raise CampaignError("frozen v5 carry reducer identity is unsupported")
     for name in OUTPUTS:
@@ -2078,100 +2642,11 @@ def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
     counts = {name: len(rows[name]) for name in rows}
     if counts != receipt.get("counts"):
         raise CampaignError("frozen v5 carry row counts disagree with READY")
-    _validate_campaign_relations(rows, receipt)
     verified = dict(receipt)
-    degraded = reducer.get("_degradedFiles") or []
-    verified["_carryBridge"] = (
-        "EXACT_AUDITED_FROZEN_V5_R3_REDUCER_SNAPSHOT_LOST_20260806"
-        if degraded
-        else "EXACT_AUDITED_FROZEN_V5_R3"
-    )
+    verified.pop("_authorityClass", None)
+    verified.pop("_replayGeneration", None)
+    verified["_carryBridge"] = "EXACT_AUDITED_FROZEN_V5_R3"
     return verified
-
-
-def _validate_reducer_manifest_digest(campaign: Path, receipt: dict) -> dict[str, object]:
-    """Reducer manifest validation for the reconstructed frozen v5 carry.
-
-    Same structure rules as ``_validate_reducer_snapshot``, but for the
-    recovered bridge root the on-disk re-hash of the three snapshot files
-    that were legitimately fixed after the v5 cut is replaced by a recorded
-    degradation row.  The reducer bundle digest is still computed from the
-    receipt's own manifest rows, so ``REDUCER_ID`` remains verified; every
-    file that CAN be re-hashed is re-hashed.
-    """
-    manifest = receipt.get("reducer")
-    if not isinstance(manifest, dict) or set(manifest) != {
-        "schema",
-        "id",
-        "entry",
-        "files",
-    }:
-        raise CampaignError("campaign READY lacks an exact reducer manifest")
-    if (
-        manifest.get("schema") != REDUCER_SCHEMA
-        or manifest.get("entry") != "_reducer/tools/re_campaign.py"
-        or not isinstance(manifest.get("files"), list)
-    ):
-        raise CampaignError("campaign reducer manifest is unsupported")
-    files = manifest["files"]
-    seen_roles: set[str] = set()
-    seen_paths: set[str] = set()
-    degraded: list[str] = []
-    # The three snapshot files legitimately fixed after the v5 cut; anything
-    # else that fails to re-hash is tampering and must refuse.  The carve-out
-    # applies ONLY at the reconstructed bridge root AND only when that root
-    # carries the explicit recovery marker written during reconstruction -
-    # a tampered copy anywhere (including a patched synthetic root) refuses.
-    # See the recovery note in _verify_frozen_v5_campaign_carry.
-    RECORDED_LOST = {
-        "_reducer/tools/re_campaign.py",
-        "_reducer/tools/probe/probe_author.py",
-        "_reducer/tools/ghidra_project_backup.py",
-    }
-    recovery_marker = campaign / "_reducer" / "REDUCER_SNAPSHOT_LOST_20260806.marker"
-    is_bridge_root = (
-        campaign.resolve() == FROZEN_V5_CAMPAIGN_CARRY_ROOT.resolve()
-        and recovery_marker.is_file()
-    )
-    for row in files:
-        if not isinstance(row, dict) or set(row) != {"role", "path", "bytes", "sha256"}:
-            raise CampaignError("campaign reducer contains a malformed file stamp")
-        role = row.get("role")
-        relative = row.get("path")
-        if (
-            not isinstance(role, str)
-            or not role
-            or role in seen_roles
-            or not isinstance(relative, str)
-            or not relative.startswith("_reducer/")
-            or relative in seen_paths
-            or Path(relative).is_absolute()
-            or ".." in Path(relative).parts
-        ):
-            raise CampaignError("campaign reducer contains a duplicate/escaping file")
-        seen_roles.add(role)
-        seen_paths.add(relative)
-        path = campaign / Path(relative)
-        if not path.is_file():
-            raise CampaignError(f"campaign reducer file is missing: {relative}")
-        actual = coverage.file_stamp(path)
-        if (
-            actual["bytes"] != row.get("bytes")
-            or actual["sha256"] != row.get("sha256")
-        ):
-            if is_bridge_root and relative in RECORDED_LOST:
-                degraded.append(relative)
-            else:
-                raise CampaignError(f"campaign reducer file has changed: {relative}")
-    # The digest is over the receipt's own manifest rows (the original v5
-    # hashes), not the on-disk files, so REDUCER_ID stays verified for the
-    # reconstructed bridge even though three snapshot files were legitimately
-    # fixed after the cut and cannot be restored byte-exact.
-    if _reducer_id(files) != manifest.get("id"):
-        raise CampaignError("campaign reducer bundle digest is inconsistent")
-    manifest = dict(manifest)
-    manifest["_degradedFiles"] = sorted(degraded)
-    return manifest
 
 
 def _verify_campaign_carry_source(root: Path) -> dict:
@@ -2206,25 +2681,13 @@ def _verify_atomic14_parent_campaign(root: Path) -> dict:
     frozen_entry = root.resolve() / str(manifest.get("entry", ""))
     if not frozen_entry.is_file():
         raise CampaignError("Atomic14 parent frozen reducer entry is absent")
-    environment = os.environ.copy()
-    environment["BEA_REPO_ROOT"] = str(REPO_ROOT)
-    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     try:
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                str(frozen_entry),
-                "verify",
-                "--campaign",
-                str(root.resolve()),
-            ],
-            cwd=REPO_ROOT,
-            env=environment,
-            capture_output=True,
-            text=True,
+        completed = _run_frozen_campaign_verifier(
+            root.resolve(),
+            replay=True,
             timeout=180,
-            check=False,
+            expected_ready_sha256=ATOMIC14_PARENT_READY_SHA256,
+            expected_reducer_id=str(manifest.get("id", "")),
         )
     except subprocess.TimeoutExpired as exc:
         raise CampaignError("Atomic14 parent frozen verifier timed out") from exc
@@ -2239,6 +2702,18 @@ def _verify_atomic14_parent_campaign(root: Path) -> dict:
     _validate_campaign_relations(rows, receipt)
     verified = dict(receipt)
     verified["_carryBridge"] = "EXACT_FROZEN_GENERATION7_REPLAY"
+    return verified
+
+
+def _verify_atomic14_recovery_parent_campaign(root: Path) -> dict:
+    """Require the exact path-pinned Generation 7 parent for post-loss recovery."""
+
+    expected = (REPO_ROOT / ATOMIC14_RECOVERY_PARENT_RELATIVE).resolve()
+    if root.resolve() != expected:
+        raise CampaignError("Atomic14 recovery parent is not the reviewed Generation 7")
+    verified = _verify_atomic14_parent_campaign(root)
+    verified = dict(verified)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION7_RECOVERY_PARENT_REPLAY"
     return verified
 
 
@@ -2280,25 +2755,13 @@ def _verify_target_lock_semantic_parent_campaign(root: Path) -> dict:
     frozen_entry = resolved / str(manifest.get("entry", ""))
     if not frozen_entry.is_file():
         raise CampaignError("target-lock semantic parent frozen reducer is absent")
-    environment = os.environ.copy()
-    environment["BEA_REPO_ROOT"] = str(REPO_ROOT)
-    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     try:
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                str(frozen_entry),
-                "verify",
-                "--campaign",
-                str(resolved),
-            ],
-            cwd=REPO_ROOT,
-            env=environment,
-            capture_output=True,
-            text=True,
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
             timeout=180,
-            check=False,
+            expected_ready_sha256=TARGET_LOCK_SEMANTIC_PARENT_READY_SHA256,
+            expected_reducer_id=TARGET_LOCK_SEMANTIC_PARENT_REDUCER_ID,
         )
     except subprocess.TimeoutExpired as exc:
         raise CampaignError(
@@ -2315,6 +2778,67 @@ def _verify_target_lock_semantic_parent_campaign(root: Path) -> dict:
     _validate_campaign_relations(rows, receipt)
     verified = dict(receipt)
     verified["_carryBridge"] = "EXACT_FROZEN_GENERATION8_REPLAY"
+    return verified
+
+
+def _verify_target_lock_recovery_parent_campaign(root: Path) -> dict:
+    """Require the exact fully replayed 8R parent for the semantic recovery branch."""
+
+    resolved = root.resolve()
+    expected_root = (REPO_ROOT / TARGET_LOCK_RECOVERY_PARENT_RELATIVE).resolve()
+    if resolved != expected_root:
+        raise CampaignError("target-lock recovery parent is not the reviewed Generation 8R")
+    ready_path = resolved / "campaign.ready.json"
+    if (
+        not ready_path.is_file()
+        or coverage.sha256_of(ready_path)
+        != TARGET_LOCK_RECOVERY_PARENT_READY_SHA256
+    ):
+        raise CampaignError("target-lock recovery parent READY is absent or changed")
+    receipt = _runtime_json(ready_path, "target-lock recovery parent campaign")
+    reducer = _validate_reducer_snapshot(resolved, receipt)
+    specimen_sha = str(
+        receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
+    ).lower()
+    advance = _runtime_mapping(
+        receipt.get("advance"), "target-lock recovery parent advance"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 8
+        or specimen_sha
+        != "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+        or receipt.get("counts") != TARGET_LOCK_SEMANTIC_PARENT_COUNTS
+        or reducer.get("id") != TARGET_LOCK_RECOVERY_PARENT_REDUCER_ID
+        or advance.get("kind") != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("target-lock recovery parent identity is unsupported")
+    frozen_entry = resolved / str(reducer.get("entry", ""))
+    if not frozen_entry.is_file():
+        raise CampaignError("target-lock recovery parent frozen reducer is absent")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=240,
+            expected_ready_sha256=TARGET_LOCK_RECOVERY_PARENT_READY_SHA256,
+            expected_reducer_id=TARGET_LOCK_RECOVERY_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("target-lock recovery parent verifier timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "target-lock recovery parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("target-lock recovery parent rows disagree with READY")
+    _validate_campaign_relations(rows, receipt)
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION8R_REPLAY"
     return verified
 
 
@@ -2350,25 +2874,13 @@ def _verify_ttd_call_context_parent_campaign(root: Path) -> dict:
     frozen_entry = resolved / str(reducer.get("entry", ""))
     if not frozen_entry.is_file():
         raise CampaignError("TTD call-context parent frozen reducer is absent")
-    environment = os.environ.copy()
-    environment["BEA_REPO_ROOT"] = str(REPO_ROOT)
-    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     try:
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-B",
-                str(frozen_entry),
-                "verify",
-                "--campaign",
-                str(resolved),
-            ],
-            cwd=REPO_ROOT,
-            env=environment,
-            capture_output=True,
-            text=True,
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
             timeout=240,
-            check=False,
+            expected_ready_sha256=TTD_CALL_CONTEXT_PARENT_READY_SHA256,
+            expected_reducer_id=TTD_CALL_CONTEXT_PARENT_REDUCER_ID,
         )
     except subprocess.TimeoutExpired as exc:
         raise CampaignError("TTD call-context parent frozen verifier timed out") from exc
@@ -2383,6 +2895,122 @@ def _verify_ttd_call_context_parent_campaign(root: Path) -> dict:
     _validate_campaign_relations(rows, receipt)
     verified = dict(receipt)
     verified["_carryBridge"] = "EXACT_FROZEN_GENERATION9_REPLAY"
+    return verified
+
+
+def _verify_ttd_call_context_recovery_parent_campaign(root: Path) -> dict:
+    """Require the exact fully replayed 9R parent for the TTD recovery branch."""
+
+    resolved = root.resolve()
+    expected_root = (REPO_ROOT / TTD_CALL_CONTEXT_RECOVERY_PARENT_RELATIVE).resolve()
+    if resolved != expected_root:
+        raise CampaignError("TTD recovery parent is not the reviewed Generation 9R")
+    ready_path = resolved / "campaign.ready.json"
+    if (
+        not ready_path.is_file()
+        or coverage.sha256_of(ready_path)
+        != TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256
+    ):
+        raise CampaignError("TTD recovery parent READY is absent or changed")
+    receipt = _runtime_json(ready_path, "TTD recovery parent campaign")
+    reducer = _validate_reducer_snapshot(resolved, receipt)
+    advance = _runtime_mapping(receipt.get("advance"), "TTD recovery parent advance")
+    specimen_sha = str(
+        receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
+    ).lower()
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 9
+        or specimen_sha != LEGACY_CAMPAIGN_CARRY_SPECIMEN_SHA256
+        or receipt.get("counts") != TTD_CALL_CONTEXT_PARENT_COUNTS
+        or reducer.get("id") != TTD_CALL_CONTEXT_RECOVERY_PARENT_REDUCER_ID
+        or advance.get("kind") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("TTD recovery parent identity is unsupported")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=300,
+            expected_ready_sha256=TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256,
+            expected_reducer_id=TTD_CALL_CONTEXT_RECOVERY_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("TTD recovery parent frozen verifier timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "TTD recovery parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("TTD recovery parent rows disagree with READY")
+    _validate_campaign_relations(rows, receipt, campaign_root=resolved)
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION9R_REPLAY"
+    return verified
+
+
+def _verify_gen73_reseal_parent_campaign(root: Path) -> dict:
+    """Require exact canonical 10R and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / GEN73_RESEAL_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "Gen73 reseal canonical 10R parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Gen73 reseal parent path is not plain: {exc}") from exc
+    if resolved != expected:
+        raise CampaignError("Gen73 reseal parent is not exact canonical 10R")
+    ready_path = resolved / "campaign.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Gen73 reseal parent READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Gen73 reseal parent READY is not plain: {exc}") from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or coverage.sha256_of(plain_ready) != GEN73_RESEAL_PARENT_READY_SHA256
+    ):
+        raise CampaignError("Gen73 reseal parent READY is absent, linked, or changed")
+    receipt = _runtime_json(plain_ready, "Gen73 reseal canonical 10R parent")
+    reducer = _runtime_mapping(receipt.get("reducer"), "Gen73 reseal parent reducer")
+    advance = _runtime_mapping(receipt.get("advance"), "Gen73 reseal parent advance")
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 10
+        or receipt.get("counts") != GEN73_RESEAL_PARENT_COUNTS
+        or reducer.get("id") != GEN73_RESEAL_PARENT_REDUCER_ID
+        or advance.get("kind") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Gen73 reseal canonical 10R identity is unsupported")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=420,
+            expected_ready_sha256=GEN73_RESEAL_PARENT_READY_SHA256,
+            expected_reducer_id=GEN73_RESEAL_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("Gen73 reseal parent frozen verifier timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Gen73 reseal parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("Gen73 reseal parent rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION10R_REPLAY"
     return verified
 
 
@@ -3007,12 +3635,26 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
             kind = advance.get("kind")
             if kind == CAMPAIGN_RESEED_KIND:
                 parent_receipt = _verify_campaign_carry_source(parent_path)
+            elif kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
+                parent_receipt = _verify_atomic14_recovery_parent_campaign(
+                    parent_path
+                )
             elif kind == GHIDRA_PARTITION_ADVANCE_KIND:
                 parent_receipt = _verify_atomic14_parent_campaign(parent_path)
+            elif kind == GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND:
+                parent_receipt = _verify_target_lock_recovery_parent_campaign(
+                    parent_path
+                )
             elif kind == GHIDRA_SEMANTIC_ADVANCE_KIND:
                 parent_receipt = _verify_target_lock_semantic_parent_campaign(
                     parent_path
                 )
+            elif kind == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND:
+                parent_receipt = _verify_ttd_call_context_recovery_parent_campaign(
+                    parent_path
+                )
+            elif kind == GEN73_RESEAL_RECOVERY_ADVANCE_KIND:
+                parent_receipt = _verify_gen73_reseal_parent_campaign(parent_path)
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -3087,6 +3729,48 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
                 )
+            elif kind == GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND:
+                if advance.get("schema") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "Ghidra semantic recovery campaign advance schema is unsupported"
+                    )
+                live_spec = _runtime_mapping(
+                    advance.get("liveReady"),
+                    "Ghidra semantic recovery live READY",
+                )
+                live_ready_path = _resolve_repo_or_absolute(
+                    live_spec.get("path"), "Ghidra semantic recovery live READY"
+                )
+                _require_file_stamp(
+                    live_ready_path,
+                    live_spec,
+                    "Ghidra semantic recovery live READY",
+                )
+                owner_recovery = _runtime_mapping(
+                    advance.get("ownerRecovery"),
+                    "Ghidra semantic recovery owner recovery",
+                )
+                owner_recovery_ready = _runtime_mapping(
+                    owner_recovery.get("ready"),
+                    "Ghidra semantic recovery owner recovery READY",
+                )
+                owner_recovery_path = _resolve_repo_or_absolute(
+                    owner_recovery_ready.get("path"),
+                    "Ghidra semantic recovery owner recovery READY",
+                )
+                _require_file_stamp(
+                    owner_recovery_path,
+                    owner_recovery_ready,
+                    "Ghidra semantic recovery owner recovery READY",
+                )
+                advance_ghidra_semantic_promotion_recovery(
+                    parent_path,
+                    live_ready_path,
+                    owner_recovery_path,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
             elif kind == GHIDRA_SEMANTIC_ADVANCE_KIND:
                 if advance.get("schema") != GHIDRA_SEMANTIC_ADVANCE_SCHEMA:
                     raise CampaignError(
@@ -3153,8 +3837,9 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
                 )
-            elif kind == GHIDRA_PARTITION_ADVANCE_KIND:
-                if advance.get("schema") != GHIDRA_PARTITION_ADVANCE_SCHEMA:
+            elif kind in GHIDRA_PARTITION_ADVANCE_KINDS:
+                expected_schema = GHIDRA_PARTITION_ADVANCE_IDENTITIES[kind]
+                if advance.get("schema") != expected_schema:
                     raise CampaignError(
                         "Ghidra exact-partition campaign advance schema is unsupported"
                     )
@@ -3196,6 +3881,48 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     artifact_paths["targets"],
                     artifact_paths["padding"],
                     artifact_paths["parityExport"],
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                    _proof_profile=(
+                        "post-loss-rederived-v2"
+                        if kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+                        else "historical"
+                    ),
+                    _advance_kind=kind,
+                    _advance_schema=expected_schema,
+                )
+            elif kind == GEN73_RESEAL_RECOVERY_ADVANCE_KIND:
+                if advance.get("schema") != GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA:
+                    raise CampaignError("Gen73 reseal advance schema is unsupported")
+                closure_spec = _runtime_mapping(
+                    advance.get("closure"), "Gen73 reseal closure"
+                )
+                closure_root = _resolve_repo_or_absolute(
+                    closure_spec.get("root"), "Gen73 reseal closure root"
+                )
+                advance_gen73_reseal_recovery(
+                    parent_path,
+                    closure_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND:
+                if advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "TTD recovery call-context campaign advance schema is unsupported"
+                    )
+                evidence_spec = _runtime_mapping(
+                    advance.get("evidence"), "TTD recovery call-context evidence"
+                )
+                evidence_root = _resolve_repo_or_absolute(
+                    evidence_spec.get("root"),
+                    "TTD recovery call-context evidence root",
+                )
+                advance_ttd_call_context_observation_recovery(
+                    parent_path,
+                    evidence_root,
                     replay,
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
@@ -3294,8 +4021,12 @@ def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
             not old
             or (
                 len(grouped) > 1
-                and {row.get("kind") for row in grouped}
-                != {GHIDRA_PARTITION_ADVANCE_KIND}
+                and not (
+                    len({row.get("kind") for row in grouped}) == 1
+                    and {row.get("kind") for row in grouped}.issubset(
+                        GHIDRA_PARTITION_ADVANCE_KINDS
+                    )
+                )
             )
             for old, grouped in grouped_old.items()
         ):
@@ -3326,6 +4057,7 @@ def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
             "supersessions": supersessions,
         },
         receipt,
+        campaign_root=Path(os.path.abspath(campaign)),
     )
     question_by_id = {row["questionId"]: row for row in questions}
     for contract in contracts:
@@ -7573,6 +8305,313 @@ def _semantic_stamped_file(
     }
 
 
+def _target_lock_historical_owner_stamp(value: object) -> dict[str, object]:
+    """Validate the live receipt's old owner identity without repinning current source."""
+
+    stamp = _runtime_mapping(value, "semantic historical owner stamp")
+    expected_path = str(
+        Path(os.path.abspath(REPO_ROOT / TARGET_LOCK_HISTORICAL_OWNER_RELATIVE))
+    )
+    if set(stamp) != {"path", "bytes", "sha256"}:
+        raise CampaignError("semantic historical owner stamp shape differs")
+    raw_path = stamp.get("path")
+    if (
+        not isinstance(raw_path, str)
+        or str(Path(os.path.abspath(raw_path))) != expected_path
+    ):
+        raise CampaignError("semantic historical owner path differs")
+    if (
+        stamp.get("bytes") != TARGET_LOCK_HISTORICAL_OWNER_BYTES
+        or stamp.get("sha256") != TARGET_LOCK_HISTORICAL_OWNER_SHA256
+    ):
+        raise CampaignError("semantic historical owner identity differs")
+    return {
+        "path": expected_path,
+        "bytes": TARGET_LOCK_HISTORICAL_OWNER_BYTES,
+        "sha256": TARGET_LOCK_HISTORICAL_OWNER_SHA256,
+    }
+
+
+def _validate_target_lock_owner_recovery(
+    ready_path: Path,
+) -> dict[str, object]:
+    """Reproduce the exact Git-blob recovery for the historical semantic owner."""
+
+    expected_ready = Path(
+        os.path.abspath(REPO_ROOT / TARGET_LOCK_OWNER_RECOVERY_READY_RELATIVE)
+    )
+    ready_path = Path(os.path.abspath(ready_path))
+    if ready_path != expected_ready:
+        raise CampaignError("target-lock owner recovery READY path differs")
+    try:
+        ready_path = ghidra_backup.resolve_plain_path(
+            ready_path, "target-lock owner recovery READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"target-lock owner recovery READY is not plain: {exc}") from exc
+    if ready_path.stat().st_nlink != 1:
+        raise CampaignError("target-lock owner recovery READY has multiple hard links")
+    ready_stamp = _atomic14_stamp(
+        ready_path,
+        TARGET_LOCK_OWNER_RECOVERY_READY_SHA256,
+        "target-lock owner recovery READY",
+    )
+    if ready_stamp.get("bytes") != 1212:
+        raise CampaignError("target-lock owner recovery READY length differs")
+    receipt = _runtime_json(ready_path, "target-lock owner recovery READY")
+    _parse_utc_timestamp(
+        str(receipt.get("completedAtUtc", "")), "target-lock owner recovery completion"
+    )
+    expected_git = {
+        "commit": TARGET_LOCK_OWNER_GIT_COMMIT,
+        "blob": TARGET_LOCK_OWNER_GIT_BLOB,
+        "sourcePath": str(TARGET_LOCK_HISTORICAL_OWNER_RELATIVE).replace("\\", "/"),
+        "treeEntry": (
+            f"100644 blob {TARGET_LOCK_OWNER_GIT_BLOB}\t"
+            f"{str(TARGET_LOCK_HISTORICAL_OWNER_RELATIVE).replace('\\', '/')}"
+        ),
+    }
+    expected_output = {
+        "path": str(TARGET_LOCK_OWNER_RECOVERED_RELATIVE).replace("\\", "/"),
+        "bytes": TARGET_LOCK_HISTORICAL_OWNER_BYTES,
+        "sha256": TARGET_LOCK_HISTORICAL_OWNER_SHA256,
+    }
+    expected_author = {
+        "path": str(TARGET_LOCK_OWNER_RECOVERY_AUTHOR_RELATIVE).replace("\\", "/"),
+        "bytes": TARGET_LOCK_OWNER_RECOVERY_AUTHOR_BYTES,
+        "sha256": TARGET_LOCK_OWNER_RECOVERY_AUTHOR_SHA256,
+    }
+    if (
+        set(receipt)
+        != {
+            "schema",
+            "status",
+            "completedAtUtc",
+            "claim",
+            "git",
+            "output",
+            "author",
+            "limitations",
+        }
+        or receipt.get("schema") != "bea.re.git-blob-recovery.v1"
+        or receipt.get("status") != "READY"
+        or receipt.get("claim")
+        != "BYTE_EXACT_HISTORICAL_OWNER_RECOVERED_FROM_GIT_BLOB"
+        or receipt.get("git") != expected_git
+        or receipt.get("output") != expected_output
+        or receipt.get("author") != expected_author
+        or receipt.get("limitations")
+        != [
+            "This restores one historical owner source identity; it does not replace current tracked source.",
+            "The recovered source is evidence for the post-loss campaign bridge, not a live Ghidra mutation.",
+        ]
+    ):
+        raise CampaignError("target-lock owner recovery receipt differs")
+
+    author_path = Path(
+        os.path.abspath(REPO_ROOT / TARGET_LOCK_OWNER_RECOVERY_AUTHOR_RELATIVE)
+    )
+    recovered_path = Path(
+        os.path.abspath(REPO_ROOT / TARGET_LOCK_OWNER_RECOVERED_RELATIVE)
+    )
+    current_path = Path(
+        os.path.abspath(REPO_ROOT / TARGET_LOCK_HISTORICAL_OWNER_RELATIVE)
+    )
+    files = [
+        ("owner recovery READY", ready_path),
+        ("owner recovery author", author_path),
+        ("recovered historical owner", recovered_path),
+        ("current tracked owner", current_path),
+    ]
+    actual_stamps: dict[str, dict[str, object]] = {}
+    for label, path in files[1:]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(path, label, strict=True)
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"{label} is not one plain file: {exc}") from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(f"{label} has multiple hard links")
+        actual_stamps[label] = {**coverage.file_stamp(plain), "path": str(plain)}
+    if (
+        actual_stamps["owner recovery author"]["bytes"]
+        != TARGET_LOCK_OWNER_RECOVERY_AUTHOR_BYTES
+        or actual_stamps["owner recovery author"]["sha256"]
+        != TARGET_LOCK_OWNER_RECOVERY_AUTHOR_SHA256
+        or actual_stamps["recovered historical owner"]["bytes"]
+        != TARGET_LOCK_HISTORICAL_OWNER_BYTES
+        or actual_stamps["recovered historical owner"]["sha256"]
+        != TARGET_LOCK_HISTORICAL_OWNER_SHA256
+    ):
+        raise CampaignError("target-lock owner recovery files differ")
+    _require_disjoint_evidence_files(files, "target-lock owner recovery")
+
+    source_path = str(TARGET_LOCK_HISTORICAL_OWNER_RELATIVE).replace("\\", "/")
+    tree = subprocess.run(
+        ["git", "ls-tree", TARGET_LOCK_OWNER_GIT_COMMIT, "--", source_path],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    blob = subprocess.run(
+        ["git", "cat-file", "blob", TARGET_LOCK_OWNER_GIT_BLOB],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if (
+        tree.returncode != 0
+        or tree.stdout.strip() != expected_git["treeEntry"]
+        or blob.returncode != 0
+        or len(blob.stdout) != TARGET_LOCK_HISTORICAL_OWNER_BYTES
+        or hashlib.sha256(blob.stdout).hexdigest()
+        != TARGET_LOCK_HISTORICAL_OWNER_SHA256
+        or recovered_path.read_bytes() != blob.stdout
+    ):
+        raise CampaignError("target-lock historical owner does not reproduce from Git")
+    return {
+        "schema": "bea.re.git-blob-recovery.v1",
+        "claim": "BYTE_EXACT_HISTORICAL_OWNER_RECOVERED_FROM_GIT_BLOB",
+        "ready": ready_stamp,
+        "git": expected_git,
+        "author": actual_stamps["owner recovery author"],
+        "recoveredOwner": actual_stamps["recovered historical owner"],
+    }
+
+
+def _validate_target_lock_plan_evidence_recovery(
+    plan_path: Path,
+    evidence_path: Path,
+) -> dict[str, object]:
+    """Bind restored plan/evidence bytes to the surviving sealed-stage mirror."""
+
+    expected_plan = (REPO_ROOT / TARGET_LOCK_PLAN_RELATIVE).resolve()
+    expected_evidence = (REPO_ROOT / TARGET_LOCK_EVIDENCE_RELATIVE).resolve()
+    if plan_path.resolve() != expected_plan or evidence_path.resolve() != expected_evidence:
+        raise CampaignError("target-lock restored plan/evidence paths differ")
+    note_path = REPO_ROOT / TARGET_LOCK_PLAN_EVIDENCE_RECOVERY_NOTE_RELATIVE
+    ready_path = REPO_ROOT / TARGET_LOCK_SEALED_REHEARSAL_RELATIVE / "rehearsal.ready.json"
+    result_path = REPO_ROOT / TARGET_LOCK_SEALED_REHEARSAL_RELATIVE / "rehearsal.result.json"
+    mirror_plan = REPO_ROOT / TARGET_LOCK_SEALED_MIRROR_ROOT_RELATIVE / plan_path.name
+    mirror_evidence = (
+        REPO_ROOT / TARGET_LOCK_SEALED_MIRROR_ROOT_RELATIVE / evidence_path.name
+    )
+    expected_files = [
+        ("restored plan", plan_path, TARGET_LOCK_PLAN_BYTES, TARGET_LOCK_PLAN_SHA256),
+        (
+            "restored evidence",
+            evidence_path,
+            TARGET_LOCK_EVIDENCE_BYTES,
+            TARGET_LOCK_EVIDENCE_SHA256,
+        ),
+        ("sealed mirror plan", mirror_plan, TARGET_LOCK_PLAN_BYTES, TARGET_LOCK_PLAN_SHA256),
+        (
+            "sealed mirror evidence",
+            mirror_evidence,
+            TARGET_LOCK_EVIDENCE_BYTES,
+            TARGET_LOCK_EVIDENCE_SHA256,
+        ),
+        (
+            "recovery note",
+            note_path,
+            415,
+            TARGET_LOCK_PLAN_EVIDENCE_RECOVERY_NOTE_SHA256,
+        ),
+        (
+            "sealed rehearsal READY",
+            ready_path,
+            255,
+            TARGET_LOCK_SEALED_REHEARSAL_READY_SHA256,
+        ),
+        (
+            "sealed rehearsal result",
+            result_path,
+            203927,
+            TARGET_LOCK_SEALED_REHEARSAL_RESULT_SHA256,
+        ),
+    ]
+    stamps: dict[str, dict[str, object]] = {}
+    plain_files: list[tuple[str, Path]] = []
+    for label, raw_path, expected_bytes, expected_sha256 in expected_files:
+        raw_path = Path(os.path.abspath(raw_path))
+        try:
+            path = ghidra_backup.resolve_plain_path(raw_path, label, strict=True)
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"target-lock {label} is not plain: {exc}") from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(f"target-lock {label} has multiple hard links")
+        stamp = {**coverage.file_stamp(path), "path": str(path)}
+        if stamp["bytes"] != expected_bytes or stamp["sha256"] != expected_sha256:
+            raise CampaignError(f"target-lock {label} bytes differ")
+        stamps[label] = stamp
+        plain_files.append((label, path))
+    _require_disjoint_evidence_files(plain_files, "target-lock plan/evidence recovery")
+    if plan_path.read_bytes() != mirror_plan.read_bytes() or evidence_path.read_bytes() != mirror_evidence.read_bytes():
+        raise CampaignError("target-lock restored plan/evidence differ from sealed mirrors")
+
+    ready = _runtime_json(ready_path, "target-lock sealed rehearsal READY")
+    result_spec = _runtime_mapping(
+        ready.get("result"), "target-lock sealed rehearsal result stamp"
+    )
+    if (
+        ready.get("schema")
+        != "bea.re.ghidra-target-lock-sealed-stage-rehearsal-ready.v1"
+        or ready.get("status") != "READY"
+        or result_spec
+        != {
+            "bytes": 203927,
+            "path": "rehearsal.result.json",
+            "sha256": TARGET_LOCK_SEALED_REHEARSAL_RESULT_SHA256,
+        }
+    ):
+        raise CampaignError("target-lock sealed rehearsal READY differs")
+    result = _runtime_json(result_path, "target-lock sealed rehearsal result")
+    bundle = _runtime_mapping(
+        result.get("executionBundle"), "target-lock sealed execution bundle"
+    )
+    bundle_plan = _runtime_mapping(bundle.get("plan"), "target-lock sealed plan")
+    bundle_evidence = _runtime_mapping(
+        bundle.get("evidence"), "target-lock sealed evidence"
+    )
+    if (
+        result.get("schema")
+        != "bea.re.ghidra-target-lock-sealed-stage-rehearsal.v1"
+        or result.get("status") != "SURVIVED"
+        or bundle.get("schema") != "bea.re.ghidra-target-lock-execution-bundle.v1"
+        or bundle.get("fileCount") != 30
+        or bundle.get("fileSetSha256")
+        != "937ebcd2454b9b4bd4db2b6a74e218bb3503fa4211a833b41db5be87e7071592"
+        or bundle_plan.get("bytes") != TARGET_LOCK_PLAN_BYTES
+        or bundle_plan.get("sha256") != TARGET_LOCK_PLAN_SHA256
+        or Path(str(bundle_plan.get("path", ""))).resolve() != mirror_plan.resolve()
+        or bundle_evidence.get("bytes") != TARGET_LOCK_EVIDENCE_BYTES
+        or bundle_evidence.get("sha256") != TARGET_LOCK_EVIDENCE_SHA256
+        or Path(str(bundle_evidence.get("path", ""))).resolve()
+        != mirror_evidence.resolve()
+    ):
+        raise CampaignError("target-lock sealed execution-bundle binding differs")
+    return {
+        "schema": "bea.re.target-lock-plan-evidence-recovery.v1",
+        "disposition": "BYTE_EXACT_RESTORED_FROM_SURVIVING_SEALED_STAGE_MIRROR",
+        "note": stamps["recovery note"],
+        "sealedRehearsalReady": stamps["sealed rehearsal READY"],
+        "sealedRehearsalResult": stamps["sealed rehearsal result"],
+        "plan": {
+            "restored": stamps["restored plan"],
+            "mirror": stamps["sealed mirror plan"],
+        },
+        "evidence": {
+            "restored": stamps["restored evidence"],
+            "mirror": stamps["sealed mirror evidence"],
+        },
+        "limitations": [
+            "Only the plan/evidence restoration claim is admitted from the recovery note.",
+            "The note's other loss classifications are historical and must be adjudicated separately.",
+            "This recovery binding does not rerun the target-lock proof or mutate Ghidra.",
+        ],
+    }
+
+
 def _semantic_observation_rows(
     observation: object,
     *,
@@ -7655,15 +8694,24 @@ def validate_ghidra_semantic_promotion(
     live_ready_path: Path,
     *,
     _verified_campaign_receipt: dict | None = None,
+    _owner_recovery_ready: Path | None = None,
 ) -> dict[str, object]:
     """Reproduce one same-range semantic Ghidra promotion from frozen evidence."""
 
     base_receipt = (
         _verified_campaign_receipt
         if _verified_campaign_receipt is not None
-        else _verify_target_lock_semantic_parent_campaign(campaign)
+        else (
+            _verify_target_lock_recovery_parent_campaign(campaign)
+            if _owner_recovery_ready is not None
+            else _verify_target_lock_semantic_parent_campaign(campaign)
+        )
     )
-    live_ready_path = live_ready_path.resolve()
+    live_ready_path = Path(os.path.abspath(live_ready_path))
+    if _owner_recovery_ready is not None and live_ready_path != Path(
+        os.path.abspath(REPO_ROOT / TARGET_LOCK_SEMANTIC_LIVE_READY_RELATIVE)
+    ):
+        raise CampaignError("semantic recovery live READY path differs")
     try:
         live_ready_path = ghidra_backup.resolve_plain_path(
             live_ready_path, "semantic live READY", strict=True
@@ -7676,6 +8724,11 @@ def validate_ghidra_semantic_promotion(
         **coverage.file_stamp(live_ready_path),
         "path": str(live_ready_path),
     }
+    if _owner_recovery_ready is not None and (
+        live_stamp.get("bytes") != TARGET_LOCK_SEMANTIC_LIVE_READY_BYTES
+        or live_stamp.get("sha256") != TARGET_LOCK_SEMANTIC_LIVE_READY_SHA256
+    ):
+        raise CampaignError("semantic recovery live READY identity differs")
     live = _promotion_json(live_ready_path, "semantic live READY")
     if (
         live.get("schema") != GHIDRA_SEMANTIC_LIVE_READY_SCHEMA
@@ -7705,9 +8758,22 @@ def validate_ghidra_semantic_promotion(
     process_path, process_stamp = _semantic_stamped_file(
         live.get("process"), "semantic live apply process", relative_root=live_root
     )
-    owner_path, owner_stamp = _semantic_stamped_file(
-        live.get("owner"), "semantic live owner"
-    )
+    owner_recovery: dict[str, object] | None = None
+    if _owner_recovery_ready is None:
+        owner_path, owner_stamp = _semantic_stamped_file(
+            live.get("owner"), "semantic live owner"
+        )
+    else:
+        owner_stamp = _target_lock_historical_owner_stamp(live.get("owner"))
+        owner_recovery = _validate_target_lock_owner_recovery(
+            _owner_recovery_ready.resolve()
+        )
+        owner_path = Path(
+            _runtime_mapping(
+                owner_recovery.get("recoveredOwner"),
+                "semantic recovered owner stamp",
+            )["path"]
+        ).resolve()
     _require_disjoint_evidence_files(
         [
             ("live READY", live_ready_path),
@@ -7779,6 +8845,11 @@ def validate_ghidra_semantic_promotion(
     )
     evidence_path, evidence_stamp = _semantic_stamped_file(
         authority.get("evidence"), "semantic evidence"
+    )
+    plan_evidence_recovery = (
+        _validate_target_lock_plan_evidence_recovery(plan_path, evidence_path)
+        if _owner_recovery_ready is not None
+        else None
     )
     tool_path, tool_stamp = _semantic_stamped_file(
         authority.get("semanticTool"), "semantic apply tool"
@@ -8042,7 +9113,7 @@ def validate_ghidra_semantic_promotion(
             }
         )
 
-    return {
+    result: dict[str, object] = {
         "baseReceipt": base_receipt,
         "liveReady": live_stamp,
         "attempt": attempt_stamp,
@@ -8062,6 +9133,11 @@ def validate_ghidra_semantic_promotion(
         "postProjectFileSetSha256": post_fileset,
         "rows": semantic_rows,
     }
+    if owner_recovery is not None:
+        result["ownerRecovery"] = owner_recovery
+    if plan_evidence_recovery is not None:
+        result["planEvidenceRecovery"] = plan_evidence_recovery
+    return result
 
 
 def advance_ghidra_semantic_promotion(
@@ -8071,11 +9147,30 @@ def advance_ghidra_semantic_promotion(
     *,
     _self_check: bool = True,
     _verified_parent_receipt: dict | None = None,
+    _owner_recovery_ready: Path | None = None,
+    _advance_kind: str = GHIDRA_SEMANTIC_ADVANCE_KIND,
+    _advance_schema: str = GHIDRA_SEMANTIC_ADVANCE_SCHEMA,
 ) -> dict:
+    recovery_mode = _advance_kind == GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+    expected_schema = (
+        GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA
+        if recovery_mode
+        else GHIDRA_SEMANTIC_ADVANCE_SCHEMA
+    )
+    if (
+        _advance_schema != expected_schema
+        or (_advance_kind not in {GHIDRA_SEMANTIC_ADVANCE_KIND, GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND})
+        or recovery_mode != (_owner_recovery_ready is not None)
+    ):
+        raise CampaignError("Ghidra semantic advance profile is inconsistent")
     base_receipt = (
         _verified_parent_receipt
         if _verified_parent_receipt is not None
-        else _verify_target_lock_semantic_parent_campaign(campaign)
+        else (
+            _verify_target_lock_recovery_parent_campaign(campaign)
+            if recovery_mode
+            else _verify_target_lock_semantic_parent_campaign(campaign)
+        )
     )
     if out.exists():
         raise CampaignError(f"refusing existing advanced-campaign destination: {out}")
@@ -8083,6 +9178,7 @@ def advance_ghidra_semantic_promotion(
         campaign,
         live_ready_path,
         _verified_campaign_receipt=base_receipt,
+        _owner_recovery_ready=_owner_recovery_ready,
     )
     functions = _read_tsv(campaign / "campaign-functions.tsv")
     residuals = _read_tsv(campaign / "campaign-residuals.tsv")
@@ -8161,8 +9257,8 @@ def advance_ghidra_semantic_promotion(
             "supersessions": len(supersessions),
         }
         advance = {
-            "kind": GHIDRA_SEMANTIC_ADVANCE_KIND,
-            "schema": GHIDRA_SEMANTIC_ADVANCE_SCHEMA,
+            "kind": _advance_kind,
+            "schema": _advance_schema,
             "promotionId": promotion_id,
             "verdict": "SURVIVED",
             "count": len(validated["rows"]),
@@ -8182,6 +9278,36 @@ def advance_ghidra_semantic_promotion(
             "questionsClosed": 0,
             "rebuildParityProved": False,
         }
+        if recovery_mode:
+            partition_context = _partition_relation_context(base_receipt)
+            if (
+                partition_context is None
+                or partition_context.get("advanceKind")
+                != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+            ):
+                raise CampaignError("Ghidra semantic recovery parent lacks 8R partition context")
+            advance["branchId"] = GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+            advance["ownerRecovery"] = validated["ownerRecovery"]
+            advance["planEvidenceRecovery"] = validated["planEvidenceRecovery"]
+            advance["semanticEvidenceMode"] = (
+                "HISTORICAL_EVIDENCE_REVALIDATED_NOT_RERUN"
+            )
+            advance["ownerRecoveryUse"] = "BYTE_IDENTITY_ONLY_NOT_EXECUTED"
+            advance["historicalProjection"] = (
+                _semantic_recovery_historical_projection(
+                    {
+                        "functions": functions,
+                        "residuals": residuals,
+                        "questions": questions,
+                        "scenarios": scenarios,
+                        "levers": levers,
+                        "contracts": contracts,
+                        "adjudications": adjudications,
+                        "supersessions": supersessions,
+                    },
+                    partition_context,
+                )
+            )
         receipt = {
             "schema": SCHEMA,
             "reducer": reducer,
@@ -8195,12 +9321,16 @@ def advance_ghidra_semantic_promotion(
             "advance": advance,
             "counts": counts,
             "questionTypes": dict(Counter(row["questionType"] for row in questions)),
-            "policies": [
-                "Only the exact five same-range Ghidra names, signatures, comments, and tags crossed the live semantic boundary.",
-                "No function/residual entity key changed, so this advance creates no supersession.",
-                "Campaign contracts remain OPEN/C0_OPAQUE; no question or rebuild-parity claim is closed by metadata alone.",
-                "The live POST project, independent readback, post backup, and restore drill agree exactly.",
-            ],
+            "policies": (
+                _semantic_recovery_policies()
+                if recovery_mode
+                else [
+                    "Only the exact five same-range Ghidra names, signatures, comments, and tags crossed the live semantic boundary.",
+                    "No function/residual entity key changed, so this advance creates no supersession.",
+                    "Campaign contracts remain OPEN/C0_OPAQUE; no question or rebuild-parity claim is closed by metadata alone.",
+                    "The live POST project, independent readback, post backup, and restore drill agree exactly.",
+                ]
+            ),
             "outputs": {
                 name: {**coverage.file_stamp(stage / name), "path": name}
                 for name in OUTPUTS
@@ -8216,6 +9346,32 @@ def advance_ghidra_semantic_promotion(
     except Exception:
         shutil.rmtree(stage, ignore_errors=True)
         raise
+
+
+def advance_ghidra_semantic_promotion_recovery(
+    campaign: Path,
+    live_ready_path: Path,
+    owner_recovery_ready: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    parent_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_target_lock_recovery_parent_campaign(campaign)
+    )
+    return advance_ghidra_semantic_promotion(
+        campaign,
+        live_ready_path,
+        out,
+        _self_check=_self_check,
+        _verified_parent_receipt=parent_receipt,
+        _owner_recovery_ready=owner_recovery_ready,
+        _advance_kind=GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND,
+        _advance_schema=GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA,
+    )
 
 
 def _global_init515_observation_evidence_files(
@@ -10178,6 +11334,263 @@ def _atomic14_relative_stamp(
     return path, stamp
 
 
+def _atomic14_rederived_formal_proof(formal_ready: Path) -> dict:
+    """Validate the new proof without substituting the lost historical READY."""
+
+    expected_ready = (REPO_ROOT / ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE).resolve()
+    if formal_ready.resolve() != expected_ready:
+        raise CampaignError("Atomic14 recovery proof is not the reviewed v2 READY")
+    _atomic14_stamp(
+        formal_ready,
+        ATOMIC14_REDERIVED_FORMAL_READY_SHA256,
+        "rederived formal proof READY",
+    )
+    proof = _runtime_json(formal_ready, "Atomic14 rederived formal proof READY")
+    historical = _runtime_mapping(
+        proof.get("historicalFormalReady"),
+        "Atomic14 rederived historical formal disposition",
+    )
+    results = _runtime_mapping(
+        proof.get("results"), "Atomic14 rederived formal results"
+    )
+    expected_results = {
+        "replicationCount": 2,
+        "adverseControlCount": 2,
+        "functionsBefore": 8110,
+        "functionsAfter": 8124,
+        "addedFunctions": 14,
+        "functionBytes": ATOMIC14_FUNCTION_BYTES,
+        "paddingBytes": ATOMIC14_PADDING_BYTES,
+        "survivingLivePostReferencesExact": True,
+        "deepLateTargetRollbackExact": True,
+        "postInnerEndRollbackExact": True,
+        "historicalIdentitySubstituted": False,
+    }
+    if (
+        proof.get("schema") != ATOMIC14_REDERIVED_FORMAL_SCHEMA
+        or proof.get("verdict") != "PASS"
+        or any(results.get(key) != value for key, value in expected_results.items())
+        or historical.get("bytes") != 23028
+        or historical.get("sha256") != ATOMIC14_FORMAL_READY_SHA256
+        or historical.get("disposition")
+        != "LOST_HISTORICAL_IDENTITY_NOT_SUBSTITUTED"
+    ):
+        raise CampaignError("Atomic14 rederived formal claim/disposition differs")
+
+    inputs = _runtime_mapping(proof.get("inputs"), "Atomic14 rederived inputs")
+    expected_input_hashes = {
+        "recoveryReady": "56da14306d4e6e70ce9853446b80861b8971f013a2af4cf37ce6de06cad664bf",
+        "generation8Ready": TARGET_LOCK_SEMANTIC_PARENT_READY_SHA256,
+        "livePromotionReady": ATOMIC14_LIVE_READY_SHA256,
+        "combinedManifest": ATOMIC14_TARGETS_SHA256,
+        "paddingManifest": ATOMIC14_PADDING_SHA256,
+    }
+    for role, expected_hash in expected_input_hashes.items():
+        stamp = _runtime_mapping(
+            inputs.get(role), f"Atomic14 rederived input {role}"
+        )
+        path = _resolve_repo_or_absolute(
+            stamp.get("path"), f"Atomic14 rederived input {role} path"
+        )
+        _require_file_stamp(path, stamp, f"Atomic14 rederived input {role}")
+        if stamp.get("sha256") != expected_hash:
+            raise CampaignError(f"Atomic14 rederived input {role} differs")
+
+    tools = _runtime_mapping(proof.get("tools"), "Atomic14 rederived tools")
+    author_stamp = _runtime_mapping(
+        tools.get("author"), "Atomic14 rederived proof author"
+    )
+    author = _resolve_repo_or_absolute(
+        author_stamp.get("path"), "Atomic14 rederived proof author path"
+    )
+    expected_author = (REPO_ROOT / ATOMIC14_REDERIVED_FORMAL_AUTHOR_RELATIVE).resolve()
+    _require_file_stamp(author, author_stamp, "Atomic14 rederived proof author")
+    if (
+        author.resolve() != expected_author
+        or author_stamp.get("sha256") != ATOMIC14_REDERIVED_FORMAL_AUTHOR_SHA256
+    ):
+        raise CampaignError("Atomic14 rederived proof author identity differs")
+
+    environment = os.environ.copy()
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    for mode, marker in (
+        ("verify", "VERIFIED Atomic14 rederived formal proof PASS"),
+        (
+            "selftest",
+            "SELFTEST_OK seven targeted receipt-tampering counterexamples rejected",
+        ),
+    ):
+        try:
+            completed = subprocess.run(
+                [sys.executable, "-B", str(author), mode],
+                cwd=REPO_ROOT,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise CampaignError(
+                f"Atomic14 rederived proof {mode} timed out"
+            ) from exc
+        if completed.returncode != 0 or marker not in completed.stdout:
+            raise CampaignError(
+                f"Atomic14 rederived proof {mode} failed: "
+                f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+            )
+
+    lane_projects: list[Path] = []
+    lane_stamps: list[Path] = []
+
+    def collect_stamps(value: object) -> None:
+        if isinstance(value, dict):
+            if {"path", "bytes", "sha256"}.issubset(value):
+                path = _resolve_repo_or_absolute(
+                    value.get("path"), "Atomic14 rederived lane artifact path"
+                )
+                _require_file_stamp(
+                    path, value, "Atomic14 rederived lane artifact"
+                )
+                lane_stamps.append(path)
+            for child in value.values():
+                collect_stamps(child)
+        elif isinstance(value, list):
+            for child in value:
+                collect_stamps(child)
+
+    replicas = _runtime_list(proof.get("replicas"), "Atomic14 rederived replicas")
+    adverse = _runtime_list(
+        proof.get("adverseControls"), "Atomic14 rederived adverse controls"
+    )
+    for lane in replicas + adverse:
+        lane_map = _runtime_mapping(lane, "Atomic14 rederived lane")
+        lane_id = lane_map.get("id")
+        raw_project = lane_map.get("project")
+        if not isinstance(lane_id, str) or not isinstance(raw_project, str):
+            raise CampaignError("Atomic14 rederived lane identity is malformed")
+        lexical_project = Path(raw_project)
+        if not lexical_project.is_absolute():
+            lexical_project = REPO_ROOT / lexical_project
+        lexical_project = Path(os.path.abspath(lexical_project))
+        expected_project = (
+            REPO_ROOT
+            / "local-lab/atomic14-rederived-formal-proof-20260808-v1"
+            / "proof-v2/projects"
+            / lane_id
+        )
+        if lexical_project != Path(os.path.abspath(expected_project)):
+            raise CampaignError("Atomic14 rederived lane project path differs")
+        try:
+            project = ghidra_backup.resolve_plain_path(
+                lexical_project, "Atomic14 rederived lane project", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Atomic14 rederived lane project is not plain: {exc}"
+            ) from exc
+        if not project.is_dir():
+            raise CampaignError("Atomic14 rederived lane project is absent")
+        lane_projects.append(project)
+        collect_stamps(lane_map)
+    if len(lane_projects) != 4:
+        raise CampaignError("Atomic14 rederived proof lane count differs")
+
+    source_manifest = _runtime_mapping(
+        inputs.get("sourceProjectManifest"),
+        "Atomic14 rederived source project manifest",
+    )
+    raw_source_manifest = source_manifest.get("path")
+    if not isinstance(raw_source_manifest, str):
+        raise CampaignError("Atomic14 rederived source project manifest path differs")
+    source_manifest_path = Path(raw_source_manifest)
+    if not source_manifest_path.is_absolute():
+        source_manifest_path = REPO_ROOT / source_manifest_path
+    try:
+        source_manifest_path = ghidra_backup.resolve_plain_path(
+            source_manifest_path,
+            "Atomic14 rederived source project manifest",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Atomic14 rederived source project manifest is not plain: {exc}"
+        ) from exc
+    source_root = source_manifest_path.parent
+    source_manifest_json = _runtime_json(
+        source_manifest_path, "Atomic14 rederived source project manifest"
+    )
+    source_files = _runtime_list(
+        _runtime_mapping(
+            source_manifest_json.get("source"),
+            "Atomic14 rederived source fileset",
+        ).get("files"),
+        "Atomic14 rederived source project files",
+    )
+    if len(source_files) != 19:
+        raise CampaignError("Atomic14 rederived source project file count differs")
+
+    all_project_roots = [source_root, *lane_projects]
+    plain_filesets: list[list[Path]] = []
+    for root in all_project_roots:
+        try:
+            plain_root = ghidra_backup.resolve_plain_path(
+                root, "Atomic14 rederived project root", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Atomic14 rederived project root is not plain: {exc}"
+            ) from exc
+        try:
+            project_files = list(ghidra_backup.iter_project_paths(plain_root, "BEA"))
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Atomic14 rederived project files are not plain: {exc}"
+            ) from exc
+        if len(project_files) != 19:
+            raise CampaignError("Atomic14 rederived project file count differs")
+        for project_file in project_files:
+            try:
+                if project_file.stat().st_nlink != 1:
+                    raise CampaignError(
+                        "Atomic14 rederived project file has multiple hard links"
+                    )
+            except OSError as exc:
+                raise CampaignError(
+                    f"Atomic14 rederived project file identity failed: {exc}"
+                ) from exc
+        plain_filesets.append(project_files)
+    for index, left_files in enumerate(plain_filesets):
+        for right_files in plain_filesets[index + 1 :]:
+            for left in left_files:
+                for right in right_files:
+                    try:
+                        aliases = os.path.samefile(left, right)
+                    except OSError as exc:
+                        raise CampaignError(
+                            f"Atomic14 rederived project identity failed: {exc}"
+                        ) from exc
+                    if aliases:
+                        raise CampaignError(
+                            "Atomic14 rederived project descendant files alias"
+                        )
+
+    for index, left in enumerate(lane_projects):
+        if os.path.samefile(left, source_root):
+            raise CampaignError("Atomic14 rederived lane aliases its PRE source")
+        for right in lane_projects[index + 1 :]:
+            if os.path.samefile(left, right):
+                raise CampaignError("Atomic14 rederived proof lanes physically alias")
+    resolved_lane_stamps = [str(path.resolve()).casefold() for path in lane_stamps]
+    if len(resolved_lane_stamps) != len(set(resolved_lane_stamps)):
+        raise CampaignError("Atomic14 rederived proof repeats a lane artifact path")
+    for index, left in enumerate(lane_stamps):
+        for right in lane_stamps[index + 1 :]:
+            if os.path.samefile(left, right):
+                raise CampaignError("Atomic14 rederived proof lane artifacts hardlink")
+    return proof
+
+
 def _validate_atomic14_partition_inputs(
     campaign: Path,
     base_receipt: dict,
@@ -10187,7 +11600,12 @@ def _validate_atomic14_partition_inputs(
     targets_path: Path,
     padding_path: Path,
     parity_export_path: Path,
+    *,
+    proof_profile: str = "historical",
 ) -> dict[str, object]:
+    if proof_profile not in {"historical", "post-loss-rederived-v2"}:
+        raise CampaignError(f"unsupported Atomic14 proof profile: {proof_profile!r}")
+    recovery_profile = proof_profile == "post-loss-rederived-v2"
     parent_ready = _atomic14_stamp(
         campaign / "campaign.ready.json",
         ATOMIC14_PARENT_READY_SHA256,
@@ -10218,7 +11636,13 @@ def _validate_atomic14_partition_inputs(
         live_ready, ATOMIC14_LIVE_READY_SHA256, "live promotion READY"
     )
     formal_stamp = _atomic14_stamp(
-        formal_ready, ATOMIC14_FORMAL_READY_SHA256, "formal proof READY"
+        formal_ready,
+        (
+            ATOMIC14_REDERIVED_FORMAL_READY_SHA256
+            if recovery_profile
+            else ATOMIC14_FORMAL_READY_SHA256
+        ),
+        "rederived formal proof READY" if recovery_profile else "formal proof READY",
     )
     targets_stamp = _atomic14_stamp(
         targets_path, ATOMIC14_TARGETS_SHA256, "target manifest"
@@ -10232,21 +11656,32 @@ def _validate_atomic14_partition_inputs(
         "POST parity-export READY",
     )
 
-    formal = _runtime_json(formal_ready, "Atomic14 formal proof READY")
-    formal_inputs = _runtime_mapping(formal.get("inputs"), "Atomic14 formal inputs")
-    if (
-        formal.get("schema") != "bea.re.console-callback-atomic14-formal-proof.v2"
-        or formal.get("verdict") != "PASS"
-        or _runtime_mapping(
-            formal_inputs.get("combinedManifest"), "Atomic14 formal combined manifest"
-        ).get("sha256")
-        != targets_stamp["sha256"]
-        or _runtime_mapping(
-            formal_inputs.get("paddingManifest"), "Atomic14 formal padding manifest"
-        ).get("sha256")
-        != padding_stamp["sha256"]
-    ):
-        raise CampaignError("Atomic14 formal proof boundary differs")
+    if recovery_profile:
+        formal = _atomic14_rederived_formal_proof(formal_ready)
+        formal_inputs = _runtime_mapping(
+            formal.get("inputs"), "Atomic14 rederived formal inputs"
+        )
+    else:
+        formal = _runtime_json(formal_ready, "Atomic14 formal proof READY")
+        formal_inputs = _runtime_mapping(
+            formal.get("inputs"), "Atomic14 formal inputs"
+        )
+        if (
+            formal.get("schema")
+            != "bea.re.console-callback-atomic14-formal-proof.v2"
+            or formal.get("verdict") != "PASS"
+            or _runtime_mapping(
+                formal_inputs.get("combinedManifest"),
+                "Atomic14 formal combined manifest",
+            ).get("sha256")
+            != targets_stamp["sha256"]
+            or _runtime_mapping(
+                formal_inputs.get("paddingManifest"),
+                "Atomic14 formal padding manifest",
+            ).get("sha256")
+            != padding_stamp["sha256"]
+        ):
+            raise CampaignError("Atomic14 formal proof boundary differs")
 
     live = _runtime_json(live_ready, "Atomic14 live promotion READY")
     if (
@@ -10313,7 +11748,7 @@ def _validate_atomic14_partition_inputs(
         or _runtime_mapping(
             parity_export.get("formalReady"), "Atomic14 parity formal READY"
         ).get("sha256")
-        != formal_stamp["sha256"]
+        != ATOMIC14_FORMAL_READY_SHA256
     ):
         raise CampaignError("Atomic14 POST parity-export source boundary differs")
     parity_root = parity_export_path.parent
@@ -10498,7 +11933,1043 @@ def _validate_atomic14_partition_inputs(
         "retiredResidual": old_residuals[0],
         "retiredQuestion": old_questions[0],
         "retiredContract": old_contracts[0],
+        "proofProfile": proof_profile,
     }
+
+
+def _atomic14_recovery_historical_projection(
+    rows: dict[str, list[dict[str, str]]],
+    validated: dict[str, object],
+    *,
+    historical_relative: Path = TARGET_LOCK_SEMANTIC_PARENT_RELATIVE,
+    historical_ready_sha256: str = TARGET_LOCK_SEMANTIC_PARENT_READY_SHA256,
+    historical_generation: int = 8,
+    expected_changed_rows: dict[str, int] | None = None,
+    parent_derived_adjudication_contracts: frozenset[str] = frozenset(),
+) -> dict[str, object]:
+    """Prove one recovery state matches its historical peer except exact proof provenance."""
+
+    historical_root = (REPO_ROOT / historical_relative).resolve()
+    historical_ready_path = historical_root / "campaign.ready.json"
+    historical_ready = _atomic14_stamp(
+        historical_ready_path,
+        historical_ready_sha256,
+        f"historical Generation {historical_generation} READY",
+    )
+    historical_receipt, _historical_reducer = _verify_frozen_campaign_integrity(
+        historical_root,
+        f"historical Generation {historical_generation} projection oracle",
+    )
+    if (
+        _integer(historical_receipt.get("generation"), -1)
+        != historical_generation
+        or historical_receipt.get("counts")
+        != {name: len(values) for name, values in rows.items()}
+    ):
+        raise CampaignError("Atomic14 historical projection identity differs")
+    historical_rows = _campaign_rows_from_root(historical_root)
+    historical_context = _partition_relation_context(historical_receipt)
+    if historical_context is None:
+        raise CampaignError("Atomic14 historical partition context is absent")
+    historical_advance = _runtime_mapping(
+        historical_context.get("advance"), "historical Atomic14 advance"
+    )
+    historical_formal = _runtime_mapping(
+        historical_advance.get("formalReady"), "historical Atomic14 formal READY"
+    )
+    if (
+        historical_context.get("advanceKind") != GHIDRA_PARTITION_ADVANCE_KIND
+        or historical_advance.get("schema") != GHIDRA_PARTITION_ADVANCE_SCHEMA
+        or historical_formal.get("sha256") != ATOMIC14_FORMAL_READY_SHA256
+    ):
+        raise CampaignError("Atomic14 historical projection ceremony differs")
+
+    old_token = (
+        f"{historical_formal.get('path')}#sha256={ATOMIC14_FORMAL_READY_SHA256}"
+    )
+    new_formal = _runtime_mapping(
+        validated.get("formalStamp"), "Atomic14 recovery formal stamp"
+    )
+    new_token = f"{new_formal.get('path')}#sha256={new_formal.get('sha256')}"
+    if new_formal.get("sha256") != ATOMIC14_REDERIVED_FORMAL_READY_SHA256:
+        raise CampaignError("Atomic14 recovery projection proof identity differs")
+
+    key_fields = {
+        "functions": "entityKey",
+        "residuals": "entityKey",
+        "questions": "questionId",
+        "scenarios": "scenarioId",
+        "levers": "regionKey",
+        "contracts": "contractId",
+        "supersessions": "supersessionId",
+    }
+    columns_by_name = {
+        "functions": FUNCTION_COLUMNS,
+        "residuals": RESIDUAL_COLUMNS,
+        "questions": QUESTION_COLUMNS,
+        "scenarios": SCENARIO_COLUMNS,
+        "levers": LEVER_COLUMNS,
+        "contracts": CONTRACT_COLUMNS,
+        "adjudications": ADJUDICATION_COLUMNS,
+        "supersessions": SUPERSESSION_COLUMNS,
+    }
+    if expected_changed_rows is None:
+        expected_changed_rows = {
+            "functions": 0,
+            "residuals": 0,
+            "questions": 0,
+            "scenarios": 0,
+            "levers": 0,
+            "contracts": 29,
+            "adjudications": 1,
+            "supersessions": 29,
+        }
+    elif set(expected_changed_rows) != set(columns_by_name):
+        raise CampaignError("Atomic14 projection changed-row census shape differs")
+    canonical_hashes: dict[str, str] = {}
+    changed_rows: dict[str, int] = {}
+
+    def keyed(
+        name: str, values: list[dict[str, str]]
+    ) -> dict[object, dict[str, str]]:
+        canonical_values = [
+            {
+                column: (
+                    "" if row.get(column, "") is None else str(row.get(column, ""))
+                )
+                for column in columns_by_name[name]
+            }
+            for row in values
+        ]
+        if name == "adjudications":
+            result = {
+                (
+                    row.get("baseContractId"),
+                    row.get("entityKey"),
+                    row.get("questionIdsAddressed"),
+                    row.get("successorQuestionIds"),
+                ): row
+                for row in canonical_values
+            }
+        else:
+            field = key_fields[name]
+            result = {row.get(field): row for row in canonical_values}
+        if len(result) != len(canonical_values) or None in result or "" in result:
+            raise CampaignError(f"Atomic14 projection {name} keys are ambiguous")
+        return result
+
+    def normalize(
+        name: str, row: dict[str, str], *, recovery: bool
+    ) -> dict[str, str]:
+        normalized = dict(row)
+        if name in {"contracts", "supersessions"}:
+            evidence = normalized.get("evidenceRefs", "")
+            source_token, target_token = (
+                (new_token, old_token) if recovery else (old_token, old_token)
+            )
+            if evidence != evidence.replace(source_token, target_token):
+                normalized["evidenceRefs"] = evidence.replace(
+                    source_token, target_token
+                )
+        if name == "supersessions" and normalized.get("oldEntityKey") == ATOMIC14_OLD_RESIDUAL:
+            expected_kind = (
+                GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+                if recovery
+                else GHIDRA_PARTITION_ADVANCE_KIND
+            )
+            if normalized.get("kind") != expected_kind:
+                raise CampaignError("Atomic14 projection supersession kind differs")
+            normalized["kind"] = "ATOMIC14_EXACT_PARTITION_OPERATION"
+        if name == "adjudications" and normalized.get("baseContractId") == ATOMIC14_OLD_CONTRACT:
+            expected_schema = (
+                GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA
+                if recovery
+                else GHIDRA_PARTITION_ADVANCE_SCHEMA
+            )
+            expected_ready = (
+                ATOMIC14_REDERIVED_FORMAL_READY_SHA256
+                if recovery
+                else ATOMIC14_FORMAL_READY_SHA256
+            )
+            if (
+                normalized.get("overlaySchema") != expected_schema
+                or normalized.get("overlayReadySha256") != expected_ready
+            ):
+                raise CampaignError("Atomic14 projection adjudication proof differs")
+            normalized["adjudicationId"] = "ATOMIC14_PARTITION_ADJUDICATION"
+            normalized["overlaySchema"] = "ATOMIC14_PARTITION_SCHEMA"
+            normalized["overlayReadySha256"] = "ATOMIC14_FORMAL_PROOF"
+            evidence = normalized.get("refuterEvidenceSha256", "")
+            if recovery:
+                evidence = evidence.replace(
+                    ATOMIC14_REDERIVED_FORMAL_READY_SHA256,
+                    ATOMIC14_FORMAL_READY_SHA256,
+                )
+            normalized["refuterEvidenceSha256"] = evidence
+        if (
+            name == "adjudications"
+            and normalized.get("baseContractId")
+            in parent_derived_adjudication_contracts
+        ):
+            if not re.fullmatch(r"A-[0-9a-f]{16}", normalized.get("adjudicationId", "")):
+                raise CampaignError("parent-derived adjudication identity is malformed")
+            normalized["adjudicationId"] = "PARENT_DERIVED_TTD_ADJUDICATION"
+        return normalized
+
+    for name in (
+        "functions",
+        "residuals",
+        "questions",
+        "scenarios",
+        "levers",
+        "contracts",
+        "adjudications",
+        "supersessions",
+    ):
+        old_map = keyed(name, historical_rows[name])
+        new_map = keyed(name, rows[name])
+        if old_map.keys() != new_map.keys():
+            raise CampaignError(f"Atomic14 projection {name} identity set differs")
+        differences = 0
+        normalized_rows: list[dict[str, str]] = []
+        for key in sorted(old_map, key=lambda value: str(value)):
+            old_row = old_map[key]
+            new_row = new_map[key]
+            if old_row != new_row:
+                differences += 1
+            old_normalized = normalize(name, old_row, recovery=False)
+            new_normalized = normalize(name, new_row, recovery=True)
+            if old_normalized != new_normalized:
+                raise CampaignError(
+                    f"Atomic14 recovery changes non-provenance state in {name}: {key}"
+                )
+            normalized_rows.append(new_normalized)
+        if differences != expected_changed_rows[name]:
+            raise CampaignError(
+                f"Atomic14 projection {name} changed-row count differs: "
+                f"{differences} != {expected_changed_rows[name]}"
+            )
+        changed_rows[name] = differences
+        canonical = json.dumps(
+            normalized_rows, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        canonical_hashes[name] = hashlib.sha256(canonical).hexdigest()
+
+    return {
+        "schema": "bea.re.campaign-historical-projection.v1",
+        "historicalReady": historical_ready,
+        "historicalAuthorityClass": "HISTORICAL_FROZEN_INTEGRITY_ONLY",
+        "stateProjection": "EQUIVALENT_EXCEPT_EXACT_RECOVERY_PROVENANCE",
+        "evidenceIdentity": "NEW_PROOF_NOT_HISTORICAL_SUBSTITUTION",
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "changedRows": changed_rows,
+        "canonicalLedgerSha256": canonical_hashes,
+    }
+
+
+def _semantic_recovery_historical_projection(
+    rows: dict[str, list[dict[str, str]]],
+    partition_context: dict[str, object],
+) -> dict[str, object]:
+    projection = _atomic14_recovery_historical_projection(
+        rows,
+        {
+            "formalStamp": _runtime_mapping(
+                _runtime_mapping(
+                    partition_context.get("advance"),
+                    "semantic recovery partition advance",
+                ).get("formalReady"),
+                "semantic recovery partition formal READY",
+            )
+        },
+        historical_relative=TTD_CALL_CONTEXT_PARENT_RELATIVE,
+        historical_ready_sha256=TTD_CALL_CONTEXT_PARENT_READY_SHA256,
+        historical_generation=9,
+    )
+    projection["scope"] = "INHERITED_ATOMIC14_PROOF_PROVENANCE_ONLY"
+    return projection
+
+
+def _ttd_recovery_historical_projection(
+    rows: dict[str, list[dict[str, str]]],
+    partition_context: dict[str, object],
+) -> dict[str, object]:
+    positive_contracts = frozenset(
+        str(binding["contractId"])
+        for binding in _ttd_call_context_target_bindings()
+        if binding["positive"] is True
+    )
+    projection = _atomic14_recovery_historical_projection(
+        rows,
+        {
+            "formalStamp": _runtime_mapping(
+                _runtime_mapping(
+                    partition_context.get("advance"),
+                    "TTD recovery partition advance",
+                ).get("formalReady"),
+                "TTD recovery partition formal READY",
+            )
+        },
+        historical_relative=TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_RELATIVE,
+        historical_ready_sha256=TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_READY_SHA256,
+        historical_generation=10,
+        expected_changed_rows={
+            "functions": 0,
+            "residuals": 0,
+            "questions": 0,
+            "scenarios": 0,
+            "levers": 0,
+            "contracts": 29,
+            "adjudications": 4,
+            "supersessions": 29,
+        },
+        parent_derived_adjudication_contracts=positive_contracts,
+    )
+    projection["scope"] = (
+        "INHERITED_ATOMIC14_PROVENANCE_PLUS_PARENT_DERIVED_TTD_ADJUDICATION_IDS"
+    )
+    projection["ttdEvidenceIdentity"] = (
+        "EXACT_HISTORICAL_SCHEMA3_EVIDENCE_REVALIDATED_NOT_RERUN"
+    )
+    projection["evidenceIdentityScope"] = "INHERITED_ATOMIC14_PROOF_ONLY"
+    projection["traceHashDisposition"] = (
+        "BOUND_RECEIPT_HASH_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+    )
+    return projection
+
+
+def _semantic_recovery_policies() -> list[str]:
+    return [
+        "Only the exact five same-range Ghidra names, signatures, comments, and tags crossed the live semantic boundary.",
+        "No function/residual entity key changed, so this advance creates no supersession.",
+        "Campaign contracts remain OPEN/C0_OPAQUE; no question or rebuild-parity claim is closed by metadata alone.",
+        "The live POST project, independent readback, post backup, and restore drill agree exactly.",
+        "Generation 9R revalidates and re-reduces surviving historical target-lock evidence; it does not rerun the target-lock proof or mutate Ghidra.",
+        "The recovered historical owner is bound as a byte identity only and is not executed from its recovery path.",
+    ]
+
+
+def _ttd_recovery_policies() -> list[str]:
+    return [
+        "Only three exact Generation 9R function contracts receive C2 bounded-runtime advances.",
+        "Raw carriers remain untyped; orphan return boundaries are never forged into invocation backlinks.",
+        "The StartDie zero-event control remains OPEN/C0 and is bounded to the exact replay window.",
+        "No name, range, memory-write, rebuild mapping, parity, or supersession claim is promoted.",
+        "Generation 10R revalidates and re-reduces the existing schema-v3 evidence; it records no new trace or game run.",
+        "The 14 GiB trace SHA-256 is inherited from two bound receipts while its current path and exact byte size are checked; recovery does not rehash the trace.",
+    ]
+
+
+def _gen73_reseal_policies() -> list[str]:
+    return [
+        "Canonical 10R is the sole parent; Generation 73 is a superseded projection oracle.",
+        "Only exact current proof-pack identities and pristine-byte checks can alter fields.",
+        "Candidate adjudication, supersession, and successor-question IDs are never copied.",
+        "Residual terminal adjudications are nonsemantic and remain bound to the exact closure.",
+        "Every candidate field delta remains accounted for in the immutable closure ledger.",
+    ]
+
+
+def _validate_gen73_reseal_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    campaign_root: Path,
+) -> None:
+    """Bind Gen11 to one plain, independent, exactly stamped campaign tree."""
+
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("Generation 11 reseal READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")), "Generation 11 reseal"
+    )
+    parent_root = (REPO_ROOT / GEN73_RESEAL_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "Generation 11 reseal parent"
+    )
+    if not _same_json(receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")):
+        raise CampaignError("Generation 11 reseal source snapshot differs")
+    expected_question_types = dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    )
+    if receipt.get("questionTypes") != expected_question_types:
+        raise CampaignError("Generation 11 reseal question types differ")
+    if receipt.get("policies") != _gen73_reseal_policies():
+        raise CampaignError("Generation 11 reseal policies differ")
+
+    outputs = _runtime_mapping(receipt.get("outputs"), "Generation 11 reseal outputs")
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("Generation 11 reseal output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "Generation 11 reseal campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Generation 11 reseal campaign root is not plain: {exc}") from exc
+    if plain_root != raw_root:
+        raise CampaignError("Generation 11 reseal campaign root aliases another path")
+
+    authority_files: list[tuple[str, Path]] = []
+    authority_candidates = [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]
+    for label, path in authority_candidates:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"Generation 11 reseal {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"Generation 11 reseal {label} is not plain: {exc}") from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(f"Generation 11 reseal {label} has multiple hard links")
+        authority_files.append((label, plain))
+
+    other_roots = (
+        (parent_root, "canonical 10R parent"),
+        ((REPO_ROOT / gen73_reseal.CANDIDATE_RELATIVE).resolve(), "Generation 73 oracle"),
+        (
+            (REPO_ROOT / gen73_reseal.HISTORICAL_BASELINE_RELATIVE).resolve(),
+            "historical Generation 10 baseline",
+        ),
+    )
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(outputs.get(name), f"Generation 11 reseal output {name}")
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(f"Generation 11 reseal output stamp shape differs: {name}")
+        if stamp.get("path") != name:
+            raise CampaignError(f"Generation 11 reseal output path differs: {name}")
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")), f"Generation 11 reseal output {name}"
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name, f"Generation 11 reseal output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"Generation 11 reseal output is not plain: {name}: {exc}") from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(f"Generation 11 reseal output has multiple hard links: {name}")
+        actual = {**coverage.file_stamp(path), "path": name}
+        if actual != stamp:
+            raise CampaignError(f"Generation 11 reseal output stamp differs: {name}")
+        for other_root, label in other_roots:
+            try:
+                aliases = os.path.samefile(path, other_root / name)
+            except OSError as exc:
+                raise CampaignError(
+                    f"Generation 11 reseal output identity cannot be read: {exc}"
+                ) from exc
+            if aliases:
+                raise CampaignError(f"Generation 11 reseal output aliases {label}: {name}")
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(output_files, "Generation 11 reseal outputs")
+    _require_disjoint_evidence_files(
+        authority_files + output_files, "Generation 11 reseal campaign authority files"
+    )
+
+
+def _validate_semantic_recovery_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    campaign_root: Path,
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("target-lock semantic recovery READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "target-lock semantic recovery generation",
+    )
+    parent_root = (REPO_ROOT / TARGET_LOCK_RECOVERY_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "target-lock semantic recovery parent"
+    )
+    if not _same_json(receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")):
+        raise CampaignError("target-lock semantic recovery source snapshot differs")
+    expected_question_types = dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    )
+    if receipt.get("questionTypes") != expected_question_types:
+        raise CampaignError("target-lock semantic recovery question types differ")
+    if receipt.get("policies") != _semantic_recovery_policies():
+        raise CampaignError("target-lock semantic recovery policies differ")
+
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "target-lock semantic recovery outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("target-lock semantic recovery output set differs")
+    campaign_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            campaign_root, "target-lock semantic recovery campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"target-lock semantic recovery campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != campaign_root:
+        raise CampaignError("target-lock semantic recovery campaign root aliases another path")
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", campaign_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(campaign_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (campaign_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(path, label, strict=True)
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"target-lock semantic recovery {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"target-lock semantic recovery {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"target-lock semantic recovery output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"target-lock semantic recovery output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"target-lock semantic recovery output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"target-lock semantic recovery output {name}",
+        )
+        raw_path = campaign_root / name
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                raw_path, f"target-lock semantic recovery output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"target-lock semantic recovery output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"target-lock semantic recovery output has multiple hard links: {name}"
+            )
+        actual = {**coverage.file_stamp(path), "path": name}
+        if actual != stamp:
+            raise CampaignError(
+                f"target-lock semantic recovery output stamp differs: {name}"
+            )
+        for other_root, label in (
+            (parent_root, "8R parent"),
+            ((REPO_ROOT / TTD_CALL_CONTEXT_PARENT_RELATIVE).resolve(), "historical Gen9"),
+        ):
+            try:
+                aliases = os.path.samefile(path, other_root / name)
+            except OSError as exc:
+                raise CampaignError(
+                    f"target-lock semantic recovery output identity cannot be read: {exc}"
+                ) from exc
+            if aliases:
+                raise CampaignError(
+                    f"target-lock semantic recovery output aliases {label}: {name}"
+                )
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "target-lock semantic recovery outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "target-lock semantic recovery campaign authority files",
+    )
+
+
+def _validate_semantic_recovery_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: dict,
+    partition_context: dict[str, object],
+    *,
+    campaign_root: Path | None = None,
+) -> None:
+    """Reject metadata-only laundering of the post-loss semantic branch."""
+
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 9
+        or advance.get("kind") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or advance.get("semanticEvidenceMode")
+        != "HISTORICAL_EVIDENCE_REVALIDATED_NOT_RERUN"
+        or advance.get("ownerRecoveryUse")
+        != "BYTE_IDENTITY_ONLY_NOT_EXECUTED"
+    ):
+        raise CampaignError("target-lock semantic recovery identity differs")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "target-lock semantic recovery parent"
+    )
+    parent_path = _resolve_repo_or_absolute(
+        parent.get("path"), "target-lock semantic recovery parent"
+    )
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "target-lock semantic recovery parent READY"
+    )
+    if (
+        parent_path.resolve()
+        != (REPO_ROOT / TARGET_LOCK_RECOVERY_PARENT_RELATIVE).resolve()
+        or parent_ready.get("sha256")
+        != TARGET_LOCK_RECOVERY_PARENT_READY_SHA256
+    ):
+        raise CampaignError("target-lock semantic recovery parent identity differs")
+    _require_file_stamp(
+        parent_path / "campaign.ready.json",
+        parent_ready,
+        "target-lock semantic recovery parent READY",
+    )
+
+    owner_recovery = _runtime_mapping(
+        advance.get("ownerRecovery"), "target-lock semantic owner recovery"
+    )
+    owner_recovery_ready = _runtime_mapping(
+        owner_recovery.get("ready"), "target-lock semantic owner recovery READY"
+    )
+    owner_recovery_path = _resolve_repo_or_absolute(
+        owner_recovery_ready.get("path"),
+        "target-lock semantic owner recovery READY",
+    )
+    expected_owner_recovery = _validate_target_lock_owner_recovery(
+        owner_recovery_path
+    )
+    if owner_recovery != expected_owner_recovery:
+        raise CampaignError("target-lock semantic owner recovery binding differs")
+    expected_plan_evidence_recovery = _validate_target_lock_plan_evidence_recovery(
+        Path(
+            str(
+                _runtime_mapping(
+                    advance.get("plan"), "target-lock semantic recovery plan"
+                ).get("path", "")
+            )
+        ),
+        Path(
+            str(
+                _runtime_mapping(
+                    advance.get("evidence"), "target-lock semantic recovery evidence"
+                ).get("path", "")
+            )
+        ),
+    )
+    if advance.get("planEvidenceRecovery") != expected_plan_evidence_recovery:
+        raise CampaignError("target-lock plan/evidence recovery binding differs")
+
+    expected_projection = _semantic_recovery_historical_projection(
+        rows, partition_context
+    )
+    if advance.get("historicalProjection") != expected_projection:
+        raise CampaignError("target-lock semantic recovery historical projection differs")
+
+    historical_root = (REPO_ROOT / TTD_CALL_CONTEXT_PARENT_RELATIVE).resolve()
+    historical_receipt, _historical_reducer = _verify_frozen_campaign_integrity(
+        historical_root, "historical Generation 9 semantic projection oracle"
+    )
+    historical_advance = _runtime_mapping(
+        historical_receipt.get("advance"), "historical Generation 9 semantic advance"
+    )
+    if (
+        historical_advance.get("kind") != GHIDRA_SEMANTIC_ADVANCE_KIND
+        or historical_advance.get("schema") != GHIDRA_SEMANTIC_ADVANCE_SCHEMA
+    ):
+        raise CampaignError("historical Generation 9 semantic identity differs")
+    added_keys = {
+        "branchId",
+        "ownerRecovery",
+        "planEvidenceRecovery",
+        "historicalProjection",
+        "semanticEvidenceMode",
+        "ownerRecoveryUse",
+    }
+    if set(advance) != set(historical_advance) | added_keys:
+        raise CampaignError("target-lock semantic recovery advance shape differs")
+    for key in set(historical_advance) - {"kind", "schema", "promotionId"}:
+        if not _same_json(advance.get(key), historical_advance.get(key)):
+            raise CampaignError(
+                f"target-lock semantic recovery changes historical evidence: {key}"
+            )
+    expected_promotion_id = "SP-" + _sha256_text(
+        "|".join(
+            (
+                str(parent_ready.get("sha256", "")),
+                str(_runtime_mapping(advance.get("liveReady"), "semantic live READY").get("sha256", "")),
+                str(_runtime_mapping(advance.get("proofReady"), "semantic proof READY").get("sha256", "")),
+            )
+        )
+    )[:16]
+    if advance.get("promotionId") != expected_promotion_id:
+        raise CampaignError("target-lock semantic recovery promotion ID differs")
+    if campaign_root is not None:
+        _validate_semantic_recovery_receipt_envelope(rows, receipt, campaign_root)
+
+
+def _validate_ttd_recovery_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    campaign_root: Path,
+) -> None:
+    """Bind a 10R READY to plain, independent, exactly stamped authority files."""
+
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("TTD recovery READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")), "TTD recovery generation"
+    )
+    parent_root = (REPO_ROOT / TTD_CALL_CONTEXT_RECOVERY_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "TTD recovery parent"
+    )
+    if not _same_json(receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")):
+        raise CampaignError("TTD recovery source snapshot differs")
+    expected_question_types = dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    )
+    if receipt.get("questionTypes") != expected_question_types:
+        raise CampaignError("TTD recovery question types differ")
+    if receipt.get("policies") != _ttd_recovery_policies():
+        raise CampaignError("TTD recovery policies differ")
+
+    outputs = _runtime_mapping(receipt.get("outputs"), "TTD recovery outputs")
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("TTD recovery output set differs")
+    campaign_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            campaign_root, "TTD recovery campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"TTD recovery campaign root is not plain: {exc}") from exc
+    if plain_root != campaign_root:
+        raise CampaignError("TTD recovery campaign root aliases another path")
+
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", campaign_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(campaign_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (campaign_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(path, label, strict=True)
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"TTD recovery {label} is not plain: {exc}") from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(f"TTD recovery {label} has multiple hard links")
+        authority_files.append((label, plain))
+
+    historical_root = (
+        REPO_ROOT / TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_RELATIVE
+    ).resolve()
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(outputs.get(name), f"TTD recovery output {name}")
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(f"TTD recovery output stamp shape differs: {name}")
+        if stamp.get("path") != name:
+            raise CampaignError(f"TTD recovery output path differs: {name}")
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")), f"TTD recovery output {name}"
+        )
+        raw_path = campaign_root / name
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                raw_path, f"TTD recovery output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TTD recovery output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TTD recovery output has multiple hard links: {name}"
+            )
+        actual = {**coverage.file_stamp(path), "path": name}
+        if actual != stamp:
+            raise CampaignError(f"TTD recovery output stamp differs: {name}")
+        for other_root, label in (
+            (parent_root, "9R parent"),
+            (historical_root, "historical Gen10"),
+        ):
+            try:
+                aliases = os.path.samefile(path, other_root / name)
+            except OSError as exc:
+                raise CampaignError(
+                    f"TTD recovery output identity cannot be read: {exc}"
+                ) from exc
+            if aliases:
+                raise CampaignError(f"TTD recovery output aliases {label}: {name}")
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(output_files, "TTD recovery outputs")
+    _require_disjoint_evidence_files(
+        authority_files + output_files, "TTD recovery campaign authority files"
+    )
+
+
+def _validate_ttd_recovery_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: dict,
+    partition_context: dict[str, object],
+    *,
+    campaign_root: Path | None = None,
+) -> None:
+    """Require the one exact post-loss reduction of the retained TTD evidence."""
+
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 10
+        or advance.get("kind") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or advance.get("observationEvidenceMode")
+        != "HISTORICAL_SCHEMA3_EVIDENCE_REVALIDATED_NOT_RERUN"
+        or advance.get("traceHashDisposition")
+        != "BOUND_RECEIPT_HASH_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+    ):
+        raise CampaignError("TTD recovery advance identity differs")
+
+    parent_root = (REPO_ROOT / TTD_CALL_CONTEXT_RECOVERY_PARENT_RELATIVE).resolve()
+    parent_ready_actual = {**coverage.file_stamp(parent_root / "campaign.ready.json"), "path": "campaign.ready.json"}
+    expected_parent = {
+        "path": str(parent_root),
+        "ready": parent_ready_actual,
+    }
+    if (
+        parent_ready_actual.get("sha256")
+        != TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256
+        or not _same_json(receipt.get("parentCampaign"), expected_parent)
+    ):
+        raise CampaignError("TTD recovery parent identity differs")
+    parent_integrity, parent_reducer = _verify_frozen_campaign_integrity(
+        parent_root, "Generation 9R TTD recovery parent"
+    )
+    parent_advance = _runtime_mapping(
+        parent_integrity.get("advance"), "Generation 9R TTD recovery parent advance"
+    )
+    if (
+        _integer(parent_integrity.get("generation"), -1) != 9
+        or parent_reducer.get("id") != TTD_CALL_CONTEXT_RECOVERY_PARENT_REDUCER_ID
+        or parent_advance.get("kind") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_KIND
+        or parent_advance.get("schema") != GHIDRA_SEMANTIC_RECOVERY_ADVANCE_SCHEMA
+    ):
+        raise CampaignError("TTD recovery parent integrity identity differs")
+    evidence_root = (REPO_ROOT / TTD_CALL_CONTEXT_EVIDENCE_RELATIVE).resolve()
+    validated_evidence = validate_ttd_call_context_observation(
+        parent_root,
+        evidence_root,
+        _verified_campaign_receipt=parent_integrity,
+        _recovery_profile=True,
+    )
+    expected_evidence = {
+        "root": str(evidence_root),
+        "artifacts": validated_evidence["artifacts"],
+        "repoArtifacts": validated_evidence["repoArtifacts"],
+        "trace": validated_evidence["trace"],
+    }
+    if not _same_json(advance.get("evidence"), expected_evidence):
+        raise CampaignError("TTD recovery current evidence binding differs")
+
+    historical_raw = Path(
+        os.path.abspath(REPO_ROOT / TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_RELATIVE)
+    )
+    try:
+        historical_root = ghidra_backup.resolve_plain_path(
+            historical_raw, "historical Generation 10 root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"historical Generation 10 root is not plain: {exc}"
+        ) from exc
+    if historical_root != historical_raw:
+        raise CampaignError("historical Generation 10 root aliases another path")
+    for name in ("campaign.ready.json", *OUTPUTS):
+        try:
+            historical_file = ghidra_backup.resolve_plain_path(
+                historical_root / name,
+                f"historical Generation 10 {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"historical Generation 10 authority file is not plain: {name}: {exc}"
+            ) from exc
+        if historical_file.stat().st_nlink != 1:
+            raise CampaignError(
+                f"historical Generation 10 authority file has multiple hard links: {name}"
+            )
+    historical_ready = _atomic14_stamp(
+        historical_root / "campaign.ready.json",
+        TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_READY_SHA256,
+        "historical Generation 10 READY",
+    )
+    historical_receipt, historical_reducer = _verify_frozen_campaign_integrity(
+        historical_root, "historical Generation 10 TTD projection oracle"
+    )
+    historical_advance = _runtime_mapping(
+        historical_receipt.get("advance"), "historical Generation 10 TTD advance"
+    )
+    if (
+        _integer(historical_receipt.get("generation"), -1) != 10
+        or historical_reducer.get("id")
+        != TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_REDUCER_ID
+        or historical_advance.get("kind") != TTD_CALL_CONTEXT_ADVANCE_KIND
+        or historical_advance.get("schema") != TTD_CALL_CONTEXT_ADVANCE_SCHEMA
+    ):
+        raise CampaignError("historical Generation 10 TTD identity differs")
+
+    expected_advance = json.loads(json.dumps(historical_advance))
+    expected_advance["kind"] = TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+    expected_advance["schema"] = TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA
+    expected_advance["observationId"] = "CO-" + _sha256_text(
+        "|".join(
+            (
+                TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256,
+                TTD_CALL_CONTEXT_PROOF_READY_SHA256,
+                TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND,
+            )
+        )
+    )[:16]
+    expected_ids: dict[str, str] = {}
+    for binding in _ttd_call_context_target_bindings():
+        if binding["positive"] is not True:
+            continue
+        contract_id = str(binding["contractId"])
+        expected_ids[contract_id] = _ttd_call_context_adjudication_id(
+            TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256,
+            contract_id,
+            str(binding["parentQuestionId"]),
+        )
+    for promotion in expected_advance.get("promotions", []):
+        contract_id = str(promotion.get("contractId", ""))
+        if contract_id not in expected_ids:
+            raise CampaignError("historical TTD promotion population differs")
+        promotion["adjudicationId"] = expected_ids[contract_id]
+    expected_advance["delta"]["adjudicationIdsAdded"] = sorted(expected_ids.values())
+    expected_advance["evidence"]["trace"] = {
+        "path": str(
+            Path(
+                str(
+                    _runtime_mapping(
+                        _runtime_mapping(
+                            historical_advance.get("evidence"),
+                            "historical TTD evidence",
+                        ).get("trace"),
+                        "historical TTD trace",
+                    ).get("path", "")
+                )
+            ).resolve()
+        ),
+        "bytes": 14214496256,
+        "sha256": TTD_CALL_CONTEXT_TRACE_SHA256,
+        "hashReadFromBoundReceipt": True,
+        "actualSizeVerified": True,
+        "actualHashVerified": False,
+        "currentContentIdentityClaimed": False,
+    }
+    expected_advance.update(
+        {
+            "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+            "observationEvidenceMode": (
+                "HISTORICAL_SCHEMA3_EVIDENCE_REVALIDATED_NOT_RERUN"
+            ),
+            "traceHashDisposition": (
+                "BOUND_RECEIPT_HASH_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+            ),
+            "historicalProjection": _ttd_recovery_historical_projection(
+                rows, partition_context
+            ),
+        }
+    )
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("TTD recovery advance differs from the exact historical projection")
+
+    parent_rows = _campaign_rows_from_root(parent_root)
+    expected_delta = _ttd_call_context_delta(parent_rows, rows)
+    if expected_delta != advance.get("delta"):
+        raise CampaignError("TTD recovery ledger delta differs")
+    adjudications_by_contract = {
+        row.get("baseContractId", ""): row for row in rows["adjudications"]
+    }
+    for binding in _ttd_call_context_target_bindings():
+        if binding["positive"] is not True:
+            continue
+        contract_id = str(binding["contractId"])
+        row = adjudications_by_contract.get(contract_id)
+        if row is None or row.get("adjudicationId") != expected_ids[contract_id]:
+            raise CampaignError(
+                f"TTD recovery parent-derived adjudication identity differs: {contract_id}"
+            )
+    if historical_ready.get("sha256") != TTD_CALL_CONTEXT_HISTORICAL_GENERATION10_READY_SHA256:
+        raise CampaignError("historical Generation 10 READY identity differs")
+    if campaign_root is not None:
+        _validate_ttd_recovery_receipt_envelope(rows, receipt, campaign_root)
 
 
 def advance_ghidra_residual_partition(
@@ -10513,8 +12984,23 @@ def advance_ghidra_residual_partition(
     *,
     _self_check: bool = True,
     _verified_parent_receipt: dict | None = None,
+    _proof_profile: str = "historical",
+    _advance_kind: str = GHIDRA_PARTITION_ADVANCE_KIND,
+    _advance_schema: str = GHIDRA_PARTITION_ADVANCE_SCHEMA,
 ) -> dict:
     """Replace one proven residual with its exact function/padding partition."""
+    expected_mode = {
+        "historical": (
+            GHIDRA_PARTITION_ADVANCE_KIND,
+            GHIDRA_PARTITION_ADVANCE_SCHEMA,
+        ),
+        "post-loss-rederived-v2": (
+            GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND,
+            GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA,
+        ),
+    }.get(_proof_profile)
+    if expected_mode != (_advance_kind, _advance_schema):
+        raise CampaignError("Atomic14 proof profile and advance identity disagree")
     base_receipt = (
         _verified_parent_receipt
         if _verified_parent_receipt is not None
@@ -10531,6 +13017,7 @@ def advance_ghidra_residual_partition(
         targets_path,
         padding_path,
         parity_export_path,
+        proof_profile=_proof_profile,
     )
     data = validated["data"]
     rows = build_campaign_rows(data)
@@ -10753,7 +13240,7 @@ def advance_ghidra_residual_partition(
             "adjudicationId": adjudication_id,
             "baseContractId": ATOMIC14_OLD_CONTRACT,
             "entityKey": ATOMIC14_OLD_RESIDUAL,
-            "overlaySchema": GHIDRA_PARTITION_ADVANCE_SCHEMA,
+            "overlaySchema": _advance_schema,
             "overlayReadySha256": validated["formalStamp"]["sha256"],
             "questionIdsAddressed": ATOMIC14_OLD_QUESTION,
             "refuterVerdict": "SURVIVED",
@@ -10785,7 +13272,7 @@ def advance_ghidra_residual_partition(
                 "supersessionId": supersession_id,
                 "oldEntityKey": ATOMIC14_OLD_RESIDUAL,
                 "newEntityKey": entity,
-                "kind": GHIDRA_PARTITION_ADVANCE_KIND,
+                "kind": _advance_kind,
                 "verdict": "SURVIVED",
                 "evidenceRefs": evidence_refs,
                 "measuredAtUtc": measured_at,
@@ -10820,6 +13307,12 @@ def advance_ghidra_residual_partition(
         row.get("questionId") in padding_question_ids for row in rows["questions"]
     ):
         raise CampaignError("Atomic14 terminal padding retained an open question")
+
+    historical_projection = (
+        _atomic14_recovery_historical_projection(rows, validated)
+        if _proof_profile == "post-loss-rederived-v2"
+        else None
+    )
 
     snapshot_ready_for_receipt = {
         **validated["snapshotReady"],
@@ -10861,8 +13354,13 @@ def advance_ghidra_residual_partition(
                 "files": data["snapshotFiles"],
             },
             "advance": {
-                "kind": GHIDRA_PARTITION_ADVANCE_KIND,
-                "schema": GHIDRA_PARTITION_ADVANCE_SCHEMA,
+                "kind": _advance_kind,
+                "schema": _advance_schema,
+                **(
+                    {"branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID}
+                    if _proof_profile == "post-loss-rederived-v2"
+                    else {}
+                ),
                 "promotionId": promotion_id,
                 "verdict": "SURVIVED",
                 "adjudicationId": adjudication_id,
@@ -10873,6 +13371,22 @@ def advance_ghidra_residual_partition(
                 },
                 "liveReady": validated["liveStamp"],
                 "formalReady": validated["formalStamp"],
+                **(
+                    {"historicalFormalReady": {
+                        "path": str(
+                            (
+                                REPO_ROOT
+                                / "local-lab/console-callback-atomic14-20260803-v1"
+                                / "formal-proof-v2/formal-proof.ready.json"
+                            ).resolve()
+                        ),
+                        "bytes": 23028,
+                        "sha256": ATOMIC14_FORMAL_READY_SHA256,
+                        "disposition": "LOST_HISTORICAL_IDENTITY_NOT_SUBSTITUTED",
+                    }}
+                    if _proof_profile == "post-loss-rederived-v2"
+                    else {}
+                ),
                 "targets": validated["targetsStamp"],
                 "padding": validated["paddingStamp"],
                 "parityExport": validated["parityExportStamp"],
@@ -10903,6 +13417,11 @@ def advance_ghidra_residual_partition(
                     "darkRegionEntityKey": region_key,
                 },
                 "carried": carry_report,
+                **(
+                    {"historicalProjection": historical_projection}
+                    if historical_projection is not None
+                    else {}
+                ),
             },
             "counts": counts,
             "questionTypes": dict(
@@ -10914,6 +13433,14 @@ def advance_ghidra_residual_partition(
                 "Boundary promotion assigns no semantic name, ABI, behavior, contract grade, or rebuild readiness.",
                 "Every successor contract mirrors the retired residual through one hash-bound supersession row.",
                 "The pristine specimen supplies byte truth; the verified POST backup supplies maintainer-project structure.",
+                *(
+                    [
+                        "The post-loss proof is a new identity and does not substitute the deleted historical a504 receipt.",
+                        "Historical Generation 8 is an integrity-only projection oracle; exact Generation 7 is the sole parent and ledger source.",
+                    ]
+                    if _proof_profile == "post-loss-rederived-v2"
+                    else []
+                ),
             ],
             "outputs": {
                 name: {**coverage.file_stamp(stage / name), "path": name}
@@ -10930,6 +13457,43 @@ def advance_ghidra_residual_partition(
     except Exception:
         shutil.rmtree(stage, ignore_errors=True)
         raise
+
+
+def advance_ghidra_residual_partition_recovery(
+    campaign: Path,
+    snapshot: Path,
+    live_ready: Path,
+    recovery_proof_ready: Path,
+    targets_path: Path,
+    padding_path: Path,
+    parity_export_path: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Rebuild Atomic14 from exact Gen7 using the admitted post-loss v2 proof."""
+
+    parent_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_atomic14_recovery_parent_campaign(campaign)
+    )
+    return advance_ghidra_residual_partition(
+        campaign,
+        snapshot,
+        live_ready,
+        recovery_proof_ready,
+        targets_path,
+        padding_path,
+        parity_export_path,
+        out,
+        _self_check=_self_check,
+        _verified_parent_receipt=parent_receipt,
+        _proof_profile="post-loss-rederived-v2",
+        _advance_kind=GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND,
+        _advance_schema=GHIDRA_PARTITION_RECOVERY_ADVANCE_SCHEMA,
+    )
 
 
 def _successor_question(
@@ -11361,32 +13925,79 @@ def _ttd_call_context_target_bindings() -> tuple[dict[str, object], ...]:
     )
 
 
+def _ttd_call_context_adjudication_id(
+    parent_ready_sha256: str,
+    contract_id: str,
+    parent_question_id: str,
+) -> str:
+    """Derive the exact parent-bound identity for one surviving observation."""
+
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                parent_ready_sha256,
+                TTD_CALL_CONTEXT_SEMANTIC_VERIFICATION_SHA256,
+                TTD_CALL_CONTEXT_PROOF_READY_SHA256,
+                contract_id,
+                parent_question_id,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
 def validate_ttd_call_context_observation(
     campaign: Path,
     evidence_root: Path,
     *,
     _verified_campaign_receipt: dict | None = None,
+    _recovery_profile: bool = False,
 ) -> dict[str, object]:
     """Reproduce and bind the exact replicated Level 521 schema-v3 evidence."""
 
-    campaign = campaign.resolve()
-    evidence_root = evidence_root.resolve()
+    raw_campaign = Path(os.path.abspath(campaign))
+    raw_evidence_root = Path(os.path.abspath(evidence_root))
+    campaign = raw_campaign.resolve()
+    evidence_root = raw_evidence_root.resolve()
     expected_evidence_root = (REPO_ROOT / TTD_CALL_CONTEXT_EVIDENCE_RELATIVE).resolve()
     if evidence_root != expected_evidence_root:
         raise CampaignError("TTD call-context evidence root is not the reviewed bundle")
+    if _recovery_profile:
+        try:
+            plain_evidence_root = ghidra_backup.resolve_plain_path(
+                raw_evidence_root, "TTD recovery evidence root", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"TTD recovery evidence root is not plain: {exc}") from exc
+        if plain_evidence_root != expected_evidence_root:
+            raise CampaignError("TTD recovery evidence root path differs")
     base_receipt = (
         _verified_campaign_receipt
         if _verified_campaign_receipt is not None
-        else _verify_ttd_call_context_parent_campaign(campaign)
+        else (
+            _verify_ttd_call_context_recovery_parent_campaign(campaign)
+            if _recovery_profile
+            else _verify_ttd_call_context_parent_campaign(campaign)
+        )
+    )
+    expected_parent_root = (
+        (REPO_ROOT / TTD_CALL_CONTEXT_RECOVERY_PARENT_RELATIVE).resolve()
+        if _recovery_profile
+        else (REPO_ROOT / TTD_CALL_CONTEXT_PARENT_RELATIVE).resolve()
+    )
+    expected_parent_ready = (
+        TTD_CALL_CONTEXT_RECOVERY_PARENT_READY_SHA256
+        if _recovery_profile
+        else TTD_CALL_CONTEXT_PARENT_READY_SHA256
     )
     if (
-        campaign != (REPO_ROOT / TTD_CALL_CONTEXT_PARENT_RELATIVE).resolve()
+        campaign != expected_parent_root
         or _integer(base_receipt.get("generation"), -1) != 9
         or base_receipt.get("counts") != TTD_CALL_CONTEXT_PARENT_COUNTS
         or coverage.sha256_of(campaign / "campaign.ready.json")
-        != TTD_CALL_CONTEXT_PARENT_READY_SHA256
+        != expected_parent_ready
     ):
-        raise CampaignError("TTD call-context parent is not finalized Generation 9")
+        raise CampaignError("TTD call-context parent is not the selected Generation 9")
 
     evidence_hashes = {
         "preregistration": ("preregistration.md", "cfe0f2bb03ebc554a9f207cbc48d4636213352ec054ca2f2c11f19a8037383a5"),
@@ -11442,6 +14053,51 @@ def validate_ttd_call_context_observation(
         ),
     }
 
+    if _recovery_profile:
+        reviewed_evidence_files = {
+            *(relative for relative, _digest in evidence_hashes.values()),
+            "README.md",
+            "run-a/semantic-verification.json",
+        }
+        actual_evidence_files = {
+            path.relative_to(evidence_root).as_posix()
+            for path in evidence_root.rglob("*")
+            if path.is_file()
+        }
+        if actual_evidence_files != reviewed_evidence_files:
+            raise CampaignError(
+                "TTD recovery evidence file set differs: "
+                f"missing={sorted(reviewed_evidence_files - actual_evidence_files)} "
+                f"extra={sorted(actual_evidence_files - reviewed_evidence_files)}"
+            )
+        recovery_only_stamps = {
+            "README.md": "1be81307b52d981f2906b95201aab6b93540073259f2ff11f58fc10d611c6c40",
+            "run-a/semantic-verification.json": (
+                "8be951a191803b049129f32be0200dfce951ebfd0308fd4491392737a9a994a6"
+            ),
+        }
+        for relative, expected_sha256 in recovery_only_stamps.items():
+            _ttd_call_context_exact_stamp(
+                evidence_root / relative,
+                expected_sha256,
+                f"reviewed evidence file {relative}",
+            )
+        for relative in sorted(reviewed_evidence_files):
+            try:
+                plain = ghidra_backup.resolve_plain_path(
+                    evidence_root / relative,
+                    f"TTD recovery evidence file {relative}",
+                    strict=True,
+                )
+            except (ghidra_backup.BackupError, OSError) as exc:
+                raise CampaignError(
+                    f"TTD recovery evidence file is not plain: {relative}: {exc}"
+                ) from exc
+            if plain.stat().st_nlink != 1:
+                raise CampaignError(
+                    f"TTD recovery evidence file has multiple hard links: {relative}"
+                )
+
     frozen_verifier = (
         _FROZEN_LOCAL_LAB
         / "ttd-call-context-level521-impact-schema3-20260804-v1/verify.py"
@@ -11452,6 +14108,15 @@ def validate_ttd_call_context_observation(
     ):
         raise CampaignError("TTD call-context frozen verifier identity differs")
     environment = os.environ.copy()
+    if _recovery_profile:
+        for name in (
+            "PYTHONHOME",
+            "PYTHONPATH",
+            "PYTHONSTARTUP",
+            "PYTHONINSPECT",
+            "PYTHONUSERBASE",
+        ):
+            environment.pop(name, None)
     environment["BEA_REPO_ROOT"] = str(REPO_ROOT.resolve())
     environment["BEA_TTD_CALL_CONTEXT_EVIDENCE"] = str(evidence_root)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -11459,6 +14124,7 @@ def validate_ttd_call_context_observation(
         completed = subprocess.run(
             [
                 sys.executable,
+                *(["-I"] if _recovery_profile else []),
                 "-B",
                 str(frozen_verifier),
                 str(evidence_root / "run-a"),
@@ -11576,7 +14242,21 @@ def validate_ttd_call_context_observation(
     trace_b = _runtime_mapping(receipt_b.get("trace"), "TTD run B trace")
     if not _same_json(trace_a, trace_b):
         raise CampaignError("TTD call-context replicas name different traces")
-    trace_path = Path(str(trace_a.get("path", ""))).resolve()
+    raw_trace_value = Path(str(trace_a.get("path", "")))
+    raw_trace_path = Path(os.path.abspath(raw_trace_value))
+    if _recovery_profile:
+        if not raw_trace_value.is_absolute():
+            raise CampaignError("TTD recovery trace path is not absolute")
+        try:
+            trace_path = ghidra_backup.resolve_plain_path(
+                raw_trace_path, "TTD recovery trace", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"TTD recovery trace is not plain: {exc}") from exc
+        if trace_path != raw_trace_path:
+            raise CampaignError("TTD recovery trace path aliases another file")
+    else:
+        trace_path = raw_trace_path.resolve()
     if (
         str(trace_a.get("sha256", "")).lower() != TTD_CALL_CONTEXT_TRACE_SHA256
         or _integer(trace_a.get("bytes"), -1) != 14214496256
@@ -11586,6 +14266,32 @@ def validate_ttd_call_context_observation(
         raise CampaignError("TTD call-context bound trace stat/identity differs")
     if str(receipt_b.get("generatedAtUtc", "")) != TTD_CALL_CONTEXT_MEASURED_AT_UTC:
         raise CampaignError("TTD call-context measurement timestamp differs")
+
+    if _recovery_profile:
+        evidence_files: list[tuple[str, Path]] = []
+        for group_name, group in (
+            ("artifact", artifacts),
+            ("repository artifact", repo_artifacts),
+        ):
+            for role, stamp in group.items():
+                raw_path = Path(str(stamp.get("path", "")))
+                try:
+                    plain_path = ghidra_backup.resolve_plain_path(
+                        raw_path, f"TTD recovery {group_name} {role}", strict=True
+                    )
+                except (ghidra_backup.BackupError, OSError) as exc:
+                    raise CampaignError(
+                        f"TTD recovery {group_name} {role} is not plain: {exc}"
+                    ) from exc
+                if plain_path.stat().st_nlink != 1:
+                    raise CampaignError(
+                        f"TTD recovery {group_name} {role} has multiple hard links"
+                    )
+                evidence_files.append((f"{group_name} {role}", plain_path))
+        if trace_path.stat().st_nlink != 1:
+            raise CampaignError("TTD recovery trace has multiple hard links")
+        evidence_files.append(("trace", trace_path))
+        _require_disjoint_evidence_files(evidence_files, "TTD recovery evidence files")
 
     evidence_refs = [
         f"{stamp['path']}#sha256={stamp['sha256']}"
@@ -11610,8 +14316,19 @@ def validate_ttd_call_context_observation(
             "path": str(trace_path),
             "bytes": 14214496256,
             "sha256": TTD_CALL_CONTEXT_TRACE_SHA256,
-            "hashReadFromBoundReceipt": True,
-            "actualBytesVerified": True,
+            **(
+                {
+                    "hashReadFromBoundReceipt": True,
+                    "actualSizeVerified": True,
+                    "actualHashVerified": False,
+                    "currentContentIdentityClaimed": False,
+                }
+                if _recovery_profile
+                else {
+                    "hashReadFromBoundReceipt": True,
+                    "actualBytesVerified": True,
+                }
+            ),
         },
         "proof": proof,
         "evidenceRefs": evidence_refs,
@@ -11630,6 +14347,7 @@ def validate_ttd_call_context_observation(
             "pathNeutralEvidenceBytes": 17804,
             "pathNeutralEvidenceSha256": TTD_CALL_CONTEXT_PATH_NEUTRAL_SHA256,
         },
+        "recoveryProfile": _recovery_profile,
     }
 
 
@@ -11861,6 +14579,7 @@ def advance_ttd_call_context_observation(
     *,
     _self_check: bool = True,
     _verified_parent_receipt: dict | None = None,
+    _recovery_profile: bool = False,
 ) -> dict:
     """Admit the exact Level 521 observation without overpromoting semantics."""
 
@@ -11869,12 +14588,17 @@ def advance_ttd_call_context_observation(
     base_receipt = (
         _verified_parent_receipt
         if _verified_parent_receipt is not None
-        else _verify_ttd_call_context_parent_campaign(campaign)
+        else (
+            _verify_ttd_call_context_recovery_parent_campaign(campaign)
+            if _recovery_profile
+            else _verify_ttd_call_context_parent_campaign(campaign)
+        )
     )
     validated = validate_ttd_call_context_observation(
         campaign,
         evidence_root,
         _verified_campaign_receipt=base_receipt,
+        _recovery_profile=_recovery_profile,
     )
     before = _campaign_rows_from_root(campaign)
     rows = json.loads(json.dumps(before))
@@ -11994,18 +14718,16 @@ def advance_ttd_call_context_observation(
         ):
             raise CampaignError("TTD call-context contract crossed the rebuild boundary")
 
-        adjudication_id = "A-" + _sha256_text(
-            "|".join(
-                (
-                    parent_ready_sha,
-                    semantic_sha,
-                    proof_sha,
-                    contract["contractId"],
-                    parent["questionId"],
-                    "SURVIVED",
-                )
-            )
-        )[:16]
+        if (
+            semantic_sha != TTD_CALL_CONTEXT_SEMANTIC_VERIFICATION_SHA256
+            or proof_sha != TTD_CALL_CONTEXT_PROOF_READY_SHA256
+        ):
+            raise CampaignError("TTD call-context adjudication evidence identity differs")
+        adjudication_id = _ttd_call_context_adjudication_id(
+            parent_ready_sha,
+            contract["contractId"],
+            parent["questionId"],
+        )
         if any(
             row.get("adjudicationId") == adjudication_id
             for row in rows["adjudications"]
@@ -12043,8 +14765,18 @@ def advance_ttd_call_context_observation(
     counts = {name: len(rows[name]) for name in rows}
     if counts != TTD_CALL_CONTEXT_EXPECTED_GENERATION10_COUNTS:
         raise CampaignError("TTD call-context Generation 10 row counts differ")
+    advance_kind = (
+        TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND
+        if _recovery_profile
+        else TTD_CALL_CONTEXT_ADVANCE_KIND
+    )
+    advance_schema = (
+        TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA
+        if _recovery_profile
+        else TTD_CALL_CONTEXT_ADVANCE_SCHEMA
+    )
     observation_id = "CO-" + _sha256_text(
-        "|".join((parent_ready_sha, proof_sha, TTD_CALL_CONTEXT_ADVANCE_KIND))
+        "|".join((parent_ready_sha, proof_sha, advance_kind))
     )[:16]
     output_rows = {
         "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
@@ -12064,8 +14796,8 @@ def advance_ttd_call_context_observation(
             _write_tsv(stage / name, columns, output)
         reducer = _publish_reducer(stage)
         advance = {
-            "kind": TTD_CALL_CONTEXT_ADVANCE_KIND,
-            "schema": TTD_CALL_CONTEXT_ADVANCE_SCHEMA,
+            "kind": advance_kind,
+            "schema": advance_schema,
             "observationId": observation_id,
             "verdict": "SURVIVED",
             "evidence": {
@@ -12106,6 +14838,28 @@ def advance_ttd_call_context_observation(
                 "StartDie zero events apply only to the exact inclusive window and are not a non-reachability law.",
             ],
         }
+        if _recovery_profile:
+            partition_context = _partition_relation_context(base_receipt)
+            if (
+                partition_context is None
+                or partition_context.get("advanceKind")
+                != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+            ):
+                raise CampaignError("TTD recovery parent lacks exact 8R ancestry")
+            advance.update(
+                {
+                    "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+                    "observationEvidenceMode": (
+                        "HISTORICAL_SCHEMA3_EVIDENCE_REVALIDATED_NOT_RERUN"
+                    ),
+                    "traceHashDisposition": (
+                        "BOUND_RECEIPT_HASH_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+                    ),
+                    "historicalProjection": _ttd_recovery_historical_projection(
+                        rows, partition_context
+                    ),
+                }
+            )
         receipt = {
             "schema": SCHEMA,
             "reducer": reducer,
@@ -12121,13 +14875,309 @@ def advance_ttd_call_context_observation(
             "questionTypes": dict(
                 Counter(row["questionType"] for row in rows["questions"])
             ),
-            "policies": [
-                "Only three exact Generation 9 function contracts receive C2 bounded-runtime advances.",
-                "Raw carriers remain untyped; orphan return boundaries are never forged into invocation backlinks.",
-                "The StartDie zero-event control remains OPEN/C0 and is bounded to the exact replay window.",
-                "No name, range, memory-write, rebuild mapping, parity, or supersession claim is promoted.",
-                "The frozen reducer replays both replicas, the independent proof, and the exact row delta.",
-            ],
+            "policies": (
+                _ttd_recovery_policies()
+                if _recovery_profile
+                else [
+                    "Only three exact Generation 9 function contracts receive C2 bounded-runtime advances.",
+                    "Raw carriers remain untyped; orphan return boundaries are never forged into invocation backlinks.",
+                    "The StartDie zero-event control remains OPEN/C0 and is bounded to the exact replay window.",
+                    "No name, range, memory-write, rebuild mapping, parity, or supersession claim is promoted.",
+                    "The frozen reducer replays both replicas, the independent proof, and the exact row delta.",
+                ]
+            ),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def advance_ttd_call_context_observation_recovery(
+    campaign: Path,
+    evidence_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Re-reduce the retained schema-v3 observation on the exact 9R parent."""
+
+    return advance_ttd_call_context_observation(
+        campaign,
+        evidence_root,
+        out,
+        _self_check=_self_check,
+        _verified_parent_receipt=_verified_parent_receipt,
+        _recovery_profile=True,
+    )
+
+
+def _gen73_reseal_adjudication_id(
+    closure_ready_sha256: str,
+    contract_id: str,
+    question_id: str,
+    terminal_state: str,
+) -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                GEN73_RESEAL_PARENT_READY_SHA256,
+                closure_ready_sha256,
+                contract_id,
+                question_id,
+                "SURVIVED",
+                terminal_state,
+            )
+        )
+    )[:16]
+
+
+def _gen73_reseal_rows_and_advance(
+    campaign: Path,
+    closure_root: Path,
+    base_receipt: dict,
+) -> tuple[dict[str, list[dict]], dict, set[str]]:
+    expected_parent = (REPO_ROOT / GEN73_RESEAL_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError("Gen73 reseal does not use exact canonical 10R")
+    raw_closure = Path(os.path.abspath(closure_root))
+    expected_closure = (REPO_ROOT / GEN73_RESEAL_CLOSURE_RELATIVE).resolve()
+    try:
+        plain_closure = ghidra_backup.resolve_plain_path(
+            raw_closure, "Gen73 reseal closure", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Gen73 reseal closure is not plain: {exc}") from exc
+    if plain_closure != expected_closure:
+        raise CampaignError("Gen73 reseal closure is not the reviewed immutable root")
+    closure_ready_path = plain_closure / "closure.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            closure_ready_path, "Gen73 reseal closure READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Gen73 reseal closure READY is not plain: {exc}") from exc
+    closure_ready_stamp = coverage.file_stamp(plain_ready)
+    if (
+        plain_ready.stat().st_nlink != 1
+        or closure_ready_stamp["bytes"] != GEN73_RESEAL_CLOSURE_READY_BYTES
+        or closure_ready_stamp["sha256"] != GEN73_RESEAL_CLOSURE_READY_SHA256
+    ):
+        raise CampaignError("Gen73 reseal closure READY identity differs")
+    try:
+        closure_receipt = gen73_reseal.verify_closure(plain_closure)
+        derived = gen73_reseal.derive_projection()
+    except (OSError, ValueError, gen73_reseal.ResealError) as exc:
+        raise CampaignError(f"Gen73 reseal closure does not rederive: {exc}") from exc
+    if (
+        base_receipt.get("generation") != 10
+        or base_receipt.get("counts") != GEN73_RESEAL_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id") != GEN73_RESEAL_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("Gen73 reseal parent receipt differs")
+
+    rows = json.loads(json.dumps(derived["outputRows"]))
+    contracts_by_id = {row["contractId"]: row for row in rows["contracts"]}
+    questions_by_id = {row["questionId"]: row for row in rows["questions"]}
+    terminal_claims = [
+        row for row in derived["claims"] if row["claimKind"] == "TERMINAL_RESIDUAL"
+    ]
+    if len(terminal_claims) != 6082:
+        raise CampaignError("Gen73 reseal terminal-claim census differs")
+    existing_ids = {row["adjudicationId"] for row in rows["adjudications"]}
+    forbidden_ids = {
+        row["adjudicationId"] for row in derived["candidateRows"]["adjudications"]
+    } | {
+        row["adjudicationId"] for row in derived["historicalRows"]["adjudications"]
+    }
+    new_ids: set[str] = set()
+    for claim in terminal_claims:
+        contract_id = str(claim["contractId"])
+        question_id = str(claim["questionId"])
+        terminal_state = str(claim["terminalState"])
+        contract = contracts_by_id.get(contract_id)
+        question = questions_by_id.get(question_id)
+        if (
+            contract is None
+            or question is None
+            or contract.get("entityKey") != claim["entityKey"]
+            or question.get("entityKey") != claim["entityKey"]
+            or question.get("state") != "CLOSED_SURVIVED"
+            or question.get("lastOutcome") != "SURVIVED"
+            or question_id not in _state_values(
+                contract.get("questionIds"), f"Gen73 reseal contract {contract_id} questions"
+            )
+            or not terminal_state.startswith("TERMINAL_")
+            or not str(contract.get("contractState", "")).startswith("TERMINAL_")
+        ):
+            raise CampaignError(f"Gen73 reseal terminal claim is incoherent: {claim['entityKey']}")
+        adjudication_id = _gen73_reseal_adjudication_id(
+            closure_ready_stamp["sha256"], contract_id, question_id, terminal_state
+        )
+        if (
+            adjudication_id in existing_ids
+            or adjudication_id in forbidden_ids
+            or adjudication_id in new_ids
+        ):
+            raise CampaignError("Gen73 reseal adjudication identity is not fresh")
+        evidence_hashes = re.findall(
+            r"#sha256=([0-9a-f]{64})(?:;|$)", str(claim["evidenceRefs"])
+        )
+        if len(evidence_hashes) < 2 or len(set(evidence_hashes)) != len(evidence_hashes):
+            raise CampaignError(
+                f"Gen73 reseal terminal claim evidence is incomplete: {claim['entityKey']}"
+            )
+        rows["adjudications"].append(
+            {
+                "adjudicationId": adjudication_id,
+                "baseContractId": contract_id,
+                "entityKey": claim["entityKey"],
+                "overlaySchema": gen73_reseal.SCHEMA,
+                "overlayReadySha256": closure_ready_stamp["sha256"],
+                "questionIdsAddressed": question_id,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": "False",
+                "terminalState": terminal_state,
+                "successorQuestionIds": "",
+                "remainingUncertainty": contract["remainingUncertainty"],
+                "measuredAtUtc": claim["measuredAtUtc"],
+            }
+        )
+        new_ids.add(adjudication_id)
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != gen73_reseal.EXPECTED_COUNTS:
+        raise CampaignError(f"Gen73 reseal output counts differ: {counts}")
+    if len(rows["supersessions"]) != 584:
+        raise CampaignError("Gen73 reseal changed canonical 10R supersessions")
+    adjudication_digest = _sha256_text("".join(value + "\n" for value in sorted(new_ids)))
+    claim_counts = dict(
+        sorted(Counter(row["disposition"] for row in derived["claims"]).items())
+    )
+    advance = {
+        "kind": GEN73_RESEAL_RECOVERY_ADVANCE_KIND,
+        "schema": GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "resealId": "RS-" + _sha256_text(
+            "|".join(
+                (
+                    GEN73_RESEAL_PARENT_READY_SHA256,
+                    closure_ready_stamp["sha256"],
+                    GEN73_RESEAL_RECOVERY_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "closure": {
+            "root": GEN73_RESEAL_CLOSURE_RELATIVE.as_posix(),
+            "ready": {**closure_ready_stamp, "path": "closure.ready.json"},
+            "outputs": closure_receipt["outputs"],
+        },
+        "evidenceMode": "CURRENT_PACKS_REVALIDATED_FROM_PRISTINE_NOT_RERUN",
+        "candidateTipDisposition": "SUPERSEDED_PROJECTION_ORACLE_NOT_PARENT",
+        "candidateTipReadySha256": gen73_reseal.CANDIDATE_READY_SHA256,
+        "historicalBaselineReadySha256": (
+            gen73_reseal.HISTORICAL_BASELINE_READY_SHA256
+        ),
+        "claimCounts": claim_counts,
+        "sourceDispositionCounts": derived["sourceDispositionCounts"],
+        "newAdjudications": {
+            "count": len(new_ids),
+            "idsSha256": adjudication_digest,
+            "semanticPromotionApplied": False,
+        },
+        "preserved10R": {
+            "adjudications": 6,
+            "supersessions": 584,
+            "recoveryContractEvidenceFloors": 29,
+        },
+        "delta": {
+            "functionRowsChanged": 1133,
+            "residualRowsChanged": 6082,
+            "questionRowsChanged": 6082,
+            "scenarioRowsChanged": 0,
+            "leverRowsChanged": 0,
+            "contractRowsChanged": 7215,
+            "adjudicationIdsAdded": 6082,
+            "supersessionsChanged": 0,
+            "candidateOnlyQuestionRowsRejected": 214,
+            "candidateAdjudicationRowsRejected": 7298,
+            "candidateSupersessionRowsRejected": 7099,
+        },
+        "semanticLimitations": [
+            "The historical Generation 73 tree is a projection oracle, never a parent or authority.",
+            "Twenty police-reopened residuals remain OPEN; NearClone remains exact 10R.",
+            "Seven wrapper C1 claims and ApplyDamage C2 are quarantined.",
+            "ApplyDamage remains C1 with its missing-raw-log limitation.",
+            "No game run, TTD replay, Ghidra mutation, rebuild mapping, or parity claim is made.",
+        ],
+    }
+    return rows, advance, new_ids
+
+
+def advance_gen73_reseal_recovery(
+    campaign: Path,
+    closure_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish one field-scoped Gen11 reseal rooted at canonical 10R."""
+
+    if out.exists():
+        raise CampaignError(f"refusing existing Gen73-reseal destination: {out}")
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_gen73_reseal_parent_campaign(campaign)
+    )
+    rows, advance, _new_ids = _gen73_reseal_rows_and_advance(
+        campaign, closure_root, base_receipt
+    )
+    counts = {name: len(value) for name, value in rows.items()}
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (ADJUDICATION_COLUMNS, rows["adjudications"]),
+        "campaign-supersessions.tsv": (SUPERSESSION_COLUMNS, rows["supersessions"]),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 11,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": counts,
+            "questionTypes": dict(Counter(row["questionType"] for row in rows["questions"])),
+            "policies": _gen73_reseal_policies(),
             "outputs": {
                 name: {**coverage.file_stamp(stage / name), "path": name}
                 for name in OUTPUTS
@@ -12687,6 +15737,25 @@ def main(argv: list[str] | None = None) -> int:
     advance_semantic_parser.add_argument("--live-ready", type=Path, required=True)
     advance_semantic_parser.add_argument("--out", type=Path, required=True)
 
+    advance_semantic_recovery_parser = commands.add_parser(
+        "advance-ghidra-semantic-promotion-recovery",
+        help=(
+            "re-reduce the exact surviving five-row target-lock evidence on 8R "
+            "while binding the recovered historical owner byte identity; this does "
+            "not rerun the proof or mutate Ghidra"
+        ),
+    )
+    advance_semantic_recovery_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_semantic_recovery_parser.add_argument(
+        "--live-ready", type=Path, required=True
+    )
+    advance_semantic_recovery_parser.add_argument(
+        "--owner-recovery-ready", type=Path, required=True
+    )
+    advance_semantic_recovery_parser.add_argument("--out", type=Path, required=True)
+
     advance_residual_parser = commands.add_parser(
         "advance-ghidra-residual-promotion",
         help=(
@@ -12715,6 +15784,36 @@ def main(argv: list[str] | None = None) -> int:
     advance_partition_parser.add_argument("--parity-export", type=Path, required=True)
     advance_partition_parser.add_argument("--out", type=Path, required=True)
 
+    advance_partition_recovery_parser = commands.add_parser(
+        "advance-ghidra-residual-partition-recovery",
+        help=(
+            "rebuild the exact Atomic14 partition from Generation 7 using the "
+            "new post-loss proof identity without substituting historical a504"
+        ),
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--snapshot", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--live-ready", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--recovery-proof-ready", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--targets", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--padding", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument(
+        "--parity-export", type=Path, required=True
+    )
+    advance_partition_recovery_parser.add_argument("--out", type=Path, required=True)
+
     advance_ttd_parser = commands.add_parser(
         "advance-ttd-call-context-observation",
         help=(
@@ -12725,6 +15824,28 @@ def main(argv: list[str] | None = None) -> int:
     advance_ttd_parser.add_argument("--campaign", type=Path, required=True)
     advance_ttd_parser.add_argument("--evidence", type=Path, required=True)
     advance_ttd_parser.add_argument("--out", type=Path, required=True)
+
+    advance_ttd_recovery_parser = commands.add_parser(
+        "advance-ttd-call-context-observation-recovery",
+        help=(
+            "re-reduce the retained Level 521 schema-v3 evidence on the exact "
+            "Generation 9R parent without recording or rehashing a trace"
+        ),
+    )
+    advance_ttd_recovery_parser.add_argument("--campaign", type=Path, required=True)
+    advance_ttd_recovery_parser.add_argument("--evidence", type=Path, required=True)
+    advance_ttd_recovery_parser.add_argument("--out", type=Path, required=True)
+
+    advance_reseal_parser = commands.add_parser(
+        "advance-gen73-reseal-recovery",
+        help=(
+            "publish Generation 11 from exact canonical 10R using the immutable "
+            "field-scoped Gen73 claim closure"
+        ),
+    )
+    advance_reseal_parser.add_argument("--campaign", type=Path, required=True)
+    advance_reseal_parser.add_argument("--closure", type=Path, required=True)
+    advance_reseal_parser.add_argument("--out", type=Path, required=True)
 
     args = parser.parse_args(argv)
     try:
@@ -12809,6 +15930,18 @@ def main(argv: list[str] | None = None) -> int:
                 f"count={receipt['advance']['count']} out={args.out}"
             )
             return 0
+        if args.command == "advance-ghidra-semantic-promotion-recovery":
+            receipt = advance_ghidra_semantic_promotion_recovery(
+                args.campaign,
+                args.live_ready,
+                args.owner_recovery_ready,
+                args.out,
+            )
+            print(
+                f"CAMPAIGN_GHIDRA_SEMANTIC_RECOVERED generation={receipt['generation']} "
+                f"count={receipt['advance']['count']} out={args.out}"
+            )
+            return 0
         if args.command == "advance-ghidra-residual-promotion":
             receipt = advance_ghidra_residual_promotion(
                 args.campaign, args.evidence, args.lineage, args.out
@@ -12835,6 +15968,23 @@ def main(argv: list[str] | None = None) -> int:
                 f"padding={receipt['advance']['partition']['paddingCount']} out={args.out}"
             )
             return 0
+        if args.command == "advance-ghidra-residual-partition-recovery":
+            receipt = advance_ghidra_residual_partition_recovery(
+                args.campaign,
+                args.snapshot,
+                args.live_ready,
+                args.recovery_proof_ready,
+                args.targets,
+                args.padding,
+                args.parity_export,
+                args.out,
+            )
+            print(
+                f"CAMPAIGN_GHIDRA_PARTITION_RECOVERED generation={receipt['generation']} "
+                f"functions={receipt['advance']['partition']['functionCount']} "
+                f"padding={receipt['advance']['partition']['paddingCount']} out={args.out}"
+            )
+            return 0
         if args.command == "advance-ttd-call-context-observation":
             receipt = advance_ttd_call_context_observation(
                 args.campaign, args.evidence, args.out
@@ -12842,6 +15992,26 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"CAMPAIGN_TTD_CALL_CONTEXT_ADVANCED generation={receipt['generation']} "
                 f"contracts={receipt['advance']['questionsClosed']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-ttd-call-context-observation-recovery":
+            receipt = advance_ttd_call_context_observation_recovery(
+                args.campaign, args.evidence, args.out
+            )
+            print(
+                f"CAMPAIGN_TTD_CALL_CONTEXT_RECOVERED generation={receipt['generation']} "
+                f"contracts={receipt['advance']['questionsClosed']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-gen73-reseal-recovery":
+            receipt = advance_gen73_reseal_recovery(
+                args.campaign, args.closure, args.out
+            )
+            print(
+                f"CAMPAIGN_GEN73_RESEAL_RECOVERED generation={receipt['generation']} "
+                f"claims={receipt['advance']['newAdjudications']['count']} "
                 f"out={args.out}"
             )
             return 0

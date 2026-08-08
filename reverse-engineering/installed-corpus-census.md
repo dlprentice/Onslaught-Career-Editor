@@ -433,9 +433,10 @@ The executable RE program is deep but not complete. The historical
 7,555-row inventory current at this document's 2026-07-28 survey date, so that
 survey's `.text` coverage figure was **UNKNOWN**. Neither metric proves that
 every recovered function's semantics or every released behavior is understood.
-The live function ledger has since grown to 8,124 functions at campaign
-generation 73 (2026-08-06); the campaign census is owned by
-`developer_state.json` → `complete_re_tip_20260805`, not by this
+The live function ledger has since grown to 8,124 functions. Candidate
+Generation 73 was subsequently closed claim by claim onto canonical recovered
+Generation 11 (2026-08-08); current campaign census and authority selection are
+owned by `developer_state.json` → `current_re_authority`, not by this
 survey-dated document.
 
 ### `Message.exe`

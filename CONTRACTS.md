@@ -1,10 +1,10 @@
 # Retail function and behavior contracts
 
 Status: active contract-system front door
-Last updated: 2026-08-06
+Last updated: 2026-08-08
 Summary: how Battle Engine Aquila contract evidence is graded, located,
-refuted, promoted, and carried into the rebuild. Live tip census is not
-Generation 10 — see `developer_state.json` → `complete_re_tip_20260805`.
+refuted, promoted, and carried into the rebuild. Current replay authority is
+selected only by `developer_state.json` → `current_re_authority`.
 
 Evidence: MEASURED — the named immutable campaign ledgers and their frozen
 verifiers own current per-entity state; this page defines routing and grade
@@ -57,15 +57,17 @@ chain that ordinarily precedes it.
 it. Candidate overlays and agent reports are inputs, not campaign authority,
 until the reducer admits them through a new verified generation.
 
-**Live complete-RE tip (2026-08-06):** do not treat Generation 10 as the live tip.
-Read `developer_state.json` → `complete_re_tip_20260805` and
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md)
-for tip generation (73), C1/C2/OPAQUE census, and Ghidra-apply authorization
-(currently **NOT_AUTHORIZED**). Tip work after Gen55 is dominated by
-OPAQUE→C1 PE plates under standing six-way review (direct DeepSeek sessions:
-native subagent N+A per AGENTS.md carve-out); C1 is partial PE contract
-state, not dual-runtime C2 and not bulk Ghidra rename authority. C2 bulk
-promotion from PE alone remains forbidden (perva plate DO_NOT_APPLY).
+**Current complete-RE authority (2026-08-08):** do not treat historical
+Generation 10 or candidate Generation 73 as the live replay parent. Read
+`developer_state.json` → `current_re_authority`. Canonical Generation 11 has
+8,124 functions, 14,241 contracts, 216 `C1_CANDIDATE_PARTIAL` functions, four
+`C2_BOUNDED_RUNTIME` functions, 7,904 opaque functions, 20 open residuals, and
+zero `REBUILD_READY` contracts. Its exact READY is `9b3769c5…2686d`; frozen
+reducer `e88c9739…6993`. Generation 73 is a projection oracle only. The closure
+keeps seven wrappers name-only/opaque, keeps ApplyDamage at C1 with an
+`UNSCORED` refuter, rejects its C2 proposal, and leaves NearClone unchanged.
+C1 remains partial evidence, not dual-runtime C2, rebuild parity, or bulk Ghidra
+rename authority. The next valid campaign generation is 12.
 
 **Historical Gen10 immutable admission (2026-08-04):** READY SHA-256
 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,

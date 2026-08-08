@@ -3,23 +3,24 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-06 (live tip pointer added; contract census refreshed to Gen73)
+Last updated: 2026-08-08 (post-loss Gen11 authority; live Ghidra unchanged)
 Verdict: **The verified maintainer database now contains 8,124 function
 boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
 previous residual entries, then 14 exact console-callback-region boundaries.
-Generation 10 accounts for those functions plus 6,117 exact residual entities,
+Canonical recovered Generation 11 accounts for those functions plus 6,117 exact residual entities,
 1,767,100 body bytes, and 162,017 still-unmapped executable bytes. The 14 new
 functions remain deliberately opaque; 15 interstitial ranges / 107 bytes are
 terminally proven NOP padding. A third authorized operation corrected five
 same-range target-lock names/signatures/comments without changing that boundary
 inventory or advancing a behavioral grade. Boundary accounting has advanced materially, but
-semantics remain the hard problem: 14,237 of 14,241 contract rows are `C0_OPAQUE`;
-four are `C2_BOUNDED_RUNTIME`, and none is rebuild-ready. The authored Mission
+semantics remain the hard problem: 14,021 of 14,241 contract rows are `C0_OPAQUE`,
+216 are `C1_CANDIDATE_PARTIAL`, four are `C2_BOUNDED_RUNTIME`, and none is
+rebuild-ready. The authored Mission
 `Damage` chain plus three raw Level 521 call-context contracts have crossed a
 bounded runtime gate. This file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative generation-10 campaign bundle, tracked Ghidra snapshot,
+readback, authoritative recovered-generation-11 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,
 copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
 claims are labelled where they carry less authority than shipped bytes or
@@ -37,33 +38,34 @@ not establish its Steam depot identity.
 
 ---
 
-## Live complete-RE tip (2026-08-06) — read this first
+## Current complete-RE replay authority (2026-08-08) — read this first
 
-The campaign census below this pointer is the Generation-10 (2026-08-04)
-snapshot. The **live** complete-RE tip is Generation **73** and is owned by
-`developer_state.json` → `complete_re_tip_20260805` plus
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md):
+The campaign census below this pointer is a historical Generation-10
+snapshot. Current authority is canonical recovered Generation **11**, selected
+only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Live tip (Gen73) |
+| Metric | Canonical Gen11 |
 |--------|------------------|
-| Functions | 8,124 (= C1 222 + C2 5 + function_semantic OPAQUE 7,897) |
-| Grades | **C1=222**, **C2=5**, function_semantic **OPAQUE=7897**; contract_C0_OPAQUE **14219**; REBUILD_READY **0** |
-| FUN* tip counter | **0** (ledger counter; not settled nameClass/supersession closure without Gen26–38 scoreboard audit — FINAL delta A3) |
+| Functions | 8,124 (= C1 216 + C2 4 + function semantic OPAQUE 7,904) |
+| Grades | **C1=216**, **C2=4**, contract C0_OPAQUE **14021**; REBUILD_READY **0** |
 | OPEN residual | **20** police holds |
 | complete_RE | **false** |
-| Ghidra apply | **NOT_AUTHORIZED** (operator 2026-08-06); FINAL-3WAY-DELTA is eligibility frame only |
-| Tip campaign | `local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1/…` |
+| READY / reducer | `9b3769c5…2686d` / `e88c9739…6993` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/` |
+| Next valid generation | **12** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
-superseded-claims appendix) is unaffected by Generations 11–73.
+superseded-claims appendix) is retained. Candidate Generation 73 is now an
+explicit projection oracle only; its admissible fields were resealed onto the
+post-loss lineage claim by claim.
 
 ---
 
 ## Current recursive-campaign delta (2026-08-04, Generation 10 — historical)
 
-**Not the live tip** (see the pointer above; live tip is Gen73 as of
-2026-08-06). This block supersedes later 7,555-row present-tense denominators.
+**Not the current authority** (see the pointer above). This block supersedes
+later 7,555-row present-tense denominators.
 Those tables remain useful as the dated 2026-07-29 semantic/naming baseline
 until their derived percentages are regenerated against the live tip.
 
@@ -72,7 +74,7 @@ until their derived percentages are regenerated against the live tip.
 | Authoritative campaign | `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2`; READY SHA-256 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; frozen reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9` |
 | Live maintainer Ghidra | 8,124 functions after 529 exact boundary-only promotions plus five same-range target-lock semantic corrections; POST fileset SHA-256 `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702` |
 | Remaining executable accounting | 6,117 residuals; 162,017 unmapped executable bytes; exact function bodies cover 1,767,100 bytes / 91.6015% of `.text` |
-| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Live tip (Gen73): C1=222, C2=5, contract_C0_OPAQUE=14219, REBUILD_READY=0** |
+| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Canonical Gen11: C1=216, C2=4, contract C0_OPAQUE=14021, REBUILD_READY=0.** |
 | Runtime console census | A replicated 16-byte disposable logger bridge realizes 31 commands and 56 CVars on Level 100; static registration contains 32/59, with `fmv_play` and three debris CVars absent on that path. READY SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297` |
 | Latest exact partition | The retired residual `[0x004295BC,0x00429BC0)` is now exactly replaced by 14 opaque functions / 1,433 code bytes and 15 terminal NOP-padding residuals / 107 bytes. No callback name, signature, ABI, behavior, or rebuild claim was promoted. |
 | TTD corpus | 75 traces / 497.31 GiB. Coverage exists for 73 traces, but 65 traces remain coverage-only and there is no normalized corpus-wide call/return/receiver/argument ledger |
@@ -149,11 +151,12 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use generation 10 and its verified parent live-POST/partition evidence for current function/residual
-identity, the unpatched baseline image for bytes and shipped tables, RTTI/source
+Use canonical recovered Generation 11 for current campaign function/residual and
+contract state, its verified live-POST/partition ancestors for Ghidra state, the
+unpatched baseline image for bytes and shipped tables, RTTI/source
 strings for identity evidence, controlled copied-runtime work for behavior, and
 this document for the reviewed synthesis and open queue. Use the 2026-07-28
-7,555-row table only for semantic fields that generation 10 explicitly carried
+7,555-row table only for semantic fields that the current reducer explicitly carried
 forward or for a clearly dated comparison.
 
 ### Master map

@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-06 (tip pointer; Gen10 block demoted to historical)
+Last updated: 2026-08-08 (post-loss Gen11 authority; Gen10/Gen73 demoted)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -49,26 +49,24 @@ not establish its Steam depot identity.
 
 ---
 
-## Live complete-RE tip (2026-08-06) — read first
+## Current complete-RE replay authority (2026-08-08) — read first
 
-Live tip census is **not** the Gen10 block below. Re-read
-`developer_state.json` → `complete_re_tip_20260805` and
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md).
-As of 2026-08-06: tip **Gen73**, functions=**8124**, C1=**222**, C2=**5**,
-function_semantic OPAQUE=**7897**, contract_C0_OPAQUE=**14219**, FUN* counter=**0**,
-OPEN residual=**20**, complete_RE=**false**, REBUILD_READY=**0**,
-Ghidra apply **NOT_AUTHORIZED**. Tip campaign:
-`local-lab/function-c1-opaque-squad-spawn-helpers-batch-generation73-20260806-v1`.
-Next mass lever: Gen74 OPAQUE→C1 under six-way
-(direct DeepSeek sessions: native subagent N+A per AGENTS.md carve-out);
-C1 PE ≠ C2 dual-runtime.
+Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
+`developer_state.json` → `current_re_authority`. Canonical recovered Gen11 has
+functions=**8124**, C1=**216**, C2=**4**, function semantic OPAQUE=**7904**,
+contract C0_OPAQUE=**14021**, OPEN residual=**20**, complete_RE=**false**, and
+REBUILD_READY=**0**. Its READY is `9b3769c5…2686d`; reducer
+`e88c9739…6993`. Generation 73 is projection-oracle evidence only. Seven
+wrappers remain name-only/opaque; ApplyDamage remains C1 with an UNSCORED
+refuter; its C2 is rejected; NearClone remains unchanged. The next valid
+campaign generation is 12. C1 PE evidence is not C2 runtime proof or parity.
 
 ## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
 
 - Generation 10 was the machine-local range/contract admission then: 8,124 functions,
   6,117 residuals, 162,017 unmapped executable bytes, 14,241 contracts, and 584
   exact supersessions. At that handoff four contracts were `C2_BOUNDED_RUNTIME`
-  (tip Gen73 has **C2=5**). None was rebuild-ready. Generation 9's five target-lock
+  (canonical Gen11 retains those same **four**). None is rebuild-ready. Generation 9's five target-lock
   changes remain same-range metadata/evidence corrections; Generation 10
   separately admitted three bounded Level 521 call-context contracts.
 - A replicated disposable bridge redirected only the four `ShowCmds`/`ShowVars`

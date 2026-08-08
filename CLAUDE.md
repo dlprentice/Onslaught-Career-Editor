@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — Claude Code bootstrap; rules and routing only.
-Last updated: 2026-08-06.
+Last updated: 2026-08-08.
 Summary: load the authoritative contributor contract, current state, and the
 right evidence owner without duplicating them here.
 
@@ -27,14 +27,13 @@ a bounded contract is not completion.
 4. [`GOAL.md`](GOAL.md) — standing outcomes and acceptance targets.
 5. [`developer_state.json`](developer_state.json) — resumable state and exact
    evidence pointers. Treat it as awareness, never as truth that primary
-   evidence cannot overturn. For complete-RE tip census and Ghidra-apply
-   authorization, open key `complete_re_tip_20260805` (and
-   `cumulative_checkpoints` when present). Prefer the path named as
-   FINAL-3WAY-DELTA over Gen10 “current handoff” prose in GOAL/DELTA.
+   evidence cannot overturn. For complete-RE replay authority, open
+   `current_re_authority`; Generation 73 is a projection oracle, not a parent.
+   Ghidra mutation has a separate evidence and authorization gate.
 6. `local-lab/INDEX.md`, when present — ignored working evidence invisible to a
    fresh clone.
 7. The owning lane: [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
-   (live tip first, historical Gen10 demoted),
+   (current recovered authority first; Gen10/Gen73 demoted),
    [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md), or [`CLI.md`](CLI.md).
 
 Current user intent, code, runtime behavior, and primary evidence outrank stale
@@ -62,9 +61,11 @@ Do not paste live C1/OPAQUE numbers into this file.
   contracts, patch/mod value, and reconstruction owners/tests. Preserve open
   questions and the cheapest falsifier instead of filling gaps with plausible
   names.
-- Delegate independent measurement and adversarial review when useful. Verify a
-  background reviewer actually began; a spawn receipt is not liveness. Treat
-  every report as input to reproduce, not authority to publish or promote.
+- Delegate independent measurement and adversarial review when useful, starting
+  with this harness's native subagents. External models are situational, not a
+  mandatory matrix; follow `reverse-engineering/REVIEW-PROTOCOL.md`. Verify a
+  background reviewer actually began, and treat every report as input to
+  reproduce rather than authority to publish or promote.
 - The presence of a Ghidra MCP connection grants access, not permission to
   mutate the maintainer project. Follow the promotion gate in `AGENTS.md` and
   `reverse-engineering/ghidra/README.md`.

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-08-06 (RE rows added; app/rebuild rows not re-reviewed).
+Last updated: 2026-08-08 (recovery authority and evidence-register gates refreshed).
 Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
@@ -25,9 +25,10 @@ options, not a required sequence.
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |
 | Portable ZIP inputs or layout | `npm run release:winui-zip` |
-| Tip census claim in docs | Re-read `developer_state.json` → `complete_re_tip_20260805` (and FINAL-3WAY-DELTA if named); do not trust Gen10 prose in DELTA/PARITY_LAB as live tip |
-| Campaign ledger / generation TSVs | Frozen generation `re_campaign.py verify` (or the owning tool for that plate); tip campaigns may REFUSE without reducer — expected |
-| C1 PE plate apply | Mutual packSha256 on DISPOSITION/SUMMARY/FORMAL-PACK; standing **six-way** after last hygiene (Grok subagent N+A, DeepSeek Flash max N+A, Opus medium N+A); **direct DeepSeek session carve-out**: native OpenCode subagent N+A satisfies the reviewer bar, external CLIs on request (see AGENTS.md); peBodySha256 dual-pin to specimen |
+| Tip census claim in docs | Re-read `developer_state.json` → `current_re_authority`, require its literal READY/reducer/authority-receipt pins, and run the named full replay. Historical Gen10 and candidate Gen73 blocks are not current routing |
+| Campaign ledger / generation TSVs | The externally pinned frozen bootstrap in `current_re_authority.verify`; a generation number, matching ledgers, self-derived pins, integrity-only success, or candidate reducer is not authority |
+| Tracked evidence register or current authority pointer | `py -3 tools/re_evidence_register_export.py --state developer_state.json --check-header-only` for the portable header gate; on the maintainer host, omit `--check-header-only` and use `--check` for literal-pinned full replay plus byte equality |
+| C1 PE plate apply | Exact current pack path/bytes/SHA, entity/body identity, pristine-byte validation, and a field-scoped reducer. Independent normal/adversarial review is strongly advised for consequential changes but is not a fixed model matrix; see `reverse-engineering/REVIEW-PROTOCOL.md` |
 | C2_BOUNDED_RUNTIME claim | Entity-scoped controlled runtime + can-fail refuter; refuse PE-only bulk C2 |
 | Ghidra mutation | `reverse-engineering/ghidra/README.md` promotion gate + explicit operator authorization; default **not authorized** |
 
