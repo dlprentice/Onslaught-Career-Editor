@@ -331,7 +331,7 @@ class BatchProofTests(unittest.TestCase):
     def test_real_v2_inventory_requires_exact_default_symbol_delta_when_present(self) -> None:
         repo = Path(proof.__file__).resolve().parents[1]
         paths = proof.default_paths(repo)
-        root = repo / "local-lab/formal-crt98-pilot-20260803-v2"
+        root = repo / "local-lab/formal-crt98-pilot-20260803-v3"
         after_functions = root / "runs/replica-a-apply-reopened/functions.tsv"
         after_program = root / "runs/replica-a-apply-reopened/program.tsv"
         manifest = root / "inputs/pilot98.tsv"

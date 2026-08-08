@@ -55,9 +55,9 @@ EXPECTED_COMPILED_PROFILE_SHA256 = "b1e0643d5e76d3aad7e82ca68cb5bd1e5f8e984cab5a
 EXPECTED_COMPILED_WORLDS = 115
 EXPECTED_COMPILED_CALLS = 9236
 EXPECTED_COMPILED_NATIVES = 108
-EXPECTED_PARITY_READY_SHA256 = "4e4dd5cb1262cbb4f3e616aa02619beee1aa7373629737f58a7cb1f577dab310"
-EXPECTED_BODY_RANGES_SHA256 = "ece12c7ce659aa23f8e8fa36b694ef7b2425212ff4ffd4b233535c4a51d00ad5"
-EXPECTED_DIRECT_CALLS_SHA256 = "fd3f744762d11ba40acc194fd69d8c55e855ddd07a80b7cf008c4df841143d00"
+EXPECTED_PARITY_READY_SHA256 = "2954adf2702d195e1a4adb59cb759afea8e9037628d5dbdce04ca34dd1da6fb1"
+EXPECTED_BODY_RANGES_SHA256 = "a863f0447d80b2dc069387d91be893673e01b6cb2d1feddab6a123bde4f11c5a"
+EXPECTED_DIRECT_CALLS_SHA256 = "42d1bb60ab631289c47afefda1a12a601e4549b47c868022ac12ea14bdade8e0"
 EXPECTED_PRINT_BODY_SHA256 = "60606dd5ad10ccd7d43cbe3c45f19ec9a6098527f1c165e00d27903c662fa9fd"
 CAPSTONE_VERSION = "5.0.7"
 CONSOLE_PRINTF_VA = 0x00441740
@@ -1101,7 +1101,7 @@ def canonical_inputs(repo: Path) -> Inputs:
     # corpus, parser, ledger, project export, and specimen fact is content-pinned.
     evidence = Path(os.environ.get("BEA_MSL_LOGGER_EVIDENCE_REPO", str(repo))).absolute()
     lab = evidence / "local-lab"
-    parity = lab / "ghidra-recursive-campaign-2026-08-02/observed40-evidence/after-parity-graph.ready.json"
+    parity = lab / "ghidra-recursive-campaign-2026-08-02/observed40-evidence-8124/after-parity-graph.ready.json"
     return Inputs(
         repo=repo.resolve(), evidence_repo=evidence,
         msl_root=lab / "safe-copy-bea-pristine/data/MissionScripts",
