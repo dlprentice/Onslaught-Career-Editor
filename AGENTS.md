@@ -179,8 +179,9 @@ Also:
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. The standing
-  reviewer set, the eight-way pin, per-generation police, gauntlet loop, and
-  every invocation/concurrency rule are owned by
+  reviewer set, the eight-way pin, the harness-agnostic selection rule (each
+  harness provides its own N+A from its native subagents), per-generation
+  police, gauntlet loop, and every invocation/concurrency rule are owned by
   [`reverse-engineering/REVIEW-PROTOCOL.md`](reverse-engineering/REVIEW-PROTOCOL.md)
   — read it before launching external reviews, and change it there rather than
   here.

@@ -44,14 +44,49 @@ Notes:
 (Grok N+A, DeepSeek Flash-max N+A, Opus 5 medium N+A, GPT 5.6 Luna Max N+A).
 Incomplete coverage is not a finished review.
 
-**Direct DeepSeek session carve-out (FRAGO 2026-08-06):** when the maintainer
-works directly with DeepSeek in an interactive OpenCode session, the external
-eight-way lanes are **not mandatory**. The reviewer pair is the native
-OpenCode subagent tool run as normal **and** adversarial roles
-(explore/general), orchestrated by the session lead. The external CLIs remain
-available on request and when available; their absence does not block a
-direct-session plate. The carve-out does **not** relax per-generation police
-or gauntlet-loop bars for campaign work launched outside a direct session,
+## Harness-agnostic reviewer selection (maintainer FRAGO 2026-08-08)
+
+The reviewer set and the invocation table above are **harness-agnostic**:
+they describe *what the project needs*, not *which harness must provide it*.
+The harness the maintainer is currently running in provides the primary
+cells from its **own native subagents**; the other lanes are complementary
+and run when available or on request.
+
+- **Running in Codex:** primary N+A = Codex native subagents (`codex exec`
+  subagent lanes, e.g. `codex-collaboration-subagent`); do **not** spawn a
+  separate `gpt-5.6-luna` lane — you ARE that lane. Complement with Grok,
+  Opus 5 medium, and DeepSeek Flash-max via their CLIs when the maintainer
+  requests them or quota allows.
+- **Running in Claude Code:** primary N+A = Claude Code native subagents
+  (`claude -p` with subagent tooling or `/agents`); you ARE the Opus lane.
+  Complement with the others on request.
+- **Running in Grok:** primary N+A = Grok subagents; you ARE the Grok lane.
+- **Running in OpenCode (DeepSeek):** primary N+A = native OpenCode subagent
+  tool (explore/general); you ARE the DeepSeek Flash-max lane (variant max).
+  This is the FRAGO 2026-08-06 direct-session carve-out, generalized.
+- **Always normal AND adversarial.** Whatever the harness, each load-bearing
+  review needs both roles with fresh context, inspecting real artifacts —
+  never the builder's self-summary.
+- **Never self-grade.** A harness's own work is reviewed by OTHER lanes or by
+  its own adversarial pass against the builder's report, not by the builder
+  grading itself.
+- The eight-way pin still describes the *complete* load-bearing review. When
+  running in one harness, the maintainer decides (with the pin as default)
+  which additional external lanes to invoke; their absence does not block a
+  direct-session plate but does mean the review is a subset, and that subset
+  must be labeled as such when it lands.
+
+## Direct DeepSeek session carve-out (FRAGO 2026-08-06)
+
+When the maintainer works directly with DeepSeek in an interactive OpenCode
+session, the external eight-way lanes are **not mandatory**. The reviewer
+pair is the native OpenCode subagent tool run as normal **and** adversarial
+roles (explore/general), orchestrated by the session lead. The external CLIs
+remain available on request and when available; their absence does not block
+a direct-session plate. This is the OpenCode instance of the general
+harness-agnostic rule above — the other harnesses follow the same pattern.
+The carve-out does **not** relax per-generation police or gauntlet-loop bars
+for campaign work launched outside a direct session,
 and it does not relax the DeepSeek authority boundaries (DeepSeek is still
 not the integration owner and does not authorize names, signatures, types,
 memory writes, campaign upgrades, rebuild parity, Ghidra mutation, or new
