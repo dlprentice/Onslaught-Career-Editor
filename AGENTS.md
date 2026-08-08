@@ -1,10 +1,11 @@
 # Onslaught Toolkit
 
 Status: active — authoritative contributor contract for this repository.
-Last updated: 2026-08-06 (standing six-way critic pin: Grok + DS Flash max +
-Opus medium; Pro max and Opus max retired for standing RE; direct DeepSeek
-session carve-out added — native subagents N+A when the maintainer works
-directly with DeepSeek in an interactive OpenCode session).
+Last updated: 2026-08-06 (standing eight-way critic pin: Grok + DS Flash max +
+Opus medium + GPT 5.6 Luna Max via Codex; Pro max and Opus max retired for
+standing RE; direct DeepSeek session carve-out added — native subagents N+A
+when the maintainer works directly with DeepSeek in an interactive OpenCode
+session).
 Summary: the mission, evidence boundaries, safety rules, and smallest set of
 routes every contributor needs before working on Battle Engine Aquila.
 
@@ -178,14 +179,15 @@ Also:
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. This repository's
-  default reviewer mix is the standing **six-way** set: **Grok 4.5 High
-  subagents** (normal + adversarial), OpenCode **DeepSeek direct Flash-max**
-  (first-party API through the OpenCode harness—not InferX mirrors and not
-  OpenCode Zen DeepSeek; normal + adversarial), and Claude Code headless
-  **Opus 5 medium** (normal + adversarial). Codex remains usable when weekly
-  quota allows; do **not** skip Grok, DeepSeek Flash, or Opus medium lanes
-  because a quota percentage looks low—use them normally unless the maintainer
-  explicitly parks a lane.
+  default reviewer mix is the standing set: **Grok 4.5 High subagents** (normal +
+  adversarial), OpenCode **DeepSeek direct Flash-max** (first-party API through
+  the OpenCode harness—not InferX mirrors and not OpenCode Zen DeepSeek; normal +
+  adversarial), Claude Code headless **Opus 5 medium** (normal + adversarial),
+  and **GPT 5.6 Luna Max via Codex** (`codex exec -m gpt-5.6-luna-max`; normal +
+  adversarial). Codex remains usable when weekly quota allows; do **not** skip
+  Grok, DeepSeek Flash, Opus medium, or GPT 5.6 Luna lanes because a quota
+  percentage looks low—use them normally unless the maintainer explicitly parks
+  a lane.
 
   **Historical note (unban):** OpenCode was previously avoided because free /
   Zen / InferX DeepSeek mirrors were unreliable for load-bearing RE. That ban
@@ -193,16 +195,16 @@ Also:
   OpenCode). Do not revive the ban; do not fall back to Zen/InferX for
   consequential reviews.
 
-  **Standing six-way critic pin (maintainer FRAGO 2026-08-05):** load-bearing
-  plates require **all six** cells below; incomplete coverage is not a finished
-  review. This supersedes the former ten-way pin (DeepSeek Pro-max and Opus 5
-  max are **retired for standing RE**—do not launch them unless the maintainer
-  explicitly re-authorizes a one-off).
+  **Standing critic pin (maintainer FRAGO 2026-08-05, extended 2026-08-06):**
+  load-bearing plates require **all eight** cells below; incomplete coverage is
+  not a finished review. This supersedes the former ten-way pin (DeepSeek
+  Pro-max and Opus 5 max are **retired for standing RE**—do not launch them
+  unless the maintainer explicitly re-authorizes a one-off).
 
   **Direct DeepSeek session carve-out (maintainer FRAGO 2026-08-06):** when the
   maintainer is working **directly with DeepSeek in an interactive OpenCode
   session** (the mode this document is currently being edited in), the standing
-  external six-way lanes are **not mandatory**. The reviewer pair in a direct
+  external eight-way lanes are **not mandatory**. The reviewer pair in a direct
   session is the **native OpenCode subagent tool** run as normal **and**
   adversarial roles (explore/general), orchestrated by the session lead. The
   external CLIs (Grok, Claude Code headless, Codex, `opencode run` DeepSeek via
@@ -210,7 +212,7 @@ Also:
   absence does not block or fail a direct-session plate. This carve-out does
   **not** relax the per-generation police or gauntlet-loop bars for campaign
   work launched outside a direct session: any load-bearing plate a session is
-  running in the standing campaign/harness machinery still needs its six-way
+  running in the standing campaign/harness machinery still needs its eight-way
   cells unless the maintainer explicitly parks them. It also does not relax the
   DeepSeek authority boundaries: in a direct session DeepSeek is still not the
   integration owner and does not authorize names, signatures, types, memory
@@ -229,10 +231,11 @@ Also:
     routine load-bearing plates; one-off use only with explicit maintainer
     re-authorization)
   - Every consequential review ships **all** of the following when the plate is
-    load-bearing (**six-way**):
+    load-bearing (**eight-way**):
     - Grok subagent normal **and** adversarial
     - DeepSeek Flash-max normal **and** adversarial (OpenCode direct)
     - Claude Opus 5 **medium** normal **and** adversarial (headless `claude -p`)
+    - GPT 5.6 Luna Max normal **and** adversarial (`codex exec -m gpt-5.6-luna-max`)
     Smaller smokes may run a subset only when explicitly labeled smoke—not as
     generation police. Self-authored `GROK-ADVERSARIAL.json` stubs written by
     the integration owner are **hygiene only** and never satisfy this bar.
@@ -249,8 +252,9 @@ Also:
     as well as catch false terminals—not only post-apply attack tables
   - **Per-generation police:** for multi-gen residual/function campaign work,
     each generation is its own review lane (Gen9, Gen10, … GenN separately)—
-    not only one mega-sweep. Each load-bearing gen needs the six-way set above.
-    A cross-gen retrospective may supplement but does not replace per-gen lanes.
+    not only one mega-sweep. Each load-bearing gen needs the eight-way set
+    above. A cross-gen retrospective may supplement but does not replace
+    per-gen lanes.
     Scaffold/status: `local-lab/per-gen-review-*/` +
     `tools/re_per_gen_review_scaffold.py` /
     `tools/re_per_gen_review_scaffold_gen26_33.py`
@@ -259,7 +263,8 @@ Also:
     evidence gates)—not “pretty good.” Lead splits into smallest pieces; each
     piece gets a builder and **separate** critics with fresh context (Grok
     normal+adversarial, DeepSeek Flash-max normal+adversarial, Claude Opus 5
-    medium normal+adversarial). Critic inspects real artifacts, never the
+    medium normal+adversarial, GPT 5.6 Luna Max normal+adversarial). Critic
+    inspects real artifacts, never the
     builder’s self-summary. No fixed round count; keep looping until the bar
     wins or the maintainer stops. See `local-lab/per-gen-review-*/GAUNTLET.md`
     and https://somethingbig.ai/gauntlet-loop. Grok and Claude fan out in
