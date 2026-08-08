@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests

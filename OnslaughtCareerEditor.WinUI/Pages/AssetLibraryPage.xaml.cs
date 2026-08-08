@@ -11,7 +11,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using OnslaughtCareerEditor.WinUI.Helpers;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI;
 using XamlLine = Microsoft.UI.Xaml.Shapes.Line;

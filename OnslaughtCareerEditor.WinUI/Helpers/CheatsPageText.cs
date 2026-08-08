@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {

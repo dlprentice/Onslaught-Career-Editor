@@ -1,7 +1,7 @@
 using System;
 using System.Buffers.Binary;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public readonly record struct MissionScriptSlotBitsetVector(
         int Slot,

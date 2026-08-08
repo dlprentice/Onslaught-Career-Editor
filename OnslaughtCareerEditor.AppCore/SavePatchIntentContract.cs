@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// The complete set of career-section payloads a save patch can carry, together with the section

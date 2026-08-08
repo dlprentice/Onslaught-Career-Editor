@@ -1,4 +1,4 @@
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// The app's appearance choices, kept in AppCore so the setting is a plain

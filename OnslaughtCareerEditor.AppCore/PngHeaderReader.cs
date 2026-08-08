@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public static class PngHeaderReader
     {

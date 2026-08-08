@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed record SafeCopyProfileModule(
         string Id,

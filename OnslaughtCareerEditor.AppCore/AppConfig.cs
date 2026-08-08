@@ -6,7 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// Application configuration for Onslaught Career Editor.

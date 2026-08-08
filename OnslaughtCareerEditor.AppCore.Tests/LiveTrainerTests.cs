@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests

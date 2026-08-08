@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.UI.Xaml.Media;
 using OnslaughtCareerEditor.WinUI.Helpers;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Models
 {

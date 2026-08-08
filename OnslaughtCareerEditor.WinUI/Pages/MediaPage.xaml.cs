@@ -19,7 +19,7 @@ using NAudio.Vorbis;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using OnslaughtCareerEditor.WinUI.Helpers;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using VlcMedia = LibVLCSharp.Shared.Media;
 
 namespace OnslaughtCareerEditor.WinUI.Pages

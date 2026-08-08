@@ -6,9 +6,9 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Onslaught___Career_Editor.Cli;
+using OnslaughtCareerEditor.Cli;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// Headless host for the toolkit's save, options, safe-copy, binary-patch, and process lanes.

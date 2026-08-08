@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OnslaughtCareerEditor.WinUI.Helpers;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace OnslaughtCareerEditor.WinUI.Pages

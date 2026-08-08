@@ -4,7 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor.Cli
+using OnslaughtCareerEditor.AppCore;
+
+namespace OnslaughtCareerEditor.Cli
 {
     /// <summary>
     /// The live-memory lane: read, and carefully write, the vitals of a running copy of the game.

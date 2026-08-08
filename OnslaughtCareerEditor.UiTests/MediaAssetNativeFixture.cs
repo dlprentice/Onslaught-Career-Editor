@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Security.Cryptography;
 using System.Text;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.UiTests;
 

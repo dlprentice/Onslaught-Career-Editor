@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>One career save sitting inside a safe copy.</summary>
     /// <param name="FileName">The file name with its extension, which is what a player recognises.</param>

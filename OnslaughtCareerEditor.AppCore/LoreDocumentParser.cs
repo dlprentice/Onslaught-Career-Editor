@@ -6,7 +6,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using System.Text;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// Turns markdown into a <see cref="LoreDocumentModel"/> by walking Markdig's

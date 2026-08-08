@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using NAudio.Wave;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {

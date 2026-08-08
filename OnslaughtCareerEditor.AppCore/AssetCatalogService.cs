@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed class AssetCatalogService
     {

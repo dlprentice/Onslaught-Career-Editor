@@ -5,7 +5,9 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor.Cli
+using OnslaughtCareerEditor.AppCore;
+
+namespace OnslaughtCareerEditor.Cli
 {
     /// <summary>
     /// The original flag-style invocation: <c>onslaught-career-editor &lt;input&gt; [output] [flags]</c>.

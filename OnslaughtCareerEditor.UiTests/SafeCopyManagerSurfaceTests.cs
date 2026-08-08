@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using OnslaughtCareerEditor.WinUI.Models;
 

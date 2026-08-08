@@ -1,5 +1,5 @@
 using System.Drawing;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.UiTests;
 

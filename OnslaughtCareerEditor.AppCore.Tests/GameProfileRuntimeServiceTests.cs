@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests
@@ -1140,7 +1140,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             string? modulePath,
             GameProfileManagedProcess expected)
         {
-            Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("Onslaught___Career_Editor.DefaultGameProfileProcessRunner")
+            Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("OnslaughtCareerEditor.AppCore.DefaultGameProfileProcessRunner")
                 ?? throw new InvalidOperationException("Default runner type was not found.");
             MethodInfo method = runnerType.GetMethod("MatchesManagedProcessIdentity", BindingFlags.NonPublic | BindingFlags.Static)
                 ?? throw new InvalidOperationException("Default runner identity helper was not found.");
@@ -1149,7 +1149,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
         private static GameProfileStopResult InvokeDefaultRunnerStop(GameProfileManagedProcess expected, TimeSpan? timeout = null)
         {
-            Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("Onslaught___Career_Editor.DefaultGameProfileProcessRunner")
+            Type runnerType = typeof(GameProfileRuntimeService).Assembly.GetType("OnslaughtCareerEditor.AppCore.DefaultGameProfileProcessRunner")
                 ?? throw new InvalidOperationException("Default runner type was not found.");
             object instance = runnerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)
                 ?? throw new InvalidOperationException("Default runner instance was not found.");

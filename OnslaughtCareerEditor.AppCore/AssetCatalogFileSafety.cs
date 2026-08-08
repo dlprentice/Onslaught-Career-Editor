@@ -1,7 +1,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.Security.Cryptography;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     internal static class AssetCatalogFileSafety
     {

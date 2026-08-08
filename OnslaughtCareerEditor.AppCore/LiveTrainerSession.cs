@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>Why an attach was refused. <see cref="None"/> is the only value that allows one.</summary>
     public enum LiveTrainerAttachRefusal

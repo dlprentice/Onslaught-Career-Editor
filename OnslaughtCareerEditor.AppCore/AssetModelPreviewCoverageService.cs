@@ -1,4 +1,4 @@
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed class AssetModelPreviewCoverageService
     {

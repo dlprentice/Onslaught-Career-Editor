@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed record BinaryPatchRegion(
         int FileOffset,

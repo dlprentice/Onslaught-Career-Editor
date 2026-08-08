@@ -1,7 +1,7 @@
 using NAudio.Vorbis;
 using System.Text.RegularExpressions;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed class MediaCatalogService
     {

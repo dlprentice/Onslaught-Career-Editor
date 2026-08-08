@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using System;
 using System.Collections.Generic;
 using System.IO;

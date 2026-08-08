@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.UiTests;

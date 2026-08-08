@@ -1,4 +1,4 @@
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using System;
 using System.Security.Cryptography;
 using System.Text;

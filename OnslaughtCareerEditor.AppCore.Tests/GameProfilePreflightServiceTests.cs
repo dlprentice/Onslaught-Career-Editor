@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests

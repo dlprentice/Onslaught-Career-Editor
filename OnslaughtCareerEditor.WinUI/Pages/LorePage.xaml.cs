@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using System;
 using System.Collections.Generic;

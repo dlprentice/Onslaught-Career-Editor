@@ -1,6 +1,6 @@
 using OnslaughtCareerEditor.WinUI.Helpers;
 using OnslaughtCareerEditor.WinUI.Models;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using System.Xml.Linq;
 
 namespace OnslaughtCareerEditor.UiTests;

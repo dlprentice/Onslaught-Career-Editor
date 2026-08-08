@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// How a lore link should be treated when the reader activates it. The

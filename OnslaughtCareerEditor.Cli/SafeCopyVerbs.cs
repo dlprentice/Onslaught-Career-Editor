@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace Onslaught___Career_Editor.Cli
+using OnslaughtCareerEditor.AppCore;
+
+namespace OnslaughtCareerEditor.Cli
 {
     /// <summary>
     /// The safe-copy, binary-patch, launch, and managed-process lane.

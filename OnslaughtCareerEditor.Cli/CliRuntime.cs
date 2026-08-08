@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Onslaught___Career_Editor.Cli
+using OnslaughtCareerEditor.AppCore;
+
+namespace OnslaughtCareerEditor.Cli
 {
     /// <summary>
     /// The exit code scheme, in one place so every verb answers the same question the same way.

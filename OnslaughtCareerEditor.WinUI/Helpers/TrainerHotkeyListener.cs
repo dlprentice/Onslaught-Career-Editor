@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using WinRT.Interop;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers

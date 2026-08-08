@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Onslaught___Career_Editor.Cli
+using OnslaughtCareerEditor.AppCore;
+
+namespace OnslaughtCareerEditor.Cli
 {
     /// <summary>
     /// Keybind and tri-state token parsing, shared by the legacy invocation and the new

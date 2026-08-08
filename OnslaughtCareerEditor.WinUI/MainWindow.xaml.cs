@@ -13,7 +13,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using OnslaughtCareerEditor.WinUI.Helpers;
 using OnslaughtCareerEditor.WinUI.Pages;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Windows.Graphics;
 using WinRT.Interop;
 

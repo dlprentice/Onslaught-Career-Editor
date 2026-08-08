@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Win32.SafeHandles;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public sealed record GameProfilePrepareOptions(
         string SourceGameRoot,

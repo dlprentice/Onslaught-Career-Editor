@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     public static class FbxModelSummaryReader
     {

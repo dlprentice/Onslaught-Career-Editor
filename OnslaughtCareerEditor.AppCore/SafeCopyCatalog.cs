@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>What one safe copy is, in the terms somebody deciding whether to keep it needs.</summary>
     /// <param name="SizeBytes">

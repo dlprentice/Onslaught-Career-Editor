@@ -2,7 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Globalization;
 
-namespace Onslaught___Career_Editor
+namespace OnslaughtCareerEditor.AppCore
 {
     /// <summary>
     /// The addresses the live trainer uses, and exactly how far the evidence for each one goes.

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using Onslaught___Career_Editor;
+using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
 namespace OnslaughtCareerEditor.AppCore.Tests
