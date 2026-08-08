@@ -28,7 +28,7 @@ SPEC.loader.exec_module(census)
 EVIDENCE_VALUE = os.environ.get("BEA_MSL_LOGGER_EVIDENCE_REPO", str(ROOT))
 EVIDENCE_ROOT = Path(EVIDENCE_VALUE).resolve()
 BUNDLE_VALUE = os.environ.get("BEA_MSL_LOGGER_CENSUS_BUNDLE", "")
-LOCAL_BUNDLE = ROOT / "local-lab/msl-logger-census-2026-08-03-v2-ready"
+LOCAL_BUNDLE = ROOT / "local-lab/msl-logger-census-2026-08-03-v3-ready"
 BUNDLE = Path(BUNDLE_VALUE).absolute() if BUNDLE_VALUE else (LOCAL_BUNDLE if LOCAL_BUNDLE.is_dir() else None)
 
 
