@@ -59,7 +59,10 @@ BACKUP_TOOL = TOOLS / "ghidra_project_backup.py"
 OWNER_TESTS = TOOLS / "ghidra_target_lock_semantic_live_promotion_tests.py"
 LAUNCHER = TOOLS / "ghidra_target_lock_semantic_live_launcher.py"
 PROCESS_HELPER = TOOLS / "ghidra_function_envelope_proof.py"
-PROCESS_HELPER_SHA256 = "e20d619c39dd0f2037523b4577860b6640ed76b0be058472834a587192b305e8"
+# Repinned 2026-08-07: canary/poison TSV re-point to byte-verified
+# formal-function-envelope-canary-20260803-v3/inputs (eight-way review
+# adjudication; same change as the atomic14 owner). Not tampering.
+PROCESS_HELPER_SHA256 = "fdf80237d642db1a2d92213048424f06a4fb0ae614f8e7db6c3bd39210e707a5"
 
 PROOF_ROOT = REPO / "local-lab/ghidra-target-lock-semantic-proof-20260804-v2-r5"
 PROOF_OWNER = TOOLS / "ghidra_target_lock_semantic_proof.py"
@@ -84,11 +87,18 @@ SCRIPT_SOURCE_BUNDLE = (
 )
 SEMANTIC_TOOL_SHA256 = "d3ab355408a70f66032f9a671c846ccf63d154fcd703d1ce20ee7a66396d4485"
 INVENTORY_TOOL_SHA256 = "04519cd813f2fc25ddea8a6660f87c010f8aa4e053560993e4b35cafcc0b5197"
-BACKUP_TOOL_SHA256 = "36969a237eef29fea0daa52fe4a657127bdbbb5091523c9ca7cd92c69566b452"
+# Repinned 2026-08-07: exFAT hard-link fallback + BOM-free probe sentinel
+# fixes (tools/ghidra_project_backup.py 4f60e0c6, verified end-to-end on the
+# F:\ pre/post-pilot backups). Adjudicated by the eight-way review. Not
+# tampering.
+BACKUP_TOOL_SHA256 = "0f426982916f0aab982efe54664342a5d34607c2f89707159ecf6c07e205ad58"
 OWNER_TESTS_SHA256 = "30c844ef27c694d2a44319d1812b2b998203716707a0bb658a87070745552188"
 REVIEWED_TEST_COUNT = 67
 
-PROOF_OWNER_SHA256 = "08bf49f38bfe89224197e28d31c8f7514d690b55f2cb2cdfa4f7fdbb3bc964dd"
+# Repinned 2026-08-07: Opus effort default made fail-closed
+# ('medium' unless review_id == 'opus-max') per the standing pin. Adjudicated
+# by the eight-way review. Not tampering.
+PROOF_OWNER_SHA256 = "753eadcb4f807a30d75c4cab50dca902528d22b581af9c15d987ccb11cce536d"
 PROOF_TESTS_SHA256 = "029f2fad9d37038707ad3d626d3907df85837ca37ae90b698f78265dd331cace"
 PROOF_READY_SHA256 = "f7c4220bdf5dfa6040bad23b11d3253ddeecea47f86b6ee238a28a4280987968"
 PROOF_CORE_SHA256 = "c981402649f3e41fe0fd039329953958451cea6d75c7d9594a593bb2db4ec782"

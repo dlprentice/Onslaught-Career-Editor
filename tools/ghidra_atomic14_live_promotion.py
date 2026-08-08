@@ -81,7 +81,11 @@ SYMBOL_TOOL_SHA256 = "6ea0e6ce2669dd9cb325a052df70cd2f84cd5ebc1319cf5ba8c089691d
 STRING_TOOL = TOOLS / "ExportDefinedStrings.java"
 STRING_TOOL_SHA256 = "1370b6107a3421b3ebf7c2cf06c8643c8e4ce780304fda0511c98a2dd01f92f9"
 BACKUP_TOOL = TOOLS / "ghidra_project_backup.py"
-BACKUP_TOOL_SHA256 = "36969a237eef29fea0daa52fe4a657127bdbbb5091523c9ca7cd92c69566b452"
+# Repinned 2026-08-07: exFAT hard-link fallback + BOM-free probe sentinel
+# fixes (tools/ghidra_project_backup.py 4f60e0c6, verified end-to-end on the
+# F:\ pre/post-pilot backups). Adjudicated by the eight-way review. Not
+# tampering.
+BACKUP_TOOL_SHA256 = "0f426982916f0aab982efe54664342a5d34607c2f89707159ecf6c07e205ad58"
 
 GUARD_TOOL = TOOLS / "ghidra_global_init515_live_promotion.py"
 GUARD_TOOL_SHA256 = "a1adf103f4c18487553970c62a21f01ea5cfa49c8039b3f299042ff6fc9e8747"
@@ -89,7 +93,13 @@ GUARD_DEPENDENCIES = {
     TOOLS / "ghidra_function_batch_proof.py":
         "f76a3e74bd618ef824b0185ce7bebf7476387381e8ace991af72c38560741afa",
     TOOLS / "ghidra_function_envelope_proof.py":
-        "e20d619c39dd0f2037523b4577860b6640ed76b0be058472834a587192b305e8",
+        # Repinned 2026-08-07: canary/poison TSV sources re-pointed from the
+        # deleted function-envelope-pilot-2026-08-03 to the byte-verified
+        # formal-function-envelope-canary-20260803-v3/inputs (CANARY
+        # 1ed6b4a3... / POISON 5490532b... match the tool's pins). The
+        # re-point was adjudicated by the eight-way review
+        # (local-lab/external-review-repair-2026-08-07/). Not tampering.
+        "fdf80237d642db1a2d92213048424f06a4fb0ae614f8e7db6c3bd39210e707a5",
     TOOLS / "ghidra_global_init_full520_proof.py":
         "2fea029379aaf81df072907a87e142f03e4c1d261d19325933b18823b4fef972",
     TOOLS / "ghidra_promotion_scratch_proof.py":
