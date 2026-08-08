@@ -37,13 +37,13 @@ re-running the grader that produced it.
 
 | Area | Canonical entry point |
 | --- | --- |
-| Cross-source synthesis | [Data/source/executable delta](../DELTA.md) |
-| Agentic parity and function discovery | [Parity lab](../PARITY_LAB.md) |
+| Cross-source synthesis | [Data/source/executable delta](delta.md) |
+| Agentic parity and function discovery | [Parity lab](parity-lab.md) |
 | Function and behavior contract system | [Contract front door](../CONTRACTS.md) |
-| Installed data narrative | [Measured installation census](../BEA_DATA.md) |
-| Executable/Ghidra narrative | [Ghidra function synthesis](../GHIDRA_FUNCTONS.md) |
-| Complete executable string inventory | [Binary strings](../BINARY_STRINGS.md) |
-| Pinned-source narrative | [Stuart source synthesis](../STUART_FUNCTIONS.md) |
+| Installed data narrative | [Measured installation census](installed-corpus-census.md) |
+| Executable/Ghidra narrative | [Ghidra function synthesis](ghidra-functions.md) |
+| Complete executable string inventory | [Binary strings](binary-analysis/binary-strings.md) |
+| Pinned-source narrative | [Stuart source synthesis](source-code/stuart-source-synthesis.md) |
 | Save and options formats | [Save-file index](save-file/_index.md) |
 | Retail binary analysis | [Binary-analysis index](binary-analysis/_index.md) |
 | Canonical Ghidra project | [Distributable database](ghidra/README.md) |
@@ -163,7 +163,7 @@ Current local boundaries that materially change the discovery lane:
   binds the pristine specimen to 9,059 Ghidra-defined string occurrences (8,541
   distinct values) and a separately graded raw printable scan. The joined local
   corpus contains 23,459 occurrences / 16,244 distinct values; raw-only rows may
-  be instruction or packed-data noise. [`../BINARY_STRINGS.md`](../BINARY_STRINGS.md)
+  be instruction or packed-data noise. [`../binary-analysis/binary-strings.md`](binary-analysis/binary-strings.md)
   renders the complete Ghidra-defined inventory; xrefs narrow investigation but
   do not prove a dormant feature is live.
 - `local-lab/source-unit-census-v1-ready/source-unit-census.ready.json`,
@@ -263,7 +263,7 @@ being recovered**, which is exactly the trap this metric sets.
 are not the current figure. The tracked `ghidra/` snapshot is the reviewed
 6,411-function state and deliberately lags the live DB. The current 7,555-row
 name projection, live/snapshot distinction, and mutation-wave reconciliation
-are tracked in [`../GHIDRA_FUNCTONS.md`](../GHIDRA_FUNCTONS.md); bulky working
+are tracked in [`ghidra-functions.md`](ghidra-functions.md); bulky working
 exports remain ignored under `local-lab/`.)*
 
 ### Specimen, coverage, and symbol ground truth
@@ -489,7 +489,7 @@ Machine-readable siblings, for consumers that should not be parsing prose:
 
 The MissionScript **command-descriptor** schema that used to sit beside these
 was deleted in `981c3379`; the 144-entry native registry it duplicated now lives
-in [`../GHIDRA_FUNCTONS.md`](../GHIDRA_FUNCTONS.md). Most of the contracts above
+in [`ghidra-functions.md`](ghidra-functions.md). Most of the contracts above
 have no `.json` sibling at all. Do not go looking for one.
 
 ## The 2026-05-26 static-review cohort — the oldest layer here

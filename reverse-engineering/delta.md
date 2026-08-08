@@ -35,7 +35,7 @@ different hashes and are identified separately below.
 **Do not treat the Gen10 table below as the live tip.** Live tip census and
 campaign path are owned by `developer_state.json` → `complete_re_tip_20260805`
 and the cumulative index
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
 Re-read those before quoting generation, C1/C2/OPAQUE, or next steps.
 
 | Surface | Tip measured state (as of 2026-08-06) |
@@ -78,16 +78,16 @@ parity owner, while a patch/mod feature still requires its own safe-copy gate.
 
 This is the delta master for:
 
-- [`BEA_DATA.md`](BEA_DATA.md): what exists in the measured installation and
+- [`installed-corpus-census.md`](installed-corpus-census.md): what exists in the measured installation and
   what its files reveal;
-- [`GHIDRA_FUNCTONS.md`](GHIDRA_FUNCTONS.md): what the repo-designated
+- [`ghidra-functions.md`](ghidra-functions.md): what the repo-designated
   unpatched executable baseline, current Ghidra database, and controlled traces
   reveal;
-- [`STUART_FUNCTIONS.md`](STUART_FUNCTIONS.md): what Stuart Gillam's partial
+- [`source-code/stuart-source-synthesis.md`](source-code/stuart-source-synthesis.md): what Stuart Gillam's partial
   internal source drop reveals about architecture, names, algorithms, formats,
   and intent.
 
-The existing filename is deliberately linked as `GHIDRA_FUNCTONS.md`; its
+The existing filename is deliberately linked as `ghidra-functions.md`; its
 misspelling is part of the current filesystem identity. This document does not
 rename or rewrite any input master.
 
@@ -125,7 +125,7 @@ For every major system, this file asks:
 
 The individual masters remain the atom stores for full tables such as all 144
 MissionScript natives, all source files and missing includes, all 104 closed
-PhysicsScript value rows, and every measured installed family. `DELTA.md` owns
+PhysicsScript value rows, and every measured installed family. `delta.md` owns
 the relationships, decisions, contradictions, risks, and unified completion
 model.
 
@@ -135,9 +135,9 @@ The findings below were reconciled against these exact document states:
 
 | Input | SHA-256 | Lines | Bytes | Role |
 | --- | --- | ---: | ---: | --- |
-| `BEA_DATA.md` | `9542028F20518742F3BFE90567E0C7DC084EC1988F24E3C1E61E3B495A84C9E3` | 1,928 | 83,045 | Complete aggregate installation map and data-family research program |
-| `GHIDRA_FUNCTONS.md` | `935EE100835BD82A16F913B7A8CE0785AE6A8499A67BA6E0BBAD14BB4E61F1AD` | 2,287 | 150,571 | Executable/Ghidra/runtime master |
-| `STUART_FUNCTIONS.md` | `57C2C02E5443BD72049EF342B85880F33E523B8970D6434B00835384C3AB7B45` | 3,899 | 173,240 | Pinned-source master |
+| `installed-corpus-census.md` | `9542028F20518742F3BFE90567E0C7DC084EC1988F24E3C1E61E3B495A84C9E3` | 1,928 | 83,045 | Complete aggregate installation map and data-family research program |
+| `ghidra-functions.md` | `935EE100835BD82A16F913B7A8CE0785AE6A8499A67BA6E0BBAD14BB4E61F1AD` | 2,287 | 150,571 | Executable/Ghidra/runtime master |
+| `source-code/stuart-source-synthesis.md` | `57C2C02E5443BD72049EF342B85880F33E523B8970D6434B00835384C3AB7B45` | 3,899 | 173,240 | Pinned-source master |
 | **Combined review surface** | — | **8,114** | **406,836** | 279 headings and 2,431 table-shaped rows; counts describe documents, not game coverage |
 
 These hashes bind this synthesis to exact measured input snapshots. A later
@@ -147,7 +147,7 @@ delta evaluated. The three snapshots above were committed together at
 
 ### Supplemental read-only joins performed for this synthesis
 
-`DELTA.md` also closes several joins that were not yet written into all three
+`delta.md` also closes several joins that were not yet written into all three
 masters. These are not a hidden fourth authority plane: each is keyed back to
 the same installed bytes, named executable, pinned source, or analyst artifact.
 
@@ -244,7 +244,7 @@ No percentage between these rows is meaningful. In particular:
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
 | Tracked Ghidra snapshot | 6,411 functions | Reviewed distributable database snapshot, older than live |
 | Live Ghidra database | 7,555 functions | Newer maintainer state; one rename ahead of the tracked 7,555-row name projection |
-| Reconstruction state | Assertions frozen inside `STUART_FUNCTIONS.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
+| Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
 and denominator can be numerically correct and still describe the wrong object.
@@ -266,14 +266,14 @@ the proxy binding is recorded by its capture manifests. The
 
 The most load-bearing cross-master authority conflict was provenance:
 
-- `BEA_DATA.md` correctly says the live installation is not reconciled to an
+- `installed-corpus-census.md` correctly says the live installation is not reconciled to an
   authenticated Steam depot manifest and that `BEA.exe.original.backup` is the
   repository's designated unpatched baseline.
-- earlier drafts of `GHIDRA_FUNCTONS.md` and `STUART_FUNCTIONS.md` repeatedly
+- earlier drafts of `ghidra-functions.md` and `source-code/stuart-source-synthesis.md` repeatedly
   used “pristine Steam executable” as shorthand. Both masters now use the
   bounded wording below.
 
-`DELTA.md` does **not** promote the shorthand. The canonical wording is:
+`delta.md` does **not** promote the shorthand. The canonical wording is:
 
 > **repo-designated unpatched retail baseline, pristine relative to the
 > project's patch catalog; depot identity unknown**
@@ -1869,7 +1869,7 @@ installed fields are empty. `mFalloff` is parsed but has no other read in the
 xref target rather than a supplied-source law.
 
 The 30 language-dependent rows name 30 distinct `HUD\...` samples. Joining this
-supplemental SFX projection to `BEA_DATA.md`'s five-bank PSMP census shows that
+supplemental SFX projection to `installed-corpus-census.md`'s five-bank PSMP census shows that
 they are exactly its 30 identities whose payloads differ across languages.
 The other 140 SFX rows collapse to the census's 134 distinct samples that are
 byte-identical across all five banks. This is **DUAL-CONVERGENCE** between
@@ -3221,7 +3221,7 @@ what remains.
 
 When any of the three masters or this delta changes:
 
-1. Recompute the three frozen-input document hashes. Record `DELTA.md`'s output
+1. Recompute the three frozen-input document hashes. Record `delta.md`'s output
    hash externally if desired; embedding its own hash would be self-referential.
 2. Record the current install manifest, executable, Ghidra export, source pin,
    and rebuild dirty fingerprint.
@@ -3240,20 +3240,20 @@ When any of the three masters or this delta changes:
 
 | Area | Durable entry point |
 | --- | --- |
-| RE evidence contract | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) |
-| Ghidra project boundary | [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md) |
-| Executable-analysis index | [`reverse-engineering/binary-analysis/_index.md`](reverse-engineering/binary-analysis/_index.md) |
-| Save format | [`reverse-engineering/save-file/_index.md`](reverse-engineering/save-file/_index.md) |
-| Rebuild provenance | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
-| Rebuild boundary | [`rebuild/README.md`](rebuild/README.md) |
-| Pinned source | [`references/Onslaught/README.md`](references/Onslaught/README.md) |
-| Source SFX parser | [`references/Onslaught/SoundManager.cpp`](references/Onslaught/SoundManager.cpp) |
-| Baseline SFX parser primary review | [`reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/primary/A06.md`](reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/primary/A06.md) |
-| Baseline SFX parser adversarial review | [`reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B06.md`](reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B06.md) |
-| World-header parser | [`tools/worldheaders_decode.py`](tools/worldheaders_decode.py) |
-| AYA inventory | [`tools/aya_archive_inventory.py`](tools/aya_archive_inventory.py) |
-| Localization parser | [`tools/language_dat_decode.py`](tools/language_dat_decode.py) |
-| Retail-asset materializer | [`rebuild/tools/materialize_retail_assets.py`](rebuild/tools/materialize_retail_assets.py) |
+| RE evidence contract | [`reverse-engineering/RE-INDEX.md`](RE-INDEX.md) |
+| Ghidra project boundary | [`reverse-engineering/ghidra/README.md`](ghidra/README.md) |
+| Executable-analysis index | [`reverse-engineering/binary-analysis/_index.md`](binary-analysis/_index.md) |
+| Save format | [`reverse-engineering/save-file/_index.md`](save-file/_index.md) |
+| Rebuild provenance | [`rebuild/PROVENANCE.md`](../rebuild/PROVENANCE.md) |
+| Rebuild boundary | [`rebuild/README.md`](../rebuild/README.md) |
+| Pinned source | [`references/Onslaught/README.md`](../references/Onslaught/README.md) |
+| Source SFX parser | [`references/Onslaught/SoundManager.cpp`](../references/Onslaught/SoundManager.cpp) |
+| Baseline SFX parser primary review | [`reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/primary/A06.md`](binary-analysis/ghidra-fullpass-findings/W007/primary/A06.md) |
+| Baseline SFX parser adversarial review | [`reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B06.md`](binary-analysis/ghidra-fullpass-findings/W007/adversarial/B06.md) |
+| World-header parser | [`tools/worldheaders_decode.py`](../tools/worldheaders_decode.py) |
+| AYA inventory | [`tools/aya_archive_inventory.py`](../tools/aya_archive_inventory.py) |
+| Localization parser | [`tools/language_dat_decode.py`](../tools/language_dat_decode.py) |
+| Retail-asset materializer | [`rebuild/tools/materialize_retail_assets.py`](../rebuild/tools/materialize_retail_assets.py) |
 
 Machine-local captures, full ledgers, live Ghidra databases, and materialized
 retail assets are reproducibility inputs on this workstation, not public

@@ -54,17 +54,17 @@ answers five different questions without pretending they are one:
 5. Which source facts should drive the next Ghidra, runtime, data, and rebuild
    investigations?
 
-The companion [`GHIDRA_FUNCTONS.md`](GHIDRA_FUNCTONS.md) is the executable-side
-master. [`BEA_DATA.md`](BEA_DATA.md) is the installed-data master. Their
+The companion [`../ghidra-functions.md`](../ghidra-functions.md) is the executable-side
+master. [`../installed-corpus-census.md`](../installed-corpus-census.md) is the installed-data master. Their
 relationship is:
 
 ```text
-STUART_FUNCTIONS.md        architecture, names, algorithms, intent
+../source-code/stuart-source-synthesis.md        architecture, names, algorithms, intent
           │
-          ├── static crosswalk ──> GHIDRA_FUNCTONS.md
+          ├── static crosswalk ──> ../ghidra-functions.md
           │                         shipped code, addresses, ABI, bytes
           │
-          ├── data contract ─────> BEA_DATA.md
+          ├── data contract ─────> ../installed-corpus-census.md
           │                         authored files and finite registries
           │
           └── implementation ────> rebuild/
@@ -1845,7 +1845,7 @@ before any adaptation; this document makes no legal conclusion.
 Source code alone does not prove Steam's final pixels. Current stronger retail
 evidence establishes, among other things, the D3D9 default state block,
 terrain-light enable/colour captures, frontend draw-call census, and HUD
-composition described in `GHIDRA_FUNCTONS.md`. Open source-guided render work
+composition described in `../ghidra-functions.md`. Open source-guided render work
 includes:
 
 - map every selected `CDXEngine::Render/PostRender` phase to retail address
@@ -3850,18 +3850,18 @@ or retail-function count.
 
 | Topic | Primary tracked owner |
 | --- | --- |
-| RE front door and evidence policy | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) |
-| Source pin/buildability audit | [`reference-submodule-audit-2026-07-12.md`](reverse-engineering/source-code/reference-submodule-audit-2026-07-12.md) |
-| Source corpus itself | [`references/Onslaught`](references/Onslaught) |
-| Ghidra/executable master | [`GHIDRA_FUNCTONS.md`](GHIDRA_FUNCTONS.md) |
-| Installed-data master | [`BEA_DATA.md`](BEA_DATA.md) |
-| Rebuild evidence/authority boundary | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
-| Rebuild architecture and commands | [`rebuild/README.md`](rebuild/README.md) |
-| Battle Engine movement crosswalk | [`battleengine-movement-static-crosswalk-2026-07-12.md`](reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md) |
-| Retail source paths/RTTI | [`rtti-and-source-path-evidence-2026-07-25.md`](reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md) |
-| Controller static crosswalk | [`controller-system.md`](reverse-engineering/source-code/frontend/controller-system.md) and current Ghidra notes |
-| Career/save structures | [`save-format.md`](reverse-engineering/save-file/save-format.md), [`struct-layouts.md`](reverse-engineering/save-file/struct-layouts.md) |
-| Source subsystem indexes | [`source-code/_index.md`](reverse-engineering/source-code/_index.md) |
+| RE front door and evidence policy | [`reverse-engineering/RE-INDEX.md`](../RE-INDEX.md) |
+| Source pin/buildability audit | [`reference-submodule-audit-2026-07-12.md`](reference-submodule-audit-2026-07-12.md) |
+| Source corpus itself | [`references/Onslaught`](../../references/Onslaught) |
+| Ghidra/executable master | [`../ghidra-functions.md`](../ghidra-functions.md) |
+| Installed-data master | [`../installed-corpus-census.md`](../installed-corpus-census.md) |
+| Rebuild evidence/authority boundary | [`rebuild/PROVENANCE.md`](../../rebuild/PROVENANCE.md) |
+| Rebuild architecture and commands | [`rebuild/README.md`](../../rebuild/README.md) |
+| Battle Engine movement crosswalk | [`battleengine-movement-static-crosswalk-2026-07-12.md`](../binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md) |
+| Retail source paths/RTTI | [`rtti-and-source-path-evidence-2026-07-25.md`](../binary-analysis/rtti-and-source-path-evidence-2026-07-25.md) |
+| Controller static crosswalk | [`controller-system.md`](frontend/controller-system.md) and current Ghidra notes |
+| Career/save structures | [`save-format.md`](../save-file/save-format.md), [`struct-layouts.md`](../save-file/struct-layouts.md) |
+| Source subsystem indexes | [`source-code/_index.md`](_index.md) |
 
 ### Machine-local measured evidence
 

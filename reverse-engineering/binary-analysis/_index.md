@@ -9,7 +9,7 @@ the document it links.
 
 ## Current authority and provenance
 
-- [Executable/Ghidra narrative synthesis](../../GHIDRA_FUNCTONS.md) — dated
+- [Executable/Ghidra narrative synthesis](../ghidra-functions.md) — dated
   reviewed synthesis and open queue; the TSV and Ghidra stores below remain the
   mechanical and database owners
 - [Ghidra workflow and evidence boundary](GHIDRA-REFERENCE.md)

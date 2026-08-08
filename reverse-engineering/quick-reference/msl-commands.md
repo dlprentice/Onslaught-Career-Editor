@@ -9,7 +9,7 @@ Current static owners are the
 [`MissionScript / IScript contract`](../binary-analysis/missionscript-iscript-static-contract.md),
 the retained [`VM/datatype/opcode schema`](../binary-analysis/missionscript-vm-datatype-opcode-schema.v1.json),
 and the exact
-[`144-entry native registry`](../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry).
+[`144-entry native registry`](../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry).
 A registry binding or corpus occurrence does not by itself prove runtime effects,
 resource selection, or rebuild parity.
 

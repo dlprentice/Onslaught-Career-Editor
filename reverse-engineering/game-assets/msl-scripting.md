@@ -360,7 +360,7 @@ ShutdownVariable(TEXT_CONSTANT);
 The exact current registry places `HighlightHudPart`, `UnHighlightHudPart`,
 `InitVariable`, `SetVariable`, and `ShutdownVariable` at rows 34, 35, 76, 77,
 and 78; see the
-[`144-entry native registry`](../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry).
+[`144-entry native registry`](../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry).
 Those bindings and these authored examples do not by themselves prove visible
 HUD output or rebuild parity.
 

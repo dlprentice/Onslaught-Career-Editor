@@ -96,9 +96,9 @@ safe-copy implementation.
 
 | Path | Authority |
 | --- | --- |
-| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the root `DELTA`, `PARITY_LAB`, `GHIDRA_FUNCTONS`, and `STUART_FUNCTIONS` syntheses. |
+| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
 | `local-lab/` and `local-proofs/` | Ignored working evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. Read `local-lab/INDEX.md` when present. |
-| [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance and deterministic ownership are subtree contracts. |
+| [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Focused extraction, validation, Ghidra, asset, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
@@ -110,16 +110,31 @@ safe-copy implementation.
 
 ## Documentation truth owners
 
+One owner per row. If a document belongs in two rows, the routing layer is
+wrong — fix the rows, not the document.
+
 | Question | Owner |
 | --- | --- |
+| What is the contributor contract? | [`AGENTS.md`](AGENTS.md) — restated nowhere |
 | What do we want? | [`GOAL.md`](GOAL.md) |
 | What does the product/rebuild currently demonstrate? | [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) |
 | Where does our code and responsibility live? | This index |
 | What is known about the retail game? | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) and its routed evidence owners |
 | How are retail function/behavior contracts graded and located? | [`CONTRACTS.md`](CONTRACTS.md) |
 | What evidence may enter the rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
+| What makes the rebuild deterministic, and what is parity? | [`rebuild/DETERMINISM.md`](rebuild/DETERMINISM.md), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
 | What is the resumable workstation state? | [`developer_state.json`](developer_state.json), rechecked against its named evidence |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
+| What shipped, per release? | [`CHANGELOG.md`](CHANGELOG.md) |
+
+### Lane front doors
+
+- **RE lane:** [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
+- **Rebuild lane:** [`rebuild/README.md`](rebuild/README.md) +
+  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
+- **App lane:** [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) /
+  [`CLI.md`](CLI.md) / [`README.RELEASE.md`](README.RELEASE.md) /
+  [`CHANGELOG.md`](CHANGELOG.md)
 
 ## Keeping this map current
 

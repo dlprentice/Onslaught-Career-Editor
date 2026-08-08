@@ -421,7 +421,7 @@
     "descriptorHandlerFieldBase": "0x0064ce50",
     "descriptorHandlerOffset": "+0x30",
     "descriptorStrideBytes": 64,
-    "registryOwner": "GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry",
+    "registryOwner": "../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry",
     "instructionFields": [
       "this+0x04 low byte indexes the descriptor table",
       "this+0x04 high bits participate in return-value expectation checks",

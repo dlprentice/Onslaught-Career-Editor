@@ -21,7 +21,7 @@ namespace OnslaughtCareerEditor.AppCore
     ///
     /// STATIC AND SOURCE CORRESPONDENCE ONLY. <see cref="LifeOffset"/>, <see cref="EnergyOffset"/>
     /// and <see cref="ShieldsOffset"/> come from the body of CBattleEngine::Damage at 0x0040A890
-    /// matching BattleEngine.cpp field for field (STUART_FUNCTIONS.md, DELTA.md), corroborated by
+    /// matching BattleEngine.cpp field for field (reverse-engineering/source-code/stuart-source-synthesis.md, reverse-engineering/delta.md), corroborated by
     /// CUnit::ApplyDamage and by the HUD health getter reading a float at +0xf8. That is a strong
     /// correspondence and it is still not a live read: the 2026-08-01 probe found the player table
     /// null because no mission was running, so nobody has yet seen a value at any of these three.

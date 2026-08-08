@@ -32,7 +32,7 @@ layouts, or behaviors are proven.
 > Later waves raised the live inventory to 7,555 functions. The tracked
 > canonical snapshot remains the reviewed 6,411-function state, while the
 > current 7,555-row name projection and its one known live-name delta are
-> reconciled in [`../../GHIDRA_FUNCTONS.md`](../../GHIDRA_FUNCTONS.md).
+> reconciled in [`../../../ghidra-functions.md`](../ghidra-functions.md).
 
 ## Safe workflow
 

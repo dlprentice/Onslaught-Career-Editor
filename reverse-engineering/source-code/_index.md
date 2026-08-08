@@ -10,7 +10,7 @@ Stuart Gillam's source represents an internal PC development lineage. The Steam
 retail executable and save layout differ. Source names and architecture are
 useful hypotheses; they are not proof of retail identity or behavior.
 
-[`STUART_FUNCTIONS.md`](../../STUART_FUNCTIONS.md) is the dated narrative
+[`../source-code/stuart-source-synthesis.md`](../source-code/stuart-source-synthesis.md) is the dated narrative
 synthesis of that exact pinned source corpus. The source files themselves remain
 the line-level authority.
 

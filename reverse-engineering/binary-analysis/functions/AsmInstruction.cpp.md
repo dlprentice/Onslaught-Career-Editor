@@ -73,7 +73,7 @@ Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factor
 The current exact registry records 144 `0x40`-stride descriptors at
 `0x0064ce20`, with names at `+0x00`, handlers at `+0x30`, and distinct
 `FollowWaypoint`-through-`IsOverWater` names and handlers. See the
-[`MissionScript appendix`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry).
+[`MissionScript appendix`](../../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry).
 Runtime command effects and exact arity remain separate proof.
 
 The retained `missionscript-vm-datatype-opcode-schema.v1.json` accounts for the

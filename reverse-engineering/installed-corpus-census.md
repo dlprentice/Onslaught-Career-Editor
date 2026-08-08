@@ -1486,26 +1486,26 @@ particle owner/test files described below were deleted later. Counts labelled
 
 | Path | Why it matters to this crosswalk |
 | --- | --- |
-| [reverse-engineering/RE-INDEX.md](reverse-engineering/RE-INDEX.md) | Evidence policy and front door to the executable/data RE corpus |
-| [reverse-engineering/game-assets/_index.md](reverse-engineering/game-assets/_index.md) | Asset-format ownership and generated/local-boundary guidance |
-| [reverse-engineering/game-assets/game-folder-analysis.md](reverse-engineering/game-assets/game-folder-analysis.md) | Older install census compared against this pass |
-| [reverse-engineering/game-assets/aya-asset-format.md](reverse-engineering/game-assets/aya-asset-format.md) | AYA framing and historical tag knowledge |
-| [reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md](reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md) | Newer boundary between tag vocabulary and payload schemas |
-| [reverse-engineering/save-file/_index.md](reverse-engineering/save-file/_index.md) | Save/options layout, evidence, and mutation constraints |
-| [tools/aya_archive_inventory.py](tools/aya_archive_inventory.py) | Fail-closed archive/member/chunk inventory |
-| [tools/aya_corpus_chunk_inventory.py](tools/aya_corpus_chunk_inventory.py) | Corpus-level AYA framing/tag census |
-| [tools/language_dat_decode.py](tools/language_dat_decode.py) | General localization parser, including the signed-STF bug found here |
-| [tools/export_language_corpus.py](tools/export_language_corpus.py) | Six-table corpus exporter that inherits the STF mapping |
-| [tools/worldheaders_decode.py](tools/worldheaders_decode.py) | Byte-exact world-header parser/re-encoder |
-| [tools/BeaAssetExportHarness/Program.cs](tools/BeaAssetExportHarness/Program.cs) | Broad texture/mesh export harness over the reference extractor |
-| [OnslaughtCareerEditor.AppCore/GameProfilePreflightService.cs](OnslaughtCareerEditor.AppCore/GameProfilePreflightService.cs) | Full-install detection and safe copied-profile materialization |
-| [OnslaughtCareerEditor.AppCore/MediaCatalogService.cs](OnslaughtCareerEditor.AppCore/MediaCatalogService.cs) | Music, English voice, and video catalog surface |
-| [rebuild/tools/materialize_retail_assets.py](rebuild/tools/materialize_retail_assets.py) | Exact ignored retail-input/output manifest for the bounded rebuild slice |
-| [rebuild/README.md](rebuild/README.md) | Current opening-slice and validation boundary |
-| [rebuild/PROVENANCE.md](rebuild/PROVENANCE.md) | Evidence/provenance ledger for reconstructed consumers |
-| [rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md](rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md) | Deep Level 100 asset/schema/render boundary |
-| [rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs](rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs) | Bounded runtime texture envelopes |
-| [rebuild/OnslaughtRebuild.Godot/RetailAquilaWalkerAsset.cs](rebuild/OnslaughtRebuild.Godot/RetailAquilaWalkerAsset.cs) | Exact Aquila asset loader, explicitly not a general mesh importer |
+| [reverse-engineering/RE-INDEX.md](RE-INDEX.md) | Evidence policy and front door to the executable/data RE corpus |
+| [reverse-engineering/game-assets/_index.md](game-assets/_index.md) | Asset-format ownership and generated/local-boundary guidance |
+| [reverse-engineering/game-assets/game-folder-analysis.md](game-assets/game-folder-analysis.md) | Older install census compared against this pass |
+| [reverse-engineering/game-assets/aya-asset-format.md](game-assets/aya-asset-format.md) | AYA framing and historical tag knowledge |
+| [reverse-engineering/game-assets/aya-resource-tag-family-static-contract.md](game-assets/aya-resource-tag-family-static-contract.md) | Newer boundary between tag vocabulary and payload schemas |
+| [reverse-engineering/save-file/_index.md](save-file/_index.md) | Save/options layout, evidence, and mutation constraints |
+| [tools/aya_archive_inventory.py](../tools/aya_archive_inventory.py) | Fail-closed archive/member/chunk inventory |
+| [tools/aya_corpus_chunk_inventory.py](../tools/aya_corpus_chunk_inventory.py) | Corpus-level AYA framing/tag census |
+| [tools/language_dat_decode.py](../tools/language_dat_decode.py) | General localization parser, including the signed-STF bug found here |
+| [tools/export_language_corpus.py](../tools/export_language_corpus.py) | Six-table corpus exporter that inherits the STF mapping |
+| [tools/worldheaders_decode.py](../tools/worldheaders_decode.py) | Byte-exact world-header parser/re-encoder |
+| [tools/BeaAssetExportHarness/Program.cs](../tools/BeaAssetExportHarness/Program.cs) | Broad texture/mesh export harness over the reference extractor |
+| [OnslaughtCareerEditor.AppCore/GameProfilePreflightService.cs]../OnslaughtCareerEditor.AppCore/GameProfilePreflightService.cs) | Full-install detection and safe copied-profile materialization |
+| [OnslaughtCareerEditor.AppCore/MediaCatalogService.cs]../OnslaughtCareerEditor.AppCore/MediaCatalogService.cs) | Music, English voice, and video catalog surface |
+| [rebuild/tools/materialize_retail_assets.py](../rebuild/tools/materialize_retail_assets.py) | Exact ignored retail-input/output manifest for the bounded rebuild slice |
+| [rebuild/README.md](../rebuild/README.md) | Current opening-slice and validation boundary |
+| [rebuild/PROVENANCE.md](../rebuild/PROVENANCE.md) | Evidence/provenance ledger for reconstructed consumers |
+| [rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md](../rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md) | Deep Level 100 asset/schema/render boundary |
+| [rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs](../rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs) | Bounded runtime texture envelopes |
+| [rebuild/OnslaughtRebuild.Godot/RetailAquilaWalkerAsset.cs](../rebuild/OnslaughtRebuild.Godot/RetailAquilaWalkerAsset.cs) | Exact Aquila asset loader, explicitly not a general mesh importer |
 
 ### Coverage labels
 

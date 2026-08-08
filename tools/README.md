@@ -91,7 +91,7 @@ nothing and must say so.
 
 ## Ghidra and runtime research
 
-[`../PARITY_LAB.md`](../PARITY_LAB.md) is the engine-neutral function-discovery
+[`../reverse-engineering/parity-lab.md`](../reverse-engineering/parity-lab.md) is the engine-neutral function-discovery
 and parity-pipeline authority. `parity_lab.py` joins repeated `drcov` or TTD
 Replay coverage to exact Ghidra ranges, emits queryable evidence bundles, and
 generates RVA-safe debugger symbols. `ExportParityLabGraph.java` publishes its

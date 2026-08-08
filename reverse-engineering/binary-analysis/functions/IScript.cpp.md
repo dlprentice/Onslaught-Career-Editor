@@ -11,7 +11,7 @@ Current corrected metadata is owned by the
 `0x40`-byte descriptor slots. An older generated schema, now retained only in
 Git history, mistook record zero's handler field for the table base and cannot
 decide an exact row or binding. The current exact 144-row registry is the
-[MissionScript appendix in `GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry);
+[MissionScript appendix in `../../ghidra-functions.md`](../../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry);
 direct stores in the pristine image decide the `Pause` row below.
 
 ## Name corrections — 2026-07-28

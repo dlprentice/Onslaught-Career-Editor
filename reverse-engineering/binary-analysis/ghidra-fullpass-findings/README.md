@@ -57,7 +57,7 @@ fullbreadth and R1 mutation maps close that remainder: 330 RTTI re-prefixes,
 13 rename-wave addresses, two proven-false demotions, 24 fullbreadth renames,
 and one R1 rename form a disjoint 370-address set. The current reconciliation
 and its source boundaries are recorded in
-[`../../../GHIDRA_FUNCTONS.md`](../../../GHIDRA_FUNCTONS.md#the-6411-function-fullpass).
+[`../../../../../ghidra-functions.md`](../../ghidra-functions.md#the-6411-function-fullpass).
 The 533-name wave of 2026-07-27 still accounts for none of this dated corpus.
 
 ## Coverage

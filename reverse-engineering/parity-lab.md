@@ -53,7 +53,7 @@ not establish its Steam depot identity.
 
 Live tip census is **not** the Gen10 block below. Re-read
 `developer_state.json` → `complete_re_tip_20260805` and
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md).
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md).
 As of 2026-08-06: tip **Gen73**, functions=**8124**, C1=**222**, C2=**5**,
 function_semantic OPAQUE=**7897**, contract_C0_OPAQUE=**14219**, FUN* counter=**0**,
 OPEN residual=**20**, complete_RE=**false**, REBUILD_READY=**0**,
@@ -96,15 +96,15 @@ parity.
 This is the engine-neutral parity and function-discovery plan requested after
 the four master research passes:
 
-- [`BEA_DATA.md`](BEA_DATA.md) owns the installed data/resource topology and the
+- [`installed-corpus-census.md`](installed-corpus-census.md) owns the installed data/resource topology and the
   finite authored scenario space.
-- [`GHIDRA_FUNCTONS.md`](GHIDRA_FUNCTONS.md) owns the executable, current
+- [`ghidra-functions.md`](ghidra-functions.md) owns the executable, current
   function population, analyst metadata, runtime evidence, and naming debt. The
   filename's missing `I` is historical and intentional.
-- [`STUART_FUNCTIONS.md`](STUART_FUNCTIONS.md) owns the pinned GPL source's
+- [`source-code/stuart-source-synthesis.md`](source-code/stuart-source-synthesis.md) owns the pinned GPL source's
   architecture, surviving implementation, target selection, omissions, and
   source-to-retail deltas.
-- [`DELTA.md`](DELTA.md) owns the cross-source adjudication and current rebuild
+- [`delta.md`](delta.md) owns the cross-source adjudication and current rebuild
   gaps.
 
 Those files are combined here wherever they answer the same question. Their
@@ -202,21 +202,21 @@ its acceptance gate.
 
 | Capability | Implementation | Real proof | Present verdict |
 | --- | --- | --- | --- |
-| Exact Ghidra function-body fragments | [`tools/ExportParityLabGraph.java`](tools/ExportParityLabGraph.java) | 7,555 functions / 7,672 ranges exported read-only | `MEASURED` |
+| Exact Ghidra function-body fragments | [`tools/ExportParityLabGraph.java`](../tools/ExportParityLabGraph.java) | 7,555 functions / 7,672 ranges exported read-only | `MEASURED` |
 | Static internal direct-call graph | same exporter | 14,142 edges / 26,622 call sites | `MEASURED`, statically resolved calls only |
-| Safe copied-target `drcov` recording | [`tools/Record-DifferentialCoverage.ps1`](tools/Record-DifferentialCoverage.ps1) | one 25 s idle and one 25 s DOWN capture | `MEASURED`, one pair |
-| Repeated differential coverage and exact mapping | [`tools/parity_lab.py`](tools/parity_lab.py) | 57/57 stable novel starts mapped | `MEASURED`, canary only |
+| Safe copied-target `drcov` recording | [`tools/Record-DifferentialCoverage.ps1`](../tools/Record-DifferentialCoverage.ps1) | one 25 s idle and one 25 s DOWN capture | `MEASURED`, one pair |
+| Repeated differential coverage and exact mapping | [`tools/parity_lab.py`](../tools/parity_lab.py) | 57/57 stable novel starts mapped | `MEASURED`, canary only |
 | Mechanical action-delivery canaries | `coverage-diff --action-canary` | `0x004669A0`: action 1/1, idle 0/1 | `MEASURED` |
 | Ghidra-to-TTD symbol map | `parity_lab.py symbol-map` | 7,672 exact fragment symbols generated | `MEASURED` |
-| WinDbg/CDB synthetic-symbol extension | [`tools/bea_ttd_symbols.cpp`](tools/bea_ttd_symbols.cpp) | CDB canary plus TTD symbolic/numeric `Calls` agreement | `MEASURED` |
-| Reproducible extension build | [`tools/Build-BeaTtdSymbols.ps1`](tools/Build-BeaTtdSymbols.ps1) | two `/Brepro` builds had identical DLL SHA-256 | `MEASURED` |
+| WinDbg/CDB synthetic-symbol extension | [`tools/bea_ttd_symbols.cpp`](../tools/bea_ttd_symbols.cpp) | CDB canary plus TTD symbolic/numeric `Calls` agreement | `MEASURED` |
+| Reproducible extension build | [`tools/Build-BeaTtdSymbols.ps1`](../tools/Build-BeaTtdSymbols.ps1) | two `/Brepro` builds had identical DLL SHA-256 | `MEASURED` |
 | Structured D3D9/TTD/shot bundle | `parity_lab.py capture-bundle` | real Level 100 B2 capture indexed losslessly | `MEASURED` |
 | Read-only query and artifact verification | `parity_lab.py query/verify` | real 74 MiB SQLite index; 246 artifacts rehashed | `MEASURED` |
-| One-pass TTD Replay-API coverage miner | [`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](tools/ttd-exec-coverage/ttd_exec_coverage.cpp), build/invoke wrappers, and `ttd-coverage-diff` | 693,973,901-instruction whole trace plus exact two-window differential | `MEASURED`; one existing trace, presence not frequency |
-| Target-filtered TTD call-context miner | same native collector plus [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1) | schema-v3 calibration: 4 paired entries, 4 raw returns, 3 validated returns, 1 orphan, 3 gap-free envelopes; replicated Level 521 bounded join | `MEASURED`; raw untyped context, existing traces only, no semantic auto-promotion |
+| One-pass TTD Replay-API coverage miner | [`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](../tools/ttd-exec-coverage/ttd_exec_coverage.cpp), build/invoke wrappers, and `ttd-coverage-diff` | 693,973,901-instruction whole trace plus exact two-window differential | `MEASURED`; one existing trace, presence not frequency |
+| Target-filtered TTD call-context miner | same native collector plus [`tools/Invoke-TtdCallContext.ps1`](../tools/Invoke-TtdCallContext.ps1) | schema-v3 calibration: 4 paired entries, 4 raw returns, 3 validated returns, 1 orphan, 3 gap-free envelopes; replicated Level 521 bounded join | `MEASURED`; raw untyped context, existing traces only, no semantic auto-promotion |
 | TTD Replay bundle/query integration | `capture-bundle --ttd-coverage/--ttd-coverage-receipt` | 2,612 ranges, assertions, gaps, and receipts indexed and reverified | `MEASURED` |
-| Stuart-source BSim candidate oracle | [`tools/Build-StuartBsimPilot.ps1`](tools/Build-StuartBsimPilot.ps1) and [`tools/ExportBSimCandidates.java`](tools/ExportBSimCandidates.java) | 8 reproducible COFF objects, 58 BSim functions, 15/15 controls within rank seven | `MEASURED` candidate calibration; never an auto-renamer |
-| apitrace D3D9 trial | [`tools/Record-ApitraceD3D9.ps1`](tools/Record-ApitraceD3D9.ps1) | 466 complete presents recovered from one forced-end startup capture and replayed cleanly | `MEASURED` feasibility; translated inspection only |
+| Stuart-source BSim candidate oracle | [`tools/Build-StuartBsimPilot.ps1`](../tools/Build-StuartBsimPilot.ps1) and [`tools/ExportBSimCandidates.java`](../tools/ExportBSimCandidates.java) | 8 reproducible COFF objects, 58 BSim functions, 15/15 controls within rank seven | `MEASURED` candidate calibration; never an auto-renamer |
+| apitrace D3D9 trial | [`tools/Record-ApitraceD3D9.ps1`](../tools/Record-ApitraceD3D9.ps1) | 466 complete presents recovered from one forced-end startup capture and replayed cleanly | `MEASURED` feasibility; translated inspection only |
 | WPR/WPA/GPUView timing lane | existing Microsoft tools | binaries present; no elevated recording run here | `AVAILABLE`, not exercised |
 | TTD manual record gating | official thread-local API design | no local end-to-end target instrumentation | `EXPERIMENTAL` |
 | RenderDoc-through-DXVK | exploratory only | no parity authority | `NON-AUTHORITATIVE` |
@@ -269,7 +269,7 @@ removal of a prefix.
 
 ## Why the installed data corpus belongs in a function-discovery system
 
-[`BEA_DATA.md`](BEA_DATA.md) measured 5,515 installed files, 133 directories,
+[`installed-corpus-census.md`](installed-corpus-census.md) measured 5,515 installed files, 133 directories,
 and 702,659,189 logical bytes. `data` owns 5,464 files and 692,713,321 bytes.
 That corpus is not just asset inventory; it supplies finite scenario inputs and
 authored names that make dynamic function discovery cheaper:
@@ -342,7 +342,7 @@ one other changed byte fails closed. Every result retains the reviewed delta; a
 reviewer must flag any function or executed block intersecting the patch before
 source/static/runtime behavior is compared. This safe-copy target is also
 distinct from the current installed Steam executable catalogued in
-`BEA_DATA.md`, whose documented hash and patch set are different.
+`installed-corpus-census.md`, whose documented hash and patch set are different.
 
 ### 2. Canonical address
 
@@ -413,8 +413,8 @@ Free-text “positive control” prose never upgrades these fields.
 
 ```mermaid
 flowchart TD
-    Data["Installed data identity<br/>BEA_DATA.md"] --> Scenario["Named scenario + one action"]
-    Stuart["Pinned partial source<br/>STUART_FUNCTIONS.md"] --> Hypothesis["Owner / algorithm hypotheses"]
+    Data["Installed data identity<br/>installed-corpus-census.md"] --> Scenario["Named scenario + one action"]
+    Stuart["Pinned partial source<br/>source-code/stuart-source-synthesis.md"] --> Hypothesis["Owner / algorithm hypotheses"]
     Ghidra["Read-only live Ghidra export<br/>entries + exact ranges + calls"] --> StaticIndex["Specimen-bound static index"]
     Scenario --> Baseline["Idle/control capture(s)"]
     Scenario --> Action["One-action capture(s)"]
@@ -451,7 +451,7 @@ maintainer project.
 The previous inventory was enough to count and name functions but not enough to
 perform exact coverage attribution. Its `bodyMin`, `bodyMax`, and `bodyRanges`
 fields could describe a bounding envelope containing bytes Ghidra did not assign
-to the function. [`tools/ExportParityLabGraph.java`](tools/ExportParityLabGraph.java)
+to the function. [`tools/ExportParityLabGraph.java`](../tools/ExportParityLabGraph.java)
 closes that gap.
 
 For every current function it emits one TSV row per actual Ghidra
@@ -554,7 +554,7 @@ thirteen focused tool tests.
 
 ### Recorder boundary
 
-[`tools/Record-DifferentialCoverage.ps1`](tools/Record-DifferentialCoverage.ps1)
+[`tools/Record-DifferentialCoverage.ps1`](../tools/Record-DifferentialCoverage.ps1)
 is deliberately a small launcher, not a debugger:
 
 1. Require a baseline/action role and a filesystem-safe unique run name.
@@ -828,7 +828,7 @@ rather than treating this hash as permanent.
 
 ### Debugger extension
 
-[`tools/bea_ttd_symbols.cpp`](tools/bea_ttd_symbols.cpp) is a Win32 dbgeng
+[`tools/bea_ttd_symbols.cpp`](../tools/bea_ttd_symbols.cpp) is a Win32 dbgeng
 extension. Its `!beasym <map.tsv> <module>` command:
 
 1. Resolves the actual loaded module base and extent.
@@ -1145,7 +1145,7 @@ avoid repeated trace-open overhead, but they do not eliminate the address-by-
 address replay.
 
 The implemented collector in
-[`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](tools/ttd-exec-coverage/ttd_exec_coverage.cpp)
+[`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](../tools/ttd-exec-coverage/ttd_exec_coverage.cpp)
 inverts the question:
 
 1. identify exactly one `BEA.exe` module instance;
@@ -1163,11 +1163,11 @@ consume the same raw coverage.
 
 | Owner | Purpose |
 | --- | --- |
-| [`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](tools/ttd-exec-coverage/ttd_exec_coverage.cpp) | x64 Replay collector, module-instance selection, position bounds, atomic bitmap, assertions, gap and completion accounting |
-| [`tools/ttd-exec-coverage/ttd_exec_coverage.vcxproj`](tools/ttd-exec-coverage/ttd_exec_coverage.vcxproj) | pinned x64 native build |
-| [`tools/ttd-exec-coverage/packages.config`](tools/ttd-exec-coverage/packages.config) | Replay API package `0.9.5` |
-| [`tools/Build-TtdExecCoverage.ps1`](tools/Build-TtdExecCoverage.ps1) | verifies package/runtime/compiler identities, builds twice, runs native self-tests, and emits a build receipt |
-| [`tools/Invoke-TtdExecCoverage.ps1`](tools/Invoke-TtdExecCoverage.ps1) | hashes trace/target before and after, derives PE identity, invokes the collector, validates output, and copies the immutable build receipt into the run |
+| [`tools/ttd-exec-coverage/ttd_exec_coverage.cpp`](../tools/ttd-exec-coverage/ttd_exec_coverage.cpp) | x64 Replay collector, module-instance selection, position bounds, atomic bitmap, assertions, gap and completion accounting |
+| [`tools/ttd-exec-coverage/ttd_exec_coverage.vcxproj`](../tools/ttd-exec-coverage/ttd_exec_coverage.vcxproj) | pinned x64 native build |
+| [`tools/ttd-exec-coverage/packages.config`](../tools/ttd-exec-coverage/packages.config) | Replay API package `0.9.5` |
+| [`tools/Build-TtdExecCoverage.ps1`](../tools/Build-TtdExecCoverage.ps1) | verifies package/runtime/compiler identities, builds twice, runs native self-tests, and emits a build receipt |
+| [`tools/Invoke-TtdExecCoverage.ps1`](../tools/Invoke-TtdExecCoverage.ps1) | hashes trace/target before and after, derives PE identity, invokes the collector, validates output, and copies the immutable build receipt into the run |
 | `parity_lab.py capture-bundle` | validates and indexes the raw coverage, receipt, assertions, ranges, and gaps |
 | `parity_lab.py ttd-coverage-diff` | performs exact byte-set subtraction and Ghidra-range attribution across matched bundles |
 
@@ -1584,7 +1584,7 @@ The same native collector now has a mutually exclusive `--mode call-context`.
 It replays sequentially, installs one-byte execute watchpoints at selected exact
 entries, consumes the Replay API call/return callback, and captures bounded x86
 register/stack context only for selected targets. Ordinary byte coverage keeps
-its original mode and schema. [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1)
+its original mode and schema. [`tools/Invoke-TtdCallContext.ps1`](../tools/Invoke-TtdCallContext.ps1)
 owns a separate receipt/manifest boundary and emits `READY` only after it:
 
 1. validates PE32 identity and the two-build collector receipt;
@@ -1681,7 +1681,7 @@ images are diagnostic for positive targets, not their causal authority. An
 explicit `0/0` target proves only that no matching callback occurred in that
 exact window. Blank expectations are discovery-only and cannot earn `READY`.
 
-[`tools/Invoke-TtdDataWrites.ps1`](tools/Invoke-TtdDataWrites.ps1) independently
+[`tools/Invoke-TtdDataWrites.ps1`](../tools/Invoke-TtdDataWrites.ps1) independently
 reparses the frozen target table and every relationship, snapshots the wrapper,
 collector C++ and project inputs, reproducible binary, build receipt, replay
 DLLs, and table, and binds them with the raw JSONL into a v3
@@ -1798,7 +1798,7 @@ the original build.
 
 ### Promoted pilot implementation
 
-[`tools/Build-StuartBsimPilot.ps1`](tools/Build-StuartBsimPilot.ps1):
+[`tools/Build-StuartBsimPilot.ps1`](../tools/Build-StuartBsimPilot.ps1):
 
 1. verifies Stuart commit
    `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` and tree
@@ -1932,7 +1932,7 @@ not establish that an arbitrary high-similarity row is correct.
 
 ### Deterministic, read-only export
 
-[`tools/ExportBSimCandidates.java`](tools/ExportBSimCandidates.java) accepts
+[`tools/ExportBSimCandidates.java`](../tools/ExportBSimCandidates.java) accepts
 explicit retail addresses and emits UTF-8 TSV. It has no rename, type-import,
 function-creation, or apply path.
 
@@ -2117,7 +2117,7 @@ The official 14.0 Win32 release was used:
 | `d3dretrace.exe` | 1,927,680 bytes, SHA-256 `B890FA74F421D24943290962BA7F78F01212467C9C3C8DA3BBE0F9F312B2809F` |
 | copied target | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` |
 
-[`tools/Record-ApitraceD3D9.ps1`](tools/Record-ApitraceD3D9.ps1) refuses an
+[`tools/Record-ApitraceD3D9.ps1`](../tools/Record-ApitraceD3D9.ps1) refuses an
 installed/Program Files target, refuses any existing local `d3d9.dll`, requires
 exact target/tool hashes, owns the exact launched process, checks the target
 before and after, never replaces a run, and cleans up only its owned processes.
@@ -3032,19 +3032,19 @@ identity and parser accounting, not the behavioral hypothesis.
 
 | Path | Durable responsibility |
 | --- | --- |
-| [`tools/parity_lab.py`](tools/parity_lab.py) | coverage diff, Replay diff, capture bundle, symbol map, read-only SQL, artifact verification |
-| [`tools/parity_lab_tests.py`](tools/parity_lab_tests.py) | synthetic exact-range, specimen, D3D9/TTD, Replay-receipt, and byte-diff regressions |
-| [`tools/ExportParityLabGraph.java`](tools/ExportParityLabGraph.java) | read-only exact body/call export; two no-clobber TSVs become valid only through the receipt-last READY marker |
-| [`tools/Record-DifferentialCoverage.ps1`](tools/Record-DifferentialCoverage.ps1) | copied-target 32-bit `drcov` recorder and bounded target-window action receipt |
-| [`tools/bea_ttd_symbols.cpp`](tools/bea_ttd_symbols.cpp) / [`tools/bea_ttd_symbols.def`](tools/bea_ttd_symbols.def) | session-local DbgEng synthetic-symbol extension |
-| [`tools/Build-BeaTtdSymbols.ps1`](tools/Build-BeaTtdSymbols.ps1) | reproducible x86 debugger-extension build |
-| [`tools/ttd-exec-coverage/`](tools/ttd-exec-coverage) | one-pass Replay API instruction-byte collector |
-| [`tools/Build-TtdExecCoverage.ps1`](tools/Build-TtdExecCoverage.ps1) | version-pinned native collector build, runtime provisioning, and self-tests |
-| [`tools/Invoke-TtdExecCoverage.ps1`](tools/Invoke-TtdExecCoverage.ps1) | trace/target hashing, PE derivation, collector invocation, and immutable receipt |
-| [`tools/Build-StuartBsimPilot.ps1`](tools/Build-StuartBsimPilot.ps1) | pinned copied-source, compatibility-overlay, two-profile COFF pilot |
-| [`tools/bsim-stuart/compat/`](tools/bsim-stuart/compat) | declaration-only pilot compatibility surface |
-| [`tools/ExportBSimCandidates.java`](tools/ExportBSimCandidates.java) | deterministic read-only BSim TSV query/export with fail-closed publication |
-| [`tools/Record-ApitraceD3D9.ps1`](tools/Record-ApitraceD3D9.ps1) | bounded copied-target apitrace capture and last-complete-frame recovery |
+| [`tools/parity_lab.py`](../tools/parity_lab.py) | coverage diff, Replay diff, capture bundle, symbol map, read-only SQL, artifact verification |
+| [`tools/parity_lab_tests.py`](../tools/parity_lab_tests.py) | synthetic exact-range, specimen, D3D9/TTD, Replay-receipt, and byte-diff regressions |
+| [`tools/ExportParityLabGraph.java`](../tools/ExportParityLabGraph.java) | read-only exact body/call export; two no-clobber TSVs become valid only through the receipt-last READY marker |
+| [`tools/Record-DifferentialCoverage.ps1`](../tools/Record-DifferentialCoverage.ps1) | copied-target 32-bit `drcov` recorder and bounded target-window action receipt |
+| [`tools/bea_ttd_symbols.cpp`](../tools/bea_ttd_symbols.cpp) / [`tools/bea_ttd_symbols.def`](../tools/bea_ttd_symbols.def) | session-local DbgEng synthetic-symbol extension |
+| [`tools/Build-BeaTtdSymbols.ps1`](../tools/Build-BeaTtdSymbols.ps1) | reproducible x86 debugger-extension build |
+| [`tools/ttd-exec-coverage/`](../tools/ttd-exec-coverage) | one-pass Replay API instruction-byte collector |
+| [`tools/Build-TtdExecCoverage.ps1`](../tools/Build-TtdExecCoverage.ps1) | version-pinned native collector build, runtime provisioning, and self-tests |
+| [`tools/Invoke-TtdExecCoverage.ps1`](../tools/Invoke-TtdExecCoverage.ps1) | trace/target hashing, PE derivation, collector invocation, and immutable receipt |
+| [`tools/Build-StuartBsimPilot.ps1`](../tools/Build-StuartBsimPilot.ps1) | pinned copied-source, compatibility-overlay, two-profile COFF pilot |
+| [`tools/bsim-stuart/compat/`](../tools/bsim-stuart/compat) | declaration-only pilot compatibility surface |
+| [`tools/ExportBSimCandidates.java`](../tools/ExportBSimCandidates.java) | deterministic read-only BSim TSV query/export with fail-closed publication |
+| [`tools/Record-ApitraceD3D9.ps1`](../tools/Record-ApitraceD3D9.ps1) | bounded copied-target apitrace capture and last-complete-frame recovery |
 
 Generated binaries, traces, projects, BSim databases, captures, and query
 outputs remain ignored. Retail assets and executables are not added to Git.

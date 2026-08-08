@@ -7,7 +7,7 @@ packages do not bundle retail asset payloads; see
 project's attribution and distribution boundary.
 
 The specimen-bounded narrative census for the measured 5,515-file installation
-snapshot is [`BEA_DATA.md`](../../BEA_DATA.md). It is a dated synthesis, not a
+snapshot is [`../installed-corpus-census.md`](../installed-corpus-census.md). It is a dated synthesis, not a
 replacement for the installed bytes or the narrower format findings below.
 
 ## Asset formats and extraction

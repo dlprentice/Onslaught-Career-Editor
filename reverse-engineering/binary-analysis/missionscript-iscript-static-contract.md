@@ -11,7 +11,7 @@ current sources.
 ## Evidence owners
 
 - The exact
-  [`144-entry native registry`](../../GHIDRA_FUNCTONS.md#appendix-a-complete-144-entry-missionscript-native-registry)
+  [`144-entry native registry`](../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry)
   records the corrected `0x0064ce20` table base, `0x40` stride, name field at
   `+0x00`, handler field at `+0x30`, and all 144 distinct
   `FollowWaypoint`-through-`IsOverWater` names and handlers.

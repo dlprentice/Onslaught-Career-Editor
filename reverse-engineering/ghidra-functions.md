@@ -42,7 +42,7 @@ not establish its Steam depot identity.
 The campaign census below this pointer is the Generation-10 (2026-08-04)
 snapshot. The **live** complete-RE tip is Generation **73** and is owned by
 `developer_state.json` → `complete_re_tip_20260805` plus
-[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md`](local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md):
+[`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md`](../local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-delta.md):
 
 | Metric | Live tip (Gen73) |
 |--------|------------------|
@@ -130,7 +130,7 @@ denominator, all known conflict classes, the important finite tables, the
 system-level address atlas, measured runtime behavior, exact open questions, and
 the raw evidence location needed to reproduce an individual row.
 
-The companion [`BEA_DATA.md`](BEA_DATA.md) is the canonical reconnaissance map
+The companion [`installed-corpus-census.md`](installed-corpus-census.md) is the canonical reconnaissance map
 of the 5,515-file installed corpus. This file explains the executable that
 loads, interprets, simulates, and renders that corpus.
 
@@ -221,9 +221,9 @@ different measurements.
 The live installed executable differs from the baseline at 28 bytes across four
 catalogued patch sites. A screenshot or byte claim from it can therefore be a
 faithful measurement of a local modification rather than retail behavior.
-[`retail-specimen-baseline.md`](reverse-engineering/binary-analysis/retail-specimen-baseline.md)
+[`retail-specimen-baseline.md`](binary-analysis/retail-specimen-baseline.md)
 and
-[`retail-capture-provenance-2026-07-25.md`](reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md)
+[`retail-capture-provenance-2026-07-25.md`](binary-analysis/retail-capture-provenance-2026-07-25.md)
 own the durable specimen warning.
 
 ### Ghidra stores
@@ -463,7 +463,7 @@ fullbreadth maps and apply evidence.
 
 The fullpass is therefore a deep dated discovery record, not current identity
 authority. See its corrected
-[`README.md`](reverse-engineering/binary-analysis/ghidra-fullpass-findings/README.md).
+[`README.md`](binary-analysis/ghidra-fullpass-findings/README.md).
 
 The later fullbreadth correction campaign closed the following reviewed lane
 populations. A lane count is not necessarily a mutation count:
@@ -1531,7 +1531,7 @@ partition establish `CTree__Init`.
 
 The executable connects Bink FMV, Ogg/Vorbis, DirectSound, language DATs,
 MissionScript text, AYA resources, textures, meshes, effects, and physics data.
-The finite installed corpus and format census is in [`BEA_DATA.md`](BEA_DATA.md):
+The finite installed corpus and format census is in [`installed-corpus-census.md`](installed-corpus-census.md):
 5,515 files, including 1,361 AYA-family files, 3,057 Ogg files, 66 Bink videos,
 six language DATs, and 95 numbered mission trees.
 
@@ -2169,7 +2169,7 @@ address-ledger completeness, not more prose volume:
 
 - Recover the missing pinned-source include graph or explicitly scope each
   source-derived claim to the 106 available files.
-- Cross-link every installed resource family in `BEA_DATA.md` to its executable
+- Cross-link every installed resource family in `installed-corpus-census.md` to its executable
   loader/registry and parser confidence.
 - Complete unit/spawner/component/feature/hazard value-offset maps to the same
   standard as Round/WeaponMode.
@@ -2351,7 +2351,7 @@ These 104 rows close the Round (38), WeaponMode (37), Explosion (15), and
 Weapon (14) value registries. They were revalidated against current functions
 with zero RTTI class/vtable mismatches and zero missing apply bodies. Durable
 Round/WeaponMode source:
-[`physics-round-value-ids-2026-07-25.md`](reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
+[`physics-round-value-ids-2026-07-25.md`](binary-analysis/physics-round-value-ids-2026-07-25.md),
 SHA-256
 `81C435E1DA0F2DC120480E3BFCCFCB45E98A45A5AAB6D3DB5EAA984FCAE57946`.
 The cross-family mechanical source is
@@ -2631,29 +2631,29 @@ to understand the current verdicts in this master.
 
 | Area | Entry point |
 | --- | --- |
-| RE evidence contract | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) |
-| Tracked Ghidra snapshot | [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md) |
-| Binary-analysis index | [`reverse-engineering/binary-analysis/_index.md`](reverse-engineering/binary-analysis/_index.md) |
-| Current tracked name projection | [`ghidra-function-name-table-2026-07-27.tsv`](reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv) |
-| July 13 reviewed plan | [`ghidra-reviewed-correction-plan-2026-07-13.json`](reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json) |
-| July 13 closeout | [`ghidra-full-reaudit-closeout-2026-07-13.md`](reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md) |
-| Fullpass corpus | [`ghidra-fullpass-findings/README.md`](reverse-engineering/binary-analysis/ghidra-fullpass-findings/README.md) |
-| Dated coverage proof | [`re-coverage-baseline-2026-07-25.md`](reverse-engineering/binary-analysis/re-coverage-baseline-2026-07-25.md) |
-| Current grading method/history | [`name-grading-ledger-2026-07-26.md`](reverse-engineering/binary-analysis/name-grading-ledger-2026-07-26.md), [`demotion 2`](reverse-engineering/binary-analysis/name-grading-ledger-2026-07-27-demotion2.md) |
-| RTTI/source paths | [`rtti-and-source-path-evidence-2026-07-25.md`](reverse-engineering/binary-analysis/rtti-and-source-path-evidence-2026-07-25.md) |
-| Function notes | [`functions/_index.md`](reverse-engineering/binary-analysis/functions/_index.md) |
-| MissionScript static contract | [`missionscript-iscript-static-contract.md`](reverse-engineering/binary-analysis/missionscript-iscript-static-contract.md) |
-| PhysicsScript static contract | [`physics-script-static-contract.md`](reverse-engineering/binary-analysis/physics-script-static-contract.md) |
-| Round/WeaponMode map | [`physics-round-value-ids-2026-07-25.md`](reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md) |
-| Save format | [`reverse-engineering/save-file/_index.md`](reverse-engineering/save-file/_index.md) |
-| Game/system router | [`mapped-systems.md`](reverse-engineering/binary-analysis/mapped-systems.md) |
-| High-impact chains | [`high-impact-call-chain-appendix.md`](reverse-engineering/binary-analysis/high-impact-call-chain-appendix.md) |
-| BattleEngine movement | [`battleengine-movement-static-crosswalk-2026-07-12.md`](reverse-engineering/binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md) |
-| D3D9 defaults | [`d3d-default-render-state-block-2026-07-27.md`](reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md) |
-| Fog | [`d3d-fog-render-state-static-contract-2026-07-25.md`](reverse-engineering/binary-analysis/d3d-fog-render-state-static-contract-2026-07-25.md) |
-| Terrain evidence | [`terrain-ambient-light-applied-2026-07-26.md`](reverse-engineering/binary-analysis/terrain-ambient-light-applied-2026-07-26.md) and neighboring terrain findings |
-| Cockpit lighting/matrix | [`cockpit-lighting-law-2026-07-26.md`](reverse-engineering/binary-analysis/cockpit-lighting-law-2026-07-26.md), [`cockpit-world-matrix-static-2026-07-26.md`](reverse-engineering/binary-analysis/cockpit-world-matrix-static-2026-07-26.md) |
-| Camera/FOV | [`player-camera-attach-and-mesh-hfov-2026-07-26.md`](reverse-engineering/binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md) |
+| RE evidence contract | [`reverse-engineering/RE-INDEX.md`](RE-INDEX.md) |
+| Tracked Ghidra snapshot | [`reverse-engineering/ghidra/README.md`](ghidra/README.md) |
+| Binary-analysis index | [`reverse-engineering/binary-analysis/_index.md`](binary-analysis/_index.md) |
+| Current tracked name projection | [`ghidra-function-name-table-2026-07-27.tsv`](binary-analysis/ghidra-function-name-table-2026-07-27.tsv) |
+| July 13 reviewed plan | [`ghidra-reviewed-correction-plan-2026-07-13.json`](binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json) |
+| July 13 closeout | [`ghidra-full-reaudit-closeout-2026-07-13.md`](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md) |
+| Fullpass corpus | [`ghidra-fullpass-findings/README.md`](binary-analysis/ghidra-fullpass-findings/README.md) |
+| Dated coverage proof | [`re-coverage-baseline-2026-07-25.md`](binary-analysis/re-coverage-baseline-2026-07-25.md) |
+| Current grading method/history | [`name-grading-ledger-2026-07-26.md`](binary-analysis/name-grading-ledger-2026-07-26.md), [`demotion 2`](binary-analysis/name-grading-ledger-2026-07-27-demotion2.md) |
+| RTTI/source paths | [`rtti-and-source-path-evidence-2026-07-25.md`](binary-analysis/rtti-and-source-path-evidence-2026-07-25.md) |
+| Function notes | [`functions/_index.md`](binary-analysis/functions/_index.md) |
+| MissionScript static contract | [`missionscript-iscript-static-contract.md`](binary-analysis/missionscript-iscript-static-contract.md) |
+| PhysicsScript static contract | [`physics-script-static-contract.md`](binary-analysis/physics-script-static-contract.md) |
+| Round/WeaponMode map | [`physics-round-value-ids-2026-07-25.md`](binary-analysis/physics-round-value-ids-2026-07-25.md) |
+| Save format | [`reverse-engineering/save-file/_index.md`](save-file/_index.md) |
+| Game/system router | [`mapped-systems.md`](binary-analysis/mapped-systems.md) |
+| High-impact chains | [`high-impact-call-chain-appendix.md`](binary-analysis/high-impact-call-chain-appendix.md) |
+| BattleEngine movement | [`battleengine-movement-static-crosswalk-2026-07-12.md`](binary-analysis/battleengine-movement-static-crosswalk-2026-07-12.md) |
+| D3D9 defaults | [`d3d-default-render-state-block-2026-07-27.md`](binary-analysis/d3d-default-render-state-block-2026-07-27.md) |
+| Fog | [`d3d-fog-render-state-static-contract-2026-07-25.md`](binary-analysis/d3d-fog-render-state-static-contract-2026-07-25.md) |
+| Terrain evidence | [`terrain-ambient-light-applied-2026-07-26.md`](binary-analysis/terrain-ambient-light-applied-2026-07-26.md) and neighboring terrain findings |
+| Cockpit lighting/matrix | [`cockpit-lighting-law-2026-07-26.md`](binary-analysis/cockpit-lighting-law-2026-07-26.md), [`cockpit-world-matrix-static-2026-07-26.md`](binary-analysis/cockpit-world-matrix-static-2026-07-26.md) |
+| Camera/FOV | [`player-camera-attach-and-mesh-hfov-2026-07-26.md`](binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md) |
 | Patch contracts | Focused `*-patch.md` documents in `reverse-engineering/binary-analysis/` and `patches/catalog/patches.v2.json` |
 
 ### Machine-local measured evidence
