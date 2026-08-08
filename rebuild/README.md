@@ -7,6 +7,9 @@ their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
+[`DETERMINISM.md`](DETERMINISM.md) is the determinism contract (the first
+thing a contributor to Core breaks). [`PARITY.md`](PARITY.md) defines what
+"1:1 parity" means operationally and what is currently graded.
 
 This subtree is the replacement-engine effort for *Battle Engine Aquila*. It is
 source- and RE-informed, not clean-room. The immediate target is a bounded
