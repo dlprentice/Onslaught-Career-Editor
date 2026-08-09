@@ -4,10 +4,10 @@
 
 This is a static, specimen-bound proof.  It decodes the retail token-name and
 parser dispatch tables directly from the pristine PE, validates every authored
-line in all three shipped ParticleSets files, extracts every retail writer call
-from exact xrefs plus machine bytes, and cross-walks the thirteen descriptor
-loaders in the latest verified Ghidra POST backup.  It does not execute the
-game, mutate Ghidra, or claim runtime path coverage.
+line in all three shipped ParticleSets files, extracts every statically encoded
+direct retail writer call from exact machine bytes, and cross-walks the thirteen
+descriptor loaders in the latest verified Ghidra POST backup.  It does not
+execute the game, mutate Ghidra, or claim runtime path coverage.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ import io
 import json
 import os
 import re
+import stat
 import struct
 import tempfile
 from collections import Counter, defaultdict
@@ -27,10 +28,11 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA = "bea.re.tokenarchive-parser-contract-reproof.v1"
+SCHEMA = "bea.re.tokenarchive-parser-contract-reproof.v7"
 CLAIM = "CTOKENARCHIVE_READNEXTTOKEN_STATIC_CONTRACT_AND_PARTICLE_CORPUS_CROSSWALK"
 SPECIMEN_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
-EVIDENCE_RELATIVE = Path("local-lab/tokenarchive-parser-contract-reproof-20260809-v1")
+INPUT_RELATIVE = Path("local-lab/tokenarchive-parser-contract-reproof-20260809-v1")
+EVIDENCE_RELATIVE = Path("local-lab/tokenarchive-parser-contract-reproof-20260809-v7")
 READY_NAME = "proof.ready.json"
 
 PARENT_RELATIVE = Path(
@@ -167,6 +169,11 @@ INPUTS: dict[str, tuple[int, str]] = {
         5_278, "5afec283ecd778d6f77fd9a7514028bd89e1c96d3e2d1e7fc211da407f2b03e2"),
 }
 
+FROZEN_SOURCE_INPUTS = {
+    "tools/re_tokenarchive_dispatch_reproof.py",
+    "tools/ExportFunctionsByAddressDecompile.java",
+}
+
 DECOMPILE_INPUTS: dict[str, tuple[int, str]] = {
     "0048de00_CTokenArchive__ReadLine.c": (1_216, "7e4d9d292ba0ca863d5b8dae2b7ef3cc392a38b6e9a5cd8c81baf65dc03274a7"),
     "004c05c0_CPDSimpleSprite__VFunc_6_004c05c0.c": (2_725, "63764292bf851e7247da93e48b8f0a2948094d285a3ed44e890b7834ae6b81b5"),
@@ -249,6 +256,34 @@ def stamp(path: Path, root: Path) -> dict[str, Any]:
     return {"path": name, "bytes": path.stat().st_size, "sha256": sha256_file(path)}
 
 
+def require_plain_path(path: Path, label: str, *, file: bool | None = None) -> Path:
+    """Reject symlink/reparse aliases before resolving a local evidence path."""
+
+    raw = Path(os.path.abspath(path))
+    current = Path(raw.anchor)
+    for part in raw.parts[1:]:
+        current /= part
+        try:
+            info = current.lstat()
+        except OSError as exc:
+            raise ProofError(f"{label} cannot be inspected: {exc}") from exc
+        attributes = getattr(info, "st_file_attributes", 0)
+        require(
+            not stat.S_ISLNK(info.st_mode)
+            and not (attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT),
+            f"{label} contains a link or reparse point: {current}",
+        )
+    resolved = raw.resolve(strict=True)
+    require(resolved == raw, f"{label} aliases another path")
+    info = raw.lstat()
+    if file is True:
+        require(stat.S_ISREG(info.st_mode), f"{label} is not a file")
+        require(info.st_nlink == 1, f"{label} has multiple hard links")
+    elif file is False:
+        require(stat.S_ISDIR(info.st_mode), f"{label} is not a directory")
+    return raw
+
+
 def read_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -271,10 +306,16 @@ def read_tsv(path: Path, *, campaign: bool = False) -> list[dict[str, str]]:
 def exact_inputs(root: Path) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     all_inputs = dict(INPUTS)
+    source_root = Path(__file__).resolve().parents[1]
     for name, expected in DECOMPILE_INPUTS.items():
-        all_inputs[(EVIDENCE_RELATIVE / "ghidra-decompile" / name).as_posix()] = expected
+        all_inputs[(INPUT_RELATIVE / "ghidra-decompile" / name).as_posix()] = expected
     for relative, expected in sorted(all_inputs.items()):
-        actual = stamp(root / relative, root)
+        path = (
+            source_root / relative
+            if relative in FROZEN_SOURCE_INPUTS
+            else root / relative
+        )
+        actual = {**stamp(path, root), "path": relative}
         require((actual["bytes"], actual["sha256"]) == expected, f"input identity differs: {relative}")
         result[relative] = actual
     return result
@@ -450,8 +491,14 @@ def validate_ghidra_source(root: Path) -> dict[str, Any]:
         and len(expected) == 19,
         "SetPos POST backup manifest differs",
     )
-    require(D_BACKUP_ROOT.is_dir(), "D-drive SetPos POST disaster backup is absent")
-    disaster_manifest_path = D_BACKUP_ROOT / "backup_manifest.json"
+    disaster_root = require_plain_path(
+        D_BACKUP_ROOT, "D-drive SetPos POST disaster backup", file=False
+    )
+    disaster_manifest_path = require_plain_path(
+        disaster_root / "backup_manifest.json",
+        "D-drive SetPos POST disaster-backup manifest",
+        file=True,
+    )
     disaster_manifest = read_json(disaster_manifest_path)
     disaster_source = {
         row["relative_path"]: (row["size"], row["sha256"])
@@ -474,25 +521,27 @@ def validate_ghidra_source(root: Path) -> dict[str, Any]:
         "D-drive Ghidra disaster-backup manifest differs",
     )
     actual_paths = {
-        path.relative_to(D_BACKUP_ROOT).as_posix(): path
-        for path in D_BACKUP_ROOT.rglob("*")
+        path.relative_to(disaster_root).as_posix(): path
+        for path in disaster_root.rglob("*")
         if path.is_file() and path != disaster_manifest_path
     }
     require(set(actual_paths) == set(expected), "D-drive Ghidra snapshot file set differs")
     for relative, identity in expected.items():
-        path = actual_paths[relative]
+        path = require_plain_path(
+            actual_paths[relative], f"D-drive Ghidra snapshot file {relative}", file=True
+        )
         require((path.stat().st_size, sha256_file(path)) == identity, f"D-drive Ghidra file differs: {relative}")
     for log_name in ("headless-decompile.log", "headless-createbytype.log"):
-        text = (root / EVIDENCE_RELATIVE / log_name).read_text(encoding="utf-8", errors="strict")
-        require(str(D_BACKUP_ROOT) in text, f"{log_name} does not bind the D-drive backup")
+        text = (root / INPUT_RELATIVE / log_name).read_text(encoding="utf-8", errors="strict")
+        require(str(disaster_root) in text, f"{log_name} does not bind the D-drive backup")
         require("Processing read-only project file: /BEA.exe" in text, f"{log_name} was not read-only")
         require("SCRIPT ERROR" not in text and "ERROR REPORT" not in text, f"{log_name} contains an error")
-    index = read_tsv(root / EVIDENCE_RELATIVE / "ghidra-decompile/index.tsv")
+    index = read_tsv(root / INPUT_RELATIVE / "ghidra-decompile/index.tsv")
     require(len(index) == 26 and all(row["status"] == "OK" for row in index), "Ghidra decompile index differs")
-    factory_index = read_tsv(root / EVIDENCE_RELATIVE / "ghidra-createbytype/index.tsv")
+    factory_index = read_tsv(root / INPUT_RELATIVE / "ghidra-createbytype/index.tsv")
     require(len(factory_index) == 1 and factory_index[0]["address"] == "0x004cc020" and factory_index[0]["status"] == "OK", "factory decompile index differs")
     return {
-        "path": str(D_BACKUP_ROOT),
+        "path": str(disaster_root),
         "projectName": "BEA",
         "fileCount": 19,
         "totalBytes": 186_485_637,
@@ -626,10 +675,38 @@ def validate_corpus(root: Path, tokens: list[dict[str, Any]]) -> tuple[dict[int,
     return result, summary
 
 
-def derive_writer_calls(root: Path, image: bytes, tokens: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[int, list[str]]]:
+def _function_body_ranges(
+    function_rows: dict[int, dict[str, str]],
+) -> list[tuple[int, int, dict[str, str]]]:
+    ranges: list[tuple[int, int, dict[str, str]]] = []
+    for row in function_rows.values():
+        parsed: list[tuple[int, int]] = []
+        for token in row["bodyRangesRva"].split(";"):
+            match = re.fullmatch(r"0x([0-9a-f]+)-0x([0-9a-f]+)", token)
+            require(match is not None, f"function body range differs: {row['entryVa']}")
+            start, end = (int(value, 16) for value in match.groups())
+            require(start < end, f"function body range is empty: {row['entryVa']}")
+            parsed.append((start, end))
+        require(
+            all(left[1] <= right[0] for left, right in zip(parsed, parsed[1:])),
+            f"function body ranges overlap or are unsorted: {row['entryVa']}",
+        )
+        require(
+            sum(end - start for start, end in parsed) == int(row["bodyBytes"]),
+            f"function body byte count differs: {row['entryVa']}",
+        )
+        ranges.extend((start, end, row) for start, end in parsed)
+    return ranges
+
+
+def derive_writer_calls(
+    root: Path,
+    image: bytes,
+    tokens: list[dict[str, Any]],
+    function_rows: dict[int, dict[str, str]],
+) -> tuple[list[dict[str, Any]], dict[int, list[str]]]:
     xrefs = read_tsv(root / "local-lab/ghidra-fullpass-2026-07-23/exports/W007/xrefs.tsv")
-    calls = []
-    token_writers: dict[int, list[str]] = defaultdict(list)
+    xref_calls: dict[int, dict[str, str]] = {}
     for row in xrefs:
         try:
             target = int(row["target_addr"], 16)
@@ -638,6 +715,35 @@ def derive_writer_calls(root: Path, image: bytes, tokens: list[dict[str, Any]]) 
             continue
         if target not in WRITER_TARGETS:
             continue
+        require(call_va not in xref_calls, f"duplicate writer xref: 0x{call_va:08x}")
+        xref_calls[call_va] = row
+
+    image_base, sections = pe_layout(image)
+    raw_calls: dict[int, int] = {}
+    for virtual_address, _extent, raw_pointer, raw_size in sections:
+        section = image[raw_pointer:raw_pointer + raw_size]
+        for offset in range(max(0, len(section) - 4)):
+            if section[offset] != 0xE8:
+                continue
+            call_va = image_base + virtual_address + offset
+            destination = call_va + 5 + struct.unpack_from("<i", section, offset + 1)[0]
+            if destination in WRITER_TARGETS:
+                raw_calls[call_va] = destination
+    require(
+        set(raw_calls) == set(xref_calls),
+        "retail direct writer-call census differs from the pinned xref export",
+    )
+    require(len(raw_calls) == 141, "retail direct writer-call census differs")
+
+    body_ranges = _function_body_ranges(function_rows)
+    calls = []
+    token_writers: dict[int, list[str]] = defaultdict(list)
+    for call_va, target in sorted(raw_calls.items()):
+        xref = xref_calls[call_va]
+        require(
+            int(xref["target_addr"], 16) == target,
+            f"writer xref target differs: 0x{call_va:08x}",
+        )
         call = va_bytes(image, call_va, call_va + 5)
         require(call[0] == 0xE8, f"writer xref is not a direct CALL: 0x{call_va:08x}")
         destination = call_va + 5 + struct.unpack_from("<i", call, 1)[0]
@@ -656,6 +762,28 @@ def derive_writer_calls(root: Path, image: bytes, tokens: list[dict[str, Any]]) 
         writer_kind = WRITER_TARGETS[target]
         parser_kind = tokens[token_id]["parseKind"]
         symmetry = "MATCH" if writer_kind == parser_kind else "MISMATCH"
+        call_rva = call_va - image_base
+        owners = {
+            row["entryVa"]: row
+            for start, end, row in body_ranges
+            if start <= call_rva and call_rva + 5 <= end
+        }
+        require(
+            len(owners) == 1,
+            f"writer call owner census differs: 0x{call_va:08x}",
+        )
+        owner = next(iter(owners.values()))
+        if xref["from_function_addr"] != "<none>":
+            require(
+                int(xref["from_function_addr"], 16) == int(owner["entryVa"], 16)
+                and xref["from_function"] == owner["currentName"],
+                f"writer xref caller corroboration differs: 0x{call_va:08x}",
+            )
+        else:
+            require(
+                xref["from_function"] == "<no_function>",
+                f"writer xref missing-caller marker differs: 0x{call_va:08x}",
+            )
         calls.append({
             "callVa": f"0x{call_va:08x}",
             "pushVa": f"0x{push_va:08x}",
@@ -665,12 +793,12 @@ def derive_writer_calls(root: Path, image: bytes, tokens: list[dict[str, Any]]) 
             "tokenName": tokens[token_id]["name"],
             "parserKind": parser_kind,
             "symmetry": symmetry,
-            "callerEntry": row["from_function_addr"],
-            "callerName": row["from_function"],
+            "callerEntry": owner["entryVa"].removeprefix("0x"),
+            "callerName": owner["currentName"],
         })
         token_writers[token_id].append(writer_kind)
     calls.sort(key=lambda row: int(row["callVa"], 16))
-    require(len(calls) == 141, "retail writer call census differs")
+    require(len(calls) == 141, "retail direct writer-call census differs")
     require(Counter(row["writerKind"] for row in calls) == Counter(WRITER_COUNTS), "retail writer kind census differs")
     require(set(token_writers) == set(range(6, 124)), "retail field writers do not cover exactly token IDs 6..123")
     mismatches = [row for row in calls if row["symmetry"] == "MISMATCH"]
@@ -685,15 +813,123 @@ def derive_writer_calls(root: Path, image: bytes, tokens: list[dict[str, Any]]) 
     return calls, token_writers
 
 
+def derive_factory_loader_map(
+    image: bytes, function_rows: dict[int, dict[str, str]]
+) -> dict[int, dict[str, Any]]:
+    case_targets = struct.unpack(
+        "<13I", va_bytes(image, FACTORY_END, FACTORY_END + 13 * 4)
+    )
+    require(
+        len(set(case_targets)) == 13
+        and all(FACTORY <= target < FACTORY_END for target in case_targets),
+        "particle factory case table differs",
+    )
+    result: dict[int, dict[str, Any]] = {}
+    for type_id, case_start in enumerate(case_targets, 1):
+        case_end = case_targets[type_id] if type_id < 13 else FACTORY_END
+        case = va_bytes(image, case_start, case_end)
+        if type_id <= 10:
+            vtables = [
+                struct.unpack_from("<I", case, offset + 2)[0]
+                for offset in range(len(case) - 5)
+                if case[offset:offset + 2] == b"\xc7\x06"
+            ]
+            require(
+                len(vtables) == 1,
+                f"particle factory inline vtable write differs: {type_id}",
+            )
+            vtable = vtables[0]
+            init_va = None
+        else:
+            calls = []
+            for offset in range(len(case) - 4):
+                if case[offset] != 0xE8:
+                    continue
+                call_va = case_start + offset
+                destination = call_va + 5 + struct.unpack_from("<i", case, offset + 1)[0]
+                if destination != 0x005490E0:
+                    calls.append(destination)
+            initializers = []
+            for destination in calls:
+                init = va_bytes(image, destination, destination + 256)
+                vtables = [
+                    struct.unpack_from("<I", init, offset + 2)[0]
+                    for offset in range(len(init) - 5)
+                    if init[offset:offset + 2] == b"\xc7\x00"
+                ]
+                if vtables:
+                    initializers.append((destination, vtables))
+            require(
+                len(initializers) == 1,
+                f"particle factory delegated initializer differs: {type_id}",
+            )
+            init_va, _unbounded_vtables = initializers[0]
+            init_function = function_rows.get(init_va)
+            require(
+                init_function is not None
+                and init_function["currentName"] == f"CParticleSet__InitType{type_id}",
+                f"particle delegated initializer identity differs: {type_id}",
+            )
+            init = va_bytes(
+                image,
+                init_va,
+                init_va + int(init_function["bodyBytes"]),
+            )
+            vtables = [
+                struct.unpack_from("<I", init, offset + 2)[0]
+                for offset in range(len(init) - 5)
+                if init[offset:offset + 2] == b"\xc7\x00"
+            ]
+            require(
+                len(vtables) == 1,
+                f"particle delegated initializer root vtable write differs: {type_id}",
+            )
+            vtable = vtables[0]
+
+        complete_object_locator = struct.unpack(
+            "<I", va_bytes(image, vtable - 4, vtable)
+        )[0]
+        type_descriptor = struct.unpack(
+            "<I",
+            va_bytes(
+                image,
+                complete_object_locator + 12,
+                complete_object_locator + 16,
+            ),
+        )[0]
+        decorated_name = read_c_string(image, type_descriptor + 8)
+        match = re.fullmatch(r"\.\?AV([A-Za-z0-9_]+)@@", decorated_name)
+        require(match is not None, f"particle RTTI type descriptor differs: {type_id}")
+        loader_va = struct.unpack(
+            "<I", va_bytes(image, vtable + 24, vtable + 28)
+        )[0]
+        result[type_id] = {
+            "className": match.group(1),
+            "caseVa": f"0x{case_start:08x}",
+            "initVa": "" if init_va is None else f"0x{init_va:08x}",
+            "vtableVa": f"0x{vtable:08x}",
+            "completeObjectLocatorVa": f"0x{complete_object_locator:08x}",
+            "typeDescriptorVa": f"0x{type_descriptor:08x}",
+            "loaderVa": loader_va,
+        }
+    return result
+
+
 def derive_loaders(
     root: Path,
     image: bytes,
     tokens: list[dict[str, Any]],
     function_rows: dict[int, dict[str, str]],
 ) -> list[dict[str, Any]]:
-    decompile_root = root / EVIDENCE_RELATIVE / "ghidra-decompile"
+    decompile_root = root / INPUT_RELATIVE / "ghidra-decompile"
+    factory_map = derive_factory_loader_map(image, function_rows)
     rows = []
     for type_id, class_name, address, filename, expected_tokens, expected_count in LOADER_SPECS:
+        factory = factory_map[type_id]
+        require(
+            factory["className"] == class_name and factory["loaderVa"] == address,
+            f"particle factory/RTTI/loader mapping differs: {type_id}",
+        )
         source = (decompile_root / filename).read_text(encoding="utf-8")
         require("CTokenArchive__ReadNextToken" in source and "return 1;" in source, f"loader loop differs: {class_name}")
         if type_id == 12:
@@ -714,13 +950,19 @@ def derive_loaders(
         body_raw = va_bytes(image, address, address + body_bytes)
         current_name = function["currentName"]
         require(current_name.startswith(class_name + "__"), f"loader RTTI owner differs: {class_name}")
+        proposed_name = current_name if type_id == 13 else class_name + "__LoadTokenFields"
         rows.append({
             "typeId": type_id,
             "className": class_name,
+            "factoryCaseVa": factory["caseVa"],
+            "factoryInitVa": factory["initVa"],
+            "vtableVa": factory["vtableVa"],
+            "completeObjectLocatorVa": factory["completeObjectLocatorVa"],
+            "typeDescriptorVa": factory["typeDescriptorVa"],
             "loaderVa": f"0x{address:08x}",
             "currentName": current_name,
-            "proposedName": current_name if type_id == 13 else class_name + "__LoadTokenFields",
-            "proposedSignature": f"int __thiscall {class_name}__LoadTokenFields(void *this, void *token_archive)",
+            "proposedName": proposed_name,
+            "proposedSignature": f"int __thiscall {proposed_name}(void *this, void *token_archive)",
             "bodyBytes": body_bytes,
             "bodySha256": sha256_bytes(body_raw),
             "bodyRangeSetSha256": function["bodyRangeSetSha256"],
@@ -728,8 +970,11 @@ def derive_loaders(
             "acceptedTokenIds": ";".join(str(value) for value in expected_tokens),
             "acceptedTokenNames": ";".join(tokens[value]["name"] for value in expected_tokens),
             "terminatorTokenId": 5,
-            "staticVerdict": "EXACT_RTTI_OWNER_FACTORY_TYPE_AND_TOKEN_SWITCH",
-            "limitations": "TYPE3_DORMANT_IN_SHIPPED_CORPUS" if type_id == 3 else "RUNTIME_SIDE_EFFECTS_NOT_REPLAYED",
+            "staticVerdict": "EXACT_FACTORY_DISPATCH_RTTI_VTABLE_LOADER_AND_PINNED_TOKEN_SWITCH",
+            "limitations": (
+                ("TYPE3_DORMANT_IN_SHIPPED_CORPUS;" if type_id == 3 else "")
+                + "RUNTIME_SIDE_EFFECTS_NOT_REPLAYED"
+            ),
         })
     require(sum(row["corpusDescriptors"] for row in rows) == 1479, "loader descriptor census differs")
     return rows
@@ -752,25 +997,31 @@ def contract_record() -> dict[str, Any]:
             "and out_string; one line supplied through CTokenArchive__ReadLine"
         ),
         "returns": (
-            "1 for recognized markers and successfully parsed category paths; 0 for unknown token, "
-            "missing required direct-output pointer, or missing required second scanned word"
+            "1 for markers 0/5; for direct float/int/string branches only after their explicit "
+            "non-null-output and initial two-word scan-count gates; reference branches use narrower, "
+            "inconsistent gates; 0 for an unknown token or an explicit branch-gate failure. Later "
+            "numeric sscanf return values are ignored, so return 1 does not prove conversion success"
         ),
         "writes": (
-            "999-byte global line/token/value scratch; *out_token_id; category output; for reference "
-            "categories an allocated remainder string at names[pending_count] and pending_count++"
+            "three 1000-byte global line/token/value buffers (ReadLine bound 999; initial %s scans "
+            "have no width); *out_token_id; category output; for reference categories an allocated "
+            "remainder string at names[pending_count] and pending_count++"
         ),
         "sideEffects": (
             "reference-name allocation through the retail memory manager; tokens 49..57 scale direct "
             "color values by approximately 1/255 when no reference suffix exists"
         ),
         "preconditions": (
-            "out_token_id is non-null; direct INT/FLOAT/STRING and REFERENCE categories require their "
-            "documented output pointer and a second scanned word; caller supplies 1000-byte string buffers"
+            "out_token_id is non-null. Retail explicitly checks the direct float/int/string output and "
+            "the initial two-word count; REFERENCE_NAME checks out_string/count but writes out_int_or_ref_index; "
+            "FLOAT_WITH_OPTIONAL_REFERENCE checks neither category output nor scan count before dereferencing. "
+            "Callers supply 1000-byte string buffers"
         ),
         "failureModes": (
-            "unknown names return 0 after writing -1; direct categories fail closed on missing outputs/value; "
-            "FLOAT_WITH_OPTIONAL_REFERENCE does not equivalently validate output pointers or scan count; "
-            "no observed pending-reference bound check protects the 10,000-slot arrays"
+            "unknown names return 0 after writing -1; direct categories fail closed on their explicit gates, "
+            "but subsequent numeric conversion results are ignored; FLOAT_WITH_OPTIONAL_REFERENCE does not "
+            "equivalently validate output pointers or scan count; no observed allocation-failure or pending-"
+            "reference bound check protects the 10,000-slot arrays"
         ),
         "ordering": (
             "read line -> sscanf first two words -> case-sensitive linear search IDs 0..123 -> write token ID -> "
@@ -818,7 +1069,9 @@ def derive(root: Path) -> tuple[dict[str, Any], dict[str, bytes]]:
     image = (root / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup").read_bytes()
     tokens, _kinds = derive_static_tables(image)
     corpus, corpus_summary = validate_corpus(root, tokens)
-    writer_calls, token_writers = derive_writer_calls(root, image, tokens)
+    writer_calls, token_writers = derive_writer_calls(
+        root, image, tokens, function_rows
+    )
     loader_rows = derive_loaders(root, image, tokens, function_rows)
 
     token_rows = []
@@ -854,7 +1107,8 @@ def derive(root: Path) -> tuple[dict[str, Any], dict[str, bytes]]:
             "parserKind", "symmetry", "callerEntry", "callerName",
         ]),
         "descriptor-loaders.tsv": render_tsv(loader_rows, [
-            "typeId", "className", "loaderVa", "currentName", "proposedName",
+            "typeId", "className", "factoryCaseVa", "factoryInitVa", "vtableVa",
+            "completeObjectLocatorVa", "typeDescriptorVa", "loaderVa", "currentName", "proposedName",
             "proposedSignature", "bodyBytes", "bodySha256", "bodyRangeSetSha256",
             "corpusDescriptors", "acceptedTokenIds", "acceptedTokenNames", "terminatorTokenId",
             "staticVerdict", "limitations",
@@ -910,7 +1164,7 @@ def derive(root: Path) -> tuple[dict[str, Any], dict[str, bytes]]:
         "contract": contract,
         "limitations": [
             "This proof is static and specimen-bound; it does not replay the game or establish runtime frequency.",
-            "Decompiler text is pinned corroboration. Token names, kinds, writer calls, body identities, and corpus facts are independently rederived from pristine bytes and authored files.",
+            "Decompiler text is pinned corroboration. Token names, kinds, exhaustive direct writer-call encodings, body identities, factory dispatch, RTTI/vtable loader mappings, and corpus facts are independently rederived from pristine bytes and authored files.",
             "C1_STATIC is bounded understanding, not proof of every malformed-input, allocation-failure, or downstream particle behavior.",
             "The token-32 defect is proven as an asymmetry and masked by shipped data; a named-modifier runtime outcome remains an explicit falsifier, not an observed shipped failure.",
             "No Ghidra or retail executable mutation is performed by this proof.",
@@ -1004,6 +1258,53 @@ def selftest(root: Path) -> None:
         require("duplicate retail token name" in str(exc), "name-table poison failed at the intended gate")
     else:
         raise ProofError("name-table poison was accepted")
+
+    image = (root / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup").read_bytes()
+    _parent, function_rows = validate_parent(root)
+    poisoned_rows = {key: dict(value) for key, value in function_rows.items()}
+    poisoned_rows[0x004CD290]["bodyBytes"] = str(
+        int(poisoned_rows[0x004CD290]["bodyBytes"]) + 64
+    )
+    try:
+        derive_factory_loader_map(image, poisoned_rows)
+    except ProofError as exc:
+        require(
+            "initializer root vtable write differs: 11" in str(exc),
+            "initializer-bound poison failed at the intended gate",
+        )
+    else:
+        raise ProofError("initializer-bound ambiguity was accepted")
+
+    tokens, _kinds = derive_static_tables(image)
+    ambiguous_rows = {key: dict(value) for key, value in function_rows.items()}
+    ambiguous_rows[0x00C25D1] = {
+        "entryVa": "0x00c25d1",
+        "currentName": "AdverseDuplicateWriterOwner",
+        "bodyRangesRva": "0xc25d1-0xc25d6",
+        "bodyBytes": "5",
+    }
+    try:
+        derive_writer_calls(root, image, tokens, ambiguous_rows)
+    except ProofError as exc:
+        require(
+            "writer call owner census differs: 0x004c25d1" in str(exc),
+            "writer-owner ambiguity poison failed at the intended gate",
+        )
+    else:
+        raise ProofError("writer-owner ambiguity was accepted")
+
+    unmapped_rows = {key: dict(value) for key, value in function_rows.items()}
+    unmapped_rows[0x004C25C0]["bodyRangesRva"] = "0xc25c0-0xc25d1"
+    unmapped_rows[0x004C25C0]["bodyBytes"] = str(0x11)
+    try:
+        derive_writer_calls(root, image, tokens, unmapped_rows)
+    except ProofError as exc:
+        require(
+            "writer call owner census differs: 0x004c25d1" in str(exc),
+            "writer-owner omission poison failed at the intended gate",
+        )
+    else:
+        raise ProofError("unmapped writer call was accepted")
 
 
 def main() -> int:

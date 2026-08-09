@@ -6,28 +6,28 @@
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
     "lineageId": "incident-20260806-recovery-v1",
-    "generation": 17,
-    "campaignPath": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1",
-    "readyBytes": 21499,
-    "readySha256": "6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2",
-    "reducerId": "fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621",
-    "authorityReceiptPath": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-authority.ready.json",
-    "authorityReceiptBytes": 9956,
-    "authorityReceiptSha256": "c37aae056dc2f04d946db69d4e13d276dbc11d1a52976c97657af0a5549b00cb",
+    "generation": 18,
+    "campaignPath": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1",
+    "readyBytes": 22974,
+    "readySha256": "4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e",
+    "reducerId": "ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74",
+    "authorityReceiptPath": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-authority.ready.json",
+    "authorityReceiptBytes": 12742,
+    "authorityReceiptSha256": "c13dcef4aaae7c95b08bd75a502069a47274e9d577b48b05c57a5f3adcf6b7a6",
     "evidenceRegisterPath": "reverse-engineering/EVIDENCE-REGISTER.tsv",
     "counts": {
       "functions": 8125,
       "residuals": 6118,
-      "questions": 15253,
+      "questions": 15254,
       "scenarios": 72,
       "levers": 915,
       "contracts": 14243,
-      "adjudications": 6096,
+      "adjudications": 6097,
       "supersessions": 588
     },
-    "verify": "$env:BEA_REPO_ROOT=(Get-Location).Path; try { python -I -B tools/re_campaign_frozen_bootstrap.py --campaign local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1 --mode full --expected-ready-sha256 6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2 --expected-reducer-id fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621; if ($LASTEXITCODE -ne 0) { throw \"Generation 17 frozen replay failed with exit code $LASTEXITCODE\" } } finally { Remove-Item Env:BEA_REPO_ROOT -ErrorAction SilentlyContinue }",
+    "verify": "$env:BEA_REPO_ROOT=(Get-Location).Path; try { python -I -B tools/re_campaign_frozen_bootstrap.py --campaign local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1 --mode full --expected-ready-sha256 4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e --expected-reducer-id ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74; if ($LASTEXITCODE -ne 0) { throw \"Generation 18 frozen replay failed with exit code $LASTEXITCODE\" } } finally { Remove-Item Env:BEA_REPO_ROOT -ErrorAction SilentlyContinue }",
     "candidateTipDisposition": "The original candidate Generations 11-73 are superseded projection history, never a parent or authority; their valid claims were re-admitted field-by-field through the exact closure.",
-    "nextValidGeneration": 18,
+    "nextValidGeneration": 19,
     "incidentRecoveryEvidence": {
       "claimClosure": "local-lab/re-campaign-incident-recovery-20260808-v1/gen73-claim-closure-v1/closure.ready.json; 48533 bytes; SHA-256 94d7a9eb380752671fdc5d5a152e1491bc6d4e4c87c225b8a1c385e39d0323e0",
       "atomic14Inputs": "local-lab/atomic14-input-recovery-20260808-v1/recovery.ready.json; 12549 bytes; SHA-256 56da14306d4e6e70ce9853446b80861b8971f013a2af4cf37ce6de06cad664bf",
@@ -38,6 +38,7 @@
       "missionNativeSetPosReproof": "local-lab/mission-native-setpos-boundary-reproof-20260809-v1/proof.ready.json; 12100 bytes; SHA-256 7fca2c1e960166603ece107c112217ea674e6c2d898622594432817a803a0a7d",
       "missionNativeSetPosRuntime": "local-lab/mission-native-setpos-runtime-20260809-v1/runtime-proof.ready.json; 25125 bytes; SHA-256 40826e7e204bac8f9db1e64f7efb59e501f73401c58a48f051ac36244e7f22e0",
       "lockHitBoundedContract": "local-lab/lockhit-bounded-contract-reproof-20260809-v1/proof.ready.json; 2693 bytes; SHA-256 aeb60bd5565872579fd58a2a557a1b466ca81a89e06dcf0a2cce632fa7448739; one non-null sole-matching-node removal path only",
+      "tokenArchiveParserContract": "local-lab/tokenarchive-parser-contract-reproof-20260809-v7/proof.ready.json; 25623 bytes; SHA-256 ed2aca4f54a82476a9f1cc1cb7e1a81376fae9b9c6dee22fcf890fe15fbf07bc; exact static parser/corpus/factory/direct-writer proof, runtime and refuter verdicts remain UNSCORED",
       "tokenArchiveLiveGhidra": "local-lab/ghidra-tokenarchive-dispatch-live-promotion-20260809-v1/promotion/promotion.ready.json; 6072 bytes; SHA-256 8ca256ec03e36aa27c4f25720ce6882fc1ece3d91d408a4097b2740e239ec632; exact 4 labels + 5 comments, no boundary/data/reference change",
       "irrecoverableHistoricalIdentity": "Atomic14 formal-proof.ready.json: 23028 bytes / a504c24b1eab555da8a01fc56d91561d3147a508dd3f906b0ac41e97697a83e6; explicitly not reconstructed or substituted. Gen3/Gen4 READY receipts remain archival losses and are not current replay dependencies."
     },
@@ -63,33 +64,33 @@
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Advance CTokenArchive::ReadNextToken at 0x004F57B0 from the Gen14 dispatch-table structure into a full static parser contract and particle-loader crosswalk.",
-        "existingEvidence": "Gen14 proves the exact 171-byte adjacent partition, all seven dispatch targets, all 125 bounded category bytes, the consumer, and xrefs. Existing decompile/fullpass evidence covers the 267-instruction body, RET 0x10, output carriers, failure/reference paths, and 18 particle-loader calls, but category meanings remain unassigned.",
-        "instrument": "A frozen static reducer mapping every one of the 125 IDs through the index table to one of seven body blocks, joined to GetTokenName, binder/writer symmetry, and the exact shipped .par corpus.",
-        "gate": "Account for all 125 IDs once, keep every target inside the exact body, decode category/output/null/failure paths, reject index/pointer/branch/output poisons, and reproduce independently; stop at C1_STATIC unless runtime evidence supports more.",
-        "reconstructionOwner": "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs and focused ParticleSetTests.cs whole-corpus coverage",
-        "why": "It turns the newly proven table and live Ghidra structure into a behavior contract without a new trace."
-      },
-      {
-        "rank": 2,
         "question": "Apply the SetPos boundary recipe to the next shipped Mission-native handler still represented as a police-open residual.",
-        "existingEvidence": "The shipped 144-entry Mission registry, canonical Gen17 range ledger, pristine bytes, and live Ghidra inventory identify 11 sibling registry pointers with no function boundary. SetPos demonstrates the exact static/scratch/live promotion workflow; it does not prove any sibling's body or contract.",
+        "existingEvidence": "The shipped 144-entry Mission registry, canonical Gen18 range ledger, pristine bytes, and live Ghidra inventory identify 11 sibling registry pointers with no function boundary. SetPos demonstrates the exact static/scratch/live promotion workflow; it does not prove any sibling's body or contract.",
         "instrument": "Select the highest-value sibling by exact registry pointer and residual envelope, derive a unique body/padding partition from pristine bytes and xrefs, reproduce it twice in isolated Ghidra copies, and use the smallest authored runtime probe only after the static boundary is sealed.",
         "gate": "Require direct registry-pointer landing, exact non-overlapping body/range hashes, complete residual-byte accounting, control-flow and ABI sanity, two identical builds, shifted-boundary/body/padding poisons, and a fresh recoverable live-promotion ceremony before saving Ghidra.",
         "reconstructionOwner": "Level100ActorScriptRuntime.cs plus the exact Level100 registry owner and one focused mission-native parity test",
         "why": "It reuses a proven instrument to retire another executable ambiguity while keeping behavior claims separate from boundary proof."
       },
       {
-        "rank": 3,
+        "rank": 2,
         "question": "Extend CBattleEngine::LockHit from its admitted single-node path into null, absent, and multi-node behavior.",
         "existingEvidence": "Generation 17 proves the non-null sole-matching-node unlink path and retains four explicit successors. Stuart source and pristine pseudocode expose the likely branch/list shape, while the current trace owns only one event.",
         "instrument": "First derive a hypothesis matrix from the exact decompile, xrefs, list helpers, and Stuart source; then use the smallest disposable-copy or short retained-trace probe needed to discriminate only the unresolved branches.",
         "gate": "Label every decompiler inference as provisional until a byte/source/runtime join supports it; reject branch-order, first-match, global-head, destructor, and return overclaims independently.",
         "reconstructionOwner": "UNASSIGNED until the retail fired-lock container owner and semantics are evidence-bound",
         "why": "It applies a hypothesis-first workflow to a high-value contract without weakening the authority boundary."
+      },
+      {
+        "rank": 3,
+        "question": "Exercise the remaining CTokenArchive::ReadNextToken runtime and error-path questions without overstating the Generation 18 static contract.",
+        "existingEvidence": "Generation 18 accounts for every shipped token name and parse-index entry, all 141 direct writer-call encodings, the exact 13 descriptor factory/RTTI/loader mappings, and the shipped ParticleSets corpus. Runtime allocation, malformed input, named token 32, overflow behavior, and complete downstream object effects remain explicitly open.",
+        "instrument": "Build the smallest copied-runtime corpus probe that isolates one open parser branch at a time, beginning with named token 32 and malformed/overflow controls, while retaining exact static expectations from the v7 proof.",
+        "gate": "Require deterministic positive, negative, malformed, and capacity controls; bind exact input bytes and output carriers; reject scan-count, allocation, alias, and error-path overclaims independently; advance beyond C1 only for reproduced bounded behavior.",
+        "reconstructionOwner": "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs and focused ParticleSetTests.cs",
+        "why": "It converts the strongest remaining static parser uncertainties into narrowly measured runtime contracts while preserving the honest C1 boundary."
       }
     ],
-    "limitations": "Generation 17 preserves canonical Generation 16 and advances only one retained non-null, sole-matching-node CBattleEngine::LockHit removal path to C2_BOUNDED_RUNTIME. Three data-write reductions and two call-context reductions describe the same immutable gameplay event, not independent gameplay replications. Null, absent, multi-node, direct global-free-head, payload destructor, full return, exact target identity, and rebuild ownership remain open as four explicit successors. No new capture, executable mutation, or live Ghidra mutation was used for Gen17. The historical Atomic14 a504 receipt remains lost and explicitly unsubstituted."
+    "limitations": "Generation 18 preserves canonical Generation 17 and advances CTokenArchive::ReadNextToken only to C1_CANDIDATE_PARTIAL from an exact static parser/corpus/factory/direct-writer proof. The static admission adjudication survived, but the contract runtime and refuter verdicts remain UNSCORED, runtime replays are zero, and the rebuild mapping remains PARTIAL_CONTRACT. Named token 32, malformed input, allocation, overflow, complete downstream object effects, and other runtime paths remain open. No gameplay capture, TTD replay, executable mutation, or live Ghidra mutation was used for Generation 18. The historical Atomic14 a504 receipt remains lost and explicitly unsubstituted."
   },
   "_REVIEW_MODE_2026_08_08_SITUATIONAL": "Reviewer selection is harness-agnostic and situational. Start with the active harness's native subagents; use fresh normal/adversarial contexts when consequence or uncertainty warrants them. Grok 4.5 High is a fast extra angle, Opus 5 Medium/Max is long-form independent review, and DeepSeek V4 Flash Max runs through OpenCode Go with Zen-free then direct-provider fallbacks. No fixed matrix is mandatory and no model report is authority. See reverse-engineering/REVIEW-PROTOCOL.md.",
   "_APP_UX_CAMPAIGN_2026_08_01": {

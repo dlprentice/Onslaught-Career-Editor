@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-09
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 17 via
+Current replay authority is Generation 18 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -62,12 +62,12 @@ reference and runbooks, and the retail → Core translation policies.
 
 The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
 2026-07 name ledgers still lag current work. Select campaign authority from `developer_state.json` →
-`current_re_authority`: canonical Generation 17 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1/`,
-READY `6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2`,
-frozen reducer `fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621`,
-external selector `c37aae05…b00cb`. It contains 8,125 functions, 215 C1, seven
-bounded C2, 7,903 opaque functions, 18 open residuals, and no rebuild-ready
+`current_re_authority`: canonical Generation 18 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1/`,
+READY `4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e`,
+frozen reducer `ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74`,
+external selector `c13dcef4…cf6b7a6`. It contains 8,125 functions, 216 C1,
+seven bounded C2, 7,902 opaque functions, 18 open residuals, and no rebuild-ready
 contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -80,9 +80,15 @@ a partial rebuild mapping; its complete writes, side effects, broader inputs,
 and failure behavior remain open. Generation 17 admits only LockHit's retained
 non-null, sole-matching-node removal path; its other list paths, free-head,
 destructor, return, identity, and rebuild questions remain open. Positive-shield absorption, raw return
-pairing, death/effect ordering, full TokenArchive parser behavior, and other paths remain open. The independent replica is
+pairing, death/effect ordering, and other paths remain open. Generation 18
+admits an exact static `CTokenArchive::ReadNextToken` parser/corpus/factory
+contract at C1 only: all 124 token names, 125 parse-index entries, 141 direct
+writer-call encodings, and 13 descriptor factory/RTTI/loader mappings are
+accounted for, while runtime/refuter verdicts, malformed input, allocation,
+overflow, named token 32, and full downstream behavior remain open. Its focused
+rebuild mapping is `PARTIAL_CONTRACT`. The independent replica is
 reproduction-only. Generation 73 remains a projection oracle, never a parent or
-authority. The next valid campaign generation is 18. Model review is
+authority. The next valid campaign generation is 19. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)

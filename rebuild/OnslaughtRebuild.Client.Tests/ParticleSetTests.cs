@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using OnslaughtRebuild.Client;
 
 namespace OnslaughtRebuild.Client.Tests;
@@ -244,6 +246,20 @@ public sealed class ParticleSetTests
                 [RetailParticleTokenParseKind.ReferenceName] = 16,
             },
             byKind);
+        StringBuilder exactMapping = new();
+        foreach (string tokenName in tokenNames.Order(StringComparer.Ordinal))
+        {
+            Assert.True(RetailParticleTokenContract.TryGetParseKind(tokenName, out var kind));
+            exactMapping
+                .Append(tokenName)
+                .Append('\t')
+                .Append((int)kind)
+                .Append('\n');
+        }
+        Assert.Equal(
+            "b99eb664bfbfb7f215ca3fbbbfa253a5f24267bcb2a0567a4ca0a0ea45d22d2c",
+            Convert.ToHexString(SHA256.HashData(
+                Encoding.UTF8.GetBytes(exactMapping.ToString()))).ToLowerInvariant());
         Assert.False(RetailParticleTokenContract.TryGetParseKind(
             "Future_Modded_Field", out var unknown));
         Assert.Equal(RetailParticleTokenParseKind.Unrecognized, unknown);

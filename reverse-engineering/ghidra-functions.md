@@ -3,11 +3,11 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen17 authority; LockHit single-node path bounded)
+Last updated: 2026-08-09 (Gen18 authority; TokenArchive static contract admitted)
 Verdict: **The verified maintainer database now contains 8,125 function
 boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
 previous residual entries, then 14 exact console-callback-region boundaries.
-Canonical Generation 17 accounts for those functions plus 6,118 exact residual entities,
+Canonical Generation 18 accounts for those functions plus 6,118 exact residual entities,
 1,767,142 body bytes, and 161,975 still-unmapped executable bytes. The 14 new
 functions remain deliberately opaque; 15 interstitial ranges / 107 bytes are
 terminally proven NOP padding. A third authorized operation corrected five
@@ -23,8 +23,8 @@ accounting has advanced again through a sixth gated operation: the exact
 42-byte/17-instruction Mission-native `IScript__SetPos` function was added with
 its name, signature, and comment, between 15-byte and 6-byte NOP ranges, while
 executable bytes, instructions, data, and references stayed unchanged.
-Semantics remain the hard problem: 14,021 of 14,243 contract rows are `C0_OPAQUE`,
-215 are `C1_CANDIDATE_PARTIAL`, seven are `C2_BOUNDED_RUNTIME`, and none is
+Semantics remain the hard problem: 14,020 of 14,243 contract rows are `C0_OPAQUE`,
+216 are `C1_CANDIDATE_PARTIAL`, seven are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
 `Damage` chain, three Level 521 call-context contracts, and one separately
 re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
@@ -33,7 +33,7 @@ path have crossed bounded runtime gates. This
 file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative Generation-17 campaign bundle, tracked Ghidra snapshot,
+readback, authoritative Generation-18 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,
 copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
 claims are labelled where they carry less authority than shipped bytes or
@@ -54,28 +54,30 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-09) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **17**, selected
+snapshot. Current authority is canonical Generation **18**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen17 |
+| Metric | Canonical Gen18 |
 |--------|------------------|
-| Functions | 8,125 (= C1 215 + C2 7 + function semantic OPAQUE 7,903) |
-| Grades | **C1=215**, **C2=7**, contract C0_OPAQUE **14021**; REBUILD_READY **0** |
+| Functions | 8,125 (= C1 216 + C2 7 + function semantic OPAQUE 7,902) |
+| Grades | **C1=216**, **C2=7**, contract C0_OPAQUE **14020**; REBUILD_READY **0** |
 | OPEN residual | **18** police holds |
 | complete_RE | **false** |
-| READY / reducer | `6d794905…01a2` / `fbb343d6…1621` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1/` |
-| Next valid generation | **18** |
+| READY / reducer | `4ae3a7b8…d97e` / `ee8bddfb…bad74` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1/` |
+| Next valid generation | **19** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
 superseded-claims appendix) is retained. Candidate Generation 73 is now an
 explicit projection oracle only; its admissible fields were resealed onto the
-post-loss lineage claim by claim. Gen12 through Gen17 then add only the bounded
+post-loss lineage claim by claim. Gen12 through Gen18 then add only the bounded
 Damage/Hit and zero-shield ApplyDamage observations plus the exact TokenArchive
 dispatch-data partition, Mission-native SetPos boundary/static contract, and
 its bounded script-visible position-copy runtime/rebuild claim, and LockHit's
-single-node removal path described above.
+single-node removal path described above, plus the exact static TokenArchive
+parser/corpus/factory/direct-writer contract admitted at C1 with runtime and
+refuter verdicts still open.
 
 ---
 
@@ -91,7 +93,7 @@ until their derived percentages are regenerated against the live tip.
 | Authoritative campaign | `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2`; READY SHA-256 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; frozen reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9` |
 | Live maintainer Ghidra | 8,124 functions after 529 exact boundary-only promotions plus five same-range target-lock semantic corrections; POST fileset SHA-256 `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702` |
 | Remaining executable accounting | 6,117 residuals; 162,017 unmapped executable bytes; exact function bodies cover 1,767,100 bytes / 91.6015% of `.text` |
-| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Canonical Gen17: C1=215, C2=7, contract C0_OPAQUE=14021, REBUILD_READY=0.** The fifth C2 is the bounded zero-shield ApplyDamage reproof; the sixth is SetPos's script-visible position-copy path; the seventh is LockHit's single-node removal path. None is an all-path law; Gen14's TokenArchive advance remains structural data proof. |
+| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Canonical Gen18: C1=216, C2=7, contract C0_OPAQUE=14020, REBUILD_READY=0.** The fifth C2 is the bounded zero-shield ApplyDamage reproof; the sixth is SetPos's script-visible position-copy path; the seventh is LockHit's single-node removal path. None is an all-path law; Gen18 adds the static TokenArchive parser contract at C1 without claiming runtime/refuter closure. |
 | Runtime console census | A replicated 16-byte disposable logger bridge realizes 31 commands and 56 CVars on Level 100; static registration contains 32/59, with `fmv_play` and three debris CVars absent on that path. READY SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297` |
 | Latest exact partition | The retired residual `[0x004295BC,0x00429BC0)` is now exactly replaced by 14 opaque functions / 1,433 code bytes and 15 terminal NOP-padding residuals / 107 bytes. No callback name, signature, ABI, behavior, or rebuild claim was promoted. |
 | TTD corpus | 75 traces / 497.31 GiB. Coverage exists for 73 traces, but 65 traces remain coverage-only and there is no normalized corpus-wide call/return/receiver/argument ledger |

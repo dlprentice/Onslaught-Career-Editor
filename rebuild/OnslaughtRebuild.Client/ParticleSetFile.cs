@@ -14,13 +14,14 @@ namespace OnslaughtRebuild.Client;
 /// <c>01a4c73d…</c>, <c>ModelViewer.par</c> sha256 <c>32d85d1f…</c>, read from
 /// <c>local-lab/safe-copy-bea-pristine/data/ParticleSets/</c>): 1,479
 /// descriptors across twelve instantiated type ids. Type id <c>3</c> is not
-/// used by the shipped corpus, but retail's exact factory and RTTI identify it
-/// as <c>CPDModifier</c>, so it is retained as a proven dormant type.</para>
+/// used by the shipped corpus, but retail's exact factory/vtable/RTTI chain
+/// identifies type 3 as <c>CPDModifier</c>, so it is retained as a proven
+/// dormant type.</para>
 ///
-/// <para>The names are now bound to the retail RTTI owners and factory switch
-/// at <c>0x004CC020</c>. The exact thirteen loader bodies and all accepted token
-/// ids are rederived by <c>tools/re_tokenarchive_parser_contract.py</c>. Type 3
-/// is a real <c>CPDModifier</c> even though no shipped descriptor uses it.</para>
+/// <para><c>tools/re_tokenarchive_parser_contract.py</c> rederives all thirteen
+/// factory cases, vtables, RTTI owners, slot-6 loader addresses, and exact body
+/// identities from pristine bytes; pinned decompiler token switches are
+/// corroboration. Type 3 remains unused by every shipped descriptor.</para>
 /// </summary>
 public enum ParticleDescriptorType
 {
@@ -156,7 +157,10 @@ public static class RetailParticleTokenContract
         return kind != RetailParticleTokenParseKind.Unrecognized;
     }
 
-    /// <summary>Returns the exact retail RTTI class selected for a type id.</summary>
+    /// <summary>
+    /// Returns the exact retail RTTI class selected through the factory case,
+    /// constructed vtable, and complete-object-locator chain.
+    /// </summary>
     public static string DescriptorClassName(int typeId) => typeId switch
     {
         1 => "CPDSimpleSprite",
@@ -175,7 +179,9 @@ public static class RetailParticleTokenContract
         _ => throw new InvalidDataException($"Retail has no particle descriptor type {typeId}."),
     };
 
-    /// <summary>Returns the exact retail token-loader entry for a type id.</summary>
+    /// <summary>
+    /// Returns the exact retail slot-6 token-loader entry for a type id.
+    /// </summary>
     public static uint DescriptorLoaderAddress(int typeId) => typeId switch
     {
         1 => 0x004C05C0,

@@ -35,6 +35,7 @@ import re_tokenarchive_dispatch_reproof as tokenarchive_reproof
 import re_mission_native_setpos_reproof as mission_setpos_reproof
 import re_mission_native_setpos_runtime as mission_setpos_runtime
 import re_lockhit_bounded_contract as lockhit_contract
+import re_tokenarchive_parser_contract as tokenarchive_parser_contract
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -144,6 +145,12 @@ MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA = (
 LOCKHIT_BOUNDED_ADVANCE_KIND = "TTD_CBATTLEENGINE_LOCKHIT_BOUNDED_CONTRACT"
 LOCKHIT_BOUNDED_ADVANCE_SCHEMA = (
     "bea.re.ttd-cbattleengine-lockhit-bounded-contract-advance.v1"
+)
+TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND = (
+    "STATIC_TOKENARCHIVE_READNEXTTOKEN_PARSER_CONTRACT"
+)
+TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA = (
+    "bea.re.static-tokenarchive-readnexttoken-parser-contract-advance.v1"
 )
 TTD_CALL_CONTEXT_PROOF_SCHEMA = "bea-level521-impact-schema3-proof.v2"
 TTD_CALL_CONTEXT_PARENT_RELATIVE = (
@@ -488,6 +495,56 @@ LOCKHIT_BOUNDED_EXPECTED_GENERATION17_COUNTS = {
     **LOCKHIT_BOUNDED_PARENT_COUNTS,
     "questions": 15253,
     "adjudications": 6096,
+}
+TOKENARCHIVE_PARSER_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-17-lockhit-bounded-contract-v1"
+)
+TOKENARCHIVE_PARSER_PARENT_READY_BYTES = 21499
+TOKENARCHIVE_PARSER_PARENT_READY_SHA256 = (
+    "6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2"
+)
+TOKENARCHIVE_PARSER_PARENT_REDUCER_ID = (
+    "fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621"
+)
+TOKENARCHIVE_PARSER_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-17-lockhit-bounded-contract-authority.ready.json"
+)
+TOKENARCHIVE_PARSER_PARENT_AUTHORITY_BYTES = 9956
+TOKENARCHIVE_PARSER_PARENT_AUTHORITY_SHA256 = (
+    "c37aae056dc2f04d946db69d4e13d276dbc11d1a52976c97657af0a5549b00cb"
+)
+TOKENARCHIVE_PARSER_PARENT_COUNTS = dict(
+    LOCKHIT_BOUNDED_EXPECTED_GENERATION17_COUNTS
+)
+TOKENARCHIVE_PARSER_PROOF_RELATIVE = Path(
+    "local-lab/tokenarchive-parser-contract-reproof-20260809-v7"
+)
+TOKENARCHIVE_PARSER_PROOF_READY_BYTES = 25623
+TOKENARCHIVE_PARSER_PROOF_READY_SHA256 = (
+    "ed2aca4f54a82476a9f1cc1cb7e1a81376fae9b9c6dee22fcf890fe15fbf07bc"
+)
+TOKENARCHIVE_PARSER_PROOF_AUTHOR_BYTES = 63516
+TOKENARCHIVE_PARSER_PROOF_AUTHOR_SHA256 = (
+    "b94a2216233fbd0623a14df8e27cbb4d1b66d978da43f8744b0e479d7e9c8ee1"
+)
+TOKENARCHIVE_PARSER_REBUILD_OWNER_BYTES = 23400
+TOKENARCHIVE_PARSER_REBUILD_OWNER_SHA256 = (
+    "9f798cf3e489b26ae8bc3caaedd6fd87ddf8aea8b149200f4b2ce7848aa8ea8d"
+)
+TOKENARCHIVE_PARSER_REBUILD_RESOLVER_BYTES = 29245
+TOKENARCHIVE_PARSER_REBUILD_RESOLVER_SHA256 = (
+    "623903cc81af90b185e7ee628315723832e71711adec3d0c26393013723022dc"
+)
+TOKENARCHIVE_PARSER_REBUILD_TEST_BYTES = 29191
+TOKENARCHIVE_PARSER_REBUILD_TEST_SHA256 = (
+    "f2c5e308dda9b7ef73c42068e645a8a7d592f9315611558544329b3a8fee6728"
+)
+TOKENARCHIVE_PARSER_EXPECTED_GENERATION18_COUNTS = {
+    **TOKENARCHIVE_PARSER_PARENT_COUNTS,
+    "questions": 15254,
+    "adjudications": 6097,
 }
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
@@ -939,6 +996,18 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             Path(lockhit_contract.__file__).resolve(),
         ),
         (
+            "tokenarchive-parser-contract-proof",
+            "_reducer/tools/re_tokenarchive_parser_contract.py",
+            Path(tokenarchive_parser_contract.__file__).resolve(),
+        ),
+        (
+            "tokenarchive-parser-ghidra-decompile-tool",
+            "_reducer/tools/ExportFunctionsByAddressDecompile.java",
+            Path(__file__).resolve().with_name(
+                "ExportFunctionsByAddressDecompile.java"
+            ),
+        ),
+        (
             "mission-native-setpos-ghidra-authority",
             "_reducer/tools/ghidra_mission_native_setpos_promotion_authority.py",
             Path(__file__).resolve().with_name(
@@ -975,6 +1044,22 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "mission-native-setpos-parity-test",
             "_reducer/rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs",
             owner_root / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs",
+        ),
+        (
+            "tokenarchive-parser-rebuild-owner",
+            "_reducer/rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs",
+        ),
+        (
+            "tokenarchive-parser-rebuild-resolver",
+            "_reducer/rebuild/OnslaughtRebuild.Client/ParticleEffectResolver.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Client/ParticleEffectResolver.cs",
+        ),
+        (
+            "tokenarchive-parser-rebuild-test",
+            "_reducer/rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs",
+            owner_root
+            / "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs",
         ),
         (
             "probe-selector",
@@ -2557,6 +2642,105 @@ def _validate_campaign_relations(
         gen11_receipt = _runtime_json(
             gen11_root / "campaign.ready.json",
             "LockHit bounded-contract inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation18_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 18
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation18_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind")
+        != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND
+        or current_advance.get("schema")
+        != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA
+        or current_advance.get("branchId")
+        != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 18 recovery campaign is not the exact TokenArchive parser-contract advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "TokenArchive parser-contract advance lacks exact recovery ancestry"
+        )
+    if generation18_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND
+    ):
+        _validate_tokenarchive_parser_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen17_root = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+        gen17_receipt = _runtime_json(
+            gen17_root / "campaign.ready.json",
+            "TokenArchive parser-contract inherited Gen17 advance",
+        )
+        _validate_lockhit_bounded_advance_relation(
+            _campaign_rows_from_root(gen17_root),
+            gen17_receipt,
+            gen17_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen16_root = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+        gen16_receipt = _runtime_json(
+            gen16_root / "campaign.ready.json",
+            "TokenArchive parser-contract inherited Gen16 advance",
+        )
+        _validate_mission_native_setpos_runtime_advance_relation(
+            _campaign_rows_from_root(gen16_root),
+            gen16_receipt,
+            gen16_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen15_root = (
+            REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+        ).resolve()
+        gen15_receipt = _runtime_json(
+            gen15_root / "campaign.ready.json",
+            "TokenArchive parser-contract inherited Gen15 advance",
+        )
+        setpos_context = _validate_mission_native_setpos_advance_relation(
+            _campaign_rows_from_root(gen15_root),
+            gen15_receipt,
+            gen15_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen14_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+        gen14_receipt = _runtime_json(
+            gen14_root / "campaign.ready.json",
+            "TokenArchive parser-contract inherited Gen14 TokenArchive advance",
+        )
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            _campaign_rows_from_root(gen14_root),
+            gen14_receipt,
+            gen14_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "TokenArchive parser-contract inherited Gen11 reseal",
         )
         reseal_context = _validate_gen73_reseal_advance_relation(
             _campaign_rows_from_root(gen11_root),
@@ -4291,6 +4475,116 @@ def _verify_lockhit_bounded_parent_campaign(root: Path) -> dict:
     return verified
 
 
+def _verify_tokenarchive_parser_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen17 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "TokenArchive parser canonical Gen17 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive parser parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "TokenArchive parser parent is not exact canonical Gen17"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_AUTHORITY_RELATIVE
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "TokenArchive parser parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path, "TokenArchive parser parent authority", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive parser parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != TOKENARCHIVE_PARSER_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != TOKENARCHIVE_PARSER_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != TOKENARCHIVE_PARSER_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != TOKENARCHIVE_PARSER_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "TokenArchive parser parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "TokenArchive parser canonical Gen17 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "TokenArchive parser parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "TokenArchive parser parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "TokenArchive parser parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"), "TokenArchive parser parent selection"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 17
+        or receipt.get("counts") != TOKENARCHIVE_PARSER_PARENT_COUNTS
+        or reducer.get("id") != TOKENARCHIVE_PARSER_PARENT_REDUCER_ID
+        or advance.get("kind") != LOCKHIT_BOUNDED_ADVANCE_KIND
+        or advance.get("schema") != LOCKHIT_BOUNDED_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or authority.get("schema")
+        != "bea.re.lockhit-bounded-generation17-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass")
+        != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId")
+        != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != TOKENARCHIVE_PARSER_PARENT_READY_SHA256
+        or canonical.get("reducerId")
+        != TOKENARCHIVE_PARSER_PARENT_REDUCER_ID
+    ):
+        raise CampaignError(
+            "TokenArchive parser canonical Gen17 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=1200,
+            expected_ready_sha256=TOKENARCHIVE_PARSER_PARENT_READY_SHA256,
+            expected_reducer_id=TOKENARCHIVE_PARSER_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "TokenArchive parser parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "TokenArchive parser parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "TokenArchive parser parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION17_REPLAY"
+    return verified
+
+
 def _question_has_progress(row: dict[str, str]) -> bool:
     return (
         row.get("state") != "OPEN"
@@ -4958,6 +5252,10 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 parent_receipt = _verify_lockhit_bounded_parent_campaign(
                     parent_path
                 )
+            elif kind == TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND:
+                parent_receipt = _verify_tokenarchive_parser_parent_campaign(
+                    parent_path
+                )
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -5318,6 +5616,28 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     "LockHit bounded-contract proof root",
                 )
                 advance_lockhit_bounded_contract(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND:
+                if (
+                    advance.get("schema")
+                    != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA
+                ):
+                    raise CampaignError(
+                        "TokenArchive parser-contract campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "TokenArchive parser-contract proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"),
+                    "TokenArchive parser-contract proof root",
+                )
+                advance_tokenarchive_parser_contract(
                     parent_path,
                     proof_root,
                     replay,
@@ -22238,6 +22558,994 @@ def advance_lockhit_bounded_contract(
         raise
 
 
+def _tokenarchive_parser_policies() -> list[str]:
+    return [
+        "Only CTokenArchive__ReadNextToken's exact function, contract, and one open executed-function question change.",
+        "The 124 token names, 125 parse-index entries, 141 statically encoded direct writer calls, body identities, and all 27,186 shipped corpus lines are independently rederived from exact bytes or authored files.",
+        "All thirteen factory cases, vtables, RTTI owners, slot-6 loader addresses, and loader body identities are independently rederived from pristine bytes; pinned decompiler token switches are corroboration.",
+        "C1_STATIC records a bounded parser contract; runtime frequency, malformed-input causality, allocation failures, pending-reference overflow, and full downstream particle behavior remain open.",
+        "The token-32 writer/reader asymmetry is a proven retail defect masked by shipped data; no named-modifier runtime outcome is invented.",
+        "No executable or live Ghidra mutation is part of this generation.",
+    ]
+
+
+def _tokenarchive_parser_successor_spec() -> dict[str, object]:
+    return {
+        "questionType": "FUNCTION_CONTRACT_RUNTIME_EDGE_CASES",
+        "priority": 2,
+        "score": 712.0,
+        "requiresElevation": True,
+        "recommendedInstrument": "DISPOSABLE_PARTICLE_NAMED_MODIFIER_RUNTIME_PROBE",
+        "question": (
+            "What runtime allocation, overflow, malformed-line, and named token-32 modifier behavior "
+            "remains beyond the static CTokenArchive__ReadNextToken contract?"
+        ),
+        "cheapestFalsifier": (
+            "Load one disposable particle-set copy with a named token-31 or token-32 modifier while "
+            "instrumenting pending slots and CPDEmitter +0x7c/+0x84 fixup destinations; never modify "
+            "shipped data in place."
+        ),
+        "source": "tokenarchive-parser-contract-reproof-v7",
+        "currentOwner": "recursive-re-campaign",
+    }
+
+
+def _tokenarchive_parser_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                TOKENARCHIVE_PARSER_PARENT_READY_SHA256,
+                TOKENARCHIVE_PARSER_PROOF_READY_SHA256,
+                tokenarchive_parser_contract.CONTRACT_ID,
+                tokenarchive_parser_contract.QUESTION_ID,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
+def _validate_tokenarchive_parser_proof(proof_root: Path) -> dict:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / TOKENARCHIVE_PARSER_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "TokenArchive parser proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive parser proof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "TokenArchive parser proof is not the reviewed immutable root"
+        )
+    ready_path = plain / tokenarchive_parser_contract.READY_NAME
+    executing_author = Path(tokenarchive_parser_contract.__file__).resolve()
+    owner_root = Path(__file__).resolve().parents[1]
+    rebuild_files = {
+        "owner": (
+            owner_root / "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs",
+            TOKENARCHIVE_PARSER_REBUILD_OWNER_BYTES,
+            TOKENARCHIVE_PARSER_REBUILD_OWNER_SHA256,
+        ),
+        "resolver": (
+            owner_root / "rebuild/OnslaughtRebuild.Client/ParticleEffectResolver.cs",
+            TOKENARCHIVE_PARSER_REBUILD_RESOLVER_BYTES,
+            TOKENARCHIVE_PARSER_REBUILD_RESOLVER_SHA256,
+        ),
+        "test": (
+            owner_root / "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs",
+            TOKENARCHIVE_PARSER_REBUILD_TEST_BYTES,
+            TOKENARCHIVE_PARSER_REBUILD_TEST_SHA256,
+        ),
+    }
+    expected_files: list[tuple[str, Path, int, str]] = [
+        (
+            "READY",
+            ready_path,
+            TOKENARCHIVE_PARSER_PROOF_READY_BYTES,
+            TOKENARCHIVE_PARSER_PROOF_READY_SHA256,
+        ),
+        (
+            "author",
+            executing_author,
+            TOKENARCHIVE_PARSER_PROOF_AUTHOR_BYTES,
+            TOKENARCHIVE_PARSER_PROOF_AUTHOR_SHA256,
+        ),
+    ]
+    expected_files.extend(
+        (f"rebuild {label}", path, size, digest)
+        for label, (path, size, digest) in rebuild_files.items()
+    )
+    checked: list[tuple[str, Path]] = []
+    for label, path, expected_bytes, expected_sha256 in expected_files:
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"TokenArchive parser {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive parser {label} is not plain: {exc}"
+            ) from exc
+        if (
+            resolved.stat().st_nlink != 1
+            or resolved.stat().st_size != expected_bytes
+            or coverage.sha256_of(resolved) != expected_sha256
+        ):
+            raise CampaignError(
+                f"TokenArchive parser {label} identity differs"
+            )
+        checked.append((label, resolved))
+    receipt = _runtime_json(ready_path, "TokenArchive parser proof READY")
+    try:
+        stable, outputs = tokenarchive_parser_contract.derive(REPO_ROOT)
+    except (
+        tokenarchive_parser_contract.ProofError,
+        OSError,
+        ValueError,
+        csv.Error,
+        struct.error,
+    ) as exc:
+        raise CampaignError(
+            f"TokenArchive parser proof does not independently rederive: {exc}"
+        ) from exc
+    stable["author"]["path"] = "tools/re_tokenarchive_parser_contract.py"
+    for key, value in stable.items():
+        if receipt.get(key) != value:
+            raise CampaignError(
+                f"TokenArchive parser proof receipt differs: {key}"
+            )
+    expected_output_stamps = tokenarchive_parser_contract.expected_output_stamps(
+        outputs
+    )
+    if (
+        set(receipt) != set(stable) | {"generatedAtUtc", "outputs"}
+        or receipt.get("outputs") != expected_output_stamps
+    ):
+        raise CampaignError("TokenArchive parser proof envelope differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "TokenArchive parser proof generation",
+    )
+    for name, data in outputs.items():
+        output_path = plain / name
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                output_path, f"TokenArchive parser output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive parser output is not plain: {name}: {exc}"
+            ) from exc
+        if (
+            resolved.stat().st_nlink != 1
+            or resolved.read_bytes() != data
+        ):
+            raise CampaignError(
+                f"TokenArchive parser output differs: {name}"
+            )
+        checked.append((f"output {name}", resolved))
+    _require_disjoint_evidence_files(
+        checked, "TokenArchive parser proof and rebuild files"
+    )
+    parent = _runtime_mapping(
+        receipt.get("parent"), "TokenArchive parser proof parent"
+    )
+    results = _runtime_mapping(
+        receipt.get("results"), "TokenArchive parser proof results"
+    )
+    contract = _runtime_mapping(
+        receipt.get("contract"), "TokenArchive parser proof contract"
+    )
+    defect = _runtime_mapping(
+        results.get("retailDefect"), "TokenArchive parser retail defect"
+    )
+    if (
+        receipt.get("schema") != tokenarchive_parser_contract.SCHEMA
+        or receipt.get("verdict") != "READY"
+        or receipt.get("claim") != tokenarchive_parser_contract.CLAIM
+        or parent.get("path") != TOKENARCHIVE_PARSER_PARENT_RELATIVE.as_posix()
+        or parent.get("readySha256")
+        != TOKENARCHIVE_PARSER_PARENT_READY_SHA256
+        or parent.get("reducerId") != TOKENARCHIVE_PARSER_PARENT_REDUCER_ID
+        or parent.get("authoritySha256")
+        != TOKENARCHIVE_PARSER_PARENT_AUTHORITY_SHA256
+        or contract.get("entityKey") != tokenarchive_parser_contract.ENTITY_KEY
+        or contract.get("contractId") != tokenarchive_parser_contract.CONTRACT_ID
+        or contract.get("questionId") != tokenarchive_parser_contract.QUESTION_ID
+        or contract.get("proposedSemanticGrade") != "C1_STATIC"
+        or results.get("retailTokenIds") != 124
+        or results.get("shippedCorpusKeysCovered") != 124
+        or results.get("writerCalls") != 141
+        or results.get("writerParserMismatches") != 1
+        or results.get("descriptorLoaders") != 13
+        or defect.get("tokenId") != 32
+        or defect.get("status")
+        != "PROVEN_STATIC_RETAIL_ASYMMETRY_MASKED_BY_SHIPPED_CORPUS"
+    ):
+        raise CampaignError("TokenArchive parser proof boundary differs")
+    return receipt
+
+
+def _tokenarchive_parser_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("residuals", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(
+                f"TokenArchive parser advance changed unrelated {name}"
+            )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"TokenArchive parser delta duplicates {field}"
+            )
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(function_before) != set(function_after)
+        or set(contract_before) != set(contract_after)
+        or not set(question_before) <= set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError(
+            "TokenArchive parser advance changed entity identities"
+        )
+    function_changes = {
+        entity: sorted(
+            field
+            for field in FUNCTION_COLUMNS
+            if prior[field] != function_after[entity][field]
+        )
+        for entity, prior in function_before.items()
+        if prior != function_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    if set(function_changes) != {tokenarchive_parser_contract.ENTITY_KEY}:
+        raise CampaignError(
+            "TokenArchive parser function delta population differs"
+        )
+    if set(contract_changes) != {tokenarchive_parser_contract.CONTRACT_ID}:
+        raise CampaignError(
+            "TokenArchive parser contract delta population differs"
+        )
+    function_allowed = {
+        "evidenceStates",
+        "resolutionState",
+        "semanticGrade",
+        "lever",
+        "requiresElevation",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "contractState",
+        "semanticGrade",
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "questionIds",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "rebuildOwner",
+        "rebuildImplementation",
+        "parityTests",
+        "rebuildState",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    if set(next(iter(function_changes.values()))) - function_allowed:
+        raise CampaignError(
+            "TokenArchive parser function delta exceeds its whitelist"
+        )
+    if set(next(iter(contract_changes.values()))) - contract_allowed:
+        raise CampaignError(
+            "TokenArchive parser contract delta exceeds its whitelist"
+        )
+    modified_questions = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    if set(modified_questions) != {tokenarchive_parser_contract.QUESTION_ID} or (
+        set(next(iter(modified_questions.values())))
+        - {"state", "attemptCount", "lastOutcome", "lastMeasurementDate"}
+    ):
+        raise CampaignError(
+            "TokenArchive parser parent-question delta differs"
+        )
+    added_questions = sorted(set(question_after) - set(question_before))
+    added_adjudications = sorted(
+        set(adjudication_after) - set(adjudication_before)
+    )
+    if len(added_questions) != 1 or added_adjudications != [
+        _tokenarchive_parser_adjudication_id()
+    ]:
+        raise CampaignError(
+            "TokenArchive parser successor/adjudication census differs"
+        )
+    return {
+        "functionRowsChanged": function_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": modified_questions,
+        "questionIdsAdded": added_questions,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": [
+            "residuals", "scenarios", "levers", "supersessions"
+        ],
+        "namesChanged": 0,
+        "rangesChanged": 0,
+        "runtimeReplaysProved": 0,
+        "shippedCorpusLinesValidated": 27186,
+        "supersessionsAdded": 0,
+        "rebuildMappingsChanged": 1,
+    }
+
+
+def _tokenarchive_parser_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "TokenArchive parser advance does not use canonical Gen17"
+        )
+    if (
+        base_receipt.get("generation") != 17
+        or base_receipt.get("counts") != TOKENARCHIVE_PARSER_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != TOKENARCHIVE_PARSER_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("TokenArchive parser parent receipt differs")
+    proof = _validate_tokenarchive_parser_proof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    functions = {row["entityKey"]: row for row in rows["functions"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    function = functions.get(tokenarchive_parser_contract.ENTITY_KEY)
+    contract = contracts.get(tokenarchive_parser_contract.CONTRACT_ID)
+    parent_question = questions.get(tokenarchive_parser_contract.QUESTION_ID)
+    if (
+        function is None
+        or contract is None
+        or parent_question is None
+        or function.get("entryVa") != "0x004f57b0"
+        or function.get("currentName") != "CTokenArchive__ReadNextToken"
+        or function.get("resolutionState") != "OPEN_JOIN"
+        or function.get("semanticGrade") != "OPAQUE"
+        or contract.get("entityKey")
+        != tokenarchive_parser_contract.ENTITY_KEY
+        or contract.get("currentName") != "CTokenArchive__ReadNextToken"
+        or contract.get("contractState") != "OPEN"
+        or contract.get("semanticGrade") != "C0_OPAQUE"
+        or contract.get("runtimeVerdict") != "UNSCORED"
+        or contract.get("refuterVerdict") != "UNSCORED"
+        or parent_question.get("state") != "OPEN"
+        or parent_question.get("entityKey")
+        != tokenarchive_parser_contract.ENTITY_KEY
+        or tokenarchive_parser_contract.QUESTION_ID
+        not in _state_values(
+            contract.get("questionIds"),
+            "TokenArchive parser parent questions",
+        )
+    ):
+        raise CampaignError("TokenArchive parser parent row differs")
+    measured_at = str(proof["generatedAtUtc"])
+    measured_date = measured_at[:10]
+    history = [
+        row
+        for row in rows["questions"]
+        if row["entityKey"] == tokenarchive_parser_contract.ENTITY_KEY
+    ]
+    successor = _successor_question(
+        _tokenarchive_parser_successor_spec(),
+        entity_key=tokenarchive_parser_contract.ENTITY_KEY,
+        parents=[parent_question],
+        history=history,
+        generation=18,
+        measured_at=measured_at,
+    )
+    parent_question["state"] = "CLOSED_SURVIVED"
+    parent_question["attemptCount"] = (
+        _integer(parent_question.get("attemptCount"), 0) + 1
+    )
+    parent_question["lastOutcome"] = "SURVIVED"
+    parent_question["lastMeasurementDate"] = measured_at
+    rows["questions"].append(successor)
+
+    for state in (
+        "TOKENARCHIVE_STATIC_CONTRACT_PROVED",
+        "PARTICLE_CORPUS_EXHAUSTIVE_STATIC_CROSSWALK",
+        "TOKENARCHIVE_WRITER_PARSER_ASYMMETRY_PROVED",
+    ):
+        function["evidenceStates"] = _append_state(
+            function["evidenceStates"], state
+        )
+    function["resolutionState"] = "CANDIDATE_CONTRACT"
+    function["semanticGrade"] = "C1_CANDIDATE_PARTIAL"
+    function["lever"] = successor["recommendedInstrument"]
+    function["requiresElevation"] = "True"
+    function["cheapestFalsifier"] = successor["cheapestFalsifier"]
+    function["lastMeasurementDate"] = measured_date
+
+    proved_contract = _runtime_mapping(
+        proof.get("contract"), "TokenArchive parser proved contract"
+    )
+    contract["contractState"] = "CANDIDATE_NEEDS_REFUTER"
+    contract["semanticGrade"] = "C1_CANDIDATE_PARTIAL"
+    for field in (
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+    ):
+        contract[field] = str(proved_contract[field])
+    contract["authorVerdict"] = (
+        "SUPPORTED_BY_PRISTINE_BYTES_SHIPPED_CORPUS_AND_STATIC_CROSSWALK"
+    )
+    contract["runtimeVerdict"] = "UNSCORED"
+    contract["refuterVerdict"] = "UNSCORED"
+    contract["questionIds"] = _append_state(
+        contract["questionIds"], successor["questionId"]
+    )
+    proof_relative = TOKENARCHIVE_PARSER_PROOF_RELATIVE.as_posix()
+    evidence_refs = [
+        f"{proof_relative}/{tokenarchive_parser_contract.READY_NAME}#sha256={TOKENARCHIVE_PARSER_PROOF_READY_SHA256}",
+        f"tools/re_tokenarchive_parser_contract.py#sha256={TOKENARCHIVE_PARSER_PROOF_AUTHOR_SHA256}",
+    ]
+    for output in sorted(proof["outputs"].values(), key=lambda row: row["path"]):
+        evidence_refs.append(
+            f"{output['path']}#sha256={output['sha256']}"
+        )
+    for relative in (
+        "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup",
+        "local-lab/ghidra-fullpass-2026-07-23/exports/W007/xrefs.tsv",
+        "local-lab/safe-copy-bea-pristine/data/ParticleSets/Frontend.par",
+        "local-lab/safe-copy-bea-pristine/data/ParticleSets/MainSet.par",
+        "local-lab/safe-copy-bea-pristine/data/ParticleSets/ModelViewer.par",
+    ):
+        input_stamp = _runtime_mapping(
+            proof["inputs"].get(relative),
+            f"TokenArchive parser input {relative}",
+        )
+        evidence_refs.append(
+            f"{input_stamp['path']}#sha256={input_stamp['sha256']}"
+        )
+    evidence_refs.extend(
+        [
+            "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs#sha256="
+            + TOKENARCHIVE_PARSER_REBUILD_OWNER_SHA256,
+            "rebuild/OnslaughtRebuild.Client/ParticleEffectResolver.cs#sha256="
+            + TOKENARCHIVE_PARSER_REBUILD_RESOLVER_SHA256,
+            "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs#sha256="
+            + TOKENARCHIVE_PARSER_REBUILD_TEST_SHA256,
+        ]
+    )
+    for reference in evidence_refs:
+        contract["evidenceRefs"] = _append_state(
+            contract["evidenceRefs"], reference
+        )
+    contract["cheapestFalsifier"] = successor["cheapestFalsifier"]
+    contract["rebuildOwner"] = (
+        "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs"
+    )
+    contract["rebuildImplementation"] = (
+        "RetailParticleTokenContract plus ParticleDescriptor.RetailDirectFloat"
+    )
+    contract["parityTests"] = (
+        "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs::"
+        "RetailTokenTableCoversEveryShippedKeyExactly;"
+        "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs::"
+        "VelocityRandomnessPinsTheMaskedRetailReaderDefect;"
+        "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs::"
+        "RetailDescriptorFactoryCoversAllThirteenTypes"
+    )
+    contract["rebuildState"] = "PARTIAL_CONTRACT"
+    contract["remainingUncertainty"] = str(
+        proved_contract["remainingUncertainty"]
+    )
+    contract["lastMeasurementDate"] = measured_date
+
+    adjudication_id = _tokenarchive_parser_adjudication_id()
+    if any(
+        row.get("adjudicationId") == adjudication_id
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError(
+            "TokenArchive parser adjudication already exists"
+        )
+    evidence_hashes = list(
+        dict.fromkeys(
+            reference.rsplit("#sha256=", 1)[1]
+            for reference in evidence_refs
+        )
+    )
+    rows["adjudications"].append(
+        {
+            "adjudicationId": adjudication_id,
+            "baseContractId": tokenarchive_parser_contract.CONTRACT_ID,
+            "entityKey": tokenarchive_parser_contract.ENTITY_KEY,
+            "overlaySchema": tokenarchive_parser_contract.SCHEMA,
+            "overlayReadySha256": TOKENARCHIVE_PARSER_PROOF_READY_SHA256,
+            "questionIdsAddressed": tokenarchive_parser_contract.QUESTION_ID,
+            "refuterVerdict": "SURVIVED",
+            "refuterEvidenceSha256": ";".join(evidence_hashes),
+            "semanticPromotionApplied": True,
+            "terminalState": "",
+            "successorQuestionIds": successor["questionId"],
+            "remainingUncertainty": contract["remainingUncertainty"],
+            "measuredAtUtc": measured_at,
+        }
+    )
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != TOKENARCHIVE_PARSER_EXPECTED_GENERATION18_COUNTS:
+        raise CampaignError(
+            f"TokenArchive parser output counts differ: {counts}"
+        )
+    delta = _tokenarchive_parser_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / TOKENARCHIVE_PARSER_PROOF_RELATIVE)
+        / tokenarchive_parser_contract.READY_NAME
+    )
+    advance = {
+        "kind": TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND,
+        "schema": TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "observationId": "TPC-"
+        + _sha256_text(
+            "|".join(
+                (
+                    TOKENARCHIVE_PARSER_PARENT_READY_SHA256,
+                    TOKENARCHIVE_PARSER_PROOF_READY_SHA256,
+                    TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": TOKENARCHIVE_PARSER_PROOF_RELATIVE.as_posix(),
+            "ready": {
+                **proof_ready_stamp,
+                "path": tokenarchive_parser_contract.READY_NAME,
+            },
+            "schema": tokenarchive_parser_contract.SCHEMA,
+            "author": {
+                "path": "tools/re_tokenarchive_parser_contract.py",
+                "bytes": TOKENARCHIVE_PARSER_PROOF_AUTHOR_BYTES,
+                "sha256": TOKENARCHIVE_PARSER_PROOF_AUTHOR_SHA256,
+            },
+            "outputs": proof["outputs"],
+        },
+        "measuredAtUtc": measured_at,
+        "evidenceDisposition": (
+            "PRISTINE_STATIC_TABLES_WRITER_CALLS_PINNED_GHIDRA_LOADER_"
+            "CORROBORATION_AND_COMPLETE_"
+            "SHIPPED_PARTICLE_CORPUS_REDERIVED_NOT_RUNTIME_REPLAYED"
+        ),
+        "promotion": {
+            "entryVa": "0x004f57b0",
+            "entityKey": tokenarchive_parser_contract.ENTITY_KEY,
+            "contractId": tokenarchive_parser_contract.CONTRACT_ID,
+            "currentName": "CTokenArchive__ReadNextToken",
+            "parentQuestionId": tokenarchive_parser_contract.QUESTION_ID,
+            "successorQuestionId": successor["questionId"],
+            "adjudicationId": adjudication_id,
+            "gradeFrom": "C0_OPAQUE",
+            "gradeTo": "C1_CANDIDATE_PARTIAL",
+        },
+        "delta": delta,
+        "questionsClosed": 1,
+        "questionsAdded": 1,
+        "adjudicationsAdded": 1,
+        "namesChanged": 0,
+        "runtimeReplaysProved": 0,
+        "retailTokenIds": 124,
+        "shippedCorpusLinesValidated": 27186,
+        "writerCallsValidated": 141,
+        "descriptorFactoryRttiMappingsDerived": 13,
+        "descriptorLoaderSwitchCorroborationsValidated": 13,
+        "retailDefectsProved": 1,
+        "rebuildMapping": {
+            "contractId": tokenarchive_parser_contract.CONTRACT_ID,
+            "state": "PARTIAL_CONTRACT",
+            "owner": contract["rebuildOwner"],
+            "implementation": contract["rebuildImplementation"],
+            "tests": contract["parityTests"],
+        },
+        "liveGhidraDisposition": (
+            "READ_ONLY_EXACT_POST_BACKUP_DECOMPILE_NO_LIVE_MUTATION"
+        ),
+        "semanticLimitations": list(proof["limitations"]),
+    }
+    return rows, advance
+
+
+def _tokenarchive_parser_plain_campaign_path(
+    path: Path, label: str, *, strict: bool
+) -> Path:
+    if ".." in path.parts:
+        raise CampaignError(f"{label} contains a parent traversal")
+    raw_text = os.path.abspath(os.fspath(path))
+    if re.match(r"^[A-Za-z]:\\", raw_text) is None:
+        raise CampaignError(
+            f"{label} must use a normal local drive-letter path"
+        )
+    raw = Path(raw_text)
+    repo_root = Path(os.path.abspath(REPO_ROOT))
+    recovery_container = Path(
+        os.path.abspath(REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE.parent)
+    )
+    try:
+        raw.relative_to(repo_root)
+    except ValueError:
+        pass
+    else:
+        if raw.parent != recovery_container:
+            raise CampaignError(
+                f"{label} must be a direct child of the recovery container"
+            )
+    try:
+        plain = ghidra_backup.resolve_plain_path(raw, label, strict=strict)
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"{label} is not plain: {exc}") from exc
+    if plain != raw:
+        raise CampaignError(f"{label} aliases another path")
+    return plain
+
+
+def _validate_tokenarchive_parser_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("TokenArchive parser-contract READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "TokenArchive parser-contract generation",
+    )
+    parent_root = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json",
+        "TokenArchive parser-contract parent",
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError("TokenArchive parser-contract source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("TokenArchive parser-contract question types differ")
+    if receipt.get("policies") != _tokenarchive_parser_policies():
+        raise CampaignError("TokenArchive parser-contract policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "TokenArchive parser-contract outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("TokenArchive parser-contract output set differs")
+
+    plain_root = _tokenarchive_parser_plain_campaign_path(
+        campaign_root, "TokenArchive parser-contract campaign root", strict=True
+    )
+
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"TokenArchive parser-contract {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive parser-contract {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TokenArchive parser-contract {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"TokenArchive parser-contract output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"TokenArchive parser-contract output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"TokenArchive parser-contract output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"TokenArchive parser-contract output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"TokenArchive parser-contract output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive parser-contract output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TokenArchive parser-contract output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(
+                f"TokenArchive parser-contract output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"TokenArchive parser-contract output aliases canonical Gen17: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"TokenArchive parser-contract output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "TokenArchive parser-contract outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "TokenArchive parser-contract authority files",
+    )
+    proof_root = (REPO_ROOT / TOKENARCHIVE_PARSER_PROOF_RELATIVE).resolve()
+    try:
+        ghidra_backup.require_disjoint_paths(
+            plain_root,
+            parent_root,
+            "TokenArchive parser-contract campaign/parent roots",
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_root,
+            proof_root,
+            "TokenArchive parser-contract campaign/proof roots",
+        )
+    except ghidra_backup.BackupError as exc:
+        raise CampaignError(str(exc)) from exc
+
+
+def _validate_tokenarchive_parser_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("TokenArchive parser-contract advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "TokenArchive parser-contract parent"
+    )
+    expected_parent = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+    if set(parent) != {"path", "ready"} or parent.get("path") != str(
+        expected_parent
+    ):
+        raise CampaignError(
+            "TokenArchive parser-contract parent route differs"
+        )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "TokenArchive parser-contract parent path"
+    )
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "TokenArchive parser-contract parent READY"
+    )
+    expected_parent_ready = {
+        **coverage.file_stamp(expected_parent / "campaign.ready.json"),
+        "path": "campaign.ready.json",
+    }
+    if (
+        _integer(receipt.get("generation"), -1) != 18
+        or parent_root != expected_parent
+        or parent_ready != expected_parent_ready
+        or parent_ready.get("bytes") != TOKENARCHIVE_PARSER_PARENT_READY_BYTES
+        or parent_ready.get("sha256") != TOKENARCHIVE_PARSER_PARENT_READY_SHA256
+        or advance.get("kind") != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND
+        or advance.get("schema") != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("TokenArchive parser-contract generation identity differs")
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "TokenArchive parser-contract exact parent",
+    )
+    expected_rows, expected_advance = _tokenarchive_parser_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / TOKENARCHIVE_PARSER_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("TokenArchive parser-contract campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("TokenArchive parser-contract advance receipt differs")
+    if receipt.get("counts") != TOKENARCHIVE_PARSER_EXPECTED_GENERATION18_COUNTS:
+        raise CampaignError("TokenArchive parser-contract READY counts differ")
+    if campaign_root is not None:
+        _validate_tokenarchive_parser_receipt_envelope(rows, receipt, campaign_root)
+    return {
+        "adjudicationIds": {_tokenarchive_parser_adjudication_id()},
+        "advance": expected_advance,
+    }
+
+
+def advance_tokenarchive_parser_contract(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the bounded static CTokenArchive::ReadNextToken contract."""
+
+    plain_out = _tokenarchive_parser_plain_campaign_path(
+        out, "TokenArchive parser-contract destination", strict=False
+    )
+    try:
+        parent_root = ghidra_backup.resolve_plain_path(
+            REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE,
+            "TokenArchive parser-contract canonical parent",
+            strict=True,
+        )
+        proof_root_exact = ghidra_backup.resolve_plain_path(
+            REPO_ROOT / TOKENARCHIVE_PARSER_PROOF_RELATIVE,
+            "TokenArchive parser-contract exact proof",
+            strict=True,
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_out,
+            parent_root,
+            "TokenArchive parser-contract destination/parent roots",
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_out,
+            proof_root_exact,
+            "TokenArchive parser-contract destination/proof roots",
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive parser-contract destination is unsafe: {exc}"
+        ) from exc
+    out = plain_out
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing TokenArchive parser-contract destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_tokenarchive_parser_parent_campaign(campaign)
+    )
+    rows, advance = _tokenarchive_parser_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 18,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _tokenarchive_parser_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
 def advance_runtime_contract(
     campaign: Path,
     overlay: Path,
@@ -22962,6 +24270,23 @@ def main(argv: list[str] | None = None) -> int:
     advance_lockhit_parser.add_argument("--proof", type=Path, required=True)
     advance_lockhit_parser.add_argument("--out", type=Path, required=True)
 
+    advance_tokenarchive_contract_parser = commands.add_parser(
+        "advance-tokenarchive-parser-contract",
+        help=(
+            "admit the exact static CTokenArchive::ReadNextToken parser proof, "
+            "shipped particle-corpus census, and bounded C1 rebuild mapping"
+        ),
+    )
+    advance_tokenarchive_contract_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_tokenarchive_contract_parser.add_argument(
+        "--proof", type=Path, required=True
+    )
+    advance_tokenarchive_contract_parser.add_argument(
+        "--out", type=Path, required=True
+    )
+
     args = parser.parse_args(argv)
     try:
         if args.command == "seed":
@@ -23187,6 +24512,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(
                 "CAMPAIGN_LOCKHIT_BOUNDED_CONTRACT_ADVANCED "
+                f"generation={receipt['generation']} "
+                f"grade={receipt['advance']['promotion']['gradeTo']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-tokenarchive-parser-contract":
+            receipt = advance_tokenarchive_parser_contract(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                "CAMPAIGN_TOKENARCHIVE_PARSER_CONTRACT_ADVANCED "
                 f"generation={receipt['generation']} "
                 f"grade={receipt['advance']['promotion']['gradeTo']} "
                 f"out={args.out}"

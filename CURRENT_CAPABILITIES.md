@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-09. RE authority block refreshed to canonical Gen17
+Last updated: 2026-08-09. RE authority block refreshed to canonical Gen18
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -643,19 +643,19 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen17 |
+| Metric | Canonical Gen18 |
 | --- | ---: |
-| Authority generation | **17** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **18** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8125** |
-| C1_CANDIDATE_PARTIAL | **215** |
+| C1_CANDIDATE_PARTIAL | **216** |
 | C2_BOUNDED_RUNTIME | **7** |
-| function_semantic OPAQUE | **7903** |
-| contract_C0_OPAQUE | **14022** (second opacity axis) |
+| function_semantic OPAQUE | **7902** |
+| contract_C0_OPAQUE | **14020** (second opacity axis) |
 | OPEN residual | **18** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `6d794905…01a2` / `fbb343d6…1621` |
-| Next valid generation | **18** |
+| READY / reducer | `4ae3a7b8…d97e` / `ee8bddfb…bad74` |
+| Next valid generation | **19** |
 
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
@@ -679,6 +679,10 @@ sole-matching-node `CBattleEngine::LockHit` removal path from retained evidence;
 null, absent, multi-node, free-head, destructor, return, identity, and rebuild
 questions remain open. Positive
 shields, return pairing, death/effect ordering, and alternate paths remain open.
+Generation 18 adds an exact static `CTokenArchive::ReadNextToken`
+parser/corpus/factory/direct-writer contract at C1. Its runtime and refuter
+verdicts remain `UNSCORED`, runtime replays are zero, malformed/allocation/
+overflow and named-token-32 paths remain open, and the rebuild is still partial.
 Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
 not a fixed model matrix.
 
@@ -701,7 +705,7 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen17 retains those four C2 rows, separately re-proves a
+admissions. Canonical Gen18 retains those four C2 rows, separately re-proves a
 narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth and LockHit's single-node removal path as a seventh;
 it does not revive the rejected historical package,
@@ -710,7 +714,7 @@ claim positive-shield behavior, or broaden SetPos beyond the observed path.
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-18
+remains an open runtime front alongside the next impact-ranked Generation-19
 contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
