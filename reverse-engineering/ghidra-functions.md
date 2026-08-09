@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; eleven bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; thirteen bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -74,9 +74,14 @@ CMeshPart55 then advances all 55 opaque mesh-part rows, retaining its exact
 10-covered/11-partial/34-dark execution split. CDXEngine59 advances 58 opaque
 renderer rows and repairs one prior C1; CEngine53 advances 51 opaque engine rows
 and repairs two prior C1s. CFastVB54 advances another 54 exact mesh/container
-functions while retaining all 54 as runtime-dark. Across all eleven cohorts,
-607 exact bodies are now bounded: 564 formerly opaque functions have C1-static
-hypotheses and 42 prior C1 rows are repaired or confirmed.
+functions while retaining all 54 as runtime-dark. Math51 adds 51 more exact
+bounded bodies while retaining two covered and 49 dark execution states; 14
+hidden stack/register prototypes remain deliberately unresolved. CDXTexture89
+then advances all 89 exact texture/resource bodies while retaining seven
+covered, 20 partial, and 62 dark execution states. Across all thirteen cohorts,
+747 exact bodies are now bounded: 704 formerly opaque functions have C1-static
+hypotheses and 42 prior C1 rows are repaired or confirmed, while ApplyDamage
+retains its pre-existing C2 contract.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -84,7 +89,7 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all ten semantic passes. The combined IScript50/World70 batch is
+untouched by all twelve semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
@@ -94,10 +99,16 @@ zero non-target rows changed, no function was added or removed, and the only
 program-level change was again the aggregate comment digest. Its post inventory
 is `949cae70…d348` and its exact result is
 `local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/`.
-The next evidence selector is another exact disjoint cohort of at least 50
-functions, not a per-function lane. CFastVB54's reviewed HYP input will share
-that cohort's disposable-Ghidra apply/readback rather than opening a bespoke
-one-cohort batch.
+The subsequent CFastVB54/Math51 batch is complete too: all 105 planned rows
+changed, no non-target row changed, no function was added or removed, all 105
+names/comments matched a fresh-process readback, and only the aggregate comment
+digest changed across the 29 program metrics. Its post inventory is
+`5da0c721…aa1d` under
+`local-lab/ghidra-cfastvb54-math51-scratch-20260809-v1/`. The next evidence
+selector remains another exact disjoint cohort of at least 50 functions, not a
+per-function lane. The active selector is the 153-function CTexture W013 cohort,
+which has complete dated metadata, decompile, instruction, and inbound-xref
+coverage.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
