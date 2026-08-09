@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; seven bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; ten bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -70,8 +70,12 @@ contracts, repairs two prior C1 rows, and recovers 21 collision-free exact
 registry-backed names while retaining all 27 runtime-dark rows as dark. World70
 adds 61 opaque-to-C1-static contracts, repairs nine prior C1 rows, and records
 eight collision-free HYP-only name corrections while retaining ten dark rows.
-Across all seven cohorts, 346 formerly opaque functions now have bounded
-C1-static hypotheses and 39 prior C1 rows are repaired or confirmed.
+CMeshPart55 then advances all 55 opaque mesh-part rows, retaining its exact
+10-covered/11-partial/34-dark execution split. CDXEngine59 advances 58 opaque
+renderer rows and repairs one prior C1; CEngine53 advances 51 opaque engine rows
+and repairs two prior C1s. Across all ten cohorts, 553 exact bodies are now
+bounded: 510 formerly opaque functions have C1-static hypotheses and 42 prior
+C1 rows are repaired or confirmed.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -79,11 +83,17 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all seven semantic passes. The combined IScript50/World70 batch is
+untouched by all ten semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
-next evidence selector is the exact 55-row `CMeshPart` cohort, not a
+subsequent CMeshPart55/CDXEngine59/CEngine53 batch is also complete in disposable
+Ghidra: all 167 exact targets were renamed/commented and read back after reopen,
+zero non-target rows changed, no function was added or removed, and the only
+program-level change was again the aggregate comment digest. Its post inventory
+is `949cae70…d348` and its exact result is
+`local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/`.
+The next evidence selector is an exact 54-row `CFastVB` cohort, not a
 per-function lane.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
