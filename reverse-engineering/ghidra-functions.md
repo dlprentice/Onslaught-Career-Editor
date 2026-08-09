@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; ten bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; eleven bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -73,9 +73,10 @@ eight collision-free HYP-only name corrections while retaining ten dark rows.
 CMeshPart55 then advances all 55 opaque mesh-part rows, retaining its exact
 10-covered/11-partial/34-dark execution split. CDXEngine59 advances 58 opaque
 renderer rows and repairs one prior C1; CEngine53 advances 51 opaque engine rows
-and repairs two prior C1s. Across all ten cohorts, 553 exact bodies are now
-bounded: 510 formerly opaque functions have C1-static hypotheses and 42 prior
-C1 rows are repaired or confirmed.
+and repairs two prior C1s. CFastVB54 advances another 54 exact mesh/container
+functions while retaining all 54 as runtime-dark. Across all eleven cohorts,
+607 exact bodies are now bounded: 564 formerly opaque functions have C1-static
+hypotheses and 42 prior C1 rows are repaired or confirmed.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -93,8 +94,10 @@ zero non-target rows changed, no function was added or removed, and the only
 program-level change was again the aggregate comment digest. Its post inventory
 is `949cae70…d348` and its exact result is
 `local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/`.
-The next evidence selector is an exact 54-row `CFastVB` cohort, not a
-per-function lane.
+The next evidence selector is another exact disjoint cohort of at least 50
+functions, not a per-function lane. CFastVB54's reviewed HYP input will share
+that cohort's disposable-Ghidra apply/readback rather than opening a bespoke
+one-cohort batch.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
