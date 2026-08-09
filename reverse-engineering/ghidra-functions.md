@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; 41-function weapon-state hypothesis pass complete)
+Last updated: 2026-08-09 (Gen19 authority; Weapon41 and CGame51 hypothesis passes complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -29,6 +29,15 @@ bounded C1-static hypotheses, three prior C1 candidates were repaired, and 13
 misleading names were corrected or narrowed. These `HYP__` names and comments
 are navigation evidence only; they have not been copied into live/tracked
 Ghidra or promoted as runtime contracts.
+
+The next count-driven pass covers 51 contiguous `CGame` lifecycle, load,
+media/run, state/control, and draw/query functions from `0x0046C210` through
+`0x004726B0` (22,256 exact body bytes). All 51 previously opaque rows now have
+bounded C1-static hypotheses; all current names survived, and the only metadata
+repair is the stale `CScript` receiver wording on `CGame__SetPlayerLives @
+0x00472620`. Runtime cadence, callee internals, uncommon error paths, rendered
+output, and gameplay outcomes remain open. Together Weapon41 and CGame51 add
+89 bounded static hypotheses without a new capture or live-Ghidra mutation.
 
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
 readback, authoritative Generation-19 campaign bundle, tracked Ghidra snapshot,

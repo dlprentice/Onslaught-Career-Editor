@@ -45,7 +45,7 @@ pins.
 | OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, and Gen19 proves the UnsetObjective 3/13/3 partition |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | The 41-function JetPart/WalkerPart weapon-state pass is complete in scratch: 41 exact body/source joins, 13 corrected or narrowed names, 38 OPAQUE → bounded C1_STATIC hypotheses, and 3 repaired prior C1 candidates. Consume it as one campaign/rebuild batch while selecting the next ≥40-function cohort; no new capture is required |
+| Immediate RE front | Two bulk passes are complete: Weapon41 contributes 38 OPAQUE → bounded C1_STATIC hypotheses plus 3 repaired C1 rows, and CGame51 contributes another 51 OPAQUE → bounded C1_STATIC hypotheses. The weapon rebuild now consumes 10 contracts fully and 4 partially. Next is CBattleEngine51: 51 exact bodies / 26,590 bytes / 43 OPAQUE + 8 existing C1, using complete existing W001/W008 static evidence; no new capture is required |
 | Ghidra apply | The latest authorized live operation added eleven exact Mission-native boundaries and shipped registry names in one batch, with fact-only comments and no signatures/contracts. Fresh readback changed 8,125 → 8,136 functions and zero existing function rows, bytes, instructions, data, or references; READY `a78b8640…b9919`, POST functions `38b86d40…57c86`, POST program `46f59a47…87180` |
 
 The frozen three-master hashes later in this document remain the correct inputs

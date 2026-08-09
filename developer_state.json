@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes, read-only exports and fresh scratch readback; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, and 13 misleading names are corrected or narrowed."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, 13 misleading names are corrected or narrowed, and the rebuild consumes 10 contracts fully plus 4 partially through deterministic player-weapon selection state. CGame cohort: 51/51 lifecycle/control bodies, 22,256 bytes, 51 OPAQUE -> bounded C1_STATIC hypotheses, 0 renames, 1 stale comment repair. The two latest static cohorts therefore advance 89 previously opaque functions without new capture or live-Ghidra mutation."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -102,7 +102,14 @@
         "xrefs": "local-lab/ghidra-weapon41-static-20260809-v1/xrefs.tsv; 11076 bytes; SHA-256 e232da72ffb6e4bb5bc7407160175dcd233a38236e62eee45309b29f63b7949a",
         "contractsAndFalsifiers": "local-lab/ghidra-weapon41-static-20260809-v1/comments.tsv; 11631 bytes; SHA-256 cac2a2012c9fe0ffb229f01a0004e0360110a8612325689f3329492556646dd9",
         "scratchReadback": "local-lab/ghidra-weapon41-static-20260809-v1/readback.tsv; 18835 bytes; SHA-256 3023bd2326c1763b5da302ecdfd12375dcae8e5d7b6af3546328af7aff5f2a92",
-        "resultSummary": "41/41 exact bodies and names read back; 6,941 exact body bytes; 38 OPAQUE -> bounded C1_STATIC hypotheses; 3 existing C1 candidates repaired; 13 corrected or narrowed names; runtime/C2/live-Ghidra claims zero"
+        "resultSummary": "41/41 exact bodies and names read back; 6,941 exact body bytes; 38 OPAQUE -> bounded C1_STATIC hypotheses; 3 existing C1 candidates repaired; 13 corrected or narrowed names; runtime/C2/live-Ghidra claims zero",
+        "rebuildMapping": "commit 4f643063; deterministic Level100PlayerWeaponRuntime consumes GetCurrentWeapon/ResetConfiguration/EnableWeapon/DisableWeapon/CountActiveWeapons for Jet and Walker fully, plus ChangeWeapon/FireWeapon selection routing partially; 10 full + 4 partial contract uses; 7 focused tests; StateHasher v35; native Godot smoke PASS at tick 2148 / 897c1115209377f8ec1d1ce79224f655f433b6d06fab01ca505ef85ee92ba8ce; Missile launch, manual cycling, charge/heat/ammo and IsFiring remain open"
+      },
+      "cgameLifecycleCohort": {
+        "contracts": "local-lab/ghidra-cgame51-static-20260809-v1/contracts.tsv; 42325 bytes; SHA-256 bb49a18bbabbababef57ab86ccbd2f1482b477ac35d6c4bb3837c64b8fba2163",
+        "report": "local-lab/ghidra-cgame51-static-20260809-v1/REPORT.md; 3380 bytes; SHA-256 aad28a858cc8be407789dedcf722ecf40a9c9b4551a67dac377fc24ee43afcb7",
+        "result": "local-lab/ghidra-cgame51-static-20260809-v1/result.json; 2004 bytes; SHA-256 f99b216c9633b0e0cc07aa35655372b3b1a7db3367f940b74c3bf788a30665cb",
+        "resultSummary": "51/51 exact CGame lifecycle/load/media/run/state/control/draw/query bodies; 22,256 exact body bytes; 51 OPAQUE -> bounded C1_STATIC hypotheses; 51 names retained; only 0x00472620 needs a stale CScript-to-CGame comment repair; runtime cadence/callee internals/error effects remain open"
       },
       "result": {
         "literalFunBefore": 932,
@@ -117,17 +124,17 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Consume the completed 41-function weapon-state cohort as one campaign/rebuild batch, not 41 ceremonies, while the next >=40-function static cohort is selected. Keep runtime-dependent branches open and continue using the same read-only exporters plus scratch HYP__ apply/readback path."
+      "nextQueue": "The 41-function weapon-state and 51-function CGame passes are complete, totaling 89 new bounded C1_STATIC hypotheses; the weapon rebuild consumes 10 contracts fully and 4 partially. Next execute CBattleEngine51: the 51 exact W001/W008 rows whose current name begins CBattleEngine__, 26,590 body bytes, 43 OPAQUE plus 8 existing C1, using existing decompiles/instructions/xrefs and pinned BattleEngine source only."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Resolve the paired JetPart/WalkerPart weapon-state subsystem as one 41-function static-contract cohort.",
-        "existingEvidence": "Canonical Gen19 identifies all 41 exact bodies; the dated W001 decompiles cover every target and six routing anchors; pinned Stuart JetPart/WalkerPart source provides the architectural twin; current census is 11 DARK, 27 PARTIAL, 3 COVERED and 38 OPAQUE plus 3 C1 candidates.",
-        "instrument": "Export the 41 targets and six anchors read-only from the existing isolated scratch project, join exact body/range identities to pristine bytes and the pinned source commit, then apply HYP__ names/comments and read them back in one batch.",
-        "gate": "Require all 41 exact body joins, pairwise Jet/Walker routing and field/call-shape checks, explicit separation of localized-name/+0x04 raw-field/+0x38 icon accessors, no Energy equivalence claim, no exclusive owner for the folded IsFiring body, and C1_STATIC at most.",
-        "reconstructionOwner": "JetPart/WalkerPart weapon-state owners in the rebuild after the static field and routing contracts are admitted",
-        "why": "It can correct 13 misleading names and advance up to 38 opaque contracts in one coherent pass with no new capture or authority machinery."
+        "question": "Resolve the primary CBattleEngine lifecycle/movement/targeting/lock/morph/cloak/player-routing block as one 51-function static-contract cohort.",
+        "existingEvidence": "Canonical Gen19 joins all 51 exact entries selected from W001/W008 by current-name prefix CBattleEngine__; existing evidence covers 51 decompiles, 7,667 instruction rows and 79 xrefs, with 43 OPAQUE and 8 existing C1 rows across 26,590 body bytes. Pinned BattleEngine.cpp/h supplies architecture for 44 rows; seven retail-static/layout hypotheses remain narrowly labelled.",
+        "instrument": "Reuse the current scratch inventory and dated W001/W008 decompile, instruction and xref exports; join exact bodies to pristine bytes and pinned BattleEngine source, then emit one bounded 51-row hypothesis ledger without new capture or live mutation.",
+        "gate": "Require 51 exact body/range joins, explicit receiver/caller/callee/field effects and cheapest falsifiers, no source attribution for the seven retail-only hypotheses, C1_STATIC at most, and no runtime/callee-internal/morph-result/targeting-outcome overclaim.",
+        "reconstructionOwner": "Existing Simulation movement, targeting, weapon routing, damage and mode-transition owners; map only contracts with an obvious current owner.",
+        "why": "It can advance 43 opaque contracts and repair or confirm eight C1 rows in one high-rebuild-value pass with complete existing static evidence and no new tooling."
       },
       {
         "rank": 2,
