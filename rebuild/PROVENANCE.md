@@ -430,6 +430,12 @@ leg's root-to-`Footbase` extension and chooses the closest frame independently
 for the current planted-foot distance. The retained chains are legs
 `18/21/22/23/24`, `28/30/31/32/33`, `46/51/52/53/54`, and
 `3/8/9/10/11`, with Footbase parts `25`, `34`, `55`, and `12`.
+Steam `CMeshPart__InterpolateSegmentTransform` at `0x004B0D00` linearly blends
+all nine stored `HORI` matrix components and the position; the Godot loader now
+preserves that componentwise law instead of quaternion-slerping fractional
+poses. The current Level 100 walker, jet, and cockpit callers supply integral
+frames, so the separate `0x004B24D0` adjuster/round/wrap path remains explicitly
+unmodeled rather than being guessed into this API.
 
 One fresh no-input control and two uninterrupted copied-retail repetitions used
 the same three-second idle, twelve-second forward hold, and fifteen-second rest

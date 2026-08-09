@@ -1553,17 +1553,13 @@ internal sealed class RetailAquilaWalkerAsset
                 Matrix3.Multiply(parent.Rotation, child.Rotation),
                 parent.Rotation.Transform(child.Position) + parent.Position);
 
-        public static BeaTransform Interpolate(BeaTransform first, BeaTransform second, float weight)
-        {
-            Basis firstBasis = first.Rotation.ToBasis();
-            Basis secondBasis = second.Rotation.ToBasis();
-            Quaternion rotation = firstBasis.GetRotationQuaternion().Slerp(
-                secondBasis.GetRotationQuaternion(),
-                weight);
-            return new BeaTransform(
-                Matrix3.FromBasis(new Basis(rotation)),
+        // Retail CMeshPart__InterpolateSegmentTransform (0x004b0d00) blends
+        // every stored HORI component directly. Quaternion slerp would erase
+        // released scale/shear terms and produces a different fractional pose.
+        public static BeaTransform Interpolate(BeaTransform first, BeaTransform second, float weight) =>
+            new(
+                Matrix3.Lerp(first.Rotation, second.Rotation, weight),
                 first.Position.Lerp(second.Position, weight));
-        }
 
         public bool ApproximatelyEquals(BeaTransform other, float tolerance) =>
             Rotation.ApproximatelyEquals(other.Rotation, tolerance) &&
@@ -1591,21 +1587,16 @@ internal sealed class RetailAquilaWalkerAsset
             (M10 * value.X) + (M11 * value.Y) + (M12 * value.Z),
             (M20 * value.X) + (M21 * value.Y) + (M22 * value.Z));
 
-        public Basis ToBasis() => new(
-            new Vector3(M00, M10, M20),
-            new Vector3(M01, M11, M21),
-            new Vector3(M02, M12, M22));
-
-        public static Matrix3 FromBasis(Basis basis) => new(
-            basis.X.X,
-            basis.Y.X,
-            basis.Z.X,
-            basis.X.Y,
-            basis.Y.Y,
-            basis.Z.Y,
-            basis.X.Z,
-            basis.Y.Z,
-            basis.Z.Z);
+        public static Matrix3 Lerp(Matrix3 first, Matrix3 second, float weight) => new(
+            first.M00 + ((second.M00 - first.M00) * weight),
+            first.M01 + ((second.M01 - first.M01) * weight),
+            first.M02 + ((second.M02 - first.M02) * weight),
+            first.M10 + ((second.M10 - first.M10) * weight),
+            first.M11 + ((second.M11 - first.M11) * weight),
+            first.M12 + ((second.M12 - first.M12) * weight),
+            first.M20 + ((second.M20 - first.M20) * weight),
+            first.M21 + ((second.M21 - first.M21) * weight),
+            first.M22 + ((second.M22 - first.M22) * weight));
 
         public static Matrix3 Multiply(Matrix3 first, Matrix3 second) => new(
             (first.M00 * second.M00) + (first.M01 * second.M10) + (first.M02 * second.M20),

@@ -458,6 +458,41 @@ public sealed class RetailAquilaVertexDiffuseTests
     }
 
     /// <summary>
+    /// Retail <c>CMeshPart__InterpolateSegmentTransform</c> at
+    /// <c>0x004b0d00</c> interpolates all nine stored <c>HORI</c> components
+    /// independently. It does not convert them to quaternions, which would
+    /// discard authored scale/shear terms and change fractional poses.
+    /// </summary>
+    [Fact]
+    public void WalkerTransformInterpolationUsesTheRetailComponentwiseMatrixLaw()
+    {
+        string loader = ReadGodotSource("RetailAquilaWalkerAsset.cs");
+
+        Assert.Contains(
+            "Matrix3.Lerp(first.Rotation, second.Rotation, weight)",
+            loader,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "first.Position.Lerp(second.Position, weight)",
+            loader,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Slerp(", loader, StringComparison.Ordinal);
+
+        foreach (string component in new[]
+                 {
+                     "M00", "M01", "M02",
+                     "M10", "M11", "M12",
+                     "M20", "M21", "M22",
+                 })
+        {
+            Assert.Contains(
+                $"first.{component} + ((second.{component} - first.{component}) * weight)",
+                loader,
+                StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
     /// The cockpit's part records, sequentially walked: name, the local
     /// <c>HORI</c> transform selected by <c>VHFM</c> at virtual frame 25 (the
     /// profile's initial frame), its determinant, and each group's index strip
