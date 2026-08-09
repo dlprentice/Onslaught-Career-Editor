@@ -82,8 +82,9 @@ namespace OnslaughtRebuild.GodotClient;
 /// <c>366021def699de220ad018c40250eefaccaab356c6c5d93fe0aa1b7f5302354c</c>,
 /// which inflates to a 128x128 <b>DXT2</b> DDS with <c>mipMapCount = 8</c>
 /// (header read directly in this session). The on-disk DXT2 against the
-/// runtime's A8R8G8B8 is not a contradiction: the loader special-cases this one
-/// filename and forces the create-format. The materializer entry is
+/// runtime's A8R8G8B8 is not a contradiction: this cursor load validates all
+/// eight stored levels and explicitly converts the decoded image to RGBA8
+/// before upload. The materializer entry is
 /// <c>Frontend/mouse-cursor.texture.aya</c>.</para>
 ///
 /// <para><b>The UV range is a released constant, not a full-texture blit.</b>
@@ -131,7 +132,13 @@ public sealed partial class RetailFrontendFlow
     {
         const string path = "res://Assets/Frontend/mouse-cursor.texture.aya";
         return Godot.FileAccess.FileExists(path)
-            ? CuratedAyaTextureLoader.Load(path, 128, 128, CuratedAyaTextureLoader.Compression.Dxt2)
+            ? CuratedAyaTextureLoader.Load(
+                path,
+                128,
+                128,
+                CuratedAyaTextureLoader.Compression.Dxt2,
+                expectedTargetFormat: Image.Format.Rgba8,
+                expectedMipCount: 8)
             : null;
     }
 

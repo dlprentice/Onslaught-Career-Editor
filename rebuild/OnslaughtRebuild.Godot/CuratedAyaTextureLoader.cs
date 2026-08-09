@@ -22,7 +22,9 @@ internal static class CuratedAyaTextureLoader
         string resourcePath,
         int expectedWidth,
         int expectedHeight,
-        Compression expectedCompression = Compression.Dxt2)
+        Compression expectedCompression = Compression.Dxt2,
+        Image.Format? expectedTargetFormat = null,
+        int? expectedMipCount = null)
     {
         byte[] source = Godot.FileAccess.GetFileAsBytes(resourcePath);
         if (source.Length is 0 or > MaximumSourceBytes)
@@ -55,6 +57,12 @@ internal static class CuratedAyaTextureLoader
             throw new InvalidDataException(
                 $"Curated texture does not match the expected {expectedCompression} DDS pixel format.");
         }
+        if (expectedMipCount is int mipCount &&
+            BinaryPrimitives.ReadUInt32LittleEndian(dds.AsSpan(28, 4)) != (uint)mipCount)
+        {
+            throw new InvalidDataException(
+                $"Curated texture '{resourcePath}' does not contain the expected {mipCount} DDS mip levels.");
+        }
 
         var image = new Image();
         Error result = image.LoadDdsFromBuffer(dds);
@@ -67,6 +75,20 @@ internal static class CuratedAyaTextureLoader
             throw new InvalidDataException(
                 $"Curated texture '{resourcePath}' decoded as {image.GetWidth()}x{image.GetHeight()}, " +
                 $"expected {expectedWidth}x{expectedHeight}.");
+        }
+        if (expectedTargetFormat is Image.Format targetFormat && image.GetFormat() != targetFormat)
+        {
+            if (image.IsCompressed() && image.Decompress() != Error.Ok)
+            {
+                throw new InvalidDataException(
+                    $"Curated texture '{resourcePath}' could not be decompressed for {targetFormat} upload.");
+            }
+            image.Convert(targetFormat);
+        }
+        if (expectedTargetFormat is Image.Format requiredFormat && image.GetFormat() != requiredFormat)
+        {
+            throw new InvalidDataException(
+                $"Curated texture '{resourcePath}' could not be converted to {requiredFormat}.");
         }
 
         return ImageTexture.CreateFromImage(image);
