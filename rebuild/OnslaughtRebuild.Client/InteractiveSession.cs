@@ -107,8 +107,6 @@ public sealed class InteractiveSession
     private readonly List<Level100WeaponFireEvent>
         _undeliveredLevel100WeaponFireEvents = [];
     private InteractiveInput _input;
-    private bool _toggleLevelWasHeld;
-    private bool _resetLevelWasHeld;
     private bool _toggleEdgePending;
     private bool _resetEdgePending;
     private bool _firePulsePending;
@@ -164,8 +162,6 @@ public sealed class InteractiveSession
 
     public bool HasHeldOrPendingInput =>
         _input != InteractiveInput.Idle ||
-        _toggleLevelWasHeld ||
-        _resetLevelWasHeld ||
         _toggleEdgePending ||
         _resetEdgePending ||
         _firePulsePending ||
@@ -209,18 +205,26 @@ public sealed class InteractiveSession
             _inputSuspendedUntilReleased = false;
         }
 
-        if (input.ToggleModeHeld && !_toggleLevelWasHeld)
+        // CPCController's three button predicates are the exact old/current
+        // truth table: Once = !old && current, On = current, Release = old &&
+        // !current (retail 0x005147b0/0x005147f0/0x00514810). Apply that table
+        // directly to the supported levels rather than treating every action
+        // as a held flag. Gun fire is BUTTON_RELEASE in the shipped mapping.
+        if (_input.FireHeld && !input.FireHeld)
+        {
+            _firePulsePending = true;
+        }
+
+        if (input.ToggleModeHeld && !_input.ToggleModeHeld)
         {
             _toggleEdgePending = true;
         }
 
-        if (input.ResetHeld && !_resetLevelWasHeld)
+        if (input.ResetHeld && !_input.ResetHeld)
         {
             _resetEdgePending = true;
         }
 
-        _toggleLevelWasHeld = input.ToggleModeHeld;
-        _resetLevelWasHeld = input.ResetHeld;
         _input = input;
     }
 
@@ -263,6 +267,7 @@ public sealed class InteractiveSession
         _skipPanningEdgePending = true;
     }
 
+    /// <summary>Queues one already-sampled gun-button release edge.</summary>
     public void QueueFirePulse()
     {
         if (IsPaused || _inputSuspendedUntilReleased)
@@ -357,8 +362,6 @@ public sealed class InteractiveSession
     private void ClearInputState()
     {
         _input = InteractiveInput.Idle;
-        _toggleLevelWasHeld = false;
-        _resetLevelWasHeld = false;
         _toggleEdgePending = false;
         _resetEdgePending = false;
         _firePulsePending = false;
@@ -499,7 +502,7 @@ public sealed class InteractiveSession
                 }
             }
 
-            SimActions actions = _input.FireHeld || firePulse ? SimActions.Fire : SimActions.None;
+            SimActions actions = firePulse ? SimActions.Fire : SimActions.None;
             if (_input.LandingJetsHeld)
             {
                 actions |= SimActions.LandingJets;

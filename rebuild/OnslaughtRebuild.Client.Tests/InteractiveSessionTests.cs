@@ -137,17 +137,36 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void HeldFire_IsSampledOnEveryAdvancedTick()
+    public void GunAction_FiresOnceOnReleaseAndDoesNotRepeatWhileHeld()
     {
         InteractiveSession session = CreatePlayingSession();
         session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
 
-        FrameAdvanceResult result = session.AdvanceFrame(TimeSpan.FromMilliseconds(200));
+        session.AdvanceFrame(TimeSpan.FromMilliseconds(200));
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        session.AdvanceFrameTicks(500_000);
 
-        Assert.Equal(4, result.StepsAdvanced);
-        Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
-        Assert.Equal(SimulationConstants.MaximumEnergy, result.CurrentSnapshot.Energy);
-        Assert.Empty(result.CurrentSnapshot.Projectiles);
+        Assert.Equal(0, session.Metrics.FirePulseEdgesConsumed);
+        Assert.Equal(5, session.Metrics.FireHeldTicksSampled);
+
+        // Godot can observe the same physical release twice: once from its
+        // key-up event and once from the next sampled level. The bool latch
+        // must coalesce those sources into one retail release action.
+        session.QueueFirePulse();
+        session.ObserveInput(InteractiveInput.Idle);
+        session.AdvanceFrameTicks(500_000);
+        Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
+        session.AdvanceFrameTicks(500_000);
+
+        Assert.Equal(1, session.Metrics.FirePulseEdgesConsumed);
+
+        // A complete repress/release between fixed steps still contributes one
+        // edge, matching CPCController's old/current button truth table.
+        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        session.ObserveInput(InteractiveInput.Idle);
+        session.AdvanceFrameTicks(500_000);
+
+        Assert.Equal(2, session.Metrics.FirePulseEdgesConsumed);
     }
 
     [Fact]
@@ -711,6 +730,8 @@ public sealed class InteractiveSessionTests
 
         session.ObserveInput(InteractiveInput.Idle);
         Assert.False(session.InputSuspendedUntilReleased);
+        session.AdvanceFrameTicks(500_000);
+        Assert.Equal(0, session.Metrics.FirePulseEdgesConsumed);
 
         session.QueueMovementPulse(0, 1);
         session.QueueFirePulse();
@@ -763,6 +784,10 @@ public sealed class InteractiveSessionTests
         Assert.False(session.HasHeldOrPendingInput);
         session.ObserveInput(InteractiveInput.Idle);
         Assert.False(session.InputSuspendedUntilReleased);
+        session.AdvanceFrameTicks(500_000);
+        Assert.Equal(
+            startingMetrics.FirePulseEdgesConsumed,
+            session.Metrics.FirePulseEdgesConsumed);
     }
 
     [Fact]
@@ -900,7 +925,7 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
-    public void FrameDestructionEvents_AggregateEverySimulationStepInOrder()
+    public void FrameDestructionEvents_AggregateTheReleaseTickInOrder()
     {
         var session = new InteractiveSession(Seed, ActorDefinitions);
         while (session.CurrentSnapshot.Tick < FirstFlightSmokeScenario.DurationTicks)
@@ -912,11 +937,11 @@ public sealed class InteractiveSessionTests
 
         // Use the released static Target Tank 2 so a multi-step client frame
         // exercises event aggregation without a waypoint mover changing the
-        // contact pose between pulse cooldowns.
+        // contact pose during the release tick.
         TargetSnapshot target = session.CurrentSnapshot.Targets.Single(item => item.Id == 2);
         Level100ActorPoseSnapshot contactPose =
             PlaceTargetCenterAtPulseEmitter(session.CurrentSnapshot);
-        session.ObserveInput(new InteractiveInput(0, 0, true, false, false));
+        session.QueueFirePulse();
 
         FrameAdvanceResult frame = session.AdvanceFrameTicks(
             InteractiveSession.MaximumFrameElapsedTicks,
@@ -934,8 +959,6 @@ public sealed class InteractiveSessionTests
             {
                 Level100DestructionEventKind.PulseImpact,
                 Level100DestructionEventKind.SegmentDamaged,
-                Level100DestructionEventKind.PulseImpact,
-                Level100DestructionEventKind.SegmentDamaged,
             },
             targetEvents.Select(item => item.Kind));
         Assert.All(
@@ -947,17 +970,15 @@ public sealed class InteractiveSessionTests
         float pulseDamage =
             BitConverter.UInt32BitsToSingle(Level100DestructionState.PulseDamageBits);
         float afterFirstHit = 6f - pulseDamage;
-        float afterSecondHit = afterFirstHit - pulseDamage;
         Assert.Equal(
             new[]
             {
                 BitConverter.SingleToUInt32Bits(afterFirstHit),
-                BitConverter.SingleToUInt32Bits(afterSecondHit),
             },
             targetEvents
                 .Where(item => item.Kind == Level100DestructionEventKind.SegmentDamaged)
                 .Select(item => item.RemainingHealthBits));
-        Assert.Equal(2, frame.CurrentSnapshot.Level100DestructionEvents.Count);
+        Assert.Empty(frame.CurrentSnapshot.Level100DestructionEvents);
         Assert.Empty(session.AdvanceFrameTicks(0).Level100DestructionEvents);
     }
 
@@ -1569,6 +1590,7 @@ public sealed class InteractiveSessionTests
             Level100ActorCommandIntent.Stopped,
             targetIntent.Intent);
         Assert.Equal(4, session.Metrics.FireHeldTicksSampled);
+        Assert.Equal(4, session.Metrics.FirePulseEdgesConsumed);
         // Re-pinned 2026-07-26 from c3ae5a39... after Level100ActorRegistry
         // began ground-seating authored actors, which retail's CThing::Init
         // (0x004F34A0) does and this reconstruction did not: Target Tank 2,
@@ -1783,8 +1805,13 @@ public sealed class InteractiveSessionTests
         // and Twin Vulcan reload countdown are future-affecting state, so they
         // are now serialized. This scenario still ends on Pulse Cannon / Mech
         // Vulcan with reload zero; the gameplay assertions above are unchanged.
+        // MOVED 2026-08-09 by the controller release-edge correction:
+        // 897c1115... -> 419e7995.... Retail maps gun fire as BUTTON_RELEASE,
+        // while the client had sent SimActions.Fire on every held tick. The
+        // same four physical holds now produce exactly four falling edges; the
+        // asserted mission/target outcome above is unchanged.
         Assert.Equal(
-            "897c1115209377f8ec1d1ce79224f655f433b6d06fab01ca505ef85ee92ba8ce",
+            "419e7995112303527ec38274e8f08e44f349d7da44f5edefc9ee77cae8fb5271",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

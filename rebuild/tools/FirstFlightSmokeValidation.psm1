@@ -206,8 +206,8 @@ function Test-FirstFlightSmokeEvidence {
     # level100MissionTick / totalSteps 2148, targetsDestroyed 0, mode Walker,
     # outcome Running, terminal None, targetVisualCount 9, the thirteen
     # delivered message ids and their speakers, level100DeliveredHelpCount 1,
-    # level100ObjectiveMarkerCount 4, fireHeldTicksSampled 4, all five edge
-    # counters 0, cappedFrameCount 0, droppedElapsedTicks 0, openingPanActive
+    # level100ObjectiveMarkerCount 4, fireHeldTicksSampled 4, four release edges,
+    # the other four edge counters 0, cappedFrameCount 0, droppedElapsedTicks 0, openingPanActive
     # false, and the whole retail-geometry block including
     # retailLevel100TerrainVertexCount 34499 and TriangleCount 33476.
     #
@@ -227,7 +227,7 @@ function Test-FirstFlightSmokeEvidence {
     # StateHasher v35 adds the selected Walker/Jet slots and Twin Vulcan
     # reload countdown. The in-process canonical tape independently measures
     # this exact structural repin; the native smoke remains the host check.
-    Assert-SmokeValue 'stateHash' '897c1115209377f8ec1d1ce79224f655f433b6d06fab01ca505ef85ee92ba8ce' $report.stateHash
+    Assert-SmokeValue 'stateHash' '419e7995112303527ec38274e8f08e44f349d7da44f5edefc9ee77cae8fb5271' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
@@ -316,7 +316,7 @@ function Test-FirstFlightSmokeEvidence {
     Assert-SmokeValue 'resetEdgesConsumed' 0 $report.resetEdgesConsumed
     Assert-SmokeValue 'resetGeneration' 0 $report.resetGeneration
     Assert-SmokeValue 'fireHeldTicksSampled' 4 $report.fireHeldTicksSampled
-    Assert-SmokeValue 'firePulseEdgesConsumed' 0 $report.firePulseEdgesConsumed
+    Assert-SmokeValue 'firePulseEdgesConsumed' 4 $report.firePulseEdgesConsumed
     Assert-SmokeValue 'movementPulseEdgesConsumed' 0 $report.movementPulseEdgesConsumed
     Assert-SmokeValue 'cappedFrameCount' 0 $report.cappedFrameCount
     Assert-SmokeValue 'droppedElapsedTicks' 0 $report.droppedElapsedTicks

@@ -72,7 +72,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v2",
+              "schemaVersion": "onslaught-rebuild-command-tape.v3",
               "name": "missing-spans",
               "seed": 1,
               "durationTicks": 10,
@@ -103,7 +103,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v2",
+              "schemaVersion": "onslaught-rebuild-command-tape.v3",
               "name": "unknown-property",
               "seed": 1,
               "durationTicks": 1,
@@ -159,6 +159,31 @@ public sealed class ReplayTests
             [new CommandSpan(0, 2, 0, 0, ToggleMode: true)]);
 
         Assert.Throws<InvalidDataException>(tape.Validate);
+    }
+
+    [Fact]
+    public void CommandTape_FireReleaseEdgeRequiresExactlyOneTick()
+    {
+        var released = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "one-fire-release",
+            1,
+            1,
+            null,
+            null,
+            [new CommandSpan(0, 1, 0, 0, Fire: true)]);
+        released.Validate();
+
+        var held = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "held-fire",
+            1,
+            2,
+            null,
+            null,
+            [new CommandSpan(0, 2, 0, 0, Fire: true)]);
+
+        Assert.Throws<InvalidDataException>(held.Validate);
     }
 
     [Fact]
@@ -264,7 +289,7 @@ public sealed class ReplayTests
     {
         const string json = """
               {
-                "schemaVersion": "onslaught-rebuild-command-tape.v2",
+                "schemaVersion": "onslaught-rebuild-command-tape.v3",
                 "name": "no-look",
                 "seed": 1,
                 "durationTicks": 1,

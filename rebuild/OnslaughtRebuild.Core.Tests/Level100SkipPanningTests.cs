@@ -413,7 +413,7 @@ public sealed class Level100SkipPanningTests
     public void ATapeWrittenUnderTheOldSchemaIsRejectedRatherThanMisparsed()
     {
         Assert.Equal(
-            "onslaught-rebuild-command-tape.v2",
+            "onslaught-rebuild-command-tape.v3",
             CommandTape.CurrentSchemaVersion);
 
         const string previousSchema = """

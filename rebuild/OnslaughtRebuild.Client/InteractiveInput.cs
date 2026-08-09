@@ -7,6 +7,9 @@ namespace OnslaughtRebuild.Client;
 public readonly record struct InteractiveInput(
     sbyte MoveX,
     sbyte MoveZ,
+    // Physical button level. InteractiveSession converts the falling edge to
+    // the retail BUTTON_RELEASE gun action; Core never receives this as a
+    // repeated held Fire action.
     bool FireHeld,
     bool ToggleModeHeld,
     bool ResetHeld,

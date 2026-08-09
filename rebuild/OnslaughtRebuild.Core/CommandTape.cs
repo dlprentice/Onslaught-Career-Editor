@@ -73,6 +73,12 @@ public sealed record CommandTape
     /// </summary>
     /// <remarks>
     /// <para>
+    /// <c>v2 -&gt; v3</c>, 2026-08-09: <c>CommandSpan.Fire</c> changed from a
+    /// held action to the shipped controller's <c>BUTTON_RELEASE</c> edge. A
+    /// fire span must therefore be exactly one tick; otherwise an old held-fire
+    /// tape would silently replay as several release edges.
+    /// </para>
+    /// <para>
     /// <c>v1 -&gt; v2</c>, 2026-07-27: <c>CommandSpan.SkipPanning</c>
     /// (<c>BUTTON_SKIP_PANNING</c> <c>0x3a</c>) was added. It is load-bearing —
     /// it ends the opening pan and, through
@@ -91,7 +97,7 @@ public sealed record CommandTape
     /// <c>3cc382e8</c>). Its <c>schemaVersion</c> field is what moves.
     /// </para>
     /// </remarks>
-    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v2";
+    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v3";
 
     [JsonConstructor]
     public CommandTape(
@@ -194,10 +200,11 @@ public sealed record CommandTape
                 throw new InvalidDataException("Command span contains invalid input values.", exception);
             }
 
-            if ((span.ToggleMode || span.Reset || span.SkipPanning) && span.DurationTicks != 1)
+            if ((span.ToggleMode || span.Fire || span.Reset || span.SkipPanning) &&
+                span.DurationTicks != 1)
             {
                 throw new InvalidDataException(
-                    "ToggleMode, Reset and SkipPanning are edge actions and require a one-tick span.");
+                    "ToggleMode, Fire, Reset and SkipPanning are edge actions and require a one-tick span.");
             }
 
             previousEnd = endTickExclusive;

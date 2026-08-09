@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; five bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; six bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -65,9 +65,11 @@ Two more bulk passes cover 58 `CUnit` rows and 65 `CActor`/`CController`/
 prior C1 rows while preserving `CUnit__ApplyDamage` at its existing C2 grade;
 the absent Stuart `Unit.cpp`/`Unit.h` prevents a source-equivalence claim.
 PlayerControlActor65 advances all 65 opaque rows, with 63 source-architecture
-joins and two retail-only POV helpers. Across all five cohorts, 237 formerly
-opaque functions now have bounded C1-static hypotheses and 28 prior C1 rows
-are repaired or confirmed.
+joins and two retail-only POV helpers. IScript50 adds 48 opaque-to-C1-static
+contracts, repairs two prior C1 rows, and recovers 21 collision-free exact
+registry-backed names while retaining all 27 runtime-dark rows as dark. Across
+all six cohorts, 285 formerly opaque functions now have bounded C1-static
+hypotheses and 30 prior C1 rows are repaired or confirmed.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -75,8 +77,9 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all five semantic passes. The next selector is another disjoint
-50-plus cohort, not another single-function promotion lane.
+untouched by all six semantic passes. The active selector is the exact 70-row
+`CWorld`/`CWorldPhysicsManager` cohort; after it closes, IScript50 and World70
+will be one 120-row disposable-Ghidra apply/readback, not per-function lanes.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does

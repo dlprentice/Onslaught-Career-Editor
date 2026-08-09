@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon41, CGame51, CBattleEngine51, CUnit58 and PlayerControlActor65 now cover 266 exact bodies: 237 formerly opaque functions have bounded C1_STATIC hypotheses, 28 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, and CGame51's retail/source divergence corrected the loss countdown from 5 seconds to 2 seconds. Scratch Ghidra has read back the 102 CGame/CBattleEngine rows and a second 122-row CUnit/Player batch; the latter changed only those 122 target names/comments plus one automatic default-named thunk following its renamed target. These hypothesis-only batches did not touch live or tracked Ghidra."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon41, CGame51, CBattleEngine51, CUnit58, PlayerControlActor65 and IScript50 now cover 316 exact bodies: 285 formerly opaque functions have bounded C1_STATIC hypotheses, 30 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, CGame51 corrected the loss countdown from source's 5 seconds to retail's 2 seconds, and the CController/CPCController slice corrected gun input from repeated held Fire to one retail BUTTON_RELEASE edge. All 444 client tests pass and two native Godot smokes agree at tick 2,148 / state 419e7995...5271. Scratch Ghidra has read back 102 CGame/CBattleEngine rows and a second 122-row CUnit/Player batch; these hypothesis-only batches did not touch live or tracked Ghidra."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -139,6 +139,12 @@
         "readback": "local-lab/ghidra-cunit58-playercontrol65-scratch-20260809-v1/readback.tsv; 154932 bytes; SHA-256 453fd7b95745906325ea71db9c945976821d5f72872ee7155a34261a80cf01dc",
         "result": "57 CUnit C1 rows plus 65 Player/Controller/Actor rows received explicit HYP__ names/comments in one disposable-project batch; ApplyDamage's C2 row was excluded; exact readback found 122 target-row changes plus one automatic DEFAULT-named thunk rename following CActor__DeclareInWater, with no other function or program metric change except the aggregate comment digest"
       },
+      "iscriptBridgeCohort": {
+        "contracts": "local-lab/ghidra-iscript50-static-20260809-v1/contracts.tsv; 47268 bytes; SHA-256 221b540766601f44767cfe4994322ff067aa96c1180b9b9ea871b9d1771f102f",
+        "report": "local-lab/ghidra-iscript50-static-20260809-v1/REPORT.md; 7182 bytes; SHA-256 25b21f86b5b10cf5528f1c40163384f32e9f361fee6cd74fe3f77c2c252426ae",
+        "result": "local-lab/ghidra-iscript50-static-20260809-v1/result.json; 7428 bytes; SHA-256 b1077820f559208792e41dc0dcac126460a89c5b351f3fd18043c877ea17e511",
+        "resultSummary": "50 exact IScript bridge rows / 8,147 body bytes / 2,612 instructions / 56 real xrefs plus one no-xref sentinel; 48 OPAQUE -> C1_STATIC, two prior C1 rows repaired, 21 collision-free registry-backed name proposals, and all 27 runtime-dark rows remain explicitly dark"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -152,26 +158,26 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Weapon41, CGame51, CBattleEngine51, CUnit58 and PlayerControlActor65 are complete, totaling 237 formerly opaque functions advanced to bounded C1_STATIC hypotheses and 28 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception. The active evidence cohort is the exact 50-row IScript bridge: 48 OPAQUE rows plus two existing C1 candidates, selected by unchanged address/name joins against dated W009/W010 evidence. The active reconstruction slice is the exact 11-contract CController/CPCController input-state adapter. No single-function lane is open."
+      "nextQueue": "Six static cohorts are complete, totaling 285 formerly opaque functions advanced to bounded C1_STATIC hypotheses and 30 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception. The active evidence cohort is the exact 70-row CWorld/CWorldPhysicsManager block: 61 OPAQUE rows plus nine existing C1 candidates, all with existing decompiles and inbound xrefs. After its ledger closes, combine IScript50 and World70 into one 120-row disposable-Ghidra hypothesis/readback batch. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Resolve the exact 50-function IScript bridge as one static-contract cohort.",
-        "existingEvidence": "Canonical Generation 19 and the latest scratch inventory join 50 unchanged IScript__ entries selected from dated W009/W010 metadata. The cohort covers 8,147 body bytes, 50 decompiles / 98,932 bytes, 2,612 instructions and 56 real xrefs plus one explicit no-xref destructor sentinel. It contains 48 OPAQUE and two C1_CANDIDATE_PARTIAL rows; 23 are executed and 27 remain runtime-dark.",
-        "instrument": "Reuse the existing campaign, scratch inventory, W009/W010 decompiles, instructions and xrefs to emit one 50-row static-contract ledger and cheapest-falsifier queue. No capture, bespoke authority tool, or live Ghidra mutation.",
-        "gate": "Require 50 exact address/name/body joins, visible inputs/returns/writes/call order, explicit execution state and uncertainty, C1_STATIC at most, and no source/runtime/callee-internal success overclaim.",
-        "reconstructionOwner": "Existing Level100Mission and Level100ActorScriptRuntime owners where a contract maps cleanly; leave unmatched script bridges unmapped.",
-        "why": "It advances up to 48 opaque contracts in one pass and directly strengthens the retail-to-rebuild script bridge without creating another one-function lane."
+        "question": "Resolve the exact 70-function CWorld/CWorldPhysicsManager block as one static-contract cohort.",
+        "existingEvidence": "The exact selector joins 70 current rows to dated metadata, decompiles and 268 real inbound xrefs. It contains 61 OPAQUE and nine C1_CANDIDATE_PARTIAL rows; 60 are executed and 10 remain runtime-dark.",
+        "instrument": "Reuse the latest scratch inventory and existing fullpass decompiles/instructions/xrefs to emit one 70-row static-contract ledger and cheapest-falsifier queue. No capture, bespoke authority tool, or live Ghidra mutation.",
+        "gate": "Require 70 exact address/name/body joins, visible inputs/returns/writes/call order, explicit execution state and uncertainty, C1_STATIC at most, and no runtime/callee-internal physics-result overclaim.",
+        "reconstructionOwner": "Existing deterministic world, terrain, actor-contact and physics owners where a contract maps cleanly; leave unmatched world services unmapped.",
+        "why": "It can advance 61 opaque contracts and repair nine partial rows in one evidence-complete pass while remaining disjoint from all six completed cohorts."
       },
       {
         "rank": 2,
-        "question": "Carry the exact 11-contract CController/CPCController input-state adapter into the existing interactive-client owner.",
-        "existingEvidence": "Eight adjacent CController contracts cover Flush, DoMappings, mapped values, target access, action dispatch, target push/pop and vibration; the complete CPC triad adds GetJoyButtonOnce/On/Release. Seven are partially represented and four remain absent in InteractiveSession.",
-        "instrument": "Keep the existing InteractiveInput, SimInput, pending fields and Simulation.Step path; make supported buttons follow explicit once/on/release transitions in the current sampling and action assembly. Do not create a mapping framework or controller-target abstraction.",
-        "gate": "Use only focused InteractiveSession tests for press-hold-release-repress, repeated On versus one-shot Once, release-before-tick, and pause/resume stale-edge rejection. Leave target-stack and vibration explicitly unmapped.",
-        "reconstructionOwner": "rebuild/OnslaughtRebuild.Client/InteractiveSession.cs and existing InteractiveSessionTests.cs",
-        "why": "It moves 11 related contracts through one existing owner and one test seam while deliberately avoiding the absent generic retail controller framework."
+        "question": "Apply the completed IScript50 plus World70 names/comments as one 120-row disposable-Ghidra hypothesis batch.",
+        "existingEvidence": "IScript50 already has 50 exact contracts and 21 registry-backed name corrections. World70 is the active 70-row static ledger. The existing batch renamer/comment tool and two prior separate-process readbacks already establish the supported noncanonical workflow.",
+        "instrument": "Generate one exact address/name map and fact-only C1_STATIC comment set, apply only to a fresh copy of the current disposable HYP project, then export metadata and full function/program inventories in a separate read-only process.",
+        "gate": "Exactly 120 intended rows, no body/boundary/signature/type/parameter/tag/byte/instruction/data/reference change, no C2 reinterpretation, and no sync to live or tracked Ghidra.",
+        "reconstructionOwner": "NONCANONICAL Ghidra navigation only",
+        "why": "It turns two bulk ledgers into immediately browsable Ghidra state in one mutation/readback block instead of reopening per-function promotion ceremonies."
       },
       {
         "rank": 3,

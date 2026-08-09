@@ -293,6 +293,20 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        // The shipped controller table maps BUTTON_MECH_FIRE_GUN_POD as
+        // BUTTON_RELEASE. Queue the falling edge so a complete press/release
+        // between two fixed-step samples is not lost. ObserveInput independently
+        // derives the same edge from sampled levels; the pending bool coalesces
+        // both paths.
+        if (inputEvent is InputEventKey fireRelease &&
+            !fireRelease.Pressed &&
+            !fireRelease.Echo &&
+            IsKey(fireRelease, Key.Space))
+        {
+            _session.QueueFirePulse();
+            return;
+        }
+
         if (inputEvent is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
         {
             return;
@@ -318,11 +332,6 @@ public sealed partial class FirstFlightGame : Node3D
         {
             _session.QueueMovementPulse(1, 0);
         }
-        if (IsKey(keyEvent, Key.Space))
-        {
-            _session.QueueFirePulse();
-        }
-
         // BUTTON_SKIP_PANNING (0x3a). The shipped 47-row binding table
         // (OptionsEntries__InitDefaultSingleBindingsTable, 0x00514210) gives it
         // four hard-wired active=0 KEY_ONCE rows at indices 22-25, DIK scan

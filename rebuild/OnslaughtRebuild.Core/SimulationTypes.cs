@@ -297,9 +297,9 @@ public readonly record struct SimInput(
     short LookXAnalogPermille = 0,
     short LookYAnalogPermille = 0)
 {
-    // Fire and LandingJets may be held. UI adapters must edge-sample
-    // ToggleMode, Reset and SkipPanning - every shipped BUTTON_SKIP_PANNING
-    // row is KEY_ONCE (push type 8).
+    // LandingJets may be held. Fire is the released gun-button edge; UI
+    // adapters must also edge-sample ToggleMode, Reset and SkipPanning - every
+    // shipped BUTTON_SKIP_PANNING row is KEY_ONCE (push type 8).
     // LookX is body look left/right and LookY is screen up/down (-1/0/+1).
     // Analog look is the deterministic -1000..1000 axis produced by an input adapter.
     public static SimInput Idle => new(0, 0);
