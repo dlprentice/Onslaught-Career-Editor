@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-09
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 18 via
+Current replay authority is Generation 19 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -62,12 +62,12 @@ reference and runbooks, and the retail → Core translation policies.
 
 The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
 2026-07 name ledgers still lag current work. Select campaign authority from `developer_state.json` →
-`current_re_authority`: canonical Generation 18 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1/`,
-READY `4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e`,
-frozen reducer `ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74`,
-external selector `c13dcef4…cf6b7a6`. It contains 8,125 functions, 216 C1,
-seven bounded C2, 7,902 opaque functions, 18 open residuals, and no rebuild-ready
+`current_re_authority`: canonical Generation 19 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-19-mission-native-unsetobjective-reproof-v1/`,
+READY `f83dbb6eddaa16deed5f2a2460d393dc4525a63ae243b6cac0c656056b69ab9a`,
+frozen reducer `151acbe5c1571dca2c53c68dd79281cf20c69af609523d54f25953643dcff3e2`,
+external selector `72c22f02…2360`. It contains 8,126 functions, 217 C1,
+seven bounded C2, 7,902 opaque functions, 17 open residuals, and no rebuild-ready
 contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -86,9 +86,14 @@ contract at C1 only: all 124 token names, 125 parse-index entries, 141 direct
 writer-call encodings, and 13 descriptor factory/RTTI/loader mappings are
 accounted for, while runtime/refuter verdicts, malformed input, allocation,
 overflow, named token 32, and full downstream behavior remain open. Its focused
-rebuild mapping is `PARTIAL_CONTRACT`. The independent replica is
+rebuild mapping is `PARTIAL_CONTRACT`. Generation 19 retires the 19-byte
+Mission-native UnsetObjective residual as exact 3-byte NOP / 13-byte wrapper /
+3-byte NOP children and admits only the wrapper's C1 static call/bit-clear
+contract. Runtime, HUD/lifetime behavior, and opaque callee `0x004E5BD0`
+remain open; its rebuild mapping is also `PARTIAL_CONTRACT`, and it made no live
+Ghidra mutation. The independent replica is
 reproduction-only. Generation 73 remains a projection oracle, never a parent or
-authority. The next valid campaign generation is 19. Model review is
+authority. The next valid campaign generation is 20. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)

@@ -967,8 +967,10 @@ public sealed class Level100ActorScriptRuntime
                     Thing(_playerActorId),
                     WaitRequest.None);
             case 23: // SetObjective
-                RequireArguments(command, arguments, 0);
-                _actors.SetObjective(RequireContext(execution).AsActorId(), true);
+                InvokeObjectiveNative(
+                    command,
+                    RequireContext(execution).AsActorId(),
+                    arguments);
                 return NativeResult.Void;
             case 24: // SetAIState
                 RequireArguments(command, arguments, 1);
@@ -986,8 +988,10 @@ public sealed class Level100ActorScriptRuntime
                 _actors.Deactivate(RequireContext(execution).AsActorId());
                 return NativeResult.Void;
             case 30: // UnsetObjective
-                RequireArguments(command, arguments, 0);
-                _actors.SetObjective(RequireContext(execution).AsActorId(), false);
+                InvokeObjectiveNative(
+                    command,
+                    RequireContext(execution).AsActorId(),
+                    arguments);
                 return NativeResult.Void;
             case 31: // IsObjective
                 RequireArguments(command, arguments, 0);
@@ -1084,6 +1088,31 @@ public sealed class Level100ActorScriptRuntime
                     command,
                     "Expected Mission native GetPos or SetPos.");
         }
+    }
+
+    /// <summary>
+    /// Implements the bounded Mission-native objective-flag contract shared by
+    /// the script dispatcher and focused parity tests. Retail static evidence
+    /// proves that SetObjective and UnsetObjective pass literal true and false,
+    /// respectively, to CThing::SetObjective; it does not establish a native
+    /// return value or complete HUD/objective-system behavior.
+    /// </summary>
+    internal void InvokeObjectiveNative(
+        int command,
+        Level100ActorId receiver,
+        IReadOnlyList<Level100ScriptValue> arguments)
+    {
+        RequireArguments(command, arguments, 0);
+        bool objective = command switch
+        {
+            23 => true,  // SetObjective
+            30 => false, // UnsetObjective
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(command),
+                command,
+                "Expected Mission native SetObjective or UnsetObjective."),
+        };
+        _actors.SetObjective(receiver, objective);
     }
 
     private void EmitCommand(

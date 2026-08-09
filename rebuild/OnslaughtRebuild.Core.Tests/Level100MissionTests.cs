@@ -58,6 +58,38 @@ public sealed class Level100MissionTests
     }
 
     [Fact]
+    public void MissionNativeUnsetObjective_ClearsOnlyTheObjectiveFlagAndIsIdempotent()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        Level100ActorId target = actors.GetThingRef("Turret 02")!.Value;
+        var runtime = new Level100ActorScriptRuntime(actors, player);
+        Level100ActorSnapshot initial = actors.GetActor(target);
+
+        runtime.InvokeObjectiveNative(23, target, Array.Empty<Level100ScriptValue>());
+        Level100ActorSnapshot marked = actors.GetActor(target);
+        Assert.Equal(initial with { IsObjective = true }, marked);
+
+        runtime.InvokeObjectiveNative(30, target, Array.Empty<Level100ScriptValue>());
+        Assert.Equal(initial, actors.GetActor(target));
+        runtime.InvokeObjectiveNative(30, target, Array.Empty<Level100ScriptValue>());
+        Assert.Equal(initial, actors.GetActor(target));
+
+        Assert.Throws<InvalidOperationException>(() =>
+            runtime.InvokeObjectiveNative(
+                30,
+                target,
+                [Level100ScriptValue.Integer(1)]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            runtime.InvokeObjectiveNative(
+                31,
+                target,
+                Array.Empty<Level100ScriptValue>()));
+        Assert.Equal(initial, actors.GetActor(target));
+    }
+
+    [Fact]
     public void ReleasedPrograms_InitializeAgainstOneCanonicalActorRegistry()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

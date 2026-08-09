@@ -59,11 +59,11 @@ until the reducer admits them through a new verified generation.
 
 **Current complete-RE authority (2026-08-09):** do not treat historical
 Generation 10 or candidate Generation 73 as the live replay parent. Read
-`developer_state.json` → `current_re_authority`. Canonical Generation 18 has
-8,125 functions, 14,243 contracts, 216 `C1_CANDIDATE_PARTIAL` functions, seven
-`C2_BOUNDED_RUNTIME` functions, 7,902 opaque functions, 18 open residuals, and
-zero `REBUILD_READY` contracts. Its exact READY is `4ae3a7b8…d97e`; frozen
-reducer `ee8bddfb…bad74`. Generation 73 is a projection oracle only. Generation
+`developer_state.json` → `current_re_authority`. Canonical Generation 19 has
+8,126 functions, 14,245 contracts, 217 `C1_CANDIDATE_PARTIAL` functions, seven
+`C2_BOUNDED_RUNTIME` functions, 7,902 opaque functions, 17 open residuals, and
+zero `REBUILD_READY` contracts. Its exact READY is `f83dbb6e…ab9a`; frozen
+reducer `151acbe5…f3e2`. Generation 73 is a projection oracle only. Generation
 14 closed one residual as the consumer-bound TokenArchive dispatch-data
 partition. Generation 15 replaces another 63-byte police-open residual with
 15 NOP bytes, the exact 42-byte/17-instruction Mission-native
@@ -78,11 +78,15 @@ explicitly open.
 Generation 18 adds only a static C1 TokenArchive parser/corpus/factory/direct-
 writer contract; its runtime and refuter verdicts remain `UNSCORED`, runtime
 replays are zero, and its rebuild mapping remains partial.
+Generation 19 adds only the exact UnsetObjective 3-byte NOP / 13-byte wrapper /
+3-byte NOP partition and its C1 static conditional-call/bit-clear contract.
+Opaque callee `0x004E5BD0`, runtime/HUD/lifetime behavior, and complete rebuild
+parity remain open; live Ghidra is unchanged.
 The separately read-back live Ghidra ceremony added the SetPos function name,
 signature, and comment without changing executable bytes, instructions, data,
 or references. The bounded ApplyDamage C2 remains one replicated 1,000-damage,
 zero-shield entry/write path, not an all-path law. The next valid campaign
-generation is 19.
+generation is 20.
 
 **Historical Gen10 immutable admission (2026-08-04):** READY SHA-256
 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,

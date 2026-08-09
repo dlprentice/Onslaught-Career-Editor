@@ -52,11 +52,11 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-09) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen18 has
-functions=**8125**, C1=**216**, C2=**7**, function semantic OPAQUE=**7902**,
-contract C0_OPAQUE=**14020**, OPEN residual=**18**, complete_RE=**false**, and
-REBUILD_READY=**0**. Its READY is `4ae3a7b8…d97e`; reducer
-`ee8bddfb…bad74`. Generation 73 is projection-oracle evidence only. Seven
+`developer_state.json` → `current_re_authority`. Canonical Gen19 has
+functions=**8126**, C1=**217**, C2=**7**, function semantic OPAQUE=**7902**,
+contract C0_OPAQUE=**14021**, OPEN residual=**17**, complete_RE=**false**, and
+REBUILD_READY=**0**. Its READY is `f83dbb6e…ab9a`; reducer
+`151acbe5…f3e2`. Generation 73 is projection-oracle evidence only. Seven
 wrappers remain name-only/opaque and NearClone remains unchanged. ApplyDamage
 is now C2 only for one replicated 1,000-damage zero-shield path with an exact
 overkill parity vector; positive-shield behavior and other paths remain open.
@@ -69,8 +69,11 @@ inputs, and failures remain open. Gen17 adds only LockHit's measured non-null,
 sole-node removal path; all other list paths and rebuild ownership remain open.
 Gen18 adds only an exact static TokenArchive parser/corpus/factory/direct-writer
 contract at C1; runtime/refuter verdicts stay `UNSCORED`, runtime replays are
-zero, and its rebuild remains partial. The next valid campaign generation is
-19. C1 static evidence is not C2 runtime
+zero, and its rebuild remains partial. Gen19 then adds only the exact
+UnsetObjective 3-byte NOP / 13-byte wrapper / 3-byte NOP partition and its C1
+static call/bit-clear contract; opaque callee and runtime behavior remain open,
+the rebuild is partial, and live Ghidra is unchanged. The next valid campaign
+generation is 20. C1 static evidence is not C2 runtime
 proof or parity, and bounded C2 is not rebuild-ready.
 
 ## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
@@ -78,9 +81,9 @@ proof or parity, and bounded C2 is not rebuild-ready.
 - Generation 10 was the machine-local range/contract admission then: 8,124 functions,
   6,117 residuals, 162,017 unmapped executable bytes, 14,241 contracts, and 584
   exact supersessions. At that handoff four contracts were `C2_BOUNDED_RUNTIME`
-   (canonical Gen18 retains those **four**, adds the separately re-proved
+   (canonical Gen19 retains those **four**, adds the separately re-proved
    zero-shield ApplyDamage path as a fifth, and the bounded SetPos position-copy
-   path as a sixth, and LockHit's single-node removal path as a seventh). None is rebuild-ready. Generation 9's five target-lock
+   path as a sixth, and LockHit's single-node removal path as a seventh). None is rebuild-ready. Gen18 adds static TokenArchive C1 and Gen19 adds static UnsetObjective C1 without runtime closure. Generation 9's five target-lock
   changes remain same-range metadata/evidence corrections; Generation 10
   separately admitted three bounded Level 521 call-context contracts.
 - A replicated disposable bridge redirected only the four `ShowCmds`/`ShowVars`

@@ -36,6 +36,7 @@ import re_mission_native_setpos_reproof as mission_setpos_reproof
 import re_mission_native_setpos_runtime as mission_setpos_runtime
 import re_lockhit_bounded_contract as lockhit_contract
 import re_tokenarchive_parser_contract as tokenarchive_parser_contract
+import re_mission_native_unsetobjective_reproof as mission_unsetobjective_reproof
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -151,6 +152,12 @@ TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND = (
 )
 TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA = (
     "bea.re.static-tokenarchive-readnexttoken-parser-contract-advance.v1"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND = (
+    "MISSION_NATIVE_UNSETOBJECTIVE_BOUNDARY_AND_STATIC_CONTRACT_REPROOF"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA = (
+    "bea.re.mission-native-unsetobjective-boundary-static-contract-reproof-advance.v1"
 )
 TTD_CALL_CONTEXT_PROOF_SCHEMA = "bea-level521-impact-schema3-proof.v2"
 TTD_CALL_CONTEXT_PARENT_RELATIVE = (
@@ -546,6 +553,60 @@ TOKENARCHIVE_PARSER_EXPECTED_GENERATION18_COUNTS = {
     "questions": 15254,
     "adjudications": 6097,
 }
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-18-tokenarchive-parser-contract-v1"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_BYTES = 22974
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256 = (
+    "4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID = (
+    "ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-18-tokenarchive-parser-contract-authority.ready.json"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_BYTES = 12742
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_SHA256 = (
+    "c13dcef4aaae7c95b08bd75a502069a47274e9d577b48b05c57a5f3adcf6b7a6"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PARENT_COUNTS = dict(
+    TOKENARCHIVE_PARSER_EXPECTED_GENERATION18_COUNTS
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE = Path(
+    "local-lab/mission-native-unsetobjective-boundary-reproof-20260809-v1"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_BYTES = 16268
+MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256 = (
+    "c6ae222d26b37863ae575b5af32ddf1a64d8660cb45adb60965610704ec37858"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_BYTES = 52888
+MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_SHA256 = (
+    "1d67823b54c465986b8b2e83ea9e1b278eef2e5dd91e509404399c21eba456fb"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_BYTES = 63729
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_SHA256 = (
+    "d322e8eb970b148cee2a7635ee420631726f50f0a8655afa491fe0284e13a385"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_OWNER_BYTES = 55385
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_OWNER_SHA256 = (
+    "157a95bb6bc4802702adcd74422c09765710563d1e50785bfd2074882c6371ae"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_TEST_BYTES = 27944
+MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_TEST_SHA256 = (
+    "4315e6c96ebdc6c2d27e5e19d91a47c5af4d6d190a135a2051b20132c401f95a"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_EXPECTED_GENERATION19_COUNTS = {
+    **MISSION_NATIVE_UNSETOBJECTIVE_PARENT_COUNTS,
+    "functions": 8126,
+    "residuals": 6119,
+    "questions": 15255,
+    "contracts": 14245,
+    "adjudications": 6099,
+    "supersessions": 592,
+}
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
 )
@@ -931,6 +992,21 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _json_load_strict(text: str, label: str) -> object:
+    def object_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise CampaignError(f"{label} contains duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    try:
+        return json.loads(text, object_pairs_hook=object_pairs)
+    except json.JSONDecodeError as exc:
+        raise CampaignError(f"{label} is not valid JSON: {exc}") from exc
+
+
 def _reducer_sources() -> list[tuple[str, str, Path]]:
     """Return the complete deterministic reducer dependency set.
 
@@ -1001,6 +1077,33 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             Path(tokenarchive_parser_contract.__file__).resolve(),
         ),
         (
+            "mission-native-unsetobjective-reproof",
+            "_reducer/tools/re_mission_native_unsetobjective_reproof.py",
+            Path(mission_unsetobjective_reproof.__file__).resolve(),
+        ),
+        (
+            "mission-native-unsetobjective-instruction-exporter",
+            "_reducer/tools/ExportInstructionsAroundAddresses.java",
+            Path(__file__).resolve().with_name(
+                "ExportInstructionsAroundAddresses.java"
+            ),
+        ),
+        (
+            "mission-native-unsetobjective-xref-exporter",
+            "_reducer/tools/ExportXrefsForAddresses.java",
+            Path(__file__).resolve().with_name("ExportXrefsForAddresses.java"),
+        ),
+        (
+            "mission-native-unsetobjective-gpl-source",
+            "_reducer/references/Onslaught/thing.cpp",
+            owner_root / "references/Onslaught/thing.cpp",
+        ),
+        (
+            "mission-native-unsetobjective-gpl-header",
+            "_reducer/references/Onslaught/thing.h",
+            owner_root / "references/Onslaught/thing.h",
+        ),
+        (
             "tokenarchive-parser-ghidra-decompile-tool",
             "_reducer/tools/ExportFunctionsByAddressDecompile.java",
             Path(__file__).resolve().with_name(
@@ -1034,6 +1137,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "mission-native-setpos-parity-owner",
             "_reducer/rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
             owner_root / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
+        ),
+        (
+            "mission-native-unsetobjective-parity-registry",
+            "_reducer/rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs",
         ),
         (
             "mission-native-setpos-parity-value",
@@ -2277,6 +2385,7 @@ def _validate_campaign_relations(
     reseal_context = None
     tokenarchive_context = None
     setpos_context = None
+    unsetobjective_context = None
     if _integer(receipt.get("generation"), -1) == 11 or (
         isinstance(current_advance, dict)
         and current_advance.get("kind") == GEN73_RESEAL_RECOVERY_ADVANCE_KIND
@@ -2748,6 +2857,120 @@ def _validate_campaign_relations(
             gen11_receipt.get("advance"),
             campaign_root=None,
         )
+    generation19_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 19
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation19_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind")
+        != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND
+        or current_advance.get("schema")
+        != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA
+        or current_advance.get("branchId")
+        != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 19 recovery campaign is not the exact Mission-native UnsetObjective advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective advance lacks exact recovery ancestry"
+        )
+    if generation19_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND
+    ):
+        unsetobjective_context = (
+            _validate_mission_native_unsetobjective_advance_relation(
+                rows,
+                receipt,
+                current_advance,
+                campaign_root=campaign_root,
+            )
+        )
+        gen18_root = (
+            REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE
+        ).resolve()
+        gen18_receipt = _runtime_json(
+            gen18_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen18 advance",
+        )
+        _validate_tokenarchive_parser_advance_relation(
+            _campaign_rows_from_root(gen18_root),
+            gen18_receipt,
+            gen18_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen17_root = (REPO_ROOT / TOKENARCHIVE_PARSER_PARENT_RELATIVE).resolve()
+        gen17_receipt = _runtime_json(
+            gen17_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen17 advance",
+        )
+        _validate_lockhit_bounded_advance_relation(
+            _campaign_rows_from_root(gen17_root),
+            gen17_receipt,
+            gen17_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen16_root = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+        gen16_receipt = _runtime_json(
+            gen16_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen16 advance",
+        )
+        _validate_mission_native_setpos_runtime_advance_relation(
+            _campaign_rows_from_root(gen16_root),
+            gen16_receipt,
+            gen16_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen15_root = (
+            REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+        ).resolve()
+        gen15_receipt = _runtime_json(
+            gen15_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen15 advance",
+        )
+        setpos_context = _validate_mission_native_setpos_advance_relation(
+            _campaign_rows_from_root(gen15_root),
+            gen15_receipt,
+            gen15_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen14_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+        gen14_receipt = _runtime_json(
+            gen14_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen14 advance",
+        )
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            _campaign_rows_from_root(gen14_root),
+            gen14_receipt,
+            gen14_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "Mission-native UnsetObjective inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
     generation9_recovery_lineage = bool(
         _integer(receipt.get("generation"), -1) == 9
         and partition_context is not None
@@ -2967,11 +3190,23 @@ def _validate_campaign_relations(
             setpos_context is not None
             and adjudication_id in setpos_context["nonsemanticAdjudicationIds"]
         )
+        unsetobjective_partition_adjudication = bool(
+            unsetobjective_context is not None
+            and adjudication_id
+            == unsetobjective_context["partitionAdjudicationId"]
+        )
+        unsetobjective_nonsemantic_adjudication = bool(
+            unsetobjective_context is not None
+            and adjudication_id
+            in unsetobjective_context["nonsemanticAdjudicationIds"]
+        )
         contract = (
             partition_context["retiredContract"]
             if partition_adjudication
             else setpos_context["retiredContract"]
             if setpos_partition_adjudication
+            else unsetobjective_context["retiredContract"]
+            if unsetobjective_partition_adjudication
             else contract_by_id.get(str(adjudication.get("baseContractId", "")))
         )
         if contract is None or adjudication.get("entityKey") != contract.get("entityKey"):
@@ -2995,6 +3230,7 @@ def _validate_campaign_relations(
                 or reseal_residual_adjudication
                 or tokenarchive_residual_adjudication
                 or setpos_nonsemantic_adjudication
+                or unsetobjective_nonsemantic_adjudication
             )
             else semantic_promotion == (verdict == "SURVIVED")
         )
@@ -3244,6 +3480,16 @@ def _validate_campaign_relations(
                 expected_setpos_supersession is not None
                 and supersession == expected_setpos_supersession
             )
+        elif kind == MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND:
+            expected_unsetobjective_supersession = (
+                unsetobjective_context["supersessionRows"].get(supersession_id)
+                if unsetobjective_context is not None
+                else None
+            )
+            kind_valid = bool(
+                expected_unsetobjective_supersession is not None
+                and supersession == expected_unsetobjective_supersession
+            )
         elif kind in GHIDRA_PARTITION_ADVANCE_KINDS:
             function = function_by_entity.get(new)
             residual = residual_by_entity.get(new)
@@ -3374,6 +3620,7 @@ def _validate_campaign_relations(
             and (
                 kinds.issubset(GHIDRA_PARTITION_ADVANCE_KINDS)
                 or kinds == {MISSION_NATIVE_SETPOS_ADVANCE_KIND}
+                or kinds == {MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND}
             )
         ):
             raise CampaignError(
@@ -4585,6 +4832,119 @@ def _verify_tokenarchive_parser_parent_campaign(root: Path) -> dict:
     return verified
 
 
+def _verify_mission_native_unsetobjective_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen18 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native UnsetObjective canonical Gen18 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native UnsetObjective parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "Mission-native UnsetObjective parent is not exact canonical Gen18"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_RELATIVE
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Mission-native UnsetObjective parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path,
+            "Mission-native UnsetObjective parent authority",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native UnsetObjective parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "Mission-native UnsetObjective canonical Gen18 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "Mission-native UnsetObjective parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Mission-native UnsetObjective parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "Mission-native UnsetObjective parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"),
+        "Mission-native UnsetObjective parent selection",
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 18
+        or receipt.get("counts") != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_COUNTS
+        or reducer.get("id") != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID
+        or advance.get("kind") != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_KIND
+        or advance.get("schema") != TOKENARCHIVE_PARSER_CONTRACT_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or authority.get("schema")
+        != "bea.re.tokenarchive-parser-generation18-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass")
+        != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256
+        or canonical.get("reducerId")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective canonical Gen18 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=1200,
+            expected_ready_sha256=MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256,
+            expected_reducer_id=MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "Mission-native UnsetObjective parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Mission-native UnsetObjective parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "Mission-native UnsetObjective parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION18_REPLAY"
+    return verified
+
+
 def _question_has_progress(row: dict[str, str]) -> bool:
     return (
         row.get("state") != "OPEN"
@@ -5256,6 +5616,12 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 parent_receipt = _verify_tokenarchive_parser_parent_campaign(
                     parent_path
                 )
+            elif kind == MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND:
+                parent_receipt = (
+                    _verify_mission_native_unsetobjective_parent_campaign(
+                        parent_path
+                    )
+                )
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -5644,6 +6010,28 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
                 )
+            elif kind == MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND:
+                if (
+                    advance.get("schema")
+                    != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA
+                ):
+                    raise CampaignError(
+                        "Mission-native UnsetObjective campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "Mission-native UnsetObjective proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"),
+                    "Mission-native UnsetObjective proof root",
+                )
+                advance_mission_native_unsetobjective_reproof(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
             elif kind == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND:
                 if advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA:
                     raise CampaignError(
@@ -5692,9 +6080,13 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
 def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
     receipt_path = campaign / "campaign.ready.json"
     try:
-        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        receipt = _json_load_strict(
+            receipt_path.read_text(encoding="utf-8"), "campaign READY receipt"
+        )
+    except OSError as exc:
         raise CampaignError(f"cannot read campaign READY receipt: {exc}") from exc
+    if not isinstance(receipt, dict):
+        raise CampaignError("campaign READY receipt root is not an object")
     if receipt.get("schema") != SCHEMA:
         raise CampaignError(f"unsupported campaign schema: {receipt.get('schema')!r}")
     _validate_reducer_bundle(campaign.resolve(), receipt)
@@ -5765,6 +6157,8 @@ def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
                         )
                         or {row.get("kind") for row in grouped}
                         == {MISSION_NATIVE_SETPOS_ADVANCE_KIND}
+                        or {row.get("kind") for row in grouped}
+                        == {MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND}
                     )
                 )
             )
@@ -6247,8 +6641,10 @@ def _runtime_artifact_path(
 
 def _runtime_json(path: Path, label: str) -> dict:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = _json_load_strict(
+            path.read_text(encoding="utf-8"), f"runtime contract {label}"
+        )
+    except OSError as exc:
         raise CampaignError(f"runtime contract {label} is not valid JSON: {exc}") from exc
     if not isinstance(value, dict):
         raise CampaignError(f"runtime contract {label} JSON root is not an object")
@@ -20757,7 +21153,11 @@ def _validate_mission_native_setpos_runtime_proof(proof_root: Path) -> dict:
         raise CampaignError(
             "Mission-native SetPos runtime proof is not the reviewed immutable root"
         )
-    owner_root = Path(__file__).resolve().parents[1]
+    # Generation 16 is immutable history. Reconstruct its parity evidence from
+    # the canonical frozen reducer rather than from the mutable current checkout.
+    owner_root = (
+        REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE / "_reducer"
+    ).resolve()
     ready_path = plain / mission_setpos_runtime.READY_NAME
     author_path = Path(mission_setpos_runtime.__file__).resolve()
     parity_owner = (
@@ -23546,6 +23946,1273 @@ def advance_tokenarchive_parser_contract(
         raise
 
 
+def _mission_native_unsetobjective_policies() -> list[str]:
+    return [
+        "The exact Gen18 residual 0x00535EDD..0x00535EF0 is retired only through one disjoint 3-byte NOP / 13-byte function / 3-byte NOP partition.",
+        "The shipped UnsetObjective registry binding, unique entry reference, every residual-byte xref, pristine wrapper/callee bytes, parent authority, and current rebuild owners are exact-pinned.",
+        "The new function is bounded to C1_CANDIDATE_PARTIAL: retail bytes prove a literal-false call into CThing__SetObjective and its bounded flag/call shape, but not the opaque 0x004E5BD0 effect or runtime behavior.",
+        "The historical residual-classification and native-boundary questions close; one function-contract successor remains open for the opaque call, runtime effects, failures, and presentation.",
+        "The two NOP children are terminal padding with no behavior question; the retired residual and code-candidate identities survive only through hash-bound supersessions.",
+        "The rebuild maps only the proved literal true/false objective flag transition and keeps retail-only opaque effects explicit; it remains PARTIAL_CONTRACT.",
+        "This generation performs no gameplay, TTD replay, executable write, or live Ghidra mutation; any Ghidra promotion is a separate backed-up ceremony.",
+    ]
+
+
+def _mission_native_unsetobjective_partition_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256,
+                MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+                mission_unsetobjective_reproof.OLD_CONTRACT,
+                mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+                "SURVIVED",
+                "TERMINAL_EXACT_PARTITION",
+            )
+        )
+    )[:16]
+
+
+def _mission_native_unsetobjective_boundary_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256,
+                MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+                mission_unsetobjective_reproof.NEW_CONTRACT,
+                mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+                "SURVIVED",
+                "FUNCTION_BOUNDARY_C1_STATIC",
+            )
+        )
+    )[:16]
+
+
+def _validate_mission_native_unsetobjective_inputs(proof_root: Path) -> dict[str, object]:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native UnsetObjective proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native UnsetObjective proof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "Mission-native UnsetObjective proof is not the reviewed immutable root"
+        )
+    source_root = Path(__file__).resolve().parents[1]
+    ready_path = plain / mission_unsetobjective_reproof.READY_NAME
+    author_path = Path(mission_unsetobjective_reproof.__file__).resolve()
+    registry_path = (
+        source_root / "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs"
+    )
+    owner_path = (
+        source_root / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs"
+    )
+    test_path = (
+        source_root / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs"
+    )
+    exact_files = (
+        (
+            "proof READY",
+            ready_path,
+            MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_BYTES,
+            MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+        ),
+        (
+            "proof author",
+            author_path,
+            MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_BYTES,
+            MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_SHA256,
+        ),
+        (
+            "rebuild registry",
+            registry_path,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_BYTES,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_SHA256,
+        ),
+        (
+            "rebuild owner",
+            owner_path,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_OWNER_BYTES,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_OWNER_SHA256,
+        ),
+        (
+            "rebuild test",
+            test_path,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_TEST_BYTES,
+            MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_TEST_SHA256,
+        ),
+    )
+    for label, path, expected_bytes, expected_sha in exact_files:
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native UnsetObjective {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native UnsetObjective {label} is not plain: {exc}"
+            ) from exc
+        if (
+            resolved.stat().st_nlink != 1
+            or resolved.stat().st_size != expected_bytes
+            or coverage.sha256_of(resolved) != expected_sha
+        ):
+            raise CampaignError(
+                f"Mission-native UnsetObjective {label} identity differs"
+            )
+    try:
+        proof = mission_unsetobjective_reproof.read_json(ready_path)
+        derived = mission_unsetobjective_reproof.derive(REPO_ROOT)
+        generated = str(proof.get("generatedAtUtc", ""))
+        if not generated.endswith("Z"):
+            raise ValueError("proof timestamp is not UTC")
+        datetime.fromisoformat(generated[:-1] + "+00:00")
+        stable = dict(proof)
+        del stable["generatedAtUtc"]
+        if stable != derived:
+            raise ValueError("proof content differs from rederived evidence")
+    except (
+        mission_unsetobjective_reproof.ProofError,
+        KeyError,
+        IndexError,
+        ValueError,
+        OSError,
+        struct.error,
+    ) as exc:
+        raise CampaignError(
+            f"Mission-native UnsetObjective proof does not rederive: {exc}"
+        ) from exc
+    parent = _runtime_mapping(
+        proof.get("parent"), "Mission-native UnsetObjective proof parent"
+    )
+    adjudication = _runtime_mapping(
+        proof.get("adjudication"), "Mission-native UnsetObjective adjudication"
+    )
+    static_proof = _runtime_mapping(
+        proof.get("staticProof"), "Mission-native UnsetObjective static proof"
+    )
+    bounded = _runtime_mapping(
+        proof.get("boundedContract"), "Mission-native UnsetObjective contract"
+    )
+    ghidra = _runtime_mapping(
+        proof.get("ghidra"), "Mission-native UnsetObjective Ghidra evidence"
+    )
+    if (
+        proof.get("schema") != mission_unsetobjective_reproof.SCHEMA
+        or proof.get("verdict") != "PASS"
+        or proof.get("claim") != mission_unsetobjective_reproof.CLAIM
+        or parent.get("generation") != 18
+        or parent.get("readySha256")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256
+        or parent.get("reducerId")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID
+        or parent.get("authorityReceiptSha256")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_AUTHORITY_SHA256
+        or adjudication.get("oldEntityKey")
+        != mission_unsetobjective_reproof.OLD_ENTITY
+        or adjudication.get("newFunctionEntityKey")
+        != mission_unsetobjective_reproof.NEW_ENTITY
+        or adjudication.get("newFunctionContractId")
+        != mission_unsetobjective_reproof.NEW_CONTRACT
+        or adjudication.get("questionsAddressed")
+        != [
+            mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+            mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+        ]
+        or adjudication.get("successorQuestionId")
+        != mission_unsetobjective_reproof.SUCCESSOR_QUESTION
+        or adjudication.get("newName") != "IScript__UnsetObjective"
+        or adjudication.get("nativeShippedName") != "UnsetObjective"
+        or adjudication.get("semanticGradeCeiling") != "C1_STATIC"
+        or adjudication.get("semanticPromotionApplied") is not False
+        or [row.get("bytes") for row in static_proof.get("partition", [])]
+        != [3, 13, 3]
+        or static_proof.get("instructionCount") != 4
+        or static_proof.get("calleeCleanupBytes") != 12
+        or bounded.get("literalArgument") is not False
+        or bounded.get("alreadyFalsePath") != "NO_CALL_NO_WRITE"
+        or bounded.get("writes")
+        != "CThing_PLUS_0x2C_FLAG_CLEAR_ON_TRANSITION;_0x004E5BD0_EFFECTS_UNCLAIMED"
+        or ghidra.get("residualByteAddressesChecked") != 19
+        or ghidra.get("interiorInboundReferences") != 0
+        or ghidra.get("proposedBodyCurrentlyHasFunction") is not False
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective proof claim boundary differs"
+        )
+    return {
+        "proof": proof,
+        "proofStamp": {
+            **coverage.file_stamp(ready_path),
+            "path": mission_unsetobjective_reproof.READY_NAME,
+        },
+        "measuredAtUtc": str(proof["generatedAtUtc"]),
+    }
+
+
+def _mission_native_unsetobjective_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+    partition_adjudication_id: str,
+    boundary_adjudication_id: str,
+    supersession_ids: list[str],
+) -> dict[str, object]:
+    if before["scenarios"] != after["scenarios"] or before["levers"] != after["levers"]:
+        raise CampaignError(
+            "Mission-native UnsetObjective changed scenario or lever ledgers"
+        )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"Mission-native UnsetObjective delta duplicates {field}"
+            )
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    residual_before = keyed(before["residuals"], "entityKey")
+    residual_after = keyed(after["residuals"], "entityKey")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    supersession_before = keyed(before["supersessions"], "supersessionId")
+    supersession_after = keyed(after["supersessions"], "supersessionId")
+    expected_added_contracts = {
+        mission_unsetobjective_reproof.NEW_CONTRACT,
+        mission_unsetobjective_reproof.PREFIX_CONTRACT,
+        mission_unsetobjective_reproof.SUFFIX_CONTRACT,
+    }
+    if (
+        set(function_after) - set(function_before)
+        != {mission_unsetobjective_reproof.NEW_ENTITY}
+        or set(function_before) - set(function_after)
+        or any(function_after[key] != value for key, value in function_before.items())
+        or set(residual_before) - set(residual_after)
+        != {mission_unsetobjective_reproof.OLD_ENTITY}
+        or set(residual_after) - set(residual_before)
+        != {
+            mission_unsetobjective_reproof.PREFIX_ENTITY,
+            mission_unsetobjective_reproof.SUFFIX_ENTITY,
+        }
+        or any(
+            residual_after[key] != value
+            for key, value in residual_before.items()
+            if key != mission_unsetobjective_reproof.OLD_ENTITY
+        )
+        or set(contract_before) - set(contract_after)
+        != {mission_unsetobjective_reproof.OLD_CONTRACT}
+        or set(contract_after) - set(contract_before) != expected_added_contracts
+        or any(
+            contract_after[key] != value
+            for key, value in contract_before.items()
+            if key != mission_unsetobjective_reproof.OLD_CONTRACT
+        )
+        or set(question_after) - set(question_before)
+        != {mission_unsetobjective_reproof.SUCCESSOR_QUESTION}
+        or set(question_before) - set(question_after)
+        or {
+            key
+            for key, value in question_before.items()
+            if question_after[key] != value
+        }
+        != {
+            mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+            mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+        }
+        or set(adjudication_after) - set(adjudication_before)
+        != {partition_adjudication_id, boundary_adjudication_id}
+        or set(adjudication_before) - set(adjudication_after)
+        or any(
+            adjudication_after[key] != value
+            for key, value in adjudication_before.items()
+        )
+        or set(supersession_after) - set(supersession_before)
+        != set(supersession_ids)
+        or set(supersession_before) - set(supersession_after)
+        or any(
+            supersession_after[key] != value
+            for key, value in supersession_before.items()
+        )
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective changed rows outside its exact partition"
+        )
+    question_changes = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if question_before[question_id][field]
+            != question_after[question_id][field]
+        )
+        for question_id in (
+            mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+            mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+        )
+    }
+    return {
+        "functionEntityAdded": mission_unsetobjective_reproof.NEW_ENTITY,
+        "residualEntityRemoved": mission_unsetobjective_reproof.OLD_ENTITY,
+        "residualEntitiesAdded": [
+            mission_unsetobjective_reproof.PREFIX_ENTITY,
+            mission_unsetobjective_reproof.SUFFIX_ENTITY,
+        ],
+        "contractIdRemoved": mission_unsetobjective_reproof.OLD_CONTRACT,
+        "contractIdsAdded": sorted(expected_added_contracts),
+        "questionRowsChanged": question_changes,
+        "questionIdAdded": mission_unsetobjective_reproof.SUCCESSOR_QUESTION,
+        "adjudicationIdsAdded": [
+            partition_adjudication_id,
+            boundary_adjudication_id,
+        ],
+        "supersessionIdsAdded": supersession_ids,
+        "unchangedLedgers": ["scenarios", "levers"],
+        "partitionBytes": 19,
+        "functionBytes": 13,
+        "paddingBytes": 6,
+        "functionsAdded": 1,
+        "namesAdded": 1,
+        "openQuestionsClosed": 2,
+        "openQuestionsAdded": 1,
+        "semanticGradeCeiling": "C1_STATIC",
+        "liveGhidraMutation": False,
+        "executableBytesChanged": 0,
+    }
+
+
+def _mission_native_unsetobjective_rows_and_advance(
+    campaign: Path,
+    proof_root: Path,
+    base_receipt: dict,
+) -> tuple[dict[str, list[dict[str, str]]], dict[str, object]]:
+    expected_parent = (
+        REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE
+    ).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "Mission-native UnsetObjective row builder requires exact canonical Gen18"
+        )
+    reducer = _runtime_mapping(
+        base_receipt.get("reducer"), "Mission-native UnsetObjective parent reducer"
+    )
+    if (
+        _integer(base_receipt.get("generation"), -1) != 18
+        or base_receipt.get("counts")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_COUNTS
+        or reducer.get("id") != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("Mission-native UnsetObjective parent receipt differs")
+    validated = _validate_mission_native_unsetobjective_inputs(proof_root)
+    rows = _campaign_rows_from_root(campaign)
+    before = json.loads(json.dumps(rows))
+    measured_at = str(validated["measuredAtUtc"])
+    measured_date = measured_at[:10]
+
+    def one(
+        items: list[dict[str, str]], field: str, value: str, label: str
+    ) -> dict[str, str]:
+        matches = [row for row in items if row.get(field) == value]
+        if len(matches) != 1:
+            raise CampaignError(
+                f"Mission-native UnsetObjective {label} is absent or ambiguous"
+            )
+        return matches[0]
+
+    retired_residual = dict(
+        one(
+            rows["residuals"],
+            "entityKey",
+            mission_unsetobjective_reproof.OLD_ENTITY,
+            "retired residual",
+        )
+    )
+    retired_contract = dict(
+        one(
+            rows["contracts"],
+            "contractId",
+            mission_unsetobjective_reproof.OLD_CONTRACT,
+            "retired residual contract",
+        )
+    )
+    residual_question = one(
+        rows["questions"],
+        "questionId",
+        mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+        "residual question",
+    )
+    candidate_question = one(
+        rows["questions"],
+        "questionId",
+        mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+        "native-boundary question",
+    )
+    if (
+        retired_residual.get("startVa") != "0x00535edd"
+        or retired_residual.get("endVa") != "0x00535ef0"
+        or retired_residual.get("bytes") != "19"
+        or retired_residual.get("terminalState") != "OPEN_CLASSIFICATION"
+        or retired_residual.get("questionIds")
+        != mission_unsetobjective_reproof.RESIDUAL_QUESTION
+        or retired_contract.get("entityKey")
+        != mission_unsetobjective_reproof.OLD_ENTITY
+        or retired_contract.get("contractState") != "OPEN_CLASSIFICATION"
+        or retired_contract.get("questionIds")
+        != mission_unsetobjective_reproof.RESIDUAL_QUESTION
+        or residual_question.get("entityKey")
+        != mission_unsetobjective_reproof.OLD_ENTITY
+        or residual_question.get("state") != "OPEN"
+        or candidate_question.get("entityKey")
+        != mission_unsetobjective_reproof.CANDIDATE_ENTITY
+        or candidate_question.get("questionType") != "NATIVE_BOUNDARY"
+        or candidate_question.get("state") != "OPEN"
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective Gen18 frontier shape differs"
+        )
+    proof = _runtime_mapping(
+        validated.get("proof"), "Mission-native UnsetObjective proof"
+    )
+    inputs = _runtime_mapping(
+        proof.get("inputs"), "Mission-native UnsetObjective proof inputs"
+    )
+
+    def input_ref(relative: str) -> str:
+        stamp = _runtime_mapping(
+            inputs.get(relative), f"Mission-native UnsetObjective input {relative}"
+        )
+        if stamp.get("path") != relative:
+            raise CampaignError(
+                f"Mission-native UnsetObjective input route differs: {relative}"
+            )
+        return f"{relative}#sha256={stamp['sha256']}"
+
+    proof_relative = MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE.as_posix()
+    evidence_references = [
+        f"{proof_relative}/{mission_unsetobjective_reproof.READY_NAME}#sha256={MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256}",
+        f"tools/re_mission_native_unsetobjective_reproof.py#sha256={MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_SHA256}",
+        input_ref("local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"),
+        input_ref("local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv"),
+        input_ref("local-lab/re-campaign-incident-recovery-20260808-v1/gen73-claim-closure-v1/closure.ready.json"),
+        input_ref("local-lab/re-campaign-incident-recovery-20260808-v1/gen73-claim-closure-v1/police-dispositions.tsv"),
+        input_ref(f"{proof_relative}/ghidra-readonly-byte-complete/instructions.tsv"),
+        input_ref(f"{proof_relative}/ghidra-readonly-byte-complete/xrefs.tsv"),
+        input_ref("references/Onslaught/thing.cpp"),
+        input_ref("references/Onslaught/thing.h"),
+        f"rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs#sha256={MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs#sha256={MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_OWNER_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs#sha256={MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_TEST_SHA256}",
+    ]
+    evidence_refs = ";".join(evidence_references)
+    evidence_hashes = list(
+        dict.fromkeys(
+            [reference.rsplit("#sha256=", 1)[1] for reference in evidence_references]
+            + [
+                mission_unsetobjective_reproof.RESIDUAL_SHA256,
+                mission_unsetobjective_reproof.PADDING_SHA256,
+                mission_unsetobjective_reproof.BODY_SHA256,
+                mission_unsetobjective_reproof.RANGE_SHA256,
+                mission_unsetobjective_reproof.CALLEE_SHA256,
+                mission_unsetobjective_reproof.TWIN_SHA256,
+            ]
+        )
+    )
+    runtime_falsifier = (
+        "A disposable Mission scenario or short exact trace shows UnsetObjective "
+        "does not pass literal false to CThing__SetObjective, mutates a different "
+        "receiver/flag, or produces effects inconsistent with the bounded static path."
+    )
+    padding_falsifier = (
+        "Any non-NOP byte, instruction/function membership, incoming reference, "
+        "or overlap contradicts terminal padding classification."
+    )
+    children = [
+        (0x00535EDD, 0x00535EE0, mission_unsetobjective_reproof.PREFIX_ENTITY, "PADDING"),
+        (0x00535EE0, 0x00535EED, mission_unsetobjective_reproof.NEW_ENTITY, "FUNCTION"),
+        (0x00535EED, 0x00535EF0, mission_unsetobjective_reproof.SUFFIX_ENTITY, "PADDING"),
+    ]
+    rows["residuals"] = [
+        row
+        for row in rows["residuals"]
+        if row["entityKey"] != mission_unsetobjective_reproof.OLD_ENTITY
+    ]
+    rows["contracts"] = [
+        row
+        for row in rows["contracts"]
+        if row["contractId"] != mission_unsetobjective_reproof.OLD_CONTRACT
+    ]
+    padding_rows = [
+        {
+            "entityKey": mission_unsetobjective_reproof.PREFIX_ENTITY,
+            "startVa": "0x00535edd",
+            "endVa": "0x00535ee0",
+            "bytes": 3,
+            "observedBytes": 0,
+            "observationState": "DARK",
+            "classification": "PADDING",
+            "classificationVerdict": "FORMAL_STATIC_PROOF_SURVIVED",
+            "terminalState": "TERMINAL_PADDING",
+            "bytePattern": "PADDING_LIKE_BYTES",
+            "prevFunc": "FUN_00535ed0",
+            "nextFunc": "IScript__UnsetObjective",
+            "campaignState": "TERMINAL_PADDING",
+            "lever": "NONE",
+            "requiresElevation": False,
+            "cheapestFalsifier": padding_falsifier,
+            "questionIds": "",
+            "lastMeasurementDate": measured_date,
+        },
+        {
+            "entityKey": mission_unsetobjective_reproof.SUFFIX_ENTITY,
+            "startVa": "0x00535eed",
+            "endVa": "0x00535ef0",
+            "bytes": 3,
+            "observedBytes": 0,
+            "observationState": "DARK",
+            "classification": "PADDING",
+            "classificationVerdict": "FORMAL_STATIC_PROOF_SURVIVED",
+            "terminalState": "TERMINAL_PADDING",
+            "bytePattern": "PADDING_LIKE_BYTES",
+            "prevFunc": "IScript__UnsetObjective",
+            "nextFunc": "FUN_00535ef0",
+            "campaignState": "TERMINAL_PADDING",
+            "lever": "NONE",
+            "requiresElevation": False,
+            "cheapestFalsifier": padding_falsifier,
+            "questionIds": "",
+            "lastMeasurementDate": measured_date,
+        },
+    ]
+    rows["residuals"].extend(padding_rows)
+    rows["residuals"].sort(key=lambda row: int(str(row["startVa"]), 16))
+    new_function = {
+        "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+        "entryVa": "0x00535ee0",
+        "entryRva": "0x00135ee0",
+        "currentName": "IScript__UnsetObjective",
+        "nativeShippedName": "UnsetObjective",
+        "nativeRegistryStatus": "STATIC_BOUNDARY_REPROVED_GHIDRA_PROMOTION_PENDING",
+        "bodyRangesRva": "0x135ee0-0x135eed",
+        "bodyRangeSetSha256": mission_unsetobjective_reproof.RANGE_SHA256,
+        "bodyBytes": 13,
+        "executionState": "DARK",
+        "observedBytes": 0,
+        "nameClass": "NAMED",
+        "understoodTier": "U2_ADDRESS_CITED",
+        "reachClass": "SCRIPT_VM",
+        "evidenceStates": (
+            "BASELINE_STATIC;ANALYST_METADATA_ONLY;CAMPAIGN_NATIVE_NAME_ALIGNED;"
+            "CAMPAIGN_C1_STATIC_PROOF"
+        ),
+        "resolutionState": "CANDIDATE_CONTRACT",
+        "semanticGrade": "C1_CANDIDATE_PARTIAL",
+        "campaignState": "OPEN_DARK",
+        "lever": "script-native-scenario",
+        "leverConfidence": "PLAUSIBLE",
+        "requiresElevation": False,
+        "cheapestFalsifier": runtime_falsifier,
+        "lastMeasurementDate": measured_date,
+    }
+    rows["functions"].append(new_function)
+    rows["functions"].sort(key=lambda row: int(str(row["entryVa"]), 16))
+    residual_question.update(
+        {
+            "state": "CLOSED_SURVIVED",
+            "attemptCount": _integer(residual_question.get("attemptCount"), 0) + 1,
+            "lastOutcome": "SURVIVED",
+            "lastMeasurementDate": measured_at,
+        }
+    )
+    candidate_question.update(
+        {
+            "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+            "state": "CLOSED_SURVIVED",
+            "attemptCount": _integer(candidate_question.get("attemptCount"), 0) + 1,
+            "lastOutcome": "SURVIVED",
+            "lastMeasurementDate": measured_at,
+        }
+    )
+    successor_question = {
+        "questionId": mission_unsetobjective_reproof.SUCCESSOR_QUESTION,
+        "questionType": "FUNCTION_CONTRACT",
+        "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+        "priority": 1,
+        "score": 930.0,
+        "state": "OPEN",
+        "requiresElevation": False,
+        "recommendedInstrument": "AUTHORED_SAFE_COPY_UNSETOBJECTIVE_STATE_AND_FAILURE_MATRIX",
+        "question": (
+            "What exact runtime, opaque 0x004E5BD0, HUD, lifetime, return, and "
+            "failure behavior complete Mission native UnsetObjective?"
+        ),
+        "cheapestFalsifier": runtime_falsifier,
+        "source": "mission-native-unsetobjective-boundary-reproof-v1",
+        "currentOwner": "recursive-re-campaign",
+        "generation": 19,
+        "attemptCount": 0,
+        "parentQuestionId": mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+        "lastOutcome": "PENDING",
+        "lastMeasurementDate": measured_at,
+    }
+    if any(
+        row.get("questionId") == mission_unsetobjective_reproof.SUCCESSOR_QUESTION
+        for row in rows["questions"]
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective successor question already exists"
+        )
+    rows["questions"].append(successor_question)
+    function_contract = {
+        "contractId": mission_unsetobjective_reproof.NEW_CONTRACT,
+        "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+        "entityKind": "FUNCTION",
+        "entryVa": "0x00535ee0",
+        "currentName": "IScript__UnsetObjective",
+        "nativeShippedName": "UnsetObjective",
+        "contractState": "CANDIDATE_NEEDS_REFUTER",
+        "semanticGrade": "C1_CANDIDATE_PARTIAL",
+        "receiver": "__thiscall IScript-like this; CThing* receiver = *(this+0x10)",
+        "inputs": (
+            "literal false passed to CThing__SetObjective; three opaque VM stack "
+            "slots are callee-cleaned and not read by this wrapper"
+        ),
+        "returns": "no defined EAX return claim; RET 0x0C cleans three stack slots",
+        "writes": (
+            "if receiver+0x2C bit 0x20 is set, call opaque 0x004E5BD0 then clear "
+            "that bit; if clear, no call and no local write"
+        ),
+        "sideEffects": (
+            "opaque 0x004E5BD0 receives ECX=0x00855140 and pushed CThing* only on "
+            "the transition; its retail semantics remain unclaimed"
+        ),
+        "preconditions": "valid this and valid CThing* at this+0x10",
+        "failureModes": (
+            "invalid receivers, opaque-call effects/failures, object lifetime, HUD "
+            "presentation, and runtime ordering remain unmeasured"
+        ),
+        "authorVerdict": "SUPPORTED_BY_PRISTINE_BYTES_REGISTRY_AND_STATIC_CALL_SHAPE",
+        "runtimeVerdict": "UNSCORED",
+        "refuterVerdict": "UNSCORED",
+        "questionIds": ";".join(
+            sorted(
+                (
+                    mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+                    mission_unsetobjective_reproof.SUCCESSOR_QUESTION,
+                )
+            )
+        ),
+        "evidenceRefs": evidence_refs
+        + ";CAMPAIGN_NATIVE_NAME_ALIGNED;CAMPAIGN_C1_STATIC_PROOF",
+        "cheapestFalsifier": runtime_falsifier,
+        "rebuildOwner": "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
+        "rebuildImplementation": (
+            "Level100ActorScriptRuntime.InvokeObjectiveNative cases 23/30 plus "
+            "Level100ActorRegistry.SetObjective"
+        ),
+        "parityTests": (
+            "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs::"
+            "MissionNativeUnsetObjective_ClearsOnlyTheObjectiveFlagAndIsIdempotent"
+        ),
+        "rebuildState": "PARTIAL_CONTRACT",
+        "remainingUncertainty": "; ".join(str(value) for value in proof["limitations"][:6]),
+        "supersedesEntityKeys": ";".join(
+            sorted(
+                (
+                    mission_unsetobjective_reproof.OLD_ENTITY,
+                    mission_unsetobjective_reproof.CANDIDATE_ENTITY,
+                )
+            )
+        ),
+        "lastMeasurementDate": measured_date,
+    }
+    padding_contracts = [
+        {
+            "contractId": (
+                mission_unsetobjective_reproof.PREFIX_CONTRACT
+                if residual["entityKey"] == mission_unsetobjective_reproof.PREFIX_ENTITY
+                else mission_unsetobjective_reproof.SUFFIX_CONTRACT
+            ),
+            "entityKey": residual["entityKey"],
+            "entityKind": "TEXT_RESIDUAL",
+            "entryVa": residual["startVa"],
+            "currentName": "<unmapped .text residual>",
+            "nativeShippedName": "",
+            "contractState": "TERMINAL_PADDING",
+            "semanticGrade": "C0_OPAQUE",
+            "receiver": "UNKNOWN",
+            "inputs": "UNKNOWN",
+            "returns": "UNKNOWN",
+            "writes": "UNKNOWN",
+            "sideEffects": "UNKNOWN",
+            "preconditions": "UNKNOWN",
+            "failureModes": "UNKNOWN",
+            "authorVerdict": "STATIC_FORMAL_PROOF",
+            "runtimeVerdict": "UNSCORED",
+            "refuterVerdict": "SURVIVED",
+            "questionIds": "",
+            "evidenceRefs": evidence_refs,
+            "cheapestFalsifier": padding_falsifier,
+            "rebuildOwner": "UNASSIGNED",
+            "rebuildImplementation": "UNMAPPED",
+            "parityTests": "UNMAPPED",
+            "rebuildState": "NOT_READY",
+            "remainingUncertainty": (
+                "No behavior contract is claimed; this exact range is NOP padding."
+            ),
+            "supersedesEntityKeys": mission_unsetobjective_reproof.OLD_ENTITY,
+            "lastMeasurementDate": measured_date,
+        }
+        for residual in padding_rows
+    ]
+    contract_by_entity = {row["entityKey"]: row for row in rows["contracts"]}
+    contract_by_entity[mission_unsetobjective_reproof.NEW_ENTITY] = function_contract
+    for contract in padding_contracts:
+        contract_by_entity[str(contract["entityKey"])] = contract
+    rows["contracts"] = [
+        contract_by_entity[row["entityKey"]] for row in rows["functions"]
+    ] + [contract_by_entity[row["entityKey"]] for row in rows["residuals"]]
+    partition_id = _mission_native_unsetobjective_partition_adjudication_id()
+    boundary_id = _mission_native_unsetobjective_boundary_adjudication_id()
+    if any(
+        row.get("adjudicationId") in {partition_id, boundary_id}
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective adjudication already exists"
+        )
+    rows["adjudications"].extend(
+        [
+            {
+                "adjudicationId": partition_id,
+                "baseContractId": mission_unsetobjective_reproof.OLD_CONTRACT,
+                "entityKey": mission_unsetobjective_reproof.OLD_ENTITY,
+                "overlaySchema": MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+                "overlayReadySha256": MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+                "questionIdsAddressed": mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": False,
+                "terminalState": "TERMINAL_EXACT_PARTITION",
+                "successorQuestionIds": "",
+                "remainingUncertainty": (
+                    "The 19-byte residual is completely partitioned; the new "
+                    "function's runtime and opaque delegated effects remain open."
+                ),
+                "measuredAtUtc": measured_at,
+            },
+            {
+                "adjudicationId": boundary_id,
+                "baseContractId": mission_unsetobjective_reproof.NEW_CONTRACT,
+                "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+                "overlaySchema": MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+                "overlayReadySha256": MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+                "questionIdsAddressed": mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": False,
+                "terminalState": "FUNCTION_BOUNDARY_C1_STATIC",
+                "successorQuestionIds": mission_unsetobjective_reproof.SUCCESSOR_QUESTION,
+                "remainingUncertainty": function_contract["remainingUncertainty"],
+                "measuredAtUtc": measured_at,
+            },
+        ]
+    )
+    supersession_specs = [
+        (
+            mission_unsetobjective_reproof.OLD_ENTITY,
+            mission_unsetobjective_reproof.PREFIX_ENTITY,
+        ),
+        (
+            mission_unsetobjective_reproof.OLD_ENTITY,
+            mission_unsetobjective_reproof.NEW_ENTITY,
+        ),
+        (
+            mission_unsetobjective_reproof.OLD_ENTITY,
+            mission_unsetobjective_reproof.SUFFIX_ENTITY,
+        ),
+        (
+            mission_unsetobjective_reproof.CANDIDATE_ENTITY,
+            mission_unsetobjective_reproof.NEW_ENTITY,
+        ),
+    ]
+    existing_supersessions = {
+        row["supersessionId"] for row in rows["supersessions"]
+    }
+    supersession_ids: list[str] = []
+    for old_entity, new_entity in supersession_specs:
+        supersession_id = "S-" + _sha256_text(
+            old_entity + "|" + new_entity
+        )[:16]
+        if supersession_id in existing_supersessions:
+            raise CampaignError(
+                f"Mission-native UnsetObjective supersession already exists: {supersession_id}"
+            )
+        rows["supersessions"].append(
+            {
+                "supersessionId": supersession_id,
+                "oldEntityKey": old_entity,
+                "newEntityKey": new_entity,
+                "kind": MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+                "verdict": "SURVIVED",
+                "evidenceRefs": evidence_refs,
+                "measuredAtUtc": measured_at,
+            }
+        )
+        existing_supersessions.add(supersession_id)
+        supersession_ids.append(supersession_id)
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != MISSION_NATIVE_UNSETOBJECTIVE_EXPECTED_GENERATION19_COUNTS:
+        raise CampaignError(
+            f"Mission-native UnsetObjective output counts differ: {counts}"
+        )
+    delta = _mission_native_unsetobjective_delta(
+        before, rows, partition_id, boundary_id, supersession_ids
+    )
+    advance = {
+        "kind": MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+        "schema": MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "promotionId": "UO-"
+        + _sha256_text(
+            "|".join(
+                (
+                    MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256,
+                    MISSION_NATIVE_UNSETOBJECTIVE_PROOF_READY_SHA256,
+                    MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE.as_posix(),
+            "ready": validated["proofStamp"],
+            "schema": mission_unsetobjective_reproof.SCHEMA,
+            "author": {
+                "path": "tools/re_mission_native_unsetobjective_reproof.py",
+                "bytes": MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_BYTES,
+                "sha256": MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_SHA256,
+            },
+        },
+        "measuredAtUtc": measured_at,
+        "evidenceDisposition": (
+            "PRISTINE_STATIC_REGISTRY_BYTE_COMPLETE_GHIDRA_XREF_GPL_"
+            "CORROBORATION_AND_REBUILD_PARITY_NO_RUNTIME_REPLAY"
+        ),
+        "retiredSubject": {
+            "residual": retired_residual,
+            "contract": retired_contract,
+        },
+        "partition": {
+            "parentStartVa": "0x00535edd",
+            "parentEndVa": "0x00535ef0",
+            "parentBytes": 19,
+            "functionCount": 1,
+            "functionBytes": 13,
+            "paddingCount": 2,
+            "paddingBytes": 6,
+            "children": [
+                {
+                    "startVa": f"0x{start:08x}",
+                    "endVa": f"0x{end:08x}",
+                    "entityKey": entity,
+                    "kind": kind,
+                }
+                for start, end, entity, kind in children
+            ],
+        },
+        "function": {
+            "entityKey": mission_unsetobjective_reproof.NEW_ENTITY,
+            "contractId": mission_unsetobjective_reproof.NEW_CONTRACT,
+            "name": "IScript__UnsetObjective",
+            "nativeShippedName": "UnsetObjective",
+            "bodyBytes": 13,
+            "instructionCount": 4,
+            "bodySha256": mission_unsetobjective_reproof.BODY_SHA256,
+            "bodyRangeSetSha256": mission_unsetobjective_reproof.RANGE_SHA256,
+            "semanticGrade": "C1_CANDIDATE_PARTIAL",
+            "semanticGradeCeiling": "C1_STATIC",
+            "runtimeVerdict": "UNSCORED",
+            "semanticPromotionApplied": False,
+        },
+        "adjudications": {
+            "partition": partition_id,
+            "boundary": boundary_id,
+        },
+        "questions": {
+            "closed": [
+                mission_unsetobjective_reproof.RESIDUAL_QUESTION,
+                mission_unsetobjective_reproof.CANDIDATE_QUESTION,
+            ],
+            "opened": [mission_unsetobjective_reproof.SUCCESSOR_QUESTION],
+        },
+        "delta": delta,
+        "rebuildMapping": {
+            "contractId": mission_unsetobjective_reproof.NEW_CONTRACT,
+            "state": "PARTIAL_CONTRACT",
+            "owner": function_contract["rebuildOwner"],
+            "implementation": function_contract["rebuildImplementation"],
+            "tests": function_contract["parityTests"],
+        },
+        "liveGhidraDisposition": (
+            "SEPARATE_BACKED_UP_PROMOTION_PENDING_NO_LIVE_MUTATION_IN_GENERATION19"
+        ),
+        "runtimeReplaysProved": 0,
+        "limitations": list(proof["limitations"]),
+    }
+    return rows, advance
+
+
+def _mission_native_unsetobjective_plain_campaign_path(
+    path: Path, label: str, *, strict: bool
+) -> Path:
+    return _tokenarchive_parser_plain_campaign_path(path, label, strict=strict)
+
+
+def _validate_mission_native_unsetobjective_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top:
+        raise CampaignError("Mission-native UnsetObjective READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "Mission-native UnsetObjective generation",
+    )
+    parent_root = (
+        REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE
+    ).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "Mission-native UnsetObjective parent"
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError("Mission-native UnsetObjective source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("Mission-native UnsetObjective question types differ")
+    if receipt.get("policies") != _mission_native_unsetobjective_policies():
+        raise CampaignError("Mission-native UnsetObjective policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "Mission-native UnsetObjective outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("Mission-native UnsetObjective output set differs")
+    plain_root = _mission_native_unsetobjective_plain_campaign_path(
+        campaign_root, "Mission-native UnsetObjective campaign root", strict=True
+    )
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native UnsetObjective {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native UnsetObjective {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native UnsetObjective {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"Mission-native UnsetObjective output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"Mission-native UnsetObjective output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"Mission-native UnsetObjective output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"Mission-native UnsetObjective output aliases canonical Gen18: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"Mission-native UnsetObjective output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "Mission-native UnsetObjective outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "Mission-native UnsetObjective authority files",
+    )
+    proof_root = (REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE).resolve()
+    try:
+        ghidra_backup.require_disjoint_paths(
+            plain_root,
+            parent_root,
+            "Mission-native UnsetObjective campaign/parent roots",
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_root,
+            proof_root,
+            "Mission-native UnsetObjective campaign/proof roots",
+        )
+    except ghidra_backup.BackupError as exc:
+        raise CampaignError(str(exc)) from exc
+
+
+def _validate_mission_native_unsetobjective_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("Mission-native UnsetObjective advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "Mission-native UnsetObjective parent"
+    )
+    expected_parent = (
+        REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE
+    ).resolve()
+    if set(parent) != {"path", "ready"} or parent.get("path") != str(
+        expected_parent
+    ):
+        raise CampaignError("Mission-native UnsetObjective parent route differs")
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "Mission-native UnsetObjective parent READY"
+    )
+    expected_parent_ready = {
+        **coverage.file_stamp(expected_parent / "campaign.ready.json"),
+        "path": "campaign.ready.json",
+    }
+    if (
+        _integer(receipt.get("generation"), -1) != 19
+        or parent_ready != expected_parent_ready
+        or parent_ready.get("bytes")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_BYTES
+        or parent_ready.get("sha256")
+        != MISSION_NATIVE_UNSETOBJECTIVE_PARENT_READY_SHA256
+        or advance.get("kind") != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Mission-native UnsetObjective generation identity differs"
+        )
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "Mission-native UnsetObjective exact parent",
+    )
+    expected_rows, expected_advance = _mission_native_unsetobjective_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("Mission-native UnsetObjective campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("Mission-native UnsetObjective advance receipt differs")
+    if (
+        receipt.get("counts")
+        != MISSION_NATIVE_UNSETOBJECTIVE_EXPECTED_GENERATION19_COUNTS
+    ):
+        raise CampaignError("Mission-native UnsetObjective READY counts differ")
+    if campaign_root is not None:
+        _validate_mission_native_unsetobjective_receipt_envelope(
+            rows, receipt, campaign_root
+        )
+    supersession_rows = {
+        row["supersessionId"]: row
+        for row in expected_rows["supersessions"]
+        if row["supersessionId"]
+        in set(expected_advance["delta"]["supersessionIdsAdded"])
+    }
+    return {
+        "advance": expected_advance,
+        "partitionAdjudicationId": expected_advance["adjudications"]["partition"],
+        "boundaryAdjudicationId": expected_advance["adjudications"]["boundary"],
+        "nonsemanticAdjudicationIds": {
+            expected_advance["adjudications"]["partition"],
+            expected_advance["adjudications"]["boundary"],
+        },
+        "retiredContract": expected_advance["retiredSubject"]["contract"],
+        "successorQuestionId": mission_unsetobjective_reproof.SUCCESSOR_QUESTION,
+        "supersessionRows": supersession_rows,
+    }
+
+
+def advance_mission_native_unsetobjective_reproof(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the exact Mission-native UnsetObjective static advance."""
+
+    plain_out = _mission_native_unsetobjective_plain_campaign_path(
+        out, "Mission-native UnsetObjective destination", strict=False
+    )
+    try:
+        parent_root = ghidra_backup.resolve_plain_path(
+            REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PARENT_RELATIVE,
+            "Mission-native UnsetObjective canonical parent",
+            strict=True,
+        )
+        proof_root_exact = ghidra_backup.resolve_plain_path(
+            REPO_ROOT / MISSION_NATIVE_UNSETOBJECTIVE_PROOF_RELATIVE,
+            "Mission-native UnsetObjective exact proof",
+            strict=True,
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_out,
+            parent_root,
+            "Mission-native UnsetObjective destination/parent roots",
+        )
+        ghidra_backup.require_disjoint_paths(
+            plain_out,
+            proof_root_exact,
+            "Mission-native UnsetObjective destination/proof roots",
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native UnsetObjective destination is unsafe: {exc}"
+        ) from exc
+    out = plain_out
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing Mission-native UnsetObjective destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_mission_native_unsetobjective_parent_campaign(campaign)
+    )
+    rows, advance = _mission_native_unsetobjective_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 19,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _mission_native_unsetobjective_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
 def advance_runtime_contract(
     campaign: Path,
     overlay: Path,
@@ -24287,6 +25954,23 @@ def main(argv: list[str] | None = None) -> int:
         "--out", type=Path, required=True
     )
 
+    advance_unsetobjective_parser = commands.add_parser(
+        "advance-mission-native-unsetobjective-reproof",
+        help=(
+            "admit the exact Mission-native UnsetObjective 3/13/3 partition, "
+            "bounded C1 static contract, and partial rebuild mapping"
+        ),
+    )
+    advance_unsetobjective_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_unsetobjective_parser.add_argument(
+        "--proof", type=Path, required=True
+    )
+    advance_unsetobjective_parser.add_argument(
+        "--out", type=Path, required=True
+    )
+
     args = parser.parse_args(argv)
     try:
         if args.command == "seed":
@@ -24525,6 +26209,17 @@ def main(argv: list[str] | None = None) -> int:
                 "CAMPAIGN_TOKENARCHIVE_PARSER_CONTRACT_ADVANCED "
                 f"generation={receipt['generation']} "
                 f"grade={receipt['advance']['promotion']['gradeTo']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-mission-native-unsetobjective-reproof":
+            receipt = advance_mission_native_unsetobjective_reproof(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                "CAMPAIGN_MISSION_NATIVE_UNSETOBJECTIVE_ADVANCED "
+                f"generation={receipt['generation']} "
+                f"grade={receipt['advance']['function']['semanticGrade']} "
                 f"out={args.out}"
             )
             return 0

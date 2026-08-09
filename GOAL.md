@@ -161,23 +161,25 @@ this standing campaign complete.
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
 `developer_state.json` → `current_re_authority`. As of 2026-08-09 the exact
-authority is canonical Generation 18 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-18-tokenarchive-parser-contract-v1/`:
-READY SHA-256 `4ae3a7b8dc4baa7cb83125fc8005503499b083fd1944f19bdfb84755f663d97e`,
+authority is canonical Generation 19 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-19-mission-native-unsetobjective-reproof-v1/`:
+READY SHA-256 `f83dbb6eddaa16deed5f2a2460d393dc4525a63ae243b6cac0c656056b69ab9a`,
 frozen reducer ID
-`ee8bddfb4cf6f05f768d9e067ea1330753eecbb3f7eb97553dfe6fa4da8bad74`,
+`151acbe5c1571dca2c53c68dd79281cf20c69af609523d54f25953643dcff3e2`,
 and external authority receipt SHA-256
-`c13dcef4aaae7c95b08bd75a502069a47274e9d577b48b05c57a5f3adcf6b7a6`.
+`72c22f029cd2f845c853dfbf2f5746062eed85ccc11d0291b531051c1e432360`.
 Its independent replica is reproduction-only. Generation 73 supplied a
-field-level projection oracle; Generations 12 through 18 then admitted bounded
+field-level projection oracle; Generations 12 through 19 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
 contract, the exact consumer-bound TokenArchive dispatch-table partition, and
 the exact Mission-native SetPos boundary plus its replicated script-visible
 position-copy contract and partial rebuild mapping, LockHit's retained
 single-node removal path, and an exact static TokenArchive parser/corpus/factory
-contract at C1 without broadening them beyond their evidence. The campaign
-remains incomplete and the next valid campaign generation is 19. Ghidra mutation still requires
-its separate promotion gate and authority.
+contract at C1, then the exact Mission-native UnsetObjective 3/13/3 partition
+and C1 static wrapper contract without broadening them beyond their evidence.
+The campaign remains incomplete and the next valid campaign generation is 20.
+Generation 19 made no live Ghidra mutation; that still requires its separate
+promotion gate and authority.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 
