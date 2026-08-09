@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; UnsetObjective static boundary admitted)
+Last updated: 2026-08-09 (Gen19 authority; 41-function weapon-state hypothesis pass complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -22,6 +22,14 @@ position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
 path have crossed bounded runtime gates. This
 file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
+
+A separate noncanonical scratch pass now covers all 41 paired JetPart/WalkerPart
+weapon-state bodies (6,941 exact body bytes): 38 previously opaque rows have
+bounded C1-static hypotheses, three prior C1 candidates were repaired, and 13
+misleading names were corrected or narrowed. These `HYP__` names and comments
+are navigation evidence only; they have not been copied into live/tracked
+Ghidra or promoted as runtime contracts.
+
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
 readback, authoritative Generation-19 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,

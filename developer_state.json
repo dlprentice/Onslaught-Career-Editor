@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0, bytes/instructions/data/references changed 0. Active measurable queue: one 41-function JetPart/WalkerPart weapon-state static-contract cohort."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes, read-only exports and fresh scratch readback; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, and 13 misleading names are corrected or narrowed."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -96,6 +96,14 @@
         "boundaryHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/mission-native-cohort-10/boundary-hypotheses.tsv; 5786 bytes; SHA-256 76acc64dee0dda2c25f841d00da126fb5cbe2ab1c6ea7e807ce7950cebb6f082",
         "result": "10/10 exact registry-linked bodies plus UnsetObjective were read back in scratch, then promoted together as one 11-function live/tracked boundary-and-name batch; all surrounding residual bytes are NOP; no signature or behavior contract was promoted"
       },
+      "weaponStateCohort": {
+        "result": "local-lab/ghidra-weapon41-static-20260809-v1/result.json; 2580 bytes; SHA-256 cd5d689d51b11f13d847a4b7c66e415cc927b09701b80f36e744120739566581",
+        "instructions": "local-lab/ghidra-weapon41-static-20260809-v1/instructions.tsv; 419123 bytes; SHA-256 eab572859563ccaa1aefd8e68a177000b20665a7372ac3696cf6bd018b239492",
+        "xrefs": "local-lab/ghidra-weapon41-static-20260809-v1/xrefs.tsv; 11076 bytes; SHA-256 e232da72ffb6e4bb5bc7407160175dcd233a38236e62eee45309b29f63b7949a",
+        "contractsAndFalsifiers": "local-lab/ghidra-weapon41-static-20260809-v1/comments.tsv; 11631 bytes; SHA-256 cac2a2012c9fe0ffb229f01a0004e0360110a8612325689f3329492556646dd9",
+        "scratchReadback": "local-lab/ghidra-weapon41-static-20260809-v1/readback.tsv; 18835 bytes; SHA-256 3023bd2326c1763b5da302ecdfd12375dcae8e5d7b6af3546328af7aff5f2a92",
+        "resultSummary": "41/41 exact bodies and names read back; 6,941 exact body bytes; 38 OPAQUE -> bounded C1_STATIC hypotheses; 3 existing C1 candidates repaired; 13 corrected or narrowed names; runtime/C2/live-Ghidra claims zero"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -109,7 +117,7 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Derive one bounded static-contract pass over the exact 41-function paired JetPart/WalkerPart weapon-state subsystem. Target: 41 body/source joins, 13 corrected or narrowed names, and up to 38 OPAQUE-to-C1_STATIC advances in scratch/campaign evidence without gameplay, TTD, or another bespoke authority tool. The 824 structural templates remain navigable and explicitly OPAQUE."
+      "nextQueue": "Consume the completed 41-function weapon-state cohort as one campaign/rebuild batch, not 41 ceremonies, while the next >=40-function static cohort is selected. Keep runtime-dependent branches open and continue using the same read-only exporters plus scratch HYP__ apply/readback path."
     },
     "rankedNextFrontiers": [
       {
