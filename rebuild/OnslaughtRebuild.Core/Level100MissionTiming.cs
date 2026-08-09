@@ -19,7 +19,10 @@ public static class Level100MissionTiming
     public const int AuthoredTriggerRadiusMillimeters = 5_000;
     public const int HealthPollCadenceTicks = SimulationConstants.TicksPerSecond;
     public const int SuccessCountdownTicks = 5 * SimulationConstants.TicksPerSecond;
-    public const int FailureCountdownTicks = 5 * SimulationConstants.TicksPerSecond;
+    // Pristine CGame::DeclareLevelLost @ 0x0046F430 stores 2.0f here. The
+    // pinned GPL source still says 5.0f, so this is an evidenced retail/source
+    // divergence rather than a source-port choice.
+    public const int FailureCountdownTicks = 2 * SimulationConstants.TicksPerSecond;
     public const int FailureMenuDelayTicks = SimulationConstants.TicksPerSecond / 2;
 
     public static SimVector2 TriggerPosition(Level100MissionTrigger trigger) => trigger switch

@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, 13 misleading names are corrected or narrowed, and the rebuild consumes 10 contracts fully plus 4 partially through deterministic player-weapon selection state. CGame cohort: 51/51 lifecycle/control bodies, 22,256 bytes, 51 OPAQUE -> bounded C1_STATIC hypotheses, 0 renames, 1 stale comment repair. The two latest static cohorts therefore advance 89 previously opaque functions without new capture or live-Ghidra mutation."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, 13 misleading names are corrected or narrowed, and the rebuild consumes 10 contracts fully plus 4 partially through deterministic player-weapon selection state. CGame cohort: 51/51 lifecycle/control bodies, 22,256 bytes, 51 OPAQUE -> bounded C1_STATIC hypotheses, 0 renames, 1 stale comment repair; its retail/source divergence corrected the rebuild loss countdown from 5 seconds to 2 seconds. CBattleEngine cohort: 51/51 lifecycle/movement/targeting/weapon-routing bodies, 26,590 bytes; 43 OPAQUE -> bounded C1_STATIC hypotheses, 8 prior C1 rows repaired or confirmed, 8 proposed name corrections, and seven retail-only rows remain explicitly source-unequated. The three bulk static cohorts therefore advance 132 previously opaque functions without new capture or live-Ghidra mutation."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -111,6 +111,12 @@
         "result": "local-lab/ghidra-cgame51-static-20260809-v1/result.json; 2004 bytes; SHA-256 f99b216c9633b0e0cc07aa35655372b3b1a7db3367f940b74c3bf788a30665cb",
         "resultSummary": "51/51 exact CGame lifecycle/load/media/run/state/control/draw/query bodies; 22,256 exact body bytes; 51 OPAQUE -> bounded C1_STATIC hypotheses; 51 names retained; only 0x00472620 needs a stale CScript-to-CGame comment repair; runtime cadence/callee internals/error effects remain open"
       },
+      "cbattleEngineCohort": {
+        "contracts": "local-lab/ghidra-cbattleengine51-static-20260809-v1/contracts.tsv; 52919 bytes; SHA-256 8aba569c397e1ec26b28923fdaee03f82a768b8c3a52b8d6f44dfc0ef7b4b6fb",
+        "rebuildMap": "local-lab/ghidra-cbattleengine51-static-20260809-v1/rebuild-map.tsv; 18733 bytes; SHA-256 b8d480c2a473f3bd419c36519bfc4bcbc538c577db76836cf9dc7c3144dd3edf; 4 IMPLEMENTED / 21 PARTIAL / 26 UNMAPPED",
+        "resultSummary": "51/51 exact CBattleEngine lifecycle/movement/targeting/lock/morph/cloak/weapon-routing bodies; 26,590 exact body bytes; 43 OPAQUE -> bounded C1_STATIC hypotheses; 8 existing C1 rows repaired or confirmed; 8 proposed renames; 44 source-architecture joins plus seven explicitly RETAIL_ONLY rows; runtime outcomes, callee internals and C2 remain open",
+        "rebuildCorrection": "CGame51's pristine CGame__DeclareLevelLost body overturned the pinned source's 5-second value: Level100MissionTiming now uses the retail 2-second failure countdown, with a focused player-death/water-loss test; the separate 15-second death pause/fade path remains open"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -124,7 +130,7 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "The 41-function weapon-state and 51-function CGame passes are complete, totaling 89 new bounded C1_STATIC hypotheses; the weapon rebuild consumes 10 contracts fully and 4 partially. Next execute CBattleEngine51: the 51 exact W001/W008 rows whose current name begins CBattleEngine__, 26,590 body bytes, 43 OPAQUE plus 8 existing C1, using existing decompiles/instructions/xrefs and pinned BattleEngine source only."
+      "nextQueue": "Weapon41, CGame51 and CBattleEngine51 are complete, totaling 132 formerly opaque functions advanced to bounded C1_STATIC hypotheses; 11 more prior C1 rows were repaired or confirmed. The next bulk selector is the exact CUnit cohort (about 124 rows / 26 KiB in the current Gen19 join), using existing dated decompiles and pinned Unit source; the selector audit must choose the whole cohort or a coherent 50+ subset before writing output."
     },
     "rankedNextFrontiers": [
       {
