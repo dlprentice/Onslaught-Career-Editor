@@ -63,6 +63,27 @@
       "liveMutationApplied": true,
       "recoveryMutation": false
     },
+    "activeHypothesisOverlay": {
+      "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
+      "projectPath": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/project",
+      "sourceCampaign": "Generation 19 campaign-functions.tsv joined to the exact 8,125-function SetPos live inventory by entry, body byte count, and complete body-range digest",
+      "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
+      "readback": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/readback/functions.tsv; 7099326 bytes; SHA-256 e68cd56685e852985c7d3cfbc843796c85a5cffba0cb95f67b1465d200dcaded",
+      "result": {
+        "literalFunBefore": 932,
+        "literalFunAfter": 0,
+        "hypothesisNamesApplied": 932,
+        "unrelatedFunctionRowsChanged": 0,
+        "structuralStubOrTemplate": 824,
+        "scriptNativeName": 54,
+        "rttiVirtualSlot": 53,
+        "unresolvedNearCloneHypothesis": 1,
+        "semanticOpaque": 917,
+        "semanticC1Candidate": 14,
+        "semanticC2Bounded": 1
+      },
+      "nextQueue": "Enrich the 108 nonstructural rows (54 script-native, 53 RTTI, 1 near-clone) in bulk; the 824 structural templates are already navigable and remain explicitly OPAQUE."
+    },
     "rankedNextFrontiers": [
       {
         "rank": 1,
