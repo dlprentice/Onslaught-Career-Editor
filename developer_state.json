@@ -3,6 +3,16 @@
   "_what_this_is_NOT": "The canonical evidence store. Current state and a costly-to-rederive bounded finding may live here only with the exact pointer that can overturn it. A claim without such a pointer is a defect. IF THIS FILE AND A MEASUREMENT DISAGREE, THE MEASUREMENT WINS AND THIS FILE IS STALE.",
   "_maintenance": "Update current fields as work lands. Remove or explicitly label superseded accounts rather than appending parallel truth. Keep detailed evidence in its owning tracked or ignored note.",
   "_audited": "The 2026-07-27 form was audited by a read-only pass. On 2026-07-28 a separate read-only state-truth audit reviewed the recovery block, goal evidence, task-store pointers, TTD eras, and named documentation claims. On 2026-07-29 a fresh primary and read-only adversarial audit reconciled the recovery commits, research masters, parity-lab work, and four distinct Level 100 deterministic runs. Historical blocks remain records rather than current assertions; current state belongs in _CODEX_CURRENT_2026_07_29.",
+  "current_re_execution_policy": {
+    "reason": "The 2026-08-09 UnsetObjective lane spent hours optimizing promotion ceremony around one function. This block prevents that failure mode from recurring.",
+    "singleFunctionLimit": "Thirty minutes. At the limit, record the best bounded hypothesis/open question and move the function into a cohort; continue alone only for a newly reproduced corruption or data-loss risk.",
+    "workInProgressLimit": "One evidence cohort and one noncanonical exploration lane. Do not open parallel bespoke function ceremonies.",
+    "minimumMaterialBlock": "Each completed work block must change at least one measured count and should cover at least 10 function boundaries/contracts or 50 hypothesis rows. If it cannot, rescope before continuing.",
+    "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
+    "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
+    "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Active enrichment queue: 108 nonstructural functions. Next canonical cohort: 10 Mission-native boundaries."
+  },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
     "lineageId": "incident-20260806-recovery-v1",
