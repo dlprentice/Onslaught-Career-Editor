@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; fourteen bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; sixteen bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -81,8 +81,12 @@ then advances all 89 exact texture/resource bodies while retaining seven
 covered, 20 partial, and 62 dark execution states. CTexture153 adds another 153
 exact parser/codec/resource bodies while retaining 24 covered, 49 partial, and
 80 dark execution states; 43 phantom trailing parameters were removed, three
-missing inputs restored, and 14 locked prototypes remain explicit. Across all
-fourteen cohorts, 900 exact bodies are now bounded: 857 formerly opaque functions have C1-static
+missing inputs restored, and 14 locked prototypes remain explicit. CDXTexture115
+then advances 115 more exact codec/resource bodies while retaining
+11 covered, eight partial, and 96 dark states; CFastVB106 advances another 106
+exact utility/container/codec bodies while retaining 14 covered, eight partial,
+and 84 dark states. Across all sixteen cohorts, 1,121 exact bodies are now
+bounded: 1,078 formerly opaque functions have C1-static
 hypotheses and 42 prior C1 rows are repaired or confirmed, while ApplyDamage
 retains its pre-existing C2 contract.
 
@@ -92,7 +96,7 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all fourteen semantic passes. The combined IScript50/World70 batch is
+untouched by all sixteen semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
@@ -107,12 +111,16 @@ changed, no non-target row changed, no function was added or removed, all 105
 names/comments matched a fresh-process readback, and only the aggregate comment
 digest changed across the 29 program metrics. Its post inventory is
 `5da0c721…aa1d` under
-`local-lab/ghidra-cfastvb54-math51-scratch-20260809-v1/`. The CTexture153 static
-pass is complete and its 153 rows are now joining CDXTexture89 in the next
-242-row disposable batch. The next evidence selector remains another exact
-disjoint cohort of at least 50 functions, not a per-function lane. The active
-selector is the 115-function CDXTexture W013 cohort, which has complete dated
-metadata, decompile, instruction, and inbound-xref coverage.
+`local-lab/ghidra-cfastvb54-math51-scratch-20260809-v1/`. The subsequent
+CDXTexture89/CTexture153 batch is complete too: all 242 planned rows changed,
+no non-target row changed, no function was added or removed, all 242
+names/comments matched fresh-process readback, and only the aggregate comment
+digest changed across the 29 program metrics. Its post inventory is
+`0614f88a…70b` under
+`local-lab/ghidra-cdxtexture89-ctexture153-scratch-20260809-v1/`. The next
+evidence selector remains another exact disjoint cohort of at least 100
+functions, not a per-function lane; it is being ranked from the existing dated
+metadata, decompile, instruction, and inbound-xref corpus.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
