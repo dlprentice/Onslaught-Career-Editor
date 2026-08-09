@@ -21,7 +21,8 @@ internal sealed class Level100WaterAsset
     private const int SurfaceRecordCount = 515;
     private const int SurfaceSegmentCount = 514;
     private const int SurfaceSourceLength = 18_572;
-    private const float ShorelineDepthBias = 0.002f;
+    private const float RetailDepthBiasScale = 0.00014f;
+    private const int ShorelineDepthBiasIndex = 4;
     private const float CausticPhaseRadiansPerSecond = 1f;
     private const float WaveScrollPerSecond = 0.06f;
 
@@ -112,6 +113,7 @@ internal sealed class Level100WaterAsset
         uniform vec2 retail_origin;
         uniform float caustic_phase;
         uniform float main_wave_scroll;
+        uniform float projection_depth_bias;
         uniform vec3 fog_color;
         uniform float fog_density;
         varying vec3 water_world_position;
@@ -132,6 +134,10 @@ internal sealed class Level100WaterAsset
 
         void vertex() {
             water_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+            // Retail subtracts index * ZBIAS_SCALER from D3D projection slot
+            // 14. Godot's reversed-Z clip space uses the opposite direction.
+            POSITION.z += projection_depth_bias * POSITION.w;
         }
 
         void fragment() {
@@ -284,6 +290,9 @@ internal sealed class Level100WaterAsset
             Level100HeightFieldAsset.PlayerStartZ));
         shorelineMaterial.SetShaderParameter("caustic_phase", 0f);
         shorelineMaterial.SetShaderParameter("main_wave_scroll", 0f);
+        shorelineMaterial.SetShaderParameter(
+            "projection_depth_bias",
+            ShorelineDepthBiasIndex * RetailDepthBiasScale);
         shorelineMaterial.RenderPriority = 0;
         SetFogParameters(shorelineMaterial, terrain);
         ArrayMesh shorelineMesh = BuildShorelineMesh(
@@ -294,7 +303,6 @@ internal sealed class Level100WaterAsset
             Name = "RetailAuthoredShorelineBands",
             Mesh = shorelineMesh,
             MaterialOverride = shorelineMaterial,
-            Position = Vector3.Up * ShorelineDepthBias,
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         };
         root.AddChild(shoreline);

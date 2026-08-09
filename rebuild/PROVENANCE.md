@@ -400,6 +400,13 @@ the stage-3 disable before the main grid, shoreline-only wave passes, and two
 exact `SURF` shoreline bands. Static
 Steam evidence at `CWaterRenderSystem__RenderMainPass` (`0x0055B6C0`) establishes
 the first-shoreline, grid, alpha-tested sun, and late additive-shoreline order.
+`CDXSurf__Render` requests projection depth-bias index `4` for its shoreline
+draw and then restores index `0`; `CDXEngine__SetProjectionDepthBiasIndex`
+at `0x005514A0` subtracts `index * ZBIAS_SCALER` from projection slot 14, while
+the shipped `cardid.txt` value is `0.00014`. The client therefore applies
+the index-4 delta `0.00056` in reversed-Z clip space instead of translating
+the shoreline `0.002` world units. The separate index-6 water caller and
+pixel-level sign validation remain open.
 The sun uses texture-factor color `#E8E8FF`, alpha reference `0xC0`, and a quad
 whose center, half-width, and half-length are respectively `6`, `2`, and `8`
 times camera height. The late shore pass uses `SRCALPHA`/`ONE`, no depth write,

@@ -259,6 +259,17 @@ public sealed class Level100WaterEnvelopeTests
         // alpha test have no RE citation, and the pass wrote B = 255 where
         // retail's hard water maximum is 253 with zero all-channel whites.
         Assert.DoesNotContain("sun_reflection_color", source, StringComparison.Ordinal);
+
+        // CDXSurf requests projection depth-bias index 4 while drawing the
+        // authored shoreline. Retail's cardid value is 0.00014, and
+        // CDXEngine applies index * scale to projection slot 14. Keep that in
+        // clip space; the former 0.002 world-space lift was a different law.
+        Assert.Contains("private const float RetailDepthBiasScale = 0.00014f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const int ShorelineDepthBiasIndex = 4;", source, StringComparison.Ordinal);
+        Assert.Contains("uniform float projection_depth_bias;", source, StringComparison.Ordinal);
+        Assert.Contains("POSITION.z += projection_depth_bias * POSITION.w;", source, StringComparison.Ordinal);
+        Assert.Contains("ShorelineDepthBiasIndex * RetailDepthBiasScale", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Position = Vector3.Up *", source, StringComparison.Ordinal);
     }
 
     /// <summary>
