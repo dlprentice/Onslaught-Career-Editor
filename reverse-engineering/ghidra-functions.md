@@ -1,29 +1,18 @@
-# Battle Engine Aquila's 8,125-function Ghidra corpus is deeply mapped, not atom-complete
+# Battle Engine Aquila's 8,136-function Ghidra corpus is deeply mapped, not atom-complete
 
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
 Last updated: 2026-08-09 (Gen19 authority; UnsetObjective static boundary admitted)
-Verdict: **The verified maintainer database now contains 8,125 function
-boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
-previous residual entries, then 14 exact console-callback-region boundaries.
-Canonical Generation 19 accounts for 8,126 campaign functions plus 6,119 exact
-residual entities; its additional `IScript__UnsetObjective` function is sealed
-statically but still awaits the separate live-Ghidra promotion gate. The 14 new
-functions remain deliberately opaque; 15 interstitial ranges / 107 bytes are
-terminally proven NOP padding. A third authorized operation corrected five
-same-range target-lock names/signatures/comments without changing that boundary
-inventory. A fourth, separately backed-up and scratch-reproduced operation
-promoted the same-boundary Damage/Hit names, void prototypes, and evidence
-comments at `0x0040A890` and `0x00407350`; its separate readback again preserved
-all boundaries and bodies. A fifth backed-up, two-replica operation
-then added four structural labels and five bounded plate comments around
-`CTokenArchive::ReadNextToken`'s exact dispatch data while preserving all 132
-pre-existing data units, every function, and every reference. Boundary
-accounting has advanced again through a sixth gated operation: the exact
-42-byte/17-instruction Mission-native `IScript__SetPos` function was added with
-its name, signature, and comment, between 15-byte and 6-byte NOP ranges, while
-executable bytes, instructions, data, and references stayed unchanged.
+Verdict: **The verified live and tracked databases now contain 8,136 function
+boundaries. The latest backed-up batch added eleven exact Mission-native
+boundaries and shipped registry names, including `IScript__UnsetObjective`,
+with fresh-process readback proving zero changes to the other 8,125 function
+rows, executable bytes, instructions, data, or references. It added fact-only
+comments but no signatures or behavior contracts. Canonical Generation 19
+remains the separate semantic authority at 8,126 campaign functions plus 6,119
+exact residual entities; live structural navigation is therefore ahead of the
+campaign without silently upgrading any semantic grade.
 Semantics remain the hard problem: 14,021 of 14,245 contract rows are `C0_OPAQUE`,
 217 are `C1_CANDIDATE_PARTIAL`, seven are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
@@ -205,25 +194,25 @@ forward or for a clearly dated comparison.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,125 functions after the prior 529-boundary campaigns plus the separately gated Mission-native `IScript__SetPos` boundary; latest TSV SHA-256 `f05259cda1c5d956098062220d6e3aada9bff4a61896a77c8fc153826691f9d0` |
-| Current live function inventory | 8,125 rows; byte-identical to the promoted tracked snapshot and verified D: disaster-recovery copy |
+| Latest verified live readback | 8,136 functions after the eleven-function Mission-native boundary/name batch; latest TSV SHA-256 `38b86d40e937e982f7228ebf84fe88b8a4fc1f6e2113d2938bf14c85b0d57c86` |
+| Current live function inventory | 8,136 rows; byte-identical to the promoted tracked snapshot and verified C:/D: POST recovery copies |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
-| Current distinct function names | 8,117; eight names occur at two addresses |
+| Current distinct function names | 8,128; eight names occur at two addresses |
 | Explicit `FUN_*` names | 932 |
 | MSVC `Unwind@*` funclets | 1,179 |
 | Thunks | 100 |
-| Functions with plate comments | 6,951 |
+| Functions with plate comments | 6,962 |
 | Functions without a plate comment | 1,174 |
 | Functions with at least one tag | 5,923 |
-| Current human-namable denominator | 6,946, excluding the 1,179 compiler EH funclets |
+| Current human-namable denominator | 6,957, excluding the 1,179 compiler EH funclets |
 | Dated pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% against the 7,555-row baseline |
 | RTTI vtable target coverage | 2,127 / 2,127 targets are current function starts |
 | Fullpass population | 6,411 functions reviewed in W001–W018 |
-| Current functions never in that dated fullpass | 1,714 / 8,125 = 21.1% |
+| Current functions never in that dated fullpass | 1,725 / 8,136 = 21.2% |
 | Dated clear identity coverage in the 322 function notes | 1,027 / 7,555 = 13.594% |
 | Dated exact entry-address mention in those notes | 1,285 / 7,555 = 17.009% |
 | MissionScript native registry | 144 / 144 names and 144 distinct handlers recovered |
-| Mission handlers absent as Ghidra functions | 45 / 144 (exact registry-pointer join against the 2026-08-09 inventory) |
+| Mission handlers absent as Ghidra functions | 34 / 144 (exact registry-pointer join against the current 8,136-row inventory) |
 | PhysicsScript corpus | 777 statements; every used value id closes against its factory |
 | Level 100 unit-factory calls in the valid TTD trace | 33 = 28 structures + 2 ambient aircraft + 3 Target Tanks |
 | Current honest conclusion | Broad architectural recovery; deep islands of exact semantics; substantial address-level work remains |
@@ -258,17 +247,17 @@ own the durable specimen warning.
 | Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-09; 19 payload files, 186,485,637 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/runs/live-inventory/functions.tsv` | Current 8,125-row function metadata used by this document |
+| Latest live readback | `local-lab/ghidra-mission-native-cohort11-live-promotion-20260809-v1/runs/live-readback/functions.tsv` | Current 8,136-row function metadata used by this document |
 | Promoted tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, SHA-256 `2dfe0b97…f0b84` | Dated projection; the tracked database now supersedes it as current state |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
 | Function-note corpus | `reverse-engineering/binary-analysis/functions/` | Deep sparse semantic notes; not complete population coverage |
 
 Fresh read-only exports in this research pass remove an important ambiguity:
 
-- The tracked snapshot contains exactly 8,125 functions, 549,872 instructions,
-  48,585 defined-data items, 3,912,345 undefined-data items, and 6,005
-  user-defined non-function symbols. Its reviewed project inventory is 19 files /
-  186,485,637 bytes with digest `6ad611d2…105b2`.
+- The tracked snapshot contains exactly 8,136 functions, 549,872 instructions,
+  48,585 defined-data items, 3,912,345 undefined-data items, and 6,016
+  user-defined symbols. Its reviewed project inventory is 19 files /
+  186,485,637 bytes with digest `9aacd7d0…5c74`.
 - It is byte-identical to the source-stable 2026-08-09 live copy and the
   independently opened/read-back D: disaster-recovery copy. The 6,411
   W001–W018 addresses remain a dated reviewed subset, not the snapshot total.
@@ -280,12 +269,14 @@ Fresh read-only exports in this research pass remove an important ambiguity:
   Later live mutations must repeat the backup/scratch/readback/promotion gate;
   this statement is not a promise that future working state can never move.
 
-The tracked name table differs from the latest live readback at one known row:
-`0x00536cd0 FUN_00536cd0` became `IScript__SpawnThing` on 2026-07-28. The
-whole-database before/after diff reports zero created functions, zero destroyed
-functions, zero moved bounds, one changed name, and one changed rendered
-signature—the signature change is only the embedded function name. Seventeen
-comments were also applied and read back exactly.
+The tracked name table is a dated projection and now differs from the latest
+live readback at multiple subsequently promoted rows, including the eleven
+Mission-native boundaries added in the current batch. That batch changed the
+function count from 8,125 to 8,136, added exactly those eleven rows, removed
+none, and changed zero pre-existing function rows. Program-wide counts changed
+only as expected: user-defined symbols 6,005 → 6,016, default-other symbols
+61,693 → 61,682, and comments 9,100 → 9,111; all other exported metrics were
+unchanged.
 
 The historical `BEA_Widescreen.exe` Program corresponds to a 2,506,752-byte
 patched image described as SHA-256
@@ -2235,13 +2226,13 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 10 | `0x0064d0a0` | `0x005381f0` | `PlaySample` | `FUN_005381f0` | `WEAK` |
 | 11 | `0x0064d0e0` | `0x00537ad0` | `Print` | `FUN_00537ad0` | `WEAK` |
 | 12 | `0x0064d120` | `0x00536920` | `Exists` | — | `NO_FUNCTION` |
-| 13 | `0x0064d160` | `0x00535cd0` | `Die` | — | `NO_FUNCTION` |
+| 13 | `0x0064d160` | `0x00535cd0` | `Die` | `IScript__Die` | `MATCH` |
 | 14 | `0x0064d1a0` | `0x005367c0` | `GetThingRef` | — | `NO_FUNCTION` |
 | 15 | `0x0064d1e0` | `0x00535d50` | `Activate` | — | `NO_FUNCTION` |
 | 16 | `0x0064d220` | `0x00537c40` | `PrintText` | `IScript__PrintText` | `MATCH` |
 | 17 | `0x0064d260` | `0x00537410` | `AddMessage` | `IScript__PlaySound` | `CONTRADICTED` |
 | 18 | `0x0064d2a0` | `0x00535920` | `GetHealth` | — | `NO_FUNCTION` |
-| 19 | `0x0064d2e0` | `0x005358e0` | `SetTimer` | — | `NO_FUNCTION` |
+| 19 | `0x0064d2e0` | `0x005358e0` | `SetTimer` | `IScript__SetTimer` | `MATCH` |
 | 20 | `0x0064d320` | `0x00536070` | `GetDistToObj` | `FUN_00536070` | `WEAK` |
 | 21 | `0x0064d360` | `0x005363e0` | `GetPlayer` | `IScript__GetPlayerBattleEngine` | `MATCH` |
 | 22 | `0x0064d3a0` | `0x00535ea0` | `SetVisible` | — | `NO_FUNCTION` |
@@ -2252,7 +2243,7 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 27 | `0x0064d4e0` | `0x00535890` | `PlayCutscene` | `FUN_00535890` | `WEAK` |
 | 28 | `0x0064d520` | `0x00537500` | `PlayCharMessage` | `IScript__PlaySoundWithCallback` | `CONTRADICTED` |
 | 29 | `0x0064d560` | `0x00535d60` | `Deactivate` | — | `NO_FUNCTION` |
-| 30 | `0x0064d5a0` | `0x00535ee0` | `UnsetObjective` | — | `NO_FUNCTION` |
+| 30 | `0x0064d5a0` | `0x00535ee0` | `UnsetObjective` | `IScript__UnsetObjective` | `MATCH` |
 | 31 | `0x0064d5e0` | `0x00535ef0` | `IsObjective` | — | `NO_FUNCTION` |
 | 32 | `0x0064d620` | `0x00535f70` | `SetVulnerable` | — | `NO_FUNCTION` |
 | 33 | `0x0064d660` | `0x00535d70` | `NumContained` | — | `NO_FUNCTION` |
@@ -2267,7 +2258,7 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 42 | `0x0064d8a0` | `0x00538300` | `SetWindVector` | — | `NO_FUNCTION` |
 | 43 | `0x0064d8e0` | `0x00538360` | `SetRainDensity` | — | `NO_FUNCTION` |
 | 44 | `0x0064d920` | `0x00538380` | `SetSnowDensity` | — | `NO_FUNCTION` |
-| 45 | `0x0064d960` | `0x005383a0` | `SetLightningDensity` | — | `NO_FUNCTION` |
+| 45 | `0x0064d960` | `0x005383a0` | `SetLightningDensity` | `IScript__SetLightningDensity` | `MATCH` |
 | 46 | `0x0064d9a0` | `0x00535c10` | `SetHealth` | — | `NO_FUNCTION` |
 | 47 | `0x0064d9e0` | `0x005353a0` | `GetRatioBattleLineNodes` | `FUN_005353a0` | `WEAK` |
 | 48 | `0x0064da20` | `0x00535c50` | `SetScript` | — | `NO_FUNCTION` |
@@ -2296,7 +2287,7 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 71 | `0x0064dfe0` | `0x00538060` | `IsEnemy` | — | `NO_FUNCTION` |
 | 72 | `0x0064e020` | `0x005361d0` | `Land` | — | `NO_FUNCTION` |
 | 73 | `0x0064e060` | `0x00535a90` | `SpawnersEmpty` | — | `NO_FUNCTION` |
-| 74 | `0x0064e0a0` | `0x005361f0` | `Dive` | — | `NO_FUNCTION` |
+| 74 | `0x0064e0a0` | `0x005361f0` | `Dive` | `IScript__Dive` | `MATCH` |
 | 75 | `0x0064e0e0` | `0x00536210` | `Surface` | — | `NO_FUNCTION` |
 | 76 | `0x0064e120` | `0x00536230` | `InitVariable` | — | `NO_FUNCTION` |
 | 77 | `0x0064e160` | `0x00536260` | `SetVariable` | — | `NO_FUNCTION` |
@@ -2304,10 +2295,10 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 79 | `0x0064e1e0` | `0x00535d00` | `Shutdown` | — | `NO_FUNCTION` |
 | 80 | `0x0064e220` | `0x00535bb0` | `GetEnergy` | — | `NO_FUNCTION` |
 | 81 | `0x0064e260` | `0x005362a0` | `GetVariable` | `IScript__GetWorldTextSlotTimerValue` | `CONTRADICTED` |
-| 82 | `0x0064e2a0` | `0x00535d30` | `Retreat` | — | `NO_FUNCTION` |
+| 82 | `0x0064e2a0` | `0x00535d30` | `Retreat` | `IScript__Retreat` | `MATCH` |
 | 83 | `0x0064e2e0` | `0x005343e0` | `PrimaryObjectiveComplete` | `IScript__PrimaryObjectiveComplete` | `MATCH` |
 | 84 | `0x0064e320` | `0x00534410` | `SecondaryObjectiveComplete` | `IScript__SecondaryObjectiveComplete` | `MATCH` |
-| 85 | `0x0064e360` | `0x005343c0` | `AddScore` | — | `NO_FUNCTION` |
+| 85 | `0x0064e360` | `0x005343c0` | `AddScore` | `IScript__AddScore` | `MATCH` |
 | 86 | `0x0064e3a0` | `0x00535fa0` | `Attack` | `IScript__Attack` | `MATCH` |
 | 87 | `0x0064e3e0` | `0x00534440` | `PrimaryObjectiveFailed` | `IScript__PrimaryObjectiveFailed` | `MATCH` |
 | 88 | `0x0064e420` | `0x00534470` | `SecondaryObjectiveFailed` | `IScript__SecondaryObjectiveFailed` | `MATCH` |
@@ -2322,7 +2313,7 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 97 | `0x0064e660` | `0x00534f90` | `Undeploy` | — | `NO_FUNCTION` |
 | 98 | `0x0064e6a0` | `0x00534fb0` | `EnableWeapon` | `IScript__SetThingValueViaVFunc198_FromArg` | `CONTRADICTED` |
 | 99 | `0x0064e6e0` | `0x00534fe0` | `DisableWeapon` | `IScript__SetThingValueViaVFunc19C_FromArg` | `CONTRADICTED` |
-| 100 | `0x0064e720` | `0x00535070` | `EnableFlightMode` | — | `NO_FUNCTION` |
+| 100 | `0x0064e720` | `0x00535070` | `EnableFlightMode` | `IScript__EnableFlightMode` | `MATCH` |
 | 101 | `0x0064e760` | `0x00535090` | `DisableFlightMode` | — | `NO_FUNCTION` |
 | 102 | `0x0064e7a0` | `0x005365c0` | `GetSquad` | `FUN_005365c0` | `WEAK` |
 | 103 | `0x0064e7e0` | `0x005366c0` | `GetTarget` | — | `NO_FUNCTION` |
@@ -2344,7 +2335,7 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 119 | `0x0064ebe0` | `0x00533a70` | `SetGoodieState` | `IScript__SetGoodieState` | `MATCH` |
 | 120 | `0x0064ec20` | `0x00533aa0` | `GetGoodieState` | `IScript__GetGoodieState` | `MATCH` |
 | 121 | `0x0064ec60` | `0x00533a40` | `MPDeclarePlayerWon` | `FUN_00533a40` | `WEAK` |
-| 122 | `0x0064eca0` | `0x00533a60` | `MPDeclareGameDrawn` | — | `NO_FUNCTION` |
+| 122 | `0x0064eca0` | `0x00533a60` | `MPDeclareGameDrawn` | `IScript__MPDeclareGameDrawn` | `MATCH` |
 | 123 | `0x0064ece0` | `0x005338d0` | `SetSlot` | `IScript__SetSlot` | `MATCH` |
 | 124 | `0x0064ed20` | `0x005339a0` | `GetSlot` | `IScript__GetSlotBitValue` | `MATCH` |
 | 125 | `0x0064ed60` | `0x005380f0` | `InJetMode` | — | `NO_FUNCTION` |
@@ -2359,12 +2350,12 @@ describe the current 2026-07-28 live readback and will move after adjudication.
 | 134 | `0x0064efa0` | `0x005354c0` | `ResetSegmentHealth` | — | `NO_FUNCTION` |
 | 135 | `0x0064efe0` | `0x00536c70` | `SetPos` | — | `NO_FUNCTION` |
 | 136 | `0x0064f020` | `0x00533950` | `SetLockable` | `FUN_00533950` | `WEAK` |
-| 137 | `0x0064f060` | `0x00533980` | `ToggleCockpit` | — | `NO_FUNCTION` |
+| 137 | `0x0064f060` | `0x00533980` | `ToggleCockpit` | `IScript__ToggleCockpit` | `MATCH` |
 | 138 | `0x0064f0a0` | `0x00535530` | `SetStealth` | `IScript__SetThingFloatViaVFunc1C8_FromArg` | `CONTRADICTED` |
 | 139 | `0x0064f0e0` | `0x00536a60` | `TeleportOrientation` | — | `NO_FUNCTION` |
 | 140 | `0x0064f120` | `0x00535010` | `EnableSpawner` | `IScript__SetThingValueViaEngineHelper4FE390_FromArg` | `CONTRADICTED` |
 | 141 | `0x0064f160` | `0x00535040` | `DisableSpawner` | `IScript__SetThingValueViaEngineHelper4FE3F0_FromArg` | `CONTRADICTED` |
-| 142 | `0x0064f1a0` | `0x00535c70` | `SetName` | — | `NO_FUNCTION` |
+| 142 | `0x0064f1a0` | `0x00535c70` | `SetName` | `IScript__SetName` | `MATCH` |
 | 143 | `0x0064f1e0` | `0x00538150` | `IsOverWater` | — | `NO_FUNCTION` |
 
 ## Appendix B: complete PhysicsScript value maps
@@ -2615,8 +2606,8 @@ the old and new statements are not presented as coequal truth.
 | --- | --- |
 | The `E143…` capture executable is pristine | False; it is pristine plus the force-windowed patch |
 | The Ghidra project is never tracked | False as a general statement; `reverse-engineering/ghidra/` is the reviewed tracked exception. Live DBs, backups, and alternates remain untracked. |
-| The current function population is 5,771, 6,411, 6,969, or 7,555 | Historical counts; current live and tracked snapshot are 8,125 |
-| The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized 2026-08-09 promotion; it now contains the exact 8,125-function live state at promotion time |
+| The current function population is 5,771, 6,411, 6,969, 7,555, or 8,125 | Historical counts; current live and tracked snapshot are 8,136 |
+| The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized 2026-08-09 promotions; it now contains the exact 8,136-function live state at promotion time |
 | Current `.text` function coverage is 79.8% | Unknown; 79.8268% is the old 6,411-body baseline |
 | Twenty-five fullpass name drifts are unexplained | False after joining both map stores; all 370 are attributed |
 | `SpawnThing` reduced the residual to 1,866 | False; fresh current grader remains 1,867 / 6,376 |
@@ -2682,7 +2673,7 @@ to understand the current verdicts in this master.
 
 | Area | Path |
 | --- | --- |
-| Current live Ghidra readback | `local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/runs/live-inventory/functions.tsv` |
+| Current live Ghidra readback | `local-lab/ghidra-mission-native-cohort11-live-promotion-20260809-v1/runs/live-readback/functions.tsv` |
 | Trace-to-Ghidra apply/readback | `local-lab/GHIDRA-FROM-TRACE-2026-07-28.md` |
 | 144 native table | `local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv` |
 | Current grader artifacts | `local-lab/re-ledger/` |

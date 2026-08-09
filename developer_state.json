@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Active enrichment queue: 108 nonstructural functions. Next canonical cohort: 10 Mission-native boundaries."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0, bytes/instructions/data/references changed 0. Active measurable queue: one 41-function JetPart/WalkerPart weapon-state static-contract cohort."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -55,30 +55,47 @@
       "irrecoverableHistoricalIdentity": "Atomic14 formal-proof.ready.json: 23028 bytes / a504c24b1eab555da8a01fc56d91561d3147a508dd3f906b0ac41e97697a83e6; explicitly not reconstructed or substituted. Gen3/Gen4 READY receipts remain archival losses and are not current replay dependencies."
     },
     "latestLiveGhidraState": {
-      "promotionReady": "local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/promotion/promotion.ready.json",
-      "promotionReadyBytes": 6782,
-      "promotionReadySha256": "e64be82f360203fd2864450c5b3bd2d0a46441b9120eb79c8c423c3fe1ca0340",
-      "postFunctionsSha256": "f05259cda1c5d956098062220d6e3aada9bff4a61896a77c8fc153826691f9d0",
-      "postProgramSha256": "6907443d213f6632c778a1c0e48f2070d5b268136b55e0e5f5c187f74dcbcf8f",
-      "postBackupManifestSha256": "df2c7ad5c2367801c6fa359ec4be7bcf65864306f87860f643f886d0517724bc",
-      "postRestoreReceiptSha256": "5a081e72c43c2152623a02319b16a75a79f2632546f63428192e123509fb75cf",
-      "offVolumeBackupRoot": "D:\\BEA-Ghidra-Backups\\2026-08-09-post-recovery",
-      "offVolumeSetPosPostManifestSha256": "ad8e92533cf8342cbbc9bca36c103899e918a94e9df7a20dc1ecba12808a9240",
-      "offVolumeRestoreReceiptSha256": "a32eea0a16de37ac2f87e06f0221c803dcd1bc9c90805a8efad675d9b569ab04",
+      "promotionReady": "local-lab/ghidra-mission-native-cohort11-live-promotion-20260809-v1/promotion/promotion.ready.json",
+      "promotionReadyBytes": 4483,
+      "promotionReadySha256": "a78b8640c1b560b30f4d9122a42c52ac23fc76b05e29c57cbdab3250270b9919",
+      "postFunctionsBytes": 7059965,
+      "postFunctionsSha256": "38b86d40e937e982f7228ebf84fe88b8a4fc1f6e2113d2938bf14c85b0d57c86",
+      "postProgramBytes": 1267,
+      "postProgramSha256": "46f59a47f830c0d093ff32d301e215a9af98b73b75f57f2c3f4b438696787180",
+      "postBackupManifestSha256": "d13daff3faff465fb0e61324bce8edd9ddc87a2b49b4fa3fcc5b419444bafb8d",
+      "postRestoreReceiptSha256": "9cb837f60004fdabb87a836ea77e374c9544ea2536bb320621bc629f91cbb453",
+      "offVolumeBackupRoot": "D:\\BEA-Ghidra-Backups\\2026-08-09-post-recovery\\mission-native-cohort11-post-live",
+      "offVolumePostManifestSha256": "5725938e5e6774bd80513d3c4ff4e67b6e46a53f215f48c45a33555e731bdd19",
+      "offVolumeRestoreReceiptSha256": "ff341313d931c065de7214305753ae97382db05f1a31a5c873db354692f6c81d",
       "offVolumeReadOnlyRestorePassed": true,
-      "addresses": ["0x00536c70"],
-      "functionName": "IScript__SetPos",
-      "functionsAdded": 1,
-      "functionCount": 8125,
+      "trackedSnapshotInventorySha256": "9aacd7d0dad41879229aab2cf73918d28208a0ad29df9748c4412264ef475c74",
+      "trackedSnapshotRestoreReceipt": "local-lab/ghidra-tracked-snapshot-cohort11-promotion-20260809-v1/tracked-snapshot-restore.ready.json; 5931 bytes; SHA-256 44035be354c93c2e81cbedd049885e946309c20f8c9682d9874eb97caaaf2518",
+      "addresses": ["0x00533980", "0x00533a60", "0x005343c0", "0x00535070", "0x005358e0", "0x00535c70", "0x00535cd0", "0x00535d30", "0x00535ee0", "0x005361f0", "0x005383a0"],
+      "functionNames": ["IScript__ToggleCockpit", "IScript__MPDeclareGameDrawn", "IScript__AddScore", "IScript__EnableFlightMode", "IScript__SetTimer", "IScript__SetName", "IScript__Die", "IScript__Retreat", "IScript__UnsetObjective", "IScript__Dive", "IScript__SetLightningDensity"],
+      "functionsAdded": 11,
+      "existingFunctionRowsChanged": 0,
+      "functionCount": 8136,
       "liveMutationApplied": true,
-      "recoveryMutation": false
+      "trackedSnapshotSynchronized": true,
+      "recoveryMutation": false,
+      "claimBoundary": "Exact function boundaries, shipped registry names, and fact-only comments only; signatures and behavior contracts were not promoted."
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
       "projectPath": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/project",
-      "sourceCampaign": "Generation 19 campaign-functions.tsv joined to the exact 8,125-function SetPos live inventory by entry, body byte count, and complete body-range digest",
+      "sourceCampaign": "Generation 19 campaign-functions.tsv joined to the exact pre-cohort 8,125-function SetPos inventory by entry, body byte count, and complete body-range digest",
       "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
       "readback": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/readback/functions.tsv; 7099326 bytes; SHA-256 e68cd56685e852985c7d3cfbc843796c85a5cffba0cb95f67b1465d200dcaded",
+      "semanticFrontier": {
+        "nativeHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/native-hypotheses.tsv; 11053 bytes; SHA-256 a13b094d734dca01178ba2cb8a94c01687a2441fc6ad1a100845c9d980494729",
+        "rttiAndNearCloneHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/rtti-nearclone-hypotheses.tsv; 10973 bytes; SHA-256 9e05bed6cd408804871ac4c3d509c5ac15a3e3c97a9a424327523090500599d7",
+        "scratchReadback": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/semantic-readback.tsv; 49753 bytes; SHA-256 af0a3248c9b55c155ba860fc87f3b57db9da6e113f663737be6746d154ab7522",
+        "result": "108/108 exact entries found; 108 unique strengthened HYP__ names; 108 hypothesis-only comments; zero name/comment errors; semantic grades unchanged"
+      },
+      "missionNativeCohortScratch": {
+        "boundaryHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/mission-native-cohort-10/boundary-hypotheses.tsv; 5786 bytes; SHA-256 76acc64dee0dda2c25f841d00da126fb5cbe2ab1c6ea7e807ce7950cebb6f082",
+        "result": "10/10 exact registry-linked bodies plus UnsetObjective were read back in scratch, then promoted together as one 11-function live/tracked boundary-and-name batch; all surrounding residual bytes are NOP; no signature or behavior contract was promoted"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -92,17 +109,17 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Enrich the 108 nonstructural rows (54 script-native, 53 RTTI, 1 near-clone) in bulk; the 824 structural templates are already navigable and remain explicitly OPAQUE."
+      "nextQueue": "Derive one bounded static-contract pass over the exact 41-function paired JetPart/WalkerPart weapon-state subsystem. Target: 41 body/source joins, 13 corrected or narrowed names, and up to 38 OPAQUE-to-C1_STATIC advances in scratch/campaign evidence without gameplay, TTD, or another bespoke authority tool. The 824 structural templates remain navigable and explicitly OPAQUE."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Apply the SetPos boundary recipe to the next shipped Mission-native handler still represented as a police-open residual.",
-        "existingEvidence": "The shipped 144-entry Mission registry, canonical Gen19 range ledger, pristine bytes, and live Ghidra inventory identify ten further sibling registry pointers still represented as residuals. Gen19 statically proves UnsetObjective but deliberately leaves its separate live-Ghidra promotion pending; SetPos demonstrates the exact static/scratch/live promotion workflow.",
-        "instrument": "Select the highest-value sibling by exact registry pointer and residual envelope, derive a unique body/padding partition from pristine bytes and xrefs, reproduce it twice in isolated Ghidra copies, and use the smallest authored runtime probe only after the static boundary is sealed.",
-        "gate": "Require direct registry-pointer landing, exact non-overlapping body/range hashes, complete residual-byte accounting, control-flow and ABI sanity, two identical builds, shifted-boundary/body/padding poisons, and a fresh recoverable live-promotion ceremony before saving Ghidra.",
-        "reconstructionOwner": "Level100ActorScriptRuntime.cs plus the exact Level100 registry owner and one focused mission-native parity test",
-        "why": "It reuses a proven instrument to retire another executable ambiguity while keeping behavior claims separate from boundary proof."
+        "question": "Resolve the paired JetPart/WalkerPart weapon-state subsystem as one 41-function static-contract cohort.",
+        "existingEvidence": "Canonical Gen19 identifies all 41 exact bodies; the dated W001 decompiles cover every target and six routing anchors; pinned Stuart JetPart/WalkerPart source provides the architectural twin; current census is 11 DARK, 27 PARTIAL, 3 COVERED and 38 OPAQUE plus 3 C1 candidates.",
+        "instrument": "Export the 41 targets and six anchors read-only from the existing isolated scratch project, join exact body/range identities to pristine bytes and the pinned source commit, then apply HYP__ names/comments and read them back in one batch.",
+        "gate": "Require all 41 exact body joins, pairwise Jet/Walker routing and field/call-shape checks, explicit separation of localized-name/+0x04 raw-field/+0x38 icon accessors, no Energy equivalence claim, no exclusive owner for the folded IsFiring body, and C1_STATIC at most.",
+        "reconstructionOwner": "JetPart/WalkerPart weapon-state owners in the rebuild after the static field and routing contracts are admitted",
+        "why": "It can correct 13 misleading names and advance up to 38 opaque contracts in one coherent pass with no new capture or authority machinery."
       },
       {
         "rank": 2,
@@ -123,7 +140,7 @@
         "why": "It converts the strongest remaining static parser uncertainties into narrowly measured runtime contracts while preserving the honest C1 boundary."
       }
     ],
-    "limitations": "Generation 19 preserves canonical Generation 18 and partitions the 19-byte UnsetObjective residual into exact 3-byte NOP / 13-byte function / 3-byte NOP children. The new IScript__UnsetObjective contract is C1_CANDIDATE_PARTIAL from specimen, registry, byte-complete Ghidra xrefs, GPL corroboration, and focused rebuild parity only; runtime and refuter verdicts remain UNSCORED, runtime replays are zero, opaque retail callee 0x004E5BD0 remains open, and the rebuild mapping remains PARTIAL_CONTRACT. No gameplay capture, TTD replay, executable mutation, or live Ghidra mutation was used for Generation 19. The latest live Ghidra state therefore remains the separately promoted 8,125-function SetPos state. The historical Atomic14 a504 receipt remains lost and explicitly unsubstituted."
+    "limitations": "Generation 19 remains the campaign authority and partitions the 19-byte UnsetObjective residual into exact 3-byte NOP / 13-byte function / 3-byte NOP children. Its IScript__UnsetObjective contract is C1_CANDIDATE_PARTIAL; runtime/refuter verdicts remain UNSCORED, runtime replays are zero, opaque retail callee 0x004E5BD0 remains open, and the rebuild mapping remains PARTIAL_CONTRACT. Separately, live and tracked Ghidra now contain 8,136 functions after a strictly structural eleven-function Mission-native batch; those live names/comments do not upgrade campaign semantic grades. The historical Atomic14 a504 receipt remains lost and explicitly unsubstituted."
   },
   "_REVIEW_MODE_2026_08_08_SITUATIONAL": "Reviewer selection is harness-agnostic and situational. Start with the active harness's native subagents; use fresh normal/adversarial contexts when consequence or uncertainty warrants them. Grok 4.5 High is a fast extra angle, Opus 5 Medium/Max is long-form independent review, and DeepSeek V4 Flash Max runs through OpenCode Go with Zen-free then direct-provider fallbacks. No fixed matrix is mandatory and no model report is authority. See reverse-engineering/REVIEW-PROTOCOL.md.",
   "_APP_UX_CAMPAIGN_2026_08_01": {

@@ -288,7 +288,7 @@ being recovered**, which is exactly the trap this metric sets.
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
 are not the current figure. The tracked `ghidra/` snapshot was promoted to the
-8,125-function live state on 2026-08-09; the 7,555-row name projection remains a
+8,136-function live state on 2026-08-09; the 7,555-row name projection remains a
 dated table. Historical live/snapshot distinction and mutation-wave reconciliation
 are tracked in [`ghidra-functions.md`](ghidra-functions.md); bulky working
 exports remain ignored under `local-lab/`.)*

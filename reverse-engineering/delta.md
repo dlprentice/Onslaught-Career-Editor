@@ -45,8 +45,8 @@ pins.
 | OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, and Gen19 proves the UnsetObjective 3/13/3 partition |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | Next valid generation is **20**; prove another shipped Mission-native residual boundary, discriminate LockHit's remaining list paths, or exercise the TokenArchive runtime/error-path frontier |
-| Ghidra apply | The latest authorized live operation added the exact `IScript__SetPos` function/name/signature/comment after two scratch reproductions and separate readback; READY `e64be82f…a034`, POST functions `f05259cd…f9d0`, POST program `6907443d…cf8f`; future mutation still needs a fresh per-plate promotion gate |
+| Immediate RE front | One 41-function JetPart/WalkerPart weapon-state static-contract cohort: 41 exact body/source joins, 13 corrected or narrowed names, and up to 38 OPAQUE → C1_STATIC advances; no new capture required |
+| Ghidra apply | The latest authorized live operation added eleven exact Mission-native boundaries and shipped registry names in one batch, with fact-only comments and no signatures/contracts. Fresh readback changed 8,125 → 8,136 functions and zero existing function rows, bytes, instructions, data, or references; READY `a78b8640…b9919`, POST functions `38b86d40…57c86`, POST program `46f59a47…87180` |
 
 The frozen three-master hashes later in this document remain the correct inputs
 for the 2026-07-29 synthesis. Body rows below that still say “current” without
@@ -219,7 +219,7 @@ evidence.
 | Plane | Exact current denominator | What “one” means |
 | --- | ---: | --- |
 | Measured installation | 5,515 files / 133 directories / 702,659,189 bytes | One filesystem object in a locally changed live install |
-| Current live Ghidra database | 8,125 functions | One current Ghidra function entry, including 1,179 EH funclets and 100 thunks |
+| Current live Ghidra database | 8,136 functions | One current Ghidra function entry, including 1,179 EH funclets and 100 thunks |
 | Pinned Stuart source | 106 C/C++ files / 1,855 physical body blocks / 1,857 conditional definition heads | One supplied text file or parser-counted source body, not one baseline-linked function |
 | Materializer snapshot reported by the frozen Stuart master | 324 expected outputs from non-additive input tables | One bounded reported rebuild output, often transformed or shared |
 
@@ -241,8 +241,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,125 functions; 19 files / 186,485,637 bytes; inventory `6ad611d2…105b2` | Reviewed distributable database snapshot, exact to live at the 2026-08-09 promotion |
-| Live Ghidra database | 8,125 functions | Current maintainer state; separately backed up and read back before snapshot promotion |
+| Tracked Ghidra snapshot | 8,136 functions; 19 files / 186,485,637 bytes; inventory `9aacd7d0…5c74` | Reviewed distributable database snapshot, exact to live at the latest 2026-08-09 promotion |
+| Live Ghidra database | 8,136 functions | Current maintainer state; separately backed up on C: and D: and read back before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
@@ -2302,7 +2302,7 @@ under their own provenance boundaries.
 “7,555 functions” means current database entries, not the unknowable perfect
 compiler/linker function total.
 
-The tracked Ghidra project now contains 8,125 functions and was promoted from the
+The tracked Ghidra project now contains 8,136 functions and was promoted from the
 verified live project on 2026-08-09. The separate 7,555-row name projection is a
 dated historical table, not the current database owner.
 
